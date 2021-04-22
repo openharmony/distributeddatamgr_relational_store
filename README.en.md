@@ -1,17 +1,19 @@
 # distributeddatamgr_appdatamgr
 
--[Introduction](#section11660541593)
--[Contents](#section1464106163817)
--[Constraints](#section1718733212019)
--[Software Architecture](#section159991817144514)
--[Interface](#section11510542164514)
--[Use](#section1685211117463)
--[Involving warehouse](#section10365113863719)
+- [Introduction](#section11660541593)
+- [Contents](#section1464106163817)
+- [Constraints](#section1718733212019)
+- [Software Architecture](#section159991817144514)
+- [Interface](#section11510542164514)
+- [Use](#section1685211117463)
+- [Involving warehouse](#section10365113863719)
 
 ## Introduction<a name="section11660541593"></a>
 Data management services provide applications and users with more convenient, efficient and safe data management capabilities. Reduce development costs and create a consistent and smooth user experience across devices.
 > Currently, it first supports lightweight key-value (KV) local data storage capabilities, and will gradually support other richer data types in the future.
+
 ![输入图片说明](https://images.gitee.com/uploads/images/2021/0422/193406_a3e03a96_8046977.png "屏幕截图.png")
+
 >-Lightweight key-value (KV) data: The data is structured, the file is lightweight, and transactional, and a dedicated key-value pair interface is provided separately
 The lightweight KV database is developed based on the KV storage capabilities provided by the current public basic library, and provides key-value pair parameter management capabilities for applications. On platforms with processes, KV storage provides parameter management for single process access and cannot be used by other applications. On such platforms, KV storage is loaded in the application process as a basic library to protect it from being accessed by other processes.
 
