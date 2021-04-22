@@ -29,9 +29,9 @@ Since the dependent platform has normal file creation, read/write, delete, modif
 ## Software Architecture<a name="section159991817144514"></a>
 ### Lightweight key value (KV) data
 The KV storage capacity is inherited from the original design of the public basic library, and is enhanced on the basis of the original capacity. The addition of data deletion and binary value reading and writing capabilities are added to ensure the atomicity of the operation; in order to distinguish between platform differences, it will rely on the content of platform differences Separate abstraction, provided by the corresponding product platform.
->LO devices generally have poor performance, insufficient memory and computing capabilities, and most data management scenarios read more and write less, and are sensitive to memory usage;
+>L0 devices generally have poor performance, insufficient memory and computing capabilities, and most data management scenarios read more and write less, and are sensitive to memory usage;
 >The KV implemented for some platforms has a lock mechanism, but the lock is only effective for the cache and not for file operations. The file operation interface used by the platform is provided by the system. Generally, the file operation interface itself is not process safe, please be extra note;
->LO platform, there is no lock capability, no lock mechanism is provided, and the concurrency is guaranteed by the business. If a lock mechanism needs to be provided, it needs to provide a hook and register by the business.
+>L0 platform, there is no lock capability, no lock mechanism is provided, and the concurrency is guaranteed by the business. If a lock mechanism needs to be provided, it needs to provide a hook and register by the business.
 
 ## Interface<a name="section11510542164514"></a>
 > To be added after the code is developed
