@@ -22,6 +22,7 @@
 #include "dbm_kv_store_env.h"
 
 #include "utils_file.h"
+#include "ohos_types.h"
 
 #ifdef DBM_DEBUG_ENABLE
 #define DBM_LOG_TAG "[low_lvl][kv]"
@@ -200,7 +201,7 @@ static int FileWriteCursor(int fd, int offset, unsigned int whence, const char* 
 
 static boolean IsStrSame(char* value, int len, const char* magic)
 {
-    if (len != strlen(magic) + 1) {
+    if ((unsigned int)len != strlen(magic) + 1) {
         return FALSE;
     }
 
@@ -906,7 +907,7 @@ static int UpdateKV(DBHandle db, KeyItem* item, void* value, unsigned int len)
     return DBM_OK;
 }
 
-static int AddNewDataItem(DBHandle db)
+static int AddNewDataItem(DBHandle db, KeyItem* item)
 {
     int itemIndex = -1;
     boolean isNewItem = TRUE;
@@ -986,7 +987,7 @@ static int FindDataItem(DBHandle db, KeyItem* item, boolean kvExisted)
         }
     }
 
-    return AddNewDataItem(db);
+    return AddNewDataItem(db, item);
 }
 
 int Put(KVStoreHandle db, const char* key, void* value, unsigned int len)
@@ -1059,7 +1060,7 @@ int DBM_Put(KVStoreHandle db, const char* key, void* value, unsigned int len)
     return ret;
 }
 
-static int ExeDelete(KVStoreHandle db,  KeyItem* item)
+static int ExeDelete(KVStoreHandle db,  KeyItem* item, boolean newItem)
 {
     char itemData[KV_SUM_DATA_ITEM_SIZE] = {0};
     int ret = FileWriteCursor(db->sumFileFd, GetKeyItemOffset(item->index) + 1, SEEK_SET_FS, itemData, 1);
@@ -1118,7 +1119,7 @@ static int Delete(KVStoreHandle db, const char* key)
         return DBM_ERROR;
     }
 
-    ret = ExeDelete(db, item);
+    ret = ExeDelete(db, item, newItem);
     free(item);
     return DBM_OK;
 }
