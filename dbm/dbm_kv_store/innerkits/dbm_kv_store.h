@@ -42,7 +42,6 @@
 #define DBM_KV_STORE_H
 
 #include "dbm_config.h"
-#include "dbm_types.h"
 
 #ifdef __cplusplus
 #if __cplusplus
