@@ -21,7 +21,7 @@
  *
  *
  * Key-value pairs can be permanently stored in the file system. \n
- * For details about the number of key-value pairs that can be stored in an application, see {@link MAX_KV_SUM}. \n
+ * For details about the number of key-value pairs that can be stored in an application, see {@link DBM_MAX_KV_SUM}. \n
  *
  * @since 1.0
  * @version 1.0

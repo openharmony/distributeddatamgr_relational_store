@@ -21,6 +21,7 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
+/* default max len of KV */
 #define MAX_KEY_LEN 32     // please consider 6 byte suffix in bak file name
 #define MAX_VALUE_LEN 512
 
@@ -31,8 +32,8 @@ extern "C"{
 #define DBM_SW_VERSION              "1.0"
 #define DBM_SW_VERSION_NUM          0x10
 
-#define DBM_CTRL_SET_LOCK           0x0         /**< set lock function control command */
-#define DBM_CTRL_SET_UNLOCK         0x1         /**< set unlock function control command */
+#define DBM_CTRL_SET_LOCK           0x0         /* set lock function control command */
+#define DBM_CTRL_SET_UNLOCK         0x1         /* set unlock function control command */
 
 /* log function: default DBM_PRINT macro is printf */
 #ifndef DBM_PRINT
@@ -48,7 +49,7 @@ extern "C"{
 #endif
 
 #ifdef DBM_RUNTIME_LOG_ENABLE
-/* rountine print function. Must be implement by user. */
+/* routine print function. Must be implement by user. */
 #define DBM_INFO(...)               DBM_LOG_PREFIX();DBM_PRINT(__VA_ARGS__);DBM_PRINT("\n")
 #else
 #define DBM_INFO(...)

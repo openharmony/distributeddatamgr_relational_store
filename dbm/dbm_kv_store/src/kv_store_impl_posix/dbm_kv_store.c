@@ -15,7 +15,7 @@
  */
 
 
-/**< This function is not open for user temp */
+/* This function is not open for user now */
 #include "dbm_kv_store.h"
 
 #include "dbm_errno.h"
