@@ -22,8 +22,10 @@ extern "C"{
 #endif /* __cplusplus */
 
 /* default max len of KV */
-#define MAX_KEY_LEN 32     // please consider 6 byte suffix in bak file name
+#define MAX_KEY_LEN 32      // please consider 6 byte suffix in bak file name
+#ifndef MAX_VALUE_LEN
 #define MAX_VALUE_LEN 512
+#endif
 
 /*
  * Defintion of macro using in KVStore.

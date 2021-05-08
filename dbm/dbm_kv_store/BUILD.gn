@@ -21,6 +21,7 @@ if (ohos_kernel_type == "liteos_m") {
       "inc",
       "innerkits",
     ]
+
   }
 } else {
   shared_library("foundation_dbm_kv_store") {

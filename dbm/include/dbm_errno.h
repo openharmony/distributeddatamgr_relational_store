@@ -27,7 +27,7 @@ enum DBLiteStatus {
     DBM_OK = 0,                 /* OK or No error */
     DBM_NOT_FOUND = 2,          /* Data not found */
     DBM_INVALID_ARGS = 3,       /* Invalid argument */
-    DBM_NOT_SUPPORT = 5,        /* unsupport this function */
+    DBM_NOT_SUPPORT = 5,        /* unsupported this function */
     DBM_OVER_MAX_LIMITS = 7,    /* Over max limits */
 };
 
