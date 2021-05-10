@@ -22,7 +22,7 @@ extern "C"{
 #endif /* __cplusplus */
 
 /* default max len of KV */
-#define MAX_KEY_LEN 32      // please consider 6 byte suffix in bak file name
+#define MAX_KEY_LEN 32      // the suffix is 7 bytes
 #ifndef MAX_VALUE_LEN
 #define MAX_VALUE_LEN 512
 #endif

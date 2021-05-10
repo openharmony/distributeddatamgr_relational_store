@@ -62,12 +62,12 @@ Data Item: key content and status
     key: key content
 */
 
-#define db_lock(db)                                                                     \
+#define DB_LOCK(db)                                                                     \
     do {                                                                                \
         if (((DBHandle)db)->lock != NULL)   ((DBHandle)db)->lock((DBHandle)db);         \
     } while(0);
 
-#define db_unlock(db)                                                                   \
+#define DB_UNLOCK(db)                                                                   \
     do {                                                                                \
         if (((DBHandle)db)->unlock != NULL)   ((DBHandle)db)->unlock((DBHandle)db);     \
     } while(0);
@@ -126,7 +126,7 @@ typedef struct KeyItem {
     int index;   // in sum file position of index
 } KeyItem;
 
-static const char* ItemPathFormat(DBHandle db)
+static const char* ItemPathFormat(const DBHandle db)
 {
     if (db->type == DBM_DB_TYPE_KV_NO_DIR) {
         return "%s%s";
@@ -135,7 +135,7 @@ static const char* ItemPathFormat(DBHandle db)
 }
 
 /* begin GetKVStore */
-static void DBMInitFinish(DBHandle db, int ret)
+static void DBMInitFinish(const DBHandle db, int ret)
 {
     static boolean isLogShow = FALSE;
     if (ret == DBM_OK) {
@@ -167,12 +167,12 @@ static DBHandle GetKVDBHandle(const char* path)
     }
 
     int ret = memset_s(db, sizeof(DBM), 0, sizeof(DBM));
-    if (ret < EOK) {
+    if (ret != EOK) {
         free(db);
         return NULL;
     }
 
-    if (strcpy_s(db->magic, sizeof(KV_MAGIC), KV_MAGIC) != EOK) {
+    if (strcpy_s(db->magic, KV_MAGIC_SIZE + 1, KV_MAGIC) != EOK) {
         free(db);
         return NULL;
     }
@@ -257,7 +257,6 @@ static boolean IsHeaderValid(const char* header)
 
 static int GetSumFilePath(DBHandle db, char* sumFilePath, unsigned int len)
 {
-    (void)memset_s(sumFilePath, len, 0, len);
     if (strlen(db->dirPath) == 0) {
         if (strcpy_s(sumFilePath, sizeof(KV_SUM_FILE), KV_SUM_FILE) != EOK) {
             return DBM_OK;
@@ -277,6 +276,7 @@ static int OpenSumFile(DBHandle db, unsigned int mode)
     if (sumFilePath == NULL) {
         return -1; // invalid fd
     }
+    (void)memset_s(sumFilePath, MAX_FILE_PATH + 1, 0, MAX_FILE_PATH + 1);
 
     int ret = GetSumFilePath(db, sumFilePath, MAX_KEY_PATH + 1);
     if (ret < 0) {
@@ -312,7 +312,7 @@ static int LoadDataItem(DBHandle db, int index, KeyItem* item)
     item->flag.isBakValid = *(itemContent + 2);
     item->flag.valueType = *(itemContent + 3);
 
-    char keyLen[KV_SUM_BLOCK_SIZE] = {0}; // temp is useless, default key contenr len is 32
+    char keyLen[KV_SUM_BLOCK_SIZE] = {0}; // default key content len is 32
     ret = memcpy_s(keyLen, KV_SUM_BLOCK_SIZE, itemContent + KV_SUM_BLOCK_SIZE, KV_SUM_BLOCK_SIZE);
     if (ret != EOK) {
         return DBM_ERROR;
@@ -618,8 +618,7 @@ static int InitKVStore(DBHandle db)
 
     // sumFileLen==0 means it's a new sum file
     if (sumFileLen == 0) {
-        char* head = SUM_FILE_DEFAULT_HEADER;
-        ret = UtilsFileWrite(db->sumFileFd, head, SUM_FILE_HEADER_SIZE);
+        ret = UtilsFileWrite(db->sumFileFd, SUM_FILE_DEFAULT_HEADER, SUM_FILE_HEADER_SIZE);
         if (ret < 0) {
             return DBM_ERROR;
         }
@@ -679,31 +678,34 @@ static boolean IsDataItemMatched(DBHandle db, const char* key, int index)
     return IsStrSame(itemContent + KV_MAGIC_SIZE + KV_SUM_BLOCK_SIZE, strlen(key) + 1, key);
 }
 
-static int FormatValueByFile(DBHandle db, const char* key, char* value, unsigned int len,
-    char* fileRead, unsigned int fileLen)
+static int IsNeedTransferValue(DBHandle db, const char* key, char* fileRead, unsigned int fileLen, boolean* isNeed)
 {
     if (fileLen <= KV_SUM_BLOCK_SIZE) { // value size < index, means old version data
-        if (memcpy_s(value, len, fileRead, fileLen) != EOK) {
-            return -1; // invalid len
-        }
-        return fileLen;
+        *isNeed = FALSE;
+        return DBM_OK;
     }
 
     char keyIndex[KV_SUM_BLOCK_SIZE] = {0};
     int ret = memcpy_s(keyIndex, KV_SUM_BLOCK_SIZE - 1, fileRead, KV_SUM_BLOCK_SIZE - 1);
-    if (ret < 0) {
-        return -1;
+    if (ret != EOK) {
+        return DBM_ERROR;
     }
 
     // output refer to value version
-    boolean isKeyInSumFile = IsDataItemMatched(db, key, atoi(keyIndex));
-    int offset = isKeyInSumFile ? KV_SUM_BLOCK_SIZE : 0;
-    if (isKeyInSumFile && (fileLen - offset > len)) {
+    *isNeed = IsDataItemMatched(db, key, atoi(keyIndex));
+    return DBM_OK;
+}
+
+static int FormatValueByFile(boolean isNeedTrans, char* value, unsigned int len, char* fileRead, unsigned int fileLen)
+{
+    int offset = isNeedTrans ? KV_SUM_BLOCK_SIZE : 0;
+    printf("#### isNeedTrans[%d], offset[%d], fileLen[%d]\n", isNeedTrans, offset, fileLen);
+    if (fileLen - offset > len) {
         return -1;
     }
 
-    ret = memcpy_s(value, len, fileRead + offset, fileLen - offset);
-    if (ret < 0) {
+    int ret = memcpy_s(value, len, fileRead + offset, fileLen - offset);
+    if (ret != EOK) {
         return -1;
     }
     return fileLen - offset;
@@ -721,6 +723,10 @@ static int GetValueByFile(DBHandle db, const char* key, char *value, unsigned in
         return DBM_ERROR;
     }
 
+    if (valueLen > MAX_VALUE_LEN + KV_SUM_BLOCK_SIZE) {
+        return DBM_ERROR;
+    }
+
     char* valueRead = (char *)malloc(valueLen);
     if (valueRead == NULL) {
         return DBM_ERROR;
@@ -732,20 +738,27 @@ static int GetValueByFile(DBHandle db, const char* key, char *value, unsigned in
         return DBM_ERROR;
     }
 
-    int ret = UtilsFileRead(fd, valueRead, valueLen);
+    int valueReadLen = UtilsFileRead(fd, valueRead, valueLen);
     UtilsFileClose(fd);
     fd = -1;
-    if (ret < 0) {
+    if (valueReadLen < 0) {
         free(valueRead);
         return DBM_ERROR;
     }
 
-    int res = FormatValueByFile(db, key, value, len, valueRead, ret);
+    boolean isNeedTrans = TRUE;
+    int ret = IsNeedTransferValue(db, key, valueRead, valueReadLen, &isNeedTrans);
+    if (ret != DBM_OK) {
+        free(valueRead);
+        return DBM_ERROR;
+    }
+
+    ret = FormatValueByFile(isNeedTrans, value, len, valueRead, valueReadLen);
     free(valueRead);
-    if (res < 0) {
+    if (ret < 0) {
         DBM_INFO("Format file value fail.");
     }
-    return res;
+    return ret;
 }
 
 static int Get(KVStoreHandle db, const char* key, void* value, unsigned int count, unsigned int* realValueLen)
@@ -771,7 +784,7 @@ static int Get(KVStoreHandle db, const char* key, void* value, unsigned int coun
     const char* keyGet = isBakExist ? bakFile : key; // bak existed means update fail
     int ret = GetValueByFile(db, keyGet, value, count);
     if (ret < 0) {
-        DBM_INFO("Get: get key path file fail.");
+        DBM_INFO("Get: get value from key path file fail.");
         return DBM_ERROR;
     }
     *realValueLen = ret;
@@ -781,9 +794,9 @@ static int Get(KVStoreHandle db, const char* key, void* value, unsigned int coun
 int DBM_Get(KVStoreHandle db, const char* key, void* value, unsigned int count, unsigned int* realValueLen)
 {
     /* lock the KVDB*/
-    db_lock(db);
+    DB_LOCK(db);
     int ret = Get(db, key, value, count, realValueLen);
-    db_unlock(db);
+    DB_UNLOCK(db);
     return ret;
 }
 
@@ -866,7 +879,7 @@ static int InitValue(int index, void* value, unsigned int len, char* valueConten
 
 static int InsertKV(DBHandle db, KeyItem* item, void* value, unsigned int len)
 {
-    char* valueContent = (char *)malloc(MAX_VALUE_LEN + KV_SUM_BLOCK_SIZE); // Avoid stack overflows
+    char* valueContent = (char *)malloc(len + KV_SUM_BLOCK_SIZE); // Avoid stack overflows
     if (valueContent == NULL) {
         return DBM_ERROR;
     }
@@ -1112,13 +1125,13 @@ static int Put(KVStoreHandle db, const char* key, void* value, unsigned int len)
 int DBM_Put(KVStoreHandle db, const char* key, void* value, unsigned int len)
 {
     /* lock the KVDB*/
-    db_lock(db);
+    DB_LOCK(db);
     int ret = Put(db, key, value, len);
-    db_unlock(db);
+    DB_UNLOCK(db);
     return ret;
 }
 
-static int ExeDelete(KVStoreHandle db, KeyItem* item, boolean newItem)
+static int ExeDelete(KVStoreHandle db, const KeyItem* item, boolean newItem)
 {
     char itemData[KV_SUM_DATA_ITEM_SIZE] = {0};
     int ret = FileWriteCursor(db->sumFileFd, GetKeyItemOffset(item->index) + 1, SEEK_SET_FS, itemData, 1);
@@ -1157,7 +1170,7 @@ static int Delete(KVStoreHandle db, const char* key)
 
     boolean newItem = IsNewItem(db, key);
     if (newItem) {
-        return DBM_NOT_FOUND;
+        return DBM_OK;
     }
 
     KeyItem* item = (KeyItem *)malloc(sizeof(KeyItem));
@@ -1186,9 +1199,9 @@ static int Delete(KVStoreHandle db, const char* key)
 int DBM_Delete(KVStoreHandle db, const char* key)
 {
     /* lock the KVDB*/
-    db_lock(db);
+    DB_LOCK(db);
     int ret = Delete(db, key);
-    db_unlock(db);
+    DB_UNLOCK(db);
     DBM_DEBUG("Delete: key[%s] ret[%d]", key, ret);
     return ret;
 }
@@ -1220,9 +1233,9 @@ int DBM_CloseKVStore(KVStoreHandle db)
     }
 
     /* lock the KVDB*/
-    db_lock(db);
+    DB_LOCK(db);
     int ret = CloseKVStore(db);
-    db_unlock(db);
+    DB_UNLOCK(db);
 
     ReleaseKVDBHandle(db);
     db = NULL;
@@ -1237,6 +1250,7 @@ static int DelSumFile(DBHandle db)
         return DBM_ERROR;
     }
 
+    (void)memset_s(sumFilePath, MAX_FILE_PATH + 1, 0, MAX_FILE_PATH + 1);
     int ret = GetSumFilePath(db, sumFilePath, MAX_FILE_PATH + 1);
     if (ret != DBM_OK) {
         free(sumFilePath);
@@ -1303,7 +1317,7 @@ int DBM_DeleteKVStore(const char* storeFullPath)
     if (db->sumFileFd < 0) {
         DBM_INFO("DeleteKVStore: open sum file fail.");
         ReleaseKVDBHandle(db);
-        return DBM_ERROR;
+        return DBM_NOT_FOUND;
     }
 
     int sumFileLen = UtilsFileSeek(db->sumFileFd, 0UL, SEEK_END_FS);
