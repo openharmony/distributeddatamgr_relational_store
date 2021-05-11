@@ -716,27 +716,27 @@ static int GetValueByFile(DBHandle db, const char* key, char *value, unsigned in
 {
     char keyPath[MAX_KEY_PATH + 1] = {0};
     if (sprintf_s(keyPath, MAX_KEY_PATH + 1, ItemPathFormat(db), db->dirPath, key) < 0) {
-        return DBM_ERROR;
+        return -1;
     }
 
     unsigned int valueLen = 0;
     if (UtilsFileStat(keyPath, &valueLen) < 0) {
-        return DBM_ERROR;
+        return -1;
     }
 
     if (valueLen > MAX_VALUE_LEN + KV_SUM_BLOCK_SIZE) {
-        return DBM_ERROR;
+        return -1;
     }
 
     char* valueRead = (char *)malloc(valueLen);
     if (valueRead == NULL) {
-        return DBM_ERROR;
+        return -1;
     }
 
     int fd = UtilsFileOpen(keyPath, O_RDONLY_FS, 0);
     if (fd < 0) {
         free(valueRead);
-        return DBM_ERROR;
+        return -1;
     }
 
     int valueReadLen = UtilsFileRead(fd, valueRead, valueLen);
@@ -744,14 +744,14 @@ static int GetValueByFile(DBHandle db, const char* key, char *value, unsigned in
     fd = -1;
     if (valueReadLen < 0) {
         free(valueRead);
-        return DBM_ERROR;
+        return -1;
     }
 
     boolean isNeedTrans = TRUE;
     int ret = IsNeedTransferValue(db, key, valueRead, valueReadLen, &isNeedTrans);
     if (ret != DBM_OK) {
         free(valueRead);
-        return DBM_ERROR;
+        return -1;
     }
 
     ret = FormatValueByFile(isNeedTrans, value, len, valueRead, valueReadLen);
