@@ -140,13 +140,13 @@ static void DBMInitFinish(const DBHandle db, int ret)
     static boolean isLogShow = FALSE;
     if (ret == DBM_OK) {
         db->initOK = TRUE;
-        if(!isLogShow) {
+        if (!isLogShow) {
             DBM_INFO("DBM KV V%s is initialize success.", DBM_SW_VERSION);
             isLogShow = TRUE;
         }
     } else {
-        DBM_INFO("Error: %s DB initialize fail (%d).", db->type == DBM_DB_TYPE_KV || db->type == DBM_DB_TYPE_KV_NO_DIR ?
-        "KVDB" : "OTHERS_TYPE", ret);
+        DBM_INFO("Error: %s DB initialize fail (%d).",
+            (db->type == DBM_DB_TYPE_KV) || (db->type == DBM_DB_TYPE_KV_NO_DIR) ? "KVDB" : "OTHERS_TYPE", ret);
     }
 }
 
@@ -183,7 +183,7 @@ static DBHandle GetKVDBHandle(const char* path)
     db->version = DBM_SW_VERSION_NUM;
     db->sumFileFd = -1;
 
-    db->type = strlen(path) == 0 ? DBM_DB_TYPE_KV_NO_DIR : DBM_DB_TYPE_KV;
+    db->type = (strlen(path) == 0) ? DBM_DB_TYPE_KV_NO_DIR : DBM_DB_TYPE_KV;
 
     ret = DBM_UserInit();
     DBMInitFinish(db, ret);
@@ -248,6 +248,7 @@ static boolean IsHeaderValid(const char* header)
     }
 
     // after 1st magic is block size flag
+    // magic is after 4 block
     if (memcpy_s(magic, KV_MAGIC_SIZE, header + 4 * KV_SUM_BLOCK_SIZE, KV_MAGIC_SIZE) != EOK &&
         !IsStrSame(magic, KV_MAGIC_SIZE + 1, KV_MAGIC)) {
         return FALSE;
@@ -308,6 +309,7 @@ static int LoadDataItem(DBHandle db, int index, KeyItem* item)
     }
 
     // 1st pos is default 0
+    // 3 pos represented flag
     item->flag.isValid = *(itemContent + 1);
     item->flag.isBakValid = *(itemContent + 2);
     item->flag.valueType = *(itemContent + 3);
@@ -320,7 +322,7 @@ static int LoadDataItem(DBHandle db, int index, KeyItem* item)
 
     item->len = atoi(keyLen); // it's 0
 
-    ret = memcpy_s(item->key, MAX_KEY_LEN, itemContent + 2 * KV_SUM_BLOCK_SIZE, MAX_KEY_LEN);
+    ret = memcpy_s(item->key, MAX_KEY_LEN, itemContent + 2 * KV_SUM_BLOCK_SIZE, MAX_KEY_LEN); // 2 block: index and len
     if (ret != EOK) {
         return DBM_ERROR;
     }
@@ -461,7 +463,7 @@ static int VacuumStore(DBHandle db)
         return DBM_ERROR;
     }
     // 20 is header len, 44 is per item size
-    int sumIndex = (sumFileLen - SUM_FILE_HEADER_SIZE ) / KV_SUM_DATA_ITEM_SIZE;
+    int sumIndex = (sumFileLen - SUM_FILE_HEADER_SIZE) / KV_SUM_DATA_ITEM_SIZE;
     if (!db->sumFlag.kvSumIndexValid) {
         db->kvItemSum = 0; // need recalculate
     }
@@ -578,7 +580,7 @@ static int LoadSumFileHeader(DBHandle db)
     }
 
     char headerFlag[KV_SUM_BLOCK_SIZE + 1] = {0};
-    if (memcpy_s(headerFlag, KV_SUM_INDEX, header + 2 * KV_SUM_INDEX, KV_SUM_INDEX) != EOK) {
+    if (memcpy_s(headerFlag, KV_SUM_INDEX, header + KV_MAGIC_SIZE + KV_SUM_INDEX, KV_SUM_INDEX) != EOK) {
         return DBM_ERROR;
     }
 
@@ -699,7 +701,6 @@ static int IsNeedTransferValue(DBHandle db, const char* key, char* fileRead, uns
 static int FormatValueByFile(boolean isNeedTrans, char* value, unsigned int len, char* fileRead, unsigned int fileLen)
 {
     int offset = isNeedTrans ? KV_SUM_BLOCK_SIZE : 0;
-    printf("#### isNeedTrans[%d], offset[%d], fileLen[%d]\n", isNeedTrans, offset, fileLen);
     if (fileLen - offset > len) {
         return -1;
     }
@@ -768,15 +769,15 @@ static int Get(KVStoreHandle db, const char* key, void* value, unsigned int coun
     }
 
     if (!db->initOK || !IsStrSame(db->magic, KV_MAGIC_SIZE + 1, KV_MAGIC)) {
-         return DBM_INVALID_ARGS;
+        return DBM_INVALID_ARGS;
     }
 
     char bakFile[MAX_KEY_PATH + 1] = {0};
     if (sprintf_s(bakFile, MAX_KEY_PATH + 1, "%s_dbm_kv", key) < 0) {
         return DBM_INVALID_ARGS;
     }
-    boolean isBakExist = !IsNewItem(db, bakFile);
 
+    boolean isBakExist = !IsNewItem(db, bakFile);
     if (db->sumFlag.isInvalid || (IsNewItem(db, key) && !isBakExist)) {
         return DBM_NOT_FOUND;
     }
@@ -793,7 +794,7 @@ static int Get(KVStoreHandle db, const char* key, void* value, unsigned int coun
 
 int DBM_Get(KVStoreHandle db, const char* key, void* value, unsigned int count, unsigned int* realValueLen)
 {
-    /* lock the KVDB*/
+    /* lock the KVDB */
     DB_LOCK(db);
     int ret = Get(db, key, value, count, realValueLen);
     DB_UNLOCK(db);
@@ -850,6 +851,7 @@ static int BackupItem(DBHandle db, const KeyItem* item)
     }
 
     char itemFlagByte[1] = {1};
+    // offset 2 pos is backup flag
     int ret = FileWriteCursor(db->sumFileFd, GetKeyItemOffset(item->index) + 2, SEEK_SET_FS, itemFlagByte, 1);
     if (ret < 0) {
         DBM_INFO("BackupItem: set backup valid flag to file fail.");
@@ -886,7 +888,7 @@ static int InsertKV(DBHandle db, KeyItem* item, void* value, unsigned int len)
     (void)memset_s(valueContent, len + KV_SUM_BLOCK_SIZE, 0, len + KV_SUM_BLOCK_SIZE);
 
     int contentLen = InitValue(item->index, value, len, valueContent, len + KV_SUM_BLOCK_SIZE);
-    if(contentLen < 0) {
+    if (contentLen < 0) {
         free(valueContent);
         return DBM_ERROR;
     }
@@ -923,7 +925,7 @@ static int UpdateKV(DBHandle db, KeyItem* item, void* value, unsigned int len)
     (void)memset_s(valueContent, len +KV_SUM_BLOCK_SIZE, 0, len + KV_SUM_BLOCK_SIZE);
 
     int contentLen = InitValue(item->index, value, len, valueContent, len + KV_SUM_BLOCK_SIZE);
-    if(contentLen < 0) {
+    if (contentLen < 0) {
         free(valueContent);
         DBM_INFO("UpdateKV init value fail.");
         return DBM_ERROR;
@@ -931,13 +933,14 @@ static int UpdateKV(DBHandle db, KeyItem* item, void* value, unsigned int len)
 
     ret = SetValueToFile(db, item->key, valueContent, contentLen);
     free(valueContent);
-    if(ret != DBM_OK) {
+    if (ret != DBM_OK) {
         DBM_INFO("UpdateKV write value to file fail.");
         RecoverItem(db, item);
         return DBM_ERROR;
     }
 
     char itemData[1] = {0};
+    // offset 2 pos is backup flag
     int pos = FileWriteCursor(db->sumFileFd, GetKeyItemOffset(item->index) + 2, SEEK_SET_FS, itemData, 1);
     if (pos < 0) {
         DBM_INFO("UpdateKV set bak file is invalid flag fail.");
@@ -1002,7 +1005,7 @@ static int AddNewDataItem(DBHandle db, KeyItem* item)
         db->kvItemSum++;
     }
 
-    item->index = (itemIndex == -1) ? db->kvItemSum - 1 : itemIndex;
+    item->index = (itemIndex == -1) ? (db->kvItemSum - 1) : itemIndex;
     if (item->index < 0) {
         DBM_INFO("AddNewDataItem: item index calcute err [%d].", db->kvItemSum, item->index);
         return DBM_ERROR;
@@ -1124,7 +1127,7 @@ static int Put(KVStoreHandle db, const char* key, void* value, unsigned int len)
 
 int DBM_Put(KVStoreHandle db, const char* key, void* value, unsigned int len)
 {
-    /* lock the KVDB*/
+    /* lock the KVDB */
     DB_LOCK(db);
     int ret = Put(db, key, value, len);
     DB_UNLOCK(db);
@@ -1198,7 +1201,7 @@ static int Delete(KVStoreHandle db, const char* key)
 
 int DBM_Delete(KVStoreHandle db, const char* key)
 {
-    /* lock the KVDB*/
+    /* lock the KVDB */
     DB_LOCK(db);
     int ret = Delete(db, key);
     DB_UNLOCK(db);
@@ -1232,7 +1235,7 @@ int DBM_CloseKVStore(KVStoreHandle db)
         return DBM_OK;
     }
 
-    /* lock the KVDB*/
+    /* lock the KVDB */
     DB_LOCK(db);
     int ret = CloseKVStore(db);
     DB_UNLOCK(db);

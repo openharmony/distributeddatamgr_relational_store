@@ -37,10 +37,57 @@ The KV storage capacity is inherited from the original design of the public basi
 >- On the LO platform, there is no lock capability and no lock mechanism is provided. Concurrency is guaranteed by the business. If a lock mechanism needs to be provided, this needs to provide a hook and register by the business.
 
 ## Interface<a name="section11510542164514"></a>
-> To be added after the code is developed
+- **lite KV store**
+
+    ```
+    typedef struct DBM *KVStoreHandle;
+    // storeFullPath is a legitimate directory, and the KV created will have created entries for this directory
+    // empty string is passed in and created with the current directory
+    int DBM_GetKVStore(const char* storeFullPath, KVStoreHandle* kvStore);
+
+    int DBM_Get(KVStoreHandle db, const char* key, void* value, unsigned int count, unsigned int* realValueLen);
+    int DBM_Put(KVStoreHandle db, const char* key, void* value, unsigned int len);
+    int DBM_Delete(KVStoreHandle db, const char* key);
+
+    int DBM_CloseKVStore(KVStoreHandle db);
+    // Make sure that all database objects for the directory are closed before deleting the database
+    int DBM_DeleteKVStore(const char* storeFullPath);
 
 ## Use <a name="section1685211117463"></a>
-> To be added after the code is developed
+- **lite KV store**
+
+    ```
+    // create or open the kvStore
+    const char storeFullPath[] = "";  // legal dir path or empty
+    KVStoreHandle kvStore = NULL;
+    int ret = DBM_GetKVStore(storeFullPath, &kvStore);
+
+    // insert or update data
+    char key[] = "rw.sys.version";
+    struct {
+        int num;
+        char content[200];
+    } value;
+    memset_s(&value, sizeof(value), 0, sizeof(value));
+    value.num = 1;
+    strcpy_s(value.content, sizeof(value.content), "Hello world !");
+    ret = DBM_Put(kvStore, key, (void*)&value, sizeof(value));
+
+    // read KV data
+    memset_s(&value, sizeof(value), 0, sizeof(value));
+    unsigned int realValLen = 0;
+    ret = DBM_Get(g_KVStoreHandle, key, &value, sizeof(value), &realValLen);
+
+    // delete one KV data item
+    ret = DBM_Delete(kvStore, key);
+
+    // close kvstore
+    ret = DBM_CloseKVStore(kvStore);
+
+    // delete kvtore and remove all KV
+    ret = DBM_DeleteKVStore(storeFullPath);
+
+    ```
 
 ## Involved warehouse<a name="section10365113863719"></a>
 distributeddatamgr_appdatamgr

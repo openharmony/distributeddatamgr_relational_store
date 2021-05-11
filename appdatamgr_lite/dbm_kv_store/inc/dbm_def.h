@@ -45,7 +45,7 @@ extern "C"{
 #define DBM_LOG_PREFIX2()           DBM_PRINT(" ")
 #define DBM_LOG_PREFIX()            DBM_LOG_PREFIX1();DBM_LOG_PREFIX2()
 #ifdef DBM_DEBUG_ENABLE
-#define DBM_DEBUG(...)              DBM_LOG_PREFIX();DBM_PRINT("(%s:%d)", __FILE__, __LINE__);DBM_PRINT(__VA_ARGS__);DBM_PRINT("\n")
+#define DBM_DEBUG(...)              DBM_LOG_PREFIX();DBM_PRINT(__VA_ARGS__);DBM_PRINT("\n")
 #else
 #define DBM_DEBUG(...)
 #endif

@@ -33,13 +33,61 @@
 KV存储能力继承自公共基础库原始设计，在原有能力基础上进行增强，新增提供数据删除及二进制value读写能力的同时，保证操作的原子性；为区别平台差异，将依赖平台差异的内容单独抽象，由对应产品平台提供。
 >- LO设备普遍性能较差，内存及计算能力均不足，对于数据管理的场景大多读多写少，且内存占用敏感；
 >- 针对部分平台实现的KV是有锁机制，但是锁只对缓存有效，对文件操作无效，平台使用的文件操作接口是由系统提供，一般来说文件操作接口本身并不是进程安全的，请格外注意；
->- LO平台，存在不具备锁能力的情况，不提供锁的机制，并发由业务保证，若需要提供有锁机制，这需要提供hook，由业务进行注册。
+>- LO平台，存在不具备锁能力的情况，不提供锁的机制，并发由业务保证，若需要提供有锁机制，则需要提供hook，由业务进行注册。
 
 ## 接口<a name="section11510542164514"></a>
-> 待代码开发完毕后补充
+- **轻量KV存储**
 
+    ```
+    typedef struct DBM *KVStoreHandle;
+    // storeFullPath为合法目录，创建的KV将已此目录创建条目
+    // 传入空串则以当前目录创建
+    int DBM_GetKVStore(const char* storeFullPath, KVStoreHandle* kvStore);
+
+    int DBM_Get(KVStoreHandle db, const char* key, void* value, unsigned int count, unsigned int* realValueLen);
+    int DBM_Put(KVStoreHandle db, const char* key, void* value, unsigned int len);
+    int DBM_Delete(KVStoreHandle db, const char* key);
+
+    int DBM_CloseKVStore(KVStoreHandle db);
+    // 请确保删除数据库前已关闭该目录对应的所有数据库对象
+    int DBM_DeleteKVStore(const char* storeFullPath);
+    ```
 ## 使用<a name="section1685211117463"></a>
-> 待代码开发完毕后补充
+
+- **轻量KV存储**
+
+    ```
+    // 创建数据库
+    const char storeFullPath[] = "";  // 目录或空字符串
+    KVStoreHandle kvStore = NULL;
+    int ret = DBM_GetKVStore(storeFullPath, &kvStore);
+
+    // 插入或修改数据
+    char key[] = "rw.sys.version";
+    struct {
+        int num;
+        char content[200];
+    } value;
+    memset_s(&value, sizeof(value), 0, sizeof(value));
+    value.num = 1;
+    strcpy_s(value.content, sizeof(value.content), "Hello world !");
+    ret = DBM_Put(kvStore, key, (void*)&value, sizeof(value));
+
+    // 读取数据
+    memset_s(&value, sizeof(value), 0, sizeof(value));
+    unsigned int realValLen = 0;
+    ret = DBM_Get(g_KVStoreHandle, key, &value, sizeof(value), &realValLen);
+
+    // 删除数据
+    ret = DBM_Delete(kvStore, key);
+
+    // 关闭数据库
+    ret = DBM_CloseKVStore(kvStore);
+
+    // 删除数据库
+    ret = DBM_DeleteKVStore(storeFullPath);
+
+    ```
 
 ## 涉及仓<a name="section10365113863719"></a>
 distributeddatamgr_appdatamgr
