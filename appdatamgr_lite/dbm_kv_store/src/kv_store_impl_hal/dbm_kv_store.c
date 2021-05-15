@@ -469,10 +469,10 @@ static int VacuumStore(DBHandle db)
     }
 
     KeyItem* item = (KeyItem *)malloc(sizeof(KeyItem));
-    (void)memset_s(item, sizeof(KeyItem), 0, sizeof(KeyItem));
     if (item == NULL) {
         return DBM_ERROR;
     }
+    (void)memset_s(item, sizeof(KeyItem), 0, sizeof(KeyItem));
     for (int index = 0; index < sumIndex; ++index) {
         ret = LoadDataItem(db, index, item);
         if (ret != DBM_OK) {
