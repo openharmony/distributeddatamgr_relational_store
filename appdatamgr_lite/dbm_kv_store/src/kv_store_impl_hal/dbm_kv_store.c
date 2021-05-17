@@ -445,6 +445,16 @@ static int CheckPointItem(DBHandle db, KeyItem* item)
     if (item->flag.isBakValid) {
         DBM_DEBUG("CheckPointItem delete item bak valid[%d]", item->flag.isBakValid);
         return RecoverItem(db, item);
+    } else {
+        char bakFile[MAX_KEY_PATH + 1] = {0};
+        if (sprintf_s(bakFile, MAX_KEY_PATH + 1, "%s_dbm_kv", item->key) < 0) {
+            return DBM_ERROR;
+        }
+
+        if (!IsNewItem(db, bakFile) && DeleteValueFromFile(db, bakFile) != DBM_OK) {
+            DBM_INFO("BackupItem: delete old backup data fail.");
+            return DBM_ERROR;
+        }
     }
     return DBM_OK;
 }
@@ -712,10 +722,10 @@ static int FormatValueByFile(boolean isNeedTrans, char* value, unsigned int len,
     return fileLen - offset;
 }
 
-static int GetValueByFile(DBHandle db, const char* key, char *value, unsigned int len)
+static int GetValueByFile(DBHandle db, const char* key, const char* keyGet, char* value, unsigned int len)
 {
     char keyPath[MAX_KEY_PATH + 1] = {0};
-    if (sprintf_s(keyPath, MAX_KEY_PATH + 1, ItemPathFormat(db), db->dirPath, key) < 0) {
+    if (sprintf_s(keyPath, MAX_KEY_PATH + 1, ItemPathFormat(db), db->dirPath, keyGet) < 0) {
         return -1;
     }
 
@@ -783,7 +793,7 @@ static int Get(KVStoreHandle db, const char* key, void* value, unsigned int coun
     }
 
     const char* keyGet = isBakExist ? bakFile : key; // bak existed means update fail
-    int ret = GetValueByFile(db, keyGet, value, count);
+    int ret = GetValueByFile(db, key, keyGet, value, count);
     if (ret < 0) {
         DBM_INFO("Get: get value from key path file fail.");
         return DBM_ERROR;
