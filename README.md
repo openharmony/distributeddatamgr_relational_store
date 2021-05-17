@@ -57,7 +57,7 @@ KV存储能力继承自公共基础库原始设计，在原有能力基础上进
 - **轻量KV存储**
 
     ```
-    // 创建数据库
+    // 创建或打开数据库
     const char storeFullPath[] = "";  // 目录或空字符串
     KVStoreHandle kvStore = NULL;
     int ret = DBM_GetKVStore(storeFullPath, &kvStore);
