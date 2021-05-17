@@ -26,15 +26,15 @@ Distributed data management services on different platforms form an abstract lay
 
 ## Constraints<a name="section1718733212019"></a>
 ### Lightweight key value (KV) data
--Relying on the platform to have normal file creation, reading, writing, deleting, modifying, and locking capabilities, and to show the same semantic functions of the interface as possible for different platforms
+-Relying on the platform to have normal file creation, reading, writing, deleting, modifying, and locking capabilities, and to show the same semantic functions of the interface as possible for different platforms（such as LiteOS Cortex-M、 LiteOS Cortex-A, etc)
 -Due to the difference in platform capabilities, database capabilities need to be tailored accordingly, and the internal implementation of different platforms may be different
 
 ## Software Architecture<a name="section159991817144514"></a>
 ### Lightweight key value (KV) data
 The KV storage capacity is inherited from the original design of the public basic library, and is enhanced on the basis of the original capacity. The addition of data deletion and binary value reading and writing capabilities are added to ensure the atomicity of the operation; in order to distinguish between platform differences, it will rely on the content of platform differences Separate abstraction, provided by the corresponding product platform.
->- LO equipment generally has poor performance, insufficient memory and computing power, and most data management scenarios read more and write less, and are sensitive to memory usage;
->- The KV implemented for some platforms has a lock mechanism, but the lock is only effective for the cache and not for file operations. The file operation interface used by the platform is provided by the system. Generally speaking, the file operation interface itself is not process safe. Please Pay extra attention
->- On the LO platform, there is no lock capability and no lock mechanism is provided. Concurrency is guaranteed by the business. If a lock mechanism needs to be provided, this needs to provide a hook and register by the business.
+>- Lite system generally has poor performance, insufficient memory and computing power, and most data management scenarios read more and write less, and are sensitive to memory usage;
+>- The file operation interface used by the platform is provided by the file system. Generally speaking, the file operation interface itself is not process safe. Please Pay extra attention
+>- On the lite system, there is no lock capability and no lock mechanism is provided. Concurrency is guaranteed by the business. If a lock mechanism needs to be provided, this needs to provide a hook and register by the business.
 
 ## Interface<a name="section11510542164514"></a>
 - **lite KV store**
@@ -44,11 +44,11 @@ The KV storage capacity is inherited from the original design of the public basi
     // storeFullPath is a legitimate directory, and the KV created will have created entries for this directory
     // empty string is passed in and created with the current directory
     int DBM_GetKVStore(const char* storeFullPath, KVStoreHandle* kvStore);
-
+    
     int DBM_Get(KVStoreHandle db, const char* key, void* value, unsigned int count, unsigned int* realValueLen);
     int DBM_Put(KVStoreHandle db, const char* key, void* value, unsigned int len);
     int DBM_Delete(KVStoreHandle db, const char* key);
-
+    
     int DBM_CloseKVStore(KVStoreHandle db);
     // Make sure that all database objects for the directory are closed before deleting the database
     int DBM_DeleteKVStore(const char* storeFullPath);
@@ -61,7 +61,7 @@ The KV storage capacity is inherited from the original design of the public basi
     const char storeFullPath[] = "";  // legal dir path or empty
     KVStoreHandle kvStore = NULL;
     int ret = DBM_GetKVStore(storeFullPath, &kvStore);
-
+    
     // insert or update data
     char key[] = "rw.sys.version";
     struct {
@@ -72,21 +72,21 @@ The KV storage capacity is inherited from the original design of the public basi
     value.num = 1;
     strcpy_s(value.content, sizeof(value.content), "Hello world !");
     ret = DBM_Put(kvStore, key, (void*)&value, sizeof(value));
-
+    
     // read KV data
     memset_s(&value, sizeof(value), 0, sizeof(value));
     unsigned int realValLen = 0;
     ret = DBM_Get(g_KVStoreHandle, key, &value, sizeof(value), &realValLen);
-
+    
     // delete one KV data item
     ret = DBM_Delete(kvStore, key);
-
+    
     // close kvstore
     ret = DBM_CloseKVStore(kvStore);
-
+    
     // delete kvtore and remove all KV
     ret = DBM_DeleteKVStore(storeFullPath);
-
+    
     ```
 
 ## Involved warehouse<a name="section10365113863719"></a>
