@@ -1,48 +1,49 @@
 # distributeddatamgr_appdatamgr
 
 - [Introduction](#section11660541593)
-- [Contents](#section1464106163817)
+- [Directory Structure](#section1464106163817)
 - [Constraints](#section1718733212019)
-- [Software Architecture](#section159991817144514)
-- [Interface](#section11510542164514)
-- [Use](#section1685211117463)
-- [Involving warehouse](#section10365113863719)
+- [Architecture](#section159991817144514)
+- [Available APIs](#section11510542164514)
+- [Usage Guidelines](#section1685211117463)
+- [Repositories Involved](#section10365113863719)
 
 ## Introduction<a name="section11660541593"></a>
-Reduce development costs and create a consistent and smooth user experience across devices.
+The distributed data management service allows you to manage data in a convenient, efficient, and secure way. It reduces development costs and creates a consistent and smooth user experience across devices.
 
-> Currently, it first supports lightweight key-value (KV) local data storage capabilities, and will gradually support other richer data types in the future.
-
-![输入图片说明](https://images.gitee.com/uploads/images/2021/0422/200748_51a0cbd1_8046977.png "屏幕截图.png")
+> Currently, it supports storage of local lightweight key-value (KV) pairs. In the future, more data types will be supported.
+Lightweight key-value pairs are structured and transaction-related (to be supported in the future). Dedicated APIs related to key-value pairs are provided.
 
 > Lightweight key-value (KV) data: The data is structured, the file is lightweight, and transactional (supported in the future), and a dedicated key-value pair interface is provided separately
 
-The lightweight KV database is developed based on the KV storage capabilities provided by the current public basic library, and provides key-value pair parameter management capabilities for applications. On a platform with processes, the parameter management provided by KV storage is for single process access and cannot be used by other processes. On such platforms, KV storage is loaded in the application process as a basic library to protect it from being accessed by other processes.
+![输入图片说明](https://images.gitee.com/uploads/images/2021/0422/200748_51a0cbd1_8046977.png "屏幕截图.png")
 
-Distributed data management services on different platforms form an abstract layer of data operation interfaces for unified file operations, so that manufacturers do not need to pay attention to the differences in file systems of different chip platforms.
+The lightweight KV store is developed based on the KV storage capabilities provided by Utils, and provides key-value pair management capabilities for apps. On a platform with processes, the key-value pair management capabilities provided by the KV store can only be accessed by a specific process. On such a platform, the KV store is loaded in the app process as a basic library so that it cannot be accessed by other processes.
 
-## Table of Contents<a name="section1464106163817"></a>
+The distributed data management service abstracts data operation APIs of different platforms into unified APIs for file operations. In this way, you do not need to pay attention to the file system differences between chip platforms.
+
+## Directory Structure<a name="section1464106163817"></a>
 > To be added after the code is developed
 
 ## Constraints<a name="section1718733212019"></a>
-### Lightweight key value (KV) data
--Relying on the platform to have normal file creation, reading, writing, deleting, modifying, and locking capabilities, and to show the same semantic functions of the interface as possible for different platforms（such as LiteOS Cortex-M、 LiteOS Cortex-A, etc)
--Due to the difference in platform capabilities, database capabilities need to be tailored accordingly, and the internal implementation of different platforms may be different
+### Lightweight Key-Value Pairs
+-The platform should have file creation, reading, writing, deletion, modification, and locking capabilities. The semantic functions of APIs should be kept the same for different platforms (such as the LiteOS Cortex-M and LiteOS Cortex-A).
+-Due to the differences in platform capabilities, the KV store capabilities need to be tailored accordingly. Internal implementation may be different for different platforms.
 
-## Software Architecture<a name="section159991817144514"></a>
-### Lightweight key value (KV) data
-The KV storage capacity is inherited from the original design of the public basic library, and is enhanced on the basis of the original capacity. The addition of data deletion and binary value reading and writing capabilities are added to ensure the atomicity of the operation; in order to distinguish between platform differences, it will rely on the content of platform differences Separate abstraction, provided by the corresponding product platform.
->- Lite system generally has poor performance, insufficient memory and computing power, and most data management scenarios read more and write less, and are sensitive to memory usage;
->- The file operation interface used by the platform is provided by the file system. Generally speaking, the file operation interface itself is not process safe. Please Pay extra attention
->- On the lite system, there is no lock capability and no lock mechanism is provided. Concurrency is guaranteed by the business. If a lock mechanism needs to be provided, this needs to provide a hook and register by the business.
+## Architecture<a name="section159991817144514"></a>
+### Lightweight Key-Value Pairs
+The KV store inherits capacities from Utils. In addition, the KV store provides data deletion and binary value reading and writing capabilities while ensuring the atomicity of operations. Capabilities specific to different platforms are abstracted separately and provided by each platform.
+>- The mini system generally has poor performance and insufficient memory and computing capabilities. In data management scenarios, reading operations are much more than writing operations, and memory usage is sensitive.、
+>- File operation APIs used by a platform are provided by the file system. These APIs are generallynot process-safe.
+>- The mini system may have no lock capabilities or lock mechanism. In that case, concurrency is guaranteed by the service. If a lock mechanism is needed, a hook should be registered by the service.
 
-## Interface<a name="section11510542164514"></a>
-- **lite KV store**
+## Available APIs<a name="section11510542164514"></a>
+- **Lightweight KV store**
 
     ```
     typedef struct DBM *KVStoreHandle;
-    // storeFullPath is a legitimate directory, and the KV created will have created entries for this directory
-    // empty string is passed in and created with the current directory
+    // storeFullPath is a valid directory. The key-value pairs of the KV store will be stored in this directory.
+    // If you pass an empty string, key-value pairs of the KV store will be stored in the current directory.
     int DBM_GetKVStore(const char* storeFullPath, KVStoreHandle* kvStore);
     
     int DBM_Get(KVStoreHandle db, const char* key, void* value, unsigned int count, unsigned int* realValueLen);
@@ -50,19 +51,19 @@ The KV storage capacity is inherited from the original design of the public basi
     int DBM_Delete(KVStoreHandle db, const char* key);
     
     int DBM_CloseKVStore(KVStoreHandle db);
-    // Make sure that all database objects for the directory are closed before deleting the database
+    // Ensure that all KVStore objects in the specified directory are closed before you delete the KV store.
     int DBM_DeleteKVStore(const char* storeFullPath);
 
 ## Use <a name="section1685211117463"></a>
 - **lite KV store**
 
     ```
-    // create or open the kvStore
-    const char storeFullPath[] = "";  // legal dir path or empty
+    // create or open the kvStore.
+    const char storeFullPath[] = "";  // A valid directory or an empty string
     KVStoreHandle kvStore = NULL;
     int ret = DBM_GetKVStore(storeFullPath, &kvStore);
     
-    // insert or update data
+    // Insert or update a key-value pair.
     char key[] = "rw.sys.version";
     struct {
         int num;
@@ -73,21 +74,21 @@ The KV storage capacity is inherited from the original design of the public basi
     strcpy_s(value.content, sizeof(value.content), "Hello world !");
     ret = DBM_Put(kvStore, key, (void*)&value, sizeof(value));
     
-    // read KV data
+    // Read a key-value pair.
     memset_s(&value, sizeof(value), 0, sizeof(value));
     unsigned int realValLen = 0;
     ret = DBM_Get(g_KVStoreHandle, key, &value, sizeof(value), &realValLen);
     
-    // delete one KV data item
+    // Delete a key-value pair.
     ret = DBM_Delete(kvStore, key);
     
-    // close kvstore
+    // Close the KV store.
     ret = DBM_CloseKVStore(kvStore);
     
-    // delete kvtore and remove all KV
+    // Delete the KV store and remove all key-value pairs.
     ret = DBM_DeleteKVStore(storeFullPath);
     
     ```
 
-## Involved warehouse<a name="section10365113863719"></a>
+## Repositories Involved<a name="section10365113863719"></a>
 distributeddatamgr_appdatamgr
