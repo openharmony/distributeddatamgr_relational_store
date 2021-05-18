@@ -21,8 +21,32 @@
 分布式数据管理服务在不同平台上，将数据操作接口形成抽象层用来统一进行文件操作，使厂商不需要关注不同芯片平台文件系统的差异。
 
 ## 目录<a name="section1464106163817"></a>
-> 待代码开发完毕后补充
-
+```
+foundation/distributeddatamgr/appdatamgr/
+└─appdatamgr_lite
+    │  BUILD.gn
+    │
+    ├─dbm_kv_store
+    │  │  BUILD.gn
+    │  │
+    │  ├─inc
+    │  │      dbm_def.h
+    │  │
+    │  ├─innerkits
+    │  │      dbm_kv_store.h
+    │  │      dbm_kv_store_env.h
+    │  │
+    │  └─src
+    │      ├─kv_store_impl_hal
+    │      │      dbm_kv_store.c
+    │      │
+    │      └─kv_store_impl_posix
+    │              dbm_kv_store.c
+    │
+    └─include
+            dbm_config.h
+            dbm_errno.h
+```
 ## 约束<a name="section1718733212019"></a>
 ### 轻量键值（KV）数据
 - 依赖平台具有正常的文件创建、读写删除修改、锁等能力，针对不同平台（如LiteOS-M内核、LiteOS-A内核等）尽可能表现接口语义功能的不变
