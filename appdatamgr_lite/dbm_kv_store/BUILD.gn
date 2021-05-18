@@ -17,11 +17,10 @@ if (ohos_kernel_type == "liteos_m") {
       "src/kv_store_impl_hal/dbm_kv_store.c",
     ]
     include_dirs = [
-      "//foundation/distributeddatamgr_appdatamgr/appdatamgr_lite/include",
+      "//foundation/distributeddatamgr/appdatamgr/appdatamgr_lite/include",
       "inc",
       "innerkits",
     ]
-
   }
 } else {
   shared_library("foundation_dbm_kv_store") {
@@ -31,7 +30,7 @@ if (ohos_kernel_type == "liteos_m") {
       "src/kvstore_impl_posix/dbm_kv_store.c",
     ]
     include_dirs = [
-      "//foundation/distributeddatamgr_appdatamgr/appdatamgr_lite/include",
+      "//foundation/distributeddatamgr/appdatamgr/appdatamgr_lite/include",
       "inc",
       "innerkits",
     ]
