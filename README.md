@@ -79,11 +79,11 @@ The KV store inherits capacities from Utils. In addition, the KV store provides 
     // Ensure that all KVStore objects in the specified directory are closed before you delete the KV store.
     int DBM_DeleteKVStore(const char* storeFullPath);
 
-## Use <a name="section1685211117463"></a>
-- **lite KV store**
+## Usage Guidelines <a name="section1685211117463"></a>
+- **Lightweight KV store**
 
     ```
-    // create or open the kvStore.
+    // Create or open the kvStore.
     const char storeFullPath[] = "";  // A valid directory or an empty string
     KVStoreHandle kvStore = NULL;
     int ret = DBM_GetKVStore(storeFullPath, &kvStore);
