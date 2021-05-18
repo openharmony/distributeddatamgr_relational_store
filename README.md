@@ -23,7 +23,32 @@ The lightweight KV store is developed based on the KV storage capabilities provi
 The distributed data management service abstracts data operation APIs of different platforms into unified APIs for file operations. In this way, you do not need to pay attention to the file system differences between chip platforms.
 
 ## Directory Structure<a name="section1464106163817"></a>
-> To be added after the code is developed
+```
+foundation/distributeddatamgr/appdatamgr/
+└─appdatamgr_lite
+    │  BUILD.gn
+    │
+    ├─dbm_kv_store
+    │  │  BUILD.gn
+    │  │
+    │  ├─inc
+    │  │      dbm_def.h
+    │  │
+    │  ├─innerkits
+    │  │      dbm_kv_store.h
+    │  │      dbm_kv_store_env.h
+    │  │
+    │  └─src
+    │      ├─kv_store_impl_hal
+    │      │      dbm_kv_store.c
+    │      │
+    │      └─kv_store_impl_posix
+    │              dbm_kv_store.c
+    │
+    └─include
+            dbm_config.h
+            dbm_errno.h
+```
 
 ## Constraints<a name="section1718733212019"></a>
 ### Lightweight Key-Value Pairs
