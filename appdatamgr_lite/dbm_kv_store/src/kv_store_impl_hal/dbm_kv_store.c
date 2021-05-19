@@ -563,6 +563,7 @@ static int CheckPoint(DBHandle db)
     }
 
     (void)memset_s(&(db->sumFlag), sizeof(KVDBStatus), 0, sizeof(KVDBStatus));
+    db->sumFlag.isNeedRecovery = FALSE;
     return DBM_OK;
 }
 
@@ -570,10 +571,7 @@ static void SetSumFlag(DBHandle db, const char* headerFlag)
 {
     db->sumFlag.kvSumIndexValid = *headerFlag;
     db->sumFlag.isInvalid = *(headerFlag + 1);
-    db->sumFlag.isNeedRecovery = FALSE;
-    if (db->sumFlag.isInvalid || !db->sumFlag.kvSumIndexValid) {
-        db->sumFlag.isNeedRecovery = TRUE;
-    }
+    db->sumFlag.isNeedRecovery = TRUE;
 }
 
 static int LoadSumFileHeader(DBHandle db)
@@ -1053,7 +1051,6 @@ static int FindDataItem(DBHandle db, KeyItem* item, boolean kvExisted)
             return DBM_OK;
         }
     }
-
     return AddNewDataItem(db, item);
 }
 
@@ -1148,8 +1145,6 @@ static int ExeDelete(KVStoreHandle db, const KeyItem* item, boolean newItem)
 {
     char itemData[KV_SUM_DATA_ITEM_SIZE] = {0};
     int ret = FileWriteCursor(db->sumFileFd, GetKeyItemOffset(item->index) + 1, SEEK_SET_FS, itemData, 1);
-    (void)FileWriteCursor(db->sumFileFd, GetKeyItemOffset(item->index), SEEK_SET_FS,
-        itemData, KV_SUM_DATA_ITEM_SIZE - KV_MAGIC_SIZE);
     db->kvItemSum--;
     if (ret < 0) {
         DBM_INFO("Delete: set data item delete flag fail. item[%s] index[%d]", item->key, item->index);
@@ -1159,6 +1154,8 @@ static int ExeDelete(KVStoreHandle db, const KeyItem* item, boolean newItem)
     if (!newItem && DeleteValueFromFile(db, item->key) != DBM_OK) {
         return DBM_ERROR;
     }
+    (void)FileWriteCursor(db->sumFileFd, GetKeyItemOffset(item->index), SEEK_SET_FS,
+        itemData, KV_SUM_DATA_ITEM_SIZE - KV_MAGIC_SIZE);
 
     char bakKey[MAX_FILE_PATH] = {0};
     if (sprintf_s(bakKey, MAX_FILE_PATH, "%s_dbm_kv", item->key) < 0) {
@@ -1235,7 +1232,6 @@ static int CloseKVStore(KVStoreHandle db)
         return DBM_ERROR;
     }
     db->sumFileFd = -1;
-
     return DBM_OK;
 }
 
@@ -1310,7 +1306,6 @@ static int RemoveKVStoreFile(DBHandle db, int sumFileLen)
             return DBM_ERROR;
         }
     }
-
     return DelSumFile(db);
 }
 
