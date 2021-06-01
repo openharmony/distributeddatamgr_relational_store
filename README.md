@@ -1,119 +1,107 @@
-# distributeddatamgr_appdatamgr
+# distributeddatamgr\_appdatamgr<a name="EN-US_TOPIC_0000001124534865"></a>
 
-- [Introduction](#section11660541593)
-- [Directory Structure](#section1464106163817)
-- [Constraints](#section1718733212019)
-- [Architecture](#section159991817144514)
-- [Available APIs](#section11510542164514)
-- [Usage Guidelines](#section1685211117463)
-- [Repositories Involved](#section10365113863719)
+-   [Introduction](#section11660541593)
+    -   [RDB](#section1589234172717)
+    -   [Preferences Database](#section1287582752719)
+
+-   [Directory Structure](#section161941989596)
+-   [Relational Database](#section101010894114)
+    -   [Constraints](#section18387142613414)
+
+-   [Preferences Database](#section762641474720)
+    -   [Constraints](#section1944481420489)
+
+-   [Repositories Involved](#section1371113476307)
 
 ## Introduction<a name="section11660541593"></a>
-The distributed data management service allows you to manage data in a convenient, efficient, and secure way. It reduces development costs and creates a consistent and smooth user experience across devices.
 
-> Currently, it supports storage of local lightweight key-value (KV) pairs. In the future, more data types will be supported.
-Lightweight key-value pairs are structured and transaction-related (to be supported in the future). Dedicated APIs related to key-value pairs are provided.
+The  **relational database \(RDB\)**  manages data based on relational models. With the underlying SQLite database, the OpenHarmony RDB provides a complete mechanism for managing local databases. 
 
-> Lightweight key-value (KV) data: The data is structured, the file is lightweight, and transactional (supported in the future), and a dedicated key-value pair interface is provided separately
+The  **preferences database**  provides lightweight key-value operations for local applications to store a small amount of data. As the stored data is already loaded in the memory, the faster data access speed achieves a higher work efficiency. The preferences database is non-relational, and therefore it is not suitable for storing a large amount of data. Instead, the preferences database is usually used to operate data in key-value pairs.
 
-![输入图片说明](https://images.gitee.com/uploads/images/2021/0422/200748_51a0cbd1_8046977.png "屏幕截图.png")
+### RDB<a name="section1589234172717"></a>
 
-The lightweight KV store is developed based on the KV storage capabilities provided by Utils, and provides key-value pair management capabilities for apps. On a platform with processes, the key-value pair management capabilities provided by the KV store can only be accessed by a specific process. On such a platform, the KV store is loaded in the app process as a basic library so that it cannot be accessed by other processes.
+With the SQLite database as the persistence engine, the OpenHarmony RDB supports all features of the SQLite database , including but not limited to transactions, indices, views, triggers, foreign keys, parameterized queries, and prepared SQL statements.
 
-The distributed data management service abstracts data operation APIs of different platforms into unified APIs for file operations. In this way, you do not need to pay attention to the file system differences between chip platforms.
+**Figure  1**  How RDB works<a name="fig3330103712254"></a>  
 
-## Directory Structure<a name="section1464106163817"></a>
+
+![](figures/en-us_image_0000001115980740.png)
+
+### Preferences Database<a name="section1287582752719"></a>
+
+1.  The preferences database provides operation classes for applications to operate the database.
+2.  With the  **PreferencesHelper**, an app can load the content of a specified file to the  **Preferences**  instance. Each file has only one  **Preferences**  instance. The system stores the instance in the memory through a static container until the app removes the instance from the memory or deletes the file.
+3.  After obtaining the  **Preferences**  instance, the app can use the functions in  **Preferences**  to read data from or write data to the  **Preferences**  instance, and use  **flush\(\)**  or  **flushSync\(\)**  to save the modification to the file that stores the preference data.
+
+**Figure  2**  How the preferences database works<a name="fig833053712258"></a>  
+
+
+![](figures/en-us_image_0000001162419711.png)
+
+## Directory Structure<a name="section161941989596"></a>
+
 ```
-foundation/distributeddatamgr/appdatamgr/
-└─appdatamgr_lite
-    │  BUILD.gn
-    │
-    ├─dbm_kv_store
-    │  │  BUILD.gn
-    │  │
-    │  ├─inc
-    │  │      dbm_def.h
-    │  │
-    │  ├─innerkits
-    │  │      dbm_kv_store.h
-    │  │      dbm_kv_store_env.h
-    │  │
-    │  └─src
-    │      ├─kv_store_impl_hal
-    │      │      dbm_kv_store.c
-    │      │
-    │      └─kv_store_impl_posix
-    │              dbm_kv_store.c
-    │
-    └─include
-            dbm_config.h
-            dbm_errno.h
+//foundation/distributeddatamgr/appdatamgr
+├── frameworks            # Framework code
+│   └── innerkitsimpl     # Internal API implementation
+└── interfaces            # APIs
+    └── innerkits         # Internal APIs
 ```
 
-## Constraints<a name="section1718733212019"></a>
-### Lightweight Key-Value Pairs
--The platform should have file creation, reading, writing, deletion, modification, and locking capabilities. The semantic functions of APIs should be kept the same for different platforms (such as the LiteOS Cortex-M and LiteOS Cortex-A).
--Due to the differences in platform capabilities, the KV store capabilities need to be tailored accordingly. Internal implementation may be different for different platforms.
+## Relational Database<a name="section101010894114"></a>
 
-## Architecture<a name="section159991817144514"></a>
-### Lightweight Key-Value Pairs
-The KV store inherits capacities from Utils. In addition, the KV store provides data deletion and binary value reading and writing capabilities while ensuring the atomicity of operations. Capabilities specific to different platforms are abstracted separately and provided by each platform.
->- The mini system generally has poor performance and insufficient memory and computing capabilities. In data management scenarios, reading operations are much more than writing operations, and memory usage is sensitive.、
->- File operation APIs used by a platform are provided by the file system. These APIs are generallynot process-safe.
->- The mini system may have no lock capabilities or lock mechanism. In that case, concurrency is guaranteed by the service. If a lock mechanism is needed, a hook should be registered by the service.
+Some basic concepts are as follows:
 
-## Available APIs<a name="section11510542164514"></a>
-- **Lightweight KV store**
+-   **Relational database \(RDB\)**
 
-    ```
-    typedef struct DBM *KVStoreHandle;
-    // storeFullPath is a valid directory. The key-value pairs of the KV store will be stored in this directory.
-    // If you pass an empty string, key-value pairs of the KV store will be stored in the current directory.
-    int DBM_GetKVStore(const char* storeFullPath, KVStoreHandle* kvStore);
-    
-    int DBM_Get(KVStoreHandle db, const char* key, void* value, unsigned int count, unsigned int* realValueLen);
-    int DBM_Put(KVStoreHandle db, const char* key, void* value, unsigned int len);
-    int DBM_Delete(KVStoreHandle db, const char* key);
-    
-    int DBM_CloseKVStore(KVStoreHandle db);
-    // Ensure that all KVStore objects in the specified directory are closed before you delete the KV store.
-    int DBM_DeleteKVStore(const char* storeFullPath);
+    A database created on the basis of relational models. The RDB stores data in rows and columns.
 
-## Usage Guidelines <a name="section1685211117463"></a>
-- **Lightweight KV store**
+-   **Result set**
 
-    ```
-    // Create or open the kvStore.
-    const char storeFullPath[] = "";  // A valid directory or an empty string
-    KVStoreHandle kvStore = NULL;
-    int ret = DBM_GetKVStore(storeFullPath, &kvStore);
-    
-    // Insert or update a key-value pair.
-    char key[] = "rw.sys.version";
-    struct {
-        int num;
-        char content[200];
-    } value;
-    memset_s(&value, sizeof(value), 0, sizeof(value));
-    value.num = 1;
-    strcpy_s(value.content, sizeof(value.content), "Hello world !");
-    ret = DBM_Put(kvStore, key, (void*)&value, sizeof(value));
-    
-    // Read a key-value pair.
-    memset_s(&value, sizeof(value), 0, sizeof(value));
-    unsigned int realValLen = 0;
-    ret = DBM_Get(g_KVStoreHandle, key, &value, sizeof(value), &realValLen);
-    
-    // Delete a key-value pair.
-    ret = DBM_Delete(kvStore, key);
-    
-    // Close the KV store.
-    ret = DBM_CloseKVStore(kvStore);
-    
-    // Delete the KV store and remove all key-value pairs.
-    ret = DBM_DeleteKVStore(storeFullPath);
-    
-    ```
+    A set of query results used to access the data. You can access the required data in a result set in flexible modes.
 
-## Repositories Involved<a name="section10365113863719"></a>
-distributeddatamgr_appdatamgr
+-   **SQLite database**
+
+    A lightweight RDB in compliance with the atomicity, consistency, isolation, and durability \(ACID\) properties. It is an open-source database.
+
+
+### Constraints<a name="section18387142613414"></a>
+
+The RDB can use a maximum of four connection pools to manage read and write operations.
+
+To ensure data accuracy, the RDB supports only one writ operation at a time.
+
+## Preferences Database<a name="section762641474720"></a>
+
+Some basic concepts are as follows:
+
+-   **Key-value database**
+
+    A database that stores data in key-value pairs. The  **key**  indicates keyword, and  **value**  indicates the corresponding value.
+
+-   **Non-relational database**
+
+    A database not in compliance with the atomicity, consistency, isolation, and durability \(ACID\) database management properties of relational data transactions. Instead, the data in a non-relational database is independent and scalable.
+
+-   **Preference** **data**
+
+    A type of data that is frequently accessed and used.
+
+
+### Constraints<a name="section1944481420489"></a>
+
+A key should be a string with a maximum of 80 characters and cannot be an empty string.
+
+A value in the format of string can have a maximum of 8192 characters. A value can be an empty string.
+
+To avoid a high memory cost, it is recommended that the preferences database store no more than ten thousand data entries.
+
+## Repositories Involved<a name="section1371113476307"></a>
+
+Distributed Data Management subsystem
+
+distributeddatamgr\_appdatamgr
+
+third\_party\_sqlite
+
