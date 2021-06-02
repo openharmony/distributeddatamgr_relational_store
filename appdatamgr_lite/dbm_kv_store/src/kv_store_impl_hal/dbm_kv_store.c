@@ -740,7 +740,8 @@ static int GetValueByFile(DBHandle db, const char* key, const char* keyGet, char
     if (valueRead == NULL) {
         return -1;
     }
-
+    (void)memset_s(valueRead, valueLen, 0, valueLen);
+	
     int fd = UtilsFileOpen(keyPath, O_RDONLY_FS, 0);
     if (fd < 0) {
         free(valueRead);
@@ -1154,8 +1155,6 @@ static int ExeDelete(KVStoreHandle db, const KeyItem* item, boolean newItem)
     if (!newItem && DeleteValueFromFile(db, item->key) != DBM_OK) {
         return DBM_ERROR;
     }
-    (void)FileWriteCursor(db->sumFileFd, GetKeyItemOffset(item->index), SEEK_SET_FS,
-        itemData, KV_SUM_DATA_ITEM_SIZE - KV_MAGIC_SIZE);
 
     char bakKey[MAX_FILE_PATH] = {0};
     if (sprintf_s(bakKey, MAX_FILE_PATH, "%s_dbm_kv", item->key) < 0) {
@@ -1165,6 +1164,8 @@ static int ExeDelete(KVStoreHandle db, const KeyItem* item, boolean newItem)
     if (!IsNewItem(db, bakKey)) {
         (void)DeleteValueFromFile(db, bakKey);
     }
+    (void)FileWriteCursor(db->sumFileFd, GetKeyItemOffset(item->index), SEEK_SET_FS,
+        itemData, KV_SUM_DATA_ITEM_SIZE - KV_MAGIC_SIZE);
     return DBM_OK;
 }
 
