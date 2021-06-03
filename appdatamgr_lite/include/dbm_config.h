@@ -46,7 +46,9 @@
  *
  * Default value: 45
  */
+#ifndef DBM_MAX_KV_SUM
 #define DBM_MAX_KV_SUM 45
+#endif
 
 #endif  // DBM_CONFIG_H
 /** @} */
