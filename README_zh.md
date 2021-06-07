@@ -49,8 +49,6 @@ OpenHarmony关系型数据库底层使用SQLite作为持久化存储引擎，支
 >
 > 轻量键值（KV）数据：数据有结构，文件轻量，具有简易事务性，单独提供一套专用的键值对接口
 
-![](https://images.gitee.com/uploads/images/2021/0422/193406_a3e03a96_8046977.png "屏幕截图.png")
-
 分布式数据管理服务在不同平台上，将数据操作接口形成抽象层用来统一进行文件操作，使厂商不需要关注不同芯片平台文件系统的差异。
 
 目前，在轻量系统上默认关闭该特性，需要使用时请用户修改vendor_hisilicon仓配置以开启。
@@ -62,11 +60,7 @@ OpenHarmony关系型数据库底层使用SQLite作为持久化存储引擎，支
 ├── frameworks            # 框架层代码
 │   └── innerkitsimpl     # 内部接口实现
 └── interfaces            # 接口代码
-|   └── innerkits         # 内部接口声明
-└── appdatamgr_lite       # 轻量系统KV数据库
-    └── dbm_kv_store
-    │   └── innerkits     # 内部接口声明
-    └─ include            # 外部类型定义声明
+    └── innerkits         # 内部接口声明
 ```
 
 ## 关系型数据库（RDB）<a name="section101010894114"></a>
