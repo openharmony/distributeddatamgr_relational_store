@@ -11,15 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//build/lite/config/component/lite_component.gni")
 if (ohos_kernel_type == "liteos_m") {
   static_library("foundation_dbm_kv_store") {
     sources = [
       "src/kv_store_impl_hal/dbm_kv_store.c",
     ]
     include_dirs = [
-      "//foundation/distributeddatamgr/appdatamgr/appdatamgr_lite/include",
+      "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/dbm_kv_store/include",
       "inc",
-      "innerkits",
     ]
   }
 } else {
@@ -30,10 +30,13 @@ if (ohos_kernel_type == "liteos_m") {
       "src/kvstore_impl_posix/dbm_kv_store.c",
     ]
     include_dirs = [
-      "//foundation/distributeddatamgr/appdatamgr/appdatamgr_lite/include",
+      "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/dbm_kv_store/include",
       "inc",
-      "innerkits",
     ]
     public_deps = [ "//third_party/bounds_checking_function:libsec_shared" ]
   }
+}
+
+lite_component("dbm_kv_store") {
+  features = [ ":foundation_dbm_kv_store" ]
 }
