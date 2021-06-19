@@ -156,7 +156,10 @@ static void ReleaseKVDBHandle(DBHandle db)
         UtilsFileClose(db->sumFileFd);
         db->sumFileFd = -1;
     }
-    free(db);
+    if (db != NULL) {
+        free(db);
+        db = NULL;
+    }
 }
 
 static DBHandle GetKVDBHandle(const char* path)
@@ -189,6 +192,7 @@ static DBHandle GetKVDBHandle(const char* path)
     DBMInitFinish(db, ret);
     if (ret != 0) {
         ReleaseKVDBHandle(db);
+        db = NULL;
         return NULL;
     }
     return db;
@@ -665,6 +669,7 @@ int DBM_GetKVStore(const char* storeFullPath, KVStoreHandle* kvStore)
     if (ret != DBM_OK) {
         DBM_INFO("Get Init KV store fail.");
         ReleaseKVDBHandle(db);
+        db = NULL;
         return DBM_ERROR;
     }
 
@@ -1296,14 +1301,12 @@ static int RemoveKVStoreFile(DBHandle db, int sumFileLen)
         ret = LoadSumFileHeader(db);
         if (ret != DBM_OK) {
             DBM_INFO("RemoveKVStoreFile: Load sum file header flag fail.");
-            ReleaseKVDBHandle(db);
             return DBM_ERROR;
         }
 
         ret = VacuumStore(db);
         if (ret != DBM_OK) {
             DBM_INFO("RemoveKVStoreFile: vacuum database fail.");
-            ReleaseKVDBHandle(db);
             return DBM_ERROR;
         }
     }
@@ -1345,6 +1348,7 @@ int DBM_DeleteKVStore(const char* storeFullPath)
 
     int ret = RemoveKVStoreFile(db, sumFileLen);
     ReleaseKVDBHandle(db);
+    db = NULL;
     return ret;
 }
 
