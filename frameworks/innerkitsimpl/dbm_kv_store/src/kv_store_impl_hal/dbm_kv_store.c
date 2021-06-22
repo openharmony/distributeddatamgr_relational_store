@@ -228,7 +228,7 @@ static int FileWriteCursor(int fd, int offset, unsigned int whence, const char* 
     return ret;
 }
 
-static boolean IsStrSame(char* value, int len, const char* str)
+static boolean IsStrSame(const char* value, int len, const char* str)
 {
     if ((unsigned int)len != strlen(str) + 1) {
         return FALSE;
@@ -397,7 +397,7 @@ static int DelItem(DBHandle db, const KeyItem* item)
     return DBM_OK;
 }
 
-int CopyValueToFile(DBHandle db, const char* src, const char* dest)
+static int CopyValueToFile(DBHandle db, const char* src, const char* dest)
 {
     char srcPath[MAX_KEY_PATH + 1] = {0};
     if (sprintf_s(srcPath, MAX_KEY_PATH + 1, ItemPathFormat(db), db->dirPath, src) < 0) {
@@ -436,7 +436,7 @@ static int RecoverItem(DBHandle db, const KeyItem* item)
     return DBM_OK;
 }
 
-static int CheckPointItem(DBHandle db, KeyItem* item)
+static int CheckPointItem(DBHandle db, const KeyItem* item)
 {
     if (strlen(item->key) == 0) {
         return DBM_OK;
@@ -654,6 +654,10 @@ static int InitKVStore(DBHandle db)
 
 int DBM_GetKVStore(const char* storeFullPath, KVStoreHandle* kvStore)
 {
+    if (kvStore == NULL) {
+        return DBM_INVALID_ARGS;
+    }
+
     if (!IsValidPath(storeFullPath)) {
         DBM_INFO("Get KVStore invalid path.");
         return DBM_INVALID_ARGS;
@@ -711,7 +715,8 @@ static int IsNeedTransferValue(DBHandle db, const char* key, char* fileRead, uns
     return DBM_OK;
 }
 
-static int FormatValueByFile(boolean isNeedTrans, char* value, unsigned int len, char* fileRead, unsigned int fileLen)
+static int FormatValueByFile(boolean isNeedTrans, char* value, unsigned int len,
+    const char* fileRead, unsigned int fileLen)
 {
     int offset = isNeedTrans ? KV_SUM_BLOCK_SIZE : 0;
     if (fileLen - offset > len) {
@@ -875,7 +880,7 @@ static int BackupItem(DBHandle db, const KeyItem* item)
     return DBM_OK;
 }
 
-static int InitValue(int index, void* value, unsigned int len, char* valueContent, unsigned int contentLen)
+static int InitValue(int index, const void* value, unsigned int len, char* valueContent, unsigned int contentLen)
 {
     if (valueContent == NULL || (contentLen < len + KV_SUM_INDEX)) {
         return -1;
@@ -893,7 +898,7 @@ static int InitValue(int index, void* value, unsigned int len, char* valueConten
     return len + KV_SUM_INDEX;
 }
 
-static int InsertKV(DBHandle db, KeyItem* item, void* value, unsigned int len)
+static int InsertKV(DBHandle db, const KeyItem* item, const void* value, unsigned int len)
 {
     char* valueContent = (char *)malloc(len + KV_SUM_BLOCK_SIZE); // Avoid stack overflows
     if (valueContent == NULL) {
@@ -923,7 +928,7 @@ static int InsertKV(DBHandle db, KeyItem* item, void* value, unsigned int len)
     return ret;
 }
 
-static int UpdateKV(DBHandle db, KeyItem* item, void* value, unsigned int len)
+static int UpdateKV(DBHandle db, const KeyItem* item, const void* value, unsigned int len)
 {
     int ret = BackupItem(db, item);
     if (ret != DBM_OK) {
@@ -973,7 +978,7 @@ static int UpdateKV(DBHandle db, KeyItem* item, void* value, unsigned int len)
     return DBM_OK;
 }
 
-static int WriteNewItemToSumFile(DBHandle db, KeyItem* item)
+static int WriteNewItemToSumFile(DBHandle db, const KeyItem* item)
 {
     char emptyBuf[2 * KV_SUM_BLOCK_SIZE] = {0}; // item flag and len 2 block size
     int ret = FileWriteCursor(db->sumFileFd, GetKeyItemOffset(item->index), SEEK_SET_FS,
@@ -1060,7 +1065,7 @@ static int FindDataItem(DBHandle db, KeyItem* item, boolean kvExisted)
     return AddNewDataItem(db, item);
 }
 
-static int PrePut(DBHandle db, KeyItem* item, boolean* newItem)
+static int PrePut(DBHandle db, const KeyItem* item, boolean* newItem)
 {
     int ret = FindDataItem(db, item, !*newItem);
     if (ret != DBM_OK) {
@@ -1092,7 +1097,7 @@ static int PrePut(DBHandle db, KeyItem* item, boolean* newItem)
     return DBM_OK;
 }
 
-static int Put(KVStoreHandle db, const char* key, void* value, unsigned int len)
+static int Put(KVStoreHandle db, const char* key, const void* value, unsigned int len)
 {
     if (!IsValidKey(key) || (value == NULL) || (len > MAX_VALUE_LEN) || len <= 0 || db == NULL) {
         return DBM_INVALID_ARGS;
@@ -1112,13 +1117,14 @@ static int Put(KVStoreHandle db, const char* key, void* value, unsigned int len)
     if (item == NULL) {
         return DBM_ERROR;
     }
-    item->len = strlen(key);
 
     (void)memset_s(item, sizeof(KeyItem), 0, sizeof(KeyItem));
     if (strcpy_s(item->key, MAX_KEY_LEN + 1, key) != EOK) {
         free(item);
         return DBM_ERROR;
     }
+
+    item->len = strlen(key);
 
     int ret = PrePut(db, item, &newItem);
     if (ret != DBM_OK) {
@@ -1138,7 +1144,7 @@ static int Put(KVStoreHandle db, const char* key, void* value, unsigned int len)
     return ret;
 }
 
-int DBM_Put(KVStoreHandle db, const char* key, void* value, unsigned int len)
+int DBM_Put(KVStoreHandle db, const char* key, const void* value, unsigned int len)
 {
     /* lock the KVDB */
     DB_LOCK(db);
