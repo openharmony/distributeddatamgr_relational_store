@@ -22,7 +22,7 @@
 namespace OHOS {
 namespace NativeRdb {
 
-/* indicates the type of the storage */
+// indicates the type of the storage
 enum class StorageMode {
     MODE_MEMORY = 101,
     MODE_DISK,
@@ -37,28 +37,71 @@ enum class JournalMode {
     MODE_OFF,
 };
 
+enum class SyncMode {
+    MODE_OFF,
+    MODE_NORMAL,
+    MODE_FULL,
+    MODE_EXTRA,
+};
+
+enum class DatabaseFileType {
+    NORMAL,
+    BACKUP,
+    CORRUPT,
+};
+
+enum class DatabaseFileSecurityLevel {
+    S4,
+    S3,
+    S2,
+    S1,
+    S0,
+    NO_LEVEL,
+};
+
 class RdbStoreConfig {
 public:
+    RdbStoreConfig(const RdbStoreConfig &config);
     RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
-        const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>());
+        const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(), const std::string &journalMode = "",
+        const std::string &syncMode = "", const std::string &databaseFileType = "",
+        const std::string &databaseFileSecurityLevel = "");
     ~RdbStoreConfig();
-    /* set the journal mode, if not set, the default mode is WAL */
-    void SetJournalMode(JournalMode journalMode);
+    std::string GetName() const;
     std::string GetPath() const;
     StorageMode GetStorageMode() const;
     std::string GetJournalMode() const;
-    bool IsReadOnly() const;
+    std::string GetSyncMode() const;
     std::vector<uint8_t> GetEncryptKey() const;
+    bool IsReadOnly() const;
+    bool IsMemoryRdb() const;
+    std::string GetDatabaseFileType() const;
+    std::string GetDatabaseFileSecurityLevel() const;
+
+    // set the journal mode, if not set, the default mode is WAL
+    void SetJournalMode(JournalMode journalMode);
+    void SetPath(std::string path);
+    void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
     void ClearEncryptKey();
 
+    static std::string GetJournalModeValue(JournalMode journalMode);
+    static std::string GetSyncModeValue(SyncMode syncMode);
+    static std::string GetDatabaseFileTypeValue(DatabaseFileType databaseFileType);
+    static std::string GetDatabaseFileSecurityLevelValue(DatabaseFileSecurityLevel databaseFileSecurityLevel);
+
 private:
+    std::string name;
     std::string path;
     StorageMode storageMode;
-    bool readOnly;
-    std::vector<uint8_t> encryptKey;
     std::string journalMode;
+    std::string syncMode;
+    std::vector<uint8_t> encryptKey;
+    bool readOnly;
+    std::string databaseFileType;
+    std::string databaseFileSecurityLevel;
 };
 
 } // namespace NativeRdb
 } // namespace OHOS
+
 #endif

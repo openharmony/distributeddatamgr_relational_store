@@ -61,6 +61,11 @@ public:
     {
         return 0;
     }
+
+    virtual int onCorruption(std::string databaseFile)
+    {
+        return 0;
+    }
 };
 
 } // namespace NativeRdb

@@ -18,6 +18,7 @@
 #include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite_global_config.h"
+#include "sqlite_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -221,6 +222,74 @@ int SqliteConnectionPool::ReOpenAvailableReadConnections()
         readConnections.push_back(connection);
     }
     return errCode;
+}
+
+/**
+ * The database locale.
+ */
+int SqliteConnectionPool::ConfigLocale(const std::string localeStr)
+{
+    std::unique_lock<std::mutex> lock(rdbMutex);
+    if (idleReadConnectionCount != readConnectionCount) {
+        return E_NO_ROW_IN_QUERY;
+    }
+
+    for (int i = 0; i < idleReadConnectionCount; i++) {
+        SqliteConnection *connection = readConnections[i];
+        if (connection == nullptr) {
+            LOG_ERROR("Read Connection is null.");
+            return E_ERROR;
+        }
+        connection->ConfigLocale(localeStr);
+    }
+
+    if (writeConnection == nullptr) {
+        LOG_ERROR("Write Connection is null.");
+        return E_ERROR;
+    } else {
+        writeConnection->ConfigLocale(localeStr);
+    }
+
+    return E_OK;
+}
+
+/**
+ * Rename the backed up database.
+ */
+int SqliteConnectionPool::ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
+    const std::vector<uint8_t> &newKey)
+{
+    if (writeConnectionUsed == true || idleReadConnectionCount != readConnectionCount) {
+        LOG_ERROR("Connection pool is busy now!");
+        return E_ERROR;
+    }
+
+    CloseAllConnections();
+
+    std::string currentPath = config.GetPath();
+    bool ret = SqliteUtils::DeleteFile(currentPath);
+    if (ret == false) {
+        LOG_ERROR("DeleteFile error");
+    }
+    SqliteUtils::DeleteFile(currentPath + "-shm");
+    SqliteUtils::DeleteFile(currentPath + "-wal");
+    SqliteUtils::DeleteFile(currentPath + "-journal");
+
+    if (currentPath != newPath) {
+        SqliteUtils::DeleteFile(newPath);
+        SqliteUtils::DeleteFile(newPath + "-shm");
+        SqliteUtils::DeleteFile(newPath + "-wal");
+        SqliteUtils::DeleteFile(newPath + "-journal");
+    }
+
+    ret = SqliteUtils::RenameFile(backupPath, newPath);
+    if (ret == false) {
+        LOG_ERROR("RenameFile error");
+    }
+
+    config.SetPath(newPath);
+    config.UpdateEncryptKey(newKey);
+    return Init();
 }
 } // namespace NativeRdb
 } // namespace OHOS

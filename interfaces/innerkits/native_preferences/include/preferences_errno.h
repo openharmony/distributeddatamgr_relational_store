@@ -21,21 +21,22 @@
 namespace OHOS {
 namespace NativePreferences {
 constexpr int E_OK = 0;
-constexpr int E_BASE = 1000; // different from the other errno.
-constexpr int E_ERROR = (E_BASE + 1);
-constexpr int E_STALE = (E_BASE + 2);         // Resource has been stopped, killed or destroyed.
-constexpr int E_INVALID_ARGS = (E_BASE + 3);  // the input args is invalid.
-constexpr int E_OUT_OF_MEMORY = (E_BASE + 4); // out of memory
-constexpr int E_NOT_PERMIT = (E_BASE + 5);    // operation is not permitted
-constexpr int E_KEY_EMPTY = (E_BASE + 6);
-constexpr int E_KEY_EXCEED_MAX_LENGTH = (E_BASE + 7);
-constexpr int E_PTR_EXIST_ANOTHER_HOLDER = (E_BASE + 8);
-constexpr int E_DELETE_FILE_FAIL = (E_BASE + 9);
-constexpr int E_EMPTY_FILE_PATH = (E_BASE + 10);
-constexpr int E_RELATIVE_PATH = (E_BASE + 11);
-constexpr int E_EMPTY_FILE_NAME = (E_BASE + 12);
-constexpr int E_INVALID_FILE_PATH = (E_BASE + 13);
-constexpr int E_PATH_EXCEED_MAX_LENGTH = (E_BASE + 14);
+constexpr int E_BASE = -1000; // different from the other errno.
+constexpr int E_ERROR = (E_BASE - 1);
+constexpr int E_STALE = (E_BASE - 2); // Resource has been stopped, killed or destroyed.
+constexpr int E_INVALID_ARGS = (E_BASE - 3); // the input args is invalid.
+constexpr int E_OUT_OF_MEMORY = (E_BASE - 4); // out of memory
+constexpr int E_NOT_PERMIT = (E_BASE - 5); // operation is not permitted
+constexpr int E_KEY_EMPTY = (E_BASE - 6);
+constexpr int E_KEY_EXCEED_MAX_LENGTH = (E_BASE - 7);
+constexpr int E_PTR_EXIST_ANOTHER_HOLDER = (E_BASE - 8);
+constexpr int E_DELETE_FILE_FAIL = (E_BASE - 9);
+constexpr int E_EMPTY_FILE_PATH = (E_BASE - 10);
+constexpr int E_RELATIVE_PATH = (E_BASE - 11);
+constexpr int E_EMPTY_FILE_NAME = (E_BASE - 12);
+constexpr int E_INVALID_FILE_PATH = (E_BASE - 13);
+constexpr int E_PATH_EXCEED_MAX_LENGTH = (E_BASE - 14);
+constexpr int E_VALUE_EXCEED_MAX_LENGTH = (E_BASE - 15);
 } // namespace NativePreferences
 } // namespace OHOS
 #endif // PREFERENCES_ERRNO_H

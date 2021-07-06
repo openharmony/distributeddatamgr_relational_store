@@ -15,6 +15,9 @@
 
 #include "sqlite_utils.h"
 
+#include <cstdio>
+
+#include "logger.h"
 #include "rdb_errno.h"
 
 namespace OHOS {
@@ -93,6 +96,16 @@ int SqliteUtils::GetConflictClause(int conflictResolution, std::string &conflict
     }
     conflictClause = ON_CONFLICT_CLAUSE[conflictResolution];
     return E_OK;
+}
+
+bool SqliteUtils::DeleteFile(const std::string filePath)
+{
+    return remove(filePath.c_str()) == 0;
+}
+
+bool SqliteUtils::RenameFile(const std::string srcFile, const std::string destFile)
+{
+    return rename(srcFile.c_str(), destFile.c_str());
 }
 } // namespace NativeRdb
 } // namespace OHOS

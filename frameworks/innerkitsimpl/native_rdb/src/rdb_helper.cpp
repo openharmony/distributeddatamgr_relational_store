@@ -54,7 +54,7 @@ int RdbHelper::ProcessOpenCallback(
 
     if (config.IsReadOnly()) {
         LOG_ERROR("RdbHelper ProcessOpenCallback Can't upgrade read-only store");
-        return E_CANNT_UPDATE_READONLY;
+        return E_CANNOT_UPDATE_READONLY;
     }
 
     errCode = rdbStore.BeginTransaction();

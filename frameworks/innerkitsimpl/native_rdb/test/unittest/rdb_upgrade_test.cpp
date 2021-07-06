@@ -127,7 +127,7 @@ HWTEST_F(RdbUpgradeTest, RdbStore_Upgrade_001, TestSize.Level1)
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 
@@ -162,7 +162,7 @@ HWTEST_F(RdbUpgradeTest, RdbStore_Upgrade_001, TestSize.Level1)
     ret = upgradeResultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
     ret = upgradeResultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
     ret = upgradeResultSet->Close();
     EXPECT_EQ(ret, E_OK);
 }

@@ -26,7 +26,7 @@ namespace OHOS {
 namespace NativeRdb {
 StepResultSet::StepResultSet(
     std::shared_ptr<RdbStoreImpl> rdb, const std::string &sql, const std::vector<std::string> &selectionArgs)
-    : rdb(rdb), sql(sql), selectionArgs(selectionArgs), pos(INIT_POS), isAfterLast(false), isClosed(false),
+    : rdb(rdb), sql(sql), selectionArgs(selectionArgs), isAfterLast(false), rowCount(INIT_POS),
       sqliteStatement(nullptr)
 {
 }
@@ -63,20 +63,9 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
     return E_OK;
 }
 
-int StepResultSet::GetColumnCount(int &count)
+int StepResultSet::GetColumnTypeForIndex(int columnIndex, ColumnType &columnType)
 {
-    int errCode = PrepareStep();
-    if (errCode) {
-        return errCode;
-    }
-
-    errCode = sqliteStatement->GetColumnCount(count);
-    return errCode;
-}
-
-int StepResultSet::GetColumnTypeForIndex(int columnIndex, ColumnType &columnType) const
-{
-    if (pos == INIT_POS) {
+    if (rowPos == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
 
@@ -106,91 +95,60 @@ int StepResultSet::GetColumnTypeForIndex(int columnIndex, ColumnType &columnType
     return E_OK;
 }
 
-int StepResultSet::GetColumnIndexForName(const std::string &columnName, int &columnIndex)
+int StepResultSet::GetRowCount(int &count)
 {
-    int errCode = PrepareStep();
-    if (errCode) {
-        return errCode;
+    if (rowCount != INIT_POS) {
+        count = rowCount;
+        return E_OK;
     }
+    int oldPosition = 0;
+    // Get the start position of the query result
+    GetRowIndex(oldPosition);
 
-    int columnCount = 0;
-    errCode = sqliteStatement->GetColumnCount(columnCount);
-    if (errCode) {
-        return errCode;
+    while (GoToNextRow() == E_OK) {
     }
+    count = rowCount;
+    // Reset the start position of the query result
+    GoToRow(oldPosition);
 
-    for (int i = 0; i < columnCount; i++) {
-        std::string name;
-        errCode = sqliteStatement->GetColumnName(i, name);
-        if (errCode) {
-            return errCode;
-        }
-        if (columnName.compare(name) == 0) {
-            columnIndex = i;
-            return E_OK;
-        }
-    }
-
-    return E_INVALID_COLUMN_NAME;
-}
-
-int StepResultSet::GetColumnNameForIndex(int columnIndex, std::string &columnName)
-{
-    int errCode = PrepareStep();
-    if (errCode) {
-        return errCode;
-    }
-
-    errCode = sqliteStatement->GetColumnName(columnIndex, columnName);
-    return errCode;
-}
-
-int StepResultSet::GetRowCount(int &count) const
-{
-    LOG_ERROR("GetRowCount is not supported by StepResultSet");
-    return E_NOT_SUPPORTED_BY_STEP_RESULT_SET;
-}
-
-int StepResultSet::GetRowIndex(int &position) const
-{
-    position = pos;
     return E_OK;
 }
 
-int StepResultSet::GoTo(int offset)
-{
-    LOG_ERROR("Move is not supported by StepResultSet");
-    return E_NOT_SUPPORTED_BY_STEP_RESULT_SET;
-}
-
+/**
+ * Moves the result set to a specified position
+ */
 int StepResultSet::GoToRow(int position)
 {
-    LOG_ERROR("GoToRow is not supported by StepResultSet");
-    return E_NOT_SUPPORTED_BY_STEP_RESULT_SET;
-}
-
-int StepResultSet::GoToFirstRow()
-{
-    if (pos == INIT_POS) {
-        return GoToNextRow();
+    if (!rdb) {
+        return E_ERROR;
+    }
+    // If the moved position is less than zero, reset the result and return an error
+    if (position < 0) {
+        Reset();
+        return E_ERROR;
+    }
+    if (position == rowPos) {
+        return E_OK;
+    }
+    if (position < rowPos) {
+        Reset();
+        return GoToRow(position);
+    }
+    while (position != rowPos) {
+        int errCode = GoToNextRow();
+        if (errCode) {
+            return errCode;
+        }
     }
 
-    LOG_ERROR("GoToFirstRow is not supported by StepResultSet");
-    return E_NOT_SUPPORTED_BY_STEP_RESULT_SET;
+    return E_OK;
 }
 
-int StepResultSet::GoToLastRow()
-{
-    LOG_ERROR("GoToLastRow is not supported by StepResultSet");
-    return E_NOT_SUPPORTED_BY_STEP_RESULT_SET;
-}
-
+/**
+ * Move the result set to the next row
+ */
 int StepResultSet::GoToNextRow()
 {
-    if (isAfterLast) {
-        return E_STEP_RESULT_IS_AFTER_LASET;
-    }
-
     int errCode = PrepareStep();
     if (errCode) {
         return errCode;
@@ -198,6 +156,7 @@ int StepResultSet::GoToNextRow()
 
     int retryCount = 0;
     errCode = sqliteStatement->Step();
+
     while (errCode == SQLITE_LOCKED || errCode == SQLITE_BUSY) {
         // The table is locked, retry
         if (retryCount > STEP_QUERY_RETRY_MAX_TIMES) {
@@ -212,12 +171,13 @@ int StepResultSet::GoToNextRow()
     }
 
     if (errCode == SQLITE_ROW) {
-        pos++;
+        rowPos++;
         return E_OK;
     } else if (errCode == SQLITE_DONE) {
         isAfterLast = true;
+        rowCount = rowPos + 1;
         FinishStep();
-        return E_STEP_RESULT_IS_AFTER_LASET;
+        return E_STEP_RESULT_IS_AFTER_LAST;
     } else {
         LOG_ERROR("StepResultSet::GoToNextRow step err = %{public}d", errCode);
         FinishStep();
@@ -225,56 +185,59 @@ int StepResultSet::GoToNextRow()
     }
 }
 
-int StepResultSet::GoToPreviousRow()
-{
-    LOG_ERROR("GoToPreviousRow is not supported by StepResultSet");
-    return E_NOT_SUPPORTED_BY_STEP_RESULT_SET;
-}
-
-int StepResultSet::IsEnded(bool &result) const
+/**
+ * Checks whether the result set is positioned after the last row
+ */
+int StepResultSet::IsEnded(bool &result)
 {
     result = isAfterLast;
     return E_OK;
 }
 
+/**
+ * Checks whether the result set is moved
+ */
 int StepResultSet::IsStarted(bool &result) const
 {
-    result = (pos == INIT_POS);
+    result = (rowPos != INIT_POS);
     return E_OK;
 }
 
+/**
+ * Check whether the result set is in the first row
+ */
 int StepResultSet::IsAtFirstRow(bool &result) const
 {
-    result = (pos == 0);
+    result = (rowPos == 0);
     return E_OK;
 }
 
-int StepResultSet::IsAtLastRow(bool &result) const
+int StepResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
 {
-    LOG_ERROR("IsAtLastRow is not supported by StepResultSet");
-    return E_NOT_SUPPORTED_BY_STEP_RESULT_SET;
-}
-
-int StepResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob) const
-{
-    if (pos == INIT_POS) {
+    if (rowPos == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
 
     return sqliteStatement->GetColumnBlob(columnIndex, blob);
 }
 
-int StepResultSet::GetString(int columnIndex, std::string &value) const
+int StepResultSet::GetString(int columnIndex, std::string &value)
 {
-    if (pos == INIT_POS) {
+    if (rowPos == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
-    return sqliteStatement->GetColumnString(columnIndex, value);
+
+    int errCode = sqliteStatement->GetColumnString(columnIndex, value);
+    if (errCode != E_OK) {
+        LOG_ERROR("StepResultSet::GetString is err=%{public}d", errCode);
+        return errCode;
+    }
+    return E_OK;
 }
 
-int StepResultSet::GetInt(int columnIndex, int &value) const
+int StepResultSet::GetInt(int columnIndex, int &value)
 {
-    if (pos == INIT_POS) {
+    if (rowPos == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
 
@@ -287,23 +250,31 @@ int StepResultSet::GetInt(int columnIndex, int &value) const
     return E_OK;
 }
 
-int StepResultSet::GetLong(int columnIndex, int64_t &value) const
+int StepResultSet::GetLong(int columnIndex, int64_t &value)
 {
-    if (pos == INIT_POS) {
+    if (rowPos == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
-    return sqliteStatement->GetColumnLong(columnIndex, value);
+    int errCode = sqliteStatement->GetColumnLong(columnIndex, value);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    return E_OK;
 }
 
-int StepResultSet::GetDouble(int columnIndex, double &value) const
+int StepResultSet::GetDouble(int columnIndex, double &value)
 {
-    if (pos == INIT_POS) {
+    if (rowPos == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
-    return sqliteStatement->GetColumnDouble(columnIndex, value);
+    int errCode = sqliteStatement->GetColumnDouble(columnIndex, value);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    return E_OK;
 }
 
-int StepResultSet::IsColumnNull(int columnIndex, bool &isNull) const
+int StepResultSet::IsColumnNull(int columnIndex, bool &isNull)
 {
     ColumnType columnType;
     int errCode = GetColumnTypeForIndex(columnIndex, columnType);
@@ -314,6 +285,9 @@ int StepResultSet::IsColumnNull(int columnIndex, bool &isNull) const
     return E_OK;
 }
 
+/**
+ * Check whether the result set is over
+ */
 bool StepResultSet::IsClosed() const
 {
     return isClosed;
@@ -339,6 +313,9 @@ int StepResultSet::CheckSession()
     return E_OK;
 }
 
+/**
+ * Obtain session and prepare precompile statement for step query
+ */
 int StepResultSet::PrepareStep()
 {
     if (isClosed) {
@@ -360,6 +337,9 @@ int StepResultSet::PrepareStep()
     return E_OK;
 }
 
+/**
+ * Release resource of step result set, this method can be called more than once
+ */
 int StepResultSet::FinishStep()
 {
     int errCode = CheckSession();
@@ -372,13 +352,26 @@ int StepResultSet::FinishStep()
     }
 
     sqliteStatement = nullptr;
-    pos = INIT_POS;
-
-    errCode = rdb->EndStepQuery();
+    rowPos = INIT_POS;
+    if (rdb != nullptr) {
+        errCode = rdb->EndStepQuery();
+    }
     if (errCode != E_OK) {
         LOG_ERROR("StepResultSet::FinishStep err = %{public}d", errCode);
     }
     return errCode;
+}
+
+/**
+ * Reset the statement
+ */
+void StepResultSet::Reset()
+{
+    if (sqliteStatement != nullptr) {
+        sqlite3_reset(sqliteStatement->GetSql3Stmt());
+    }
+    rowPos = INIT_POS;
+    isAfterLast = false;
 }
 } // namespace NativeRdb
 } // namespace OHOS

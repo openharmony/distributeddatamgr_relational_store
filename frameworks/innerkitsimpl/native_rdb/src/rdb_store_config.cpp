@@ -17,72 +17,229 @@
 
 namespace OHOS {
 namespace NativeRdb {
-RdbStoreConfig::RdbStoreConfig(
-    const std::string &path, StorageMode storageMode, bool isReadOnly, const std::vector<uint8_t> &encryptKey)
-    : path(path), storageMode(storageMode), readOnly(isReadOnly), encryptKey(encryptKey), journalMode("")
+RdbStoreConfig::RdbStoreConfig(const RdbStoreConfig &config)
 {
+    name = config.GetName();
+    path = config.GetPath();
+    storageMode = config.GetStorageMode();
+    journalMode = config.GetJournalMode();
+    syncMode = config.GetSyncMode();
+    encryptKey = config.GetEncryptKey();
+    readOnly = config.IsReadOnly();
+    databaseFileType = config.GetDatabaseFileType();
+    databaseFileSecurityLevel = config.GetDatabaseFileSecurityLevel();
 }
+
+RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode, bool isReadOnly,
+    const std::vector<uint8_t> &encryptKey, const std::string &journalMode, const std::string &syncMode,
+    const std::string &databaseFileType, const std::string &databaseFileSecurityLevel)
+    : name(name),
+      path(name),
+      storageMode(storageMode),
+      journalMode(journalMode),
+      syncMode(syncMode),
+      encryptKey(encryptKey),
+      readOnly(isReadOnly),
+      databaseFileType(databaseFileType),
+      databaseFileSecurityLevel(databaseFileSecurityLevel)
+{}
 
 RdbStoreConfig::~RdbStoreConfig()
 {
     ClearEncryptKey();
 }
 
-void RdbStoreConfig::SetJournalMode(JournalMode journalMode)
+/**
+ * Obtains the database name.
+ */
+std::string RdbStoreConfig::GetName() const
 {
-    switch (journalMode) {
-        case JournalMode::MODE_DELETE:
-            this->journalMode = "DELETE";
-            break;
-        case JournalMode::MODE_TRUNCATE:
-            this->journalMode = "TRUNCATE";
-            break;
-        case JournalMode::MODE_PERSIST:
-            this->journalMode = "PERSIST";
-            break;
-        case JournalMode::MODE_MEMORY:
-            this->journalMode = "MEMORY";
-            break;
-        case JournalMode::MODE_WAL:
-            this->journalMode = "WAL";
-            break;
-        case JournalMode::MODE_OFF:
-            this->journalMode = "OFF";
-            break;
-        default:
-            break;
-    }
+    return name;
 }
 
+/**
+ * Obtains the database path.
+ */
 std::string RdbStoreConfig::GetPath() const
 {
     return path;
 }
 
+/**
+ * Obtains the storage mode.
+ */
 StorageMode RdbStoreConfig::GetStorageMode() const
 {
     return storageMode;
 }
 
+/**
+ * Obtains the journal mode in this {@code StoreConfig} object.
+ */
 std::string RdbStoreConfig::GetJournalMode() const
 {
     return journalMode;
 }
 
+/**
+ * Obtains the synchronization mode in this {@code StoreConfig} object.
+ */
+std::string RdbStoreConfig::GetSyncMode() const
+{
+    return syncMode;
+}
+
+/**
+ * Obtains the encrypt key in this {@code StoreConfig} object.
+ */
+std::vector<uint8_t> RdbStoreConfig::GetEncryptKey() const
+{
+    return encryptKey;
+}
+
+/**
+ * Sets the encrypt key for the object.
+ */
+void RdbStoreConfig::SetEncryptKey(const std::vector<uint8_t> &encryptKey)
+{
+    this->encryptKey = encryptKey;
+}
+
+/**
+ * Checks whether the database is read-only.
+ */
 bool RdbStoreConfig::IsReadOnly() const
 {
     return readOnly;
 }
 
-std::vector<uint8_t> RdbStoreConfig::GetEncryptKey() const
+/**
+ * Checks whether the database is memory.
+ */
+bool RdbStoreConfig::IsMemoryRdb() const
 {
-    return encryptKey;
+    return GetStorageMode() == StorageMode::MODE_MEMORY;
+}
+
+/**
+ * Obtains the database file type in this {@code StoreConfig} object.
+ */
+std::string RdbStoreConfig::GetDatabaseFileType() const
+{
+    return databaseFileType;
+}
+
+/**
+ * Obtains the security level of the database file.
+ */
+std::string RdbStoreConfig::GetDatabaseFileSecurityLevel() const
+{
+    return databaseFileSecurityLevel;
+}
+
+/**
+ * Sets the journal mode  for the object.
+ */
+void RdbStoreConfig::SetJournalMode(JournalMode journalMode)
+{
+    this->journalMode = GetJournalModeValue(journalMode);
+}
+
+/**
+ * Sets the path  for the object.
+ */
+void RdbStoreConfig::SetPath(std::string path)
+{
+    this->path = path;
 }
 
 void RdbStoreConfig::ClearEncryptKey()
 {
     std::fill(encryptKey.begin(), encryptKey.end(), 0);
     encryptKey.clear();
+}
+
+std::string RdbStoreConfig::GetJournalModeValue(JournalMode journalMode)
+{
+    std::string value = "";
+
+    switch (journalMode) {
+        case JournalMode::MODE_DELETE:
+            return "DELETE";
+        case JournalMode::MODE_TRUNCATE:
+            return "TRUNCATE";
+        case JournalMode::MODE_PERSIST:
+            return  "PERSIST";
+        case JournalMode::MODE_MEMORY:
+            return "MEMORY";
+        case JournalMode::MODE_WAL:
+            return "WAL";
+        case JournalMode::MODE_OFF:
+            return "OFF";
+        default:
+            break;
+    }
+    return value;
+}
+
+std::string RdbStoreConfig::GetSyncModeValue(SyncMode syncMode)
+{
+    std::string value = "";
+    switch (syncMode) {
+        case SyncMode::MODE_OFF:
+            return "MODE_OFF";
+        case SyncMode::MODE_NORMAL:
+            return "MODE_NORMAL";
+        case SyncMode::MODE_FULL:
+            return "MODE_FULL";
+        case SyncMode::MODE_EXTRA:
+            return "MODE_EXTRA";
+        default:
+            break;
+    }
+
+    return value;
+}
+
+std::string RdbStoreConfig::GetDatabaseFileTypeValue(DatabaseFileType databaseFileType)
+{
+    std::string value = "";
+    switch (databaseFileType) {
+        case DatabaseFileType::NORMAL:
+            return "db";
+        case DatabaseFileType::BACKUP:
+            return "backup";
+        case DatabaseFileType::CORRUPT:
+            return "corrupt";
+        default:
+            break;
+    }
+
+    return value;
+}
+
+std::string RdbStoreConfig::GetDatabaseFileSecurityLevelValue(DatabaseFileSecurityLevel databaseFileSecurityLevel)
+{
+    std::string value = "";
+
+    switch (databaseFileSecurityLevel) {
+        case DatabaseFileSecurityLevel::S4:
+            return "S4";
+        case DatabaseFileSecurityLevel::S3:
+            return "S3";
+        case DatabaseFileSecurityLevel::S2:
+            return "S2";
+        case DatabaseFileSecurityLevel::S1:
+            return "S1";
+        case DatabaseFileSecurityLevel::S0:
+            return "S0";
+        case DatabaseFileSecurityLevel::NO_LEVEL:
+            return "NO_LEVEL";
+        default:
+            break;
+    }
+
+    return value;
 }
 } // namespace NativeRdb
 } // namespace OHOS

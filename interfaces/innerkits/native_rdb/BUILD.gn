@@ -18,6 +18,10 @@ config("native_rdb_config") {
   include_dirs = [
     "include",
     "../../../frameworks/innerkitsimpl/native_rdb/src",
+    "../../../frameworks/innerkitsimpl/native_rdb/include",
+    "//third_party/icu/icu4c/source",
+    "//third_party/icu/icu4c/source/i18n",
+    "//third_party/icu/icu4c/source/common",
   ]
 
   defines = [ "SQLITE_HAS_CODEC" ]
@@ -34,25 +38,45 @@ config("native_rdb_public_config") {
 ohos_shared_library("native_rdb") {
   part_name = "native_appdatamgr"
   sources = [
+    "../../../frameworks/innerkitsimpl/native_rdb/src/abs_predicates.cpp",
+    "../../../frameworks/innerkitsimpl/native_rdb/src/abs_rdb_predicates.cpp",
+    "../../../frameworks/innerkitsimpl/native_rdb/src/abs_result_set.cpp",
+    "../../../frameworks/innerkitsimpl/native_rdb/src/abs_shared_result_set.cpp",
+    "../../../frameworks/innerkitsimpl/native_rdb/src/data_ability_predicates.cpp",
+    "../../../frameworks/innerkitsimpl/native_rdb/src/logger.h",
+    "../../../frameworks/innerkitsimpl/native_rdb/src/predicates_utils.cpp",
+    "../../../frameworks/innerkitsimpl/native_rdb/src/raw_rdb_predicates.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/rdb_helper.cpp",
+    "../../../frameworks/innerkitsimpl/native_rdb/src/rdb_predicates.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/rdb_store_config.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/rdb_store_impl.cpp",
+    "../../../frameworks/innerkitsimpl/native_rdb/src/share_block.cpp",
+    "../../../frameworks/innerkitsimpl/native_rdb/src/shared_block_serializer_info.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/sqlite_config.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/sqlite_connection.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/sqlite_connection_pool.cpp",
+    "../../../frameworks/innerkitsimpl/native_rdb/src/sqlite_database_utils.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/sqlite_global_config.cpp",
+    "../../../frameworks/innerkitsimpl/native_rdb/src/sqlite_shared_result_set.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/sqlite_sql_builder.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/sqlite_statement.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/sqlite_utils.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/step_result_set.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/store_session.cpp",
+    "../../../frameworks/innerkitsimpl/native_rdb/src/string_utils.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/value_object.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/values_bucket.cpp",
   ]
 
   configs = [ ":native_rdb_config" ]
 
-  deps = [ "//third_party/sqlite:sqlite" ]
+  deps = [
+    "../../../frameworks/innerkitsimpl/native_appdatafwk:native_appdatafwk",
+    "//third_party/icu/icu4c:shared_icui18n",
+    "//third_party/icu/icu4c:shared_icuuc",
+    "//third_party/sqlite:sqlite",
+    "//utils/native/base:utils",
+  ]
 
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 
