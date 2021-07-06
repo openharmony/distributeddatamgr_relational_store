@@ -91,9 +91,11 @@ void PreferencesImpl::StartLoadFromDisk()
 int PreferencesImpl::CheckKey(const std::string &key)
 {
     if (key.empty()) {
+        LOG_ERROR("The key string is null or empty.");
         return E_KEY_EMPTY;
     }
     if (Preferences::MAX_KEY_LENGTH < key.length()) {
+        LOG_ERROR("The key string length should shorter than 80.");
         return E_KEY_EXCEED_MAX_LENGTH;
     }
     return E_OK;
@@ -167,7 +169,7 @@ void PreferencesImpl::WriteToDiskFile(std::shared_ptr<MemoryToDiskRequest> mcr)
     }
 
     if (WriteSettingXml(filePath_, mcr->writeToDiskMap_)) {
-        if (std::remove(backupPath_.c_str())) {
+        if (IsFileExist(backupPath_) && std::remove(backupPath_.c_str())) {
             LOG_ERROR("Couldn't delete backup file %{private}s when writeToFile finish.", backupPath_.c_str());
         }
         diskStateGeneration_ = mcr->memoryStateGeneration_;
@@ -304,6 +306,34 @@ int64_t PreferencesImpl::GetLong(const std::string &key, int64_t defValue)
     return ret;
 }
 
+std::set<std::string> PreferencesImpl::GetStringSet(const std::string &key, std::set<std::string> &defValue)
+{
+    if (CheckKey(key) != E_OK) {
+        return defValue;
+    }
+
+    AwaitLoadFile();
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::set<std::string> ret = defValue;
+
+    auto iter = map_.find(key);
+    if (iter != map_.end()) {
+        PreferencesValue val = iter->second;
+        if (val.IsSet()) {
+            ret = val;
+        }
+    }
+    return ret;
+}
+
+std::map<std::string, PreferencesValue> PreferencesImpl::GetAll()
+{
+    AwaitLoadFile();
+
+    return map_;
+}
+
 bool PreferencesImpl::ReadSettingXml(
     const std::filesystem::path &prefPath, std::map<std::string, PreferencesValue> &prefMap)
 {
@@ -329,6 +359,12 @@ bool PreferencesImpl::ReadSettingXml(
             prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
         } else if (element.tag_.compare("string") == 0) {
             prefMap.insert(std::make_pair(element.key_, PreferencesValue(element.value_)));
+        } else if (element.tag_.compare("set") == 0) {
+            std::set<std::string> values;
+            for (auto child : element.children_) {
+                values.insert(child.value_);
+            }
+            prefMap.insert(std::make_pair(element.key_, PreferencesValue(values)));
         } else {
             LOG_WARN(
                 "ReadSettingXml:%{private}s, unknown element tag:%{public}s.", prefPath.c_str(), element.tag_.c_str());
@@ -361,6 +397,15 @@ bool PreferencesImpl::WriteSettingXml(
         } else if (value.IsString()) {
             elem.tag_ = std::string("string");
             elem.value_ = (std::string)value;
+        } else if (value.IsSet()) {
+            elem.tag_ = std::string("set");
+            auto values = (std::set<std::string>)value;
+            for (std::string val : values) {
+                Element element;
+                element.tag_ = std::string("string");
+                element.value_ = (std::string)val;
+                elem.children_.push_back(element);
+            }
         } else {
             LOG_WARN("WriteSettingXml:%{private}s, unknown element type.", filePath_.c_str());
             continue;
@@ -431,9 +476,22 @@ int PreferencesImpl::PutInt(const std::string &key, int value)
     return E_OK;
 }
 
+int PreferencesImpl::CheckStringValue(const std::string &value)
+{
+    if (Preferences::MAX_VALUE_LENGTH < value.length()) {
+        LOG_ERROR("The value string length should shorter than 8 * 1024.");
+        return E_VALUE_EXCEED_MAX_LENGTH;
+    }
+    return E_OK;
+}
+
 int PreferencesImpl::PutString(const std::string &key, const std::string &value)
 {
     int errCode = CheckKey(key);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    errCode = CheckStringValue(value);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -466,6 +524,21 @@ int PreferencesImpl::PutFloat(const std::string &key, float value)
     int errCode = CheckKey(key);
     if (errCode != E_OK) {
         return errCode;
+    }
+    PutPreferencesValue(key, PreferencesValue(value));
+    return E_OK;
+}
+
+int PreferencesImpl::PutStringSet(const std::string &key, const std::set<std::string> &value)
+{
+    int errCode = CheckKey(key);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    for (auto child : value) {
+        if (CheckStringValue(child) != E_OK) {
+            return errCode;
+        }
     }
     PutPreferencesValue(key, PreferencesValue(value));
     return E_OK;

@@ -209,7 +209,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_002, TestSize.Level1)
     std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 
@@ -283,7 +283,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)
     std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 
@@ -356,7 +356,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)
     std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 
@@ -427,7 +427,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_003, TestSize.Level1)
     std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 
@@ -508,7 +508,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_004, TestSize.Level1)
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 

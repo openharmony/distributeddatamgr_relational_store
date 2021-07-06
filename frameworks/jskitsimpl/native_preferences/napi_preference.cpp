@@ -149,7 +149,7 @@ bool CheckNumberType(double input)
 
 bool IsFloat(double input)
 {
-    return abs(input - floor(input)) >= 0; // DBL_EPSILON;
+    return abs(input - floor(input)) >= DBL_EPSILON;
 }
 
 napi_value PreferencesProxy::GetValueSync(napi_env env, napi_callback_info info)
@@ -332,9 +332,11 @@ napi_value PreferencesProxy::SetValueSync(napi_env env, napi_callback_info info)
         NAPI_CALL(env, napi_get_value_double(env, args[1], &value));
 
         if (IsFloat(value)) {
+            NAPI_ASSERT(env, CheckNumberType<float>(value), "the value out of float range");
             int result = obj->value_->PutFloat(key, (float)value);
             NAPI_ASSERT(env, result == E_OK, "call PutFloat failed");
         } else {
+            NAPI_ASSERT(env, CheckNumberType<int64_t>(value), "the value out of long long range");
             int result = obj->value_->PutLong(key, (int64_t)value);
             NAPI_ASSERT(env, result == E_OK, "call PutLong failed");
         }
@@ -565,7 +567,7 @@ napi_value PreferencesProxy::RegisterObserver(napi_env env, napi_callback_info i
     PreferencesProxy *obj = nullptr;
     NAPI_CALL(env, napi_unwrap(env, _this, reinterpret_cast<void **>(&obj)));
 
-    // reference保存
+    // reference save
     obj->observer_ = std::make_shared<PreferencesObserverImpl>(env, args[1]);
     obj->value_->RegisterObserver(obj->observer_);
     LOG_DEBUG("RegisterObserver end");

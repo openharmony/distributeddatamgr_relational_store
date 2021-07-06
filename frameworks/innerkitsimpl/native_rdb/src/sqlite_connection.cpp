@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,18 +15,27 @@
 
 #include "sqlite_connection.h"
 
+#include <securec.h>
+#include <sqlite3sym.h>
 #include <sys/stat.h>
+#include <unicode/ucol.h>
+#include <unistd.h>
 
 #include <cerrno>
 
 #include "logger.h"
 #include "rdb_errno.h"
+#include "share_block.h"
+#include "shared_block_serializer_info.h"
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
+// error status
+const int ERROR_STATUS = -1;
+
 SqliteConnection *SqliteConnection::Open(const SqliteConfig &config, bool isWriteConnection, int &errCode)
 {
     auto connection = new SqliteConnection(isWriteConnection);
@@ -39,7 +48,13 @@ SqliteConnection *SqliteConnection::Open(const SqliteConfig &config, bool isWrit
 }
 
 SqliteConnection::SqliteConnection(bool isWriteConnection)
-    : dbHandle(nullptr), isWriteConnection(isWriteConnection), isReadOnly(false), statement(), stepStatement(nullptr)
+    : dbHandle(nullptr),
+      isWriteConnection(isWriteConnection),
+      isReadOnly(false),
+      statement(),
+      stepStatement(nullptr),
+      filePath(""),
+      openFlags(0)
 {
 }
 
@@ -64,8 +79,8 @@ int SqliteConnection::InnerOpen(const SqliteConfig &config)
     }
 
     isReadOnly = !isWriteConnection || config.IsReadOnly();
-    int openFlags = config.IsReadOnly() ? SQLITE_OPEN_READONLY : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
-    int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle, openFlags, nullptr);
+    int openFileFlags = config.IsReadOnly() ? SQLITE_OPEN_READONLY : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
+    int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle, openFileFlags, nullptr);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("SqliteConnection InnerOpen fail to open database err = %{public}d", errCode);
         return SQLiteError::ErrNo(errCode);
@@ -77,6 +92,9 @@ int SqliteConnection::InnerOpen(const SqliteConfig &config)
     if (errCode != E_OK) {
         return errCode;
     }
+
+    filePath = dbPath;
+    openFlags = openFileFlags;
 
     return E_OK;
 }
@@ -99,7 +117,7 @@ int SqliteConnection::Config(const SqliteConfig &config)
         return errCode;
     }
 
-    errCode = SetJournalMode(config.GetJournalMode());
+    errCode = SetJournalMode(config.GetJournalMode(), config.GetSyncMode());
     if (errCode != E_OK) {
         return errCode;
     }
@@ -171,7 +189,7 @@ int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &encryptKey)
     return E_OK;
 }
 
-int SqliteConnection::SetJournalMode(const std::string &journalMode)
+int SqliteConnection::SetJournalMode(const std::string &journalMode, const std::string &synclMode)
 {
     if (isReadOnly) {
         return E_OK;
@@ -200,7 +218,7 @@ int SqliteConnection::SetJournalMode(const std::string &journalMode)
     }
 
     if (journalMode == "WAL") {
-        errCode = SetWalSyncMode();
+        errCode = SetWalSyncMode(synclMode);
     }
 
     return errCode;
@@ -258,9 +276,13 @@ int SqliteConnection::SetAutoCheckpoint()
     return errCode;
 }
 
-int SqliteConnection::SetWalSyncMode()
+int SqliteConnection::SetWalSyncMode(const std::string &syncMode)
 {
     std::string targetValue = SqliteGlobalConfig::GetWalSyncMode();
+    if (syncMode.length() != 0) {
+        targetValue = syncMode;
+    }
+
     std::string value;
     int errCode = ExecuteGetString(value, "PRAGMA synchronous");
     if (errCode != E_OK) {
@@ -295,8 +317,44 @@ int SqliteConnection::Prepare(const std::string &sql, bool &outIsReadOnly)
     return E_OK;
 }
 
+int SqliteConnection::PrepareAndGetInfo(const std::string &sql, bool &outIsReadOnly, int &numParameters,
+    std::vector<std::string> &columnNames)
+{
+    int errCode = statement.Prepare(dbHandle, sql);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    errCode = statement.GetColumnCount(numParameters);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    int columnCount;
+    errCode = statement.GetColumnCount(columnCount);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    for (int i = 0; i < columnCount; i++) {
+        std::string name;
+        statement.GetColumnName(i, name);
+        columnNames.push_back(name);
+    }
+    outIsReadOnly = statement.IsReadOnly();
+
+    errCode = statement.GetNumParameters(numParameters);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    return E_OK;
+}
+
 int SqliteConnection::PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
+    if (dbHandle == nullptr) {
+        LOG_ERROR("SqliteConnection dbHandle is nullptr");
+    }
     int errCode = statement.Prepare(dbHandle, sql);
     if (errCode != E_OK) {
         return errCode;
@@ -431,7 +489,7 @@ int SqliteConnection::ExecuteGetString(
 }
 
 std::shared_ptr<SqliteStatement> SqliteConnection::BeginStepQuery(
-    int &errCode, const std::string &sql, const std::vector<std::string> &selectionArgs)
+    int &errCode, const std::string &sql, const std::vector<std::string> &selectionArgs) const
 {
     errCode = stepStatement->Prepare(dbHandle, sql);
     if (errCode != E_OK) {
@@ -490,6 +548,111 @@ void SqliteConnection::LimitPermission(const std::string &dbPath) const
     } else {
         LOG_ERROR("SqliteConnection LimitPermission stat fail, err = %{public}d", errno);
     }
+}
+
+int Collate8Compare(void *p, int n1, const void *v1, int n2, const void *v2)
+{
+    UCollator *coll = reinterpret_cast<UCollator *>(p);
+    UCharIterator i1, i2;
+    UErrorCode status = U_ZERO_ERROR;
+
+    uiter_setUTF8(&i1, (const char *)v1, n1);
+    uiter_setUTF8(&i2, (const char *)v2, n2);
+
+    UCollationResult result = ucol_strcollIter(coll, &i1, &i2, &status);
+
+    if (U_FAILURE(status)) {
+        LOG_ERROR("Ucol strcoll error.");
+    }
+
+    if (result == UCOL_LESS) {
+        return -1;
+    } else if (result == UCOL_GREATER) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+void LocalizedCollatorDestroy(UCollator *collator)
+{
+    ucol_close(collator);
+}
+
+/**
+ * The database locale.
+ */
+int SqliteConnection::ConfigLocale(const std::string localeStr)
+{
+    std::unique_lock<std::mutex> lock(rdbMutex);
+    UErrorCode status = U_ZERO_ERROR;
+    UCollator *collator = ucol_open(localeStr.c_str(), &status);
+    if (U_FAILURE(status)) {
+        LOG_ERROR("Can not open collator.");
+        return E_ERROR;
+    }
+    ucol_setAttribute(collator, UCOL_STRENGTH, UCOL_PRIMARY, &status);
+    if (U_FAILURE(status)) {
+        LOG_ERROR("Set attribute of collator failed.");
+        return E_ERROR;
+    }
+
+    int err = sqlite3_create_collation_v2(dbHandle, "LOCALES", SQLITE_UTF8, collator, Collate8Compare,
+        (void (*)(void *))LocalizedCollatorDestroy);
+    if (err != SQLITE_OK) {
+        LOG_ERROR("SCreate collator in sqlite3 failed.");
+        return err;
+    }
+
+    return E_OK;
+}
+
+/**
+ * Executes a statement and populates the specified with a range of results.
+ */
+int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const std::vector<ValueObject> &bindArgs,
+    AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows)
+{
+    if (sharedBlock == nullptr) {
+        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
+        return E_ERROR;
+    }
+
+    SqliteConnectionS connection(this->dbHandle, this->openFlags, this->filePath);
+    int errCode = PrepareAndBind(sql, bindArgs);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    if (ClearSharedBlock(sharedBlock) == ERROR_STATUS) {
+        return E_ERROR;
+    }
+
+    sqlite3_stmt *tempSqlite3St = statement.GetSql3Stmt();
+    int columnNum = sqlite3_column_count(tempSqlite3St);
+    if (SharedBlockSetColumnNum(sharedBlock, columnNum) == ERROR_STATUS) {
+        return E_ERROR;
+    }
+
+    SharedBlockInfo sharedBlockInfo(&connection, sharedBlock, tempSqlite3St);
+    sharedBlockInfo.requiredPos = requiredPos;
+    sharedBlockInfo.columnNum = columnNum;
+    sharedBlockInfo.isCountAllRows = isCountAllRows;
+    sharedBlockInfo.startPos = startPos;
+
+    int rc = sqlite3_db_config(connection.db, SQLITE_DBCONFIG_USE_SHAREDBLOCK);
+    if (rc == SQLITE_OK) {
+        FillSharedBlockOpt(&sharedBlockInfo);
+    } else {
+        FillSharedBlock(&sharedBlockInfo);
+    }
+
+    if (!ResetStatement(&sharedBlockInfo)) {
+        return E_ERROR;
+    }
+    rowNum = static_cast<int>(GetCombinedData(sharedBlockInfo.startPos, sharedBlockInfo.totalRows));
+    errCode = statement.ResetStatementAndClearBindings();
+    return errCode;
 }
 } // namespace NativeRdb
 } // namespace OHOS
