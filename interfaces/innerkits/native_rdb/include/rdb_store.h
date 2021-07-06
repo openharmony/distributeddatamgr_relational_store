@@ -56,14 +56,25 @@ public:
         const std::vector<std::string> &columns, const std::string &selection = "",
         const std::vector<std::string> &selectionArgs = std::vector<std::string>(), const std::string &groupBy = "",
         const std::string &having = "", const std::string &orderBy = "", const std::string &limit = "") = 0;
-    virtual std::unique_ptr<ResultSet> QuerySql(
-        const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
-    virtual int ExecuteSql(
-        const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+    virtual std::unique_ptr<ResultSet> QuerySql(const std::string &sql,
+        const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
+    virtual std::unique_ptr<ResultSet> QuerySqlShared(const std::string &sql,
+        const std::vector<std::string> &selectionArgs) = 0;
+    virtual std::unique_ptr<ResultSet> QueryByStep(const std::string &sql,
+        const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
+    virtual int ExecuteSql(const std::string &sql,
+        const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
     virtual int ExecuteAndGetLong(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
     virtual int ExecuteAndGetString(std::string &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+    virtual int ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql,
+        const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+    virtual int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
+        const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+    virtual int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey) = 0;
+    virtual int Attach(const std::string &alias, const std::string &pathName,
+        const std::vector<uint8_t> destEncryptKey) = 0;
     virtual int GetVersion(int &version) = 0;
     virtual int SetVersion(int version) = 0;
     virtual int BeginTransaction() = 0;
@@ -71,6 +82,7 @@ public:
     virtual int EndTransaction() = 0;
     virtual bool IsInTransaction() = 0;
     virtual int ChangeEncryptKey(const std::vector<uint8_t> &newKey) = 0;
+    virtual std::string GetPath() = 0;
 };
 
 } // namespace NativeRdb

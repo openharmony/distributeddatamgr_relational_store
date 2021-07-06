@@ -83,10 +83,10 @@ bool PreferencesXmlUtils::ReadSettingXml(const std::string &fileName, std::vecto
 /* static */
 bool ParseNodeElement(const xmlNode *node, Element &element)
 {
-    if (!xmlStrcmp(node->name, reinterpret_cast<const xmlChar *>("int")) ||
-        !xmlStrcmp(node->name, reinterpret_cast<const xmlChar *>("long")) ||
-        !xmlStrcmp(node->name, reinterpret_cast<const xmlChar *>("bool")) ||
-        !xmlStrcmp(node->name, reinterpret_cast<const xmlChar *>("float"))) {
+    if (!xmlStrcmp(node->name, reinterpret_cast<const xmlChar *>("int"))
+        || !xmlStrcmp(node->name, reinterpret_cast<const xmlChar *>("long"))
+        || !xmlStrcmp(node->name, reinterpret_cast<const xmlChar *>("bool"))
+        || !xmlStrcmp(node->name, reinterpret_cast<const xmlChar *>("float"))) {
         return ParsePrimitiveNodeElement(node, element);
     }
 
@@ -259,8 +259,8 @@ bool PreferencesXmlUtils::WriteSettingXml(const std::string &fileName, std::vect
 /* static */
 xmlNode *CreateElementNode(Element &element)
 {
-    if ((element.tag_.compare("int") == 0) || (element.tag_.compare("long") == 0) ||
-        (element.tag_.compare("float") == 0) || (element.tag_.compare("bool") == 0)) {
+    if ((element.tag_.compare("int") == 0) || (element.tag_.compare("long") == 0)
+        || (element.tag_.compare("float") == 0) || (element.tag_.compare("bool") == 0)) {
         return CreatePrimitiveNode(element);
     }
 

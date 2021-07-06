@@ -14,11 +14,10 @@
  */
 
 #include "rdb_store_impl.h"
-
 #include <sstream>
-
 #include "logger.h"
 #include "rdb_errno.h"
+#include "sqlite_shared_result_set.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
@@ -43,10 +42,20 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     if (connectionPool == nullptr) {
         return errCode;
     }
+    isOpen = true;
+    path = config.GetPath();
+    orgPath = path;
+    isReadOnly = config.IsReadOnly();
+    isMemoryRdb = config.IsMemoryRdb();
+    name = config.GetName();
+    fileSecurityLevel = config.GetDatabaseFileSecurityLevel();
+    fileType = config.GetDatabaseFileType();
+
     return E_OK;
 }
 
-RdbStoreImpl::RdbStoreImpl() : connectionPool(nullptr)
+RdbStoreImpl::RdbStoreImpl()
+    : connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false), isMemoryRdb(false)
 {
 }
 
@@ -237,8 +246,8 @@ std::unique_ptr<ResultSet> RdbStoreImpl::Query(int &errCode, bool distinct, cons
     const std::string &orderBy, const std::string &limit)
 {
     std::string sql;
-    errCode =
-        SqliteSqlBuilder::BuildQueryString(distinct, table, columns, selection, groupBy, having, orderBy, limit, sql);
+    errCode = SqliteSqlBuilder::BuildQueryString(distinct, table, columns, selection, groupBy, having, orderBy, limit,
+        "", sql);
     if (errCode != E_OK) {
         return nullptr;
     }
@@ -289,6 +298,65 @@ int RdbStoreImpl::ExecuteAndGetString(
     ReleaseThreadSession();
     return errCode;
 }
+
+int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql,
+    const std::vector<ValueObject> &bindArgs)
+{
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode = session->ExecuteForLastInsertedRowId(outValue, sql, bindArgs);
+    ReleaseThreadSession();
+    return errCode;
+}
+
+int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
+    const std::vector<ValueObject> &bindArgs)
+{
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int changeRow = 0;
+    int errCode = session->ExecuteForChangedRowCount(changeRow, sql, bindArgs);
+    outValue = changeRow;
+    ReleaseThreadSession();
+    return errCode;
+}
+
+/**
+ * Restores a database from a specified encrypted or unencrypted database file.
+ */
+int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
+{
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode = session->Backup(databasePath, destEncryptKey);
+    ReleaseThreadSession();
+    return errCode;
+}
+
+bool RdbStoreImpl::IsHoldingConnection()
+{
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    return session->IsHoldingConnection();
+}
+
+int RdbStoreImpl::GiveConnectionTemporarily(long milliseconds)
+{
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    return session->GiveConnectionTemporarily(milliseconds);
+}
+
+/**
+ * Attaches a database.
+ */
+int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
+    const std::vector<uint8_t> destEncryptKey)
+{
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode = session->Attach(alias, pathName, destEncryptKey);
+    ReleaseThreadSession();
+    return errCode;
+}
+
+/**
+ * Obtains the database version.
+ */
 int RdbStoreImpl::GetVersion(int &version)
 {
     int64_t value;
@@ -297,16 +365,34 @@ int RdbStoreImpl::GetVersion(int &version)
     return errCode;
 }
 
+/**
+ * Sets the version of a new database.
+ */
 int RdbStoreImpl::SetVersion(int version)
 {
     std::string sql = "PRAGMA user_version = " + std::to_string(version);
     return ExecuteSql(sql, std::vector<ValueObject>());
 }
 
-int RdbStoreImpl::BeginTransaction()
+/**
+ * Begins a transaction in EXCLUSIVE mode.
+ */
+    int RdbStoreImpl::BeginTransaction()
 {
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int errCode = session->BeginTransaction();
+    if (errCode != E_OK) {
+        ReleaseThreadSession();
+        return errCode;
+    }
+    return E_OK;
+}
+
+int RdbStoreImpl::BeginTransactionWithObserver(TransactionObserver *transactionObserver)
+{
+    transactionObserverStack.push(transactionObserver);
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode = session->BeginTransaction(transactionObserver);
     if (errCode != E_OK) {
         ReleaseThreadSession();
         return errCode;
@@ -324,12 +410,23 @@ int RdbStoreImpl::MarkAsCommit()
 
 int RdbStoreImpl::EndTransaction()
 {
+    TransactionObserver *transactionObserver = nullptr;
+    if (transactionObserverStack.size() > 0) {
+        transactionObserver = transactionObserverStack.top();
+        transactionObserverStack.pop();
+    }
+
     std::shared_ptr<StoreSession> session = GetThreadSession();
-    int errCode = session->EndTransaction();
+    int errCode = session->EndTransactionWithObserver(transactionObserver);
     // release the session got in EndTransaction()
     ReleaseThreadSession();
     // release the session got in BeginTransaction()
     ReleaseThreadSession();
+
+    if (!transactionObserver) {
+        delete transactionObserver;
+    }
+
     return errCode;
 }
 
@@ -386,10 +483,126 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
     journalMode = SqliteUtils::StrToUpper(journalMode);
     if (journalMode == "WAL") {
         LOG_ERROR("RdbStoreImpl attach is not supported in WAL mode");
-        return E_NOT_SUPPROTED_ATTACH_IN_WAL_MODE;
+        return E_NOT_SUPPORTED_ATTACH_IN_WAL_MODE;
     }
 
     return E_OK;
+}
+
+bool RdbStoreImpl::IsOpen() const
+{
+    return isOpen;
+}
+
+std::string RdbStoreImpl::GetPath()
+{
+    return path;
+}
+
+std::string RdbStoreImpl::GetOrgPath()
+{
+    return orgPath;
+}
+
+bool RdbStoreImpl::IsReadOnly() const
+{
+    return isReadOnly;
+}
+
+bool RdbStoreImpl::IsMemoryRdb() const
+{
+    return isMemoryRdb;
+}
+
+std::string RdbStoreImpl::GetName()
+{
+    return name;
+}
+std::string RdbStoreImpl::GetFileType()
+{
+    return fileType;
+}
+
+std::string RdbStoreImpl::GetFileSecurityLevel()
+{
+    return fileSecurityLevel;
+}
+
+int RdbStoreImpl::PrepareAndGetInfo(const std::string &sql, bool &outIsReadOnly, int &numParameters,
+    std::vector<std::string> &columnNames)
+{
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+
+    int errCode = session->PrepareAndGetInfo(sql, outIsReadOnly, numParameters, columnNames);
+    ReleaseThreadSession();
+    return errCode;
+}
+
+/**
+ * Sets the database locale.
+ */
+int RdbStoreImpl::ConfigLocale(const std::string localeStr)
+{
+    if (isOpen == false) {
+        LOG_ERROR("The connection pool has been closed.");
+        return E_ERROR;
+    }
+
+    if (connectionPool == nullptr) {
+        LOG_ERROR("connectionPool is null");
+        return E_ERROR;
+    }
+    return connectionPool->ConfigLocale(localeStr);
+}
+
+/**
+ * Restores a database from a specified encrypted or unencrypted database file.
+ */
+int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
+    const std::vector<uint8_t> &newKey)
+{
+    if (isOpen == false) {
+        LOG_ERROR("The connection pool has been closed.");
+        return E_ERROR;
+    }
+
+    if (connectionPool == nullptr) {
+        LOG_ERROR("connectionPool is null");
+        return E_ERROR;
+    }
+    path = newPath;
+    return connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey);
+}
+int RdbStoreImpl::ExecuteForSharedBlock(int &rowNum, AppDataFwk::SharedBlock *sharedBlock, int startPos,
+    int requiredPos, bool isCountAllRows, std::string sql, std::vector<ValueObject> &bindArgVec)
+{
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode =
+        session->ExecuteForSharedBlock(rowNum, sql, bindArgVec, sharedBlock, startPos, requiredPos, isCountAllRows);
+    ReleaseThreadSession();
+    return errCode;
+}
+
+/**
+ * Executes an SQL statement and specifies the result set.
+ */
+std::unique_ptr<ResultSet> RdbStoreImpl::QuerySqlShared(const std::string &sql,
+    const std::vector<std::string> &selectionArgs)
+{
+    std::unique_ptr<ResultSet> resultSet =
+        std::make_unique<SqliteSharedResultSet>(shared_from_this(), path, sql, selectionArgs);
+    return resultSet;
+}
+
+/**
+ * Queries data in the database based on specified conditions.
+ */
+std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
+    const std::vector<std::string> &selectionArgs)
+{
+    std::unique_ptr<ResultSet> resultSet =
+        std::make_unique<StepResultSet>(shared_from_this(), sql, selectionArgs);
+    return resultSet;
 }
 } // namespace NativeRdb
 } // namespace OHOS

@@ -14,7 +14,6 @@
  */
 
 #include "sqlite_config.h"
-
 #include "sqlite_global_config.h"
 
 namespace OHOS {
@@ -27,6 +26,8 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     encryptKey = config.GetEncryptKey();
     encrypted = !encryptKey.empty();
     journalMode = config.GetJournalMode();
+    databaseFileType = config.GetDatabaseFileType();
+    syncMode = config.GetSyncMode();
     if (journalMode.empty()) {
         journalMode = SqliteGlobalConfig::GetDefaultJournalMode();
     }
@@ -42,6 +43,12 @@ std::string SqliteConfig::GetPath() const
     return path;
 }
 
+void SqliteConfig::SetPath(std::string newPath)
+{
+    this->path = newPath;
+}
+
+
 StorageMode SqliteConfig::GetStorageMode() const
 {
     return storageMode;
@@ -50,6 +57,11 @@ StorageMode SqliteConfig::GetStorageMode() const
 std::string SqliteConfig::GetJournalMode() const
 {
     return journalMode;
+}
+
+std::string SqliteConfig::GetSyncMode() const
+{
+    return syncMode;
 }
 
 bool SqliteConfig::IsReadOnly() const
@@ -71,12 +83,18 @@ void SqliteConfig::UpdateEncryptKey(const std::vector<uint8_t> &newKey)
 {
     std::fill(encryptKey.begin(), encryptKey.end(), 0);
     encryptKey = newKey;
+    encrypted = !encryptKey.empty();
 }
 
 void SqliteConfig::ClearEncryptKey()
 {
     std::fill(encryptKey.begin(), encryptKey.end(), 0);
     encryptKey.clear();
+}
+
+std::string SqliteConfig::GetDatabaseFileType() const
+{
+    return databaseFileType;
 }
 } // namespace NativeRdb
 } // namespace OHOS

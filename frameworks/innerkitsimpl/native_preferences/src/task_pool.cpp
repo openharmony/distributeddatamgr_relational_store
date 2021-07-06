@@ -36,15 +36,15 @@ int TaskPool::Start()
 {
     if (maxThreads_ < minThreads_) {
         LOG_ERROR("Start task pool failed, maxThreads(%d) < minThreads(%d).", maxThreads_, minThreads_);
-        return -E_INVALID_ARGS;
+        return E_INVALID_ARGS;
     }
     if (maxThreads_ <= 0) {
         LOG_ERROR("Start task pool failed, maxThreads(%d) <= 0.", maxThreads_);
-        return -E_INVALID_ARGS;
+        return E_INVALID_ARGS;
     }
     if (minThreads_ < 0) {
         LOG_ERROR("Start task pool failed, minThreads(%d) < 0.", minThreads_);
-        return -E_INVALID_ARGS;
+        return E_INVALID_ARGS;
     }
 
     std::lock_guard<std::mutex> guard(tasksMutex_);
@@ -73,16 +73,16 @@ void TaskPool::Stop()
 int TaskPool::Schedule(const Task &task)
 {
     if (!task) {
-        return -E_INVALID_ARGS;
+        return E_INVALID_ARGS;
     }
     std::lock_guard<std::mutex> guard(tasksMutex_);
     if (!isStarted_) {
         LOG_ERROR("Schedule failed, the task pool is not started.");
-        return -E_NOT_PERMIT;
+        return E_NOT_PERMIT;
     }
     if (isStopping_) {
         LOG_ERROR("Schedule failed, the task pool is stopping.");
-        return -E_STALE;
+        return E_STALE;
     }
     if (genericTaskCount_ == INT_MAX) {
         LOG_ERROR("Schedule failed, the task pool is full.");
@@ -98,16 +98,16 @@ int TaskPool::Schedule(const Task &task)
 int TaskPool::Schedule(const std::string &queueTag, const Task &task)
 {
     if (!task) {
-        return -E_INVALID_ARGS;
+        return E_INVALID_ARGS;
     }
     std::lock_guard<std::mutex> guard(tasksMutex_);
     if (!isStarted_) {
         LOG_ERROR("Schedule failed, the task pool is not started.");
-        return -E_NOT_PERMIT;
+        return E_NOT_PERMIT;
     }
     if (isStopping_) {
         LOG_ERROR("Schedule failed, the task pool is stopping.");
-        return -E_STALE;
+        return E_STALE;
     }
     if (queuedTaskCount_ == INT_MAX) {
         LOG_ERROR("Schedule failed, the task pool is full.");
@@ -221,7 +221,7 @@ int TaskPool::SpawnThreads(bool isStart)
 {
     if (!isStarted_) {
         LOG_ERROR("Spawn task pool threads failed, pool is not started.");
-        return -E_NOT_PERMIT;
+        return E_NOT_PERMIT;
     }
     if (curThreads_ >= maxThreads_) {
         // the pool is full of threads.

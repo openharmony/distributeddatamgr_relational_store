@@ -42,6 +42,11 @@ PreferencesValue::PreferencesValue(std::string value)
     data_ = value;
 }
 
+PreferencesValue::PreferencesValue(std::set<std::string> value)
+{
+    data_ = std::move(value);
+}
+
 bool PreferencesValue::IsInt() const
 {
     auto pVal = std::get_if<int>(&data_);
@@ -72,6 +77,12 @@ bool PreferencesValue::IsString() const
     return (pVal != nullptr);
 }
 
+bool PreferencesValue::IsSet() const
+{
+    auto pVal = std::get_if<std::set<std::string>>(&data_);
+    return (pVal != nullptr);
+}
+
 PreferencesValue::operator int()
 {
     return std::get<int>(data_);
@@ -97,7 +108,12 @@ PreferencesValue::operator std::string()
     return std::get<std::string>(data_);
 }
 
-bool PreferencesValue::operator==(const PreferencesValue &value)
+PreferencesValue::operator std::set<std::string>()
+{
+    return std::get<std::set<std::string>>(data_);
+}
+
+bool PreferencesValue::operator == (const PreferencesValue &value)
 {
     return (this->data_ == value.data_);
 }

@@ -22,6 +22,7 @@
 #include <list>
 #include <map>
 #include <mutex>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -49,6 +50,8 @@ public:
 
     virtual int64_t GetLong(const std::string &key, int64_t defValue) override;
 
+    virtual std::set<std::string> GetStringSet(const std::string &key, std::set<std::string> &defValue) override;
+
     virtual bool HasKey(const std::string &key) override;
 
     virtual int PutInt(const std::string &key, int value) override;
@@ -60,6 +63,10 @@ public:
     virtual int PutLong(const std::string &key, int64_t value) override;
 
     virtual int PutFloat(const std::string &key, float value) override;
+
+    virtual int PutStringSet(const std::string &key, const std::set<std::string> &value) override;
+
+    virtual std::map<std::string, PreferencesValue> GetAll() override;
 
     virtual int Delete(const std::string &key) override;
 
@@ -103,6 +110,7 @@ private:
     void PutPreferencesValue(const std::string &key, const PreferencesValue &value);
     void StartLoadFromDisk();
     int CheckKey(const std::string &key);
+    int CheckStringValue(const std::string &value);
 
     /* thread function */
     static void LoadFromDisk(PreferencesImpl &pref);

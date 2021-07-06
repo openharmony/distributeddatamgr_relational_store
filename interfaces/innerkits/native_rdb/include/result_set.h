@@ -55,7 +55,7 @@ public:
      * param columnIndex the zero-based index of the target column.
      * return column value type.
      */
-    virtual int GetColumnTypeForIndex(int columnIndex, ColumnType &columnType) const = 0;
+    virtual int GetColumnTypeForIndex(int columnIndex, ColumnType &columnType) = 0;
 
     /**
      * Returns the zero-based index for the given column name.
@@ -77,7 +77,7 @@ public:
     /**
      * return the numbers of rows in the result set.
      */
-    virtual int GetRowCount(int &count) const = 0;
+    virtual int GetRowCount(int &count) = 0;
 
     /**
      * Returns the current position of the cursor in the result set.
@@ -141,7 +141,7 @@ public:
      *
      * return whether the cursor is before the first row.
      */
-    virtual int IsEnded(bool &result) const = 0;
+    virtual int IsEnded(bool &result) = 0;
 
     /**
      * Returns whether the cursor is pointing to the position before the first
@@ -163,7 +163,7 @@ public:
      *
      * return whether the cursor is pointing at the last entry.
      */
-    virtual int IsAtLastRow(bool &result) const = 0;
+    virtual int IsAtLastRow(bool &result) = 0;
 
     /**
      * Returns the value of the requested column as a byte array.
@@ -171,7 +171,7 @@ public:
      * param columnIndex the zero-based index of the target column.
      * return the value of the requested column as a byte array.
      */
-    virtual int GetBlob(int columnIndex, std::vector<uint8_t> &blob) const = 0;
+    virtual int GetBlob(int columnIndex, std::vector<uint8_t> &blob) = 0;
 
     /**
      * Returns the value of the requested column as a String.
@@ -179,7 +179,7 @@ public:
      * param columnIndex the zero-based index of the target column.
      * return the value of the requested column as a String.
      */
-    virtual int GetString(int columnIndex, std::string &value) const = 0;
+    virtual int GetString(int columnIndex, std::string &value) = 0;
 
     /**
      * Returns the value of the requested column as a int.
@@ -187,7 +187,7 @@ public:
      * param columnIndex the zero-based index of the target column.
      * return the value of the requested column as a int.
      */
-    virtual int GetInt(int columnIndex, int &value) const = 0;
+    virtual int GetInt(int columnIndex, int &value) = 0;
 
     /**
      * Returns the value of the requested column as a long.
@@ -195,7 +195,7 @@ public:
      * param columnIndex the zero-based index of the target column.
      * return the value of the requested column as a long.
      */
-    virtual int GetLong(int columnIndex, int64_t &value) const = 0;
+    virtual int GetLong(int columnIndex, int64_t &value) = 0;
 
     /**
      * Returns the value of the requested column as a double.
@@ -203,7 +203,7 @@ public:
      * param columnIndex the zero-based index of the target column.
      * return the value of the requested column as a double.
      */
-    virtual int GetDouble(int columnIndex, double &value) const = 0;
+    virtual int GetDouble(int columnIndex, double &value) = 0;
 
     /**
      * Whether the value of the requested column is null.
@@ -211,7 +211,7 @@ public:
      * param columnIndex the zero-based index of the target column.
      * return whether the column value is null.
      */
-    virtual int IsColumnNull(int columnIndex, bool &isNull) const = 0;
+    virtual int IsColumnNull(int columnIndex, bool &isNull) = 0;
 
     /**
      * Return true if the result set is closed.

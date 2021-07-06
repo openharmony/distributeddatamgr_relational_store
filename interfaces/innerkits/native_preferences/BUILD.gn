@@ -16,7 +16,7 @@ config("native_preferences_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
-    "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_preferences/include",
+    "../../../frameworks/innerkitsimpl/native_preferences/include",
     "//utils/native/base/include",
   ]
 }
