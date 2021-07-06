@@ -184,7 +184,7 @@ void RdbStoreInsertTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     RdbStoreInsertTest::CheckBlob(resultSet);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
 
     ret = resultSet->GetColumnTypeForIndex(columnIndex, columnType);
     EXPECT_EQ(ret, E_STEP_RESULT_QUERY_NOT_EXECUTED);
@@ -361,7 +361,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_001, TestSize.Level1)
     EXPECT_EQ(3, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -446,7 +446,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_002, TestSize.Level1)
     EXPECT_EQ(3, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -684,7 +684,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_006_007, Test
     EXPECT_EQ(6, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);

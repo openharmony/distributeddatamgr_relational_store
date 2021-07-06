@@ -63,7 +63,7 @@ ValueObjectType ValueObject::GetType() const
 int ValueObject::GetInt(int &val) const
 {
     if (type != ValueObjectType::TYPE_INT) {
-        return E_INVLAID_ONJECT_TYPE;
+        return E_INVALID_OBJECT_TYPE;
     }
 
     int64_t v = std::get<int64_t>(value);
@@ -74,7 +74,7 @@ int ValueObject::GetInt(int &val) const
 int ValueObject::GetLong(int64_t &val) const
 {
     if (type != ValueObjectType::TYPE_INT) {
-        return E_INVLAID_ONJECT_TYPE;
+        return E_INVALID_OBJECT_TYPE;
     }
 
     val = std::get<int64_t>(value);
@@ -84,7 +84,7 @@ int ValueObject::GetLong(int64_t &val) const
 int ValueObject::GetDouble(double &val) const
 {
     if (type != ValueObjectType::TYPE_DOUBLE) {
-        return E_INVLAID_ONJECT_TYPE;
+        return E_INVALID_OBJECT_TYPE;
     }
 
     val = std::get<double>(value);
@@ -94,7 +94,7 @@ int ValueObject::GetDouble(double &val) const
 int ValueObject::GetBool(bool &val) const
 {
     if (type != ValueObjectType::TYPE_BOOL) {
-        return E_INVLAID_ONJECT_TYPE;
+        return E_INVALID_OBJECT_TYPE;
     }
 
     val = std::get<bool>(value);
@@ -104,7 +104,7 @@ int ValueObject::GetBool(bool &val) const
 int ValueObject::GetString(std::string &val) const
 {
     if (type != ValueObjectType::TYPE_STRING) {
-        return E_INVLAID_ONJECT_TYPE;
+        return E_INVALID_OBJECT_TYPE;
     }
 
     val = std::get<std::string>(value);
@@ -114,7 +114,7 @@ int ValueObject::GetString(std::string &val) const
 int ValueObject::GetBlob(std::vector<uint8_t> &val) const
 {
     if (type != ValueObjectType::TYPE_BLOB) {
-        return E_INVLAID_ONJECT_TYPE;
+        return E_INVALID_OBJECT_TYPE;
     }
 
     val = std::get<std::vector<uint8_t>>(value);

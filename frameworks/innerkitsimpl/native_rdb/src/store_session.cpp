@@ -14,9 +14,13 @@
  */
 
 #include "store_session.h"
-
+#include <chrono>
+#include <stack>
+#include <thread>
 #include "logger.h"
 #include "rdb_errno.h"
+#include "shared_block.h"
+#include "sqlite_database_utils.h"
 #include "sqlite_utils.h"
 
 namespace OHOS {
@@ -51,6 +55,27 @@ void StoreSession::ReleaseConnection()
         connectionPool.ReleaseConnection(connection);
         connection = nullptr;
     }
+}
+
+int StoreSession::PrepareAndGetInfo(const std::string &sql, bool &outIsReadOnly, int &numParameters,
+    std::vector<std::string> &columnNames)
+{
+    // Obtains the type of SQL statement.
+    int type = SqliteUtils::GetSqlStatementType(sql);
+    if (SqliteUtils::IsSpecial(type)) {
+        return E_TRANSACTION_IN_EXECUTE;
+    }
+    bool assumeReadOnly = SqliteUtils::IsSqlReadOnly(type);
+
+    AcquireConnection(assumeReadOnly);
+    int errCode = connection->PrepareAndGetInfo(sql, outIsReadOnly, numParameters, columnNames);
+    if (errCode != 0) {
+        ReleaseConnection();
+        return errCode;
+    }
+
+    ReleaseConnection();
+    return E_OK;
 }
 
 int StoreSession::BeginExecuteSql(const std::string &sql)
@@ -138,10 +163,120 @@ int StoreSession::ExecuteGetString(
     if (errCode != 0) {
         return errCode;
     }
-
+    std::string sqlstr = sql;
+    int type = SqliteDatabaseUtils::GetSqlStatementType(sqlstr);
+    if (type == STATEMENT_PRAGMA) {
+        ReleaseConnection();
+        AcquireConnection(false);
+    }
     errCode = connection->ExecuteGetString(outValue, sql, bindArgs);
     ReleaseConnection();
     return errCode;
+}
+
+int StoreSession::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
+{
+    std::vector<ValueObject> bindArgs;
+    bindArgs.push_back(ValueObject(databasePath));
+    if (destEncryptKey.size() != 0) {
+        bindArgs.push_back(ValueObject(destEncryptKey));
+    } else {
+        std::string str = "";
+        bindArgs.push_back(ValueObject(str));
+    }
+
+    int errCode = ExecuteSql(ATTACH_BACKUP_SQL, bindArgs);
+    if (errCode != E_OK) {
+        LOG_ERROR("ExecuteSql ATTACH_BACKUP_SQL error %{public}d", errCode);
+        return errCode;
+    }
+    int64_t count;
+    errCode = ExecuteGetLong(count, EXPORT_SQL, std::vector<ValueObject>());
+    if (errCode != E_OK) {
+        LOG_ERROR("ExecuteSql EXPORT_SQL error %{public}d", errCode);
+        return errCode;
+    }
+
+    errCode = ExecuteSql(DETACH_BACKUP_SQL, std::vector<ValueObject>());
+    if (errCode != E_OK) {
+        LOG_ERROR("ExecuteSql DETACH_BACKUP_SQL error %{public}d", errCode);
+        return errCode;
+    }
+    return E_OK;
+}
+
+// Checks whether this thread holds a database connection.
+bool StoreSession::IsHoldingConnection() const
+{
+    if (connection == nullptr) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+int StoreSession::CheckNoTransaction() const
+{
+    int errorCode = 0;
+    if (transactionStack.empty()) {
+        errorCode = E_STORE_SESSION_NO_CURRENT_TRANSACTION;
+        return errorCode;
+    }
+    return E_OK;
+}
+
+int StoreSession::GiveConnectionTemporarily(long milliseconds)
+{
+    int errorCode = CheckNoTransaction();
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
+    Transaction transaction = transactionStack.top();
+    if (transaction.IsMarkedSuccessful() || transactionStack.size() > 1) {
+        errorCode = E_STORE_SESSION_NOT_GIVE_CONNECTION_TEMPORARILY;
+        return errorCode;
+    }
+
+    MarkAsCommit();
+    EndTransaction();
+    if (milliseconds > 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+    }
+    BeginTransaction();
+    return E_OK;
+}
+
+int StoreSession::Attach(const std::string &alias, const std::string &pathName,
+    const std::vector<uint8_t> destEncryptKey)
+{
+    std::string journalMode;
+    int errCode = ExecuteGetString(journalMode, "PRAGMA journal_mode", std::vector<ValueObject>());
+    if (errCode != E_OK) {
+        LOG_ERROR("RdbStoreImpl CheckAttach fail to get journal mode : %{public}d", errCode);
+        return errCode;
+    }
+    journalMode = SqliteUtils::StrToUpper(journalMode);
+    if (journalMode == "WAL") {
+        LOG_ERROR("RdbStoreImpl attach is not supported in WAL mode");
+        return E_NOT_SUPPORTED_ATTACH_IN_WAL_MODE;
+    }
+
+    std::vector<ValueObject> bindArgs;
+    bindArgs.push_back(ValueObject(pathName));
+    bindArgs.push_back(ValueObject(alias));
+    if (destEncryptKey.size() != 0) {
+        bindArgs.push_back(ValueObject(destEncryptKey));
+    } else {
+        std::string str = "";
+        bindArgs.push_back(ValueObject(str));
+    }
+    errCode = ExecuteSql(ATTACH_SQL, bindArgs);
+    if (errCode != E_OK) {
+        LOG_ERROR("ExecuteSql ATTACH_SQL error %{public}d", errCode);
+        return errCode;
+    }
+
+    return E_OK;
 }
 
 int StoreSession::BeginTransaction()
@@ -165,6 +300,84 @@ int StoreSession::BeginTransaction()
     transactionStack.push(transaction);
     return E_OK;
 }
+
+int StoreSession::BeginTransaction(TransactionObserver *transactionObserver)
+{
+    if (transactionStack.empty()) {
+        AcquireConnection(false);
+        if (!connection->IsWriteConnection()) {
+            LOG_ERROR("StoreSession BeginExecutea : read connection can not begin transaction");
+            ReleaseConnection();
+            return E_BEGIN_TRANSACTION_IN_READ_CONNECTION;
+        }
+
+        int errCode = connection->ExecuteSql("BEGIN EXCLUSIVE;");
+        if (errCode != E_OK) {
+            ReleaseConnection();
+            return errCode;
+        }
+    }
+
+    if (transactionObserver != nullptr) {
+        transactionObserver->OnBegin();
+    }
+
+    Transaction transaction;
+    transactionStack.push(transaction);
+
+    return E_OK;
+}
+
+int StoreSession::MarkAsCommitWithObserver(TransactionObserver *transactionObserver)
+{
+    if (transactionStack.empty()) {
+        return E_NO_TRANSACTION_IN_SESSION;
+    }
+    transactionStack.top().SetMarkedSuccessful(true);
+    return E_OK;
+}
+
+int StoreSession::EndTransactionWithObserver(TransactionObserver *transactionObserver)
+{
+    if (transactionStack.empty()) {
+        return E_NO_TRANSACTION_IN_SESSION;
+    }
+
+    Transaction transaction = transactionStack.top();
+    bool isSucceed = transaction.IsAllBeforeSuccessful() && transaction.IsMarkedSuccessful();
+    transactionStack.pop();
+
+    if (transactionObserver != nullptr) {
+        if (isSucceed) {
+            transactionObserver->OnCommit();
+        } else {
+            transactionObserver->OnRollback();
+        }
+    }
+
+    if (!transactionStack.empty()) {
+        if (transactionObserver != nullptr) {
+            transactionObserver->OnRollback();
+        }
+
+        if (!isSucceed) {
+            transactionStack.top().SetAllBeforeSuccessful(false);
+        }
+    } else {
+        int errCode;
+        if (isSucceed) {
+            errCode = connection->ExecuteSql("COMMIT;");
+        } else {
+            errCode = connection->ExecuteSql("ROLLBACK;");
+        }
+
+        ReleaseConnection();
+        return errCode;
+    }
+
+    return E_OK;
+}
+
 int StoreSession::MarkAsCommit()
 {
     if (transactionStack.empty()) {
@@ -173,6 +386,7 @@ int StoreSession::MarkAsCommit()
     transactionStack.top().SetMarkedSuccessful(true);
     return E_OK;
 }
+
 int StoreSession::EndTransaction()
 {
     if (transactionStack.empty()) {
@@ -262,6 +476,19 @@ bool StoreSession::Transaction::IsMarkedSuccessful() const
 void StoreSession::Transaction::SetMarkedSuccessful(bool isMarkedSuccessful)
 {
     this->isMarkedSuccessful = isMarkedSuccessful;
+}
+
+int StoreSession::ExecuteForSharedBlock(int &rowNum, std::string sql, const std::vector<ValueObject> &bindArgs,
+    AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows)
+{
+    int errCode = BeginExecuteSql(sql);
+    if (errCode != 0) {
+        return errCode;
+    }
+    errCode =
+        connection->ExecuteForSharedBlock(rowNum, sql, bindArgs, sharedBlock, startPos, requiredPos, isCountAllRows);
+    ReleaseConnection();
+    return errCode;
 }
 } // namespace NativeRdb
 } // namespace OHOS

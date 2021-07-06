@@ -169,7 +169,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
     EXPECT_EQ(6, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -291,7 +291,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
     EXPECT_EQ(6, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -465,7 +465,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
     EXPECT_EQ(9, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -588,7 +588,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
     EXPECT_EQ(6, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -712,7 +712,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
     EXPECT_EQ(9, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -835,7 +835,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
     EXPECT_EQ(6, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -959,7 +959,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
     EXPECT_EQ(9, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -1050,7 +1050,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize
     EXPECT_EQ(6, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);

@@ -12,15 +12,20 @@
 # limitations under the License.
 import("//build/test.gni")
 
-module_output_path = "appdatamgr/native_rdb"
+module_output_path = "native_appdatamgr/native_rdb"
 
 ###############################################################################
 config("module_private_config") {
   visibility = [ ":*" ]
 
   include_dirs = [
-    ##"../include/",
+    "../include/",
     "../../../../interfaces/innerkits/native_rdb/include",
+    "../../../../frameworks/innerkitsimpl/native_rdb/src",
+    "../../../../frameworks/innerkitsimpl/native_appdatafwk/include",
+    "//third_party/icu/icu4c/source/i18n",
+    "//third_party/icu/icu4c/source/common",
+    "//utils/native/base/include",
   ]
 }
 
@@ -28,6 +33,7 @@ ohos_unittest("NativeRdbTest") {
   module_out_path = module_output_path
 
   sources = [
+    "unittest/data_ability_predicates_test.cpp",
     "unittest/rdb_attach_test.cpp",
     "unittest/rdb_delete_test.cpp",
     "unittest/rdb_encrypt_test.cpp",
@@ -35,6 +41,10 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_helper_test.cpp",
     "unittest/rdb_insert_test.cpp",
     "unittest/rdb_open_callback_test.cpp",
+    "unittest/rdb_predicates_test.cpp",
+    "unittest/rdb_raw_predicates_test.cpp",
+    "unittest/rdb_sqlite_shared_result_set_test.cpp",
+    "unittest/rdb_step_result_set_test.cpp",
     "unittest/rdb_store_concurrent_test.cpp",
     "unittest/rdb_store_config_test.cpp",
     "unittest/rdb_store_interface_test.cpp",
@@ -50,6 +60,10 @@ ohos_unittest("NativeRdbTest") {
   deps = [
     "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_rdb:native_rdb",
     "//third_party/googletest:gtest_main",
+    "//third_party/icu/icu4c:shared_icui18n",
+    "//third_party/icu/icu4c:shared_icuuc",
+    "//third_party/sqlite:sqlite",
+    "//utils/native/base:utils",
   ]
 }
 

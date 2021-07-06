@@ -203,7 +203,7 @@ void RdbEncryptTest::QueryCheckID1(std::shared_ptr<RdbStore> &store)
     EXPECT_EQ(2, blob[1]);
     EXPECT_EQ(3, blob[2]);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 }
@@ -304,7 +304,7 @@ void RdbEncryptTest::QueryCheckID4(std::shared_ptr<RdbStore> &store)
     EXPECT_EQ(11, blob[1]);
     EXPECT_EQ(12, blob[2]);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 }
@@ -454,7 +454,7 @@ void RdbEncryptTest::QueryCheckID5(std::shared_ptr<RdbStore> &store)
     EXPECT_EQ(14, blob[1]);
     EXPECT_EQ(15, blob[2]);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 }
@@ -544,7 +544,7 @@ void RdbEncryptTest::QueryThread(int n)
     EXPECT_EQ(ret, E_OK);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LASET);
+    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 }
