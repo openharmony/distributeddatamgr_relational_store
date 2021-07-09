@@ -17,7 +17,6 @@
 #define NATIVE_RDB_SHARE_BLOCK_H
 
 #include "shared_block.h"
-#include <jni.h>
 #include <sqlite3sym.h>
 #include <string>
 

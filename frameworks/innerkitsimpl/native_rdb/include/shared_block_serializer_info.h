@@ -16,7 +16,6 @@
 #ifndef SHARED_BLOCK_SERIALIZER_INFO_H
 #define SHARED_BLOCK_SERIALIZER_INFO_H
 
-#include <jni.h>
 #include <sqlite3sym.h>
 
 #include "shared_block.h"
