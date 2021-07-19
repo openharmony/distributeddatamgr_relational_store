@@ -55,7 +55,7 @@ ohos_unittest("NativeRdbTest") {
 
   configs = [ ":module_private_config" ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog_native:libhilog" ]
 
   deps = [
     "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_rdb:native_rdb",

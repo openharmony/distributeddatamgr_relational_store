@@ -78,7 +78,7 @@ ohos_shared_library("native_rdb") {
     "//utils/native/base:utils",
   ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog_native:libhilog" ]
 
   public_configs = [ ":native_rdb_public_config" ]
 
