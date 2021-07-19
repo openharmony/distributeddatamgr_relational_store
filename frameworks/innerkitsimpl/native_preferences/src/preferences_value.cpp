@@ -32,6 +32,11 @@ PreferencesValue::PreferencesValue(float value)
     data_ = value;
 }
 
+PreferencesValue::PreferencesValue(double value)
+{
+    data_ = value;
+}
+
 PreferencesValue::PreferencesValue(bool value)
 {
     data_ = value;
@@ -62,6 +67,12 @@ bool PreferencesValue::IsLong() const
 bool PreferencesValue::IsFloat() const
 {
     auto pVal = std::get_if<float>(&data_);
+    return (pVal != nullptr);
+}
+
+bool PreferencesValue::IsDouble() const
+{
+    auto pVal = std::get_if<double>(&data_);
     return (pVal != nullptr);
 }
 
@@ -96,6 +107,11 @@ PreferencesValue::operator int64_t()
 PreferencesValue::operator float()
 {
     return std::get<float>(data_);
+}
+
+PreferencesValue::operator double()
+{
+    return std::get<double>(data_);
 }
 
 PreferencesValue::operator bool()

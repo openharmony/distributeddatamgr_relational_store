@@ -176,17 +176,11 @@ napi_value PreferencesProxy::GetValueSync(napi_env env, napi_callback_info info)
     napi_value output = nullptr;
     NAPI_CALL(env, napi_typeof(env, args[1], &valueType));
     if (valueType == napi_number) {
-        double value;
+        double value = 0.0;
         NAPI_CALL(env, napi_get_value_double(env, args[1], &value));
         LOG_DEBUG("get number");
-
-        if (!IsFloat(value)) {
-            int64_t result = obj->value_->GetLong(key, (int64_t)value);
-            NAPI_CALL(env, napi_create_int64(env, result, &output)); // int
-        } else {
-            float result = obj->value_->GetFloat(key, value);
-            NAPI_CALL(env, napi_create_double(env, result, &output)); // double
-        }
+        double result = obj->value_->GetDouble(key, value);
+        NAPI_CALL(env, napi_create_double(env, result, &output)); // double
         LOG_DEBUG("get number end");
     } else if (valueType == napi_string) {
         LOG_DEBUG("get string");
@@ -226,15 +220,10 @@ void ParseDefValue(const napi_env& env, const napi_value& arg, StorageAysncConte
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, arg, &valueType);
     if (valueType == napi_number) {
-        double number;
+        double number = 0.0;
         napi_get_value_double(env, arg, &number);
-        if (!IsFloat(number)) {
-            PreferencesValue value((int64_t)number);
-            asyncContext->defValue = value;
-        } else {
-            PreferencesValue value((float)number);
-            asyncContext->defValue = value;
-        }
+        PreferencesValue value((double)number);
+        asyncContext->defValue = value;
     } else if (valueType == napi_string) {
         char* str = new char[MAX_VALUE_LENGTH];
         size_t valueSize = 0;
@@ -269,15 +258,12 @@ napi_value PreferencesProxy::GetValue(napi_env env, napi_callback_info info)
             if (asyncContext->defValue.IsBool()) {
                 bool tmpValue = (bool)obj->value_->GetBool(asyncContext->key, (bool)asyncContext->defValue);
                 asyncContext->defValue = PreferencesValue((bool)tmpValue);
-            } else if (asyncContext->defValue.IsLong()) {
-                int64_t tmpValue = obj->value_->GetLong(asyncContext->key, (int64_t)asyncContext->defValue);
-                asyncContext->defValue = PreferencesValue((int64_t)tmpValue);
             } else if (asyncContext->defValue.IsString()) {
                 std::string tmpValue = obj->value_->GetString(asyncContext->key, (std::string)asyncContext->defValue);
                 asyncContext->defValue = PreferencesValue((std::string)tmpValue);
-            } else if (asyncContext->defValue.IsFloat()) {
-                float tmpValue = obj->value_->GetFloat(asyncContext->key, (float)asyncContext->defValue);
-                asyncContext->defValue = PreferencesValue((float)tmpValue);
+            } else if (asyncContext->defValue.IsDouble()) {
+                double tmpValue = obj->value_->GetDouble(asyncContext->key, (double)asyncContext->defValue);
+                asyncContext->defValue = PreferencesValue((double)tmpValue);
             } else {
                 errCode = ERR;
             }
@@ -288,13 +274,11 @@ napi_value PreferencesProxy::GetValue(napi_env env, napi_callback_info info)
             int errCode = OK;
             if (asyncContext->defValue.IsBool()) {
                 napi_get_boolean(asyncContext->env, (bool)asyncContext->defValue, &output);
-            } else if (asyncContext->defValue.IsLong()) {
-                napi_create_int64(asyncContext->env, (int64_t)asyncContext->defValue, &output);
             } else if (asyncContext->defValue.IsString()) {
                 std::string tempStr = (std::string)asyncContext->defValue;
                 napi_create_string_utf8(asyncContext->env, tempStr.c_str(), tempStr.size(), &output);
-            } else if (asyncContext->defValue.IsFloat()) {
-                napi_create_double(asyncContext->env, (float)asyncContext->defValue, &output);
+            } else if (asyncContext->defValue.IsDouble()) {
+                napi_create_double(asyncContext->env, (double)asyncContext->defValue, &output);
             } else {
                 errCode = ERR;
             }
@@ -330,14 +314,8 @@ napi_value PreferencesProxy::SetValueSync(napi_env env, napi_callback_info info)
     if (valueType == napi_number) {
         double value = 0.0;
         NAPI_CALL(env, napi_get_value_double(env, args[1], &value));
-
-        if (IsFloat(value)) {
-            int result = obj->value_->PutFloat(key, (float)value);
-            NAPI_ASSERT(env, result == E_OK, "call PutFloat failed");
-        } else {
-            int result = obj->value_->PutLong(key, (int64_t)value);
-            NAPI_ASSERT(env, result == E_OK, "call PutLong failed");
-        }
+        int result = obj->value_->PutDouble(key, (double) value);
+        NAPI_ASSERT(env, result == E_OK, "call PutDouble failed");
     } else if (valueType == napi_string) {
         char *value = new char[MAX_VALUE_LENGTH];
         napi_get_value_string_utf8(env, args[1], value, MAX_VALUE_LENGTH, &out);
@@ -373,12 +351,10 @@ napi_value PreferencesProxy::SetValue(napi_env env, napi_callback_info info)
             PreferencesProxy* obj = reinterpret_cast<PreferencesProxy*>(asyncContext->boundObj);
             if (asyncContext->defValue.IsBool()) {
                 errCode = obj->value_->PutBool(asyncContext->key, (bool)asyncContext->defValue);
-            } else if (asyncContext->defValue.IsLong()) {
-                errCode = obj->value_->PutLong(asyncContext->key, (int64_t)asyncContext->defValue);
             } else if (asyncContext->defValue.IsString()) {
                 errCode = obj->value_->PutString(asyncContext->key, (std::string)asyncContext->defValue);
-            } else if (asyncContext->defValue.IsFloat()) {
-                errCode = obj->value_->PutFloat(asyncContext->key, (float)asyncContext->defValue);
+            } else if (asyncContext->defValue.IsDouble()) {
+                errCode = obj->value_->PutDouble(asyncContext->key, (double)asyncContext->defValue);
             } else {
                 errCode = ERR;
             }
@@ -487,7 +463,6 @@ napi_value PreferencesProxy::Flush(napi_env env, napi_callback_info info)
     NapiAsyncProxy<StorageAysncContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<StorageAysncContext>::InputParser> parsers;
-    parsers.push_back(ParseKey);
     proxy.ParseInputs(parsers);
 
     return proxy.DoAsyncWork(
