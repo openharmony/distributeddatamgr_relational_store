@@ -585,12 +585,12 @@ HWTEST_F(PreferencesTest, NativePreferencesTest_019, TestSize.Level1)
     ret = pref->GetDouble("", 35.99999);
     EXPECT_EQ(ret, 35.99999);
 
-    pref->PutDouble(PreferencesTest::KEY_TEST_DOUBLE_ELEMENT, (numeric_limits<double>::max)());
+    pref->PutDouble(PreferencesTest::KEY_TEST_DOUBLE_ELEMENT, (std::numeric_limits<double>::max)());
     pref->PutString(PreferencesTest::KEY_TEST_STRING_ELEMENT, "5.99");
     pref->Flush();
 
     ret = pref->GetDouble(PreferencesTest::KEY_TEST_DOUBLE_ELEMENT, 3.99);
-    EXPECT_EQ(ret, (numeric_limits<double>::max)());
+    EXPECT_EQ(ret, (std::numeric_limits<double>::max)());
 
     ret = pref->GetDouble(PreferencesTest::KEY_TEST_STRING_ELEMENT, 3.99);
     EXPECT_EQ(ret, 3.99);
