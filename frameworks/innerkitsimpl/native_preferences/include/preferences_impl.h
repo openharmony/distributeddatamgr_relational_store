@@ -48,6 +48,8 @@ public:
 
     virtual float GetFloat(const std::string &key, float defValue) override;
 
+    virtual double GetDouble(const std::string &key, double defValue) override;
+
     virtual int64_t GetLong(const std::string &key, int64_t defValue) override;
 
     virtual std::set<std::string> GetStringSet(const std::string &key, std::set<std::string> &defValue) override;
@@ -63,6 +65,8 @@ public:
     virtual int PutLong(const std::string &key, int64_t value) override;
 
     virtual int PutFloat(const std::string &key, float value) override;
+
+    virtual int PutDouble(const std::string &key, double value) override;
 
     virtual int PutStringSet(const std::string &key, const std::set<std::string> &value) override;
 
