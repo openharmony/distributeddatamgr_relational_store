@@ -29,6 +29,7 @@ public:
     explicit PreferencesValue(int value);
     explicit PreferencesValue(int64_t value);
     explicit PreferencesValue(float value);
+    explicit PreferencesValue(double value);
     explicit PreferencesValue(bool value);
     explicit PreferencesValue(std::string value);
     explicit PreferencesValue(std::set<std::string> value);
@@ -36,12 +37,14 @@ public:
     bool IsInt() const;
     bool IsLong() const;
     bool IsFloat() const;
+    bool IsDouble() const;
     bool IsBool() const;
     bool IsString() const;
     bool IsSet() const;
 
     operator int();
     operator float();
+    operator double();
     operator bool();
     operator int64_t();
     operator std::string();
@@ -50,7 +53,7 @@ public:
     bool operator==(const PreferencesValue &value);
 
 private:
-    std::variant<int, int64_t, float, bool, std::string, std::set<std::string>> data_;
+    std::variant<int, int64_t, float, double, bool, std::string, std::set<std::string>> data_;
 };
 } // End of namespace NativePreferences
 } // End of namespace OHOS

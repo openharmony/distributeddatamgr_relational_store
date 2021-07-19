@@ -285,6 +285,27 @@ float PreferencesImpl::GetFloat(const std::string &key, float defValue)
     return ret;
 }
 
+double PreferencesImpl::GetDouble(const std::string &key, double defValue)
+{
+    if (CheckKey(key) != E_OK) {
+        return defValue;
+    }
+
+    AwaitLoadFile();
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    double ret = defValue;
+
+    auto iter = map_.find(key);
+    if (iter != map_.end()) {
+        PreferencesValue val = iter->second;
+        if (val.IsDouble()) {
+            ret = val;
+        }
+    }
+    return ret;
+}
+
 int64_t PreferencesImpl::GetLong(const std::string &key, int64_t defValue)
 {
     if (CheckKey(key) != E_OK) {
@@ -357,6 +378,9 @@ bool PreferencesImpl::ReadSettingXml(
         } else if (element.tag_.compare("float") == 0) {
             float value = atof(element.value_.c_str());
             prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
+        } else if (element.tag_.compare("double") == 0) {
+            double value = atof(element.value_.c_str());
+            prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
         } else if (element.tag_.compare("string") == 0) {
             prefMap.insert(std::make_pair(element.key_, PreferencesValue(element.value_)));
         } else if (element.tag_.compare("set") == 0) {
@@ -394,6 +418,9 @@ bool PreferencesImpl::WriteSettingXml(
         } else if (value.IsFloat()) {
             elem.tag_ = std::string("float");
             elem.value_ = std::to_string((float)value);
+        } else if (value.IsDouble()) {
+            elem.tag_ = std::string("double");
+            elem.value_ = std::to_string((double)value);
         } else if (value.IsString()) {
             elem.tag_ = std::string("string");
             elem.value_ = (std::string)value;
@@ -520,6 +547,16 @@ int PreferencesImpl::PutLong(const std::string &key, int64_t value)
 }
 
 int PreferencesImpl::PutFloat(const std::string &key, float value)
+{
+    int errCode = CheckKey(key);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    PutPreferencesValue(key, PreferencesValue(value));
+    return E_OK;
+}
+
+int PreferencesImpl::PutDouble(const std::string &key, double value)
 {
     int errCode = CheckKey(key);
     if (errCode != E_OK) {
