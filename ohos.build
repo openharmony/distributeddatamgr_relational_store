@@ -53,6 +53,15 @@
             ],
             "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_preferences/include"
           }
+        },
+        {
+          "name": "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_appdatafwk:native_appdatafwk",
+          "header": {
+            "header_files": [
+              "shared_block.h"
+            ],
+            "header_base": "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_appdatafwk/include"
+          }
         }
       ],
       "test_list": [
