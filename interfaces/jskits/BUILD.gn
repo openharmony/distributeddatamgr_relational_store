@@ -50,7 +50,7 @@ ohos_shared_library("storage") {
 
   external_deps = [
     # "napi:napi_packages",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog_native:libhilog",
     "native_appdatamgr:native_preferences",
   ]
 
@@ -68,7 +68,7 @@ ohos_shared_library("rdb") {
 
   external_deps = [
     # "napi:napi_packages",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog_native:libhilog",
     "native_appdatamgr:native_rdb",
   ]
 
