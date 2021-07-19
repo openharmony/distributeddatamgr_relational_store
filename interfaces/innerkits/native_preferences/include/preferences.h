@@ -41,6 +41,8 @@ public:
 
     virtual float GetFloat(const std::string &key, float defValue) = 0;
 
+    virtual double GetDouble(const std::string &key, double defValue) = 0;
+
     virtual int64_t GetLong(const std::string &key, int64_t defValue) = 0;
 
     virtual std::set<std::string> GetStringSet(const std::string &key, std::set<std::string> &defValue) = 0;
@@ -58,6 +60,8 @@ public:
     virtual int PutLong(const std::string &key, int64_t value) = 0;
 
     virtual int PutFloat(const std::string &key, float value) = 0;
+
+    virtual int PutDouble(const std::string &key, double value) = 0;
 
     virtual int PutStringSet(const std::string &key, const std::set<std::string> &value) = 0;
 

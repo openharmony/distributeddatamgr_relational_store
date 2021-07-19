@@ -43,6 +43,7 @@ public:
     static const std::string KEY_TEST_INT_ELEMENT;
     static const std::string KEY_TEST_LONG_ELEMENT;
     static const std::string KEY_TEST_FLOAT_ELEMENT;
+    static const std::string KEY_TEST_DOUBLE_ELEMENT;
     static const std::string KEY_TEST_BOOL_ELEMENT;
     static const std::string KEY_TEST_STRING_ELEMENT;
 };
@@ -55,6 +56,7 @@ const std::string PreferencesTest::LONG_KEY = std::string(Preferences::MAX_KEY_L
 const std::string PreferencesTest::KEY_TEST_INT_ELEMENT = "key_test_int";
 const std::string PreferencesTest::KEY_TEST_LONG_ELEMENT = "key_test_long";
 const std::string PreferencesTest::KEY_TEST_FLOAT_ELEMENT = "key_test_float";
+const std::string PreferencesTest::KEY_TEST_DOUBLE_ELEMENT = "key_test_double";
 const std::string PreferencesTest::KEY_TEST_BOOL_ELEMENT = "key_test_bool";
 const std::string PreferencesTest::KEY_TEST_STRING_ELEMENT = "key_test_string";
 
@@ -566,4 +568,30 @@ HWTEST_F(PreferencesTest, NativePreferencesTest_018, TestSize.Level1)
     EXPECT_EQ(ret, "defaultvalue");
     ret1 = pref->GetInt(PreferencesTest::KEY_TEST_INT_ELEMENT, 0);
     EXPECT_EQ(ret1, 0);
+}
+
+/**
+ * @tc.name: NativePreferencesTest_019
+ * @tc.desc: normal testcase of GetDouble
+ * @tc.type: FUNC
+ * @tc.require: Na
+ * @tc.author: mang tsang
+ */
+HWTEST_F(PreferencesTest, NativePreferencesTest_019, TestSize.Level1)
+{
+    double ret = pref->GetDouble(PreferencesTest::LONG_KEY + 'x', 35.99999);
+    EXPECT_EQ(ret, 35.99999);
+
+    ret = pref->GetDouble("", 35.99999);
+    EXPECT_EQ(ret, 35.99999);
+
+    pref->PutDouble(PreferencesTest::KEY_TEST_DOUBLE_ELEMENT, (numeric_limits<double>::max)());
+    pref->PutString(PreferencesTest::KEY_TEST_STRING_ELEMENT, "5.99");
+    pref->Flush();
+
+    ret = pref->GetDouble(PreferencesTest::KEY_TEST_DOUBLE_ELEMENT, 3.99);
+    EXPECT_EQ(ret, (numeric_limits<double>::max)());
+
+    ret = pref->GetDouble(PreferencesTest::KEY_TEST_STRING_ELEMENT, 3.99);
+    EXPECT_EQ(ret, 3.99);
 }
