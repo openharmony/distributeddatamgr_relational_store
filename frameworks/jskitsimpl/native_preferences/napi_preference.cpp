@@ -469,8 +469,7 @@ napi_value PreferencesProxy::Flush(napi_env env, napi_callback_info info)
         "Flush",
         [](StorageAysncContext* asyncContext) {
             PreferencesProxy* obj = reinterpret_cast<PreferencesProxy*>(asyncContext->boundObj);
-            obj->value_->Flush();
-            return OK;
+            return obj->value_->FlushSync();
         },
         [](StorageAysncContext* asyncContext, napi_value& output) {
             napi_status status = napi_get_undefined(asyncContext->env, &output);
