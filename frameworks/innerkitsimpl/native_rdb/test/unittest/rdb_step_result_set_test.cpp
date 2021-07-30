@@ -104,13 +104,13 @@ void RdbStepResultSetTest::GenerateDefaultTable()
     typeBlob.clear();
     store->ExecuteSql(insertSql, std::vector<ValueObject> {
             ValueObject(std::string("2")), ValueObject((int)-5),
-            ValueObject((double)2.5), ValueObject(NULL)
+            ValueObject((double)2.5), ValueObject()
         });
 
     /* insert third entry data */
     store->ExecuteSql(insertSql, std::vector<ValueObject> {
             ValueObject(std::string("hello world")),
-            ValueObject((int)3), ValueObject((double)1.8), ValueObject(NULL)
+            ValueObject((int)3), ValueObject((double)1.8), ValueObject()
         });
 }
 
