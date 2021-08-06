@@ -193,7 +193,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_001, TestSize.Level1)
 
     std::vector<uint8_t> blobValue;
     iRet = resultSet->GetBlob(4, blobValue);
-    EXPECT_EQ(E_INVALID_COLUMN_TYPE, iRet);
+    EXPECT_EQ(E_OK, iRet);
 }
 
 /* *
@@ -740,7 +740,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_012, TestSize.Level1)
 
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
     iRet = resultSet->GetBlob(3, blobValue);
-    EXPECT_EQ(E_INVALID_COLUMN_TYPE, iRet);
+    EXPECT_EQ(E_OK, iRet);
 }
 
 
@@ -977,7 +977,7 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount003, TestSize.Level1)
     EXPECT_EQ(2.5, dValue);
 
     iRet = resultSet->GetBlob(4, blobValue);
-    EXPECT_EQ(E_INVALID_COLUMN_TYPE, iRet);
+    EXPECT_EQ(E_OK, iRet);
 
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
     iRet = resultSet->GetRowIndex(position);
@@ -1074,7 +1074,7 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount004, TestSize.Level1)
     EXPECT_EQ(1.8, dValue);
 
     iRet = resultSet->GetBlob(3, blobValue);
-    EXPECT_EQ(E_INVALID_COLUMN_TYPE, iRet);
+    EXPECT_EQ(E_OK, iRet);
 }
 
 /* *
@@ -1127,7 +1127,7 @@ HWTEST_F(RdbStepResultSetTest, testGoToRow005, TestSize.Level1)
     EXPECT_EQ(1.8, dValue);
 
     iRet = resultSet->GetBlob(3, blobValue);
-    EXPECT_EQ(E_INVALID_COLUMN_TYPE, iRet);
+    EXPECT_EQ(E_OK, iRet);
 
     EXPECT_EQ(E_OK, resultSet->GoToRow(1));
 
@@ -1198,7 +1198,7 @@ HWTEST_F(RdbStepResultSetTest, testGo006, TestSize.Level1)
     EXPECT_EQ(1.8, dValue);
 
     iRet = resultSet->GetBlob(4, blobValue);
-    EXPECT_EQ(E_INVALID_COLUMN_TYPE, iRet);
+    EXPECT_EQ(E_OK, iRet);
 
     EXPECT_EQ(resultSet->GoTo(-2), E_OK);
 
@@ -1315,7 +1315,7 @@ HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
     EXPECT_EQ(2.5, dValue);
 
     iRet = resultSet->GetBlob(3, blobValue);
-    EXPECT_EQ(E_INVALID_COLUMN_TYPE, iRet);
+    EXPECT_EQ(E_OK, iRet);
 
     EXPECT_EQ(E_OK, resultSet->GoToLastRow());
 
@@ -1411,7 +1411,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep008, TestSize.Level1)
     EXPECT_EQ(2.5, dValue);
 
     iRet = resultSet->GetBlob(3, blobValue);
-    EXPECT_EQ(E_INVALID_COLUMN_TYPE, iRet);
+    EXPECT_EQ(E_OK, iRet);
 }
 
 /* *
