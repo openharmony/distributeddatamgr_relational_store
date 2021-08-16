@@ -1149,7 +1149,7 @@ HWTEST_F(RdbStepResultSetTest, testGoToRow005, TestSize.Level1)
     EXPECT_EQ(2.5, dValue);
 
     iRet = resultSet->GetBlob(3, blobValue);
-    EXPECT_EQ(E_INVALID_COLUMN_TYPE, iRet);
+    EXPECT_EQ(E_OK, iRet);
 }
 
 /* *
