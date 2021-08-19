@@ -53,7 +53,7 @@ typedef struct DBM *KVStoreHandle;
 int DBM_GetKVStore(const char* storeFullPath, KVStoreHandle* kvStore);
 
 int DBM_Get(KVStoreHandle db, const char* key, void* value, unsigned int count, unsigned int* realValueLen);
-int DBM_Put(KVStoreHandle db, const char* key, void* value, unsigned int len);
+int DBM_Put(KVStoreHandle db, const char* key, const void* value, unsigned int len);
 int DBM_Delete(KVStoreHandle db, const char* key);
 
 int DBM_CloseKVStore(KVStoreHandle db);
