@@ -72,6 +72,7 @@ void RdbStoreConfigTest::SetUp(void)
 
 void RdbStoreConfigTest::TearDown(void)
 {
+    RdbHelper::ClearCache();
 }
 
 /**

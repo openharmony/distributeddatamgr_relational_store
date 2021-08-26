@@ -37,7 +37,7 @@ public:
     virtual int GetDouble(int columnIndex, double &value) override;
     virtual int IsColumnNull(int columnIndex, bool &isNull) override;
     virtual int GoToRow(int position) override;
-    virtual int GetColumnTypeForIndex(int columnIndex, ColumnType &columnType) override;
+    virtual int GetColumnType(int columnIndex, ColumnType &columnType) override;
     int GetRowIndex(int &position) const override;
     int GoTo(int offset) override;
     int GoToFirstRow() override;
@@ -49,8 +49,8 @@ public:
     int IsStarted(bool &result) const override;
     int IsEnded(bool &result) override;
     int GetColumnCount(int &count) override;
-    int GetColumnIndexForName(const std::string &columnName, int &columnIndex) override;
-    int GetColumnNameForIndex(int columnIndex, std::string &columnName) override;
+    int GetColumnIndex(const std::string &columnName, int &columnIndex) override;
+    int GetColumnName(int columnIndex, std::string &columnName) override;
     bool IsClosed() const override;
     int Close() override;
 protected:

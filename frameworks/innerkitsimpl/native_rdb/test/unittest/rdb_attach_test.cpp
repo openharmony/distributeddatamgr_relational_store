@@ -104,6 +104,7 @@ void RdbAttachTest::SetUp(void)
 
 void RdbAttachTest::TearDown(void)
 {
+    RdbHelper::ClearCache();
 }
 
 /**
@@ -184,13 +185,13 @@ void RdbAttachTest::QueryCheck1(std::shared_ptr<RdbStore> &store) const
     EXPECT_EQ(ret, E_OK);
     int columnIndex;
     int intVal;
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(intVal, 1);
     std::string strVal;
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
@@ -200,12 +201,12 @@ void RdbAttachTest::QueryCheck1(std::shared_ptr<RdbStore> &store) const
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(intVal, 1);
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
@@ -220,13 +221,13 @@ void RdbAttachTest::QueryCheck2(std::shared_ptr<RdbStore> &store) const
     EXPECT_EQ(ret, E_OK);
     int columnIndex;
     int intVal;
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(intVal, 1);
     std::string strVal;
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);

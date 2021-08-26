@@ -63,12 +63,11 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
     return E_OK;
 }
 
-int StepResultSet::GetColumnTypeForIndex(int columnIndex, ColumnType &columnType)
+int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 {
     if (rowPos == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
-
     int sqliteType;
     int errCode = sqliteStatement->GetColumnType(columnIndex, sqliteType);
     if (errCode) {
@@ -277,7 +276,7 @@ int StepResultSet::GetDouble(int columnIndex, double &value)
 int StepResultSet::IsColumnNull(int columnIndex, bool &isNull)
 {
     ColumnType columnType;
-    int errCode = GetColumnTypeForIndex(columnIndex, columnType);
+    int errCode = GetColumnType(columnIndex, columnType);
     if (errCode != E_OK) {
         return errCode;
     }

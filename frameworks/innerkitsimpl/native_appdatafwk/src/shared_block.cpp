@@ -130,6 +130,7 @@ int SharedBlock::CreateFromParcel(Parcel *parcel, SharedBlock **outSharedBlock)
     } else {
         void *data = ::mmap(NULL, size, PROT_READ, MAP_SHARED, dupAshmemFd, 0);
         if (data == MAP_FAILED) {
+            LOG_ERROR("SharedBlock: mmap function failed.");
             result = -errno;
             ::close(dupAshmemFd);
         } else if (AshmemGetSize(dupAshmemFd) != size) {
@@ -154,6 +155,7 @@ int SharedBlock::CreateFromParcel(Parcel *parcel, SharedBlock **outSharedBlock)
 
 int SharedBlock::WriteToParcel(Parcel &parcel)
 {
+    LOG_DEBUG("To write SharedBlock to Parcel.");
     return parcel.WriteString16(ToUtf16(mName)) && parcel.WriteInt32(mAshmemFd);
 }
 

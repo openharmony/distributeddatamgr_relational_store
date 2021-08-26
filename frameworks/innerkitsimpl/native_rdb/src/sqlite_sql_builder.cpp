@@ -183,6 +183,23 @@ std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const std::string &in
     return sqlString;
 }
 
+std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const AbsRdbPredicates &predicates)
+{
+    std::string sqlString;
+
+    std::string limitStr = (predicates.GetLimit() == -1) ? "" : std::to_string(predicates.GetLimit());
+    std::string offsetStr = (predicates.GetOffset() == -1) ? "" : std::to_string(predicates.GetOffset());
+
+    AppendClause(sqlString, " INDEXED BY ", predicates.GetIndex());
+    AppendClause(sqlString, " WHERE ", predicates.GetWhereClause());
+    AppendClause(sqlString, " GROUP BY ", predicates.GetGroup());
+    AppendClause(sqlString, " ORDER BY ", predicates.GetOrder());
+    AppendClause(sqlString, " LIMIT ", limitStr);
+    AppendClause(sqlString, " OFFSET ", offsetStr);
+
+    return sqlString;
+}
+
 std::string SqliteSqlBuilder::BuildSqlStringFromPredicatesNoWhere(const std::string &index,
     const std::string &whereClause, const std::string &group, const std::string &order, int limit, int offset)
 {
@@ -252,6 +269,29 @@ bool SqliteSqlBuilder::IsNotEmptyString(const std::string &str)
     return (!str.empty());
 }
 
+std::string SqliteSqlBuilder::BuildQueryString(const AbsRdbPredicates &predicates,
+    const std::vector<std::string> &columns)
+{
+    bool distinct = predicates.IsDistinct();
+    std::string tableNameStr = predicates.GetTableName();
+    std::string whereClauseStr = predicates.GetWhereClause();
+    std::string groupStr = predicates.GetGroup();
+    std::string indexStr = predicates.GetIndex();
+    std::string orderStr = predicates.GetOrder();
+    std::string limitStr = std::to_string(predicates.GetLimit());
+    std::string offsetStr = std::to_string(predicates.GetOffset());
+    std::string sqlStr;
+    BuildQueryString(distinct, tableNameStr, columns, whereClauseStr, groupStr, indexStr, orderStr, limitStr,
+        offsetStr, sqlStr);
+    LOG_DEBUG("sqlStr:%{public}s", sqlStr.c_str());
+    return sqlStr;
+}
+
+std::string SqliteSqlBuilder::BuildCountString(const AbsRdbPredicates &predicates)
+{
+    std::string tableName = predicates.GetTableName();
+    return "SELECT COUNT(*) FROM " + tableName + BuildSqlStringFromPredicates(predicates);
+}
 
 std::string SqliteSqlBuilder::Normalize(const std::string &source, int &errorCode)
 {

@@ -14,9 +14,7 @@
 import("//build/lite/config/component/lite_component.gni")
 if (ohos_kernel_type == "liteos_m") {
   static_library("foundation_dbm_kv_store") {
-    sources = [
-      "src/kv_store_impl_hal/dbm_kv_store.c",
-    ]
+    sources = [ "src/kv_store_impl_hal/dbm_kv_store.c" ]
     include_dirs = [
       "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/dbm_kv_store/include",
       "inc",
@@ -26,9 +24,7 @@ if (ohos_kernel_type == "liteos_m") {
   shared_library("foundation_dbm_kv_store") {
     cflags = [ "-Wall" ]
     cflags_cc = cflags
-    sources = [
-      "src/kvstore_impl_posix/dbm_kv_store.c",
-    ]
+    sources = [ "src/kvstore_impl_posix/dbm_kv_store.c" ]
     include_dirs = [
       "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/dbm_kv_store/include",
       "inc",

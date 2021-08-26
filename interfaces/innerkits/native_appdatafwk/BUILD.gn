@@ -26,7 +26,7 @@ config("appdatafwk_public_config") {
 }
 
 ohos_shared_library("native_appdatafwk") {
-  sources = [ "src/shared_block.cpp" ]
+  sources = [ "../../../frameworks/innerkitsimpl/native_appdatafwk/src/shared_block.cpp" ]
 
   configs = [ ":appdatafwk_config" ]
 

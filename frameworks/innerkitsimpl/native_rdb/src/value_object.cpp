@@ -24,6 +24,25 @@ ValueObject::ValueObject() : type(ValueObjectType::TYPE_NULL)
 {
 }
 
+ValueObject::ValueObject(ValueObject &&valueObject) noexcept
+{
+    if (this == &valueObject) {
+        return;
+    }
+    type = valueObject.type;
+    value = std::move(valueObject.value);
+    valueObject.type = ValueObjectType::TYPE_NULL;
+}
+
+ValueObject::ValueObject(const ValueObject &valueObject)
+{
+    if (this == &valueObject) {
+        return;
+    }
+    type = valueObject.type;
+    value = valueObject.value;
+}
+
 ValueObject::~ValueObject()
 {
 }
@@ -53,6 +72,27 @@ ValueObject::ValueObject(const std::vector<uint8_t> &val) : type(ValueObjectType
 {
     std::vector<uint8_t> blob = val;
     value = blob;
+}
+
+ValueObject &ValueObject::operator=(ValueObject &&valueObject) noexcept
+{
+    if (this == &valueObject) {
+        return *this;
+    }
+    type = valueObject.type;
+    value = std::move(valueObject.value);
+    valueObject.type = ValueObjectType::TYPE_NULL;
+    return *this;
+}
+
+ValueObject &ValueObject::operator=(const ValueObject &valueObject)
+{
+    if (this == &valueObject) {
+        return *this;
+    }
+    type = valueObject.type;
+    value = valueObject.value;
+    return *this;
 }
 
 ValueObjectType ValueObject::GetType() const
@@ -119,6 +159,86 @@ int ValueObject::GetBlob(std::vector<uint8_t> &val) const
 
     val = std::get<std::vector<uint8_t>>(value);
     return E_OK;
+}
+
+bool ValueObject::Marshalling(Parcel &parcel) const
+{
+    switch (this->type) {
+        case ValueObjectType::TYPE_NULL: {
+            parcel.WriteInt16((int16_t) ValueObjectType::TYPE_NULL);
+            break;
+        }
+        case ValueObjectType::TYPE_INT: {
+            parcel.WriteInt16((int16_t) ValueObjectType::TYPE_INT);
+            parcel.WriteInt64(std::get<int64_t>(value));
+            break;
+        }
+        case ValueObjectType::TYPE_DOUBLE: {
+            parcel.WriteInt16((int16_t) ValueObjectType::TYPE_DOUBLE);
+            parcel.WriteDouble(std::get<double>(value));
+            break;
+        }
+        case ValueObjectType::TYPE_STRING: {
+            parcel.WriteInt16((int16_t) ValueObjectType::TYPE_STRING);
+            parcel.WriteString(std::get<std::string>(value));
+            break;
+        }
+        case ValueObjectType::TYPE_BLOB: {
+            parcel.WriteInt16((int16_t) ValueObjectType::TYPE_BLOB);
+            parcel.WriteUInt8Vector(std::get<std::vector<uint8_t>>(value));
+            break;
+        }
+        case ValueObjectType::TYPE_BOOL: {
+            parcel.WriteInt16((int16_t) ValueObjectType::TYPE_BOOL);
+            parcel.WriteBool(std::get<bool>(value));
+            break;
+        }
+        default:
+            break;
+    }
+    return true;
+}
+
+ValueObject *ValueObject::Unmarshalling(Parcel &parcel)
+{
+    auto *pValueObject = new ValueObject();
+    switch (parcel.ReadInt16()) {
+        case (int16_t)ValueObjectType::TYPE_NULL: {
+            pValueObject->type = ValueObjectType::TYPE_NULL;
+            pValueObject->value = nullptr;
+            break;
+        }
+        case (int16_t)ValueObjectType::TYPE_INT: {
+            pValueObject->type = ValueObjectType::TYPE_INT;
+            pValueObject->value = parcel.ReadInt64();
+            break;
+        }
+        case (int16_t)ValueObjectType::TYPE_DOUBLE: {
+            pValueObject->type = ValueObjectType::TYPE_DOUBLE;
+            pValueObject->value = parcel.ReadDouble();
+            break;
+        }
+        case (int16_t)ValueObjectType::TYPE_STRING: {
+            pValueObject->type = ValueObjectType::TYPE_STRING;
+            pValueObject->value = parcel.ReadString();
+            break;
+        }
+        case (int16_t)ValueObjectType::TYPE_BLOB: {
+            pValueObject->type = ValueObjectType::TYPE_BLOB;
+            std::vector<uint8_t> val;
+            parcel.ReadUInt8Vector(&val);
+            pValueObject->value = val;
+            break;
+        }
+        case (int16_t)ValueObjectType::TYPE_BOOL: {
+            pValueObject->type = ValueObjectType::TYPE_BOOL;
+            pValueObject->value = parcel.ReadBool();
+            break;
+        }
+        default:
+            break;
+    }
+    return pValueObject;
 }
 } // namespace NativeRdb
 } // namespace OHOS

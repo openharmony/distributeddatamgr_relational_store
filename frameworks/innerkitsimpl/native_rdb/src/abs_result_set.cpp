@@ -71,7 +71,7 @@ int AbsResultSet::GoToRow(int position)
     return E_OK;
 }
 
-int AbsResultSet::GetColumnTypeForIndex(int columnIndex, ColumnType &columnType)
+int AbsResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 {
     return E_OK;
 }
@@ -187,7 +187,7 @@ int AbsResultSet::GetColumnCount(int &count)
     return E_OK;
 }
 
-int AbsResultSet::GetColumnIndexForName(const std::string &columnName, int &columnIndex)
+int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex)
 {
     int periodIndex = columnName.rfind(".");
     std::string columnNameBack = columnName;
@@ -198,7 +198,7 @@ int AbsResultSet::GetColumnIndexForName(const std::string &columnName, int &colu
     std::vector<std::string> columnNames;
     int ret = GetAllColumnNames(columnNames);
     if (ret != E_OK) {
-        LOG_ERROR("AbsResultSet::GetColumnIndexForName  return GetAllColumnNames::ret is wrong!");
+        LOG_ERROR("AbsResultSet::GetColumnIndex  return GetAllColumnNames::ret is wrong!");
         return ret;
     }
     int len = columnNames.size();
@@ -215,12 +215,12 @@ int AbsResultSet::GetColumnIndexForName(const std::string &columnName, int &colu
     return E_ERROR;
 }
 
-int AbsResultSet::GetColumnNameForIndex(int columnIndex, std::string &columnName)
+int AbsResultSet::GetColumnName(int columnIndex, std::string &columnName)
 {
     int rowCnt = 0;
     int ret = GetColumnCount(rowCnt);
     if (ret != E_OK) {
-        LOG_ERROR("AbsResultSet::GetColumnNameForIndex  return GetColumnCount::ret is wrong!");
+        LOG_ERROR("AbsResultSet::GetColumnName  return GetColumnCount::ret is wrong!");
         return ret;
     }
     if (columnIndex >= rowCnt || columnIndex < 0) {
