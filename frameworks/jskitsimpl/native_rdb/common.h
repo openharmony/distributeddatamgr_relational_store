@@ -75,7 +75,7 @@ static inline const char *GetErrStr(int err)
     if (err == OHOS::NativeRdb::E_OK) {
         return nullptr;
     }
-    int index = err - OHOS::NativeRdb::E_BASE - 1;
+    size_t index = err - OHOS::NativeRdb::E_BASE - 1;
     if (index >= ERR_INFO.size() || index < 0) {
         return "Unkown error";
     }

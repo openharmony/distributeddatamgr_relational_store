@@ -34,7 +34,7 @@ public:
     ~StepResultSet() override;
 
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
-    int GetColumnTypeForIndex(int columnIndex, ColumnType &columnType) override;
+    int GetColumnType(int columnIndex, ColumnType &columnType) override;
     int GetRowCount(int &count) override;
     int GoToRow(int position) override;
     int GoToNextRow() override;

@@ -81,7 +81,10 @@ void RdbStepResultSetTest::SetUp(void)
     store->ExecuteSql("DELETE FROM test");
 }
 
-void RdbStepResultSetTest::TearDown(void) {}
+void RdbStepResultSetTest::TearDown(void)
+{
+    RdbHelper::ClearCache();
+}
 
 void RdbStepResultSetTest::GenerateDefaultTable()
 {
@@ -104,13 +107,13 @@ void RdbStepResultSetTest::GenerateDefaultTable()
     typeBlob.clear();
     store->ExecuteSql(insertSql, std::vector<ValueObject> {
             ValueObject(std::string("2")), ValueObject((int)-5),
-            ValueObject((double)2.5), ValueObject()
+            ValueObject((double)2.5), ValueObject() // set double value 2.5
         });
 
     /* insert third entry data */
     store->ExecuteSql(insertSql, std::vector<ValueObject> {
             ValueObject(std::string("hello world")),
-            ValueObject((int)3), ValueObject((double)1.8), ValueObject()
+            ValueObject((int)3), ValueObject((double)1.8), ValueObject() // set int value 3, double 1.8
         });
 }
 
@@ -144,23 +147,23 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_001, TestSize.Level1)
     EXPECT_EQ(bResultSet, true);
 
     ColumnType type;
-    iRet = resultSet->GetColumnTypeForIndex(0, type);
+    iRet = resultSet->GetColumnType(0, type);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(ColumnType::TYPE_INTEGER, type);
 
-    iRet = resultSet->GetColumnTypeForIndex(1, type);
+    iRet = resultSet->GetColumnType(1, type);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(ColumnType::TYPE_STRING, type);
 
-    iRet = resultSet->GetColumnTypeForIndex(2, type);
+    iRet = resultSet->GetColumnType(2, type);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(ColumnType::TYPE_INTEGER, type);
 
-    iRet = resultSet->GetColumnTypeForIndex(3, type);
+    iRet = resultSet->GetColumnType(3, type);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(ColumnType::TYPE_FLOAT, type);
 
-    iRet = resultSet->GetColumnTypeForIndex(4, type);
+    iRet = resultSet->GetColumnType(4, type);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(ColumnType::TYPE_BLOB, type);
 
@@ -757,34 +760,34 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_013, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
 
     ColumnType type;
-    int iRet = resultSet->GetColumnTypeForIndex(0, type);
+    int iRet = resultSet->GetColumnType(0, type);
     EXPECT_NE(E_OK, iRet);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
-    iRet = resultSet->GetColumnTypeForIndex(0, type);
+    iRet = resultSet->GetColumnType(0, type);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(ColumnType::TYPE_INTEGER, type);
 
-    iRet = resultSet->GetColumnTypeForIndex(1, type);
+    iRet = resultSet->GetColumnType(1, type);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(ColumnType::TYPE_STRING, type);
 
-    iRet = resultSet->GetColumnTypeForIndex(2, type);
+    iRet = resultSet->GetColumnType(2, type);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(ColumnType::TYPE_INTEGER, type);
 
-    iRet = resultSet->GetColumnTypeForIndex(3, type);
+    iRet = resultSet->GetColumnType(3, type);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(ColumnType::TYPE_FLOAT, type);
 
-    iRet = resultSet->GetColumnTypeForIndex(4, type);
+    iRet = resultSet->GetColumnType(4, type);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(ColumnType::TYPE_BLOB, type);
 
     int columnCount = 0;
     iRet = resultSet->GetColumnCount(columnCount);
     EXPECT_EQ(5, columnCount);
-    iRet = resultSet->GetColumnTypeForIndex(columnCount, type);
+    iRet = resultSet->GetColumnType(columnCount, type);
     EXPECT_NE(E_OK, iRet);
 }
 
@@ -801,27 +804,27 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_014, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
 
     int columnIndex;
-    int iRet = resultSet->GetColumnIndexForName("data1", columnIndex);
+    int iRet = resultSet->GetColumnIndex("data1", columnIndex);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(1, columnIndex);
 
-    iRet = resultSet->GetColumnIndexForName("data2", columnIndex);
+    iRet = resultSet->GetColumnIndex("data2", columnIndex);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(2, columnIndex);
 
-    iRet = resultSet->GetColumnIndexForName("data3", columnIndex);
+    iRet = resultSet->GetColumnIndex("data3", columnIndex);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(3, columnIndex);
 
-    iRet = resultSet->GetColumnIndexForName("data4", columnIndex);
+    iRet = resultSet->GetColumnIndex("data4", columnIndex);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(4, columnIndex);
 
-    iRet = resultSet->GetColumnIndexForName("jank.data1", columnIndex);
+    iRet = resultSet->GetColumnIndex("jank.data1", columnIndex);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(1, columnIndex);
 
-    iRet = resultSet->GetColumnIndexForName("datax", columnIndex);
+    iRet = resultSet->GetColumnIndex("datax", columnIndex);
     EXPECT_EQ(E_ERROR, iRet);
     EXPECT_EQ(-1, columnIndex);
 }
@@ -843,26 +846,26 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_015, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
 
     std::string columnName;
-    iRet = resultSet->GetColumnNameForIndex(1, columnName);
+    iRet = resultSet->GetColumnName(1, columnName);
     EXPECT_EQ("data1", columnName);
     EXPECT_EQ(allColumnNames[1], columnName);
 
-    iRet = resultSet->GetColumnNameForIndex(2, columnName);
+    iRet = resultSet->GetColumnName(2, columnName);
     EXPECT_EQ("data2", columnName);
     EXPECT_EQ(allColumnNames[2], columnName);
 
-    iRet = resultSet->GetColumnNameForIndex(3, columnName);
+    iRet = resultSet->GetColumnName(3, columnName);
     EXPECT_EQ("data3", columnName);
     EXPECT_EQ(allColumnNames[3], columnName);
 
-    iRet = resultSet->GetColumnNameForIndex(4, columnName);
+    iRet = resultSet->GetColumnName(4, columnName);
     EXPECT_EQ("data4", columnName);
     EXPECT_EQ(allColumnNames[4], columnName);
 
     int columnCount = 0;
     iRet = resultSet->GetColumnCount(columnCount);
     EXPECT_EQ(5, columnCount);
-    iRet = resultSet->GetColumnNameForIndex(columnCount, columnName);
+    iRet = resultSet->GetColumnName(columnCount, columnName);
     EXPECT_NE(E_OK, iRet);
 }
 
@@ -1364,19 +1367,19 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep008, TestSize.Level1)
     EXPECT_EQ(bResultSet, true);
 
     ColumnType type;
-    iRet = resultSet->GetColumnTypeForIndex(0, type);
+    iRet = resultSet->GetColumnType(0, type);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(ColumnType::TYPE_STRING, type);
 
-    iRet = resultSet->GetColumnTypeForIndex(1, type);
+    iRet = resultSet->GetColumnType(1, type);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(ColumnType::TYPE_INTEGER, type);
 
-    iRet = resultSet->GetColumnTypeForIndex(2, type);
+    iRet = resultSet->GetColumnType(2, type);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(ColumnType::TYPE_FLOAT, type);
 
-    iRet = resultSet->GetColumnTypeForIndex(3, type);
+    iRet = resultSet->GetColumnType(3, type);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(ColumnType::TYPE_BLOB, type);
 

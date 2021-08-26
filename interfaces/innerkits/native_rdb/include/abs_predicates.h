@@ -43,7 +43,8 @@ public:
     bool IsDistinct() const;
     std::string GetGroup() const;
     std::string GetIndex() const;
-    bool GetIsNeedAnd() const;
+    bool IsNeedAnd() const;
+    bool IsSorted() const;
 
 public:
     virtual void Clear();

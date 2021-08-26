@@ -8,7 +8,7 @@
         "ivi"
       ],
       "module_list": [
-        "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_appdatafwk:native_appdatafwk",
+        "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_appdatafwk:native_appdatafwk",
         "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_preferences:native_preferences",
         "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_rdb:native_rdb"
       ],
@@ -55,12 +55,12 @@
           }
         },
         {
-          "name": "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_appdatafwk:native_appdatafwk",
+          "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_appdatafwk:native_appdatafwk",
           "header": {
             "header_files": [
               "shared_block.h"
             ],
-            "header_base": "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_appdatafwk/include"
+            "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_appdatafwk/include"
           }
         }
       ],
@@ -76,7 +76,8 @@
         "ivi"
       ],
       "module_list": [
-        "//foundation/distributeddatamgr/appdatamgr/interfaces/jskits:storage"
+        "//foundation/distributeddatamgr/appdatamgr/interfaces/jskits:storage",
+        "//foundation/distributeddatamgr/appdatamgr/interfaces/jskits:rdb"
       ],
       "system_capabilities":[
         "SystemCapability.Data.DATA_APPDATAMGR"

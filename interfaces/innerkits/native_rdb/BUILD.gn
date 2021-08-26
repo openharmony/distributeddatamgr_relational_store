@@ -17,8 +17,8 @@ config("native_rdb_config") {
 
   include_dirs = [
     "include",
-    "../../../frameworks/innerkitsimpl/native_rdb/src",
     "../../../frameworks/innerkitsimpl/native_rdb/include",
+    "../../../frameworks/innerkitsimpl/native_appdatafwk/include",
     "//third_party/icu/icu4c/source",
     "//third_party/icu/icu4c/source/i18n",
     "//third_party/icu/icu4c/source/common",
@@ -71,14 +71,17 @@ ohos_shared_library("native_rdb") {
   configs = [ ":native_rdb_config" ]
 
   deps = [
-    "../../../frameworks/innerkitsimpl/native_appdatafwk:native_appdatafwk",
+    "../../../interfaces/innerkits/native_appdatafwk:native_appdatafwk",
     "//third_party/icu/icu4c:shared_icui18n",
     "//third_party/icu/icu4c:shared_icuuc",
     "//third_party/sqlite:sqlite",
     "//utils/native/base:utils",
   ]
 
-  external_deps = [ "hilog_native:libhilog" ]
+  external_deps = [
+    "hilog_native:libhilog",
+    "native_appdatamgr:native_appdatafwk",
+  ]
 
   public_configs = [ ":native_rdb_public_config" ]
 

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-
 #include "abs_rdb_predicates.h"
+
 #include "logger.h"
 
 namespace OHOS {
@@ -32,9 +32,22 @@ AbsRdbPredicates::AbsRdbPredicates(std::string tableName)
 /**
  * Obtains the table name.
  */
-std::string AbsRdbPredicates::GetTableName()
+std::string AbsRdbPredicates::GetTableName() const
 {
     return tableName;
+}
+
+std::string AbsRdbPredicates::ToString() const
+{
+    std::string args;
+    for (std::string item : GetWhereArgs()) {
+        args += item + ", ";
+    }
+    return "TableName = " + GetTableName() + ", {WhereClause:" + GetWhereClause() + ", whereArgs:{" + args + "}"
+           + ", order:" + GetOrder() + ", group:" + GetGroup() + ", index:" + GetIndex()
+           + ", limit:" + std::to_string(GetLimit()) + ", offset:" + std::to_string(GetOffset())
+           + ", distinct:" + std::to_string(IsDistinct()) + ", isNeedAnd:" + std::to_string(IsNeedAnd())
+           + ", isSorted:" + std::to_string(IsSorted()) + "}";
 }
 } // namespace NativeRdb
 } // namespace OHOS

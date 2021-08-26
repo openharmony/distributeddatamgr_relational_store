@@ -127,7 +127,7 @@ HWTEST_F(RdbUpgradeTest, RdbStore_Upgrade_001, TestSize.Level1)
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 
@@ -144,17 +144,17 @@ HWTEST_F(RdbUpgradeTest, RdbStore_Upgrade_001, TestSize.Level1)
     EXPECT_EQ(columnCount, 6);
     ret = upgradeResultSet->GoToNextRow();
     int columnIndex;
-    ret = upgradeResultSet->GetColumnIndexForName("id", columnIndex);
+    ret = upgradeResultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
-    ret = upgradeResultSet->GetColumnIndexForName("name", columnIndex);
+    ret = upgradeResultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
-    ret = upgradeResultSet->GetColumnIndexForName("age", columnIndex);
+    ret = upgradeResultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
-    ret = upgradeResultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = upgradeResultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
-    ret = upgradeResultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = upgradeResultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
-    ret = upgradeResultSet->GetColumnIndexForName("address", columnIndex);
+    ret = upgradeResultSet->GetColumnIndex("address", columnIndex);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(columnIndex, 5);
     ret = upgradeResultSet->GoToNextRow();
@@ -162,7 +162,7 @@ HWTEST_F(RdbUpgradeTest, RdbStore_Upgrade_001, TestSize.Level1)
     ret = upgradeResultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
     ret = upgradeResultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
     ret = upgradeResultSet->Close();
     EXPECT_EQ(ret, E_OK);
 }

@@ -24,12 +24,10 @@
 #include <ctime>
 
 #include "common.h"
-#include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_predicates.h"
-#include "sqlite_sql_builder.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -320,10 +318,8 @@ public:
     void CalendarTest(RdbPredicates predicates1);
     void BasicDataTypeTest(RdbPredicates predicates1);
     int ResultSize(std::unique_ptr<ResultSet> &resultSet);
-    std::string BuildQueryString(RdbPredicates predicates1, std::vector<std::string> columns);
     void BasicDataTypeTest002(RdbPredicates predicates1);
     void CalendarTest002(RdbPredicates predicates1);
-    std::unique_ptr<ResultSet> ResultSetQuerySqlShared(RdbPredicates predicates1, std::vector<std::string> columns);
 };
 
 std::shared_ptr<RdbStore> RdbStorePredicateTest::store = nullptr;
@@ -593,7 +589,7 @@ void RdbStorePredicateTest::CalendarTest(RdbPredicates predicates1)
     time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
 
     predicates1.EqualTo("timeValue", std::to_string(calendarTime));
-    std::unique_ptr<ResultSet> allDataTypes9 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes9 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(E_OK, allDataTypes9->GoToFirstRow());
     int valueInt = 0;
     allDataTypes9->GetInt(0, valueInt);
@@ -604,34 +600,34 @@ void RdbStorePredicateTest::BasicDataTypeTest(RdbPredicates predicates1)
     std::vector<std::string> columns;
     std::stringstream tempValue;
     predicates1.EqualTo("booleanValue", "1");
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     predicates1.EqualTo("byteValue", std::to_string(INT8_MIN))->Or()->EqualTo("byteValue", std::to_string(1));
-    std::unique_ptr<ResultSet> allDataTypes2 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN");
-    std::unique_ptr<ResultSet> allDataTypes3 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << DBL_MIN;
     predicates1.EqualTo("doubleValue", tempValue.str());
-    std::unique_ptr<ResultSet> allDataTypes4 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes4));
 
     predicates1.Clear();
     predicates1.EqualTo("shortValue", std::to_string(SHRT_MIN));
-    std::unique_ptr<ResultSet> allDataTypes5 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes5));
 
     predicates1.Clear();
     predicates1.EqualTo("integerValue", std::to_string(1));
-    std::unique_ptr<ResultSet> allDataTypes6 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(E_OK, allDataTypes6->GoToFirstRow());
     int valueInt = 0;
     allDataTypes6->GetInt(0, valueInt);
@@ -639,7 +635,7 @@ void RdbStorePredicateTest::BasicDataTypeTest(RdbPredicates predicates1)
 
     predicates1.Clear();
     predicates1.EqualTo("longValue", std::to_string(1));
-    std::unique_ptr<ResultSet> allDataTypes7 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes7 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(E_OK, allDataTypes7->GoToFirstRow());
     allDataTypes7->GetInt(0, valueInt);
     EXPECT_EQ(2, valueInt);
@@ -648,7 +644,7 @@ void RdbStorePredicateTest::BasicDataTypeTest(RdbPredicates predicates1)
     tempValue.str("");
     tempValue << FLT_MIN;
     predicates1.EqualTo("floatValue", tempValue.str());
-    std::unique_ptr<ResultSet> allDataTypes8 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes8 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(E_OK, allDataTypes8->GoToFirstRow());
     allDataTypes8->GetInt(0, valueInt);
     EXPECT_EQ(3, valueInt);
@@ -664,32 +660,6 @@ int RdbStorePredicateTest::ResultSize(std::unique_ptr<ResultSet> &resultSet)
         count++;
     }
     return count;
-}
-
-std::unique_ptr<ResultSet> RdbStorePredicateTest::ResultSetQuerySqlShared(RdbPredicates predicates1,
-                                                                          std::vector<std::string> columns)
-{
-    std::vector<std::string> sqlArgs;
-    std::string sql;
-    sqlArgs = predicates1.GetWhereArgs();
-    sql = BuildQueryString(predicates1, columns);
-    std::unique_ptr<ResultSet> resultSet = RdbStorePredicateTest::store->QuerySqlShared(sql, sqlArgs);
-    return resultSet;
-}
-std::string RdbStorePredicateTest::BuildQueryString(RdbPredicates predicates1, std::vector<std::string> columns)
-{
-    bool distinct = predicates1.IsDistinct();
-    std::string tableNameStr = predicates1.GetTableName();
-    std::string whereClauseStr = predicates1.GetWhereClause();
-    std::string groupStr = predicates1.GetGroup();
-    std::string indexStr = predicates1.GetIndex();
-    std::string orderStr = predicates1.GetOrder();
-    std::string limitStr = std::to_string(predicates1.GetLimit());
-    std::string offsetStr = std::to_string(predicates1.GetOffset());
-    std::string sqlStr;
-    OHOS::NativeRdb::SqliteSqlBuilder::BuildQueryString(distinct, tableNameStr, columns, whereClauseStr,
-        groupStr, indexStr, orderStr, limitStr, offsetStr, sqlStr);
-    return sqlStr;
 }
 
 /* *
@@ -718,7 +688,7 @@ void RdbStorePredicateTest::CalendarTest002(RdbPredicates predicates1)
     time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
 
     predicates1.NotEqualTo("timeValue", std::to_string(calendarTime));
-    std::unique_ptr<ResultSet> allDataTypes9 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes9 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes9));
 }
 void RdbStorePredicateTest::BasicDataTypeTest002(RdbPredicates predicates1)
@@ -727,46 +697,46 @@ void RdbStorePredicateTest::BasicDataTypeTest002(RdbPredicates predicates1)
     std::stringstream tempValue;
 
     predicates1.NotEqualTo("primBooleanValue", "1");
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     predicates1.NotEqualTo("primByteValue", std::to_string(INT8_MIN))->NotEqualTo("primByteValue", std::to_string(1));
-    std::unique_ptr<ResultSet> allDataTypes2 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.NotEqualTo("stringValue", "ABCDEFGHIJKLMN");
-    std::unique_ptr<ResultSet> allDataTypes3 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << DBL_MIN;
     predicates1.NotEqualTo("doubleValue", tempValue.str());
-    std::unique_ptr<ResultSet> allDataTypes4 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes4));
 
     predicates1.Clear();
     predicates1.NotEqualTo("shortValue", std::to_string(SHRT_MIN));
-    std::unique_ptr<ResultSet> allDataTypes5 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes5));
 
     predicates1.Clear();
     predicates1.NotEqualTo("integerValue", "1");
-    std::unique_ptr<ResultSet> allDataTypes6 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes6));
 
     predicates1.Clear();
     predicates1.NotEqualTo("longValue", "1");
-    std::unique_ptr<ResultSet> allDataTypes7 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes7 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes7));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << FLT_MIN;
     predicates1.NotEqualTo("floatValue", tempValue.str());
-    std::unique_ptr<ResultSet> allDataTypes8 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes8 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes8));
 }
 
@@ -781,7 +751,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_IsNull_003, TestSize.Level1)
     RdbPredicates predicates1("AllDataType");
     predicates1.IsNull("primLongValue");
     std::vector<std::string> columns;
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes1));
 }
 
@@ -796,7 +766,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotNull_003, TestSize.Level1)
     RdbPredicates predicates1("AllDataType");
     predicates1.IsNotNull("primLongValue");
     std::vector<std::string> columns;
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 }
 
@@ -813,38 +783,38 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThan_005, TestSize.Level1)
     std::stringstream tempValue;
 
     predicates1.GreaterThan("stringValue", "ABC");
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << DBL_MIN;
     predicates1.GreaterThan("doubleValue", tempValue.str());
-    std::unique_ptr<ResultSet> allDataTypes2 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.GreaterThan("integerValue", "1");
-    std::unique_ptr<ResultSet> allDataTypes3 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     predicates1.GreaterThan("longValue", "1");
-    std::unique_ptr<ResultSet> allDataTypes4 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes4));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << FLT_MIN;
     predicates1.GreaterThan("floatValue", tempValue.str());
-    std::unique_ptr<ResultSet> allDataTypes5 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes5));
 
     predicates1.Clear();
     std::vector<int> date = {2019, 6, 9};
     time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
     predicates1.GreaterThan("timeValue", std::to_string(calendarTime).c_str());
-    std::unique_ptr<ResultSet> allDataTypes6 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes6));
 }
 
@@ -861,38 +831,38 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThanOrEqualTo_006, TestSize.Leve
     std::stringstream tempValue;
 
     predicates1.GreaterThanOrEqualTo("stringValue", "ABC");
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << DBL_MIN;
     predicates1.GreaterThanOrEqualTo("doubleValue", tempValue.str());
-    std::unique_ptr<ResultSet> allDataTypes2 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.GreaterThanOrEqualTo("integerValue", "1");
-    std::unique_ptr<ResultSet> allDataTypes3 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     predicates1.GreaterThanOrEqualTo("longValue", "1");
-    std::unique_ptr<ResultSet> allDataTypes4 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes4));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << FLT_MIN;
     predicates1.GreaterThanOrEqualTo("floatValue", tempValue.str());
-    std::unique_ptr<ResultSet> allDataTypes5 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes5));
 
     predicates1.Clear();
     std::vector<int> date = {2019, 6, 9};
     time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
     predicates1.GreaterThanOrEqualTo("timeValue", std::to_string(calendarTime).c_str());
-    std::unique_ptr<ResultSet> allDataTypes6 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes6));
 }
 
@@ -909,38 +879,38 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_lessThan_007, TestSize.Level1)
     std::stringstream tempValue;
 
     predicates1.LessThan("stringValue", "ABD");
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << DBL_MIN;
     predicates1.LessThan("doubleValue", tempValue.str());
-    std::unique_ptr<ResultSet> allDataTypes2 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.LessThan("integerValue", "1");
-    std::unique_ptr<ResultSet> allDataTypes3 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     predicates1.LessThan("longValue", "1");
-    std::unique_ptr<ResultSet> allDataTypes4 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes4));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << FLT_MIN;
     predicates1.LessThan("floatValue", tempValue.str());
-    std::unique_ptr<ResultSet> allDataTypes5 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes5));
 
     predicates1.Clear();
     std::vector<int> date = {2019, 6, 9};
     time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
     predicates1.LessThan("timeValue", std::to_string(calendarTime).c_str());
-    std::unique_ptr<ResultSet> allDataTypes6 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes6));
 }
 
@@ -957,38 +927,38 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_LessThanOrEqualTo_008, TestSize.Level1)
     std::stringstream tempValue;
 
     predicates1.LessThanOrEqualTo("stringValue", "ABD");
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << DBL_MIN;
     predicates1.LessThanOrEqualTo("doubleValue", tempValue.str());
-    std::unique_ptr<ResultSet> allDataTypes2 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.LessThanOrEqualTo("integerValue", "1");
-    std::unique_ptr<ResultSet> allDataTypes3 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     predicates1.LessThanOrEqualTo("longValue", "1");
-    std::unique_ptr<ResultSet> allDataTypes4 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes4));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << FLT_MIN;
     predicates1.LessThanOrEqualTo("floatValue", tempValue.str());
-    std::unique_ptr<ResultSet> allDataTypes5 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes5));
 
     predicates1.Clear();
     std::vector<int> date = {2019, 6, 9};
     time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
     predicates1.LessThanOrEqualTo("timeValue", std::to_string(calendarTime).c_str());
-    std::unique_ptr<ResultSet> allDataTypes6 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes6));
 }
 
@@ -1005,24 +975,24 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Between_009, TestSize.Level1)
     std::stringstream tempValue;
 
     predicates1.Between("stringValue", "ABB", "ABD");
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << DBL_MAX;
     predicates1.Between("doubleValue", "0.0", tempValue.str());
-    std::unique_ptr<ResultSet> allDataTypes2 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.Between("integerValue", "0", "1");
-    std::unique_ptr<ResultSet> allDataTypes3 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     predicates1.Between("longValue", "0", "2");
-    std::unique_ptr<ResultSet> allDataTypes4 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes4));
 
     predicates1.Clear();
@@ -1032,7 +1002,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Between_009, TestSize.Level1)
     tempValue.str("");
     tempValue << FLT_MIN;
     predicates1.Between("floatValue", tempValue.str(), floatMax);
-    std::unique_ptr<ResultSet> allDataTypes5 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes5));
 
     predicates1.Clear();
@@ -1041,7 +1011,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Between_009, TestSize.Level1)
     std::vector<int> highCalendar = {2019, 7, 17};
     time_t highCalendarTime = RdbStorePredicateTest::DateMakeTime(highCalendar);
     predicates1.Between("timeValue", std::to_string(lowCalendarTime).c_str(), std::to_string(highCalendarTime).c_str());
-    std::unique_ptr<ResultSet> allDataTypes6 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes6));
 }
 
@@ -1057,7 +1027,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Contain_010, TestSize.Level1)
     std::vector<std::string> columns;
 
     predicates1.Contains("stringValue", "DEF");
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 }
 
@@ -1073,7 +1043,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_BeginsWith_011, TestSize.Level1)
     std::vector<std::string> columns;
 
     predicates1.BeginsWith("stringValue", "ABC");
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 }
 
@@ -1089,7 +1059,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_EndsWith_012, TestSize.Level1)
     std::vector<std::string> columns;
 
     predicates1.EndsWith("stringValue", "LMN");
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 }
 
@@ -1105,7 +1075,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Like_013, TestSize.Level1)
     std::vector<std::string> columns;
 
     predicates1.Like("stringValue", "%LMN%");
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 }
 
@@ -1126,12 +1096,12 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_BeginEndWrap_014, TestSize.Level1)
     ->Or()
     ->EqualTo("integerValue", std::to_string(INT_MAX))
     ->EndWrap();
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")->And()->EqualTo("integerValue", "1");
-    std::unique_ptr<ResultSet> allDataTypes2 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes2));
 }
 
@@ -1153,12 +1123,12 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_AndOR_015, TestSize.Level1)
     ->EqualTo("integerValue", std::to_string(INT_MAX))
     ->EndWrap();
 
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")->And()->EqualTo("integerValue", "1");
-    std::unique_ptr<ResultSet> allDataTypes2 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes2));
 }
 
@@ -1174,7 +1144,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Order_016, TestSize.Level1)
     std::vector<std::string> columns;
 
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")->OrderByAsc("integerValue")->Distinct();
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(E_OK, allDataTypes1->GoToFirstRow());
     int valueInt = 0;
     allDataTypes1->GetInt(0, valueInt);
@@ -1188,7 +1158,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Order_016, TestSize.Level1)
 
     predicates1.Clear();
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")->OrderByDesc("integerValue")->Distinct();
-    std::unique_ptr<ResultSet> allDataTypes2 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(E_OK, allDataTypes2->GoToFirstRow());
     allDataTypes2->GetInt(0, valueInt);
     EXPECT_EQ(1, valueInt);
@@ -1212,7 +1182,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Limit_017, TestSize.Level1)
     std::vector<std::string> columns;
 
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")->Limit(1);
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes1));
 }
 
@@ -1257,32 +1227,32 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Glob_019, TestSize.Level1)
     std::vector<std::string> columns;
 
     predicates1.Glob("stringValue", "ABC*");
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     predicates1.Glob("stringValue", "*EFG*");
-    std::unique_ptr<ResultSet> allDataTypes2 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.Glob("stringValue", "?B*");
-    std::unique_ptr<ResultSet> allDataTypes3 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     predicates1.Glob("stringValue", "A????????????N");
-    std::unique_ptr<ResultSet> allDataTypes4 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes4));
 
     predicates1.Clear();
     predicates1.Glob("stringValue", "A?????????????N");
-    std::unique_ptr<ResultSet> allDataTypes5 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes5));
 
     predicates1.Clear();
     predicates1.Glob("stringValue", "?B*N");
-    std::unique_ptr<ResultSet> allDataTypes6 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes6));
 }
 
@@ -1299,24 +1269,24 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotBetween_020, TestSize.Level1)
     std::stringstream tempValue;
 
     predicates1.NotBetween("stringValue", "ABB", "ABD");
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << DBL_MAX;
     predicates1.NotBetween("doubleValue", "0.0", tempValue.str());
-    std::unique_ptr<ResultSet> allDataTypes2 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.NotBetween("integerValue", "0", "1");
-    std::unique_ptr<ResultSet> allDataTypes3 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     predicates1.NotBetween("longValue", "0", "2");
-    std::unique_ptr<ResultSet> allDataTypes4 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes4));
 
     predicates1.Clear();
@@ -1326,7 +1296,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotBetween_020, TestSize.Level1)
     tempValue.str("");
     tempValue << FLT_MIN;
     predicates1.NotBetween("floatValue", tempValue.str(), floatMax);
-    std::unique_ptr<ResultSet> allDataTypes5 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes5));
 
     std::vector<int> lowCalendar = {2019, 6, 9};
@@ -1335,7 +1305,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotBetween_020, TestSize.Level1)
     time_t highCalendarTime = RdbStorePredicateTest::DateMakeTime(highCalendar);
     predicates1.Clear();
     predicates1.NotBetween("timeValue", std::to_string(lowCalendarTime), std::to_string(highCalendarTime));
-    std::unique_ptr<ResultSet> allDataTypes6 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes6));
 }
 
@@ -1352,7 +1322,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ComplexPredicate_021, TestSize.Level1)
 
     predicates1.Glob("stringValue", "ABC*")->EqualTo("booleanValue", "1")
     ->NotBetween("longValue", "0", "2");
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes1));
 }
 
@@ -1376,7 +1346,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ClearMethod_022, TestSize.Level1)
     ->OrderByDesc("integerValue")
     ->Limit(2);
 
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes1));
 
     EXPECT_EQ("AllDataType", predicates1.GetTableName());
@@ -1438,7 +1408,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_InMethod_023, TestSize.Level1)
     std::vector<std::string> columns;
     std::vector<std::string> agrs = {std::to_string(INT_MAX)};
     rdbPredicates1.In("integerValue", agrs);
-    std::unique_ptr<ResultSet> resultSet1 = ResultSetQuerySqlShared(rdbPredicates1, columns);
+    std::unique_ptr<ResultSet> resultSet1 = RdbStorePredicateTest::store->Query(rdbPredicates1, columns);
     int count = 0;
     resultSet1->GetRowCount(count);
     EXPECT_EQ(1, count);
@@ -1446,20 +1416,20 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_InMethod_023, TestSize.Level1)
     RdbPredicates rdbPredicates2("AllDataType");
     agrs[0] = "1";
     rdbPredicates2.In("longValue", agrs);
-    std::unique_ptr<ResultSet> resultSet2 = ResultSetQuerySqlShared(rdbPredicates2, columns);
+    std::unique_ptr<ResultSet> resultSet2 = RdbStorePredicateTest::store->Query(rdbPredicates2, columns);
     resultSet2->GetRowCount(count);
     EXPECT_EQ(1, count);
 
     RdbPredicates rdbPredicates3("AllDataType");
     agrs[0] = "1.0";
     rdbPredicates3.In("doubleValue", agrs);
-    std::unique_ptr<ResultSet> resultSet3 = ResultSetQuerySqlShared(rdbPredicates3, columns);
+    std::unique_ptr<ResultSet> resultSet3 = RdbStorePredicateTest::store->Query(rdbPredicates3, columns);
     resultSet3->GetRowCount(count);
     EXPECT_EQ(1, count);
 
     RdbPredicates rdbPredicates4("AllDataType");
     rdbPredicates4.In("floatValue", agrs);
-    std::unique_ptr<ResultSet> resultSet4 = ResultSetQuerySqlShared(rdbPredicates4, columns);
+    std::unique_ptr<ResultSet> resultSet4 = RdbStorePredicateTest::store->Query(rdbPredicates4, columns);
     resultSet4->GetRowCount(count);
     EXPECT_EQ(1, count);
 
@@ -1468,7 +1438,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_InMethod_023, TestSize.Level1)
     RdbPredicates rdbPredicates5("AllDataType");
     agrs[0] = std::to_string(calendarTime);
     rdbPredicates5.In("timeValue", agrs);
-    std::unique_ptr<ResultSet> resultSet5 = ResultSetQuerySqlShared(rdbPredicates5, columns);
+    std::unique_ptr<ResultSet> resultSet5 = RdbStorePredicateTest::store->Query(rdbPredicates5, columns);
     resultSet5->GetRowCount(count);
     EXPECT_EQ(1, count);
 }
@@ -1487,7 +1457,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotInMethod_023, TestSize.Level1)
 
     RdbPredicates rdbPredicates1("AllDataType");
     rdbPredicates1.NotIn("integerValue", agrs);
-    std::unique_ptr<ResultSet> resultSet1 = ResultSetQuerySqlShared(rdbPredicates1, columns);
+    std::unique_ptr<ResultSet> resultSet1 = RdbStorePredicateTest::store->Query(rdbPredicates1, columns);
     int count = 0;
     resultSet1->GetRowCount(count);
     EXPECT_EQ(1, count);
@@ -1496,7 +1466,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotInMethod_023, TestSize.Level1)
     agrs[0] = "1";
     agrs[1] = std::to_string(LONG_MAX);
     rdbPredicates2.NotIn("longValue", agrs);
-    std::unique_ptr<ResultSet> resultSet2 = ResultSetQuerySqlShared(rdbPredicates2, columns);
+    std::unique_ptr<ResultSet> resultSet2 = RdbStorePredicateTest::store->Query(rdbPredicates2, columns);
     resultSet2->GetRowCount(count);
     EXPECT_EQ(1, count);
 
@@ -1506,7 +1476,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotInMethod_023, TestSize.Level1)
     agrs[0] = "1.0";
     agrs[1] = tempValue.str();
     rdbPredicates3.NotIn("doubleValue", agrs);
-    std::unique_ptr<ResultSet> resultSet3 = ResultSetQuerySqlShared(rdbPredicates3, columns);
+    std::unique_ptr<ResultSet> resultSet3 = RdbStorePredicateTest::store->Query(rdbPredicates3, columns);
     resultSet3->GetRowCount(count);
     EXPECT_EQ(1, count);
 
@@ -1516,7 +1486,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotInMethod_023, TestSize.Level1)
     agrs[0] = "1.0";
     agrs[1] = tempValue.str();
     rdbPredicates4.NotIn("floatValue", agrs);
-    std::unique_ptr<ResultSet> resultSet4 = ResultSetQuerySqlShared(rdbPredicates4, columns);
+    std::unique_ptr<ResultSet> resultSet4 = RdbStorePredicateTest::store->Query(rdbPredicates4, columns);
     resultSet4->GetRowCount(count);
     EXPECT_EQ(1, count);
 }
@@ -1537,7 +1507,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
     ->EqualTo("integerValue", std::to_string(INT_MAX))
     ->EndWrap()->OrderByDesc("integerValue")->Limit(2);
     std::vector<std::string> columns = {"booleanValue", "doubleValue", "order"};
-    std::unique_ptr<ResultSet> allDataTypes1 = ResultSetQuerySqlShared(predicates1, columns);
+    std::unique_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     allDataTypes1->GoToFirstRow();
     EXPECT_EQ(2, ResultSize(allDataTypes1));
 

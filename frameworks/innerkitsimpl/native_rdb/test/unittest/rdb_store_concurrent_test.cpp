@@ -200,7 +200,7 @@ int RdbConcurrentTest::CheckId(ResultSet &resultSet)
     int columnIndex;
     int intVal;
 
-    int errCode = resultSet.GetColumnIndexForName("id", columnIndex);
+    int errCode = resultSet.GetColumnIndex("id", columnIndex);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -217,7 +217,7 @@ int RdbConcurrentTest::CheckName(ResultSet &resultSet)
     int columnIndex;
     std::string strVal;
 
-    int errCode = resultSet.GetColumnIndexForName("name", columnIndex);
+    int errCode = resultSet.GetColumnIndex("name", columnIndex);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -239,7 +239,7 @@ int RdbConcurrentTest::CheckAge(ResultSet &resultSet)
     int columnIndex;
     int intVal;
 
-    int errCode = resultSet.GetColumnIndexForName("age", columnIndex);
+    int errCode = resultSet.GetColumnIndex("age", columnIndex);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -261,7 +261,7 @@ int RdbConcurrentTest::CheckSalary(ResultSet &resultSet)
     int columnIndex;
     double dVal;
 
-    int errCode = resultSet.GetColumnIndexForName("salary", columnIndex);
+    int errCode = resultSet.GetColumnIndex("salary", columnIndex);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -281,7 +281,7 @@ int RdbConcurrentTest::CheckBlob(ResultSet &resultSet)
     int columnIndex;
     std::vector<uint8_t> blob;
 
-    int errCode = resultSet.GetColumnIndexForName("blobType", columnIndex);
+    int errCode = resultSet.GetColumnIndex("blobType", columnIndex);
     if (errCode != E_OK) {
         return errCode;
     }

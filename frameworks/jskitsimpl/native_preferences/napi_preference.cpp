@@ -28,6 +28,7 @@
 #include "napi_async_proxy.h"
 
 using namespace OHOS::NativePreferences;
+using namespace OHOS::JsKit;
 
 namespace OHOS {
 namespace PreferencesJsKit {
