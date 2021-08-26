@@ -18,15 +18,17 @@
 
 #include <map>
 #include <set>
+#include <parcel.h>
 
 #include "value_object.h"
 
 namespace OHOS {
 namespace NativeRdb {
 
-class ValuesBucket {
+class ValuesBucket : public virtual OHOS::Parcelable {
 public:
     ValuesBucket();
+    ValuesBucket(std::map<std::string, ValueObject> &valuesMap);
     ~ValuesBucket();
     void PutString(const std::string &columnName, const std::string &value);
     void PutInt(const std::string &columnName, int value);
@@ -43,6 +45,8 @@ public:
     bool GetObject(const std::string &columnName, ValueObject &value) const;
     void GetAll(std::map<std::string, ValueObject> &valuesMap) const;
 
+    bool Marshalling(Parcel &parcel) const override;
+    static ValuesBucket *CreateFromParcel(Parcel &parcel);
 private:
     std::map<std::string, ValueObject> valuesMap;
 };

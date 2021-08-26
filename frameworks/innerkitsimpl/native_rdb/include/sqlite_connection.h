@@ -18,6 +18,7 @@
 
 #include <vector>
 #include <mutex>
+#include <memory>
 #include "sqlite3sym.h"
 #include "sqlite_config.h"
 #include "sqlite_statement.h"

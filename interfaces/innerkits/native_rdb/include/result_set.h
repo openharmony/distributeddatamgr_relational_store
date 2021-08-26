@@ -17,7 +17,7 @@
 #define NATIVE_RDB_RESULT_SET_H
 
 #include <string>
-
+#include <vector>
 namespace OHOS {
 namespace NativeRdb {
 
@@ -55,7 +55,7 @@ public:
      * param columnIndex the zero-based index of the target column.
      * return column value type.
      */
-    virtual int GetColumnTypeForIndex(int columnIndex, ColumnType &columnType) = 0;
+    virtual int GetColumnType(int columnIndex, ColumnType &columnType) = 0;
 
     /**
      * Returns the zero-based index for the given column name.
@@ -64,7 +64,7 @@ public:
      * return the column index for the given column, or -1 if
      *     the column does not exist.
      */
-    virtual int GetColumnIndexForName(const std::string &columnName, int &columnIndex) = 0;
+    virtual int GetColumnIndex(const std::string &columnName, int &columnIndex) = 0;
 
     /**
      * Returns the column name at the given column index.
@@ -72,7 +72,7 @@ public:
      * param columnIndex the zero-based index.
      * return the column name for the given index.
      */
-    virtual int GetColumnNameForIndex(int columnIndex, std::string &columnName) = 0;
+    virtual int GetColumnName(int columnIndex, std::string &columnName) = 0;
 
     /**
      * return the numbers of rows in the result set.

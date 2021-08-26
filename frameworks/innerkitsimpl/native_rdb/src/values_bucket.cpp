@@ -21,6 +21,10 @@ ValuesBucket::ValuesBucket()
 {
 }
 
+ValuesBucket::ValuesBucket(std::map<std::string, ValueObject> &valuesMap) : valuesMap(valuesMap)
+{
+}
+
 ValuesBucket::~ValuesBucket()
 {
 }
@@ -102,6 +106,28 @@ bool ValuesBucket::GetObject(const std::string &columnName, ValueObject &value) 
 void ValuesBucket::GetAll(std::map<std::string, ValueObject> &outValuesMap) const
 {
     outValuesMap = valuesMap;
+}
+
+bool ValuesBucket::Marshalling(Parcel &parcel) const
+{
+    parcel.WriteInt32(valuesMap.size());
+    for (auto &it : valuesMap) {
+        parcel.WriteString(it.first);
+        parcel.WriteParcelable(&it.second);
+    }
+    return true;
+}
+
+ValuesBucket *ValuesBucket::CreateFromParcel(Parcel &parcel)
+{
+    int mapSize = parcel.ReadInt32();
+    std::map<std::string, ValueObject> valuesMap;
+    for (int i = 0; i < mapSize; i++) {
+        std::string key = parcel.ReadString();
+        ValueObject *value = parcel.ReadParcelable<ValueObject>();
+        valuesMap.insert(std::make_pair(key, *value));
+    }
+    return new ValuesBucket(valuesMap);
 }
 } // namespace NativeRdb
 } // namespace OHOS

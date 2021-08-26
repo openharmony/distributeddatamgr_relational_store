@@ -15,6 +15,7 @@
 
 #include "sqlite_connection.h"
 
+#include <memory>
 #include <securec.h>
 #include <sqlite3sym.h>
 #include <sys/stat.h>
@@ -569,9 +570,8 @@ int Collate8Compare(void *p, int n1, const void *v1, int n2, const void *v2)
         return -1;
     } else if (result == UCOL_GREATER) {
         return 1;
-    } else {
-        return 0;
     }
+    return 0;
 }
 
 void LocalizedCollatorDestroy(UCollator *collator)

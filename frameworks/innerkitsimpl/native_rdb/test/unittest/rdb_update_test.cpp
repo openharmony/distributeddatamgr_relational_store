@@ -87,6 +87,7 @@ void RdbStoreUpdateTest::SetUp(void)
 
 void RdbStoreUpdateTest::TearDown(void)
 {
+    RdbHelper::ClearCache();
 }
 
 /**
@@ -135,31 +136,31 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
     ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
 
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, intVal);
 
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("lisi", strVal);
 
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(20, intVal);
 
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(200.5, dVal);
 
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -169,7 +170,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
     EXPECT_EQ(6, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -228,29 +229,29 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
 
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, intVal);
 
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhangsan", strVal);
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(18, intVal);
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(300.5, dVal);
 
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -261,27 +262,27 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, intVal);
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("lisi", strVal);
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(20, intVal);
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(300.5, dVal);
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -291,7 +292,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
     EXPECT_EQ(6, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -404,27 +405,27 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, intVal);
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhangsan", strVal);
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(18, intVal);
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(100.5, dVal);
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -435,27 +436,27 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, intVal);
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("wangjing", strVal);
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(20, intVal);
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(300.5, dVal);
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -465,7 +466,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
     EXPECT_EQ(9, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -527,27 +528,27 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, intVal);
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhangsan", strVal);
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(18, intVal);
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(100.5, dVal);
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -558,27 +559,27 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, intVal);
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("lisi", strVal);
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(19, intVal);
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(200.5, dVal);
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -588,7 +589,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
     EXPECT_EQ(6, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -651,27 +652,27 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, intVal);
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhangsan", strVal);
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(18, intVal);
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(100.5, dVal);
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -682,27 +683,27 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, intVal);
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("wangjing", strVal);
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(20, intVal);
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(300.5, dVal);
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -712,7 +713,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
     EXPECT_EQ(9, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -774,27 +775,27 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, intVal);
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhangsan", strVal);
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(18, intVal);
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(100.5, dVal);
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -805,27 +806,27 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, intVal);
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("lisi", strVal);
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(19, intVal);
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(200.5, dVal);
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -835,7 +836,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
     EXPECT_EQ(6, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -898,27 +899,27 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, intVal);
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhangsan", strVal);
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(18, intVal);
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(100.5, dVal);
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -929,27 +930,27 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, intVal);
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("wangjing", strVal);
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(20, intVal);
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(300.5, dVal);
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -959,7 +960,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
     EXPECT_EQ(9, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -1020,27 +1021,27 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, intVal);
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhangsan", strVal);
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(20, intVal);
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(300.5, dVal);
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -1050,7 +1051,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize
     EXPECT_EQ(6, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);

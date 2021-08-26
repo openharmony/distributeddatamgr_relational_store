@@ -50,11 +50,12 @@ public:
         ConflictResolution conflictResolution) override;
     int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
         const std::vector<std::string> &whereArgs) override;
-    std::unique_ptr<ResultSet> Query(int &errCode, bool distinct,
+    std::unique_ptr<AbsSharedResultSet> Query(int &errCode, bool distinct,
         const std::string &table, const std::vector<std::string> &columns,
         const std::string &selection, const std::vector<std::string> &selectionArgs, const std::string &groupBy,
         const std::string &having, const std::string &orderBy, const std::string &limit) override;
-    std::unique_ptr<ResultSet> QuerySql(const std::string &sql, const std::vector<std::string> &selectionArgs) override;
+    std::unique_ptr<AbsSharedResultSet> QuerySql(const std::string &sql,
+        const std::vector<std::string> &selectionArgs) override;
     int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql,
@@ -94,10 +95,16 @@ public:
     std::string GetFileSecurityLevel();
     int ExecuteForSharedBlock(int &rowNum, AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos,
         bool isCountAllRows, std::string sql, std::vector<ValueObject> &bindArgVec);
-    std::unique_ptr<ResultSet> QuerySqlShared(const std::string &sql,
-        const std::vector<std::string> &selectionArgs) override;
     std::unique_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
+
+
+    std::unique_ptr<AbsSharedResultSet> Query(const AbsRdbPredicates &predicates,
+        const std::vector<std::string> columns) override;
+    int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
+    int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
+    int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
+
 private:
     int InnerOpen(const RdbStoreConfig &config);
     std::shared_ptr<StoreSession> GetThreadSession();

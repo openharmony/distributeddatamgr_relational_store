@@ -22,13 +22,25 @@
 
 namespace OHOS {
 namespace NativeRdb {
+std::mutex RdbHelper::mutex_;
+std::map<std::string, std::shared_ptr<RdbStore>> RdbHelper::storeCache_;
 std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode)
 {
-    std::shared_ptr<RdbStore> rdbStore = RdbStoreImpl::Open(config, errCode);
-    if (rdbStore == nullptr) {
-        LOG_ERROR("RdbHelper GetRdbStore fail to open RdbStore");
-        return nullptr;
+    std::shared_ptr<RdbStore> rdbStore;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::string path = config.GetPath();
+        if (storeCache_.find(path) == storeCache_.end()) {
+            rdbStore = RdbStoreImpl::Open(config, errCode);
+            if (rdbStore == nullptr) {
+                LOG_ERROR("RdbHelper GetRdbStore fail to open RdbStore, err is %{public}d", errCode);
+                return nullptr;
+            }
+            storeCache_.insert(std::pair {path, rdbStore});
+        } else {
+            rdbStore = storeCache_[path];
+        }
     }
 
     errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
@@ -94,6 +106,11 @@ int RdbHelper::ProcessOpenCallback(
     return openCallback.OnOpen(rdbStore);
 }
 
+void RdbHelper::ClearCache()
+{
+    storeCache_.clear();
+}
+
 int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
 {
     if (dbFileName.empty()) {
@@ -103,7 +120,12 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
     if (access(dbFileName.c_str(), F_OK) != 0) {
         return E_OK; // not not exist
     }
-
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (storeCache_.find(dbFileName) != storeCache_.end()) {
+            storeCache_.erase(dbFileName);
+        }
+    }
     int result = remove(dbFileName.c_str());
     if (result != 0) {
         LOG_ERROR("RdbHelper DeleteRdbStore failed to delete the db file err = %{public}d", errno);

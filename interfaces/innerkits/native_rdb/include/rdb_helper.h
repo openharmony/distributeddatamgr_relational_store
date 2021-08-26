@@ -18,7 +18,7 @@
 
 #include <memory>
 #include <string>
-
+#include <mutex>
 #include "rdb_open_callback.h"
 #include "rdb_store.h"
 #include "rdb_store_config.h"
@@ -31,10 +31,13 @@ public:
     static std::shared_ptr<RdbStore> GetRdbStore(
         const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode);
     static int DeleteRdbStore(const std::string &path);
+    static void ClearCache();
 
 private:
     static int ProcessOpenCallback(
         RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
+    static std::mutex mutex_;
+    static std::map<std::string, std::shared_ptr<RdbStore>> storeCache_;
 };
 
 } // namespace NativeRdb

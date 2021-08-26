@@ -24,8 +24,9 @@ namespace NativeRdb {
 class AbsRdbPredicates : public AbsPredicates {
 public:
     explicit AbsRdbPredicates(std::string tableName);
-    std::string GetTableName();
+    std::string GetTableName() const;
     virtual ~AbsRdbPredicates() override {}
+    std::string ToString() const;
 
 private:
     std::string tableName;

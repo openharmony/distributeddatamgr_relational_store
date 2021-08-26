@@ -22,7 +22,7 @@ config("module_private_config") {
     "../include/",
     "../../../../interfaces/innerkits/native_rdb/include",
     "../../../../frameworks/innerkitsimpl/native_rdb/src",
-    "../../../../frameworks/innerkitsimpl/native_appdatafwk/include",
+    "../../../../interfaces/innerkits/native_appdatafwk/include",
     "//third_party/icu/icu4c/source/i18n",
     "//third_party/icu/icu4c/source/common",
     "//utils/native/base/include",
@@ -55,10 +55,12 @@ ohos_unittest("NativeRdbTest") {
 
   configs = [ ":module_private_config" ]
 
-  external_deps = [ "hilog_native:libhilog" ]
+  external_deps = [
+    "hilog_native:libhilog",
+    "native_appdatamgr:native_rdb",
+  ]
 
   deps = [
-    "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_rdb:native_rdb",
     "//third_party/googletest:gtest_main",
     "//third_party/icu/icu4c:shared_icui18n",
     "//third_party/icu/icu4c:shared_icuuc",

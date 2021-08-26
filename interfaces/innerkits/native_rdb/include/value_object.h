@@ -19,6 +19,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <parcel.h>
 
 namespace OHOS {
 namespace NativeRdb {
@@ -32,16 +33,20 @@ enum class ValueObjectType {
     TYPE_BOOL,
 };
 
-class ValueObject {
+class ValueObject : public virtual OHOS::Parcelable{
 public:
     ValueObject();
     ~ValueObject();
+    ValueObject(ValueObject &&valueObject) noexcept;
+    ValueObject(const ValueObject &valueObject);
     explicit ValueObject(int val);
     explicit ValueObject(int64_t val);
     explicit ValueObject(double val);
     explicit ValueObject(bool val);
     explicit ValueObject(const std::string &val);
     explicit ValueObject(const std::vector<uint8_t> &blob);
+    ValueObject &operator=(ValueObject &&valueObject) noexcept;
+    ValueObject &operator=(const ValueObject &valueObject);
 
     ValueObjectType GetType() const;
     int GetInt(int &val) const;
@@ -51,6 +56,8 @@ public:
     int GetString(std::string &val) const;
     int GetBlob(std::vector<uint8_t> &val) const;
 
+    bool Marshalling(Parcel &parcel) const override;
+    static ValueObject *Unmarshalling(Parcel &parcel);
 private:
     ValueObjectType type;
     std::variant<int64_t, double, std::string, bool, std::vector<uint8_t>> value;

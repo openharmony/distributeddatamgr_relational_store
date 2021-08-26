@@ -43,7 +43,7 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
     sqlite3_stmt *stmt = nullptr;
     int errCode = sqlite3_prepare_v2(dbHandle, newSql.c_str(), newSql.length(), &stmt, nullptr);
     if (errCode != SQLITE_OK) {
-        LOG_ERROR("SqliteStatement::Prepare prepare failed err = %{public}d", errCode);
+        LOG_ERROR("SqliteStatement::Prepare failed err = %{public}d", errCode);
         if (stmt != nullptr) {
             sqlite3_finalize(stmt);
         }
