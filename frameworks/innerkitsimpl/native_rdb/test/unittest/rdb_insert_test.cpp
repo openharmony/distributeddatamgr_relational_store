@@ -154,25 +154,25 @@ void RdbStoreInsertTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(position, -1);
 
-    ret = resultSet->GetColumnTypeForIndex(0, columnType);
-    EXPECT_EQ(ret, E_STEP_RESULT_QUERY_NOT_EXECUTED);
+    ret = resultSet->GetColumnType(0, columnType);
+    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
 
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(columnIndex, 0);
-    ret = resultSet->GetColumnTypeForIndex(columnIndex, columnType);
+    ret = resultSet->GetColumnType(columnIndex, columnType);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(columnType, ColumnType::TYPE_INTEGER);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, intVal);
 
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnTypeForIndex(columnIndex, columnType);
+    ret = resultSet->GetColumnType(columnIndex, columnType);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(columnType, ColumnType::TYPE_STRING);
     ret = resultSet->GetString(columnIndex, strVal);
@@ -184,10 +184,10 @@ void RdbStoreInsertTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     RdbStoreInsertTest::CheckBlob(resultSet);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
 
-    ret = resultSet->GetColumnTypeForIndex(columnIndex, columnType);
-    EXPECT_EQ(ret, E_STEP_RESULT_QUERY_NOT_EXECUTED);
+    ret = resultSet->GetColumnType(columnIndex, columnType);
+    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -198,9 +198,9 @@ void RdbStoreInsertTest::CheckAge(std::unique_ptr<ResultSet> &resultSet)
     int columnIndex;
     int intVal;
     ColumnType columnType;
-    int ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    int ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnTypeForIndex(columnIndex, columnType);
+    ret = resultSet->GetColumnType(columnIndex, columnType);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(columnType, ColumnType::TYPE_INTEGER);
     ret = resultSet->GetInt(columnIndex, intVal);
@@ -213,9 +213,9 @@ void RdbStoreInsertTest::CheckSalary(std::unique_ptr<ResultSet> &resultSet)
     int columnIndex;
     double dVal;
     ColumnType columnType;
-    int ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    int ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnTypeForIndex(columnIndex, columnType);
+    ret = resultSet->GetColumnType(columnIndex, columnType);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(columnType, ColumnType::TYPE_FLOAT);
     ret = resultSet->GetDouble(columnIndex, dVal);
@@ -228,9 +228,9 @@ void RdbStoreInsertTest::CheckBlob(std::unique_ptr<ResultSet> &resultSet)
     int columnIndex;
     std::vector<uint8_t> blob;
     ColumnType columnType;
-    int ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    int ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnTypeForIndex(columnIndex, columnType);
+    ret = resultSet->GetColumnType(columnIndex, columnType);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(columnType, ColumnType::TYPE_BLOB);
     ret = resultSet->GetBlob(columnIndex, blob);
@@ -327,31 +327,31 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_001, TestSize.Level1)
     double dVal;
     std::vector<uint8_t> blob;
 
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, intVal);
 
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhangsan", strVal);
 
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(18, intVal);
 
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(100.5, dVal);
 
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -361,7 +361,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_001, TestSize.Level1)
     EXPECT_EQ(3, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -412,31 +412,31 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_002, TestSize.Level1)
     double dVal;
     std::vector<uint8_t> blob;
 
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, intVal);
 
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhangsan", strVal);
 
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(18, intVal);
 
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(200.5, dVal);
 
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -446,7 +446,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_002, TestSize.Level1)
     EXPECT_EQ(3, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -650,31 +650,31 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_006_007, Test
     double dVal;
     std::vector<uint8_t> blob;
 
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, intVal);
 
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhangsan", strVal);
 
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(18, intVal);
 
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(200.5, dVal);
 
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -684,7 +684,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_006_007, Test
     EXPECT_EQ(6, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);

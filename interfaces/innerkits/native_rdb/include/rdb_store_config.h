@@ -79,8 +79,12 @@ public:
     std::string GetDatabaseFileSecurityLevel() const;
 
     // set the journal mode, if not set, the default mode is WAL
+    void SetName(const std::string &name);
     void SetJournalMode(JournalMode journalMode);
     void SetPath(std::string path);
+    void SetReadOnly(bool readOnly);
+    void SetStorageMode(StorageMode storageMode);
+    void SetDatabaseFileType(DatabaseFileType type);
     void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
     void ClearEncryptKey();
 

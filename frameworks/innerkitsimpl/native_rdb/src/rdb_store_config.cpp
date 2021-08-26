@@ -137,6 +137,11 @@ std::string RdbStoreConfig::GetDatabaseFileSecurityLevel() const
     return databaseFileSecurityLevel;
 }
 
+void RdbStoreConfig::SetName(const std::string &name)
+{
+    this->name = name;
+}
+
 /**
  * Sets the journal mode  for the object.
  */
@@ -145,12 +150,27 @@ void RdbStoreConfig::SetJournalMode(JournalMode journalMode)
     this->journalMode = GetJournalModeValue(journalMode);
 }
 
+void RdbStoreConfig::SetDatabaseFileType(DatabaseFileType type)
+{
+    this->databaseFileType = GetDatabaseFileTypeValue(type);
+}
+
 /**
  * Sets the path  for the object.
  */
 void RdbStoreConfig::SetPath(std::string path)
 {
     this->path = path;
+}
+
+void RdbStoreConfig::SetStorageMode(StorageMode storageMode)
+{
+    this->storageMode = storageMode; 
+}
+
+void RdbStoreConfig::SetReadOnly(bool readOnly)
+{
+    this->readOnly = readOnly; 
 }
 
 void RdbStoreConfig::ClearEncryptKey()

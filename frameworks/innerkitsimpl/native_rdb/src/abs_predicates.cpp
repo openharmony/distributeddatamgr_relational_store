@@ -13,10 +13,8 @@
  * limitations under the License.
  */
 
-
 #include "abs_predicates.h"
 
-#include <iostream>
 #include <algorithm>
 #include <initializer_list>
 
@@ -30,14 +28,16 @@ AbsPredicates::AbsPredicates()
     Initial();
 }
 
-AbsPredicates::~AbsPredicates() {}
+AbsPredicates::~AbsPredicates()
+{
+}
 
 void AbsPredicates::Clear()
 {
     Initial();
 }
 
-bool AbsPredicates::GetIsNeedAnd() const
+bool AbsPredicates::IsNeedAnd() const
 {
     return isNeedAnd;
 }
@@ -529,8 +529,8 @@ void AbsPredicates::Initial()
 /**
  * Check the parameter validity.
  */
-bool AbsPredicates::CheckParameter(std::string methodName, std::string field,
-    std::initializer_list<std::string> args) const
+bool AbsPredicates::CheckParameter(
+    std::string methodName, std::string field, std::initializer_list<std::string> args) const
 {
     if (field.empty()) {
         LOG_WARN("QueryImpl(): string 'field' is empty.");
@@ -595,8 +595,8 @@ void AbsPredicates::CheckIsNeedAnd()
     }
 }
 
-void AbsPredicates::AppendWhereClauseWithInOrNotIn(std::string methodName, std::string field,
-    std::vector<std::string> replaceValues)
+void AbsPredicates::AppendWhereClauseWithInOrNotIn(
+    std::string methodName, std::string field, std::vector<std::string> replaceValues)
 {
     std::string normalizedField = Normalized(RemoveQuotes(field));
     whereClause = whereClause + normalizedField + StringUtils::SurroundWithFunction(methodName, ",", replaceValues);
@@ -651,6 +651,11 @@ int AbsPredicates::GetOffset() const
 bool AbsPredicates::IsDistinct() const
 {
     return distinct;
+}
+
+bool AbsPredicates::IsSorted() const
+{
+    return isSorted;
 }
 
 std::string AbsPredicates::GetGroup() const

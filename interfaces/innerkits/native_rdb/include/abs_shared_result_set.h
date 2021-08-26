@@ -16,22 +16,22 @@
 #ifndef NATIVE_RDB_ABS_SHARED_RESULT_SET_H
 #define NATIVE_RDB_ABS_SHARED_RESULT_SET_H
 
-
-#include "shared_block.h"
-#include "abs_result_set.h"
-#include "shared_result_set.h"
 #include <memory>
+#include <string>
 #include <thread>
 #include <vector>
-#include <string>
-#include "rdb_store_impl.h"
-#include "sqlite_statement.h"
+
+#include "abs_result_set.h"
+#include "parcel.h"
+#include "shared_block.h"
+#include "shared_result_set.h"
 
 namespace OHOS {
 namespace NativeRdb {
-class AbsSharedResultSet : public AbsResultSet, public SharedResultSet {
+class AbsSharedResultSet : public AbsResultSet, public SharedResultSet, public virtual Parcelable {
 public:
     AbsSharedResultSet(std::string name);
+    AbsSharedResultSet(Parcel &parcel);
     virtual ~AbsSharedResultSet();
     int GetBlob(int columnIndex, std::vector<uint8_t> &blob) override;
     int GetString(int columnIndex, std::string &value) override;
@@ -39,7 +39,7 @@ public:
     int GetLong(int columnIndex, int64_t &value) override;
     int GetDouble(int columnIndex, double &value) override;
     int IsColumnNull(int columnIndex, bool &isNull) override;
-    int GetColumnTypeForIndex(int columnIndex, ColumnType &columnType) override;
+    int GetColumnType(int columnIndex, ColumnType &columnType) override;
     int GoToRow(int position) override;
     virtual int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     virtual int GetRowCount(int &count) override;
@@ -49,6 +49,8 @@ public:
     void SetBlock(AppDataFwk::SharedBlock *block);
     bool HasBlock() const;
     virtual int Close() override;
+    bool Marshalling(Parcel &parcel) const override;
+
 protected:
     int CheckState(int columnIndex);
     void ClearBlock();

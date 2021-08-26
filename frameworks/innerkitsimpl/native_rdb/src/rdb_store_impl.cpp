@@ -173,6 +173,12 @@ int RdbStoreImpl::Update(int &changedRows, const std::string &table, const Value
         changedRows, table, values, whereClause, whereArgs, ConflictResolution::ON_CONFLICT_NONE);
 }
 
+int RdbStoreImpl::Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates)
+{
+    return Update(
+        changedRows, predicates.GetTableName(), values, predicates.GetWhereClause(), predicates.GetWhereArgs());
+}
+
 int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
     const std::string &whereClause, const std::vector<std::string> &whereArgs, ConflictResolution conflictResolution)
 {
@@ -216,6 +222,11 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
     return errCode;
 }
 
+int RdbStoreImpl::Delete(int &deletedRows, const AbsRdbPredicates &predicates)
+{
+    return Delete(deletedRows, predicates.GetTableName(), predicates.GetWhereClause(), predicates.GetWhereArgs());
+}
+
 int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
     const std::vector<std::string> &whereArgs)
 {
@@ -240,7 +251,16 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
     return errCode;
 }
 
-std::unique_ptr<ResultSet> RdbStoreImpl::Query(int &errCode, bool distinct, const std::string &table,
+std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
+{
+    LOG_DEBUG("RdbStoreImpl::Query on called.");
+    std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
+    std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
+    return QuerySql(sql, selectionArgs);
+}
+
+std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool distinct, const std::string &table,
     const std::vector<std::string> &columns, const std::string &selection,
     const std::vector<std::string> &selectionArgs, const std::string &groupBy, const std::string &having,
     const std::string &orderBy, const std::string &limit)
@@ -255,10 +275,26 @@ std::unique_ptr<ResultSet> RdbStoreImpl::Query(int &errCode, bool distinct, cons
     return QuerySql(sql, selectionArgs);
 }
 
-std::unique_ptr<ResultSet> RdbStoreImpl::QuerySql(const std::string &sql, const std::vector<std::string> &selectionArgs)
+std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sql,
+    const std::vector<std::string> &selectionArgs)
 {
-    std::unique_ptr<ResultSet> resultSet = std::make_unique<StepResultSet>(shared_from_this(), sql, selectionArgs);
-    return resultSet;
+    return std::make_unique<SqliteSharedResultSet>(shared_from_this(), path, sql, selectionArgs);
+}
+
+int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
+{
+    LOG_DEBUG("RdbStoreImpl::Count on called.");
+    std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
+    std::string sql = SqliteSqlBuilder::BuildCountString(predicates);
+
+    std::vector<ValueObject> bindArgs;
+    std::vector<std::string> whereArgs = predicates.GetWhereArgs();
+    int size = whereArgs.size();
+    for (int i = 0; i < size; i++) {
+        bindArgs.push_back(ValueObject(whereArgs[i]));
+    }
+
+    return ExecuteAndGetLong(outValue, sql, bindArgs);
 }
 
 int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs)
@@ -581,17 +617,6 @@ int RdbStoreImpl::ExecuteForSharedBlock(int &rowNum, AppDataFwk::SharedBlock *sh
         session->ExecuteForSharedBlock(rowNum, sql, bindArgVec, sharedBlock, startPos, requiredPos, isCountAllRows);
     ReleaseThreadSession();
     return errCode;
-}
-
-/**
- * Executes an SQL statement and specifies the result set.
- */
-std::unique_ptr<ResultSet> RdbStoreImpl::QuerySqlShared(const std::string &sql,
-    const std::vector<std::string> &selectionArgs)
-{
-    std::unique_ptr<ResultSet> resultSet =
-        std::make_unique<SqliteSharedResultSet>(shared_from_this(), path, sql, selectionArgs);
-    return resultSet;
 }
 
 /**

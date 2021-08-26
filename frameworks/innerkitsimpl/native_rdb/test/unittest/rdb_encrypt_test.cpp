@@ -105,6 +105,7 @@ void RdbEncryptTest::SetUp(void)
 
 void RdbEncryptTest::TearDown(void)
 {
+    RdbHelper::ClearCache();
 }
 
 /**
@@ -174,27 +175,27 @@ void RdbEncryptTest::QueryCheckID1(std::shared_ptr<RdbStore> &store)
     std::vector<uint8_t> blob;
     int ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, intVal);
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhangsan", strVal);
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(18, intVal);
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(100.5, dVal);
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -203,7 +204,7 @@ void RdbEncryptTest::QueryCheckID1(std::shared_ptr<RdbStore> &store)
     EXPECT_EQ(2, blob[1]);
     EXPECT_EQ(3, blob[2]);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 }
@@ -225,6 +226,7 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_002, TestSize.Level1)
     EXPECT_NE(store, nullptr);
 
     RdbEncryptTest::QueryCheckID1(store);
+    store = nullptr;
 }
 
 /**
@@ -275,27 +277,27 @@ void RdbEncryptTest::QueryCheckID4(std::shared_ptr<RdbStore> &store)
     std::vector<uint8_t> blob;
     int ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(4, intVal);
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhao", strVal);
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(40, intVal);
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(400.5, dVal);
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -304,7 +306,7 @@ void RdbEncryptTest::QueryCheckID4(std::shared_ptr<RdbStore> &store)
     EXPECT_EQ(11, blob[1]);
     EXPECT_EQ(12, blob[2]);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 }
@@ -425,27 +427,27 @@ void RdbEncryptTest::QueryCheckID5(std::shared_ptr<RdbStore> &store)
     std::vector<uint8_t> blob;
     int ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndexForName("id", columnIndex);
+    ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(5, intVal);
-    ret = resultSet->GetColumnIndexForName("name", columnIndex);
+    ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("sun", strVal);
-    ret = resultSet->GetColumnIndexForName("age", columnIndex);
+    ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(50, intVal);
-    ret = resultSet->GetColumnIndexForName("salary", columnIndex);
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(500.5, dVal);
-    ret = resultSet->GetColumnIndexForName("blobType", columnIndex);
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
     EXPECT_EQ(ret, E_OK);
@@ -454,7 +456,7 @@ void RdbEncryptTest::QueryCheckID5(std::shared_ptr<RdbStore> &store)
     EXPECT_EQ(14, blob[1]);
     EXPECT_EQ(15, blob[2]);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_STEP_RESULT_IS_AFTER_LAST);
+    EXPECT_EQ(ret, E_ERROR);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 }
@@ -538,7 +540,7 @@ void RdbEncryptTest::QueryThread(int n)
 {
     std::shared_ptr<RdbStore> &store = RdbEncryptTest::testStore;
     std::unique_ptr<ResultSet> resultSet =
-        store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+        store->QueryByStep("SELECT * FROM test WHERE name = ?", std::vector<std::string> { "zhangsan" });
     EXPECT_NE(resultSet, nullptr);
     int ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);

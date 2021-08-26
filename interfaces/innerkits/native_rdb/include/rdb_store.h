@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+#include "abs_rdb_predicates.h"
+#include "abs_shared_result_set.h"
 #include "result_set.h"
 #include "value_object.h"
 #include "values_bucket.h"
@@ -52,18 +54,16 @@ public:
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
     virtual int Delete(int &deletedRows, const std::string &table, const std::string &whereClause = "",
         const std::vector<std::string> &whereArgs = std::vector<std::string>()) = 0;
-    virtual std::unique_ptr<ResultSet> Query(int &errCode, bool distinct, const std::string &table,
+    virtual std::unique_ptr<AbsSharedResultSet> Query(int &errCode, bool distinct, const std::string &table,
         const std::vector<std::string> &columns, const std::string &selection = "",
         const std::vector<std::string> &selectionArgs = std::vector<std::string>(), const std::string &groupBy = "",
         const std::string &having = "", const std::string &orderBy = "", const std::string &limit = "") = 0;
-    virtual std::unique_ptr<ResultSet> QuerySql(const std::string &sql,
-        const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
-    virtual std::unique_ptr<ResultSet> QuerySqlShared(const std::string &sql,
-        const std::vector<std::string> &selectionArgs) = 0;
-    virtual std::unique_ptr<ResultSet> QueryByStep(const std::string &sql,
-        const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
-    virtual int ExecuteSql(const std::string &sql,
-        const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+    virtual std::unique_ptr<AbsSharedResultSet> QuerySql(
+        const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
+    virtual std::unique_ptr<ResultSet> QueryByStep(
+        const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
+    virtual int ExecuteSql(
+        const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
     virtual int ExecuteAndGetLong(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
     virtual int ExecuteAndGetString(std::string &outValue, const std::string &sql,
@@ -73,8 +73,15 @@ public:
     virtual int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
     virtual int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey) = 0;
-    virtual int Attach(const std::string &alias, const std::string &pathName,
-        const std::vector<uint8_t> destEncryptKey) = 0;
+    virtual int Attach(
+        const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey) = 0;
+
+    virtual int Count(int64_t &outValue, const AbsRdbPredicates &predicates) = 0;
+    virtual std::unique_ptr<AbsSharedResultSet> Query(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> columns) = 0;
+    virtual int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) = 0;
+    virtual int Delete(int &deletedRows, const AbsRdbPredicates &predicates) = 0;
+
     virtual int GetVersion(int &version) = 0;
     virtual int SetVersion(int version) = 0;
     virtual int BeginTransaction() = 0;
