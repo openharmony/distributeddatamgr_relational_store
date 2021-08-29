@@ -16,9 +16,10 @@
 #ifndef NATIVE_RDB_DATD_ABILITY_PREDICATES_H
 #define NATIVE_RDB_DATD_ABILITY_PREDICATES_H
 
+#include <string>
+
 #include "abs_predicates.h"
 #include "parcel.h"
-#include <string>
 
 namespace OHOS {
 namespace NativeRdb {
@@ -31,7 +32,7 @@ public:
     bool IsRawSelection() const;
     bool GetJudgeSource() const;
     bool Marshalling(OHOS::Parcel &parcel) const override;
-    static  DataAbilityPredicates *Unmarshalling(OHOS::Parcel &parcel);
+    static DataAbilityPredicates *Unmarshalling(OHOS::Parcel &parcel);
     static bool result;
 
 private:

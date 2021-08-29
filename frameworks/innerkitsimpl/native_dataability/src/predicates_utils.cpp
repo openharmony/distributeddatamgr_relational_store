@@ -16,7 +16,6 @@
 #include "predicates_utils.h"
 
 #include <sstream>
-#include "logger.h"
 
 namespace OHOS {
 namespace NativeRdb {

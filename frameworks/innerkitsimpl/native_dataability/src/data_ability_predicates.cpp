@@ -14,7 +14,6 @@
  */
 
 #include "data_ability_predicates.h"
-#include "logger.h"
 #include "predicates_utils.h"
 
 namespace OHOS {

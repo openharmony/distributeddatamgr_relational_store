@@ -10,6 +10,7 @@
       "module_list": [
         "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_appdatafwk:native_appdatafwk",
         "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_preferences:native_preferences",
+        "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_dataability:native_dataability",
         "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_rdb:native_rdb"
       ],
       "system_capabilities":[
@@ -23,7 +24,6 @@
               "abs_rdb_predicates.h",
               "abs_result_set.h",
               "abs_shared_result_set.h",
-              "data_ability_predicates.h",
               "raw_rdb_predicates.h",
               "rdb_errno.h",
               "rdb_helper.h",
@@ -62,10 +62,21 @@
             ],
             "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_appdatafwk/include"
           }
+        },
+        {
+          "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_dataability:native_dataability",
+          "header": {
+            "header_files": [
+              "data_ability_predicates.h",
+              "predicates_utils.h"
+            ],
+            "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_dataability/include"
+          }
         }
       ],
       "test_list": [
         "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_preferences/test:unittest",
+        "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_dataability/test:unittest",
         "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_rdb/test:unittest"
       ]
     },
@@ -76,6 +87,7 @@
         "ivi"
       ],
       "module_list": [
+        "//foundation/distributeddatamgr/appdatamgr/interfaces/jskits:dataability",
         "//foundation/distributeddatamgr/appdatamgr/interfaces/jskits:storage",
         "//foundation/distributeddatamgr/appdatamgr/interfaces/jskits:rdb"
       ],

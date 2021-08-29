@@ -274,7 +274,7 @@ void ParsePredicates(const napi_env &env, const napi_value &arg, RdbStoreContext
 {
     LOG_DEBUG("ParsePredicates on called.");
     napi_unwrap(env, arg, reinterpret_cast<void **>(&asyncContext->predicatesProxy));
-    asyncContext->tableName = asyncContext->predicatesProxy->getPredicates()->GetTableName();
+    asyncContext->tableName = asyncContext->predicatesProxy->GetPredicates()->GetTableName();
 }
 
 void ParseColumns(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
@@ -394,10 +394,10 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
         "Delete",
         [](RdbStoreContext *context) {
             LOG_DEBUG("napi Delete predicates:%{public}s",
-                context->predicatesProxy->getPredicates()->ToString().c_str());
+                context->predicatesProxy->GetPredicates()->ToString().c_str());
             RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
             int temp = 0;
-            int errCode = obj->rdbStore_->Delete(temp, *(context->predicatesProxy->getPredicates()));
+            int errCode = obj->rdbStore_->Delete(temp, *(context->predicatesProxy->GetPredicates()));
             context->rowId = temp;
             LOG_DEBUG("napi Delete");
             return errCode;
@@ -420,12 +420,12 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
         "Update",
         [](RdbStoreContext *context) {
             LOG_DEBUG("napi Update predicates:%{public}s",
-                context->predicatesProxy->getPredicates()->ToString().c_str());
+                context->predicatesProxy->GetPredicates()->ToString().c_str());
             RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
             int temp = 0;
             context->JSNumber2NativeType(obj->rdbStore_);
             int errCode =
-                obj->rdbStore_->Update(temp, *(context->valuesBucket), *(context->predicatesProxy->getPredicates()));
+                obj->rdbStore_->Update(temp, *(context->valuesBucket), *(context->predicatesProxy->GetPredicates()));
             context->rowId = temp;
             return errCode;
         },
@@ -448,9 +448,9 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
         "Query",
         [](RdbStoreContext *context) {
             LOG_DEBUG("napi Query predicates:%{public}s",
-                context->predicatesProxy->getPredicates()->ToString().c_str());
+                context->predicatesProxy->GetPredicates()->ToString().c_str());
             RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            context->resultSet = obj->rdbStore_->Query(*(context->predicatesProxy->getPredicates()), context->columns);
+            context->resultSet = obj->rdbStore_->Query(*(context->predicatesProxy->GetPredicates()), context->columns);
             LOG_DEBUG("Query result is nullptr ? %{public}d", (context->resultSet == nullptr));
             return (context->resultSet != nullptr) ? OK : ERR;
         },
