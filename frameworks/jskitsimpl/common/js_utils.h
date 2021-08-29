@@ -22,7 +22,6 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "ability.h"
 
 namespace OHOS {
 namespace JsKit {
@@ -42,8 +41,6 @@ public:
     static napi_value Convert2JSValue(napi_env env, int64_t value);
     static napi_value Convert2JSValue(napi_env env, double value);
     static napi_value Convert2JSValue(napi_env env, bool value);
-
-    static AppExecFwk::Ability* GetJSAbility(napi_env env);
 };
 } // namespace JsKit
 } // namespace OHOS

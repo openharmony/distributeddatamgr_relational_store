@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#include <unistd.h>
-
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "napi_rdb_predicates.h"
@@ -52,7 +50,7 @@ static napi_module _module = {
 /*
  * Module register function
  */
-extern "C" __attribute__((constructor)) void RegisterModule(void)
+static __attribute__((constructor)) void RegisterModule(void)
 {
     napi_module_register(&_module);
 }
