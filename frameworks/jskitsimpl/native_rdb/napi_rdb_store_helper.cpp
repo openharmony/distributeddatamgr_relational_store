@@ -17,6 +17,7 @@
 #include <functional>
 
 #include "common.h"
+#include "js_ability.h"
 #include "js_utils.h"
 #include "napi_async_proxy.h"
 #include "napi_rdb_store.h"
@@ -248,7 +249,7 @@ public:
 
 std::string GetDatabaseDir(const napi_env &env)
 {
-    AppExecFwk::Ability *ability = JSUtils::GetJSAbility(env);
+    AppExecFwk::Ability *ability = JSAbility::GetJSAbility(env);
     std::string databaseDir = ability->GetDatabaseDir();
     LOG_DEBUG("GetDatabaseDir:%{public}s", databaseDir.c_str());
     return databaseDir;
@@ -395,11 +396,13 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
 
 napi_value InitRdbHelper(napi_env env, napi_value exports)
 {
+    LOG_INFO("Init InitRdbHelper");
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("getRdbStore", GetRdbStore),
         DECLARE_NAPI_FUNCTION("deleteRdbStore", DeleteRdbStore),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
+    LOG_INFO("Init InitRdbHelper end");
     return exports;
 }
 } // namespace RdbJsKit

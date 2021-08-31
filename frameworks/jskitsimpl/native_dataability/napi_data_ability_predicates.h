@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,32 +13,32 @@
  * limitations under the License.
  */
 
-#ifndef RDB_JSKIT_NAPI_RDB_PREDICATES_H
-#define RDB_JSKIT_NAPI_RDB_PREDICATES_H
+#ifndef DATAABILITY_JSKIT_NAPI_DATA_ABILITY_PREDICATES_H
+#define DATAABILITY_JSKIT_NAPI_DATA_ABILITY_PREDICATES_H
 
-#include <memory>
-
+#include "data_ability_predicates.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "rdb_predicates.h"
+#include <memory>
 
 namespace OHOS {
-namespace RdbJsKit {
-class RdbPredicatesProxy {
+namespace DataAbilityJsKit {
+
+class DataAbilityPredicatesProxy {
 public:
     static void Init(napi_env env, napi_value exports);
     static void Destructor(napi_env env, void *nativeObject, void *finalize_hint);
 
-    explicit RdbPredicatesProxy(std::string tableName);
-    NativeRdb::RdbPredicates *GetPredicates() const;
+    explicit DataAbilityPredicatesProxy();
+    explicit DataAbilityPredicatesProxy(NativeRdb::DataAbilityPredicates &predicates);
+    NativeRdb::DataAbilityPredicates *GetPredicates() const;
 
-    void setProperties(napi_env env, napi_ref wrapper_);
 private:
-    ~RdbPredicatesProxy();
+    ~DataAbilityPredicatesProxy();
 
     static napi_value New(napi_env env, napi_callback_info info);
-    static NativeRdb::RdbPredicates *GetNativePredicates(napi_env env, napi_callback_info info);
+    static NativeRdb::DataAbilityPredicates *GetNativePredicates(napi_env env, napi_callback_info info);
 
     static napi_value EqualTo(napi_env env, napi_callback_info info);
     static napi_value NotEqualTo(napi_env env, napi_callback_info info);
@@ -69,12 +69,24 @@ private:
     static napi_value In(napi_env env, napi_callback_info info);
     static napi_value NotIn(napi_env env, napi_callback_info info);
 
+    static napi_value GetWhereClause(napi_env env, napi_callback_info info);
+    static napi_value GetWhereArgs(napi_env env, napi_callback_info info);
+    static napi_value GetOrder(napi_env env, napi_callback_info info);
+    static napi_value GetLimit(napi_env env, napi_callback_info info);
+    static napi_value GetOffset(napi_env env, napi_callback_info info);
+    static napi_value IsDistinct(napi_env env, napi_callback_info info);
+    static napi_value GetGroup(napi_env env, napi_callback_info info);
+    static napi_value GetIndex(napi_env env, napi_callback_info info);
+    static napi_value IsNeedAnd(napi_env env, napi_callback_info info);
+    static napi_value IsSorted(napi_env env, napi_callback_info info);
+
     static napi_ref constructor_;
-    NativeRdb::RdbPredicates *predicates_;
+    NativeRdb::DataAbilityPredicates *predicates_;
     napi_env env_;
     napi_ref wrapper_;
 };
-} // namespace RdbJsKit
+
+} // namespace DataAbilityJsKit
 } // namespace OHOS
 
-#endif // RDB_JSKIT_NAPI_RDB_PREDICATES_H
+#endif // DATAABILITY_JSKIT_NAPI_DATA_ABILITY_PREDICATES_H
