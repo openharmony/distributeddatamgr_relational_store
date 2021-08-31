@@ -25,7 +25,6 @@ ohos_shared_library("storage") {
   include_dirs = [
     "//third_party/node/src",
     "//utils/native/base/include",
-    "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_preferences/include",
     "../../frameworks/jskitsimpl/common",
   ]
 
@@ -35,10 +34,7 @@ ohos_shared_library("storage") {
     "../../frameworks/jskitsimpl/native_preferences/napi_preference_helper.cpp",
   ]
 
-  deps = [
-    "//foundation/ace/napi:ace_napi",
-    "//utils/native/base:utils",
-  ]
+  deps = [ "//foundation/ace/napi:ace_napi" ]
 
   external_deps = [
     "hilog_native:libhilog",
@@ -59,11 +55,13 @@ ohos_shared_library("rdb") {
 
   sources = [
     "../../frameworks/jskitsimpl/common/js_utils.cpp",
+    "../../frameworks/jskitsimpl/common/js_ability.cpp",
     "../../frameworks/jskitsimpl/native_rdb/entry_point.cpp",
     "../../frameworks/jskitsimpl/native_rdb/napi_rdb_predicates.cpp",
     "../../frameworks/jskitsimpl/native_rdb/napi_rdb_store.cpp",
     "../../frameworks/jskitsimpl/native_rdb/napi_rdb_store_helper.cpp",
     "../../frameworks/jskitsimpl/native_rdb/napi_result_set.cpp",
+    "../../frameworks/jskitsimpl/native_rdb/napi_values_bucket.cpp",
   ]
 
   deps = [
@@ -74,8 +72,8 @@ ohos_shared_library("rdb") {
 
   external_deps = [
     "hilog_native:libhilog",
-    "native_appdatamgr:native_rdb",
     "native_appdatamgr:native_appdatafwk",
+    "native_appdatamgr:native_rdb",
     "aafwk_standard:want",
     "aafwk_standard:ability_manager",
     "appexecfwk_standard:appexecfwk_base",
@@ -85,4 +83,35 @@ ohos_shared_library("rdb") {
   subsystem_name = "distributeddatamgr"
   part_name = "appdatamgr_jskits"
   relative_install_dir = "module/data"
+}
+
+ohos_shared_library("dataability") {
+  include_dirs = [
+    "//third_party/node/src",
+    "//utils/native/base/include",
+    "../../frameworks/jskitsimpl/common",
+    "../../frameworks/jskitsimpl/native_rdb",
+  ]
+
+  sources = [
+    "../../frameworks/jskitsimpl/common/js_utils.cpp",
+    "../../frameworks/jskitsimpl/native_dataability/entry_point.cpp",
+    "../../frameworks/jskitsimpl/native_dataability/napi_data_ability_predicates.cpp",
+    "../../frameworks/jskitsimpl/native_dataability/napi_predicates_utils.cpp",
+  ]
+
+  deps = [
+    "../../interfaces/jskits:rdb",
+    "//foundation/ace/napi:ace_napi",
+  ]
+
+  external_deps = [
+    "hilog_native:libhilog",
+    "native_appdatamgr:native_dataability",
+    "native_appdatamgr:native_rdb",
+  ]
+
+  subsystem_name = "distributeddatamgr"
+  part_name = "appdatamgr_jskits"
+  relative_install_dir = "module/ability"
 }

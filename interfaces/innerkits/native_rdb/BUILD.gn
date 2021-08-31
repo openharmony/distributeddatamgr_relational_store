@@ -18,7 +18,6 @@ config("native_rdb_config") {
   include_dirs = [
     "include",
     "../../../frameworks/innerkitsimpl/native_rdb/include",
-    "../../../frameworks/innerkitsimpl/native_appdatafwk/include",
     "//third_party/icu/icu4c/source",
     "//third_party/icu/icu4c/source/i18n",
     "//third_party/icu/icu4c/source/common",
@@ -42,9 +41,7 @@ ohos_shared_library("native_rdb") {
     "../../../frameworks/innerkitsimpl/native_rdb/src/abs_rdb_predicates.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/abs_result_set.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/abs_shared_result_set.cpp",
-    "../../../frameworks/innerkitsimpl/native_rdb/src/data_ability_predicates.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/logger.h",
-    "../../../frameworks/innerkitsimpl/native_rdb/src/predicates_utils.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/raw_rdb_predicates.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/rdb_helper.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/rdb_predicates.cpp",
@@ -71,17 +68,17 @@ ohos_shared_library("native_rdb") {
   configs = [ ":native_rdb_config" ]
 
   deps = [
-    "../../../interfaces/innerkits/native_appdatafwk:native_appdatafwk",
     "//third_party/icu/icu4c:shared_icui18n",
     "//third_party/icu/icu4c:shared_icuuc",
     "//third_party/sqlite:sqlite",
     "//utils/native/base:utils",
   ]
 
-  external_deps = [
-    "hilog_native:libhilog",
-    "native_appdatamgr:native_appdatafwk",
+  public_deps = [
+    "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_appdatafwk:native_appdatafwk"
   ]
+
+  external_deps = [ "hilog_native:libhilog" ]
 
   public_configs = [ ":native_rdb_public_config" ]
 

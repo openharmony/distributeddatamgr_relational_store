@@ -14,15 +14,10 @@
  */
 
 #include <gtest/gtest.h>
-#include <algorithm>
 #include <vector>
-#include <string>
 
 #include "data_ability_predicates.h"
 #include "refbase.h"
-#include "logger.h"
-#include "common.h"
-
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;

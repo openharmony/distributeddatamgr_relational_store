@@ -12,7 +12,7 @@
 # limitations under the License.
 import("//build/test.gni")
 
-module_output_path = "native_appdatamgr/native_rdb"
+module_output_path = "native_appdatamgr/native_dataability"
 
 ###############################################################################
 config("module_private_config") {
@@ -20,50 +20,26 @@ config("module_private_config") {
 
   include_dirs = [
     "../include/",
-    "../../../../interfaces/innerkits/native_rdb/include",
-    "../../../../frameworks/innerkitsimpl/native_rdb/src",
-    "../../../../interfaces/innerkits/native_appdatafwk/include",
-    "//third_party/icu/icu4c/source/i18n",
-    "//third_party/icu/icu4c/source/common",
+    "../../../../interfaces/innerkits/native_dataability/include",
     "//utils/native/base/include",
   ]
 }
 
-ohos_unittest("NativeRdbTest") {
+ohos_unittest("NativeDataAbilityTest") {
   module_out_path = module_output_path
 
-  sources = [
-    "unittest/rdb_attach_test.cpp",
-    "unittest/rdb_delete_test.cpp",
-    "unittest/rdb_encrypt_test.cpp",
-    "unittest/rdb_execute_test.cpp",
-    "unittest/rdb_helper_test.cpp",
-    "unittest/rdb_insert_test.cpp",
-    "unittest/rdb_open_callback_test.cpp",
-    "unittest/rdb_predicates_test.cpp",
-    "unittest/rdb_raw_predicates_test.cpp",
-    "unittest/rdb_sqlite_shared_result_set_test.cpp",
-    "unittest/rdb_step_result_set_test.cpp",
-    "unittest/rdb_store_concurrent_test.cpp",
-    "unittest/rdb_store_config_test.cpp",
-    "unittest/rdb_store_interface_test.cpp",
-    "unittest/rdb_transaction_test.cpp",
-    "unittest/rdb_update_test.cpp",
-    "unittest/rdb_upgrade_test.cpp",
-  ]
+  sources = [ "unittest/data_ability_predicates_test.cpp" ]
 
   configs = [ ":module_private_config" ]
 
   external_deps = [
     "hilog_native:libhilog",
+    "native_appdatamgr:native_dataability",
     "native_appdatamgr:native_rdb",
   ]
 
   deps = [
     "//third_party/googletest:gtest_main",
-    "//third_party/icu/icu4c:shared_icui18n",
-    "//third_party/icu/icu4c:shared_icuuc",
-    "//third_party/sqlite:sqlite",
     "//utils/native/base:utils",
   ]
 }
@@ -72,6 +48,6 @@ ohos_unittest("NativeRdbTest") {
 group("unittest") {
   testonly = true
 
-  deps = [ ":NativeRdbTest" ]
+  deps = [ ":NativeDataAbilityTest" ]
 }
 ###############################################################################
