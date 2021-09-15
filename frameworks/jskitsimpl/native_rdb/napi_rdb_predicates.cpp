@@ -105,6 +105,34 @@ napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
     return output;
 }
 
+napi_value RdbPredicatesProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbPredicates> value)
+{
+    napi_value cons;
+    napi_status status = napi_get_reference_value(env, constructor_, &cons);
+    if (status != napi_ok) {
+        LOG_ERROR("RdbPredicatesProxy get constructor failed! napi_status:%{public}d!", status);
+        return nullptr;
+    }
+
+    size_t argc = 1;
+    napi_value args[1] = { JSUtils::Convert2JSValue(env, value->GetTableName()) };
+    napi_value instance = nullptr;
+    status = napi_new_instance(env, cons, argc, args, &instance);
+    if (status != napi_ok) {
+        LOG_ERROR("RdbPredicatesProxy napi_new_instance failed! napi_status:%{public}d!", status);
+        return nullptr;
+    }
+
+    RdbPredicatesProxy *proxy = nullptr;
+    status = napi_unwrap(env, instance, reinterpret_cast<void **>(&proxy));
+    if (status != napi_ok) {
+        LOG_ERROR("RdbPredicatesProxy native instance is nullptr! napi_status:%{public}d!", status);
+        return instance;
+    }
+    proxy->predicates_ = std::move(value);
+    return instance;
+}
+
 void RdbPredicatesProxy::Destructor(napi_env env, void *nativeObject, void *)
 {
     RdbPredicatesProxy *proxy = static_cast<RdbPredicatesProxy *>(nativeObject);
@@ -118,10 +146,10 @@ RdbPredicatesProxy::~RdbPredicatesProxy()
 
 RdbPredicatesProxy::RdbPredicatesProxy(std::string tableName) : env_(nullptr), wrapper_(nullptr)
 {
-    predicates_ = new NativeRdb::RdbPredicates(tableName);
+    predicates_ = std::make_shared<NativeRdb::RdbPredicates> (tableName);
 }
 
-NativeRdb::RdbPredicates *RdbPredicatesProxy::GetNativePredicates(
+std::shared_ptr<NativeRdb::RdbPredicates> RdbPredicatesProxy::GetNativePredicates(
     napi_env env, napi_callback_info info)
 {
     RdbPredicatesProxy *predicatesProxy = nullptr;
@@ -519,15 +547,9 @@ napi_value RdbPredicatesProxy::NotIn(napi_env env, napi_callback_info info)
     return _this;
 }
 
-NativeRdb::RdbPredicates *RdbPredicatesProxy::GetPredicates() const
+std::shared_ptr<NativeRdb::RdbPredicates> RdbPredicatesProxy::GetPredicates() const
 {
     return this->predicates_;
-}
-
-void RdbPredicatesProxy::setProperties(napi_env env, napi_ref wrapper_)
-{
-    this->env_ = env;
-    this->wrapper_ = wrapper_;
 }
 } // namespace RdbJsKit
 } // namespace OHOS
