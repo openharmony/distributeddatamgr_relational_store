@@ -381,5 +381,10 @@ bool AbsSharedResultSet::Marshalling(Parcel &parcel) const
     LOG_DEBUG("AbsSharedResultSet::Marshalling sharedBlock.");
     return this->GetBlock()->WriteToParcel(parcel) == E_OK;
 }
+
+AbsSharedResultSet *AbsSharedResultSet::Unmarshalling(Parcel &parcel)
+{
+    return new AbsSharedResultSet(parcel);
+}
 } // namespace NativeRdb
 } // namespace OHOS

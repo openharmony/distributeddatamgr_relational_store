@@ -21,19 +21,10 @@
 #include "napi/native_node_api.h"
 #include "values_bucket.h"
 
-namespace OHOS {
-namespace RdbJsKit {
-
-class ValuesBucketProxy {
-public:
-    explicit ValuesBucketProxy(NativeRdb::ValuesBucket &valuesBucket_);
-
-    napi_value Convert2JSValue(napi_env env);
-
-private:
-    NativeRdb::ValuesBucket &valuesBucket_;
-};
-
-} // namespace RdbJsKit
-} // namespace OHOS
+EXTERN_C_START
+__attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_RdbJsKit_ValuesBucketProxy_NewInstance(
+    napi_env env, OHOS::NativeRdb::ValuesBucket &valuesBucket);
+__attribute__((visibility("default"))) OHOS::NativeRdb::ValuesBucket *
+NAPI_OHOS_Data_RdbJsKit_ValuesBucketProxy_GetNativeObject(napi_env env, napi_value &value);
+EXTERN_C_END
 #endif //APPDATAMGR_NAPI_VALUES_BUCKET_H

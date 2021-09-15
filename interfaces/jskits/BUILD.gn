@@ -54,8 +54,8 @@ ohos_shared_library("rdb") {
   ]
 
   sources = [
-    "../../frameworks/jskitsimpl/common/js_utils.cpp",
     "../../frameworks/jskitsimpl/common/js_ability.cpp",
+    "../../frameworks/jskitsimpl/common/js_utils.cpp",
     "../../frameworks/jskitsimpl/native_rdb/entry_point.cpp",
     "../../frameworks/jskitsimpl/native_rdb/napi_rdb_predicates.cpp",
     "../../frameworks/jskitsimpl/native_rdb/napi_rdb_store.cpp",
@@ -71,13 +71,13 @@ ohos_shared_library("rdb") {
   ]
 
   external_deps = [
+    "aafwk_standard:ability_manager",
+    "aafwk_standard:want",
+    "appexecfwk_standard:appexecfwk_base",
+    "appexecfwk_standard:appexecfwk_core",
     "hilog_native:libhilog",
     "native_appdatamgr:native_appdatafwk",
     "native_appdatamgr:native_rdb",
-    "aafwk_standard:want",
-    "aafwk_standard:ability_manager",
-    "appexecfwk_standard:appexecfwk_base",
-    "appexecfwk_standard:appexecfwk_core",
   ]
 
   subsystem_name = "distributeddatamgr"
@@ -113,5 +113,5 @@ ohos_shared_library("dataability") {
 
   subsystem_name = "distributeddatamgr"
   part_name = "appdatamgr_jskits"
-  relative_install_dir = "module/ability"
+  relative_install_dir = "module/data"
 }
