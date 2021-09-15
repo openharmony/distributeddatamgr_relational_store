@@ -43,17 +43,14 @@ napi_value CreateRdbPredicates(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_unwrap(env, args[1], reinterpret_cast<void **>(&dataAbilityPredicatesProxy)));
 
     auto absPredicates = dataAbilityPredicatesProxy->GetPredicates();
-    auto proxy = new RdbJsKit::RdbPredicatesProxy(tableName);
+    auto predicates = std::make_shared<NativeRdb::RdbPredicates>(tableName);
     NativeRdb::PredicatesUtils::SetWhereClauseAndArgs(
-        proxy->GetPredicates(), absPredicates->GetWhereClause(), absPredicates->GetWhereArgs());
-    NativeRdb::PredicatesUtils::SetAttributes(proxy->GetPredicates(), absPredicates->IsDistinct(),
+        predicates.get(), absPredicates->GetWhereClause(), absPredicates->GetWhereArgs());
+    NativeRdb::PredicatesUtils::SetAttributes(predicates.get(), absPredicates->IsDistinct(),
         absPredicates->GetIndex(), absPredicates->GetGroup(), absPredicates->GetOrder(), absPredicates->GetLimit(),
         absPredicates->GetOffset());
 
-    napi_ref wrapper;
-    NAPI_CALL(env, napi_wrap(env, _this, proxy, RdbJsKit::RdbPredicatesProxy::Destructor, nullptr, &wrapper));
-    proxy->setProperties(env, wrapper);
-    return _this;
+    return RdbJsKit::RdbPredicatesProxy::NewInstance(env, predicates);
 }
 
 napi_value InitPredicatesUtils(napi_env env, napi_value exports)
