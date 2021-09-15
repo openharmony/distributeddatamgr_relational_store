@@ -35,7 +35,7 @@ public:
     static std::string ConvertAny2String(napi_env env, const napi_value jsValue);
 
     static napi_value Convert2JSValue(napi_env env, std::vector<std::string> &value);
-    static napi_value Convert2JSValue(napi_env env, std::string &value);
+    static napi_value Convert2JSValue(napi_env env, const std::string &value);
     static napi_value Convert2JSValue(napi_env env, std::vector<uint8_t> &value);
     static napi_value Convert2JSValue(napi_env env, int32_t value);
     static napi_value Convert2JSValue(napi_env env, int64_t value);

@@ -50,7 +50,7 @@ public:
     bool HasBlock() const;
     virtual int Close() override;
     bool Marshalling(Parcel &parcel) const override;
-
+    static AbsSharedResultSet *Unmarshalling(Parcel &parcel);
 protected:
     int CheckState(int columnIndex);
     void ClearBlock();
