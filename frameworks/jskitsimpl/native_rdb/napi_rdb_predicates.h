@@ -28,17 +28,16 @@ namespace RdbJsKit {
 class RdbPredicatesProxy {
 public:
     static void Init(napi_env env, napi_value exports);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbPredicates> value);
     static void Destructor(napi_env env, void *nativeObject, void *finalize_hint);
 
     explicit RdbPredicatesProxy(std::string tableName);
-    NativeRdb::RdbPredicates *GetPredicates() const;
-
-    void setProperties(napi_env env, napi_ref wrapper_);
+    std::shared_ptr<NativeRdb::RdbPredicates> GetPredicates() const;
 private:
     ~RdbPredicatesProxy();
 
     static napi_value New(napi_env env, napi_callback_info info);
-    static NativeRdb::RdbPredicates *GetNativePredicates(napi_env env, napi_callback_info info);
+    static std::shared_ptr<NativeRdb::RdbPredicates> GetNativePredicates(napi_env env, napi_callback_info info);
 
     static napi_value EqualTo(napi_env env, napi_callback_info info);
     static napi_value NotEqualTo(napi_env env, napi_callback_info info);
@@ -70,7 +69,7 @@ private:
     static napi_value NotIn(napi_env env, napi_callback_info info);
 
     static napi_ref constructor_;
-    NativeRdb::RdbPredicates *predicates_;
+    std::shared_ptr<NativeRdb::RdbPredicates> predicates_;
     napi_env env_;
     napi_ref wrapper_;
 };

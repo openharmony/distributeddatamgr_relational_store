@@ -118,7 +118,7 @@ bool ValuesBucket::Marshalling(Parcel &parcel) const
     return true;
 }
 
-ValuesBucket *ValuesBucket::CreateFromParcel(Parcel &parcel)
+ValuesBucket *ValuesBucket::Unmarshalling(Parcel &parcel)
 {
     int mapSize = parcel.ReadInt32();
     std::map<std::string, ValueObject> valuesMap;

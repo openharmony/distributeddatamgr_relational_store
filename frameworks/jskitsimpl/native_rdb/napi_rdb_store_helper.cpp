@@ -343,6 +343,12 @@ void ParseOpenCallback(const napi_env &env, const napi_value &arg, HelperRdbCont
     asyncContext->openCallback = OpenCallback(env, arg);
 }
 
+class DefaultOpenCallback : public RdbOpenCallback {
+public:
+    int OnCreate(RdbStore &rdbStore) override { return E_OK; }
+    int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override { return E_OK; }
+};
+
 napi_value GetRdbStore(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("GetRdbStore start");
@@ -351,14 +357,14 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
     std::vector<NapiAsyncProxy<HelperRdbContext>::InputParser> parsers;
     parsers.push_back(ParseStoreConfig);
     parsers.push_back(ParseVersion);
-    parsers.push_back(ParseOpenCallback);
     proxy.ParseInputs(parsers);
     return proxy.DoAsyncWork(
         "getRdbStore",
         [](HelperRdbContext *context) {
             int errCode = OK;
             LOG_DEBUG("GetRdbStore begin");
-            context->proxy = RdbHelper::GetRdbStore(context->config, context->version, context->openCallback, errCode);
+            DefaultOpenCallback callback;
+            context->proxy = RdbHelper::GetRdbStore(context->config, context->version, callback, errCode);
             if (errCode != E_OK) {
                 LOG_DEBUG("GetRdbStore failed %{public}d", errCode);
             }
