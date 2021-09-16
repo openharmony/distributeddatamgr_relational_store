@@ -46,7 +46,7 @@ public:
     void GetAll(std::map<std::string, ValueObject> &valuesMap) const;
 
     bool Marshalling(Parcel &parcel) const override;
-    static ValuesBucket *CreateFromParcel(Parcel &parcel);
+    static ValuesBucket *Unmarshalling(Parcel &parcel);
 private:
     std::map<std::string, ValueObject> valuesMap;
 };

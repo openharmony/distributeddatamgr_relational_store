@@ -60,6 +60,19 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::unique_ptr<AbsSharedRe
     return instance;
 }
 
+std::unique_ptr<NativeRdb::AbsSharedResultSet> ResultSetProxy::GetNativePredicates(
+    napi_env const &env, napi_value const &arg)
+{
+    LOG_DEBUG("GetNativePredicates on called.");
+    if (arg == nullptr) {
+        LOG_ERROR("DataAbilityPredicatesProxy arg is null.");
+        return nullptr;
+    }
+    ResultSetProxy *proxy = nullptr;
+    napi_unwrap(env, arg, reinterpret_cast<void **>(&proxy));
+    return std::move(proxy->resultSet_);
+}
+
 napi_value ResultSetProxy::GetConstructor(napi_env env)
 {
     napi_value cons;
@@ -197,7 +210,7 @@ napi_value ResultSetProxy::GoToRow(napi_env env, napi_callback_info info)
 napi_value ResultSetProxy::GetColumnCount(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("GetColumnCount Begin!");
-    int32_t count;
+    int32_t count = 0;
     int errCode = GetInnerResultSet(env, info)->GetColumnCount(count);
     if (errCode != E_OK) {
         LOG_ERROR("GetColumnCount failed code:%{public}d", errCode);
@@ -260,7 +273,7 @@ napi_value ResultSetProxy::GoTo(napi_env env, napi_callback_info info)
 napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("GetColumnIndex Begin!");
-    int32_t result;
+    int32_t result = -1;
     size_t argc = MAX_INPUT_COUNT;
     napi_value args[MAX_INPUT_COUNT] = { 0 };
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
@@ -525,3 +538,19 @@ napi_value ResultSetProxy::GetSharedBlockAshmemFd(napi_env env, napi_callback_in
 }
 } // namespace RdbJsKit
 } // namespace OHOS
+
+EXTERN_C_START
+__attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_NewInstance(
+    napi_env env, OHOS::NativeRdb::AbsSharedResultSet *resultSet)
+{
+    return OHOS::RdbJsKit::ResultSetProxy::NewInstance(
+        env, std::unique_ptr<OHOS::NativeRdb::AbsSharedResultSet>(resultSet));
+}
+
+__attribute__((visibility("default"))) OHOS::NativeRdb::AbsSharedResultSet *
+NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_GetNativeObject(const napi_env &env, const napi_value &arg)
+{
+    auto resultSet = OHOS::RdbJsKit::ResultSetProxy::GetNativePredicates(env, arg);
+    return resultSet.get();
+}
+EXTERN_C_END

@@ -31,6 +31,8 @@ public:
     ResultSetProxy(std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet);
     ResultSetProxy &operator = (std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet);
     static napi_value NewInstance(napi_env env, std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet);
+    static std::unique_ptr<NativeRdb::AbsSharedResultSet> GetNativePredicates(
+        const napi_env &env, const napi_value &arg);
 
 private:
     static std::unique_ptr<NativeRdb::AbsSharedResultSet> &GetInnerResultSet(napi_env env, napi_callback_info info);
@@ -75,3 +77,11 @@ private:
 }
 }
 #endif // DISTRIBUTEDDATAMGR_APPDATAMGR_JS_RESULT_SET_H
+
+EXTERN_C_START
+__attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_NewInstance(
+    napi_env env, OHOS::NativeRdb::AbsSharedResultSet *resultSet);
+
+__attribute__((visibility("default"))) OHOS::NativeRdb::AbsSharedResultSet *
+NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_GetNativeObject(const napi_env &env, const napi_value &arg);
+EXTERN_C_END

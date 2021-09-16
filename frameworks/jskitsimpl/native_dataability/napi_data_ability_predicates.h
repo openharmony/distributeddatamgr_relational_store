@@ -16,11 +16,12 @@
 #ifndef DATAABILITY_JSKIT_NAPI_DATA_ABILITY_PREDICATES_H
 #define DATAABILITY_JSKIT_NAPI_DATA_ABILITY_PREDICATES_H
 
+#include <memory>
+
 #include "data_ability_predicates.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include <memory>
 
 namespace OHOS {
 namespace DataAbilityJsKit {
@@ -28,17 +29,19 @@ namespace DataAbilityJsKit {
 class DataAbilityPredicatesProxy {
 public:
     static void Init(napi_env env, napi_value exports);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::DataAbilityPredicates> value);
+    static std::shared_ptr<NativeRdb::DataAbilityPredicates> GetNativePredicates(
+        const napi_env &env, const napi_value &arg);
     static void Destructor(napi_env env, void *nativeObject, void *finalize_hint);
 
     explicit DataAbilityPredicatesProxy();
-    explicit DataAbilityPredicatesProxy(NativeRdb::DataAbilityPredicates &predicates);
-    NativeRdb::DataAbilityPredicates *GetPredicates() const;
+    std::shared_ptr<NativeRdb::DataAbilityPredicates> GetPredicates() const;
 
 private:
     ~DataAbilityPredicatesProxy();
 
     static napi_value New(napi_env env, napi_callback_info info);
-    static NativeRdb::DataAbilityPredicates *GetNativePredicates(napi_env env, napi_callback_info info);
+    static std::shared_ptr<NativeRdb::DataAbilityPredicates> GetNativePredicates(napi_env env, napi_callback_info info);
 
     static napi_value EqualTo(napi_env env, napi_callback_info info);
     static napi_value NotEqualTo(napi_env env, napi_callback_info info);
@@ -70,8 +73,11 @@ private:
     static napi_value NotIn(napi_env env, napi_callback_info info);
 
     static napi_value GetWhereClause(napi_env env, napi_callback_info info);
+    static napi_value SetWhereClause(napi_env env, napi_callback_info info);
     static napi_value GetWhereArgs(napi_env env, napi_callback_info info);
+    static napi_value SetWhereArgs(napi_env env, napi_callback_info info);
     static napi_value GetOrder(napi_env env, napi_callback_info info);
+    static napi_value SetOrder(napi_env env, napi_callback_info info);
     static napi_value GetLimit(napi_env env, napi_callback_info info);
     static napi_value GetOffset(napi_env env, napi_callback_info info);
     static napi_value IsDistinct(napi_env env, napi_callback_info info);
@@ -81,12 +87,19 @@ private:
     static napi_value IsSorted(napi_env env, napi_callback_info info);
 
     static napi_ref constructor_;
-    NativeRdb::DataAbilityPredicates *predicates_;
+    std::shared_ptr<NativeRdb::DataAbilityPredicates> predicates_;
     napi_env env_;
     napi_ref wrapper_;
 };
-
 } // namespace DataAbilityJsKit
 } // namespace OHOS
 
+EXTERN_C_START
+__attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_NewInstance(
+    napi_env env, OHOS::NativeRdb::DataAbilityPredicates *predicates);
+
+__attribute__((visibility("default"))) OHOS::NativeRdb::DataAbilityPredicates *
+NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_GetNativeObject(
+    const napi_env &env, const napi_value &arg);
+EXTERN_C_END
 #endif // DATAABILITY_JSKIT_NAPI_DATA_ABILITY_PREDICATES_H

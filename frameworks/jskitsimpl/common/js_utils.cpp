@@ -111,7 +111,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, std::vector<std::string> &valu
     return jsValue;
 }
 
-napi_value JSUtils::Convert2JSValue(napi_env env, std::string &value)
+napi_value JSUtils::Convert2JSValue(napi_env env, const std::string &value)
 {
     napi_value jsValue;
     napi_status status = napi_create_string_utf8(env, value.c_str(), value.size(), &jsValue);

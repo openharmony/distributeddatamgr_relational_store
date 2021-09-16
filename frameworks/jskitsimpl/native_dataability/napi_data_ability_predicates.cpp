@@ -59,9 +59,9 @@ void DataAbilityPredicatesProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("in", In),
         DECLARE_NAPI_FUNCTION("notIn", NotIn),
 
-        DECLARE_NAPI_GETTER("whereClause", GetWhereClause),
-        DECLARE_NAPI_GETTER("whereArgs", GetWhereArgs),
-        DECLARE_NAPI_GETTER("order", GetOrder),
+        DECLARE_NAPI_GETTER_SETTER("whereClause", GetWhereClause, SetWhereClause),
+        DECLARE_NAPI_GETTER_SETTER("whereArgs", GetWhereArgs, SetWhereArgs),
+        DECLARE_NAPI_GETTER_SETTER("order", GetOrder, SetOrder),
         DECLARE_NAPI_GETTER("limit", GetLimit),
         DECLARE_NAPI_GETTER("offset", GetOffset),
         DECLARE_NAPI_GETTER("isDistinct", IsDistinct),
@@ -107,6 +107,46 @@ napi_value DataAbilityPredicatesProxy::New(napi_env env, napi_callback_info info
     return output;
 }
 
+napi_value DataAbilityPredicatesProxy::NewInstance(
+    napi_env env, std::shared_ptr<NativeRdb::DataAbilityPredicates> value)
+{
+    napi_value cons;
+    napi_status status = napi_get_reference_value(env, constructor_, &cons);
+    if (status != napi_ok) {
+        LOG_ERROR("DataAbilityPredicatesProxy get constructor failed! napi_status:%{public}d!", status);
+        return nullptr;
+    }
+
+    napi_value instance = nullptr;
+    status = napi_new_instance(env, cons, 0, nullptr, &instance);
+    if (status != napi_ok) {
+        LOG_ERROR("DataAbilityPredicatesProxy napi_new_instance failed! napi_status:%{public}d!", status);
+        return nullptr;
+    }
+
+    DataAbilityPredicatesProxy *proxy = nullptr;
+    status = napi_unwrap(env, instance, reinterpret_cast<void **>(&proxy));
+    if (status != napi_ok) {
+        LOG_ERROR("DataAbilityPredicatesProxy native instance is nullptr! napi_status:%{public}d!", status);
+        return instance;
+    }
+    proxy->predicates_ = std::move(value);
+    return instance;
+}
+
+std::shared_ptr<NativeRdb::DataAbilityPredicates> DataAbilityPredicatesProxy::GetNativePredicates(
+    const napi_env &env, const napi_value &arg)
+{
+    LOG_DEBUG("GetNativePredicates on called.");
+    if (arg == nullptr) {
+        LOG_ERROR("DataAbilityPredicatesProxy arg is null.");
+        return nullptr;
+    }
+    DataAbilityPredicatesProxy *proxy = nullptr;
+    napi_unwrap(env, arg, reinterpret_cast<void **>(&proxy));
+    return proxy->predicates_;
+}
+
 void DataAbilityPredicatesProxy::Destructor(napi_env env, void *nativeObject, void *)
 {
     DataAbilityPredicatesProxy *proxy = static_cast<DataAbilityPredicatesProxy *>(nativeObject);
@@ -123,12 +163,8 @@ DataAbilityPredicatesProxy::DataAbilityPredicatesProxy()
 {
 }
 
-DataAbilityPredicatesProxy::DataAbilityPredicatesProxy(DataAbilityPredicates &predicates)
-    : predicates_(&predicates), env_(nullptr), wrapper_(nullptr)
-{
-}
-
-NativeRdb::DataAbilityPredicates *DataAbilityPredicatesProxy::GetNativePredicates(napi_env env, napi_callback_info info)
+std::shared_ptr<NativeRdb::DataAbilityPredicates> DataAbilityPredicatesProxy::GetNativePredicates(napi_env env,
+    napi_callback_info info)
 {
     DataAbilityPredicatesProxy *predicatesProxy = nullptr;
     napi_value _this;
@@ -527,7 +563,7 @@ napi_value DataAbilityPredicatesProxy::NotIn(napi_env env, napi_callback_info in
     return _this;
 }
 
-NativeRdb::DataAbilityPredicates *DataAbilityPredicatesProxy::GetPredicates() const
+std::shared_ptr<NativeRdb::DataAbilityPredicates> DataAbilityPredicatesProxy::GetPredicates() const
 {
     return this->predicates_;
 }
@@ -538,16 +574,58 @@ napi_value DataAbilityPredicatesProxy::GetWhereClause(napi_env env, napi_callbac
     return JSUtils::Convert2JSValue(env, ret);
 }
 
+napi_value DataAbilityPredicatesProxy::SetWhereClause(napi_env env, napi_callback_info info)
+{
+    napi_value _this;
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &_this, nullptr);
+    NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::SetWhereClause Invalid argvs!");
+
+    std::string whereClause = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    GetNativePredicates(env, info)->SetWhereClause(whereClause);
+
+    return _this;
+}
+
 napi_value DataAbilityPredicatesProxy::GetWhereArgs(napi_env env, napi_callback_info info)
 {
     auto ret = GetNativePredicates(env, info)->GetWhereArgs();
     return JSUtils::Convert2JSValue(env, ret);
 }
 
+napi_value DataAbilityPredicatesProxy::SetWhereArgs(napi_env env, napi_callback_info info)
+{
+    napi_value _this;
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &_this, nullptr);
+    NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::SetWhereArgs Invalid argvs!");
+
+    std::vector<std::string> whereArgs = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    GetNativePredicates(env, info)->SetWhereArgs(whereArgs);
+
+    return _this;
+}
+
 napi_value DataAbilityPredicatesProxy::GetOrder(napi_env env, napi_callback_info info)
 {
     auto ret = GetNativePredicates(env, info)->GetOrder();
     return JSUtils::Convert2JSValue(env, ret);
+}
+
+napi_value DataAbilityPredicatesProxy::SetOrder(napi_env env, napi_callback_info info)
+{
+    napi_value _this;
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &_this, nullptr);
+    NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::SetOrder Invalid argvs!");
+
+    std::string order = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    GetNativePredicates(env, info)->SetOrder(order);
+
+    return _this;
 }
 
 napi_value DataAbilityPredicatesProxy::GetLimit(napi_env env, napi_callback_info info)
@@ -588,3 +666,20 @@ napi_value DataAbilityPredicatesProxy::IsSorted(napi_env env, napi_callback_info
 }
 } // namespace DataAbilityJsKit
 } // namespace OHOS
+
+EXTERN_C_START
+__attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_NewInstance(
+    napi_env env, OHOS::NativeRdb::DataAbilityPredicates *predicates)
+{
+    return OHOS::DataAbilityJsKit::DataAbilityPredicatesProxy::NewInstance(
+        env, std::shared_ptr<OHOS::NativeRdb::DataAbilityPredicates>(predicates));
+}
+
+__attribute__((visibility("default"))) OHOS::NativeRdb::DataAbilityPredicates *
+NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_GetNativeObject(
+    const napi_env &env, const napi_value &arg)
+{
+    auto predicates = OHOS::DataAbilityJsKit::DataAbilityPredicatesProxy::GetNativePredicates(env, arg);
+    return predicates.get();
+}
+EXTERN_C_END
