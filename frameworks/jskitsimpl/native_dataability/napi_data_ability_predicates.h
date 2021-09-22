@@ -34,7 +34,7 @@ public:
         const napi_env &env, const napi_value &arg);
     static void Destructor(napi_env env, void *nativeObject, void *finalize_hint);
 
-    explicit DataAbilityPredicatesProxy();
+    DataAbilityPredicatesProxy();
     std::shared_ptr<NativeRdb::DataAbilityPredicates> GetPredicates() const;
 
 private:
