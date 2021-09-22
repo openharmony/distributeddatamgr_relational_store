@@ -22,16 +22,17 @@
 #include <vector>
 
 #include "abs_result_set.h"
+#include "message_parcel.h"
 #include "parcel.h"
 #include "shared_block.h"
 #include "shared_result_set.h"
 
 namespace OHOS {
 namespace NativeRdb {
-class AbsSharedResultSet : public AbsResultSet, public SharedResultSet, public virtual Parcelable {
+class AbsSharedResultSet : public AbsResultSet, public SharedResultSet {
 public:
     AbsSharedResultSet(std::string name);
-    AbsSharedResultSet(Parcel &parcel);
+    AbsSharedResultSet(MessageParcel &parcel);
     virtual ~AbsSharedResultSet();
     int GetBlob(int columnIndex, std::vector<uint8_t> &blob) override;
     int GetString(int columnIndex, std::string &value) override;
@@ -49,8 +50,9 @@ public:
     void SetBlock(AppDataFwk::SharedBlock *block);
     bool HasBlock() const;
     virtual int Close() override;
-    bool Marshalling(Parcel &parcel) const override;
-    static AbsSharedResultSet *Unmarshalling(Parcel &parcel);
+    bool Marshalling(MessageParcel &parcel);
+    static AbsSharedResultSet *Unmarshalling(MessageParcel &parcel);
+
 protected:
     int CheckState(int columnIndex);
     void ClearBlock();

@@ -39,5 +39,9 @@ ohos_shared_library("native_appdatafwk") {
 
   external_deps = [ "hilog_native:libhilog" ]
 
+  public_deps = [
+    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
+  ]
+
   public_configs = [ ":appdatafwk_public_config" ]
 }

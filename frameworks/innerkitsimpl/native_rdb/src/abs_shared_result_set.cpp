@@ -35,9 +35,9 @@ AbsSharedResultSet::AbsSharedResultSet(std::string name)
     AppDataFwk::SharedBlock::Create(name, DEFAULT_BLOCK_SIZE, &sharedBlock);
 }
 
-AbsSharedResultSet::AbsSharedResultSet(Parcel &parcel)
+AbsSharedResultSet::AbsSharedResultSet(MessageParcel &parcel)
 {
-    int result = AppDataFwk::SharedBlock::CreateFromParcel(&parcel, &sharedBlock);
+    int result = AppDataFwk::SharedBlock::ReadMessageParcel(&parcel, &sharedBlock);
     if (result < 0) {
         LOG_ERROR("AbsSharedResultSet: create from parcel error is %{public}d.", result);
     }
@@ -54,6 +54,7 @@ int AbsSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 
 int AbsSharedResultSet::GetRowCount(int &count)
 {
+    count = sharedBlock->GetRowNum();
     return E_OK;
 }
 
@@ -376,13 +377,17 @@ int AbsSharedResultSet::CheckState(int columnIndex)
     return E_OK;
 }
 
-bool AbsSharedResultSet::Marshalling(Parcel &parcel) const
+bool AbsSharedResultSet::Marshalling(MessageParcel &parcel)
 {
+    if (this->GetBlock() == nullptr) {
+        LOG_ERROR("AbsSharedResultSet::Marshalling sharedBlock is null.");
+        return false;
+    }
     LOG_DEBUG("AbsSharedResultSet::Marshalling sharedBlock.");
-    return this->GetBlock()->WriteToParcel(parcel) == E_OK;
+    return this->GetBlock()->WriteMessageParcel(parcel);
 }
 
-AbsSharedResultSet *AbsSharedResultSet::Unmarshalling(Parcel &parcel)
+AbsSharedResultSet *AbsSharedResultSet::Unmarshalling(MessageParcel &parcel)
 {
     return new AbsSharedResultSet(parcel);
 }
