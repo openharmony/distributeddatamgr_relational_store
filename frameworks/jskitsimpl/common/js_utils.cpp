@@ -74,8 +74,8 @@ std::vector<uint8_t> JSUtils::Convert2U8Vector(napi_env env, napi_value input_ar
 
 std::string JSUtils::ConvertAny2String(napi_env env, napi_value jsValue)
 {
-    napi_valuetype valueType;
-    NAPI_CALL(env, napi_typeof(env, jsValue, &valueType));
+    napi_valuetype valueType = napi_undefined;
+    NAPI_CALL_BASE(env, napi_typeof(env, jsValue, &valueType), "napi_typeof failed");
     if (valueType == napi_string) {
         return JSUtils::Convert2String(env, jsValue, JSUtils::DEFAULT_BUF_SIZE);
     } else if (valueType == napi_number) {
@@ -87,14 +87,14 @@ std::string JSUtils::ConvertAny2String(napi_env env, napi_value jsValue)
         napi_get_value_bool(env, jsValue, &valueBool);
         return std::to_string(valueBool);
     } else if (valueType == napi_null) {
-        return nullptr;
+        return "null";
     } else if (valueType == napi_object) {
         std::vector<uint8_t> bytes = JSUtils::Convert2U8Vector(env, jsValue);
         std::string ret(bytes.begin(), bytes.end());
         return ret;
     }
 
-    return nullptr;
+    return "invalid type";
 }
 
 napi_value JSUtils::Convert2JSValue(napi_env env, std::vector<std::string> &value)

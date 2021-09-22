@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#include <ashmem.h>
 #include <fcntl.h>
 #include <securec.h>
 #include <shared_block.h>
@@ -28,6 +27,13 @@
 
 namespace OHOS {
 namespace AppDataFwk {
+SharedBlock::SharedBlock(const std::string &name, sptr<Ashmem> ashmem, size_t size, bool readOnly)
+    : mName(name), ashmem_(ashmem), mSize(size), mReadOnly(readOnly)
+{
+    mData = const_cast<void *>(ashmem->ReadFromAshmem(sizeof(SharedBlockHeader), 0));
+    mHeader = static_cast<SharedBlockHeader *>(mData);
+}
+
 SharedBlock::SharedBlock(const std::string &name, int ashmemFd, void *data, size_t size, bool readOnly)
     : mName(name), mAshmemFd(ashmemFd), mData(data), mSize(size), mReadOnly(readOnly)
 {
@@ -36,8 +42,15 @@ SharedBlock::SharedBlock(const std::string &name, int ashmemFd, void *data, size
 
 SharedBlock::~SharedBlock()
 {
-    ::munmap(mData, mSize);
-    ::close(mAshmemFd);
+    if (ashmem_ != nullptr) {
+        ashmem_->UnmapAshmem();
+        ashmem_->CloseAshmem();
+        LOG_ERROR("SharedBlock: close ashmem");
+    }
+    if (mAshmemFd > 0) {
+        ::munmap(mData, mSize);
+        ::close(mAshmemFd);
+    }
 }
 
 std::u16string SharedBlock::ToUtf16(std::string str)
@@ -82,6 +95,17 @@ int SharedBlock::CreateSharedBlock(const std::string &name, size_t size, int ash
     return result;
 }
 
+int SharedBlock::CreateSharedBlock(const std::string &name, size_t size,
+                                   sptr<Ashmem> ashmem, SharedBlock **outSharedBlock)
+{
+    LOG_DEBUG("CreateSharedBlock into.");
+    *outSharedBlock = new SharedBlock(name, ashmem, size, false);
+    if (*outSharedBlock == nullptr) {
+        LOG_ERROR("CreateSharedBlock: new SharedBlock error.");
+    }
+    return SHARED_BLOCK_OK;
+}
+
 int SharedBlock::Create(const std::string &name, size_t size, SharedBlock **outSharedBlock)
 {
     std::string ashmemName = "SharedBlock:" + name;
@@ -99,7 +123,7 @@ int SharedBlock::Create(const std::string &name, size_t size, SharedBlock **outS
         return SHARED_BLOCK_SET_PORT_ERROR;
     }
 
-    int result = CreateSharedBlock(name, size, ashmem->GetAshmemFd(), outSharedBlock);
+    int result = CreateSharedBlock(name, size, ashmem, outSharedBlock);
     if (result == SHARED_BLOCK_OK) {
         return SHARED_BLOCK_OK;
     }
@@ -157,6 +181,33 @@ int SharedBlock::WriteToParcel(Parcel &parcel)
 {
     LOG_DEBUG("To write SharedBlock to Parcel.");
     return parcel.WriteString16(ToUtf16(mName)) && parcel.WriteInt32(mAshmemFd);
+}
+
+int SharedBlock::WriteMessageParcel(MessageParcel &parcel)
+{
+    return parcel.WriteString16(ToUtf16(mName)) && parcel.WriteAshmem(ashmem_);
+}
+
+int SharedBlock::ReadMessageParcel(MessageParcel *parcel, SharedBlock **block)
+{
+    std::string name = ToUtf8(parcel->ReadString16());
+    sptr<Ashmem> ashmem = parcel->ReadAshmem();
+    bool ret = ashmem->MapReadAndWriteAshmem();
+    if (!ret) {
+        LOG_ERROR("ReadMessageParcel: MapReadAndWriteAshmem function error.");
+        ashmem->CloseAshmem();
+        return SHARED_BLOCK_SET_PORT_ERROR;
+    }
+    *block = new SharedBlock(name, ashmem, ashmem->GetAshmemSize(), true);
+    if (*block == nullptr) {
+        LOG_ERROR("ReadMessageParcel new SharedBlock error.");
+    }
+    LOG_DEBUG("Created SharedBlock from parcel: unusedOffset=%{private}d, "
+              "rowNums=%{private}d, columnNums=%{private}d, mSize=%{private}d, mData=%{private}p",
+              (*block)->mHeader->unusedOffset, (*block)->mHeader->rowNums, (*block)->mHeader->columnNums,
+              static_cast<int>((*block)->mSize), (*block)->mData);
+
+    return SHARED_BLOCK_OK;
 }
 
 int SharedBlock::Clear()

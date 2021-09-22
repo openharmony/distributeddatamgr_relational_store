@@ -16,6 +16,7 @@
 #include "napi_result_set.h"
 #include <functional>
 
+#include "message_parcel.h"
 #include "abs_shared_result_set.h"
 #include "common.h"
 #include "js_utils.h"
@@ -48,12 +49,12 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::unique_ptr<AbsSharedRe
         LOG_ERROR("NewInstance native instance is nullptr! code:%{public}d!", status);
         return instance;
     }
-    Parcel parcel(nullptr);
+    MessageParcel parcel(nullptr);
     resultSet->Marshalling(parcel);
     *proxy = std::move(resultSet);
 
     proxy->sharedBlockName_ = Str16ToStr8(parcel.ReadString16());
-    proxy->sharedBlockAshmemFd_ = parcel.ReadInt32();
+    proxy->sharedBlockAshmemFd_ = parcel.ReadAshmem()->GetAshmemFd();
     LOG_INFO("{sharedBlockName:%{public}s, sharedBlockAshmemFd_:%{public}d}", proxy->sharedBlockName_.c_str(),
         proxy->sharedBlockAshmemFd_);
 
