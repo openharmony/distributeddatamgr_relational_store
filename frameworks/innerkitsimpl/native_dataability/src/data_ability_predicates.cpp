@@ -102,9 +102,8 @@ bool DataAbilityPredicates::Marshalling(OHOS::Parcel &parcel) const
  */
 DataAbilityPredicates* DataAbilityPredicates::Unmarshalling(OHOS::Parcel &parcel)
 {
-    DataAbilityPredicates *dataAbilityPredicates = new DataAbilityPredicates();
     result = true;
-    return dataAbilityPredicates;
+    return new DataAbilityPredicates(&parcel);
 }
 
 void DataAbilityPredicates::MarshallingString(std::string value, OHOS::Parcel &parcel) const

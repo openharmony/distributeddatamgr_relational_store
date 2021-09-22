@@ -19,7 +19,8 @@
 #include <inttypes.h>
 
 #include <string>
-
+#include <ashmem.h>
+#include "message_parcel.h"
 #include "parcel.h"
 #include "securec.h"
 
@@ -67,6 +68,7 @@ public:
     /**
      * SharedBlock constructor.
      */
+    SharedBlock(const std::string &name, sptr<Ashmem> ashmem, size_t size, bool readOnly);
     SharedBlock(const std::string &name, int ashmemFd, void *data, size_t size, bool readOnly);
 
     /**
@@ -206,6 +208,9 @@ public:
      */
     int WriteToParcel(Parcel &parcel);
 
+    int WriteMessageParcel(MessageParcel &parcel);
+
+    static int ReadMessageParcel(MessageParcel *parcel, SharedBlock **block);
     /**
      * Write raw data in block.
      */
@@ -214,6 +219,7 @@ public:
 private:
     std::string mName;
     int mAshmemFd;
+    sptr<Ashmem> ashmem_;
     void *mData;
     size_t mSize;
     bool mReadOnly;
@@ -255,6 +261,8 @@ private:
     int PutBlobOrString(uint32_t row, uint32_t column, const void *value, size_t size, int32_t type);
 
     static int CreateSharedBlock(const std::string &name, size_t size, int ashmemFd, SharedBlock **outSharedBlock);
+    static int CreateSharedBlock(const std::string &name, size_t size,
+                                 sptr<Ashmem> ashmem, SharedBlock **outSharedBlock);
 
     uint32_t OffsetFromPtr(void *ptr);
 
