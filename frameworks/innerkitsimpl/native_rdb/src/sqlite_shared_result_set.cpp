@@ -86,11 +86,11 @@ std::shared_ptr<RdbStore> SqliteSharedResultSet::GetRdbStore() const
 
 bool SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
 {
-    if (sharedBlock == nullptr) {
+    if (GetBlock() == nullptr) {
         FillSharedBlock(newPosition);
         return true;
     }
-    if (newPosition >= (int)sharedBlock->GetRowNum()) {
+    if (newPosition >= (int)GetBlock()->GetRowNum()) {
         FillSharedBlock(newPosition);
     }
     return true;
@@ -99,9 +99,9 @@ bool SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
 /**
  * Calculate a proper start position to fill the block.
  */
-int SqliteSharedResultSet::PickFillBlockStartPosition(int resultSetPosition, int resultSetBlockCapacity) const
+int SqliteSharedResultSet::PickFillBlockStartPosition(int resultSetPosition, int blockCapacity) const
 {
-    return std::max(resultSetPosition - resultSetBlockCapacity / PICK_POS, 0);
+    return std::max(resultSetPosition - blockCapacity / PICK_POS, 0);
 }
 
 void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
@@ -117,12 +117,12 @@ void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
     }
 
     if (rowNum == NO_COUNT) {
-        rdbStoreImpl->ExecuteForSharedBlock(rowNum, sharedBlock, requiredPos, requiredPos, true, qrySql, bindArgs);
-        resultSetBlockCapacity = sharedBlock->GetRowNum();
+        rdbStoreImpl->ExecuteForSharedBlock(rowNum, GetBlock(), requiredPos, requiredPos, true, qrySql, bindArgs);
+        resultSetBlockCapacity = GetBlock()->GetRowNum();
     } else {
         int startPos =
             isOnlyFillResultSetBlock ? requiredPos : PickFillBlockStartPosition(requiredPos, resultSetBlockCapacity);
-        rdbStoreImpl->ExecuteForSharedBlock(rowNum, sharedBlock, startPos, requiredPos, false, qrySql, bindArgs);
+        rdbStoreImpl->ExecuteForSharedBlock(rowNum, GetBlock(), startPos, requiredPos, false, qrySql, bindArgs);
     }
 }
 

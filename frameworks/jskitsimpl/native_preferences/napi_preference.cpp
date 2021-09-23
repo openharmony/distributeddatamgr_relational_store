@@ -18,7 +18,7 @@
 #include <cerrno>
 #include <cmath>
 #include <limits>
-
+#include <linux/limits.h>
 #include "securec.h"
 #include "common.h"
 

@@ -28,14 +28,14 @@ class ResultSetProxy final {
 public:
     ResultSetProxy() = default;
     ~ResultSetProxy();
-    ResultSetProxy(std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet);
-    ResultSetProxy &operator = (std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet);
-    static napi_value NewInstance(napi_env env, std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet);
-    static std::unique_ptr<NativeRdb::AbsSharedResultSet> GetNativePredicates(
+    ResultSetProxy(std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
+    ResultSetProxy &operator = (std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
+    static std::shared_ptr<NativeRdb::AbsSharedResultSet> GetNativePredicates(
         const napi_env &env, const napi_value &arg);
 
 private:
-    static std::unique_ptr<NativeRdb::AbsSharedResultSet> &GetInnerResultSet(napi_env env, napi_callback_info info);
+    static std::shared_ptr<NativeRdb::AbsSharedResultSet> &GetInnerResultSet(napi_env env, napi_callback_info info);
     static napi_value GetConstructor(napi_env env);
     static napi_value Initialize(napi_env env, napi_callback_info info);
     static napi_value GetAllColumnNames(napi_env env, napi_callback_info info);
@@ -68,7 +68,7 @@ private:
     static napi_value GetSharedBlockAshmemFd(napi_env env, napi_callback_info info);
 
     static napi_ref ctorRef_;
-    std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet_;
+    std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet_;
     napi_ref ref_ = nullptr;
 
     std::string sharedBlockName_;

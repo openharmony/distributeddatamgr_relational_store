@@ -31,8 +31,8 @@ namespace OHOS {
 namespace NativeRdb {
 class AbsSharedResultSet : public AbsResultSet, public SharedResultSet {
 public:
+    AbsSharedResultSet();
     AbsSharedResultSet(std::string name);
-    AbsSharedResultSet(MessageParcel &parcel);
     virtual ~AbsSharedResultSet();
     int GetBlob(int columnIndex, std::vector<uint8_t> &blob) override;
     int GetString(int columnIndex, std::string &value) override;
@@ -42,29 +42,30 @@ public:
     int IsColumnNull(int columnIndex, bool &isNull) override;
     int GetColumnType(int columnIndex, ColumnType &columnType) override;
     int GoToRow(int position) override;
-    virtual int GetAllColumnNames(std::vector<std::string> &columnNames) override;
-    virtual int GetRowCount(int &count) override;
+    int GetAllColumnNames(std::vector<std::string> &columnNames) override;
+    int GetRowCount(int &count) override;
     AppDataFwk::SharedBlock *GetBlock() const override;
-    virtual bool OnGo(int oldRowIndex, int newRowIndex) override;
+    bool OnGo(int oldRowIndex, int newRowIndex) override;
     void FillBlock(int startRowIndex, AppDataFwk::SharedBlock *block) override;
-    void SetBlock(AppDataFwk::SharedBlock *block);
+    virtual void SetBlock(AppDataFwk::SharedBlock *block);
+    int Close() override;
     bool HasBlock() const;
-    virtual int Close() override;
-    bool Marshalling(MessageParcel &parcel);
-    static AbsSharedResultSet *Unmarshalling(MessageParcel &parcel);
-
 protected:
     int CheckState(int columnIndex);
     void ClearBlock();
     void ClosedBlock();
     virtual void Finalize();
-protected:
-    // The SharedBlock owned by this AbsSharedResultSet
-    AppDataFwk::SharedBlock *sharedBlock;
+
+    friend class ISharedResultSetStub;
+    bool Unmarshalling(MessageParcel &parcel);
+    bool Marshalling(MessageParcel &parcel);
 private:
     // The default position of the cursor
     static const int INIT_POS = -1;
     static const size_t DEFAULT_BLOCK_SIZE = 2 * 1024 * 1024;
+
+    // The SharedBlock owned by this AbsSharedResultSet
+    AppDataFwk::SharedBlock *sharedBlock_  = nullptr;
 };
 } // namespace NativeRdb
 } // namespace OHOS

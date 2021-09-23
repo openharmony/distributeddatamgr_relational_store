@@ -455,7 +455,8 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
             return (context->resultSet != nullptr) ? OK : ERR;
         },
         [](RdbStoreContext *context, napi_value &output) {
-            output = ResultSetProxy::NewInstance(context->env, std::move(context->resultSet));
+            output = ResultSetProxy::NewInstance(context->env,
+                                                 std::shared_ptr<AbsSharedResultSet>(context->resultSet.release()));
             return (output != nullptr) ? OK : ERR;
         });
 }
@@ -478,7 +479,8 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
             return (context->resultSet != nullptr) ? OK : ERR;
         },
         [](RdbStoreContext *context, napi_value &output) {
-            output = ResultSetProxy::NewInstance(context->env, std::move(context->resultSet));
+            output = ResultSetProxy::NewInstance(context->env,
+                                                 std::shared_ptr<AbsSharedResultSet>(context->resultSet.release()));
             return (output != nullptr) ? OK : ERR;
         });
 }

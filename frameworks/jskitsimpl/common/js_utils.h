@@ -29,7 +29,7 @@ class JSUtils final {
 public:
     static constexpr int32_t DEFAULT_BUF_SIZE = 1024;
     static constexpr int32_t ASYNC_RST_SIZE = 2;
-    static std::string Convert2String(napi_env env, napi_value jsStr, size_t max);
+    static std::string Convert2String(napi_env env, napi_value jsStr, size_t max = DEFAULT_BUF_SIZE);
     static std::vector<std::string> Convert2StrVector(napi_env env, napi_value value, size_t strMax);
     static std::vector<uint8_t> Convert2U8Vector(napi_env env, napi_value jsValue);
     static std::string ConvertAny2String(napi_env env, const napi_value jsValue);

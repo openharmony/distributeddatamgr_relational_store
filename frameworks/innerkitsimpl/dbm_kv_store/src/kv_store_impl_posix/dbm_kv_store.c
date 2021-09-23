@@ -31,7 +31,7 @@ int DBM_Get(KVStoreHandle db, const char* key, void* value, unsigned int count, 
 {
     return DBM_NOT_SUPPORT;
 }
-int DBM_Put(KVStoreHandle db, const char* key, void* value, unsigned int len)
+int DBM_Put(KVStoreHandle db, const char* key, const void* value, unsigned int len)
 {
     return DBM_NOT_SUPPORT;
 }
@@ -51,5 +51,4 @@ int DBM_DeleteKVStore(const char* storeFullPath)
 
 void DBM_KVStoreControl(KVStoreHandle db, int cmd, void* arg)
 {
-    return DBM_NOT_SUPPORT;
 }
