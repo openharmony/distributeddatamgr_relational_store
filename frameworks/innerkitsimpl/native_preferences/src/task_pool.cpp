@@ -14,7 +14,7 @@
  */
 
 #include "task_pool.h"
-
+#include <climits>
 #include "logger.h"
 #include "preferences_errno.h"
 

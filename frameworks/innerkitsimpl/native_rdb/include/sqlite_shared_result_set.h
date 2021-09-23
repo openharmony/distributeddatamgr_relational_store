@@ -39,9 +39,9 @@ public:
     int Close() override;
     int GetRowCount(int &count) override;
     bool OnGo(int oldPosition, int newPosition) override;
-    void SetBlock(AppDataFwk::SharedBlock *block);
+    void SetBlock(AppDataFwk::SharedBlock *block) override;
     std::shared_ptr<RdbStore> GetRdbStore() const;
-    int PickFillBlockStartPosition(int resultSetPosition, int resultSetBlockCapacity) const;
+    int PickFillBlockStartPosition(int resultSetPosition, int blockCapacity) const;
     void SetFillBlockForwardOnly(bool isOnlyFillResultSetBlockInput);
 
 protected:
