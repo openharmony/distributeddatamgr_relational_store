@@ -25,6 +25,7 @@
 #include "preferences.h"
 #include "preferences_errno.h"
 #include "preferences_impl.h"
+#include "securec.h"
 
 namespace OHOS {
 namespace NativePreferences {

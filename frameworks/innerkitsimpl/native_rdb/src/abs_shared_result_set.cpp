@@ -32,19 +32,16 @@ namespace OHOS {
 namespace NativeRdb {
 AbsSharedResultSet::AbsSharedResultSet(std::string name)
 {
-    AppDataFwk::SharedBlock::Create(name, DEFAULT_BLOCK_SIZE, &sharedBlock);
+    AppDataFwk::SharedBlock::Create(name, DEFAULT_BLOCK_SIZE, sharedBlock_);
 }
 
-AbsSharedResultSet::AbsSharedResultSet(MessageParcel &parcel)
+AbsSharedResultSet::AbsSharedResultSet()
 {
-    int result = AppDataFwk::SharedBlock::ReadMessageParcel(&parcel, &sharedBlock);
-    if (result < 0) {
-        LOG_ERROR("AbsSharedResultSet: create from parcel error is %{public}d.", result);
-    }
 }
 
 AbsSharedResultSet::~AbsSharedResultSet()
 {
+    ClosedBlock();
 }
 
 int AbsSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
@@ -54,7 +51,6 @@ int AbsSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 
 int AbsSharedResultSet::GetRowCount(int &count)
 {
-    count = sharedBlock->GetRowNum();
     return E_OK;
 }
 
@@ -73,12 +69,12 @@ void AbsSharedResultSet::FillBlock(int startRowIndex, AppDataFwk::SharedBlock *b
  */
 AppDataFwk::SharedBlock *AbsSharedResultSet::GetBlock() const
 {
-    return sharedBlock;
+    return sharedBlock_;
 }
 
 int AbsSharedResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 {
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock->GetCellUnit((uint32_t)rowPos, (uint32_t)columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit((uint32_t)rowPos, (uint32_t)columnIndex);
     if (!cellUnit) {
         LOG_ERROR("AbsSharedResultSet::GetColumnType cellUnit is null!");
         return E_ERROR;
@@ -102,7 +98,11 @@ int AbsSharedResultSet::GoToRow(int position)
     if (position == rowPos) {
         return E_OK;
     }
-    bool result = OnGo(rowPos, position);
+    bool result = true;
+    if (sharedBlock_ == nullptr ||
+        position >= sharedBlock_->GetRowNum()) {
+        result = OnGo(rowPos, position);
+    }
     if (!result) {
         rowPos = INIT_POS;
         return E_ERROR;
@@ -119,7 +119,7 @@ int AbsSharedResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &value)
         return errorCode;
     }
 
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock->GetCellUnit(rowPos, columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos, columnIndex);
     if (!cellUnit) {
         LOG_ERROR("AbsSharedResultSet::GetBlob cellUnit is null!");
         return E_ERROR;
@@ -130,7 +130,7 @@ int AbsSharedResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &value)
     if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB
         || type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_STRING) {
         size_t size;
-        const auto *blob = static_cast<const uint8_t *>(sharedBlock->GetCellUnitValueBlob(cellUnit, &size));
+        const auto *blob = static_cast<const uint8_t *>(sharedBlock_->GetCellUnitValueBlob(cellUnit, &size));
         if (size == 0 || blob == nullptr) {
             LOG_WARN("blob data is empty!");
         } else {
@@ -159,7 +159,7 @@ int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
     if (errorCode != E_OK) {
         return errorCode;
     }
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock->GetCellUnit(rowPos, columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos, columnIndex);
     if (!cellUnit) {
         LOG_ERROR("AbsSharedResultSet::GetString cellUnit is null!");
         return E_ERROR;
@@ -167,7 +167,7 @@ int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
     int type = cellUnit->type;
     if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_STRING) {
         size_t sizeIncludingNull;
-        const char *tempValue = sharedBlock->GetCellUnitValueString(cellUnit, &sizeIncludingNull);
+        const char *tempValue = sharedBlock_->GetCellUnitValueString(cellUnit, &sizeIncludingNull);
         if ((sizeIncludingNull <= 1) || (tempValue == nullptr)) {
             value = "";
             return E_ERROR;
@@ -198,7 +198,7 @@ int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
 
 int AbsSharedResultSet::GetInt(int columnIndex, int &value)
 {
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock->GetCellUnit(rowPos, columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos, columnIndex);
     if (!cellUnit) {
         LOG_ERROR("AbsSharedResultSet::GetInt cellUnit is null!");
         return E_ERROR;
@@ -213,7 +213,7 @@ int AbsSharedResultSet::GetLong(int columnIndex, int64_t &value)
     if (errorCode != E_OK) {
         return errorCode;
     }
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock->GetCellUnit(rowPos, columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos, columnIndex);
     if (!cellUnit) {
         LOG_ERROR("AbsSharedResultSet::GetLong cellUnit is null!");
         return E_ERROR;
@@ -226,7 +226,7 @@ int AbsSharedResultSet::GetLong(int columnIndex, int64_t &value)
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_STRING) {
         size_t sizeIncludingNull;
-        const char *tempValue = sharedBlock->GetCellUnitValueString(cellUnit, &sizeIncludingNull);
+        const char *tempValue = sharedBlock_->GetCellUnitValueString(cellUnit, &sizeIncludingNull);
         value = ((sizeIncludingNull > 1) && (tempValue != nullptr)) ? long(strtoll(tempValue, nullptr, 0)) : 0L;
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT) {
@@ -253,7 +253,7 @@ int AbsSharedResultSet::GetDouble(int columnIndex, double &value)
     if (errorCode != E_OK) {
         return errorCode;
     }
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock->GetCellUnit(rowPos, columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos, columnIndex);
     if (!cellUnit) {
         LOG_ERROR("AbsSharedResultSet::GetDouble cellUnit is null!");
         return E_ERROR;
@@ -264,7 +264,7 @@ int AbsSharedResultSet::GetDouble(int columnIndex, double &value)
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_STRING) {
         size_t sizeIncludingNull;
-        const char *tempValue = sharedBlock->GetCellUnitValueString(cellUnit, &sizeIncludingNull);
+        const char *tempValue = sharedBlock_->GetCellUnitValueString(cellUnit, &sizeIncludingNull);
         value = ((sizeIncludingNull > 1) && (tempValue != nullptr)) ? strtod(tempValue, nullptr) : 0.0;
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_INTEGER) {
@@ -291,7 +291,7 @@ int AbsSharedResultSet::IsColumnNull(int columnIndex, bool &isNull)
     if (errorCode != E_OK) {
         return errorCode;
     }
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock->GetCellUnit(rowPos, columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos, columnIndex);
     if (!cellUnit) {
         LOG_ERROR("AbsSharedResultSet::IsColumnNull cellUnit is null!");
         return E_ERROR;
@@ -316,9 +316,9 @@ int AbsSharedResultSet::Close()
  */
 void AbsSharedResultSet::SetBlock(AppDataFwk::SharedBlock *block)
 {
-    if (this->sharedBlock != block) {
+    if (sharedBlock_ != block) {
         ClosedBlock();
-        this->sharedBlock = block;
+        sharedBlock_ = block;
     }
 }
 
@@ -327,7 +327,7 @@ void AbsSharedResultSet::SetBlock(AppDataFwk::SharedBlock *block)
  */
 bool AbsSharedResultSet::HasBlock() const
 {
-    return this->sharedBlock != nullptr;
+    return sharedBlock_ != nullptr;
 }
 
 /**
@@ -335,24 +335,20 @@ bool AbsSharedResultSet::HasBlock() const
  */
 void AbsSharedResultSet::ClosedBlock()
 {
-    if (this->sharedBlock != nullptr) {
-        delete sharedBlock;
-        sharedBlock = nullptr;
-    }
+    delete sharedBlock_;
+    sharedBlock_ = nullptr;
 }
 
 void AbsSharedResultSet::ClearBlock()
 {
-    if (this->sharedBlock != nullptr) {
-        sharedBlock->Clear();
+    if (sharedBlock_ != nullptr) {
+        sharedBlock_->Clear();
     }
 }
 
 void AbsSharedResultSet::Finalize()
 {
-    if (this->sharedBlock != nullptr) {
-        Close();
-    }
+    Close();
 }
 
 /**
@@ -360,7 +356,7 @@ void AbsSharedResultSet::Finalize()
  */
 int AbsSharedResultSet::CheckState(int columnIndex)
 {
-    if (sharedBlock == nullptr) {
+    if (sharedBlock_ == nullptr) {
         LOG_ERROR("AbsSharedResultSet::CheckState sharedBlock is null!");
         return E_ERROR;
     }
@@ -379,17 +375,24 @@ int AbsSharedResultSet::CheckState(int columnIndex)
 
 bool AbsSharedResultSet::Marshalling(MessageParcel &parcel)
 {
-    if (this->GetBlock() == nullptr) {
+    if (sharedBlock_ == nullptr) {
         LOG_ERROR("AbsSharedResultSet::Marshalling sharedBlock is null.");
         return false;
     }
     LOG_DEBUG("AbsSharedResultSet::Marshalling sharedBlock.");
-    return this->GetBlock()->WriteMessageParcel(parcel);
+    return sharedBlock_->WriteMessageParcel(parcel);
 }
 
-AbsSharedResultSet *AbsSharedResultSet::Unmarshalling(MessageParcel &parcel)
+bool AbsSharedResultSet::Unmarshalling(MessageParcel &parcel)
 {
-    return new AbsSharedResultSet(parcel);
+    if (sharedBlock_ != nullptr) {
+        return false;
+    }
+    int result = AppDataFwk::SharedBlock::ReadMessageParcel(parcel, sharedBlock_);
+    if (result < 0) {
+        LOG_ERROR("AbsSharedResultSet: create from parcel error is %{public}d.", result);
+    }
+    return true;
 }
 } // namespace NativeRdb
 } // namespace OHOS

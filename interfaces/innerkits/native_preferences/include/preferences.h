@@ -19,6 +19,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <memory>
 
 #include "preferences_observer.h"
 #include "preferences_value.h"

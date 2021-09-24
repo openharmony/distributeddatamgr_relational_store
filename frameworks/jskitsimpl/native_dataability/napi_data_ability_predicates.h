@@ -17,7 +17,6 @@
 #define DATAABILITY_JSKIT_NAPI_DATA_ABILITY_PREDICATES_H
 
 #include <memory>
-
 #include "data_ability_predicates.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
@@ -42,7 +41,6 @@ private:
 
     static napi_value New(napi_env env, napi_callback_info info);
     static std::shared_ptr<NativeRdb::DataAbilityPredicates> GetNativePredicates(napi_env env, napi_callback_info info);
-
     static napi_value EqualTo(napi_env env, napi_callback_info info);
     static napi_value NotEqualTo(napi_env env, napi_callback_info info);
     static napi_value BeginWrap(napi_env env, napi_callback_info info);
