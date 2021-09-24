@@ -16,6 +16,7 @@
 #include "sqlite_utils.h"
 
 #include <cstdio>
+#include <algorithm>
 
 #include "logger.h"
 #include "rdb_errno.h"

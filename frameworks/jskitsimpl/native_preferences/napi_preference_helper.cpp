@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "napi_preference_helper.h"
+#include <linux/limits.h>
 #include "securec.h"
 
 #include "napi_preference.h"

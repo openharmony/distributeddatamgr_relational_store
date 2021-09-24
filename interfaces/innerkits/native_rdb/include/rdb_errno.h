@@ -61,6 +61,8 @@ constexpr int E_CREATE_FOLDER_FAIL = (E_BASE + 37);
 constexpr int E_SQLITE_SQL_BUILDER_NORMALIZE_FAIL = (E_BASE + 38);
 constexpr int E_STORE_SESSION_NOT_GIVE_CONNECTION_TEMPORARILY = (E_BASE + 39);
 constexpr int E_STORE_SESSION_NO_CURRENT_TRANSACTION = (E_BASE + 40);
+constexpr int E_NOT_SUPPORT = (E_BASE + 41);
+constexpr int E_INVALID_PARCEL = (E_BASE + 42);
 } // namespace NativeRdb
 } // namespace OHOS
 
