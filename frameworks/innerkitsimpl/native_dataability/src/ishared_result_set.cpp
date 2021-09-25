@@ -13,31 +13,17 @@
  * limitations under the License.
  */
 
-#ifndef TASK_QUEUE_H
-#define TASK_QUEUE_H
+#include "ishared_result_set.h"
 
-#include <queue>
-#include <thread>
-#include <functional>
+namespace OHOS::NativeRdb {
+std::shared_ptr<AbsSharedResultSet> ISharedResultSet::ReadFromParcel(MessageParcel &parcel)
+{
+    return consumerCreator_(parcel);
+}
 
-namespace OHOS {
-namespace NativePreferences {
-using Task = std::function<void(void)>;
-
-class TaskQueue {
-public:
-    explicit TaskQueue(bool lockable = true);
-    ~TaskQueue();
-    void PutTask(const Task &task);
-    Task GetTaskAutoLock();
-    void ReleaseLock();
-    bool IsEmptyAndUnlocked();
-
-private:
-    bool lockable_;
-    std::thread::id lockThread_;
-    std::queue<Task> tasks_;
-};
-} // namespace NativePreferences
-} // namespace OHOS
-#endif // TASK_QUEUE_H
+sptr<ISharedResultSet> ISharedResultSet::WriteToParcel(std::shared_ptr<AbsSharedResultSet> resultSet,
+    MessageParcel &parcel)
+{
+    return providerCreator_(std::move(resultSet), parcel);
+}
+}

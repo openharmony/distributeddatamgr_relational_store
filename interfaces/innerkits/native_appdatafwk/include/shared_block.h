@@ -19,7 +19,8 @@
 #include <inttypes.h>
 
 #include <string>
-
+#include <ashmem.h>
+#include "message_parcel.h"
 #include "parcel.h"
 #include "securec.h"
 
@@ -67,7 +68,7 @@ public:
     /**
      * SharedBlock constructor.
      */
-    SharedBlock(const std::string &name, int ashmemFd, void *data, size_t size, bool readOnly);
+    SharedBlock(const std::string &name, sptr<Ashmem> ashmem, size_t size, bool readOnly);
 
     /**
      * SharedBlock constructor.
@@ -77,7 +78,7 @@ public:
     /**
      * Create a shared block.
      */
-    static int Create(const std::string &name, size_t size, SharedBlock **outSharedBlock);
+    static int Create(const std::string &name, size_t size, SharedBlock *&outSharedBlock);
 
     /**
      * Clear current shared block.
@@ -196,24 +197,26 @@ public:
         return mHeader->columnNums;
     }
 
-    /**
-     * Create a shared block from parcel.
-     */
-    static int CreateFromParcel(Parcel *parcel, SharedBlock **outSharedBlock);
+    int WriteMessageParcel(MessageParcel &parcel);
 
-    /**
-     * Write shared block information to parcel.
-     */
-    int WriteToParcel(Parcel &parcel);
-
+    static int ReadMessageParcel(MessageParcel &parcel, SharedBlock *&block);
     /**
      * Write raw data in block.
      */
     size_t SetRawData(const void *rawData, size_t size);
-
+    /**
+     * The fd of shared memory
+     */
+    int GetFd()
+    {
+        if (ashmem_ == nullptr) {
+            return -1;
+        }
+        return ashmem_->GetAshmemFd();
+    }
 private:
     std::string mName;
-    int mAshmemFd;
+    sptr<Ashmem> ashmem_;
     void *mData;
     size_t mSize;
     bool mReadOnly;
@@ -254,7 +257,8 @@ private:
 
     int PutBlobOrString(uint32_t row, uint32_t column, const void *value, size_t size, int32_t type);
 
-    static int CreateSharedBlock(const std::string &name, size_t size, int ashmemFd, SharedBlock **outSharedBlock);
+    static int CreateSharedBlock(const std::string &name, size_t size, sptr<Ashmem> ashmem,
+        SharedBlock *&outSharedBlock);
 
     uint32_t OffsetFromPtr(void *ptr);
 
