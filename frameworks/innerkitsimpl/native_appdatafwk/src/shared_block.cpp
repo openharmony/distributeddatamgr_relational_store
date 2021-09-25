@@ -12,11 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include "shared_block.h"
 #include <ashmem.h>
 #include <fcntl.h>
 #include <securec.h>
-#include <shared_block.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -28,16 +27,20 @@
 
 namespace OHOS {
 namespace AppDataFwk {
-SharedBlock::SharedBlock(const std::string &name, int ashmemFd, void *data, size_t size, bool readOnly)
-    : mName(name), mAshmemFd(ashmemFd), mData(data), mSize(size), mReadOnly(readOnly)
+SharedBlock::SharedBlock(const std::string &name, sptr<Ashmem> ashmem, size_t size, bool readOnly)
+    : mName(name), ashmem_(ashmem), mSize(size), mReadOnly(readOnly)
 {
+    mData = const_cast<void *>(ashmem->ReadFromAshmem(sizeof(SharedBlockHeader), 0));
     mHeader = static_cast<SharedBlockHeader *>(mData);
 }
 
 SharedBlock::~SharedBlock()
 {
-    ::munmap(mData, mSize);
-    ::close(mAshmemFd);
+    if (ashmem_ != nullptr) {
+        ashmem_->UnmapAshmem();
+        ashmem_->CloseAshmem();
+        LOG_ERROR("SharedBlock: close ashmem");
+    }
 }
 
 std::u16string SharedBlock::ToUtf16(std::string str)
@@ -50,39 +53,18 @@ std::string SharedBlock::ToUtf8(std::u16string str16)
     return OHOS::Str16ToStr8(str16);
 }
 
-int SharedBlock::CreateSharedBlock(const std::string &name, size_t size, int ashmemFd, SharedBlock **outSharedBlock)
+int SharedBlock::CreateSharedBlock(const std::string &name, size_t size, sptr<Ashmem> ashmem,
+    SharedBlock *&outSharedBlock)
 {
-    void *data = ::mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, ashmemFd, 0);
-    if (data == MAP_FAILED) {
-        LOG_ERROR("SharedBlock: mmap function error");
-        return SHARED_BLOCK_ASHMEM_ERROR;
+    LOG_DEBUG("CreateSharedBlock into.");
+    outSharedBlock = new SharedBlock(name, ashmem, size, false);
+    if (outSharedBlock == nullptr) {
+        LOG_ERROR("CreateSharedBlock: new SharedBlock error.");
     }
-
-    int ret = AshmemSetProt(ashmemFd, PROT_READ);
-    if (ret < 0) {
-        LOG_ERROR("SharedBlock: AshmemSetProt function error.");
-        ::munmap(data, size);
-        return SHARED_BLOCK_SET_PORT_ERROR;
-    }
-
-    /* readOnly */
-    SharedBlock *block = new SharedBlock(name, ashmemFd, data, size, false);
-    int result = block->Clear();
-    if (!result) {
-        LOG_DEBUG("Created a new SharedBlock: freeOffset=%{private}d, numRows=%{private}d, "
-            "numColumns=%{private}d, mSize=%{private}d",
-            block->mHeader->unusedOffset, block->mHeader->rowNums, block->mHeader->columnNums,
-            static_cast<int>(block->mSize));
-        *outSharedBlock = block;
-        return SHARED_BLOCK_OK;
-    }
-
-    delete block;
-    block = NULL;
-    return result;
+    return SHARED_BLOCK_OK;
 }
 
-int SharedBlock::Create(const std::string &name, size_t size, SharedBlock **outSharedBlock)
+int SharedBlock::Create(const std::string &name, size_t size, SharedBlock *&outSharedBlock)
 {
     std::string ashmemName = "SharedBlock:" + name;
 
@@ -99,64 +81,45 @@ int SharedBlock::Create(const std::string &name, size_t size, SharedBlock **outS
         return SHARED_BLOCK_SET_PORT_ERROR;
     }
 
-    int result = CreateSharedBlock(name, size, ashmem->GetAshmemFd(), outSharedBlock);
+    int result = CreateSharedBlock(name, size, ashmem, outSharedBlock);
     if (result == SHARED_BLOCK_OK) {
         return SHARED_BLOCK_OK;
     }
     ashmem->UnmapAshmem();
     ashmem->CloseAshmem();
-    *outSharedBlock = nullptr;
+    outSharedBlock = nullptr;
     return result;
 }
 
-int SharedBlock::CreateFromParcel(Parcel *parcel, SharedBlock **outSharedBlock)
+int SharedBlock::WriteMessageParcel(MessageParcel &parcel)
 {
-    std::string name = ToUtf8(parcel->ReadString16());
+    return parcel.WriteString16(ToUtf16(mName)) && parcel.WriteAshmem(ashmem_);
+}
 
-    int ashmemFd = parcel->ReadInt32();
-    if (fcntl(ashmemFd, F_GETFD) < 0) {
+int SharedBlock::ReadMessageParcel(MessageParcel &parcel, SharedBlock *&block)
+{
+    std::string name = ToUtf8(parcel.ReadString16());
+    sptr<Ashmem> ashmem = parcel.ReadAshmem();
+    if (ashmem == nullptr) {
+        LOG_ERROR("ReadMessageParcel: No ashmem in the parcel.");
         return SHARED_BLOCK_BAD_VALUE;
     }
-
-    ssize_t size = AshmemGetSize(ashmemFd);
-    if (size < 0) {
-        return SHARED_BLOCK_ASHMEM_ERROR;
+    bool ret = ashmem->MapReadAndWriteAshmem();
+    if (!ret) {
+        LOG_ERROR("ReadMessageParcel: MapReadAndWriteAshmem function error.");
+        ashmem->CloseAshmem();
+        return SHARED_BLOCK_SET_PORT_ERROR;
     }
-
-    int result;
-    int dupAshmemFd = ::dup(ashmemFd);
-    if (dupAshmemFd < 0) {
-        result = -errno;
-    } else {
-        void *data = ::mmap(NULL, size, PROT_READ, MAP_SHARED, dupAshmemFd, 0);
-        if (data == MAP_FAILED) {
-            LOG_ERROR("SharedBlock: mmap function failed.");
-            result = -errno;
-            ::close(dupAshmemFd);
-        } else if (AshmemGetSize(dupAshmemFd) != size) {
-            LOG_ERROR("SharedBlock: mmap function error for bad file descriptor.");
-            ::munmap(data, size);
-            ::close(dupAshmemFd);
-            result = -errno;
-        } else {
-            /* readOnly */
-            SharedBlock *block = new SharedBlock(name, dupAshmemFd, data, size, true);
-            LOG_DEBUG("Created SharedBlock from parcel: unusedOffset=%{private}d, "
-                "rowNums=%{private}d, columnNums=%{private}d, mSize=%{private}d, mData=%{private}p",
-                block->mHeader->unusedOffset, block->mHeader->rowNums, block->mHeader->columnNums,
-                static_cast<int>(block->mSize), block->mData);
-            *outSharedBlock = block;
-            return SHARED_BLOCK_OK;
-        }
+    block = new (std::nothrow) SharedBlock(name, ashmem, ashmem->GetAshmemSize(), true);
+    if (block == nullptr) {
+        LOG_ERROR("ReadMessageParcel new SharedBlock error.");
     }
-    *outSharedBlock = nullptr;
-    return result;
-}
+    LOG_DEBUG("Created SharedBlock from parcel: unusedOffset=%{private}d, "
+              "rowNums=%{private}d, columnNums=%{private}d, mSize=%{private}d, mData=%{private}p",
+              block->mHeader->unusedOffset, block->mHeader->rowNums, block->mHeader->columnNums,
+              static_cast<int>(block->mSize), block->mData);
 
-int SharedBlock::WriteToParcel(Parcel &parcel)
-{
-    LOG_DEBUG("To write SharedBlock to Parcel.");
-    return parcel.WriteString16(ToUtf16(mName)) && parcel.WriteInt32(mAshmemFd);
+    return SHARED_BLOCK_OK;
 }
 
 int SharedBlock::Clear()
@@ -206,7 +169,7 @@ int SharedBlock::AllocRow()
 
     /* Fill in the row offset */
     uint32_t *rowOffset = AllocRowOffset();
-    if (rowOffset == NULL) {
+    if (rowOffset == nullptr) {
         return SHARED_BLOCK_NO_MEMORY;
     }
 
@@ -223,7 +186,7 @@ int SharedBlock::AllocRow()
     }
 
     CellUnit *fieldDir = static_cast<CellUnit *>(OffsetToPtr(fieldDirOffset));
-    if (fieldDir == NULL) {
+    if (fieldDir == nullptr) {
         return SHARED_BLOCK_BAD_VALUE;
     }
     int result = memset_s(fieldDir, fieldDirSize, 0, fieldDirSize);
@@ -276,16 +239,16 @@ uint32_t *SharedBlock::GetRowOffset(uint32_t row)
     uint32_t rowPos = row;
 
     RowGroupHeader *group = static_cast<RowGroupHeader *>(OffsetToPtr(mHeader->firstRowGroupOffset));
-    if (group == NULL) {
+    if (group == nullptr) {
         LOG_ERROR("Failed to get group in getRowOffset().");
-        return NULL;
+        return nullptr;
     }
 
     while (rowPos >= ROW_OFFSETS_NUM) {
         group = static_cast<RowGroupHeader *>(OffsetToPtr(group->nextGroupOffset));
-        if (group == NULL) {
+        if (group == nullptr) {
             LOG_ERROR("Failed to get group in OffsetToPtr(group->nextGroupOffset) when while loop.");
-            return NULL;
+            return nullptr;
         }
         rowPos -= ROW_OFFSETS_NUM;
     }
@@ -298,16 +261,16 @@ uint32_t *SharedBlock::AllocRowOffset()
     uint32_t rowPos = mHeader->rowNums;
 
     RowGroupHeader *group = static_cast<RowGroupHeader *>(OffsetToPtr(mHeader->firstRowGroupOffset));
-    if (group == NULL) {
+    if (group == nullptr) {
         LOG_ERROR("Failed to get group in allocRowOffset().");
-        return NULL;
+        return nullptr;
     }
 
     while (rowPos > ROW_OFFSETS_NUM) {
         group = static_cast<RowGroupHeader *>(OffsetToPtr(group->nextGroupOffset));
-        if (group == NULL) {
+        if (group == nullptr) {
             LOG_ERROR("Failed to get group in OffsetToPtr(group->nextGroupOffset) when while loop.");
-            return NULL;
+            return nullptr;
         }
         rowPos -= ROW_OFFSETS_NUM;
     }
@@ -316,13 +279,13 @@ uint32_t *SharedBlock::AllocRowOffset()
             /* Aligned */
             group->nextGroupOffset = Alloc(sizeof(RowGroupHeader), true);
             if (!group->nextGroupOffset) {
-                return NULL;
+                return nullptr;
             }
         }
         group = static_cast<RowGroupHeader *>(OffsetToPtr(group->nextGroupOffset));
-        if (group == NULL) {
+        if (group == nullptr) {
             LOG_ERROR("Failed to get group in OffsetToPtr(group->nextGroupOffset).");
-            return NULL;
+            return nullptr;
         }
         group->nextGroupOffset = 0;
         rowPos = 0;
@@ -338,19 +301,19 @@ SharedBlock::CellUnit *SharedBlock::GetCellUnit(uint32_t row, uint32_t column)
         LOG_ERROR("Failed to read row %{public}d, column %{public}d from a SharedBlock"
             " which has %{public}d rows, %{public}d columns.",
             row, column, mHeader->rowNums, mHeader->columnNums);
-        return NULL;
+        return nullptr;
     }
 
     uint32_t *rowOffset = GetRowOffset(row);
     if (!rowOffset) {
         LOG_ERROR("Failed to find rowOffset for row %{public}d.", row);
-        return NULL;
+        return nullptr;
     }
 
     CellUnit *cellUnit = static_cast<CellUnit *>(OffsetToPtr(*rowOffset));
     if (!cellUnit) {
         LOG_ERROR("Failed to find cellUnit for rowOffset %{public}d.", *rowOffset);
-        return NULL;
+        return nullptr;
     }
 
     return &cellUnit[column];
@@ -471,11 +434,11 @@ void *SharedBlock::OffsetToPtr(uint32_t offset, uint32_t bufferSize)
 {
     if (offset >= mSize) {
         LOG_ERROR("Offset %" PRIu32 " out of bounds, max value %zu", offset, mSize);
-        return NULL;
+        return nullptr;
     }
     if (offset + bufferSize > mSize) {
         LOG_ERROR("End offset %" PRIu32 " out of bounds, max value %zu", offset + bufferSize, mSize);
-        return NULL;
+        return nullptr;
     }
     return static_cast<uint8_t *>(mData) + offset;
 }

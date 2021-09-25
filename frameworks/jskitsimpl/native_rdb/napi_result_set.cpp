@@ -16,6 +16,7 @@
 #include "napi_result_set.h"
 #include <functional>
 
+#include "message_parcel.h"
 #include "abs_shared_result_set.h"
 #include "common.h"
 #include "js_utils.h"
@@ -28,7 +29,7 @@ using namespace OHOS::JsKit;
 namespace OHOS {
 namespace RdbJsKit {
 napi_ref ResultSetProxy::ctorRef_ = nullptr;
-napi_value ResultSetProxy::NewInstance(napi_env env, std::unique_ptr<AbsSharedResultSet> resultSet)
+napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<AbsSharedResultSet> resultSet)
 {
     napi_value cons = GetConstructor(env);
     if (cons == nullptr) {
@@ -48,19 +49,18 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::unique_ptr<AbsSharedRe
         LOG_ERROR("NewInstance native instance is nullptr! code:%{public}d!", status);
         return instance;
     }
-    Parcel parcel(nullptr);
-    resultSet->Marshalling(parcel);
+
+    if (resultSet->GetBlock() != nullptr) {
+        proxy->sharedBlockName_ = resultSet->GetBlock()->Name();
+        proxy->sharedBlockAshmemFd_ = resultSet->GetBlock()->GetFd();
+        LOG_INFO("{sharedBlockName:%{public}s, sharedBlockAshmemFd_:%{public}d}", proxy->sharedBlockName_.c_str(),
+                 proxy->sharedBlockAshmemFd_);
+    }
     *proxy = std::move(resultSet);
-
-    proxy->sharedBlockName_ = Str16ToStr8(parcel.ReadString16());
-    proxy->sharedBlockAshmemFd_ = parcel.ReadInt32();
-    LOG_INFO("{sharedBlockName:%{public}s, sharedBlockAshmemFd_:%{public}d}", proxy->sharedBlockName_.c_str(),
-        proxy->sharedBlockAshmemFd_);
-
     return instance;
 }
 
-std::unique_ptr<NativeRdb::AbsSharedResultSet> ResultSetProxy::GetNativePredicates(
+std::shared_ptr<NativeRdb::AbsSharedResultSet> ResultSetProxy::GetNativePredicates(
     napi_env const &env, napi_value const &arg)
 {
     LOG_DEBUG("GetNativePredicates on called.");
@@ -70,7 +70,7 @@ std::unique_ptr<NativeRdb::AbsSharedResultSet> ResultSetProxy::GetNativePredicat
     }
     ResultSetProxy *proxy = nullptr;
     napi_unwrap(env, arg, reinterpret_cast<void **>(&proxy));
-    return std::move(proxy->resultSet_);
+    return proxy->resultSet_;
 }
 
 napi_value ResultSetProxy::GetConstructor(napi_env env)
@@ -152,7 +152,7 @@ ResultSetProxy::~ResultSetProxy()
     }
 }
 
-ResultSetProxy::ResultSetProxy(std::unique_ptr<AbsSharedResultSet> resultSet)
+ResultSetProxy::ResultSetProxy(std::shared_ptr<AbsSharedResultSet> resultSet)
 {
     if (resultSet_ == resultSet) {
         return;
@@ -160,7 +160,7 @@ ResultSetProxy::ResultSetProxy(std::unique_ptr<AbsSharedResultSet> resultSet)
     resultSet_ = std::move(resultSet);
 }
 
-ResultSetProxy &ResultSetProxy::operator = (std::unique_ptr<AbsSharedResultSet> resultSet)
+ResultSetProxy &ResultSetProxy::operator = (std::shared_ptr<AbsSharedResultSet> resultSet)
 {
     if (resultSet_ == resultSet) {
         return *this;
@@ -169,7 +169,7 @@ ResultSetProxy &ResultSetProxy::operator = (std::unique_ptr<AbsSharedResultSet> 
     return *this;
 }
 
-std::unique_ptr<NativeRdb::AbsSharedResultSet> &ResultSetProxy::GetInnerResultSet(napi_env env, napi_callback_info info)
+std::shared_ptr<NativeRdb::AbsSharedResultSet> &ResultSetProxy::GetInnerResultSet(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSet = nullptr;
     napi_value self = nullptr;
@@ -544,12 +544,13 @@ __attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_RdbJsKit_Result
     napi_env env, OHOS::NativeRdb::AbsSharedResultSet *resultSet)
 {
     return OHOS::RdbJsKit::ResultSetProxy::NewInstance(
-        env, std::unique_ptr<OHOS::NativeRdb::AbsSharedResultSet>(resultSet));
+        env, std::shared_ptr<OHOS::NativeRdb::AbsSharedResultSet>(resultSet));
 }
 
 __attribute__((visibility("default"))) OHOS::NativeRdb::AbsSharedResultSet *
 NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_GetNativeObject(const napi_env &env, const napi_value &arg)
 {
+    // the resultSet maybe release.
     auto resultSet = OHOS::RdbJsKit::ResultSetProxy::GetNativePredicates(env, arg);
     return resultSet.get();
 }

@@ -33,7 +33,7 @@ enum class ValueObjectType {
     TYPE_BOOL,
 };
 
-class ValueObject : public virtual OHOS::Parcelable{
+class ValueObject : public virtual OHOS::Parcelable {
 public:
     ValueObject();
     ~ValueObject();
