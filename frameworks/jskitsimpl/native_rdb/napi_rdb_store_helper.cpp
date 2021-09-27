@@ -330,7 +330,15 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
 
 void ParsePath(const napi_env &env, const napi_value &arg, HelperRdbContext *asyncContext)
 {
-    asyncContext->path = JSUtils::Convert2String(env, arg, JSUtils::DEFAULT_BUF_SIZE);
+    std::string root = GetDatabaseDir(env);
+    std::string name = JSUtils::Convert2String(env, arg, JSUtils::DEFAULT_BUF_SIZE);
+    int errorCode = E_OK;
+    std::string path = SqliteDatabaseUtils::GetDefaultDatabasePath(root, name, errorCode);
+    if (errorCode != E_OK) {
+        LOG_ERROR("Get default database path failed.");
+    } else {
+        asyncContext->path = path;
+    }
 }
 
 void ParseVersion(const napi_env &env, const napi_value &arg, HelperRdbContext *asyncContext)
