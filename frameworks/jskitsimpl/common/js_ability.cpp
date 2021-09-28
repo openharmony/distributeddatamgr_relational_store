@@ -24,20 +24,17 @@ AppExecFwk::Ability *JSAbility::GetJSAbility(napi_env env)
 
     napi_status status = napi_get_global(env, &global);
     if (status != napi_ok || global == nullptr) {
-        //LOG_ERROR("Cannot get global instance for %{public}d", status);
         return nullptr;
     }
 
     status = napi_get_named_property(env, global, "ability", &abilityContext);
     if (status != napi_ok || abilityContext == nullptr) {
-        //LOG_ERROR("Cannot get ability context for %{public}d", status);
         return nullptr;
     }
 
     AppExecFwk::Ability *ability = nullptr;
     status = napi_get_value_external(env, abilityContext, (void **)&ability);
     if (status != napi_ok || ability == nullptr) {
-        //LOG_ERROR("Get ability form property failed for %{public}d", status);
     }
 
     return ability;
