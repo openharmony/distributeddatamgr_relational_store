@@ -59,6 +59,7 @@ Note:If the text contains special characters, please escape them according to th
         <filefilterlist>
             <filefilter name="binaryFileTypePolicyFilter" desc="Filters for binary file policies" >
                 <filteritem type="filepath" name=".*.db" desc="Database data file used for test case execution."/>
+                <filteritem type="filepath" name="figures/.*.png" desc="Binary files that do not involve infringement."/>
             </filefilter>
         </filefilterlist>
     </oatconfig>
