@@ -41,7 +41,6 @@ private:
     static napi_value Query(napi_env env, napi_callback_info info);
     static napi_value QuerySql(napi_env env, napi_callback_info info);
     static napi_value ExecuteSql(napi_env env, napi_callback_info info);
-    static napi_ref constructor_;
     std::mutex mutex_;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
     napi_ref ref_ = nullptr;

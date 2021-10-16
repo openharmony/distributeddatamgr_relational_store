@@ -24,7 +24,7 @@ using namespace OHOS::JsKit;
 
 namespace OHOS {
 namespace DataAbilityJsKit {
-napi_ref DataAbilityPredicatesProxy::constructor_ = nullptr;
+static __thread napi_ref constructor_ = nullptr;
 
 void DataAbilityPredicatesProxy::Init(napi_env env, napi_value exports)
 {

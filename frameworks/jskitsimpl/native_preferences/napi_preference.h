@@ -53,7 +53,6 @@ private:
     static napi_value RegisterObserver(napi_env env, napi_callback_info info);
     static napi_value UnRegisterObserver(napi_env env, napi_callback_info info);
 
-    static napi_ref constructor;
     std::shared_ptr<OHOS::NativePreferences::Preferences> value_;
     napi_env env_;
     napi_ref wrapper_;
