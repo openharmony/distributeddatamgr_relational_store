@@ -28,7 +28,7 @@ using namespace OHOS::JsKit;
 
 namespace OHOS {
 namespace RdbJsKit {
-napi_ref ResultSetProxy::ctorRef_ = nullptr;
+static napi_ref __thread ctorRef_ = nullptr;
 napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<AbsSharedResultSet> resultSet)
 {
     napi_value cons = GetConstructor(env);
@@ -160,7 +160,7 @@ ResultSetProxy::ResultSetProxy(std::shared_ptr<AbsSharedResultSet> resultSet)
     resultSet_ = std::move(resultSet);
 }
 
-ResultSetProxy &ResultSetProxy::operator = (std::shared_ptr<AbsSharedResultSet> resultSet)
+ResultSetProxy &ResultSetProxy::operator=(std::shared_ptr<AbsSharedResultSet> resultSet)
 {
     if (resultSet_ == resultSet) {
         return *this;

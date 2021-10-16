@@ -41,7 +41,7 @@ struct StorageAysncContext : NapiAsyncProxy<StorageAysncContext>::AysncContext {
     bool hasKey;
 };
 
-napi_ref PreferencesProxy::constructor;
+static __thread napi_ref constructor_;
 
 PreferencesProxy::PreferencesProxy(std::shared_ptr<OHOS::NativePreferences::Preferences> value)
     : value_(value), env_(nullptr), wrapper_(nullptr)
@@ -75,7 +75,7 @@ void PreferencesProxy::Init(napi_env env, napi_value exports)
     napi_define_class(env, "Storage", NAPI_AUTO_LENGTH, New, nullptr,
         sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons);
 
-    napi_create_reference(env, cons, 1, &constructor);
+    napi_create_reference(env, cons, 1, &constructor_);
     LOG_DEBUG("Init end");
 }
 
@@ -87,7 +87,7 @@ napi_status PreferencesProxy::NewInstance(napi_env env, napi_value arg, napi_val
     napi_value argv[argc] = {arg};
 
     napi_value cons;
-    status = napi_get_reference_value(env, constructor, &cons);
+    status = napi_get_reference_value(env, constructor_, &cons);
     if (status != napi_ok) {
         return status;
     }
