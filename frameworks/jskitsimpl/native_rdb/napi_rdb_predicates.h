@@ -68,7 +68,6 @@ private:
     static napi_value In(napi_env env, napi_callback_info info);
     static napi_value NotIn(napi_env env, napi_callback_info info);
 
-    static napi_ref constructor_;
     std::shared_ptr<NativeRdb::RdbPredicates> predicates_;
     napi_env env_;
     napi_ref wrapper_;

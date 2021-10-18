@@ -24,7 +24,7 @@ using namespace OHOS::JsKit;
 
 namespace OHOS {
 namespace RdbJsKit {
-napi_ref RdbPredicatesProxy::constructor_ = nullptr;
+static __thread napi_ref constructor_ = nullptr;
 
 void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
 {

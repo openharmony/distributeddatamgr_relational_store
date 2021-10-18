@@ -29,7 +29,7 @@ public:
     ResultSetProxy() = default;
     ~ResultSetProxy();
     ResultSetProxy(std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
-    ResultSetProxy &operator = (std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
+    ResultSetProxy &operator=(std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
     static std::shared_ptr<NativeRdb::AbsSharedResultSet> GetNativePredicates(
         const napi_env &env, const napi_value &arg);
@@ -67,7 +67,6 @@ private:
     static napi_value GetSharedBlockName(napi_env env, napi_callback_info info);
     static napi_value GetSharedBlockAshmemFd(napi_env env, napi_callback_info info);
 
-    static napi_ref ctorRef_;
     std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet_;
     napi_ref ref_ = nullptr;
 
