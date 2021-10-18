@@ -83,8 +83,6 @@ private:
     static napi_value GetIndex(napi_env env, napi_callback_info info);
     static napi_value IsNeedAnd(napi_env env, napi_callback_info info);
     static napi_value IsSorted(napi_env env, napi_callback_info info);
-
-    static napi_ref constructor_;
     std::shared_ptr<NativeRdb::DataAbilityPredicates> predicates_;
     napi_env env_;
     napi_ref wrapper_;

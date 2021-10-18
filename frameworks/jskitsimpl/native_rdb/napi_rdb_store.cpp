@@ -66,8 +66,7 @@ public:
     std::unique_ptr<AbsSharedResultSet> resultSet;
 };
 
-napi_ref RdbStoreProxy::constructor_ = nullptr;
-
+static __thread napi_ref constructor_ = nullptr;
 void RdbStoreContext::BindArgs(napi_env env, napi_value arg)
 {
     bindArgs.clear();
