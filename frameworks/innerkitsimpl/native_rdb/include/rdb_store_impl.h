@@ -77,18 +77,18 @@ public:
     std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string sql,
         const std::vector<std::string> &bindArgs);
     int EndStepQuery();
-    bool IsOpen() const;
+    bool IsOpen() const override;
     std::string GetPath() override;
-    bool IsReadOnly() const;
-    bool IsMemoryRdb() const;
+    bool IsReadOnly() const override;
+    bool IsMemoryRdb() const override;
     int PrepareAndGetInfo(const std::string &sql, bool &outIsReadOnly, int &numParameters,
         std::vector<std::string> &columnNames);
-    bool IsHoldingConnection();
+    bool IsHoldingConnection() override;
     int GiveConnectionTemporarily(long milliseconds);
     int BeginTransactionWithObserver(TransactionObserver *transactionObserver);
     int ConfigLocale(const std::string localeStr);
     int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
-        const std::vector<uint8_t> &newKey);
+        const std::vector<uint8_t> &newKey) override;
     std::string GetName();
     std::string GetOrgPath();
     std::string GetFileType();
