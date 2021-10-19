@@ -69,7 +69,8 @@ private:
     static napi_value IndexedBy(napi_env env, napi_callback_info info);
     static napi_value In(napi_env env, napi_callback_info info);
     static napi_value NotIn(napi_env env, napi_callback_info info);
-
+    static napi_value Clear(napi_env env, napi_callback_info info);
+    static napi_value IsRawSelection(napi_env env, napi_callback_info info);
     static napi_value GetWhereClause(napi_env env, napi_callback_info info);
     static napi_value SetWhereClause(napi_env env, napi_callback_info info);
     static napi_value GetWhereArgs(napi_env env, napi_callback_info info);
