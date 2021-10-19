@@ -58,7 +58,8 @@ void DataAbilityPredicatesProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("indexedBy", IndexedBy),
         DECLARE_NAPI_FUNCTION("in", In),
         DECLARE_NAPI_FUNCTION("notIn", NotIn),
-
+        DECLARE_NAPI_FUNCTION("clear", Clear),
+        DECLARE_NAPI_FUNCTION("isRawSelection", IsRawSelection),
         DECLARE_NAPI_GETTER_SETTER("whereClause", GetWhereClause, SetWhereClause),
         DECLARE_NAPI_GETTER_SETTER("whereArgs", GetWhereArgs, SetWhereArgs),
         DECLARE_NAPI_GETTER_SETTER("order", GetOrder, SetOrder),
@@ -561,6 +562,24 @@ napi_value DataAbilityPredicatesProxy::NotIn(napi_env env, napi_callback_info in
 
     GetNativePredicates(env, info)->NotIn(field, values);
     return _this;
+}
+
+napi_value DataAbilityPredicatesProxy::Clear(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("DataAbilityPredicatesProxy::Clear on called.");
+    napi_value _this = nullptr;
+    napi_get_cb_info(env, info, nullptr, nullptr, &_this, nullptr);
+    GetNativePredicates(env, info)->Clear();
+    return _this;
+}
+
+napi_value DataAbilityPredicatesProxy::IsRawSelection(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("DataAbilityPredicatesProxy::IsRawSelection on called.");
+    napi_value _this = nullptr;
+    napi_get_cb_info(env, info, nullptr, nullptr, &_this, nullptr);
+    bool out = GetNativePredicates(env, info)->IsRawSelection();
+    return JSUtils::Convert2JSValue(env, out);
 }
 
 std::shared_ptr<NativeRdb::DataAbilityPredicates> DataAbilityPredicatesProxy::GetPredicates() const
