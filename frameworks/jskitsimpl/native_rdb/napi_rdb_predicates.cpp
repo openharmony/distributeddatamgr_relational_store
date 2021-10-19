@@ -58,6 +58,16 @@ void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("indexedBy", IndexedBy),
         DECLARE_NAPI_FUNCTION("in", In),
         DECLARE_NAPI_FUNCTION("notIn", NotIn),
+        DECLARE_NAPI_FUNCTION("using", Using),
+        DECLARE_NAPI_FUNCTION("leftOuterJoin", LeftOuterJoin),
+        DECLARE_NAPI_FUNCTION("innerJoin", InnerJoin),
+        DECLARE_NAPI_FUNCTION("on", On),
+        DECLARE_NAPI_FUNCTION("clear", Clear),
+        DECLARE_NAPI_FUNCTION("crossJoin", CrossJoin),
+        DECLARE_NAPI_GETTER_SETTER("joinCount", GetJoinCount, SetJoinCount),
+        DECLARE_NAPI_GETTER_SETTER("joinConditions", GetJoinConditions, SetJoinConditions),
+        DECLARE_NAPI_GETTER_SETTER("joinNames", GetJoinTableNames, SetJoinTableNames),
+        DECLARE_NAPI_GETTER_SETTER("joinTypes", GetJoinTypes, SetJoinTypes),
     };
 
     napi_value cons;
@@ -544,6 +554,172 @@ napi_value RdbPredicatesProxy::NotIn(napi_env env, napi_callback_info info)
     std::vector<std::string> values = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
 
     GetNativePredicates(env, info)->NotIn(field, values);
+    return _this;
+}
+
+napi_value RdbPredicatesProxy::Using(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbPredicatesProxy::Using on called.");
+    napi_value _this = nullptr;
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &_this, nullptr);
+    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::Using Invalid argvs!");
+    auto fields = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    GetNativePredicates(env, info)->Using(fields);
+    return _this;
+}
+
+napi_value RdbPredicatesProxy::LeftOuterJoin(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbPredicatesProxy::LeftOuterJoin on called.");
+    napi_value _this = nullptr;
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &_this, nullptr);
+    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::LeftOuterJoin Invalid argvs!");
+    std::string tablename = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    LOG_DEBUG("RdbPredicatesProxy::LeftOuterJoin tablename:%{public}s", tablename.c_str());
+    GetNativePredicates(env, info)->LeftOuterJoin(tablename);
+    return _this;
+}
+
+napi_value RdbPredicatesProxy::InnerJoin(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbPredicatesProxy::InnerJoin on called.");
+    napi_value _this = nullptr;
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &_this, nullptr);
+    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::InnerJoin Invalid argvs!");
+    std::string tablename = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    LOG_DEBUG("RdbPredicatesProxy::InnerJoin tablename:%{public}s", tablename.c_str());
+    GetNativePredicates(env, info)->InnerJoin(tablename);
+    return _this;
+}
+
+napi_value RdbPredicatesProxy::On(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbPredicatesProxy::On on called.");
+    napi_value _this = nullptr;
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &_this, nullptr);
+    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::On Invalid argvs!");
+    auto clauses = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    GetNativePredicates(env, info)->On(clauses);
+    return _this;
+}
+
+napi_value RdbPredicatesProxy::Clear(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbPredicatesProxy::Clear on called.");
+    napi_value _this = nullptr;
+    napi_get_cb_info(env, info, nullptr, nullptr, &_this, nullptr);
+    GetNativePredicates(env, info)->Clear();
+    return _this;
+}
+
+napi_value RdbPredicatesProxy::CrossJoin(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbPredicatesProxy::CrossJoin on called.");
+    napi_value _this = nullptr;
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &_this, nullptr);
+    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::CrossJoin Invalid argvs!");
+    std::string tablename = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    LOG_DEBUG("RdbPredicatesProxy::CrossJoin tablename:%{public}s", tablename.c_str());
+    GetNativePredicates(env, info)->CrossJoin(tablename);
+    return _this;
+}
+
+napi_value RdbPredicatesProxy::GetJoinCount(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("GetJoinCount Begin!");
+    napi_value _this = nullptr;
+    napi_get_cb_info(env, info, nullptr, nullptr, &_this, nullptr);
+    int errCode = GetNativePredicates(env, info)->GetJoinCount();
+    return JSUtils::Convert2JSValue(env, errCode);
+}
+
+napi_value RdbPredicatesProxy::SetJoinCount(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbPredicatesProxy::SetJoinCount on called.");
+    napi_value _this = nullptr;
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &_this, nullptr);
+    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::SetJoinCount Invalid argvs!");
+    int32_t joinCount = 0;
+    napi_get_value_int32(env, args[0], &joinCount);
+    GetNativePredicates(env, info)->SetJoinCount(joinCount);
+    return _this;
+}
+
+napi_value RdbPredicatesProxy::GetJoinTypes(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbPredicatesProxy::GetJoinTypes on called.");
+    napi_value _this = nullptr;
+    napi_get_cb_info(env, info, nullptr, nullptr, &_this, nullptr);
+    auto joinTypes = GetNativePredicates(env, info)->GetJoinTypes();
+    return JSUtils::Convert2JSValue(env, joinTypes);
+}
+
+napi_value RdbPredicatesProxy::GetJoinTableNames(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbPredicatesProxy::GetJoinTableNames on called.");
+    napi_value _this = nullptr;
+    napi_get_cb_info(env, info, nullptr, nullptr, &_this, nullptr);
+    auto joinTableNames = GetNativePredicates(env, info)->GetJoinTableNames();
+    return JSUtils::Convert2JSValue(env, joinTableNames);
+}
+
+napi_value RdbPredicatesProxy::GetJoinConditions(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbPredicatesProxy::GetJoinConditions on called.");
+    napi_value _this = nullptr;
+    napi_get_cb_info(env, info, nullptr, nullptr, &_this, nullptr);
+    auto joinConditions = GetNativePredicates(env, info)->GetJoinConditions();
+    return JSUtils::Convert2JSValue(env, joinConditions);
+}
+
+napi_value RdbPredicatesProxy::SetJoinConditions(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbPredicatesProxy::SetJoinConditions on called.");
+    napi_value _this = nullptr;
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &_this, nullptr);
+    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::SetJoinConditions Invalid argvs!");
+    auto joinConditions = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    GetNativePredicates(env, info)->SetJoinConditions(joinConditions);
+    return _this;
+}
+
+napi_value RdbPredicatesProxy::SetJoinTableNames(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbPredicatesProxy::SetJoinTableNames on called.");
+    napi_value _this = nullptr;
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &_this, nullptr);
+    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::SetJoinTableNames Invalid argvs!");
+    auto joinNames = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    GetNativePredicates(env, info)->SetJoinTableNames(joinNames);
+    return _this;
+}
+
+napi_value RdbPredicatesProxy::SetJoinTypes(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbPredicatesProxy::SetJoinTypes on called.");
+    napi_value _this = nullptr;
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &_this, nullptr);
+    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::SetJoinTypes Invalid argvs!");
+    auto joinTypes = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    GetNativePredicates(env, info)->SetJoinTypes(joinTypes);
     return _this;
 }
 

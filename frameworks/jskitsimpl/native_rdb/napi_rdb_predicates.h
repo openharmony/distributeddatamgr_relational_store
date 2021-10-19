@@ -67,6 +67,20 @@ private:
     static napi_value IndexedBy(napi_env env, napi_callback_info info);
     static napi_value In(napi_env env, napi_callback_info info);
     static napi_value NotIn(napi_env env, napi_callback_info info);
+    static napi_value Using(napi_env env, napi_callback_info info);
+    static napi_value Clear(napi_env env, napi_callback_info info);
+    static napi_value CrossJoin(napi_env env, napi_callback_info info);
+    static napi_value LeftOuterJoin(napi_env env, napi_callback_info info);
+    static napi_value GetJoinCount(napi_env env, napi_callback_info info);
+    static napi_value SetJoinConditions(napi_env env, napi_callback_info info);
+    static napi_value SetJoinTableNames(napi_env env, napi_callback_info info);
+    static napi_value SetJoinTypes(napi_env env, napi_callback_info info);
+    static napi_value SetJoinCount(napi_env env, napi_callback_info info);
+    static napi_value GetJoinTypes(napi_env env, napi_callback_info info);
+    static napi_value GetJoinTableNames(napi_env env, napi_callback_info info);
+    static napi_value GetJoinConditions(napi_env env, napi_callback_info info);
+    static napi_value InnerJoin(napi_env env, napi_callback_info info);
+    static napi_value On(napi_env env, napi_callback_info info);
 
     std::shared_ptr<NativeRdb::RdbPredicates> predicates_;
     napi_env env_;
