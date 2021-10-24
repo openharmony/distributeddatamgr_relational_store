@@ -117,15 +117,27 @@ bool SqliteDatabaseUtils::RenameFile(std::string &oldFileName, std::string &newF
  */
 std::string SqliteDatabaseUtils::GetDefaultDatabasePath(std::string &context, std::string &name, int &errorCode)
 {
-    std::string databasePath = context + "/" + "db";
     std::unique_lock<std::mutex> lock(g_locker);
+    if (access(context.c_str(), F_OK) != 0) {
+        if (mkdir(context.c_str(), g_mkdirMode)) {
+            errorCode = E_CREATE_FOLDER_FAIL;
+        }
+    }
+    std::string databasePath = context.append("/").append("db");
     if (access(databasePath.c_str(), F_OK) != 0) {
         if (mkdir(databasePath.c_str(), g_mkdirMode)) {
             errorCode = E_CREATE_FOLDER_FAIL;
         }
     }
-    databasePath = databasePath + "/" + name;
-    return databasePath;
+    char canonicalPath[PATH_MAX + 1] = { 0 };
+    if (realpath(databasePath.c_str(), canonicalPath) == NULL) {
+        LOG_ERROR("Failed to obtain real path, errno:%{public}d", errno);
+        errorCode = E_INVALID_FILE_PATH;
+        return "";
+    }
+    std::string realFilePath(canonicalPath);
+    realFilePath = realFilePath.append("/").append(name);
+    return realFilePath;
 }
 
 /**
