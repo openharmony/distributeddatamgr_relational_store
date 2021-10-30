@@ -59,14 +59,14 @@ public:
         }
     }
     OpenCallback(const OpenCallback &obj) = delete;
-    OpenCallback &operator = (const OpenCallback &obj) = delete;
+    OpenCallback &operator=(const OpenCallback &obj) = delete;
 
     OpenCallback(OpenCallback &&obj) noexcept
     {
-        operator = (std::move(obj));
+        operator=(std::move(obj));
     }
 
-    OpenCallback &operator = (OpenCallback &&obj) noexcept
+    OpenCallback &operator=(OpenCallback &&obj) noexcept
     {
         if (this == &obj) {
             return *this;
@@ -237,8 +237,10 @@ private:
 
 class HelperRdbContext : public NapiAsyncProxy<HelperRdbContext>::AysncContext {
 public:
-    HelperRdbContext() : AysncContext(), config(""), path(""), version(0), errCode(E_OK), openCallback(), proxy(nullptr)
-    {}
+    HelperRdbContext()
+        : AysncContext(), config(""), path(""), version(0), errCode(E_OK), openCallback(), proxy(nullptr)
+    {
+    }
     RdbStoreConfig config;
     std::string path;
     int32_t version;
@@ -251,75 +253,19 @@ std::string GetDatabaseDir(const napi_env &env)
 {
     AppExecFwk::Ability *ability = JSAbility::GetJSAbility(env);
     std::string databaseDir = ability->GetDatabaseDir();
-    LOG_DEBUG("GetDatabaseDir:%{public}s", databaseDir.c_str());
+    LOG_DEBUG("ability->GetDatabaseDir:%{public}s", databaseDir.c_str());
     return databaseDir;
-}
-
-std::string GetDatabaseDirByContext(const napi_env &env, napi_value context)
-{
-    std::string databaseDirSync = "";
-    napi_value getDatabaseDirSync = nullptr;
-    napi_status status = napi_get_named_property(env, context, "getDatabaseDirSync", &getDatabaseDirSync);
-    if (status != napi_ok) {
-        LOG_ERROR("get function error!");
-        return databaseDirSync;
-    }
-    napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, getDatabaseDirSync, &valueType);
-    if (valueType != napi_function) {
-        LOG_ERROR("value type is not function!");
-        return databaseDirSync;
-    }
-    napi_value callbackResult = nullptr;
-    status = napi_call_function(env, context, getDatabaseDirSync, 0, nullptr, &callbackResult);
-    if (status != napi_ok) {
-        LOG_ERROR("callback result is error!");
-        return databaseDirSync;
-    }
-    databaseDirSync = JSUtils::Convert2String(env, callbackResult, JSUtils::DEFAULT_BUF_SIZE);
-    LOG_DEBUG("databaseDirSync:%{public}s", databaseDirSync.c_str());
-
-    return databaseDirSync;
-}
-
-void ParseContext(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
-{
-    std::string root = GetDatabaseDirByContext(env, object);
-    LOG_DEBUG("Get default database root is %{public}s.", root.c_str());
-    asyncContext->config.SetPath(root);
-    asyncContext->path = root;
-}
-
-
-void ParseName(const napi_env &env, const napi_value &arg, HelperRdbContext *asyncContext)
-{
-    std::string name = JSUtils::Convert2String(env, arg, JSUtils::DEFAULT_BUF_SIZE);
-    LOG_DEBUG("ParseStoreConfig name=%{public}s", name.c_str());
-    asyncContext->config.SetName(std::move(name));
-
-    std::string root = asyncContext->config.GetPath();
-    LOG_DEBUG("Get default database root is %{public}s.", root.c_str());
-
-    int errorCode = E_OK;
-    std::string path = SqliteDatabaseUtils::GetDefaultDatabasePath(root, name, errorCode);
-    LOG_DEBUG("Get default database path is %{public}s.", path.c_str());
-    if (errorCode != E_OK) {
-        LOG_ERROR("Get default database path failed.");
-    } else {
-        asyncContext->config.SetPath(path);
-        asyncContext->path = path;
-    }
 }
 
 void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
 {
     napi_value value;
     napi_get_named_property(env, object, "name", &value);
-    if (value == nullptr) {
-        LOG_ERROR("There is no name!");
-        return;
-    }
-    ParseName(env, value, asyncContext);
+    NAPI_ASSERT_RETURN_VOID(env, value != nullptr, "no database name found in config.");
+    std::string name = JSUtils::Convert2String(env, value, JSUtils::DEFAULT_BUF_SIZE);
+    NAPI_ASSERT_RETURN_VOID(env, name != "", "Get database name empty.");
+    LOG_DEBUG("ParseStoreConfig name=%{public}s", name.c_str());
+    asyncContext->config.SetName(std::move(name));
 
     value = nullptr;
     napi_get_named_property(env, object, "storageMode", &value);
@@ -370,6 +316,40 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
     if (value != nullptr) {
         asyncContext->config.SetEncryptKey(JSUtils::Convert2U8Vector(env, value));
     }
+
+    value = nullptr;
+    napi_get_named_property(env, object, "path", &value);
+    std::string path = "";
+    if (value != nullptr) {
+        path = JSUtils::Convert2String(env, value, JSUtils::DEFAULT_BUF_SIZE);
+    }
+    path = (path.empty() ? GetDatabaseDir(env) : path);
+
+    NAPI_ASSERT_RETURN_VOID(env, !path.empty(), "Get database path empty.");
+    int errorCode = E_OK;
+    path = SqliteDatabaseUtils::GetDefaultDatabasePath(path, name, errorCode);
+    LOG_DEBUG("ParseStoreConfig path=%{public}s", path.c_str());
+    NAPI_ASSERT_RETURN_VOID(env, errorCode == E_OK, "Get database path failed.");
+    asyncContext->config.SetPath(path);
+}
+
+void ParsePath(const napi_env &env, const napi_value &arg, HelperRdbContext *asyncContext)
+{
+    LOG_DEBUG("ParsePath on called");
+    std::string path = JSUtils::Convert2String(env, arg, JSUtils::DEFAULT_BUF_SIZE);
+    NAPI_ASSERT_RETURN_VOID(env, !path.empty(), "Get database name empty.");
+
+    if (path.front() != '/') {
+        std::string::size_type pos = path.find_last_of('/');
+        NAPI_ASSERT_RETURN_VOID(env, pos == std::string::npos, "name can not be relative path.");
+
+        int errorCode = E_OK;
+        std::string defaultPath = GetDatabaseDir(env);
+        path = SqliteDatabaseUtils::GetDefaultDatabasePath(defaultPath, path, errorCode);
+        NAPI_ASSERT_RETURN_VOID(env, errorCode == E_OK, "Get default database path failed.");
+    }
+    asyncContext->path = path;
+    LOG_DEBUG("ParsePath path=%{public}s", path.c_str());
 }
 
 void ParseVersion(const napi_env &env, const napi_value &arg, HelperRdbContext *asyncContext)
@@ -377,15 +357,16 @@ void ParseVersion(const napi_env &env, const napi_value &arg, HelperRdbContext *
     napi_get_value_int32(env, arg, &asyncContext->version);
 }
 
-void ParseOpenCallback(const napi_env &env, const napi_value &arg, HelperRdbContext *asyncContext)
-{
-    asyncContext->openCallback = OpenCallback(env, arg);
-}
-
 class DefaultOpenCallback : public RdbOpenCallback {
 public:
-    int OnCreate(RdbStore &rdbStore) override { return E_OK; }
-    int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override { return E_OK; }
+    int OnCreate(RdbStore &rdbStore) override
+    {
+        return E_OK;
+    }
+    int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override
+    {
+        return E_OK;
+    }
 };
 
 napi_value GetRdbStore(napi_env env, napi_callback_info info)
@@ -394,7 +375,6 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
     NapiAsyncProxy<HelperRdbContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<HelperRdbContext>::InputParser> parsers;
-    parsers.push_back(ParseContext);
     parsers.push_back(ParseStoreConfig);
     parsers.push_back(ParseVersion);
     proxy.ParseInputs(parsers);
@@ -402,7 +382,6 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         "getRdbStore",
         [](HelperRdbContext *context) {
             int errCode = OK;
-            LOG_DEBUG("GetRdbStore begin");
             DefaultOpenCallback callback;
             context->proxy = RdbHelper::GetRdbStore(context->config, context->version, callback, errCode);
             if (errCode != E_OK) {
@@ -424,13 +403,11 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
     NapiAsyncProxy<HelperRdbContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<HelperRdbContext>::InputParser> parsers;
-    parsers.push_back(ParseContext);
-    parsers.push_back(ParseName);
+    parsers.push_back(ParsePath);
     proxy.ParseInputs(parsers);
     return proxy.DoAsyncWork(
         "deleteRdbStore",
         [](HelperRdbContext *context) {
-            LOG_DEBUG("DeleteRdbStore begin");
             context->errCode = RdbHelper::DeleteRdbStore(context->path);
             return OK;
         },

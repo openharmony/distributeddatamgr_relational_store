@@ -99,8 +99,7 @@ int AbsSharedResultSet::GoToRow(int position)
         return E_OK;
     }
     bool result = true;
-    if (sharedBlock_ == nullptr ||
-        position >= sharedBlock_->GetRowNum()) {
+    if (sharedBlock_ == nullptr || (uint32_t)position >= sharedBlock_->GetRowNum()) {
         result = OnGo(rowPos, position);
     }
     if (!result) {
