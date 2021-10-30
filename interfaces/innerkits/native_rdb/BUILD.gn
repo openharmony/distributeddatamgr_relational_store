@@ -74,9 +74,7 @@ ohos_shared_library("native_rdb") {
     "//utils/native/base:utils",
   ]
 
-  public_deps = [
-    "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_appdatafwk:native_appdatafwk"
-  ]
+  public_deps = [ "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_appdatafwk:native_appdatafwk" ]
 
   external_deps = [ "hilog_native:libhilog" ]
 
