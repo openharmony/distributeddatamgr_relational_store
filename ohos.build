@@ -3,7 +3,7 @@
   "parts": {
     "native_appdatamgr": {
       "version": "1.0.0",
-      "interface-version": {}
+      "interface-version": {},
       "variants": [
         "phone",
         "wearable",
@@ -84,7 +84,7 @@
     },
     "appdatamgr_jskits": {
       "version": "1.0.0",
-      "interface-version": {}
+      "interface-version": {},
       "variants": [
         "phone",
         "wearable",
