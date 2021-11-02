@@ -76,7 +76,10 @@ ohos_shared_library("native_rdb") {
 
   public_deps = [ "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_appdatafwk:native_appdatafwk" ]
 
-  external_deps = [ "hilog_native:libhilog" ]
+  external_deps = [
+    "hilog_native:libhilog",
+    "ipc:ipc_core",
+  ]
 
   public_configs = [ ":native_rdb_public_config" ]
 

@@ -34,10 +34,9 @@ ohos_shared_library("storage") {
     "../../frameworks/jskitsimpl/native_preferences/napi_preference_helper.cpp",
   ]
 
-  deps = [ "//foundation/ace/napi:ace_napi" ]
-
   external_deps = [
     "hilog_native:libhilog",
+    "napi:ace_napi",
     "native_appdatamgr:native_preferences",
   ]
 
@@ -54,7 +53,6 @@ ohos_shared_library("rdb") {
   ]
 
   sources = [
-    "../../frameworks/jskitsimpl/common/js_ability.cpp",
     "../../frameworks/jskitsimpl/common/js_utils.cpp",
     "../../frameworks/jskitsimpl/native_rdb/entry_point.cpp",
     "../../frameworks/jskitsimpl/native_rdb/napi_rdb_predicates.cpp",
@@ -66,19 +64,27 @@ ohos_shared_library("rdb") {
 
   deps = [
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
-    "//foundation/ace/napi:ace_napi",
     "//utils/native/base:utils",
   ]
 
   external_deps = [
-    "aafwk_standard:ability_manager",
-    "aafwk_standard:want",
-    "appexecfwk_standard:appexecfwk_base",
-    "appexecfwk_standard:appexecfwk_core",
     "hilog_native:libhilog",
+    "napi:ace_napi",
     "native_appdatamgr:native_appdatafwk",
     "native_appdatamgr:native_rdb",
   ]
+
+  if (is_standard_system) {
+    defines = [ "STANDARD_SYSTEM_ENABLE" ]
+
+    sources += [ "../../frameworks/jskitsimpl/common/js_ability.cpp" ]
+    external_deps += [
+      "aafwk_standard:ability_manager",
+      "aafwk_standard:want",
+      "appexecfwk_standard:appexecfwk_base",
+      "appexecfwk_standard:appexecfwk_core",
+    ]
+  }
 
   subsystem_name = "distributeddatamgr"
   part_name = "appdatamgr_jskits"
@@ -102,11 +108,11 @@ ohos_shared_library("dataability") {
 
   deps = [
     "../../interfaces/jskits:rdb",
-    "//foundation/ace/napi:ace_napi",
   ]
 
   external_deps = [
     "hilog_native:libhilog",
+    "napi:ace_napi",
     "native_appdatamgr:native_dataability",
     "native_appdatamgr:native_rdb",
   ]

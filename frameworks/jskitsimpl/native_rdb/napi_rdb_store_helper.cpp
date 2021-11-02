@@ -249,14 +249,6 @@ public:
     std::shared_ptr<RdbStore> proxy;
 };
 
-std::string GetDatabaseDir(const napi_env &env)
-{
-    AppExecFwk::Ability *ability = JSAbility::GetJSAbility(env);
-    std::string databaseDir = ability->GetDatabaseDir();
-    LOG_DEBUG("ability->GetDatabaseDir:%{public}s", databaseDir.c_str());
-    return databaseDir;
-}
-
 void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
 {
     napi_value value;
@@ -323,7 +315,7 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
     if (value != nullptr) {
         path = JSUtils::Convert2String(env, value, JSUtils::DEFAULT_BUF_SIZE);
     }
-    path = (path.empty() ? GetDatabaseDir(env) : path);
+    path = (path.empty() ? JSAbility::GetDatabaseDir(env) : path);
 
     NAPI_ASSERT_RETURN_VOID(env, !path.empty(), "Get database path empty.");
     int errorCode = E_OK;
@@ -344,7 +336,7 @@ void ParsePath(const napi_env &env, const napi_value &arg, HelperRdbContext *asy
         NAPI_ASSERT_RETURN_VOID(env, pos == std::string::npos, "name can not be relative path.");
 
         int errorCode = E_OK;
-        std::string defaultPath = GetDatabaseDir(env);
+        std::string defaultPath = JSAbility::GetDatabaseDir(env);
         path = SqliteDatabaseUtils::GetDefaultDatabasePath(defaultPath, path, errorCode);
         NAPI_ASSERT_RETURN_VOID(env, errorCode == E_OK, "Get default database path failed.");
     }
