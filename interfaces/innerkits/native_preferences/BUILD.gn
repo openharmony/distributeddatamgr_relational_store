@@ -40,8 +40,8 @@ ohos_shared_library("native_preferences") {
   configs = [ ":native_preferences_config" ]
 
   deps = [
+    "//third_party/libxml2:libxml2",
     "//utils/native/base:utils",
-    "//third_party/libxml2:libxml2"
   ]
 
   external_deps = [ "hilog_native:libhilog" ]
