@@ -53,6 +53,7 @@ ohos_shared_library("rdb") {
   ]
 
   sources = [
+    "../../frameworks/jskitsimpl/common/js_ability.cpp",
     "../../frameworks/jskitsimpl/common/js_utils.cpp",
     "../../frameworks/jskitsimpl/native_rdb/entry_point.cpp",
     "../../frameworks/jskitsimpl/native_rdb/napi_rdb_predicates.cpp",
@@ -75,7 +76,7 @@ ohos_shared_library("rdb") {
     defines = [ "STANDARD_SYSTEM_ENABLE" ]
 
     deps += [ "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native" ]
-    sources += [ "../../frameworks/jskitsimpl/common/js_ability.cpp" ]
+
     external_deps += [
       "aafwk_standard:ability_manager",
       "aafwk_standard:want",
