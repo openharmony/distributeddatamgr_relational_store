@@ -62,10 +62,7 @@ ohos_shared_library("rdb") {
     "../../frameworks/jskitsimpl/native_rdb/napi_values_bucket.cpp",
   ]
 
-  deps = [
-    "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
-    "//utils/native/base:utils",
-  ]
+  deps = [ "//utils/native/base:utils" ]
 
   external_deps = [
     "hilog_native:libhilog",
@@ -77,6 +74,7 @@ ohos_shared_library("rdb") {
   if (is_standard_system) {
     defines = [ "STANDARD_SYSTEM_ENABLE" ]
 
+    deps += [ "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native" ]
     sources += [ "../../frameworks/jskitsimpl/common/js_ability.cpp" ]
     external_deps += [
       "aafwk_standard:ability_manager",
@@ -106,9 +104,7 @@ ohos_shared_library("dataability") {
     "../../frameworks/jskitsimpl/native_dataability/napi_predicates_utils.cpp",
   ]
 
-  deps = [
-    "../../interfaces/jskits:rdb",
-  ]
+  deps = [ "../../interfaces/jskits:rdb" ]
 
   external_deps = [
     "hilog_native:libhilog",
