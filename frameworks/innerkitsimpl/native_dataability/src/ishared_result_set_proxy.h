@@ -30,45 +30,9 @@ public:
     bool OnGo(int oldRowIndex, int newRowIndex) override;
     int Close() override;
 private:
-    class ISharedResultSetClient : public AbsSharedResultSet {
-    public:
-        ISharedResultSetClient(sptr<ISharedResultSet> remote, MessageParcel &parcel);
-        int GetAllColumnNames(std::vector<std::string> &columnNames) override
-        {
-            int errCode = E_OK;
-            if (columnNames_.empty()) {
-                errCode = remote_->GetAllColumnNames(columnNames_);
-            }
-            columnNames = columnNames_;
-            return errCode;
-        }
-
-        int GetRowCount(int &count) override
-        {
-            int errCode = E_OK;
-            if (rowCount_ < 0) {
-                errCode = remote_->GetRowCount(rowCount_);
-            }
-            count = rowCount_;
-            return errCode;
-        }
-
-        bool OnGo(int oldRowIndex, int newRowIndex) override
-        {
-            return remote_->OnGo(oldRowIndex, newRowIndex);
-        }
-
-        int Close() override
-        {
-            AbsSharedResultSet::Close();
-            return remote_->Close();
-        }
-    private:
-        sptr<ISharedResultSet> remote_;
-        std::vector<std::string> columnNames_;
-        int32_t rowCount_ = -1;
-    };
     static BrokerDelegator<ISharedResultSetProxy> delegator_;
+    std::vector<std::string> columnNames_;
+    int32_t rowCount_ = -1;
 };
 }
 #endif // DATAABILITY_I_SHARED_RESULT_SET_PROXY_H
