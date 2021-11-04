@@ -33,12 +33,17 @@ std::shared_ptr<AbsSharedResultSet> ISharedResultSetProxy::CreateProxy(MessagePa
         return nullptr;
     }
     sptr<ISharedResultSet> result = iface_cast<ISharedResultSet>(remoter);
-    return std::make_shared<ISharedResultSetClient>(result, parcel);
+    result->Unmarshalling(parcel);
+    return std::shared_ptr<AbsSharedResultSet>(result.GetRefPtr(), [keep = result] (AbsSharedResultSet *) {});
 }
 
 int ISharedResultSetProxy::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
     LOG_DEBUG("GetAllColumnNames Begin");
+    if (!columnNames_.empty()) {
+        columnNames = columnNames_;
+        return E_OK;
+    }
     MessageParcel request;
     request.WriteInterfaceToken(GetDescriptor());
     MessageParcel reply;
@@ -56,12 +61,17 @@ int ISharedResultSetProxy::GetAllColumnNames(std::vector<std::string> &columnNam
     if (!reply.ReadStringVector(&columnNames)) {
         return E_INVALID_PARCEL;
     }
+    columnNames_ = columnNames;
     return E_OK;
 }
 
 int ISharedResultSetProxy::GetRowCount(int &count)
 {
     LOG_DEBUG("GetRowCount Begin");
+    if (rowCount_ >= 0) {
+        count = rowCount_;
+        return E_OK;
+    }
     MessageParcel request;
     request.WriteInterfaceToken(GetDescriptor());
     MessageParcel reply;
@@ -78,6 +88,7 @@ int ISharedResultSetProxy::GetRowCount(int &count)
     }
     count = reply.ReadInt32();
     LOG_DEBUG("GetRowCount count %{public}d", count);
+    rowCount_ = count;
     return E_OK;
 }
 
@@ -101,6 +112,7 @@ bool ISharedResultSetProxy::OnGo(int oldRowIndex, int newRowIndex)
 int ISharedResultSetProxy::Close()
 {
     LOG_DEBUG("Close Begin");
+    AbsSharedResultSet::Close();
     MessageParcel request;
     request.WriteInterfaceToken(GetDescriptor());
     MessageParcel reply;
@@ -111,11 +123,5 @@ int ISharedResultSetProxy::Close()
         return -errCode;
     }
     return reply.ReadInt32();
-}
-
-ISharedResultSetProxy::ISharedResultSetClient::ISharedResultSetClient(sptr<ISharedResultSet> remote,
-    MessageParcel &parcel) : remote_(remote)
-{
-    Unmarshalling(parcel);
 }
 }

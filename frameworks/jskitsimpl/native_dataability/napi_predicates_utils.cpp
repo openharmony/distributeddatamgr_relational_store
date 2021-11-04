@@ -27,8 +27,8 @@ napi_value CreateRdbPredicates(napi_env env, napi_callback_info info)
 {
     size_t argc = 2;
     napi_value args[2] = { 0 };
-    napi_value _this;
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &_this, nullptr));
+    napi_value thiz;
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
     NAPI_ASSERT(env, argc == 2, "DataAbilityJsKit::CreateRdbPredicates Invalid argvs!");
 
     LOG_DEBUG("DataAbilityJsKit::CreateRdbPredicates argc is %{public}zu", argc);

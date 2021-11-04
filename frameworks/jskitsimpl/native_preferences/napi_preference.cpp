@@ -105,9 +105,9 @@ napi_value PreferencesProxy::New(napi_env env, napi_callback_info info)
     LOG_DEBUG("New");
     size_t argc = 1;
     napi_value args[1] = {0};
-    napi_value _this = nullptr;
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &_this, nullptr));
-    if (_this == nullptr) {
+    napi_value thiz = nullptr;
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
+    if (thiz == nullptr) {
         LOG_WARN("get this failed");
         return nullptr;
     }
@@ -132,11 +132,11 @@ napi_value PreferencesProxy::New(napi_env env, napi_callback_info info)
     NAPI_ASSERT(env, preference != nullptr, "failed to call native");
     PreferencesProxy *obj = new PreferencesProxy(preference);
     obj->env_ = env;
-    NAPI_CALL(env, napi_wrap(env, _this, obj, PreferencesProxy::Destructor,
+    NAPI_CALL(env, napi_wrap(env, thiz, obj, PreferencesProxy::Destructor,
         nullptr, // finalize_hint
         &obj->wrapper_));
     LOG_DEBUG("New end");
-    return _this;
+    return thiz;
 }
 
 template<typename T>
@@ -155,11 +155,11 @@ bool IsFloat(double input)
 
 napi_value PreferencesProxy::GetValueSync(napi_env env, napi_callback_info info)
 {
-    napi_value _this = nullptr;
+    napi_value thiz = nullptr;
     size_t argc = 2; // arg count
     napi_value args[2] = {0};
 
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &_this, nullptr));
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
     NAPI_ASSERT(env, argc == 2, "Wrong number of arguments");
     // get value type
     napi_valuetype valueType = napi_undefined;
@@ -171,7 +171,7 @@ napi_value PreferencesProxy::GetValueSync(napi_env env, napi_callback_info info)
     size_t keySize = 0;
     NAPI_CALL(env, napi_get_value_string_utf8(env, args[0], key, MAX_KEY_LENGTH, &keySize));
     PreferencesProxy *obj = nullptr;
-    NAPI_CALL(env, napi_unwrap(env, _this, reinterpret_cast<void **>(&obj)));
+    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&obj)));
     NAPI_ASSERT(env, (obj != nullptr && obj->value_ != nullptr), "unwrap null native pointer");
 
     napi_value output = nullptr;
@@ -290,12 +290,12 @@ napi_value PreferencesProxy::GetValue(napi_env env, napi_callback_info info)
 
 napi_value PreferencesProxy::SetValueSync(napi_env env, napi_callback_info info)
 {
-    napi_value _this = nullptr;
+    napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = {0};
 
     LOG_DEBUG("SETVALUE");
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &_this, nullptr));
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
     NAPI_ASSERT(env, argc == 2, "Wrong number of arguments");
     // get value type
     napi_valuetype valueType = napi_undefined;
@@ -308,7 +308,7 @@ napi_value PreferencesProxy::SetValueSync(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_value_string_utf8(env, args[0], key, MAX_KEY_LENGTH, &out));
 
     PreferencesProxy *obj = nullptr;
-    NAPI_CALL(env, napi_unwrap(env, _this, reinterpret_cast<void **>(&obj)));
+    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&obj)));
     NAPI_ASSERT(env, (obj != nullptr && obj->value_ != nullptr), "unwrap null native pointer");
 
     NAPI_CALL(env, napi_typeof(env, args[1], &valueType));
@@ -370,10 +370,10 @@ napi_value PreferencesProxy::SetValue(napi_env env, napi_callback_info info)
 
 napi_value PreferencesProxy::DeleteSync(napi_env env, napi_callback_info info)
 {
-    napi_value _this = nullptr;
+    napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = {0};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &_this, nullptr));
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
     NAPI_ASSERT(env, argc == 1, "Wrong number of arguments");
     // get value type
     napi_valuetype valueType;
@@ -384,7 +384,7 @@ napi_value PreferencesProxy::DeleteSync(napi_env env, napi_callback_info info)
     size_t out = 0;
     NAPI_CALL(env, napi_get_value_string_utf8(env, args[0], key, MAX_KEY_LENGTH, &out));
     PreferencesProxy *obj = nullptr;
-    NAPI_CALL(env, napi_unwrap(env, _this, reinterpret_cast<void **>(&obj)));
+    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&obj)));
     int result = obj->value_->Delete(key);
     NAPI_ASSERT(env, result == E_OK, "call Delete failed");
     LOG_INFO("Delete");
@@ -415,10 +415,10 @@ napi_value PreferencesProxy::Delete(napi_env env, napi_callback_info info)
 
 napi_value PreferencesProxy::HasKeySync(napi_env env, napi_callback_info info)
 {
-    napi_value _this = nullptr;
+    napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = {0};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &_this, nullptr));
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
     NAPI_ASSERT(env, argc == 1, "Wrong number of arguments");
     // get value type
     napi_valuetype valueType;
@@ -429,7 +429,7 @@ napi_value PreferencesProxy::HasKeySync(napi_env env, napi_callback_info info)
     size_t out = 0;
     NAPI_CALL(env, napi_get_value_string_utf8(env, args[0], key, MAX_KEY_LENGTH, &out));
     PreferencesProxy *obj = nullptr;
-    NAPI_CALL(env, napi_unwrap(env, _this, reinterpret_cast<void **>(&obj)));
+    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&obj)));
     bool result = obj->value_->HasKey(key);
     napi_value output = nullptr;
     NAPI_CALL(env, napi_get_boolean(env, result, &output));
@@ -480,10 +480,10 @@ napi_value PreferencesProxy::Flush(napi_env env, napi_callback_info info)
 
 napi_value PreferencesProxy::FlushSync(napi_env env, napi_callback_info info)
 {
-    napi_value _this = nullptr;
-    NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &_this, nullptr));
+    napi_value thiz = nullptr;
+    NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr));
     PreferencesProxy *obj = nullptr;
-    NAPI_CALL(env, napi_unwrap(env, _this, reinterpret_cast<void **>(&obj)));
+    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&obj)));
     int result = obj->value_->FlushSync();
     napi_value output = nullptr;
     NAPI_CALL(env, napi_create_int64(env, result, &output));
@@ -493,10 +493,10 @@ napi_value PreferencesProxy::FlushSync(napi_env env, napi_callback_info info)
 
 napi_value PreferencesProxy::ClearSync(napi_env env, napi_callback_info info)
 {
-    napi_value _this = nullptr;
-    NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &_this, nullptr));
+    napi_value thiz = nullptr;
+    NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr));
     PreferencesProxy *obj = nullptr;
-    NAPI_CALL(env, napi_unwrap(env, _this, reinterpret_cast<void **>(&obj)));
+    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&obj)));
     int result = obj->value_->Clear();
     NAPI_ASSERT(env, result == E_OK, "call Clear failed");
     LOG_DEBUG("Clear");
@@ -524,12 +524,12 @@ napi_value PreferencesProxy::Clear(napi_env env, napi_callback_info info)
 
 napi_value PreferencesProxy::RegisterObserver(napi_env env, napi_callback_info info)
 {
-    napi_value _this = nullptr;
+    napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = {0};
 
     LOG_DEBUG("RegisterObserver");
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &_this, nullptr));
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
     napi_valuetype type;
     NAPI_CALL(env, napi_typeof(env, args[0], &type));
     NAPI_ASSERT(env, type == napi_string, "key not string type");
@@ -538,7 +538,7 @@ napi_value PreferencesProxy::RegisterObserver(napi_env env, napi_callback_info i
     NAPI_ASSERT(env, type == napi_function, "observer not function type");
 
     PreferencesProxy *obj = nullptr;
-    NAPI_CALL(env, napi_unwrap(env, _this, reinterpret_cast<void **>(&obj)));
+    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&obj)));
 
     // reference save
     obj->observer_ = std::make_shared<PreferencesObserverImpl>(env, args[1]);
@@ -550,12 +550,12 @@ napi_value PreferencesProxy::RegisterObserver(napi_env env, napi_callback_info i
 
 napi_value PreferencesProxy::UnRegisterObserver(napi_env env, napi_callback_info info)
 {
-    napi_value _this = nullptr;
+    napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = {0};
     LOG_DEBUG("UnRegisterObserver");
 
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &_this, nullptr));
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
     napi_valuetype type;
     NAPI_CALL(env, napi_typeof(env, args[0], &type));
     NAPI_ASSERT(env, type == napi_string, "key not string type");
@@ -564,7 +564,7 @@ napi_value PreferencesProxy::UnRegisterObserver(napi_env env, napi_callback_info
     NAPI_ASSERT(env, type == napi_function, "observer not function type");
 
     PreferencesProxy *obj = nullptr;
-    NAPI_CALL(env, napi_unwrap(env, _this, reinterpret_cast<void **>(&obj)));
+    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&obj)));
     obj->value_->UnRegisterObserver(obj->observer_);
     obj->observer_.reset();
     obj->observer_ = nullptr;

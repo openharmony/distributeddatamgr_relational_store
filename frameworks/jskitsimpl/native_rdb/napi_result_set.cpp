@@ -517,22 +517,22 @@ napi_value ResultSetProxy::IsClosed(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetSharedBlockName(napi_env env, napi_callback_info info)
 {
-    napi_value _this;
-    NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &_this, nullptr));
+    napi_value thiz;
+    NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr));
 
     ResultSetProxy *proxy;
-    NAPI_CALL(env, napi_unwrap(env, _this, reinterpret_cast<void **>(&proxy)));
+    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy)));
 
     return JSUtils::Convert2JSValue(env, proxy->sharedBlockName_);
 }
 
 napi_value ResultSetProxy::GetSharedBlockAshmemFd(napi_env env, napi_callback_info info)
 {
-    napi_value _this;
-    NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &_this, nullptr));
+    napi_value thiz;
+    NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr));
 
     ResultSetProxy *proxy;
-    NAPI_CALL(env, napi_unwrap(env, _this, reinterpret_cast<void **>(&proxy)));
+    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy)));
 
     return JSUtils::Convert2JSValue(env, proxy->sharedBlockAshmemFd_);
 }
