@@ -781,18 +781,18 @@ napi_value RdbStoreProxy::GetVersion(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::SetVersion(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::SetVersion on called.");
-    napi_value _this;
+    napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &_this, nullptr);
+    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc == 1, "RdbStoreProxy::SetVersion Invalid argvs!");
-    RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, _this);
+    RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thiz);
     int32_t setVersion = 0;
     napi_get_value_int32(env, args[0], &setVersion);
     LOG_DEBUG("RdbStoreProxy::SetVersion setVersion is : %{public}d", setVersion);
     int out = rdbStoreProxy->rdbStore_->SetVersion(setVersion);
     LOG_DEBUG("RdbStoreProxy::SetVersion out is : %{public}d", out);
-    return _this;
+    return thiz;
 }
 
 napi_value RdbStoreProxy::MarkAsCommit(napi_env env, napi_callback_info info)

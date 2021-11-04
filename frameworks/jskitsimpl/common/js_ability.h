@@ -17,18 +17,16 @@
 #define DISTRIBUTEDDATAMGR_APPDATAMGR_JSABILITY_H
 #include <iostream>
 #include <string>
-#include <vector>
 
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "ability.h"
 
 namespace OHOS {
 namespace JsKit {
 class JSAbility final {
 public:
-  static AppExecFwk::Ability* GetJSAbility(napi_env env);
+  static std::string GetDatabaseDir(napi_env env);
 };
 } // namespace JsKit
 } // namespace OHOS

@@ -15,39 +15,31 @@
 #ifndef PREFERENCES_JSKIT_NAPI_ASYNC_PROXY_H
 #define PREFERENCES_JSKIT_NAPI_ASYNC_PROXY_H
 #include <vector>
-#include "securec.h"
 
-#include "napi/native_common.h"
 #include "napi/native_api.h"
+#include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "hilog/log.h"
+#include "securec.h"
 
 namespace OHOS {
 namespace JsKit {
-static const OHOS::HiviewDFX::HiLogLabel PREFIX_LABEL = { LOG_CORE, 0xD001650, "NapiAsyncProxy" };
-
-#define LOG_DEBUG(...) ((void)OHOS::HiviewDFX::HiLog::Debug(PREFIX_LABEL, __VA_ARGS__))
-#define LOG_INFO(...) ((void)OHOS::HiviewDFX::HiLog::Info(PREFIX_LABEL, __VA_ARGS__))
-#define LOG_WARN(...) ((void)OHOS::HiviewDFX::HiLog::Warn(PREFIX_LABEL, __VA_ARGS__))
-#define LOG_ERROR(...) ((void)OHOS::HiviewDFX::HiLog::Error(PREFIX_LABEL, __VA_ARGS__))
-#define LOG_FATAL(...) ((void)OHOS::HiviewDFX::HiLog::Fatal(PREFIX_LABEL, __VA_ARGS__))
-
 constexpr int MAX_INPUT_COUNT = 10;
 constexpr int OK = 0;
 constexpr int ERR = -1;
 
 // T inherits AysncContext
-template<class T>
-class NapiAsyncProxy {
+template<class T> class NapiAsyncProxy {
 public:
     constexpr static int RESULT_COUNT = 2;
-    using InputParser = void (*)(const napi_env&, const napi_value&, T*);
-    using NapiAsyncExecute = int (*)(T*);
-    using NapiAsyncComplete = int (*)(T*, napi_value&);
+    using InputParser = void (*)(const napi_env &, const napi_value &, T *);
+    using NapiAsyncExecute = int (*)(T *);
+    using NapiAsyncComplete = int (*)(T *, napi_value &);
 
     // AsyncContext base
     struct AysncContext {
-        AysncContext() {}
+        AysncContext()
+        {
+        }
         virtual ~AysncContext()
         {
             if (env == nullptr) {
@@ -64,7 +56,7 @@ public:
         NapiAsyncExecute execFunc = nullptr;
         int execStatus = ERR;
         NapiAsyncComplete completeFunc = nullptr;
-        void* boundObj = nullptr;
+        void *boundObj = nullptr;
     };
 
 public:
@@ -78,12 +70,12 @@ public:
         asyncContext->info = info;
     }
 
-    static void DefParserThis(const napi_env &env, const napi_value &self, T* context)
+    static void DefParserThis(const napi_env &env, const napi_value &self, T *context)
     {
         napi_unwrap(env, self, &context->boundObj);
     }
 
-    void ParseInputs(const std::vector<InputParser>& parsers, InputParser parserThis = DefParserThis)
+    void ParseInputs(const std::vector<InputParser> &parsers, InputParser parserThis = DefParserThis)
     {
         if (asyncContext == nullptr) {
             return;
@@ -102,7 +94,7 @@ public:
                 }
                 break;
             }
-            auto* parserFunction = parsers[i];
+            auto *parserFunction = parsers[i];
             if (parserFunction != nullptr) {
                 parserFunction(asyncContext->env, args[i], this->asyncContext);
             }
@@ -112,7 +104,6 @@ public:
 
     napi_value DoAsyncWork(std::string resourceName, NapiAsyncExecute execFunc, NapiAsyncComplete completeFunc)
     {
-        LOG_INFO("DoAsyncWork on called");
         if (asyncContext == nullptr) {
             return nullptr;
         }
@@ -130,65 +121,50 @@ public:
         asyncContext->execFunc = execFunc;
         asyncContext->completeFunc = completeFunc;
         napi_create_async_work(
-            asyncContext->env,
-            nullptr,
-            resource,
-            [](napi_env env, void* data) {
-                T* context = (T*)data;
+            asyncContext->env, nullptr, resource,
+            [](napi_env env, void *data) {
+                T *context = (T *)data;
                 context->execStatus = context->execFunc(context);
             },
-            [](napi_env env, napi_status status, void* data) {
-                T* context = (T*)data;
+            [](napi_env env, napi_status status, void *data) {
+                T *context = (T *)data;
                 napi_value output = nullptr;
-                LOG_INFO("DoAsyncWork completeFunc start");
                 int completeStatus = context->completeFunc(context, output);
-                LOG_INFO("DoAsyncWork completeFunc end, completeStatus=%{public}d, context->execStatus=%{public}d", completeStatus, context->execStatus);
                 napi_value result[RESULT_COUNT] = { 0 };
                 if (context->execStatus == OK && completeStatus == OK) {
-                    LOG_INFO("DoAsyncWork napi_get_undefined start");
                     napi_get_undefined(env, &result[0]);
                     result[1] = output;
                 } else {
                     napi_value message = nullptr;
-                    LOG_INFO("DoAsyncWork napi_create_string_utf8 start");
                     napi_create_string_utf8(env, "async call failed", NAPI_AUTO_LENGTH, &message);
                     napi_create_error(env, nullptr, message, &result[0]);
                     napi_get_undefined(env, &result[1]);
                 }
-                LOG_INFO("DoAsyncWork napi_resolve_deferred start");
                 if (context->deferred) {
                     // promise
                     if (context->execStatus == OK && completeStatus == OK) {
-                        LOG_INFO("DoAsyncWork napi_reject_deferred start, 1");
                         napi_resolve_deferred(env, context->deferred, result[1]);
                     } else {
-                        LOG_INFO("DoAsyncWork napi_reject_deferred start, 0");
                         napi_reject_deferred(env, context->deferred, result[0]);
                     }
                 } else {
                     // callback
                     napi_value callback = nullptr;
-                    LOG_INFO("DoAsyncWork napi_get_reference_value start");
                     napi_get_reference_value(env, context->callbackRef, &callback);
                     napi_value callbackResult = nullptr;
-                    LOG_INFO("DoAsyncWork napi_call_function start");
                     napi_call_function(env, nullptr, callback, RESULT_COUNT, result, &callbackResult);
                 }
-                LOG_INFO("DoAsyncWork delete context start");
                 delete context;
             },
-            (void*)asyncContext,
-            &asyncContext->work);
+            (void *)asyncContext, &asyncContext->work);
 
-        LOG_INFO("DoAsyncWork napi_queue_async_work start");
         napi_queue_async_work(asyncContext->env, asyncContext->work);
-        LOG_INFO("DoAsyncWork napi_queue_async_work end");
         return ret;
     }
 
 private:
-    T* asyncContext;
+    T *asyncContext;
 };
-}  // namespace PreferencesJsKit
-}  // namespace OHOS
+} // namespace JsKit
+} // namespace OHOS
 #endif

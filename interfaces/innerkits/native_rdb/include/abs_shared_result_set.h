@@ -57,6 +57,7 @@ protected:
     virtual void Finalize();
 
     friend class ISharedResultSetStub;
+    friend class ISharedResultSetProxy;
     bool Unmarshalling(MessageParcel &parcel);
     bool Marshalling(MessageParcel &parcel);
 private:
