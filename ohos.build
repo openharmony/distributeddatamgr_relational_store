@@ -93,6 +93,11 @@
       ],
       "system_capabilities":[
         "SystemCapability.Data.DATA_APPDATAMGR"
+      ],
+      "test_list": [
+        "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/native_rdb/test:unittest",
+        "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/native_preferences/test:unittest",
+        "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/native_dataability/test:unittest"
       ]
     }
   }
