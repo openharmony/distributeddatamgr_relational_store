@@ -125,22 +125,14 @@ napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
     auto *proxy = new ResultSetProxy();
     auto finalize = [](napi_env env, void *data, void *hint) {
         ResultSetProxy *proxy = reinterpret_cast<ResultSetProxy *>(data);
-        if (proxy->ref_ != nullptr) {
-            napi_delete_reference(env, proxy->ref_);
-            proxy->ref_ = nullptr;
-        }
         delete proxy;
     };
-    napi_status status = napi_wrap(env, self, proxy, finalize, nullptr, &proxy->ref_);
+    napi_status status = napi_wrap(env, self, proxy, finalize, nullptr, nullptr);
     if (status != napi_ok) {
         LOG_ERROR("ResultSetProxy napi_wrap failed! code:%{public}d!", status);
         finalize(env, proxy, nullptr);
         return nullptr;
     }
-    if (proxy->ref_ == nullptr) {
-        napi_create_reference(env, self, 0, &proxy->ref_);
-    }
-    LOG_INFO("ResultSetProxy constructor ref:%{public}p", proxy->ref_);
     return self;
 }
 
