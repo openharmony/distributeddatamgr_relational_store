@@ -321,7 +321,7 @@ void ParseColumns(const napi_env &env, const napi_value &arg, RdbStoreContext *a
 {
     LOG_DEBUG("ParseColumns on called.");
     asyncContext->columns = JSUtils::Convert2StrVector(env, arg, JSUtils::DEFAULT_BUF_SIZE);
-    LOG_DEBUG("ParseColumns columns(begin):%{public}s.", asyncContext->columns.begin()->c_str());
+    LOG_DEBUG("ParseColumns columns :%{public}zu", asyncContext->columns.size());
 }
 
 void ParseWhereClause(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
