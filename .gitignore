@@ -3,4 +3,3 @@
 *.iml
 CMakeLists.txt
 cmake-build-debug
-.clang-format
