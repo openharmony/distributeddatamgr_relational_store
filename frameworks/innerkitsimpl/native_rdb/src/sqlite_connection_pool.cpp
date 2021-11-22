@@ -159,14 +159,15 @@ void SqliteConnectionPool::ReleaseReadConnection(SqliteConnection *connection)
     readCondition.notify_one();
 }
 
-bool SqliteConnectionPool:: IsOverLength(const std::vector<uint8_t> &newKey){
+bool SqliteConnectionPool::IsOverLength(const std::vector<uint8_t> &newKey)
+{
     if (newKey.empty()) {
         return false;
     }
 
     std::stringstream ss;
     copy(newKey.begin(), newKey.end(), std::ostream_iterator<uint8_t>(ss, ""));
-    return ss.str().length() > 1024;
+    return ss.str().length() > LIMITATION;
 }
 
 int SqliteConnectionPool::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
@@ -175,7 +176,7 @@ int SqliteConnectionPool::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
         return E_CHANGE_UNENCRYPTED_TO_ENCRYPTED;
     }
 
-    if (IsOverLength(newKey)){
+    if (IsOverLength(newKey)) {
         return E_CHANGE_ENCRYPT_KEY_OVER_LENGTH;
     }
 
@@ -201,7 +202,8 @@ int SqliteConnectionPool::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
     return errCode;
 }
 
-int SqliteConnectionPool::InnerReOpenReadConnections(){
+int SqliteConnectionPool::InnerReOpenReadConnections()
+{
     int errCode = E_OK;
     for (auto &item : readConnections) {
         if (item != nullptr) {

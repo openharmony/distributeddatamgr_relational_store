@@ -66,6 +66,7 @@ private:
     std::condition_variable readCondition;
     int readConnectionCount;
     int idleReadConnectionCount;
+    const static int LIMITATION = 1024;
 };
 
 } // namespace NativeRdb
