@@ -25,6 +25,7 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     readOnly = config.IsReadOnly();
     encryptKey = config.GetEncryptKey();
     encrypted = !encryptKey.empty();
+    initEncrypted = !encryptKey.empty();
     journalMode = config.GetJournalMode();
     databaseFileType = config.GetDatabaseFileType();
     syncMode = config.GetSyncMode();
@@ -72,6 +73,11 @@ bool SqliteConfig::IsReadOnly() const
 bool SqliteConfig::IsEncrypted() const
 {
     return encrypted;
+}
+
+bool SqliteConfig::IsInitEncrypted() const
+{
+    return initEncrypted;
 }
 
 std::vector<uint8_t> SqliteConfig::GetEncryptKey() const

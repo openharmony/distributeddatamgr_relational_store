@@ -20,6 +20,13 @@
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 
+#include <condition_variable>
+#include <mutex>
+#include <vector>
+#include <sstream>
+#include <iostream>
+#include <iterator>
+
 namespace OHOS {
 namespace NativeRdb {
 SqliteConnectionPool *SqliteConnectionPool::Create(const RdbStoreConfig &storeConfig, int &errCode)
@@ -152,24 +159,34 @@ void SqliteConnectionPool::ReleaseReadConnection(SqliteConnection *connection)
     readCondition.notify_one();
 }
 
-int SqliteConnectionPool::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
-{
+bool SqliteConnectionPool:: IsOverLength(const std::vector<uint8_t> &newKey){
     if (newKey.empty()) {
-        return E_EMPTY_NEW_ENCRYPT_KEY;
+        return false;
     }
 
-    if (!config.IsEncrypted()) {
+    std::stringstream ss;
+    copy(newKey.begin(), newKey.end(), std::ostream_iterator<uint8_t>(ss, ""));
+    return ss.str().length() > 1024;
+}
+
+int SqliteConnectionPool::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
+{
+    if (!config.IsInitEncrypted()) {
         return E_CHANGE_UNENCRYPTED_TO_ENCRYPTED;
+    }
+
+    if (IsOverLength(newKey)){
+        return E_CHANGE_ENCRYPT_KEY_OVER_LENGTH;
     }
 
     std::unique_lock<std::mutex> writeLock(writeMutex);
     if (writeConnectionUsed) {
-        return E_CHANGE_ENCRYPT_KEY_IN_BUSY;
+        return E_CHANGE_ENCRYPT_KEY_WRITECONNECTION_BUSY;
     }
 
     std::unique_lock<std::mutex> readLock(readMutex);
     if (idleReadConnectionCount < readConnectionCount) {
-        return E_CHANGE_ENCRYPT_KEY_IN_BUSY;
+        return E_CHANGE_ENCRYPT_KEY_READCONNECTION_BUSY;
     }
 
     int errCode = writeConnection->ChangeEncryptKey(newKey);
@@ -179,6 +196,13 @@ int SqliteConnectionPool::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
 
     config.UpdateEncryptKey(newKey);
 
+    errCode = InnerReOpenReadConnections();
+
+    return errCode;
+}
+
+int SqliteConnectionPool::InnerReOpenReadConnections(){
+    int errCode = E_OK;
     for (auto &item : readConnections) {
         if (item != nullptr) {
             delete item;
@@ -197,31 +221,14 @@ int SqliteConnectionPool::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
         readConnections.push_back(connection);
     }
 
-    return E_OK;
+    return errCode;
 }
+
 
 int SqliteConnectionPool::ReOpenAvailableReadConnections()
 {
     std::unique_lock<std::mutex> lock(readMutex);
-    for (auto &item : readConnections) {
-        if (item != nullptr) {
-            delete item;
-            item = nullptr;
-        }
-    }
-    readConnections.clear();
-
-    int errCode = E_OK;
-    for (int i = 0; i < idleReadConnectionCount; i++) {
-        SqliteConnection *connection = SqliteConnection::Open(config, false, errCode);
-        if (connection == nullptr) {
-            config.ClearEncryptKey();
-            CloseAllConnections();
-            return errCode;
-        }
-        readConnections.push_back(connection);
-    }
-    return errCode;
+    return InnerReOpenReadConnections();
 }
 
 /**
