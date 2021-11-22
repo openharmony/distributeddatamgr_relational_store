@@ -21,7 +21,7 @@ namespace OHOS {
 namespace JsKit {
 std::string JSUtils::Convert2String(napi_env env, napi_value jsStr, const size_t max)
 {
-    NAPI_ASSERT(env, max <= 0, "Memory error!");
+    NAPI_ASSERT_BASE(env, max > 0, "failed on max > 0", std::string());
     char *buf = new char[max + 1];
     size_t len = 0;
     napi_get_value_string_utf8(env, jsStr, buf, max, &len);
@@ -33,7 +33,7 @@ std::string JSUtils::Convert2String(napi_env env, napi_value jsStr, const size_t
 
 std::vector<std::string> JSUtils::Convert2StrVector(napi_env env, napi_value value, const size_t strMax)
 {
-    NAPI_ASSERT(env, strMax <= 0, "Memory error!");
+    NAPI_ASSERT_BASE(env, strMax > 0, "failed on strMax > 0",  std::vector<std::string>());
     uint32_t arrLen = 0;
     napi_get_array_length(env, value, &arrLen);
     if (arrLen == 0) {
