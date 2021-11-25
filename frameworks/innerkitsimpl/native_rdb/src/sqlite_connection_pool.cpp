@@ -177,17 +177,17 @@ int SqliteConnectionPool::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
     }
 
     if (IsOverLength(newKey)) {
-        return E_CHANGE_ENCRYPT_KEY_OVER_LENGTH;
+        return E_ERROR;
     }
 
     std::unique_lock<std::mutex> writeLock(writeMutex);
     if (writeConnectionUsed) {
-        return E_CHANGE_ENCRYPT_KEY_WRITECONNECTION_BUSY;
+        return E_CHANGE_ENCRYPT_KEY_IN_BUSY;
     }
 
     std::unique_lock<std::mutex> readLock(readMutex);
     if (idleReadConnectionCount < readConnectionCount) {
-        return E_CHANGE_ENCRYPT_KEY_READCONNECTION_BUSY;
+        return E_CHANGE_ENCRYPT_KEY_IN_BUSY;
     }
 
     int errCode = writeConnection->ChangeEncryptKey(newKey);
