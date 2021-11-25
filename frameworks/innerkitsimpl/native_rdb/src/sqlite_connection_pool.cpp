@@ -176,6 +176,10 @@ int SqliteConnectionPool::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
         return E_CHANGE_UNENCRYPTED_TO_ENCRYPTED;
     }
 
+    if (newKey.empty()) {
+        return E_EMPTY_NEW_ENCRYPT_KEY;
+    }
+
     if (IsOverLength(newKey)) {
         return E_ERROR;
     }
