@@ -38,17 +38,11 @@ std::vector<std::string> JSUtils::Convert2StrVector(napi_env env, napi_value val
         return {};
     }
     std::vector<std::string> result;
-    char *buf = new char[strMax + 1];
-    size_t len = 0;
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value element;
         napi_get_element(env, value, i, &element);
-        len = 0;
-        napi_get_value_string_utf8(env, element, buf, strMax, &len);
-        buf[len] = 0;
-        result.push_back(buf);
+        result.push_back(ConvertAny2String(env, element));
     }
-    delete[] buf;
     return result;
 }
 
