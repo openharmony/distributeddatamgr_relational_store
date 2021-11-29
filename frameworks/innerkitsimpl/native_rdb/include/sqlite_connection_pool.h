@@ -19,6 +19,9 @@
 #include <condition_variable>
 #include <mutex>
 #include <vector>
+#include <sstream>
+#include <iostream>
+#include <iterator>
 
 #include "rdb_store_config.h"
 #include "sqlite_config.h"
@@ -48,6 +51,8 @@ private:
     SqliteConnection *AcquireReadConnection();
     void ReleaseReadConnection(SqliteConnection *connection);
     void CloseAllConnections();
+    bool IsOverLength(const std::vector<uint8_t> &newKey);
+    int InnerReOpenReadConnections();
 
     SqliteConfig config;
     SqliteConnection *writeConnection;
@@ -61,6 +66,7 @@ private:
     std::condition_variable readCondition;
     int readConnectionCount;
     int idleReadConnectionCount;
+    const static int LIMITATION = 1024;
 };
 
 } // namespace NativeRdb
