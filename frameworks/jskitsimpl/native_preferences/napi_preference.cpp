@@ -587,14 +587,15 @@ void PreferencesObserverImpl::OnChange(Preferences &preferences, const std::stri
 {
     LOG_DEBUG("OnChange key:%{public}s", key.c_str());
     napi_value callback = nullptr;
+    napi_value global = nullptr;
+    napi_value result = nullptr;
     napi_value args[1] = {0};
 
     napi_create_string_utf8(env_, key.c_str(), key.size(), &args[0]);
     napi_get_reference_value(env_, observerRef, &callback);
-
-    napi_value global = nullptr;
     napi_get_global(env_, &global);
-    napi_call_function(env_, global, callback, 1, args, nullptr);
+
+    napi_call_function(env_, global, callback, 1, args, &result);
     LOG_DEBUG("OnChange key end");
 }
 } // namespace PreferencesJsKit

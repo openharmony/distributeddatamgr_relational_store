@@ -528,7 +528,7 @@ int SqliteConnection::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
         return errCode;
     }
 
-    stepStatement->Finalize();
+    errCode = stepStatement->Finalize();
     if (errCode != SQLITE_OK) {
         return errCode;
     }
