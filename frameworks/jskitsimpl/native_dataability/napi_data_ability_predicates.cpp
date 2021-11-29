@@ -558,7 +558,7 @@ napi_value DataAbilityPredicatesProxy::NotIn(napi_env env, napi_callback_info in
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::NotIn Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
-    std::vector<std::string> values = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::vector<std::string> values = JSUtils::Convert2StrVector(env, args[1], JSUtils::DEFAULT_BUF_SIZE);
 
     GetNativePredicates(env, info)->NotIn(field, values);
     return thiz;
