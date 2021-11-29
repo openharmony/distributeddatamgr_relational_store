@@ -62,9 +62,10 @@ describe('rdbStoreInsertTest', function () {
     console.log(TAG + "*************Unit Test Begin*************");
 
     /**
-     * @tc.name rdb insert test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
+     * @tc.name testRdbStoreChangeEncryptKey0001
+     * @tc.require #I4FZ6G
      * @tc.desc encrypt the db at start, then change the encrypt key
+     * @tc.author lichenlong1
      */
     it('testRdbStoreChangeEncryptKey0001', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreChangeEncryptKey0001 start *************");
@@ -101,9 +102,10 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
-     * @tc.name rdb insert test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
+     * @tc.name testRdbStoreChangeEncryptKey0002
+     * @tc.require #I4FZ6G
      * @tc.desc encrypt the db at start, then change the encrypt key
+     * @tc.author lichenlong1
      */
     it('testRdbStoreChangeEncryptKey0002', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreChangeEncryptKey0002 start *************");
@@ -130,11 +132,12 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
-     * @tc.name rdb insert test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
+     * @tc.name testRdbStoreChangeEncryptKey0003
+     * @tc.require #I4FZ6G
      * @tc.desc encrypt the db at start, then clear the encrypt key
-     *      now sqlite does not support this feature, switch encrypt to non-encrypt
+     *      now sqlite does not support this feature, switch encrypt to non-encrypt,
      *      sqlite is supported by GAUSSE@HUAWEI
+     * @tc.author lichenlong1
      */
     it('testRdbStoreChangeEncryptKey0003', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreChangeEncryptKey0003 start *************");
