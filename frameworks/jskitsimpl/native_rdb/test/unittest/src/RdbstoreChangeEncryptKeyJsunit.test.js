@@ -135,8 +135,7 @@ describe('rdbStoreInsertTest', function () {
      * @tc.name testRdbStoreChangeEncryptKey0003
      * @tc.require #I4FZ6G
      * @tc.desc encrypt the db at start, then clear the encrypt key
-     *      now sqlite does not support this feature, switch encrypt to non-encrypt,
-     *      sqlite is supported by GAUSSE@HUAWEI
+     *      now sqlite does not support this feature, switch encrypt to non-encrypt.
      * @tc.author lichenlong1
      */
     it('testRdbStoreChangeEncryptKey0003', 0, async function (done) {
