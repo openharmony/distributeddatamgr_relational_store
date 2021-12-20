@@ -55,10 +55,10 @@ private:
     bool isRunning_ = true;
     std::thread thread_;
     static constexpr Handler handlers[FUNC_BUTT] {
-        [FUNC_GET_ROW_COUNT] = &ISharedResultSetStub::HandleGetRowCountRequest,
-        [FUNC_GET_ALL_COLUMN_NAMES] = &ISharedResultSetStub::HandleGetAllColumnNamesRequest,
-        [FUNC_ON_GO] = &ISharedResultSetStub::HandleOnGoRequest,
-        [FUNC_CLOSE] = &ISharedResultSetStub::HandleCloseRequest,
+        &ISharedResultSetStub::HandleGetRowCountRequest,
+        &ISharedResultSetStub::HandleGetAllColumnNamesRequest,
+        &ISharedResultSetStub::HandleOnGoRequest,
+        &ISharedResultSetStub::HandleCloseRequest,
     };
 };
 }
