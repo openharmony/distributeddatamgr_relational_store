@@ -35,7 +35,7 @@ public:
     static void Destructor(napi_env env, void *nativeObject, void *finalize_hint);
 
 private:
-    explicit PreferencesProxy(std::shared_ptr<OHOS::NativePreferences::Preferences> value);
+    explicit PreferencesProxy(std::shared_ptr<OHOS::NativePreferences::Preferences> &value);
     ~PreferencesProxy();
 
     static napi_value GetValueSync(napi_env env, napi_callback_info info);

@@ -121,7 +121,7 @@ void RdbStoreContext::JSNumber2NativeType(std::shared_ptr<OHOS::NativeRdb::RdbSt
     std::unique_ptr<ResultSet> result = rdbStore->QueryByStep(std::string("SELECT * FROM ") + tableName + " LIMIT 1");
     LOG_DEBUG("ValueBucket table:%{public}s", tableName.c_str());
     result->GoToFirstRow();
-    for (std::map<std::string, ValueObject>::iterator it = numberMaps.begin(); it != numberMaps.end(); it++) {
+    for (std::map<std::string, ValueObject>::iterator it = numberMaps.begin(); it != numberMaps.end(); ++it) {
         int index = -1;
         result->GetColumnIndex(it->first, index);
         ColumnType columnType = ColumnType::TYPE_FLOAT;
@@ -182,7 +182,6 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER("isReadOnly", IsReadOnly),
         DECLARE_NAPI_GETTER("isMemoryRdb", IsMemoryRdb),
     };
-    LOG_DEBUG("Init RdbStoreProxy");
     napi_value cons = nullptr;
     napi_define_class(env, "RdbStore", NAPI_AUTO_LENGTH, Initialize, nullptr,
         sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons);
@@ -294,7 +293,6 @@ void ParseTableName(const napi_env &env, const napi_value &arg, RdbStoreContext 
 
 void ParsePredicates(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
 {
-    LOG_DEBUG("ParsePredicates on called.");
     napi_unwrap(env, arg, reinterpret_cast<void **>(&asyncContext->predicatesProxy));
     asyncContext->tableName = asyncContext->predicatesProxy->GetPredicates()->GetTableName();
 }
@@ -319,7 +317,6 @@ void ParseSrcName(const napi_env &env, const napi_value &arg, RdbStoreContext *a
 
 void ParseColumns(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
 {
-    LOG_DEBUG("ParseColumns on called.");
     asyncContext->columns = JSUtils::Convert2StrVector(env, arg, JSUtils::DEFAULT_BUF_SIZE);
     LOG_DEBUG("ParseColumns columns :%{public}zu", asyncContext->columns.size());
 }
@@ -489,7 +486,6 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("Query on called.");
     NapiAsyncProxy<RdbStoreContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
@@ -562,7 +558,6 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::Count(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::Count on called.");
     NapiAsyncProxy<RdbStoreContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
@@ -612,7 +607,6 @@ napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::Backup(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::Backup on called.");
     NapiAsyncProxy<RdbStoreContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
@@ -635,7 +629,6 @@ napi_value RdbStoreProxy::Backup(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::Attach(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::Attach on called.");
     NapiAsyncProxy<RdbStoreContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
@@ -659,7 +652,6 @@ napi_value RdbStoreProxy::Attach(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::IsHoldingConnection(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::IsHoldingConnection on called.");
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
@@ -670,7 +662,6 @@ napi_value RdbStoreProxy::IsHoldingConnection(napi_env env, napi_callback_info i
 
 napi_value RdbStoreProxy::IsReadOnly(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::IsReadOnly on called.");
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
@@ -681,7 +672,6 @@ napi_value RdbStoreProxy::IsReadOnly(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::IsMemoryRdb(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::IsMemoryRdb on called.");
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
@@ -692,7 +682,6 @@ napi_value RdbStoreProxy::IsMemoryRdb(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::GetPath(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::GetPath on called.");
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
@@ -703,7 +692,6 @@ napi_value RdbStoreProxy::GetPath(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::BeginTransaction on called.");
     NapiAsyncProxy<RdbStoreContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
@@ -724,7 +712,6 @@ napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info
 
 napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::QueryByStep on called.");
     NapiAsyncProxy<RdbStoreContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
@@ -746,7 +733,6 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::IsInTransaction(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::IsInTransaction on called.");
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
@@ -757,7 +743,6 @@ napi_value RdbStoreProxy::IsInTransaction(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::IsOpen(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::IsOpen on called.");
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
@@ -768,7 +753,6 @@ napi_value RdbStoreProxy::IsOpen(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::GetVersion(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::GetVersion on called.");
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
@@ -780,7 +764,6 @@ napi_value RdbStoreProxy::GetVersion(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::SetVersion(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::SetVersion on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -797,7 +780,6 @@ napi_value RdbStoreProxy::SetVersion(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::MarkAsCommit(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::MarkAsCommit on called.");
     NapiAsyncProxy<RdbStoreContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
@@ -818,7 +800,6 @@ napi_value RdbStoreProxy::MarkAsCommit(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::EndTransaction(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::EndTransaction on called.");
     NapiAsyncProxy<RdbStoreContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
@@ -839,7 +820,6 @@ napi_value RdbStoreProxy::EndTransaction(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::ChangeDbFileForRestore(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::Restore on called.");
     NapiAsyncProxy<RdbStoreContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
@@ -865,7 +845,6 @@ napi_value RdbStoreProxy::ChangeDbFileForRestore(napi_env env, napi_callback_inf
 
 napi_value RdbStoreProxy::ChangeEncryptKey(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::ChangeEncryptKey on called.");
     NapiAsyncProxy<RdbStoreContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;

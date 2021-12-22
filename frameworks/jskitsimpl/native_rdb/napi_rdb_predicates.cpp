@@ -154,10 +154,9 @@ RdbPredicatesProxy::~RdbPredicatesProxy()
     napi_delete_reference(env_, wrapper_);
 }
 
-RdbPredicatesProxy::RdbPredicatesProxy(std::string tableName) : env_(nullptr), wrapper_(nullptr)
-{
-    predicates_ = std::make_shared<NativeRdb::RdbPredicates> (tableName);
-}
+RdbPredicatesProxy::RdbPredicatesProxy(std::string tableName)
+    : predicates_(std::make_shared<NativeRdb::RdbPredicates> (tableName)), env_(nullptr), wrapper_(nullptr)
+{}
 
 std::shared_ptr<NativeRdb::RdbPredicates> RdbPredicatesProxy::GetNativePredicates(
     napi_env env, napi_callback_info info)
@@ -171,7 +170,6 @@ std::shared_ptr<NativeRdb::RdbPredicates> RdbPredicatesProxy::GetNativePredicate
 
 napi_value RdbPredicatesProxy::EqualTo(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::EqualTo on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -187,7 +185,6 @@ napi_value RdbPredicatesProxy::EqualTo(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::NotEqualTo(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::NotEqualTo on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -203,7 +200,6 @@ napi_value RdbPredicatesProxy::NotEqualTo(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::BeginWrap(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::BeginWrap on called.");
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->BeginWrap();
@@ -212,7 +208,6 @@ napi_value RdbPredicatesProxy::BeginWrap(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::EndWrap(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::EndWrap on called.");
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->EndWrap();
@@ -221,7 +216,6 @@ napi_value RdbPredicatesProxy::EndWrap(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::Or(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::Or on called.");
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->Or();
@@ -230,7 +224,6 @@ napi_value RdbPredicatesProxy::Or(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::And(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::And on called.");
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->And();
@@ -239,7 +232,6 @@ napi_value RdbPredicatesProxy::And(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::Contains(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::Contains on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -254,7 +246,6 @@ napi_value RdbPredicatesProxy::Contains(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::BeginsWith(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::BeginsWith on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -269,7 +260,6 @@ napi_value RdbPredicatesProxy::BeginsWith(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::EndsWith(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::EndsWith on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -284,7 +274,6 @@ napi_value RdbPredicatesProxy::EndsWith(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::IsNull(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::IsNull on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -298,7 +287,6 @@ napi_value RdbPredicatesProxy::IsNull(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::IsNotNull(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::IsNotNull on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -312,7 +300,6 @@ napi_value RdbPredicatesProxy::IsNotNull(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::Like(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::Like on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -327,7 +314,6 @@ napi_value RdbPredicatesProxy::Like(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::Glob(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::Glob on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -342,7 +328,6 @@ napi_value RdbPredicatesProxy::Glob(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::Between(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::Between on called.");
     napi_value thiz;
     size_t argc = 3;
     napi_value args[3] = { 0 };
@@ -360,7 +345,6 @@ napi_value RdbPredicatesProxy::Between(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::NotBetween(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::NotBetween on called.");
     napi_value thiz;
     size_t argc = 3;
     napi_value args[3] = { 0 };
@@ -376,7 +360,6 @@ napi_value RdbPredicatesProxy::NotBetween(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::GreaterThan(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::GreaterThan on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -391,7 +374,6 @@ napi_value RdbPredicatesProxy::GreaterThan(napi_env env, napi_callback_info info
 
 napi_value RdbPredicatesProxy::LessThan(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::LessThan on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -406,7 +388,6 @@ napi_value RdbPredicatesProxy::LessThan(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::GreaterThanOrEqualTo(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::GreaterThanOrEqualTo on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -421,7 +402,6 @@ napi_value RdbPredicatesProxy::GreaterThanOrEqualTo(napi_env env, napi_callback_
 
 napi_value RdbPredicatesProxy::LessThanOrEqualTo(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::LessThanOrEqualTo on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -436,7 +416,6 @@ napi_value RdbPredicatesProxy::LessThanOrEqualTo(napi_env env, napi_callback_inf
 
 napi_value RdbPredicatesProxy::OrderByAsc(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::OrderByAsc on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -450,7 +429,6 @@ napi_value RdbPredicatesProxy::OrderByAsc(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::OrderByDesc(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::OrderByDesc on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -464,7 +442,6 @@ napi_value RdbPredicatesProxy::OrderByDesc(napi_env env, napi_callback_info info
 
 napi_value RdbPredicatesProxy::Distinct(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::Distinct on called.");
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->Distinct();
@@ -473,7 +450,6 @@ napi_value RdbPredicatesProxy::Distinct(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::Limit(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::Limit on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -487,7 +463,6 @@ napi_value RdbPredicatesProxy::Limit(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::Offset(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::Offset on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -501,7 +476,6 @@ napi_value RdbPredicatesProxy::Offset(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::GroupBy(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::GroupBy on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -515,7 +489,6 @@ napi_value RdbPredicatesProxy::GroupBy(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::IndexedBy(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::IndexedBy on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -529,7 +502,6 @@ napi_value RdbPredicatesProxy::IndexedBy(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::In(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::In on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -544,7 +516,6 @@ napi_value RdbPredicatesProxy::In(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::NotIn(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::NotIn on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -559,7 +530,6 @@ napi_value RdbPredicatesProxy::NotIn(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::Using(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::Using on called.");
     napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -572,7 +542,6 @@ napi_value RdbPredicatesProxy::Using(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::LeftOuterJoin(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::LeftOuterJoin on called.");
     napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -586,7 +555,6 @@ napi_value RdbPredicatesProxy::LeftOuterJoin(napi_env env, napi_callback_info in
 
 napi_value RdbPredicatesProxy::InnerJoin(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::InnerJoin on called.");
     napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -600,7 +568,6 @@ napi_value RdbPredicatesProxy::InnerJoin(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::On(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::On on called.");
     napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -613,7 +580,6 @@ napi_value RdbPredicatesProxy::On(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::Clear(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::Clear on called.");
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->Clear();
@@ -622,7 +588,6 @@ napi_value RdbPredicatesProxy::Clear(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::CrossJoin(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::CrossJoin on called.");
     napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -636,7 +601,6 @@ napi_value RdbPredicatesProxy::CrossJoin(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::GetJoinCount(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GetJoinCount Begin!");
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     int errCode = GetNativePredicates(env, info)->GetJoinCount();
@@ -645,7 +609,6 @@ napi_value RdbPredicatesProxy::GetJoinCount(napi_env env, napi_callback_info inf
 
 napi_value RdbPredicatesProxy::SetJoinCount(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::SetJoinCount on called.");
     napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -659,7 +622,6 @@ napi_value RdbPredicatesProxy::SetJoinCount(napi_env env, napi_callback_info inf
 
 napi_value RdbPredicatesProxy::GetJoinTypes(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::GetJoinTypes on called.");
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     auto joinTypes = GetNativePredicates(env, info)->GetJoinTypes();
@@ -668,7 +630,6 @@ napi_value RdbPredicatesProxy::GetJoinTypes(napi_env env, napi_callback_info inf
 
 napi_value RdbPredicatesProxy::GetJoinTableNames(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::GetJoinTableNames on called.");
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     auto joinTableNames = GetNativePredicates(env, info)->GetJoinTableNames();
@@ -677,7 +638,6 @@ napi_value RdbPredicatesProxy::GetJoinTableNames(napi_env env, napi_callback_inf
 
 napi_value RdbPredicatesProxy::GetJoinConditions(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::GetJoinConditions on called.");
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     auto joinConditions = GetNativePredicates(env, info)->GetJoinConditions();
@@ -686,7 +646,6 @@ napi_value RdbPredicatesProxy::GetJoinConditions(napi_env env, napi_callback_inf
 
 napi_value RdbPredicatesProxy::SetJoinConditions(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::SetJoinConditions on called.");
     napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -699,7 +658,6 @@ napi_value RdbPredicatesProxy::SetJoinConditions(napi_env env, napi_callback_inf
 
 napi_value RdbPredicatesProxy::SetJoinTableNames(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::SetJoinTableNames on called.");
     napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -712,7 +670,6 @@ napi_value RdbPredicatesProxy::SetJoinTableNames(napi_env env, napi_callback_inf
 
 napi_value RdbPredicatesProxy::SetJoinTypes(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::SetJoinTypes on called.");
     napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
