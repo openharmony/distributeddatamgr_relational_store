@@ -43,7 +43,7 @@ struct StorageAysncContext : NapiAsyncProxy<StorageAysncContext>::AysncContext {
 
 static __thread napi_ref constructor_;
 
-PreferencesProxy::PreferencesProxy(std::shared_ptr<OHOS::NativePreferences::Preferences> value)
+PreferencesProxy::PreferencesProxy(std::shared_ptr<OHOS::NativePreferences::Preferences> &value)
     : value_(value), env_(nullptr), wrapper_(nullptr)
 {}
 
@@ -54,7 +54,6 @@ PreferencesProxy::~PreferencesProxy()
 
 void PreferencesProxy::Destructor(napi_env env, void *nativeObject, void *finalize_hint)
 {
-    LOG_DEBUG("Destructor");
     PreferencesProxy *obj = static_cast<PreferencesProxy *>(nativeObject);
     delete obj;
 }
@@ -70,13 +69,11 @@ void PreferencesProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("flushSync", FlushSync),   DECLARE_NAPI_FUNCTION("flush", Flush),
         DECLARE_NAPI_FUNCTION("on", RegisterObserver),   DECLARE_NAPI_FUNCTION("off", UnRegisterObserver),
     };
-    LOG_DEBUG("Init");
     napi_value cons = nullptr;
     napi_define_class(env, "Storage", NAPI_AUTO_LENGTH, New, nullptr,
         sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons);
 
     napi_create_reference(env, cons, 1, &constructor_);
-    LOG_DEBUG("Init end");
 }
 
 napi_status PreferencesProxy::NewInstance(napi_env env, napi_value arg, napi_value *instance)
@@ -102,7 +99,6 @@ napi_status PreferencesProxy::NewInstance(napi_env env, napi_value arg, napi_val
 
 napi_value PreferencesProxy::New(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("New");
     size_t argc = 1;
     napi_value args[1] = {0};
     napi_value thiz = nullptr;
@@ -135,7 +131,6 @@ napi_value PreferencesProxy::New(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_wrap(env, thiz, obj, PreferencesProxy::Destructor,
         nullptr, // finalize_hint
         &obj->wrapper_));
-    LOG_DEBUG("New end");
     return thiz;
 }
 
@@ -179,12 +174,9 @@ napi_value PreferencesProxy::GetValueSync(napi_env env, napi_callback_info info)
     if (valueType == napi_number) {
         double value = 0.0;
         NAPI_CALL(env, napi_get_value_double(env, args[1], &value));
-        LOG_DEBUG("get number");
         double result = obj->value_->GetDouble(key, value);
         NAPI_CALL(env, napi_create_double(env, result, &output)); // double
-        LOG_DEBUG("get number end");
     } else if (valueType == napi_string) {
-        LOG_DEBUG("get string");
         char *value = new char[MAX_VALUE_LENGTH];
         size_t valueSize = 0;
         napi_get_value_string_utf8(env, args[1], value, MAX_VALUE_LENGTH, &valueSize);
@@ -192,15 +184,12 @@ napi_value PreferencesProxy::GetValueSync(napi_env env, napi_callback_info info)
         std::string result = obj->value_->GetString(key, value);
         delete[] value;
         NAPI_CALL(env, napi_create_string_utf8(env, result.c_str(), result.size(), &output));
-        LOG_DEBUG("get string end");
     } else if (valueType == napi_boolean) {
-        LOG_DEBUG("get bool");
         bool value = false;
         NAPI_CALL(env, napi_get_value_bool(env, args[1], &value));
         // get value
         bool result = obj->value_->GetBool(key, value);
         NAPI_CALL(env, napi_get_boolean(env, result, &output));
-        LOG_DEBUG("get bool end");
     } else {
         NAPI_ASSERT(env, false, "Wrong second parameter type");
     }
@@ -528,7 +517,6 @@ napi_value PreferencesProxy::RegisterObserver(napi_env env, napi_callback_info i
     size_t argc = 2;
     napi_value args[2] = {0};
 
-    LOG_DEBUG("RegisterObserver");
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
     napi_valuetype type;
     NAPI_CALL(env, napi_typeof(env, args[0], &type));
@@ -553,7 +541,6 @@ napi_value PreferencesProxy::UnRegisterObserver(napi_env env, napi_callback_info
     napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = {0};
-    LOG_DEBUG("UnRegisterObserver");
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
     napi_valuetype type;

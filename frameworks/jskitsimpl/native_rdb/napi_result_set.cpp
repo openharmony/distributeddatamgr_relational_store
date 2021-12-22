@@ -63,7 +63,6 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<AbsSharedRe
 std::shared_ptr<NativeRdb::AbsSharedResultSet> ResultSetProxy::GetNativePredicates(
     napi_env const &env, napi_value const &arg)
 {
-    LOG_DEBUG("GetNativePredicates on called.");
     if (arg == nullptr) {
         LOG_ERROR("DataAbilityPredicatesProxy arg is null.");
         return nullptr;
@@ -172,7 +171,6 @@ std::shared_ptr<NativeRdb::AbsSharedResultSet> &ResultSetProxy::GetInnerResultSe
 
 napi_value ResultSetProxy::GetAllColumnNames(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GetAllColumnNames Begin!");
     std::vector<std::string> colNames;
     int errCode = GetInnerResultSet(env, info)->GetAllColumnNames(colNames);
     if (errCode != E_OK) {
@@ -183,7 +181,6 @@ napi_value ResultSetProxy::GetAllColumnNames(napi_env env, napi_callback_info in
 
 napi_value ResultSetProxy::GoToRow(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GoToRow Begin!");
     int32_t position;
     size_t argc = MAX_INPUT_COUNT;
     napi_value args[MAX_INPUT_COUNT] = { 0 };
@@ -201,7 +198,6 @@ napi_value ResultSetProxy::GoToRow(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetColumnCount(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GetColumnCount Begin!");
     int32_t count = 0;
     int errCode = GetInnerResultSet(env, info)->GetColumnCount(count);
     if (errCode != E_OK) {
@@ -212,7 +208,6 @@ napi_value ResultSetProxy::GetColumnCount(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetLong(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GetLong Begin!");
     int32_t columnIndex;
     int64_t result;
     size_t argc = MAX_INPUT_COUNT;
@@ -229,7 +224,6 @@ napi_value ResultSetProxy::GetLong(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetColumnType(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GetColumnType Begin!");
     int32_t columnIndex;
     ColumnType columnType;
     size_t argc = MAX_INPUT_COUNT;
@@ -246,7 +240,6 @@ napi_value ResultSetProxy::GetColumnType(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GoTo(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GoTo Begin!");
     int32_t columnIndex;
     size_t argc = MAX_INPUT_COUNT;
     napi_value args[MAX_INPUT_COUNT] = { 0 };
@@ -264,7 +257,6 @@ napi_value ResultSetProxy::GoTo(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GetColumnIndex Begin!");
     int32_t result = -1;
     size_t argc = MAX_INPUT_COUNT;
     napi_value args[MAX_INPUT_COUNT] = { 0 };
@@ -280,7 +272,6 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetInt(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GetInt Begin!");
     int32_t columnIndex;
     int32_t result;
     size_t argc = MAX_INPUT_COUNT;
@@ -297,7 +288,6 @@ napi_value ResultSetProxy::GetInt(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetColumnName(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GetColumnName Begin!");
     int32_t columnIndex;
     std::string result;
     size_t argc = MAX_INPUT_COUNT;
@@ -314,7 +304,6 @@ napi_value ResultSetProxy::GetColumnName(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::Close(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("Close Begin!");
     int errCode = GetInnerResultSet(env, info)->Close();
     if (errCode != E_OK) {
         LOG_ERROR("Close failed code:%{public}d", errCode);
@@ -324,7 +313,6 @@ napi_value ResultSetProxy::Close(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetRowCount(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GetRowCount Begin!");
     int32_t result;
     int errCode = GetInnerResultSet(env, info)->GetRowCount(result);
     if (errCode != E_OK) {
@@ -335,7 +323,6 @@ napi_value ResultSetProxy::GetRowCount(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetRowIndex(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GetRowIndex Begin!");
     int32_t result;
     int errCode = GetInnerResultSet(env, info)->GetRowIndex(result);
     if (errCode != E_OK) {
@@ -346,8 +333,7 @@ napi_value ResultSetProxy::GetRowIndex(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::IsEnded(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("IsEnded Begin!");
-    bool result;
+    bool result = false;
     int errCode = GetInnerResultSet(env, info)->IsEnded(result);
     if (errCode != E_OK) {
         LOG_ERROR("IsEnded failed code:%{public}d", errCode);
@@ -357,8 +343,7 @@ napi_value ResultSetProxy::IsEnded(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::IsBegin(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("IsBegin Begin!");
-    bool result;
+    bool result = false;
     int errCode = GetInnerResultSet(env, info)->IsStarted(result);
     if (errCode != E_OK) {
         LOG_ERROR("IsBegin failed code:%{public}d", errCode);
@@ -368,7 +353,6 @@ napi_value ResultSetProxy::IsBegin(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GoToFirstRow(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GoToFirstRow Begin!");
     int errCode = GetInnerResultSet(env, info)->GoToFirstRow();
     if (errCode != E_OK) {
         LOG_ERROR("GoToFirstRow failed code:%{public}d", errCode);
@@ -378,7 +362,6 @@ napi_value ResultSetProxy::GoToFirstRow(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GoToLastRow(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GoToLastRow Begin!");
     int errCode = GetInnerResultSet(env, info)->GoToLastRow();
     if (errCode != E_OK) {
         LOG_ERROR("GoToLastRow failed code:%{public}d", errCode);
@@ -388,7 +371,6 @@ napi_value ResultSetProxy::GoToLastRow(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GoToNextRow(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GoToNextRow Begin!");
     int errCode = GetInnerResultSet(env, info)->GoToNextRow();
     if (errCode != E_OK) {
         LOG_ERROR("GoToNextRow failed code:%{public}d", errCode);
@@ -398,7 +380,6 @@ napi_value ResultSetProxy::GoToNextRow(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GoToPreviousRow(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GoToPreviousRow Begin!");
     int errCode = GetInnerResultSet(env, info)->GoToPreviousRow();
     if (errCode != E_OK) {
         LOG_ERROR("GoToPreviousRow failed code:%{public}d", errCode);
@@ -408,8 +389,7 @@ napi_value ResultSetProxy::GoToPreviousRow(napi_env env, napi_callback_info info
 
 napi_value ResultSetProxy::IsAtFirstRow(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("IsAtFirstRow Begin!");
-    bool result;
+    bool result = false;
     int errCode = GetInnerResultSet(env, info)->IsAtFirstRow(result);
     if (errCode != E_OK) {
         LOG_ERROR("IsAtFirstRow failed code:%{public}d", errCode);
@@ -419,8 +399,7 @@ napi_value ResultSetProxy::IsAtFirstRow(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::IsAtLastRow(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("IsAtLastRow Begin!");
-    bool result;
+    bool result = false;
     int errCode = GetInnerResultSet(env, info)->IsAtLastRow(result);
     if (errCode != E_OK) {
         LOG_ERROR("IsAtLastRow failed code:%{public}d", errCode);
@@ -430,7 +409,6 @@ napi_value ResultSetProxy::IsAtLastRow(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetBlob(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GetBlob Begin!");
     int32_t columnIndex;
     std::vector<uint8_t> result;
     size_t argc = MAX_INPUT_COUNT;
@@ -447,7 +425,6 @@ napi_value ResultSetProxy::GetBlob(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetString(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GetString Begin!");
     int32_t columnIndex;
     std::string result;
     size_t argc = MAX_INPUT_COUNT;
@@ -464,9 +441,8 @@ napi_value ResultSetProxy::GetString(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetDouble(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GetDouble Begin!");
     int32_t columnIndex;
-    double result;
+    double result = 0.0;
     size_t argc = MAX_INPUT_COUNT;
     napi_value args[MAX_INPUT_COUNT] = { 0 };
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
@@ -481,9 +457,8 @@ napi_value ResultSetProxy::GetDouble(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("IsColumnNull Begin!");
     int32_t columnIndex;
-    bool result;
+    bool result = false;
     size_t argc = MAX_INPUT_COUNT;
     napi_value args[MAX_INPUT_COUNT] = { 0 };
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
@@ -500,7 +475,6 @@ napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::IsClosed(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("IsClosed Begin!");
     int result = GetInnerResultSet(env, info)->IsClosed();
     napi_value output;
     napi_get_boolean(env, result, &output);
