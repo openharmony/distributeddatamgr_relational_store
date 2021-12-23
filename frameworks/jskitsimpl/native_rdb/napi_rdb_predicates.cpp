@@ -154,7 +154,7 @@ RdbPredicatesProxy::~RdbPredicatesProxy()
     napi_delete_reference(env_, wrapper_);
 }
 
-RdbPredicatesProxy::RdbPredicatesProxy(std::string tableName)
+RdbPredicatesProxy::RdbPredicatesProxy(std::string &tableName)
     : predicates_(std::make_shared<NativeRdb::RdbPredicates> (tableName)), env_(nullptr), wrapper_(nullptr)
 {}
 
