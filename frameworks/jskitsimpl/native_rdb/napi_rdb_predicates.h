@@ -31,7 +31,7 @@ public:
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbPredicates> value);
     static void Destructor(napi_env env, void *nativeObject, void *finalize_hint);
 
-    explicit RdbPredicatesProxy(std::string tableName);
+    explicit RdbPredicatesProxy(std::string &tableName);
     std::shared_ptr<NativeRdb::RdbPredicates> GetPredicates() const;
 private:
     ~RdbPredicatesProxy();
