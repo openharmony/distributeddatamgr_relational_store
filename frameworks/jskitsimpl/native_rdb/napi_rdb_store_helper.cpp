@@ -327,7 +327,6 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
 
 void ParsePath(const napi_env &env, const napi_value &arg, HelperRdbContext *asyncContext)
 {
-    LOG_DEBUG("ParsePath on called");
     std::string path = JSUtils::Convert2String(env, arg, JSUtils::DEFAULT_BUF_SIZE);
     NAPI_ASSERT_RETURN_VOID(env, !path.empty(), "Get database name empty.");
 

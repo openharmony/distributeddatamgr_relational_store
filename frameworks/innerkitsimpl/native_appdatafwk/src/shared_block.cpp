@@ -194,9 +194,6 @@ int SharedBlock::AllocRow()
         LOG_ERROR("Set memory failed");
         return SHARED_BLOCK_NO_MEMORY;
     }
-    LOG_DEBUG("Allocated row %{private}u, row offset is at offset %{private}u,"
-        " fieldDir is %{private}d bytes at offset %{private}u\n",
-        mHeader->rowNums - 1, OffsetFromPtr(rowOffset), static_cast<int>(fieldDirSize), fieldDirOffset);
 
     *rowOffset = fieldDirOffset;
     return SHARED_BLOCK_OK;
