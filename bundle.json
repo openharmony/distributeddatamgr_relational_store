@@ -1,7 +1,7 @@
 {
     "name": "@ohos/distributeddatamgr_appdatamgr",
     "version": "",
-    "description": "提供本地数据管理能力，包括Preferences、Orm、Rdb、DataAbiliy。",
+    "description": "提供本地数据管理能力，包括关系型数据库和轻量级数据存储。",
     "homePage": "https://gitee.com/openharmony",
     "license": "Apache V2",
     "repository": "https://gitee.com/openharmony/distributeddatamgr_appdatamgr",
