@@ -14,6 +14,7 @@
  */
 
 #include "rdb_store_impl.h"
+#include <unistd.h>
 #include <sstream>
 #include "logger.h"
 #include "rdb_errno.h"
@@ -23,6 +24,7 @@
 #include "step_result_set.h"
 #include <sys/types.h>
 #include <unistd.h>
+
 
 namespace OHOS {
 namespace NativeRdb {

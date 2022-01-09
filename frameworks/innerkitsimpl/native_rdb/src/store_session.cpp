@@ -141,7 +141,7 @@ int StoreSession::ExecuteForLastInsertedRowId(
     }
 
     errCode = connection->ExecuteForLastInsertedRowId(outRowId, sql, bindArgs);
-    if (errCode != E_OK){
+    if (errCode != E_OK) {
         LOG_ERROR("rdbStore ExecuteForLastInsertedRowId FAILED");
     }
     ReleaseConnection();
@@ -235,7 +235,7 @@ int StoreSession::GiveConnectionTemporarily(long milliseconds)
     if (errorCode != E_OK) {
         return errorCode;
     }
-    Transaction transaction = connectionPool.getTransactionStack().top();
+    BaseTransaction transaction = connectionPool.getTransactionStack().top();
     if (transaction.IsMarkedSuccessful() || connectionPool.getTransactionStack().size() > 1) {
         errorCode = E_STORE_SESSION_NOT_GIVE_CONNECTION_TEMPORARILY;
         return errorCode;
@@ -304,7 +304,7 @@ int StoreSession::BeginTransaction(TransactionObserver *transactionObserver)
         transactionObserver->OnBegin();
     }
 
-    Transaction transaction(connectionPool.getTransactionStack().size());
+    BaseTransaction transaction(connectionPool.getTransactionStack().size());
     connectionPool.getTransactionStack().push(transaction);
 
     return E_OK;
@@ -325,7 +325,7 @@ int StoreSession::EndTransactionWithObserver(TransactionObserver *transactionObs
         return E_NO_TRANSACTION_IN_SESSION;
     }
 
-    Transaction transaction = connectionPool.getTransactionStack().top();
+    BaseTransaction transaction = connectionPool.getTransactionStack().top();
     bool isSucceed = transaction.IsAllBeforeSuccessful() && transaction.IsMarkedSuccessful();
     connectionPool.getTransactionStack().pop();
 
@@ -375,7 +375,7 @@ int StoreSession::EndTransaction()
         return E_NO_TRANSACTION_IN_SESSION;
     }
 
-    Transaction transaction = connectionPool.getTransactionStack().top();
+    BaseTransaction transaction = connectionPool.getTransactionStack().top();
     bool isSucceed = transaction.IsAllBeforeSuccessful() && transaction.IsMarkedSuccessful();
     connectionPool.getTransactionStack().pop();
     if (!connectionPool.getTransactionStack().empty()) {
@@ -449,8 +449,7 @@ int StoreSession::BeginTransaction()
 {
     AcquireConnection(false);
 
-    Transaction transaction(connectionPool.getTransactionStack().size());
-    LOG_DEBUG("storeSession BeginTransaction %{public}s" , transaction.getTransactionStr().c_str());
+    BaseTransaction transaction(connectionPool.getTransactionStack().size());
     int errCode = connection->ExecuteSql(transaction.getTransactionStr());
     if (errCode != E_OK) {
         LOG_DEBUG("storeSession BeginTransaction Failed");
@@ -464,13 +463,11 @@ int StoreSession::BeginTransaction()
 
 int StoreSession::Commit()
 {
-    LOG_DEBUG("storeSession Commit stack size %{public}d" , connectionPool.getTransactionStack().size());
     if (connectionPool.getTransactionStack().empty()) {
         return E_OK;
     }
-    Transaction transaction = connectionPool.getTransactionStack().top();
+    BaseTransaction transaction = connectionPool.getTransactionStack().top();
     std::string sqlStr = transaction.getCommitStr();
-    LOG_DEBUG("storeSession Commit %{public}s" , sqlStr.c_str());
     if (sqlStr.size() <= 1) {
         connectionPool.getTransactionStack().pop();
         return E_OK;
@@ -489,7 +486,7 @@ int StoreSession::Commit()
 
 int StoreSession::RollBack()
 {
-    if (connectionPool.getTransactionStack().size() == 0){
+    if (connectionPool.getTransactionStack().size() == 0) {
         return E_OK;
     }
 
@@ -497,13 +494,12 @@ int StoreSession::RollBack()
         return E_NO_TRANSACTION_IN_SESSION;
     }
 
-    Transaction transaction = connectionPool.getTransactionStack().top();
+    BaseTransaction transaction = connectionPool.getTransactionStack().top();
     connectionPool.getTransactionStack().pop();
     if (transaction.getType() != TransType::ROLLBACK_SELF
         && !connectionPool.getTransactionStack().empty()) {
         connectionPool.getTransactionStack().top().setChildFailure(true);
     }
-    LOG_DEBUG("storeSession RollBack %{public}s" , transaction.getRollbackStr().c_str());
     AcquireConnection(false);
     int errCode = connection->ExecuteSql(transaction.getRollbackStr());
     ReleaseConnection();
@@ -513,7 +509,5 @@ int StoreSession::RollBack()
 
     return errCode;
 }
-
-
 } // namespace NativeRdb
 } // namespace OHOS
