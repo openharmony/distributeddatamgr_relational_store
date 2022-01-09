@@ -720,8 +720,8 @@ napi_value RdbStoreProxy::RollBack(napi_env env, napi_callback_info info)
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
     proxy.ParseInputs(parsers, ParseThis);
     return proxy.DoAsyncWork(
-            "Rollback",
-            [](RdbStoreContext *context) {
+        "Rollback",
+        [](RdbStoreContext *context) {
                 RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
                 int errCode = obj->rdbStore_->RollBack();
                 LOG_DEBUG("RdbStoreProxy::Rollback errCode is : %{public}d", errCode);
@@ -741,8 +741,8 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
     proxy.ParseInputs(parsers, ParseThis);
     return proxy.DoAsyncWork(
-            "Commit",
-            [](RdbStoreContext *context) {
+        "Commit",
+        [](RdbStoreContext *context) {
                 RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
                 int errCode = obj->rdbStore_->Commit();
                 LOG_DEBUG("RdbStoreProxy::Commit errCode is : %{public}d", errCode);

@@ -43,7 +43,7 @@ public:
     int ConfigLocale(const std::string localeStr);
     int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
         const std::vector<uint8_t> &newKey);
-    std::stack<Transaction> &getTransactionStack();
+    std::stack<BaseTransaction> &getTransactionStack();
 
 private:
     explicit SqliteConnectionPool(const RdbStoreConfig &storeConfig);
@@ -71,7 +71,7 @@ private:
     int idleReadConnectionCount;
     const static int LIMITATION = 1024;
 
-    std::stack<Transaction> transactionStack;
+    std::stack<BaseTransaction> transactionStack;
 };
 
 } // namespace NativeRdb
