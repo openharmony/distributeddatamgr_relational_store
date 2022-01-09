@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,10 +22,12 @@
 #include <sstream>
 #include <iostream>
 #include <iterator>
+#include <stack>
 
 #include "rdb_store_config.h"
 #include "sqlite_config.h"
 #include "sqlite_connection.h"
+#include "base_transaction.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -41,6 +43,7 @@ public:
     int ConfigLocale(const std::string localeStr);
     int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
         const std::vector<uint8_t> &newKey);
+    std::stack<Transaction> &getTransactionStack();
 
 private:
     explicit SqliteConnectionPool(const RdbStoreConfig &storeConfig);
@@ -67,6 +70,8 @@ private:
     int readConnectionCount;
     int idleReadConnectionCount;
     const static int LIMITATION = 1024;
+
+    std::stack<Transaction> transactionStack;
 };
 
 } // namespace NativeRdb

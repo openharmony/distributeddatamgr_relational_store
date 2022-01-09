@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,9 +16,10 @@
 #ifndef NATIVE_RDB_SQLITE_CONNECTION_H
 #define NATIVE_RDB_SQLITE_CONNECTION_H
 
-#include <vector>
 #include <mutex>
 #include <memory>
+#include <vector>
+
 #include "sqlite3sym.h"
 #include "sqlite_config.h"
 #include "sqlite_statement.h"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,7 +46,6 @@ public:
     int MarkAsCommitWithObserver(TransactionObserver *transactionObserver);
     int EndTransactionWithObserver(TransactionObserver *transactionObserver);
     int Attach(const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey);
-    int BeginTransaction();
     int MarkAsCommit();
     int EndTransaction();
     bool IsInTransaction() const;
@@ -58,20 +57,12 @@ public:
     int ExecuteForSharedBlock(int &rowNum, std::string sql, const std::vector<ValueObject> &bindArgs,
         AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows);
 
-private:
-    class Transaction {
-    public:
-        Transaction();
-        ~Transaction();
-        bool IsAllBeforeSuccessful() const;
-        void SetAllBeforeSuccessful(bool isAllBeforeSuccessful);
-        bool IsMarkedSuccessful() const;
-        void SetMarkedSuccessful(bool isMarkedSuccessful);
+    int BeginTransaction();
+    int Commit();
+    int RollBack();
 
-    private:
-        bool isAllBeforeSuccessful;
-        bool isMarkedSuccessful;
-    };
+private:
+
     void AcquireConnection(bool isReadOnly);
     void ReleaseConnection();
     int BeginExecuteSql(const std::string &sql);
@@ -79,7 +70,7 @@ private:
     SqliteConnection *connection;
     int connectionUseCount;
     bool isInStepQuery;
-    std::stack<Transaction> transactionStack;
+
 
     const std::string ATTACH_BACKUP_SQL = "ATTACH ? AS backup KEY ?";
     const std::string ATTACH_SQL = "ATTACH ? AS ? KEY ?";

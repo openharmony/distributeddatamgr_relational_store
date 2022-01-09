@@ -63,6 +63,8 @@ ohos_shared_library("native_rdb") {
     "../../../frameworks/innerkitsimpl/native_rdb/src/string_utils.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/value_object.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/values_bucket.cpp",
+    "../../../frameworks/innerkitsimpl/native_rdb/src/base_transaction.cpp",
+    "../../../frameworks/innerkitsimpl/native_rdb/src/base_transaction.h",
   ]
 
   configs = [ ":native_rdb_config" ]
