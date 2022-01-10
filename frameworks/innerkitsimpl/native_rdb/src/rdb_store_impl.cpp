@@ -14,17 +14,14 @@
  */
 
 #include "rdb_store_impl.h"
-#include <unistd.h>
 #include <sstream>
+#include <unistd.h>
 #include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite_shared_result_set.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
-#include <sys/types.h>
-#include <unistd.h>
-
 
 namespace OHOS {
 namespace NativeRdb {
