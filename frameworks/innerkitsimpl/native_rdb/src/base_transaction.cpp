@@ -15,68 +15,67 @@
 
 #include "base_transaction.h"
 
-namespace OHOS{
-namespace NativeRdb{
+namespace OHOS {
+namespace NativeRdb {
 
-Transaction::Transaction(int ids)
+BaseTransaction::BaseTransaction(int ids)
     : allBeforeSuccessful(true), markedSuccessful(false), childFailure(false), type(ROLLBACK_SELF), id(ids)
 {
 }
 
-Transaction::~Transaction()
+BaseTransaction::~BaseTransaction()
 {
 }
 
-bool Transaction::IsAllBeforeSuccessful() const
+bool BaseTransaction::IsAllBeforeSuccessful() const
 {
     return allBeforeSuccessful;
 }
 
-void Transaction::SetAllBeforeSuccessful(bool allBeforeSuccessful)
+void BaseTransaction::SetAllBeforeSuccessful(bool allBeforeSuccessful)
 {
     this->allBeforeSuccessful = allBeforeSuccessful;
 }
-bool Transaction::IsMarkedSuccessful() const
+bool BaseTransaction::IsMarkedSuccessful() const
 {
     return markedSuccessful;
 }
-void Transaction::SetMarkedSuccessful(bool markedSuccessful)
+void BaseTransaction::SetMarkedSuccessful(bool markedSuccessful)
 {
     this->markedSuccessful = markedSuccessful;
 }
 
-int Transaction::getType() const
+int BaseTransaction::getType() const
 {
     return type;
 }
 
-bool Transaction::IsChildFailure() const
+bool BaseTransaction::IsChildFailure() const
 {
     return childFailure;
 }
 
-void Transaction::setChildFailure(bool failureFlag)
+void BaseTransaction::setChildFailure(bool failureFlag)
 {
     this->childFailure = failureFlag;
 }
 
-std::string Transaction:: getTransactionStr()
+std::string BaseTransaction::getTransactionStr()
 {
     std::string retStr = this->id == 0 ? BEGIN_IMMEDIATE : SAVE_POINT + " " + TRANS_STR + std::to_string(this->id);
     return retStr + ";";
 }
 
-std::string Transaction:: getCommitStr()
+std::string BaseTransaction::getCommitStr()
 {
     std::string retStr = this->id == 0 ? COMMIT : "";
     return retStr + ";";
 }
 
-std::string Transaction:: getRollbackStr()
+std::string BaseTransaction::getRollbackStr()
 {
     std::string retStr = this->id == 0 ? ROLLBACK : ROLLBACK_TO + " " + TRANS_STR + std::to_string(this->id);
     return retStr + ";";
 }
-
 }
 }

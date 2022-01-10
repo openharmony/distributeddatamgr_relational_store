@@ -22,10 +22,10 @@ namespace OHOS {
 namespace NativeRdb {
 enum TransType { ROLLBACK_SELF = 1, ROLLBACK_PARENT};
 
-class Transaction {
+class BaseTransaction {
 public:
-    Transaction(int id);
-    ~Transaction();
+    BaseTransaction(int id);
+    ~BaseTransaction();
     bool IsAllBeforeSuccessful() const;
     void SetAllBeforeSuccessful(bool allBeforeSuccessful);
     bool IsMarkedSuccessful() const;
@@ -53,5 +53,4 @@ private:
 };
 }
 }
-
-#endif //DISTRIBUTEDDATAMGR_APPDATAMGR_BASE_TRANSACTION_H
+#endif

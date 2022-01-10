@@ -727,7 +727,7 @@ napi_value RdbStoreProxy::RollBack(napi_env env, napi_callback_info info)
                 LOG_DEBUG("RdbStoreProxy::Rollback errCode is : %{public}d", errCode);
                 return (errCode == E_OK) ? OK : ERR;
             },
-            [](RdbStoreContext *context, napi_value &output) {
+        [](RdbStoreContext *context, napi_value &output) {
                 napi_status status = napi_get_undefined(context->env, &output);
                 return (status == napi_ok) ? OK : ERR;
             });
@@ -748,7 +748,7 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
                 LOG_DEBUG("RdbStoreProxy::Commit errCode is : %{public}d", errCode);
                 return (errCode == E_OK) ? OK : ERR;
             },
-            [](RdbStoreContext *context, napi_value &output) {
+        [](RdbStoreContext *context, napi_value &output) {
                 napi_status status = napi_get_undefined(context->env, &output);
                 return (status == napi_ok) ? OK : ERR;
             });
