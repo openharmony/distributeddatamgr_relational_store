@@ -308,7 +308,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
     std::shared_ptr<StoreSession> session = GetThreadSession();
     errCode = session->ExecuteSql(sql, bindArgs);
     if (errCode != E_OK) {
-        LOG_ERROR("RDB_STORE Execute SQL ERROR ");
+        LOG_ERROR("RDB_STORE Execute SQL ERROR.");
         ReleaseThreadSession();
         return errCode;
     }

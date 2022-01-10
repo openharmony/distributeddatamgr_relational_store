@@ -17,8 +17,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
-BaseTransaction::BaseTransaction(int ids)
-    : allBeforeSuccessful(true), markedSuccessful(false), childFailure(false), type(ROLLBACK_SELF), id(ids)
+BaseTransaction::BaseTransaction(int id)
+    : allBeforeSuccessful(true), markedSuccessful(false), childFailure(false), type(ROLLBACK_SELF), id(id)
 {
 }
 

@@ -486,10 +486,6 @@ int StoreSession::Commit()
 
 int StoreSession::RollBack()
 {
-    if (connectionPool.getTransactionStack().size() == 0) {
-        return E_OK;
-    }
-
     if (connectionPool.getTransactionStack().empty()) {
         return E_NO_TRANSACTION_IN_SESSION;
     }
