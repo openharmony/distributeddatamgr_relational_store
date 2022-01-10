@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,10 @@
 
 namespace OHOS {
 namespace NativeRdb {
-enum TransType { ROLLBACK_SELF = 1, ROLLBACK_PARENT};
+enum TransType {
+    ROLLBACK_SELF = 1,
+    ROLLBACK_PARENT
+};
 
 class BaseTransaction {
 public:
@@ -51,6 +54,6 @@ private:
     const std::string ROLLBACK = "ROLLBACK";
     const std::string ROLLBACK_TO = "ROLLBACK TO";
 };
-}
-}
+} // namespace NativeRdb
+} // namespace OHOS
 #endif

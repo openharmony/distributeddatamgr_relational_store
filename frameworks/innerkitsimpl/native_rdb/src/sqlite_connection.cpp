@@ -626,14 +626,14 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     }
 
     if (ClearSharedBlock(sharedBlock) == ERROR_STATUS) {
-        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null. ClearSharedBlock(");
+        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
         return E_ERROR;
     }
 
     sqlite3_stmt *tempSqlite3St = statement.GetSql3Stmt();
     int columnNum = sqlite3_column_count(tempSqlite3St);
     if (SharedBlockSetColumnNum(sharedBlock, columnNum) == ERROR_STATUS) {
-        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null. SharedBlockSetColumnNum(sharedBloc");
+        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
         return E_ERROR;
     }
 

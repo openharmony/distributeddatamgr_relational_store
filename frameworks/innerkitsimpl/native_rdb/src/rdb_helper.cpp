@@ -87,13 +87,7 @@ int RdbHelper::ProcessOpenCallback(
     }
 
     if (errCode != E_OK) {
-        LOG_ERROR("RdbHelper ProcessOpenCallback create rdbStore errCode");
-        rdbStore.RollBack();
-        return errCode;
-    }
-
-    if (errCode != E_OK) {
-        LOG_ERROR("RdbHelper ProcessOpenCallback create rdbStore errCode");
+        LOG_ERROR("RdbHelper ProcessOpenCallback create rdbStore error.");
         rdbStore.RollBack();
         return errCode;
     }
