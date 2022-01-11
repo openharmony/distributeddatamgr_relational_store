@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,7 @@
 #include <sstream>
 #include <iostream>
 #include <iterator>
+#include <base_transaction.h>
 
 namespace OHOS {
 namespace NativeRdb {
@@ -42,7 +43,7 @@ SqliteConnectionPool *SqliteConnectionPool::Create(const RdbStoreConfig &storeCo
 
 SqliteConnectionPool::SqliteConnectionPool(const RdbStoreConfig &storeConfig)
     : config(storeConfig), writeConnection(nullptr), writeConnectionUsed(true), readConnections(),
-      readConnectionCount(0), idleReadConnectionCount(0)
+      readConnectionCount(0), idleReadConnectionCount(0), transactionStack()
 {
 }
 
@@ -140,6 +141,10 @@ void SqliteConnectionPool::ReleaseWriteConnection()
     writeCondition.notify_one();
 }
 
+/**
+ * get last element from connectionPool
+ * @return
+ */
 SqliteConnection *SqliteConnectionPool::AcquireReadConnection()
 {
     std::unique_lock<std::mutex> lock(readMutex);
@@ -149,6 +154,11 @@ SqliteConnection *SqliteConnectionPool::AcquireReadConnection()
     idleReadConnectionCount--;
     return connection;
 }
+
+/**
+ * push connection back to last of connectionPool
+ * @param connection
+ */
 void SqliteConnectionPool::ReleaseReadConnection(SqliteConnection *connection)
 {
     {
@@ -303,6 +313,11 @@ int SqliteConnectionPool::ChangeDbFileForRestore(const std::string newPath, cons
     config.SetPath(newPath);
     config.UpdateEncryptKey(newKey);
     return Init();
+}
+
+std::stack<BaseTransaction> &SqliteConnectionPool::getTransactionStack()
+{
+    return transactionStack;
 }
 } // namespace NativeRdb
 } // namespace OHOS

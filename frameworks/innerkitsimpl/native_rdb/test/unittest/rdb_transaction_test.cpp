@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -91,7 +91,7 @@ void RdbTransactionTest::TearDown(void)
 
 /**
  * @tc.name: RdbStore_Transaction_001
- * @tc.desc: test RdbStore Transaction
+ * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
  * @tc.require: AR000CU2BO
  * @tc.author: chenxi
@@ -154,7 +154,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_001, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_Transaction_002
- * @tc.desc: test RdbStore Transaction
+ * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
  * @tc.require: AR000CU2BO
  * @tc.author: chenxi
@@ -221,7 +221,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_002, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_NestedTransaction_001
- * @tc.desc: test RdbStore Transaction
+ * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
  * @tc.require: AR000CU2BO
  * @tc.author: chenxi
@@ -295,7 +295,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_NestedTransaction_002
- * @tc.desc: test RdbStore Transaction
+ * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
  * @tc.require: AR000CU2BO
  * @tc.author: chenxi
@@ -368,7 +368,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_NestedTransaction_003
- * @tc.desc: test RdbStore Transaction
+ * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
  * @tc.require: AR000CU2BO
  * @tc.author: chenxi
@@ -439,7 +439,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_003, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_NestedTransaction_004
- * @tc.desc: test RdbStore Transaction
+ * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
  * @tc.require: AR000CU2BO
  * @tc.author: chenxi
@@ -520,7 +520,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_004, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_Transaction_003
- * @tc.desc: test RdbStore Transaction
+ * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
  * @tc.require: AR000CU2BO
  * @tc.author: chenxi

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "rdb_store_impl.h"
 #include <sstream>
+#include <unistd.h>
 #include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite_shared_result_set.h"
@@ -307,6 +308,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
     std::shared_ptr<StoreSession> session = GetThreadSession();
     errCode = session->ExecuteSql(sql, bindArgs);
     if (errCode != E_OK) {
+        LOG_ERROR("RDB_STORE Execute SQL ERROR.");
         ReleaseThreadSession();
         return errCode;
     }
@@ -413,10 +415,39 @@ int RdbStoreImpl::SetVersion(int version)
 /**
  * Begins a transaction in EXCLUSIVE mode.
  */
-    int RdbStoreImpl::BeginTransaction()
+int RdbStoreImpl::BeginTransaction()
 {
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int errCode = session->BeginTransaction();
+    if (errCode != E_OK) {
+        ReleaseThreadSession();
+        return errCode;
+    }
+    return E_OK;
+}
+
+/**
+* Begins a transaction in EXCLUSIVE mode.
+*/
+int RdbStoreImpl::RollBack()
+{
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode = session->RollBack();
+    if (errCode != E_OK) {
+        ReleaseThreadSession();
+        return errCode;
+    }
+    return E_OK;
+}
+
+/**
+* Begins a transaction in EXCLUSIVE mode.
+*/
+int RdbStoreImpl::Commit()
+{
+    LOG_DEBUG("Enter Commit");
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode = session->Commit();
     if (errCode != E_OK) {
         ReleaseThreadSession();
         return errCode;
