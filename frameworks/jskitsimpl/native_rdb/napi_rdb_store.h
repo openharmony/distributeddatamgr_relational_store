@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -50,6 +50,8 @@ private:
     static napi_value IsHoldingConnection(napi_env env, napi_callback_info info);
     static napi_value IsReadOnly(napi_env env, napi_callback_info info);
     static napi_value BeginTransaction(napi_env env, napi_callback_info info);
+    static napi_value RollBack(napi_env env, napi_callback_info info);
+    static napi_value Commit(napi_env env, napi_callback_info info);
     static napi_value QueryByStep(napi_env env, napi_callback_info info);
     static napi_value IsInTransaction(napi_env env, napi_callback_info info);
     static napi_value IsOpen(napi_env env, napi_callback_info info);

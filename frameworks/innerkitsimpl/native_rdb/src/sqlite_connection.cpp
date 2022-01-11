@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -621,16 +621,19 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     SqliteConnectionS connection(this->dbHandle, this->openFlags, this->filePath);
     int errCode = PrepareAndBind(sql, bindArgs);
     if (errCode != E_OK) {
+        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null. SqliteConnectionS connection");
         return errCode;
     }
 
     if (ClearSharedBlock(sharedBlock) == ERROR_STATUS) {
+        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
         return E_ERROR;
     }
 
     sqlite3_stmt *tempSqlite3St = statement.GetSql3Stmt();
     int columnNum = sqlite3_column_count(tempSqlite3St);
     if (SharedBlockSetColumnNum(sharedBlock, columnNum) == ERROR_STATUS) {
+        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
         return E_ERROR;
     }
 

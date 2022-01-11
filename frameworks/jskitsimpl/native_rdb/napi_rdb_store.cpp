@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -169,6 +169,8 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("count", Count),
         DECLARE_NAPI_FUNCTION("addAttach", Attach),
         DECLARE_NAPI_FUNCTION("beginTransaction", BeginTransaction),
+        DECLARE_NAPI_FUNCTION("rollBack", RollBack),
+        DECLARE_NAPI_FUNCTION("commit", Commit),
         DECLARE_NAPI_FUNCTION("queryByStep", QueryByStep),
         DECLARE_NAPI_GETTER_SETTER("version", GetVersion, SetVersion),
         DECLARE_NAPI_FUNCTION("markAsCommit", MarkAsCommit),
@@ -708,6 +710,48 @@ napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info
             napi_status status = napi_get_undefined(context->env, &output);
             return (status == napi_ok) ? OK : ERR;
         });
+}
+
+napi_value RdbStoreProxy::RollBack(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbStoreProxy::Rollback on called.");
+    NapiAsyncProxy<RdbStoreContext> proxy;
+    proxy.Init(env, info);
+    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
+    proxy.ParseInputs(parsers, ParseThis);
+    return proxy.DoAsyncWork(
+        "Rollback",
+        [](RdbStoreContext *context) {
+                RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+                int errCode = obj->rdbStore_->RollBack();
+                LOG_DEBUG("RdbStoreProxy::Rollback errCode is : %{public}d", errCode);
+                return (errCode == E_OK) ? OK : ERR;
+            },
+        [](RdbStoreContext *context, napi_value &output) {
+                napi_status status = napi_get_undefined(context->env, &output);
+                return (status == napi_ok) ? OK : ERR;
+            });
+}
+
+napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbStoreProxy::Commit on called.");
+    NapiAsyncProxy<RdbStoreContext> proxy;
+    proxy.Init(env, info);
+    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
+    proxy.ParseInputs(parsers, ParseThis);
+    return proxy.DoAsyncWork(
+        "Commit",
+        [](RdbStoreContext *context) {
+                RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+                int errCode = obj->rdbStore_->Commit();
+                LOG_DEBUG("RdbStoreProxy::Commit errCode is : %{public}d", errCode);
+                return (errCode == E_OK) ? OK : ERR;
+            },
+        [](RdbStoreContext *context, napi_value &output) {
+                napi_status status = napi_get_undefined(context->env, &output);
+                return (status == napi_ok) ? OK : ERR;
+            });
 }
 
 napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)

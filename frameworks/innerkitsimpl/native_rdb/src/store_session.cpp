@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,12 +22,12 @@
 #include "shared_block.h"
 #include "sqlite_database_utils.h"
 #include "sqlite_utils.h"
+#include "base_transaction.h"
 
 namespace OHOS {
 namespace NativeRdb {
 StoreSession::StoreSession(SqliteConnectionPool &connectionPool)
-    : connectionPool(connectionPool), connection(nullptr), connectionUseCount(0), isInStepQuery(false),
-      transactionStack()
+    : connectionPool(connectionPool), connection(nullptr), connectionUseCount(0), isInStepQuery(false)
 {
 }
 
@@ -136,10 +136,14 @@ int StoreSession::ExecuteForLastInsertedRowId(
 {
     int errCode = BeginExecuteSql(sql);
     if (errCode != 0) {
+        LOG_ERROR("rdbStore BeginExecuteSql failed");
         return errCode;
     }
 
     errCode = connection->ExecuteForLastInsertedRowId(outRowId, sql, bindArgs);
+    if (errCode != E_OK) {
+        LOG_ERROR("rdbStore ExecuteForLastInsertedRowId FAILED");
+    }
     ReleaseConnection();
     return errCode;
 }
@@ -218,7 +222,7 @@ bool StoreSession::IsHoldingConnection() const
 int StoreSession::CheckNoTransaction() const
 {
     int errorCode = 0;
-    if (transactionStack.empty()) {
+    if (connectionPool.getTransactionStack().empty()) {
         errorCode = E_STORE_SESSION_NO_CURRENT_TRANSACTION;
         return errorCode;
     }
@@ -231,8 +235,8 @@ int StoreSession::GiveConnectionTemporarily(long milliseconds)
     if (errorCode != E_OK) {
         return errorCode;
     }
-    Transaction transaction = transactionStack.top();
-    if (transaction.IsMarkedSuccessful() || transactionStack.size() > 1) {
+    BaseTransaction transaction = connectionPool.getTransactionStack().top();
+    if (transaction.IsMarkedSuccessful() || connectionPool.getTransactionStack().size() > 1) {
         errorCode = E_STORE_SESSION_NOT_GIVE_CONNECTION_TEMPORARILY;
         return errorCode;
     }
@@ -279,31 +283,9 @@ int StoreSession::Attach(const std::string &alias, const std::string &pathName,
     return E_OK;
 }
 
-int StoreSession::BeginTransaction()
-{
-    if (transactionStack.empty()) {
-        AcquireConnection(false);
-        if (!connection->IsWriteConnection()) {
-            LOG_ERROR("StoreSession BeginExecutea : read connection can not begin transaction");
-            ReleaseConnection();
-            return E_BEGIN_TRANSACTION_IN_READ_CONNECTION;
-        }
-
-        int errCode = connection->ExecuteSql("BEGIN EXCLUSIVE;");
-        if (errCode != E_OK) {
-            ReleaseConnection();
-            return errCode;
-        }
-    }
-
-    Transaction transaction;
-    transactionStack.push(transaction);
-    return E_OK;
-}
-
 int StoreSession::BeginTransaction(TransactionObserver *transactionObserver)
 {
-    if (transactionStack.empty()) {
+    if (connectionPool.getTransactionStack().empty()) {
         AcquireConnection(false);
         if (!connection->IsWriteConnection()) {
             LOG_ERROR("StoreSession BeginExecutea : read connection can not begin transaction");
@@ -322,30 +304,30 @@ int StoreSession::BeginTransaction(TransactionObserver *transactionObserver)
         transactionObserver->OnBegin();
     }
 
-    Transaction transaction;
-    transactionStack.push(transaction);
+    BaseTransaction transaction(connectionPool.getTransactionStack().size());
+    connectionPool.getTransactionStack().push(transaction);
 
     return E_OK;
 }
 
 int StoreSession::MarkAsCommitWithObserver(TransactionObserver *transactionObserver)
 {
-    if (transactionStack.empty()) {
+    if (connectionPool.getTransactionStack().empty()) {
         return E_NO_TRANSACTION_IN_SESSION;
     }
-    transactionStack.top().SetMarkedSuccessful(true);
+    connectionPool.getTransactionStack().top().SetMarkedSuccessful(true);
     return E_OK;
 }
 
 int StoreSession::EndTransactionWithObserver(TransactionObserver *transactionObserver)
 {
-    if (transactionStack.empty()) {
+    if (connectionPool.getTransactionStack().empty()) {
         return E_NO_TRANSACTION_IN_SESSION;
     }
 
-    Transaction transaction = transactionStack.top();
+    BaseTransaction transaction = connectionPool.getTransactionStack().top();
     bool isSucceed = transaction.IsAllBeforeSuccessful() && transaction.IsMarkedSuccessful();
-    transactionStack.pop();
+    connectionPool.getTransactionStack().pop();
 
     if (transactionObserver != nullptr) {
         if (isSucceed) {
@@ -355,13 +337,13 @@ int StoreSession::EndTransactionWithObserver(TransactionObserver *transactionObs
         }
     }
 
-    if (!transactionStack.empty()) {
+    if (!connectionPool.getTransactionStack().empty()) {
         if (transactionObserver != nullptr) {
             transactionObserver->OnRollback();
         }
 
         if (!isSucceed) {
-            transactionStack.top().SetAllBeforeSuccessful(false);
+            connectionPool.getTransactionStack().top().SetAllBeforeSuccessful(false);
         }
     } else {
         int errCode;
@@ -380,25 +362,25 @@ int StoreSession::EndTransactionWithObserver(TransactionObserver *transactionObs
 
 int StoreSession::MarkAsCommit()
 {
-    if (transactionStack.empty()) {
+    if (connectionPool.getTransactionStack().empty()) {
         return E_NO_TRANSACTION_IN_SESSION;
     }
-    transactionStack.top().SetMarkedSuccessful(true);
+    connectionPool.getTransactionStack().top().SetMarkedSuccessful(true);
     return E_OK;
 }
 
 int StoreSession::EndTransaction()
 {
-    if (transactionStack.empty()) {
+    if (connectionPool.getTransactionStack().empty()) {
         return E_NO_TRANSACTION_IN_SESSION;
     }
 
-    Transaction transaction = transactionStack.top();
+    BaseTransaction transaction = connectionPool.getTransactionStack().top();
     bool isSucceed = transaction.IsAllBeforeSuccessful() && transaction.IsMarkedSuccessful();
-    transactionStack.pop();
-    if (!transactionStack.empty()) {
+    connectionPool.getTransactionStack().pop();
+    if (!connectionPool.getTransactionStack().empty()) {
         if (!isSucceed) {
-            transactionStack.top().SetAllBeforeSuccessful(false);
+            connectionPool.getTransactionStack().top().SetAllBeforeSuccessful(false);
         }
     } else {
         int errCode = connection->ExecuteSql(isSucceed ? "COMMIT;" : "ROLLBACK;");
@@ -410,7 +392,7 @@ int StoreSession::EndTransaction()
 }
 bool StoreSession::IsInTransaction() const
 {
-    return !transactionStack.empty();
+    return !connectionPool.getTransactionStack().empty();
 }
 
 std::shared_ptr<SqliteStatement> StoreSession::BeginStepQuery(
@@ -450,34 +432,6 @@ int StoreSession::EndStepQuery()
     return errCode;
 }
 
-StoreSession::Transaction::Transaction() : isAllBeforeSuccessful(true), isMarkedSuccessful(false)
-{
-}
-
-StoreSession::Transaction::~Transaction()
-{
-}
-
-bool StoreSession::Transaction::IsAllBeforeSuccessful() const
-{
-    return isAllBeforeSuccessful;
-}
-
-void StoreSession::Transaction::SetAllBeforeSuccessful(bool isAllBeforeSuccessful)
-{
-    this->isAllBeforeSuccessful = isAllBeforeSuccessful;
-}
-
-bool StoreSession::Transaction::IsMarkedSuccessful() const
-{
-    return isMarkedSuccessful;
-}
-
-void StoreSession::Transaction::SetMarkedSuccessful(bool isMarkedSuccessful)
-{
-    this->isMarkedSuccessful = isMarkedSuccessful;
-}
-
 int StoreSession::ExecuteForSharedBlock(int &rowNum, std::string sql, const std::vector<ValueObject> &bindArgs,
     AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows)
 {
@@ -488,6 +442,67 @@ int StoreSession::ExecuteForSharedBlock(int &rowNum, std::string sql, const std:
     errCode =
         connection->ExecuteForSharedBlock(rowNum, sql, bindArgs, sharedBlock, startPos, requiredPos, isCountAllRows);
     ReleaseConnection();
+    return errCode;
+}
+
+int StoreSession::BeginTransaction()
+{
+    AcquireConnection(false);
+
+    BaseTransaction transaction(connectionPool.getTransactionStack().size());
+    int errCode = connection->ExecuteSql(transaction.getTransactionStr());
+    if (errCode != E_OK) {
+        LOG_DEBUG("storeSession BeginTransaction Failed");
+        ReleaseConnection();
+        return errCode;
+    }
+    connectionPool.getTransactionStack().push(transaction);
+    ReleaseConnection();
+    return E_OK;
+}
+
+int StoreSession::Commit()
+{
+    if (connectionPool.getTransactionStack().empty()) {
+        return E_OK;
+    }
+    BaseTransaction transaction = connectionPool.getTransactionStack().top();
+    std::string sqlStr = transaction.getCommitStr();
+    if (sqlStr.size() <= 1) {
+        connectionPool.getTransactionStack().pop();
+        return E_OK;
+    }
+
+    AcquireConnection(false);
+    int errCode = connection->ExecuteSql(sqlStr);
+    ReleaseConnection();
+    if (errCode != E_OK) {
+        // if error the transaction is leaving for rollback
+        return errCode;
+    }
+    connectionPool.getTransactionStack().pop();
+    return E_OK;
+}
+
+int StoreSession::RollBack()
+{
+    if (connectionPool.getTransactionStack().empty()) {
+        return E_NO_TRANSACTION_IN_SESSION;
+    }
+
+    BaseTransaction transaction = connectionPool.getTransactionStack().top();
+    connectionPool.getTransactionStack().pop();
+    if (transaction.getType() != TransType::ROLLBACK_SELF
+        && !connectionPool.getTransactionStack().empty()) {
+        connectionPool.getTransactionStack().top().setChildFailure(true);
+    }
+    AcquireConnection(false);
+    int errCode = connection->ExecuteSql(transaction.getRollbackStr());
+    ReleaseConnection();
+    if (errCode != E_OK) {
+        LOG_ERROR("storeSession RollBack Fail");
+    }
+
     return errCode;
 }
 } // namespace NativeRdb
