@@ -13,7 +13,7 @@
 
 import("//build/test.gni")
 
-module_output_path = "appdatamgr_jskits/dataability"
+module_output_path = "native_appdatamgr/dataability"
 
 ohos_js_unittest("DataAbJsTest") {
   module_out_path = module_output_path
