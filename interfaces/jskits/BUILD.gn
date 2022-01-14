@@ -41,7 +41,7 @@ ohos_shared_library("storage") {
   ]
 
   subsystem_name = "distributeddatamgr"
-  part_name = "appdatamgr_jskits"
+  part_name = "native_appdatamgr"
   relative_install_dir = "module/data"
 }
 
@@ -86,7 +86,7 @@ ohos_shared_library("rdb") {
   }
 
   subsystem_name = "distributeddatamgr"
-  part_name = "appdatamgr_jskits"
+  part_name = "native_appdatamgr"
   relative_install_dir = "module/data"
 }
 
@@ -115,6 +115,6 @@ ohos_shared_library("dataability") {
   ]
 
   subsystem_name = "distributeddatamgr"
-  part_name = "appdatamgr_jskits"
+  part_name = "native_appdatamgr"
   relative_install_dir = "module/data"
 }

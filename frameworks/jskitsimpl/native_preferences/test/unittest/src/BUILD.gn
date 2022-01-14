@@ -13,7 +13,7 @@
 
 import("//build/test.gni")
 
-module_output_path = "appdatamgr_jskits/storage"
+module_output_path = "native_appdatamgr/storage"
 
 ohos_js_unittest("StorageJsTest") {
   module_out_path = module_output_path
