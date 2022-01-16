@@ -29,7 +29,11 @@ const std::string SqliteGlobalConfig::DEFAULT_JOURNAL_MODE = "WAL";
 const std::string SqliteGlobalConfig::WAL_SYNC_MODE = "FULL";
 const int SqliteGlobalConfig::JOURNAL_FILE_SIZE = 524288; /* 512KB */
 const int SqliteGlobalConfig::WAL_AUTO_CHECKPOINT = 100;  /* 100 pages */
-static SqliteGlobalConfig globalConfig;
+
+void SqliteGlobalConfig::InitSqliteGlobalConfig()
+{
+    static SqliteGlobalConfig globalConfig;
+}
 
 SqliteGlobalConfig::SqliteGlobalConfig()
 {
