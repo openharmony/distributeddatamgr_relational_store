@@ -33,6 +33,7 @@ ohos_unittest("NativeRdbTest") {
   module_out_path = module_output_path
 
   sources = [
+    "unittest/rdb_distributed_test.cpp",
     "unittest/rdb_attach_test.cpp",
     "unittest/rdb_delete_test.cpp",
     "unittest/rdb_encrypt_test.cpp",
