@@ -28,16 +28,14 @@ config("native_rdb_config") {
 
   defines = [
     "SQLITE_HAS_CODEC",
-    "SQLITE_DISTRIBUTE_RELATIONAL"
+    "SQLITE_DISTRIBUTE_RELATIONAL",
   ]
 }
 
 config("native_rdb_public_config") {
   visibility = [ "//foundation/distributeddatamgr/appdatamgr:*" ]
 
-  include_dirs = [
-    "include",
-  ]
+  include_dirs = [ "include" ]
 
   defines = [ "SQLITE_HAS_CODEC" ]
 }
