@@ -950,6 +950,5 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
             return (status == napi_ok) ? OK : ERR;
         });
 }
-
 } // namespace RdbJsKit
 } // namespace OHOS

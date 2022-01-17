@@ -27,7 +27,6 @@
 
 using namespace OHOS::DistributedKv;
 namespace OHOS::NativeRdb {
-
 class ServiceDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
     explicit ServiceDeathRecipient(RdbClient* owner) : owner_(owner) {}
