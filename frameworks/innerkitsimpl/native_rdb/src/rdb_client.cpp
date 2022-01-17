@@ -27,8 +27,6 @@
 
 using namespace OHOS::DistributedKv;
 namespace OHOS::NativeRdb {
-RdbClient* RdbClient::instance_ = nullptr;
-std::mutex RdbClient::instanceMutex_;
 
 class ServiceDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
@@ -76,11 +74,8 @@ RdbClient::~RdbClient()
 
 RdbClient& RdbClient::GetInstance()
 {
-    std::lock_guard<std::mutex> lock(instanceMutex_);
-    if (instance_ == nullptr) {
-        instance_ = new(std::nothrow) RdbClient();
-    }
-    return *instance_;
+    static RdbClient rdbClient;
+    return rdbClient;
 }
 
 sptr<IRdbService> RdbClient::GetRdbService()
