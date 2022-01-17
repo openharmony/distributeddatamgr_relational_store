@@ -58,9 +58,6 @@ private:
     
     void RegisterClientDeathRecipient(const std::string& bundleName);
     
-    static RdbClient* instance_;
-    static std::mutex instanceMutex_;
-
     std::mutex mutex_;
     sptr<OHOS::DistributedKv::IKvStoreDataService> distributedDataMgr_;
     sptr<OHOS::DistributedKv::IRdbService> rdbService_;
