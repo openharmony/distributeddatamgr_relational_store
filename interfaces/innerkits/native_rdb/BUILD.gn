@@ -28,7 +28,6 @@ config("native_rdb_config") {
 
   defines = [
     "SQLITE_HAS_CODEC",
-    "RELATIONAL_STORE",
     "SQLITE_DISTRIBUTE_RELATIONAL"
   ]
 }

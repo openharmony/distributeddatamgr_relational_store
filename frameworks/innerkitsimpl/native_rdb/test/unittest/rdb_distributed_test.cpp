@@ -45,7 +45,8 @@ public:
 
 class TestOpenCallback : public RdbOpenCallback {
 public:
-    int OnCreate(RdbStore& store) override {
+    int OnCreate(RdbStore& store) override
+    {
         std::cout << "on create" << std::endl;
         std::string sql = "CREATE TABLE IF NOT EXISTS employee ("
                           "id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -57,12 +58,14 @@ public:
         return 0;
     }
     
-    int OnOpen(RdbStore& store) override {
+    int OnOpen(RdbStore& store) override
+    {
         std::cout << "on open" << std::endl;
         return 0;
     }
     
-    int OnUpgrade(RdbStore& store, int currentVersion, int targetVersion) override {
+    int OnUpgrade(RdbStore& store, int currentVersion, int targetVersion) override
+    {
         std::cout << "on upgrade" << std::endl;
         return 0;
     }
@@ -82,7 +85,7 @@ void RdbStoreDistributedTest::SetUpTestCase()
     chown(path.c_str(), 0, ddmsGroupId_);
     
     RdbStoreConfig config(path);
-    config.SetBundleName("com.huawei.distributed.rdb");
+    config.SetBundleName("com.example.distributed.rdb");
     config.SetName("distributed_rdb.db");
     TestOpenCallback callback;
     rdbStore = RdbHelper::GetRdbStore(config, 1, callback, errCode);
@@ -100,9 +103,9 @@ void RdbStoreDistributedTest::InsertValue(std::shared_ptr<RdbStore> &store)
     
     values.PutInt("id", 1);
     values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("data", std::vector<uint8_t>{ 1, 2, 3 });
+    values.PutInt("age", 18); // 18 age
+    values.PutDouble("salary", 100.5); // 100.5
+    values.PutBlob("data", std::vector<uint8_t>{1, 2, 3});
     int ret = store->Insert(id, "employee", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
@@ -111,7 +114,7 @@ void RdbStoreDistributedTest::InsertValue(std::shared_ptr<RdbStore> &store)
 void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
 {
     std::unique_ptr<ResultSet> resultSet =
-        store->QuerySql("SELECT * FROM employee WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+        store->QuerySql("SELECT * FROM employee WHERE name = ?", {"zhangsan"});
     EXPECT_NE(resultSet, nullptr);
     
     int columnIndex;
