@@ -158,7 +158,7 @@ describe('rdbStorePredicatesJoinTest', function () {
      */
     it('testRdbJoin003', 0, async function (done) {
         console.log(TAG + "testRdbJoin003 begin.");
-        let resultSet = await rdbStore.query(
+        let resultSet = await rdbStore.querySql(
             "SELECT * FROM user LEFT OUTER JOIN Book ON user.userId = Book.id");
 
         expect(5).assertEqual(resultSet.rowCount);
