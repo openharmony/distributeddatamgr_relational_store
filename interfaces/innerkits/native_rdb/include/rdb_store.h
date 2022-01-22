@@ -25,10 +25,9 @@
 #include "result_set.h"
 #include "value_object.h"
 #include "values_bucket.h"
+#include "rdb_types.h"
 
-namespace OHOS {
-namespace NativeRdb {
-
+namespace OHOS::NativeRdb {
 enum class ConflictResolution {
     ON_CONFLICT_NONE = 0,
     ON_CONFLICT_ROLLBACK,
@@ -44,31 +43,10 @@ class RdbStoreObserver {
 
 class RdbStore {
 public:
-    enum SyncMode {
-        PUSH,
-        PULL,
-    };
-    
-    struct SyncOption {
-        SyncMode mode;
-        bool isBlock;
-    };
-    
-    using SyncResult = std::map<std::string, int>; // networkId
-    using SyncCallback = std::function<void(SyncResult&)>;
-    
-    enum SubscribeMode {
-        LOCAL,
-        REMOTE,
-        LOCAL_AND_REMOTE,
-    };
-    
-    struct SubscribeOption {
-        SubscribeMode mode;
-    };
-    
-    struct DropOption {
-    };
+    using SyncOption = DistributedRdb::SyncOption;
+    using SyncCallback = DistributedRdb::SyncCallback;
+    using SubscribeOption = DistributedRdb::SubscribeOption;
+    using DropOption = DistributedRdb::DropOption;
     
     virtual ~RdbStore(){};
     virtual int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) = 0;
@@ -140,7 +118,5 @@ public:
     // user must use UDID
     virtual bool DropDeviceData(std::vector<std::string>& devices, DropOption& option) = 0;
 };
-
-} // namespace NativeRdb
-} // namespace OHOS
+}
 #endif

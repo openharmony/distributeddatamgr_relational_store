@@ -18,11 +18,9 @@
 
 #include <string>
 #include <vector>
-#include <rdb_parcel.h>
+#include <rdb_types.h>
 
-namespace OHOS {
-namespace NativeRdb {
-
+namespace OHOS::NativeRdb {
 // indicates the type of the storage
 enum class StorageMode {
     MODE_MEMORY = 101,
@@ -60,7 +58,7 @@ enum class DatabaseFileSecurityLevel {
     NO_LEVEL,
 };
 
-using DistributedType = OHOS::DistributedKv::RdbDistributedType;
+using DistributedType = OHOS::DistributedRdb::RdbDistributedType;
 
 class RdbStoreConfig {
 public:
@@ -114,12 +112,10 @@ private:
     std::string databaseFileSecurityLevel;
     
     // distributed rdb
-    DistributedType distributedType_ = DistributedType::RDB_DEVICE_COLLABORATION;
+    DistributedType distributedType_ = DistributedRdb::RdbDistributedType::RDB_DEVICE_COLLABORATION;
     std::string bundleName_;
     //
 };
-
-} // namespace NativeRdb
-} // namespace OHOS
+}
 
 #endif
