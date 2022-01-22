@@ -22,9 +22,8 @@
 #include <mutex>
 #include <thread>
 
-#include "rdb_client.h"
-#include "irdb_store.h"
 #include "rdb_store.h"
+#include "rdb_syncer.h"
 #include "rdb_store_config.h"
 #include "sqlite_connection_pool.h"
 #include "sqlite_statement.h"
@@ -142,9 +141,8 @@ private:
     std::stack<TransactionObserver *> transactionObserverStack;
     
     std::mutex mutex_;
-    std::unique_ptr<OHOS::DistributedKv::RdbStoreParam> distributedStoreParam_;
-    std::shared_ptr<OHOS::DistributedKv::IRdbStore> distributedStore_;
-    RdbClient::RdbServiceDeathCallback deathCallback_;
+    DistributedRdb::RdbSyncerParam syncerParam_;
+    std::shared_ptr<DistributedRdb::RdbSyncer> syncer_;
 };
 }
 #endif

@@ -18,13 +18,12 @@
 #include <unistd.h>
 #include "logger.h"
 #include "rdb_errno.h"
-#include "rdb_client.h"
+#include "rdb_manager.h"
 #include "sqlite_shared_result_set.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
 
-using namespace OHOS::DistributedKv;
 namespace OHOS::NativeRdb {
 std::shared_ptr<RdbStore> RdbStoreImpl::Open(const RdbStoreConfig &config, int &errCode)
 {
@@ -62,8 +61,8 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     name = config.GetName();
     fileSecurityLevel = config.GetDatabaseFileSecurityLevel();
     fileType = config.GetDatabaseFileType();
-    distributedStoreParam_= std::make_unique<RdbStoreParam>(config.GetBundleName(), config.GetPath(),
-        RemoveSuffix(config.GetName()), config.GetDistributedType());
+    syncerParam_ = { config.GetBundleName(), config.GetPath(),
+                    RemoveSuffix(config.GetName()), config.GetDistributedType() };
     return E_OK;
 }
 
@@ -77,9 +76,7 @@ RdbStoreImpl::~RdbStoreImpl()
     delete connectionPool;
     threadMap.clear();
     idleSessions.clear();
-    if (distributedStoreParam_ != nullptr) {
-        RdbClient::GetInstance().UnRegisterRdbServiceDeathCallback(distributedStoreParam_->storeName_);
-    }
+    DistributedRdb::RdbManager::UnRegisterRdbServiceDeathObserver(syncerParam_.storeName_);
 }
 
 std::shared_ptr<StoreSession> RdbStoreImpl::GetThreadSession()
@@ -677,30 +674,24 @@ void RdbStoreImpl::ServiceDeathCallback()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     LOG_INFO("enter");
-    distributedStore_ = nullptr;
+    syncer_ = nullptr;
 }
 
 bool RdbStoreImpl::InitDistributed()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (distributedStore_ != nullptr) {
+    if (syncer_ != nullptr) {
         return true;
     }
-    if (distributedStoreParam_ == nullptr) {
-        LOG_ERROR("distributed store param is not init");
-        return false;
-    }
-    if (deathCallback_ == nullptr) {
-        deathCallback_ = [this] { ServiceDeathCallback(); };
-    }
     
-    distributedStore_ = RdbClient::GetInstance().GetRdbStore(*distributedStoreParam_);
-    if (distributedStore_ == nullptr) {
+    syncer_ = DistributedRdb::RdbManager::GetRdbSyncer(syncerParam_);
+    if (syncer_ == nullptr) {
         LOG_ERROR("get rdb store failed");
         return false;
     }
-    RdbClient::GetInstance().RegisterRdbServiceDeathCallback(distributedStoreParam_->storeName_, deathCallback_);
     
+    DistributedRdb::RdbManager::RegisterRdbServiceDeathObserver(syncerParam_.storeName_,
+                                                                [this] { ServiceDeathCallback(); });
     LOG_INFO("success");
     return true;
 }
@@ -710,7 +701,7 @@ bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
     if (!InitDistributed()) {
         return false;
     }
-    if (distributedStore_->SetDistributedTables(tables) != 0) {
+    if (syncer_->SetDistributedTables(tables) != 0) {
         LOG_ERROR("set distributed tables failed");
         return false;
     }

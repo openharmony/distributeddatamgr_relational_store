@@ -17,8 +17,6 @@ config("native_rdb_config") {
 
   include_dirs = [
     "include",
-    "//foundation/distributeddatamgr/distributeddatamgr/frameworks/innerkitsimpl/distributeddatafwk/include",
-    "//foundation/distributeddatamgr/distributeddatamgr/frameworks/innerkitsimpl/distributeddatafwk/include/rdb",
     "../../../frameworks/innerkitsimpl/native_rdb/include",
     "//utils/system/safwk/native/include",
     "//third_party/icu/icu4c/source",
@@ -52,7 +50,6 @@ ohos_shared_library("native_rdb") {
     "../../../frameworks/innerkitsimpl/native_rdb/src/base_transaction.h",
     "../../../frameworks/innerkitsimpl/native_rdb/src/logger.h",
     "../../../frameworks/innerkitsimpl/native_rdb/src/raw_rdb_predicates.cpp",
-    "../../../frameworks/innerkitsimpl/native_rdb/src/rdb_client.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/rdb_helper.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/rdb_predicates.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/rdb_store_config.cpp",

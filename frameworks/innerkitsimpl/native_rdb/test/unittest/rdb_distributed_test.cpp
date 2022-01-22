@@ -105,7 +105,7 @@ void RdbStoreDistributedTest::InsertValue(std::shared_ptr<RdbStore> &store)
     values.PutString("name", std::string("zhangsan"));
     values.PutInt("age", 18); // 18 age
     values.PutDouble("salary", 100.5); // 100.5
-    values.PutBlob("data", std::vector<uint8_t>{1, 2, 3});
+    values.PutBlob("data", std::vector<uint8_t>{ 1, 2, 3 });
     int ret = store->Insert(id, "employee", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
@@ -114,7 +114,7 @@ void RdbStoreDistributedTest::InsertValue(std::shared_ptr<RdbStore> &store)
 void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
 {
     std::unique_ptr<ResultSet> resultSet =
-        store->QuerySql("SELECT * FROM employee WHERE name = ?", {"zhangsan"});
+        store->QuerySql("SELECT * FROM employee WHERE name = ?", { "zhangsan" });
     EXPECT_NE(resultSet, nullptr);
     
     int columnIndex;
@@ -162,7 +162,7 @@ void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
 HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_001, TestSize.Level1)
 {
     EXPECT_NE(rdbStore, nullptr) << "get rdb store failed";
-    EXPECT_EQ(rdbStore->SetDistributedTables({"employee"}), true) << "set distributed tables failed";
+    EXPECT_EQ(rdbStore->SetDistributedTables({ "employee" }), true) << "set distributed tables failed";
 }
 
 /**
@@ -179,7 +179,7 @@ HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_002, TestSize.Level1)
     EXPECT_NE(rdbStore, nullptr) << "get rdb store failed";
     system("/system/bin/killall -9 distributeddata");
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    EXPECT_EQ(rdbStore->SetDistributedTables({"employee"}), true) << "set distributed tables failed";
+    EXPECT_EQ(rdbStore->SetDistributedTables({ "employee" }), true) << "set distributed tables failed";
     
     InsertValue(rdbStore);
     CheckResultSet(rdbStore);
