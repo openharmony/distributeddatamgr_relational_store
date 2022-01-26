@@ -72,9 +72,10 @@
                 "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_preferences:native_preferences",
                 "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_dataability:native_dataability",
                 "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_rdb:native_rdb",
-                "//foundation/distributeddatamgr/appdatamgr/interfaces/jskits:dataability",
-                "//foundation/distributeddatamgr/appdatamgr/interfaces/jskits:storage",
-                "//foundation/distributeddatamgr/appdatamgr/interfaces/jskits:rdb"
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_dataability:dataability",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_preferences:storage",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_resultset:resultset",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_rdb:rdb"
             ],
             "inner_kits": [
                 {
@@ -138,9 +139,9 @@
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_preferences/test:unittest",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_dataability/test:unittest",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_rdb/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/native_rdb/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/native_preferences/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/native_dataability/test:unittest"
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_rdb/test:unittest",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_preferences/test:unittest",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_dataability/test:unittest"
             ]
         }
     }
