@@ -15,7 +15,7 @@
 
 #include "preferences_impl.h"
 
-#include <inttypes.h>
+#include <cinttypes>
 #include <limits.h>
 #include <stdlib.h>
 

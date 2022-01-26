@@ -16,7 +16,7 @@
 #ifndef SHARED_BLOCK_H
 #define SHARED_BLOCK_H
 
-#include <inttypes.h>
+#include <cinttypes>
 
 #include <string>
 #include <ashmem.h>
