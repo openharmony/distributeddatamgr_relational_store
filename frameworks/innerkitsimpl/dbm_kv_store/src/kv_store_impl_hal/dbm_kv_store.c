@@ -161,7 +161,6 @@ static void ReleaseKVDBHandle(DBHandle db)
         db->sumFileFd = -1;
     }
     free(db);
-    db = NULL;
 }
 
 static DBHandle GetKVDBHandle(const char* path)
@@ -194,7 +193,6 @@ static DBHandle GetKVDBHandle(const char* path)
     DBMInitFinish(db, ret);
     if (ret != 0) {
         ReleaseKVDBHandle(db);
-        db = NULL;
         return NULL;
     }
     return db;
@@ -326,7 +324,11 @@ static int LoadDataItem(DBHandle db, int index, KeyItem* item)
         return DBM_ERROR;
     }
 
-    item->len = atoi(keyLen); // it's 0
+    int length = atoi(keyLen);
+    if (length < 0) {
+        return DBM_ERROR;
+    }
+    item->len = length;
 
     ret = memcpy_s(item->key, MAX_KEY_LEN, itemContent + 2 * KV_SUM_BLOCK_SIZE, MAX_KEY_LEN); // 2 block: index and len
     if (ret != EOK) {
@@ -690,7 +692,6 @@ int DBM_GetKVStore(const char* storeFullPath, KVStoreHandle* kvStore)
     if (ret != DBM_OK) {
         DBM_INFO("Get Init KV store fail.");
         ReleaseKVDBHandle(db);
-        db = NULL;
         return DBM_ERROR;
     }
 
@@ -735,7 +736,7 @@ static int IsNeedTransferValue(DBHandle db, const char* key, const char* fileRea
 static int FormatValueByFile(boolean isNeedTrans, char* value, unsigned int len,
     const char* fileRead, unsigned int fileLen)
 {
-    int offset = isNeedTrans ? KV_SUM_BLOCK_SIZE : 0;
+    unsigned int offset = isNeedTrans ? KV_SUM_BLOCK_SIZE : 0;
     if (fileLen - offset > len) {
         return -1;
     }
@@ -1285,7 +1286,6 @@ int DBM_CloseKVStore(KVStoreHandle db)
     DB_UNLOCK(db);
 
     ReleaseKVDBHandle(db);
-    db = NULL;
     DBM_DEBUG("FInish Get KV store ret[%d].", ret);
     return ret;
 }
@@ -1381,7 +1381,6 @@ int DBM_DeleteKVStore(const char* storeFullPath)
 
     int ret = RemoveKVStoreFile(db, sumFileLen);
     ReleaseKVDBHandle(db);
-    db = NULL;
     DBM_INFO("Delete kv store complete[%d].", ret);
     return ret;
 }
