@@ -347,7 +347,7 @@ static int DeleteValueFromFile(DBHandle db, const char* key)
     }
     int ret = UtilsFileDelete(keyPath);
     if (ret < 0) {
-        DBM_INFO("%s delete value file failed ret[%d]", __func__, ret);
+        DBM_INFO("Delete value file failed ret[%d]", ret);
         return DBM_ERROR;
     }
     return DBM_OK;
@@ -415,7 +415,7 @@ static int CopyValueToFile(DBHandle db, const char* src, const char* dest)
     }
     int ret = UtilsFileCopy(srcPath, destPath);
     if (ret < 0) {
-        DBM_INFO("%s copy value file failed ret[%d]", __func__, ret);
+        DBM_INFO("Copy value file failed ret[%d]", ret);
         return DBM_ERROR;
     }
 
@@ -441,7 +441,7 @@ static int RecoverItem(DBHandle db, const KeyItem* item)
     char itemFlagByte[1] = {0};
     int ret = FileWriteCursor(db->sumFileFd, GetKeyItemOffset(item->index) + 1, SEEK_SET_FS, itemFlagByte, 1);
     if (ret < 0) {
-        DBM_INFO("%s update flag failed ret[%d]", __func__, ret);
+        DBM_INFO("Update flag failed ret[%d]", ret);
         return DBM_ERROR;
     }
     return DBM_OK;
@@ -715,7 +715,8 @@ static boolean IsDataItemMatched(DBHandle db, const char* key, int index)
     return IsStrSame(itemContent + KV_MAGIC_SIZE + KV_SUM_BLOCK_SIZE, strlen(key) + 1, key);
 }
 
-static int IsNeedTransferValue(DBHandle db, const char* key, const char* fileRead, unsigned int fileLen, boolean* isNeed)
+static int IsNeedTransferValue(DBHandle db, const char* key, const char* fileRead,
+    unsigned int fileLen, boolean* isNeed)
 {
     if (fileLen <= KV_SUM_BLOCK_SIZE) { // value size < index, means old version data
         *isNeed = FALSE;
@@ -1403,7 +1404,7 @@ void DBM_KVStoreControl(KVStoreHandle db, int cmd, void* arg)
     }
 }
 
-int DBM_UserInit()
+int DBM_UserInit(void)
 {
     return 0;
 }
