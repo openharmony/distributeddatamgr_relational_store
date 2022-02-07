@@ -173,8 +173,11 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("count", Count),
         DECLARE_NAPI_FUNCTION("addAttach", Attach),
         DECLARE_NAPI_FUNCTION("beginTransaction", BeginTransaction),
+        DECLARE_NAPI_FUNCTION("beginTransactionSync", BeginTransactionSync),
         DECLARE_NAPI_FUNCTION("rollBack", RollBack),
+        DECLARE_NAPI_FUNCTION("rollBackSync", RollBackSync),
         DECLARE_NAPI_FUNCTION("commit", Commit),
+        DECLARE_NAPI_FUNCTION("commitSync", CommitSync),
         DECLARE_NAPI_FUNCTION("queryByStep", QueryByStep),
         DECLARE_NAPI_GETTER_SETTER("version", GetVersion, SetVersion),
         DECLARE_NAPI_FUNCTION("markAsCommit", MarkAsCommit),
@@ -737,6 +740,17 @@ napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info
         });
 }
 
+napi_value RdbStoreProxy::BeginTransactionSync(napi_env env, napi_callback_info info)
+{
+    napi_value thisObj = nullptr;
+    napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
+    RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
+
+    int errCode = rdbStoreProxy->rdbStore_->BeginTransaction();
+    LOG_DEBUG("RdbStoreProxy::BeginTransactionSync out is : %{public}d", errCode);
+    return JSUtils::Convert2JSValue(env, errCode);
+}
+
 napi_value RdbStoreProxy::RollBack(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Rollback on called.");
@@ -758,6 +772,17 @@ napi_value RdbStoreProxy::RollBack(napi_env env, napi_callback_info info)
             });
 }
 
+napi_value RdbStoreProxy::RollBackSync(napi_env env, napi_callback_info info)
+{
+    napi_value thisObj = nullptr;
+    napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
+    RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
+
+    int errCode = rdbStoreProxy->rdbStore_->RollBack();
+    LOG_DEBUG("RdbStoreProxy::RollBackSync out is : %{public}d", errCode);
+    return JSUtils::Convert2JSValue(env, errCode);
+}
+
 napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Commit on called.");
@@ -777,6 +802,17 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
                 napi_status status = napi_get_undefined(context->env, &output);
                 return (status == napi_ok) ? OK : ERR;
             });
+}
+
+napi_value RdbStoreProxy::CommitSync(napi_env env, napi_callback_info info)
+{
+    napi_value thisObj = nullptr;
+    napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
+    RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
+
+    int errCode = rdbStoreProxy->rdbStore_->Commit();
+    LOG_DEBUG("RdbStoreProxy::CommitSync out is : %{public}d", errCode);
+    return JSUtils::Convert2JSValue(env, errCode);
 }
 
 napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
