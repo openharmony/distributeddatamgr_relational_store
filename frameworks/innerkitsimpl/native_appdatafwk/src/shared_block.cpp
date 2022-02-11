@@ -348,7 +348,7 @@ int SharedBlock::PutBlobOrString(uint32_t row, uint32_t column, const void *valu
     }
 
     if (size != 0) {
-        int result = memcpy_s(ptr, size, value, size);
+        error_t result = memcpy_s(ptr, size, value, size);
         if (result != 0) {
             return SHARED_BLOCK_NO_MEMORY;
         }
@@ -420,7 +420,7 @@ size_t SharedBlock::SetRawData(const void *rawData, size_t size)
         return SHARED_BLOCK_NO_MEMORY;
     }
 
-    int result = memcpy_s(mHeader, mSize, rawData, size);
+    error_t result = memcpy_s(mHeader, mSize, rawData, size);
     if (result != 0) {
         return SHARED_BLOCK_NO_MEMORY;
     }
