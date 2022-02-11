@@ -237,17 +237,30 @@ private:
 
 class HelperRdbContext : public NapiAsyncProxy<HelperRdbContext>::AysncContext {
 public:
-    HelperRdbContext()
-        : AysncContext(), config(""), path(""), version(0), errCode(E_OK), openCallback(), proxy(nullptr)
+    HelperRdbContext() : AysncContext(), config(""), version(0), openCallback(), proxy(nullptr)
     {
     }
     RdbStoreConfig config;
-    std::string path;
     int32_t version;
-    int64_t errCode;
     OpenCallback openCallback;
     std::shared_ptr<RdbStore> proxy;
+    std::shared_ptr<Context> context;
 };
+
+void ParseContext(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
+{
+    auto context = JSAbility::GetContext(env, object);
+    NAPI_ASSERT_RETURN_VOID(env, context != nullptr, "ParseContext get context failed.");
+    asyncContext->context = context;
+}
+
+std::string GetRealPath(std::string dir, std::string name)
+{
+    int errorCode = E_OK;
+    std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(dir, name, errorCode);
+    LOG_DEBUG("ParseStoreConfig path=%{public}s", realPath.c_str());
+    return realPath;
+}
 
 void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
 {
@@ -255,7 +268,7 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
     napi_get_named_property(env, object, "name", &value);
     NAPI_ASSERT_RETURN_VOID(env, value != nullptr, "no database name found in config.");
     std::string name = JSUtils::Convert2String(env, value, JSUtils::DEFAULT_BUF_SIZE);
-    NAPI_ASSERT_RETURN_VOID(env, name != "", "Get database name empty.");
+    NAPI_ASSERT_RETURN_VOID(env, !name.empty(), "Get database name empty.");
     LOG_DEBUG("ParseStoreConfig name=%{public}s", name.c_str());
     asyncContext->config.SetName(std::move(name));
 
@@ -265,39 +278,38 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
         asyncContext->config.SetEncryptKey(JSUtils::Convert2U8Vector(env, value));
     }
 
-    value = nullptr;
-    napi_get_named_property(env, object, "path", &value);
-    std::string path = "";
-    if (value != nullptr) {
-        path = JSUtils::Convert2String(env, value, JSUtils::DEFAULT_BUF_SIZE);
+    if (asyncContext->context == nullptr) {
+        ParseContext(env, nullptr, asyncContext); // when no context as arg got from application.
     }
-    path = (path.empty() ? JSAbility::GetDatabaseDir(env) : path);
-
-    NAPI_ASSERT_RETURN_VOID(env, !path.empty(), "Get database path empty.");
+    std::string databaseDir = asyncContext->context->GetDatabaseDir();
     int errorCode = E_OK;
-    path = SqliteDatabaseUtils::GetDefaultDatabasePath(path, name, errorCode);
-    LOG_DEBUG("ParseStoreConfig path=%{public}s", path.c_str());
-    NAPI_ASSERT_RETURN_VOID(env, errorCode == E_OK, "Get database path failed.");
-    asyncContext->config.SetPath(path);
-    asyncContext->config.SetBundleName(JSAbility::GetBundleName(env));
+    std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, name, errorCode);
+    NAPI_ASSERT_RETURN_VOID(env, errorCode == E_OK, "Get database real path failed.");
+    asyncContext->config.SetPath(realPath);
+    asyncContext->config.SetBundleName(asyncContext->context->GetBundleName());
 }
 
 void ParsePath(const napi_env &env, const napi_value &arg, HelperRdbContext *asyncContext)
 {
     std::string path = JSUtils::Convert2String(env, arg, JSUtils::DEFAULT_BUF_SIZE);
     NAPI_ASSERT_RETURN_VOID(env, !path.empty(), "Get database name empty.");
+    std::string::size_type pos = path.find_last_of('/');
+    NAPI_ASSERT_RETURN_VOID(env, pos == std::string::npos, "name can not be relative path.");
 
-    if (path.front() != '/') {
-        std::string::size_type pos = path.find_last_of('/');
-        NAPI_ASSERT_RETURN_VOID(env, pos == std::string::npos, "name can not be relative path.");
-
-        int errorCode = E_OK;
-        std::string defaultPath = JSAbility::GetDatabaseDir(env);
-        path = SqliteDatabaseUtils::GetDefaultDatabasePath(defaultPath, path, errorCode);
-        NAPI_ASSERT_RETURN_VOID(env, errorCode == E_OK, "Get default database path failed.");
+    if (path.front() == '/') {
+        asyncContext->config.SetPath(path);
+        LOG_DEBUG("ParseStoreConfig with full path=%{public}s", path.c_str());
+        return;
     }
-    asyncContext->path = path;
-    LOG_DEBUG("ParsePath path=%{public}s", path.c_str());
+
+    if (asyncContext->context == nullptr) {
+        ParseContext(env, nullptr, asyncContext); // when no context as arg got from application.
+    }
+    std::string databaseDir = asyncContext->context->GetDatabaseDir();
+    int errorCode = E_OK;
+    std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, path, errorCode);
+    NAPI_ASSERT_RETURN_VOID(env, errorCode == E_OK, "Get database real path failed.");
+    asyncContext->config.SetPath(realPath);
 }
 
 void ParseVersion(const napi_env &env, const napi_value &arg, HelperRdbContext *asyncContext)
@@ -323,6 +335,10 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
     NapiAsyncProxy<HelperRdbContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<HelperRdbContext>::InputParser> parsers;
+
+    if (JSAbility::CheckContext(env, info)) {
+        parsers.push_back(ParseContext);
+    }
     parsers.push_back(ParseStoreConfig);
     parsers.push_back(ParseVersion);
     proxy.ParseInputs(parsers);
@@ -351,16 +367,20 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
     NapiAsyncProxy<HelperRdbContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<HelperRdbContext>::InputParser> parsers;
+
+    if (JSAbility::CheckContext(env, info)) {
+        parsers.push_back(ParseContext);
+    }
     parsers.push_back(ParsePath);
     proxy.ParseInputs(parsers);
     return proxy.DoAsyncWork(
         "deleteRdbStore",
         [](HelperRdbContext *context) {
-            context->errCode = RdbHelper::DeleteRdbStore(context->path);
-            return OK;
+            int ret = RdbHelper::DeleteRdbStore(context->config.GetPath());
+            return (ret == E_OK) ? OK : ERR;
         },
         [](HelperRdbContext *context, napi_value &output) {
-            napi_status status = napi_create_int64(context->env, context->errCode, &output);
+            napi_status status = napi_create_int64(context->env, E_OK, &output);
             LOG_DEBUG("DeleteRdbStore end");
             return (status == napi_ok) ? OK : ERR;
         });
