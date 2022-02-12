@@ -21,7 +21,7 @@
 #include <cmath>
 #include <limits>
 
-#include "common.h"
+#include "js_logger.h"
 #include "napi_async_proxy.h"
 #include "preferences.h"
 #include "preferences_errno.h"
