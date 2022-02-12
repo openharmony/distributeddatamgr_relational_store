@@ -16,8 +16,8 @@
 
 #include <functional>
 
-#include "common.h"
 #include "js_ability.h"
+#include "js_logger.h"
 #include "js_utils.h"
 #include "napi_async_proxy.h"
 #include "napi_rdb_store.h"
@@ -293,14 +293,8 @@ void ParsePath(const napi_env &env, const napi_value &arg, HelperRdbContext *asy
 {
     std::string path = JSUtils::Convert2String(env, arg, JSUtils::DEFAULT_BUF_SIZE);
     NAPI_ASSERT_RETURN_VOID(env, !path.empty(), "Get database name empty.");
-    std::string::size_type pos = path.find_last_of('/');
-    NAPI_ASSERT_RETURN_VOID(env, pos == std::string::npos, "name can not be relative path.");
-
-    if (path.front() == '/') {
-        asyncContext->config.SetPath(path);
-        LOG_DEBUG("ParseStoreConfig with full path=%{public}s", path.c_str());
-        return;
-    }
+    size_t pos = path.find_first_of('/');
+    NAPI_ASSERT_RETURN_VOID(env, pos == 0, "A name without path should be input.");
 
     if (asyncContext->context == nullptr) {
         ParseContext(env, nullptr, asyncContext); // when no context as arg got from application.

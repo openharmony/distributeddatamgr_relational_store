@@ -15,7 +15,7 @@
 
 #include "js_ability.h"
 
-#include "common.h"
+#include "js_logger.h"
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
@@ -23,7 +23,7 @@ Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
 {
     databaseDir_ = stageContext->GetDatabaseDir();
     preferencesDir_ = stageContext->GetStorageDir();
-    bundleName_ = "ohos.samples.jshelloworld";//stageContext->GetBundleName();
+    bundleName_ = stageContext->GetBundleName();
     LOG_DEBUG("ParseContext databaseDir_=%{public}s, preferencesDir_=%{public}s, bundleName_=%{public}s",
         databaseDir_.c_str(), preferencesDir_.c_str(), bundleName_.c_str());
 }
@@ -32,7 +32,7 @@ Context::Context(AppExecFwk::Ability *featureAbility)
 {
     databaseDir_ = featureAbility->GetDatabaseDir();
     preferencesDir_ = featureAbility->GetPreferencesDir();
-    bundleName_ = "ohos.samples.jshelloworld";//featureAbility->GetBundleName();
+    bundleName_ = featureAbility->GetBundleName();
     LOG_DEBUG("ParseContext databaseDir_=%{public}s, preferencesDir_=%{public}s, bundleName_=%{public}s",
         databaseDir_.c_str(), preferencesDir_.c_str(), bundleName_.c_str());
 }

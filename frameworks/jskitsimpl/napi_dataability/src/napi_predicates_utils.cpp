@@ -15,7 +15,7 @@
 
 #include "napi_predicates_utils.h"
 
-#include "common.h"
+#include "js_logger.h"
 #include "js_utils.h"
 #include "napi_data_ability_predicates.h"
 #include "napi_rdb_predicates.h"

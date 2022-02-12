@@ -15,7 +15,7 @@
 
 #include "napi_values_bucket.h"
 
-#include "common.h"
+#include "js_logger.h"
 #include "js_utils.h"
 #include "value_object.h"
 
@@ -30,7 +30,7 @@ __attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_RdbJsKit_Values
     std::map<std::string, ValueObject> valuesMap;
     valuesBucket.GetAll(valuesMap);
     std::map<std::string, ValueObject>::iterator it;
-    for (it = valuesMap.begin(); it != valuesMap.end(); it++) {
+    for (it = valuesMap.begin(); it != valuesMap.end(); ++it) {
         std::string key = it->first;
         auto valueObject = it->second;
         napi_value value = nullptr;
