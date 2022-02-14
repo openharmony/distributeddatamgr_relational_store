@@ -18,8 +18,7 @@
 
 #include <iostream>
 
-namespace OHOS {
-namespace NativeRdb {
+namespace OHOS::NativeRdb {
 enum TransType {
     ROLLBACK_SELF = 1,
     ROLLBACK_PARENT
@@ -54,6 +53,5 @@ private:
     const std::string ROLLBACK = "ROLLBACK";
     const std::string ROLLBACK_TO = "ROLLBACK TO";
 };
-} // namespace NativeRdb
-} // namespace OHOS
+}
 #endif
