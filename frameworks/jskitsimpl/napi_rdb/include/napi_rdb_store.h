@@ -49,11 +49,8 @@ private:
     static napi_value IsMemoryRdb(napi_env env, napi_callback_info info);
     static napi_value IsHoldingConnection(napi_env env, napi_callback_info info);
     static napi_value IsReadOnly(napi_env env, napi_callback_info info);
-    static napi_value BeginTransaction(napi_env env, napi_callback_info info);
     static napi_value BeginTransactionSync(napi_env env, napi_callback_info info);
-    static napi_value RollBack(napi_env env, napi_callback_info info);
     static napi_value RollBackSync(napi_env env, napi_callback_info info);
-    static napi_value Commit(napi_env env, napi_callback_info info);
     static napi_value CommitSync(napi_env env, napi_callback_info info);
     static napi_value QueryByStep(napi_env env, napi_callback_info info);
     static napi_value IsInTransaction(napi_env env, napi_callback_info info);

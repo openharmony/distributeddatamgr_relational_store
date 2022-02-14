@@ -172,11 +172,8 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("backup", Backup),
         DECLARE_NAPI_FUNCTION("count", Count),
         DECLARE_NAPI_FUNCTION("addAttach", Attach),
-        DECLARE_NAPI_FUNCTION("beginTransaction", BeginTransaction),
         DECLARE_NAPI_FUNCTION("beginTransactionSync", BeginTransactionSync),
-        DECLARE_NAPI_FUNCTION("rollBack", RollBack),
         DECLARE_NAPI_FUNCTION("rollBackSync", RollBackSync),
-        DECLARE_NAPI_FUNCTION("commit", Commit),
         DECLARE_NAPI_FUNCTION("commitSync", CommitSync),
         DECLARE_NAPI_FUNCTION("queryByStep", QueryByStep),
         DECLARE_NAPI_GETTER_SETTER("version", GetVersion, SetVersion),
@@ -720,26 +717,6 @@ napi_value RdbStoreProxy::GetPath(napi_env env, napi_callback_info info)
     return JSUtils::Convert2JSValue(env, path);
 }
 
-napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info)
-{
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    proxy.ParseInputs(parsers, ParseThis);
-
-    return proxy.DoAsyncWork(
-        "BeginTransaction",
-        [](RdbStoreContext *context) {
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            int out = obj->rdbStore_->BeginTransaction();
-            return out;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_get_undefined(context->env, &output);
-            return (status == napi_ok) ? OK : ERR;
-        });
-}
-
 napi_value RdbStoreProxy::BeginTransactionSync(napi_env env, napi_callback_info info)
 {
     napi_value thisObj = nullptr;
@@ -752,27 +729,6 @@ napi_value RdbStoreProxy::BeginTransactionSync(napi_env env, napi_callback_info 
     return nullptr;
 }
 
-napi_value RdbStoreProxy::RollBack(napi_env env, napi_callback_info info)
-{
-    LOG_DEBUG("RdbStoreProxy::Rollback on called.");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "Rollback",
-        [](RdbStoreContext *context) {
-                RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-                int errCode = obj->rdbStore_->RollBack();
-                LOG_DEBUG("RdbStoreProxy::Rollback errCode is : %{public}d", errCode);
-                return (errCode == E_OK) ? OK : ERR;
-            },
-        [](RdbStoreContext *context, napi_value &output) {
-                napi_status status = napi_get_undefined(context->env, &output);
-                return (status == napi_ok) ? OK : ERR;
-            });
-}
-
 napi_value RdbStoreProxy::RollBackSync(napi_env env, napi_callback_info info)
 {
     napi_value thisObj = nullptr;
@@ -783,27 +739,6 @@ napi_value RdbStoreProxy::RollBackSync(napi_env env, napi_callback_info info)
     rdbStoreProxy->Release(env);
     LOG_DEBUG("RollBack");
     return nullptr;
-}
-
-napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
-{
-    LOG_DEBUG("RdbStoreProxy::Commit on called.");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "Commit",
-        [](RdbStoreContext *context) {
-                RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-                int errCode = obj->rdbStore_->Commit();
-                LOG_DEBUG("RdbStoreProxy::Commit errCode is : %{public}d", errCode);
-                return (errCode == E_OK) ? OK : ERR;
-            },
-        [](RdbStoreContext *context, napi_value &output) {
-                napi_status status = napi_get_undefined(context->env, &output);
-                return (status == napi_ok) ? OK : ERR;
-            });
 }
 
 napi_value RdbStoreProxy::CommitSync(napi_env env, napi_callback_info info)
