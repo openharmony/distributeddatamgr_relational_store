@@ -745,9 +745,9 @@ napi_value RdbStoreProxy::BeginTransactionSync(napi_env env, napi_callback_info 
     napi_value thisObj = nullptr;
     NAPI_CALL(env,  napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr));
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_CALL(env, napi_unwrap(env, thisObj, reinterpret_cast<void **>(&rdbStoreProxy)));
     int errCode = rdbStoreProxy->rdbStore_->BeginTransaction();
     NAPI_ASSERT(env, errCode == E_OK, "call BeginTransaction failed");
+    rdbStoreProxy->Release(env);
     LOG_DEBUG("BeginTransaction");
     return nullptr;
 }
@@ -778,9 +778,9 @@ napi_value RdbStoreProxy::RollBackSync(napi_env env, napi_callback_info info)
     napi_value thisObj = nullptr;
     NAPI_CALL(env,  napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr));
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_CALL(env, napi_unwrap(env, thisObj, reinterpret_cast<void **>(&rdbStoreProxy)));
     int errCode = rdbStoreProxy->rdbStore_->RollBack();
     NAPI_ASSERT(env, errCode == E_OK, "call RollBack failed");
+    rdbStoreProxy->Release(env);
     LOG_DEBUG("RollBack");
     return nullptr;
 }
@@ -811,9 +811,9 @@ napi_value RdbStoreProxy::CommitSync(napi_env env, napi_callback_info info)
     napi_value thisObj = nullptr;
     NAPI_CALL(env,  napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr));
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_CALL(env, napi_unwrap(env, thisObj, reinterpret_cast<void **>(&rdbStoreProxy)));
     int errCode = rdbStoreProxy->rdbStore_->Commit();
     NAPI_ASSERT(env, errCode == E_OK, "call Commit failed");
+    rdbStoreProxy->Release(env);
     LOG_DEBUG("Commit");
     return nullptr;
 }
