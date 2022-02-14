@@ -15,7 +15,7 @@
 
 #include "napi_data_ability_predicates.h"
 
-#include "common.h"
+#include "js_logger.h"
 #include "js_utils.h"
 #include "napi_async_proxy.h"
 

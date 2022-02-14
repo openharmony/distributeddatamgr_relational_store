@@ -18,16 +18,32 @@
 #include <iostream>
 #include <string>
 
+#include "ability.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "napi_base_context.h"
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
+class Context {
+public:
+    Context(std::shared_ptr<AbilityRuntime::Context> stageContext);
+    Context(AppExecFwk::Ability *featureAbility);
+    std::string GetDatabaseDir();
+    std::string GetPreferencesDir();
+    std::string GetBundleName();
+
+private:
+    std::string databaseDir_;
+    std::string preferencesDir_;
+    std::string bundleName_;
+};
+
 class JSAbility final {
 public:
-  static std::string GetDatabaseDir(napi_env env);
-  static std::string GetBundleName(napi_env env);
+    static bool CheckContext(napi_env env, napi_callback_info info);
+    static std::shared_ptr<Context> GetContext(napi_env env, napi_value object);
 };
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
