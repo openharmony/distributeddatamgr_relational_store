@@ -48,7 +48,8 @@
         "ram": "",
         "deps": {
             "components": [
-                "ability_manager",
+                "ability_base",
+                "ability_runtime",
                 "want",
                 "appexecfwk_base",
                 "appexecfwk_core",
