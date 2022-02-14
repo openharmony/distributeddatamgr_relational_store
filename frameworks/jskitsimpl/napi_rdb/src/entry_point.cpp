@@ -17,7 +17,6 @@
 #include "napi_rdb_store.h"
 #include "napi_rdb_store_helper.h"
 #include "napi/native_api.h"
-#include "napi/native_node_api.h"
 
 using namespace OHOS::RdbJsKit;
 

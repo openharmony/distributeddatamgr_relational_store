@@ -15,101 +15,74 @@
 
 #include "js_ability.h"
 
-#include "hilog/log.h"
-
-#ifdef STANDARD_SYSTEM_ENABLE
-#include "ability.h"
-#else
-#include "js_utils.h"
-#endif
+#include "js_logger.h"
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
-static const OHOS::HiviewDFX::HiLogLabel PREFIX_LABEL = { LOG_CORE, 0xD001650, "JOHOS_JsKit_Ability" };
-
-#define LOG_DEBUG(...) ((void)OHOS::HiviewDFX::HiLog::Debug(PREFIX_LABEL, __VA_ARGS__))
-#define LOG_INFO(...) ((void)OHOS::HiviewDFX::HiLog::Info(PREFIX_LABEL, __VA_ARGS__))
-#define LOG_WARN(...) ((void)OHOS::HiviewDFX::HiLog::Warn(PREFIX_LABEL, __VA_ARGS__))
-#define LOG_ERROR(...) ((void)OHOS::HiviewDFX::HiLog::Error(PREFIX_LABEL, __VA_ARGS__))
-
-#ifdef STANDARD_SYSTEM_ENABLE
-static AppExecFwk::Ability* GetAbility(napi_env env)
+Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
 {
-    napi_value global = nullptr;
-    napi_status status = napi_get_global(env, &global);
-    if (status != napi_ok || global == nullptr) {
-        LOG_ERROR("Cannot get global instance for %{public}d", status);
+    databaseDir_ = stageContext->GetDatabaseDir();
+    preferencesDir_ = stageContext->GetStorageDir();
+    bundleName_ = stageContext->GetBundleName();
+    LOG_DEBUG("ParseContext databaseDir_=%{public}s, preferencesDir_=%{public}s, bundleName_=%{public}s",
+        databaseDir_.c_str(), preferencesDir_.c_str(), bundleName_.c_str());
+}
+
+Context::Context(AppExecFwk::Ability *featureAbility)
+{
+    databaseDir_ = featureAbility->GetDatabaseDir();
+    preferencesDir_ = featureAbility->GetPreferencesDir();
+    bundleName_ = featureAbility->GetBundleName();
+    LOG_DEBUG("ParseContext databaseDir_=%{public}s, preferencesDir_=%{public}s, bundleName_=%{public}s",
+        databaseDir_.c_str(), preferencesDir_.c_str(), bundleName_.c_str());
+}
+
+std::string Context::GetDatabaseDir()
+{
+    return databaseDir_;
+}
+
+std::string Context::GetPreferencesDir()
+{
+    return preferencesDir_;
+}
+
+std::string Context::GetBundleName()
+{
+    return bundleName_;
+}
+
+bool JSAbility::CheckContext(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    bool mode = false;
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    napi_status status = AbilityRuntime::IsStageContext(env, args[0], mode);
+    LOG_DEBUG("Check context as stage mode, mode is %{public}d, status is %{public}d", mode, status == napi_ok);
+    return status == napi_ok;
+}
+
+std::shared_ptr<Context> JSAbility::GetContext(napi_env env, napi_value value)
+{
+    bool mode = false;
+    AbilityRuntime::IsStageContext(env, value, mode);
+    if (mode) {
+        LOG_DEBUG("Get context as stage mode.");
+        auto stageContext = AbilityRuntime::GetStageModeContext(env, value);
+        if (stageContext == nullptr) {
+            LOG_ERROR("GetStageModeContext failed.");
+            return nullptr;
+        }
+        return std::make_shared<Context>(stageContext);
+    }
+    LOG_DEBUG("Get context as feature ability mode.");
+    auto featureAbility = AbilityRuntime::GetCurrentAbility(env);
+    if (featureAbility == nullptr) {
+        LOG_ERROR("GetCurrentAbility failed.");
         return nullptr;
     }
-    
-    napi_value abilityContext = nullptr;
-    status = napi_get_named_property(env, global, "ability", &abilityContext);
-    if (status != napi_ok || abilityContext == nullptr) {
-        LOG_ERROR("Cannot get ability context for %{public}d", status);
-        return nullptr;
-    }
-    
-    AppExecFwk::Ability *ability = nullptr;
-    status = napi_get_value_external(env, abilityContext, (void **)&ability);
-    if (status != napi_ok || ability == nullptr) {
-        LOG_ERROR("Get ability form property failed for %{public}d", status);
-        return nullptr;
-    }
-    return ability;
+    return std::make_shared<Context>(featureAbility);
 }
-
-std::string JSAbility::GetDatabaseDir(napi_env env)
-{
-    AppExecFwk::Ability* ability = GetAbility(env);
-    if (ability == nullptr) {
-        return std::string();
-    }
-    return ability->GetDatabaseDir();
-}
-
-std::string JSAbility::GetBundleName(napi_env env)
-{
-    AppExecFwk::Ability* ability = GetAbility(env);
-    if (ability == nullptr) {
-        return std::string();
-    }
-    return ability->GetBundleName();
-}
-#else
-std::string JSAbility::GetDatabaseDir(napi_env env)
-{
-    napi_value global = nullptr;
-    napi_status status = napi_get_global(env, &global);
-    NAPI_ASSERT(env, status == napi_ok, "napi get global failed!");
-
-    napi_value ohosPlugin = nullptr;
-    status = napi_get_named_property(env, global, "ohosplugin", &ohosPlugin);
-    NAPI_ASSERT(env, status == napi_ok, "napi get ohosplugin failed!");
-
-    napi_value app = nullptr;
-    status = napi_get_named_property(env, ohosPlugin, "app", &app);
-    NAPI_ASSERT(env, status == napi_ok, "napi get app failed!");
-
-    napi_value context = nullptr;
-    status = napi_get_named_property(env, app, "context", &context);
-    NAPI_ASSERT(env, status == napi_ok, "napi get context failed!");
-
-    napi_value getDatabaseDirSync = nullptr;
-    status = napi_get_named_property(env, context, "getDatabaseDirSync", &getDatabaseDirSync);
-    NAPI_ASSERT(env, status == napi_ok, "napi get getDatabaseDirSync failed!");
-
-    napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, getDatabaseDirSync, &valueType);
-    NAPI_ASSERT(env, valueType == napi_function, "getDatabaseDirSync is not napi_function!");
-
-    napi_value callbackResult = nullptr;
-    status = napi_call_function(env, context, getDatabaseDirSync, 0, nullptr, &callbackResult);
-    NAPI_ASSERT(env, status == napi_ok, "napi call getDatabaseDirSync failed!");
-
-    std::string databaseDir = JSUtils::Convert2String(env, callbackResult, JSUtils::DEFAULT_BUF_SIZE);
-    LOG_DEBUG("getDatabaseDirSync is %{public}s!", databaseDir.c_str());
-    return databaseDir;
-}
-#endif
 } // namespace AppDataMgrJsKit
 } // namespace OHOS

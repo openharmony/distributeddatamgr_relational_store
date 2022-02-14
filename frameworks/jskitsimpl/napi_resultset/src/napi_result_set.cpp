@@ -17,8 +17,8 @@
 
 #include <functional>
 
-#include "common.h"
 #include "abs_shared_result_set.h"
+#include "js_logger.h"
 #include "js_utils.h"
 #include "napi_async_proxy.h"
 #include "string_ex.h"

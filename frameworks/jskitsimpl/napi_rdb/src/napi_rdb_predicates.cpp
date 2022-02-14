@@ -15,9 +15,8 @@
 
 #include "napi_rdb_predicates.h"
 
-#include "common.h"
+#include "js_logger.h"
 #include "js_utils.h"
-#include "napi_async_proxy.h"
 
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
