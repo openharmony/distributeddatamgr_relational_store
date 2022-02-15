@@ -725,7 +725,7 @@ napi_value RdbStoreProxy::BeginTransactionSync(napi_env env, napi_callback_info 
     int errCode = rdbStoreProxy->rdbStore_->BeginTransaction();
     NAPI_ASSERT(env, errCode == E_OK, "call BeginTransaction failed");
     rdbStoreProxy->Release(env);
-    LOG_DEBUG("BeginTransaction");
+    LOG_DEBUG("RdbStoreProxy::BeginTransaction end, errCode is:%{public}d", errCode);
     return nullptr;
 }
 
@@ -737,7 +737,7 @@ napi_value RdbStoreProxy::RollBackSync(napi_env env, napi_callback_info info)
     int errCode = rdbStoreProxy->rdbStore_->RollBack();
     NAPI_ASSERT(env, errCode == E_OK, "call RollBack failed");
     rdbStoreProxy->Release(env);
-    LOG_DEBUG("RollBack");
+    LOG_DEBUG("RdbStoreProxy::RollBack end, errCode is:%{public}d", errCode);
     return nullptr;
 }
 
@@ -749,7 +749,7 @@ napi_value RdbStoreProxy::CommitSync(napi_env env, napi_callback_info info)
     int errCode = rdbStoreProxy->rdbStore_->Commit();
     NAPI_ASSERT(env, errCode == E_OK, "call Commit failed");
     rdbStoreProxy->Release(env);
-    LOG_DEBUG("Commit");
+    LOG_DEBUG("RdbStoreProxy::Commit end, errCode is:%{public}d", errCode);
     return nullptr;
 }
 
