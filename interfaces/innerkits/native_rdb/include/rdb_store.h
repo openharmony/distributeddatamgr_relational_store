@@ -111,9 +111,9 @@ public:
     
     virtual bool Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) = 0;
     
-    virtual bool Subscribe(const SubscribeOption& option, const RdbStoreObserver& observer) = 0;
+    virtual bool Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
     
-    virtual bool UnSubscribe(const SubscribeOption& option, const RdbStoreObserver& observer) = 0;
+    virtual bool UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
     
     // user must use UDID
     virtual bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) = 0;

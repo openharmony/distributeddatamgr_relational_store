@@ -111,9 +111,9 @@ public:
     
     bool Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) override;
     
-    bool Subscribe(const SubscribeOption& option, const RdbStoreObserver& observer) override;
+    bool Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;
     
-    bool UnSubscribe(const SubscribeOption& option, const RdbStoreObserver& observer) override;
+    bool UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;
     
     // user must use UDID
     bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) override;
