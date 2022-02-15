@@ -172,9 +172,9 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("backup", Backup),
         DECLARE_NAPI_FUNCTION("count", Count),
         DECLARE_NAPI_FUNCTION("addAttach", Attach),
-        DECLARE_NAPI_FUNCTION("beginTransactionSync", BeginTransactionSync),
-        DECLARE_NAPI_FUNCTION("rollBackSync", RollBackSync),
-        DECLARE_NAPI_FUNCTION("commitSync", CommitSync),
+        DECLARE_NAPI_FUNCTION("beginTransaction", BeginTransaction),
+        DECLARE_NAPI_FUNCTION("rollBack", RollBack),
+        DECLARE_NAPI_FUNCTION("commit", Commit),
         DECLARE_NAPI_FUNCTION("queryByStep", QueryByStep),
         DECLARE_NAPI_GETTER_SETTER("version", GetVersion, SetVersion),
         DECLARE_NAPI_FUNCTION("markAsCommit", MarkAsCommit),
@@ -717,7 +717,7 @@ napi_value RdbStoreProxy::GetPath(napi_env env, napi_callback_info info)
     return JSUtils::Convert2JSValue(env, path);
 }
 
-napi_value RdbStoreProxy::BeginTransactionSync(napi_env env, napi_callback_info info)
+napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info)
 {
     napi_value thisObj = nullptr;
     NAPI_CALL(env,  napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr));
@@ -729,7 +729,7 @@ napi_value RdbStoreProxy::BeginTransactionSync(napi_env env, napi_callback_info 
     return nullptr;
 }
 
-napi_value RdbStoreProxy::RollBackSync(napi_env env, napi_callback_info info)
+napi_value RdbStoreProxy::RollBack(napi_env env, napi_callback_info info)
 {
     napi_value thisObj = nullptr;
     NAPI_CALL(env,  napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr));
@@ -741,7 +741,7 @@ napi_value RdbStoreProxy::RollBackSync(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
-napi_value RdbStoreProxy::CommitSync(napi_env env, napi_callback_info info)
+napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
 {
     napi_value thisObj = nullptr;
     NAPI_CALL(env,  napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr));
