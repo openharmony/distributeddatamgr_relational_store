@@ -430,8 +430,9 @@ int RdbStoreImpl::BeginTransaction()
     int errCode = session->BeginTransaction();
     if (errCode != E_OK) {
         ReleaseThreadSession();
+        return errCode;
     }
-    return errCode;
+    return E_OK;
 }
 
 /**
@@ -443,8 +444,9 @@ int RdbStoreImpl::RollBack()
     int errCode = session->RollBack();
     if (errCode != E_OK) {
         ReleaseThreadSession();
+        return errCode;
     }
-    return errCode;
+    return E_OK;
 }
 
 /**
@@ -457,8 +459,9 @@ int RdbStoreImpl::Commit()
     int errCode = session->Commit();
     if (errCode != E_OK) {
         ReleaseThreadSession();
+        return errCode;
     }
-    return errCode;
+    return E_OK;
 }
 
 int RdbStoreImpl::BeginTransactionWithObserver(TransactionObserver *transactionObserver)
