@@ -282,5 +282,64 @@ describe('rdbStoreDistributedTest', function () {
         done()
         console.log(TAG + "************* testRdbStoreDistributed0010 end *************");
     })
+
+    /**
+     * @tc.name sync test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_011
+     * @tc.desc sync test
+     */
+    it('testRdbStoreDistributed0011', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreDistributed0011 start *************");
+        {
+            let predicates = new dataRdb.RdbPredicates("employee")
+            predicates = predicates.inAllDevices();
+            let promise = rdbStore.sync(dataRdb.SyncMode.SYNC_MODE_PUSH, predicates);
+            promise.then((result) => {
+                console.log(TAG + "sync success");
+                expect(rdbStore).assertEqual(rdbStore);
+            }).catch((err) => {
+                console.log(TAG + "sync failed");
+            })
+        }
+
+        done()
+        console.log(TAG + "************* testRdbStoreDistributed0011 end *************");
+    })
+
+    /**
+     * @tc.name subscribe test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_012
+     * @tc.desc subscribe test
+     */
+    it('testRdbStoreDistributed0012', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreDistributed0012 start *************");
+        {
+            rdbStore.on("dataChange", (device) => {
+                console.log(TAG + device + " dataChange");
+            });
+            expect(rdbStore).assertEqual(rdbStore);
+        }
+
+        done()
+        console.log(TAG + "************* testRdbStoreDistributed0012 end *************");
+    })
+
+    /**
+     * @tc.name subscribe test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_013
+     * @tc.desc subscribe test
+     */
+    it('testRdbStoreDistributed0013', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreDistributed0013 start *************");
+        {
+            rdbStore.off("dataChange", (device) => {
+                console.log(TAG + device + " dataChange");
+            });
+            expect(rdbStore).assertEqual(rdbStore);
+        }
+
+        done()
+        console.log(TAG + "************* testRdbStoreDistributed0013 end *************");
+    })
     console.log(TAG + "*************Unit Test End*************");
 })
