@@ -50,8 +50,6 @@
             "components": [
                 "ability_manager",
                 "want",
-                "appexecfwk_base",
-                "appexecfwk_core",
                 "libhilog",
                 "ipc_core",
                 "ace_napi",

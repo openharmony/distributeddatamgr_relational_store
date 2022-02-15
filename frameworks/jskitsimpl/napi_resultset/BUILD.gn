@@ -45,11 +45,6 @@ ohos_shared_library("resultset") {
 
   if (is_standard_system) {
     defines = [ "STANDARD_SYSTEM_ENABLE" ]
-
-    external_deps += [
-      "bundle_framework:appexecfwk_base",
-      "bundle_framework:appexecfwk_core",
-    ]
   }
 
   subsystem_name = "distributeddatamgr"
