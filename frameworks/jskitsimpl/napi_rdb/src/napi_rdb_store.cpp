@@ -986,19 +986,19 @@ napi_value RdbStoreProxy::ObtainDistributedTableName(napi_env env, napi_callback
     parsers.push_back(ParseTableName);
     proxy.ParseInputs(parsers, ParseThis);
     return proxy.DoAsyncWork(
-            "ObtainDistributedTableName",
-            [](RdbStoreContext *context) {
-                RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-                auto name = obj->rdbStore_->ObtainDistributedTableName(context->device, context->tableName);
-                LOG_INFO("RdbStoreProxy::ObtainDistributedTableName: %{public}s", name.c_str());
-                context->tableName = name;
-                return name.empty() ? ERR : OK;
-            },
-            [](RdbStoreContext *context, napi_value &output) {
-                napi_status status = napi_create_string_utf8(context->env, context->tableName.c_str(),
-                                                             context->tableName.length(), &output);
-                return (status == napi_ok) ? OK : ERR;
-            });
+        "ObtainDistributedTableName",
+        [](RdbStoreContext *context) {
+            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+            auto name = obj->rdbStore_->ObtainDistributedTableName(context->device, context->tableName);
+            LOG_INFO("RdbStoreProxy::ObtainDistributedTableName: %{public}s", name.c_str());
+            context->tableName = name;
+            return name.empty() ? ERR : OK;
+        },
+        [](RdbStoreContext *context, napi_value &output) {
+            napi_status status = napi_create_string_utf8(context->env, context->tableName.c_str(),
+                                                         context->tableName.length(), &output);
+            return (status == napi_ok) ? OK : ERR;
+        });
 }
 
 napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
@@ -1010,23 +1010,23 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
     parsers.push_back(ParsePredicates);
     proxy.ParseInputs(parsers, ParseThis);
     return proxy.DoAsyncWork(
-            "Sync",
-            [](RdbStoreContext *context) {
-                auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-                SyncOption option;
-                option.mode = static_cast<DistributedRdb::SyncMode>(context->enumArg);
-                option.isBlock = true;
-                bool res = obj->rdbStore_->Sync(option, *context->predicatesProxy->GetPredicates(),
-                                                [context](const SyncResult& result) {
-                    context->syncResult = result;
-                });
-                LOG_INFO("RdbStoreProxy Sync: res=%{public}d", res);
-                return res ? OK : ERR;
-            },
-            [](RdbStoreContext *context, napi_value &output) {
-                output = JSUtils::Convert2JSValue(context->env, context->syncResult);
-                return (output != nullptr) ? OK : ERR;
-            });
+        "Sync",
+        [](RdbStoreContext *context) {
+            auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+            SyncOption option;
+            option.mode = static_cast<DistributedRdb::SyncMode>(context->enumArg);
+            option.isBlock = true;
+            bool res = obj->rdbStore_->Sync(option, *context->predicatesProxy->GetPredicates(),
+                                            [context](const SyncResult& result) {
+                                                context->syncResult = result;
+                                            });
+            LOG_INFO("RdbStoreProxy Sync: res=%{public}d", res);
+            return res ? OK : ERR;
+        },
+        [](RdbStoreContext *context, napi_value &output) {
+            output = JSUtils::Convert2JSValue(context->env, context->syncResult);
+            return (output != nullptr) ? OK : ERR;
+        });
 }
 
 void RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value* argv)
