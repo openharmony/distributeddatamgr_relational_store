@@ -707,7 +707,7 @@ bool RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predic
     return true;
 }
 
-bool RdbStoreImpl::Subscribe(const SubscribeOption &option, const RdbStoreObserver &observer)
+bool RdbStoreImpl::Subscribe(const SubscribeOption &option, RdbStoreObserver *observer)
 {
     LOG_INFO("enter");
     auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
@@ -717,7 +717,7 @@ bool RdbStoreImpl::Subscribe(const SubscribeOption &option, const RdbStoreObserv
     return service->Subscribe(syncerParam_, option, observer) == 0;
 }
 
-bool RdbStoreImpl::UnSubscribe(const SubscribeOption &option, const RdbStoreObserver& observer)
+bool RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *observer)
 {
     LOG_INFO("enter");
     auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);

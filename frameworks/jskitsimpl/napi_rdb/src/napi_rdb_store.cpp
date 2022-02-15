@@ -1061,7 +1061,7 @@ void RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value* arg
     SubscribeOption option;
     option.mode = static_cast<SubscribeMode>(mode);
     auto observer = std::make_shared<NapiRdbStoreObserver>(env, argv[1]);
-    if (!rdbStore_->Subscribe(option, *observer)) {
+    if (!rdbStore_->Subscribe(option, observer.get())) {
         LOG_ERROR("OnDataChangeEvent: subscribe failed");
         return;
     }
@@ -1096,7 +1096,7 @@ void RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value* ar
     std::lock_guard<std::mutex> lockGuard(mutex_);
     for (auto it = observers_[mode].begin(); it != observers_[mode].end(); it++) {
         if (**it == argv[1]) {
-            rdbStore_->UnSubscribe(option, **it);
+            rdbStore_->UnSubscribe(option, it->get());
             observers_[mode].erase(it);
             LOG_INFO("OffDataChangeEvent: unsubscribe success");
             return;
