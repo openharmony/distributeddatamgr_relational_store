@@ -59,7 +59,7 @@ describe('rdbStoreInsertTest', function () {
         console.log(TAG + "************* testRdbStoreInsert0001 start *************");
         var u8 = new Uint8Array([1, 2, 3])
         try {
-            rdbStore.beginTransactionSync()
+            rdbStore.beginTransaction()
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -68,7 +68,7 @@ describe('rdbStoreInsertTest', function () {
             }
             await rdbStore.insert("test", valueBucket)
 
-            rdbStore.commitSync()
+            rdbStore.commit()
 
             let predicates = new dataRdb.RdbPredicates("test");
             let resultSet = await rdbStore.query(predicates)
@@ -93,7 +93,7 @@ describe('rdbStoreInsertTest', function () {
         console.log(TAG + "************* testRdbStoreInsert0002 start *************");
         var u8 = new Uint8Array([1, 2, 3])
         try {
-            rdbStore.beginTransactionSync()
+            rdbStore.beginTransaction()
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -119,7 +119,7 @@ describe('rdbStoreInsertTest', function () {
             }
             await rdbStore.insert("test", valueBucket2)
 
-            rdbStore.commitSync()
+            rdbStore.commit()
 
             let predicates = new dataRdb.RdbPredicates("test");
             let resultSet = await rdbStore.query(predicates)
@@ -144,7 +144,7 @@ describe('rdbStoreInsertTest', function () {
         console.log(TAG + "************* testRdbTransactionInsert0003 start *************");
         var u8 = new Uint8Array([1, 2, 3])
         try {
-            rdbStore.beginTransactionSync()
+            rdbStore.beginTransaction()
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -173,7 +173,7 @@ describe('rdbStoreInsertTest', function () {
             }
             await rdbStore.insert("test", valueBucket2)
 
-            rdbStore.commitSync()
+            rdbStore.commit()
         } catch (e) {
             expect(null).assertFail()
             console.log(TAG + "testRdbTransactionInsert0003 failed");
@@ -192,7 +192,7 @@ describe('rdbStoreInsertTest', function () {
         console.log(TAG + "************* testRdbTransactionRollBack0001 start *************");
         var u8 = new Uint8Array([1, 2, 3])
         try {
-            rdbStore.beginTransactionSync()
+            rdbStore.beginTransaction()
             const valueBucket = {
                 "id": 1,
                 "name": "lisi",
@@ -203,9 +203,9 @@ describe('rdbStoreInsertTest', function () {
             await rdbStore.insert("test", valueBucket)
             await rdbStore.insert("test", valueBucket)
 
-            rdbStore.commitSync()
+            rdbStore.commit()
         } catch (e) {
-            rdbStore.rollBackSync()
+            rdbStore.rollBack()
             let predicates = new dataRdb.RdbPredicates("test");
             let resultSet = await rdbStore.query(predicates)
             console.log(TAG + "testRdbTransactionRollBack0001 result count " + resultSet.rowCount);
@@ -226,7 +226,7 @@ describe('rdbStoreInsertTest', function () {
         console.log(TAG + "************* testRdbTransactionMulti0001 start *************");
         var u8 = new Uint8Array([1, 2, 3])
         try {
-            rdbStore.beginTransactionSync()
+            rdbStore.beginTransaction()
             const valueBucket = {
                 "id": 1,
                 "name": "lisi",
@@ -236,7 +236,7 @@ describe('rdbStoreInsertTest', function () {
             }
             await rdbStore.insert("test", valueBucket)
 
-            rdbStore.beginTransactionSync()
+            rdbStore.beginTransaction()
             const valueBucket1 = {
                 "name": "zhangsan",
                 "age": 20,
@@ -249,7 +249,7 @@ describe('rdbStoreInsertTest', function () {
                 expect(2).assertEqual(ret)
             })
 
-            rdbStore.commitSync()
+            rdbStore.commit()
 
             let predicates = new dataRdb.RdbPredicates("test");
             num =  rdbStore.query(predicates)
@@ -274,7 +274,7 @@ describe('rdbStoreInsertTest', function () {
         console.log(TAG + "************* testRdbTransactionMulti0002 start *************");
         var u8 = new Uint8Array([1, 2, 3])
         try {
-            rdbStore.beginTransactionSync()
+            rdbStore.beginTransaction()
             const valueBucket = {
                 "id": 1,
                 "name": "lisi",
@@ -286,7 +286,7 @@ describe('rdbStoreInsertTest', function () {
 
             });
 
-            rdbStore.beginTransactionSync()
+            rdbStore.beginTransaction()
             const valueBucket1 = {
                 "name": "zhangsan",
                 "age": 20,
@@ -300,9 +300,9 @@ describe('rdbStoreInsertTest', function () {
                 ret.close()
             })
 
-            rdbStore.rollBackSync()
+            rdbStore.rollBack()
 
-            rdbStore.commitSync()
+            rdbStore.commit()
 
             let predicates = new dataRdb.RdbPredicates("test");
             num =  rdbStore.query(predicates)
@@ -328,7 +328,7 @@ describe('rdbStoreInsertTest', function () {
         console.log(TAG + "************* testRdbTransactionMulti0003 start *************");
         var u8 = new Uint8Array([1, 2, 3])
         try {
-            rdbStore.beginTransactionSync()
+            rdbStore.beginTransaction()
             const valueBucket = {
                 "id": 1,
                 "name": "lisi",
@@ -340,7 +340,7 @@ describe('rdbStoreInsertTest', function () {
 
             });
 
-            rdbStore.beginTransactionSync()
+            rdbStore.beginTransaction()
             const valueBucket1 = {
                 "name": "zhangsan",
                 "age": 20,
@@ -349,10 +349,10 @@ describe('rdbStoreInsertTest', function () {
             }
             let num = await rdbStore.insert("test", valueBucket1)
 
-            rdbStore.rollBackSync()
+            rdbStore.rollBack()
 
             await rdbStore.insert("test", valueBucket)
-            rdbStore.commitSync()
+            rdbStore.commit()
 
             let predicates = new dataRdb.RdbPredicates("test");
             num =  rdbStore.query(predicates)
@@ -362,7 +362,7 @@ describe('rdbStoreInsertTest', function () {
                 ret.close()
             })
         } catch (e) {
-            rdbStore.rollBackSync()
+            rdbStore.rollBack()
             console.log(TAG + "testRdbTransactionMulti0003 rollback ***** ");
         }
         done()
