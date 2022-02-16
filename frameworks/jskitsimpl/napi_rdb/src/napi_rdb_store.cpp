@@ -741,64 +741,38 @@ napi_value RdbStoreProxy::GetPath(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info)
 {
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    proxy.ParseInputs(parsers, ParseThis);
-
-    return proxy.DoAsyncWork(
-        "BeginTransaction",
-        [](RdbStoreContext *context) {
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            int out = obj->rdbStore_->BeginTransaction();
-            return out;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_get_undefined(context->env, &output);
-            return (status == napi_ok) ? OK : ERR;
-        });
+    napi_value thisObj = nullptr;
+    NAPI_CALL(env,  napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr));
+    RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
+    int errCode = rdbStoreProxy->rdbStore_->BeginTransaction();
+    NAPI_ASSERT(env, errCode == E_OK, "call BeginTransaction failed");
+    rdbStoreProxy->Release(env);
+    LOG_DEBUG("RdbStoreProxy::BeginTransaction end, errCode is:%{public}d", errCode);
+    return nullptr;
 }
 
 napi_value RdbStoreProxy::RollBack(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::Rollback on called.");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "Rollback",
-        [](RdbStoreContext *context) {
-                RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-                int errCode = obj->rdbStore_->RollBack();
-                LOG_DEBUG("RdbStoreProxy::Rollback errCode is : %{public}d", errCode);
-                return (errCode == E_OK) ? OK : ERR;
-            },
-        [](RdbStoreContext *context, napi_value &output) {
-                napi_status status = napi_get_undefined(context->env, &output);
-                return (status == napi_ok) ? OK : ERR;
-            });
+    napi_value thisObj = nullptr;
+    NAPI_CALL(env,  napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr));
+    RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
+    int errCode = rdbStoreProxy->rdbStore_->RollBack();
+    NAPI_ASSERT(env, errCode == E_OK, "call RollBack failed");
+    rdbStoreProxy->Release(env);
+    LOG_DEBUG("RdbStoreProxy::RollBack end, errCode is:%{public}d", errCode);
+    return nullptr;
 }
 
 napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::Commit on called.");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "Commit",
-        [](RdbStoreContext *context) {
-                RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-                int errCode = obj->rdbStore_->Commit();
-                LOG_DEBUG("RdbStoreProxy::Commit errCode is : %{public}d", errCode);
-                return (errCode == E_OK) ? OK : ERR;
-            },
-        [](RdbStoreContext *context, napi_value &output) {
-                napi_status status = napi_get_undefined(context->env, &output);
-                return (status == napi_ok) ? OK : ERR;
-            });
+    napi_value thisObj = nullptr;
+    NAPI_CALL(env,  napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr));
+    RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
+    int errCode = rdbStoreProxy->rdbStore_->Commit();
+    NAPI_ASSERT(env, errCode == E_OK, "call Commit failed");
+    rdbStoreProxy->Release(env);
+    LOG_DEBUG("RdbStoreProxy::Commit end, errCode is:%{public}d", errCode);
+    return nullptr;
 }
 
 napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
