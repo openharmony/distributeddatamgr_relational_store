@@ -51,8 +51,6 @@
                 "ability_base",
                 "ability_runtime",
                 "want",
-                "appexecfwk_base",
-                "appexecfwk_core",
                 "libhilog",
                 "ipc_core",
                 "ace_napi",
