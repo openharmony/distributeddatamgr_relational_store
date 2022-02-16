@@ -420,7 +420,7 @@ size_t SharedBlock::SetRawData(const void *rawData, size_t size)
         return SHARED_BLOCK_NO_MEMORY;
     }
 
-    error_t result = memcpy_s(mHeader, mSize, rawData, size);
+    int result = memcpy_s(mHeader, mSize, rawData, size);
     if (result != 0) {
         return SHARED_BLOCK_NO_MEMORY;
     }
