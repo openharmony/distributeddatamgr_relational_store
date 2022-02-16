@@ -436,7 +436,7 @@ int StoreSession::ExecuteForSharedBlock(int &rowNum, std::string sql, const std:
     AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows)
 {
     int errCode = BeginExecuteSql(sql);
-    if (errCode != 0) {
+    if (errCode != E_OK) {
         return errCode;
     }
     errCode =

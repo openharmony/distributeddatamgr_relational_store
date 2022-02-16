@@ -14,10 +14,11 @@
  */
 #include "napi_preference_helper.h"
 
-#include <string>
 #include <linux/limits.h>
 
-#include "common.h"
+#include <string>
+
+#include "js_logger.h"
 #include "napi_async_proxy.h"
 #include "napi_preference.h"
 #include "preferences_errno.h"

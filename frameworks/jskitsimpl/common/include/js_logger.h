@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef RDB_JSKIT_COMMON_H
-#define RDB_JSKIT_COMMON_H
+#ifndef RDB_JSKIT_LOGGER_H
+#define RDB_JSKIT_LOGGER_H
 
 #include <string>
 #include <vector>

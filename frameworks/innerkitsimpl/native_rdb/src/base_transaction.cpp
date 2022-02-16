@@ -35,10 +35,12 @@ void BaseTransaction::SetAllBeforeSuccessful(bool allBeforeSuccessful)
 {
     this->allBeforeSuccessful = allBeforeSuccessful;
 }
+
 bool BaseTransaction::IsMarkedSuccessful() const
 {
     return markedSuccessful;
 }
+
 void BaseTransaction::SetMarkedSuccessful(bool markedSuccessful)
 {
     this->markedSuccessful = markedSuccessful;
