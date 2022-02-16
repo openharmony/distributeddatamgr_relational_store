@@ -348,7 +348,7 @@ int SharedBlock::PutBlobOrString(uint32_t row, uint32_t column, const void *valu
     }
 
     if (size != 0) {
-        error_t result = memcpy_s(ptr, size, value, size);
+        int result = memcpy_s(ptr, size, value, size);
         if (result != EOK) {
             return SHARED_BLOCK_NO_MEMORY;
         }
