@@ -286,7 +286,7 @@ void ParsePath(const napi_env &env, const napi_value &arg, HelperRdbContext *asy
     std::string path = JSUtils::Convert2String(env, arg, JSUtils::DEFAULT_BUF_SIZE);
     NAPI_ASSERT_RETURN_VOID(env, !path.empty(), "Get database name empty.");
     size_t pos = path.find_first_of('/');
-    NAPI_ASSERT_RETURN_VOID(env, pos == strd::string::npos, "A name without path should be input.");
+    NAPI_ASSERT_RETURN_VOID(env, pos == std::string::npos, "A name without path should be input.");
 
     if (asyncContext->context == nullptr) {
         ParseContext(env, nullptr, asyncContext); // when no context as arg got from application.
