@@ -12,7 +12,7 @@
 # limitations under the License.
 import("//build/test.gni")
 
-module_output_path = "appdatamgr/native_preferences"
+module_output_path = "native_appdatamgr/native_preferences"
 
 ###############################################################################
 config("module_private_config") {
