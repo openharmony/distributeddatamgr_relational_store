@@ -46,7 +46,8 @@ static __thread napi_ref constructor_;
 
 PreferencesProxy::PreferencesProxy(std::shared_ptr<OHOS::NativePreferences::Preferences> &value)
     : value_(value), env_(nullptr), wrapper_(nullptr)
-{}
+{
+}
 
 PreferencesProxy::~PreferencesProxy()
 {
@@ -62,13 +63,14 @@ void PreferencesProxy::Destructor(napi_env env, void *nativeObject, void *finali
 void PreferencesProxy::Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor descriptors[] = {
-        DECLARE_NAPI_FUNCTION("putSync", SetValueSync),  DECLARE_NAPI_FUNCTION("put", SetValue),
-        DECLARE_NAPI_FUNCTION("getSync", GetValueSync),  DECLARE_NAPI_FUNCTION("get", GetValue),
-        DECLARE_NAPI_FUNCTION("deleteSync", DeleteSync), DECLARE_NAPI_FUNCTION("delete", Delete),
-        DECLARE_NAPI_FUNCTION("clearSync", ClearSync),   DECLARE_NAPI_FUNCTION("clear", Clear),
-        DECLARE_NAPI_FUNCTION("hasSync", HasKeySync),    DECLARE_NAPI_FUNCTION("has", HasKey),
-        DECLARE_NAPI_FUNCTION("flushSync", FlushSync),   DECLARE_NAPI_FUNCTION("flush", Flush),
-        DECLARE_NAPI_FUNCTION("on", RegisterObserver),   DECLARE_NAPI_FUNCTION("off", UnRegisterObserver),
+        DECLARE_NAPI_FUNCTION("put", SetValue),
+        DECLARE_NAPI_FUNCTION("get", GetValue),
+        DECLARE_NAPI_FUNCTION("delete", Delete),
+        DECLARE_NAPI_FUNCTION("clear", Clear),
+        DECLARE_NAPI_FUNCTION("has", HasKey),
+        DECLARE_NAPI_FUNCTION("flush", Flush),
+        DECLARE_NAPI_FUNCTION("on", RegisterObserver),
+        DECLARE_NAPI_FUNCTION("off", UnRegisterObserver),
     };
     napi_value cons = nullptr;
     napi_define_class(env, "Storage", NAPI_AUTO_LENGTH, New, nullptr,
@@ -82,7 +84,7 @@ napi_status PreferencesProxy::NewInstance(napi_env env, napi_value arg, napi_val
     napi_status status;
 
     const int argc = 1;
-    napi_value argv[argc] = {arg};
+    napi_value argv[argc] = { arg };
 
     napi_value cons;
     status = napi_get_reference_value(env, constructor_, &cons);
@@ -101,7 +103,7 @@ napi_status PreferencesProxy::NewInstance(napi_env env, napi_value arg, napi_val
 napi_value PreferencesProxy::New(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
-    napi_value args[1] = {0};
+    napi_value args[1] = { 0 };
     napi_value thiz = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
     if (thiz == nullptr) {
@@ -130,13 +132,12 @@ napi_value PreferencesProxy::New(napi_env env, napi_callback_info info)
     PreferencesProxy *obj = new PreferencesProxy(preference);
     obj->env_ = env;
     NAPI_CALL(env, napi_wrap(env, thiz, obj, PreferencesProxy::Destructor,
-        nullptr, // finalize_hint
-        &obj->wrapper_));
+                       nullptr, // finalize_hint
+                       &obj->wrapper_));
     return thiz;
 }
 
-template<typename T>
-bool CheckNumberType(double input)
+template<typename T> bool CheckNumberType(double input)
 {
     if (input > (std::numeric_limits<T>::max)() || input < (std::numeric_limits<T>::min)()) {
         return false;
@@ -149,55 +150,7 @@ bool IsFloat(double input)
     return abs(input - floor(input)) >= 0; // DBL_EPSILON;
 }
 
-napi_value PreferencesProxy::GetValueSync(napi_env env, napi_callback_info info)
-{
-    napi_value thiz = nullptr;
-    size_t argc = 2; // arg count
-    napi_value args[2] = {0};
-
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
-    NAPI_ASSERT(env, argc == 2, "Wrong number of arguments");
-    // get value type
-    napi_valuetype valueType = napi_undefined;
-    NAPI_CALL(env, napi_typeof(env, args[0], &valueType));
-    NAPI_ASSERT(env, valueType == napi_string, "type mismatch for key");
-
-    // get input key
-    char key[MAX_KEY_LENGTH] = {0};
-    size_t keySize = 0;
-    NAPI_CALL(env, napi_get_value_string_utf8(env, args[0], key, MAX_KEY_LENGTH, &keySize));
-    PreferencesProxy *obj = nullptr;
-    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&obj)));
-    NAPI_ASSERT(env, (obj != nullptr && obj->value_ != nullptr), "unwrap null native pointer");
-
-    napi_value output = nullptr;
-    NAPI_CALL(env, napi_typeof(env, args[1], &valueType));
-    if (valueType == napi_number) {
-        double value = 0.0;
-        NAPI_CALL(env, napi_get_value_double(env, args[1], &value));
-        double result = obj->value_->GetDouble(key, value);
-        NAPI_CALL(env, napi_create_double(env, result, &output)); // double
-    } else if (valueType == napi_string) {
-        char *value = new char[MAX_VALUE_LENGTH];
-        size_t valueSize = 0;
-        napi_get_value_string_utf8(env, args[1], value, MAX_VALUE_LENGTH, &valueSize);
-        // get value
-        std::string result = obj->value_->GetString(key, value);
-        delete[] value;
-        NAPI_CALL(env, napi_create_string_utf8(env, result.c_str(), result.size(), &output));
-    } else if (valueType == napi_boolean) {
-        bool value = false;
-        NAPI_CALL(env, napi_get_value_bool(env, args[1], &value));
-        // get value
-        bool result = obj->value_->GetBool(key, value);
-        NAPI_CALL(env, napi_get_boolean(env, result, &output));
-    } else {
-        NAPI_ASSERT(env, false, "Wrong second parameter type");
-    }
-    return output;
-}
-
-void ParseKey(const napi_env& env, const napi_value& arg, StorageAysncContext* asyncContext)
+void ParseKey(const napi_env &env, const napi_value &arg, StorageAysncContext *asyncContext)
 {
     // get input key
     char key[MAX_KEY_LENGTH] = { 0 };
@@ -206,7 +159,7 @@ void ParseKey(const napi_env& env, const napi_value& arg, StorageAysncContext* a
     asyncContext->key = key;
 }
 
-void ParseDefValue(const napi_env& env, const napi_value& arg, StorageAysncContext* asyncContext)
+void ParseDefValue(const napi_env &env, const napi_value &arg, StorageAysncContext *asyncContext)
 {
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, arg, &valueType);
@@ -216,7 +169,7 @@ void ParseDefValue(const napi_env& env, const napi_value& arg, StorageAysncConte
         PreferencesValue value((double)number);
         asyncContext->defValue = value;
     } else if (valueType == napi_string) {
-        char* str = new char[MAX_VALUE_LENGTH];
+        char *str = new char[MAX_VALUE_LENGTH];
         size_t valueSize = 0;
         napi_get_value_string_utf8(env, arg, str, MAX_VALUE_LENGTH, &valueSize);
         PreferencesValue value((std::string)(str));
@@ -243,9 +196,9 @@ napi_value PreferencesProxy::GetValue(napi_env env, napi_callback_info info)
 
     return proxy.DoAsyncWork(
         "GetValue",
-        [](StorageAysncContext* asyncContext) {
+        [](StorageAysncContext *asyncContext) {
             int errCode = OK;
-            PreferencesProxy* obj = reinterpret_cast<PreferencesProxy*>(asyncContext->boundObj);
+            PreferencesProxy *obj = reinterpret_cast<PreferencesProxy *>(asyncContext->boundObj);
             if (asyncContext->defValue.IsBool()) {
                 bool tmpValue = (bool)obj->value_->GetBool(asyncContext->key, (bool)asyncContext->defValue);
                 asyncContext->defValue = PreferencesValue((bool)tmpValue);
@@ -261,7 +214,7 @@ napi_value PreferencesProxy::GetValue(napi_env env, napi_callback_info info)
 
             return errCode;
         },
-        [](StorageAysncContext* asyncContext, napi_value& output) {
+        [](StorageAysncContext *asyncContext, napi_value &output) {
             int errCode = OK;
             if (asyncContext->defValue.IsBool()) {
                 napi_get_boolean(asyncContext->env, (bool)asyncContext->defValue, &output);
@@ -278,54 +231,6 @@ napi_value PreferencesProxy::GetValue(napi_env env, napi_callback_info info)
         });
 }
 
-napi_value PreferencesProxy::SetValueSync(napi_env env, napi_callback_info info)
-{
-    napi_value thiz = nullptr;
-    size_t argc = 2;
-    napi_value args[2] = {0};
-
-    LOG_DEBUG("SETVALUE");
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
-    NAPI_ASSERT(env, argc == 2, "Wrong number of arguments");
-    // get value type
-    napi_valuetype valueType = napi_undefined;
-    NAPI_CALL(env, napi_typeof(env, args[0], &valueType));
-    NAPI_ASSERT(env, valueType == napi_string, "type mismatch for key");
-
-    // get input key
-    char key[MAX_KEY_LENGTH] = {0};
-    size_t out = 0;
-    NAPI_CALL(env, napi_get_value_string_utf8(env, args[0], key, MAX_KEY_LENGTH, &out));
-
-    PreferencesProxy *obj = nullptr;
-    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&obj)));
-    NAPI_ASSERT(env, (obj != nullptr && obj->value_ != nullptr), "unwrap null native pointer");
-
-    NAPI_CALL(env, napi_typeof(env, args[1], &valueType));
-    if (valueType == napi_number) {
-        double value = 0.0;
-        NAPI_CALL(env, napi_get_value_double(env, args[1], &value));
-        int result = obj->value_->PutDouble(key, (double) value);
-        NAPI_ASSERT(env, result == E_OK, "call PutDouble failed");
-    } else if (valueType == napi_string) {
-        char *value = new char[MAX_VALUE_LENGTH];
-        napi_get_value_string_utf8(env, args[1], value, MAX_VALUE_LENGTH, &out);
-        // get value
-        int result = obj->value_->PutString(key, value);
-        delete[] value;
-        NAPI_ASSERT(env, result == E_OK, "call PutString failed");
-    } else if (valueType == napi_boolean) {
-        bool value = false;
-        NAPI_CALL(env, napi_get_value_bool(env, args[1], &value));
-        // get value
-        int result = obj->value_->PutBool(key, value);
-        NAPI_ASSERT(env, result == E_OK, "call PutBool failed");
-    } else {
-        NAPI_ASSERT(env, false, "Wrong second parameter type");
-    }
-    return nullptr;
-}
-
 napi_value PreferencesProxy::SetValue(napi_env env, napi_callback_info info)
 {
     NapiAsyncProxy<StorageAysncContext> proxy;
@@ -337,9 +242,9 @@ napi_value PreferencesProxy::SetValue(napi_env env, napi_callback_info info)
 
     return proxy.DoAsyncWork(
         "SetValue",
-        [](StorageAysncContext* asyncContext) {
+        [](StorageAysncContext *asyncContext) {
             int errCode = OK;
-            PreferencesProxy* obj = reinterpret_cast<PreferencesProxy*>(asyncContext->boundObj);
+            PreferencesProxy *obj = reinterpret_cast<PreferencesProxy *>(asyncContext->boundObj);
             if (asyncContext->defValue.IsBool()) {
                 errCode = obj->value_->PutBool(asyncContext->key, (bool)asyncContext->defValue);
             } else if (asyncContext->defValue.IsString()) {
@@ -352,33 +257,10 @@ napi_value PreferencesProxy::SetValue(napi_env env, napi_callback_info info)
 
             return errCode;
         },
-        [](StorageAysncContext* asyncContext, napi_value& output) {
+        [](StorageAysncContext *asyncContext, napi_value &output) {
             napi_status status = napi_get_undefined(asyncContext->env, &output);
             return (status == napi_ok) ? OK : ERR;
         });
-}
-
-napi_value PreferencesProxy::DeleteSync(napi_env env, napi_callback_info info)
-{
-    napi_value thiz = nullptr;
-    size_t argc = 1;
-    napi_value args[1] = {0};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
-    NAPI_ASSERT(env, argc == 1, "Wrong number of arguments");
-    // get value type
-    napi_valuetype valueType;
-    NAPI_CALL(env, napi_typeof(env, args[0], &valueType));
-    NAPI_ASSERT(env, valueType == napi_string, "type mismatch for key");
-
-    char key[MAX_KEY_LENGTH] = {0};
-    size_t out = 0;
-    NAPI_CALL(env, napi_get_value_string_utf8(env, args[0], key, MAX_KEY_LENGTH, &out));
-    PreferencesProxy *obj = nullptr;
-    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&obj)));
-    int result = obj->value_->Delete(key);
-    NAPI_ASSERT(env, result == E_OK, "call Delete failed");
-    LOG_INFO("Delete");
-    return nullptr;
 }
 
 napi_value PreferencesProxy::Delete(napi_env env, napi_callback_info info)
@@ -391,40 +273,16 @@ napi_value PreferencesProxy::Delete(napi_env env, napi_callback_info info)
 
     return proxy.DoAsyncWork(
         "Delete",
-        [](StorageAysncContext* asyncContext) {
-            PreferencesProxy* obj = reinterpret_cast<PreferencesProxy*>(asyncContext->boundObj);
+        [](StorageAysncContext *asyncContext) {
+            PreferencesProxy *obj = reinterpret_cast<PreferencesProxy *>(asyncContext->boundObj);
             int errCode = obj->value_->Delete(asyncContext->key);
 
             return errCode;
         },
-        [](StorageAysncContext* asyncContext, napi_value& output) {
+        [](StorageAysncContext *asyncContext, napi_value &output) {
             napi_status status = napi_get_undefined(asyncContext->env, &output);
             return (status == napi_ok) ? OK : ERR;
         });
-}
-
-napi_value PreferencesProxy::HasKeySync(napi_env env, napi_callback_info info)
-{
-    napi_value thiz = nullptr;
-    size_t argc = 1;
-    napi_value args[1] = {0};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
-    NAPI_ASSERT(env, argc == 1, "Wrong number of arguments");
-    // get value type
-    napi_valuetype valueType;
-    NAPI_CALL(env, napi_typeof(env, args[0], &valueType));
-    NAPI_ASSERT(env, valueType == napi_string, "type mismatch for key");
-
-    char key[MAX_KEY_LENGTH] = {0};
-    size_t out = 0;
-    NAPI_CALL(env, napi_get_value_string_utf8(env, args[0], key, MAX_KEY_LENGTH, &out));
-    PreferencesProxy *obj = nullptr;
-    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&obj)));
-    bool result = obj->value_->HasKey(key);
-    napi_value output = nullptr;
-    NAPI_CALL(env, napi_get_boolean(env, result, &output));
-    LOG_DEBUG("HasKey");
-    return output;
 }
 
 napi_value PreferencesProxy::HasKey(napi_env env, napi_callback_info info)
@@ -437,13 +295,13 @@ napi_value PreferencesProxy::HasKey(napi_env env, napi_callback_info info)
 
     return proxy.DoAsyncWork(
         "HasKey",
-        [](StorageAysncContext* asyncContext) {
-            PreferencesProxy* obj = reinterpret_cast<PreferencesProxy*>(asyncContext->boundObj);
+        [](StorageAysncContext *asyncContext) {
+            PreferencesProxy *obj = reinterpret_cast<PreferencesProxy *>(asyncContext->boundObj);
             asyncContext->hasKey = obj->value_->HasKey(asyncContext->key);
 
             return OK;
         },
-        [](StorageAysncContext* asyncContext, napi_value& output) {
+        [](StorageAysncContext *asyncContext, napi_value &output) {
             napi_status status = napi_get_boolean(asyncContext->env, asyncContext->hasKey, &output);
             return (status == napi_ok) ? OK : ERR;
         });
@@ -458,39 +316,14 @@ napi_value PreferencesProxy::Flush(napi_env env, napi_callback_info info)
 
     return proxy.DoAsyncWork(
         "Flush",
-        [](StorageAysncContext* asyncContext) {
-            PreferencesProxy* obj = reinterpret_cast<PreferencesProxy*>(asyncContext->boundObj);
+        [](StorageAysncContext *asyncContext) {
+            PreferencesProxy *obj = reinterpret_cast<PreferencesProxy *>(asyncContext->boundObj);
             return obj->value_->FlushSync();
         },
-        [](StorageAysncContext* asyncContext, napi_value& output) {
+        [](StorageAysncContext *asyncContext, napi_value &output) {
             napi_status status = napi_get_undefined(asyncContext->env, &output);
             return (status == napi_ok) ? OK : ERR;
         });
-}
-
-napi_value PreferencesProxy::FlushSync(napi_env env, napi_callback_info info)
-{
-    napi_value thiz = nullptr;
-    NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr));
-    PreferencesProxy *obj = nullptr;
-    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&obj)));
-    int result = obj->value_->FlushSync();
-    napi_value output = nullptr;
-    NAPI_CALL(env, napi_create_int64(env, result, &output));
-    LOG_DEBUG("FlushSync");
-    return output;
-}
-
-napi_value PreferencesProxy::ClearSync(napi_env env, napi_callback_info info)
-{
-    napi_value thiz = nullptr;
-    NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr));
-    PreferencesProxy *obj = nullptr;
-    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&obj)));
-    int result = obj->value_->Clear();
-    NAPI_ASSERT(env, result == E_OK, "call Clear failed");
-    LOG_DEBUG("Clear");
-    return nullptr;
 }
 
 napi_value PreferencesProxy::Clear(napi_env env, napi_callback_info info)
@@ -502,11 +335,11 @@ napi_value PreferencesProxy::Clear(napi_env env, napi_callback_info info)
 
     return proxy.DoAsyncWork(
         "Clear",
-        [](StorageAysncContext* asyncContext) {
-            PreferencesProxy* obj = reinterpret_cast<PreferencesProxy*>(asyncContext->boundObj);
+        [](StorageAysncContext *asyncContext) {
+            PreferencesProxy *obj = reinterpret_cast<PreferencesProxy *>(asyncContext->boundObj);
             return obj->value_->Clear();
         },
-        [](StorageAysncContext* asyncContext, napi_value& output) {
+        [](StorageAysncContext *asyncContext, napi_value &output) {
             napi_status status = napi_get_undefined(asyncContext->env, &output);
             return (status == napi_ok) ? OK : ERR;
         });
@@ -516,7 +349,7 @@ napi_value PreferencesProxy::RegisterObserver(napi_env env, napi_callback_info i
 {
     napi_value thiz = nullptr;
     size_t argc = 2;
-    napi_value args[2] = {0};
+    napi_value args[2] = { 0 };
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
     napi_valuetype type;
@@ -541,7 +374,7 @@ napi_value PreferencesProxy::UnRegisterObserver(napi_env env, napi_callback_info
 {
     napi_value thiz = nullptr;
     size_t argc = 2;
-    napi_value args[2] = {0};
+    napi_value args[2] = { 0 };
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
     napi_valuetype type;
@@ -577,7 +410,7 @@ void PreferencesObserverImpl::OnChange(Preferences &preferences, const std::stri
     napi_value callback = nullptr;
     napi_value global = nullptr;
     napi_value result = nullptr;
-    napi_value args[1] = {0};
+    napi_value args[1] = { 0 };
 
     napi_create_string_utf8(env_, key.c_str(), key.size(), &args[0]);
     napi_get_reference_value(env_, observerRef, &callback);
