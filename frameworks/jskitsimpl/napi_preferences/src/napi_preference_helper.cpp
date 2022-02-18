@@ -18,7 +18,9 @@
 
 #include <string>
 
+#include "js_ability.h"
 #include "js_logger.h"
+#include "js_utils.h"
 #include "napi_async_proxy.h"
 #include "napi_preference.h"
 #include "preferences_errno.h"
@@ -31,53 +33,49 @@ namespace OHOS {
 namespace PreferencesJsKit {
 struct HelperAysncContext : NapiAsyncProxy<HelperAysncContext>::AysncContext {
     std::string path;
+    std::shared_ptr<Context> context;
 };
 
-napi_value GetStorageSync(napi_env env, napi_callback_info info)
+void ParseContext(const napi_env &env, const napi_value &object, HelperAysncContext *asyncContext)
 {
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-
-    LOG_DEBUG("getPreferences %{public}zu", argc);
-    napi_value instance = nullptr;
-    NAPI_CALL(env, PreferencesProxy::NewInstance(env, args[0], &instance));
-    LOG_DEBUG("getPreferences end");
-
-    return instance;
+    auto context = JSAbility::GetContext(env, object);
+    NAPI_ASSERT_RETURN_VOID(env, context != nullptr, "ParseContext get context failed.");
+    asyncContext->context = context;
 }
 
-void ParseString(const napi_env& env, const napi_value& value, HelperAysncContext* asyncContext)
+void ParsePath(const napi_env &env, const napi_value &value, HelperAysncContext *asyncContext)
 {
-    if (asyncContext == nullptr) {
-        LOG_WARN("error input");
-        return;
-    }
-    char* path = new char[PATH_MAX];
-    memset_s(path, PATH_MAX, 0, PATH_MAX);
-    size_t pathLen = 0;
-    napi_get_value_string_utf8(env, value, path, PATH_MAX, &pathLen);
-    asyncContext->path = path;
-    delete[] path;
+    LOG_DEBUG("ParsePath start");
+    NAPI_ASSERT_RETURN_VOID(env, asyncContext->context != nullptr, "ParsePath context is null.");
+    std::string name = JSUtils::Convert2String(env, value, JSUtils::DEFAULT_BUF_SIZE);
+    NAPI_ASSERT_RETURN_VOID(env, !name.empty(), "Get database name empty.");
+
+    size_t pos = name.find_first_of('/');
+    NAPI_ASSERT_RETURN_VOID(env, pos == std::string::npos, "A name without path should be input.");
+    std::string databaseDir = asyncContext->context->GetDatabaseDir();
+    asyncContext->path = databaseDir.append("/").append(name);
+    LOG_DEBUG("ParsePath path=%{public}s", databaseDir.c_str());
 }
 
-napi_value GetStorage(napi_env env, napi_callback_info info)
+napi_value GetPreferences(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("GetPreferences start");
     NapiAsyncProxy<HelperAysncContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<HelperAysncContext>::InputParser> parsers;
-    parsers.push_back(ParseString);
+    parsers.push_back(ParseContext);
+    parsers.push_back(ParsePath);
     proxy.ParseInputs(parsers);
 
     return proxy.DoAsyncWork(
-        "GetStorage",
-        [](HelperAysncContext* asyncContext) {
+        "GetPreferences",
+        [](HelperAysncContext *asyncContext) {
             int errCode = OK;
             OHOS::NativePreferences::PreferencesHelper::GetPreferences(asyncContext->path, errCode);
             LOG_DEBUG("GetPreferences return %{public}d", errCode);
             return errCode;
         },
-        [](HelperAysncContext* asyncContext, napi_value& output) {
+        [](HelperAysncContext *asyncContext, napi_value &output) {
             napi_value path = nullptr;
             napi_create_string_utf8(asyncContext->env, asyncContext->path.c_str(), NAPI_AUTO_LENGTH, &path);
             auto ret = PreferencesProxy::NewInstance(asyncContext->env, path, &output);
@@ -85,106 +83,45 @@ napi_value GetStorage(napi_env env, napi_callback_info info)
         });
 }
 
-napi_status GetInputPath(napi_env env, napi_callback_info info, std::string &pathString)
-{
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_status ret = napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    if (ret != napi_ok) {
-        return ret;
-    }
-
-    napi_valuetype valueType;
-    ret = napi_typeof(env, args[0], &valueType);
-    if (ret != napi_ok || valueType != napi_string) {
-        return napi_invalid_arg;
-    }
-
-    char *path = new char[PATH_MAX];
-    memset_s(path, PATH_MAX, 0, PATH_MAX);
-    size_t pathLen = 0;
-    ret = napi_get_value_string_utf8(env, args[0], path, PATH_MAX, &pathLen);
-    pathString = path;
-    delete[] path;
-    return ret;
-}
-
-napi_value DeleteStorageSync(napi_env env, napi_callback_info info)
-{
-    std::string path;
-    napi_status ret = GetInputPath(env, info, path);
-    if (ret != napi_ok) {
-        napi_throw_error(env, nullptr, "Input path error");
-        return nullptr;
-    }
-    LOG_DEBUG("deleteStorage %{public}s", path.c_str());
-    int errCode = PreferencesHelper::DeletePreferences(path);
-    if (errCode != E_OK) {
-        LOG_ERROR("deleteStorage failed %{public}d", errCode);
-        napi_throw_error(env, std::to_string(errCode).c_str(), "deleteStorage failed");
-    }
-    LOG_DEBUG("deleteStorage end");
-
-    return nullptr;
-}
-
-napi_value DeleteStorage(napi_env env, napi_callback_info info)
+napi_value DeletePreferences(napi_env env, napi_callback_info info)
 {
     NapiAsyncProxy<HelperAysncContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<HelperAysncContext>::InputParser> parsers;
-    parsers.push_back(ParseString);
+    parsers.push_back(ParseContext);
+    parsers.push_back(ParsePath);
     proxy.ParseInputs(parsers);
 
     return proxy.DoAsyncWork(
-        "DeleteStorage",
-        [](HelperAysncContext* asyncContext) {
+        "DeletePreferences",
+        [](HelperAysncContext *asyncContext) {
             int errCode = PreferencesHelper::DeletePreferences(asyncContext->path);
             LOG_DEBUG("DeletePreferences return %{public}d", errCode);
             return errCode;
         },
-        [](HelperAysncContext* asyncContext, napi_value& output) {
+        [](HelperAysncContext *asyncContext, napi_value &output) {
             napi_get_undefined(asyncContext->env, &output);
             return OK;
         });
 }
 
-napi_value RemoveStorageFromCacheSync(napi_env env, napi_callback_info info)
-{
-    std::string path;
-    napi_status ret = GetInputPath(env, info, path);
-    if (ret != napi_ok) {
-        napi_throw_error(env, nullptr, "Input path error");
-        return nullptr;
-    }
-
-    LOG_DEBUG("removeStorageFromCache %{public}s", path.c_str());
-    int errCode = PreferencesHelper::RemovePreferencesFromCache(path);
-    if (errCode != E_OK) {
-        LOG_ERROR("removeStorageFromCache failed %{public}d", errCode);
-        napi_throw_error(env, std::to_string(errCode).c_str(), "removeStorageFromCache failed");
-    }
-    LOG_DEBUG("removeStorageFromCache end");
-
-    return nullptr;
-}
-
-napi_value RemoveStorageFromCache(napi_env env, napi_callback_info info)
+napi_value RemovePreferencesFromCache(napi_env env, napi_callback_info info)
 {
     NapiAsyncProxy<HelperAysncContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<HelperAysncContext>::InputParser> parsers;
-    parsers.push_back(ParseString);
+    parsers.push_back(ParseContext);
+    parsers.push_back(ParsePath);
     proxy.ParseInputs(parsers);
 
     return proxy.DoAsyncWork(
-        "RemoveStorageFromCache",
-        [](HelperAysncContext* asyncContext) {
+        "RemovePreferencesFromCache",
+        [](HelperAysncContext *asyncContext) {
             int errCode = PreferencesHelper::RemovePreferencesFromCache(asyncContext->path);
             LOG_DEBUG("RemovePreferencesFromCache return %{public}d", errCode);
             return errCode;
         },
-        [](HelperAysncContext* asyncContext, napi_value& output) {
+        [](HelperAysncContext *asyncContext, napi_value &output) {
             napi_get_undefined(asyncContext->env, &output);
             return OK;
         });
@@ -193,15 +130,12 @@ napi_value RemoveStorageFromCache(napi_env env, napi_callback_info info)
 napi_value InitPreferenceHelper(napi_env env, napi_value exports)
 {
     napi_property_descriptor properties[] = {
-        DECLARE_NAPI_FUNCTION("getStorage", GetStorage),
-        DECLARE_NAPI_FUNCTION("getStorageSync", GetStorageSync),
-        DECLARE_NAPI_FUNCTION("deleteStorage", DeleteStorage),
-        DECLARE_NAPI_FUNCTION("deleteStorageSync", DeleteStorageSync),
-        DECLARE_NAPI_FUNCTION("removeStorageFromCache", RemoveStorageFromCache),
-        DECLARE_NAPI_FUNCTION("removeStorageFromCacheSync", RemoveStorageFromCacheSync),
+        DECLARE_NAPI_FUNCTION("getPreferences", GetPreferences),
+        DECLARE_NAPI_FUNCTION("deletePreferences", DeletePreferences),
+        DECLARE_NAPI_FUNCTION("removePreferencesFromCache", RemovePreferencesFromCache),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
     return exports;
 }
-}  // namespace PreferencesJsKit
+} // namespace PreferencesJsKit
 } // namespace OHOS
