@@ -42,7 +42,7 @@ static napi_module _module = {
     .nm_register_func = Init,
     .nm_modname = "data.storage",
     .nm_priv = ((void *)0),
-    .reserved = { 0 } 
+    .reserved = { 0 }
 };
 /*
  * Module register function
