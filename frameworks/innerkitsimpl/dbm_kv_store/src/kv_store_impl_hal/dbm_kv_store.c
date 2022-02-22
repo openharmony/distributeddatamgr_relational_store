@@ -64,13 +64,13 @@ Data Item: key content and status
 
 #define DB_LOCK(db)                                                                     \
     do {                                                                                \
-        if (((DBHandle)db)->lock != NULL)   ((DBHandle)db)->lock((DBHandle)db);         \
-    } while(0);
+        if (((DBHandle)(db))->lock != NULL)   ((DBHandle)(db))->lock((DBHandle)(db));         \
+    } while (0)
 
 #define DB_UNLOCK(db)                                                                   \
     do {                                                                                \
-        if (((DBHandle)db)->unlock != NULL)   ((DBHandle)db)->unlock((DBHandle)db);     \
-    } while(0);
+        if (((DBHandle)(db))->unlock != NULL)   ((DBHandle)(db))->unlock((DBHandle)(db));     \
+    } while (0)
 
 static boolean IsValidPath(const char* path)
 {
@@ -1403,7 +1403,7 @@ void DBM_KVStoreControl(KVStoreHandle db, int cmd, void* arg)
     }
 }
 
-int DBM_UserInit()
+int DBM_UserInit(void)
 {
     return 0;
 }
