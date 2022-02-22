@@ -35,13 +35,15 @@ EXTERN_C_END
 /*
  * Module define
  */
-static napi_module _module = { .nm_version = 1,
+static napi_module _module = {
+    .nm_version = 1,
     .nm_flags = 0,
     .nm_filename = nullptr,
     .nm_register_func = Init,
     .nm_modname = "data.storage",
     .nm_priv = ((void *)0),
-    .reserved = { 0 } };
+    .reserved = { 0 } 
+};
 /*
  * Module register function
  */
