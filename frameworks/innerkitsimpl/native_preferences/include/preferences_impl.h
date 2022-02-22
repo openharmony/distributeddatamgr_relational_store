@@ -93,7 +93,7 @@ private:
         MemoryToDiskRequest(const std::map<std::string, PreferencesValue> &writeToDiskMap,
             const std::list<std::string> &keysModified,
             const std::vector<std::weak_ptr<PreferencesObserver>> preferencesObservers, int64_t memStataGeneration);
-        ~MemoryToDiskRequest(){};
+        ~MemoryToDiskRequest() {};
         void SetDiskWriteResult(bool wasWritten, int result);
 
         bool isSyncRequest_;
