@@ -15,8 +15,8 @@
 
 #include "preferences_helper.h"
 
-#include <limits.h>
-#include <stdlib.h>
+#include <climits>
+#include <cstdlib>
 
 #include <cerrno>
 #include <utility>

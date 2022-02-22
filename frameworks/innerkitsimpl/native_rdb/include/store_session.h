@@ -71,7 +71,6 @@ private:
     int connectionUseCount;
     bool isInStepQuery;
 
-
     const std::string ATTACH_BACKUP_SQL = "ATTACH ? AS backup KEY ?";
     const std::string ATTACH_SQL = "ATTACH ? AS ? KEY ?";
     const std::string EXPORT_SQL = "SELECT export_database('backup')";
