@@ -28,7 +28,7 @@ namespace OHOS {
 namespace NativePreferences {
 class Preferences {
 public:
-    virtual ~Preferences(){};
+    virtual ~Preferences() {};
 
     static const unsigned int MAX_KEY_LENGTH = 80;
 
