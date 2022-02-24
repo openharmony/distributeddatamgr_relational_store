@@ -63,14 +63,14 @@ const std::string PreferencesTest::KEY_TEST_STRING_ELEMENT = "key_test_string";
 void PreferencesTest::SetUpTestCase(void)
 {
     int errCode = E_OK;
-    pref = PreferencesHelper::GetPreferences("/data/test/test", errCode);
+    pref = PreferencesHelper::GetPreferences("/data/test", errCode);
     EXPECT_EQ(errCode, E_OK);
 }
 
 void PreferencesTest::TearDownTestCase(void)
 {
     pref = nullptr;
-    int ret = PreferencesHelper::DeletePreferences("/data/test/test");
+    int ret = PreferencesHelper::DeletePreferences("/data/test");
     EXPECT_EQ(ret, E_OK);
 }
 
