@@ -50,7 +50,7 @@ describe('storageTest', function () {
      * @tc.desc Constructor test
      */
     it('testConstructor002', 0, function () {
-        expect(mPref).assertEqual('[object Object]');
+        expect('to:' + mPref).assertEqual('to:[object Object]');
     })
 
     /**
