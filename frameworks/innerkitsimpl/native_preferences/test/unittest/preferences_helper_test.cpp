@@ -63,7 +63,7 @@ void PreferencesHelperTest::TearDown(void)
 HWTEST_F(PreferencesHelperTest, NativePreferencesHelperTest_001, TestSize.Level1)
 {
     int errCode = E_OK;
-    std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences("/data/test/test_helper", errCode);
+    std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences("/data/test_helper", errCode);
     EXPECT_EQ(errCode, E_OK);
 
     pref->PutInt("key1", 2);
@@ -71,17 +71,11 @@ HWTEST_F(PreferencesHelperTest, NativePreferencesHelperTest_001, TestSize.Level1
     int ret = pref->FlushSync();
     EXPECT_EQ(ret, E_OK);
 
-//    ret = PreferencesHelper::RemovePreferencesFromCache("/data/test/test_helper");
-//    EXPECT_EQ(ret, E_PTR_EXIST_ANOTHER_HOLDER);
-//
-//    ret = PreferencesHelper::DeletePreferences("/data/test/test_helper");
-//    EXPECT_EQ(ret, E_PTR_EXIST_ANOTHER_HOLDER);
-
     pref = nullptr;
 
-    ret = PreferencesHelper::RemovePreferencesFromCache("/data/test/test_helper");
+    ret = PreferencesHelper::RemovePreferencesFromCache("/data/test_helper");
     EXPECT_EQ(ret, E_OK);
 
-    ret = PreferencesHelper::DeletePreferences("/data/test/test_helper");
+    ret = PreferencesHelper::DeletePreferences("/data/test_helper");
     EXPECT_EQ(ret, E_OK);
 }

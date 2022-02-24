@@ -18,16 +18,15 @@
 
 #include <assert.h>
 
-#include "napi/native_common.h"
 #include "napi/native_api.h"
+#include "napi/native_common.h"
 #include "napi/native_node_api.h"
-
 #include "preferences.h"
 #include "preferences_helper.h"
 
 namespace OHOS {
 namespace PreferencesJsKit {
-class PreferencesProxy {
+class StorageProxy {
 public:
     static void Init(napi_env env, napi_value exports);
     static napi_value New(napi_env env, napi_callback_info info);
@@ -35,8 +34,8 @@ public:
     static void Destructor(napi_env env, void *nativeObject, void *finalize_hint);
 
 private:
-    explicit PreferencesProxy(std::shared_ptr<OHOS::NativePreferences::Preferences> &value);
-    ~PreferencesProxy();
+    explicit StorageProxy(std::shared_ptr<OHOS::NativePreferences::Preferences> &value);
+    ~StorageProxy();
 
     static napi_value GetValueSync(napi_env env, napi_callback_info info);
     static napi_value GetValue(napi_env env, napi_callback_info info);
@@ -59,10 +58,10 @@ private:
     std::shared_ptr<OHOS::NativePreferences::PreferencesObserver> observer_;
 };
 
-class PreferencesObserverImpl : public OHOS::NativePreferences::PreferencesObserver {
+class StorageObserverImpl : public OHOS::NativePreferences::PreferencesObserver {
 public:
-    PreferencesObserverImpl(napi_env env, napi_value callback);
-    virtual ~PreferencesObserverImpl();
+    StorageObserverImpl(napi_env env, napi_value callback);
+    virtual ~StorageObserverImpl();
     void OnChange(OHOS::NativePreferences::Preferences &preferences, const std::string &key) override;
 
 private:
