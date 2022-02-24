@@ -55,16 +55,17 @@ std::string AbsRdbPredicates::ToString() const
 
 AbsRdbPredicates* AbsRdbPredicates::InDevices(std::vector<std::string> &devices)
 {
+    for (const auto& device : devices) {
+        LOG_INFO("%{public}.6s", device.c_str());
+    }
     predicates_.devices_ = devices;
     return this;
 }
 
 AbsRdbPredicates* AbsRdbPredicates::InAllDevices()
 {
-    predicates_.devices_ = DistributedRdb::RdbManager::GetConnectDevices();
-    for (const auto& device : predicates_.devices_) {
-        LOG_INFO("%{public}.6s", device.c_str());
-    }
+    LOG_INFO("enter");
+    predicates_.devices_.clear();
     return this;
 }
 
