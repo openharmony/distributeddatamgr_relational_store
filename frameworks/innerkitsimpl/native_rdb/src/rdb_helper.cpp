@@ -71,11 +71,6 @@ int RdbHelper::ProcessOpenCallback(
         return E_CANNOT_UPDATE_READONLY;
     }
 
-    errCode = rdbStore.BeginTransaction();
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
     if (currentVersion == 0) {
         errCode = openCallback.OnCreate(rdbStore);
     } else if (version > currentVersion) {
@@ -89,13 +84,7 @@ int RdbHelper::ProcessOpenCallback(
     }
 
     if (errCode != E_OK) {
-        LOG_ERROR("RdbHelper ProcessOpenCallback create rdbStore error.");
-        rdbStore.RollBack();
-        return errCode;
-    }
-
-    errCode = rdbStore.Commit();
-    if (errCode != E_OK) {
+        LOG_ERROR("RdbHelper ProcessOpenCallback set new version failed.");
         return errCode;
     }
 

@@ -135,10 +135,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_001, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
-    ret = store->MarkAsCommit();
-    EXPECT_EQ(ret, E_OK);
-
-    ret = store->EndTransaction();
+    ret = store->Commit();
     EXPECT_EQ(ret, E_OK);
 
     int64_t count;
@@ -198,25 +195,25 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_002, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
-    ret = store->EndTransaction();
+    ret = store->Commit();
     EXPECT_EQ(ret, E_OK);
 
     int64_t count;
     ret = store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(count, 0);
+    EXPECT_EQ(count, 3);
 
     std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_OK);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 
     int deletedRows;
     ret = store->Delete(deletedRows, "test");
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(deletedRows, 0);
+    EXPECT_EQ(deletedRows, 3);
 }
 
 /**
@@ -256,7 +253,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)
     ret = store->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
-    ret = store->EndTransaction(); // not commit
+    ret = store->Commit(); // not commit
     EXPECT_EQ(ret, E_OK);
 
     values.Clear();
@@ -269,28 +266,25 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
-    ret = store->MarkAsCommit();
-    EXPECT_EQ(ret, E_OK);
-
-    ret = store->EndTransaction();
+    ret = store->Commit();
     EXPECT_EQ(ret, E_OK);
 
     int64_t count;
     ret = store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(count, 0);
+    EXPECT_EQ(count, 3);
 
     std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_OK);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 
     int deletedRows;
     ret = store->Delete(deletedRows, "test");
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(deletedRows, 0);
+    EXPECT_EQ(deletedRows, 3);
 }
 
 /**
@@ -330,9 +324,9 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)
     ret = store->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
-    ret = store->MarkAsCommit();
+    ret = store->Commit();
     EXPECT_EQ(ret, E_OK);
-    ret = store->EndTransaction(); // commit
+    ret = store->Commit(); // commit
     EXPECT_EQ(ret, E_OK);
 
     values.Clear();
@@ -345,25 +339,22 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
-    ret = store->EndTransaction(); // not commit
-    EXPECT_EQ(ret, E_OK);
-
     int64_t count;
     ret = store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(count, 0);
+    EXPECT_EQ(count, 3);
 
     std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_OK);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 
     int deletedRows;
     ret = store->Delete(deletedRows, "test");
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(deletedRows, 0);
+    EXPECT_EQ(deletedRows, 3);
 }
 
 /**
@@ -403,7 +394,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_003, TestSize.Level1)
     ret = store->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
-    ret = store->EndTransaction(); // not commit
+    ret = store->Commit(); // not commit
     EXPECT_EQ(ret, E_OK);
 
     values.Clear();
@@ -416,25 +407,25 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_003, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
-    ret = store->EndTransaction(); // not commit
+    ret = store->Commit(); // not commit
     EXPECT_EQ(ret, E_OK);
 
     int64_t count;
     ret = store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(count, 0);
+    EXPECT_EQ(count, 3);
 
     std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_OK);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 
     int deletedRows;
     ret = store->Delete(deletedRows, "test");
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(deletedRows, 0);
+    EXPECT_EQ(deletedRows, 3);
 }
 
 /**
@@ -474,9 +465,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_004, TestSize.Level1)
     ret = store->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
-    ret = store->MarkAsCommit();
-    EXPECT_EQ(ret, E_OK);
-    ret = store->EndTransaction(); // commit
+    ret = store->Commit(); // commit
     EXPECT_EQ(ret, E_OK);
 
     values.Clear();
@@ -489,9 +478,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_004, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
-    ret = store->MarkAsCommit();
-    EXPECT_EQ(ret, E_OK);
-    ret = store->EndTransaction(); // commit
+    ret = store->Commit(); // commit
     EXPECT_EQ(ret, E_OK);
 
     int64_t count;
@@ -516,33 +503,4 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_004, TestSize.Level1)
     ret = store->Delete(deletedRows, "test");
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(deletedRows, 3);
-}
-
-/**
- * @tc.name: RdbStore_Transaction_003
- * @tc.desc: test RdbStore BaseTransaction
- * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
- */
-HWTEST_F(RdbTransactionTest, RdbStore_Transaction_003, TestSize.Level1)
-{
-    std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
-
-    bool in = store->IsInTransaction();
-    EXPECT_EQ(in, false);
-
-    int ret = store->BeginTransaction();
-    EXPECT_EQ(ret, E_OK);
-
-    in = store->IsInTransaction();
-    EXPECT_EQ(in, true);
-
-    ret = store->MarkAsCommit();
-    EXPECT_EQ(ret, E_OK);
-    ret = store->EndTransaction();
-    EXPECT_EQ(ret, E_OK);
-
-    in = store->IsInTransaction();
-    EXPECT_EQ(in, false);
 }

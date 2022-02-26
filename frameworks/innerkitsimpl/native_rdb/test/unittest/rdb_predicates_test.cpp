@@ -357,13 +357,15 @@ int PredicateTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int ne
     return E_OK;
 }
 
-void RdbStorePredicateTest::SetUpTestCase(void)
+void RdbStorePredicateTest::SetUpTestCase()
 {}
 
-void RdbStorePredicateTest::TearDownTestCase(void)
-{}
+void RdbStorePredicateTest::TearDownTestCase()
+{
+    RdbHelper::DeleteRdbStore(RdbStorePredicateTest::DATABASE_NAME);
+}
 
-void RdbStorePredicateTest::SetUp(void)
+void RdbStorePredicateTest::SetUp()
 {
     if (access(RdbStorePredicateTest::DATABASE_NAME.c_str(), F_OK) != 0) {
         remove(RdbStorePredicateTest::DATABASE_NAME.c_str());
