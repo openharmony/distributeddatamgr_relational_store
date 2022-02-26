@@ -118,7 +118,7 @@ void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
 
     if (rowNum == NO_COUNT) {
         rdbStoreImpl->ExecuteForSharedBlock(rowNum, GetBlock(), requiredPos, requiredPos, true, qrySql, bindArgs);
-        resultSetBlockCapacity = GetBlock()->GetRowNum();
+        resultSetBlockCapacity = static_cast<int>(GetBlock()->GetRowNum());
     } else {
         int startPos =
             isOnlyFillResultSetBlock ? requiredPos : PickFillBlockStartPosition(requiredPos, resultSetBlockCapacity);

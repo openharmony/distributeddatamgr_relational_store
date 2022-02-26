@@ -256,10 +256,10 @@ FillOneRowResult FillOneRowOfString(AppDataFwk::SharedBlock *sharedBlock, sqlite
         return SHARED_BLOCK_IS_FULL;
     }
 
-    size_t sizeIncludingNull = sqlite3_column_bytes(statement, pos) + 1;
+    auto sizeIncludingNull = sqlite3_column_bytes(statement, pos) + 1;
     int status = sharedBlock->PutString(addedRows, pos, text, sizeIncludingNull);
     if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
-        LOG_ERROR("Failed allocating %{public}zu bytes for text at %{public}d,%{public}d, error=%{public}d",
+        LOG_ERROR("Failed allocating %{public}d bytes for text at %{public}d,%{public}d, error=%{public}d",
             sizeIncludingNull, startPos + addedRows, pos, status);
         return SHARED_BLOCK_IS_FULL;
     }
@@ -297,7 +297,7 @@ FillOneRowResult FillOneRowOfBlob(AppDataFwk::SharedBlock *sharedBlock, sqlite3_
     int addedRows, int pos)
 {
     const void *blob = sqlite3_column_blob(statement, pos);
-    size_t size = sqlite3_column_bytes(statement, pos);
+    auto size = sqlite3_column_bytes(statement, pos);
     int status = sharedBlock->PutBlob(addedRows, pos, blob, size);
     if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
         LOG_ERROR("Failed allocating %{public}zu bytes for blob at %{public}d,%{public}d, error=%{public}d", size,

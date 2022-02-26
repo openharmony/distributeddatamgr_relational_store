@@ -70,7 +70,7 @@ private:
     std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet_;
 
     std::string sharedBlockName_;
-    int32_t sharedBlockAshmemFd_;
+    int32_t sharedBlockAshmemFd_ = -1;
 };
 }
 }

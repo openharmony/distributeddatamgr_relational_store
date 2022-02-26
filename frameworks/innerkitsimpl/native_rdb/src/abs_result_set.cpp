@@ -183,33 +183,33 @@ int AbsResultSet::GetColumnCount(int &count)
         LOG_ERROR("AbsResultSet::GetColumnCount  return GetAllColumnNames::ret is wrong!");
         return ret;
     }
-    count = columnNames.size();
+    count = static_cast<int>(columnNames.size());
     return E_OK;
 }
 
 int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex)
 {
-    int periodIndex = columnName.rfind(".");
-    std::string columnNameBack = columnName;
-    if (periodIndex != -1) {
-        columnNameBack = columnNameBack.substr(periodIndex + 1);
+    auto periodIndex = columnName.rfind('.');
+    std::string columnNameLower = columnName;
+    if (periodIndex != std::string::npos) {
+        columnNameLower = columnNameLower.substr(periodIndex + 1);
     }
-    transform(columnNameBack.begin(), columnNameBack.end(), columnNameBack.begin(), ::tolower);
+    transform(columnNameLower.begin(), columnNameLower.end(), columnNameLower.begin(), ::tolower);
     std::vector<std::string> columnNames;
     int ret = GetAllColumnNames(columnNames);
     if (ret != E_OK) {
         LOG_ERROR("AbsResultSet::GetColumnIndex  return GetAllColumnNames::ret is wrong!");
         return ret;
     }
-    int len = columnNames.size();
-    std::string tempStr = "";
-    for (int i = 0; i < len; i++) {
-        tempStr = columnNames[i];
-        transform(tempStr.begin(), tempStr.end(), tempStr.begin(), ::tolower);
-        if (tempStr == columnNameBack) {
-            columnIndex = i;
+
+    columnIndex = 0;
+    for (const auto& name : columnNames) {
+        std::string lowerName = name;
+        transform(name.begin(), name.end(), lowerName.begin(), ::tolower);
+        if (lowerName == columnNameLower) {
             return E_OK;
         }
+        columnIndex++;
     }
     columnIndex = -1;
     return E_ERROR;

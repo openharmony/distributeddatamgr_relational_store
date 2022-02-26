@@ -79,7 +79,7 @@ int SqliteStatement::Finalize()
 
 int SqliteStatement::BindArguments(const std::vector<ValueObject> &bindArgs) const
 {
-    int count = bindArgs.size();
+    int count = static_cast<int>(bindArgs.size());
     std::vector<ValueObject> abindArgs;
 
     if (count == 0) {
@@ -87,7 +87,7 @@ int SqliteStatement::BindArguments(const std::vector<ValueObject> &bindArgs) con
     }
     // Obtains the bound parameter set.
     if ((numParameters != 0) && (count <= numParameters)) {
-        for (auto i : bindArgs) {
+        for (const auto& i : bindArgs) {
             abindArgs.push_back(i);
         }
 
