@@ -299,9 +299,8 @@ int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
 
     std::vector<ValueObject> bindArgs;
     std::vector<std::string> whereArgs = predicates.GetWhereArgs();
-    int size = whereArgs.size();
-    for (int i = 0; i < size; i++) {
-        bindArgs.push_back(ValueObject(whereArgs[i]));
+    for (const auto& whereArg : whereArgs) {
+        bindArgs.emplace_back(whereArg);
     }
 
     return ExecuteAndGetLong(outValue, sql, bindArgs);
