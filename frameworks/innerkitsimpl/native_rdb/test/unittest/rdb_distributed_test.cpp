@@ -33,7 +33,9 @@ static std::shared_ptr<RdbStore> rdbStore;
 class RdbStoreDistributedTest : public testing::Test {
 public:
     static void SetUpTestCase();
-    static void TearDownTestCase() {};
+    static void TearDownTestCase() {
+        RdbHelper::DeleteRdbStore(RdbStoreDistributedTest::DRDB_PATH + RdbStoreDistributedTest::DRDB_NAME);
+    };
     void SetUp() {};
     void TearDown() {};
     
@@ -41,7 +43,12 @@ public:
     void CheckResultSet(std::shared_ptr<RdbStore> &store);
     
     static constexpr int ddmsGroupId_ = 3012;
+    static const std::string DRDB_NAME;
+    static const  std::string DRDB_PATH;
 };
+
+const std::string RdbStoreDistributedTest::DRDB_NAME = "distributed_rdb.db";
+const std::string RdbStoreDistributedTest::DRDB_PATH = "/data/test/";
 
 class TestOpenCallback : public RdbOpenCallback {
 public:
@@ -74,7 +81,7 @@ public:
 void RdbStoreDistributedTest::SetUpTestCase()
 {
     int errCode = 0;
-    std::string path = "/data/test/distributed_rdb.db";
+    std::string path = RdbStoreDistributedTest::DRDB_PATH + RdbStoreDistributedTest::DRDB_NAME;
     int fd = open(path.c_str(), O_CREAT, S_IRWXU | S_IRWXG);
     if (fd < 0) {
         std::cout << "open file failed" << std::endl;
@@ -86,7 +93,7 @@ void RdbStoreDistributedTest::SetUpTestCase()
     
     RdbStoreConfig config(path);
     config.SetBundleName("com.example.distributed.rdb");
-    config.SetName("distributed_rdb.db");
+    config.SetName(RdbStoreDistributedTest::DRDB_NAME);
     TestOpenCallback callback;
     rdbStore = RdbHelper::GetRdbStore(config, 1, callback, errCode);
     if (rdbStore == nullptr) {
@@ -149,6 +156,7 @@ void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     EXPECT_EQ(columnType, ColumnType::TYPE_STRING);
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
+    std::cout << "strVal=" << strVal << std::endl;
     EXPECT_EQ("zhangsan", strVal);
 }
 
@@ -177,9 +185,8 @@ static
 HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_002, TestSize.Level1)
 {
     EXPECT_NE(rdbStore, nullptr) << "get rdb store failed";
-    system("/system/bin/killall -9 distributeddata");
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    EXPECT_EQ(rdbStore->SetDistributedTables({ "employee" }), true) << "set distributed tables failed";
+    std::vector<std::string> empty;
+    EXPECT_EQ(rdbStore->SetDistributedTables(empty), true) << "set distributed tables failed";
     
     InsertValue(rdbStore);
     CheckResultSet(rdbStore);
