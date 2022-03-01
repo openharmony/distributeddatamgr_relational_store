@@ -60,8 +60,8 @@ void PreferencesFileTest::TearDown(void)
  */
 HWTEST_F(PreferencesFileTest, NativePreferencesFileTest_001, TestSize.Level1)
 {
-    std::string file = "/data/test";
-    std::string backupFile = "/data/test.bak";
+    std::string file = "/data/test/test";
+    std::string backupFile = "/data/test/test.bak";
 
     std::remove(file.c_str());
     std::remove(backupFile.c_str());
@@ -100,7 +100,7 @@ HWTEST_F(PreferencesFileTest, NativePreferencesFileTest_001, TestSize.Level1)
  */
 HWTEST_F(PreferencesFileTest, NativePreferencesFileTest_002, TestSize.Level1)
 {
-    std::string file = "/data/test";
+    std::string file = "/data/test/test";
     std::remove(file.c_str());
 
     int errCode = E_OK;
@@ -133,7 +133,7 @@ HWTEST_F(PreferencesFileTest, NativePreferencesFileTest_002, TestSize.Level1)
 HWTEST_F(PreferencesFileTest, NativePreferencesFileTest_003, TestSize.Level1)
 {
     std::string absolutePath = "/data/test1";
-    std::string relativePath = "/data/../data/test1";
+    std::string relativePath = "/data/test/../test1";
     std::remove(absolutePath.c_str());
 
     int errCode = E_OK;
@@ -161,7 +161,7 @@ HWTEST_F(PreferencesFileTest, NativePreferencesFileTest_003, TestSize.Level1)
  */
 HWTEST_F(PreferencesFileTest, NativePreferencesFileTest_004, TestSize.Level1)
 {
-    std::string file = "/data/test";
+    std::string file = "/data/test/test";
     int ret = PreferencesHelper::DeletePreferences(file);
     EXPECT_EQ(ret, E_OK);
 
@@ -178,7 +178,7 @@ HWTEST_F(PreferencesFileTest, NativePreferencesFileTest_004, TestSize.Level1)
     EXPECT_EQ("string1", pref->GetString("stringKey", ""));
 
     pref = nullptr;
-    ret = PreferencesHelper::RemovePreferencesFromCache("/data/test_helper");
+    ret = PreferencesHelper::RemovePreferencesFromCache("/data/test/test_helper");
     EXPECT_EQ(ret, E_OK);
 
     errCode = E_OK;
@@ -212,7 +212,7 @@ HWTEST_F(PreferencesFileTest, NativePreferencesFileTest_004, TestSize.Level1)
     EXPECT_EQ("string5", pref->GetString("stringKey", ""));
 
     pref = nullptr;
-    ret = PreferencesHelper::RemovePreferencesFromCache("/data/test_helper");
+    ret = PreferencesHelper::RemovePreferencesFromCache("/data/test/test_helper");
     EXPECT_EQ(ret, E_OK);
 
     errCode = E_OK;
@@ -223,7 +223,7 @@ HWTEST_F(PreferencesFileTest, NativePreferencesFileTest_004, TestSize.Level1)
     EXPECT_EQ("string5", pref->GetString("stringKey", ""));
 
     pref = nullptr;
-    ret = PreferencesHelper::DeletePreferences("/data/test_helper");
+    ret = PreferencesHelper::DeletePreferences("/data/test/test_helper");
     EXPECT_EQ(ret, E_OK);
 }
 
@@ -236,7 +236,7 @@ HWTEST_F(PreferencesFileTest, NativePreferencesFileTest_004, TestSize.Level1)
  */
 HWTEST_F(PreferencesFileTest, NativePreferencesFileTest_005, TestSize.Level3)
 {
-    std::string file = "/data/test";
+    std::string file = "/data/test/test";
     int ret = PreferencesHelper::DeletePreferences(file);
     EXPECT_EQ(ret, E_OK);
 
@@ -254,7 +254,7 @@ HWTEST_F(PreferencesFileTest, NativePreferencesFileTest_005, TestSize.Level3)
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
     pref = nullptr;
-    ret = PreferencesHelper::RemovePreferencesFromCache("/data/test_helper");
+    ret = PreferencesHelper::RemovePreferencesFromCache("/data/test/test_helper");
     EXPECT_EQ(ret, E_OK);
 
     errCode = E_OK;
@@ -285,7 +285,7 @@ HWTEST_F(PreferencesFileTest, NativePreferencesFileTest_005, TestSize.Level3)
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
     pref = nullptr;
-    ret = PreferencesHelper::RemovePreferencesFromCache("/data/test_helper");
+    ret = PreferencesHelper::RemovePreferencesFromCache("/data/test/test_helper");
     EXPECT_EQ(ret, E_OK);
 
     errCode = E_OK;
@@ -296,6 +296,6 @@ HWTEST_F(PreferencesFileTest, NativePreferencesFileTest_005, TestSize.Level3)
     EXPECT_EQ("string5", pref->GetString("stringKey", ""));
 
     pref = nullptr;
-    ret = PreferencesHelper::DeletePreferences("/data/test_helper");
+    ret = PreferencesHelper::DeletePreferences("/data/test/test_helper");
     EXPECT_EQ(ret, E_OK);
 }
