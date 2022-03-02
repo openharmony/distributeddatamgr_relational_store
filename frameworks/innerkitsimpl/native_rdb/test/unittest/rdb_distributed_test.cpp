@@ -38,10 +38,10 @@ public:
     };
     void SetUp() {};
     void TearDown() {};
-    
+
     void InsertValue(std::shared_ptr<RdbStore> &store);
     void CheckResultSet(std::shared_ptr<RdbStore> &store);
-    
+
     static constexpr int ddmsGroupId_ = 3012;
     static const std::string DRDB_NAME;
     static const  std::string DRDB_PATH;
@@ -64,13 +64,13 @@ public:
         std::cout << "create table return " << store.ExecuteSql(sql) << std::endl;
         return 0;
     }
-    
+
     int OnOpen(RdbStore& store) override
     {
         std::cout << "on open" << std::endl;
         return 0;
     }
-    
+
     int OnUpgrade(RdbStore& store, int currentVersion, int targetVersion) override
     {
         std::cout << "on upgrade" << std::endl;
@@ -90,7 +90,7 @@ void RdbStoreDistributedTest::SetUpTestCase()
         close(fd);
     }
     chown(path.c_str(), 0, ddmsGroupId_);
-    
+
     RdbStoreConfig config(path);
     config.SetBundleName("com.example.distributed.rdb");
     config.SetName(RdbStoreDistributedTest::DRDB_NAME);
@@ -107,7 +107,7 @@ void RdbStoreDistributedTest::InsertValue(std::shared_ptr<RdbStore> &store)
 {
     int64_t id;
     ValuesBucket values;
-    
+
     values.PutInt("id", 1);
     values.PutString("name", std::string("zhangsan"));
     values.PutInt("age", 18); // 18 age
@@ -123,7 +123,7 @@ void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     std::unique_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT * FROM employee WHERE name = ?", { "zhangsan" });
     EXPECT_NE(resultSet, nullptr);
-    
+
     int columnIndex;
     int intVal;
     std::string strVal;
@@ -132,13 +132,13 @@ void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     int ret = resultSet->GetRowIndex(position);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(position, -1);
-    
+
     ret = resultSet->GetColumnType(0, columnType);
     EXPECT_EQ(ret, E_ERROR);
-    
+
     ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
-    
+
     ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(columnIndex, 0);
@@ -148,7 +148,7 @@ void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, intVal);
-    
+
     ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetColumnType(columnIndex, columnType);
@@ -180,14 +180,13 @@ HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_001, TestSize.Level1)
  * @tc.require: AR000GK58F
  * @tc.author: wuchunbo
  */
- 
-static
+
 HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_002, TestSize.Level1)
 {
     EXPECT_NE(rdbStore, nullptr) << "get rdb store failed";
     std::vector<std::string> empty;
     EXPECT_EQ(rdbStore->SetDistributedTables(empty), true) << "set distributed tables failed";
-    
+
     InsertValue(rdbStore);
     CheckResultSet(rdbStore);
 }
