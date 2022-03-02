@@ -42,7 +42,7 @@ public:
     void InsertValue(std::shared_ptr<RdbStore> &store);
     void CheckResultSet(std::shared_ptr<RdbStore> &store);
 
-    static constexpr int ddmsGroupId_ = 3012;
+    static constexpr int ddmsGroupId_ = 1000;
     static const std::string DRDB_NAME;
     static const  std::string DRDB_PATH;
 };
