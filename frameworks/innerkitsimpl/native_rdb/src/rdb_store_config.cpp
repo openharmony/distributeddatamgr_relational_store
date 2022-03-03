@@ -167,12 +167,12 @@ void RdbStoreConfig::SetPath(std::string path)
 
 void RdbStoreConfig::SetStorageMode(StorageMode storageMode)
 {
-    this->storageMode = storageMode; 
+    this->storageMode = storageMode;
 }
 
 void RdbStoreConfig::SetReadOnly(bool readOnly)
 {
-    this->readOnly = readOnly; 
+    this->readOnly = readOnly;
 }
 
 void RdbStoreConfig::ClearEncryptKey()
@@ -185,10 +185,10 @@ int RdbStoreConfig::SetDistributedType(DistributedType type)
 {
     if (type < DistributedType::RDB_DEVICE_COLLABORATION || type >= DistributedType::RDB_DISTRIBUTED_TYPE_MAX) {
         LOG_ERROR("type is invalid");
-        return -1;
+        return SetReturnStatus::SET_ERROR;
     }
     distributedType_ = type;
-    return 0;
+    return SetReturnStatus::SET_OK;
 }
 
 DistributedType RdbStoreConfig::GetDistributedType() const
@@ -200,10 +200,10 @@ int RdbStoreConfig::SetBundleName(const std::string& bundleName)
 {
     if (bundleName.empty()) {
         LOG_ERROR("bundleName is empty");
-        return -1;
+        return SetReturnStatus::SET_ERROR;
     }
     bundleName_ = bundleName;
-    return 0;
+    return SetReturnStatus::SET_OK;
 }
 
 std::string RdbStoreConfig::GetBundleName() const
