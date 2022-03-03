@@ -181,6 +181,7 @@ void RdbStoreConfig::ClearEncryptKey()
     encryptKey.clear();
 }
 
+<<<<<<< HEAD
 int RdbStoreConfig::SetDistributedType(DistributedType type)
 {
     if (type < DistributedType::RDB_DEVICE_COLLABORATION || type >= DistributedType::RDB_DISTRIBUTED_TYPE_MAX) {
@@ -191,6 +192,8 @@ int RdbStoreConfig::SetDistributedType(DistributedType type)
     return E_OK;
 }
 
+=======
+>>>>>>> 74cf32221d65bf6c5cbdc29a660ede6f89971ce0
 DistributedType RdbStoreConfig::GetDistributedType() const
 {
     return distributedType_;
