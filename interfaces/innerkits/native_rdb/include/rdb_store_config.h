@@ -58,6 +58,11 @@ enum class DatabaseFileSecurityLevel {
     NO_LEVEL,
 };
 
+enum class SetReturnStatus {
+    SET_OK = 0,
+    SET_ERROR = -1,
+};
+
 using DistributedType = OHOS::DistributedRdb::RdbDistributedType;
 
 class RdbStoreConfig {
@@ -88,7 +93,7 @@ public:
     void SetDatabaseFileType(DatabaseFileType type);
     void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
     void ClearEncryptKey();
-    
+
     // distributed rdb
     int SetBundleName(const std::string& bundleName);
     std::string GetBundleName() const;
@@ -110,7 +115,7 @@ private:
     bool readOnly;
     std::string databaseFileType;
     std::string databaseFileSecurityLevel;
-    
+
     // distributed rdb
     DistributedType distributedType_ = DistributedRdb::RdbDistributedType::RDB_DEVICE_COLLABORATION;
     std::string bundleName_;
