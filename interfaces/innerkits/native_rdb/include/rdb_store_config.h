@@ -95,9 +95,9 @@ public:
     void ClearEncryptKey();
 
     // distributed rdb
-    int SetBundleName(const std::string& bundleName);
+    SetReturnStatus SetBundleName(const std::string &bundleName);
     std::string GetBundleName() const;
-    int SetDistributedType(DistributedType type);
+    SetReturnStatus SetDistributedType(DistributedType type);
     DistributedType GetDistributedType() const;
 
     static std::string GetJournalModeValue(JournalMode journalMode);
