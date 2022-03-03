@@ -181,7 +181,7 @@ void RdbStoreConfig::ClearEncryptKey()
     encryptKey.clear();
 }
 
-int RdbStoreConfig::SetDistributedType(DistributedType type)
+SetReturnStatus RdbStoreConfig::SetDistributedType(DistributedType type)
 {
     if (type < DistributedType::RDB_DEVICE_COLLABORATION || type >= DistributedType::RDB_DISTRIBUTED_TYPE_MAX) {
         LOG_ERROR("type is invalid");
@@ -196,7 +196,7 @@ DistributedType RdbStoreConfig::GetDistributedType() const
     return distributedType_;
 }
 
-int RdbStoreConfig::SetBundleName(const std::string& bundleName)
+SetReturnStatus RdbStoreConfig::SetBundleName(const std::string &bundleName)
 {
     if (bundleName.empty()) {
         LOG_ERROR("bundleName is empty");
