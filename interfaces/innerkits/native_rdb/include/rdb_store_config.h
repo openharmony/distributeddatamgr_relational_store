@@ -97,7 +97,10 @@ public:
     // distributed rdb
     int SetBundleName(const std::string &bundleName);
     std::string GetBundleName() const;
+<<<<<<< HEAD
     int SetDistributedType(DistributedType type);
+=======
+>>>>>>> 74cf32221d65bf6c5cbdc29a660ede6f89971ce0
     DistributedType GetDistributedType() const;
 
     static std::string GetJournalModeValue(JournalMode journalMode);
