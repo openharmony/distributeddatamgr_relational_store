@@ -181,29 +181,19 @@ void RdbStoreConfig::ClearEncryptKey()
     encryptKey.clear();
 }
 
-SetReturnStatus RdbStoreConfig::SetDistributedType(DistributedType type)
-{
-    if (type < DistributedType::RDB_DEVICE_COLLABORATION || type >= DistributedType::RDB_DISTRIBUTED_TYPE_MAX) {
-        LOG_ERROR("type is invalid");
-        return SetReturnStatus::SET_ERROR;
-    }
-    distributedType_ = type;
-    return SetReturnStatus::SET_OK;
-}
-
 DistributedType RdbStoreConfig::GetDistributedType() const
 {
     return distributedType_;
 }
 
-SetReturnStatus RdbStoreConfig::SetBundleName(const std::string &bundleName)
+int RdbStoreConfig::SetBundleName(const std::string &bundleName)
 {
     if (bundleName.empty()) {
         LOG_ERROR("bundleName is empty");
-        return SetReturnStatus::SET_ERROR;
+        return E_ERROR;
     }
     bundleName_ = bundleName;
-    return SetReturnStatus::SET_OK;
+    return E_OK;
 }
 
 std::string RdbStoreConfig::GetBundleName() const
