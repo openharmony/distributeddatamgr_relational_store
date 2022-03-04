@@ -16,7 +16,9 @@
 #define LOG_TAG "RdbStoreConfig"
 
 #include "rdb_store_config.h"
+
 #include "logger.h"
+#include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
 RdbStoreConfig::RdbStoreConfig(const RdbStoreConfig &config)
