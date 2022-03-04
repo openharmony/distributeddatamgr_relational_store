@@ -58,11 +58,6 @@ enum class DatabaseFileSecurityLevel {
     NO_LEVEL,
 };
 
-enum class SetReturnStatus {
-    SET_OK = 0,
-    SET_ERROR = -1,
-};
-
 using DistributedType = OHOS::DistributedRdb::RdbDistributedType;
 
 class RdbStoreConfig {
