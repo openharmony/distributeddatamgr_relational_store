@@ -16,7 +16,9 @@
 #define LOG_TAG "RdbStoreConfig"
 
 #include "rdb_store_config.h"
+
 #include "logger.h"
+#include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
 RdbStoreConfig::RdbStoreConfig(const RdbStoreConfig &config)
@@ -167,12 +169,12 @@ void RdbStoreConfig::SetPath(std::string path)
 
 void RdbStoreConfig::SetStorageMode(StorageMode storageMode)
 {
-    this->storageMode = storageMode; 
+    this->storageMode = storageMode;
 }
 
 void RdbStoreConfig::SetReadOnly(bool readOnly)
 {
-    this->readOnly = readOnly; 
+    this->readOnly = readOnly;
 }
 
 void RdbStoreConfig::ClearEncryptKey()
@@ -185,10 +187,10 @@ int RdbStoreConfig::SetDistributedType(DistributedType type)
 {
     if (type < DistributedType::RDB_DEVICE_COLLABORATION || type >= DistributedType::RDB_DISTRIBUTED_TYPE_MAX) {
         LOG_ERROR("type is invalid");
-        return -1;
+        return E_ERROR;
     }
     distributedType_ = type;
-    return 0;
+    return E_OK;
 }
 
 DistributedType RdbStoreConfig::GetDistributedType() const
@@ -196,14 +198,14 @@ DistributedType RdbStoreConfig::GetDistributedType() const
     return distributedType_;
 }
 
-int RdbStoreConfig::SetBundleName(const std::string& bundleName)
+int RdbStoreConfig::SetBundleName(const std::string &bundleName)
 {
     if (bundleName.empty()) {
         LOG_ERROR("bundleName is empty");
-        return -1;
+        return E_ERROR;
     }
     bundleName_ = bundleName;
-    return 0;
+    return E_OK;
 }
 
 std::string RdbStoreConfig::GetBundleName() const
