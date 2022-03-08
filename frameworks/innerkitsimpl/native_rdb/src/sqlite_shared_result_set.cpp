@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <memory>
 #include <rdb_errno.h>
+#include "logger.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -107,6 +108,11 @@ int SqliteSharedResultSet::PickFillBlockStartPosition(int resultSetPosition, int
 void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
 {
     ClearBlock();
+
+    if (!HasBlock()) {
+        LOG_ERROR("SqliteSharedResultSet::FillSharedBlock sharedBlock is null.");
+        return;
+    }
 
     std::vector<ValueObject> bindArgs;
     size_t size = selectionArgVec.size();
