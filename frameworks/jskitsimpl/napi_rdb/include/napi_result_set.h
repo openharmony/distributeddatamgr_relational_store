@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DISTRIBUTEDDATAMGR_APPDATAMGR_JS_RESULT_SET_H
-#define DISTRIBUTEDDATAMGR_APPDATAMGR_JS_RESULT_SET_H
+#ifndef RDB_JSKIT_NAPI_RESULT_SET_H
+#define RDB_JSKIT_NAPI_RESULT_SET_H
 
 #include <memory>
 #include "abs_shared_result_set.h"
@@ -74,7 +74,7 @@ private:
 };
 }
 }
-#endif // DISTRIBUTEDDATAMGR_APPDATAMGR_JS_RESULT_SET_H
+#endif // RDB_JSKIT_NAPI_RESULT_SET_H
 
 EXTERN_C_START
 __attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_NewInstance(
