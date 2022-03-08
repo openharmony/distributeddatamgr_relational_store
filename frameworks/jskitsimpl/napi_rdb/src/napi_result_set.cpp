@@ -61,15 +61,19 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<AbsSharedRe
     return instance;
 }
 
-std::shared_ptr<NativeRdb::AbsSharedResultSet> ResultSetProxy::GetNativePredicates(
+std::shared_ptr<NativeRdb::AbsSharedResultSet> ResultSetProxy::GetNativeObject(
     napi_env const &env, napi_value const &arg)
 {
     if (arg == nullptr) {
-        LOG_ERROR("DataAbilityPredicatesProxy arg is null.");
+        LOG_ERROR("ResultSetProxy GetNativeObject arg is null.");
         return nullptr;
     }
     ResultSetProxy *proxy = nullptr;
     napi_unwrap(env, arg, reinterpret_cast<void **>(&proxy));
+    if (proxy == nullptr) {
+        LOG_ERROR("ResultSetProxy GetNativeObject proxy is null.");
+        return nullptr;
+    }
     return proxy->resultSet_;
 }
 
@@ -518,7 +522,7 @@ __attribute__((visibility("default"))) OHOS::NativeRdb::AbsSharedResultSet *
 NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_GetNativeObject(const napi_env &env, const napi_value &arg)
 {
     // the resultSet maybe release.
-    auto resultSet = OHOS::RdbJsKit::ResultSetProxy::GetNativePredicates(env, arg);
+    auto resultSet = OHOS::RdbJsKit::ResultSetProxy::GetNativeObject(env, arg);
     return resultSet.get();
 }
 EXTERN_C_END
