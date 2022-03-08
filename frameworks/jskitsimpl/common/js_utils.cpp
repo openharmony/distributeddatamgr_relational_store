@@ -18,10 +18,9 @@
 #include "securec.h"
 
 namespace OHOS {
-namespace AppDataMgrJsKit {
+namespace JsKit {
 std::string JSUtils::Convert2String(napi_env env, napi_value jsStr, const size_t max)
 {
-    NAPI_ASSERT_BASE(env, max > 0, "failed on max > 0", std::string());
     char *buf = new char[max + 1];
     size_t len = 0;
     napi_get_value_string_utf8(env, jsStr, buf, max, &len);
@@ -33,18 +32,23 @@ std::string JSUtils::Convert2String(napi_env env, napi_value jsStr, const size_t
 
 std::vector<std::string> JSUtils::Convert2StrVector(napi_env env, napi_value value, const size_t strMax)
 {
-    NAPI_ASSERT_BASE(env, strMax > 0, "failed on strMax > 0",  std::vector<std::string>());
     uint32_t arrLen = 0;
     napi_get_array_length(env, value, &arrLen);
     if (arrLen == 0) {
         return {};
     }
     std::vector<std::string> result;
+    char *buf = new char[strMax + 1];
+    size_t len = 0;
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value element;
         napi_get_element(env, value, i, &element);
-        result.push_back(ConvertAny2String(env, element));
+        len = 0;
+        napi_get_value_string_utf8(env, element, buf, strMax, &len);
+        buf[len] = 0;
+        result.push_back(buf);
     }
+    delete[] buf;
     return result;
 }
 
@@ -93,7 +97,7 @@ std::string JSUtils::ConvertAny2String(napi_env env, napi_value jsValue)
     return "invalid type";
 }
 
-napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<std::string> &value)
+napi_value JSUtils::Convert2JSValue(napi_env env, std::vector<std::string> &value)
 {
     napi_value jsValue;
     napi_status status = napi_create_array_with_length(env, value.size(), &jsValue);
@@ -117,7 +121,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::string &value)
     return jsValue;
 }
 
-napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<uint8_t> &value)
+napi_value JSUtils::Convert2JSValue(napi_env env, std::vector<uint8_t> &value)
 {
     napi_value jsValue;
     void *native = nullptr;
@@ -176,28 +180,5 @@ napi_value JSUtils::Convert2JSValue(napi_env env, bool value)
     }
     return jsValue;
 }
-
-napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<std::string, int> &value)
-{
-    napi_value jsValue;
-    napi_status status = napi_create_array_with_length(env, value.size(), &jsValue);
-    if (status != napi_ok) {
-        return nullptr;
-    }
-
-    int index = 0;
-    for (const auto& [device, result] : value) {
-        napi_value jsElement;
-        status = napi_create_array_with_length(env, SYNC_RESULT_ELEMNT_NUM, &jsElement);
-        if (status != napi_ok) {
-            return nullptr;
-        }
-        napi_set_element(env, jsElement, 0, Convert2JSValue(env, device));
-        napi_set_element(env, jsElement, 1, Convert2JSValue(env, result));
-        napi_set_element(env, jsValue, index++, jsElement);
-    }
-
-    return jsValue;
-}
-} // namespace AppDataMgrJsKit
+} // namespace JsKit
 } // namespace OHOS
