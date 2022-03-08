@@ -140,7 +140,7 @@
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_dataability/test:unittest",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_rdb/test:unittest",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_rdb/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_storage/test:unittest",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_preferences/test:unittest",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_dataability/test:unittest"
             ]
         }
