@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DISTRIBUTEDDATAMGR_APPDATAMGR_JS_RESULT_SET_H
-#define DISTRIBUTEDDATAMGR_APPDATAMGR_JS_RESULT_SET_H
+#ifndef RDB_JSKIT_NAPI_RESULT_SET_H
+#define RDB_JSKIT_NAPI_RESULT_SET_H
 
 #include <memory>
 #include "abs_shared_result_set.h"
@@ -31,7 +31,7 @@ public:
     ResultSetProxy(std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
     ResultSetProxy &operator=(std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
-    static std::shared_ptr<NativeRdb::AbsSharedResultSet> GetNativePredicates(
+    static std::shared_ptr<NativeRdb::AbsSharedResultSet> GetNativeObject(
         const napi_env &env, const napi_value &arg);
     static napi_value GetConstructor(napi_env env);
 
@@ -74,7 +74,7 @@ private:
 };
 }
 }
-#endif // DISTRIBUTEDDATAMGR_APPDATAMGR_JS_RESULT_SET_H
+#endif // RDB_JSKIT_NAPI_RESULT_SET_H
 
 EXTERN_C_START
 __attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_NewInstance(
