@@ -19,9 +19,7 @@
 #include "bytrace.h"
 
 namespace OHOS::NativeRdb {
-
 #define RDB_TRACE_BEGIN(name) StartTrace(BYTRACE_TAG_DISTRIBUTEDDATA, (name))
 #define RDB_TRACE_END() FinishTrace(BYTRACE_TAG_DISTRIBUTEDDATA)
-
 }
 #endif
