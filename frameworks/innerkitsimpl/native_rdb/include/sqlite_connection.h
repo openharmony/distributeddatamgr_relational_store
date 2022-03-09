@@ -65,9 +65,10 @@ private:
     int SetWalSyncMode(const std::string &syncMode);
     int PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void LimitPermission(const std::string &dbPath) const;
-    
+
     int SetPersistWal();
-    
+    int SetBusyTimeout(int timeout);
+
     sqlite3 *dbHandle;
     bool isWriteConnection;
     bool isReadOnly;
@@ -76,6 +77,8 @@ private:
     std::string filePath;
     int openFlags;
     std::mutex rdbMutex;
+
+    static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
 };
 
 } // namespace NativeRdb
