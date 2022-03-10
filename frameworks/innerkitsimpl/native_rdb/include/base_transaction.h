@@ -18,11 +18,10 @@
 
 #include <iostream>
 
-namespace OHOS {
-namespace NativeRdb {
+namespace OHOS::NativeRdb {
 enum TransType {
     ROLLBACK_SELF = 1,
-    ROLLBACK_PARENT
+    ROLLBACK_PARENT,
 };
 
 class BaseTransaction {
@@ -33,7 +32,7 @@ public:
     void SetAllBeforeSuccessful(bool allBeforeSuccessful);
     bool IsMarkedSuccessful() const;
     void SetMarkedSuccessful(bool markedSuccessful);
-    int getType() const ;
+    int getType() const;
     bool IsChildFailure() const;
     void setChildFailure(bool failureFlag);
     std::string getTransactionStr();
@@ -54,6 +53,5 @@ private:
     const std::string ROLLBACK = "ROLLBACK";
     const std::string ROLLBACK_TO = "ROLLBACK TO";
 };
-} // namespace NativeRdb
-} // namespace OHOS
+} // namespace OHOS::NativeRdb
 #endif

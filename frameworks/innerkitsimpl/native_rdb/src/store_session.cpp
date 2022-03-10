@@ -24,8 +24,7 @@
 #include "sqlite_utils.h"
 #include "base_transaction.h"
 
-namespace OHOS {
-namespace NativeRdb {
+namespace OHOS::NativeRdb {
 StoreSession::StoreSession(SqliteConnectionPool &connectionPool)
     : connectionPool(connectionPool), connection(nullptr), connectionUseCount(0), isInStepQuery(false)
 {
@@ -57,8 +56,8 @@ void StoreSession::ReleaseConnection()
     }
 }
 
-int StoreSession::PrepareAndGetInfo(const std::string &sql, bool &outIsReadOnly, int &numParameters,
-    std::vector<std::string> &columnNames)
+int StoreSession::PrepareAndGetInfo(
+    const std::string &sql, bool &outIsReadOnly, int &numParameters, std::vector<std::string> &columnNames)
 {
     // Obtains the type of SQL statement.
     int type = SqliteUtils::GetSqlStatementType(sql);
@@ -250,8 +249,8 @@ int StoreSession::GiveConnectionTemporarily(long milliseconds)
     return E_OK;
 }
 
-int StoreSession::Attach(const std::string &alias, const std::string &pathName,
-    const std::vector<uint8_t> destEncryptKey)
+int StoreSession::Attach(
+    const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey)
 {
     std::string journalMode;
     int errCode = ExecuteGetString(journalMode, "PRAGMA journal_mode", std::vector<ValueObject>());
@@ -486,15 +485,14 @@ int StoreSession::Commit()
 
 int StoreSession::RollBack()
 {
-    if (connectionPool.getTransactionStack().empty()) {
+    std::stack<BaseTransaction> transactionStack = connectionPool.getTransactionStack();
+    if (transactionStack.empty()) {
         return E_NO_TRANSACTION_IN_SESSION;
     }
-
-    BaseTransaction transaction = connectionPool.getTransactionStack().top();
-    connectionPool.getTransactionStack().pop();
-    if (transaction.getType() != TransType::ROLLBACK_SELF
-        && !connectionPool.getTransactionStack().empty()) {
-        connectionPool.getTransactionStack().top().setChildFailure(true);
+    BaseTransaction transaction = transactionStack.top();
+    transactionStack.pop();
+    if (transaction.getType() != TransType::ROLLBACK_SELF && !transactionStack.empty()) {
+        transactionStack.top().setChildFailure(true);
     }
     AcquireConnection(false);
     int errCode = connection->ExecuteSql(transaction.getRollbackStr());
@@ -505,5 +503,4 @@ int StoreSession::RollBack()
 
     return errCode;
 }
-} // namespace NativeRdb
-} // namespace OHOS
+} // namespace OHOS::NativeRdb

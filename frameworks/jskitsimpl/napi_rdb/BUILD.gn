@@ -39,12 +39,12 @@ ohos_shared_library("rdb") {
     "src/napi_rdb_store.cpp",
     "src/napi_rdb_store_helper.cpp",
     "src/napi_rdb_store_observer.cpp",
+    "src/napi_result_set.cpp",
     "src/napi_uv_queue.cpp",
     "src/napi_values_bucket.cpp",
   ]
 
   deps = [
-    "../napi_resultset:resultset",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
     "//utils/native/base:utils",
   ]

@@ -38,7 +38,11 @@
         "name": "native_appdatamgr",
         "subsystem": "distributeddatamgr",
         "syscap": [
-            "SystemCapability.Data.DATA_APPDATAMGR"
+            "SystemCapability.DistributedDataManager.DataShare.Core",
+            "SystemCapability.DistributedDataManager.DataShare.Consumer",
+            "SystemCapability.DistributedDataManager.DataShare.Provider",
+            "SystemCapability.DistributedDataManager.RelationalStore.Core",
+            "SystemCapability.DistributedDataManager.Preferences.Core"
         ],
         "features": [],
         "adapted_system_type": [
@@ -74,7 +78,6 @@
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_dataability:dataability",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_preferences:preferences",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_preferences:storage",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_resultset:resultset",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_rdb:rdb"
             ],
             "inner_kits": [

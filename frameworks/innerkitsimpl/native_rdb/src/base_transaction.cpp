@@ -15,8 +15,7 @@
 
 #include "base_transaction.h"
 
-namespace OHOS {
-namespace NativeRdb {
+namespace OHOS ::NativeRdb {
 BaseTransaction::BaseTransaction(int id)
     : allBeforeSuccessful(true), markedSuccessful(false), childFailure(false), type(ROLLBACK_SELF), id(id)
 {
@@ -78,5 +77,4 @@ std::string BaseTransaction::getRollbackStr()
     std::string retStr = this->id == 0 ? ROLLBACK : ROLLBACK_TO + " " + TRANS_STR + std::to_string(this->id);
     return retStr + ";";
 }
-}
-}
+} // namespace OHOS::NativeRdb
