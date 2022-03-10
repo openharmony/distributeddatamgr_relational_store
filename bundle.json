@@ -76,6 +76,7 @@
                 "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_dataability:native_dataability",
                 "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_rdb:native_rdb",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_dataability:dataability",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_preferences:preferences",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_preferences:storage",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_rdb:rdb"
             ],
