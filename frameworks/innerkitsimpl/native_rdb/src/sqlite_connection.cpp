@@ -89,6 +89,7 @@ int SqliteConnection::InnerOpen(const SqliteConfig &config)
     }
 
     SetPersistWal();
+    SetBusyTimeout(DEFAULT_BUSY_TIMEOUT_MS);
     LimitPermission(dbPath);
 
     errCode = Config(config);
@@ -199,6 +200,17 @@ int SqliteConnection::SetPersistWal()
     if (errCode != SQLITE_OK) {
         LOG_ERROR("failed");
         return E_SET_PERSIST_WAL;
+    }
+    LOG_INFO("success");
+    return E_OK;
+}
+
+int SqliteConnection::SetBusyTimeout(int timeout)
+{
+    auto errCode = sqlite3_busy_timeout(dbHandle, timeout);
+    if (errCode != SQLITE_OK) {
+        LOG_ERROR("set buys timeout failed, errCode=%{public}d", errCode);
+        return errCode;
     }
     LOG_INFO("success");
     return E_OK;
