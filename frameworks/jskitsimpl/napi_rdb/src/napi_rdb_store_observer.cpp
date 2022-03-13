@@ -14,33 +14,31 @@
  */
 
 #include "napi_rdb_store_observer.h"
+
 #include "js_logger.h"
 #include "js_utils.h"
 
-using OHOS::AppDataMgrJsKit::PREFIX_LABEL;
 using OHOS::AppDataMgrJsKit::JSUtils;
+using OHOS::AppDataMgrJsKit::PREFIX_LABEL;
 
 namespace OHOS::RdbJsKit {
-NapiRdbStoreObserver::NapiRdbStoreObserver(napi_env env, napi_value callback)
-    : NapiUvQueue(env, callback)
+NapiRdbStoreObserver::NapiRdbStoreObserver(napi_env env, napi_value callback) : NapiUvQueue(env, callback)
 {
-    LOG_INFO("JsRdbStoreObserver construct");
+    LOG_INFO("NapiRdbStoreObserver construct");
 }
 
 NapiRdbStoreObserver::~NapiRdbStoreObserver() noexcept
 {
-    LOG_INFO("JsRdbStoreObserver destroy");
+    LOG_INFO("NapiRdbStoreObserver destroy");
 }
 
 void NapiRdbStoreObserver::OnChange(const std::vector<std::string> &devices)
 {
-    for (const auto& device : devices) {
-        LOG_INFO("JsRdbStoreObserver OnChange: %{public}.6s", device.c_str());
-    }
-
+    LOG_INFO("NapiRdbStoreObserver::OnChange begin");
     CallFunction([devices](napi_env env, int &argc, napi_value *argv) {
         argc = 1;
         argv[0] = JSUtils::Convert2JSValue(env, devices);
     });
+    LOG_INFO("NapiRdbStoreObserver::OnChange end");
 }
-}
+} // namespace OHOS::RdbJsKit
