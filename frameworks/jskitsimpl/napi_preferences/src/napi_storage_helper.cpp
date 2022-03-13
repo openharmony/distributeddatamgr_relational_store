@@ -117,7 +117,6 @@ napi_value DeleteStorageSync(napi_env env, napi_callback_info info)
         napi_throw_error(env, nullptr, "Input path error");
         return nullptr;
     }
-    LOG_DEBUG("deleteStorage %{public}s", path.c_str());
     int errCode = PreferencesHelper::DeletePreferences(path);
     if (errCode != E_OK) {
         LOG_ERROR("deleteStorage failed %{public}d", errCode);
@@ -158,7 +157,6 @@ napi_value RemoveStorageFromCacheSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    LOG_DEBUG("removeStorageFromCache %{public}s", path.c_str());
     int errCode = PreferencesHelper::RemovePreferencesFromCache(path);
     if (errCode != E_OK) {
         LOG_ERROR("removeStorageFromCache failed %{public}d", errCode);
