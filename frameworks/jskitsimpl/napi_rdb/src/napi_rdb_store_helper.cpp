@@ -35,6 +35,7 @@ namespace RdbJsKit {
 class OpenCallback : public OHOS::NativeRdb::RdbOpenCallback {
 public:
     OpenCallback() = default;
+
     OpenCallback(napi_env env, napi_value jsObj) : env_(env)
     {
         napi_create_reference(env, jsObj, 1, &ref_);
@@ -48,6 +49,7 @@ public:
         napi_get_named_property(env_, jsObj, "onDowngrade", &property);
         napi_create_reference(env, property, 1, &onDowngrade_);
     }
+
     ~OpenCallback()
     {
         if (env_ != nullptr) {
@@ -58,7 +60,9 @@ public:
             napi_delete_reference(env_, onDowngrade_);
         }
     }
+
     OpenCallback(const OpenCallback &obj) = delete;
+
     OpenCallback &operator=(const OpenCallback &obj) = delete;
 
     OpenCallback(OpenCallback &&obj) noexcept
@@ -249,19 +253,21 @@ public:
 
 void ParseContext(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
 {
+    LOG_DEBUG("ParseContext begin");
     auto context = JSAbility::GetContext(env, object);
     NAPI_ASSERT_RETURN_VOID(env, context != nullptr, "ParseContext get context failed.");
     asyncContext->context = context;
+    LOG_DEBUG("ParseContext end");
 }
 
 void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
 {
+    LOG_DEBUG("ParseStoreConfig begin");
     napi_value value;
     napi_get_named_property(env, object, "name", &value);
     NAPI_ASSERT_RETURN_VOID(env, value != nullptr, "no database name found in config.");
     std::string name = JSUtils::Convert2String(env, value, JSUtils::DEFAULT_BUF_SIZE);
     NAPI_ASSERT_RETURN_VOID(env, !name.empty(), "Get database name empty.");
-    LOG_DEBUG("ParseStoreConfig name=%{public}s", name.c_str());
     asyncContext->config.SetName(std::move(name));
 
     value = nullptr;
@@ -279,10 +285,12 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
     NAPI_ASSERT_RETURN_VOID(env, errorCode == E_OK, "Get database real path failed.");
     asyncContext->config.SetPath(realPath);
     asyncContext->config.SetBundleName(asyncContext->context->GetBundleName());
+    LOG_DEBUG("ParseStoreConfig end");
 }
 
 void ParsePath(const napi_env &env, const napi_value &arg, HelperRdbContext *asyncContext)
 {
+    LOG_DEBUG("ParsePath begin");
     std::string path = JSUtils::Convert2String(env, arg, JSUtils::DEFAULT_BUF_SIZE);
     NAPI_ASSERT_RETURN_VOID(env, !path.empty(), "Get database name empty.");
     size_t pos = path.find_first_of('/');
@@ -296,11 +304,13 @@ void ParsePath(const napi_env &env, const napi_value &arg, HelperRdbContext *asy
     std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, path, errorCode);
     NAPI_ASSERT_RETURN_VOID(env, errorCode == E_OK, "Get database real path failed.");
     asyncContext->config.SetPath(realPath);
+    LOG_DEBUG("ParsePath end");
 }
 
 void ParseVersion(const napi_env &env, const napi_value &arg, HelperRdbContext *asyncContext)
 {
     napi_get_value_int32(env, arg, &asyncContext->version);
+    LOG_DEBUG("ParseVersion end");
 }
 
 class DefaultOpenCallback : public RdbOpenCallback {
@@ -317,7 +327,7 @@ public:
 
 napi_value GetRdbStore(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("GetRdbStore start");
+    LOG_DEBUG("RdbJsKit::GetRdbStore start");
     NapiAsyncProxy<HelperRdbContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<HelperRdbContext>::InputParser> parsers;
@@ -331,6 +341,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
     return proxy.DoAsyncWork(
         "getRdbStore",
         [](HelperRdbContext *context) {
+            LOG_DEBUG("RdbJsKit::GetRdbStore Async");
             int errCode = OK;
             DefaultOpenCallback callback;
             context->proxy = RdbHelper::GetRdbStore(context->config, context->version, callback, errCode);
@@ -342,14 +353,14 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         [](HelperRdbContext *context, napi_value &output) {
             output = RdbStoreProxy::NewInstance(context->env, context->proxy);
             context->openCallback.DelayNotify();
-            LOG_DEBUG("GetRdbStore end");
+            LOG_DEBUG("RdbJsKit::GetRdbStore end");
             return (output != nullptr) ? OK : ERR;
         });
 }
 
 napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DeleteRdbStore start");
+    LOG_DEBUG("RdbJsKit::DeleteRdbStore start");
     NapiAsyncProxy<HelperRdbContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<HelperRdbContext>::InputParser> parsers;
@@ -367,20 +378,20 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
         },
         [](HelperRdbContext *context, napi_value &output) {
             napi_status status = napi_create_int64(context->env, E_OK, &output);
-            LOG_DEBUG("DeleteRdbStore end");
+            LOG_DEBUG("RdbJsKit::DeleteRdbStore end");
             return (status == napi_ok) ? OK : ERR;
         });
 }
 
 napi_value InitRdbHelper(napi_env env, napi_value exports)
 {
-    LOG_INFO("Init InitRdbHelper");
+    LOG_INFO("RdbJsKit::InitRdbHelper begin");
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("getRdbStore", GetRdbStore),
         DECLARE_NAPI_FUNCTION("deleteRdbStore", DeleteRdbStore),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
-    LOG_INFO("Init InitRdbHelper end");
+    LOG_INFO("RdbJsKit::InitRdbHelper end");
     return exports;
 }
 } // namespace RdbJsKit
