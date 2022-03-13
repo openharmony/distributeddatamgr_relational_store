@@ -54,8 +54,6 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<AbsSharedRe
     if (resultSet->GetBlock() != nullptr) {
         proxy->sharedBlockName_ = resultSet->GetBlock()->Name();
         proxy->sharedBlockAshmemFd_ = resultSet->GetBlock()->GetFd();
-        LOG_INFO("{sharedBlockName:%{public}s, sharedBlockAshmemFd_:%{public}d}", proxy->sharedBlockName_.c_str(),
-                 proxy->sharedBlockAshmemFd_);
     }
     *proxy = std::move(resultSet);
     return instance;
@@ -117,7 +115,7 @@ napi_value ResultSetProxy::GetConstructor(napi_env env)
         DECLARE_NAPI_GETTER("sharedBlockAshmemFd", GetSharedBlockAshmemFd),
     };
     NAPI_CALL(env, napi_define_class(env, "ResultSet", NAPI_AUTO_LENGTH, Initialize, nullptr,
-        sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
+                       sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
     NAPI_CALL(env, napi_create_reference(env, cons, 1, &ctorRef_));
     return cons;
 }
