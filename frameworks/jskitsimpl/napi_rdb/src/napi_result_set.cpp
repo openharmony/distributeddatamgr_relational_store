@@ -54,8 +54,6 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<AbsSharedRe
     if (resultSet->GetBlock() != nullptr) {
         proxy->sharedBlockName_ = resultSet->GetBlock()->Name();
         proxy->sharedBlockAshmemFd_ = resultSet->GetBlock()->GetFd();
-        LOG_INFO("{sharedBlockName:%{public}s, sharedBlockAshmemFd_:%{public}d}", proxy->sharedBlockName_.c_str(),
-                 proxy->sharedBlockAshmemFd_);
     }
     *proxy = std::move(resultSet);
     return instance;
