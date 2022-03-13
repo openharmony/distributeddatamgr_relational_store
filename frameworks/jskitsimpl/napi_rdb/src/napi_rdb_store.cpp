@@ -93,19 +93,19 @@ void RdbStoreContext::BindArgs(napi_env env, napi_value arg)
         napi_typeof(env, element, &type);
         switch (type) {
             case napi_boolean: {
-                bool value;
-                napi_status status = napi_get_value_bool(env, element, &value);
-                if (status == napi_ok) {
-                    bindArgs.push_back(ValueObject(value));
-                }
-            } break;
+                    bool value;
+                    napi_status status = napi_get_value_bool(env, element, &value);
+                    if (status == napi_ok) {
+                        bindArgs.push_back(ValueObject(value));
+                    }
+                } break;
             case napi_number: {
-                double value;
-                napi_status status = napi_get_value_double(env, element, &value);
-                if (status == napi_ok) {
-                    bindArgs.push_back(ValueObject(value));
-                }
-            } break;
+                    double value;
+                    napi_status status = napi_get_value_double(env, element, &value);
+                    if (status == napi_ok) {
+                        bindArgs.push_back(ValueObject(value));
+                    }
+                } break;
             case napi_null:
                 bindArgs.push_back(ValueObject());
                 break;
@@ -1129,7 +1129,7 @@ void RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *ar
 napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
 {
     size_t argc = MAX_ON_EVENT_ARG_NUM;
-    napi_value argv[MAX_ON_EVENT_ARG_NUM]{};
+    napi_value argv[MAX_ON_EVENT_ARG_NUM] {};
     napi_value self = nullptr;
     if (napi_get_cb_info(env, info, &argc, argv, &self, nullptr) != napi_ok) {
         LOG_ERROR("RdbStoreProxy::OnEvent: get args failed");
@@ -1154,7 +1154,7 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
 {
     size_t argc = MAX_ON_EVENT_ARG_NUM;
-    napi_value argv[MAX_ON_EVENT_ARG_NUM]{};
+    napi_value argv[MAX_ON_EVENT_ARG_NUM] {};
     napi_value self = nullptr;
     if (napi_get_cb_info(env, info, &argc, argv, &self, nullptr) != napi_ok) {
         LOG_ERROR("RdbStoreProxy::OffEvent: get args failed");
