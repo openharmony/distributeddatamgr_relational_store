@@ -115,7 +115,7 @@ napi_value ResultSetProxy::GetConstructor(napi_env env)
         DECLARE_NAPI_GETTER("sharedBlockAshmemFd", GetSharedBlockAshmemFd),
     };
     NAPI_CALL(env, napi_define_class(env, "ResultSet", NAPI_AUTO_LENGTH, Initialize, nullptr,
-                       sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
+        sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
     NAPI_CALL(env, napi_create_reference(env, cons, 1, &ctorRef_));
     return cons;
 }
