@@ -94,26 +94,23 @@ __attribute__((visibility("default"))) ValuesBucket *NAPI_OHOS_Data_RdbJsKit_Val
         if (valueType == napi_string) {
             std::string valueString = JSUtils::Convert2String(env, value, JSUtils::DEFAULT_BUF_SIZE);
             valuesBucket->PutString(keyStr, valueString);
-            LOG_DEBUG("ValueObject type:%{public}d, key:%{public}s, value:%{public}s", valueType, keyStr.c_str(),
-                valueString.c_str());
+            LOG_DEBUG("ValueObject type napi_string");
         } else if (valueType == napi_number) {
             double valueNumber;
             napi_get_value_double(env, value, &valueNumber);
             valuesBucket->PutDouble(keyStr, valueNumber);
-            LOG_DEBUG("ValueObject type:%{public}d, key:%{public}s, value:%{public}lf", valueType, keyStr.c_str(),
-                valueNumber);
+            LOG_DEBUG("ValueObject type napi_number");
         } else if (valueType == napi_boolean) {
             bool valueBool = false;
             napi_get_value_bool(env, value, &valueBool);
             valuesBucket->PutBool(keyStr, valueBool);
-            LOG_DEBUG(
-                "ValueObject type:%{public}d, key:%{public}s, value:%{public}d", valueType, keyStr.c_str(), valueBool);
+            LOG_DEBUG("ValueObject type napi_boolean");
         } else if (valueType == napi_null) {
             valuesBucket->PutNull(keyStr);
-            LOG_DEBUG("ValueObject type:%{public}d, key:%{public}s, value:null", valueType, keyStr.c_str());
+            LOG_DEBUG("ValueObject type napi_null");
         } else if (valueType == napi_object) {
             valuesBucket->PutBlob(keyStr, JSUtils::Convert2U8Vector(env, value));
-            LOG_DEBUG("ValueObject type:%{public}d, key:%{public}s, value:Uint8Array", valueType, keyStr.c_str());
+            LOG_DEBUG("ValueObject type napi_object");
         } else {
             LOG_WARN("valuesBucket error");
         }

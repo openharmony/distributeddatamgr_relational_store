@@ -54,7 +54,6 @@ void ParseName(const napi_env &env, const napi_value &value, HelperAysncContext 
     NAPI_ASSERT_RETURN_VOID(env, pos == std::string::npos, "A name without path should be input.");
     std::string databaseDir = asyncContext->context->GetDatabaseDir();
     asyncContext->path = databaseDir.append("/").append(name);
-    LOG_DEBUG("ParseName path=%{public}s", databaseDir.c_str());
 }
 
 napi_value GetPreferences(napi_env env, napi_callback_info info)
