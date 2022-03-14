@@ -66,8 +66,6 @@ ohos_shared_library("preferences") {
   external_deps = [
     "ability_runtime:ability_manager",
     "ability_runtime:napi_base_context",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "hilog_native:libhilog",
     "napi:ace_napi",
     "native_appdatamgr:native_preferences",
