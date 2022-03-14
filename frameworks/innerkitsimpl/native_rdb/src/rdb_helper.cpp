@@ -102,14 +102,14 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
         return E_EMPTY_FILE_NAME;
     }
 
-    if (access(dbFileName.c_str(), F_OK) != 0) {
-        return E_OK; // not not exist
-    }
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (storeCache_.find(dbFileName) != storeCache_.end()) {
             storeCache_.erase(dbFileName);
         }
+    }
+    if (access(dbFileName.c_str(), F_OK) != 0) {
+        return E_OK; // not not exist
     }
     int result = remove(dbFileName.c_str());
     if (result != 0) {
