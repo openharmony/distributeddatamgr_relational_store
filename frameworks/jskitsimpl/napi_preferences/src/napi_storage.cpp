@@ -114,7 +114,6 @@ napi_value StorageProxy::New(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_typeof(env, args[0], &valueType));
     NAPI_ASSERT(env, valueType == napi_string, "input type not string");
     char *path = new char[PATH_MAX];
-    memset_s(path, PATH_MAX, 0, PATH_MAX);
     size_t pathLen = 0;
     napi_status status = napi_get_value_string_utf8(env, args[0], path, PATH_MAX, &pathLen);
     if (status != napi_ok) {
