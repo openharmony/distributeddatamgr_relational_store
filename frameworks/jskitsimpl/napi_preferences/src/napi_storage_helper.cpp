@@ -54,7 +54,6 @@ void ParseString(const napi_env &env, const napi_value &value, HelperAysncContex
         return;
     }
     char *path = new char[PATH_MAX];
-    memset_s(path, PATH_MAX, 0, PATH_MAX);
     size_t pathLen = 0;
     napi_get_value_string_utf8(env, value, path, PATH_MAX, &pathLen);
     asyncContext->path = path;
@@ -101,7 +100,6 @@ napi_status GetInputPath(napi_env env, napi_callback_info info, std::string &pat
     }
 
     char *path = new char[PATH_MAX];
-    memset_s(path, PATH_MAX, 0, PATH_MAX);
     size_t pathLen = 0;
     ret = napi_get_value_string_utf8(env, args[0], path, PATH_MAX, &pathLen);
     pathString = path;
