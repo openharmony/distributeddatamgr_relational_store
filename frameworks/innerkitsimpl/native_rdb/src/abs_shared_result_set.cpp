@@ -300,7 +300,7 @@ int AbsSharedResultSet::IsColumnNull(int columnIndex, bool &isNull)
         return E_OK;
     }
     isNull = false;
-    return E_ERROR;
+    return E_OK;
 }
 
 int AbsSharedResultSet::Close()
