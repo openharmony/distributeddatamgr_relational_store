@@ -82,7 +82,7 @@ __attribute__((visibility("default"))) ValuesBucket *NAPI_OHOS_Data_RdbJsKit_Val
         LOG_DEBUG("ValuesBucket errr");
         return valuesBucket;
     }
-    LOG_DEBUG("ValuesBucket num:%{public}d ", arrLen);
+    LOG_DEBUG("ValuesBucket num:%{public}u ", arrLen);
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value key;
         napi_get_element(env, keys, i, &key);
