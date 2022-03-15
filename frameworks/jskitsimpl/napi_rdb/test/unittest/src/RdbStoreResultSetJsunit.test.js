@@ -44,7 +44,7 @@ describe('rdbResultSetTest', function () {
         rdbStore = null
         await dataRdb.deleteRdbStore("Resultset.db");
     })
-    //插入数据
+    //insert data
     async function createTest() {
         console.log(TAG + "createTest data start");
         {
