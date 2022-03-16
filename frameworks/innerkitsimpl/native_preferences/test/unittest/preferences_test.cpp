@@ -502,7 +502,7 @@ HWTEST_F(PreferencesTest, NativePreferencesTest_015, TestSize.Level1)
 HWTEST_F(PreferencesTest, NativePreferencesTest_016, TestSize.Level1)
 {
     std::shared_ptr<PreferencesObserver> counter =
-        std::shared_ptr<PreferencesObserver>(new PreferencesObserverCounter());
+        std::make_shared<PreferencesObserverCounter>();
     pref->RegisterObserver(counter);
 
     pref->PutString(PreferencesTest::KEY_TEST_STRING_ELEMENT, "test");
@@ -528,7 +528,7 @@ HWTEST_F(PreferencesTest, NativePreferencesTest_016, TestSize.Level1)
 HWTEST_F(PreferencesTest, NativePreferencesTest_017, TestSize.Level1)
 {
     std::shared_ptr<PreferencesObserver> counter =
-        std::shared_ptr<PreferencesObserver>(new PreferencesObserverCounter());
+        std::make_shared<PreferencesObserverCounter>();
     pref->RegisterObserver(counter);
 
     pref->PutInt(PreferencesTest::KEY_TEST_INT_ELEMENT, 2);
