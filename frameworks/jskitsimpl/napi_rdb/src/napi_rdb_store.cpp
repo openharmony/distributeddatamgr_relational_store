@@ -287,8 +287,8 @@ void RdbStoreProxy::Release(napi_env env)
     }
 
     if (status != napi_ok) {
-        LOG_ERROR("RdbStoreProxy::Release napi_reference_unref(%{public}p) failed! code:%{public}d!, count:%{public}u",
-            ref_, status, count);
+        LOG_ERROR("RdbStoreProxy::Release napi_reference_unref failed! code:%{public}d!, count:%{public}u",
+            status, count);
     }
 }
 

@@ -31,7 +31,7 @@ OpenHarmony关系型数据库底层使用SQLite作为持久化存储引擎，支
 **图 1**  关系型数据库运作机制<a name="fig3330103712254"></a>  
 
 
-![](figures/zh-cn_image_0000001115980740.png)
+![](figures/zh-cn_关系型数据库运作机制.png)
 
 ### 轻量级偏好数据库（Preferences）<a name="section1287582752719"></a>
 
@@ -41,7 +41,8 @@ OpenHarmony关系型数据库底层使用SQLite作为持久化存储引擎，支
 
 **图 2**  轻量级偏好数据库运行机制<a name="fig833053712258"></a>  
 
-![](figures/zh-cn_image_0000001162419711.png)
+![](figures/zh-cn_轻量级偏好数据库运行机制.png)
+
 
 ### 轻量系统KV数据库（Lightweight KV store）<a name="section1287582752720"></a>
 
