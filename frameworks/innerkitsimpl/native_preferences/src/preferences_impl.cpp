@@ -31,7 +31,7 @@ namespace NativePreferences {
 static bool IsFileExist(const std::filesystem::path &inputPath)
 {
     char path[PATH_MAX + 1] = { 0x00 };
-    if (strlen(inputPath.c_str()) > PATH_MAX || realpath(inputPath.c_str(), path) == nullptr) {
+    if (strlen(inputPath.c_str()) > PATH_MAX || realpath(inputPath.c_str(), path) == NULL) {
         return false;
     }
     const char *pathString = path;

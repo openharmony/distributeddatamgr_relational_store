@@ -174,6 +174,7 @@ public:
                 LOG_ERROR("OnDowngrade get method reference failed, code:%{public}d", status);
                 return E_ERROR;
             }
+            LOG_DEBUG("OnDowngrade self:%{public}p, method:%{public}p", self, method);
             napi_value result[JSUtils::ASYNC_RST_SIZE] = { 0 };
             napi_get_undefined(env_, &result[0]);
             napi_create_object(env_, &result[1]);
