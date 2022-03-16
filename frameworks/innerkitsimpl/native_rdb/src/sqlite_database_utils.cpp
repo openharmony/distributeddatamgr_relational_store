@@ -130,7 +130,7 @@ std::string SqliteDatabaseUtils::GetDefaultDatabasePath(std::string &context, st
         }
     }
     char canonicalPath[PATH_MAX + 1] = { 0 };
-    if (realpath(databasePath.c_str(), canonicalPath) == NULL) {
+    if (realpath(databasePath.c_str(), canonicalPath) == nullptr) {
         LOG_ERROR("Failed to obtain real path, errno:%{public}d", errno);
         errorCode = E_INVALID_FILE_PATH;
         return "";
