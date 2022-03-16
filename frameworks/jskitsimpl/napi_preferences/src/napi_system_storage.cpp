@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace SystemStorageJsKit {
-typedef struct {
+struct AsyncContext {
     std::string key;
     std::string def;
     std::string val;
@@ -30,7 +30,7 @@ typedef struct {
     napi_ref complete;
     napi_status output = napi_generic_failure;
     napi_async_work request;
-} AsyncContext;
+};
 
 void ParseString(napi_env env, napi_value &object, const char *name, const bool enable, std::string &output)
 {
