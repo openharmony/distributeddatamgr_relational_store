@@ -12,11 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "napi_system_storage.h"
-#include <linux/limits.h>
 #include <string>
-
+#include <linux/limits.h>
+#include "napi_system_storage.h"
 #include "js_logger.h"
 #include "js_utils.h"
 #include "preferences_errno.h"
@@ -79,7 +77,10 @@ napi_value Operate(napi_env env, napi_callback_info info, const char *resource, 
     napi_value resource_name;
     NAPI_CALL(env, napi_create_string_utf8(env, resource, NAPI_AUTO_LENGTH, &resource_name));
     NAPI_CALL(env, napi_create_async_work(
-                       env, nullptr, resource_name, execute,
+                       env,
+                       nullptr,
+                       resource_name,
+                       execute,
                        [](napi_env env, napi_status status, void *data) {
                            AsyncContext *ctx = static_cast<AsyncContext *>(data);
 
