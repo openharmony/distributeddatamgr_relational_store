@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <string>
 #include <linux/limits.h>
-#include "napi_system_storage.h"
 #include "js_logger.h"
 #include "js_utils.h"
-#include "preferences_errno.h"
+#include "napi_system_storage.h"
 
 namespace OHOS {
 namespace SystemStorageJsKit {
@@ -28,7 +28,7 @@ typedef struct {
     napi_ref success;
     napi_ref fail;
     napi_ref complete;
-    int32_t output;
+    napi_status output = napi_generic_failure;
     napi_async_work request;
 } AsyncContext;
 
@@ -53,7 +53,25 @@ void ParseFunction(napi_env env, napi_value &object, const char *name, napi_ref 
         NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, value, 1, &output));
     }
 }
+void complete(napi_env env, napi_status status, void *data)
+{
+    AsyncContext *ctx = static_cast<AsyncContext *>(data);
+    if (status != napi_ok) {
+        napi_throw_type_error(env, nullptr, "Execute callback failed.");
+        return;
+    }
+    napi_value successCallBack;
+    NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, ctx->success, &successCallBack));
+    napi_value result;
+    NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, successCallBack, 0, nullptr, &result));
 
+    napi_delete_reference(env, ctx->success);
+    napi_delete_reference(env, ctx->fail);
+    napi_delete_reference(env, ctx->complete);
+    napi_delete_async_work(env, ctx->request);
+
+    delete ctx;
+}
 napi_value Operate(napi_env env, napi_callback_info info, const char *resource, napi_async_execute_callback execute)
 {
     size_t argc = 1;
@@ -65,44 +83,23 @@ napi_value Operate(napi_env env, napi_callback_info info, const char *resource, 
     NAPI_ASSERT(env, valueType == napi_object, "Wrong argument type, object expected.");
 
     AsyncContext *context = new AsyncContext();
-    context->output = 0;
 
     ParseString(env, argv[0], "key", true, context->key);
     ParseString(env, argv[0], "value", false, context->val);
     ParseString(env, argv[0], "default", false, context->def);
+
     ParseFunction(env, argv[0], "success", context->success);
     ParseFunction(env, argv[0], "fail", context->fail);
     ParseFunction(env, argv[0], "complete", context->complete);
 
-    napi_value resource_name;
-    NAPI_CALL(env, napi_create_string_utf8(env, resource, NAPI_AUTO_LENGTH, &resource_name));
-    NAPI_CALL(env, napi_create_async_work(
-                       env,
-                       nullptr,
-                       resource_name,
-                       execute,
-                       [](napi_env env, napi_status status, void *data) {
-                           AsyncContext *ctx = static_cast<AsyncContext *>(data);
-
-                           if (status != napi_ok) {
-                               napi_throw_type_error(env, nullptr, "Execute callback failed.");
-                               return;
-                           }
-
-                           napi_value successCallBack;
-                           NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, ctx->success, &successCallBack));
-                           napi_value result;
-                           NAPI_CALL_RETURN_VOID(
-                               env, napi_call_function(env, nullptr, successCallBack, 0, nullptr, &result));
-                           NAPI_CALL_RETURN_VOID(env, napi_delete_reference(env, ctx->success));
-                           NAPI_CALL_RETURN_VOID(env, napi_delete_async_work(env, ctx->request));
-                       },
-                       context, &context->request));
+    napi_value resourceName;
+    NAPI_CALL(env, napi_create_string_utf8(env, resource, NAPI_AUTO_LENGTH, &resourceName));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, execute,
+                       complete, context, &context->request));
     NAPI_CALL(env, napi_queue_async_work(env, context->request));
 
     napi_value ret = nullptr;
     napi_get_undefined(env, &ret);
-    delete context;
     return ret;
 }
 
@@ -111,7 +108,7 @@ napi_value NapiGet(napi_env env, napi_callback_info info)
     return Operate(env, info, "get", [](napi_env env, void *data) {
         AsyncContext *context = static_cast<AsyncContext *>(data);
         context->val = context->def;
-        context->output = 0;
+        context->output = napi_ok;
     });
 }
 
