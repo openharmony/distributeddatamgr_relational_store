@@ -78,6 +78,7 @@
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_dataability:dataability",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_preferences:preferences",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_preferences:storage",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_preferences:storage_napi",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_rdb:rdb"
             ],
             "inner_kits": [

@@ -45,6 +45,31 @@ ohos_shared_library("storage") {
   relative_install_dir = "module/data"
 }
 
+ohos_shared_library("storage_napi") {
+  include_dirs = [
+    "include",
+    "../common/include",
+    "//third_party/node/src",
+    "//utils/native/base/include",
+  ]
+
+  sources = [
+    "../common/src/js_utils.cpp",
+    "src/entry_point_system_storage.cpp",
+    "src/napi_system_storage.cpp",
+  ]
+
+  external_deps = [
+    "hilog_native:libhilog",
+    "napi:ace_napi",
+    "native_appdatamgr:native_preferences",
+  ]
+
+  subsystem_name = "distributeddatamgr"
+  part_name = "native_appdatamgr"
+  relative_install_dir = "module"
+}
+
 ohos_shared_library("preferences") {
   include_dirs = [
     "include",
@@ -67,6 +92,7 @@ ohos_shared_library("preferences") {
     "ability_runtime:ability_manager",
     "ability_runtime:napi_base_context",
     "hilog_native:libhilog",
+    "ipc:ipc_core",
     "napi:ace_napi",
     "native_appdatamgr:native_preferences",
   ]
