@@ -36,6 +36,7 @@ ohos_shared_library("storage") {
 
   external_deps = [
     "hilog_native:libhilog",
+    "ipc:ipc_core",
     "napi:ace_napi",
     "native_appdatamgr:native_preferences",
   ]
@@ -61,7 +62,6 @@ ohos_shared_library("storage_napi") {
 
   external_deps = [
     "hilog_native:libhilog",
-    "ipc:ipc_core",
     "napi:ace_napi",
     "native_appdatamgr:native_preferences",
   ]
