@@ -26,7 +26,7 @@ With the SQLite database as the persistence engine, the OpenHarmony RDB supports
 **Figure  1**  How RDB works<a name="fig3330103712254"></a>  
 
 
-![](figures/en-us_image_0000001115980740.png)
+![](figures/en-us_How_RDB_works.png)
 
 ### Preferences Database<a name="section1287582752719"></a>
 
@@ -37,7 +37,7 @@ With the SQLite database as the persistence engine, the OpenHarmony RDB supports
 **Figure  2**  How the preferences database works<a name="fig833053712258"></a>  
 
 
-![](figures/en-us_image_0000001162419711.png)
+![](figures/en-us_How_the_preferences_database_works.png)
 
 ## Directory Structure<a name="section161941989596"></a>
 
