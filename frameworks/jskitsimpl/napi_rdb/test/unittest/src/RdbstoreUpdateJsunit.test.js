@@ -84,35 +84,38 @@ describe('rdbStoreUpdateTest', function () {
             updatePromise.then(async (ret) => {
                 await expect(1).assertEqual(ret);
                 await console.log(TAG + "update done: " + ret);
+
+                //查询
+                {
+                    let predicates = await new dataRdb.RdbPredicates("test")
+                    let resultSet = await rdbStore.query(predicates)
+
+                    expect(true).assertEqual(resultSet.goToFirstRow())
+                    const id = await resultSet.getLong(resultSet.getColumnIndex("id"))
+                    const name = await resultSet.getString(resultSet.getColumnIndex("name"))
+                    const age = await resultSet.getLong(resultSet.getColumnIndex("age"))
+                    const salary = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                    const blobType = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+
+                    await expect(1).assertEqual(id);
+                    await expect("lisi").assertEqual(name);
+                    await expect(20).assertEqual(age);
+                    await expect(200.5).assertEqual(salary);
+                    await expect(4).assertEqual(blobType[0]);
+                    await expect(5).assertEqual(blobType[1]);
+                    await expect(6).assertEqual(blobType[2]);
+                    console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
+                    await expect(false).assertEqual(resultSet.goToNextRow())
+                    resultSet = null
+                }
+                
             }).catch((err) => {
                 console.log(TAG + "update error");
                 expect(null).assertFail();
             })
             //await updatePromise
         }
-        //查询
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-
-            expect(true).assertEqual(resultSet.goToFirstRow())
-            const id = await resultSet.getLong(resultSet.getColumnIndex("id"))
-            const name = await resultSet.getString(resultSet.getColumnIndex("name"))
-            const age = await resultSet.getLong(resultSet.getColumnIndex("age"))
-            const salary = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
-            const blobType = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
-
-            await expect(1).assertEqual(id);
-            await expect("lisi").assertEqual(name);
-            await expect(20).assertEqual(age);
-            await expect(200.5).assertEqual(salary);
-            await expect(4).assertEqual(blobType[0]);
-            await expect(5).assertEqual(blobType[1]);
-            await expect(6).assertEqual(blobType[2]);
-            console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
-            await expect(false).assertEqual(resultSet.goToNextRow())
-            resultSet = null
-        }
+        
         done();
         console.log(TAG + "************* testRdbStoreUpdate0001 end   *************");
     })
