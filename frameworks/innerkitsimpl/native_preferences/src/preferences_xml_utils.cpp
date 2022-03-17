@@ -48,7 +48,7 @@ bool PreferencesXmlUtils::ReadSettingXml(const std::string &fileName, std::vecto
     }
     const char *pathString = path;
     xmlDoc *doc = xmlReadFile(pathString, "UTF-8", XML_PARSE_NOBLANKS);
-    if (doc == NULL) {
+    if (doc == nullptr) {
         LOG_ERROR("The file name is incorrect.");
         return false;
     }
@@ -61,8 +61,8 @@ bool PreferencesXmlUtils::ReadSettingXml(const std::string &fileName, std::vecto
     }
 
     bool success = true;
-    const xmlNode *cur = NULL;
-    for (cur = root->children; cur != NULL; cur = cur->next) {
+    const xmlNode *cur = nullptr;
+    for (cur = root->children; cur != nullptr; cur = cur->next) {
         Element element;
 
         if (ParseNodeElement(cur, element)) {
@@ -106,7 +106,7 @@ bool ParseNodeElement(const xmlNode *node, Element &element)
 /* static */
 bool ParsePrimitiveNodeElement(const xmlNode *node, Element &element)
 {
-    if (node == NULL) {
+    if (node == nullptr) {
         return false;
     }
 
@@ -114,7 +114,7 @@ bool ParsePrimitiveNodeElement(const xmlNode *node, Element &element)
     xmlChar *value = xmlGetProp(node, reinterpret_cast<const xmlChar *>("value"));
 
     bool success = false;
-    if (key != NULL && value != NULL) {
+    if (key != nullptr && value != nullptr) {
         element.tag_ = std::string(reinterpret_cast<const char *>(node->name));
         element.key_ = std::string(reinterpret_cast<char *>(key));
         element.value_ = std::string(reinterpret_cast<char *>(value));
@@ -123,10 +123,10 @@ bool ParsePrimitiveNodeElement(const xmlNode *node, Element &element)
         LOG_ERROR("Failed to obtain a valid key or value when parsing %{public}s.", node->name);
     }
 
-    if (key != NULL) {
+    if (key != nullptr) {
         xmlFree(key);
     }
-    if (value != NULL) {
+    if (value != nullptr) {
         xmlFree(value);
     }
     return success;
@@ -135,7 +135,7 @@ bool ParsePrimitiveNodeElement(const xmlNode *node, Element &element)
 /* static */
 bool ParseStringNodeElement(const xmlNode *node, Element &element)
 {
-    if (node == NULL) {
+    if (node == nullptr) {
         return false;
     }
 
@@ -143,9 +143,9 @@ bool ParseStringNodeElement(const xmlNode *node, Element &element)
     xmlChar *text = xmlNodeGetContent(node);
 
     bool success = false;
-    if (text != NULL) {
+    if (text != nullptr) {
         element.tag_ = std::string(reinterpret_cast<const char *>(node->name));
-        if (key != NULL) {
+        if (key != nullptr) {
             element.key_ = std::string(reinterpret_cast<char *>(key));
         }
         element.value_ = std::string(reinterpret_cast<char *>(text));
@@ -154,10 +154,10 @@ bool ParseStringNodeElement(const xmlNode *node, Element &element)
         LOG_ERROR("Failed to obtain a valid key or value when parsing a String element.");
     }
 
-    if (key != NULL) {
+    if (key != nullptr) {
         xmlFree(key);
     }
-    if (text != NULL) {
+    if (text != nullptr) {
         xmlFree(text);
     }
     return success;
@@ -166,7 +166,7 @@ bool ParseStringNodeElement(const xmlNode *node, Element &element)
 /* static */
 bool ParseSetNodeElement(const xmlNode *node, Element &element)
 {
-    if (node == NULL) {
+    if (node == nullptr) {
         return false;
     }
 
@@ -174,13 +174,13 @@ bool ParseSetNodeElement(const xmlNode *node, Element &element)
     const xmlNode *children = node->children;
 
     bool success = false;
-    if (key != NULL) {
+    if (key != nullptr) {
         element.tag_ = std::string(reinterpret_cast<const char *>(node->name));
         element.key_ = std::string(reinterpret_cast<char *>(key));
 
-        const xmlNode *cur = NULL;
+        const xmlNode *cur = nullptr;
         bool finishTravelChild = true;
-        for (cur = children; cur != NULL; cur = cur->next) {
+        for (cur = children; cur != nullptr; cur = cur->next) {
             Element child;
             if (ParseNodeElement(cur, child)) {
                 element.children_.push_back(child);
@@ -195,7 +195,7 @@ bool ParseSetNodeElement(const xmlNode *node, Element &element)
         LOG_ERROR("Failed to obtain a valid key or value when parsing a Set element.");
     }
 
-    if (key != NULL) {
+    if (key != nullptr) {
         xmlFree(key);
     }
     return success;
@@ -212,12 +212,12 @@ bool PreferencesXmlUtils::WriteSettingXml(const std::string &fileName, std::vect
 
     // define doc and root Node
     xmlDoc *doc = xmlNewDoc(BAD_CAST "1.0");
-    if (doc == NULL) {
+    if (doc == nullptr) {
         LOG_ERROR("Failed to initialize the xmlDoc.");
         return false;
     }
     xmlNode *root_node = xmlNewNode(NULL, BAD_CAST "preferences");
-    if (root_node == NULL) {
+    if (root_node == nullptr) {
         LOG_ERROR("The xmlDoc failed to initialize the root node.");
         xmlFreeDoc(doc);
         return false;
@@ -230,12 +230,12 @@ bool PreferencesXmlUtils::WriteSettingXml(const std::string &fileName, std::vect
     // set children node
     for (Element element : settings) {
         xmlNode *node = CreateElementNode(element);
-        if (node == NULL) {
+        if (node == nullptr) {
             LOG_ERROR("The xmlDoc failed to initialize the element node.");
             xmlFreeDoc(doc);
             return false;
         }
-        if (root_node == NULL || xmlAddChild(root_node, node) == NULL) {
+        if (root_node == nullptr || xmlAddChild(root_node, node) == nullptr) {
             /* free node in case of error */
             LOG_ERROR("The xmlDoc failed to add the child node.");
             xmlFreeNode(node);
@@ -282,7 +282,7 @@ xmlNode *CreateElementNode(Element &element)
 xmlNode *CreatePrimitiveNode(Element &element)
 {
     xmlNode *node = xmlNewNode(NULL, BAD_CAST element.tag_.c_str());
-    if (node == NULL) {
+    if (node == nullptr) {
         LOG_ERROR("The xmlDoc failed to initialize the primitive element node.");
         return nullptr;
     }
@@ -298,7 +298,7 @@ xmlNode *CreatePrimitiveNode(Element &element)
 xmlNode *CreateStringNode(Element &element)
 {
     xmlNode *node = xmlNewNode(NULL, BAD_CAST element.tag_.c_str());
-    if (node == NULL) {
+    if (node == nullptr) {
         LOG_ERROR("The xmlDoc failed to initialize the string element node.");
         return nullptr;
     }
@@ -310,7 +310,7 @@ xmlNode *CreateStringNode(Element &element)
 
     const char *value = element.value_.c_str();
     xmlNodePtr text = xmlNewText(BAD_CAST value);
-    if (xmlAddChild(node, text) == NULL) {
+    if (xmlAddChild(node, text) == nullptr) {
         xmlFreeNode(text);
     }
     return node;
@@ -319,7 +319,7 @@ xmlNode *CreateStringNode(Element &element)
 xmlNode *CreateSetNode(Element &element)
 {
     xmlNode *node = xmlNewNode(NULL, BAD_CAST element.tag_.c_str());
-    if (node == NULL) {
+    if (node == nullptr) {
         LOG_ERROR("The xmlDoc failed to initialize the set element node.");
         return nullptr;
     }
@@ -329,10 +329,10 @@ xmlNode *CreateSetNode(Element &element)
 
     for (Element child : element.children_) {
         xmlNode *childNode = CreateElementNode(child);
-        if (childNode == NULL) {
+        if (childNode == nullptr) {
             continue;
         }
-        if (xmlAddChild(node, childNode) == NULL) {
+        if (xmlAddChild(node, childNode) == nullptr) {
             xmlFreeNode(childNode);
         }
     }
