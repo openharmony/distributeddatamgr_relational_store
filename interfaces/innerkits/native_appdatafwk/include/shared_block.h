@@ -76,6 +76,11 @@ public:
     ~SharedBlock();
 
     /**
+     * Init current shared block.
+     */
+    bool Init();
+
+    /**
      * Create a shared block.
      */
     static int Create(const std::string &name, size_t size, SharedBlock *&outSharedBlock);
