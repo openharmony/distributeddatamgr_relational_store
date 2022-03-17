@@ -30,6 +30,8 @@ namespace AppDataFwk {
 SharedBlock::SharedBlock(const std::string &name, sptr<Ashmem> ashmem, size_t size, bool readOnly)
     : mName(name), ashmem_(ashmem), mSize(size), mReadOnly(readOnly)
 {
+    mData = const_cast<void *>(ashmem->ReadFromAshmem(sizeof(SharedBlockHeader), 0));
+    mHeader = static_cast<SharedBlockHeader *>(mData);
 }
 
 SharedBlock::~SharedBlock()
@@ -51,16 +53,6 @@ std::string SharedBlock::ToUtf8(std::u16string str16)
     return OHOS::Str16ToStr8(str16);
 }
 
-bool SharedBlock::Init()
-{
-    mData = const_cast<void *>(ashmem_->ReadFromAshmem(sizeof(SharedBlockHeader), 0));
-    mHeader = static_cast<SharedBlockHeader *>(mData);
-    if (mHeader == nullptr) {
-        return false;
-    }
-    return true;
-}
-
 int SharedBlock::CreateSharedBlock(const std::string &name, size_t size, sptr<Ashmem> ashmem,
     SharedBlock *&outSharedBlock)
 {
@@ -68,12 +60,6 @@ int SharedBlock::CreateSharedBlock(const std::string &name, size_t size, sptr<As
     outSharedBlock = new SharedBlock(name, ashmem, size, false);
     if (outSharedBlock == nullptr) {
         LOG_ERROR("CreateSharedBlock: new SharedBlock error.");
-        return SHARED_BLOCK_BAD_VALUE;
-    }
-    if (outSharedBlock->Init() == false) {
-        delete outSharedBlock;
-        LOG_ERROR("CreateSharedBlock: Init error.");
-        return SHARED_BLOCK_ASHMEM_ERROR;
     }
     return SHARED_BLOCK_OK;
 }
