@@ -30,8 +30,6 @@ namespace AppDataFwk {
 SharedBlock::SharedBlock(const std::string &name, sptr<Ashmem> ashmem, size_t size, bool readOnly)
     : mName(name), ashmem_(ashmem), mSize(size), mReadOnly(readOnly)
 {
-    mData = const_cast<void *>(ashmem->ReadFromAshmem(sizeof(SharedBlockHeader), 0));
-    mHeader = static_cast<SharedBlockHeader *>(mData);
 }
 
 SharedBlock::~SharedBlock()
@@ -53,6 +51,16 @@ std::string SharedBlock::ToUtf8(std::u16string str16)
     return OHOS::Str16ToStr8(str16);
 }
 
+bool SharedBlock::Init()
+{
+    mData = const_cast<void *>(ashmem_->ReadFromAshmem(sizeof(SharedBlockHeader), 0));
+    mHeader = static_cast<SharedBlockHeader *>(mData);
+    if (mHeader == nullptr) {
+        return false;
+    }
+    return true;
+}
+
 int SharedBlock::CreateSharedBlock(const std::string &name, size_t size, sptr<Ashmem> ashmem,
     SharedBlock *&outSharedBlock)
 {
@@ -60,6 +68,13 @@ int SharedBlock::CreateSharedBlock(const std::string &name, size_t size, sptr<As
     outSharedBlock = new SharedBlock(name, ashmem, size, false);
     if (outSharedBlock == nullptr) {
         LOG_ERROR("CreateSharedBlock: new SharedBlock error.");
+        return SHARED_BLOCK_BAD_VALUE;
+    }
+
+    if (outSharedBlock->Init() == false) {
+        delete outSharedBlock;
+        LOG_ERROR("CreateSharedBlock: mHeader is null.");
+        return SHARED_BLOCK_ASHMEM_ERROR;
     }
     return SHARED_BLOCK_OK;
 }
@@ -113,7 +128,14 @@ int SharedBlock::ReadMessageParcel(MessageParcel &parcel, SharedBlock *&block)
     block = new (std::nothrow) SharedBlock(name, ashmem, ashmem->GetAshmemSize(), true);
     if (block == nullptr) {
         LOG_ERROR("ReadMessageParcel new SharedBlock error.");
+        return SHARED_BLOCK_BAD_VALUE;
     }
+    if (block->Init() == false) {
+        delete block;
+        LOG_ERROR("ReadMessageParcel: mHeader is null.");
+        return SHARED_BLOCK_ASHMEM_ERROR;
+    }
+
     LOG_DEBUG("Created SharedBlock from parcel: unusedOffset=%{private}d, "
               "rowNums=%{private}d, columnNums=%{private}d, mSize=%{private}d, mData=%{private}p",
               block->mHeader->unusedOffset, block->mHeader->rowNums, block->mHeader->columnNums,
