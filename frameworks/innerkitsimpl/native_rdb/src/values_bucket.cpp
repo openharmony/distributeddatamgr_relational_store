@@ -123,8 +123,7 @@ ValuesBucket *ValuesBucket::Unmarshalling(Parcel &parcel)
     int mapSize = parcel.ReadInt32();
     std::map<std::string, ValueObject> valuesMap;
     ValueObject *value = nullptr;
-    for (int i = 0; i < mapSize; i++)
-    {
+    for (int i = 0; i < mapSize; i++) {
         std::string key = parcel.ReadString();
         value = parcel.ReadParcelable<ValueObject>();
         valuesMap.insert(std::make_pair(key, *value));
