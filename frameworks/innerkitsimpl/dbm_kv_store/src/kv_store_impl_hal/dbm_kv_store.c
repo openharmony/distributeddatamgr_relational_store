@@ -911,7 +911,7 @@ static int InitValue(int index, const void* value, unsigned int len, char* value
         return -1;
     }
 
-    int ret = memcpy_s(valueContent + KV_SUM_INDEX, len, value, len);
+    errno_t ret = memcpy_s(valueContent + KV_SUM_INDEX, len, value, len);
     if (ret != EOK) {
         return -1;
     }

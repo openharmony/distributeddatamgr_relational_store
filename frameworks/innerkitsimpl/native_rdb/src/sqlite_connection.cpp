@@ -381,6 +381,7 @@ int SqliteConnection::PrepareAndBind(const std::string &sql, const std::vector<V
 {
     if (dbHandle == nullptr) {
         LOG_ERROR("SqliteConnection dbHandle is nullptr");
+        return E_INVALID_STATEMENT;
     }
     int errCode = statement.Prepare(dbHandle, sql);
     if (errCode != E_OK) {
