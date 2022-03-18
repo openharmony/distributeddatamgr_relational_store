@@ -122,11 +122,14 @@ ValuesBucket *ValuesBucket::Unmarshalling(Parcel &parcel)
 {
     int mapSize = parcel.ReadInt32();
     std::map<std::string, ValueObject> valuesMap;
-    for (int i = 0; i < mapSize; i++) {
+    ValueObject *value = nullptr;
+    for (int i = 0; i < mapSize; i++)
+    {
         std::string key = parcel.ReadString();
-        ValueObject *value = parcel.ReadParcelable<ValueObject>();
+        value = parcel.ReadParcelable<ValueObject>();
         valuesMap.insert(std::make_pair(key, *value));
     }
+    value = nullptr;
     return new ValuesBucket(valuesMap);
 }
 } // namespace NativeRdb
