@@ -22,7 +22,7 @@ namespace AppDataMgrJsKit {
 Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
 {
     databaseDir_ = stageContext->GetDatabaseDir();
-    preferencesDir_ = stageContext->GetStorageDir();
+    preferencesDir_ = stageContext->GetPreferencesDir();
     bundleName_ = stageContext->GetBundleName();
 }
 
