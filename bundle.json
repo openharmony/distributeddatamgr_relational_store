@@ -44,7 +44,7 @@
             "SystemCapability.DistributedDataManager.RelationalStore.Core",
             "SystemCapability.DistributedDataManager.Preferences.Core"
         ],
-        "features": [],
+        "features": ["native_appdatamgr_rdb_support_icu"],
         "adapted_system_type": [
             "standard"
         ],

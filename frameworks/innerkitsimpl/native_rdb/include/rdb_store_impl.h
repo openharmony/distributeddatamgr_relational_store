@@ -86,7 +86,9 @@ public:
     bool IsHoldingConnection() override;
     int GiveConnectionTemporarily(long milliseconds);
     int BeginTransactionWithObserver(TransactionObserver *transactionObserver);
+#ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
+#endif
     int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
         const std::vector<uint8_t> &newKey) override;
     std::string GetName();

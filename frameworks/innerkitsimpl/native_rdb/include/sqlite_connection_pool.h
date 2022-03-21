@@ -40,7 +40,9 @@ public:
     void ReleaseConnection(SqliteConnection *connection);
     int ChangeEncryptKey(const std::vector<uint8_t> &newKey);
     int ReOpenAvailableReadConnections();
+#ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
+#endif
     int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
         const std::vector<uint8_t> &newKey);
     std::stack<BaseTransaction> &getTransactionStack();

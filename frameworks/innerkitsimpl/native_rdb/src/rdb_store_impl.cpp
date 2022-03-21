@@ -628,6 +628,7 @@ int RdbStoreImpl::PrepareAndGetInfo(const std::string &sql, bool &outIsReadOnly,
     return errCode;
 }
 
+#ifdef RDB_SUPPORT_ICU
 /**
  * Sets the database locale.
  */
@@ -644,6 +645,7 @@ int RdbStoreImpl::ConfigLocale(const std::string localeStr)
     }
     return connectionPool->ConfigLocale(localeStr);
 }
+#endif
 
 /**
  * Restores a database from a specified encrypted or unencrypted database file.

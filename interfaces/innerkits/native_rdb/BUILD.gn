@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/ohos.gni")
+import("//foundation/distributeddatamgr/appdatamgr/appdatamgr.gni")
 
 config("native_rdb_config") {
   visibility = [ ":*" ]
@@ -19,9 +20,6 @@ config("native_rdb_config") {
     "include",
     "../../../frameworks/innerkitsimpl/native_rdb/include",
     "//utils/system/safwk/native/include",
-    "//third_party/icu/icu4c/source",
-    "//third_party/icu/icu4c/source/i18n",
-    "//third_party/icu/icu4c/source/common",
   ]
 
   defines = [
@@ -29,6 +27,15 @@ config("native_rdb_config") {
     "SQLITE_HAS_CODEC",
     "SQLITE_DISTRIBUTE_RELATIONAL",
   ]
+
+  if (native_appdatamgr_rdb_support_icu) {
+    include_dirs += [
+      "//third_party/icu/icu4c/source",
+      "//third_party/icu/icu4c/source/i18n",
+      "//third_party/icu/icu4c/source/common",
+    ]
+    defines += [ "RDB_SUPPORT_ICU" ]
+  }
 }
 
 config("native_rdb_public_config") {
