@@ -19,7 +19,9 @@
 #include <securec.h>
 #include <sqlite3sym.h>
 #include <sys/stat.h>
+#ifdef RDB_SUPPORT_ICU
 #include <unicode/ucol.h>
+#endif
 #include <unistd.h>
 
 #include <cerrno>
@@ -577,6 +579,7 @@ void SqliteConnection::LimitPermission(const std::string &dbPath) const
     }
 }
 
+#ifdef RDB_SUPPORT_ICU
 int Collate8Compare(void *p, int n1, const void *v1, int n2, const void *v2)
 {
     UCollator *coll = reinterpret_cast<UCollator *>(p);
@@ -632,6 +635,7 @@ int SqliteConnection::ConfigLocale(const std::string localeStr)
 
     return E_OK;
 }
+#endif
 
 /**
  * Executes a statement and populates the specified with a range of results.
