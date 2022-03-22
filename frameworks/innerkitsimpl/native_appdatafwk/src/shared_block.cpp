@@ -30,6 +30,7 @@ namespace AppDataFwk {
 SharedBlock::SharedBlock(const std::string &name, sptr<Ashmem> ashmem, size_t size, bool readOnly)
     : mName(name), ashmem_(ashmem), mSize(size), mReadOnly(readOnly)
 {
+    mHeader = nullptr;
 }
 
 SharedBlock::~SharedBlock()
