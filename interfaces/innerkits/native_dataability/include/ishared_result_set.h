@@ -55,6 +55,7 @@ protected:
         FUNC_GET_ROW_INDEX,
         FUNC_BUTT
     };
+    
 private:
     static std::function<std::shared_ptr<AbsSharedResultSet>(MessageParcel &parcel)> consumerCreator_;
     static std::function<sptr<ISharedResultSet>(std::shared_ptr<AbsSharedResultSet>, MessageParcel &)> providerCreator_;
