@@ -58,6 +58,7 @@ public:
 
     bool Marshalling(Parcel &parcel) const override;
     static ValueObject *Unmarshalling(Parcel &parcel);
+    
 private:
     ValueObjectType type;
     std::variant<int64_t, double, std::string, bool, std::vector<uint8_t>> value;
