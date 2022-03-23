@@ -27,6 +27,7 @@ public:
     ~ISharedResultSetStub();
     static sptr<ISharedResultSet> CreateStub(std::shared_ptr<AbsSharedResultSet> resultSet, MessageParcel &parcel);
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+    
 protected:
     int HandleGetRowCountRequest(MessageParcel &data, MessageParcel &reply);
     int HandleGetAllColumnNamesRequest(MessageParcel &data, MessageParcel &reply);
