@@ -25,7 +25,7 @@ class AbsRdbPredicates : public AbsPredicates {
 public:
     explicit AbsRdbPredicates(std::string tableName);
     
-    virtual ~AbsRdbPredicates() override {}
+    ~AbsRdbPredicates() override {}
     
     std::string ToString() const;
     
