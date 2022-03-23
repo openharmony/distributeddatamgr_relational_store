@@ -20,7 +20,7 @@ namespace OHOS {
 namespace NativeRdb {
 class TransactionObserver {
 public:
-    virtual ~TransactionObserver() {};
+    virtual ~TransactionObserver() {}
     virtual void OnBegin() const;
     virtual void OnCommit() const;
     virtual void OnRollback() const;

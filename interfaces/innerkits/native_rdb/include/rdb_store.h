@@ -46,7 +46,7 @@ public:
     using DropOption = DistributedRdb::DropOption;
     using RdbStoreObserver = DistributedRdb::RdbStoreObserver;
     
-    virtual ~RdbStore() {};
+    virtual ~RdbStore() {}
     virtual int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) = 0;
     virtual int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) = 0;
     virtual int InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
