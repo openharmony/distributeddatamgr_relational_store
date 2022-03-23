@@ -50,6 +50,7 @@ public:
     virtual void SetBlock(AppDataFwk::SharedBlock *block);
     int Close() override;
     bool HasBlock() const;
+
 protected:
     int CheckState(int columnIndex);
     void ClearBlock();
@@ -60,6 +61,7 @@ protected:
     friend class ISharedResultSetProxy;
     bool Unmarshalling(MessageParcel &parcel);
     bool Marshalling(MessageParcel &parcel);
+    
 private:
     // The default position of the cursor
     static const int INIT_POS = -1;
