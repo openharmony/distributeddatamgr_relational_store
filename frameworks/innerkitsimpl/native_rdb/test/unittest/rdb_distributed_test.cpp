@@ -35,9 +35,9 @@ public:
     static void SetUpTestCase();
     static void TearDownTestCase() {
         RdbHelper::DeleteRdbStore(RdbStoreDistributedTest::DRDB_PATH + RdbStoreDistributedTest::DRDB_NAME);
-    };
-    void SetUp() {};
-    void TearDown() {};
+    }
+    void SetUp() {}
+    void TearDown() {}
 
     void InsertValue(std::shared_ptr<RdbStore> &store);
     void CheckResultSet(std::shared_ptr<RdbStore> &store);
