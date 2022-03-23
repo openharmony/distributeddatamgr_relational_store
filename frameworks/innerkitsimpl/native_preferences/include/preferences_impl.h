@@ -40,49 +40,49 @@ public:
 
     int Init();
 
-    virtual int GetInt(const std::string &key, int defValue) override;
+    int GetInt(const std::string &key, int defValue) override;
 
-    virtual std::string GetString(const std::string &key, const std::string &defValue) override;
+    std::string GetString(const std::string &key, const std::string &defValue) override;
 
-    virtual bool GetBool(const std::string &key, bool defValue) override;
+    bool GetBool(const std::string &key, bool defValue) override;
 
-    virtual float GetFloat(const std::string &key, float defValue) override;
+    float GetFloat(const std::string &key, float defValue) override;
 
-    virtual double GetDouble(const std::string &key, double defValue) override;
+    double GetDouble(const std::string &key, double defValue) override;
 
-    virtual int64_t GetLong(const std::string &key, int64_t defValue) override;
+    int64_t GetLong(const std::string &key, int64_t defValue) override;
 
-    virtual std::set<std::string> GetStringSet(const std::string &key, std::set<std::string> &defValue) override;
+    std::set<std::string> GetStringSet(const std::string &key, std::set<std::string> &defValue) override;
 
-    virtual bool HasKey(const std::string &key) override;
+    bool HasKey(const std::string &key) override;
 
-    virtual int PutInt(const std::string &key, int value) override;
+    int PutInt(const std::string &key, int value) override;
 
-    virtual int PutString(const std::string &key, const std::string &value) override;
+    int PutString(const std::string &key, const std::string &value) override;
 
-    virtual int PutBool(const std::string &key, bool value) override;
+    int PutBool(const std::string &key, bool value) override;
 
-    virtual int PutLong(const std::string &key, int64_t value) override;
+    int PutLong(const std::string &key, int64_t value) override;
 
-    virtual int PutFloat(const std::string &key, float value) override;
+    int PutFloat(const std::string &key, float value) override;
 
-    virtual int PutDouble(const std::string &key, double value) override;
+    int PutDouble(const std::string &key, double value) override;
 
-    virtual int PutStringSet(const std::string &key, const std::set<std::string> &value) override;
+    int PutStringSet(const std::string &key, const std::set<std::string> &value) override;
 
-    virtual std::map<std::string, PreferencesValue> GetAll() override;
+    std::map<std::string, PreferencesValue> GetAll() override;
 
-    virtual int Delete(const std::string &key) override;
+    int Delete(const std::string &key) override;
 
-    virtual int Clear() override;
+    int Clear() override;
 
-    virtual void Flush() override;
+    void Flush() override;
 
-    virtual int FlushSync() override;
+    int FlushSync() override;
 
-    virtual void RegisterObserver(std::shared_ptr<PreferencesObserver> preferencesObserver) override;
+    void RegisterObserver(std::shared_ptr<PreferencesObserver> preferencesObserver) override;
 
-    virtual void UnRegisterObserver(std::shared_ptr<PreferencesObserver> preferencesObserver) override;
+    void UnRegisterObserver(std::shared_ptr<PreferencesObserver> preferencesObserver) override;
 
     static std::filesystem::path MakeBackupPath(const std::filesystem::path &prefPath);
     static std::filesystem::path MakeBrokenPath(const std::filesystem::path &prefPath);
