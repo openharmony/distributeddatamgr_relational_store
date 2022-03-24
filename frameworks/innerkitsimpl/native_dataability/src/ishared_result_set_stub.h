@@ -62,6 +62,6 @@ private:
         &ISharedResultSetStub::HandleCloseRequest,
     };
 };
-}
+} // namespace OHOS::NativeRdb
 
 #endif // DATAABILITY_I_SHARED_RESULT_SET_STUB_H

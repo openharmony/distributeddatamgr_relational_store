@@ -120,4 +120,4 @@ AbsRdbPredicates* AbsRdbPredicates::OrderByDesc(std::string field)
     predicates_.AddOperation(DistributedRdb::ORDER_BY, field, isAsc);
     return (AbsRdbPredicates *)AbsPredicates::OrderByDesc(field);
 }
-}
+} // namespace OHOS::NativeRdb

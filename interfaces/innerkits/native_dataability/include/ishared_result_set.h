@@ -60,6 +60,6 @@ private:
     static std::function<std::shared_ptr<AbsSharedResultSet>(MessageParcel &parcel)> consumerCreator_;
     static std::function<sptr<ISharedResultSet>(std::shared_ptr<AbsSharedResultSet>, MessageParcel &)> providerCreator_;
 };
-}
+} // namespace OHOS::NativeRdb
 
 #endif // DATAABILITY_I_SHARED_RESULT_SET_H
