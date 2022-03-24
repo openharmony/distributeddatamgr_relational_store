@@ -143,5 +143,5 @@ private:
     
     DistributedRdb::RdbSyncerParam syncerParam_;
 };
-}
+} // namespace OHOS::NativeRdb
 #endif
