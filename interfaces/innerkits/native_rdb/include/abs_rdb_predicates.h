@@ -48,6 +48,6 @@ private:
     std::string tableName;
     mutable DistributedRdb::RdbPredicates predicates_;
 };
-}
+} // namespace OHOS::NativeRdb
 
 #endif

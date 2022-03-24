@@ -38,8 +38,8 @@ static napi_value ExportSyncMode(napi_env env)
 {
     napi_value syncMode = nullptr;
     napi_create_object(env, &syncMode);
-    SetNamedProperty(env, syncMode, "SYNC_MODE_PUSH", (int32_t)SyncMode::PUSH);
-    SetNamedProperty(env, syncMode, "SYNC_MODE_PULL", (int32_t)SyncMode::PULL);
+    (void)SetNamedProperty(env, syncMode, "SYNC_MODE_PUSH", (int32_t)SyncMode::PUSH);
+    (void)SetNamedProperty(env, syncMode, "SYNC_MODE_PULL", (int32_t)SyncMode::PULL);
     napi_object_freeze(env, syncMode);
     return syncMode;
 }
@@ -49,7 +49,7 @@ static napi_value ExportSubscribeType(napi_env env)
     napi_value subscribeType = nullptr;
     napi_create_object(env, &subscribeType);
 
-    SetNamedProperty(env, subscribeType, "SUBSCRIBE_TYPE_REMOTE", (int32_t)SubscribeMode::REMOTE);
+    (void)SetNamedProperty(env, subscribeType, "SUBSCRIBE_TYPE_REMOTE", (int32_t)SubscribeMode::REMOTE);
     napi_object_freeze(env, subscribeType);
     return subscribeType;
 }
@@ -64,4 +64,4 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
     size_t count = sizeof(properties) / sizeof(properties[0]);
     return napi_define_properties(env, exports, count, properties);
 }
-}
+} // namespace OHOS::RdbJsKit

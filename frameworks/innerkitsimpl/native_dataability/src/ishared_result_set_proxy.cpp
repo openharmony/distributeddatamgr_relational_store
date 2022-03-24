@@ -124,4 +124,4 @@ int ISharedResultSetProxy::Close()
     }
     return reply.ReadInt32();
 }
-}
+} // namespace OHOS::NativeRdb

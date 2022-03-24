@@ -28,7 +28,7 @@ static const OHOS::HiviewDFX::HiLogLabel PREFIX_LABEL = { LOG_CORE, 0xD001650, "
 #define LOG_WARN(...) ((void)OHOS::HiviewDFX::HiLog::Warn(PREFIX_LABEL, __VA_ARGS__))
 #define LOG_ERROR(...) ((void)OHOS::HiviewDFX::HiLog::Error(PREFIX_LABEL, __VA_ARGS__))
 #define LOG_FATAL(...) ((void)OHOS::HiviewDFX::HiLog::Fatal(PREFIX_LABEL, __VA_ARGS__))
-} // namespace RdbJsKit
+} // namespace AppDataMgrJsKit
 } // namespace OHOS
 
 #endif
