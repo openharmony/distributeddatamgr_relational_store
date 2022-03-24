@@ -72,8 +72,8 @@ private:
     std::string sharedBlockName_;
     int32_t sharedBlockAshmemFd_ = -1;
 };
-}
-}
+} // namespace RdbJsKit
+} // namespace OHOS
 #endif // RDB_JSKIT_NAPI_RESULT_SET_H
 
 EXTERN_C_START

@@ -118,5 +118,5 @@ public:
     // user must use UDID
     virtual bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) = 0;
 };
-}
+} // namespace OHOS::NativeRdb
 #endif

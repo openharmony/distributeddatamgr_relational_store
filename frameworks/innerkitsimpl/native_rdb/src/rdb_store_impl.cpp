@@ -756,4 +756,4 @@ bool RdbStoreImpl::DropDeviceData(const std::vector<std::string> &devices, const
     LOG_INFO("not implement");
     return true;
 }
-}
+} // namespace OHOS::NativeRdb
