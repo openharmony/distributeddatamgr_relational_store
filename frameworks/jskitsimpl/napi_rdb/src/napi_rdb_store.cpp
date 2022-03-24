@@ -100,7 +100,7 @@ void RdbStoreContext::BindArgs(napi_env env, napi_value arg)
                     }
                 } break;
             case napi_number: {
-                    double value;
+                    double value = false;
                     napi_status status = napi_get_value_double(env, element, &value);
                     if (status == napi_ok) {
                         bindArgs.push_back(ValueObject(value));

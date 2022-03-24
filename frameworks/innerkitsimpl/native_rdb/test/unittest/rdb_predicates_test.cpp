@@ -263,7 +263,7 @@ private:
 
     short shortValue;
 
-    bool booleanValue;
+    bool booleanValue = false;
 
     double doubleValue;
 
@@ -291,7 +291,7 @@ private:
 
     double primDoubleValue;
 
-    bool primBooleanValue;
+    bool primBooleanValue = false;
 
     int8_t primByteValue;
 
