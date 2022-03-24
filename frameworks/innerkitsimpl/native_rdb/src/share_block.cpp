@@ -300,7 +300,7 @@ FillOneRowResult FillOneRowOfBlob(AppDataFwk::SharedBlock *sharedBlock, sqlite3_
     auto size = sqlite3_column_bytes(statement, pos);
     int status = sharedBlock->PutBlob(addedRows, pos, blob, size);
     if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
-        LOG_ERROR("Failed allocating %{public}zu bytes for blob at %{public}d,%{public}d, error=%{public}d", size,
+        LOG_ERROR("Failed allocating %{public}lu bytes for blob at %{public}d,%{public}d, error=%{public}d", size,
             startPos + addedRows, pos, status);
         return SHARED_BLOCK_IS_FULL;
     }

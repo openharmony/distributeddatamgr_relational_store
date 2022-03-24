@@ -29,7 +29,7 @@ Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
 Context::Context(std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext)
 {
     databaseDir_ = abilityContext->GetDatabaseDir();
-    preferencesDir_ = abilityContext->GetStorageDir();
+    preferencesDir_ = abilityContext->GetPreferencesDir();
     bundleName_ = abilityContext->GetBundleName();
 }
 
