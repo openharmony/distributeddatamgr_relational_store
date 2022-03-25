@@ -28,8 +28,8 @@ namespace OHOS {
 namespace AppDataMgrJsKit {
 class Context {
 public:
-    Context(std::shared_ptr<AbilityRuntime::Context> stageContext);
-    Context(AppExecFwk::Ability *featureAbility);
+    explicit Context(std::shared_ptr<AbilityRuntime::Context> stageContext);
+    explicit Context(AppExecFwk::Ability *featureAbility);
     std::string GetDatabaseDir();
     std::string GetPreferencesDir();
     std::string GetBundleName();
