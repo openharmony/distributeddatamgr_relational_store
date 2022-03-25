@@ -43,5 +43,5 @@ private:
 
     static constexpr int MAX_CALLBACK_ARG_NUM = 6;
 };
-}
+} // namespace OHOS::RdbJsKit
 #endif

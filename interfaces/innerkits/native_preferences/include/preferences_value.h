@@ -24,7 +24,7 @@ namespace OHOS {
 namespace NativePreferences {
 class PreferencesValue {
 public:
-    ~PreferencesValue() {};
+    ~PreferencesValue() {}
 
     explicit PreferencesValue(int value);
     explicit PreferencesValue(int64_t value);

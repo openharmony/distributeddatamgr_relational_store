@@ -27,6 +27,7 @@ public:
     ~ISharedResultSetStub();
     static sptr<ISharedResultSet> CreateStub(std::shared_ptr<AbsSharedResultSet> resultSet, MessageParcel &parcel);
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+    
 protected:
     int HandleGetRowCountRequest(MessageParcel &data, MessageParcel &reply);
     int HandleGetAllColumnNamesRequest(MessageParcel &data, MessageParcel &reply);
@@ -61,6 +62,6 @@ private:
         &ISharedResultSetStub::HandleCloseRequest,
     };
 };
-}
+} // namespace OHOS::NativeRdb
 
 #endif // DATAABILITY_I_SHARED_RESULT_SET_STUB_H

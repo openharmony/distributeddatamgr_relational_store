@@ -26,8 +26,8 @@ namespace NativeRdb {
 class DataAbilityPredicates : public AbsPredicates, public virtual OHOS::Parcelable {
 public:
     DataAbilityPredicates();
-    DataAbilityPredicates(std::string rawSelection);
-    DataAbilityPredicates(OHOS::Parcel *source);
+    explicit DataAbilityPredicates(std::string rawSelection);
+    explicit DataAbilityPredicates(OHOS::Parcel *source);
     ~DataAbilityPredicates() override;
     bool IsRawSelection() const;
     bool GetJudgeSource() const;

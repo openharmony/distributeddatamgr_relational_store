@@ -71,4 +71,4 @@ void NapiUvQueue::CallFunction(NapiArgsGenerator genArgs)
             delete work;
         });
 }
-}
+} // namespace OHOS::RdbJsKit

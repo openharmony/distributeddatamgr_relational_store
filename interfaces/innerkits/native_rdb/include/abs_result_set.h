@@ -28,16 +28,16 @@ class AbsResultSet : public ResultSet {
 public:
     AbsResultSet();
     virtual ~AbsResultSet();
-    virtual int GetRowCount(int &count) override;
-    virtual int GetAllColumnNames(std::vector<std::string> &columnNames) override;
-    virtual int GetBlob(int columnIndex, std::vector<uint8_t> &blob) override;
-    virtual int GetString(int columnIndex, std::string &value) override;
-    virtual int GetInt(int columnIndex, int &value) override;
-    virtual int GetLong(int columnIndex, int64_t &value) override;
-    virtual int GetDouble(int columnIndex, double &value) override;
-    virtual int IsColumnNull(int columnIndex, bool &isNull) override;
-    virtual int GoToRow(int position) override;
-    virtual int GetColumnType(int columnIndex, ColumnType &columnType) override;
+    int GetRowCount(int &count) override;
+    int GetAllColumnNames(std::vector<std::string> &columnNames) override;
+    int GetBlob(int columnIndex, std::vector<uint8_t> &blob) override;
+    int GetString(int columnIndex, std::string &value) override;
+    int GetInt(int columnIndex, int &value) override;
+    int GetLong(int columnIndex, int64_t &value) override;
+    int GetDouble(int columnIndex, double &value) override;
+    int IsColumnNull(int columnIndex, bool &isNull) override;
+    int GoToRow(int position) override;
+    int GetColumnType(int columnIndex, ColumnType &columnType) override;
     int GetRowIndex(int &position) const override;
     int GoTo(int offset) override;
     int GoToFirstRow() override;
@@ -53,6 +53,7 @@ public:
     int GetColumnName(int columnIndex, std::string &columnName) override;
     bool IsClosed() const override;
     int Close() override;
+    
 protected:
     // The default position of the result set
     static const int INIT_POS = -1;

@@ -25,7 +25,7 @@ class AbsRdbPredicates : public AbsPredicates {
 public:
     explicit AbsRdbPredicates(std::string tableName);
     
-    virtual ~AbsRdbPredicates() override {}
+    ~AbsRdbPredicates() override {}
     
     std::string ToString() const;
     
@@ -48,6 +48,6 @@ private:
     std::string tableName;
     mutable DistributedRdb::RdbPredicates predicates_;
 };
-}
+} // namespace OHOS::NativeRdb
 
 #endif

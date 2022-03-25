@@ -33,6 +33,7 @@ public:
 
     explicit RdbPredicatesProxy(std::string &tableName);
     std::shared_ptr<NativeRdb::RdbPredicates> GetPredicates() const;
+    
 private:
     ~RdbPredicatesProxy();
 

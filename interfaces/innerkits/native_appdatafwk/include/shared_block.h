@@ -219,6 +219,7 @@ public:
         }
         return ashmem_->GetAshmemFd();
     }
+    
 private:
     std::string mName;
     sptr<Ashmem> ashmem_;
