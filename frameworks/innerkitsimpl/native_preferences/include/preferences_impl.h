@@ -35,7 +35,7 @@ namespace OHOS {
 namespace NativePreferences {
 class PreferencesImpl : public Preferences {
 public:
-    PreferencesImpl(const std::filesystem::path &path);
+    explicit PreferencesImpl(const std::filesystem::path &path);
     virtual ~PreferencesImpl();
 
     int Init();
