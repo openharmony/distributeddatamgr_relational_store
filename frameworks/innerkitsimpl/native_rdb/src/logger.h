@@ -35,5 +35,5 @@ static const OHOS::HiviewDFX::HiLogLabel RDB_LABEL = { LOG_CORE, 0xD001650, "Nat
     (void)OHOS::HiviewDFX::HiLog::Error(RDB_LABEL, LOG_TAG "::%{public}s: " fmt, __FUNCTION__, ##__VA_ARGS__)
 #define LOG_FATAL(fmt, ...) \
     (void)OHOS::HiviewDFX::HiLog::Fatal(RDB_LABEL, LOG_TAG "::%{public}s: " fmt, __FUNCTION__, ##__VA_ARGS__)
-}
+} // namespace OHOS::NativeRdb
 #endif

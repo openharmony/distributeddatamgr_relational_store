@@ -30,6 +30,7 @@ class Context {
 public:
     explicit Context(std::shared_ptr<AbilityRuntime::Context> stageContext);
     explicit Context(std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext);
+
     std::string GetDatabaseDir();
     std::string GetPreferencesDir();
     std::string GetBundleName();

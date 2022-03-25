@@ -247,6 +247,7 @@ int SqliteConnectionPool::ReOpenAvailableReadConnections()
     return InnerReOpenReadConnections();
 }
 
+#ifdef RDB_SUPPORT_ICU
 /**
  * The database locale.
  */
@@ -275,6 +276,7 @@ int SqliteConnectionPool::ConfigLocale(const std::string localeStr)
 
     return E_OK;
 }
+#endif
 
 /**
  * Rename the backed up database.
