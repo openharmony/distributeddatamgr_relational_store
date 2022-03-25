@@ -334,7 +334,7 @@ bool ResetStatement(SharedBlockInfo *sharedBlockInfo)
     return true;
 }
 
-long GetCombinedData(int startPos, int totalRows)
+int64_t GetCombinedData(int startPos, int totalRows)
 {
     if (startPos > totalRows) {
         LOG_ERROR("startPos %{public}d > actual rows %{public}d", startPos, totalRows);
@@ -342,7 +342,7 @@ long GetCombinedData(int startPos, int totalRows)
 
     auto high = static_cast<uint64_t>(static_cast<uint32_t>(startPos));
     auto low = static_cast<uint64_t>(static_cast<uint32_t>(totalRows));
-    return static_cast<long>((high << OFFSET) | low);
+    return static_cast<int64_t>((high << OFFSET) | low);
 }
 } // namespace NativeRdb
 } // namespace OHOS
