@@ -26,4 +26,4 @@ sptr<ISharedResultSet> ISharedResultSet::WriteToParcel(std::shared_ptr<AbsShared
 {
     return providerCreator_(std::move(resultSet), parcel);
 }
-}
+} // namespace OHOS::NativeRdb

@@ -26,7 +26,7 @@ enum TransType {
 
 class BaseTransaction {
 public:
-    BaseTransaction(int id);
+    explicit BaseTransaction(int id);
     ~BaseTransaction();
     bool IsAllBeforeSuccessful() const;
     void SetAllBeforeSuccessful(bool allBeforeSuccessful);

@@ -262,6 +262,10 @@ static boolean IsHeaderValid(const char* header)
 
 static int GetSumFilePath(DBHandle db, char* sumFilePath, unsigned int len)
 {
+    if (!db) {
+        return DBM_ERROR;
+    }
+    
     if (strlen(db->dirPath) == 0) {
         if (strcpy_s(sumFilePath, sizeof(KV_SUM_FILE), KV_SUM_FILE) != EOK) {
             return DBM_OK;

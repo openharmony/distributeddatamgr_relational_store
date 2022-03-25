@@ -295,4 +295,4 @@ std::string RdbStoreConfig::GetDatabaseFileSecurityLevelValue(DatabaseFileSecuri
 
     return value;
 }
-}
+} // namespace OHOS::NativeRdb

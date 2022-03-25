@@ -23,8 +23,8 @@ namespace OHOS {
 namespace NativeRdb {
 class SharedResultSet {
 public:
-    SharedResultSet() {};
-    ~SharedResultSet() {};
+    SharedResultSet() {}
+    ~SharedResultSet() {}
     /**
      * Obtains a block from the {@link SharedResultSet}
      */
