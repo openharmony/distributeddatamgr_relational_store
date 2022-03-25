@@ -32,7 +32,7 @@ namespace NativeRdb {
 class AbsSharedResultSet : public AbsResultSet, public SharedResultSet {
 public:
     AbsSharedResultSet();
-    AbsSharedResultSet(std::string name);
+    explicit AbsSharedResultSet(std::string name);
     virtual ~AbsSharedResultSet();
     int GetBlob(int columnIndex, std::vector<uint8_t> &blob) override;
     int GetString(int columnIndex, std::string &value) override;
