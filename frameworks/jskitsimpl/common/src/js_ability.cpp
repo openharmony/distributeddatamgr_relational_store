@@ -77,10 +77,16 @@ std::shared_ptr<Context> JSAbility::GetContext(napi_env env, napi_value value)
         }
         return std::make_shared<Context>(stageContext);
     }
+
     LOG_DEBUG("Get context as feature ability mode.");
-    auto abilityContext = AbilityRuntime::GetCurrentAbility(env)->GetAbilityContext();
-    if (abilityContext == nullptr) {
+    auto ability = AbilityRuntime::GetCurrentAbility(env);
+    if (ability == nullptr) {
         LOG_ERROR("GetCurrentAbility failed.");
+        return nullptr;
+    }
+    auto abilityContext = ability->GetAbilityContext();
+    if (abilityContext == nullptr) {
+        LOG_ERROR("GetAbilityContext failed.");
         return nullptr;
     }
     return std::make_shared<Context>(abilityContext);
