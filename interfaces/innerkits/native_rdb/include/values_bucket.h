@@ -28,7 +28,7 @@ namespace NativeRdb {
 class ValuesBucket : public virtual OHOS::Parcelable {
 public:
     ValuesBucket();
-    ValuesBucket(std::map<std::string, ValueObject> &valuesMap);
+    explicit ValuesBucket(std::map<std::string, ValueObject> &valuesMap);
     ~ValuesBucket();
     void PutString(const std::string &columnName, const std::string &value);
     void PutInt(const std::string &columnName, int value);
