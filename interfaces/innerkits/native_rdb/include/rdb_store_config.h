@@ -116,6 +116,6 @@ private:
     std::string bundleName_;
     //
 };
-}
+} // namespace OHOS::NativeRdb
 
 #endif

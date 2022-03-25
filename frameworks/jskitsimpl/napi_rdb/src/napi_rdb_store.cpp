@@ -93,7 +93,7 @@ void RdbStoreContext::BindArgs(napi_env env, napi_value arg)
         napi_typeof(env, element, &type);
         switch (type) {
             case napi_boolean: {
-                    bool value;
+                    bool value = false;
                     napi_status status = napi_get_value_bool(env, element, &value);
                     if (status == napi_ok) {
                         bindArgs.push_back(ValueObject(value));

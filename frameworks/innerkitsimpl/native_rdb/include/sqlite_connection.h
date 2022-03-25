@@ -49,7 +49,9 @@ public:
         const std::vector<std::string> &selectionArgs) const;
     int EndStepQuery();
     int ChangeEncryptKey(const std::vector<uint8_t> &newKey);
+#ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
+#endif
     int ExecuteForSharedBlock(int &rowNum, std::string sql, const std::vector<ValueObject> &bindArgs,
         AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows);
 

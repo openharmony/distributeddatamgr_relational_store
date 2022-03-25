@@ -101,7 +101,7 @@ HWTEST_F(ValuesBucketTest, Values_Bucket_001, TestSize.Level1)
 
     valuesBucket->GetObject("graduated", valueObject);
     EXPECT_EQ(ValueObjectType::TYPE_BOOL, valueObject.GetType());
-    bool boolVal;
+    bool boolVal = false;
     valueObject.GetBool(boolVal);
     EXPECT_EQ(true, boolVal);
 

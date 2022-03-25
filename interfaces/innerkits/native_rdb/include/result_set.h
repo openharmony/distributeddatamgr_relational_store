@@ -32,7 +32,7 @@ enum class ColumnType {
 
 class ResultSet {
 public:
-    virtual ~ResultSet() {};
+    virtual ~ResultSet() {}
 
     /**
      * Returns a string array holding the names of all of the columns in the

@@ -128,4 +128,4 @@ void ISharedResultSetStub::Run()
     }
     LOG_ERROR("ISharedResultSetStub thread(%{public}" PRIx64 ") is exited", uint64_t(handle));
 }
-}
+} // namespace OHOS::NativeRdb
