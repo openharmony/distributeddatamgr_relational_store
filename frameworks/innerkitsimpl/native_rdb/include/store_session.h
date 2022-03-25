@@ -40,7 +40,7 @@ public:
     int ExecuteGetString(std::string &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey);
     bool IsHoldingConnection() const;
-    int GiveConnectionTemporarily(long milliseconds);
+    int GiveConnectionTemporarily(int64_t milliseconds);
     int CheckNoTransaction() const;
     int BeginTransaction(TransactionObserver *transactionObserver);
     int MarkAsCommitWithObserver(TransactionObserver *transactionObserver);
