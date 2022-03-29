@@ -537,6 +537,7 @@ std::shared_ptr<SqliteStatement> RdbStoreImpl::BeginStepQuery(
     int &errCode, const std::string sql, const std::vector<std::string> &bindArgs)
 {
     std::shared_ptr<StoreSession> session = GetThreadSession();
+    LOG_DEBUG("RdbStoreImpl::BeginStepQuery session's connection count:%{public}d",session->GetConnectionUseCount());
     return session->BeginStepQuery(errCode, sql, bindArgs);
 }
 

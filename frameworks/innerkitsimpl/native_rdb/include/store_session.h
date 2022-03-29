@@ -60,6 +60,7 @@ public:
     int BeginTransaction();
     int Commit();
     int RollBack();
+    int GetConnectionUseCount();
 
 private:
 

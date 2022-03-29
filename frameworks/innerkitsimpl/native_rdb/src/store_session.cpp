@@ -503,4 +503,9 @@ int StoreSession::RollBack()
 
     return errCode;
 }
+
+int StoreSession::GetConnectionUseCount()
+{
+    return connectionUseCount;
+}
 } // namespace OHOS::NativeRdb

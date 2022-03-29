@@ -120,7 +120,8 @@ public:
 
         asyncContext->execFunc = execFunc;
         asyncContext->completeFunc = completeFunc;
-        napi_create_async_work(
+        int napiStatus = ERR;
+        napiStatus = napi_create_async_work(
             asyncContext->env, nullptr, resource,
             [](napi_env env, void *data) {
                 T *context = (T *)data;
@@ -158,7 +159,14 @@ public:
             },
             (void *)asyncContext, &asyncContext->work);
 
-        napi_queue_async_work(asyncContext->env, asyncContext->work);
+        if (napiStatus) {
+           LOG_DEBUG("DoAsyncWork napi_create_async_work napi_status: %{public}d", napiStatus);
+        }
+        
+        napiStatus = napi_queue_async_work(asyncContext->env, asyncContext->work);
+        if (napiStatus) {
+           LOG_DEBUG("DoAsyncWork napi_queue_async_work napi_status: %{public}d", napiStatus);
+        }
         return ret;
     }
 
