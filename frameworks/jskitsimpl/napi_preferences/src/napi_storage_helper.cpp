@@ -42,7 +42,7 @@ napi_value GetStorageSync(napi_env env, napi_callback_info info)
 
     char *path = new char[PATH_MAX];
     size_t pathLen = 0;
-    ret = napi_get_value_string_utf8(env, args[0], path, PATH_MAX, &pathLen);
+    napi_get_value_string_utf8(env, args[0], path, PATH_MAX, &pathLen);
     LOG_DEBUG("getPreferences: path %{public}s", path);
     delete[] path;
 
