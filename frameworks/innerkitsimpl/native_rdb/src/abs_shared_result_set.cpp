@@ -226,7 +226,7 @@ int AbsSharedResultSet::GetLong(int columnIndex, int64_t &value)
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_STRING) {
         size_t sizeIncludingNull;
         const char *tempValue = sharedBlock_->GetCellUnitValueString(cellUnit, &sizeIncludingNull);
-        value = ((sizeIncludingNull > 1) && (tempValue != nullptr)) ? long(strtoll(tempValue, nullptr, 0)) : 0L;
+        value = ((sizeIncludingNull > 1) && (tempValue != nullptr)) ? int64_t(strtoll(tempValue, nullptr, 0)) : 0L;
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT) {
         value = (int64_t)cellUnit->cell.doubleValue;
