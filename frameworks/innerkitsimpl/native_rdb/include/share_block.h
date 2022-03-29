@@ -103,7 +103,7 @@ FillOneRowResult FillOneRow(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *
 void FillRow(SharedBlockInfo *info);
 void FillSharedBlock(SharedBlockInfo *info);
 bool ResetStatement(SharedBlockInfo *sharedBlockInfo);
-long GetCombinedData(int startPos, int totalRows);
+int64_t GetCombinedData(int startPos, int totalRows);
 #ifdef __cplusplus
 }
 #endif

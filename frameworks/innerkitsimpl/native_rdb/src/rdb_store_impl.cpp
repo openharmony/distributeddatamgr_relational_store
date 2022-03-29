@@ -401,7 +401,7 @@ bool RdbStoreImpl::IsHoldingConnection()
     return session->IsHoldingConnection();
 }
 
-int RdbStoreImpl::GiveConnectionTemporarily(long milliseconds)
+int RdbStoreImpl::GiveConnectionTemporarily(int64_t milliseconds)
 {
     std::shared_ptr<StoreSession> session = GetThreadSession();
     return session->GiveConnectionTemporarily(milliseconds);

@@ -84,7 +84,7 @@ public:
     int PrepareAndGetInfo(const std::string &sql, bool &outIsReadOnly, int &numParameters,
         std::vector<std::string> &columnNames);
     bool IsHoldingConnection() override;
-    int GiveConnectionTemporarily(long milliseconds);
+    int GiveConnectionTemporarily(int64_t milliseconds);
     int BeginTransactionWithObserver(TransactionObserver *transactionObserver);
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);

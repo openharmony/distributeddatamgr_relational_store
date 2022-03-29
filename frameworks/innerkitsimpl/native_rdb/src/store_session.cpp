@@ -228,7 +228,7 @@ int StoreSession::CheckNoTransaction() const
     return E_OK;
 }
 
-int StoreSession::GiveConnectionTemporarily(long milliseconds)
+int StoreSession::GiveConnectionTemporarily(int64_t milliseconds)
 {
     int errorCode = CheckNoTransaction();
     if (errorCode != E_OK) {
