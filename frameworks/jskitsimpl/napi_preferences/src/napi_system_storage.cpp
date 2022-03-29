@@ -38,13 +38,17 @@ struct AsyncContext {
     napi_ref success;
     napi_ref fail;
     napi_ref complete;
-    int output = E_ERROR;
+    int32_t output = E_ERROR;
     napi_async_work request;
 };
 
 static const unsigned int MAX_KEY_LENGTH = 32;
 
 static const unsigned int MAX_VALUE_LENGTH = 128;
+
+static const int32_t failArgc = 2;
+
+static const int32_t succArgc = 1;
 
 void ParseString(napi_env env, napi_value &object, const char *name, const bool enable, std::string &output)
 {
@@ -67,7 +71,7 @@ void ParseFunction(napi_env env, napi_value &object, const char *name, napi_ref 
     }
 }
 
-std::string getMessageInfo(int errCode)
+const std::string GetMessageInfo(int errCode)
 {
     std::string message;
     switch (errCode) {
@@ -94,34 +98,36 @@ void Complete(napi_env env, napi_status status, void *data)
         return;
     }
 
+    size_t len = 0;
     if (ctx->output == E_OK && ctx->success != nullptr) {
-        napi_value successCallBack;
+        napi_value successCallBack = nullptr;
         NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, ctx->success, &successCallBack));
-        napi_value succRes[1] = { 0 };
-        size_t str_len = strlen(ctx->val.c_str());
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, ctx->val.c_str(), str_len, &succRes[0]));
-        napi_value succ_callbackResult = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, successCallBack, 1, succRes, &succ_callbackResult));
+        napi_value succRes[succArgc] = { 0 };
+        len = strlen(ctx->val.c_str());
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, ctx->val.c_str(), len, &succRes[0]));
+        napi_value succCallbackResult = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, successCallBack, succArgc, succRes, &succCallbackResult));
     }
 
     if (ctx->output != E_OK && ctx->fail != nullptr) {
-        napi_value failCallBack;
+        napi_value failCallBack = nullptr;
         NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, ctx->fail, &failCallBack));
-        napi_value failRes[2] = { 0 };
-        std::string message = getMessageInfo(ctx->output);
-        size_t str_len = strlen(message.c_str());
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, message.c_str(), str_len, &failRes[0]));
+        napi_value failRes[failArgc] = { 0 };
+        std::string message = GetMessageInfo(ctx->output);
+        len = strlen(message.c_str());
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, message.c_str(), len, &failRes[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ctx->output, &failRes[1]));
-        napi_value fail_callbackResult = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, failCallBack, 2, failRes, &fail_callbackResult));
+        napi_value failCallbackResult = nullptr;
+        NAPI_CALL_RETURN_VOID(
+            env, napi_call_function(env, nullptr, failCallBack, failArgc, failRes, &failCallbackResult));
     }
 
     if (ctx->complete != nullptr) {
-        napi_value completeCallBack;
+        napi_value completeCallBack = nullptr;
         NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, ctx->complete, &completeCallBack));
-        napi_value complete_callbackResult = nullptr;
+        napi_value completeCallbackResult = nullptr;
         NAPI_CALL_RETURN_VOID(
-            env, napi_call_function(env, nullptr, completeCallBack, 0, nullptr, &complete_callbackResult));
+            env, napi_call_function(env, nullptr, completeCallBack, 0, nullptr, &completeCallbackResult));
     }
 
     napi_delete_reference(env, ctx->success);
@@ -132,13 +138,19 @@ void Complete(napi_env env, napi_status status, void *data)
     delete ctx;
 }
 
+std::string GetPrefName(napi_env env)
+{
+    auto ctx = JSAbility::GetContext(env, nullptr);
+    return ctx->GetPreferencesDir() + "/default.xml";
+}
+
 napi_value Operate(napi_env env, napi_callback_info info, const char *resource, napi_async_execute_callback execute)
 {
     size_t argc = 1;
-    napi_value argv[1];
+    napi_value argv[1] = { 0 };
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     NAPI_ASSERT(env, argc == 1, "Not enough arguments, expected 1.");
-    napi_valuetype valueType;
+    napi_valuetype valueType = napi_null;
     NAPI_CALL(env, napi_typeof(env, argv[0], &valueType));
     NAPI_ASSERT(env, valueType == napi_object, "Wrong argument type, object expected.");
 
@@ -152,7 +164,7 @@ napi_value Operate(napi_env env, napi_callback_info info, const char *resource, 
     ParseFunction(env, argv[0], "fail", context->fail);
     ParseFunction(env, argv[0], "complete", context->complete);
 
-    napi_value resourceName;
+    napi_value resourceName = nullptr;
     NAPI_CALL(env, napi_create_string_utf8(env, resource, NAPI_AUTO_LENGTH, &resourceName));
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, execute, Complete, context, &context->request));
     NAPI_CALL(env, napi_queue_async_work(env, context->request));
@@ -166,21 +178,20 @@ napi_value NapiGet(napi_env env, napi_callback_info info)
 {
     return Operate(env, info, "get", [](napi_env env, void *data) {
         AsyncContext *context = static_cast<AsyncContext *>(data);
-        if (MAX_KEY_LENGTH < context->key.size()) {
+        if (context->key.size() > MAX_KEY_LENGTH) {
             context->output = E_KEY_EXCEED_LENGTH_LIMIT;
             return;
         }
-        if (MAX_VALUE_LENGTH < context->def.size()) {
+
+        std::string prefName = GetPrefName(env);
+        std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context->output);
+        std::string tmpValue;
+        tmpValue = pref->GetString(context->key, context->def);
+        if (tmpValue.size() > MAX_VALUE_LENGTH) {
             context->output = E_VALUE_EXCEED_LENGTH_LIMIT;
             return;
         }
-
-        auto ctx = JSAbility::GetContext(env, nullptr);
-        std::string prefName = ctx->GetPreferencesDir() + "/default.xml";
-        int errCode = E_OK;
-        std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, errCode);
-        context->val = pref->GetString(context->key, context->def);
-        context->output = errCode;
+        context->val = tmpValue;
     });
 }
 
@@ -188,25 +199,21 @@ napi_value NapiSet(napi_env env, napi_callback_info info)
 {
     return Operate(env, info, "set", [](napi_env env, void *data) {
         AsyncContext *context = static_cast<AsyncContext *>(data);
-        if (MAX_KEY_LENGTH < context->key.size()) {
+        if (context->key.size() > MAX_KEY_LENGTH) {
             context->output = E_KEY_EXCEED_LENGTH_LIMIT;
             return;
         }
-        if (MAX_VALUE_LENGTH < context->val.size()) {
+        if (context->val.size() > MAX_VALUE_LENGTH) {
             context->output = E_VALUE_EXCEED_LENGTH_LIMIT;
             return;
         }
 
-        auto ctx = JSAbility::GetContext(env, nullptr);
-        std::string prefName = ctx->GetPreferencesDir() + "/default.xml";
-        int errCode = E_OK;
-        std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, errCode);
-        if (errCode != E_OK) {
-            context->output = errCode;
+        std::string prefName = GetPrefName(env);
+        std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context->output);
+        if (context->output != E_OK) {
             return;
         }
-        errCode = pref->PutString(context->key, context->val);
-        context->output = errCode;
+        context->output = pref->PutString(context->key, context->val);
     });
 }
 
@@ -214,21 +221,17 @@ napi_value NapiDelete(napi_env env, napi_callback_info info)
 {
     return Operate(env, info, "delete", [](napi_env env, void *data) {
         AsyncContext *context = static_cast<AsyncContext *>(data);
-        if (MAX_KEY_LENGTH < context->key.size()) {
+        if (context->key.size() > MAX_KEY_LENGTH) {
             context->output = E_KEY_EXCEED_LENGTH_LIMIT;
             return;
         }
 
-        auto ctx = JSAbility::GetContext(env, nullptr);
-        std::string prefName = ctx->GetPreferencesDir() + "/default.xml";
-        int errCode = E_OK;
-        std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, errCode);
-        if (errCode != E_OK) {
-            context->output = errCode;
+        std::string prefName = GetPrefName(env);
+        std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context->output);
+        if (context->output != E_OK) {
             return;
         }
-        errCode = pref->Delete(context->key);
-        context->output = errCode;
+        context->output = pref->Delete(context->key);
     });
 }
 
@@ -236,16 +239,12 @@ napi_value NapiClear(napi_env env, napi_callback_info info)
 {
     return Operate(env, info, "clear", [](napi_env env, void *data) {
         AsyncContext *context = static_cast<AsyncContext *>(data);
-        auto ctx = JSAbility::GetContext(env, nullptr);
-        std::string prefName = ctx->GetPreferencesDir() + "/default.xml";
-        int errCode = E_OK;
-        std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, errCode);
-        if (errCode != E_OK) {
-            context->output = errCode;
+        std::string prefName = GetPrefName(env);
+        std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context->output);
+        if (context->output != E_OK) {
             return;
         }
-        errCode = pref->Clear();
-        context->output = errCode;
+        context->output = pref->Clear();
     });
 }
 
