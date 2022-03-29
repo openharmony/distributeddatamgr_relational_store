@@ -368,19 +368,19 @@ bool PreferencesImpl::ReadSettingXml(
     for (auto it = settings.begin(); it != settings.end(); it++) {
         Element element = *it;
         if (element.tag_.compare("int") == 0) {
-            int value = stoi(element.value_);
+            int value = std::stoi(element.value_);
             prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
         } else if (element.tag_.compare("bool") == 0) {
             bool value = (element.value_.compare("true") == 0) ? true : false;
             prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
         } else if (element.tag_.compare("long") == 0) {
-            int64_t value = static_cast<int64_t>(stoll(element.value_));
+            int64_t value = static_cast<int64_t>(std::stoll(element.value_));
             prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
         } else if (element.tag_.compare("float") == 0) {
-            float value = stof(element.value_);
+            float value = std::stof(element.value_);
             prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
         } else if (element.tag_.compare("double") == 0) {
-            double value = stof(element.value_);
+            double value = std::stod(element.value_);
             prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
         } else if (element.tag_.compare("string") == 0) {
             prefMap.insert(std::make_pair(element.key_, PreferencesValue(element.value_)));
