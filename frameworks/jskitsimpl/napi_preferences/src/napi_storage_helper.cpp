@@ -38,8 +38,14 @@ napi_value GetStorageSync(napi_env env, napi_callback_info info)
     size_t argc = 1;
     napi_value args[1] = { 0 };
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-
     LOG_DEBUG("getPreferences %{public}zu", argc);
+
+    char *path = new char[PATH_MAX];
+    size_t pathLen = 0;
+    ret = napi_get_value_string_utf8(env, args[0], path, PATH_MAX, &pathLen);
+    LOG_DEBUG("getPreferences: path %{public}s", path);
+    delete[] path;
+
     napi_value instance = nullptr;
     NAPI_CALL(env, StorageProxy::NewInstance(env, args[0], &instance));
     LOG_DEBUG("getPreferences end");
