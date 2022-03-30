@@ -266,6 +266,7 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
     napi_get_named_property(env, object, "name", &value);
     NAPI_ASSERT_RETURN_VOID(env, value != nullptr, "no database name found in config.");
     std::string name = JSUtils::Convert2String(env, value, JSUtils::DEFAULT_BUF_SIZE);
+    LOG_DEBUG("ParseStoreConfig: name %{public}s", name.c_str());
     NAPI_ASSERT_RETURN_VOID(env, !name.empty(), "Get database name empty.");
     asyncContext->config.SetName(std::move(name));
 
@@ -279,6 +280,7 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
         ParseContext(env, nullptr, asyncContext); // when no context as arg got from application.
     }
     std::string databaseDir = asyncContext->context->GetDatabaseDir();
+    LOG_DEBUG("ParseStoreConfig: databaseDir %{public}s", databaseDir.c_str());
     int errorCode = E_OK;
     std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, name, errorCode);
     LOG_DEBUG("ParseStoreConfig: realPath %{public}s", realPath.c_str());
