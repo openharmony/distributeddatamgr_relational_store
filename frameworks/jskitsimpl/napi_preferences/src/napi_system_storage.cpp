@@ -24,7 +24,6 @@
 #include "js_utils.h"
 #include "preferences_errno.h"
 #include "preferences_helper.h"
-#include "unistd.h"
 
 using namespace OHOS::AppDataMgrJsKit;
 using namespace OHOS::NativePreferences;
@@ -103,7 +102,7 @@ void Complete(napi_env env, napi_status status, void *data)
         napi_value successCallBack = nullptr;
         NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, ctx->success, &successCallBack));
         napi_value succRes[succArgc] = { 0 };
-        len = strlen(ctx->val.c_str());
+        len = ctx->val.size();
         NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, ctx->val.c_str(), len, &succRes[0]));
         napi_value succCallbackResult = nullptr;
         NAPI_CALL_RETURN_VOID(
@@ -115,7 +114,7 @@ void Complete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, ctx->fail, &failCallBack));
         napi_value failRes[failArgc] = { 0 };
         std::string message = GetMessageInfo(ctx->output);
-        len = strlen(message.c_str());
+        len = message.size();
         NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, message.c_str(), len, &failRes[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ctx->output, &failRes[1]));
         napi_value failCallbackResult = nullptr;
