@@ -160,10 +160,14 @@ public:
             (void *)asyncContext, &asyncContext->work);
         if (napiStatus != napi_ok) {
             LOG_DEBUG("DoAsyncWork napi_create_async_work failed napi_status: %{public}d", napiStatus);
+            GET_AND_THROW_LAST_ERROR(asyncContext->env);
+            return ret;
         }
         napiStatus = napi_queue_async_work(asyncContext->env, asyncContext->work);
         if (napiStatus != napi_ok) {
             LOG_DEBUG("DoAsyncWork napi_queue_async_work failed napi_status: %{public}d", napiStatus);
+            GET_AND_THROW_LAST_ERROR(asyncContext->env);
+            return ret;
         }
         return ret;
     }
