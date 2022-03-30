@@ -120,8 +120,7 @@ public:
 
         asyncContext->execFunc = execFunc;
         asyncContext->completeFunc = completeFunc;
-        napi_status napiStatus;
-        napiStatus = napi_create_async_work(
+        napi_status napiStatus = napi_create_async_work(
             asyncContext->env, nullptr, resource,
             [](napi_env env, void *data) {
                 T *context = (T *)data;
