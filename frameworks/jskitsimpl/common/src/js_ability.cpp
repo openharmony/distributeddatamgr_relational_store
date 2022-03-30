@@ -32,11 +32,11 @@ Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
 Context::Context(std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext)
 {
     databaseDir_ = abilityContext->GetDatabaseDir();
-    LOG_DEBUG("Stage: DatabaseDir %{public}s", databaseDir_.c_str());
+    LOG_DEBUG("FA: DatabaseDir %{public}s", databaseDir_.c_str());
     preferencesDir_ = abilityContext->GetPreferencesDir();
-    LOG_DEBUG("Stage: PreferencesDir %{public}s", preferencesDir_.c_str());
+    LOG_DEBUG("FA: PreferencesDir %{public}s", preferencesDir_.c_str());
     bundleName_ = abilityContext->GetBundleName();
-    LOG_DEBUG("Stage: PreferencesDir %{public}s", preferencesDir_.c_str());
+    LOG_DEBUG("FA: BundleName %{public}s", bundleName_.c_str());
 }
 
 std::string Context::GetDatabaseDir()
