@@ -67,6 +67,7 @@ ohos_shared_library("storage_napi") {
     "ability_runtime:ability_manager",
     "ability_runtime:napi_base_context",
     "hilog_native:libhilog",
+    "ipc:ipc_core",
     "napi:ace_napi",
     "native_appdatamgr:native_preferences",
   ]

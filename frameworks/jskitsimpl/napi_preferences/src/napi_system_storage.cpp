@@ -106,7 +106,8 @@ void Complete(napi_env env, napi_status status, void *data)
         len = strlen(ctx->val.c_str());
         NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, ctx->val.c_str(), len, &succRes[0]));
         napi_value succCallbackResult = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, successCallBack, succArgc, succRes, &succCallbackResult));
+        NAPI_CALL_RETURN_VOID(
+            env, napi_call_function(env, nullptr, successCallBack, succArgc, succRes, &succCallbackResult));
     }
 
     if (ctx->output != E_OK && ctx->fail != nullptr) {
@@ -185,8 +186,7 @@ napi_value NapiGet(napi_env env, napi_callback_info info)
 
         std::string prefName = GetPrefName(env);
         std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context->output);
-        std::string tmpValue;
-        tmpValue = pref->GetString(context->key, context->def);
+        std::string tmpValue = pref->GetString(context->key, context->def);
         if (tmpValue.size() > MAX_VALUE_LENGTH) {
             context->output = E_VALUE_EXCEED_LENGTH_LIMIT;
             return;
