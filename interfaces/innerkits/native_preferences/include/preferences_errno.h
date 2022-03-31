@@ -37,6 +37,8 @@ constexpr int E_EMPTY_FILE_NAME = (E_BASE - 12);
 constexpr int E_INVALID_FILE_PATH = (E_BASE - 13);
 constexpr int E_PATH_EXCEED_MAX_LENGTH = (E_BASE - 14);
 constexpr int E_VALUE_EXCEED_MAX_LENGTH = (E_BASE - 15);
+constexpr int E_KEY_EXCEED_LENGTH_LIMIT = (E_BASE - 16);
+constexpr int E_VALUE_EXCEED_LENGTH_LIMIT = (E_BASE - 17);
 } // namespace NativePreferences
 } // namespace OHOS
 #endif // PREFERENCES_ERRNO_H
