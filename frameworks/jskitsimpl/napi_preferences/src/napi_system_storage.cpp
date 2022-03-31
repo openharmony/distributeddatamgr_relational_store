@@ -15,8 +15,6 @@
 
 #include "napi_system_storage.h"
 
-#include <linux/limits.h>
-
 #include <string>
 
 #include "js_ability.h"
