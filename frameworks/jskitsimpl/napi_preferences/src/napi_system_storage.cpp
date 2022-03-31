@@ -36,7 +36,6 @@ struct AsyncContext {
     napi_ref fail;
     napi_ref complete;
     int32_t output = E_ERROR;
-    napi_async_work request;
 };
 
 static const unsigned int MAX_KEY_LENGTH = 32;
@@ -87,13 +86,9 @@ const std::string GetMessageInfo(int errCode)
     return message;
 }
 
-void Complete(napi_env env, napi_status status, void *data)
+void Complete(napi_env env, void *data)
 {
     AsyncContext *ctx = static_cast<AsyncContext *>(data);
-    if (status != napi_ok) {
-        napi_throw_type_error(env, nullptr, "Execute callback failed.");
-        return;
-    }
 
     size_t len = 0;
     if (ctx->output == E_OK && ctx->success != nullptr) {
@@ -131,7 +126,6 @@ void Complete(napi_env env, napi_status status, void *data)
     napi_delete_reference(env, ctx->success);
     napi_delete_reference(env, ctx->fail);
     napi_delete_reference(env, ctx->complete);
-    napi_delete_async_work(env, ctx->request);
 
     delete ctx;
 }
@@ -142,7 +136,7 @@ std::string GetPrefName(napi_env env)
     return ctx->GetPreferencesDir() + "/default.xml";
 }
 
-napi_value Operate(napi_env env, napi_callback_info info, const char *resource, napi_async_execute_callback execute)
+napi_value Operate(napi_env env, napi_callback_info info, std::function<void(napi_env env, void *data)> execute)
 {
     size_t argc = 1;
     napi_value argv[1] = { 0 };
@@ -162,10 +156,8 @@ napi_value Operate(napi_env env, napi_callback_info info, const char *resource, 
     ParseFunction(env, argv[0], "fail", context->fail);
     ParseFunction(env, argv[0], "complete", context->complete);
 
-    napi_value resourceName = nullptr;
-    NAPI_CALL(env, napi_create_string_utf8(env, resource, NAPI_AUTO_LENGTH, &resourceName));
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, execute, Complete, context, &context->request));
-    NAPI_CALL(env, napi_queue_async_work(env, context->request));
+    execute(env, context);
+    Complete(env, context);
 
     napi_value ret = nullptr;
     napi_get_undefined(env, &ret);
@@ -174,7 +166,7 @@ napi_value Operate(napi_env env, napi_callback_info info, const char *resource, 
 
 napi_value NapiGet(napi_env env, napi_callback_info info)
 {
-    return Operate(env, info, "get", [](napi_env env, void *data) {
+    return Operate(env, info, [](napi_env env, void *data) {
         AsyncContext *context = static_cast<AsyncContext *>(data);
         if (context->key.size() > MAX_KEY_LENGTH) {
             context->output = E_KEY_EXCEED_LENGTH_LIMIT;
@@ -194,7 +186,7 @@ napi_value NapiGet(napi_env env, napi_callback_info info)
 
 napi_value NapiSet(napi_env env, napi_callback_info info)
 {
-    return Operate(env, info, "set", [](napi_env env, void *data) {
+    return Operate(env, info, [](napi_env env, void *data) {
         AsyncContext *context = static_cast<AsyncContext *>(data);
         if (context->key.size() > MAX_KEY_LENGTH) {
             context->output = E_KEY_EXCEED_LENGTH_LIMIT;
@@ -211,12 +203,13 @@ napi_value NapiSet(napi_env env, napi_callback_info info)
             return;
         }
         context->output = pref->PutString(context->key, context->val);
+        pref->FlushSync();
     });
 }
 
 napi_value NapiDelete(napi_env env, napi_callback_info info)
 {
-    return Operate(env, info, "delete", [](napi_env env, void *data) {
+    return Operate(env, info, [](napi_env env, void *data) {
         AsyncContext *context = static_cast<AsyncContext *>(data);
         if (context->key.size() > MAX_KEY_LENGTH) {
             context->output = E_KEY_EXCEED_LENGTH_LIMIT;
@@ -234,7 +227,7 @@ napi_value NapiDelete(napi_env env, napi_callback_info info)
 
 napi_value NapiClear(napi_env env, napi_callback_info info)
 {
-    return Operate(env, info, "clear", [](napi_env env, void *data) {
+    return Operate(env, info, [](napi_env env, void *data) {
         AsyncContext *context = static_cast<AsyncContext *>(data);
         std::string prefName = GetPrefName(env);
         std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context->output);
