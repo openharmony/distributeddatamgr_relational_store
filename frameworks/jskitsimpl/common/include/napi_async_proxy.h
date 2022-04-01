@@ -154,8 +154,8 @@ public:
                 }
                 delete context;
             },
-            (void *)asyncContext, &asyncContext->work),ret);
-        NAPI_CALL_BASE(asyncContext->env,napi_queue_async_work(asyncContext->env, asyncContext->work),ret);
+            (void *)asyncContext, &asyncContext->work), ret);
+        NAPI_CALL_BASE(asyncContext->env,napi_queue_async_work(asyncContext->env, asyncContext->work), ret);
         return ret;
     }
 
