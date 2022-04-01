@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "RdbStoreImpl"
+
 #include "rdb_store_impl.h"
 #include <sstream>
 #include <unistd.h>
@@ -537,6 +539,7 @@ std::shared_ptr<SqliteStatement> RdbStoreImpl::BeginStepQuery(
     int &errCode, const std::string sql, const std::vector<std::string> &bindArgs)
 {
     std::shared_ptr<StoreSession> session = GetThreadSession();
+    LOG_DEBUG("session connection count:%{public}d", session->GetConnectionUseCount());
     return session->BeginStepQuery(errCode, sql, bindArgs);
 }
 

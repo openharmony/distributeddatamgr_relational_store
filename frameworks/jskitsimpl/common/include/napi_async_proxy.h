@@ -117,11 +117,9 @@ public:
 
         napi_value resource = nullptr;
         napi_create_string_utf8(asyncContext->env, resourceName.c_str(), NAPI_AUTO_LENGTH, &resource);
-
         asyncContext->execFunc = execFunc;
         asyncContext->completeFunc = completeFunc;
-        napi_create_async_work(
-            asyncContext->env, nullptr, resource,
+        NAPI_CALL_BASE(asyncContext->env, napi_create_async_work(asyncContext->env, nullptr, resource,
             [](napi_env env, void *data) {
                 T *context = (T *)data;
                 context->execStatus = context->execFunc(context);
@@ -156,9 +154,8 @@ public:
                 }
                 delete context;
             },
-            (void *)asyncContext, &asyncContext->work);
-
-        napi_queue_async_work(asyncContext->env, asyncContext->work);
+            (void *)asyncContext, &asyncContext->work), ret);
+        NAPI_CALL_BASE(asyncContext->env, napi_queue_async_work(asyncContext->env, asyncContext->work), ret);
         return ret;
     }
 
