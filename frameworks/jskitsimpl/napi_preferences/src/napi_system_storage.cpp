@@ -82,6 +82,7 @@ static const std::string GetMessageInfo(int errCode)
             break;
         case E_INVALID_ARGS:
             message = "The input args is invalid.";
+            break;
         default:
             message = "Unknown err";
     }
