@@ -136,7 +136,8 @@ std::string GetPrefName(napi_env env)
     return ctx->GetPreferencesDir() + "/default.xml";
 }
 
-napi_value Operate(napi_env env, napi_callback_info info, std::function<void(napi_env env, void *data)> execute)
+napi_value Operate(
+    napi_env env, napi_callback_info info, std::function<void(napi_env env, AsyncContext *context)> execute)
 {
     size_t argc = 1;
     napi_value argv[1] = { 0 };
@@ -166,8 +167,7 @@ napi_value Operate(napi_env env, napi_callback_info info, std::function<void(nap
 
 napi_value NapiGet(napi_env env, napi_callback_info info)
 {
-    return Operate(env, info, [](napi_env env, void *data) {
-        AsyncContext *context = static_cast<AsyncContext *>(data);
+    return Operate(env, info, [](napi_env env, AsyncContext *context) {
         if (context->key.size() > MAX_KEY_LENGTH) {
             context->output = E_KEY_EXCEED_LENGTH_LIMIT;
             return;
@@ -186,8 +186,7 @@ napi_value NapiGet(napi_env env, napi_callback_info info)
 
 napi_value NapiSet(napi_env env, napi_callback_info info)
 {
-    return Operate(env, info, [](napi_env env, void *data) {
-        AsyncContext *context = static_cast<AsyncContext *>(data);
+    return Operate(env, info, [](napi_env env, AsyncContext *context) {
         if (context->key.size() > MAX_KEY_LENGTH) {
             context->output = E_KEY_EXCEED_LENGTH_LIMIT;
             return;
@@ -209,8 +208,7 @@ napi_value NapiSet(napi_env env, napi_callback_info info)
 
 napi_value NapiDelete(napi_env env, napi_callback_info info)
 {
-    return Operate(env, info, [](napi_env env, void *data) {
-        AsyncContext *context = static_cast<AsyncContext *>(data);
+    return Operate(env, info, [](napi_env env, AsyncContext *context) {
         if (context->key.size() > MAX_KEY_LENGTH) {
             context->output = E_KEY_EXCEED_LENGTH_LIMIT;
             return;
@@ -227,8 +225,7 @@ napi_value NapiDelete(napi_env env, napi_callback_info info)
 
 napi_value NapiClear(napi_env env, napi_callback_info info)
 {
-    return Operate(env, info, [](napi_env env, void *data) {
-        AsyncContext *context = static_cast<AsyncContext *>(data);
+    return Operate(env, info, [](napi_env env, AsyncContext *context) {
         std::string prefName = GetPrefName(env);
         std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context->output);
         if (context->output != E_OK) {
