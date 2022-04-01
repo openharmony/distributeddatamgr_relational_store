@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "StepResultSet"
+
 #include "step_result_set.h"
 
 #include <unistd.h>
@@ -317,6 +319,7 @@ int StepResultSet::CheckSession()
  */
 int StepResultSet::PrepareStep()
 {
+    LOG_DEBUG("begin");
     if (isClosed) {
         return E_STEP_RESULT_CLOSED;
     }
@@ -326,12 +329,14 @@ int StepResultSet::PrepareStep()
     }
 
     int errCode;
+    LOG_DEBUG("rdb->BeginStepQuery begin");
     sqliteStatement = rdb->BeginStepQuery(errCode, sql, selectionArgs);
     if (sqliteStatement == nullptr) {
         rdb->EndStepQuery();
         return errCode;
     }
 
+    LOG_DEBUG("get_id begin");
     tid = std::this_thread::get_id();
     return E_OK;
 }
