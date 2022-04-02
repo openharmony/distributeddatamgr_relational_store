@@ -58,10 +58,14 @@ static void ParseString(napi_env env, napi_value &object, const char *name, cons
 
 static void ParseFunction(napi_env env, napi_value &object, const char *name, napi_value &output)
 {
-    if (napi_get_named_property(env, object, name, &output) == napi_ok) {
+    napi_value value = nullptr;
+    if (napi_get_named_property(env, object, name, &value) == napi_ok) {
         napi_valuetype valueType = napi_null;
-        NAPI_CALL_RETURN_VOID(env, napi_typeof(env, output, &valueType));
+        NAPI_CALL_RETURN_VOID(env, napi_typeof(env, value, &valueType));
         NAPI_ASSERT_RETURN_VOID(env, valueType == napi_function, "Wrong argument, function expected.");
+        output = value;
+    } else {
+        output = nullptr;
     }
 }
 
@@ -146,7 +150,7 @@ static int32_t ParseArgs(napi_env env, napi_callback_info info, SyncContext &con
 
 napi_value NapiGet(napi_env env, napi_callback_info info)
 {
-    SyncContext context;
+    SyncContext context{};
     context.output = ParseArgs(env, info, context);
     napi_value ret = nullptr;
     if (context.output != E_OK) {
@@ -179,7 +183,7 @@ napi_value NapiGet(napi_env env, napi_callback_info info)
 
 napi_value NapiSet(napi_env env, napi_callback_info info)
 {
-    SyncContext context;
+    SyncContext context{};
     context.output = ParseArgs(env, info, context);
     napi_value ret = nullptr;
     if (context.output != E_OK) {
@@ -216,7 +220,7 @@ napi_value NapiSet(napi_env env, napi_callback_info info)
 
 napi_value NapiDelete(napi_env env, napi_callback_info info)
 {
-    SyncContext context;
+    SyncContext context{};
     context.output = ParseArgs(env, info, context);
     napi_value ret = nullptr;
     if (context.output != E_OK) {
@@ -246,7 +250,7 @@ napi_value NapiDelete(napi_env env, napi_callback_info info)
 
 napi_value NapiClear(napi_env env, napi_callback_info info)
 {
-    SyncContext context;
+    SyncContext context{};
     context.output = ParseArgs(env, info, context);
     napi_value ret = nullptr;
     if (context.output != E_OK) {
