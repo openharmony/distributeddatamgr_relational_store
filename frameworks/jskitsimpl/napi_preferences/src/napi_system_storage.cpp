@@ -149,7 +149,7 @@ static int32_t ParseArgs(napi_env env, napi_callback_info info, SyncContext &con
 
 napi_value NapiGet(napi_env env, napi_callback_info info)
 {
-    SyncContext context{};
+    SyncContext context {};
     context.output = ParseArgs(env, info, context);
     napi_value ret = nullptr;
     if (context.output != E_OK) {
@@ -182,7 +182,7 @@ napi_value NapiGet(napi_env env, napi_callback_info info)
 
 napi_value NapiSet(napi_env env, napi_callback_info info)
 {
-    SyncContext context{};
+    SyncContext context {};
     context.output = ParseArgs(env, info, context);
     napi_value ret = nullptr;
     if (context.output != E_OK) {
@@ -219,7 +219,7 @@ napi_value NapiSet(napi_env env, napi_callback_info info)
 
 napi_value NapiDelete(napi_env env, napi_callback_info info)
 {
-    SyncContext context{};
+    SyncContext context {};
     context.output = ParseArgs(env, info, context);
     napi_value ret = nullptr;
     if (context.output != E_OK) {
@@ -249,7 +249,7 @@ napi_value NapiDelete(napi_env env, napi_callback_info info)
 
 napi_value NapiClear(napi_env env, napi_callback_info info)
 {
-    SyncContext context{};
+    SyncContext context {};
     context.output = ParseArgs(env, info, context);
     napi_value ret = nullptr;
     if (context.output != E_OK) {
