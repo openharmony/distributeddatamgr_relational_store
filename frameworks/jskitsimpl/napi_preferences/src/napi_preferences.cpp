@@ -192,7 +192,6 @@ napi_value PreferencesProxy::GetAll(napi_env env, napi_callback_info info)
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<PreferencesAysncContext>::InputParser> parsers;
     proxy.ParseInputs(parsers);
-
     return proxy.DoAsyncWork(
         "GetAll",
         [](PreferencesAysncContext *asyncContext) {
@@ -208,7 +207,6 @@ napi_value PreferencesProxy::GetAll(napi_env env, napi_callback_info info)
             napi_value num;
             napi_value str;
             napi_value boolVal;
-
             for (auto iter : asyncContext->allMaps) {
                 if (iter.second.IsBool()) {
                     status = napi_get_boolean(asyncContext->env, iter.second, &boolVal);
