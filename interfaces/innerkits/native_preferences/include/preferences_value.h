@@ -42,13 +42,13 @@ public:
     bool IsString() const;
     bool IsSet() const;
 
-    operator int();
-    operator float();
-    operator double();
-    operator bool();
-    operator int64_t();
-    operator std::string();
-    operator std::set<std::string>();
+    operator int() const;
+    operator float() const;
+    operator double() const;
+    operator bool() const;
+    operator int64_t() const;
+    operator std::string() const;
+    operator std::set<std::string>() const;
 
     bool operator==(const PreferencesValue &value);
 

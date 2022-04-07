@@ -200,40 +200,33 @@ napi_value PreferencesProxy::GetAll(napi_env env, napi_callback_info info)
             return OK;
         },
         [](PreferencesAysncContext *asyncContext, napi_value &output) {
-            napi_status status = napi_create_object(asyncContext->env, &output);
-            if (status != napi_ok) {
+            if (napi_create_object(asyncContext->env, &output) != napi_ok) {
                 return ERR;
             }
             napi_value num;
             napi_value str;
             napi_value boolVal;
-            for (auto iter : asyncContext->allMaps) {
-                if (iter.second.IsBool()) {
-                    status = napi_get_boolean(asyncContext->env, iter.second, &boolVal);
-                    if (status != napi_ok) {
+            for (const auto &[key, value] : asyncContext->allMaps) {
+                if (value.IsBool()) {
+                    if (napi_get_boolean(asyncContext->env, value, &boolVal) != napi_ok) {
                         return ERR;
                     }
-                    status = napi_set_named_property(asyncContext->env, output, iter.first.c_str(), boolVal);
-                    if (status != napi_ok) {
+                    if (napi_set_named_property(asyncContext->env, output, key.c_str(), boolVal) != napi_ok) {
                         return ERR;
                     }
-                } else if (iter.second.IsDouble()) {
-                    status = napi_create_double(asyncContext->env, iter.second, &num);
-                    if (status != napi_ok) {
+                } else if (value.IsDouble()) {
+                    if (napi_create_double(asyncContext->env, value, &num) != napi_ok) {
                         return ERR;
                     }
-                    status = napi_set_named_property(asyncContext->env, output, iter.first.c_str(), num);
-                    if (status != napi_ok) {
+                    if (napi_set_named_property(asyncContext->env, output, key.c_str(), num) != napi_ok) {
                         return ERR;
                     }
                 } else {
-                    std::string tempStr = (std::string)iter.second;
-                    status = napi_create_string_utf8(asyncContext->env, tempStr.c_str(), tempStr.size(), &str);
-                    if (status != napi_ok) {
+                    std::string tempStr = (std::string)value;
+                    if (napi_create_string_utf8(asyncContext->env, tempStr.c_str(), tempStr.size(), &str) != napi_ok) {
                         return ERR;
                     }
-                    status = napi_set_named_property(asyncContext->env, output, iter.first.c_str(), str);
-                    if (status != napi_ok) {
+                    if (napi_set_named_property(asyncContext->env, output, key.c_str(), str) != napi_ok) {
                         return ERR;
                     }
                 }
