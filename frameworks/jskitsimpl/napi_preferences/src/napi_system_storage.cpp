@@ -28,26 +28,25 @@ using namespace OHOS::NativePreferences;
 
 namespace OHOS {
 namespace SystemStorageJsKit {
-struct AsyncContext {
+struct SyncContext {
     std::string key;
     std::string def;
     std::string val;
-    napi_ref success;
-    napi_ref fail;
-    napi_ref complete;
+    napi_value success;
+    napi_value fail;
+    napi_value complete;
     int32_t output = E_ERROR;
-    napi_async_work request;
 };
 
 static const unsigned int MAX_KEY_LENGTH = 32;
 
 static const unsigned int MAX_VALUE_LENGTH = 128;
 
-static const int32_t failArgc = 2;
+static const int32_t FAILCOUNT = 2;
 
-static const int32_t succArgc = 1;
+static const int32_t SUCCOUNT = 1;
 
-void ParseString(napi_env env, napi_value &object, const char *name, const bool enable, std::string &output)
+static void ParseString(napi_env env, napi_value &object, const char *name, const bool enable, std::string &output)
 {
     napi_value value = nullptr;
     if (napi_get_named_property(env, object, name, &value) == napi_ok) {
@@ -57,18 +56,19 @@ void ParseString(napi_env env, napi_value &object, const char *name, const bool 
     }
 }
 
-void ParseFunction(napi_env env, napi_value &object, const char *name, napi_ref &output)
+static void ParseFunction(napi_env env, napi_value &object, const char *name, napi_value &output)
 {
     napi_value value = nullptr;
+    output = nullptr;
     if (napi_get_named_property(env, object, name, &value) == napi_ok) {
         napi_valuetype valueType = napi_null;
         NAPI_CALL_RETURN_VOID(env, napi_typeof(env, value, &valueType));
         NAPI_ASSERT_RETURN_VOID(env, valueType == napi_function, "Wrong argument, function expected.");
-        NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, value, 1, &output));
+        output = value;
     }
 }
 
-const std::string GetMessageInfo(int errCode)
+static const std::string GetMessageInfo(int errCode)
 {
     std::string message;
     switch (errCode) {
@@ -81,168 +81,194 @@ const std::string GetMessageInfo(int errCode)
         case E_KEY_EXCEED_LENGTH_LIMIT:
             message = "The value string length should shorter than 128.";
             break;
+        case E_INVALID_ARGS:
+            message = "The input args is invalid.";
+            break;
         default:
-            message = "unknown err";
+            message = "Unknown err";
     }
     return message;
 }
 
-void Complete(napi_env env, napi_status status, void *data)
+static void CallFunctions(napi_env env, const SyncContext &context)
 {
-    AsyncContext *ctx = static_cast<AsyncContext *>(data);
-    if (status != napi_ok) {
-        napi_throw_type_error(env, nullptr, "Execute callback failed.");
-        return;
-    }
-
     size_t len = 0;
-    if (ctx->output == E_OK && ctx->success != nullptr) {
-        napi_value successCallBack = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, ctx->success, &successCallBack));
-        napi_value succRes[succArgc] = { 0 };
-        len = ctx->val.size();
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, ctx->val.c_str(), len, &succRes[0]));
+    if (context.output == E_OK && context.success != nullptr) {
+        napi_value succRes[SUCCOUNT] = { 0 };
+        len = context.val.size();
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, context.val.c_str(), len, &succRes[0]));
         napi_value succCallbackResult = nullptr;
         NAPI_CALL_RETURN_VOID(
-            env, napi_call_function(env, nullptr, successCallBack, succArgc, succRes, &succCallbackResult));
+            env, napi_call_function(env, nullptr, context.success, SUCCOUNT, succRes, &succCallbackResult));
     }
 
-    if (ctx->output != E_OK && ctx->fail != nullptr) {
-        napi_value failCallBack = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, ctx->fail, &failCallBack));
-        napi_value failRes[failArgc] = { 0 };
-        std::string message = GetMessageInfo(ctx->output);
+    if (context.output != E_OK && context.fail != nullptr) {
+        napi_value failRes[FAILCOUNT] = { 0 };
+        std::string message = GetMessageInfo(context.output);
         len = message.size();
         NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, message.c_str(), len, &failRes[0]));
-        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ctx->output, &failRes[1]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, context.output, &failRes[1]));
         napi_value failCallbackResult = nullptr;
         NAPI_CALL_RETURN_VOID(
-            env, napi_call_function(env, nullptr, failCallBack, failArgc, failRes, &failCallbackResult));
+            env, napi_call_function(env, nullptr, context.fail, FAILCOUNT, failRes, &failCallbackResult));
     }
 
-    if (ctx->complete != nullptr) {
-        napi_value completeCallBack = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, ctx->complete, &completeCallBack));
+    if (context.complete != nullptr) {
         napi_value completeCallbackResult = nullptr;
         NAPI_CALL_RETURN_VOID(
-            env, napi_call_function(env, nullptr, completeCallBack, 0, nullptr, &completeCallbackResult));
+            env, napi_call_function(env, nullptr, context.complete, 0, nullptr, &completeCallbackResult));
     }
-
-    napi_delete_reference(env, ctx->success);
-    napi_delete_reference(env, ctx->fail);
-    napi_delete_reference(env, ctx->complete);
-    napi_delete_async_work(env, ctx->request);
-
-    delete ctx;
 }
 
-std::string GetPrefName(napi_env env)
+static std::string GetPrefName(napi_env env)
 {
     auto ctx = JSAbility::GetContext(env, nullptr);
     return ctx->GetPreferencesDir() + "/default.xml";
 }
 
-napi_value Operate(napi_env env, napi_callback_info info, const char *resource, napi_async_execute_callback execute)
+static int32_t ParseArgs(napi_env env, napi_callback_info info, SyncContext &context)
 {
     size_t argc = 1;
     napi_value argv[1] = { 0 };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
-    NAPI_ASSERT(env, argc == 1, "Not enough arguments, expected 1.");
+    NAPI_CALL_BASE(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr), E_ERROR);
+    NAPI_ASSERT_BASE(env, argc == 1, "Not enough arguments, expected 1.", E_INVALID_ARGS);
     napi_valuetype valueType = napi_null;
-    NAPI_CALL(env, napi_typeof(env, argv[0], &valueType));
-    NAPI_ASSERT(env, valueType == napi_object, "Wrong argument type, object expected.");
+    NAPI_CALL_BASE(env, napi_typeof(env, argv[0], &valueType), E_ERROR);
+    NAPI_ASSERT_BASE(env, valueType == napi_object, "Wrong argument type, object expected.", E_INVALID_ARGS);
 
-    AsyncContext *context = new AsyncContext();
+    ParseString(env, argv[0], "key", true, context.key);
+    ParseString(env, argv[0], "value", false, context.val);
+    ParseString(env, argv[0], "default", false, context.def);
 
-    ParseString(env, argv[0], "key", true, context->key);
-    ParseString(env, argv[0], "value", false, context->val);
-    ParseString(env, argv[0], "default", false, context->def);
+    ParseFunction(env, argv[0], "success", context.success);
+    ParseFunction(env, argv[0], "fail", context.fail);
+    ParseFunction(env, argv[0], "complete", context.complete);
 
-    ParseFunction(env, argv[0], "success", context->success);
-    ParseFunction(env, argv[0], "fail", context->fail);
-    ParseFunction(env, argv[0], "complete", context->complete);
-
-    napi_value resourceName = nullptr;
-    NAPI_CALL(env, napi_create_string_utf8(env, resource, NAPI_AUTO_LENGTH, &resourceName));
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, execute, Complete, context, &context->request));
-    NAPI_CALL(env, napi_queue_async_work(env, context->request));
-
-    napi_value ret = nullptr;
-    napi_get_undefined(env, &ret);
-    return ret;
+    return E_OK;
 }
 
 napi_value NapiGet(napi_env env, napi_callback_info info)
 {
-    return Operate(env, info, "get", [](napi_env env, void *data) {
-        AsyncContext *context = static_cast<AsyncContext *>(data);
-        if (context->key.size() > MAX_KEY_LENGTH) {
-            context->output = E_KEY_EXCEED_LENGTH_LIMIT;
-            return;
-        }
+    SyncContext context {};
+    context.output = ParseArgs(env, info, context);
+    napi_value ret = nullptr;
+    if (context.output != E_OK) {
+        CallFunctions(env, context);
+        napi_create_int32(env, context.output, &ret);
+        return ret;
+    }
 
-        std::string prefName = GetPrefName(env);
-        std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context->output);
-        std::string tmpValue = pref->GetString(context->key, context->def);
-        if (tmpValue.size() > MAX_VALUE_LENGTH) {
-            context->output = E_VALUE_EXCEED_LENGTH_LIMIT;
-            return;
-        }
-        context->val = tmpValue;
-    });
+    if (context.key.size() > MAX_KEY_LENGTH) {
+        context.output = E_KEY_EXCEED_LENGTH_LIMIT;
+        CallFunctions(env, context);
+        napi_create_int32(env, context.output, &ret);
+        return ret;
+    }
+
+    std::string prefName = GetPrefName(env);
+    std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context.output);
+    std::string tmpValue = pref->GetString(context.key, context.def);
+    if (tmpValue.size() > MAX_VALUE_LENGTH) {
+        context.output = E_VALUE_EXCEED_LENGTH_LIMIT;
+        napi_create_int32(env, context.output, &ret);
+        return ret;
+    }
+    context.val = tmpValue;
+    CallFunctions(env, context);
+
+    napi_create_int32(env, E_OK, &ret);
+    return ret;
 }
 
 napi_value NapiSet(napi_env env, napi_callback_info info)
 {
-    return Operate(env, info, "set", [](napi_env env, void *data) {
-        AsyncContext *context = static_cast<AsyncContext *>(data);
-        if (context->key.size() > MAX_KEY_LENGTH) {
-            context->output = E_KEY_EXCEED_LENGTH_LIMIT;
-            return;
-        }
-        if (context->val.size() > MAX_VALUE_LENGTH) {
-            context->output = E_VALUE_EXCEED_LENGTH_LIMIT;
-            return;
-        }
+    SyncContext context {};
+    context.output = ParseArgs(env, info, context);
+    napi_value ret = nullptr;
+    if (context.output != E_OK) {
+        CallFunctions(env, context);
+        napi_create_int32(env, context.output, &ret);
+        return ret;
+    }
 
-        std::string prefName = GetPrefName(env);
-        std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context->output);
-        if (context->output != E_OK) {
-            return;
-        }
-        context->output = pref->PutString(context->key, context->val);
-    });
+    if (context.key.size() > MAX_KEY_LENGTH) {
+        context.output = E_KEY_EXCEED_LENGTH_LIMIT;
+        CallFunctions(env, context);
+        napi_create_int32(env, context.output, &ret);
+        return ret;
+    }
+    if (context.val.size() > MAX_VALUE_LENGTH) {
+        context.output = E_VALUE_EXCEED_LENGTH_LIMIT;
+        CallFunctions(env, context);
+        napi_create_int32(env, context.output, &ret);
+        return ret;
+    }
+
+    std::string prefName = GetPrefName(env);
+    std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context.output);
+    if (context.output != E_OK) {
+        CallFunctions(env, context);
+        return ret;
+    }
+    context.output = pref->PutString(context.key, context.val);
+    pref->FlushSync();
+    CallFunctions(env, context);
+    napi_create_int32(env, E_OK, &ret);
+    return ret;
 }
 
 napi_value NapiDelete(napi_env env, napi_callback_info info)
 {
-    return Operate(env, info, "delete", [](napi_env env, void *data) {
-        AsyncContext *context = static_cast<AsyncContext *>(data);
-        if (context->key.size() > MAX_KEY_LENGTH) {
-            context->output = E_KEY_EXCEED_LENGTH_LIMIT;
-            return;
-        }
+    SyncContext context {};
+    context.output = ParseArgs(env, info, context);
+    napi_value ret = nullptr;
+    if (context.output != E_OK) {
+        CallFunctions(env, context);
+        napi_create_int32(env, context.output, &ret);
+        return ret;
+    }
 
-        std::string prefName = GetPrefName(env);
-        std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context->output);
-        if (context->output != E_OK) {
-            return;
-        }
-        context->output = pref->Delete(context->key);
-    });
+    if (context.key.size() > MAX_KEY_LENGTH) {
+        context.output = E_KEY_EXCEED_LENGTH_LIMIT;
+        CallFunctions(env, context);
+        napi_create_int32(env, context.output, &ret);
+        return ret;
+    }
+
+    std::string prefName = GetPrefName(env);
+    std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context.output);
+    if (context.output != E_OK) {
+        napi_create_int32(env, context.output, &ret);
+        return ret;
+    }
+    context.output = pref->Delete(context.key);
+    CallFunctions(env, context);
+    napi_create_int32(env, E_OK, &ret);
+    return ret;
 }
 
 napi_value NapiClear(napi_env env, napi_callback_info info)
 {
-    return Operate(env, info, "clear", [](napi_env env, void *data) {
-        AsyncContext *context = static_cast<AsyncContext *>(data);
-        std::string prefName = GetPrefName(env);
-        std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context->output);
-        if (context->output != E_OK) {
-            return;
-        }
-        context->output = pref->Clear();
-    });
+    SyncContext context {};
+    context.output = ParseArgs(env, info, context);
+    napi_value ret = nullptr;
+    if (context.output != E_OK) {
+        CallFunctions(env, context);
+        napi_create_int32(env, context.output, &ret);
+        return ret;
+    }
+
+    std::string prefName = GetPrefName(env);
+    std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context.output);
+    if (context.output != E_OK) {
+        CallFunctions(env, context);
+        napi_create_int32(env, context.output, &ret);
+        return ret;
+    }
+    context.output = pref->Clear();
+    CallFunctions(env, context);
+    napi_create_int32(env, E_OK, &ret);
+    return ret;
 }
 
 napi_value InitSystemStorage(napi_env env, napi_value exports)
