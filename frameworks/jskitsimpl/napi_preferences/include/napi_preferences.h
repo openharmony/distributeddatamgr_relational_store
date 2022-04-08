@@ -45,6 +45,7 @@ private:
     static napi_value Clear(napi_env env, napi_callback_info info);
     static napi_value RegisterObserver(napi_env env, napi_callback_info info);
     static napi_value UnRegisterObserver(napi_env env, napi_callback_info info);
+    static napi_value GetAll(napi_env env, napi_callback_info info);
 
     std::shared_ptr<OHOS::NativePreferences::Preferences> value_;
     napi_env env_;

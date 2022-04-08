@@ -94,37 +94,37 @@ bool PreferencesValue::IsSet() const
     return (pVal != nullptr);
 }
 
-PreferencesValue::operator int()
+PreferencesValue::operator int() const
 {
     return std::get<int>(data_);
 }
 
-PreferencesValue::operator int64_t()
+PreferencesValue::operator int64_t() const
 {
     return std::get<int64_t>(data_);
 }
 
-PreferencesValue::operator float()
+PreferencesValue::operator float() const
 {
     return std::get<float>(data_);
 }
 
-PreferencesValue::operator double()
+PreferencesValue::operator double() const
 {
     return std::get<double>(data_);
 }
 
-PreferencesValue::operator bool()
+PreferencesValue::operator bool() const
 {
     return std::get<bool>(data_);
 }
 
-PreferencesValue::operator std::string()
+PreferencesValue::operator std::string() const
 {
     return std::get<std::string>(data_);
 }
 
-PreferencesValue::operator std::set<std::string>()
+PreferencesValue::operator std::set<std::string>() const
 {
     return std::get<std::set<std::string>>(data_);
 }
