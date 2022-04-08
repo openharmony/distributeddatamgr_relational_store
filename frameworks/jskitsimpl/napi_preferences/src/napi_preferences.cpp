@@ -39,6 +39,7 @@ namespace PreferencesJsKit {
 struct PreferencesAysncContext : NapiAsyncProxy<PreferencesAysncContext>::AysncContext {
     std::string key;
     PreferencesValue defValue = PreferencesValue((int)0);
+    std::map<std::string, PreferencesValue> allMaps;
     bool hasKey;
 };
 
@@ -65,6 +66,7 @@ void PreferencesProxy::Init(napi_env env, napi_value exports)
     napi_property_descriptor descriptors[] = {
         DECLARE_NAPI_FUNCTION("put", SetValue),
         DECLARE_NAPI_FUNCTION("get", GetValue),
+        DECLARE_NAPI_FUNCTION("getAll", GetAll),
         DECLARE_NAPI_FUNCTION("delete", Delete),
         DECLARE_NAPI_FUNCTION("clear", Clear),
         DECLARE_NAPI_FUNCTION("has", HasKey),
@@ -182,6 +184,55 @@ void ParseDefValue(const napi_env &env, const napi_value &arg, PreferencesAysncC
     } else {
         LOG_ERROR("Wrong second parameter type");
     }
+}
+
+napi_value PreferencesProxy::GetAll(napi_env env, napi_callback_info info)
+{
+    NapiAsyncProxy<PreferencesAysncContext> proxy;
+    proxy.Init(env, info);
+    std::vector<NapiAsyncProxy<PreferencesAysncContext>::InputParser> parsers;
+    proxy.ParseInputs(parsers);
+    return proxy.DoAsyncWork(
+        "GetAll",
+        [](PreferencesAysncContext *asyncContext) {
+            PreferencesProxy *obj = reinterpret_cast<PreferencesProxy *>(asyncContext->boundObj);
+            asyncContext->allMaps = obj->value_->GetAll();
+            return OK;
+        },
+        [](PreferencesAysncContext *asyncContext, napi_value &output) {
+            if (napi_create_object(asyncContext->env, &output) != napi_ok) {
+                return ERR;
+            }
+            napi_value num;
+            napi_value str;
+            napi_value boolVal;
+            for (const auto &[key, value] : asyncContext->allMaps) {
+                if (value.IsBool()) {
+                    if (napi_get_boolean(asyncContext->env, value, &boolVal) != napi_ok) {
+                        return ERR;
+                    }
+                    if (napi_set_named_property(asyncContext->env, output, key.c_str(), boolVal) != napi_ok) {
+                        return ERR;
+                    }
+                } else if (value.IsDouble()) {
+                    if (napi_create_double(asyncContext->env, value, &num) != napi_ok) {
+                        return ERR;
+                    }
+                    if (napi_set_named_property(asyncContext->env, output, key.c_str(), num) != napi_ok) {
+                        return ERR;
+                    }
+                } else {
+                    std::string tempStr = (std::string)value;
+                    if (napi_create_string_utf8(asyncContext->env, tempStr.c_str(), tempStr.size(), &str) != napi_ok) {
+                        return ERR;
+                    }
+                    if (napi_set_named_property(asyncContext->env, output, key.c_str(), str) != napi_ok) {
+                        return ERR;
+                    }
+                }
+            }
+            return OK;
+        });
 }
 
 napi_value PreferencesProxy::GetValue(napi_env env, napi_callback_info info)
