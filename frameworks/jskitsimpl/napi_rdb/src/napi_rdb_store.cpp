@@ -670,7 +670,6 @@ napi_value RdbStoreProxy::Backup(napi_env env, napi_callback_info info)
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
     parsers.push_back(ParseTableName);
-    parsers.push_back(ParseNewKey);
     proxy.ParseInputs(parsers, ParseThis);
     return proxy.DoAsyncWork(
         "Backup",
@@ -927,7 +926,6 @@ napi_value RdbStoreProxy::ChangeDbFileForRestore(napi_env env, napi_callback_inf
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
     parsers.push_back(ParseDestName);
     parsers.push_back(ParseSrcName);
-    parsers.push_back(ParseNewKey);
     proxy.ParseInputs(parsers, ParseThis);
     return proxy.DoAsyncWork(
         "Restore",
