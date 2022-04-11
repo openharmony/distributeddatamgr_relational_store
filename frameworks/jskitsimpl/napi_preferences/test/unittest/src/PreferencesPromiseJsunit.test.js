@@ -237,7 +237,6 @@ describe('preferencesTest', function () {
      * @tc.desc put boolean promise interface test
      */
     it('testPreferencesPutBoolean0121', 0, async function (done) {
-        await mPreferences.clear();
         const promise = mPreferences.put(KEY_TEST_BOOLEAN_ELEMENT, true);
         promise.then(async (ret) => {
             let per = await mPreferences.get(KEY_TEST_BOOLEAN_ELEMENT, false);
@@ -258,7 +257,6 @@ describe('preferencesTest', function () {
      * @tc.desc put float promise interface test
      */
     it('testPreferencesPutFloat0131', 0, async function (done) {
-        await mPreferences.clear();
         const promise = mPreferences.put(KEY_TEST_FLOAT_ELEMENT, 4.0);
         promise.then(async (ret) => {
             let per = await mPreferences.get(KEY_TEST_FLOAT_ELEMENT, 0.0);
@@ -279,7 +277,6 @@ describe('preferencesTest', function () {
      * @tc.desc put int promise interface test
      */
     it('testPreferencesPutInt0141', 0, async function (done) {
-        await mPreferences.clear();
         const promise = mPreferences.put(KEY_TEST_INT_ELEMENT, 4);
         promise.then(async (ret) => {
             let per = await mPreferences.get(KEY_TEST_INT_ELEMENT, 0);
@@ -300,8 +297,6 @@ describe('preferencesTest', function () {
      * @tc.desc put long promise interface test
      */
     it('testPreferencesPutLong0151', 0, async function (done) {
-        await mPreferences.clear();
-        await mPreferences.put(KEY_TEST_LONG_ELEMENT, 4);
         const promise = mPreferences.put(KEY_TEST_LONG_ELEMENT, 4);
         promise.then(async (ret) => {
             let per = await mPreferences.get(KEY_TEST_LONG_ELEMENT, 0);
@@ -322,8 +317,6 @@ describe('preferencesTest', function () {
      * @tc.desc put String promise interface test
      */
     it('testPreferencesPutString0161', 0, async function (done) {
-        await mPreferences.clear();
-        await mPreferences.put(KEY_TEST_STRING_ELEMENT, "abc");
         const promise = mPreferences.put(KEY_TEST_STRING_ELEMENT, '');
         promise.then(async (ret) => {
             let per = await mPreferences.get(KEY_TEST_STRING_ELEMENT, "defaultvalue")
