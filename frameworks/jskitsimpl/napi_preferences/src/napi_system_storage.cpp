@@ -81,6 +81,9 @@ static const std::string GetMessageInfo(int errCode)
         case E_KEY_EXCEED_LENGTH_LIMIT:
             message = "The value string length should shorter than 128.";
             break;
+        case E_DEFAULT_EXCEED_LENGTH_LIMIT:
+            message = "The default string length should shorter than 128.";
+            break;
         case E_INVALID_ARGS:
             message = "The input args is invalid.";
             break;
@@ -165,15 +168,16 @@ napi_value NapiGet(napi_env env, napi_callback_info info)
         return ret;
     }
 
-    std::string prefName = GetPrefName(env);
-    std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context.output);
-    std::string tmpValue = pref->GetString(context.key, context.def);
-    if (tmpValue.size() > MAX_VALUE_LENGTH) {
-        context.output = E_VALUE_EXCEED_LENGTH_LIMIT;
+    if (context.def.size() > MAX_VALUE_LENGTH) {
+        context.output = E_DEFAULT_EXCEED_LENGTH_LIMIT;
+        CallFunctions(env, context);
         napi_create_int32(env, context.output, &ret);
         return ret;
     }
-    context.val = tmpValue;
+
+    std::string prefName = GetPrefName(env);
+    std::shared_ptr<Preferences> pref = PreferencesHelper::GetPreferences(prefName, context.output);
+    context.val = pref->GetString(context.key, context.def);
     CallFunctions(env, context);
 
     napi_create_int32(env, E_OK, &ret);
