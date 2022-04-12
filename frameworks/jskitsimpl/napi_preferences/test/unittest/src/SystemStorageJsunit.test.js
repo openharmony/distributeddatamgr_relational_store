@@ -228,11 +228,9 @@ describe('systemStorageTest', function () {
             fail: function (errCode, data) {
                 testErrCode = errCode;
                 testData = data;
-                console.info("LJT get3 fail");
                 failRet = true;
             },
             complete: function () {
-                console.info("LJT get3 complete");
                 completeRet = true;
             }
         })
