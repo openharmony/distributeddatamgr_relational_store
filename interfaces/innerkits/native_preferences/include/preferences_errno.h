@@ -39,6 +39,7 @@ constexpr int E_PATH_EXCEED_MAX_LENGTH = (E_BASE - 14);
 constexpr int E_VALUE_EXCEED_MAX_LENGTH = (E_BASE - 15);
 constexpr int E_KEY_EXCEED_LENGTH_LIMIT = (E_BASE - 16);
 constexpr int E_VALUE_EXCEED_LENGTH_LIMIT = (E_BASE - 17);
+constexpr int E_DEFAULT_EXCEED_LENGTH_LIMIT = (E_BASE - 18);
 } // namespace NativePreferences
 } // namespace OHOS
 #endif // PREFERENCES_ERRNO_H
