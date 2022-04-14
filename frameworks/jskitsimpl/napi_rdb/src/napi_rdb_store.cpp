@@ -936,7 +936,7 @@ napi_value RdbStoreProxy::ChangeDbFileForRestore(napi_env env, napi_callback_inf
             const std::vector<uint8_t> newKey;
             errCode = obj->rdbStore_->ChangeDbFileForRestore(context->destName, context->srcName, newKey);
             LOG_DEBUG("RdbStoreProxy::ChangeDbFileForRestore errCode is : %{public}d", errCode);
-            return (errCode != E_OK) ? OK : ERR;
+            return (errCode == E_OK) ? OK : ERR;
         },
 
         [](RdbStoreContext *context, napi_value &output) {
