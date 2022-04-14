@@ -294,6 +294,8 @@ int SqliteConnectionPool::ChangeDbFileForRestore(const std::string newPath, cons
 {
     if (writeConnectionUsed == true || idleReadConnectionCount != readConnectionCount) {
         LOG_ERROR("Connection pool is busy now!");
+        LOG_DEBUG("writeConnectionUsed:%{public}d, idleReadConnectionCount=%{public}d,"
+            "readConnectionCount=%{public}d", writeConnectionUsed, idleReadConnectionCount, readConnectionCount);
         return E_ERROR;
     }
 
