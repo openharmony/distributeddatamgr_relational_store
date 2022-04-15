@@ -103,13 +103,12 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
 
     /**
      * @tc.name rdb restore test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Restore_0010
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Restore_0020
      * @tc.desc rdb restore test
      */
     it('testRdbStoreBackupRestoreWithFAContextTest0002', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreBackupRestore0002 start *************");
         try {
-
             await rdbStore.restore(DATABASE_ROUTE + DATABASE_RESTORE_NAME, DATABASE_ROUTE + DATABASE_BACKUP_NAME)
             console.log(TAG + "restore database success");
 
@@ -124,7 +123,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
 
     /**
      * @tc.name rdb query test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Query_0010
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Query_0030
      * @tc.desc rdb query test
      */
     it('testRdbStoreBackupRestoreWithFAContextTest0003', 0, async function (done) {
