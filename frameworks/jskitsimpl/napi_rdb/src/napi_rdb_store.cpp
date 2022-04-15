@@ -670,14 +670,14 @@ napi_value RdbStoreProxy::Backup(napi_env env, napi_callback_info info)
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
     parsers.push_back(ParseTableName);
-    parsers.push_back(ParseNewKey);
     proxy.ParseInputs(parsers, ParseThis);
     return proxy.DoAsyncWork(
         "Backup",
         [](RdbStoreContext *context) {
             LOG_DEBUG("RdbStoreProxy::Backup Async");
             RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            int errCode = obj->rdbStore_->Backup(context->tableName, context->newKey);
+            const std::vector<uint8_t> newKey;
+            int errCode = obj->rdbStore_->Backup(context->tableName, newKey);
             LOG_DEBUG("RdbStoreProxy::Backup errCode is: %{public}d", errCode);
             return (errCode == E_OK) ? OK : ERR;
         },
@@ -926,7 +926,6 @@ napi_value RdbStoreProxy::ChangeDbFileForRestore(napi_env env, napi_callback_inf
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
     parsers.push_back(ParseDestName);
     parsers.push_back(ParseSrcName);
-    parsers.push_back(ParseNewKey);
     proxy.ParseInputs(parsers, ParseThis);
     return proxy.DoAsyncWork(
         "Restore",
@@ -934,9 +933,10 @@ napi_value RdbStoreProxy::ChangeDbFileForRestore(napi_env env, napi_callback_inf
             LOG_DEBUG("RdbStoreProxy::ChangeDbFileForRestore Async");
             RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
             int errCode = 0;
-            errCode = obj->rdbStore_->ChangeDbFileForRestore(context->destName, context->srcName, context->newKey);
+            const std::vector<uint8_t> newKey;
+            errCode = obj->rdbStore_->ChangeDbFileForRestore(context->destName, context->srcName, newKey);
             LOG_DEBUG("RdbStoreProxy::ChangeDbFileForRestore errCode is : %{public}d", errCode);
-            return (errCode != E_OK) ? OK : ERR;
+            return (errCode == E_OK) ? OK : ERR;
         },
 
         [](RdbStoreContext *context, napi_value &output) {
