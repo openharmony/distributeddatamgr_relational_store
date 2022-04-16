@@ -50,6 +50,14 @@ static std::string RemoveSuffix(const std::string& name)
     return std::string(name, 0, pos);
 }
 
+static std::string GetGlobalPath(const std::string &sandboxPath)
+{
+    if (sandboxPath.find("media_library.db") != std::string::npos) {
+        return "/data/app/el2/100/database/com.ohos.medialibrary.MediaLibraryDataA/DataAbility/media_library.db";
+    }
+    return sandboxPath;
+}
+
 int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
 {
     RDB_TRACE_BEGIN("rdb open");
@@ -67,7 +75,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     name = config.GetName();
     fileSecurityLevel = config.GetDatabaseFileSecurityLevel();
     fileType = config.GetDatabaseFileType();
-    syncerParam_ = { config.GetBundleName(), config.GetPath(),
+    syncerParam_ = { config.GetBundleName(), GetGlobalPath(config.GetPath()),
                     RemoveSuffix(config.GetName()), config.GetDistributedType() };
     RDB_TRACE_END();
     return E_OK;
