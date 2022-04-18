@@ -189,6 +189,7 @@ void ParseDefValue(const napi_env &env, const napi_value &arg, PreferencesAysncC
 int32_t GetAllExecute(PreferencesAysncContext *asyncContext, napi_value &output)
 {
     if (napi_create_object(asyncContext->env, &output) != napi_ok) {
+        LOG_ERROR("PreferencesProxy::GetAll creat object failed");
         return ERR;
     }
     napi_value num;
