@@ -59,9 +59,12 @@ OpenHarmony关系型数据库底层使用SQLite作为持久化存储引擎，支
 ```
 //foundation/distributeddatamgr/appdatamgr
 ├── frameworks            # 框架层代码
-│   └── innerkitsimpl     # 内部接口实现
+│   └── js                # JS API的实现
+│   │   └── napi          # napi代码实现
+│   └── native            # 内部接口实现
 └── interfaces            # 接口代码
-    └── innerkits         # 内部接口声明
+    └── inner_api         # 内部接口声明
+        └── native        # C/C++接口
 ```
 
 ## 关系型数据库（RDB）<a name="section101010894114"></a>

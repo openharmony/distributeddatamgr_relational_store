@@ -19,8 +19,8 @@ config("native_dataability_config") {
   cflags_cc = [ "-Wc99-designator" ]
   include_dirs = [
     "include",
-    "../../../frameworks/innerkitsimpl/native_dataability/include",
-    "../../../frameworks/innerkitsimpl/native_dataability/src",
+    "../../../../frameworks/native/dataability/include",
+    "../../../../frameworks/native/dataability/src",
     "//utils/native/base/include",
   ]
 }
@@ -33,12 +33,12 @@ config("native_dataability_public_config") {
 ohos_shared_library("native_dataability") {
   part_name = "native_appdatamgr"
   sources = [
-    "../../../frameworks/innerkitsimpl/native_dataability/src/data_ability_predicates.cpp",
-    "../../../frameworks/innerkitsimpl/native_dataability/src/ishared_result_set.cpp",
-    "../../../frameworks/innerkitsimpl/native_dataability/src/ishared_result_set_proxy.cpp",
-    "../../../frameworks/innerkitsimpl/native_dataability/src/ishared_result_set_stub.cpp",
-    "../../../frameworks/innerkitsimpl/native_dataability/src/logger.h",
-    "../../../frameworks/innerkitsimpl/native_dataability/src/predicates_utils.cpp",
+    "../../../../frameworks/native/dataability/src/data_ability_predicates.cpp",
+    "../../../../frameworks/native/dataability/src/ishared_result_set.cpp",
+    "../../../../frameworks/native/dataability/src/ishared_result_set_proxy.cpp",
+    "../../../../frameworks/native/dataability/src/ishared_result_set_stub.cpp",
+    "../../../../frameworks/native/dataability/src/logger.h",
+    "../../../../frameworks/native/dataability/src/predicates_utils.cpp",
   ]
 
   configs = [ ":native_dataability_config" ]

@@ -71,19 +71,19 @@
         },
         "build": {
             "sub_component": [
-                "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_appdatafwk:native_appdatafwk",
-                "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_preferences:native_preferences",
-                "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_dataability:native_dataability",
-                "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_rdb:native_rdb",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_dataability:dataability",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_preferences:preferences",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_preferences:storage",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_preferences:storage_napi",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_rdb:rdb"
+                "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/appdatafwk:native_appdatafwk",
+                "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/preferences:native_preferences",
+                "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/dataability:native_dataability",
+                "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb:native_rdb",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/dataability:dataability",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/preferences:preferences",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/preferences:storage",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/preferences:storage_napi",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/rdb:rdb"
             ],
             "inner_kits": [
                 {
-                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_rdb:native_rdb",
+                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb:native_rdb",
                     "header": {
                         "header_files": [
                             "abs_rdb_predicates.h",
@@ -102,11 +102,11 @@
                             "value_object.h",
                             "values_bucket.h"
                         ],
-                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_rdb/include"
+                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb/include"
                     }
                 },
                 {
-                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_preferences:native_preferences",
+                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/preferences:native_preferences",
                     "header": {
                         "header_files": [
                             "preferences.h",
@@ -116,36 +116,36 @@
                             "preferences_xml_utils.h",
                             "preferences_value.h"
                         ],
-                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_preferences/include"
+                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/preferences/include"
                     }
                 },
                 {
-                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_appdatafwk:native_appdatafwk",
+                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/appdatafwk:native_appdatafwk",
                     "header": {
                         "header_files": [
                             "shared_block.h"
                         ],
-                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_appdatafwk/include"
+                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/appdatafwk/include"
                     }
                 },
                 {
-                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_dataability:native_dataability",
+                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/dataability:native_dataability",
                     "header": {
                         "header_files": [
                             "data_ability_predicates.h",
                             "predicates_utils.h"
                         ],
-                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_dataability/include"
+                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/dataability/include"
                     }
                 }
             ],
             "test": [
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_preferences/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_dataability/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_rdb/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_rdb/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_preferences/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/jskitsimpl/napi_dataability/test:unittest"
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/native/preferences/test:unittest",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/native/dataability/test:unittest",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/native/rdb/test:unittest",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/rdb/test:unittest",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/preferences/test:unittest",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/dataability/test:unittest"
             ]
         }
     }
