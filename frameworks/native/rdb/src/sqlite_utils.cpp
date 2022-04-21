@@ -104,10 +104,9 @@ bool SqliteUtils::DeleteFile(const std::string filePath)
     return remove(filePath.c_str()) == 0;
 }
 
-bool SqliteUtils::RenameFile(const std::string srcFile, const std::string destFile)
+int SqliteUtils::RenameFile(const std::string srcFile, const std::string destFile)
 {
-    bool ret = rename(srcFile.c_str(), destFile.c_str());
-    return !ret;
+    return rename(srcFile.c_str(), destFile.c_str());
 }
 } // namespace NativeRdb
 } // namespace OHOS

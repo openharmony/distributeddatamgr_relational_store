@@ -676,8 +676,7 @@ napi_value RdbStoreProxy::Backup(napi_env env, napi_callback_info info)
         [](RdbStoreContext *context) {
             LOG_DEBUG("RdbStoreProxy::Backup Async");
             RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            const std::vector<uint8_t> newKey;
-            int errCode = obj->rdbStore_->Backup(context->tableName, newKey);
+            int errCode = obj->rdbStore_->Backup(context->tableName, context->newKey);
             LOG_DEBUG("RdbStoreProxy::Backup errCode is: %{public}d", errCode);
             return (errCode == E_OK) ? OK : ERR;
         },
@@ -933,8 +932,7 @@ napi_value RdbStoreProxy::ChangeDbFileForRestore(napi_env env, napi_callback_inf
             LOG_DEBUG("RdbStoreProxy::ChangeDbFileForRestore Async");
             RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
             int errCode = 0;
-            const std::vector<uint8_t> newKey;
-            errCode = obj->rdbStore_->ChangeDbFileForRestore(context->destName, context->srcName, newKey);
+            errCode = obj->rdbStore_->ChangeDbFileForRestore(context->destName, context->srcName, context->newKey);
             LOG_DEBUG("RdbStoreProxy::ChangeDbFileForRestore errCode is : %{public}d", errCode);
             return (errCode == E_OK) ? OK : ERR;
         },
