@@ -16,10 +16,9 @@
 #define LOG_TAG "RdbStoreImpl"
 
 #include "rdb_store_impl.h"
-
+#include <sstream>
 #include <unistd.h>
 
-#include <sstream>
 
 #include "directory_ex.h"
 #include "logger.h"
@@ -369,8 +368,8 @@ int RdbStoreImpl::ExecuteAndGetLong(int64_t &outValue, const std::string &sql, c
     return errCode;
 }
 
-int RdbStoreImpl::ExecuteAndGetString(std::string &outValue, const std::string &sql,
-    const std::vector<ValueObject> &bindArgs)
+int RdbStoreImpl::ExecuteAndGetString(
+    std::string &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int errCode = session->ExecuteGetString(outValue, sql, bindArgs);
