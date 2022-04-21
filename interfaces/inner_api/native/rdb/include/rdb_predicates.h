@@ -25,29 +25,17 @@ class RdbPredicates : public AbsRdbPredicates {
 public:
     explicit RdbPredicates(std::string tableName);
     ~RdbPredicates() override {}
-    void Clear() override;
-    void InitialParam();
-    std::vector<std::string> GetJoinTypes();
-    void SetJoinTypes(const std::vector<std::string> joinTypes);
-    std::vector<std::string> GetJoinTableNames();
-    void SetJoinTableNames(const std::vector<std::string> joinTableNames);
-    std::vector<std::string> GetJoinConditions();
-    void SetJoinConditions(const std::vector<std::string> joinConditions);
-    std::string GetJoinClause();
-    int GetJoinCount() const;
-    void SetJoinCount(int joinCount);
-    RdbPredicates *CrossJoin(std::string tableName);
-    RdbPredicates *InnerJoin(std::string tableName);
-    RdbPredicates *LeftOuterJoin(std::string tableName);
-    RdbPredicates *Using(std::vector<std::string> fields);
-    RdbPredicates *On(std::vector<std::string> clauses);
+
+    std::string GetJoinClause() const override;
+
+    RdbPredicates *CrossJoin(std::string tableName) override;
+    RdbPredicates *InnerJoin(std::string tableName) override;
+    RdbPredicates *LeftOuterJoin(std::string tableName) override;
+    RdbPredicates *Using(std::vector<std::string> fields) override;
+    RdbPredicates *On(std::vector<std::string> clauses) override;
 
 private:
-    std::vector<std::string> joinTypes;
-    std::vector<std::string> joinTableNames;
-    std::vector<std::string> joinConditions;
-    int joinCount;
-    std::string ProcessJoins();
+    std::string ProcessJoins() const;
     std::string GetGrammar(int type) const;
     RdbPredicates *Join(int join, std::string tableName);
 };

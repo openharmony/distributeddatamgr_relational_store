@@ -24,13 +24,15 @@ namespace OHOS::NativeRdb {
 class AbsRdbPredicates : public AbsPredicates {
 public:
     explicit AbsRdbPredicates(std::string tableName);
-    
+
     ~AbsRdbPredicates() override {}
+
+    void Clear() override;
     
     std::string ToString() const;
-    
+
     std::string GetTableName() const;
-    
+
     AbsRdbPredicates *InDevices(std::vector<std::string>& devices);
     
     AbsRdbPredicates *InAllDevices();
@@ -44,9 +46,32 @@ public:
 
     const DistributedRdb::RdbPredicates& GetDistributedPredicates() const;
 
+    virtual void InitialParam();
+    virtual std::vector<std::string> GetJoinTypes();
+    virtual void SetJoinTypes(const std::vector<std::string> joinTypes);
+    virtual std::vector<std::string> GetJoinTableNames();
+    virtual void SetJoinTableNames(const std::vector<std::string> joinTableNames);
+    virtual std::vector<std::string> GetJoinConditions();
+    virtual void SetJoinConditions(const std::vector<std::string> joinConditions);
+    virtual std::string GetJoinClause() const;
+    virtual int GetJoinCount() const;
+    virtual void SetJoinCount(int joinCount);
+    virtual AbsRdbPredicates *CrossJoin(std::string tableName);
+    virtual AbsRdbPredicates *InnerJoin(std::string tableName);
+    virtual AbsRdbPredicates *LeftOuterJoin(std::string tableName);
+    virtual AbsRdbPredicates *Using(std::vector<std::string> fields);
+    virtual AbsRdbPredicates *On(std::vector<std::string> clauses);
+
 private:
     std::string tableName;
     mutable DistributedRdb::RdbPredicates predicates_;
+
+protected:
+    mutable std::string builder;
+    std::vector<std::string> joinTypes;
+    std::vector<std::string> joinTableNames;
+    std::vector<std::string> joinConditions;
+    int joinCount;
 };
 } // namespace OHOS::NativeRdb
 

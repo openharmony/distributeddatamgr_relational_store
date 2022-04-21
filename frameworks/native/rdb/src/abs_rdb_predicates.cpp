@@ -32,6 +32,130 @@ AbsRdbPredicates::AbsRdbPredicates(std::string tableName)
     predicates_.table_ = tableName;
 }
 
+void RdbPredicates::Clear()
+{
+    AbsPredicates::Clear();
+    InitialParam();
+}
+
+void AbsRdbPredicates::InitialParam()
+{
+    joinTypes.clear();
+    joinTableNames.clear();
+    joinConditions.clear();
+    joinCount = 0;
+}
+
+std::vector<std::string> AbsRdbPredicates::GetJoinTypes()
+{
+    return joinTypes;
+}
+
+/**
+ * Sets the join types in the predicates. The value can be {@code INNER JOIN}, {@code LEFT OUTER JOIN},
+ * and {@code CROSS JOIN}.
+ */
+void AbsRdbPredicates::SetJoinTypes(const std::vector<std::string> joinTypes)
+{
+    this->joinTypes = joinTypes;
+}
+
+/**
+ * Obtains the database table names of the joins in the predicates.
+ */
+std::vector<std::string> AbsRdbPredicates::GetJoinTableNames()
+{
+    return joinTableNames;
+}
+
+/**
+ * Sets the database table names of the joins in the predicates.
+ */
+void AbsRdbPredicates::SetJoinTableNames(const std::vector<std::string> joinTableNames)
+{
+    this->joinTableNames = joinTableNames;
+}
+
+/**
+ * Obtains the join conditions in the predicates.
+ */
+std::vector<std::string> AbsRdbPredicates::GetJoinConditions()
+{
+    return joinConditions;
+}
+
+/**
+ * Sets the join conditions required in the predicates.
+ */
+void AbsRdbPredicates::SetJoinConditions(const std::vector<std::string> joinConditions)
+{
+    this->joinConditions = joinConditions;
+}
+
+/**
+ * Obtains the join clause in the predicates.
+ */
+std::string AbsRdbPredicates::GetJoinClause() const
+{
+    return tableName;
+}
+
+/**
+ * Obtains the number of joins in the predicates.
+ */
+int AbsRdbPredicates::GetJoinCount() const
+{
+    return joinCount;
+}
+
+/**
+ * Sets the number of joins in the predicates.
+ */
+void AbsRdbPredicates::SetJoinCount(int joinCount)
+{
+    this->joinCount = joinCount;
+}
+
+/**
+ * Adds a {@code cross join} condition to a SQL statement.
+ */
+AbsRdbPredicates* AbsRdbPredicates::CrossJoin(std::string tableName)
+{
+    return nullptr;
+}
+
+/**
+ * Adds an {@code inner join} condition to a SQL statement.
+ */
+AbsRdbPredicates* AbsRdbPredicates::InnerJoin(std::string tableName)
+{
+    return nullptr;
+}
+
+/**
+ * Adds a {@code left outer join} condition to a SQL statement.
+ */
+AbsRdbPredicates* AbsRdbPredicates::LeftOuterJoin(std::string tableName)
+{
+    return nullptr;
+}
+
+/**
+ * Adds a {@code using} condition to the predicate. This method is similar to {@code using} of the SQL statement.
+ */
+AbsRdbPredicates* AbsRdbPredicates::Using(std::vector<std::string> fields)
+{
+    return nullptr;
+}
+
+/**
+ * Adds an {@code on} condition to the predicate.
+ */
+AbsRdbPredicates* AbsRdbPredicates::On(std::vector<std::string> clauses)
+{
+    return nullptr;
+}
+
 /**
  * Obtains the table name.
  */

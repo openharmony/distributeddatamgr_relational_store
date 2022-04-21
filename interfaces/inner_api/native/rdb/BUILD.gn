@@ -56,7 +56,6 @@ ohos_shared_library("native_rdb") {
     "../../../../frameworks/native/rdb/src/base_transaction.cpp",
     "../../../../frameworks/native/rdb/src/base_transaction.h",
     "../../../../frameworks/native/rdb/src/logger.h",
-    "../../../../frameworks/native/rdb/src/raw_rdb_predicates.cpp",
     "../../../../frameworks/native/rdb/src/rdb_helper.cpp",
     "../../../../frameworks/native/rdb/src/rdb_predicates.cpp",
     "../../../../frameworks/native/rdb/src/rdb_store_config.cpp",
