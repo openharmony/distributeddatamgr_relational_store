@@ -20,7 +20,7 @@ config("module_private_config") {
 
   include_dirs = [
     "../include/",
-    "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_preferences/include",
+    "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/preferences/include",
   ]
 }
 
@@ -38,7 +38,7 @@ ohos_unittest("NativePreferencesTest") {
   external_deps = [ "hilog_native:libhilog" ]
 
   deps = [
-    "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/native_preferences:native_preferences",
+    "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/preferences:native_preferences",
     "//third_party/googletest:gtest_main",
   ]
 }
