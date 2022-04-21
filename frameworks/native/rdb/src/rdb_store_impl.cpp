@@ -16,18 +16,21 @@
 #define LOG_TAG "RdbStoreImpl"
 
 #include "rdb_store_impl.h"
-#include <sstream>
+
 #include <unistd.h>
+
+#include <sstream>
+
+#include "directory_ex.h"
 #include "logger.h"
-#include "rdb_perf_trace.h"
 #include "rdb_errno.h"
 #include "rdb_manager.h"
+#include "rdb_perf_trace.h"
+#include "relational_store_manager.h"
 #include "sqlite_shared_result_set.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
-#include "relational_store_manager.h"
-#include "directory_ex.h"
 
 namespace OHOS::NativeRdb {
 std::shared_ptr<RdbStore> RdbStoreImpl::Open(const RdbStoreConfig &config, int &errCode)
@@ -41,7 +44,7 @@ std::shared_ptr<RdbStore> RdbStoreImpl::Open(const RdbStoreConfig &config, int &
     return rdbStore;
 }
 
-static std::string RemoveSuffix(const std::string& name)
+static std::string RemoveSuffix(const std::string &name)
 {
     std::string suffix(".db");
     auto pos = name.rfind(suffix);
@@ -76,8 +79,8 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     name = config.GetName();
     fileSecurityLevel = config.GetDatabaseFileSecurityLevel();
     fileType = config.GetDatabaseFileType();
-    syncerParam_ = { config.GetBundleName(), GetGlobalPath(config.GetPath()),
-                    RemoveSuffix(config.GetName()), config.GetDistributedType() };
+    syncerParam_ = { config.GetBundleName(), GetGlobalPath(config.GetPath()), RemoveSuffix(config.GetName()),
+        config.GetDistributedType() };
     RDB_TRACE_END();
     return E_OK;
 }
@@ -300,8 +303,8 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool disti
 {
     RDB_TRACE_BEGIN("rdb query");
     std::string sql;
-    errCode = SqliteSqlBuilder::BuildQueryString(distinct, table, columns, selection, groupBy, having, orderBy, limit,
-        "", sql);
+    errCode = SqliteSqlBuilder::BuildQueryString(
+        distinct, table, columns, selection, groupBy, having, orderBy, limit, "", sql);
     if (errCode != E_OK) {
         RDB_TRACE_END();
         return nullptr;
@@ -312,8 +315,8 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool disti
     return resultSet;
 }
 
-std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sql,
-    const std::vector<std::string> &selectionArgs)
+std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(
+    const std::string &sql, const std::vector<std::string> &selectionArgs)
 {
     RDB_TRACE_BEGIN("rdb query sql");
     auto resultSet = std::make_unique<SqliteSharedResultSet>(shared_from_this(), path, sql, selectionArgs);
@@ -329,7 +332,7 @@ int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
 
     std::vector<ValueObject> bindArgs;
     std::vector<std::string> whereArgs = predicates.GetWhereArgs();
-    for (const auto& whereArg : whereArgs) {
+    for (const auto &whereArg : whereArgs) {
         bindArgs.emplace_back(whereArg);
     }
 
@@ -375,8 +378,8 @@ int RdbStoreImpl::ExecuteAndGetString(
     return errCode;
 }
 
-int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql,
-    const std::vector<ValueObject> &bindArgs)
+int RdbStoreImpl::ExecuteForLastInsertedRowId(
+    int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int errCode = session->ExecuteForLastInsertedRowId(outValue, sql, bindArgs);
@@ -384,8 +387,8 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
     return errCode;
 }
 
-int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
-    const std::vector<ValueObject> &bindArgs)
+int RdbStoreImpl::ExecuteForChangedRowCount(
+    int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int changeRow = 0;
@@ -412,6 +415,7 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
             LOG_ERROR("Invalid databasePath");
             return E_INVALID_FILE_PATH;
         }
+        backupFilePath = databasePath;
     }
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int errCode = session->Backup(backupFilePath, destEncryptKey);
@@ -434,8 +438,8 @@ int RdbStoreImpl::GiveConnectionTemporarily(int64_t milliseconds)
 /**
  * Attaches a database.
  */
-int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
-    const std::vector<uint8_t> destEncryptKey)
+int RdbStoreImpl::Attach(
+    const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey)
 {
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int errCode = session->Attach(alias, pathName, destEncryptKey);
@@ -643,8 +647,8 @@ std::string RdbStoreImpl::GetFileSecurityLevel()
     return fileSecurityLevel;
 }
 
-int RdbStoreImpl::PrepareAndGetInfo(const std::string &sql, bool &outIsReadOnly, int &numParameters,
-    std::vector<std::string> &columnNames)
+int RdbStoreImpl::PrepareAndGetInfo(
+    const std::string &sql, bool &outIsReadOnly, int &numParameters, std::vector<std::string> &columnNames)
 {
     std::shared_ptr<StoreSession> session = GetThreadSession();
 
@@ -675,8 +679,8 @@ int RdbStoreImpl::ConfigLocale(const std::string localeStr)
 /**
  * Restores a database from a specified encrypted or unencrypted database file.
  */
-int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
-    const std::vector<uint8_t> &newKey)
+int RdbStoreImpl::ChangeDbFileForRestore(
+    const std::string newPath, const std::string backupPath, const std::vector<uint8_t> &newKey)
 {
     if (isOpen == false) {
         LOG_ERROR("The connection pool has been closed.");
@@ -699,7 +703,7 @@ int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::s
         backupFilePath = backupPath;
     }
     if (access(backupFilePath.c_str(), F_OK) != E_OK) {
-        LOG_ERROR("backupPath does not exist");
+        LOG_ERROR("backupPath does not exists");
         return E_INVALID_FILE_PATH;
     }
 
@@ -710,6 +714,7 @@ int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::s
             LOG_ERROR("Invalid newPath");
             return E_INVALID_FILE_PATH;
         }
+        restoreFilePath = newPath;
     }
     if (backupFilePath == restoreFilePath) {
         LOG_ERROR("backupPath and newPath cannot be equal");
@@ -732,11 +737,10 @@ int RdbStoreImpl::ExecuteForSharedBlock(int &rowNum, AppDataFwk::SharedBlock *sh
 /**
  * Queries data in the database based on specified conditions.
  */
-std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
-    const std::vector<std::string> &selectionArgs)
+std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(
+    const std::string &sql, const std::vector<std::string> &selectionArgs)
 {
-    std::unique_ptr<ResultSet> resultSet =
-        std::make_unique<StepResultSet>(shared_from_this(), sql, selectionArgs);
+    std::unique_ptr<ResultSet> resultSet = std::make_unique<StepResultSet>(shared_from_this(), sql, selectionArgs);
     return resultSet;
 }
 
