@@ -400,6 +400,7 @@ void RdbStorePredicateTest::GenerateAllDataTypeTable()
     RdbStorePredicateTest::InsertDates(dataTypes);
 
     delete dataType1;
+    dataType1 = nullptr;
     delete dataType2;
     dataType2 = nullptr;
     delete dataType3;
@@ -1394,7 +1395,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ClearMethod_022, TestSize.Level1)
     EXPECT_EQ(0, predicates1.GetJoinCount());
     EXPECT_EQ(true, predicates1.GetJoinConditions().empty());
     EXPECT_EQ(true, predicates1.GetJoinTypes().empty());
-    EXPECT_EQ("", predicates1.GetJoinClause());
+    EXPECT_EQ("AllDataType", predicates1.GetJoinClause());
     EXPECT_EQ(true, predicates1.GetOrder().empty());
     EXPECT_EQ(false, predicates1.IsDistinct());
 }
@@ -1495,7 +1496,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotInMethod_023, TestSize.Level1)
 }
 
 /* *
- * @tc.name: RdbStore_KeywordMethod_023
+ * @tc.name: RdbStore_KeywordMethod_024
  * @tc.desc: Normal testCase of RdbPredicates for clear method
  * @tc.type: FUNC
  * @tc.require: AR000FKD4F
@@ -1556,7 +1557,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
     EXPECT_EQ(0, predicates1.GetJoinCount());
     EXPECT_EQ(true, predicates1.GetJoinConditions().empty());
     EXPECT_EQ(true, predicates1.GetJoinTypes().empty());
-    EXPECT_EQ("", predicates1.GetJoinClause());
+    EXPECT_EQ("AllDataType", predicates1.GetJoinClause());
     EXPECT_EQ(true, predicates1.GetOrder().empty());
     EXPECT_EQ(false, predicates1.IsDistinct());
 }
