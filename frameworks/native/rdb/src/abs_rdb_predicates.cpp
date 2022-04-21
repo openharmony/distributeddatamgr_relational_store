@@ -32,7 +32,7 @@ AbsRdbPredicates::AbsRdbPredicates(std::string tableName)
     predicates_.table_ = tableName;
 }
 
-void RdbPredicates::Clear()
+void AbsRdbPredicates::Clear()
 {
     AbsPredicates::Clear();
     InitialParam();
