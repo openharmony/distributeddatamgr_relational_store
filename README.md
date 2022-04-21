@@ -44,9 +44,12 @@ With the SQLite database as the persistence engine, the OpenHarmony RDB supports
 ```
 //foundation/distributeddatamgr/appdatamgr
 ├── frameworks            # Framework code
-│   └── innerkitsimpl     # Internal API implementation
+│   └── js                # JS API implementation
+│   │   └── napi          # napi implementation
+│   └── native            # Internal API implementation
 └── interfaces            # APIs
-    └── innerkits         # Internal APIs
+    └── inner_api         # Internal APIs
+        └── native        # C/C++ APIs
 ```
 
 ## Relational Database<a name="section101010894114"></a>

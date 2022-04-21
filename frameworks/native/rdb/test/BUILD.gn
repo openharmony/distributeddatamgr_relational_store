@@ -21,9 +21,9 @@ config("module_private_config") {
 
   include_dirs = [
     "../include/",
-    "../../../../interfaces/innerkits/native_rdb/include",
-    "../../../../frameworks/innerkitsimpl/native_rdb/src",
-    "../../../../interfaces/innerkits/native_appdatafwk/include",
+    "../../../../interfaces/inner_api/native/rdb/include",
+    "../../../../frameworks/native/rdb/src",
+    "../../../../interfaces/inner_api/native/appdatafwk/include",
     "//utils/native/base/include",
   ]
 
