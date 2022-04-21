@@ -16,7 +16,7 @@ config("native_preferences_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
-    "../../../frameworks/innerkitsimpl/native_preferences/include",
+    "../../../../frameworks/native/preferences/include",
     "//utils/native/base/include",
   ]
 }
@@ -28,13 +28,13 @@ config("native_preferences_public_config") {
 
 ohos_shared_library("native_preferences") {
   sources = [
-    "../../../frameworks/innerkitsimpl/native_preferences/src/preferences_helper.cpp",
-    "../../../frameworks/innerkitsimpl/native_preferences/src/preferences_impl.cpp",
-    "../../../frameworks/innerkitsimpl/native_preferences/src/preferences_observer.cpp",
-    "../../../frameworks/innerkitsimpl/native_preferences/src/preferences_value.cpp",
-    "../../../frameworks/innerkitsimpl/native_preferences/src/preferences_xml_utils.cpp",
-    "../../../frameworks/innerkitsimpl/native_preferences/src/task_pool.cpp",
-    "../../../frameworks/innerkitsimpl/native_preferences/src/task_queue.cpp",
+    "../../../../frameworks/native/preferences/src/preferences_helper.cpp",
+    "../../../../frameworks/native/preferences/src/preferences_impl.cpp",
+    "../../../../frameworks/native/preferences/src/preferences_observer.cpp",
+    "../../../../frameworks/native/preferences/src/preferences_value.cpp",
+    "../../../../frameworks/native/preferences/src/preferences_xml_utils.cpp",
+    "../../../../frameworks/native/preferences/src/task_pool.cpp",
+    "../../../../frameworks/native/preferences/src/task_queue.cpp",
   ]
 
   configs = [ ":native_preferences_config" ]

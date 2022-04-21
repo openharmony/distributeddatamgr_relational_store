@@ -16,7 +16,7 @@ if (ohos_kernel_type == "liteos_m") {
   static_library("foundation_dbm_kv_store") {
     sources = [ "src/kv_store_impl_hal/dbm_kv_store.c" ]
     include_dirs = [
-      "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/dbm_kv_store/include",
+      "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/dbm_kv_store/include",
       "inc",
     ]
   }
@@ -26,7 +26,7 @@ if (ohos_kernel_type == "liteos_m") {
     cflags_cc = cflags
     sources = [ "src/kvstore_impl_posix/dbm_kv_store.c" ]
     include_dirs = [
-      "//foundation/distributeddatamgr/appdatamgr/interfaces/innerkits/dbm_kv_store/include",
+      "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native//dbm_kv_store/include",
       "inc",
     ]
     public_deps = [ "//third_party/bounds_checking_function:libsec_shared" ]
