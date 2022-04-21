@@ -42,7 +42,7 @@ public:
     static int GetConflictClause(int conflictResolution, std::string &conflictClause);
     static std::string StrToUpper(std::string s);
     static bool DeleteFile(const std::string path);
-    static bool RenameFile(const std::string srcFile, const std::string destFile);
+    static int RenameFile(const std::string srcFile, const std::string destFile);
 
 private:
     static const std::map<std::string, int> SQL_TYPE_MAP;

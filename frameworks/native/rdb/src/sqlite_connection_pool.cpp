@@ -294,8 +294,6 @@ int SqliteConnectionPool::ChangeDbFileForRestore(const std::string newPath, cons
 {
     if (writeConnectionUsed == true || idleReadConnectionCount != readConnectionCount) {
         LOG_ERROR("Connection pool is busy now!");
-        LOG_DEBUG("writeConnectionUsed:%{public}d, idleReadConnectionCount=%{public}d,"
-            "readConnectionCount=%{public}d", writeConnectionUsed, idleReadConnectionCount, readConnectionCount);
         return E_ERROR;
     }
 
@@ -317,8 +315,8 @@ int SqliteConnectionPool::ChangeDbFileForRestore(const std::string newPath, cons
         SqliteUtils::DeleteFile(newPath + "-journal");
     }
 
-    ret = SqliteUtils::RenameFile(backupPath, newPath);
-    if (!ret) {
+    int retVal = SqliteUtils::RenameFile(backupPath, newPath);
+    if (retVal != E_OK) {
         LOG_ERROR("RenameFile error");
     }
 

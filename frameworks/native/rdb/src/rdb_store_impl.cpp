@@ -27,6 +27,7 @@
 #include "sqlite_utils.h"
 #include "step_result_set.h"
 #include "relational_store_manager.h"
+#include "directory_ex.h"
 
 namespace OHOS::NativeRdb {
 std::shared_ptr<RdbStore> RdbStoreImpl::Open(const RdbStoreConfig &config, int &errCode)
@@ -399,8 +400,21 @@ int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string
  */
 int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
 {
+    if (databasePath.empty()) {
+        LOG_ERROR("Empty databasePath");
+        return E_INVALID_FILE_PATH;
+    }
+    std::string backupFilePath;
+    if (databasePath.find("/") == std::string::npos) {
+        backupFilePath = ExtractFilePath(path) + databasePath;
+    } else {
+        if (!PathToRealPath(ExtractFilePath(databasePath), backupFilePath)) {
+            LOG_ERROR("Invalid databasePath");
+            return E_INVALID_FILE_PATH;
+        }
+    }
     std::shared_ptr<StoreSession> session = GetThreadSession();
-    int errCode = session->Backup(databasePath, destEncryptKey);
+    int errCode = session->Backup(backupFilePath, destEncryptKey);
     ReleaseThreadSession();
     return errCode;
 }
@@ -673,8 +687,37 @@ int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::s
         LOG_ERROR("connectionPool is null");
         return E_ERROR;
     }
-    path = newPath;
-    return connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey);
+    if (newPath.empty() || backupPath.empty()) {
+        LOG_ERROR("Empty databasePath");
+        return E_INVALID_FILE_PATH;
+    }
+    std::string backupFilePath;
+    std::string restoreFilePath;
+    if (backupPath.find("/") == std::string::npos) {
+        backupFilePath = ExtractFilePath(path) + backupPath;
+    } else {
+        backupFilePath = backupPath;
+    }
+    if (access(backupFilePath.c_str(), F_OK) != E_OK) {
+        LOG_ERROR("backupPath does not exist");
+        return E_INVALID_FILE_PATH;
+    }
+
+    if (newPath.find("/") == std::string::npos) {
+        restoreFilePath = ExtractFilePath(path) + newPath;
+    } else {
+        if (!PathToRealPath(ExtractFilePath(newPath), restoreFilePath)) {
+            LOG_ERROR("Invalid newPath");
+            return E_INVALID_FILE_PATH;
+        }
+    }
+    if (backupFilePath == restoreFilePath) {
+        LOG_ERROR("backupPath and newPath cannot be equal");
+        return E_INVALID_FILE_PATH;
+    }
+
+    path = restoreFilePath;
+    return connectionPool->ChangeDbFileForRestore(restoreFilePath, backupFilePath, newKey);
 }
 int RdbStoreImpl::ExecuteForSharedBlock(int &rowNum, AppDataFwk::SharedBlock *sharedBlock, int startPos,
     int requiredPos, bool isCountAllRows, std::string sql, std::vector<ValueObject> &bindArgVec)
