@@ -104,6 +104,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
                 fileio.accessSync(DATABASE_DIR + DATABASE_RESTORE_NAME)
                 expect(false).assertTrue()
             } catch (err) {
+                expect(true).assertTrue()
             }
         }).catch((err) => {
             expect(false).assertTrue()
@@ -122,12 +123,14 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
                 fileio.accessSync(DATABASE_DIR + DATABASE_BACKUP_NAME)
                 expect(false).assertTrue()
             } catch (err) {
+                expect(true).assertTrue()
             }
 
             try {
                 fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name)
                 expect(false).assertTrue()
             } catch (err) {
+                expect(true).assertTrue()
             }
         }).catch((err) => {
             expect(false).assertTrue()
