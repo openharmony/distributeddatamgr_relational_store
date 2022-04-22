@@ -82,15 +82,13 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
     })
 
     console.log(TAG + "*************Unit Test Begin*************")
-
     /**
-     * @tc.name: RdbStoreBackupRestoreFunctionTest0001
-     * @tc.desc: Verify the sub function.
-     * @tc.type: FUNC
-     * @tc.require: #I4KNAM
+     * @tc.name RDB BackupRestore test
+     * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0010
+     * @tc.desc RDB BackupRestore test
      */
-    it('RdbStoreBackupRestoreFunctionTest0001', 0, async function (done) {
-        await console.log(TAG + "************* testRdbStoreBackupRestore0001 start *************")
+    it('RdbBackupRestoreTest_0010', 0, async function (done) {
+        await console.log(TAG + "************* RdbBackupRestoreTest_0010 start *************")
         let promiseBackup = rdbStore.backup(DATABASE_DIR + DATABASE_BACKUP_NAME)
         promiseBackup.then(async () => {
             try {
@@ -155,7 +153,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
         resultSet = null
 
         done()
-        await console.log(TAG + "************* testRdbStoreBackupRestore0001 end *************")
+        await console.log(TAG + "************* RdbBackupRestoreTest_0010 end *************")
     })
     console.log(TAG + "*************Unit Test End*************")
 })
