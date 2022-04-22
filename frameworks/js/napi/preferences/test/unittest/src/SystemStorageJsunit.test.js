@@ -21,14 +21,14 @@ describe('systemStorageTest', function () {
         console.info(TAG + 'beforeAll')
     })
 
-    afterEach(function () {
+    afterEach(async function () {
         console.info(TAG + 'afterEach')
-        storage.clear({
-            success: function () {
-                console.info(TAG + 'afterEach clear success')
+        await storage.clear({
+            success() {
+                expect(true).assertTrue();
             },
-            fail: function (data, errCode) {
-                console.info(TAG + 'afterEach clear fail, data = ' + data + ', errCode = ' + errCode)
+            fail(data, errCode) {
+                expect(false).assertTrue();
             }
         })
     })
@@ -38,29 +38,30 @@ describe('systemStorageTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Set_0001
      * @tc.desc set and can get correct value in success callback, finally get complete callback
      */
-    it('testSet001', 0, function (done) {
+    it('testSet001', 0, async function (done) {
         console.log(TAG + '************* testSet001 start *************');
-        var completeRet = false;
-        storage.set({
+        let completeRet = false;
+        let successRet = false;
+        let getValue = undefined;
+        await storage.set({
             key: 'storageKey',
             value: 'testValue',
-            success: function () {
-                var getValue;
-                storage.get({
-                    key: 'storageKey',
-                    success: function (data) {
-                        getValue = data;
-                    }
-                })
-                expect(getValue).assertEqual('testValue');
+            success() {
+                successRet = true;
             },
-            complete: function () {
+            complete() {
                 completeRet = true;
             }
-
+        });
+        await storage.get({
+            key: 'storageKey',
+            async success(data) {
+                getValue = data;
+                await expect(getValue).assertEqual('testValue');
+            }
         })
+        expect(successRet).assertTrue();
         expect(completeRet).assertTrue();
-
         done();
 
         console.log(TAG + '************* testSet001 end *************');
@@ -71,22 +72,28 @@ describe('systemStorageTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Set_0002
      * @tc.desc set null key can receive fail callback
      */
-    it('testSet002', 0, function (done) {
+    it('testSet002', 0, async function (done) {
         console.log(TAG + '************* testSet002 start *************');
-        var testData = undefined;
-        var testErrCode = undefined;
-        storage.set({
+        let testData = undefined;
+        let testErrCode = undefined;
+        let compelteRet = false;
+        await storage.set({
             key: '',
             value: 'testValue',
-            success: function () {
+            success() {
+                expect(false).assertTrue();
             },
-            fail: function (data, errCode) {
+            fail(data, errCode) {
                 testData = data;
                 testErrCode = errCode;
+            },
+            complete() {
+                compelteRet = true;
             }
         })
-        expect(testData != undefined).assertTrue();
-        expect(testErrCode != undefined).assertTrue();
+        expect("The key string is null or empty.").assertEqual(testData);
+        expect(-1006).assertEqual(testErrCode);
+        expect(compelteRet).assertTrue();
 
         done();
 
@@ -98,22 +105,28 @@ describe('systemStorageTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Set_0003
      * @tc.desc set key which size over 32 bytes and can receive fail callback
      */
-    it('testSet003', 0, function (done) {
+    it('testSet003', 0, async function (done) {
         console.log(TAG + '************* testSet003 start *************');
-        var testData = undefined;
-        var testErrCode = undefined;
-        storage.set({
+        let testData = undefined;
+        let testErrCode = undefined;
+        let compelteRet = false;
+        await storage.set({
             key: 'x'.repeat(33),
             value: 'testValue',
-            success: function () {
+            success() {
+                expect(false).assertTrue();
             },
-            fail: function (data, errCode) {
+            fail(data, errCode) {
                 testData = data;
                 testErrCode = errCode;
+            },
+            complete() {
+                compelteRet = true;
             }
         })
-        expect(testData != undefined).assertTrue();
-        expect(testErrCode != undefined).assertTrue();
+        expect("The key string length should shorter than 32.").assertEqual(testData);
+        expect(-1016).assertEqual(testErrCode);
+        expect(compelteRet).assertTrue();
 
         done();
 
@@ -126,22 +139,28 @@ describe('systemStorageTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Set_0004
      * @tc.desc set value which size over 128 bytes and can receive fail callback
      */
-    it('testSet004', 0, function (done) {
+    it('testSet004', 0, async function (done) {
         console.log(TAG + '************* testSet004 start *************');
-        var testData = undefined;
-        var testErrCode = undefined;
-        storage.set({
+        let testData = undefined;
+        let testErrCode = undefined;
+        let compelteRet = false;
+        await storage.set({
             key: 'testKey',
             value: 'x'.repeat(129),
-            success: function () {
+            success() {
+                expect(false).assertTrue();
             },
-            fail: function (data, errCode) {
+            fail(data, errCode) {
                 testData = data;
                 testErrCode = errCode;
+            },
+            complete() {
+                compelteRet = true;
             }
         })
-        expect(testData != undefined).assertTrue();
-        expect(testErrCode != undefined).assertTrue();
+        expect("The value string length should shorter than 128.").assertEqual(testData);
+        expect(-1017).assertEqual(testErrCode);
+        expect(compelteRet).assertTrue();
 
         done();
 
@@ -149,27 +168,25 @@ describe('systemStorageTest', function () {
     })
 
     /**
-     * @tc.name testGet001
-     * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Get_0001
-     * @tc.desc set and can get correct value in success callback, finally receive a get complete callback
-     */
-    it('testGet001', 0, function (done) {
+         * @tc.name testGet001
+         * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Get_0001
+         * @tc.desc set and can get correct value in success callback, finally receive a get complete callback
+         */
+    it('testGet001', 0, async function (done) {
         console.log(TAG + '************* testGet001 start *************');
-        var testVal = undefined;
-        var completeRet = false;
-        storage.set({
+        let testVal = undefined;
+        let completeRet = false;
+        await storage.set({
             key: 'storageKey',
             value: 'storageVal',
-            success: function () {
-                storage.get({
-                    key: 'storageKey',
-                    success: function (data) {
-                        testVal = data;
-                    },
-                    complete: function () {
-                        completeRet = true;
-                    }
-                })
+        })
+        await storage.get({
+            key: 'storageKey',
+            success(data) {
+                testVal = data;
+            },
+            complete() {
+                completeRet = true;
             }
         })
         expect('storageVal').assertEqual(testVal);
@@ -185,17 +202,19 @@ describe('systemStorageTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Get_0002
      * @tc.desc get value without set any value and can get default in success callback
      */
-    it('testGet002', 0, function (done) {
+    it('testGet002', 0, async function (done) {
         console.log(TAG + '************* testGet002 start *************');
-        var testVal = undefined;
-        var completeRet = false;
-        storage.get({
+        let completeRet = false;
+        await storage.get({
             key: 'storageKey',
             default: '123',
-            success: function (data) {
+            success(data) {
                 expect('123').assertEqual(data);
             },
-            complete: function () {
+            fail() {
+                expect(false).assertTrue();
+            },
+            complete() {
                 completeRet = true;
             }
         })
@@ -212,32 +231,32 @@ describe('systemStorageTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Get_0003
      * @tc.desc get default size over 128 and can receive fail callback
      */
-    it('testGet003', 0, function (done) {
+    it('testGet003', 0, async function (done) {
         console.log(TAG + '************* testGet003 start *************');
-        var testVal = undefined;
-        var testData = undefined;
-        var testErrCode = undefined;
-        var completeRet = false;
-        var failRet = false;
-        storage.get({
+        let testVal = undefined;
+        let testData = undefined;
+        let testErrCode = undefined;
+        let completeRet = false;
+        let failRet = false;
+        await storage.get({
             key: 'storageKey',
             default: 'x'.repeat(129),
-            success: function (data) {
+            success(data) {
                 testVal = data;
             },
-            fail: function (errCode, data) {
+            fail(data, errCode) {
                 testErrCode = errCode;
                 testData = data;
                 failRet = true;
             },
-            complete: function () {
+            complete() {
                 completeRet = true;
             }
         })
         expect(failRet).assertTrue();
         expect(completeRet).assertTrue();
-        expect(testErrCode != undefined).assertTrue();
-        expect(testData != undefined).assertTrue();
+        expect(-1018).assertEqual(testErrCode);
+        expect('The default string length should shorter than 128.').assertEqual(testData);
         expect(testVal == undefined).assertTrue();
 
         done();
@@ -250,30 +269,25 @@ describe('systemStorageTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Get_0004
      * @tc.desc get null key and can return default value
      */
-    it('testGet004', 0, function (done) {
+    it('testGet004', 0, async function (done) {
         console.log(TAG + '************* testGet004 start *************');
-        var testVal = undefined;
-        var testData = undefined;
-        var testErrCode = undefined;
-        var completeRet = false;
-        storage.get({
+        let testVal = undefined;
+        let completeRet = false;
+        await storage.get({
             key: '',
             default: 'storageVal',
-            success: function (data) {
+            success(data) {
                 testVal = data;
             },
-            fail: function (errCode, data) {
-                testErrCode = errCode;
-                testData = data;
+            fail(errCode, data) {
+                expect(false).assertTrue();
             },
-            complete: function () {
+            complete() {
                 completeRet = true;
             }
         })
         expect(testVal).assertEqual('storageVal');
         expect(completeRet).assertTrue();
-        expect(testErrCode).assertUndefined();
-        expect(testData).assertUndefined();
 
         done();
 
@@ -285,30 +299,33 @@ describe('systemStorageTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Delete_0001
      * @tc.desc delete value and can not get value
      */
-    it('testDelete001', 0, function (done) {
+    it('testDelete001', 0, async function (done) {
         console.log(TAG + '************* testDelete001 start *************');
-        var testData = undefined;
-        var completeRet = false;
-        storage.set({
+        let testData = undefined;
+        let completeRet = false;
+        let successRet = false;
+        await storage.set({
             key: 'storageKey',
             value: 'storageVal'
         })
-        storage.delete({
+        await storage.delete({
             key: "storageKey",
-            success: function () {
-                storage.get({
-                    key: 'storageKey',
-                    default: 'testVal',
-                    success: function (data) {
-                        testData = data;
-                    }
-                })
+            success() {
+                successRet = true;
             },
-            complete: function () {
+            complete() {
                 completeRet = true;
+            }
+        });
+        await storage.get({
+            key: 'storageKey',
+            default: 'testVal',
+            success(data) {
+                testData = data;
             }
         })
         expect(completeRet).assertTrue();
+        expect(successRet).assertTrue();
         expect(testData).assertEqual('testVal');
 
         done();
@@ -321,42 +338,34 @@ describe('systemStorageTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Delete_0002
      * @tc.desc delete null key and can get fail callback
      */
-    it('testDelete002', 0, function (done) {
+    it('testDelete002', 0, async function (done) {
         console.log(TAG + '************* testDelete002 start *************');
-        var testVal = undefined;
-        var testData = undefined;
-        var testErrCode = undefined;
-        var completeRet = false;
-        var failRet = false;
-        storage.set({
+        let testData = undefined;
+        let testErrCode = undefined;
+        let completeRet = false;
+        let failRet = false;
+        await storage.set({
             key: 'storageKey',
             value: 'storageVal'
         })
-        storage.delete({
+        await storage.delete({
             key: '',
-            success: function () {
-                storage.get({
-                    key: 'storageKey',
-                    default: 'testVal',
-                    success: function (data) {
-                        testVal = data;
-                    }
-                })
+            success() {
+                expect(false).assertTrue();
             },
-            fail: function (err, data) {
+            fail(data, err) {
                 testErrCode = err;
                 testData = data;
                 failRet = true;
             },
-            complete: function () {
+            complete() {
                 completeRet = true;
             }
         })
         expect(completeRet).assertTrue();
-        expect(testData != undefined).assertTrue();
-        expect(testErrCode != undefined).assertTrue();
+        expect("The key string is null or empty.").assertEqual(testData);
+        expect(-1006).assertEqual(testErrCode);
         expect(failRet).assertTrue();
-        expect(testVal).assertUndefined();
 
         done();
 
@@ -368,41 +377,34 @@ describe('systemStorageTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Delete_0003
      * @tc.desc delete incorrect key and can get success callback
      */
-    it('testDelete003', 0, function (done) {
+    it('testDelete003', 0, async function (done) {
         console.log(TAG + '************* testDelete003 start *************');
-        var testVal = undefined;
-        var testData = undefined;
-        var testErrCode = undefined;
-        var completeRet = false;
-        var failRet = false;
+        let testVal = undefined;
+        let completeRet = false;
         storage.set({
             key: 'storageKey',
             value: 'storageVal'
         });
-        storage.delete({
+        await storage.delete({
             key: '123',
-            success: function () {
-                storage.get({
-                    key: 'storageKey',
-                    default: 'testVal',
-                    success: function (data) {
-                        testVal = data;
-                    }
-                })
+            success() {
+                expect(true).assertTrue();
             },
-            fail: function (err, data) {
-                testErrCode = err;
-                testData = data;
-                failRet = true;
+            fail(err, data) {
+                expect(false).assertTrue();
             },
-            complete: function () {
+            complete() {
                 completeRet = true;
             }
         });
+        await storage.get({
+            key: 'storageKey',
+            default: 'testVal',
+            success(data) {
+                testVal = data;
+            }
+        })
         expect(completeRet).assertTrue();
-        expect(testData).assertUndefined();
-        expect(testErrCode).assertUndefined();
-        expect(failRet).assertFalse();
         expect(testVal).assertEqual('storageVal');
 
         done();
@@ -415,46 +417,30 @@ describe('systemStorageTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Clear_0001
      * @tc.desc clear and can receive success callback
      */
-    it('testClear001', 0, function (done) {
+    it('testClear001', 0, async function (done) {
         console.log(TAG + '************* testClear001 start *************');
-        storage.set({
+        let successRet = false;
+        await storage.set({
             key: 'storageKey1',
             value: 'storageVal1'
-        })
-        storage.set({
+        });
+        await storage.set({
             key: 'storageKey2',
             value: 'storageVal2'
-        })
-        storage.get({
-            key: 'storageKey1',
-            success: function (data) {
-                expect('storageVal1').assertEqual(data);
-                storage.get({
-                    key: 'storageKey2',
-                    success: function (data) {
-                        expect('storageVal2').assertEqual(data);
-                    }
-                })
+        });
+        await storage.clear({
+            success() {
+                successRet = true;
+            },
+            fail() {
+                expect(false).assertTrue();
             }
-        })
-        storage.clear()
-        storage.get({
-            key: 'storageKey1',
-            success: function (data) {
-                expect(undefined == data);
-                storage.get({
-                    key: 'storageKey2',
-                    success: function (data) {
-                        expect(undefined == data);
-                    }
-                })
-            }
-        })
+        });
+        expect(successRet).assertTrue();
 
         done();
 
         console.log(TAG + '************* testClear001 end *************');
     })
-
 
 })
