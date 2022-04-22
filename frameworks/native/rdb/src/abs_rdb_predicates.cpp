@@ -121,7 +121,7 @@ void AbsRdbPredicates::SetJoinCount(int joinCount)
  */
 AbsRdbPredicates* AbsRdbPredicates::CrossJoin(std::string tableName)
 {
-    return nullptr;
+    return this;
 }
 
 /**
@@ -129,7 +129,7 @@ AbsRdbPredicates* AbsRdbPredicates::CrossJoin(std::string tableName)
  */
 AbsRdbPredicates* AbsRdbPredicates::InnerJoin(std::string tableName)
 {
-    return nullptr;
+    return this;
 }
 
 /**
@@ -137,7 +137,7 @@ AbsRdbPredicates* AbsRdbPredicates::InnerJoin(std::string tableName)
  */
 AbsRdbPredicates* AbsRdbPredicates::LeftOuterJoin(std::string tableName)
 {
-    return nullptr;
+    return this;
 }
 
 /**
@@ -145,7 +145,7 @@ AbsRdbPredicates* AbsRdbPredicates::LeftOuterJoin(std::string tableName)
  */
 AbsRdbPredicates* AbsRdbPredicates::Using(std::vector<std::string> fields)
 {
-    return nullptr;
+    return this;
 }
 
 /**
@@ -153,7 +153,7 @@ AbsRdbPredicates* AbsRdbPredicates::Using(std::vector<std::string> fields)
  */
 AbsRdbPredicates* AbsRdbPredicates::On(std::vector<std::string> clauses)
 {
-    return nullptr;
+    return this;
 }
 
 /**
