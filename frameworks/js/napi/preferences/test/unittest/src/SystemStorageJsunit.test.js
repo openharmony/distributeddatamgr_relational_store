@@ -1,4 +1,3 @@
-// @ts-nocheck
 /*
 * Copyright (c) 2022 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,14 +21,14 @@ describe('systemStorageTest', function () {
         console.info(TAG + 'beforeAll')
     })
 
-    afterEach(function () {
+    afterEach(async function () {
         console.info(TAG + 'afterEach')
-        storage.clear({
-            success: function () {
-                console.info(TAG + 'afterEach clear success')
+        await storage.clear({
+            success() {
+                expect(true).assertTrue();
             },
-            fail: function (data, errCode) {
-                console.info(TAG + 'afterEach clear fail, data = ' + data + ', errCode = ' + errCode)
+            fail(data, errCode) {
+                expect(false).assertTrue();
             }
         })
     })
@@ -75,21 +74,26 @@ describe('systemStorageTest', function () {
      */
     it('testSet002', 0, async function (done) {
         console.log(TAG + '************* testSet002 start *************');
-        var testData = undefined;
-        var testErrCode = undefined;
+        let testData = undefined;
+        let testErrCode = undefined;
+        let compelteRet = false;
         await storage.set({
             key: '',
             value: 'testValue',
-            success: function () {
+            success() {
                 expect(false).assertTrue();
             },
-            fail: function (data, errCode) {
+            fail(data, errCode) {
                 testData = data;
                 testErrCode = errCode;
+            },
+            complete() {
+                compelteRet = true;
             }
         })
         expect("The key string is null or empty.").assertEqual(testData);
         expect(-1006).assertEqual(testErrCode);
+        expect(compelteRet).assertTrue();
 
         done();
 
@@ -103,21 +107,26 @@ describe('systemStorageTest', function () {
      */
     it('testSet003', 0, async function (done) {
         console.log(TAG + '************* testSet003 start *************');
-        var testData = undefined;
-        var testErrCode = undefined;
+        let testData = undefined;
+        let testErrCode = undefined;
+        let compelteRet = false;
         await storage.set({
             key: 'x'.repeat(33),
             value: 'testValue',
-            success: function () {
+            success() {
                 expect(false).assertTrue();
             },
-            fail: function (data, errCode) {
+            fail(data, errCode) {
                 testData = data;
                 testErrCode = errCode;
+            },
+            complete() {
+                compelteRet = true;
             }
         })
         expect("The key string length should shorter than 32.").assertEqual(testData);
         expect(-1016).assertEqual(testErrCode);
+        expect(compelteRet).assertTrue();
 
         done();
 
@@ -132,21 +141,26 @@ describe('systemStorageTest', function () {
      */
     it('testSet004', 0, async function (done) {
         console.log(TAG + '************* testSet004 start *************');
-        var testData = undefined;
-        var testErrCode = undefined;
+        let testData = undefined;
+        let testErrCode = undefined;
+        let compelteRet = false;
         await storage.set({
             key: 'testKey',
             value: 'x'.repeat(129),
-            success: function () {
+            success() {
                 expect(false).assertTrue();
             },
-            fail: function (data, errCode) {
+            fail(data, errCode) {
                 testData = data;
                 testErrCode = errCode;
+            },
+            complete() {
+                compelteRet = true;
             }
         })
         expect("The value string length should shorter than 128.").assertEqual(testData);
         expect(-1017).assertEqual(testErrCode);
+        expect(compelteRet).assertTrue();
 
         done();
 
@@ -154,24 +168,24 @@ describe('systemStorageTest', function () {
     })
 
     /**
-     * @tc.name testGet001
-     * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Get_0001
-     * @tc.desc set and can get correct value in success callback, finally receive a get complete callback
-     */
+         * @tc.name testGet001
+         * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Get_0001
+         * @tc.desc set and can get correct value in success callback, finally receive a get complete callback
+         */
     it('testGet001', 0, async function (done) {
         console.log(TAG + '************* testGet001 start *************');
-        var testVal = undefined;
-        var completeRet = false;
+        let testVal = undefined;
+        let completeRet = false;
         await storage.set({
             key: 'storageKey',
             value: 'storageVal',
         })
         await storage.get({
             key: 'storageKey',
-            success: function (data) {
+            success(data) {
                 testVal = data;
             },
-            complete: function () {
+            complete() {
                 completeRet = true;
             }
         })
@@ -190,14 +204,17 @@ describe('systemStorageTest', function () {
      */
     it('testGet002', 0, async function (done) {
         console.log(TAG + '************* testGet002 start *************');
-        var completeRet = false;
+        let completeRet = false;
         await storage.get({
             key: 'storageKey',
             default: '123',
-            success: function (data) {
+            success(data) {
                 expect('123').assertEqual(data);
             },
-            complete: function () {
+            fail() {
+                expect(false).assertTrue();
+            },
+            complete() {
                 completeRet = true;
             }
         })
@@ -216,23 +233,23 @@ describe('systemStorageTest', function () {
      */
     it('testGet003', 0, async function (done) {
         console.log(TAG + '************* testGet003 start *************');
-        var testVal = undefined;
-        var testData = undefined;
-        var testErrCode = undefined;
-        var completeRet = false;
-        var failRet = false;
+        let testVal = undefined;
+        let testData = undefined;
+        let testErrCode = undefined;
+        let completeRet = false;
+        let failRet = false;
         await storage.get({
             key: 'storageKey',
             default: 'x'.repeat(129),
-            success: function (data) {
+            success(data) {
                 testVal = data;
             },
-            fail: function (data, errCode) {
+            fail(data, errCode) {
                 testErrCode = errCode;
                 testData = data;
                 failRet = true;
             },
-            complete: function () {
+            complete() {
                 completeRet = true;
             }
         })
@@ -254,18 +271,18 @@ describe('systemStorageTest', function () {
      */
     it('testGet004', 0, async function (done) {
         console.log(TAG + '************* testGet004 start *************');
-        var testVal = undefined;
-        var completeRet = false;
+        let testVal = undefined;
+        let completeRet = false;
         await storage.get({
             key: '',
             default: 'storageVal',
-            success: function (data) {
+            success(data) {
                 testVal = data;
             },
-            fail: function (errCode, data) {
+            fail(errCode, data) {
                 expect(false).assertTrue();
             },
-            complete: function () {
+            complete() {
                 completeRet = true;
             }
         })
@@ -284,26 +301,26 @@ describe('systemStorageTest', function () {
      */
     it('testDelete001', 0, async function (done) {
         console.log(TAG + '************* testDelete001 start *************');
-        var testData = undefined;
-        var completeRet = false;
-        var successRet = false;
+        let testData = undefined;
+        let completeRet = false;
+        let successRet = false;
         await storage.set({
             key: 'storageKey',
             value: 'storageVal'
         })
         await storage.delete({
             key: "storageKey",
-            success: function () {
+            success() {
                 successRet = true;
             },
-            complete: function () {
+            complete() {
                 completeRet = true;
             }
         });
         await storage.get({
             key: 'storageKey',
             default: 'testVal',
-            success: function (data) {
+            success(data) {
                 testData = data;
             }
         })
@@ -323,25 +340,25 @@ describe('systemStorageTest', function () {
      */
     it('testDelete002', 0, async function (done) {
         console.log(TAG + '************* testDelete002 start *************');
-        var testData = undefined;
-        var testErrCode = undefined;
-        var completeRet = false;
-        var failRet = false;
+        let testData = undefined;
+        let testErrCode = undefined;
+        let completeRet = false;
+        let failRet = false;
         await storage.set({
             key: 'storageKey',
             value: 'storageVal'
         })
         await storage.delete({
             key: '',
-            success: function () {
+            success() {
                 expect(false).assertTrue();
             },
-            fail: function (data, err) {
+            fail(data, err) {
                 testErrCode = err;
                 testData = data;
                 failRet = true;
             },
-            complete: function () {
+            complete() {
                 completeRet = true;
             }
         })
@@ -362,27 +379,28 @@ describe('systemStorageTest', function () {
      */
     it('testDelete003', 0, async function (done) {
         console.log(TAG + '************* testDelete003 start *************');
-        var testVal = undefined;
-        var completeRet = false;
+        let testVal = undefined;
+        let completeRet = false;
         storage.set({
             key: 'storageKey',
             value: 'storageVal'
         });
         await storage.delete({
             key: '123',
-            success: function () {
+            success() {
+                expect(true).assertTrue();
             },
-            fail: function (err, data) {
+            fail(err, data) {
                 expect(false).assertTrue();
             },
-            complete: function () {
+            complete() {
                 completeRet = true;
             }
         });
         await storage.get({
             key: 'storageKey',
             default: 'testVal',
-            success: function (data) {
+            success(data) {
                 testVal = data;
             }
         })
@@ -401,7 +419,7 @@ describe('systemStorageTest', function () {
      */
     it('testClear001', 0, async function (done) {
         console.log(TAG + '************* testClear001 start *************');
-        var successRet = false;
+        let successRet = false;
         await storage.set({
             key: 'storageKey1',
             value: 'storageVal1'
@@ -411,10 +429,10 @@ describe('systemStorageTest', function () {
             value: 'storageVal2'
         });
         await storage.clear({
-            success(){
+            success() {
                 successRet = true;
             },
-            fail(){
+            fail() {
                 expect(false).assertTrue();
             }
         });
@@ -424,6 +442,5 @@ describe('systemStorageTest', function () {
 
         console.log(TAG + '************* testClear001 end *************');
     })
-
 
 })
