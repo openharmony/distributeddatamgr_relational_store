@@ -32,16 +32,25 @@ std::string RdbPredicates::GetJoinClause() const
     return GetTableName();
 }
 
+/**
+ * Adds a {@code cross join} condition to a SQL statement.
+ */
 RdbPredicates *RdbPredicates::CrossJoin(std::string tableName)
 {
     return Join(JoinType::CROSS, tableName);
 }
 
+/**
+ * Adds an {@code inner join} condition to a SQL statement.
+ */
 RdbPredicates *RdbPredicates::InnerJoin(std::string tableName)
 {
     return Join(JoinType::INNER, tableName);
 }
 
+/**
+ * Adds a {@code left outer join} condition to a SQL statement.
+ */
 RdbPredicates *RdbPredicates::LeftOuterJoin(std::string tableName)
 {
     return Join(JoinType::LEFT, tableName);
@@ -62,6 +71,9 @@ RdbPredicates *RdbPredicates::Join(int join, std::string tableName)
     return this;
 }
 
+/**
+ * Adds a {@code using} condition to the predicate. This method is similar to {@code using} of the SQL statement.
+ */
 RdbPredicates *RdbPredicates::Using(std::vector<std::string> fields)
 {
     if (fields.size() == 0) {
@@ -81,6 +93,9 @@ RdbPredicates *RdbPredicates::Using(std::vector<std::string> fields)
     return this;
 }
 
+/**
+ * Adds an {@code on} condition to the predicate.
+ */
 RdbPredicates *RdbPredicates::On(std::vector<std::string> clauses)
 {
     if (clauses.size() == 0) {
@@ -102,7 +117,7 @@ RdbPredicates *RdbPredicates::On(std::vector<std::string> clauses)
 
 std::string RdbPredicates::ProcessJoins() const
 {
-    builder = GetTableName();
+    std::string builder = GetTableName();
     size_t size = joinTableNames.size();
     for (size_t i = 0; i < size; i++) {
         builder = builder + " " + joinTypes[i] + " " + joinTableNames[i];
