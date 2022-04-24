@@ -117,46 +117,6 @@ void AbsRdbPredicates::SetJoinCount(int joinCount)
 }
 
 /**
- * Adds a {@code cross join} condition to a SQL statement.
- */
-AbsRdbPredicates* AbsRdbPredicates::CrossJoin(std::string tableName)
-{
-    return this;
-}
-
-/**
- * Adds an {@code inner join} condition to a SQL statement.
- */
-AbsRdbPredicates* AbsRdbPredicates::InnerJoin(std::string tableName)
-{
-    return this;
-}
-
-/**
- * Adds a {@code left outer join} condition to a SQL statement.
- */
-AbsRdbPredicates* AbsRdbPredicates::LeftOuterJoin(std::string tableName)
-{
-    return this;
-}
-
-/**
- * Adds a {@code using} condition to the predicate. This method is similar to {@code using} of the SQL statement.
- */
-AbsRdbPredicates* AbsRdbPredicates::Using(std::vector<std::string> fields)
-{
-    return this;
-}
-
-/**
- * Adds an {@code on} condition to the predicate.
- */
-AbsRdbPredicates* AbsRdbPredicates::On(std::vector<std::string> clauses)
-{
-    return this;
-}
-
-/**
  * Obtains the table name.
  */
 std::string AbsRdbPredicates::GetTableName() const

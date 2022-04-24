@@ -56,18 +56,12 @@ public:
     virtual std::string GetJoinClause() const;
     virtual int GetJoinCount() const;
     virtual void SetJoinCount(int joinCount);
-    virtual AbsRdbPredicates *CrossJoin(std::string tableName);
-    virtual AbsRdbPredicates *InnerJoin(std::string tableName);
-    virtual AbsRdbPredicates *LeftOuterJoin(std::string tableName);
-    virtual AbsRdbPredicates *Using(std::vector<std::string> fields);
-    virtual AbsRdbPredicates *On(std::vector<std::string> clauses);
 
 private:
     std::string tableName;
     mutable DistributedRdb::RdbPredicates predicates_;
 
 protected:
-    mutable std::string builder;
     std::vector<std::string> joinTypes;
     std::vector<std::string> joinTableNames;
     std::vector<std::string> joinConditions;

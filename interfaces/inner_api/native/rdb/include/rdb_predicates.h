@@ -27,12 +27,11 @@ public:
     ~RdbPredicates() override {}
 
     std::string GetJoinClause() const override;
-
-    RdbPredicates *CrossJoin(std::string tableName) override;
-    RdbPredicates *InnerJoin(std::string tableName) override;
-    RdbPredicates *LeftOuterJoin(std::string tableName) override;
-    RdbPredicates *Using(std::vector<std::string> fields) override;
-    RdbPredicates *On(std::vector<std::string> clauses) override;
+    RdbPredicates *CrossJoin(std::string tableName);
+    RdbPredicates *InnerJoin(std::string tableName);
+    RdbPredicates *LeftOuterJoin(std::string tableName);
+    RdbPredicates *Using(std::vector<std::string> fields);
+    RdbPredicates *On(std::vector<std::string> clauses);
 
 private:
     std::string ProcessJoins() const;
