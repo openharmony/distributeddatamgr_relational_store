@@ -12,13 +12,12 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/common/datashare.gni")
+import(
+    "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/common/datashare.gni")
 
 config("ability_config") {
   visibility = [ ":*" ]
-  include_dirs = [
-    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base/include",
-  ]
+  include_dirs = [ "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base/include" ]
 
   cflags = []
   if (target_cpu == "arm") {
@@ -42,18 +41,18 @@ ohos_shared_library("datashare_common") {
     "${datashare_common_napi_path}/src/datashare_result_set_proxy.cpp",
     "${datashare_common_napi_path}/src/napi_datashare_values_bucket.cpp",
     "${datashare_common_native_path}/src/datashare_abs_result_set.cpp",
-    "${datashare_common_native_path}/src/datashare_result_set.cpp",
-    "${datashare_common_native_path}/src/datashare_operation_builder.cpp",
     "${datashare_common_native_path}/src/datashare_operation.cpp",
+    "${datashare_common_native_path}/src/datashare_operation_builder.cpp",
     "${datashare_common_native_path}/src/datashare_predicates.cpp",
     "${datashare_common_native_path}/src/datashare_predicates_object.cpp",
     "${datashare_common_native_path}/src/datashare_result.cpp",
+    "${datashare_common_native_path}/src/datashare_result_set.cpp",
     "${datashare_common_native_path}/src/datashare_string_utils.cpp",
     "${datashare_common_native_path}/src/datashare_value_object.cpp",
     "${datashare_common_native_path}/src/datashare_values_bucket.cpp",
+    "${datashare_common_native_path}/src/ishared_result_set.cpp",
     "${datashare_common_native_path}/src/ishared_result_set_proxy.cpp",
     "${datashare_common_native_path}/src/ishared_result_set_stub.cpp",
-    "${datashare_common_native_path}/src/ishared_result_set.cpp",
   ]
 
   configs = [ ":ability_config" ]
@@ -64,10 +63,10 @@ ohos_shared_library("datashare_common") {
   ]
 
   external_deps = [
-    "napi:ace_napi",
-    "ipc:ipc_core",
     "ability_base:zuri",
     "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+    "napi:ace_napi",
     "native_appdatamgr:native_appdatafwk",
   ]
 
