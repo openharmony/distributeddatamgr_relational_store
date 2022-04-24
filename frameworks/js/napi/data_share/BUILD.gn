@@ -12,7 +12,8 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/common/datashare.gni")
+import(
+    "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/common/datashare.gni")
 
 group("datashare_napi_packages") {
   deps = [

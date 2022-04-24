@@ -12,7 +12,8 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/common/datashare.gni")
+import(
+    "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/common/datashare.gni")
 
 config("ability_config") {
   visibility = [ ":*" ]
@@ -60,13 +61,13 @@ ohos_shared_library("datashare_abilitykit") {
     "${datashare_native_consumer_path}/src/datashare_connection.cpp",
     "${datashare_native_consumer_path}/src/datashare_helper.cpp",
     "${datashare_native_consumer_path}/src/datashare_proxy.cpp",
-    "${datashare_native_provider_path}/src/datashare_ext_ability_context.cpp",
     "${datashare_native_provider_path}/src/datashare_ext_ability.cpp",
-    "${datashare_native_provider_path}/src/datashare_stub_impl.cpp",
+    "${datashare_native_provider_path}/src/datashare_ext_ability_context.cpp",
     "${datashare_native_provider_path}/src/datashare_stub.cpp",
+    "${datashare_native_provider_path}/src/datashare_stub_impl.cpp",
     "${datashare_native_provider_path}/src/datashare_uv_queue.cpp",
-    "${datashare_native_provider_path}/src/js_datashare_ext_ability_context.cpp",
     "${datashare_native_provider_path}/src/js_datashare_ext_ability.cpp",
+    "${datashare_native_provider_path}/src/js_datashare_ext_ability_context.cpp",
   ]
   configs = [ ":ability_config" ]
   public_configs = [
@@ -111,9 +112,7 @@ ohos_shared_library("datashare_abilitykit") {
 ohos_shared_library("datashare_ext_ability_module") {
   include_dirs = [ "${datashare_native_provider_path}/include" ]
 
-  sources = [
-    "${datashare_native_provider_path}/src/datashare_ext_ability_module_loader.cpp"
-  ]
+  sources = [ "${datashare_native_provider_path}/src/datashare_ext_ability_module_loader.cpp" ]
 
   configs = [ ":ability_config" ]
   public_configs = [ ":ability_public_config" ]
@@ -128,8 +127,8 @@ ohos_shared_library("datashare_ext_ability_module") {
     "ability_base:want",
     "ability_runtime:runtime",
     "hiviewdfx_hilog_native:libhilog",
-    "utils_base:utils",
     "native_appdatamgr:native_appdatafwk",
+    "utils_base:utils",
   ]
 
   subsystem_name = "distributeddatamgr"

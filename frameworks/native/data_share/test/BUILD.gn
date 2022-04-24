@@ -11,7 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/test.gni")
-import("//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_data_share/common/datashare.gni")
+import(
+    "//foundation/distributeddatamgr/appdatamgr/frameworks/innerkitsimpl/native_data_share/common/datashare.gni")
 
 module_output_path = "native_appdatamgr/native_datashare"
 
@@ -40,9 +41,7 @@ config("module_private_config") {
 ohos_unittest("NativeDataShareTest") {
   module_out_path = module_output_path
 
-  sources = [
-    "unittest/datashare_helper_test.cpp",
-  ]
+  sources = [ "unittest/datashare_helper_test.cpp" ]
 
   configs = [ ":module_private_config" ]
 
