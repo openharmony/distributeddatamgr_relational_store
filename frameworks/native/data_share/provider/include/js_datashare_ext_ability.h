@@ -16,7 +16,7 @@
 #ifndef JS_DATASHARE_EXT_ABILITY_H
 #define JS_DATASHARE_EXT_ABILITY_H
 
-#include "datashare_result_set.h"
+#include "datashare_abs_shared_result_set.h"
 #include "datashare_predicates.h"
 #include "datashare_ext_ability.h"
 #include "js_runtime.h"
@@ -154,7 +154,7 @@ public:
      *
      * @return Returns the query result.
      */
-    std::shared_ptr<DataShareResultSet> Query(const Uri &uri, std::vector<std::string> &columns,
+    std::shared_ptr<DataShareAbsSharedResultSet> Query(const Uri &uri, std::vector<std::string> &columns,
         const DataSharePredicates &predicates) override;
 
     /**

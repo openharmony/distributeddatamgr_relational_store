@@ -83,22 +83,13 @@ private:
     static napi_value GetIndex(napi_env env, napi_callback_info info);
     static napi_value IsNeedAnd(napi_env env, napi_callback_info info);
     static napi_value IsSorted(napi_env env, napi_callback_info info);
-    static napi_value Reset(napi_env env, napi_callback_info info);
-    static napi_value Unlike(napi_env env, napi_callback_info info);
-    static napi_value PrefixKey(napi_env env, napi_callback_info info);
-    static napi_value SetSuggestIndex(napi_env env, napi_callback_info info);
-    static napi_value InDevices(napi_env env, napi_callback_info info);
-    static napi_value InAllDevices(napi_env env, napi_callback_info info);
-    static napi_value GetJudgeSource(napi_env env, napi_callback_info info);
-    
     std::shared_ptr<DataSharePredicates> predicates_;
     napi_env env_;
     napi_ref wrapper_;
 };
-    napi_value GetNapiObject(napi_env env, OHOS::DataShare::DataSharePredicates *predicates);
-    DataSharePredicates *GetNativePredicatesObject(const napi_env &env, const napi_value &arg);
 
+napi_value GetNapiObject(napi_env env, OHOS::DataShare::DataSharePredicates *predicates);
+DataSharePredicates *GetNativePredicatesObject(const napi_env &env, const napi_value &arg);
 } // namespace DataShare
 } // namespace OHOS
-
 #endif // DATASHARE_PREDICATES_PROXY_H

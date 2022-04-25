@@ -21,8 +21,8 @@
 
 #include "securec.h"
 
-using namespace OHOS::DataShare;
-
+namespace OHOS {
+namespace DataShare {
 napi_value DataShareValueBucketNewInstance(napi_env env, DataShareValuesBucket &valuesBucket)
 {
     napi_value ret;
@@ -131,3 +131,5 @@ void GetValueBucketObject(DataShareValuesBucket &valuesBucket, const napi_env &e
 {
     AnalysisValuesBucket(valuesBucket, env, arg);
 }
+} // namespace DataShare
+} // namespace OHOS
