@@ -30,44 +30,44 @@ DataShareValuesBucket::~DataShareValuesBucket()
 {
 }
 
-void DataShareValuesBucket::PutString(const std::string &columnOrKeyName, const std::string &value)
+void DataShareValuesBucket::PutString(const std::string &columnName, const std::string &value)
 {
-    valuesMap.insert(std::make_pair(columnOrKeyName, DataShareValueObject(value)));
+    valuesMap.insert(std::make_pair(columnName, DataShareValueObject(value)));
 }
 
-void DataShareValuesBucket::PutInt(const std::string &columnOrKeyName, int value)
+void DataShareValuesBucket::PutInt(const std::string &columnName, int value)
 {
-    valuesMap.insert(std::make_pair(columnOrKeyName, DataShareValueObject(value)));
+    valuesMap.insert(std::make_pair(columnName, DataShareValueObject(value)));
 }
 
-void DataShareValuesBucket::PutLong(const std::string &columnOrKeyName, int64_t value)
+void DataShareValuesBucket::PutLong(const std::string &columnName, int64_t value)
 {
-    valuesMap.insert(std::make_pair(columnOrKeyName, DataShareValueObject(value)));
+    valuesMap.insert(std::make_pair(columnName, DataShareValueObject(value)));
 }
 
-void DataShareValuesBucket::PutDouble(const std::string &columnOrKeyName, double value)
+void DataShareValuesBucket::PutDouble(const std::string &columnName, double value)
 {
-    valuesMap.insert(std::make_pair(columnOrKeyName, DataShareValueObject(value)));
+    valuesMap.insert(std::make_pair(columnName, DataShareValueObject(value)));
 }
 
-void DataShareValuesBucket::PutBool(const std::string &columnOrKeyName, bool value)
+void DataShareValuesBucket::PutBool(const std::string &columnName, bool value)
 {
-    valuesMap.insert(std::make_pair(columnOrKeyName, DataShareValueObject(value)));
+    valuesMap.insert(std::make_pair(columnName, DataShareValueObject(value)));
 }
 
-void DataShareValuesBucket::PutBlob(const std::string &columnOrKeyName, const std::vector<uint8_t> &value)
+void DataShareValuesBucket::PutBlob(const std::string &columnName, const std::vector<uint8_t> &value)
 {
-    valuesMap.insert(std::make_pair(columnOrKeyName, DataShareValueObject(value)));
+    valuesMap.insert(std::make_pair(columnName, DataShareValueObject(value)));
 }
 
-void DataShareValuesBucket::PutNull(const std::string &columnOrKeyName)
+void DataShareValuesBucket::PutNull(const std::string &columnName)
 {
-    valuesMap.insert(std::make_pair(columnOrKeyName, DataShareValueObject()));
+    valuesMap.insert(std::make_pair(columnName, DataShareValueObject()));
 }
 
-void DataShareValuesBucket::Delete(const std::string &columnOrKeyName)
+void DataShareValuesBucket::Delete(const std::string &columnName)
 {
-    valuesMap.erase(columnOrKeyName);
+    valuesMap.erase(columnName);
 }
 
 void DataShareValuesBucket::Clear()
@@ -85,18 +85,18 @@ bool DataShareValuesBucket::IsEmpty() const
     return valuesMap.empty();
 }
 
-bool DataShareValuesBucket::HasColumnOrKey(const std::string &columnOrKeyName) const
+bool DataShareValuesBucket::HasColumn(const std::string &columnName) const
 {
-    auto iter = valuesMap.find(columnOrKeyName);
+    auto iter = valuesMap.find(columnName);
     if (iter == valuesMap.end()) {
         return false;
     }
     return true;
 }
 
-bool DataShareValuesBucket::GetObject(const std::string &columnOrKeyName, DataShareValueObject &value) const
+bool DataShareValuesBucket::GetObject(const std::string &columnName, DataShareValueObject &value) const
 {
-    auto iter = valuesMap.find(columnOrKeyName);
+    auto iter = valuesMap.find(columnName);
     if (iter == valuesMap.end()) {
         return false;
     }

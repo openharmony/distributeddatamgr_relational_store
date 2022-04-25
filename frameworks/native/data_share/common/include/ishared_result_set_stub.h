@@ -23,9 +23,9 @@
 namespace OHOS::DataShare {
 class ISharedResultSetStub : public IRemoteStub<ISharedResultSet> {
 public:
-    explicit ISharedResultSetStub(std::shared_ptr<DataShareResultSet> resultSet);
+    explicit ISharedResultSetStub(std::shared_ptr<DataShareAbsSharedResultSet> resultSet);
     ~ISharedResultSetStub();
-    static sptr<ISharedResultSet> CreateStub(std::shared_ptr<DataShareResultSet> resultSet,
+    static sptr<ISharedResultSet> CreateStub(std::shared_ptr<DataShareAbsSharedResultSet> resultSet,
                                             MessageParcel &parcel);
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 protected:
@@ -51,7 +51,7 @@ private:
     void Run();
     using Handler = int(ISharedResultSetStub::*)(MessageParcel &request, MessageParcel &reply);
     static constexpr int MAX_RUNNABLE = 1024;
-    std::shared_ptr<DataShareResultSet> resultSet_;
+    std::shared_ptr<DataShareAbsSharedResultSet> resultSet_;
     SafeBlockQueue<std::function<bool()>> runnables_;
     bool isRunning_ = true;
     std::thread thread_;

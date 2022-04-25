@@ -19,7 +19,7 @@
 
 namespace OHOS {
 namespace DataShare {
-DataShareAbsResultSet::DataShareAbsResultSet() : rowPos_(INIT_POS), isClosed_(false)
+DataShareAbsResultSet::DataShareAbsResultSet() : rowPos(INIT_POS), isClosed(false)
 {}
 
 DataShareAbsResultSet::~DataShareAbsResultSet() {}
@@ -69,20 +69,20 @@ int DataShareAbsResultSet::GoToRow(int position)
     return E_OK;
 }
 
-int DataShareAbsResultSet::GetDataType(int columnIndex, DataType &dataType)
+int DataShareAbsResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 {
     return E_OK;
 }
 
 int DataShareAbsResultSet::GetRowIndex(int &position) const
 {
-    position = rowPos_;
+    position = rowPos;
     return E_OK;
 }
 
 int DataShareAbsResultSet::GoTo(int offset)
 {
-    int ret = GoToRow(rowPos_ + offset);
+    int ret = GoToRow(rowPos + offset);
     if (ret != E_OK) {
         LOG_ERROR("DataShareAbsResultSet::GoTo return ret is wrong!");
         return ret;
@@ -119,7 +119,7 @@ int DataShareAbsResultSet::GoToLastRow()
 
 int DataShareAbsResultSet::GoToNextRow()
 {
-    int ret = GoToRow(rowPos_ + 1);
+    int ret = GoToRow(rowPos + 1);
     if (ret != E_OK) {
         LOG_ERROR("DataShareAbsResultSet::GoToNextRow  return GoToRow::ret is wrong!");
         return ret;
@@ -129,7 +129,7 @@ int DataShareAbsResultSet::GoToNextRow()
 
 int DataShareAbsResultSet::GoToPreviousRow()
 {
-    int ret = GoToRow(rowPos_ - 1);
+    int ret = GoToRow(rowPos - 1);
     if (ret != E_OK) {
         LOG_ERROR("DataShareAbsResultSet::GoToPreviousRow  return GoToRow::ret is wrong!");
         return ret;
@@ -139,7 +139,7 @@ int DataShareAbsResultSet::GoToPreviousRow()
 
 int DataShareAbsResultSet::IsAtFirstRow(bool &result) const
 {
-    result = (rowPos_ == 0);
+    result = (rowPos == 0);
     return E_OK;
 }
 
@@ -151,13 +151,13 @@ int DataShareAbsResultSet::IsAtLastRow(bool &result)
         LOG_ERROR("DataShareAbsResultSet::IsAtLastRow  return GetRowCount::ret is wrong!");
         return ret;
     }
-    result = (rowPos_ == (rowCnt - 1));
+    result = (rowPos == (rowCnt - 1));
     return E_OK;
 }
 
 int DataShareAbsResultSet::IsStarted(bool &result) const
 {
-    result = (rowPos_ != INIT_POS);
+    result = (rowPos != INIT_POS);
     return E_OK;
 }
 
@@ -169,7 +169,7 @@ int DataShareAbsResultSet::IsEnded(bool &result)
         LOG_ERROR("DataShareAbsResultSet::IsEnded  return GetRowCount::ret is wrong!");
         return ret;
     }
-    result = (rowCnt == 0) ? true : (rowPos_ == rowCnt);
+    result = (rowCnt == 0) ? true : (rowPos == rowCnt);
     return E_OK;
 }
 
@@ -232,12 +232,12 @@ int DataShareAbsResultSet::GetColumnName(int columnIndex, std::string &columnNam
 
 bool DataShareAbsResultSet::IsClosed() const
 {
-    return isClosed_;
+    return isClosed;
 }
 
 int DataShareAbsResultSet::Close()
 {
-    isClosed_ = true;
+    isClosed = true;
     return E_OK;
 }
 } // namespace DataShare

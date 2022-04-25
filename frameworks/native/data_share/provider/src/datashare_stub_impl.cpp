@@ -127,11 +127,11 @@ int DataShareStubImpl::Delete(const Uri &uri, const DataSharePredicates &predica
     return ret;
 }
 
-std::shared_ptr<DataShareResultSet> DataShareStubImpl::Query(const Uri &uri,
+std::shared_ptr<DataShareAbsSharedResultSet> DataShareStubImpl::Query(const Uri &uri,
     std::vector<std::string> &columns, const DataSharePredicates &predicates)
 {
     LOG_INFO("begin.");
-    std::shared_ptr<DataShareResultSet> ret = nullptr;
+    std::shared_ptr<DataShareAbsSharedResultSet> ret = nullptr;
     std::function<void()> syncTaskFunc = [=, &columns, &ret, client = sptr<DataShareStubImpl>(this)]() {
         auto extension = client->GetOwner();
         if (extension == nullptr) {

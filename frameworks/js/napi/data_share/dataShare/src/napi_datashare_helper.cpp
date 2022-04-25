@@ -2929,7 +2929,7 @@ void QueryAsyncCompleteCB(napi_env env, napi_status status, void *data)
     LOG_INFO("NAPI_Query, main event thread complete end.");
 }
 
-napi_value WrapResultSet(napi_env env, const std::shared_ptr<DataShareResultSet> &resultSet)
+napi_value WrapResultSet(napi_env env, const std::shared_ptr<DataShareAbsSharedResultSet> &resultSet)
 {
     LOG_INFO("%{public}s,called", __func__);
     if (resultSet == nullptr) {

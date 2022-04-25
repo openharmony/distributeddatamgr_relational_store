@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DATASHARE_RESULT_SET_H
-#define DATASHARE_RESULT_SET_H
+#ifndef DATASHARE_ABS_SHARED_RESULT_SET_H
+#define DATASHARE_ABS_SHARED_RESULT_SET_H
 
 #include <memory>
 #include <string>
@@ -29,18 +29,18 @@
 
 namespace OHOS {
 namespace DataShare {
-class DataShareResultSet : public DataShareAbsResultSet, public SharedResultSet {
+class DataShareAbsSharedResultSet : public DataShareAbsResultSet, public SharedResultSet {
 public:
-    DataShareResultSet();
-    DataShareResultSet(std::string name);
-    virtual ~DataShareResultSet();
+    DataShareAbsSharedResultSet();
+    DataShareAbsSharedResultSet(std::string name);
+    virtual ~DataShareAbsSharedResultSet();
     int GetBlob(int columnIndex, std::vector<uint8_t> &blob) override;
     int GetString(int columnIndex, std::string &value) override;
     int GetInt(int columnIndex, int &value) override;
     int GetLong(int columnIndex, int64_t &value) override;
     int GetDouble(int columnIndex, double &value) override;
     int IsColumnNull(int columnIndex, bool &isNull) override;
-    int GetDataType(int columnIndex, DataType &dataType) override;
+    int GetColumnType(int columnIndex, ColumnType &columnType) override;
     int GoToRow(int position) override;
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int GetRowCount(int &count) override;
@@ -65,10 +65,10 @@ private:
     static const int INIT_POS = -1;
     static const size_t DEFAULT_BLOCK_SIZE = 2 * 1024 * 1024;
 
-    // The SharedBlock owned by this DataShareResultSet
+    // The SharedBlock owned by this DataShareAbsSharedResultSet
     AppDataFwk::SharedBlock *sharedBlock_  = nullptr;
 };
 } // namespace DataShare
 } // namespace OHOS
 
-#endif // DATASHARE_RESULT_SET_H
+#endif

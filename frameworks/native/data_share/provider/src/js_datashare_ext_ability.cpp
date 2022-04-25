@@ -390,11 +390,11 @@ int JsDataShareExtAbility::Delete(const Uri &uri, const DataSharePredicates &pre
     return ret;
 }
 
-std::shared_ptr<DataShareResultSet> JsDataShareExtAbility::Query(const Uri &uri,
+std::shared_ptr<DataShareAbsSharedResultSet> JsDataShareExtAbility::Query(const Uri &uri,
     std::vector<std::string> &columns, const DataSharePredicates &predicates)
 {
     LOG_INFO("begin.");
-    std::shared_ptr<DataShareResultSet> ret;
+    std::shared_ptr<DataShareAbsSharedResultSet> ret;
     if (!CheckCallingPermission(abilityInfo_->readPermission)) {
         LOG_ERROR("%{public}s Check calling permission failed.", __func__);
         return ret;

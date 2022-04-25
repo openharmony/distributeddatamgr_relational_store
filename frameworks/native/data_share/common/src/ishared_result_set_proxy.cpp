@@ -18,7 +18,7 @@
 #include "iremote_proxy.h"
 #include "datashare_log.h"
 namespace OHOS::DataShare {
-std::function<std::shared_ptr<DataShareResultSet>(
+std::function<std::shared_ptr<DataShareAbsSharedResultSet>(
     MessageParcel &parcel)> ISharedResultSet::consumerCreator_ = ISharedResultSetProxy::CreateProxy;
 BrokerDelegator<ISharedResultSetProxy> ISharedResultSetProxy::delegator_;
 ISharedResultSetProxy::ISharedResultSetProxy(const sptr<OHOS::IRemoteObject> &impl)
@@ -26,7 +26,7 @@ ISharedResultSetProxy::ISharedResultSetProxy(const sptr<OHOS::IRemoteObject> &im
 {
 }
 
-std::shared_ptr<DataShareResultSet> ISharedResultSetProxy::CreateProxy(MessageParcel &parcel)
+std::shared_ptr<DataShareAbsSharedResultSet> ISharedResultSetProxy::CreateProxy(MessageParcel &parcel)
 {
     sptr<IRemoteObject> remoter = parcel.ReadRemoteObject();
     if (remoter == nullptr) {
@@ -34,8 +34,8 @@ std::shared_ptr<DataShareResultSet> ISharedResultSetProxy::CreateProxy(MessagePa
     }
     sptr<ISharedResultSet> result = iface_cast<ISharedResultSet>(remoter);
     result->Unmarshalling(parcel);
-    return std::shared_ptr<DataShareResultSet>(result.GetRefPtr(),
-           [keep = result] (DataShareResultSet *) {});
+    return std::shared_ptr<DataShareAbsSharedResultSet>(result.GetRefPtr(),
+           [keep = result] (DataShareAbsSharedResultSet *) {});
 }
 
 int ISharedResultSetProxy::GetAllColumnNames(std::vector<std::string> &columnNames)
@@ -113,7 +113,7 @@ bool ISharedResultSetProxy::OnGo(int oldRowIndex, int newRowIndex)
 int ISharedResultSetProxy::Close()
 {
     LOG_DEBUG("Close Begin");
-    DataShareResultSet::Close();
+    DataShareAbsSharedResultSet::Close();
     MessageParcel request;
     request.WriteInterfaceToken(GetDescriptor());
     MessageParcel reply;

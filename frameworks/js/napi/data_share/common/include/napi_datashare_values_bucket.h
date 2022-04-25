@@ -22,9 +22,12 @@
 #include "datashare_values_bucket.h"
 #include "datashare_js_utils.h"
 
-napi_value DataShareValueBucketNewInstance(napi_env env, OHOS::DataShare::DataShareValuesBucket &valuesBucket);
-napi_value NAPI_OHOS_Data_DataShare_ValueBucket_NewInstance(napi_env env, OHOS::DataShare::DataShareValuesBucket *valuebucket);
+namespace OHOS {
+namespace DataShare {
+napi_value DataShareValueBucketNewInstance(napi_env env, DataShareValuesBucket &valuesBucket);
 void SetValuesBucketObject(
-    OHOS::DataShare::DataShareValuesBucket &valuesBucket, const napi_env &env, std::string keyStr, napi_value value);
-void GetValueBucketObject(OHOS::DataShare::DataShareValuesBucket &valuesBucket, const napi_env &env, const napi_value &arg);
+    DataShareValuesBucket &valuesBucket, const napi_env &env, std::string keyStr, napi_value value);
+void GetValueBucketObject(DataShareValuesBucket &valuesBucket, const napi_env &env, const napi_value &arg);
+} // namespace DataShare
+} // namespace OHOS
 #endif // NAPI_DATASHARE_VALUES_BUCKET_H

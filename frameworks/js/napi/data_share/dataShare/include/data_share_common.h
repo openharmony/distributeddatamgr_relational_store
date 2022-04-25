@@ -16,7 +16,7 @@
 #ifndef DATASHARE_COMMON_H
 #define DATASHARE_COMMON_H
 #include "ability.h"
-#include "datashare_result_set.h"
+#include "datashare_abs_shared_result_set.h"
 #include "datashare_predicates.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
@@ -314,7 +314,7 @@ struct DSHelperQueryCB {
     std::string uri;
     std::vector<std::string> columns;
     DataSharePredicates predicates;
-    std::shared_ptr<DataShareResultSet> result;
+    std::shared_ptr<DataShareAbsSharedResultSet> result;
     int execResult;
 };
 

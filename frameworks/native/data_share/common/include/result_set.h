@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_DATASHARE_COMMON_INCLUDE_RESULT_SET_H
-#define NATIVE_DATASHARE_COMMON_INCLUDE_RESULT_SET_H
+#ifndef DATASHARE_RESULT_SET_H
+#define DATASHARE_RESULT_SET_H
 
 #include <string>
 namespace OHOS {
 namespace DataShare {
-/* Value returned by getDataType(int) */
-enum class DataType {
+/* Value returned by getColumnType(int) */
+enum class ColumnType {
     TYPE_NULL = 0,
     TYPE_INTEGER,
     TYPE_FLOAT,
@@ -53,7 +53,7 @@ public:
      * param columnIndex the zero-based index of the target column.
      * return column value type.
      */
-    virtual int GetDataType(int columnIndex, DataType &dataType) = 0;
+    virtual int GetColumnType(int columnIndex, ColumnType &columnType) = 0;
 
     /**
      * Returns the zero-based index for the given column name.

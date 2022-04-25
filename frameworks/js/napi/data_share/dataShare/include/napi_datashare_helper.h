@@ -385,7 +385,7 @@ void QueryAsyncCompleteCB(napi_env env, napi_status status, void *data);
 
 void QueryPromiseCompleteCB(napi_env env, napi_status status, void *data);
 
-napi_value WrapResultSet(napi_env env, const std::shared_ptr<DataShareResultSet> &resultSet);
+napi_value WrapResultSet(napi_env env, const std::shared_ptr<DataShareAbsSharedResultSet> &resultSet);
 
 void AnalysisValuesBucket(DataShareValuesBucket &value, const napi_env &env, const napi_value &arg);
 void SetValuesBucketObject(

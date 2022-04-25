@@ -93,11 +93,11 @@ int DataShareExtAbility::Delete(const Uri &uri, const DataSharePredicates &predi
     return 0;
 }
 
-std::shared_ptr<DataShareResultSet> DataShareExtAbility::Query(const Uri &uri,
+std::shared_ptr<DataShareAbsSharedResultSet> DataShareExtAbility::Query(const Uri &uri,
     std::vector<std::string> &columns, const DataSharePredicates &predicates)
 {
     LOG_INFO("begin.");
-    std::shared_ptr<DataShareResultSet> ret;
+    std::shared_ptr<DataShareAbsSharedResultSet> ret;
     LOG_INFO("end.");
     return ret;
 }
