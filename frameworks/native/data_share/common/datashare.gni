@@ -13,12 +13,16 @@
 
 datashare_base_path = "//foundation/distributeddatamgr/appdatamgr"
 
-datashare_common_native_path = "${datashare_base_path}/frameworks/native/data_share/common"
+datashare_common_native_path =
+    "${datashare_base_path}/frameworks/native/data_share/common"
 
-datashare_common_napi_path = "${datashare_base_path}/frameworks/js/napi/data_share/common"
+datashare_common_napi_path =
+    "${datashare_base_path}/frameworks/js/napi/data_share/common"
 
 datashare_napi_path = "${datashare_base_path}/frameworks/js/napi/data_share"
 
-datashare_native_provider_path = "${datashare_base_path}/frameworks/native/data_share/provider"
+datashare_native_provider_path =
+    "${datashare_base_path}/frameworks/native/data_share/provider"
 
-datashare_native_consumer_path = "${datashare_base_path}/frameworks/native/data_share/consumer"
+datashare_native_consumer_path =
+    "${datashare_base_path}/frameworks/native/data_share/consumer"
