@@ -16,9 +16,7 @@
 #ifndef DATASHARE_ABS_RESULT_SET_H
 #define DATASHARE_ABS_RESULT_SET_H
 
-#include <memory>
 #include <string>
-#include <vector>
 #include "result_set.h"
 
 
