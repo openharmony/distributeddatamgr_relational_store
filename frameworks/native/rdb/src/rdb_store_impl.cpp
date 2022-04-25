@@ -18,15 +18,18 @@
 #include "rdb_store_impl.h"
 #include <sstream>
 #include <unistd.h>
+
+
+#include "directory_ex.h"
 #include "logger.h"
-#include "rdb_perf_trace.h"
 #include "rdb_errno.h"
 #include "rdb_manager.h"
+#include "rdb_perf_trace.h"
+#include "relational_store_manager.h"
 #include "sqlite_shared_result_set.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
-#include "relational_store_manager.h"
 
 namespace OHOS::NativeRdb {
 std::shared_ptr<RdbStore> RdbStoreImpl::Open(const RdbStoreConfig &config, int &errCode)
@@ -399,8 +402,22 @@ int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string
  */
 int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
 {
+    if (databasePath.empty()) {
+        LOG_ERROR("Backup:Empty databasePath.");
+        return E_INVALID_FILE_PATH;
+    }
+    std::string backupFilePath;
+    if (databasePath.find("/") == std::string::npos) {
+        backupFilePath = ExtractFilePath(path) + databasePath;
+    } else {
+        if (!PathToRealPath(ExtractFilePath(databasePath), backupFilePath)) {
+            LOG_ERROR("Backup:Invalid databasePath.");
+            return E_INVALID_FILE_PATH;
+        }
+        backupFilePath = databasePath;
+    }
     std::shared_ptr<StoreSession> session = GetThreadSession();
-    int errCode = session->Backup(databasePath, destEncryptKey);
+    int errCode = session->Backup(backupFilePath, destEncryptKey);
     ReleaseThreadSession();
     return errCode;
 }
@@ -665,16 +682,49 @@ int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::s
     const std::vector<uint8_t> &newKey)
 {
     if (isOpen == false) {
-        LOG_ERROR("The connection pool has been closed.");
+        LOG_ERROR("ChangeDbFileForRestore:The connection pool has been closed.");
         return E_ERROR;
     }
 
     if (connectionPool == nullptr) {
-        LOG_ERROR("connectionPool is null");
+        LOG_ERROR("ChangeDbFileForRestore:The connectionPool is null.");
         return E_ERROR;
     }
-    path = newPath;
-    return connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey);
+    if (newPath.empty() || backupPath.empty()) {
+        LOG_ERROR("ChangeDbFileForRestore:Empty databasePath.");
+        return E_INVALID_FILE_PATH;
+    }
+    std::string backupFilePath;
+    std::string restoreFilePath;
+    if (backupPath.find("/") == std::string::npos) {
+        backupFilePath = ExtractFilePath(path) + backupPath;
+    } else {
+        backupFilePath = backupPath;
+    }
+    if (access(backupFilePath.c_str(), F_OK) != E_OK) {
+        LOG_ERROR("ChangeDbFileForRestore:The backupPath does not exists.");
+        return E_INVALID_FILE_PATH;
+    }
+
+    if (newPath.find("/") == std::string::npos) {
+        restoreFilePath = ExtractFilePath(path) + newPath;
+    } else {
+        if (!PathToRealPath(ExtractFilePath(newPath), restoreFilePath)) {
+            LOG_ERROR("ChangeDbFileForRestore:Invalid newPath.");
+            return E_INVALID_FILE_PATH;
+        }
+        restoreFilePath = newPath;
+    }
+    if (backupFilePath == restoreFilePath) {
+        LOG_ERROR("ChangeDbFileForRestore:The backupPath and newPath should not be same.");
+        return E_INVALID_FILE_PATH;
+    }
+
+    int ret = connectionPool->ChangeDbFileForRestore(restoreFilePath, backupFilePath, newKey);
+    if (ret == E_OK) {
+        path = restoreFilePath;
+    }
+    return ret;
 }
 int RdbStoreImpl::ExecuteForSharedBlock(int &rowNum, AppDataFwk::SharedBlock *sharedBlock, int startPos,
     int requiredPos, bool isCountAllRows, std::string sql, std::vector<ValueObject> &bindArgVec)
