@@ -57,15 +57,15 @@ public:
     virtual int GetJoinCount() const;
     virtual void SetJoinCount(int joinCount);
 
-private:
-    std::string tableName;
-    mutable DistributedRdb::RdbPredicates predicates_;
-
 protected:
     std::vector<std::string> joinTypes;
     std::vector<std::string> joinTableNames;
     std::vector<std::string> joinConditions;
     int joinCount;
+
+private:
+    std::string tableName;
+    mutable DistributedRdb::RdbPredicates predicates_;
 };
 } // namespace OHOS::NativeRdb
 

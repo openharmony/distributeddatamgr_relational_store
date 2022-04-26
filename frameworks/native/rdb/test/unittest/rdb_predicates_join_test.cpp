@@ -51,11 +51,11 @@ public:
 const std::string RdbStorePredicateJoinTest::DATABASE_NAME = RDB_TEST_PATH + "predicates_join_test.db";
 std::shared_ptr<RdbStore> RdbStorePredicateJoinTest::store = nullptr;
 const std::string CREATE_TABLE_USER_SQL = std::string("CREATE TABLE IF NOT EXISTS user ") +
-        std::string("(userId INTEGER PRIMARY KEY AUTOINCREMENT, firstName TEXT , lastName TEXT ,") +
+        std::string("(userId INTEGER PRIMARY KEY AUTOINCREMENT, firstName TEXT , lastName TEXT , ") +
         std::string("age INTEGER , balance REAL  NOT NULL)");
-const std::string CREATE_TABLE_BOOK_SQL = std::string("CREATE TABLE IF NOT EXISTS Book") +
+const std::string CREATE_TABLE_BOOK_SQL = std::string("CREATE TABLE IF NOT EXISTS Book ") +
         std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT, userId INTEGER , ") +
-        std::string( "FOREIGN KEY (userId) REFERENCES user (userId) ON UPDATE NO ACTION ON DELETE CASCADE)");
+        std::string("FOREIGN KEY (userId) REFERENCES user (userId) ON UPDATE NO ACTION ON DELETE CASCADE)");
 
 
 class PredicateJoinTestOpenCallback : public RdbOpenCallback {
