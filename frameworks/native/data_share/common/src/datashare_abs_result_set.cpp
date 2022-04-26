@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#include <vector>
 #include "datashare_abs_result_set.h"
 #include "datashare_log.h"
 #include "datashare_errno.h"
+#include <vector>
 
 namespace OHOS {
 namespace DataShare {
