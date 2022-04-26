@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -116,4 +116,95 @@ HWTEST_F(ValuesBucketTest, Values_Bucket_001, TestSize.Level1)
 
     valuesBucket->GetObject("mark", valueObject);
     EXPECT_EQ(ValueObjectType::TYPE_NULL, valueObject.GetType());
+}
+
+/**
+ * @tc.name: Values_Bucket_002
+ * @tc.desc: test Values Bucket HasColumn
+ * @tc.type: FUNC
+ */
+HWTEST_F(ValuesBucketTest, Values_Bucket_002, TestSize.Level1)
+{
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutLong("No.", 9223372036854775807L);
+    values.PutDouble("salary", 100.5);
+    values.PutBool("graduated", true);
+    values.PutBlob("codes", std::vector<uint8_t>{ 1, 2, 3 });
+    values.PutNull("mark");
+
+    EXPECT_EQ(true, values.HasColumn("id"));
+    EXPECT_EQ(true, values.HasColumn("name"));
+    EXPECT_EQ(true, values.HasColumn("No."));
+    EXPECT_EQ(true, values.HasColumn("salary"));
+    EXPECT_EQ(true, values.HasColumn("graduated"));
+    EXPECT_EQ(true, values.HasColumn("codes"));
+    EXPECT_EQ(true, values.HasColumn("mark"));
+
+    values.Delete("id");
+    values.Delete("name");
+    values.Delete("No.");
+    values.Delete("salary");
+    values.Delete("graduated");
+    values.Delete("codes");
+    values.Delete("mark");
+
+    EXPECT_EQ(false, values.HasColumn("id"));
+    EXPECT_EQ(false, values.HasColumn("name"));
+    EXPECT_EQ(false, values.HasColumn("No."));
+    EXPECT_EQ(false, values.HasColumn("salary"));
+    EXPECT_EQ(false, values.HasColumn("graduated"));
+    EXPECT_EQ(false, values.HasColumn("codes"));
+    EXPECT_EQ(false, values.HasColumn("mark"));
+}
+
+/**
+ * @tc.name: Values_Bucket_003
+ * @tc.desc: test Values Bucket GetAll
+ * @tc.type: FUNC
+ */
+HWTEST_F(ValuesBucketTest, Values_Bucket_003, TestSize.Level1)
+{
+    ValuesBucket values;
+    std::map<std::string, ValueObject> getAllValuesMap;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutLong("No.", 9223372036854775807L);
+    values.PutDouble("salary", 100.5);
+    values.PutBool("graduated", true);
+    values.PutBlob("codes", std::vector<uint8_t>{ 1, 2, 3 });
+    values.PutNull("mark");
+
+    values.GetAll(getAllValuesMap);
+    EXPECT_EQ(7, getAllValuesMap.size());
+    getAllValuesMap.clear();
+    EXPECT_EQ(true, getAllValuesMap.empty());
+
+    EXPECT_EQ(7, values.Size());
+    values.Clear();
+    EXPECT_EQ(true, values.IsEmpty());
+}
+
+/**
+ * @tc.name: Values_Bucket_004
+ * @tc.desc: test Values Bucket Marshalling
+ * @tc.type: FUNC
+ */
+HWTEST_F(ValuesBucketTest, Values_Bucket_004, TestSize.Level1)
+{
+    Parcel parcel;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutLong("No.", 9223372036854775807L);
+    values.PutDouble("salary", 100.5);
+    values.PutBool("graduated", true);
+    values.PutBlob("codes", std::vector<uint8_t>{ 1, 2, 3 });
+    values.PutNull("mark");
+
+    EXPECT_EQ(true, values.Marshalling(parcel));
+    EXPECT_EQ(7, values.Unmarshalling(parcel)->Size());
+    values.Unmarshalling(parcel)->Clear();
+    EXPECT_EQ(true, values.Unmarshalling(parcel)->IsEmpty());
 }

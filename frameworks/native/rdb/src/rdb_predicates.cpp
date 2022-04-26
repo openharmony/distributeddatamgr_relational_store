@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,88 +24,14 @@ RdbPredicates::RdbPredicates(std::string tableName) : AbsRdbPredicates(tableName
     InitialParam();
 }
 
-void RdbPredicates::Clear()
-{
-    AbsPredicates::Clear();
-    InitialParam();
-}
-
-void RdbPredicates::InitialParam()
-{
-    joinTypes.clear();
-    joinTableNames.clear();
-    joinConditions.clear();
-    joinCount = 0;
-}
-
-std::vector<std::string> RdbPredicates::GetJoinTypes()
-{
-    return joinTypes;
-}
-
-/**
- * Sets the join types in the predicates. The value can be {@code INNER JOIN}, {@code LEFT OUTER JOIN},
- * and {@code CROSS JOIN}.
- */
-void RdbPredicates::SetJoinTypes(const std::vector<std::string> joinTypes)
-{
-    this->joinTypes = joinTypes;
-}
-
-/**
- * Obtains the database table names of the joins in the predicates.
- */
-std::vector<std::string> RdbPredicates::GetJoinTableNames()
-{
-    return joinTableNames;
-}
-/**
- * Sets the database table names of the joins in the predicates.
- */
-void RdbPredicates::SetJoinTableNames(const std::vector<std::string> joinTableNames)
-{
-    this->joinTableNames = joinTableNames;
-}
-
-/**
- * Obtains the join conditions in the predicates.
- */
-std::vector<std::string> RdbPredicates::GetJoinConditions()
-{
-    return joinConditions;
-}
-
-/**
- * Sets the join conditions required in the predicates.
- */
-void RdbPredicates::SetJoinConditions(const std::vector<std::string> joinConditions)
-{
-    this->joinConditions = joinConditions;
-}
-/**
- * Obtains the join clause in the predicates.
- */
-std::string RdbPredicates::GetJoinClause()
+std::string RdbPredicates::GetJoinClause() const
 {
     if (!joinTableNames.empty()) {
         return ProcessJoins();
     }
-    return "";
+    return GetTableName();
 }
-/**
- * Obtains the number of joins in the predicates.
- */
-int RdbPredicates::GetJoinCount() const
-{
-    return joinCount;
-}
-/**
- * Sets the number of joins in the predicates.
- */
-void RdbPredicates::SetJoinCount(int joinCount)
-{
-    this->joinCount = joinCount;
-}
+
 /**
  * Adds a {@code cross join} condition to a SQL statement.
  */
@@ -113,6 +39,7 @@ RdbPredicates *RdbPredicates::CrossJoin(std::string tableName)
 {
     return Join(JoinType::CROSS, tableName);
 }
+
 /**
  * Adds an {@code inner join} condition to a SQL statement.
  */
@@ -120,6 +47,7 @@ RdbPredicates *RdbPredicates::InnerJoin(std::string tableName)
 {
     return Join(JoinType::INNER, tableName);
 }
+
 /**
  * Adds a {@code left outer join} condition to a SQL statement.
  */
@@ -164,6 +92,7 @@ RdbPredicates *RdbPredicates::Using(std::vector<std::string> fields)
     joinConditions.push_back(StringUtils::SurroundWithFunction("USING", ",", fields));
     return this;
 }
+
 /**
  * Adds an {@code on} condition to the predicate.
  */
@@ -186,7 +115,7 @@ RdbPredicates *RdbPredicates::On(std::vector<std::string> clauses)
     return this;
 }
 
-std::string RdbPredicates::ProcessJoins()
+std::string RdbPredicates::ProcessJoins() const
 {
     std::string builder = GetTableName();
     size_t size = joinTableNames.size();

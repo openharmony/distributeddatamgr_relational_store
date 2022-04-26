@@ -47,7 +47,6 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_insert_test.cpp",
     "unittest/rdb_open_callback_test.cpp",
     "unittest/rdb_predicates_test.cpp",
-    "unittest/rdb_raw_predicates_test.cpp",
     "unittest/rdb_sqlite_shared_result_set_test.cpp",
     "unittest/rdb_step_result_set_test.cpp",
     "unittest/rdb_store_concurrent_test.cpp",

@@ -89,7 +89,6 @@
                             "abs_rdb_predicates.h",
                             "abs_result_set.h",
                             "abs_shared_result_set.h",
-                            "raw_rdb_predicates.h",
                             "rdb_errno.h",
                             "rdb_helper.h",
                             "rdb_open_callback.h",
