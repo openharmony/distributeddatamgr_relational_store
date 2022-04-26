@@ -273,7 +273,7 @@ std::string SqliteSqlBuilder::BuildQueryString(const AbsRdbPredicates &predicate
     const std::vector<std::string> &columns)
 {
     bool distinct = predicates.IsDistinct();
-    std::string tableNameStr = predicates.GetTableName();
+    std::string tableNameStr = predicates.GetJoinClause();
     std::string whereClauseStr = predicates.GetWhereClause();
     std::string groupStr = predicates.GetGroup();
     std::string indexStr = predicates.GetIndex();

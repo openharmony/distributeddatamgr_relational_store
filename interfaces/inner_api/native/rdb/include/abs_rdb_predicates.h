@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,13 +24,15 @@ namespace OHOS::NativeRdb {
 class AbsRdbPredicates : public AbsPredicates {
 public:
     explicit AbsRdbPredicates(std::string tableName);
-    
+
     ~AbsRdbPredicates() override {}
+
+    void Clear() override;
     
     std::string ToString() const;
-    
+
     std::string GetTableName() const;
-    
+
     AbsRdbPredicates *InDevices(std::vector<std::string>& devices);
     
     AbsRdbPredicates *InAllDevices();
@@ -43,6 +45,23 @@ public:
     AbsRdbPredicates* OrderByDesc(std::string field) override;
 
     const DistributedRdb::RdbPredicates& GetDistributedPredicates() const;
+
+    virtual void InitialParam();
+    virtual std::vector<std::string> GetJoinTypes();
+    virtual void SetJoinTypes(const std::vector<std::string> joinTypes);
+    virtual std::vector<std::string> GetJoinTableNames();
+    virtual void SetJoinTableNames(const std::vector<std::string> joinTableNames);
+    virtual std::vector<std::string> GetJoinConditions();
+    virtual void SetJoinConditions(const std::vector<std::string> joinConditions);
+    virtual std::string GetJoinClause() const;
+    virtual int GetJoinCount() const;
+    virtual void SetJoinCount(int joinCount);
+
+protected:
+    std::vector<std::string> joinTypes;
+    std::vector<std::string> joinTableNames;
+    std::vector<std::string> joinConditions;
+    int joinCount;
 
 private:
     std::string tableName;

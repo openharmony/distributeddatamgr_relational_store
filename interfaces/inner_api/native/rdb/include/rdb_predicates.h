@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,17 +25,8 @@ class RdbPredicates : public AbsRdbPredicates {
 public:
     explicit RdbPredicates(std::string tableName);
     ~RdbPredicates() override {}
-    void Clear() override;
-    void InitialParam();
-    std::vector<std::string> GetJoinTypes();
-    void SetJoinTypes(const std::vector<std::string> joinTypes);
-    std::vector<std::string> GetJoinTableNames();
-    void SetJoinTableNames(const std::vector<std::string> joinTableNames);
-    std::vector<std::string> GetJoinConditions();
-    void SetJoinConditions(const std::vector<std::string> joinConditions);
-    std::string GetJoinClause();
-    int GetJoinCount() const;
-    void SetJoinCount(int joinCount);
+
+    std::string GetJoinClause() const override;
     RdbPredicates *CrossJoin(std::string tableName);
     RdbPredicates *InnerJoin(std::string tableName);
     RdbPredicates *LeftOuterJoin(std::string tableName);
@@ -43,11 +34,7 @@ public:
     RdbPredicates *On(std::vector<std::string> clauses);
 
 private:
-    std::vector<std::string> joinTypes;
-    std::vector<std::string> joinTableNames;
-    std::vector<std::string> joinConditions;
-    int joinCount;
-    std::string ProcessJoins();
+    std::string ProcessJoins() const;
     std::string GetGrammar(int type) const;
     RdbPredicates *Join(int join, std::string tableName);
 };
