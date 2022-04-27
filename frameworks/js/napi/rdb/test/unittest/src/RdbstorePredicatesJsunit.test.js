@@ -51,7 +51,7 @@ describe('rdbPredicatesTest', function () {
     afterAll(async function () {
         console.info(TAG + 'afterAll')
         rdbStore = null
-        await dataRdb.deleteRdbStore("Predicates.db");
+        await dataRdb.deleteRdbStore("RdbPredicates.db");
     })
 
     function resultSize(resultSet) {
