@@ -14,9 +14,10 @@
  */
 
 #include "datashare_abs_result_set.h"
-#include "datashare_log.h"
-#include "datashare_errno.h"
+
 #include <vector>
+#include "datashare_errno.h"
+#include "datashare_log.h"
 
 namespace OHOS {
 namespace DataShare {

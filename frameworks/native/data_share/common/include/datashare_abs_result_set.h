@@ -19,7 +19,6 @@
 #include <string>
 #include "result_set.h"
 
-
 namespace OHOS {
 namespace DataShare {
 class DataShareAbsResultSet : public ResultSet {

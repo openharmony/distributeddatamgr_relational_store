@@ -18,7 +18,6 @@
 
 #include <map>
 #include <memory>
-#include "datashare_operation_builder.h"
 #include "datashare_predicates.h"
 #include "datashare_values_bucket.h"
 #include "uri.h"
