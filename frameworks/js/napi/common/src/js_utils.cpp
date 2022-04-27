@@ -23,7 +23,6 @@ std::string JSUtils::Convert2String(napi_env env, napi_value jsStr)
 {
     size_t str_buffer_size = 0;
     napi_get_value_string_utf8(env, jsStr, nullptr, 0, &str_buffer_size);
-
     char *buf = new char[str_buffer_size + 1];
     size_t len = 0;
     napi_get_value_string_utf8(env, jsStr, buf, str_buffer_size, &len);
@@ -31,7 +30,6 @@ std::string JSUtils::Convert2String(napi_env env, napi_value jsStr)
     std::string value(buf);
     delete[] buf;
     return value;
-
 }
 
 std::vector<std::string> JSUtils::Convert2StrVector(napi_env env, napi_value value)
