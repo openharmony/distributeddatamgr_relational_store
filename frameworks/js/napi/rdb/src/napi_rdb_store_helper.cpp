@@ -265,7 +265,7 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
     napi_value value;
     napi_get_named_property(env, object, "name", &value);
     NAPI_ASSERT_RETURN_VOID(env, value != nullptr, "no database name found in config.");
-    std::string name = JSUtils::Convert2String(env, value, JSUtils::DEFAULT_BUF_SIZE);
+    std::string name = JSUtils::Convert2String(env, value);
     NAPI_ASSERT_RETURN_VOID(env, !name.empty(), "Get database name empty.");
     asyncContext->config.SetName(std::move(name));
 
@@ -290,7 +290,7 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
 void ParsePath(const napi_env &env, const napi_value &arg, HelperRdbContext *asyncContext)
 {
     LOG_DEBUG("ParsePath begin");
-    std::string path = JSUtils::Convert2String(env, arg, JSUtils::DEFAULT_BUF_SIZE);
+    std::string path = JSUtils::Convert2String(env, arg);
     NAPI_ASSERT_RETURN_VOID(env, !path.empty(), "Get database name empty.");
     size_t pos = path.find_first_of('/');
     NAPI_ASSERT_RETURN_VOID(env, pos == std::string::npos, "A name without path should be input.");

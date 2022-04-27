@@ -51,7 +51,7 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.name rdb insert test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0001
      * @tc.desc rdb insert test
      */
     it('testRdbStoreInsert0001', 0, async function (done) {
@@ -115,7 +115,7 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.name rdb insert test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0020
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0002
      * @tc.desc rdb insert test
      */
     it('testRdbStoreInsert0002', 0, async function (done) {
@@ -143,7 +143,7 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.name rdb insert test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0030
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0003
      * @tc.desc rdb insert test
      */
     it('testRdbStoreInsert0003', 0, async function (done) {
@@ -168,5 +168,53 @@ describe('rdbStoreInsertTest', function () {
         done()
         console.log(TAG + "************* testRdbStoreInsert0003 end   *************");
     })
+
+    /**
+     * @tc.name rdb insert test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0004
+     * @tc.desc rdb insert test
+     */
+    it('testRdbStoreInsert0004', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreInsert0004 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var nameLen = 2000
+        var name = "abcd"
+        for (var i = 0; i < nameLen; i++) {
+            name += "e";
+        }
+
+        const valueBucket = {
+            "name": name,
+            "age": 18,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        await rdbStore.insert("test", valueBucket)
+        let predicates = new dataRdb.RdbPredicates("test");
+        predicates.equalTo("name", name)
+        let resultSet = await rdbStore.query(predicates)
+        try {
+            console.log(TAG + "resultSet query done");
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const name = resultSet.getString(resultSet.getColumnIndex("name"))
+            const age = resultSet.getLong(resultSet.getColumnIndex("age"))
+            const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
+            const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+            console.log(TAG + "id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
+            expect(name).assertEqual(name)
+            expect(18).assertEqual(age)
+            expect(100.5).assertEqual(salary)
+            expect(1).assertEqual(blobType[0])
+            expect(2).assertEqual(blobType[1])
+            expect(3).assertEqual(blobType[2])
+            expect(false).assertEqual(resultSet.goToNextRow())
+        } catch (e) {
+            console.log("insert1 error " + e);
+        }
+        resultSet = null
+        done()
+        console.log(TAG + "************* testRdbStoreInsert0004 end   *************");
+    })
+
     console.log(TAG + "*************Unit Test End*************");
 })
