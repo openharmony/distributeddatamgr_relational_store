@@ -51,9 +51,9 @@ ohos_shared_library("datashare_common") {
     "${datashare_common_native_path}/src/datashare_string_utils.cpp",
     "${datashare_common_native_path}/src/datashare_value_object.cpp",
     "${datashare_common_native_path}/src/datashare_values_bucket.cpp",
-    "${datashare_common_native_path}/src/ishared_result_set.cpp",
     "${datashare_common_native_path}/src/ishared_result_set_proxy.cpp",
     "${datashare_common_native_path}/src/ishared_result_set_stub.cpp",
+    "${datashare_common_native_path}/src/ishared_result_set.cpp",
   ]
 
   configs = [ ":ability_config" ]
