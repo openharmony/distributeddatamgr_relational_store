@@ -110,7 +110,7 @@ void RdbStoreContext::BindArgs(napi_env env, napi_value arg)
                 bindArgs.push_back(ValueObject());
                 break;
             case napi_string:
-                bindArgs.push_back(ValueObject(JSUtils::Convert2String(env, element, JSUtils::DEFAULT_BUF_SIZE)));
+                bindArgs.push_back(ValueObject(JSUtils::Convert2String(env, element)));
                 break;
             case napi_object:
                 bindArgs.push_back(ValueObject(JSUtils::Convert2U8Vector(env, element)));
@@ -300,13 +300,13 @@ void ParseThis(const napi_env &env, const napi_value &arg, RdbStoreContext *asyn
 
 void ParseTableName(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
 {
-    asyncContext->tableName = JSUtils::Convert2String(env, arg, JSUtils::DEFAULT_BUF_SIZE);
+    asyncContext->tableName = JSUtils::Convert2String(env, arg);
     LOG_DEBUG("ParseTableName end");
 }
 
 void ParseDevice(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
 {
-    asyncContext->device = JSUtils::Convert2String(env, arg, JSUtils::DEFAULT_BUF_SIZE);
+    asyncContext->device = JSUtils::Convert2String(env, arg);
     LOG_DEBUG("ParseDevice end");
 }
 
@@ -323,7 +323,7 @@ void ParseTablesName(const napi_env &env, const napi_value &arg, RdbStoreContext
         napi_valuetype type;
         napi_typeof(env, element, &type);
         if (type == napi_string) {
-            std::string table = JSUtils::Convert2String(env, element, JSUtils::DEFAULT_BUF_SIZE);
+            std::string table = JSUtils::Convert2String(env, element);
             asyncContext->tablesName.push_back(table);
         }
     }
@@ -351,55 +351,55 @@ void ParseNewKey(const napi_env &env, const napi_value &arg, RdbStoreContext *as
 
 void ParseDestName(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
 {
-    asyncContext->destName = JSUtils::Convert2String(env, arg, E_EMPTY_FILE_NAME);
+    asyncContext->destName = JSUtils::Convert2String(env, arg);
     LOG_DEBUG("DestName end");
 }
 
 void ParseSrcName(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
 {
-    asyncContext->srcName = JSUtils::Convert2String(env, arg, E_EMPTY_TABLE_NAME);
+    asyncContext->srcName = JSUtils::Convert2String(env, arg);
     LOG_DEBUG("ParseSrcName end");
 }
 
 void ParseColumns(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
 {
-    asyncContext->columns = JSUtils::Convert2StrVector(env, arg, JSUtils::DEFAULT_BUF_SIZE);
+    asyncContext->columns = JSUtils::Convert2StrVector(env, arg);
     LOG_DEBUG("ParseColumns end");
 }
 
 void ParseWhereClause(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
 {
-    asyncContext->whereClause = JSUtils::Convert2String(env, arg, E_HAVING_CLAUSE_NOT_IN_GROUP_BY);
+    asyncContext->whereClause = JSUtils::Convert2String(env, arg);
     LOG_DEBUG("ParseWhereClause end");
 }
 
 void ParseAlias(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
 {
-    asyncContext->aliasName = JSUtils::Convert2String(env, arg, E_EMPTY_TABLE_NAME);
+    asyncContext->aliasName = JSUtils::Convert2String(env, arg);
     LOG_DEBUG("ParseAlias end");
 }
 
 void ParsePath(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
 {
-    asyncContext->pathName = JSUtils::Convert2String(env, arg, E_EMPTY_TABLE_NAME);
+    asyncContext->pathName = JSUtils::Convert2String(env, arg);
     LOG_DEBUG("ParsePath end");
 }
 
 void ParseWhereArgs(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
 {
-    asyncContext->whereArgs = JSUtils::Convert2StrVector(env, arg, JSUtils::DEFAULT_BUF_SIZE);
+    asyncContext->whereArgs = JSUtils::Convert2StrVector(env, arg);
     LOG_DEBUG("ParseWhereArgs end");
 }
 
 void ParseSelectionArgs(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
 {
-    asyncContext->selectionArgs = JSUtils::Convert2StrVector(env, arg, JSUtils::DEFAULT_BUF_SIZE);
+    asyncContext->selectionArgs = JSUtils::Convert2StrVector(env, arg);
     LOG_DEBUG("ParseSelectionArgs end");
 }
 
 void ParseSql(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
 {
-    asyncContext->sql = JSUtils::Convert2String(env, arg, JSUtils::DEFAULT_BUF_SIZE);
+    asyncContext->sql = JSUtils::Convert2String(env, arg);
     LOG_DEBUG("ParseSql end");
 }
 
@@ -416,13 +416,13 @@ void ParseValuesBucket(const napi_env &env, const napi_value &arg, RdbStoreConte
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value key;
         status = napi_get_element(env, keys, i, &key);
-        std::string keyStr = JSUtils::Convert2String(env, key, JSUtils::DEFAULT_BUF_SIZE);
+        std::string keyStr = JSUtils::Convert2String(env, key);
         napi_value value;
         napi_get_property(env, arg, key, &value);
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, value, &valueType);
         if (valueType == napi_string) {
-            std::string valueString = JSUtils::Convert2String(env, value, JSUtils::DEFAULT_BUF_SIZE);
+            std::string valueString = JSUtils::Convert2String(env, value);
             context->valuesBucket->PutString(keyStr, valueString);
             LOG_DEBUG("ValueObject type napi_string");
         } else if (valueType == napi_number) {
