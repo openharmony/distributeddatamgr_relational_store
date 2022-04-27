@@ -23,6 +23,7 @@ std::string JSUtils::Convert2String(napi_env env, napi_value jsStr)
 {
     size_t str_buffer_size = 0;
     napi_get_value_string_utf8(env, jsStr, nullptr, 0, &str_buffer_size);
+    str_buffer_size += BUF_CACHE_MARGIN;
     char *buf = new char[str_buffer_size + 1];
     size_t len = 0;
     napi_get_value_string_utf8(env, jsStr, buf, str_buffer_size, &len);

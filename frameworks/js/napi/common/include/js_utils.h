@@ -29,6 +29,7 @@ namespace OHOS {
 namespace AppDataMgrJsKit {
 class JSUtils final {
 public:
+    static constexpr int32_t BUF_CACHE_MARGIN = 4;
     static constexpr int32_t ASYNC_RST_SIZE = 2;
     static constexpr int32_t SYNC_RESULT_ELEMNT_NUM = 2;
 

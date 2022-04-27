@@ -26,7 +26,7 @@ const CREATE_TABLE_ALL_DATA_TYPE_SQL = "CREATE TABLE IF NOT EXISTS AllDataType "
 + "primBooleanValue INTEGER , primByteValue INTEGER , primCharValue TEXT, `order` INTEGER);";
 
 const STORE_CONFIG = {
-    name: "Predicates.db",
+    name: "RdbPredicates.db",
 }
 var rdbStore = undefined;
 var DOUBLE_MAX = 9223372036854775807;
