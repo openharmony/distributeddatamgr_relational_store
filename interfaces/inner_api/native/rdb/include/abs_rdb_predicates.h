@@ -61,7 +61,7 @@ protected:
     std::vector<std::string> joinTypes;
     std::vector<std::string> joinTableNames;
     std::vector<std::string> joinConditions;
-    int joinCount;
+    int joinCount = 0;
 
 private:
     std::string tableName;
