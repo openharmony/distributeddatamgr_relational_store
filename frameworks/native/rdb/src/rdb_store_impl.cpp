@@ -70,7 +70,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     name = config.GetName();
     fileSecurityLevel = config.GetDatabaseFileSecurityLevel();
     fileType = config.GetDatabaseFileType();
-    syncerParam_ = { config.GetBundleName(), config.GetRelativePath(),
+    syncerParam_ = { config.GetBundleName(), config.GetAppModuleName() + '/' + config.GetRelativePath(),
                     RemoveSuffix(config.GetName()), config.GetEncryptLevel(), "", config.GetDistributedType() };
     RDB_TRACE_END();
     return E_OK;
