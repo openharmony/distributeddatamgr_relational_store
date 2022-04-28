@@ -34,11 +34,13 @@ public:
     std::string GetDatabaseDir();
     std::string GetPreferencesDir();
     std::string GetBundleName();
+    std::string GetModuleName();
 
 private:
     std::string databaseDir_;
     std::string preferencesDir_;
     std::string bundleName_;
+    std::string moduleName_;
 };
 
 class JSAbility final {

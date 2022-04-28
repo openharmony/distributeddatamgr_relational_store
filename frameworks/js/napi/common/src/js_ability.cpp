@@ -37,6 +37,10 @@ Context::Context(std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext)
     LOG_DEBUG("FA: PreferencesDir %{public}s", preferencesDir_.c_str());
     bundleName_ = abilityContext->GetBundleName();
     LOG_DEBUG("FA: BundleName %{public}s", bundleName_.c_str());
+    auto abilityInfo = abilityContext->GetAbilityInfo();
+    if (abilityInfo != nullptr) {
+        moduleName_ = abilityInfo->moduleName;
+    }
 }
 
 std::string Context::GetDatabaseDir()
@@ -52,6 +56,11 @@ std::string Context::GetPreferencesDir()
 std::string Context::GetBundleName()
 {
     return bundleName_;
+}
+
+std::string Context::GetModuleName()
+{
+    return moduleName_;
 }
 
 bool JSAbility::CheckContext(napi_env env, napi_callback_info info)
