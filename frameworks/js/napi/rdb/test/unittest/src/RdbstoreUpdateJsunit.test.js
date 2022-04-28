@@ -52,7 +52,6 @@ describe('rdbStoreUpdateTest', function () {
     it('testRdbStoreUpdate0001', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreUpdate0001 start *************");
         var u8 = new Uint8Array([1, 2, 3])
-        //插入
         {
             const valueBucket = {
                 "name": "zhangsan",
@@ -69,7 +68,6 @@ describe('rdbStoreUpdateTest', function () {
             })
             await insertPromise
         }
-        //更新
         {
             var u8 = new Uint8Array([4, 5, 6])
             const valueBucket = {
@@ -84,8 +82,6 @@ describe('rdbStoreUpdateTest', function () {
             updatePromise.then(async (ret) => {
                 await expect(1).assertEqual(ret);
                 await console.log(TAG + "update done: " + ret);
-
-                //查询
                 {
                     let predicates = await new dataRdb.RdbPredicates("test")
                     let resultSet = await rdbStore.query(predicates)
@@ -127,7 +123,6 @@ describe('rdbStoreUpdateTest', function () {
      */
     it('testRdbStoreUpdate0002', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreUpdate0002 start *************");
-        //更新
         {
             var u8 = new Uint8Array([1, 2, 3])
             const valueBucket = {
@@ -180,7 +175,6 @@ describe('rdbStoreUpdateTest', function () {
      */
     it('testRdbStoreUpdate0003', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreUpdate0003 start *************");
-        //更新
         {
             var u8 = new Uint8Array([1, 2, 3])
             const valueBucket = {
@@ -224,7 +218,6 @@ describe('rdbStoreUpdateTest', function () {
      */
     it('testRdbStoreUpdate0004', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreUpdate0004 start *************");
-        //更新
         {
             var u8 = new Uint8Array([1, 2, 3])
             const valueBucket = {
@@ -272,7 +265,6 @@ describe('rdbStoreUpdateTest', function () {
     it('testRdbStoreUpdate0005', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreUpdate0005 start *************");
         var u8 = new Uint8Array([1, 2, 3])
-        //插入
         {
             const valueBucket = {
                 "name": "xiaoming",
@@ -282,12 +274,9 @@ describe('rdbStoreUpdateTest', function () {
             }
             await rdbStore.insert("test", valueBucket)
         }
-        //更新
         {
             var u8 = new Uint8Array([4, 5, 6])
-            var nameStr = "abcd"
-            nameStr +="e".repeat(2000);
-            nameStr += "./&*$!@()";
+            var nameStr = "abcd" + "e".repeat(2000) + "./&*$!@()"
             const valueBucket = {
                 "name": nameStr,
                 "age": 20,
@@ -300,8 +289,6 @@ describe('rdbStoreUpdateTest', function () {
             updatePromise.then(async (ret) => {
                 await expect(1).assertEqual(ret);
                 await console.log(TAG + "update done: " + ret);
-
-                //查询
                 {
                     let predicates = await new dataRdb.RdbPredicates("test")
                     predicates.equalTo("name", nameStr)
@@ -331,7 +318,6 @@ describe('rdbStoreUpdateTest', function () {
     it('testRdbStoreUpdate0006', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreUpdate0006 start *************");
         var u8 = new Uint8Array([1, 2, 3])
-        //插入
         {
             const valueBucket = {
                 "name": "xiaohua",
@@ -341,15 +327,12 @@ describe('rdbStoreUpdateTest', function () {
             }
             await rdbStore.insert("test", valueBucket)
         }
-        //更新
         {
             var u8 = new Uint8Array([4, 5, 6])
-            var nameStr = "小明爱吃饭"
-            nameStr += "e".repeat(2000);
-            nameStr += "./&*$!@()";
+            var nameStr = "橘子是水果" + "e".repeat(2000)
             const valueBucket = {
                 "name": nameStr,
-                "age": 20,
+                "age": 19,
                 "salary": 200.5,
                 "blobType": u8,
             }
@@ -359,8 +342,6 @@ describe('rdbStoreUpdateTest', function () {
             updatePromise.then(async (ret) => {
                 await expect(1).assertEqual(ret);
                 await console.log(TAG + "update done: " + ret);
-
-                //查询
                 {
                     let predicates = await new dataRdb.RdbPredicates("test")
                     predicates.equalTo("name", nameStr)
@@ -390,7 +371,6 @@ describe('rdbStoreUpdateTest', function () {
     it('testRdbStoreUpdate0007', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreUpdate0007 start *************");
         var u8 = new Uint8Array([1, 2, 3])
-        //插入
         {
             const valueBucket = {
                 "name": "xiaocan",
@@ -400,15 +380,12 @@ describe('rdbStoreUpdateTest', function () {
             }
             await rdbStore.insert("test", valueBucket)
         }
-        //更新
         {
             var u8 = new Uint8Array([4, 5, 6])
-            var nameStr = "小明爱吃饭"
-            nameStr += "e".repeat(2000);
-            nameStr += "小明爱小花";
+            var nameStr = "菠萝是水果" + "e".repeat(2000) + "好吃又不贵"
             const valueBucket = {
                 "name": nameStr,
-                "age": 20,
+                "age": 21,
                 "salary": 200.5,
                 "blobType": u8,
             }
@@ -418,8 +395,6 @@ describe('rdbStoreUpdateTest', function () {
             updatePromise.then(async (ret) => {
                 await expect(1).assertEqual(ret);
                 await console.log(TAG + "update done: " + ret);
-                
-                //查询
                 {
                     let predicates = await new dataRdb.RdbPredicates("test")
                     predicates.equalTo("name", nameStr)
@@ -440,6 +415,5 @@ describe('rdbStoreUpdateTest', function () {
         done();
         console.log(TAG + "************* testRdbStoreUpdate0007 end   *************");
     })
-
     console.log(TAG + "*************Unit Test End*************");
 })

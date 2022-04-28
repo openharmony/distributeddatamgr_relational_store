@@ -172,17 +172,15 @@ describe('rdbStoreInsertTest', function () {
     /**
      * @tc.name rdb insert Extra long character test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0004
-     * @tc.desc rdb insert test
+     * @tc.desc rdb insert Extra long character test
      */
     it('testRdbStoreInsert0004', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0004 start *************");
         var u8 = new Uint8Array([1, 2, 3])
-        var nameStr = "abcd"
-        nameStr += "e".repeat(2000);
-        nameStr += "./&*$!@()";
+        var nameStr = "abcd" + "e".repeat(2000) + "./&*$!@()"
         const valueBucket = {
             "name": nameStr,
-            "age": 18,
+            "age": 19,
             "salary": 100.5,
             "blobType": u8,
         }
@@ -207,17 +205,15 @@ describe('rdbStoreInsertTest', function () {
     /**
      * @tc.name rdb insert Extra long character test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0005
-     * @tc.desc rdb insert test
+     * @tc.desc rdb insert Extra long character test
      */
     it('testRdbStoreInsert0005', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0005 start *************");
         var u8 = new Uint8Array([1, 2, 3])
-        var nameStr = "小明爱吃饭"
-        nameStr += "e".repeat(2000);
-
+        var nameStr = "苹果是水果" + "e".repeat(2000)
         const valueBucket = {
             "name": nameStr,
-            "age": 18,
+            "age": 20,
             "salary": 100.5,
             "blobType": u8,
         }
@@ -242,18 +238,15 @@ describe('rdbStoreInsertTest', function () {
     /**
      * @tc.name rdb insert Extra long character test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0006
-     * @tc.desc rdb insert test
+     * @tc.desc rdb insert Extra long character test
      */
     it('testRdbStoreInsert0006', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0006 start *************");
         var u8 = new Uint8Array([1, 2, 3])
-        var nameStr = "小明爱吃饭"
-        nameStr += "e".repeat(2000);
-        nameStr += "小明爱小花";
-
+        var nameStr = "西瓜是水果" + "e".repeat(2000) + "好吃又好看"
         const valueBucket = {
             "name": nameStr,
-            "age": 18,
+            "age": 21,
             "salary": 100.5,
             "blobType": u8,
         }
