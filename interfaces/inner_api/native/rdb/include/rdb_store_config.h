@@ -99,8 +99,8 @@ public:
     void SetRelativePath(const std::string& relativePath);
     std::string GetRelativePath() const;
     void SetServiceName(const std::string& serviceName);
-    void SetSecurityLevel(const std::string& secLevel);
-    std::string GetSecurityLevel() const;
+    void SetEncryptLevel(const std::string& secLevel);
+    std::string GetEncryptLevel() const;
 
     static std::string GetJournalModeValue(JournalMode journalMode);
     static std::string GetSyncModeValue(SyncMode syncMode);
@@ -123,7 +123,7 @@ private:
     std::string bundleName_;
     std::string databaseDir_;
     std::string relativePath_;
-    std::string secLevel_;
+    std::string encryptLevel_;
 };
 } // namespace OHOS::NativeRdb
 

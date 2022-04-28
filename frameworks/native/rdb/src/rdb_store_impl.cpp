@@ -71,7 +71,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     fileSecurityLevel = config.GetDatabaseFileSecurityLevel();
     fileType = config.GetDatabaseFileType();
     syncerParam_ = { config.GetBundleName(), config.GetRelativePath(),
-                    RemoveSuffix(config.GetName()), config.GetSecurityLevel(), "", config.GetDistributedType() };
+                    RemoveSuffix(config.GetName()), config.GetEncryptLevel(), "", config.GetDistributedType() };
     RDB_TRACE_END();
     return E_OK;
 }
