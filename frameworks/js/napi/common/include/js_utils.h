@@ -29,11 +29,12 @@ namespace OHOS {
 namespace AppDataMgrJsKit {
 class JSUtils final {
 public:
+    static constexpr int32_t DEFAULT_BUF_SIZE = 1024;
     static constexpr int32_t BUF_CACHE_MARGIN = 4;
     static constexpr int32_t ASYNC_RST_SIZE = 2;
     static constexpr int32_t SYNC_RESULT_ELEMNT_NUM = 2;
 
-    static std::string Convert2String(napi_env env, napi_value jsStr);
+    static std::string Convert2String(napi_env env, napi_value jsStr, bool useDefaultBufSize = true);
     static std::vector<std::string> Convert2StrVector(napi_env env, napi_value value);
     static std::vector<uint8_t> Convert2U8Vector(napi_env env, napi_value jsValue);
     static std::string ConvertAny2String(napi_env env, const napi_value jsValue);
