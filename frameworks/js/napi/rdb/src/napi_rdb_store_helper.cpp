@@ -259,6 +259,13 @@ void ParseContext(const napi_env &env, const napi_value &object, HelperRdbContex
     LOG_DEBUG("ParseContext end");
 }
 
+static std::string GetEncryptLevel(const std::string& databaseDir)
+{
+    static constexpr int EL_SIZE = 3;
+    auto pos = databaseDir.find("/database");
+    return databaseDir.substr(pos - EL_SIZE, EL_SIZE);
+}
+
 void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
 {
     LOG_DEBUG("ParseStoreConfig begin");
@@ -283,6 +290,15 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
     std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, name, errorCode);
     NAPI_ASSERT_RETURN_VOID(env, errorCode == E_OK, "Get database real path failed.");
     asyncContext->config.SetPath(realPath);
+    static constexpr int ENTRY_CHAR_LEN = 5;
+    if (databaseDir.substr(databaseDir.length() - ENTRY_CHAR_LEN, ENTRY_CHAR_LEN) == "entry") {
+        asyncContext->config.SetDatabaseDir(databaseDir.substr(0, databaseDir.length() - ENTRY_CHAR_LEN - 1));
+        asyncContext->config.SetRelativePath(realPath.substr(databaseDir.length() - ENTRY_CHAR_LEN));
+    } else {
+        asyncContext->config.SetDatabaseDir(databaseDir);
+        asyncContext->config.SetRelativePath(realPath.substr(databaseDir.length() + 1));
+    }
+    asyncContext->config.SetEncryptLevel(GetEncryptLevel(databaseDir));
     asyncContext->config.SetBundleName(asyncContext->context->GetBundleName());
     LOG_DEBUG("ParseStoreConfig end");
 }

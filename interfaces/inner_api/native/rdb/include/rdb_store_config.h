@@ -94,6 +94,13 @@ public:
     std::string GetBundleName() const;
     int SetDistributedType(DistributedType type);
     DistributedType GetDistributedType() const;
+    void SetDatabaseDir(const std::string& databaseDir);
+    std::string GetDataBaseDir() const;
+    void SetRelativePath(const std::string& relativePath);
+    std::string GetRelativePath() const;
+    void SetServiceName(const std::string& serviceName);
+    void SetEncryptLevel(const std::string& secLevel);
+    std::string GetEncryptLevel() const;
 
     static std::string GetJournalModeValue(JournalMode journalMode);
     static std::string GetSyncModeValue(SyncMode syncMode);
@@ -114,7 +121,9 @@ private:
     // distributed rdb
     DistributedType distributedType_ = DistributedRdb::RdbDistributedType::RDB_DEVICE_COLLABORATION;
     std::string bundleName_;
-    //
+    std::string databaseDir_;
+    std::string relativePath_;
+    std::string encryptLevel_;
 };
 } // namespace OHOS::NativeRdb
 

@@ -123,7 +123,7 @@ std::string SqliteDatabaseUtils::GetDefaultDatabasePath(std::string &context, st
             errorCode = E_CREATE_FOLDER_FAIL;
         }
     }
-    std::string databasePath = context.append("/").append("db");
+    std::string databasePath = context + "/db";
     if (access(databasePath.c_str(), F_OK) != 0) {
         if (mkdir(databasePath.c_str(), g_mkdirMode)) {
             errorCode = E_CREATE_FOLDER_FAIL;
