@@ -422,7 +422,7 @@ void ParseValuesBucket(const napi_env &env, const napi_value &arg, RdbStoreConte
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, value, &valueType);
         if (valueType == napi_string) {
-            std::string valueString = JSUtils::Convert2String(env, value);
+            std::string valueString = JSUtils::Convert2String(env, value, false);
             context->valuesBucket->PutString(keyStr, valueString);
             LOG_DEBUG("ValueObject type napi_string");
         } else if (valueType == napi_number) {
