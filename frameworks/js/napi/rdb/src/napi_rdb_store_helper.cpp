@@ -259,7 +259,7 @@ void ParseContext(const napi_env &env, const napi_value &object, HelperRdbContex
     LOG_DEBUG("ParseContext end");
 }
 
-static std::string GetSecurityLevel(const std::string& databaseDir)
+static std::string GetEncryptLevel(const std::string& databaseDir)
 {
     static constexpr int EL_SIZE = 3;
     auto pos = databaseDir.find("/database");
@@ -298,7 +298,7 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
         asyncContext->config.SetDatabaseDir(databaseDir);
         asyncContext->config.SetRelativePath(realPath.substr(databaseDir.length() + 1));
     }
-    asyncContext->config.SetSecurityLevel(GetSecurityLevel(databaseDir));
+    asyncContext->config.SetEncryptLevel(GetEncryptLevel(databaseDir));
     asyncContext->config.SetBundleName(asyncContext->context->GetBundleName());
     LOG_DEBUG("ParseStoreConfig end");
 }

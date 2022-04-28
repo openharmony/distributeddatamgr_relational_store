@@ -238,14 +238,14 @@ void RdbStoreConfig::SetServiceName(const std::string &serviceName)
     SetBundleName(serviceName);
 }
 
-void RdbStoreConfig::SetSecurityLevel(const std::string &secLevel)
+void RdbStoreConfig::SetEncryptLevel(const std::string &secLevel)
 {
-    secLevel_ = secLevel;
+    encryptLevel_ = secLevel;
 }
 
-std::string RdbStoreConfig::GetSecurityLevel() const
+std::string RdbStoreConfig::GetEncryptLevel() const
 {
-    return secLevel_;
+    return encryptLevel_;
 }
 
 std::string RdbStoreConfig::GetJournalModeValue(JournalMode journalMode)
