@@ -94,8 +94,8 @@ public:
     std::string GetBundleName() const;
     int SetDistributedType(DistributedType type);
     DistributedType GetDistributedType() const;
-    void SetDatabaseDir(const std::string& databaseDir);
-    std::string GetDataBaseDir() const;
+    void SetAppModuleName(const std::string& moduleName);
+    std::string GetAppModuleName() const;
     void SetRelativePath(const std::string& relativePath);
     std::string GetRelativePath() const;
     void SetServiceName(const std::string& serviceName);
@@ -121,7 +121,7 @@ private:
     // distributed rdb
     DistributedType distributedType_ = DistributedRdb::RdbDistributedType::RDB_DEVICE_COLLABORATION;
     std::string bundleName_;
-    std::string databaseDir_;
+    std::string moduleName_;
     std::string relativePath_;
     std::string encryptLevel_;
 };
