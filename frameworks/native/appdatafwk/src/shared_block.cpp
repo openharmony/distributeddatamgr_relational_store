@@ -136,8 +136,8 @@ int SharedBlock::ReadMessageParcel(MessageParcel &parcel, SharedBlock *&block)
         return SHARED_BLOCK_ASHMEM_ERROR;
     }
 
-    LOG_DEBUG("Created SharedBlock from parcel: unusedOffset=%{private}d, "
-              "rowNums=%{private}d, columnNums=%{private}d, mSize=%{private}d, mData=%{private}p",
+    LOG_DEBUG("Created SharedBlock from parcel: unusedOffset=%{private}" PRIu32 ", "
+              "rowNums=%{private}" PRIu32 ", columnNums=%{private}" PRIu32 ", mSize=%{private}d, mData=%{private}p",
               block->mHeader->unusedOffset, block->mHeader->rowNums, block->mHeader->columnNums,
               static_cast<int>(block->mSize), block->mData);
 
@@ -172,11 +172,11 @@ int SharedBlock::SetColumnNum(uint32_t numColumns)
 
     uint32_t cur = mHeader->columnNums;
     if ((cur > 0 || mHeader->rowNums > 0) && cur != numColumns) {
-        LOG_ERROR("Trying to go from %{public}d columns to %{public}d", cur, numColumns);
+        LOG_ERROR("Trying to go from %{public}" PRIu32 " columns to %{public}" PRIu32 "", cur, numColumns);
         return SHARED_BLOCK_INVALID_OPERATION;
     }
     if (numColumns > COL_MAX_NUM) {
-        LOG_ERROR("Trying to set %{public}d columns out of size", numColumns);
+        LOG_ERROR("Trying to set %{public}" PRIu32 " columns out of size", numColumns);
         return SHARED_BLOCK_INVALID_OPERATION;
     }
     mHeader->columnNums = numColumns;
@@ -202,7 +202,7 @@ int SharedBlock::AllocRow()
     uint32_t fieldDirOffset = Alloc(fieldDirSize, true);
     if (!fieldDirOffset) {
         mHeader->rowNums--;
-        LOG_INFO("Alloc the row failed, so back out the new row accounting from allocRowoffset %{public}d",
+        LOG_INFO("Alloc the row failed, so back out the new row accounting from allocRowoffset %{public}" PRIu32 "",
             mHeader->rowNums);
         return SHARED_BLOCK_NO_MEMORY;
     }
@@ -317,21 +317,21 @@ uint32_t *SharedBlock::AllocRowOffset()
 SharedBlock::CellUnit *SharedBlock::GetCellUnit(uint32_t row, uint32_t column)
 {
     if (row >= mHeader->rowNums || column >= mHeader->columnNums) {
-        LOG_ERROR("Failed to read row %{public}d, column %{public}d from a SharedBlock"
-            " which has %{public}d rows, %{public}d columns.",
+        LOG_ERROR("Failed to read row %{public}" PRIu32 ", column %{public}" PRIu32 " from a SharedBlock"
+            " which has %{public}" PRIu32 " rows, %{public}" PRIu32 " columns.",
             row, column, mHeader->rowNums, mHeader->columnNums);
         return nullptr;
     }
 
     uint32_t *rowOffset = GetRowOffset(row);
     if (!rowOffset) {
-        LOG_ERROR("Failed to find rowOffset for row %{public}d.", row);
+        LOG_ERROR("Failed to find rowOffset for row %{public}" PRIu32 ".", row);
         return nullptr;
     }
 
     CellUnit *cellUnit = static_cast<CellUnit *>(OffsetToPtr(*rowOffset));
     if (!cellUnit) {
-        LOG_ERROR("Failed to find cellUnit for rowOffset %{public}d.", *rowOffset);
+        LOG_ERROR("Failed to find cellUnit for rowOffset %{public}" PRIu32 ".", *rowOffset);
         return nullptr;
     }
 
@@ -452,11 +452,11 @@ size_t SharedBlock::SetRawData(const void *rawData, size_t size)
 void *SharedBlock::OffsetToPtr(uint32_t offset, uint32_t bufferSize)
 {
     if (offset >= mSize) {
-        LOG_ERROR("Offset %" PRIu32 " out of bounds, max value %zu", offset, mSize);
+        LOG_ERROR("Offset %{public}" PRIu32 " out of bounds, max value %{public}zu", offset, mSize);
         return nullptr;
     }
     if (offset + bufferSize > mSize) {
-        LOG_ERROR("End offset %" PRIu32 " out of bounds, max value %zu", offset + bufferSize, mSize);
+        LOG_ERROR("End offset %{public}" PRIu32 " out of bounds, max value %{public}zu", offset + bufferSize, mSize);
         return nullptr;
     }
     return static_cast<uint8_t *>(mData) + offset;
