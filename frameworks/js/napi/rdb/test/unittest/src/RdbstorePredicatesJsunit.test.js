@@ -26,7 +26,7 @@ const CREATE_TABLE_ALL_DATA_TYPE_SQL = "CREATE TABLE IF NOT EXISTS AllDataType "
 + "primBooleanValue INTEGER , primByteValue INTEGER , primCharValue TEXT, `order` INTEGER);";
 
 const STORE_CONFIG = {
-    name: "RdbPredicates.db",
+    name: "Predicates.db",
 }
 var rdbStore = undefined;
 var DOUBLE_MAX = 9223372036854775807;
@@ -51,7 +51,7 @@ describe('rdbPredicatesTest', function () {
     afterAll(async function () {
         console.info(TAG + 'afterAll')
         rdbStore = null
-        await dataRdb.deleteRdbStore("RdbPredicates.db");
+        await dataRdb.deleteRdbStore("Predicates.db");
     })
 
     function resultSize(resultSet) {
