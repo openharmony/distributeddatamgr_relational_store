@@ -213,16 +213,6 @@ std::string RdbStoreConfig::GetBundleName() const
     return bundleName_;
 }
 
-void RdbStoreConfig::SetDatabaseDir(const std::string &databaseDir)
-{
-    databaseDir_ = databaseDir;
-}
-
-std::string RdbStoreConfig::GetDataBaseDir() const
-{
-    return databaseDir_;
-}
-
 void RdbStoreConfig::SetRelativePath(const std::string &relativePath)
 {
     relativePath_ = relativePath;
@@ -231,6 +221,16 @@ void RdbStoreConfig::SetRelativePath(const std::string &relativePath)
 std::string RdbStoreConfig::GetRelativePath() const
 {
     return relativePath_;
+}
+
+void RdbStoreConfig::SetAppModuleName(const std::string &moduleName)
+{
+    moduleName_ = moduleName;
+}
+
+std::string RdbStoreConfig::GetAppModuleName() const
+{
+    return moduleName_;
 }
 
 void RdbStoreConfig::SetServiceName(const std::string &serviceName)
