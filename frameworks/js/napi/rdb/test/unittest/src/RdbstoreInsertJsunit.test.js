@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,7 +51,7 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.name rdb insert test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0001
      * @tc.desc rdb insert test
      */
     it('testRdbStoreInsert0001', 0, async function (done) {
@@ -115,7 +115,7 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.name rdb insert test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0020
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0002
      * @tc.desc rdb insert test
      */
     it('testRdbStoreInsert0002', 0, async function (done) {
@@ -143,7 +143,7 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.name rdb insert test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0030
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0003
      * @tc.desc rdb insert test
      */
     it('testRdbStoreInsert0003', 0, async function (done) {
@@ -168,5 +168,105 @@ describe('rdbStoreInsertTest', function () {
         done()
         console.log(TAG + "************* testRdbStoreInsert0003 end   *************");
     })
+
+    /**
+     * @tc.name rdb insert Extra long character test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0004
+     * @tc.desc rdb insert Extra long character test
+     */
+    it('testRdbStoreInsert0004', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreInsert0004 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var nameStr = "abcd" + "e".repeat(2000) + "./&*$!@()"
+        const valueBucket = {
+            "name": nameStr,
+            "age": 19,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        await rdbStore.insert("test", valueBucket)
+        let predicates = new dataRdb.RdbPredicates("test");
+        predicates.equalTo("name", nameStr)
+        let resultSet = await rdbStore.query(predicates)
+        try {
+            console.log(TAG + "resultSet query done");
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const name = resultSet.getString(resultSet.getColumnIndex("name"))
+            console.log(TAG + "id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
+            expect(nameStr).assertEqual(name)
+        } catch (e) {
+            console.log("insert1 error " + e);
+        }
+        resultSet = null
+        done()
+        console.log(TAG + "************* testRdbStoreInsert0004 end   *************");
+    })
+
+    /**
+     * @tc.name rdb insert Extra long character test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0005
+     * @tc.desc rdb insert Extra long character test
+     */
+    it('testRdbStoreInsert0005', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreInsert0005 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var nameStr = "苹果是水果" + "e".repeat(2000)
+        const valueBucket = {
+            "name": nameStr,
+            "age": 20,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        await rdbStore.insert("test", valueBucket)
+        let predicates = new dataRdb.RdbPredicates("test");
+        predicates.equalTo("name", nameStr)
+        let resultSet = await rdbStore.query(predicates)
+        try {
+            console.log(TAG + "resultSet query done");
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const name = resultSet.getString(resultSet.getColumnIndex("name"))
+            console.log(TAG + "id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
+            expect(nameStr).assertEqual(name)
+        } catch (e) {
+            console.log("insert1 error " + e);
+        }
+        resultSet = null
+        done()
+        console.log(TAG + "************* testRdbStoreInsert0005 end   *************");
+    })
+
+    /**
+     * @tc.name rdb insert Extra long character test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0006
+     * @tc.desc rdb insert Extra long character test
+     */
+    it('testRdbStoreInsert0006', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreInsert0006 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var nameStr = "西瓜是水果" + "e".repeat(2000) + "好吃又好看"
+        const valueBucket = {
+            "name": nameStr,
+            "age": 21,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        await rdbStore.insert("test", valueBucket)
+        let predicates = new dataRdb.RdbPredicates("test");
+        predicates.equalTo("name", nameStr)
+        let resultSet = await rdbStore.query(predicates)
+        try {
+            console.log(TAG + "resultSet query done");
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const name = resultSet.getString(resultSet.getColumnIndex("name"))
+            console.log(TAG + "id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
+            expect(nameStr).assertEqual(name)
+        } catch (e) {
+            console.log("insert1 error " + e);
+        }
+        resultSet = null
+        done()
+        console.log(TAG + "************* testRdbStoreInsert0006 end   *************");
+    })
+
     console.log(TAG + "*************Unit Test End*************");
 })
