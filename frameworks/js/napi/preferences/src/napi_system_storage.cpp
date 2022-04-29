@@ -52,7 +52,7 @@ void ParseString(napi_env env, napi_value &object, const char *name, const bool 
 {
     napi_value value = nullptr;
     if (napi_get_named_property(env, object, name, &value) == napi_ok) {
-        std::string key = JSUtils::Convert2String(env, value, JSUtils::DEFAULT_BUF_SIZE);
+        std::string key = JSUtils::Convert2String(env, value);
         NAPI_ASSERT_RETURN_VOID(env, enable || !key.empty(), "StorageOptions is empty.");
         output = std::move(key);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,13 +46,12 @@ describe('rdbStoreUpdateTest', function () {
 
     /**
      * @tc.name resultSet Update test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0010
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0001
      * @tc.desc resultSet Update test
      */
     it('testRdbStoreUpdate0001', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreUpdate0001 start *************");
         var u8 = new Uint8Array([1, 2, 3])
-        //插入
         {
             const valueBucket = {
                 "name": "zhangsan",
@@ -69,7 +68,6 @@ describe('rdbStoreUpdateTest', function () {
             })
             await insertPromise
         }
-        //更新
         {
             var u8 = new Uint8Array([4, 5, 6])
             const valueBucket = {
@@ -84,8 +82,6 @@ describe('rdbStoreUpdateTest', function () {
             updatePromise.then(async (ret) => {
                 await expect(1).assertEqual(ret);
                 await console.log(TAG + "update done: " + ret);
-
-                //查询
                 {
                     let predicates = await new dataRdb.RdbPredicates("test")
                     let resultSet = await rdbStore.query(predicates)
@@ -108,26 +104,25 @@ describe('rdbStoreUpdateTest', function () {
                     await expect(false).assertEqual(resultSet.goToNextRow())
                     resultSet = null
                 }
-                
+
             }).catch((err) => {
                 console.log(TAG + "update error");
                 expect(null).assertFail();
             })
             //await updatePromise
         }
-        
+
         done();
         console.log(TAG + "************* testRdbStoreUpdate0001 end   *************");
     })
 
     /**
      * @tc.name resultSet Update test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0020
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0002
      * @tc.desc resultSet Update test
      */
     it('testRdbStoreUpdate0002', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreUpdate0002 start *************");
-        //更新
         {
             var u8 = new Uint8Array([1, 2, 3])
             const valueBucket = {
@@ -175,12 +170,11 @@ describe('rdbStoreUpdateTest', function () {
 
     /**
      * @tc.name resultSet Update test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0030
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0003
      * @tc.desc resultSet Update test
      */
     it('testRdbStoreUpdate0003', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreUpdate0003 start *************");
-        //更新
         {
             var u8 = new Uint8Array([1, 2, 3])
             const valueBucket = {
@@ -219,12 +213,11 @@ describe('rdbStoreUpdateTest', function () {
 
     /**
      * @tc.name resultSet Update test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0040
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0004
      * @tc.desc resultSet Update test
      */
     it('testRdbStoreUpdate0004', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreUpdate0004 start *************");
-        //更新
         {
             var u8 = new Uint8Array([1, 2, 3])
             const valueBucket = {
@@ -263,6 +256,164 @@ describe('rdbStoreUpdateTest', function () {
         done();
         console.log(TAG + "************* testRdbStoreUpdate0004 end   *************");
     })
+
+    /**
+     * @tc.name resultSet Update Extra long character test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0005
+     * @tc.desc resultSet Update Extra long character test
+     */
+    it('testRdbStoreUpdate0005', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreUpdate0005 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        {
+            const valueBucket = {
+                "name": "xiaoming",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            await rdbStore.insert("test", valueBucket)
+        }
+        {
+            var u8 = new Uint8Array([4, 5, 6])
+            var nameStr = "abcd" + "e".repeat(2000) + "./&*$!@()"
+            const valueBucket = {
+                "name": nameStr,
+                "age": 20,
+                "salary": 200.5,
+                "blobType": u8,
+            }
+            let predicates = await new dataRdb.RdbPredicates("test")
+            await predicates.equalTo("name", "xiaoming")
+            let updatePromise = rdbStore.update(valueBucket, predicates)
+            updatePromise.then(async (ret) => {
+                await expect(1).assertEqual(ret);
+                await console.log(TAG + "update done: " + ret);
+                {
+                    let predicates = await new dataRdb.RdbPredicates("test")
+                    predicates.equalTo("name", nameStr)
+                    let resultSet = await rdbStore.query(predicates)
+                    expect(true).assertEqual(resultSet.goToFirstRow())
+                    const name = await resultSet.getString(resultSet.getColumnIndex("name"))
+                    await expect(nameStr).assertEqual(name);
+                    console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
+                    resultSet = null
+                }
+
+            }).catch((err) => {
+                console.log(TAG + "update error");
+                expect(null).assertFail();
+            })
+        }
+
+        done();
+        console.log(TAG + "************* testRdbStoreUpdate0005 end   *************");
+    })
+
+    /**
+     * @tc.name resultSet Update Extra long character test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0006
+     * @tc.desc resultSet Update Extra long character test
+     */
+    it('testRdbStoreUpdate0006', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreUpdate0006 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        {
+            const valueBucket = {
+                "name": "xiaohua",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            await rdbStore.insert("test", valueBucket)
+        }
+        {
+            var u8 = new Uint8Array([4, 5, 6])
+            var nameStr = "橘子是水果" + "e".repeat(2000)
+            const valueBucket = {
+                "name": nameStr,
+                "age": 19,
+                "salary": 200.5,
+                "blobType": u8,
+            }
+            let predicates = await new dataRdb.RdbPredicates("test")
+            await predicates.equalTo("name", "xiaohua")
+            let updatePromise = rdbStore.update(valueBucket, predicates)
+            updatePromise.then(async (ret) => {
+                await expect(1).assertEqual(ret);
+                await console.log(TAG + "update done: " + ret);
+                {
+                    let predicates = await new dataRdb.RdbPredicates("test")
+                    predicates.equalTo("name", nameStr)
+                    let resultSet = await rdbStore.query(predicates)
+                    expect(true).assertEqual(resultSet.goToFirstRow())
+                    const name = await resultSet.getString(resultSet.getColumnIndex("name"))
+                    await expect(nameStr).assertEqual(name);
+                    console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
+                    resultSet = null
+                }
+
+            }).catch((err) => {
+                console.log(TAG + "update error");
+                expect(null).assertFail();
+            })
+        }
+
+        done();
+        console.log(TAG + "************* testRdbStoreUpdate0006 end   *************");
+    })
+
+    /**
+     * @tc.name resultSet Update Extra long character test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0007
+     * @tc.desc resultSet Update Extra long character test
+     */
+    it('testRdbStoreUpdate0007', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreUpdate0007 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        {
+            const valueBucket = {
+                "name": "xiaocan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            await rdbStore.insert("test", valueBucket)
+        }
+        {
+            var u8 = new Uint8Array([4, 5, 6])
+            var nameStr = "菠萝是水果" + "e".repeat(2000) + "好吃又不贵"
+            const valueBucket = {
+                "name": nameStr,
+                "age": 21,
+                "salary": 200.5,
+                "blobType": u8,
+            }
+            let predicates = await new dataRdb.RdbPredicates("test")
+            await predicates.equalTo("name", "xiaocan")
+            let updatePromise = rdbStore.update(valueBucket, predicates)
+            updatePromise.then(async (ret) => {
+                await expect(1).assertEqual(ret);
+                await console.log(TAG + "update done: " + ret);
+                {
+                    let predicates = await new dataRdb.RdbPredicates("test")
+                    predicates.equalTo("name", nameStr)
+                    let resultSet = await rdbStore.query(predicates)
+                    expect(true).assertEqual(resultSet.goToFirstRow())
+                    const name = await resultSet.getString(resultSet.getColumnIndex("name"))
+                    await expect(nameStr).assertEqual(name);
+                    console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
+                    resultSet = null
+                }
+
+            }).catch((err) => {
+                console.log(TAG + "update error");
+                expect(null).assertFail();
+            })
+        }
+
+        done();
+        console.log(TAG + "************* testRdbStoreUpdate0007 end   *************");
+    })
     console.log(TAG + "*************Unit Test End*************");
 })
-  

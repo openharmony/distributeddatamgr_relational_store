@@ -86,13 +86,13 @@ __attribute__((visibility("default"))) ValuesBucket *NAPI_OHOS_Data_RdbJsKit_Val
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value key;
         napi_get_element(env, keys, i, &key);
-        std::string keyStr = JSUtils::Convert2String(env, key, JSUtils::DEFAULT_BUF_SIZE);
+        std::string keyStr = JSUtils::Convert2String(env, key);
         napi_value value;
         napi_get_property(env, arg, key, &value);
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, value, &valueType);
         if (valueType == napi_string) {
-            std::string valueString = JSUtils::Convert2String(env, value, JSUtils::DEFAULT_BUF_SIZE);
+            std::string valueString = JSUtils::Convert2String(env, value);
             valuesBucket->PutString(keyStr, valueString);
             LOG_DEBUG("ValueObject type napi_string");
         } else if (valueType == napi_number) {

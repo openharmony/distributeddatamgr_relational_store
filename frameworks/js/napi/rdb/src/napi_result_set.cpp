@@ -265,7 +265,7 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
     napi_value args[MAX_INPUT_COUNT] = { 0 };
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     NAPI_ASSERT(env, argc > 0, "Invalid argvs!");
-    std::string input = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string input = JSUtils::Convert2String(env, args[0]);
     int errCode = GetInnerResultSet(env, info)->GetColumnIndex(input, result);
     if (errCode != E_OK) {
         LOG_ERROR("GetColumnIndex failed code:%{public}d", errCode);
