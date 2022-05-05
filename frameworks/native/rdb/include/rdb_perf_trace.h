@@ -16,7 +16,7 @@
 #ifndef NATIVE_RDB_PERF_TRACE_H
 #define NATIVE_RDB_PERF_TRACE_H
 
-#include "bytrace.h"
+#include "hitrace_meter.h"
 
 namespace OHOS::NativeRdb {
 #define RDB_TRACE_BEGIN(name) StartTrace(BYTRACE_TAG_DISTRIBUTEDDATA, (name))
