@@ -112,7 +112,7 @@ napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
 
     napi_value output;
     NAPI_CALL(env, napi_new_instance(env, cons, argc, argv, &output));
-    LOG_DEBUG("sundou RdbPredicatesProxy::New end");
+    LOG_DEBUG("RdbPredicatesProxy::New end");
     return output;
 }
 
