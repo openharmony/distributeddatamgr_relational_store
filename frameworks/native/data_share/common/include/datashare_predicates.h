@@ -39,8 +39,8 @@ private:
     void MarshallingString(std::string value, OHOS::Parcel &parcel) const;
     void MarshallingStringList(std::vector<std::string> list, OHOS::Parcel &parcel) const;
 
-    bool isRawSelection;
-    bool judgeSource;
+    bool isRawSelection = false;
+    bool judgeSource = false;
 };
 } // namespace DataShare
 } // namespace OHOS
