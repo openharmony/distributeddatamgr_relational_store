@@ -92,7 +92,7 @@ napi_value DataShareResultSetProxy::GetConstructor(napi_env env)
         DECLARE_NAPI_FUNCTION("getInt", GetInt),
         DECLARE_NAPI_FUNCTION("getLong", GetLong),
         DECLARE_NAPI_FUNCTION("getDouble", GetDouble),
-        DECLARE_NAPI_FUNCTION("isColumnNull", IsColumnOrKeyNull),
+        DECLARE_NAPI_FUNCTION("isColumnOrKeyNull", IsColumnOrKeyNull),
         DECLARE_NAPI_FUNCTION("close", Close),
         DECLARE_NAPI_FUNCTION("getColumnOrKeyIndex", GetColumnOrKeyIndex),
         DECLARE_NAPI_FUNCTION("getColumnOrKeyName", GetColumnOrKeyName),

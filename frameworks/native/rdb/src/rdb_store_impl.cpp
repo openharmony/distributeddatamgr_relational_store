@@ -237,10 +237,8 @@ int RdbStoreImpl::Update(int &changedRows, const DataShare::DataShareValuesBucke
     const DataShare::DataSharePredicates &dataSharePredicates)
 {
     ValuesBucket values = RdbUtils::ConvertToValuesBucket(dataShareValues);
-    std::shared_ptr<AbsPredicates> predicates = RdbUtils::ToOperate(dataSharePredicates);
-    LOG_DEBUG("Data Share Update successful.");
-    //return Update(changedRows, values, *predicates);
-    return 0;
+    std::shared_ptr<AbsRdbPredicates> predicates = RdbUtils::ToOperate(dataSharePredicates);
+    return Update(changedRows, values, *predicates.get());
 }
 
 int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
@@ -304,10 +302,8 @@ int RdbStoreImpl::Delete(int &deletedRows, const AbsRdbPredicates &predicates)
 
 int RdbStoreImpl::Delete(int &deletedRows, const DataShare::DataSharePredicates &dataSharePredicates)
 {
-    std::shared_ptr<AbsPredicates> rdbPredicates = RdbUtils::ToOperate(dataSharePredicates);
-    //return Delete(deletedRows, *rdbPredicates);
-    LOG_DEBUG("Data Share Delete successful.");
-    return 0;
+    std::shared_ptr<AbsRdbPredicates> predicates = RdbUtils::ToOperate(dataSharePredicates);
+    return Delete(deletedRows, *predicates.get());
 }
 
 int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
@@ -348,10 +344,11 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
 std::shared_ptr<DataShare::DataShareAbstractResultSet> RdbStoreImpl::Query(
     const DataShare::DataSharePredicates &dataSharePredicates, const std::vector<std::string> columns)
 {
-    std::shared_ptr<AbsPredicates> predicate = RdbUtils::ToOperate(dataSharePredicates);
-    //return Query(*predicate, columns);
-    LOG_DEBUG("Data Share Query successful.");
-    return 0;
+    std::shared_ptr<AbsRdbPredicates> predicate = RdbUtils::ToOperate(dataSharePredicates);
+    std::vector<std::string> selectionArgs = predicate.get()->GetWhereArgs();
+    std::string sql = SqliteSqlBuilder::BuildQueryString(*predicate.get(), columns);
+    LOG_DEBUG("Data Share Query sql:  %{public}s", sql.c_str());
+    return DataShareQueryByStep(sql, selectionArgs);
 }
 
 std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool distinct, const std::string &table,
@@ -399,10 +396,8 @@ int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
 
 int RdbStoreImpl::Count(int64_t &outValue, const DataShare::DataSharePredicates &dataSharePredicates)
 {
-    std::shared_ptr<AbsPredicates> predicate = RdbUtils::ToOperate(dataSharePredicates);
-    //return Count(outValue, dataSharePredicates);
-    LOG_INFO("RdbStoreImpl::Count::DataShare Count successful.");
-    return 0;
+    std::shared_ptr<AbsRdbPredicates> predicate = RdbUtils::ToOperate(dataSharePredicates);
+    return Count(outValue, *predicate.get());
 }
 
 int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs)
@@ -806,19 +801,19 @@ int RdbStoreImpl::ExecuteForSharedBlock(int &rowNum, AppDataFwk::SharedBlock *sh
 /**
  * Queries data in the database based on specified conditions.
  */
-std::unique_ptr<DataShare::DataShareAbstractResultSet> RdbStoreImpl::DataShareQueryByStep(const std::string &sql,
-    const std::vector<std::string> &selectionArgs)
-{
-    std::unique_ptr<DataShare::DataShareAbstractResultSet> resultSet =
-        std::make_unique<StepDataShareResultSet>(shared_from_this(), sql, selectionArgs);
-    return resultSet;
-}
-
 std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
     const std::vector<std::string> &selectionArgs)
 {
     std::unique_ptr<ResultSet> resultSet =
         std::make_unique<StepResultSet>(shared_from_this(), sql, selectionArgs);
+    return resultSet;
+}
+
+std::shared_ptr<DataShare::DataShareAbstractResultSet> RdbStoreImpl::DataShareQueryByStep(const std::string &sql,
+    const std::vector<std::string> &selectionArgs)
+{
+    std::shared_ptr<DataShare::DataShareAbstractResultSet> resultSet =
+        std::make_shared<StepDataShareResultSet>(shared_from_this(), sql, selectionArgs);
     return resultSet;
 }
 
@@ -867,13 +862,11 @@ bool RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predic
     return true;
 }
 
-bool RdbStoreImpl::Sync(
-    const SyncOption &option, const DataShare::DataSharePredicates &dataSharePredicates, const SyncCallback &callback)
+bool RdbStoreImpl::Sync(const SyncOption &option, const DataShare::DataSharePredicates &dataSharePredicates,
+    const SyncCallback &callback)
 {
-    std::shared_ptr<AbsPredicates> predicate = RdbUtils::ToOperate(dataSharePredicates);
-    //return Sync(option, predicate, callback);
-    LOG_INFO("RdbStoreImpl::Count::DataShare Sync successful.");
-    return 0;
+    std::shared_ptr<AbsRdbPredicates> predicate = RdbUtils::ToOperate(dataSharePredicates);
+    return Sync(option, *predicate.get(), callback);
 }
 
 bool RdbStoreImpl::Subscribe(const SubscribeOption &option, RdbStoreObserver *observer)

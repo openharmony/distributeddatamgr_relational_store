@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -387,79 +387,50 @@ int StepDataShareResultSet::GetAllColumnOrKeyName(std::vector<std::string> &colu
 
 bool StepDataShareResultSet::OnGo(int oldRowIndex, int newRowIndex, const std::shared_ptr<DataShareBlockWriter> &writer)
 {
-    if (writer == nullptr) {
+    if(writer == nullptr) {
         LOG_ERROR("StepSharedResultSet:: Writer is null.");
         return false;
     }
 
     int rowCount;
     GetRowCount(rowCount);
-    if (newRowIndex < 0 || newRowIndex > rowCount) {
-        LOG_ERROR("StepSharedResultSet:: Invalid newRowIndex.");
+    if(newRowIndex < 0 || newRowIndex > rowCount) {
+        LOG_ERROR("StepSharedResultSet:: Invalid newRowIndex: %{public}d.", rowCount);
         return false;
     }
+
+    int columnCount;
+    GetColumnCount(columnCount);
+    if(columnCount <= 0) {
+        LOG_ERROR("StepSharedResultSet:: Invalid columnCount: %{public}d.", columnCount);
+        return false;
+    }
+    LOG_DEBUG("StepSharedResultSet:: rowCount: %{public}d, columnCount:  %{public}d.", rowCount, columnCount);
 
     writer->Clear();
 
     bool bResultSet = false;
     IsStarted(bResultSet);
-    if (!bResultSet) {
+    if(!bResultSet) {
         GoToFirstRow();
     }
 
     int errCode = GoToRow(newRowIndex);
-    if (errCode) {
-        LOG_ERROR("StepSharedResultSet:: Go to newRowIndex failed.");
+    if(errCode) {
+        LOG_ERROR("StepSharedResultSet:: Go to row(%{public}d) failed.", newRowIndex);
         return false;
     }
 
-    bool isFull = false;
-    int columnCount;
-    GetColumnCount(columnCount);
-
     DataType columnTypes[columnCount];
     GetColumnTypes(columnCount, columnTypes);
-
-    int row = 0;
-    while (!isFull && !errCode) {
-        int status = writer->AllocRow();
-        if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
-            isFull = true;
-            return true;
-        }
-
-        for (int i = 0; i < columnCount; ++i) {
-            switch (columnTypes[i]) {
-                case DataType::TYPE_INTEGER:
-                    int64_t value;
-                    GetLong(i, value);
-                    writer->WriteLong(row, i, value);
-                    break;
-                case DataType::TYPE_FLOAT:
-                    double dValue;
-                    GetDouble(i, dValue);
-                    writer->WriteDouble(row, i, dValue);
-                    break;
-                case DataType::TYPE_NULL:
-                    writer->WriteNull(row, i);
-                    break;
-                case DataType::TYPE_BLOB:
-                    WriteBlobData(row, i, writer);
-                    break;
-                default:
-                    std::string stringValue;
-                    GetString(i, stringValue);
-                    writer->WriteString(row, 1, (char*)stringValue.c_str(), sizeof(stringValue));
-            }
-        }
-        row++;
-        errCode = GoToNextRow();
-    }
+    writer->SetColumnNum(columnCount);
+    WriteBlock(columnCount, columnTypes, writer);
 
     return true;
 }
 
-void StepDataShareResultSet::GetColumnTypes(int columnCount, DataType columnTypes[]) {
+void StepDataShareResultSet::GetColumnTypes(int columnCount, DataType columnTypes[])
+{
     for (int i = 0; i < columnCount; ++i) {
         DataType type;
         GetDataType(i, type);
@@ -467,17 +438,70 @@ void StepDataShareResultSet::GetColumnTypes(int columnCount, DataType columnType
     }
 }
 
-bool StepDataShareResultSet::WriteBlobData(int row, int column, const std::shared_ptr<DataShareBlockWriter> &writer) {
+void StepDataShareResultSet::WriteBlock(int columnCount, DataType columnTypes[], const std::shared_ptr<DataShareBlockWriter> &writer)
+{
+    bool isFull = false;
+    int errCode = 0;
+    int row = 0;
+    while(!isFull && !errCode) {
+        int status = writer->AllocRow();
+        if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
+            isFull = true;
+            LOG_ERROR("StepSharedResultSet:: SharedBlock is full.");
+            break;
+        }
+
+        for (int i = 0; i < columnCount; i++) {
+            LOG_DEBUG("StepSharedResultSet:: Write data of row: %{public}d, column: %{public}d", row, i);
+            switch (columnTypes[i]) {
+                case DataType::TYPE_INTEGER:
+                    int64_t value;
+                    GetLong(i, value);
+                    if(writer->WriteLong(row, i, value)) {
+                        LOG_DEBUG("StepSharedResultSet:: WriteLong failed of row: : %{public}d, column: %{public}d", row, i);
+                    }
+                    break;
+                case DataType::TYPE_FLOAT:
+                    double dValue;
+                    GetDouble(i, dValue);
+                    if(writer->WriteDouble(row, i, dValue)) {
+                        LOG_DEBUG("StepSharedResultSet:: WriteDouble failed of row: row: %{public}d, column: %{public}d", row, i);
+                    }
+                    break;
+                case DataType::TYPE_NULL:
+                    if(writer->WriteNull(row, i)) {
+                        LOG_DEBUG("StepSharedResultSet:: WriteNull failed of row: row: %{public}d, column: %{public}d", row, i);
+                    }
+                    break;
+                case DataType::TYPE_BLOB:
+                    if(WriteBlobData(row, i, writer)) {
+                        LOG_DEBUG("StepSharedResultSet:: WriteBlobData failed of row: %{public}d, column: %{public}d", row, i);
+                    }
+                    break;
+                default:
+                    std::string stringValue;
+                    GetString(i, stringValue);
+                    if(writer->WriteString(row, i, (char*)stringValue.c_str(), sizeof(stringValue))) {
+                        LOG_DEBUG("StepSharedResultSet:: WriteString failed of row: row: %{public}d, column: %{public}d", row, i);
+                    }
+            }
+        }
+        row++;
+        errCode = GoToNextRow();
+    }
+}
+
+bool StepDataShareResultSet::WriteBlobData(int row, int column, const std::shared_ptr<DataShareBlockWriter> &writer)
+{
     std::vector<uint8_t> blobValue;
     GetBlob(column, blobValue);
-    char *bValue = nullptr;
-    int result = memcpy_s(bValue, blobValue.size(), blobValue.data(), blobValue.size());
-    if (result != EOK && blobValue.size() > 0) {
+    char *bValue = (char *)malloc(sizeof(blobValue.data()));
+    if (memcpy_s(bValue, sizeof(bValue), blobValue.data(), sizeof(blobValue.data())) != EOK) {
         LOG_ERROR("StepSharedResultSet:: Failed to write blob data.");
         return false;
     }
-    writer->WriteBlob(row, column, bValue, sizeof(blobValue));
-    return true;
+
+    return writer->WriteBlob(row, column, bValue, sizeof(blobValue));
 }
 } // namespace NativeRdb
 } // namespace OHOS

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -76,6 +76,8 @@ private:
     static const int STEP_QUERY_RETRY_INTERVAL = 1000;
 
     void GetColumnTypes(int columnCount, DataShare::DataType columnTypes[]);
+    void WriteBlock(int columnCount, DataShare::DataType columnTypes[],
+        const std::shared_ptr<DataShare::DataShareBlockWriter> &writer);
     bool WriteBlobData(int row, int column, const std::shared_ptr<DataShare::DataShareBlockWriter> &writer);
 };
 

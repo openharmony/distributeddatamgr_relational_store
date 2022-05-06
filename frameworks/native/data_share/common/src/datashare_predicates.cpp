@@ -813,6 +813,16 @@ DataSharePredicates *DataSharePredicates::InKeys(const std::vector<std::string> 
     return this;
 }
 
+void DataSharePredicates::SetTableName(std::string &tableName) const
+{
+    if (tableName.empty()) {
+        this->predicates_.tableName = "";
+        LOG_INFO("no tableName specified.");
+        return;
+    }
+    this->predicates_.tableName = tableName;
+}
+
 /**
  * GetOperationList
  */
