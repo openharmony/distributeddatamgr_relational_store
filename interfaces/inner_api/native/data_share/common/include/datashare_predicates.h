@@ -97,12 +97,13 @@ public:
     bool Marshalling(OHOS::Parcel &parcel) const override;
     static DataSharePredicates *Unmarshalling(OHOS::Parcel &parcel);
     const std::list<OperationItem>& GetOperationList() const;
+    void SetTableName(std::string &tableName) const;
     std::string GetTableName() const;
 
 private:
     void SetOperationList(OperationType operationType, DataSharePredicatesObject &para1,
         DataSharePredicatesObject &para2, DataSharePredicatesObject &para3, ParameterCount parameterCount);
-    Predicates predicates_;
+    mutable Predicates predicates_;
 };
 } // namespace DataShare
 } // namespace OHOS
