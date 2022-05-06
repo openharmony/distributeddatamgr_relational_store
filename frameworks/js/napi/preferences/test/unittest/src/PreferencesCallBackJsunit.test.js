@@ -25,6 +25,8 @@ const KEY_TEST_STRING_ELEMENT = 'key_test_string';
 var mPreferences;
 var context;
 
+const TAG = '[PREFERENCES_CALLBACK_JSUNIT_TEST]'
+
 describe('preferencesTest', function () {
     beforeAll(async function () {
         console.info('beforeAll')
@@ -272,6 +274,54 @@ describe('preferencesTest', function () {
             let pre2 = await mPreferences.get(KEY_TEST_STRING_ELEMENT, "defaultvalue")
             expect('').assertEqual(pre2);
             done();
+        });
+    })
+
+    /**
+     * @tc.name clear、put、get、flush String callback interface test
+     * @tc.number SUB_DDM_AppDataFWK_JSPreferences_CallBack_0120
+     * @tc.desc flush String callback interface test
+     */
+     it('testPreferencesCallback0172', 0, function (done) {
+        console.log(TAG + "testPreferencesCallback0172 begin.");
+        mPreferences.clear(function (err) {
+            if(err){
+                console.log(TAG + "clear error: " + err);
+                expect(null).assertEqual();
+            }
+            console.log(TAG + "clear done.");
+            mPreferences.put(KEY_TEST_STRING_ELEMENT, '', function (err, ret) {
+                if(err){
+                    console.log(TAG + "put error: " + err);
+                    expect(null).assertEqual();
+                }
+                console.log(TAG + "put done.");
+                mPreferences.get(KEY_TEST_STRING_ELEMENT, "defaultvalue", function (err, pre) {
+                    if(err){
+                        console.log(TAG + "get error: " + err);
+                        expect(null).assertEqual();
+                    }
+                    console.log(TAG + "get done.");
+                    expect('').assertEqual(pre);
+                    mPreferences.flush(function (err) {
+                        if(err){
+                            console.log(TAG + "flush error: " + err);
+                            expect(null).assertEqual();
+                        }
+                        console.log(TAG + "flush done.");
+                        mPreferences.get(KEY_TEST_STRING_ELEMENT, "defaultvalue", function (err, pre2) {
+                            if(err){
+                                console.log(TAG + "get error: " + err);
+                                expect(null).assertEqual();
+                            }
+                            console.log(TAG + "get done.");
+                            expect('').assertEqual(pre2);
+                            done();
+                            console.log(TAG + "testPreferencesCallback0172 end.");
+                        })
+                    });
+                })
+            });
         });
     })
 })
