@@ -120,6 +120,25 @@ std::string DataShareJSUtils::ConvertAny2String(napi_env env, napi_value jsValue
     return "invalid type";
 }
 
+double DataShareJSUtils::Convert2Value(napi_env env, napi_value jsValue, double TypeValue)
+{
+    double valueNumber;
+    napi_get_value_double(env, jsValue, &valueNumber);
+    return valueNumber;
+}
+
+bool DataShareJSUtils::Convert2Value(napi_env env, napi_value jsValue, bool TypeValue)
+{
+    bool valueBool = false;
+    napi_get_value_bool(env, jsValue, &valueBool);
+    return valueBool;
+}
+
+std::string DataShareJSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string TypeValue)
+{
+    return DataShareJSUtils::Convert2String(env, jsValue, DataShareJSUtils::DEFAULT_BUF_SIZE);
+}
+
 napi_value DataShareJSUtils::Convert2JSValue(napi_env env, const std::vector<std::string> &value)
 {
     napi_value jsValue;

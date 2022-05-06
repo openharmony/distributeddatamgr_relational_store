@@ -23,11 +23,12 @@
 namespace OHOS::DataShare {
 class ISharedResultSetStub : public IRemoteStub<ISharedResultSet> {
 public:
-    explicit ISharedResultSetStub(std::shared_ptr<DataShareAbsSharedResultSet> resultSet);
+    explicit ISharedResultSetStub(std::shared_ptr<DataShareResultSet> resultSet);
     ~ISharedResultSetStub();
-    static sptr<ISharedResultSet> CreateStub(std::shared_ptr<DataShareAbsSharedResultSet> resultSet,
+    static sptr<ISharedResultSet> CreateStub(std::shared_ptr<DataShareResultSet> resultSet,
                                             MessageParcel &parcel);
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+
 protected:
     int HandleGetRowCountRequest(MessageParcel &data, MessageParcel &reply);
     int HandleGetAllColumnNamesRequest(MessageParcel &data, MessageParcel &reply);
@@ -51,7 +52,7 @@ private:
     void Run();
     using Handler = int(ISharedResultSetStub::*)(MessageParcel &request, MessageParcel &reply);
     static constexpr int MAX_RUNNABLE = 1024;
-    std::shared_ptr<DataShareAbsSharedResultSet> resultSet_;
+    std::shared_ptr<DataShareResultSet> resultSet_;
     SafeBlockQueue<std::function<bool()>> runnables_;
     bool isRunning_ = true;
     std::thread thread_;
@@ -62,6 +63,6 @@ private:
         &ISharedResultSetStub::HandleCloseRequest,
     };
 };
-}
+} // namespace OHOS::DataShare
 
 #endif // DATASHARE_I_SHARED_RESULT_SET_STUB_H

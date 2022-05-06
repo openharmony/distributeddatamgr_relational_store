@@ -21,10 +21,10 @@
 
 namespace OHOS {
 namespace DataShare {
-class SharedResultSet {
+class DataShareSharedResultSet {
 public:
-    SharedResultSet() {};
-    ~SharedResultSet() {};
+    DataShareSharedResultSet() {}
+    ~DataShareSharedResultSet() {}
     /**
      * Obtains a block from the {@link SharedResultSet}
      */
