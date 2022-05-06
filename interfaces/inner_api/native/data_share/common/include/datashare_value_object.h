@@ -16,10 +16,10 @@
 #ifndef DATASHARE_VALUE_OBJECT_H
 #define DATASHARE_VALUE_OBJECT_H
 
-#include <string>
-#include <variant>
-#include <vector>
 #include <parcel.h>
+#include <variant>
+#include <string>
+#include <vector>
 
 namespace OHOS {
 namespace DataShare {
@@ -57,6 +57,7 @@ public:
 
     bool Marshalling(Parcel &parcel) const override;
     static DataShareValueObject *Unmarshalling(Parcel &parcel);
+
 private:
     DataShareValueObjectType type;
     std::variant<int64_t, double, std::string, bool, std::vector<uint8_t>> value;

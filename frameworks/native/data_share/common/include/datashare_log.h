@@ -42,5 +42,5 @@ static const OHOS::HiviewDFX::HiLogLabel DATASHARE_LABEL = { LOG_CORE, 0xD002000
 #define LOG_FATAL(fmt, ...) \
     (void)OHOS::HiviewDFX::HiLog::Fatal(DATASHARE_LABEL, \
     "[%{public}s(%{public}s:%{public}d)]" fmt, __FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
-}
+} // namespace OHOS::DataShare
 #endif

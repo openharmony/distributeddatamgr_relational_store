@@ -83,6 +83,14 @@ private:
     static napi_value GetIndex(napi_env env, napi_callback_info info);
     static napi_value IsNeedAnd(napi_env env, napi_callback_info info);
     static napi_value IsSorted(napi_env env, napi_callback_info info);
+    static napi_value Reset(napi_env env, napi_callback_info info);
+    static napi_value Unlike(napi_env env, napi_callback_info info);
+    static napi_value PrefixKey(napi_env env, napi_callback_info info);
+    static napi_value SetSuggestIndex(napi_env env, napi_callback_info info);
+    static napi_value InDevices(napi_env env, napi_callback_info info);
+    static napi_value InAllDevices(napi_env env, napi_callback_info info);
+    static napi_value GetJudgeSource(napi_env env, napi_callback_info info);
+
     std::shared_ptr<DataSharePredicates> predicates_;
     napi_env env_;
     napi_ref wrapper_;

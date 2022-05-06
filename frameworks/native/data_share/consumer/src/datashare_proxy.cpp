@@ -15,10 +15,9 @@
 
 #include "datashare_proxy.h"
 
-#include <ipc_types.h>
 #include <string_ex.h>
 
-#include "datashare_abs_shared_result_set.h"
+#include "datashare_result_set.h"
 #include "data_ability_observer_interface.h"
 #include "data_ability_operation.h"
 #include "data_ability_predicates.h"
@@ -258,7 +257,7 @@ int DataShareProxy::Delete(const Uri &uri, const DataSharePredicates &predicates
     return index;
 }
 
-std::shared_ptr<DataShareAbsSharedResultSet> DataShareProxy::Query(const Uri &uri,
+std::shared_ptr<DataShareResultSet> DataShareProxy::Query(const Uri &uri,
     std::vector<std::string> &columns, const DataSharePredicates &predicates)
 {
     LOG_INFO("begin.");

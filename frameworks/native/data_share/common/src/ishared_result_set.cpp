@@ -16,14 +16,14 @@
 #include "ishared_result_set.h"
 
 namespace OHOS::DataShare {
-std::shared_ptr<DataShareAbsSharedResultSet> ISharedResultSet::ReadFromParcel(MessageParcel &parcel)
+std::shared_ptr<DataShareResultSet> ISharedResultSet::ReadFromParcel(MessageParcel &parcel)
 {
     return consumerCreator_(parcel);
 }
 
-sptr<ISharedResultSet> ISharedResultSet::WriteToParcel(std::shared_ptr<DataShareAbsSharedResultSet> resultSet,
+sptr<ISharedResultSet> ISharedResultSet::WriteToParcel(std::shared_ptr<DataShareResultSet> resultSet,
     MessageParcel &parcel)
 {
     return providerCreator_(std::move(resultSet), parcel);
 }
-}
+} // namespace OHOS::DataShare
