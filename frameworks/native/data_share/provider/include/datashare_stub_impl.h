@@ -48,7 +48,7 @@ public:
 
     int Delete(const Uri &uri, const DataSharePredicates &predicates) override;
 
-    std::shared_ptr<DataShareAbsSharedResultSet> Query(const Uri &uri,
+    std::shared_ptr<DataShareResultSet> Query(const Uri &uri,
         std::vector<std::string> &columns, const DataSharePredicates &predicates) override;
 
     std::string GetType(const Uri &uri) override;
@@ -67,6 +67,7 @@ public:
 
     std::vector<std::shared_ptr<DataShareResult>> ExecuteBatch(
         const std::vector<std::shared_ptr<DataShareOperation>> &operations) override;
+
 private:
     std::shared_ptr<JsDataShareExtAbility> GetOwner();
 

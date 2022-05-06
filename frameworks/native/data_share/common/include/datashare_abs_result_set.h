@@ -34,7 +34,7 @@ public:
     virtual int GetDouble(int columnIndex, double &value) override;
     virtual int IsColumnNull(int columnIndex, bool &isNull) override;
     virtual int GoToRow(int position) override;
-    virtual int GetColumnType(int columnIndex, ColumnType &columnType) override;
+    virtual int GetDataType(int columnIndex, DataType &dataType) override;
     int GetRowIndex(int &position) const override;
     int GoTo(int offset) override;
     int GoToFirstRow() override;
@@ -50,12 +50,13 @@ public:
     int GetColumnName(int columnIndex, std::string &columnName) override;
     bool IsClosed() const override;
     int Close() override;
+
 protected:
     // The default position of the result set
     static const int INIT_POS = -1;
-    int rowPos;
+    int rowPos_;
     // Indicates whether the result set is closed
-    bool isClosed;
+    bool isClosed_;
 };
 } // namespace DataShare
 } // namespace OHOS

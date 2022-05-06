@@ -29,19 +29,19 @@ public:
      * @brief A constructor used to create a DataShareResult instance
      * with the input parameter count specified.
      */
-    DataShareResult(int count);
+    explicit DataShareResult(int count);
 
     /**
      * @brief A constructor used to create a DataShareResult instance
      * with the input parameter uri specified
      */
-    DataShareResult(const Uri &uri);
+    explicit DataShareResult(const Uri &uri);
 
     /**
      * @brief A constructor used to create a DataShareResult instance
      * with a Parcel object specified.
      */
-    DataShareResult(Parcel &parcel);
+    explicit DataShareResult(Parcel &parcel);
 
     /**
      * @brief A constructor used to create a DataShareResult instance

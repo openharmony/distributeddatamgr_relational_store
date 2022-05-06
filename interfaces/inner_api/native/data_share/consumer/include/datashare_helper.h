@@ -161,7 +161,7 @@ public:
      *
      * @return Returns the query result.
      */
-    std::shared_ptr<DataShareAbsSharedResultSet> Query(
+    std::shared_ptr<DataShareResultSet> Query(
         Uri &uri, std::vector<std::string> &columns, const DataSharePredicates &predicates);
 
     /**

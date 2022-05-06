@@ -1,0 +1,86 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/test.gni")
+import(
+    "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/common/datashare.gni")
+
+module_output_path = "native_appdatamgr/native_datashare"
+
+###############################################################################
+
+config("module_private_config") {
+  visibility = [ ":*" ]
+  include_dirs = [
+    "${datashare_common_napi_path}/include",
+    "${datashare_common_native_path}/include",
+    "${datashare_native_consumer_path}/include",
+    "${datashare_native_provider_path}/include",
+    "//foundation/windowmanager/interfaces/innerkits/wm",
+    "//foundation/aafwk/standard/frameworks/kits/appkit/native/ability_runtime/app",
+    "//foundation/aafwk/standard/frameworks/kits/appkit/native/app/include",
+    "//foundation/aafwk/standard/frameworks/kits/appkit/native/ability_runtime/context",
+    "//foundation/aafwk/standard/services/common/include",
+    "//foundation/aafwk/standard/frameworks/kits/ability/native/include/continuation/distributed",
+    "//foundation/aafwk/standard/frameworks/kits/ability/native/include/continuation/kits",
+    "//foundation/aafwk/standard/interfaces/kits/napi/aafwk/inner/napi_common",
+    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base/include",
+  ]
+}
+
+ohos_unittest("NativeDataShareTest") {
+  module_out_path = module_output_path
+
+  sources = [ "unittest/datashare_helper_test.cpp" ]
+
+  configs = [ ":module_private_config" ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_context_native",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_manager",
+    "ability_runtime:runtime",
+    "ability_runtime:wantagent_innerkits",
+    "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "form_runtime:fmskit_native",
+    "ipc:ipc_core",
+    "ipc_js:rpc",
+    "native_appdatamgr:native_dataability",
+    "permission_standard:libpermissionsdk_standard",
+    "utils_base:utils",
+  ]
+
+  deps = [
+    "${datashare_common_native_path}:datashare_common",
+    "//foundation/aafwk/standard/frameworks/kits/appkit:app_context",
+    "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share:datashare_abilitykit",
+    "//foundation/windowmanager/dm:libdm",
+    "//third_party/googletest:gtest_main",
+    "//third_party/icu/icu4c:shared_icui18n",
+    "//third_party/icu/icu4c:shared_icuuc",
+    "//third_party/sqlite:sqlite",
+    "//utils/native/base:utils",
+  ]
+}
+
+###############################################################################
+group("unittest") {
+  testonly = true
+
+  deps = [ ":NativeDataShareTest" ]
+}
+###############################################################################

@@ -19,6 +19,10 @@ config("native_rdb_config") {
   include_dirs = [
     "include",
     "../../../../frameworks/native/rdb/include",
+    "../../../../interfaces/inner_api/native/data_share/common/include",
+    "../../../../interfaces/inner_api/native/data_share/consumer/include",
+    "../../../../frameworks/native/data_share/common/include",
+    "../../../../interfaces/inner_api/native/data_share/provider/include",
     "//utils/system/safwk/native/include",
   ]
 
@@ -72,10 +76,12 @@ ohos_shared_library("native_rdb") {
     "../../../../frameworks/native/rdb/src/sqlite_statement.cpp",
     "../../../../frameworks/native/rdb/src/sqlite_utils.cpp",
     "../../../../frameworks/native/rdb/src/step_result_set.cpp",
+    "../../../../frameworks/native/rdb/src/step_datashare_result_set.cpp",
     "../../../../frameworks/native/rdb/src/store_session.cpp",
     "../../../../frameworks/native/rdb/src/string_utils.cpp",
     "../../../../frameworks/native/rdb/src/value_object.cpp",
     "../../../../frameworks/native/rdb/src/values_bucket.cpp",
+    "../../../../frameworks/native/rdb/src/rdb_utils.cpp"
   ]
 
   configs = [ ":native_rdb_config" ]
@@ -91,6 +97,7 @@ ohos_shared_library("native_rdb") {
     "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/appdatafwk:native_appdatafwk",
     "//foundation/distributeddatamgr/distributeddatamgr/interfaces/innerkits/distributeddata:distributeddata_inner",
     "//foundation/distributeddatamgr/distributeddatamgr/services/distributeddataservice/libs/distributeddb:distributeddb",
+    "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/common:datashare_common",
   ]
 
   external_deps = [

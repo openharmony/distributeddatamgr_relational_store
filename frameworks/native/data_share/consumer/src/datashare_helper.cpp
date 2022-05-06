@@ -17,7 +17,7 @@
 
 #include "ability_scheduler_interface.h"
 #include "ability_thread.h"
-#include "datashare_abs_shared_result_set.h"
+#include "datashare_result_set.h"
 #include "data_ability_observer_interface.h"
 #include "data_ability_operation.h"
 #include "data_ability_predicates.h"
@@ -592,11 +592,11 @@ int DataShareHelper::Delete(Uri &uri, const DataSharePredicates &predicates)
  *
  * @return Returns the query result.
  */
-std::shared_ptr<DataShareAbsSharedResultSet> DataShareHelper::Query(
+std::shared_ptr<DataShareResultSet> DataShareHelper::Query(
     Uri &uri, std::vector<std::string> &columns, const DataSharePredicates &predicates)
 {
     LOG_INFO("DataShareHelper::Query start.");
-    std::shared_ptr<DataShareAbsSharedResultSet> resultset = nullptr;
+    std::shared_ptr<DataShareResultSet> resultset = nullptr;
 
     if (!CheckUriParam(uri)) {
         LOG_ERROR("%{public}s called. CheckUriParam uri failed", __func__);
