@@ -35,8 +35,8 @@ public:
 
     DataShareOperation(
         const std::shared_ptr<DataShareOperation> &dataAbilityOperation, const std::shared_ptr<Uri> &withUri);
-    DataShareOperation(Parcel &in);
-    DataShareOperation(const std::shared_ptr<DataShareOperationBuilder> &builder);
+    explicit DataShareOperation(Parcel &in);
+    explicit DataShareOperation(const std::shared_ptr<DataShareOperationBuilder> &builder);
     DataShareOperation();
     /**
      * @brief Creates an operation for inserting data.

@@ -16,32 +16,32 @@
 #ifndef DATASHARE_VALUES_BUCKET_H
 #define DATASHARE_VALUES_BUCKET_H
 
+#include "datashare_value_object.h"
+
+#include <parcel.h>
 #include <map>
 #include <set>
-#include <parcel.h>
-
-#include "datashare_value_object.h"
 
 namespace OHOS {
 namespace DataShare {
 class DataShareValuesBucket : public virtual OHOS::Parcelable {
 public:
     DataShareValuesBucket();
-    DataShareValuesBucket(std::map<std::string, DataShareValueObject> &valuesMap);
+    explicit DataShareValuesBucket(std::map<std::string, DataShareValueObject> &valuesMap);
     ~DataShareValuesBucket();
-    void PutString(const std::string &columnName, const std::string &value);
-    void PutInt(const std::string &columnName, int value);
-    void PutLong(const std::string &columnName, int64_t value);
-    void PutDouble(const std::string &columnName, double value);
-    void PutBool(const std::string &columnName, bool value);
-    void PutBlob(const std::string &columnName, const std::vector<uint8_t> &value);
-    void PutNull(const std::string &columnName);
-    void Delete(const std::string &columnName);
+    void PutString(const std::string &columnOrKeyName, const std::string &value);
+    void PutInt(const std::string &columnOrKeyName, int value);
+    void PutLong(const std::string &columnOrKeyName, int64_t value);
+    void PutDouble(const std::string &columnOrKeyName, double value);
+    void PutBool(const std::string &columnOrKeyName, bool value);
+    void PutBlob(const std::string &columnOrKeyName, const std::vector<uint8_t> &value);
+    void PutNull(const std::string &columnOrKeyName);
+    void Delete(const std::string &columnOrKeyName);
     void Clear();
     int Size() const;
     bool IsEmpty() const;
-    bool HasColumn(const std::string &columnName) const;
-    bool GetObject(const std::string &columnName, DataShareValueObject &value) const;
+    bool HasColumnOrKey(const std::string &columnOrKeyName) const;
+    bool GetObject(const std::string &columnOrKeyName, DataShareValueObject &value) const;
     void GetAll(std::map<std::string, DataShareValueObject> &valuesMap) const;
 
     bool Marshalling(Parcel &parcel) const override;

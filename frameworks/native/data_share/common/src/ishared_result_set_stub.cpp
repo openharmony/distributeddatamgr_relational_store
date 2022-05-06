@@ -19,11 +19,11 @@
 #include "datashare_errno.h"
 
 namespace OHOS::DataShare {
-std::function<sptr<ISharedResultSet>(std::shared_ptr<DataShareAbsSharedResultSet>,
+std::function<sptr<ISharedResultSet>(std::shared_ptr<DataShareResultSet>,
     MessageParcel &)> ISharedResultSet::providerCreator_ = ISharedResultSetStub::CreateStub;
 constexpr ISharedResultSetStub::Handler ISharedResultSetStub::handlers[ISharedResultSet::FUNC_BUTT];
 
-sptr<ISharedResultSet> ISharedResultSetStub::CreateStub(std::shared_ptr<DataShareAbsSharedResultSet> result,
+sptr<ISharedResultSet> ISharedResultSetStub::CreateStub(std::shared_ptr<DataShareResultSet> result,
     OHOS::MessageParcel &parcel)
 {
     sptr<ISharedResultSet> stub = new ISharedResultSetStub(result);
@@ -32,7 +32,7 @@ sptr<ISharedResultSet> ISharedResultSetStub::CreateStub(std::shared_ptr<DataShar
     return stub;
 }
 
-ISharedResultSetStub::ISharedResultSetStub(std::shared_ptr<DataShareAbsSharedResultSet> resultSet)
+ISharedResultSetStub::ISharedResultSetStub(std::shared_ptr<DataShareResultSet> resultSet)
     : resultSet_(std::move(resultSet)),
       runnables_(MAX_RUNNABLE),
       thread_(&ISharedResultSetStub::Run, this)
@@ -128,4 +128,4 @@ void ISharedResultSetStub::Run()
     }
     LOG_ERROR("ISharedResultSetStub thread(%{public}" PRIx64 ") is exited", uint64_t(handle));
 }
-}
+} // namespace OHOS::DataShare
