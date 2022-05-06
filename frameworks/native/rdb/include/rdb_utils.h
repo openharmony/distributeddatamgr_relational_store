@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include "abs_predicates.h"
+#include "abs_rdb_predicates.h"
 #include "datashare_predicates.h"
 #include "datashare_values_bucket.h"
 #include "values_bucket.h"
@@ -30,22 +30,23 @@ namespace NativeRdb {
 class RdbUtils {
 public:
     static ValuesBucket ConvertToValuesBucket(DataShare::DataShareValuesBucket dataShareValuesBucket);
-    static std::shared_ptr<AbsPredicates> ToOperate(const DataShare::DataSharePredicates &dataSharePredicates);
+    static std::shared_ptr<AbsRdbPredicates> ToOperate(const DataShare::DataSharePredicates &dataSharePredicates);
 
 private:
     RdbUtils();
     ~RdbUtils();
     static void ToOperateThird(
             std::list<DataShare::OperationItem>::iterator operations,
-            std::shared_ptr<AbsPredicates> predicates);
+            std::shared_ptr<AbsRdbPredicates> predicates);
     static void ToOperateSecond(
             std::list<DataShare::OperationItem>::iterator operations,
-            std::shared_ptr<AbsPredicates> predicates);
+            std::shared_ptr<AbsRdbPredicates> predicates);
     static void ToOperateFirst(
             std::list<DataShare::OperationItem>::iterator operations,
-            std::shared_ptr<AbsPredicates> predicates);
+            std::shared_ptr<AbsRdbPredicates> predicates);
     static std::string ToString(
-            DataShare::DataSharePredicatesObject &predicatesObject);
+            const DataShare::DataSharePredicatesObject &predicatesObject);
+
 };
 } // namespace NativeRdb
 } // namespace OHOS

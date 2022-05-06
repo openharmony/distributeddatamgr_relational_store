@@ -44,23 +44,25 @@ public:
     ~RdbStoreImpl() override;
 
     int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
-    int Insert(int64_t &outRowId, const std::string &table, const DataShare::DataShareValuesBucket &initialValues) override;
+    int Insert(int64_t &outRowId, const std::string &table,
+        const DataShare::DataShareValuesBucket &initialValues) override;
     int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
-    int Replace(int64_t &outRowId, const std::string &table, const DataShare::DataShareValuesBucket &initialValues) override;
+    int Replace(int64_t &outRowId, const std::string &table,
+        const DataShare::DataShareValuesBucket &initialValues) override;
     int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues,
         ConflictResolution conflictResolution) override;
-    int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const DataShare::DataShareValuesBucket &initialValues,
-        ConflictResolution conflictResolution) override;
+    int InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
+        const DataShare::DataShareValuesBucket &initialValues, ConflictResolution conflictResolution) override;
     int Update(int &changedRows, const std::string &table, const ValuesBucket &values, const std::string &whereClause,
         const std::vector<std::string> &whereArgs) override;
-    int Update(int &changedRows, const std::string &table, const DataShare::DataShareValuesBucket &values, const std::string &whereClause,
-        const std::vector<std::string> &whereArgs) override;
+    int Update(int &changedRows, const std::string &table, const DataShare::DataShareValuesBucket &values,
+        const std::string &whereClause, const std::vector<std::string> &whereArgs) override;
     int UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
         const std::string &whereClause, const std::vector<std::string> &whereArgs,
         ConflictResolution conflictResolution) override;
-    int UpdateWithConflictResolution(int &changedRows, const std::string &table, const DataShare::DataShareValuesBucket &values,
-        const std::string &whereClause, const std::vector<std::string> &whereArgs,
-        ConflictResolution conflictResolution) override;
+    int UpdateWithConflictResolution(int &changedRows, const std::string &table,
+        const DataShare::DataShareValuesBucket &values, const std::string &whereClause,
+        const std::vector<std::string> &whereArgs, ConflictResolution conflictResolution) override;
     int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
         const std::vector<std::string> &whereArgs) override;
     std::unique_ptr<AbsSharedResultSet> Query(int &errCode, bool distinct,
@@ -112,7 +114,7 @@ public:
     std::string GetFileSecurityLevel();
     int ExecuteForSharedBlock(int &rowNum, AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos,
         bool isCountAllRows, std::string sql, std::vector<ValueObject> &bindArgVec);
-    std::unique_ptr<DataShare::DataShareAbstractResultSet> DataShareQueryByStep(const std::string &sql,
+    std::shared_ptr<DataShare::DataShareAbstractResultSet> DataShareQueryByStep(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
     std::unique_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
@@ -123,8 +125,9 @@ public:
                                               const std::vector<std::string> columns) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int Count(int64_t &outValue, const DataShare::DataSharePredicates &predicates) override;
-    int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;    
-    int Update(int &changedRows, const DataShare::DataShareValuesBucket &values, const DataShare::DataSharePredicates &predicates) override;
+    int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
+    int Update(int &changedRows, const DataShare::DataShareValuesBucket &values,
+        const DataShare::DataSharePredicates &predicates) override;
     int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
     int Delete(int &deletedRows, const DataShare::DataSharePredicates &predicates) override;
 
@@ -133,7 +136,8 @@ public:
     std::string ObtainDistributedTableName(const std::string& device, const std::string& table) override;
 
     bool Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) override;
-    bool Sync(const SyncOption& option, const DataShare::DataSharePredicates& predicate, const SyncCallback& callback) override;
+    bool Sync(const SyncOption& option, const DataShare::DataSharePredicates& predicate,
+         const SyncCallback& callback) override;
 
     bool Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;
 
