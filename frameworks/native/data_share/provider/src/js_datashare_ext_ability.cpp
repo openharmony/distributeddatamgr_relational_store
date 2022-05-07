@@ -17,7 +17,7 @@
 
 #include "ability_info.h"
 #include "accesstoken_kit.h"
-#include "bytrace.h"
+#include "hitrace_meter.h"
 #include "dataobs_mgr_client.h"
 #include "datashare_stub_impl.h"
 #include "datashare_log.h"
