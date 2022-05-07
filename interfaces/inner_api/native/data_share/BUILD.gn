@@ -103,9 +103,9 @@ ohos_shared_library("datashare_abilitykit") {
     "ipc:ipc_core",
     "ipc_js:rpc",
     "native_appdatamgr:native_dataability",
+    "native_appdatamgr:native_rdb",
     "permission_standard:libpermissionsdk_standard",
     "utils_base:utils",
-    "native_appdatamgr:native_rdb",
   ]
 
   public_deps = [
