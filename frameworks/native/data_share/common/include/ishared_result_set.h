@@ -17,14 +17,15 @@
 #define DATASHARE_I_SHARED_RESULT_SET_H
 #include <memory>
 #include "iremote_broker.h"
-#include "datashare_abs_shared_result_set.h"
+#include "datashare_result_set.h"
 namespace OHOS::DataShare {
-class ISharedResultSet : public DataShareAbsSharedResultSet, public IRemoteBroker {
+class ISharedResultSet : public DataShareResultSet, public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DataShare.ISharedResultSet")
-    static std::shared_ptr<DataShareAbsSharedResultSet> ReadFromParcel(MessageParcel &parcel);
-    static sptr<ISharedResultSet> WriteToParcel(std::shared_ptr<DataShareAbsSharedResultSet> resultSet,
+    static std::shared_ptr<DataShareResultSet> ReadFromParcel(MessageParcel &parcel);
+    static sptr<ISharedResultSet> WriteToParcel(std::shared_ptr<DataShareResultSet> resultSet,
                                                 MessageParcel &parcel);
+
 protected:
     enum {
         FUNC_GET_ROW_COUNT,
@@ -55,11 +56,12 @@ protected:
         FUNC_GET_ROW_INDEX,
         FUNC_BUTT
     };
+
 private:
-    static std::function<std::shared_ptr<DataShareAbsSharedResultSet>(MessageParcel &parcel)> consumerCreator_;
-    static std::function<sptr<ISharedResultSet>(std::shared_ptr<DataShareAbsSharedResultSet>,
+    static std::function<std::shared_ptr<DataShareResultSet>(MessageParcel &parcel)> consumerCreator_;
+    static std::function<sptr<ISharedResultSet>(std::shared_ptr<DataShareResultSet>,
                                                 MessageParcel &)> providerCreator_;
 };
-}
+} // namespace OHOS::DataShare
 
 #endif // DATASHARE_I_SHARED_RESULT_SET_H

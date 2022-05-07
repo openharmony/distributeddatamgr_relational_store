@@ -17,6 +17,7 @@ import(
 
 config("ability_config") {
   visibility = [ ":*" ]
+  include_dirs = [ "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base/include" ]
 
   cflags = []
   if (target_cpu == "arm") {
@@ -32,21 +33,25 @@ ohos_shared_library("datashare_common") {
   include_dirs = [
     "${datashare_common_napi_path}/include",
     "${datashare_common_native_path}/include",
+    "${datashare_base_path}/interfaces/inner_api/native/data_share/common/include",
+    "${datashare_base_path}/interfaces/inner_api/native/data_share/consumer/include",
+    "${datashare_base_path}/interfaces/inner_api/native/data_share/provider/include",
   ]
 
   sources = [
     "${datashare_common_napi_path}/src/datashare_js_utils.cpp",
     "${datashare_common_napi_path}/src/datashare_predicates_proxy.cpp",
     "${datashare_common_napi_path}/src/datashare_result_set_proxy.cpp",
+    "${datashare_common_napi_path}/src/napi_datashare_abstract_result_set.cpp",
     "${datashare_common_napi_path}/src/napi_datashare_values_bucket.cpp",
-    "${datashare_common_native_path}/src/datashare_abs_predicates.cpp",
     "${datashare_common_native_path}/src/datashare_abs_result_set.cpp",
-    "${datashare_common_native_path}/src/datashare_abs_shared_result_set.cpp",
+    "${datashare_common_native_path}/src/datashare_block_writer_impl.cpp",
     "${datashare_common_native_path}/src/datashare_operation.cpp",
     "${datashare_common_native_path}/src/datashare_operation_builder.cpp",
     "${datashare_common_native_path}/src/datashare_predicates.cpp",
-    "${datashare_common_native_path}/src/datashare_predicates_utils.cpp",
+    "${datashare_common_native_path}/src/datashare_predicates_object.cpp",
     "${datashare_common_native_path}/src/datashare_result.cpp",
+    "${datashare_common_native_path}/src/datashare_result_set.cpp",
     "${datashare_common_native_path}/src/datashare_string_utils.cpp",
     "${datashare_common_native_path}/src/datashare_value_object.cpp",
     "${datashare_common_native_path}/src/datashare_values_bucket.cpp",
@@ -64,7 +69,6 @@ ohos_shared_library("datashare_common") {
 
   external_deps = [
     "ability_base:zuri",
-    "bundle_framework:appexecfwk_base",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",

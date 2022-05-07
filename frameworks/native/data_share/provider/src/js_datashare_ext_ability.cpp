@@ -17,6 +17,7 @@
 
 #include "ability_info.h"
 #include "accesstoken_kit.h"
+#include "bytrace.h"
 #include "dataobs_mgr_client.h"
 #include "datashare_stub_impl.h"
 #include "datashare_log.h"
@@ -31,7 +32,7 @@
 #include "napi_remote_object.h"
 
 #include "napi_datashare_values_bucket.h"
-#include "datashare_result_set_proxy.h"
+#include "napi_datashare_abstract_result_set.h"
 #include "datashare_predicates_proxy.h"
 
 namespace OHOS {
@@ -42,7 +43,11 @@ constexpr size_t ARGC_ONE = 1;
 constexpr size_t ARGC_TWO = 2;
 constexpr size_t ARGC_THREE = 3;
 constexpr int INVALID_VALUE = -1;
+constexpr int NUM_HUNDRED = 100;
+const std::string ASYNC_CALLBACK_NAME = "AsyncCallback";
 }
+
+void PrintPredicates(const DataSharePredicates &predicates);
 
 using namespace OHOS::AppExecFwk;
 using OHOS::Security::AccessToken::AccessTokenKit;
@@ -128,12 +133,13 @@ void JsDataShareExtAbility::OnStart(const AAFwk::Want &want)
     napi_value napiWant = OHOS::AppExecFwk::WrapWant(env, want);
     NativeValue* nativeWant = reinterpret_cast<NativeValue*>(napiWant);
     NativeValue* argv[] = {nativeWant};
-    CallObjectMethod("onCreate", argv, ARGC_ONE);
+    CallObjectMethod("onCreate", argv, ARGC_ONE, false);
     LOG_INFO("end.");
 }
 
 sptr<IRemoteObject> JsDataShareExtAbility::OnConnect(const AAFwk::Want &want)
 {
+    BYTRACE_NAME(BYTRACE_TAG_DISTRIBUTEDDATA, __PRETTY_FUNCTION__);
     LOG_INFO("begin.");
     Extension::OnConnect(want);
     sptr<DataShareStubImpl> remoteObject = new (std::nothrow) DataShareStubImpl(
@@ -147,7 +153,53 @@ sptr<IRemoteObject> JsDataShareExtAbility::OnConnect(const AAFwk::Want &want)
     return remoteObject->AsObject();
 }
 
-NativeValue* JsDataShareExtAbility::CallObjectMethod(const char* name, NativeValue* const* argv, size_t argc)
+NativeValue* JsDataShareExtAbility::AsyncCallback(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    LOG_INFO("%{public}s begin.", __func__);
+
+    LOG_INFO("%{public}s engine:%{public}p, info:%{public}p.", __func__, engine, info);
+    if (engine == nullptr || info == nullptr) {
+        LOG_ERROR("%{public}s invalid param.", __func__);
+        return nullptr;
+    }
+    if (info->argc < ARGC_TWO) {
+        LOG_ERROR("%{public}s invalid argc.", __func__);
+        return nullptr;
+    }
+    JsDataShareExtAbility* me = CheckParamsAndGetThis<JsDataShareExtAbility>(engine, info);
+    if (me == nullptr) {
+        LOG_ERROR("%{public}s invalid object.", __func__);
+        return nullptr;
+    }
+    LOG_INFO("%{public}s end.", __func__);
+    return me->OnAsyncCallback(*engine, *info);
+}
+
+NativeValue* JsDataShareExtAbility::OnAsyncCallback(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    LOG_INFO("%{public}s begin.", __func__);
+    if (info.argc < ARGC_TWO) {
+        LOG_ERROR("%{public}s invalid argc.", __func__);
+        return engine.CreateUndefined();
+    }
+
+    int32_t code = -1;
+    if ((info.argv[0])->TypeOf() == NATIVE_NUMBER) {
+        if (!ConvertFromJsValue(engine, info.argv[0], code)) {
+            LOG_ERROR("%{public}s, Parse value for code failed", __func__);
+        }
+        LOG_INFO("%{public}s code:%{public}d.", __func__, code);
+    }
+
+    callbackData_ = info.argv[1];
+    LOG_INFO("%{public}s data:%{public}p.", __func__, callbackData_);
+    isBlockWaiting_ = true;
+    LOG_INFO("%{public}s end.", __func__);
+    return engine.CreateUndefined();
+}
+
+NativeValue* JsDataShareExtAbility::CallObjectMethod(const char* name, NativeValue* const* argv, size_t argc,
+    bool isAsync)
 {
     LOG_INFO("JsDataShareExtAbility::CallObjectMethod(%{public}s), begin", name);
 
@@ -171,8 +223,36 @@ NativeValue* JsDataShareExtAbility::CallObjectMethod(const char* name, NativeVal
         LOG_ERROR("Failed to get '%{public}s' from DataShareExtAbility object", name);
         return nullptr;
     }
+
+    size_t count = argc + 1;
+    NativeValue **args = new NativeValue *[count];
+    for (size_t i = 0; i < argc; i++) {
+        args[i] = argv[i];
+    }
+
+    if (isAsync) {
+        args[argc] = nativeEngine.CreateFunction(ASYNC_CALLBACK_NAME.c_str(), ASYNC_CALLBACK_NAME.length(),
+            AsyncCallback, nullptr);
+    } else {
+        args[argc] = nullptr;
+    }
+
     LOG_INFO("JsDataShareExtAbility::CallFunction(%{public}s), success", name);
-    return handleScope.Escape(nativeEngine.CallFunction(value, method, argv, argc));
+    isBlockWaiting_ = false;
+    handleScope.Escape(nativeEngine.CallFunction(value, method, args, count));
+    LOG_INFO("NativeEngine::CallFunction end");
+
+    if (isAsync) {
+        int tryTimes = 10;
+        while (!isBlockWaiting_ && tryTimes > 0) {
+            LOG_INFO("%{public}s waitting for callback, tryTimes=%{public}d", __func__, tryTimes);
+            std::this_thread::sleep_for(std::chrono::milliseconds(NUM_HUNDRED));
+            tryTimes--;
+        }
+    }
+
+    LOG_INFO("%{public}s(%{public}s) end", __func__, name);
+    return callbackData_;
 }
 
 void JsDataShareExtAbility::GetSrcPath(std::string &srcPath)
@@ -198,6 +278,7 @@ void JsDataShareExtAbility::GetSrcPath(std::string &srcPath)
 
 std::vector<std::string> JsDataShareExtAbility::GetFileTypes(const Uri &uri, const std::string &mimeTypeFilter)
 {
+    BYTRACE_NAME(BYTRACE_TAG_DISTRIBUTEDDATA, __PRETTY_FUNCTION__);
     LOG_INFO("begin.");
     auto ret = DataShareExtAbility::GetFileTypes(uri, mimeTypeFilter);
     HandleScope handleScope(jsRuntime_);
@@ -280,6 +361,7 @@ int JsDataShareExtAbility::OpenRawFile(const Uri &uri, const std::string &mode)
 
 int JsDataShareExtAbility::Insert(const Uri &uri, const DataShareValuesBucket &value)
 {
+    BYTRACE_NAME(BYTRACE_TAG_DISTRIBUTEDDATA, __PRETTY_FUNCTION__);
     LOG_INFO("begin.");
     int ret = INVALID_VALUE;
     if (!CheckCallingPermission(abilityInfo_->writePermission)) {
@@ -315,7 +397,9 @@ int JsDataShareExtAbility::Insert(const Uri &uri, const DataShareValuesBucket &v
 int JsDataShareExtAbility::Update(const Uri &uri, const DataShareValuesBucket &value,
     const DataSharePredicates &predicates)
 {
+    BYTRACE_NAME(BYTRACE_TAG_DISTRIBUTEDDATA, __PRETTY_FUNCTION__);
     LOG_INFO("begin.");
+    PrintPredicates(predicates);
     int ret = INVALID_VALUE;
     if (!CheckCallingPermission(abilityInfo_->writePermission)) {
         LOG_ERROR("%{public}s Check calling permission failed.", __func__);
@@ -357,7 +441,9 @@ int JsDataShareExtAbility::Update(const Uri &uri, const DataShareValuesBucket &v
 
 int JsDataShareExtAbility::Delete(const Uri &uri, const DataSharePredicates &predicates)
 {
+    BYTRACE_NAME(BYTRACE_TAG_DISTRIBUTEDDATA, __PRETTY_FUNCTION__);
     LOG_INFO("begin.");
+    PrintPredicates(predicates);
     int ret = INVALID_VALUE;
     if (!CheckCallingPermission(abilityInfo_->writePermission)) {
         LOG_ERROR("%{public}s Check calling permission failed.", __func__);
@@ -390,11 +476,13 @@ int JsDataShareExtAbility::Delete(const Uri &uri, const DataSharePredicates &pre
     return ret;
 }
 
-std::shared_ptr<DataShareAbsSharedResultSet> JsDataShareExtAbility::Query(const Uri &uri,
+std::shared_ptr<DataShareAbstractResultSet> JsDataShareExtAbility::Query(const Uri &uri,
     std::vector<std::string> &columns, const DataSharePredicates &predicates)
 {
+    BYTRACE_NAME(BYTRACE_TAG_DISTRIBUTEDDATA, __PRETTY_FUNCTION__);
     LOG_INFO("begin.");
-    std::shared_ptr<DataShareAbsSharedResultSet> ret;
+    PrintPredicates(predicates);
+    std::shared_ptr<DataShareAbstractResultSet> ret;
     if (!CheckCallingPermission(abilityInfo_->readPermission)) {
         LOG_ERROR("%{public}s Check calling permission failed.", __func__);
         return ret;
@@ -437,7 +525,7 @@ std::shared_ptr<DataShareAbsSharedResultSet> JsDataShareExtAbility::Query(const 
         return ret;
     }
 
-    auto nativeObject = GetResultSetProxyObject(env, reinterpret_cast<napi_value>(nativeResult));
+    auto nativeObject = GetNativeAbstractResultSetObject(env, reinterpret_cast<napi_value>(nativeResult));
     if (nativeObject == nullptr) {
         return ret;
     }
@@ -449,6 +537,7 @@ std::shared_ptr<DataShareAbsSharedResultSet> JsDataShareExtAbility::Query(const 
 
 std::string JsDataShareExtAbility::GetType(const Uri &uri)
 {
+    BYTRACE_NAME(BYTRACE_TAG_DISTRIBUTEDDATA, __PRETTY_FUNCTION__);
     LOG_INFO("begin.");
     auto ret = DataShareExtAbility::GetType(uri);
     HandleScope handleScope(jsRuntime_);
@@ -472,6 +561,7 @@ std::string JsDataShareExtAbility::GetType(const Uri &uri)
 
 int JsDataShareExtAbility::BatchInsert(const Uri &uri, const std::vector<DataShareValuesBucket> &values)
 {
+    BYTRACE_NAME(BYTRACE_TAG_DISTRIBUTEDDATA, __PRETTY_FUNCTION__);
     LOG_INFO("begin.");
     int ret = INVALID_VALUE;
     if (!CheckCallingPermission(abilityInfo_->writePermission)) {
@@ -557,6 +647,7 @@ bool JsDataShareExtAbility::UnregisterObserver(const Uri &uri, const sptr<AAFwk:
 
 bool JsDataShareExtAbility::NotifyChange(const Uri &uri)
 {
+    BYTRACE_NAME(BYTRACE_TAG_DISTRIBUTEDDATA, __PRETTY_FUNCTION__);
     LOG_INFO("begin.");
     DataShareExtAbility::NotifyChange(uri);
     auto obsMgrClient = DataObsMgrClient::GetInstance();
@@ -576,6 +667,7 @@ bool JsDataShareExtAbility::NotifyChange(const Uri &uri)
 
 Uri JsDataShareExtAbility::NormalizeUri(const Uri &uri)
 {
+    BYTRACE_NAME(BYTRACE_TAG_DISTRIBUTEDDATA, __PRETTY_FUNCTION__);
     LOG_INFO("begin.");
     auto ret = DataShareExtAbility::NormalizeUri(uri);
     HandleScope handleScope(jsRuntime_);
@@ -598,6 +690,7 @@ Uri JsDataShareExtAbility::NormalizeUri(const Uri &uri)
 
 Uri JsDataShareExtAbility::DenormalizeUri(const Uri &uri)
 {
+    BYTRACE_NAME(BYTRACE_TAG_DISTRIBUTEDDATA, __PRETTY_FUNCTION__);
     LOG_INFO("begin.");
     auto ret = DataShareExtAbility::DenormalizeUri(uri);
     HandleScope handleScope(jsRuntime_);
@@ -655,6 +748,25 @@ napi_value JsDataShareExtAbility::MakePredicates(napi_env env, const DataSharePr
     }
     LOG_INFO("end.");
     return napiPredicates;
+}
+
+void PrintPredicates(const DataSharePredicates &predicates)
+{
+    std::list<OperationItem> preList = predicates.GetOperationList();
+    for (int i = 0; i < preList.size(); i++) {
+        std::string str1 = "";
+        std::string str2 = "";
+        std::string str3 = "";
+        OperationItem op = static_cast<OperationItem>(preList.front());
+        preList.pop_front();
+        op.para1.GetString(str1);
+        op.para2.GetString(str2);
+        op.para3.GetString(str3);
+        LOG_INFO("operation = %{public}d, count = %{public}d", op.operation, op.parameterCount);
+        LOG_INFO("type1 = %{public}d, para1 = %{public}s", op.para1.GetType(), str1.c_str());
+        LOG_INFO("type2 = %{public}d, para2 = %{public}s", op.para2.GetType(), str2.c_str());
+        LOG_INFO("type3 = %{public}d, para3 = %{public}s", op.para3.GetType(), str3.c_str());
+    }
 }
 } // namespace DataShare
 } // namespace OHOS

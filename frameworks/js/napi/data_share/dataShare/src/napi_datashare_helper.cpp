@@ -14,8 +14,8 @@
  */
 #include "napi_datashare_helper.h"
 
-#include <cstring>
 #include <uv.h>
+#include <cstring>
 #include <vector>
 
 #include "datashare_helper.h"
@@ -49,7 +49,7 @@ bool NapiValueToArrayStringUtf8(napi_env env, napi_value param, std::vector<std:
 {
     return UnwrapArrayStringFromJS(env, param, result);
 }
-}
+} // namespace
 
 std::list<std::shared_ptr<DataShareHelper>> g_dataShareHelperList;
 static napi_ref g_constructorRef = nullptr;
@@ -2929,7 +2929,7 @@ void QueryAsyncCompleteCB(napi_env env, napi_status status, void *data)
     LOG_INFO("NAPI_Query, main event thread complete end.");
 }
 
-napi_value WrapResultSet(napi_env env, const std::shared_ptr<DataShareAbsSharedResultSet> &resultSet)
+napi_value WrapResultSet(napi_env env, const std::shared_ptr<DataShareResultSet> &resultSet)
 {
     LOG_INFO("%{public}s,called", __func__);
     if (resultSet == nullptr) {
