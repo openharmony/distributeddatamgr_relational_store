@@ -22,7 +22,7 @@
 namespace OHOS::DataShare {
 class ISharedResultSetProxy : public IRemoteProxy<ISharedResultSet> {
 public:
-    static std::shared_ptr<DataShareAbsSharedResultSet> CreateProxy(MessageParcel &parcel);
+    static std::shared_ptr<DataShareResultSet> CreateProxy(MessageParcel &parcel);
     explicit ISharedResultSetProxy(const sptr<IRemoteObject> &impl);
     virtual ~ISharedResultSetProxy() = default;
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
@@ -34,5 +34,5 @@ private:
     std::vector<std::string> columnNames_;
     int32_t rowCount_ = -1;
 };
-}
+} // namespace OHOS::DataShare
 #endif // DATASHARE_I_SHARED_RESULT_SET_PROXY_H
