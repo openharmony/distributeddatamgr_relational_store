@@ -26,7 +26,7 @@ namespace OHOS {
 namespace DataShare {
 using namespace OHOS::AppExecFwk;
 
-static CreatorFunc DataShareExtAbility::creator_ = nullptr;
+CreatorFunc DataShareExtAbility::creator_ = nullptr;
 void DataShareExtAbility::SetCreator(const CreatorFunc& creator)
 {
     creator_ = creator;

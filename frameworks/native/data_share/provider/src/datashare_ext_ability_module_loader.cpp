@@ -31,8 +31,9 @@ extern "C" __attribute__((visibility("default"))) void* OHOS_EXTENSION_GetExtens
     return &DataShareExtAbilityModuleLoader::GetInstance();
 }
 
-extern "C" __attribute__((visibility("default"))) void* SetCreator(const CreatorFunc& creator)
+extern "C" __attribute__((visibility("default"))) void SetCreator(const CreatorFunc& creator)
 {
     return DataShareExtAbility::SetCreator(creator);
 }
+
 } // namespace OHOS::DataShare
