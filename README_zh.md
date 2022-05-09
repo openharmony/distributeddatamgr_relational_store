@@ -2,13 +2,13 @@
 
 -   [简介](#section11660541593)
     -   [关系型数据库（RDB）](#section1589234172717)
-    -   [轻量级偏好数据库（Preferences）](#section1287582752719)
+    -   [首选项（Preferences）](#section1287582752719)
     -   [轻量系统KV数据库（Lightweight KV store）](#section1287582752720)
 -   [目录](#section161941989596)
 -   [关系型数据库（RDB）](#section101010894114)
     -   [约束](#section18387142613414)
 
--   [轻量级偏好数据库（Preferences）](#section762641474720)
+-   [首选项（Preferences）](#section762641474720)
     -   [约束](#section1944481420489)
 
 -   [轻量系统KV数据库（Lightweight KV store）](#section762641474721)
@@ -20,7 +20,7 @@
 
 **关系型数据库（Relational Database，RDB）** 是一种基于关系模型来管理数据的数据库。OpenHarmony关系型数据库基于SQLite组件提供了一套完整的对本地数据库进行管理的机制。
 
-**轻量级偏好数据库（Preferences）** 主要提供轻量级Key-Value操作，支持本地应用存储少量数据，数据存储在本地文件中，同时也加载在内存中的，所以访问速度更快，效率更高。轻量级偏好数据库属于非关系型数据库，不宜存储大量数据，经常用于操作键值对形式数据的场景。
+**首选项（Preferences）** 主要提供轻量级Key-Value操作，支持本地应用存储少量数据，数据存储在本地文件中，同时也加载在内存中，所以访问速度更快，效率更高。首选项提供非关系型数据存储，不宜存储大量数据，经常用于操作键值对形式数据的场景。
 
 **轻量系统KV数据库（Lightweight KV store）** 依托当前公共基础库提供的KV存储能力开发，为轻量系统设备应用提供键值对数据管理能力。在有进程的平台上，KV存储提供的参数管理，供单进程访问不能被其他进程使用。在此类平台上，KV存储作为基础库加载在应用进程，以保障不被其他进程访问。
 
@@ -28,20 +28,20 @@
 
 OpenHarmony关系型数据库底层使用SQLite作为持久化存储引擎，支持SQLite具有的所有数据库特性，包括但不限于事务、索引、视图、触发器、外键、参数化查询和预编译SQL语句。
 
-**图 1**  关系型数据库运作机制<a name="fig3330103712254"></a>  
+**图 1**  关系型数据库运作机制<a name="fig3330103712254"></a>
 
 
 ![](figures/zh-cn_关系型数据库运作机制.png)
 
-### 轻量级偏好数据库（Preferences）<a name="section1287582752719"></a>
+### 首选项（Preferences）<a name="section1287582752719"></a>
 
-1.  本模块提供偏好型数据库的操作类，应用通过这些操作类完成数据库操作。
-2.  借助PreferencesHelper，可以将指定文件的内容加载到Preferences实例，每个文件最多有一个Preferences实例，系统会通过静态容器将该实例存储在内存中，直到主动从内存中移除该实例或者删除该文件。
-3.  获取Preferences实例后，可以借助Preferences类的函数，从Preferences实例中读取数据或者将数据写入Preferences实例，通过flush或者flushSync将Preferences实例持久化。
+1.  本模块提供首选项的操作类，应用通过这些操作类完成首选项操作。
+2.  借助getPreferences，可以将指定文件的内容加载到Preferences实例，每个文件最多有一个Preferences实例，系统会通过静态容器将该实例存储在内存中，直到主动从内存中移除该实例或者删除该文件。
+3.  获取Preferences实例后，可以借助Preferences类的函数，从Preferences实例中读取数据或者将数据写入Preferences实例，通过flush将Preferences实例持久化。
 
-**图 2**  轻量级偏好数据库运行机制<a name="fig833053712258"></a>  
+**图 2**  首选项运行机制<a name="fig833053712258"></a>
 
-![](figures/zh-cn_轻量级偏好数据库运行机制.png)
+![](figures/zh-cn_首选项运行机制.png)
 
 
 ### 轻量系统KV数据库（Lightweight KV store）<a name="section1287582752720"></a>
@@ -90,7 +90,7 @@ OpenHarmony关系型数据库底层使用SQLite作为持久化存储引擎，支
 
 为保证数据的准确性，数据库同一时间只能支持一个写操作。
 
-## 轻量级偏好数据库（Preferences）<a name="section762641474720"></a>
+## 首选项（Preferences）<a name="section762641474720"></a>
 
 以下是几个基本概念：
 
@@ -138,6 +138,6 @@ KV存储能力继承自公共基础库原始设计，在原有能力基础上进
 
 分布式数据管理子系统
 
-distributeddatamgr\_appdatamgr
+[distributeddatamgr\_appdatamgr](https://gitee.com/openharmony/distributeddatamgr_appdatamgr)
 
-third\_party\_sqlite
+[third\_party\_sqlite](https://gitee.com/openharmony/third_party_sqlite)
