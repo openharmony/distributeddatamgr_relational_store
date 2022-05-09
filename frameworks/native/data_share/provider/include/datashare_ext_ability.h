@@ -33,6 +33,8 @@ class Runtime;
 namespace DataShare {
 using namespace AbilityRuntime;
 class DataShareExtAbilityContext;
+class DataShareExtAbility;
+using CreatorFunc = std::function<DataShareExtAbility* (const std::unique_ptr<Runtime>& runtime)>;
 /**
  * @brief Basic datashare extension ability components.
  */
@@ -223,6 +225,15 @@ public:
      */
     virtual std::vector<std::shared_ptr<DataShareResult>> ExecuteBatch(
         const std::vector<std::shared_ptr<DataShareOperation>> &operations);
+
+    /**
+     * @brief Set a creator function.
+     *
+     * @param creator The function for create a datashare extension ability.
+     */
+    static void SetCreator(const CreatorFunc& creator);
+private:
+    static CreatorFunc creator_;
 };
 }  // namespace DataShare
 }  // namespace OHOS
