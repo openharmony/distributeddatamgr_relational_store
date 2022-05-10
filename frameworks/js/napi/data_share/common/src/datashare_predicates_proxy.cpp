@@ -175,8 +175,8 @@ napi_value DataSharePredicatesProxy::EqualTo(napi_env env, napi_callback_info in
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::EqualTo Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, args[1], &valueType);
-    // std::string value = DataShareJSUtils::ConvertAny2String(env, args[1]);
+    napi_status status = napi_typeof(env, args[1], &valueType);
+    LOG_INFO("napi_typeof status : %{public}d", status);
     switch (valueType) {
         case napi_number: {
             double value;
@@ -208,7 +208,8 @@ napi_value DataSharePredicatesProxy::NotEqualTo(napi_env env, napi_callback_info
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::NotEqualTo Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, args[1], &valueType);
+    napi_status status = napi_typeof(env, args[1], &valueType);
+    LOG_INFO("napi_typeof status : %{public}d", status);
     switch (valueType) {
         case napi_number: {
             double value;
@@ -418,7 +419,8 @@ napi_value DataSharePredicatesProxy::GreaterThan(napi_env env, napi_callback_inf
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::GreaterThan Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, args[1], &valueType);
+    napi_status status = napi_typeof(env, args[1], &valueType);
+    LOG_INFO("napi_typeof status : %{public}d", status);
     switch (valueType) {
         case napi_number: {
             double value;
@@ -472,7 +474,8 @@ napi_value DataSharePredicatesProxy::GreaterThanOrEqualTo(napi_env env, napi_cal
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::GreaterThanOrEqualTo Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, args[1], &valueType);
+    napi_status status = napi_typeof(env, args[1], &valueType);
+    LOG_INFO("napi_typeof status : %{public}d", status);
     switch (valueType) {
         case napi_number: {
             double value;
@@ -499,7 +502,8 @@ napi_value DataSharePredicatesProxy::LessThanOrEqualTo(napi_env env, napi_callba
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::LessThanOrEqualTo Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, args[1], &valueType);
+    napi_status status = napi_typeof(env, args[1], &valueType);
+    LOG_INFO("napi_typeof status : %{public}d", status);
     switch (valueType) {
         case napi_number: {
             double value;
@@ -560,9 +564,11 @@ napi_value DataSharePredicatesProxy::Limit(napi_env env, napi_callback_info info
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::Limit Invalid argvs!");
     int number = 0;
-    napi_get_value_int32(env, args[0], &number);
+    napi_status status = napi_get_value_int32(env, args[0], &number);
+    LOG_INFO("number, napi_get_value_int32 : %{public}d", status);
     int offset = 0;
-    napi_get_value_int32(env, args[1], &offset);
+    status = napi_get_value_int32(env, args[1], &offset);
+    LOG_INFO("offset, napi_get_value_int32 : %{public}d", status);
     GetNativePredicates(env, info)->Limit(number, offset);
     return thiz;
 }
