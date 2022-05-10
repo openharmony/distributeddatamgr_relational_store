@@ -99,7 +99,6 @@ ohos_shared_library("datashare_abilitykit") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
-    "hitrace_native:hitrace_meter",
     "ipc:ipc_core",
     "ipc_js:rpc",
     "native_appdatamgr:native_dataability",
