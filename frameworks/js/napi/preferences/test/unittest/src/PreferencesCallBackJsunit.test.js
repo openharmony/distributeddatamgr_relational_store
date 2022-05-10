@@ -284,37 +284,27 @@ describe('preferencesTest', function () {
      */
      it('testPreferencesCallback0172', 0, function (done) {
         console.log(TAG + "testPreferencesCallback0172 begin.");
-        mPreferences.clear(function (err) {
+        mPreferences.clear(function (err, val) {
             if(err){
-                console.log(TAG + "clear error: " + err);
                 expect(null).assertEqual();
             }
-            console.log(TAG + "clear done.");
             mPreferences.put(KEY_TEST_STRING_ELEMENT, '', function (err, ret) {
                 if(err){
-                    console.log(TAG + "put error: " + err);
                     expect(null).assertEqual();
                 }
-                console.log(TAG + "put done.");
                 mPreferences.get(KEY_TEST_STRING_ELEMENT, "defaultvalue", function (err, pre) {
                     if(err){
-                        console.log(TAG + "get error: " + err);
                         expect(null).assertEqual();
                     }
-                    console.log(TAG + "get done.");
                     expect('').assertEqual(pre);
-                    mPreferences.flush(function (err) {
+                    mPreferences.flush(function (err, val) {
                         if(err){
-                            console.log(TAG + "flush error: " + err);
                             expect(null).assertEqual();
                         }
-                        console.log(TAG + "flush done.");
                         mPreferences.get(KEY_TEST_STRING_ELEMENT, "defaultvalue", function (err, pre2) {
                             if(err){
-                                console.log(TAG + "get error: " + err);
                                 expect(null).assertEqual();
                             }
-                            console.log(TAG + "get done.");
                             expect('').assertEqual(pre2);
                             done();
                             console.log(TAG + "testPreferencesCallback0172 end.");
