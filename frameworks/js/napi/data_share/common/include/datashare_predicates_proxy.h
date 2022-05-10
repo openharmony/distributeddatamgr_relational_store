@@ -52,6 +52,7 @@ private:
     static napi_value IsNull(napi_env env, napi_callback_info info);
     static napi_value IsNotNull(napi_env env, napi_callback_info info);
     static napi_value Like(napi_env env, napi_callback_info info);
+    static napi_value Unlike(napi_env env, napi_callback_info info);
     static napi_value Glob(napi_env env, napi_callback_info info);
     static napi_value Between(napi_env env, napi_callback_info info);
     static napi_value NotBetween(napi_env env, napi_callback_info info);
@@ -84,7 +85,7 @@ private:
     static napi_value IsNeedAnd(napi_env env, napi_callback_info info);
     static napi_value IsSorted(napi_env env, napi_callback_info info);
     static napi_value Reset(napi_env env, napi_callback_info info);
-    static napi_value Unlike(napi_env env, napi_callback_info info);
+    static napi_value SetTableName(napi_env env, napi_callback_info info);
     static napi_value PrefixKey(napi_env env, napi_callback_info info);
     static napi_value SetSuggestIndex(napi_env env, napi_callback_info info);
     static napi_value InDevices(napi_env env, napi_callback_info info);

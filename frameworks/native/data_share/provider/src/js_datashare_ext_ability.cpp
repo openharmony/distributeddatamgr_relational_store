@@ -468,7 +468,7 @@ std::shared_ptr<DataShareAbstractResultSet> JsDataShareExtAbility::Query(const U
     NativeValue* nativeUri = reinterpret_cast<NativeValue*>(napiUri);
     NativeValue* nativeColumns = reinterpret_cast<NativeValue*>(napiColumns);
     NativeValue* nativePredicates = reinterpret_cast<NativeValue*>(napiPredicates);
-    NativeValue* argv[] = {nativeUri, nativeColumns, nativePredicates};
+    NativeValue* argv[] = {nativeUri, nativePredicates, nativeColumns};
     NativeValue* nativeResult = CallObjectMethod("query", argv, ARGC_THREE);
     if (nativeResult == nullptr) {
         LOG_ERROR("%{public}s call query with return null.", __func__);

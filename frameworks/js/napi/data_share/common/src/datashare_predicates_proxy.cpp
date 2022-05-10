@@ -61,6 +61,7 @@ void DataSharePredicatesProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("inAllDevices", InAllDevices),
         DECLARE_NAPI_FUNCTION("inDevices", InDevices),
         DECLARE_NAPI_FUNCTION("reset", Reset),
+        DECLARE_NAPI_FUNCTION("setTableName", SetTableName),
     };
 
     napi_value cons;
@@ -655,6 +656,19 @@ napi_value DataSharePredicatesProxy::Reset(napi_env env, napi_callback_info info
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->Reset();
+    return thiz;
+}
+
+napi_value DataSharePredicatesProxy::SetTableName(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("DataSharePredicatesProxy::setTableName on called.");
+    napi_value thiz;
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::setTableName Invalid argvs!");
+    std::string name = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
+    GetNativePredicates(env, info)->SetTableName(name);
     return thiz;
 }
 
