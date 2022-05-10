@@ -186,7 +186,7 @@ describe('rdbStoreInsertTest', function () {
         }
         await rdbStore.insert("test", valueBucket)
         let predicates = new dataRdb.RdbPredicates("test");
-        predicates.equalTo("name", nameStr)
+        predicates.equalTo("age", 19)
         let resultSet = await rdbStore.query(predicates)
         try {
             console.log(TAG + "resultSet query done");
@@ -219,7 +219,7 @@ describe('rdbStoreInsertTest', function () {
         }
         await rdbStore.insert("test", valueBucket)
         let predicates = new dataRdb.RdbPredicates("test");
-        predicates.equalTo("name", nameStr)
+        predicates.equalTo("age", 20)
         let resultSet = await rdbStore.query(predicates)
         try {
             console.log(TAG + "resultSet query done");
@@ -252,7 +252,7 @@ describe('rdbStoreInsertTest', function () {
         }
         await rdbStore.insert("test", valueBucket)
         let predicates = new dataRdb.RdbPredicates("test");
-        predicates.equalTo("name", nameStr)
+        predicates.equalTo("age", 21)
         let resultSet = await rdbStore.query(predicates)
         try {
             console.log(TAG + "resultSet query done");
