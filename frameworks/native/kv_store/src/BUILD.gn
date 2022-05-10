@@ -26,7 +26,7 @@ if (ohos_kernel_type == "liteos_m") {
     include_dirs = [
       "//utils/native/lite/include",
       "kvstore_common",
-      "//utils/native/lite/kv_store/innerkits",
+      "../innerkits",
     ]
   }
 } else {
@@ -41,7 +41,7 @@ if (ohos_kernel_type == "liteos_m") {
       "//utils/native/lite/include",
       "kvstore_common",
       "//third_party/bounds_checking_function/include",
-      "//utils/native/lite/kv_store/innerkits",
+      "../innerkits",
     ]
     public_deps = [ "//third_party/bounds_checking_function:libsec_shared" ]
   }
