@@ -291,7 +291,7 @@ describe('rdbStoreUpdateTest', function () {
                 await console.log(TAG + "update done: " + ret);
                 {
                     let predicates = await new dataRdb.RdbPredicates("test")
-                    predicates.equalTo("name", nameStr)
+                    predicates.equalTo("age", 20)
                     let resultSet = await rdbStore.query(predicates)
                     expect(true).assertEqual(resultSet.goToFirstRow())
                     const name = await resultSet.getString(resultSet.getColumnIndex("name"))
@@ -397,7 +397,7 @@ describe('rdbStoreUpdateTest', function () {
                 await console.log(TAG + "update done: " + ret);
                 {
                     let predicates = await new dataRdb.RdbPredicates("test")
-                    predicates.equalTo("name", nameStr)
+                    predicates.equalTo("age", 21)
                     let resultSet = await rdbStore.query(predicates)
                     expect(true).assertEqual(resultSet.goToFirstRow())
                     const name = await resultSet.getString(resultSet.getColumnIndex("name"))

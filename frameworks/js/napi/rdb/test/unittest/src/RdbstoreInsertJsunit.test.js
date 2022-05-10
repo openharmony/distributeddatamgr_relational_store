@@ -195,7 +195,7 @@ describe('rdbStoreInsertTest', function () {
             console.log(TAG + "id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
             expect(nameStr).assertEqual(name)
         } catch (e) {
-            console.log("insert1 error " + e);
+            console.log("insert error " + e);
         }
         resultSet = null
         done()
@@ -228,7 +228,7 @@ describe('rdbStoreInsertTest', function () {
             console.log(TAG + "id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
             expect(nameStr).assertEqual(name)
         } catch (e) {
-            console.log("insert1 error " + e);
+            console.log("insert error " + e);
         }
         resultSet = null
         done()
@@ -261,7 +261,7 @@ describe('rdbStoreInsertTest', function () {
             console.log(TAG + "id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
             expect(nameStr).assertEqual(name)
         } catch (e) {
-            console.log("insert1 error " + e);
+            console.log("insert error " + e);
         }
         resultSet = null
         done()
