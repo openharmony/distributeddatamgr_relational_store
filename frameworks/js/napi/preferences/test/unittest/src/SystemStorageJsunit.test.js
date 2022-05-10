@@ -64,11 +64,11 @@ describe('systemStorageTest', function () {
             key: 'storageKey',
             success: function (data) {
                 getValue = data;
-                expect(getValue).assertEqual('testValue');
                 done();
             }
         })
         await promise2;
+        expect(getValue).assertEqual('testValue');
         expect(successRet).assertTrue();
         expect(completeRet).assertTrue();
         done();
@@ -204,7 +204,7 @@ describe('systemStorageTest', function () {
                 expect(true).assertTrue();
                 done();
             },
-            fail: function () {
+            fail: function (data, err) {
                 expect(false).assertTrue();
                 done();
             },
@@ -245,7 +245,7 @@ describe('systemStorageTest', function () {
                 expect('123').assertEqual(data);
                 done();
             },
-            fail() {
+            fail(data, err) {
                 expect(false).assertTrue();
                 done();
             },
@@ -321,7 +321,7 @@ describe('systemStorageTest', function () {
                 testVal = data;
                 done();
             },
-            fail(errCode, data) {
+            fail(data, err) {
                 expect(false).assertTrue();
                 done();
             },
@@ -356,7 +356,7 @@ describe('systemStorageTest', function () {
                 expect(true).assertTrue();
                 done();
             },
-            fail: function () {
+            fail: function (data, err) {
                 expect(false).assertTrue();
                 done();
             },
@@ -379,13 +379,13 @@ describe('systemStorageTest', function () {
             default: 'testVal',
             success(data) {
                 testData = data;
+                expect(testData).assertEqual('testVal');
                 done();
             }
         })
         await promise3;
         expect(completeRet).assertTrue();
         expect(successRet).assertTrue();
-        expect(testData).assertEqual('testVal');
 
         done();
 
@@ -410,7 +410,7 @@ describe('systemStorageTest', function () {
                 expect(true).assertTrue();
                 done();
             },
-            fail: function () {
+            fail: function (data, err) {
                 expect(false).assertTrue();
                 done();
             },
@@ -455,7 +455,7 @@ describe('systemStorageTest', function () {
         let completeRet = false;
         let promise1 = storage.set({
             key: 'storageKey',
-            value: 'storageVal',
+            value: 'test',
             success: function () {
                 expect(true).assertTrue();
                 done();
@@ -484,15 +484,18 @@ describe('systemStorageTest', function () {
         await promise2;
         let promise3 = storage.get({
             key: 'storageKey',
-            default: 'testVal',
-            success(data) {
+            success: function (data) {
                 testVal = data;
+                expect(testVal).assertEqual('test');
+                done();
+            },
+            fail: function (data, err) {
+                expect(false).assertTrue();
                 done();
             }
         })
         await promise3;
         expect(completeRet).assertTrue();
-        expect(testVal).assertEqual('storageVal');
 
         done();
 
@@ -538,7 +541,7 @@ describe('systemStorageTest', function () {
                 successRet = true;
                 done();
             },
-            fail() {
+            fail: function (data, err) {
                 expect(false).assertTrue();
                 done();
             }
