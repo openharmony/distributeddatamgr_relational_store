@@ -21,16 +21,20 @@ describe('systemStorageTest', function () {
         console.info(TAG + 'beforeAll')
     })
 
-    afterEach(async function () {
+    afterEach(async function (done) {
         console.info(TAG + 'afterEach')
-        await storage.clear({
-            success() {
+        let promise = storage.clear({
+            success: function () {
                 expect(true).assertTrue();
+                done();
             },
-            fail(data, errCode) {
+            fail: function (data, errCode) {
                 expect(false).assertTrue();
+                done();
             }
-        })
+        });
+        await promise;
+        done();
     })
 
     /**
@@ -43,23 +47,28 @@ describe('systemStorageTest', function () {
         let completeRet = false;
         let successRet = false;
         let getValue = undefined;
-        await storage.set({
+        let promise1 = storage.set({
             key: 'storageKey',
             value: 'testValue',
-            success() {
+            success: function () {
                 successRet = true;
+                done();
             },
-            complete() {
+            complete: function () {
                 completeRet = true;
+                done();
             }
         });
-        await storage.get({
+        await promise1;
+        let promise2 = storage.get({
             key: 'storageKey',
-            async success(data) {
+            success: function (data) {
                 getValue = data;
-                await expect(getValue).assertEqual('testValue');
+                expect(getValue).assertEqual('testValue');
+                done();
             }
         })
+        await promise2;
         expect(successRet).assertTrue();
         expect(completeRet).assertTrue();
         done();
@@ -77,20 +86,24 @@ describe('systemStorageTest', function () {
         let testData = undefined;
         let testErrCode = undefined;
         let compelteRet = false;
-        await storage.set({
+        let promise = storage.set({
             key: '',
             value: 'testValue',
             success() {
                 expect(false).assertTrue();
+                done();
             },
             fail(data, errCode) {
                 testData = data;
                 testErrCode = errCode;
+                done();
             },
             complete() {
                 compelteRet = true;
+                done();
             }
         })
+        await promise;
         expect("The key string is null or empty.").assertEqual(testData);
         expect(-1006).assertEqual(testErrCode);
         expect(compelteRet).assertTrue();
@@ -110,20 +123,24 @@ describe('systemStorageTest', function () {
         let testData = undefined;
         let testErrCode = undefined;
         let compelteRet = false;
-        await storage.set({
+        let promise = storage.set({
             key: 'x'.repeat(33),
             value: 'testValue',
             success() {
                 expect(false).assertTrue();
+                done();
             },
             fail(data, errCode) {
                 testData = data;
                 testErrCode = errCode;
+                done();
             },
             complete() {
                 compelteRet = true;
+                done();
             }
         })
+        await promise;
         expect("The key string length should shorter than 32.").assertEqual(testData);
         expect(-1016).assertEqual(testErrCode);
         expect(compelteRet).assertTrue();
@@ -144,20 +161,24 @@ describe('systemStorageTest', function () {
         let testData = undefined;
         let testErrCode = undefined;
         let compelteRet = false;
-        await storage.set({
+        let promise = storage.set({
             key: 'testKey',
             value: 'x'.repeat(129),
             success() {
                 expect(false).assertTrue();
+                done();
             },
             fail(data, errCode) {
                 testData = data;
                 testErrCode = errCode;
+                done();
             },
             complete() {
                 compelteRet = true;
+                done();
             }
         })
+        await promise;
         expect("The value string length should shorter than 128.").assertEqual(testData);
         expect(-1017).assertEqual(testErrCode);
         expect(compelteRet).assertTrue();
@@ -168,27 +189,39 @@ describe('systemStorageTest', function () {
     })
 
     /**
-         * @tc.name testGet001
-         * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Get_0001
-         * @tc.desc set and can get correct value in success callback, finally receive a get complete callback
-         */
+     * @tc.name testGet001
+     * @tc.number SUB_DDM_AppDataFWK_SystemStorage_Get_0001
+     * @tc.desc set and can get correct value in success callback, finally receive a get complete callback
+     */
     it('testGet001', 0, async function (done) {
         console.log(TAG + '************* testGet001 start *************');
         let testVal = undefined;
         let completeRet = false;
-        await storage.set({
+        let promise1 = storage.set({
             key: 'storageKey',
             value: 'storageVal',
-        })
-        await storage.get({
-            key: 'storageKey',
-            success(data) {
-                testVal = data;
+            success: function () {
+                expect(true).assertTrue();
+                done();
             },
-            complete() {
+            fail: function () {
+                expect(false).assertTrue();
+                done();
+            },
+        });
+        await promise1;
+        let promise2 = storage.get({
+            key: 'storageKey',
+            success: function (data) {
+                testVal = data;
+                done();
+            },
+            complete: function () {
                 completeRet = true;
+                done();
             }
-        })
+        });
+        await promise2;
         expect('storageVal').assertEqual(testVal);
         expect(completeRet).assertTrue();
 
@@ -205,19 +238,23 @@ describe('systemStorageTest', function () {
     it('testGet002', 0, async function (done) {
         console.log(TAG + '************* testGet002 start *************');
         let completeRet = false;
-        await storage.get({
+        let promise = storage.get({
             key: 'storageKey',
             default: '123',
             success(data) {
                 expect('123').assertEqual(data);
+                done();
             },
             fail() {
                 expect(false).assertTrue();
+                done();
             },
             complete() {
                 completeRet = true;
+                done();
             }
         })
+        await promise;
         expect(completeRet).assertTrue();
 
         done();
@@ -238,21 +275,25 @@ describe('systemStorageTest', function () {
         let testErrCode = undefined;
         let completeRet = false;
         let failRet = false;
-        await storage.get({
+        let promise = storage.get({
             key: 'storageKey',
             default: 'x'.repeat(129),
             success(data) {
                 testVal = data;
+                done();
             },
             fail(data, errCode) {
                 testErrCode = errCode;
                 testData = data;
                 failRet = true;
+                done();
             },
             complete() {
                 completeRet = true;
+                done();
             }
         })
+        await promise;
         expect(failRet).assertTrue();
         expect(completeRet).assertTrue();
         expect(-1018).assertEqual(testErrCode);
@@ -273,19 +314,23 @@ describe('systemStorageTest', function () {
         console.log(TAG + '************* testGet004 start *************');
         let testVal = undefined;
         let completeRet = false;
-        await storage.get({
+        let promise = storage.get({
             key: '',
             default: 'storageVal',
             success(data) {
                 testVal = data;
+                done();
             },
             fail(errCode, data) {
                 expect(false).assertTrue();
+                done();
             },
             complete() {
                 completeRet = true;
+                done();
             }
         })
+        await promise;
         expect(testVal).assertEqual('storageVal');
         expect(completeRet).assertTrue();
 
@@ -304,26 +349,40 @@ describe('systemStorageTest', function () {
         let testData = undefined;
         let completeRet = false;
         let successRet = false;
-        await storage.set({
+        let promise1 = storage.set({
             key: 'storageKey',
-            value: 'storageVal'
+            value: 'storageVal',
+            success: function () {
+                expect(true).assertTrue();
+                done();
+            },
+            fail: function () {
+                expect(false).assertTrue();
+                done();
+            },
         })
-        await storage.delete({
+        await promise1;
+        let promise2 = storage.delete({
             key: "storageKey",
             success() {
                 successRet = true;
+                done();
             },
             complete() {
                 completeRet = true;
+                done();
             }
         });
-        await storage.get({
+        await promise2;
+        let promise3 = storage.get({
             key: 'storageKey',
             default: 'testVal',
             success(data) {
                 testData = data;
+                done();
             }
         })
+        await promise3;
         expect(completeRet).assertTrue();
         expect(successRet).assertTrue();
         expect(testData).assertEqual('testVal');
@@ -344,24 +403,37 @@ describe('systemStorageTest', function () {
         let testErrCode = undefined;
         let completeRet = false;
         let failRet = false;
-        await storage.set({
+        let promise1 = storage.set({
             key: 'storageKey',
-            value: 'storageVal'
+            value: 'storageVal',
+            success: function () {
+                expect(true).assertTrue();
+                done();
+            },
+            fail: function () {
+                expect(false).assertTrue();
+                done();
+            },
         })
-        await storage.delete({
+        await promise1;
+        let promise2 = storage.delete({
             key: '',
             success() {
                 expect(false).assertTrue();
+                done();
             },
             fail(data, err) {
                 testErrCode = err;
                 testData = data;
                 failRet = true;
+                done();
             },
             complete() {
                 completeRet = true;
+                done();
             }
         })
+        await promise2;
         expect(completeRet).assertTrue();
         expect("The key string is null or empty.").assertEqual(testData);
         expect(-1006).assertEqual(testErrCode);
@@ -381,29 +453,44 @@ describe('systemStorageTest', function () {
         console.log(TAG + '************* testDelete003 start *************');
         let testVal = undefined;
         let completeRet = false;
-        storage.set({
+        let promise1 = storage.set({
             key: 'storageKey',
-            value: 'storageVal'
+            value: 'storageVal',
+            success: function () {
+                expect(true).assertTrue();
+                done();
+            },
+            fail: function () {
+                expect(false).assertTrue();
+                done();
+            },
         });
-        await storage.delete({
+        await promise1;
+        let promise2 = storage.delete({
             key: '123',
             success() {
                 expect(true).assertTrue();
+                done();
             },
             fail(err, data) {
                 expect(false).assertTrue();
+                done();
             },
             complete() {
                 completeRet = true;
+                done();
             }
         });
-        await storage.get({
+        await promise2;
+        let promise3 = storage.get({
             key: 'storageKey',
             default: 'testVal',
             success(data) {
                 testVal = data;
+                done();
             }
         })
+        await promise3;
         expect(completeRet).assertTrue();
         expect(testVal).assertEqual('storageVal');
 
@@ -420,22 +507,43 @@ describe('systemStorageTest', function () {
     it('testClear001', 0, async function (done) {
         console.log(TAG + '************* testClear001 start *************');
         let successRet = false;
-        await storage.set({
+        let promise1 = storage.set({
             key: 'storageKey1',
-            value: 'storageVal1'
+            value: 'storageVal1',
+            success: function () {
+                expect(true).assertTrue();
+                done();
+            },
+            fail: function () {
+                expect(false).assertTrue();
+                done();
+            },
         });
-        await storage.set({
+        await promise1;
+        let promise2 = storage.set({
             key: 'storageKey2',
-            value: 'storageVal2'
+            value: 'storageVal2',
+            success: function () {
+                expect(true).assertTrue();
+                done();
+            },
+            fail: function () {
+                expect(false).assertTrue();
+                done();
+            },
         });
-        await storage.clear({
+        await promise2;
+        let promise3 = storage.clear({
             success() {
                 successRet = true;
+                done();
             },
             fail() {
                 expect(false).assertTrue();
+                done();
             }
         });
+        await promise3;
         expect(successRet).assertTrue();
 
         done();
