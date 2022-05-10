@@ -12,10 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "napi_datashare_helper.h"
 
-#include <uv.h>
 #include <cstring>
+#include <uv.h>
 #include <vector>
 
 #include "datashare_helper.h"
@@ -210,18 +211,21 @@ napi_value DataShareHelperConstructor(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr));
     NAPI_ASSERT(env, argc > 0, "Wrong number of arguments");
     AAFwk::Want want;
-    OHOS::AppExecFwk::UnwrapWant(env, argv[PARAM1], want);
-    std::string strUri = NapiValueToStringUtf8(env, argv[PARAM2]);
+    std::string strUri;
     std::shared_ptr<DataShareHelper> dataShareHelper = nullptr;
     bool isStageMode = false;
     napi_status status = AbilityRuntime::IsStageContext(env, argv[PARAM0], isStageMode);
     if (status != napi_ok || !isStageMode) {
         auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);
+        OHOS::AppExecFwk::UnwrapWant(env, argv[PARAM0], want);
+        strUri = NapiValueToStringUtf8(env, argv[PARAM1]);
         NAPI_ASSERT(env, ability != nullptr, "DataShareHelperConstructor: failed to get native ability");
         LOG_INFO("FA Model: strUri = %{public}s", strUri.c_str());
         dataShareHelper = DataShareHelper::Creator(ability->GetContext(), want, std::make_shared<Uri>(strUri));
     } else {
         auto context = OHOS::AbilityRuntime::GetStageModeContext(env, argv[PARAM0]);
+        OHOS::AppExecFwk::UnwrapWant(env, argv[PARAM1], want);
+        strUri = NapiValueToStringUtf8(env, argv[PARAM2]);
         NAPI_ASSERT(env, context != nullptr, "DataShareHelperConstructor: failed to get native context");
         LOG_INFO("Stage Model: strUri = %{public}s", strUri.c_str());
         dataShareHelper = DataShareHelper::Creator(context, want, std::make_shared<Uri>(strUri));
