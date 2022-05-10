@@ -29,7 +29,7 @@ Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
 Context::Context(AppExecFwk::Ability *featureAbility)
 {
     databaseDir_ = featureAbility->GetDatabaseDir();
-    preferencesDir_ = featureAbility->GetStorageDir();
+    preferencesDir_ = featureAbility->GetAbilityContext()->GetStorageDir();
     bundleName_ = featureAbility->GetBundleName();
 }
 
