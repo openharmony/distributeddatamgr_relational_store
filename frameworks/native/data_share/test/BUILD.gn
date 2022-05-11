@@ -67,7 +67,6 @@ ohos_unittest("NativeDataShareTest") {
     "${datashare_common_native_path}:datashare_common",
     "//foundation/aafwk/standard/frameworks/kits/appkit:app_context",
     "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share:datashare_abilitykit",
-    "//foundation/windowmanager/dm:libdm",
     "//third_party/googletest:gtest_main",
     "//third_party/icu/icu4c:shared_icui18n",
     "//third_party/icu/icu4c:shared_icuuc",
