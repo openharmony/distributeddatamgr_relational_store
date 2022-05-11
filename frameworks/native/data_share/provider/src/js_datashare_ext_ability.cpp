@@ -31,7 +31,7 @@
 #include "napi_remote_object.h"
 
 #include "napi_datashare_values_bucket.h"
-#include "datashare_result_set_proxy.h"
+#include "napi_datashare_abstract_result_set.h"
 #include "datashare_predicates_proxy.h"
 
 namespace OHOS {
@@ -43,6 +43,9 @@ constexpr size_t ARGC_TWO = 2;
 constexpr size_t ARGC_THREE = 3;
 constexpr int INVALID_VALUE = -1;
 }
+
+void PrintPredicates(const DataSharePredicates &predicates);
+bool MakeNapiColumn(napi_env env, napi_value &napiColumns, const std::vector<std::string> columns);
 
 using namespace OHOS::AppExecFwk;
 using OHOS::Security::AccessToken::AccessTokenKit;
@@ -108,7 +111,7 @@ void JsDataShareExtAbility::Init(const std::shared_ptr<AbilityLocalRecord> &reco
         return;
     }
 
-    LOG_INFO("Set datashare extension ability context pointer: %{public}p", context.get());
+    LOG_INFO("Set datashare extension ability context pointer is nullptr: %{public}d", context.get() == nullptr);
 
     nativeObj->SetNativePointer(new std::weak_ptr<AbilityRuntime::Context>(context),
         [](NativeEngine*, void* data, void*) {
@@ -204,9 +207,17 @@ std::vector<std::string> JsDataShareExtAbility::GetFileTypes(const Uri &uri, con
     napi_env env = reinterpret_cast<napi_env>(&jsRuntime_.GetNativeEngine());
 
     napi_value napiUri = nullptr;
-    napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    napi_status status = napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_create_string_utf8 status : %{public}d", status);
+        return ret;
+    }
     napi_value napiMimeTypeFilter = nullptr;
-    napi_create_string_utf8(env, mimeTypeFilter.c_str(), NAPI_AUTO_LENGTH, &napiMimeTypeFilter);
+    status = napi_create_string_utf8(env, mimeTypeFilter.c_str(), NAPI_AUTO_LENGTH, &napiMimeTypeFilter);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_create_string_utf8 status : %{public}d", status);
+        return ret;
+    }
 
     NativeValue* nativeUri = reinterpret_cast<NativeValue*>(napiUri);
     NativeValue* nativeMimeTypeFilter = reinterpret_cast<NativeValue*>(napiMimeTypeFilter);
@@ -234,9 +245,17 @@ int JsDataShareExtAbility::OpenFile(const Uri &uri, const std::string &mode)
     napi_env env = reinterpret_cast<napi_env>(&jsRuntime_.GetNativeEngine());
 
     napi_value napiUri = nullptr;
-    napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    napi_status status = napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_create_string_utf8 status : %{public}d", status);
+        return ret;
+    }
     napi_value napiMode = nullptr;
-    napi_create_string_utf8(env, mode.c_str(), NAPI_AUTO_LENGTH, &napiMode);
+    status = napi_create_string_utf8(env, mode.c_str(), NAPI_AUTO_LENGTH, &napiMode);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_create_string_utf8 status : %{public}d", status);
+        return ret;
+    }
 
     NativeValue* nativeUri = reinterpret_cast<NativeValue*>(napiUri);
     NativeValue* nativeMode = reinterpret_cast<NativeValue*>(napiMode);
@@ -260,9 +279,17 @@ int JsDataShareExtAbility::OpenRawFile(const Uri &uri, const std::string &mode)
     napi_env env = reinterpret_cast<napi_env>(&jsRuntime_.GetNativeEngine());
 
     napi_value napiUri = nullptr;
-    napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    napi_status status = napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_create_string_utf8 status : %{public}d", status);
+        return ret;
+    }
     napi_value napiMode = nullptr;
-    napi_create_string_utf8(env, mode.c_str(), NAPI_AUTO_LENGTH, &napiMode);
+    status = napi_create_string_utf8(env, mode.c_str(), NAPI_AUTO_LENGTH, &napiMode);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_create_string_utf8 status : %{public}d", status);
+        return ret;
+    }
 
     NativeValue* nativeUri = reinterpret_cast<NativeValue*>(napiUri);
     NativeValue* nativeMode = reinterpret_cast<NativeValue*>(napiMode);
@@ -291,7 +318,11 @@ int JsDataShareExtAbility::Insert(const Uri &uri, const DataShareValuesBucket &v
     HandleScope handleScope(jsRuntime_);
     napi_env env = reinterpret_cast<napi_env>(&jsRuntime_.GetNativeEngine());
     napi_value napiUri = nullptr;
-    napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    napi_status status = napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_create_string_utf8 status : %{public}d", status);
+        return ret;
+    }
     napi_value napiValue = DataShareValueBucketNewInstance(env, const_cast<DataShareValuesBucket&>(value));
     if (napiValue == nullptr) {
         LOG_ERROR("%{public}s failed to make new instance of rdbValueBucket.", __func__);
@@ -316,6 +347,7 @@ int JsDataShareExtAbility::Update(const Uri &uri, const DataShareValuesBucket &v
     const DataSharePredicates &predicates)
 {
     LOG_INFO("begin.");
+    PrintPredicates(predicates);
     int ret = INVALID_VALUE;
     if (!CheckCallingPermission(abilityInfo_->writePermission)) {
         LOG_ERROR("%{public}s Check calling permission failed.", __func__);
@@ -327,7 +359,11 @@ int JsDataShareExtAbility::Update(const Uri &uri, const DataShareValuesBucket &v
     HandleScope handleScope(jsRuntime_);
     napi_env env = reinterpret_cast<napi_env>(&jsRuntime_.GetNativeEngine());
     napi_value napiUri = nullptr;
-    napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    napi_status status = napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_create_string_utf8 status : %{public}d", status);
+        return ret;
+    }
     napi_value napiValue = DataShareValueBucketNewInstance(env, const_cast<DataShareValuesBucket&>(value));
     if (napiValue == nullptr) {
         LOG_ERROR("%{public}s failed to make new instance of rdbValueBucket.", __func__);
@@ -358,6 +394,7 @@ int JsDataShareExtAbility::Update(const Uri &uri, const DataShareValuesBucket &v
 int JsDataShareExtAbility::Delete(const Uri &uri, const DataSharePredicates &predicates)
 {
     LOG_INFO("begin.");
+    PrintPredicates(predicates);
     int ret = INVALID_VALUE;
     if (!CheckCallingPermission(abilityInfo_->writePermission)) {
         LOG_ERROR("%{public}s Check calling permission failed.", __func__);
@@ -368,7 +405,11 @@ int JsDataShareExtAbility::Delete(const Uri &uri, const DataSharePredicates &pre
     HandleScope handleScope(jsRuntime_);
     napi_env env = reinterpret_cast<napi_env>(&jsRuntime_.GetNativeEngine());
     napi_value napiUri = nullptr;
-    napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    napi_status status = napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_create_string_utf8 status : %{public}d", status);
+        return ret;
+    }
 
     napi_value napiPredicates = MakePredicates(env, predicates);
     if (napiPredicates == nullptr) {
@@ -390,11 +431,12 @@ int JsDataShareExtAbility::Delete(const Uri &uri, const DataSharePredicates &pre
     return ret;
 }
 
-std::shared_ptr<DataShareAbsSharedResultSet> JsDataShareExtAbility::Query(const Uri &uri,
+std::shared_ptr<DataShareAbstractResultSet> JsDataShareExtAbility::Query(const Uri &uri,
     std::vector<std::string> &columns, const DataSharePredicates &predicates)
 {
     LOG_INFO("begin.");
-    std::shared_ptr<DataShareAbsSharedResultSet> ret;
+    PrintPredicates(predicates);
+    std::shared_ptr<DataShareAbstractResultSet> ret;
     if (!CheckCallingPermission(abilityInfo_->readPermission)) {
         LOG_ERROR("%{public}s Check calling permission failed.", __func__);
         return ret;
@@ -405,20 +447,16 @@ std::shared_ptr<DataShareAbsSharedResultSet> JsDataShareExtAbility::Query(const 
     HandleScope handleScope(jsRuntime_);
     napi_env env = reinterpret_cast<napi_env>(&jsRuntime_.GetNativeEngine());
     napi_value napiUri = nullptr;
-    napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
-
-    napi_value napiColumns = nullptr;
-    napi_create_array(env, &napiColumns);
-    bool isArray = false;
-    if (napi_is_array(env, napiColumns, &isArray) != napi_ok || !isArray) {
-        LOG_ERROR("JsDataShareExtAbility create array failed");
+    napi_status status = napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_create_string_utf8 status : %{public}d", status);
         return ret;
     }
-    int32_t index = 0;
-    for (const auto &column : columns) {
-        napi_value result = nullptr;
-        napi_create_string_utf8(env, column.c_str(), column.length(), &result);
-        napi_set_element(env, napiColumns, index++, result);
+
+    napi_value napiColumns = nullptr;
+    if (!MakeNapiColumn(env, napiColumns, columns)) {
+        LOG_ERROR("MakeNapiColumn failed");
+        return ret;
     }
 
     napi_value napiPredicates = MakePredicates(env, predicates);
@@ -430,14 +468,14 @@ std::shared_ptr<DataShareAbsSharedResultSet> JsDataShareExtAbility::Query(const 
     NativeValue* nativeUri = reinterpret_cast<NativeValue*>(napiUri);
     NativeValue* nativeColumns = reinterpret_cast<NativeValue*>(napiColumns);
     NativeValue* nativePredicates = reinterpret_cast<NativeValue*>(napiPredicates);
-    NativeValue* argv[] = {nativeUri, nativeColumns, nativePredicates};
+    NativeValue* argv[] = {nativeUri, nativePredicates, nativeColumns};
     NativeValue* nativeResult = CallObjectMethod("query", argv, ARGC_THREE);
     if (nativeResult == nullptr) {
         LOG_ERROR("%{public}s call query with return null.", __func__);
         return ret;
     }
 
-    auto nativeObject = GetResultSetProxyObject(env, reinterpret_cast<napi_value>(nativeResult));
+    auto nativeObject = GetNativeAbstractResultSetObject(env, reinterpret_cast<napi_value>(nativeResult));
     if (nativeObject == nullptr) {
         return ret;
     }
@@ -455,8 +493,11 @@ std::string JsDataShareExtAbility::GetType(const Uri &uri)
     napi_env env = reinterpret_cast<napi_env>(&jsRuntime_.GetNativeEngine());
 
     napi_value napiUri = nullptr;
-    napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH,
-        &napiUri);
+    napi_status status = napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_create_string_utf8 status : %{public}d", status);
+        return ret;
+    }
     NativeValue* nativeUri = reinterpret_cast<NativeValue*>(napiUri);
     NativeValue* argv[] = {nativeUri};
     NativeValue* nativeResult = CallObjectMethod("getType", argv, ARGC_ONE);
@@ -484,10 +525,18 @@ int JsDataShareExtAbility::BatchInsert(const Uri &uri, const std::vector<DataSha
     HandleScope handleScope(jsRuntime_);
     napi_env env = reinterpret_cast<napi_env>(&jsRuntime_.GetNativeEngine());
     napi_value napiUri = nullptr;
-    napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    napi_status status = napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_create_string_utf8 status : %{public}d", status);
+        return ret;
+    }
 
     napi_value napiValues = nullptr;
-    napi_create_array(env, &napiValues);
+    status = napi_create_array(env, &napiValues);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_create_array status : %{public}d", status);
+        return ret;
+    }
     bool isArray = false;
     if (napi_is_array(env, napiValues, &isArray) != napi_ok || !isArray) {
         LOG_ERROR("JsDataShareExtAbility create array failed");
@@ -582,7 +631,11 @@ Uri JsDataShareExtAbility::NormalizeUri(const Uri &uri)
     napi_env env = reinterpret_cast<napi_env>(&jsRuntime_.GetNativeEngine());
 
     napi_value napiUri = nullptr;
-    napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    napi_status status = napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_create_string_utf8 status : %{public}d", status);
+        return ret;
+    }
     NativeValue* nativeUri = reinterpret_cast<NativeValue*>(napiUri);
     NativeValue* argv[] = {nativeUri};
     NativeValue* nativeResult = CallObjectMethod("normalizeUri", argv, ARGC_ONE);
@@ -604,7 +657,11 @@ Uri JsDataShareExtAbility::DenormalizeUri(const Uri &uri)
     napi_env env = reinterpret_cast<napi_env>(&jsRuntime_.GetNativeEngine());
 
     napi_value napiUri = nullptr;
-    napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    napi_status status = napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &napiUri);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_create_string_utf8 status : %{public}d", status);
+        return ret;
+    }
     NativeValue* nativeUri = reinterpret_cast<NativeValue*>(napiUri);
     NativeValue* argv[] = {nativeUri};
     NativeValue* nativeResult = CallObjectMethod("denormalizeUri", argv, ARGC_ONE);
@@ -655,6 +712,49 @@ napi_value JsDataShareExtAbility::MakePredicates(napi_env env, const DataSharePr
     }
     LOG_INFO("end.");
     return napiPredicates;
+}
+
+void PrintPredicates(const DataSharePredicates &predicates)
+{
+    std::list<OperationItem> preList = predicates.GetOperationList();
+    for (int i = 0; i < preList.size(); i++) {
+        std::string str1 = "";
+        std::string str2 = "";
+        std::string str3 = "";
+        OperationItem op = static_cast<OperationItem>(preList.front());
+        preList.pop_front();
+        op.para1.GetString(str1);
+        op.para2.GetString(str2);
+        op.para3.GetString(str3);
+        LOG_INFO("operation = %{public}d, count = %{public}d", op.operation, op.parameterCount);
+        LOG_INFO("type1 = %{public}d, para1 = %{public}s", op.para1.GetType(), str1.c_str());
+        LOG_INFO("type2 = %{public}d, para2 = %{public}s", op.para2.GetType(), str2.c_str());
+        LOG_INFO("type3 = %{public}d, para3 = %{public}s", op.para3.GetType(), str3.c_str());
+    }
+}
+
+bool MakeNapiColumn(napi_env env, napi_value &napiColumns, const std::vector<std::string> columns)
+{
+    napi_status status = napi_create_array(env, &napiColumns);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_create_array status : %{public}d", status);
+        return false;
+    }
+
+    bool isArray = false;
+    if (napi_is_array(env, napiColumns, &isArray) != napi_ok || !isArray) {
+        LOG_ERROR("JsDataShareExtAbility create array failed");
+        return false;
+    }
+
+    int32_t index = 0;
+    for (const auto &column : columns) {
+        napi_value result = nullptr;
+        napi_create_string_utf8(env, column.c_str(), column.length(), &result);
+        napi_set_element(env, napiColumns, index++, result);
+    }
+
+    return true;
 }
 } // namespace DataShare
 } // namespace OHOS

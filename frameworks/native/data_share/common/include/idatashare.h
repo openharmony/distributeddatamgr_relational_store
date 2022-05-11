@@ -23,7 +23,7 @@
 #include "datashare_values_bucket.h"
 #include "datashare_result.h"
 #include "datashare_predicates.h"
-#include "datashare_abs_shared_result_set.h"
+#include "datashare_result_set.h"
 #include "datashare_operation.h"
 
 namespace OHOS {
@@ -131,7 +131,7 @@ public:
      *
      * @return Returns the query result.
      */
-    virtual std::shared_ptr<DataShareAbsSharedResultSet> Query(
+    virtual std::shared_ptr<DataShareResultSet> Query(
         const Uri &uri, std::vector<std::string> &columns, const DataSharePredicates &predicates) = 0;
 
     /**

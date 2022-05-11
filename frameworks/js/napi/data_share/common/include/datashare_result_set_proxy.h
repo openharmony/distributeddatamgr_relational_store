@@ -17,7 +17,7 @@
 #define DATASHARE_RESULT_SET_PROXY
 
 #include <memory>
-#include "datashare_abs_shared_result_set.h"
+#include "datashare_result_set.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -28,52 +28,54 @@ class DataShareResultSetProxy final {
 public:
     DataShareResultSetProxy() = default;
     ~DataShareResultSetProxy();
-    DataShareResultSetProxy(std::shared_ptr<DataShareAbsSharedResultSet> resultSet);
-    DataShareResultSetProxy &operator=(std::shared_ptr<DataShareAbsSharedResultSet> resultSet);
-    static napi_value NewInstance(napi_env env, std::shared_ptr<DataShareAbsSharedResultSet> resultSet);
-    static std::shared_ptr<DataShareAbsSharedResultSet> GetNativeObject(
+    explicit DataShareResultSetProxy(std::shared_ptr<DataShareResultSet> resultSet);
+    DataShareResultSetProxy &operator=(std::shared_ptr<DataShareResultSet> resultSet);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<DataShareResultSet> resultSet);
+    static std::shared_ptr<DataShareResultSet> GetNativeObject(
         const napi_env &env, const napi_value &arg);
     static napi_value GetConstructor(napi_env env);
 
 private:
-    static std::shared_ptr<DataShareAbsSharedResultSet> &GetInnerResultSet(napi_env env, napi_callback_info info);
+    static std::shared_ptr<DataShareResultSet> &GetInnerResultSet(napi_env env, napi_callback_info info);
     static napi_value Initialize(napi_env env, napi_callback_info info);
-    static napi_value GetAllColumnNames(napi_env env, napi_callback_info info);
-    static napi_value GoToRow(napi_env env, napi_callback_info info);
-    static napi_value GetColumnCount(napi_env env, napi_callback_info info);
-    static napi_value GetLong(napi_env env, napi_callback_info info);
-    static napi_value GetColumnType(napi_env env, napi_callback_info info);
-    static napi_value GoTo(napi_env env, napi_callback_info info);
-    static napi_value GetColumnIndex(napi_env env, napi_callback_info info);
-    static napi_value GetInt(napi_env env, napi_callback_info info);
-    static napi_value GetColumnName(napi_env env, napi_callback_info info);
-    static napi_value Close(napi_env env, napi_callback_info info);
-    static napi_value GetRowCount(napi_env env, napi_callback_info info);
-    static napi_value GetRowIndex(napi_env env, napi_callback_info info);
-    static napi_value IsEnded(napi_env env, napi_callback_info info);
-    static napi_value IsBegin(napi_env env, napi_callback_info info);
+
     static napi_value GoToFirstRow(napi_env env, napi_callback_info info);
     static napi_value GoToLastRow(napi_env env, napi_callback_info info);
     static napi_value GoToNextRow(napi_env env, napi_callback_info info);
     static napi_value GoToPreviousRow(napi_env env, napi_callback_info info);
-    static napi_value IsAtFirstRow(napi_env env, napi_callback_info info);
-    static napi_value IsAtLastRow(napi_env env, napi_callback_info info);
+    static napi_value GoTo(napi_env env, napi_callback_info info);
+    static napi_value GoToRow(napi_env env, napi_callback_info info);
     static napi_value GetBlob(napi_env env, napi_callback_info info);
     static napi_value GetString(napi_env env, napi_callback_info info);
+    static napi_value GetInt(napi_env env, napi_callback_info info);
+    static napi_value GetLong(napi_env env, napi_callback_info info);
     static napi_value GetDouble(napi_env env, napi_callback_info info);
-    static napi_value IsColumnNull(napi_env env, napi_callback_info info);
+    static napi_value IsColumnOrKeyNull(napi_env env, napi_callback_info info);
+    static napi_value Close(napi_env env, napi_callback_info info);
+    static napi_value GetColumnOrKeyIndex(napi_env env, napi_callback_info info);
+    static napi_value GetColumnOrKeyName(napi_env env, napi_callback_info info);
+    static napi_value GetDataType(napi_env env, napi_callback_info info);
+
+    static napi_value GetAllColumnOrKeyNames(napi_env env, napi_callback_info info);
+    static napi_value GetColumnOrKeyCount(napi_env env, napi_callback_info info);
+    static napi_value GetRowCount(napi_env env, napi_callback_info info);
+    static napi_value GetRowIndex(napi_env env, napi_callback_info info);
+    static napi_value IsAtFirstRow(napi_env env, napi_callback_info info);
+    static napi_value IsAtLastRow(napi_env env, napi_callback_info info);
+    static napi_value IsEnded(napi_env env, napi_callback_info info);
+    static napi_value IsStarted(napi_env env, napi_callback_info info);
     static napi_value IsClosed(napi_env env, napi_callback_info info);
 
     static napi_value GetSharedBlockName(napi_env env, napi_callback_info info);
     static napi_value GetSharedBlockAshmemFd(napi_env env, napi_callback_info info);
 
-    std::shared_ptr<DataShareAbsSharedResultSet> resultSet_;
+    std::shared_ptr<DataShareResultSet> resultSet_;
 
     std::string sharedBlockName_;
     int32_t sharedBlockAshmemFd_ = -1;
 };
-napi_value GetNapiResultSetObject(napi_env env, DataShareAbsSharedResultSet *resultSet);
-DataShareAbsSharedResultSet *GetResultSetProxyObject(const napi_env &env, const napi_value &arg);
-}
-}
+napi_value GetNapiResultSetObject(napi_env env, DataShareResultSet *resultSet);
+DataShareResultSet *GetResultSetProxyObject(const napi_env &env, const napi_value &arg);
+} // namespace DataShare
+} // namespace OHOS
 #endif // DATASHARE_RESULT_SET_PROXY
