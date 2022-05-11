@@ -56,7 +56,6 @@ ohos_unittest("NativeDataShareTest") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
-    "form_runtime:fmskit_native",
     "ipc:ipc_core",
     "ipc_js:rpc",
     "native_appdatamgr:native_dataability",
