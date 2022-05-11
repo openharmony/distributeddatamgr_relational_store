@@ -54,7 +54,7 @@ void ParseString(napi_env env, napi_value &object, const char *name, const bool 
     napi_value value = nullptr;
     bool exist = false;
     napi_has_named_property(env, object, name, &exist);
-    if (napi_get_named_property(env, object, name, &value) == napi_ok) {
+    if (exist && (napi_get_named_property(env, object, name, &value) == napi_ok)) {
         std::string key = JSUtils::Convert2String(env, value);
         NAPI_ASSERT_RETURN_VOID(env, enable || !key.empty(), "StorageOptions is empty.");
         output = std::move(key);
@@ -66,7 +66,7 @@ void ParseFunction(napi_env env, napi_value &object, const char *name, napi_ref 
     napi_value value = nullptr;
     bool exist = false;
     napi_has_named_property(env, object, name, &exist);
-    if (napi_get_named_property(env, object, name, &value) == napi_ok) {
+    if (exist && (napi_get_named_property(env, object, name, &value) == napi_ok)) {
         napi_valuetype valueType = napi_null;
         NAPI_ASSERT_RETURN_VOID(env, value != nullptr, "value == nullptr");
         NAPI_CALL_RETURN_VOID(env, napi_typeof(env, value, &valueType));
@@ -167,11 +167,9 @@ napi_value Operate(napi_env env, napi_callback_info info, const char *resource, 
 
     context->prefName = GetPrefName(env);
 
-    if (parseStrFlag) {
-        ParseString(env, argv[0], "key", true, context->key);
-        ParseString(env, argv[0], "value", false, context->val);
-        ParseString(env, argv[0], "default", false, context->def);
-    }
+    ParseString(env, argv[0], "key", parseStrFlag, context->key);
+    ParseString(env, argv[0], "value", false, context->val);
+    ParseString(env, argv[0], "default", false, context->def);
 
     ParseFunction(env, argv[0], "success", context->success);
     ParseFunction(env, argv[0], "fail", context->fail);
