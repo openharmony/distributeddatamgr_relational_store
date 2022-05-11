@@ -18,7 +18,9 @@ import(
 config("ability_config") {
   visibility = [ ":*" ]
   include_dirs = [
-    "include",
+    "common/include",
+    "consumer/include",
+    "provider/include",
     "${datashare_native_consumer_path}/include",
     "${datashare_native_provider_path}/include",
     "//foundation/aafwk/standard/frameworks/kits/appkit/native/app/include",
@@ -26,6 +28,9 @@ config("ability_config") {
     "//foundation/aafwk/standard/frameworks/kits/ability/native/include/continuation/distributed",
     "//foundation/aafwk/standard/frameworks/kits/ability/native/include/continuation/kits",
     "//foundation/aafwk/standard/interfaces/kits/napi/aafwk/inner/napi_common",
+    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base/include",
+    "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb/include",
+    "//foundation/distributeddatamgr/distributeddatamgr/frameworks/innerkitsimpl/rdb/include",
   ]
 
   cflags = []
@@ -41,7 +46,9 @@ config("ability_config") {
 config("ability_public_config") {
   visibility = [ ":*" ]
   include_dirs = [
-    "include",
+    "common/include",
+    "consumer/include",
+    "provider/include",
     "${datashare_common_napi_path}/include",
     "${datashare_common_native_path}/include",
     "${datashare_native_consumer_path}/include",
@@ -95,6 +102,7 @@ ohos_shared_library("datashare_abilitykit") {
     "ipc:ipc_core",
     "ipc_js:rpc",
     "native_appdatamgr:native_dataability",
+    "native_appdatamgr:native_rdb",
     "permission_standard:libpermissionsdk_standard",
     "utils_base:utils",
   ]

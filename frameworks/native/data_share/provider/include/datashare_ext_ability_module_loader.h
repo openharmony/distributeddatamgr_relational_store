@@ -33,5 +33,5 @@ public:
      */
     virtual Extension *Create(const std::unique_ptr<Runtime>& runtime) const override;
 };
-}
+} // namespace OHOS::DataShare
 #endif // DATASHARE_EXT_ABILITY_MODULE_LOADER_H

@@ -39,6 +39,7 @@ void DataSharePredicatesProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("isNull", IsNull),
         DECLARE_NAPI_FUNCTION("isNotNull", IsNotNull),
         DECLARE_NAPI_FUNCTION("like", Like),
+        DECLARE_NAPI_FUNCTION("unlike", Unlike),
         DECLARE_NAPI_FUNCTION("glob", Glob),
         DECLARE_NAPI_FUNCTION("between", Between),
         DECLARE_NAPI_FUNCTION("notBetween", NotBetween),
@@ -49,24 +50,18 @@ void DataSharePredicatesProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("orderByAsc", OrderByAsc),
         DECLARE_NAPI_FUNCTION("orderByDesc", OrderByDesc),
         DECLARE_NAPI_FUNCTION("distinct", Distinct),
-        DECLARE_NAPI_FUNCTION("limitAs", Limit),
+        DECLARE_NAPI_FUNCTION("limit", Limit),
         DECLARE_NAPI_FUNCTION("offsetAs", Offset),
         DECLARE_NAPI_FUNCTION("groupBy", GroupBy),
         DECLARE_NAPI_FUNCTION("indexedBy", IndexedBy),
         DECLARE_NAPI_FUNCTION("in", In),
         DECLARE_NAPI_FUNCTION("notIn", NotIn),
-        DECLARE_NAPI_FUNCTION("clear", Clear),
-        DECLARE_NAPI_FUNCTION("isRawSelection", IsRawSelection),
-        DECLARE_NAPI_GETTER_SETTER("whereClause", GetWhereClause, SetWhereClause),
-        DECLARE_NAPI_GETTER_SETTER("whereArgs", GetWhereArgs, SetWhereArgs),
-        DECLARE_NAPI_GETTER_SETTER("order", GetOrder, SetOrder),
-        DECLARE_NAPI_GETTER("limit", GetLimit),
-        DECLARE_NAPI_GETTER("offset", GetOffset),
-        DECLARE_NAPI_GETTER("isDistinct", IsDistinct),
-        DECLARE_NAPI_GETTER("group", GetGroup),
-        DECLARE_NAPI_GETTER("index", GetIndex),
-        DECLARE_NAPI_GETTER("isNeedAnd", IsNeedAnd),
-        DECLARE_NAPI_GETTER("isSorted", IsSorted),
+        DECLARE_NAPI_FUNCTION("prefixKey", PrefixKey),
+        DECLARE_NAPI_FUNCTION("setSuggestIndex", SetSuggestIndex),
+        DECLARE_NAPI_FUNCTION("inAllDevices", InAllDevices),
+        DECLARE_NAPI_FUNCTION("inDevices", InDevices),
+        DECLARE_NAPI_FUNCTION("reset", Reset),
+        DECLARE_NAPI_FUNCTION("setTableName", SetTableName),
     };
 
     napi_value cons;
@@ -180,8 +175,27 @@ napi_value DataSharePredicatesProxy::EqualTo(napi_env env, napi_callback_info in
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::EqualTo Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
-    std::string value = DataShareJSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->EqualTo(field, value);
+    napi_valuetype valueType = napi_undefined;
+    napi_status status = napi_typeof(env, args[1], &valueType);
+    LOG_INFO("napi_typeof status : %{public}d", status);
+    switch (valueType) {
+        case napi_number: {
+            double value;
+            napi_get_value_double(env, args[1], &value);
+            GetNativePredicates(env, info)->EqualTo(field, value);
+        }
+        case napi_boolean: {
+            bool value = false;
+            napi_get_value_bool(env, args[1], &value);
+            GetNativePredicates(env, info)->EqualTo(field, value);
+        }
+        case napi_string: {
+            std::string value = DataShareJSUtils::Convert2String(env, args[1], DataShareJSUtils::DEFAULT_BUF_SIZE);
+            GetNativePredicates(env, info)->EqualTo(field, value);
+        }
+        default:
+            break;
+    }
     return thiz;
 }
 
@@ -194,8 +208,27 @@ napi_value DataSharePredicatesProxy::NotEqualTo(napi_env env, napi_callback_info
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::NotEqualTo Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
-    std::string value = DataShareJSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->NotEqualTo(field, value);
+    napi_valuetype valueType = napi_undefined;
+    napi_status status = napi_typeof(env, args[1], &valueType);
+    LOG_INFO("napi_typeof status : %{public}d", status);
+    switch (valueType) {
+        case napi_number: {
+            double value;
+            napi_get_value_double(env, args[1], &value);
+            GetNativePredicates(env, info)->NotEqualTo(field, value);
+        }
+        case napi_boolean: {
+            bool value = false;
+            napi_get_value_bool(env, args[1], &value);
+            GetNativePredicates(env, info)->NotEqualTo(field, value);
+        }
+        case napi_string: {
+            std::string value = DataShareJSUtils::Convert2String(env, args[1], DataShareJSUtils::DEFAULT_BUF_SIZE);
+            GetNativePredicates(env, info)->NotEqualTo(field, value);
+        }
+        default:
+            break;
+    }
     return thiz;
 }
 
@@ -287,6 +320,7 @@ napi_value DataSharePredicatesProxy::IsNull(napi_env env, napi_callback_info inf
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::IsNull Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
+    LOG_DEBUG("DataSharePredicatesProxy::IsNull on called.");
     GetNativePredicates(env, info)->IsNull(field);
     return thiz;
 }
@@ -315,6 +349,20 @@ napi_value DataSharePredicatesProxy::Like(napi_env env, napi_callback_info info)
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::string value = DataShareJSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->Like(field, value);
+    return thiz;
+}
+
+napi_value DataSharePredicatesProxy::Unlike(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("DataSharePredicatesProxy::Unlike on called.");
+    napi_value thiz;
+    size_t argc = 2;
+    napi_value args[2] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::Unlike Invalid argvs!");
+    std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
+    std::string value = DataShareJSUtils::ConvertAny2String(env, args[1]);
+    GetNativePredicates(env, info)->Unlike(field, value);
     return thiz;
 }
 
@@ -371,8 +419,22 @@ napi_value DataSharePredicatesProxy::GreaterThan(napi_env env, napi_callback_inf
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::GreaterThan Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
-    std::string value = DataShareJSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->GreaterThan(field, value);
+    napi_valuetype valueType = napi_undefined;
+    napi_status status = napi_typeof(env, args[1], &valueType);
+    LOG_INFO("napi_typeof status : %{public}d", status);
+    switch (valueType) {
+        case napi_number: {
+            double value;
+            napi_get_value_double(env, args[1], &value);
+            GetNativePredicates(env, info)->GreaterThan(field, value);
+        }
+        case napi_string: {
+            std::string value = DataShareJSUtils::Convert2String(env, args[1], DataShareJSUtils::DEFAULT_BUF_SIZE);
+            GetNativePredicates(env, info)->GreaterThan(field, value);
+        }
+        default:
+            break;
+    }
     return thiz;
 }
 
@@ -385,8 +447,21 @@ napi_value DataSharePredicatesProxy::LessThan(napi_env env, napi_callback_info i
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::LessThan Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
-    std::string value = DataShareJSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->LessThan(field, value);
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, args[1], &valueType);
+    switch (valueType) {
+        case napi_number: {
+            double value;
+            napi_get_value_double(env, args[1], &value);
+            GetNativePredicates(env, info)->LessThan(field, value);
+        }
+        case napi_string: {
+            std::string value = DataShareJSUtils::Convert2String(env, args[1], DataShareJSUtils::DEFAULT_BUF_SIZE);
+            GetNativePredicates(env, info)->LessThan(field, value);
+        }
+        default:
+            break;
+    }
     return thiz;
 }
 
@@ -399,8 +474,22 @@ napi_value DataSharePredicatesProxy::GreaterThanOrEqualTo(napi_env env, napi_cal
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::GreaterThanOrEqualTo Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
-    std::string value = DataShareJSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->GreaterThanOrEqualTo(field, value);
+    napi_valuetype valueType = napi_undefined;
+    napi_status status = napi_typeof(env, args[1], &valueType);
+    LOG_INFO("napi_typeof status : %{public}d", status);
+    switch (valueType) {
+        case napi_number: {
+            double value;
+            napi_get_value_double(env, args[1], &value);
+            GetNativePredicates(env, info)->GreaterThanOrEqualTo(field, value);
+        }
+        case napi_string: {
+            std::string value = DataShareJSUtils::Convert2String(env, args[1], DataShareJSUtils::DEFAULT_BUF_SIZE);
+            GetNativePredicates(env, info)->GreaterThanOrEqualTo(field, value);
+        }
+        default:
+            break;
+    }
     return thiz;
 }
 
@@ -413,8 +502,22 @@ napi_value DataSharePredicatesProxy::LessThanOrEqualTo(napi_env env, napi_callba
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::LessThanOrEqualTo Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
-    std::string value = DataShareJSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->LessThanOrEqualTo(field, value);
+    napi_valuetype valueType = napi_undefined;
+    napi_status status = napi_typeof(env, args[1], &valueType);
+    LOG_INFO("napi_typeof status : %{public}d", status);
+    switch (valueType) {
+        case napi_number: {
+            double value;
+            napi_get_value_double(env, args[1], &value);
+            GetNativePredicates(env, info)->LessThanOrEqualTo(field, value);
+        }
+        case napi_string: {
+            std::string value = DataShareJSUtils::Convert2String(env, args[1], DataShareJSUtils::DEFAULT_BUF_SIZE);
+            GetNativePredicates(env, info)->LessThanOrEqualTo(field, value);
+        }
+        default:
+            break;
+    }
     return thiz;
 }
 
@@ -457,13 +560,17 @@ napi_value DataSharePredicatesProxy::Limit(napi_env env, napi_callback_info info
 {
     LOG_DEBUG("DataSharePredicatesProxy::Limit on called.");
     napi_value thiz;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
+    size_t argc = 2;
+    napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::Limit Invalid argvs!");
-    int32_t limit = 0;
-    napi_get_value_int32(env, args[0], &limit);
-    GetNativePredicates(env, info)->Limit(limit);
+    int number = 0;
+    napi_status status = napi_get_value_int32(env, args[0], &number);
+    LOG_INFO("number, napi_get_value_int32 : %{public}d", status);
+    int offset = 0;
+    status = napi_get_value_int32(env, args[1], &offset);
+    LOG_INFO("offset, napi_get_value_int32 : %{public}d", status);
+    GetNativePredicates(env, info)->Limit(number, offset);
     return thiz;
 }
 
@@ -538,125 +645,80 @@ napi_value DataSharePredicatesProxy::NotIn(napi_env env, napi_callback_info info
     return thiz;
 }
 
-napi_value DataSharePredicatesProxy::Clear(napi_env env, napi_callback_info info)
-{
-    LOG_DEBUG("DataSharePredicatesProxy::Clear on called.");
-    napi_value thiz = nullptr;
-    napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
-    GetNativePredicates(env, info)->Clear();
-    return thiz;
-}
-
-napi_value DataSharePredicatesProxy::IsRawSelection(napi_env env, napi_callback_info info)
-{
-    LOG_DEBUG("DataSharePredicatesProxy::IsRawSelection on called.");
-    napi_value thiz = nullptr;
-    napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
-    bool out = GetNativePredicates(env, info)->IsRawSelection();
-    return DataShareJSUtils::Convert2JSValue(env, out);
-}
-
 std::shared_ptr<DataSharePredicates> DataSharePredicatesProxy::GetPredicates() const
 {
     return this->predicates_;
 }
 
-napi_value DataSharePredicatesProxy::GetWhereClause(napi_env env, napi_callback_info info)
+napi_value DataSharePredicatesProxy::Reset(napi_env env, napi_callback_info info)
 {
-    auto ret = GetNativePredicates(env, info)->GetWhereClause();
-    return DataShareJSUtils::Convert2JSValue(env, ret);
-}
-
-napi_value DataSharePredicatesProxy::SetWhereClause(napi_env env, napi_callback_info info)
-{
+    LOG_DEBUG("DataSharePredicatesProxy::Reset on called.");
     napi_value thiz;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::SetWhereClause Invalid argvs!");
-
-    std::string whereClause = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
-    GetNativePredicates(env, info)->SetWhereClause(whereClause);
-
+    napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
+    GetNativePredicates(env, info)->Reset();
     return thiz;
 }
 
-napi_value DataSharePredicatesProxy::GetWhereArgs(napi_env env, napi_callback_info info)
+napi_value DataSharePredicatesProxy::SetTableName(napi_env env, napi_callback_info info)
 {
-    auto ret = GetNativePredicates(env, info)->GetWhereArgs();
-    return DataShareJSUtils::Convert2JSValue(env, ret);
-}
-
-napi_value DataSharePredicatesProxy::SetWhereArgs(napi_env env, napi_callback_info info)
-{
+    LOG_DEBUG("DataSharePredicatesProxy::setTableName on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::SetWhereArgs Invalid argvs!");
+    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::setTableName Invalid argvs!");
+    std::string name = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
+    GetNativePredicates(env, info)->SetTableName(name);
+    return thiz;
+}
 
-    std::vector<std::string> whereArgs = DataShareJSUtils::Convert2StrVector(env,
+napi_value DataSharePredicatesProxy::SetSuggestIndex(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("DataSharePredicatesProxy::SetSuggestIndex on called.");
+    napi_value thiz;
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::SetSuggestIndex Invalid argvs!");
+    std::string index = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
+    GetNativePredicates(env, info)->SetSuggestIndex(index);
+    return thiz;
+}
+
+napi_value DataSharePredicatesProxy::PrefixKey(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("DataSharePredicatesProxy::PrefixKey on called.");
+    napi_value thiz;
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::PrefixKey Invalid argvs!");
+    std::string prefix = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
+    GetNativePredicates(env, info)->KeyPrefix(prefix);
+    return thiz;
+}
+
+napi_value DataSharePredicatesProxy::InDevices(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("DataSharePredicatesProxy::InDevices on called.");
+    napi_value thiz;
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::InDevices Invalid argvs!");
+    std::vector<std::string> devices = DataShareJSUtils::Convert2StrVector(env,
         args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
-    GetNativePredicates(env, info)->SetWhereArgs(whereArgs);
-
+    GetNativePredicates(env, info)->InDevices(devices);
     return thiz;
 }
 
-napi_value DataSharePredicatesProxy::GetOrder(napi_env env, napi_callback_info info)
+napi_value DataSharePredicatesProxy::InAllDevices(napi_env env, napi_callback_info info)
 {
-    auto ret = GetNativePredicates(env, info)->GetOrder();
-    return DataShareJSUtils::Convert2JSValue(env, ret);
-}
-
-napi_value DataSharePredicatesProxy::SetOrder(napi_env env, napi_callback_info info)
-{
+    LOG_DEBUG("DataSharePredicatesProxy::InAllDevices on called.");
     napi_value thiz;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::SetOrder Invalid argvs!");
-
-    std::string order = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
-    GetNativePredicates(env, info)->SetOrder(order);
-
+    napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
+    GetNativePredicates(env, info)->InAllDevices();
     return thiz;
-}
-
-napi_value DataSharePredicatesProxy::GetLimit(napi_env env, napi_callback_info info)
-{
-    return DataShareJSUtils::Convert2JSValue(env, GetNativePredicates(env, info)->GetLimit());
-}
-
-napi_value DataSharePredicatesProxy::GetOffset(napi_env env, napi_callback_info info)
-{
-    return DataShareJSUtils::Convert2JSValue(env, GetNativePredicates(env, info)->GetOffset());
-}
-
-napi_value DataSharePredicatesProxy::IsDistinct(napi_env env, napi_callback_info info)
-{
-    return DataShareJSUtils::Convert2JSValue(env, GetNativePredicates(env, info)->IsDistinct());
-}
-
-napi_value DataSharePredicatesProxy::GetGroup(napi_env env, napi_callback_info info)
-{
-    auto ret = GetNativePredicates(env, info)->GetGroup();
-    return DataShareJSUtils::Convert2JSValue(env, ret);
-}
-
-napi_value DataSharePredicatesProxy::GetIndex(napi_env env, napi_callback_info info)
-{
-    auto ret = GetNativePredicates(env, info)->GetIndex();
-    return DataShareJSUtils::Convert2JSValue(env, ret);
-}
-
-napi_value DataSharePredicatesProxy::IsNeedAnd(napi_env env, napi_callback_info info)
-{
-    return DataShareJSUtils::Convert2JSValue(env, GetNativePredicates(env, info)->IsNeedAnd());
-}
-
-napi_value DataSharePredicatesProxy::IsSorted(napi_env env, napi_callback_info info)
-{
-    return DataShareJSUtils::Convert2JSValue(env, GetNativePredicates(env, info)->IsSorted());
 }
 
 napi_value GetNapiObject(napi_env env, DataSharePredicates *predicates)

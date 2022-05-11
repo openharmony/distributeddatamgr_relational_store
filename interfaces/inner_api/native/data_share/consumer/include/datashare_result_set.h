@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DATASHARE_ABS_SHARED_RESULT_SET_H
-#define DATASHARE_ABS_SHARED_RESULT_SET_H
+#ifndef DATASHARE_RESULT_SET_H
+#define DATASHARE_RESULT_SET_H
 
 #include <memory>
 #include <string>
@@ -25,22 +25,24 @@
 #include "message_parcel.h"
 #include "parcel.h"
 #include "shared_block.h"
-#include "shared_result_set.h"
+#include "datashare_shared_result_set.h"
+#include "datashare_abstract_result_set.h"
+#include "datashare_block_writer_impl.h"
 
 namespace OHOS {
 namespace DataShare {
-class DataShareAbsSharedResultSet : public DataShareAbsResultSet, public SharedResultSet {
+class DataShareResultSet : public DataShareAbsResultSet, public DataShareSharedResultSet {
 public:
-    DataShareAbsSharedResultSet();
-    DataShareAbsSharedResultSet(std::string name);
-    virtual ~DataShareAbsSharedResultSet();
+    DataShareResultSet();
+    explicit DataShareResultSet(std::shared_ptr<DataShareAbstractResultSet> &resultSet);
+    virtual ~DataShareResultSet();
     int GetBlob(int columnIndex, std::vector<uint8_t> &blob) override;
     int GetString(int columnIndex, std::string &value) override;
     int GetInt(int columnIndex, int &value) override;
     int GetLong(int columnIndex, int64_t &value) override;
     int GetDouble(int columnIndex, double &value) override;
     int IsColumnNull(int columnIndex, bool &isNull) override;
-    int GetColumnType(int columnIndex, ColumnType &columnType) override;
+    int GetDataType(int columnIndex, DataType &dataType) override;
     int GoToRow(int position) override;
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int GetRowCount(int &count) override;
@@ -50,6 +52,7 @@ public:
     virtual void SetBlock(AppDataFwk::SharedBlock *block);
     int Close() override;
     bool HasBlock() const;
+
 protected:
     int CheckState(int columnIndex);
     void ClearBlock();
@@ -60,15 +63,18 @@ protected:
     friend class ISharedResultSetProxy;
     bool Unmarshalling(MessageParcel &parcel);
     bool Marshalling(MessageParcel &parcel);
+
 private:
     // The default position of the cursor
     static const int INIT_POS = -1;
     static const size_t DEFAULT_BLOCK_SIZE = 2 * 1024 * 1024;
-
-    // The SharedBlock owned by this DataShareAbsSharedResultSet
+    static int blockId_;
+    // The SharedBlock owned by this DataShareResultSet
     AppDataFwk::SharedBlock *sharedBlock_  = nullptr;
+    std::shared_ptr<DataShareBlockWriterImpl> blockWriter_ = nullptr;
+    std::shared_ptr<DataShareAbstractResultSet> resultSet_ = nullptr;
 };
 } // namespace DataShare
 } // namespace OHOS
 
-#endif
+#endif // DATASHARE_RESULT_SET_H
