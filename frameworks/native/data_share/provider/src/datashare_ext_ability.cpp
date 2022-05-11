@@ -25,11 +25,23 @@
 namespace OHOS {
 namespace DataShare {
 using namespace OHOS::AppExecFwk;
+
+CreatorFunc DataShareExtAbility::creator_ = nullptr;
+void DataShareExtAbility::SetCreator(const CreatorFunc& creator)
+{
+    creator_ = creator;
+}
+
 DataShareExtAbility* DataShareExtAbility::Create(const std::unique_ptr<Runtime>& runtime)
 {
     if (!runtime) {
         return new DataShareExtAbility();
     }
+
+    if (creator_) {
+        return creator_(runtime);
+    }
+
     LOG_INFO("DataShareExtAbility::Create runtime");
     switch (runtime->GetLanguage()) {
         case Runtime::Language::JS:
