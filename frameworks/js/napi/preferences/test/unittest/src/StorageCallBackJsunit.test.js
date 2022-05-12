@@ -272,7 +272,6 @@ describe('storageTest', function () {
                 console.log("*******************clear error: " + err);
                 expect(false).assertTrue();
             }
-            console.log("*******************clear done.");
             mPref.put(KEY_TEST_STRING_ELEMENT, '', function (err, ret) {
                 if(err){
                     console.log("*******************put error: " + err);
@@ -284,20 +283,17 @@ describe('storageTest', function () {
                         console.log("*******************get error: " + err);
                         expect(false).assertTrue();
                     }
-                    console.log("*******************get done.");
                     expect('').assertEqual(pre);
                     mPref.flush(function (err, val) {
                         if(err){
                             console.log("*******************flush error: " + err);
                             expect(false).assertTrue();
                         }
-                        console.log("*******************flush done.");
                         mPref.get(KEY_TEST_STRING_ELEMENT, "defaultvalue", function (err, pre2) {
                             if(err){
                                 console.log("*******************get error: " + err);
                                 expect(false).assertTrue();
                             }
-                            console.log("*******************get done.");
                             expect('').assertEqual(pre2);
                             done();
                             console.log("*******************testCallback0172 end.");
