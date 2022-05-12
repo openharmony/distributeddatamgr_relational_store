@@ -2787,9 +2787,11 @@ napi_value QueryWrap(napi_env env, napi_callback_info info, DSHelperQueryCB *que
         LOG_INFO("%{public}s,uri=%{public}s", __func__, queryCB->uri.c_str());
     }
 
+    UnwrapDataSharePredicates(queryCB->predicates, env, args[PARAM1]);
+
     std::vector<std::string> result;
     bool arrayStringbool = false;
-    arrayStringbool = NapiValueToArrayStringUtf8(env, args[PARAM1], result);
+    arrayStringbool = NapiValueToArrayStringUtf8(env, args[PARAM2], result);
     if (!arrayStringbool) {
         LOG_ERROR("%{public}s, The return value of arraystringbool is false", __func__);
     }
@@ -2798,7 +2800,6 @@ napi_value QueryWrap(napi_env env, napi_callback_info info, DSHelperQueryCB *que
         LOG_INFO("%{public}s,columns=%{public}s", __func__, queryCB->columns.at(i).c_str());
     }
 
-    UnwrapDataSharePredicates(queryCB->predicates, env, args[PARAM2]);
     DataShareHelper *objectInfo = nullptr;
     napi_unwrap(env, thisVar, (void **)&objectInfo);
     LOG_INFO("%{public}s,DataShareHelper objectInfo = %{public}p", __func__, objectInfo);
