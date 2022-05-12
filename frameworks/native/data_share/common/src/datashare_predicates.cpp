@@ -853,16 +853,12 @@ std::string DataSharePredicates::GetWhereClause() const
  */
 int DataSharePredicates::SetWhereClause(const std::string &whereClause)
 {
-    if (settingMode_ != PREDICATES_METHOD) {
-        if (!whereClause.empty()) {
-            this->whereClause_ = whereClause;
-            settingMode_ = QUERY_LANGUAGE;
-        }
+    if ((settingMode_ != PREDICATES_METHOD) && (!whereClause.empty())) {
+        this->whereClause_ = whereClause;
+        settingMode_ = QUERY_LANGUAGE;
         return E_OK;
     }
-    else {
-        return E_ERROR;
-    }
+    return E_ERROR;
 }
 
 /**
@@ -878,16 +874,14 @@ std::vector<std::string> DataSharePredicates::GetWhereArgs() const
  */
 int DataSharePredicates::SetWhereArgs(const std::vector<std::string> &whereArgs)
 {
-    if (settingMode_ != PREDICATES_METHOD) {
+    if ((settingMode_ != PREDICATES_METHOD) && (!whereArgs.empty())) {
         if (!whereArgs.empty()) {
             this->whereArgs_ = whereArgs;
             settingMode_ = QUERY_LANGUAGE;
+            return E_OK;
         }
-        return E_OK;
     }
-    else {
-        return E_ERROR;
-    }
+    return E_ERROR;
 }
 
 /**
@@ -904,16 +898,12 @@ std::string DataSharePredicates::GetOrder() const
 int DataSharePredicates::SetOrder(const std::string &order)
 {
     LOG_DEBUG("DataSharePredicates::SetOrder Start order%{public}s", order.c_str());
-    if (settingMode_ != PREDICATES_METHOD) {
-        if (!order.empty()) {
-            this->order_ = order;
-            settingMode_ = QUERY_LANGUAGE;
-        }
-         return E_OK;
+    if ((settingMode_ != PREDICATES_METHOD) && (!order.empty())) {
+        this->order_ = order;
+        settingMode_ = QUERY_LANGUAGE;
+        return E_OK;
     }
-    else {
-        return E_ERROR;
-    }
+    return E_ERROR;
 }
 
 /**
