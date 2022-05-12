@@ -80,6 +80,12 @@ typedef struct {
     std::string tableName;
     std::list<OperationItem> operationList;
 } Predicates;
+
+typedef enum {
+    INVALID_MODE = 0X0,
+    QUERY_LANGUAGE,
+    PREDICATES_METHOD
+} SettingMode;
 } // namespace DataShare
 } // namespace OHOS
 

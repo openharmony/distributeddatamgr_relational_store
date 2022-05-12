@@ -840,6 +840,99 @@ std::string DataSharePredicates::GetTableName() const
 }
 
 /**
+ * Get WhereClause
+ */
+std::string DataSharePredicates::GetWhereClause() const
+{
+    return whereClause_;
+}
+
+/**
+ * Set WhereClause
+ */
+void DataSharePredicates::SetWhereClause(std::string &whereClause)
+{
+    if (settingMode_ != PREDICATES_METHOD) {
+        if (whereClause.empty()) {
+            return;
+        }
+        this->whereClause_ = whereClause;
+        settingMode_ = QUERY_LANGUAGE;
+    }
+}
+
+/**
+ * Get WhereArgs
+ */
+std::vector<std::string> DataSharePredicates::GetWhereArgs() const
+{
+    return whereArgs_;
+}
+
+/**
+ * Get WhereArgs
+ */
+void DataSharePredicates::SetWhereArgs(std::vector<std::string> &whereArgs)
+{
+    if (settingMode_ != PREDICATES_METHOD) {
+        if (whereArgs.empty()) {
+            return;
+        }
+        this->whereArgs_ = whereArgs;
+        settingMode_ = QUERY_LANGUAGE;
+    }
+}
+
+/**
+ * Get Order
+ */
+std::string DataSharePredicates::GetOrder() const
+{
+    return order_;
+}
+
+/**
+ * Set Order
+ */
+void DataSharePredicates::SetOrder(std::string &order)
+{
+    LOG_DEBUG("DataSharePredicates::SetOrder Start order%{public}s", order.c_str());
+    if (settingMode_ != PREDICATES_METHOD) {
+        if (order.empty()) {
+            return;
+        }
+        this->order_ = order;
+        settingMode_ = QUERY_LANGUAGE;
+    }
+}
+
+/**
+ * Clear Query Language
+ */
+void DataSharePredicates::ClearQueryLanguage()
+{
+    whereClause_ = "";
+    whereArgs_ = {};
+    order_ = "";
+}
+
+/**
+ * Set Setting Mode
+ */
+void DataSharePredicates::SetSettingMode(SettingMode &settingMode)
+{
+    settingMode_ = settingMode;
+}
+
+/**
+ * Get Setting Mode
+ */
+SettingMode DataSharePredicates::GetSettingMode() const
+{
+    return settingMode_;
+}
+
+/**
  * SetOperationList
  */
 void DataSharePredicates::SetOperationList(OperationType operationType, DataSharePredicatesObject &para1,
@@ -853,7 +946,11 @@ void DataSharePredicates::SetOperationList(OperationType operationType, DataShar
     operationItem.para3 = para3;
     operationItem.parameterCount = parameterCount;
     predicates_.operationList.push_back(operationItem);
-    LOG_DEBUG("DataSharePredicates::SetOperationList END");
+    if (settingMode_ != PREDICATES_METHOD) {
+        ClearQueryLanguage();
+        settingMode_ = PREDICATES_METHOD;
+    }
+    LOG_DEBUG("DataSharePredicates::SetOperationList END settingMode_%{public}d", settingMode_);
 }
 
 /**
@@ -871,6 +968,10 @@ bool DataSharePredicates::Marshalling(OHOS::Parcel &parcel) const
         parcel.WriteParcelable(&it.para3);
         parcel.WriteInt64(static_cast<int64_t>(it.parameterCount));
     }
+    parcel.WriteString(whereClause_);
+    parcel.WriteStringVector(whereArgs_);
+    parcel.WriteString(order_);
+    parcel.WriteInt64(static_cast<int64_t>(settingMode_));
     LOG_DEBUG("DataSharePredicates::Marshalling End");
     return true;
 }
@@ -881,9 +982,13 @@ bool DataSharePredicates::Marshalling(OHOS::Parcel &parcel) const
 DataSharePredicates* DataSharePredicates::Unmarshalling(OHOS::Parcel &parcel)
 {
     LOG_DEBUG("DataSharePredicates::Unmarshalling Start");
-    Predicates predicates;
+    Predicates predicates {};
     OperationItem listitem {};
     predicates.tableName = "";
+    std::string whereClause = "";
+    std::vector<std::string> whereArgs;
+    std::string order = "";
+    int64_t settingMode = INVALID_MODE;
     parcel.ReadString(predicates.tableName);
     int listSize = parcel.ReadInt32();
     for (int i = 0; i < listSize; i++) {
@@ -897,8 +1002,18 @@ DataSharePredicates* DataSharePredicates::Unmarshalling(OHOS::Parcel &parcel)
         listitem.parameterCount = static_cast<ParameterCount>(parcel.ReadInt64());
         predicates.operationList.push_back(listitem);
     }
+    parcel.ReadString(whereClause);
+    parcel.ReadStringVector(&whereArgs);
+    parcel.ReadString(order);
+    parcel.ReadInt64(settingMode);
+    SettingMode settingmode = static_cast<SettingMode>(settingMode);
+    auto predicatesObject = new DataSharePredicates(predicates);
+    predicatesObject->SetWhereClause(whereClause);
+    predicatesObject->SetWhereArgs(whereArgs);
+    predicatesObject->SetOrder(order);
+    predicatesObject->SetSettingMode(settingmode);
     LOG_DEBUG("DataSharePredicates::Unmarshalling End");
-    return new DataSharePredicates(predicates);
+    return predicatesObject;
 }
 } // namespace DataShare
 } // namespace OHOS

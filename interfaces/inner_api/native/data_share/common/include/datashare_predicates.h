@@ -99,11 +99,23 @@ public:
     const std::list<OperationItem>& GetOperationList() const;
     void SetTableName(std::string &tableName) const;
     std::string GetTableName() const;
-
+    std::string GetWhereClause() const;
+    void SetWhereClause(std::string &whereClause);
+    std::vector<std::string> GetWhereArgs() const;
+    void SetWhereArgs(std::vector<std::string> &whereArgs);
+    std::string GetOrder() const;
+    void SetOrder(std::string &order);
+    SettingMode GetSettingMode() const;
 private:
     void SetOperationList(OperationType operationType, DataSharePredicatesObject &para1,
         DataSharePredicatesObject &para2, DataSharePredicatesObject &para3, ParameterCount parameterCount);
+    void ClearQueryLanguage();
+    void SetSettingMode(SettingMode &settingMode);
     mutable Predicates predicates_;
+    std::string whereClause_;
+    std::vector<std::string> whereArgs_;
+    std::string order_;
+    SettingMode settingMode_;
 };
 } // namespace DataShare
 } // namespace OHOS
