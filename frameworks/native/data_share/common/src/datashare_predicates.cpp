@@ -17,6 +17,7 @@
 
 #include <cinttypes>
 #include "datashare_log.h"
+#include "datashare_errno.h"
 namespace OHOS {
 namespace DataShare {
 DataSharePredicates::DataSharePredicates()
@@ -850,14 +851,17 @@ std::string DataSharePredicates::GetWhereClause() const
 /**
  * Set WhereClause
  */
-void DataSharePredicates::SetWhereClause(std::string &whereClause)
+int DataSharePredicates::SetWhereClause(const std::string &whereClause)
 {
     if (settingMode_ != PREDICATES_METHOD) {
-        if (whereClause.empty()) {
-            return;
+        if (!whereClause.empty()) {
+            this->whereClause_ = whereClause;
+            settingMode_ = QUERY_LANGUAGE;
         }
-        this->whereClause_ = whereClause;
-        settingMode_ = QUERY_LANGUAGE;
+        return E_OK;
+    }
+    else {
+        return E_ERROR;
     }
 }
 
@@ -872,14 +876,17 @@ std::vector<std::string> DataSharePredicates::GetWhereArgs() const
 /**
  * Get WhereArgs
  */
-void DataSharePredicates::SetWhereArgs(std::vector<std::string> &whereArgs)
+int DataSharePredicates::SetWhereArgs(const std::vector<std::string> &whereArgs)
 {
     if (settingMode_ != PREDICATES_METHOD) {
-        if (whereArgs.empty()) {
-            return;
+        if (!whereArgs.empty()) {
+            this->whereArgs_ = whereArgs;
+            settingMode_ = QUERY_LANGUAGE;
         }
-        this->whereArgs_ = whereArgs;
-        settingMode_ = QUERY_LANGUAGE;
+        return E_OK;
+    }
+    else {
+        return E_ERROR;
     }
 }
 
@@ -894,15 +901,18 @@ std::string DataSharePredicates::GetOrder() const
 /**
  * Set Order
  */
-void DataSharePredicates::SetOrder(std::string &order)
+int DataSharePredicates::SetOrder(const std::string &order)
 {
     LOG_DEBUG("DataSharePredicates::SetOrder Start order%{public}s", order.c_str());
     if (settingMode_ != PREDICATES_METHOD) {
-        if (order.empty()) {
-            return;
+        if (!order.empty()) {
+            this->order_ = order;
+            settingMode_ = QUERY_LANGUAGE;
         }
-        this->order_ = order;
-        settingMode_ = QUERY_LANGUAGE;
+         return E_OK;
+    }
+    else {
+        return E_ERROR;
     }
 }
 
@@ -919,7 +929,7 @@ void DataSharePredicates::ClearQueryLanguage()
 /**
  * Set Setting Mode
  */
-void DataSharePredicates::SetSettingMode(SettingMode &settingMode)
+void DataSharePredicates::SetSettingMode(const SettingMode &settingMode)
 {
     settingMode_ = settingMode;
 }

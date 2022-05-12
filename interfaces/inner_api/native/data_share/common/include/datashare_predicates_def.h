@@ -82,7 +82,7 @@ typedef struct {
 } Predicates;
 
 typedef enum {
-    INVALID_MODE = 0X0,
+    INVALID_MODE,
     QUERY_LANGUAGE,
     PREDICATES_METHOD
 } SettingMode;
