@@ -15,7 +15,7 @@
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
 import storage from '@ohos.data.storage'
 
-const PATH = '/data/test_storage';
+const PATH = "/data/storage/el2/database/test_storage";
 const KEY_TEST_INT_ELEMENT = 'key_test_int';
 const KEY_TEST_LONG_ELEMENT = 'key_test_long';
 const KEY_TEST_FLOAT_ELEMENT = 'key_test_float';
@@ -257,6 +257,54 @@ describe('storageTest', function () {
             mPref.flushSync();
             expect('').assertEqual(mPref.getSync(KEY_TEST_STRING_ELEMENT, "defaultvalue"));
             done();
+        });
+    })
+
+    /**
+     * @tc.name clear、put、get、flush String callback interface test
+     * @tc.number SUB_DDM_AppDataFWK_JSPreferences_CallBack_0120
+     * @tc.desc flush String callback interface test
+     */
+     it('testCallback0172', 0, function (done) {
+        console.log("*******************testCallback0172 begin.");
+        mPref.clear(function (err, val) {
+            if(err){
+                console.log("*******************clear error: " + err);
+                expect(false).assertTrue();
+            }
+            console.log("*******************clear done.");
+            mPref.put(KEY_TEST_STRING_ELEMENT, '', function (err, ret) {
+                if(err){
+                    console.log("*******************put error: " + err);
+                    expect(false).assertTrue();
+                }
+                console.log("*******************put done.");
+                mPref.get(KEY_TEST_STRING_ELEMENT, "defaultvalue", function (err, pre) {
+                    if(err){
+                        console.log("*******************get error: " + err);
+                        expect(false).assertTrue();
+                    }
+                    console.log("*******************get done.");
+                    expect('').assertEqual(pre);
+                    mPref.flush(function (err, val) {
+                        if(err){
+                            console.log("*******************flush error: " + err);
+                            expect(false).assertTrue();
+                        }
+                        console.log("*******************flush done.");
+                        mPref.get(KEY_TEST_STRING_ELEMENT, "defaultvalue", function (err, pre2) {
+                            if(err){
+                                console.log("*******************get error: " + err);
+                                expect(false).assertTrue();
+                            }
+                            console.log("*******************get done.");
+                            expect('').assertEqual(pre2);
+                            done();
+                            console.log("*******************testCallback0172 end.");
+                        })
+                    });
+                })
+            });
         });
     })
 })

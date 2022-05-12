@@ -16,7 +16,7 @@
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
 import storage from '@ohos.data.storage'
 
-const PATH = '/data/test_storage';
+const PATH = "/data/storage/el2/database/test_storage";
 var mPref;
 
 describe('storageTest', function () {
