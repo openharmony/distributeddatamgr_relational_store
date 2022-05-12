@@ -15,7 +15,7 @@
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
 import storage from '@ohos.data.storage'
 
-const PATH = '/data/test_storage';
+const PATH = "/data/storage/el2/database/test_storage";
 const KEY_TEST_INT_ELEMENT = 'key_test_int';
 const KEY_TEST_LONG_ELEMENT = 'key_test_long';
 const KEY_TEST_FLOAT_ELEMENT = 'key_test_float';
