@@ -18,7 +18,7 @@
 
 namespace OHOS {
 namespace DataShare {
-DataShareBlockWriterImpl::DataShareBlockWriterImpl()
+DataShareBlockWriterImpl::DataShareBlockWriterImpl() : shareBlock_(nullptr)
 {
 }
 
