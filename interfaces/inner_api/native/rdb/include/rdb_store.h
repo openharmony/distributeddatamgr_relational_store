@@ -62,8 +62,6 @@ public:
     virtual int InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
         const ValuesBucket &initialValues,
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
-    virtual int InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
-        const DataShare::DataShareValuesBucket &initialValues, ConflictResolution conflictResolution) = 0;
     virtual int Update(int &changedRows, const std::string &table, const ValuesBucket &values,
         const std::string &whereClause = "",
         const std::vector<std::string> &whereArgs = std::vector<std::string>()) = 0;
@@ -72,9 +70,6 @@ public:
     virtual int UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
         const std::string &whereClause = "", const std::vector<std::string> &whereArgs = std::vector<std::string>(),
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
-    virtual int UpdateWithConflictResolution(int &changedRows, const std::string &table,
-        const DataShare::DataShareValuesBucket &values, const std::string &whereClause,
-        const std::vector<std::string> &whereArgs, ConflictResolution conflictResolution) = 0;
     virtual int Delete(int &deletedRows, const std::string &table, const std::string &whereClause = "",
         const std::vector<std::string> &whereArgs = std::vector<std::string>()) = 0;
     virtual std::unique_ptr<AbsSharedResultSet> Query(int &errCode, bool distinct, const std::string &table,
@@ -135,9 +130,7 @@ public:
     virtual std::string ObtainDistributedTableName(const std::string& device, const std::string& table) = 0;
 
     virtual bool Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) = 0;
-    virtual bool Sync(const SyncOption& option, const DataShare::DataSharePredicates& predicate,
-        const SyncCallback& callback) = 0;
-    
+
     virtual bool Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
 
     virtual bool UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;

@@ -14,11 +14,13 @@
  */
 
 #include <gtest/gtest.h>
+
 #include <string>
+
+#include "common.h"
 #include "datashare_abstract_result_set.h"
 #include "datashare_block_writer_impl.h"
 #include "datashare_predicates.h"
-#include "common.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -50,10 +52,10 @@ public:
 };
 
 const std::string RdbStepSharedResultSetTest::DATABASE_NAME = RDB_TEST_PATH + "stepResultSet_test.db";
-std::shared_ptr<RdbStore> RdbStepSharedResultSetTest::store = nullptr;
 const int RdbStepSharedResultSetTest::E_SQLITE_ERROR = -1;          // errno SQLITE_ERROR
 const int RdbStepSharedResultSetTest::E_INVALID_COLUMN_TYPE = 1009; // errno SQLITE_NULL
 const size_t RdbStepSharedResultSetTest::DEFAULT_BLOCK_SIZE = 2 * 1024 * 1024;
+std::shared_ptr<RdbStore> RdbStepSharedResultSetTest::store = nullptr;
 
 class RdbStepSharedResultSetOpenCallback : public RdbOpenCallback {
 public:
@@ -64,15 +66,18 @@ public:
     static const std::string CREATE_TABLE_TEST;
 };
 
-int RdbStepSharedResultSetOpenCallback::OnCreate(RdbStore &store) {
+int RdbStepSharedResultSetOpenCallback::OnCreate(RdbStore &store)
+{
     return E_OK;
 }
 
-int RdbStepSharedResultSetOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion) {
+int RdbStepSharedResultSetOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
+{
     return E_OK;
 }
 
-void RdbStepSharedResultSetTest::SetUpTestCase(void) {
+void RdbStepSharedResultSetTest::SetUpTestCase(void)
+{
     int errCode = E_OK;
     RdbStoreConfig config(RdbStepSharedResultSetTest::DATABASE_NAME);
     RdbStepSharedResultSetOpenCallback helper;
@@ -81,19 +86,23 @@ void RdbStepSharedResultSetTest::SetUpTestCase(void) {
     EXPECT_EQ(errCode, E_OK);
 }
 
-void RdbStepSharedResultSetTest::TearDownTestCase(void) {
+void RdbStepSharedResultSetTest::TearDownTestCase(void)
+{
     RdbHelper::DeleteRdbStore(RdbStepSharedResultSetTest::DATABASE_NAME);
 }
 
-void RdbStepSharedResultSetTest::SetUp(void) {
+void RdbStepSharedResultSetTest::SetUp(void)
+{
     store->ExecuteSql("DELETE FROM test");
 }
 
-void RdbStepSharedResultSetTest::TearDown(void) {
+void RdbStepSharedResultSetTest::TearDown(void)
+{
     RdbHelper::ClearCache();
 }
 
-void RdbStepSharedResultSetTest::GenerateDefaultTable() {
+void RdbStepSharedResultSetTest::GenerateDefaultTable()
+{
     std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ") +
                                  std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
     store->ExecuteSql(createTableSql);
@@ -104,32 +113,33 @@ void RdbStepSharedResultSetTest::GenerateDefaultTable() {
     uint8_t uValue = 66;
     std::vector<uint8_t> typeBlob;
     typeBlob.push_back(uValue);
-    store->ExecuteSql(insertSql, std::vector<ValueObject>{
-            ValueObject(std::string("hello")), ValueObject((int) 10),
-            ValueObject((double) 1.0), ValueObject((std::vector<uint8_t>) typeBlob)
+    store->ExecuteSql(insertSql, std::vector<ValueObject> {
+        ValueObject(std::string("hello")), ValueObject((int)10),
+        ValueObject((double)1.0), ValueObject((std::vector<uint8_t>)typeBlob)
     });
 
     /* insert second entry data */
     typeBlob.clear();
-    store->ExecuteSql(insertSql, std::vector<ValueObject>{
-            ValueObject(std::string("2")), ValueObject((int) -5),
-            ValueObject((double) 2.5), ValueObject() // set double value 2.5
+    store->ExecuteSql(insertSql, std::vector<ValueObject> {
+        ValueObject(std::string("2")), ValueObject((int)-5), ValueObject((double)2.5),
+        ValueObject() // set double value 2.5
     });
 
     /* insert third entry data */
-    store->ExecuteSql(insertSql, std::vector<ValueObject>{
-            ValueObject(std::string("hello world")),
-            ValueObject((int) 3), ValueObject((double) 1.8), ValueObject() // set int value 3, double 1.8
+    store->ExecuteSql(insertSql, std::vector<ValueObject> {
+        ValueObject(std::string("hello world")), ValueObject((int)3),
+        ValueObject((double)1.8), ValueObject() // set int value 3, double 1.8
     });
 
     /* insert four entry data */
-    store->ExecuteSql(insertSql, std::vector<ValueObject>{
-            ValueObject(std::string("new world")),
-            ValueObject((int) 5), ValueObject((double) 5.8), ValueObject() // set int value 5, double 5.8
+    store->ExecuteSql(insertSql, std::vector<ValueObject> {
+        ValueObject(std::string("new world")), ValueObject((int)5),
+        ValueObject((double)5.8), ValueObject() // set int value 5, double 5.8
     });
 }
 
-void RdbStepSharedResultSetTest::GenerateDefaultEmptyTable() {
+void RdbStepSharedResultSetTest::GenerateDefaultEmptyTable()
+{
     std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ") +
                                  std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
     store->ExecuteSql(createTableSql);
@@ -146,7 +156,7 @@ HWTEST_F(RdbStepSharedResultSetTest, RdbStore_StepSharedResultSet_001, TestSize.
     GenerateDefaultTable();
 
     std::shared_ptr<OHOS::DataShare::DataShareAbstractResultSet> resultSet = store->DataShareQueryByStep(
-            "SELECT * FROM test");
+        "SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     int rowCount;
     resultSet.get()->GetRowCount(rowCount);

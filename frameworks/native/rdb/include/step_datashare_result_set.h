@@ -20,18 +20,18 @@
 #include <thread>
 #include <vector>
 
-#include "rdb_store_impl.h"
 #include "abs_result_set.h"
-#include "sqlite_statement.h"
 #include "datashare_abs_result_set.h"
 #include "datashare_abstract_result_set.h"
+#include "rdb_store_impl.h"
+#include "sqlite_statement.h"
 
 namespace OHOS {
 namespace NativeRdb {
 class StepDataShareResultSet : public DataShare::DataShareAbsResultSet, public DataShare::DataShareAbstractResultSet {
 public:
-    StepDataShareResultSet(std::shared_ptr<RdbStoreImpl> rdb, const std::string &sql,
-        const std::vector<std::string> &selectionArgs);
+    StepDataShareResultSet(
+        std::shared_ptr<RdbStoreImpl> rdb, const std::string &sql, const std::vector<std::string> &selectionArgs);
     ~StepDataShareResultSet() override;
 
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
@@ -53,8 +53,8 @@ public:
     int FinishStep();
     int PrepareStep();
     int GetAllColumnOrKeyName(std::vector<std::string> &columnOrKeyNames) override;
-    bool OnGo(int oldRowIndex, int targetRowIndex,
-        const std::shared_ptr<DataShare::DataShareBlockWriter> &writer) override;
+    bool OnGo(
+        int oldRowIndex, int targetRowIndex, const std::shared_ptr<DataShare::DataShareBlockWriter> &writer) override;
 
 private:
     int CheckSession();
@@ -79,7 +79,7 @@ private:
         const std::shared_ptr<DataShare::DataShareBlockWriter> &writer);
     bool WriteBlobData(int row, int column, const std::shared_ptr<DataShare::DataShareBlockWriter> &writer);
     void WriteColumn(int columnCount, const DataShare::DataType *columnTypes,
-                     const std::shared_ptr<DataShare::DataShareBlockWriter> &writer, int row);
+        const std::shared_ptr<DataShare::DataShareBlockWriter> &writer, int row);
 };
 } // namespace NativeRdb
 } // namespace OHOS

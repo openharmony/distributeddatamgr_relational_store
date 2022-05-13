@@ -36,16 +36,12 @@ private:
     RdbUtils();
     ~RdbUtils();
     static void ToOperateThird(
-            std::list<DataShare::OperationItem>::iterator operations,
-            std::shared_ptr<AbsRdbPredicates> predicates);
+        std::list<DataShare::OperationItem>::iterator operations, std::shared_ptr<AbsRdbPredicates> predicates);
     static void ToOperateSecond(
-            std::list<DataShare::OperationItem>::iterator operations,
-            std::shared_ptr<AbsRdbPredicates> predicates);
+        std::list<DataShare::OperationItem>::iterator operations, std::shared_ptr<AbsRdbPredicates> predicates);
     static void ToOperateFirst(
-            std::list<DataShare::OperationItem>::iterator operations,
-            std::shared_ptr<AbsRdbPredicates> predicates);
-    static std::string ToString(
-            const DataShare::DataSharePredicatesObject &predicatesObject);
+        std::list<DataShare::OperationItem>::iterator operations, std::shared_ptr<AbsRdbPredicates> predicates);
+    static std::string ToString(const DataShare::DataSharePredicatesObject &predicatesObject);
 };
 } // namespace NativeRdb
 } // namespace OHOS
