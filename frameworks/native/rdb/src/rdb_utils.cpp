@@ -178,7 +178,7 @@ std::shared_ptr<AbsRdbPredicates> RdbUtils::ToOperate(const DataSharePredicates 
     } else {
         std::list<OperationItem> operationLists = dataSharePredicates.GetOperationList();
         std::list<OperationItem>::iterator operations;
-        for (operations = operationLists.begin(); operations != operationLists.end(); operations++) {
+        for (operations = operationLists.begin(); operations != operationLists.end(); ++operations) {
             ToOperateFirst(operations, predicates);
             ToOperateSecond(operations, predicates);
             ToOperateThird(operations, predicates);
