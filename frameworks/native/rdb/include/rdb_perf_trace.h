@@ -19,7 +19,7 @@
 #include "hitrace_meter.h"
 
 namespace OHOS::NativeRdb {
-#define RDB_TRACE_BEGIN(name) StartTrace(BYTRACE_TAG_DISTRIBUTEDDATA, (name))
-#define RDB_TRACE_END() FinishTrace(BYTRACE_TAG_DISTRIBUTEDDATA)
+#define RDB_TRACE_BEGIN(name) StartTrace(HITRACE_TAG_DISTRIBUTEDDATA, (name))
+#define RDB_TRACE_END() FinishTrace(HITRACE_TAG_DISTRIBUTEDDATA)
 }
 #endif
