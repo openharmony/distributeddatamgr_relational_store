@@ -204,13 +204,6 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
     return errCode;
 }
 
-int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
-    const DataShare::DataShareValuesBucket &dataShareValues, ConflictResolution conflictResolution)
-{
-    ValuesBucket initialValues = RdbUtils::ConvertToValuesBucket(dataShareValues);
-    return InsertWithConflictResolution(outRowId, table, initialValues, conflictResolution);
-}
-
 int RdbStoreImpl::Update(int &changedRows, const std::string &table, const ValuesBucket &values,
     const std::string &whereClause, const std::vector<std::string> &whereArgs)
 {
@@ -284,14 +277,6 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
     ReleaseThreadSession();
     RDB_TRACE_END();
     return errCode;
-}
-
-int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::string &table,
-    const DataShare::DataShareValuesBucket &dataShareValues, const std::string &whereClause,
-    const std::vector<std::string> &whereArgs, ConflictResolution conflictResolution)
-{
-    ValuesBucket values = RdbUtils::ConvertToValuesBucket(dataShareValues);
-    return UpdateWithConflictResolution(changedRows, table, values, whereClause, whereArgs, conflictResolution);
 }
 
 int RdbStoreImpl::Delete(int &deletedRows, const AbsRdbPredicates &predicates)
@@ -859,13 +844,6 @@ bool RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predic
     LOG_INFO("success");
     RDB_TRACE_END();
     return true;
-}
-
-bool RdbStoreImpl::Sync(const SyncOption &option, const DataShare::DataSharePredicates &dataSharePredicates,
-    const SyncCallback &callback)
-{
-    std::shared_ptr<AbsRdbPredicates> predicate = RdbUtils::ToOperate(dataSharePredicates);
-    return Sync(option, *predicate.get(), callback);
 }
 
 bool RdbStoreImpl::Subscribe(const SubscribeOption &option, RdbStoreObserver *observer)

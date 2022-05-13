@@ -14,6 +14,7 @@
  */
 
 #include "rdb_utils.h"
+
 #include "logger.h"
 
 using namespace OHOS::NativeRdb;
@@ -52,8 +53,8 @@ ValuesBucket RdbUtils::ConvertToValuesBucket(DataShareValuesBucket dataShareValu
     return ValuesBucket(valuesMap);
 }
 
-void RdbUtils::ToOperateFirst(std::list<OperationItem>::iterator operations,
-    std::shared_ptr<AbsRdbPredicates> predicates)
+void RdbUtils::ToOperateFirst(
+    std::list<OperationItem>::iterator operations, std::shared_ptr<AbsRdbPredicates> predicates)
 {
     switch (operations->operation) {
         case OperationType::EQUAL_TO:
@@ -81,7 +82,8 @@ void RdbUtils::ToOperateFirst(std::list<OperationItem>::iterator operations,
             predicates->BeginWrap();
             break;
         case OperationType::BETWEEN:
-            predicates->Between(ToString(operations->para1), ToString(operations->para2), ToString(operations->para3));
+            predicates->Between(
+                ToString(operations->para1), ToString(operations->para2), ToString(operations->para3));
             break;
         default:
             LOG_INFO("RdbUtils::ToOperateFirst successful");
@@ -89,8 +91,8 @@ void RdbUtils::ToOperateFirst(std::list<OperationItem>::iterator operations,
     }
 }
 
-void RdbUtils::ToOperateSecond(std::list<OperationItem>::iterator operations,
-    std::shared_ptr<AbsRdbPredicates> predicates)
+void RdbUtils::ToOperateSecond(
+    std::list<OperationItem>::iterator operations, std::shared_ptr<AbsRdbPredicates> predicates)
 {
     switch (operations->operation) {
         case OperationType::BEGIN_WITH:
@@ -115,8 +117,8 @@ void RdbUtils::ToOperateSecond(std::list<OperationItem>::iterator operations,
             predicates->IndexedBy(ToString(operations->para1));
             break;
         case OperationType::NOTBETWEEN:
-            predicates->NotBetween(ToString(operations->para1), ToString(operations->para2),
-                ToString(operations->para3));
+            predicates->NotBetween(
+                ToString(operations->para1), ToString(operations->para2), ToString(operations->para3));
             break;
         case OperationType::ORDER_BY_ASC:
             predicates->OrderByAsc(ToString(operations->para1));
@@ -127,8 +129,8 @@ void RdbUtils::ToOperateSecond(std::list<OperationItem>::iterator operations,
     }
 }
 
-void RdbUtils::ToOperateThird(std::list<OperationItem>::iterator operations,
-    std::shared_ptr<AbsRdbPredicates> predicates)
+void RdbUtils::ToOperateThird(
+    std::list<OperationItem>::iterator operations, std::shared_ptr<AbsRdbPredicates> predicates)
 {
     switch (operations->operation) {
         case OperationType::ORDER_BY_DESC:
@@ -152,7 +154,8 @@ void RdbUtils::ToOperateThird(std::list<OperationItem>::iterator operations,
             predicates->LessThanOrEqualTo(ToString(operations->para1), ToString(operations->para2));
             break;
         case OperationType::NOT_IN:
-            predicates->NotIn(ToString(operations->para1), std::get<std::vector<std::string>>(operations->para2.value));
+            predicates->NotIn(
+                ToString(operations->para1), std::get<std::vector<std::string>>(operations->para2.value));
             break;
         case OperationType::LIKE:
             predicates->Like(ToString(operations->para1), ToString(operations->para2));

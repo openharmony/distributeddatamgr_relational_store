@@ -27,7 +27,7 @@ config("module_private_config") {
     "../../../../interfaces/inner_api/native/appdatafwk/include",
     "../../../../interfaces/inner_api/native/data_share/common/include",
     "../../../../interfaces/inner_api/native/data_share/consumer/include",
-    "../../../../interfaces/inner_api/native/data_share/provider/include",  
+    "../../../../interfaces/inner_api/native/data_share/provider/include",
     "//utils/native/base/include",
   ]
 

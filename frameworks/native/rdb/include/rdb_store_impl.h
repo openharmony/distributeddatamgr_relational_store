@@ -27,7 +27,6 @@
 #include "sqlite_connection_pool.h"
 #include "sqlite_statement.h"
 #include "store_session.h"
-
 #include "transaction_observer.h"
 
 namespace OHOS {
@@ -51,8 +50,6 @@ public:
         const DataShare::DataShareValuesBucket &initialValues) override;
     int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues,
         ConflictResolution conflictResolution) override;
-    int InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
-        const DataShare::DataShareValuesBucket &initialValues, ConflictResolution conflictResolution) override;
     int Update(int &changedRows, const std::string &table, const ValuesBucket &values, const std::string &whereClause,
         const std::vector<std::string> &whereArgs) override;
     int Update(int &changedRows, const std::string &table, const DataShare::DataShareValuesBucket &values,
@@ -60,9 +57,6 @@ public:
     int UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
         const std::string &whereClause, const std::vector<std::string> &whereArgs,
         ConflictResolution conflictResolution) override;
-    int UpdateWithConflictResolution(int &changedRows, const std::string &table,
-        const DataShare::DataShareValuesBucket &values, const std::string &whereClause,
-        const std::vector<std::string> &whereArgs, ConflictResolution conflictResolution) override;
     int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
         const std::vector<std::string> &whereArgs) override;
     std::unique_ptr<AbsSharedResultSet> Query(int &errCode, bool distinct,
@@ -137,8 +131,6 @@ public:
     std::string ObtainDistributedTableName(const std::string& device, const std::string& table) override;
 
     bool Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) override;
-    bool Sync(const SyncOption& option, const DataShare::DataSharePredicates& predicate,
-        const SyncCallback& callback) override;
 
     bool Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;
 

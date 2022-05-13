@@ -30,8 +30,7 @@ namespace OHOS {
 namespace NativeRdb {
 StepDataShareResultSet::StepDataShareResultSet(
     std::shared_ptr<RdbStoreImpl> rdb, const std::string &sql, const std::vector<std::string> &selectionArgs)
-    : rdb(rdb), sql(sql), selectionArgs(selectionArgs), isAfterLast(false), rowCount(INIT_POS),
-      sqliteStatement(nullptr)
+    : rdb(rdb), sql(sql), selectionArgs(selectionArgs), isAfterLast(false), rowCount(INIT_POS), sqliteStatement(nullptr)
 {
 }
 
@@ -385,8 +384,8 @@ int StepDataShareResultSet::GetAllColumnOrKeyName(std::vector<std::string> &colu
     return GetAllColumnNames(columnOrKeyNames);
 }
 
-bool StepDataShareResultSet::OnGo(int oldRowIndex, int targetRowIndex,
-    const std::shared_ptr<DataShareBlockWriter> &writer)
+bool StepDataShareResultSet::OnGo(
+    int oldRowIndex, int targetRowIndex, const std::shared_ptr<DataShareBlockWriter> &writer)
 {
     if (writer == nullptr) {
         LOG_ERROR("Writer is null.");
@@ -439,13 +438,13 @@ void StepDataShareResultSet::GetColumnTypes(int columnCount, DataType columnType
     }
 }
 
-void StepDataShareResultSet::WriteBlock(int columnCount, DataType columnTypes[],
-    const std::shared_ptr<DataShareBlockWriter> &writer)
+void StepDataShareResultSet::WriteBlock(
+    int columnCount, DataType columnTypes[], const std::shared_ptr<DataShareBlockWriter> &writer)
 {
     bool isFull = false;
     int errCode = 0;
     int row = 0;
-    while(!isFull && !errCode) {
+    while (!isFull && !errCode) {
         int status = writer->AllocRow();
         if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
             isFull = true;
@@ -459,8 +458,9 @@ void StepDataShareResultSet::WriteBlock(int columnCount, DataType columnTypes[],
     }
 }
 
-void StepDataShareResultSet::WriteColumn(int columnCount, const DataType *columnTypes,
-    const std::shared_ptr<DataShareBlockWriter> &writer, int row) {
+void StepDataShareResultSet::WriteColumn(
+    int columnCount, const DataType *columnTypes, const std::shared_ptr<DataShareBlockWriter> &writer, int row)
+{
     for (int i = 0; i < columnCount; i++) {
         LOG_DEBUG("Write data of row: %{public}d, column: %{public}d", row, i);
         switch (columnTypes[i]) {
@@ -491,7 +491,7 @@ void StepDataShareResultSet::WriteColumn(int columnCount, const DataType *column
             default:
                 std::string stringValue;
                 GetString(i, stringValue);
-                if (writer->WriteString(row, i, (char*)stringValue.c_str(), sizeof(stringValue))) {
+                if (writer->WriteString(row, i, (char *)stringValue.c_str(), sizeof(stringValue))) {
                     LOG_DEBUG("WriteString failed of row: %{public}d, column: %{public}d", row, i);
                 }
         }
@@ -505,7 +505,7 @@ bool StepDataShareResultSet::WriteBlobData(int row, int column, const std::share
     std::string str;
     str.assign(blobValue.begin(), blobValue.end());
     const char *value = str.c_str();
-    return writer->WriteBlob(row, column, value, sizeof(value));
+    return writer->WriteBlob(row, column, value, str.size());
 }
 } // namespace NativeRdb
 } // namespace OHOS
