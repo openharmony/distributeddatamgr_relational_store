@@ -45,7 +45,7 @@ constexpr int INVALID_VALUE = -1;
 }
 
 void PrintPredicates(const DataSharePredicates &predicates);
-bool MakeNapiColumn(napi_env env, napi_value &napiColumns, const std::vector<std::string> columns);
+bool MakeNapiColumn(napi_env env, napi_value &napiColumns, const std::vector<std::string> &columns);
 
 using namespace OHOS::AppExecFwk;
 using OHOS::Security::AccessToken::AccessTokenKit;
