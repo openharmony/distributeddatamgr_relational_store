@@ -75,6 +75,12 @@ int DataShareAbsResultSet::GetDataType(int columnIndex, DataType &dataType)
     return E_OK;
 }
 
+int DataShareAbsResultSet::GetRowIndex(int &position) const
+{
+    position = rowPos_;
+    return E_OK;
+}
+
 int DataShareAbsResultSet::GoTo(int offset)
 {
     int ret = GoToRow(rowPos_ + offset);
@@ -129,6 +135,42 @@ int DataShareAbsResultSet::GoToPreviousRow()
         LOG_ERROR("DataShareAbsResultSet::GoToPreviousRow  return GoToRow::ret is wrong!");
         return ret;
     }
+    return E_OK;
+}
+
+int DataShareAbsResultSet::IsAtFirstRow(bool &result) const
+{
+    result = (rowPos_ == 0);
+    return E_OK;
+}
+
+int DataShareAbsResultSet::IsAtLastRow(bool &result)
+{
+    int rowCnt = 0;
+    int ret = GetRowCount(rowCnt);
+    if (ret != E_OK) {
+        LOG_ERROR("DataShareAbsResultSet::IsAtLastRow  return GetRowCount::ret is wrong!");
+        return ret;
+    }
+    result = (rowPos_ == (rowCnt - 1));
+    return E_OK;
+}
+
+int DataShareAbsResultSet::IsStarted(bool &result) const
+{
+    result = (rowPos_ != INIT_POS);
+    return E_OK;
+}
+
+int DataShareAbsResultSet::IsEnded(bool &result)
+{
+    int rowCnt = 0;
+    int ret =  GetRowCount(rowCnt);
+    if (ret != E_OK) {
+        LOG_ERROR("DataShareAbsResultSet::IsEnded  return GetRowCount::ret is wrong!");
+        return ret;
+    }
+    result = (rowCnt == 0) ? true : (rowPos_ == rowCnt);
     return E_OK;
 }
 
