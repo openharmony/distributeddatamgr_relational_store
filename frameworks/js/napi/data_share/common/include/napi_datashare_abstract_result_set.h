@@ -40,9 +40,6 @@ private:
         napi_callback_info info);
     static napi_value Initialize(napi_env env, napi_callback_info info);
 
-    static napi_value GetRowCount(napi_env env, napi_callback_info info);
-    static napi_value GetAllColumnNames(napi_env env, napi_callback_info info);
-
     std::shared_ptr<DataShareAbstractResultSet> resultSet_;
 };
 napi_value GetNapiAbstractResultSetObject(napi_env env, DataShareAbstractResultSet *resultSet);
