@@ -169,13 +169,20 @@ void RdbUtils::ToOperateThird(std::list<OperationItem>::iterator operations,
 
 std::shared_ptr<AbsRdbPredicates> RdbUtils::ToOperate(const DataSharePredicates &dataSharePredicates)
 {
-    std::list<OperationItem> operationLists = dataSharePredicates.GetOperationList();
-    std::list<OperationItem>::iterator operations;
-    std::shared_ptr<AbsRdbPredicates> predicates = std::make_shared<AbsRdbPredicates>(dataSharePredicates.GetTableName());
-    for (operations = operationLists.begin(); operations != operationLists.end(); operations++) {
-        ToOperateFirst(operations, predicates);
-        ToOperateSecond(operations, predicates);
-        ToOperateThird(operations, predicates);
+    std::shared_ptr<AbsRdbPredicates> predicates = std::make_shared<AbsRdbPredicates>(
+        dataSharePredicates.GetTableName());
+    if (dataSharePredicates.GetSettingMode() == DataShare::QUERY_LANGUAGE) {
+        predicates->SetWhereClause(dataSharePredicates.GetWhereClause());
+        predicates->SetWhereArgs(dataSharePredicates.GetWhereArgs());
+        predicates->SetOrder(dataSharePredicates.GetOrder());
+    } else {
+        std::list<OperationItem> operationLists = dataSharePredicates.GetOperationList();
+        std::list<OperationItem>::iterator operations;
+        for (operations = operationLists.begin(); operations != operationLists.end(); ++operations) {
+            ToOperateFirst(operations, predicates);
+            ToOperateSecond(operations, predicates);
+            ToOperateThird(operations, predicates);
+        }
     }
     return predicates;
 }
