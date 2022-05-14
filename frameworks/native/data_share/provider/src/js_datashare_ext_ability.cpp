@@ -733,7 +733,7 @@ void PrintPredicates(const DataSharePredicates &predicates)
     }
 }
 
-bool MakeNapiColumn(napi_env env, napi_value &napiColumns, const std::vector<std::string> columns)
+bool MakeNapiColumn(napi_env env, napi_value &napiColumns, const std::vector<std::string> &columns)
 {
     napi_status status = napi_create_array(env, &napiColumns);
     if (status != napi_ok) {
