@@ -51,16 +51,12 @@ void DataSharePredicatesProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("orderByDesc", OrderByDesc),
         DECLARE_NAPI_FUNCTION("distinct", Distinct),
         DECLARE_NAPI_FUNCTION("limit", Limit),
-        DECLARE_NAPI_FUNCTION("offsetAs", Offset),
         DECLARE_NAPI_FUNCTION("groupBy", GroupBy),
         DECLARE_NAPI_FUNCTION("indexedBy", IndexedBy),
         DECLARE_NAPI_FUNCTION("in", In),
         DECLARE_NAPI_FUNCTION("notIn", NotIn),
         DECLARE_NAPI_FUNCTION("prefixKey", PrefixKey),
-        DECLARE_NAPI_FUNCTION("setSuggestIndex", SetSuggestIndex),
-        DECLARE_NAPI_FUNCTION("inAllDevices", InAllDevices),
-        DECLARE_NAPI_FUNCTION("inDevices", InDevices),
-        DECLARE_NAPI_FUNCTION("reset", Reset),
+        DECLARE_NAPI_FUNCTION("inKeys", InKeys),
     };
 
     napi_value cons;
@@ -175,22 +171,25 @@ napi_value DataSharePredicatesProxy::EqualTo(napi_env env, napi_callback_info in
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::EqualTo Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, args[1], &valueType);
-    // std::string value = DataShareJSUtils::ConvertAny2String(env, args[1]);
+    napi_status status = napi_typeof(env, args[1], &valueType);
+    LOG_INFO("napi_typeof status : %{public}d", status);
     switch (valueType) {
         case napi_number: {
             double value;
             napi_get_value_double(env, args[1], &value);
             GetNativePredicates(env, info)->EqualTo(field, value);
+            break;
         }
         case napi_boolean: {
             bool value = false;
             napi_get_value_bool(env, args[1], &value);
             GetNativePredicates(env, info)->EqualTo(field, value);
+            break;
         }
         case napi_string: {
             std::string value = DataShareJSUtils::Convert2String(env, args[1], DataShareJSUtils::DEFAULT_BUF_SIZE);
             GetNativePredicates(env, info)->EqualTo(field, value);
+            break;
         }
         default:
             break;
@@ -208,21 +207,25 @@ napi_value DataSharePredicatesProxy::NotEqualTo(napi_env env, napi_callback_info
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::NotEqualTo Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, args[1], &valueType);
+    napi_status status = napi_typeof(env, args[1], &valueType);
+    LOG_INFO("napi_typeof status : %{public}d", status);
     switch (valueType) {
         case napi_number: {
             double value;
             napi_get_value_double(env, args[1], &value);
             GetNativePredicates(env, info)->NotEqualTo(field, value);
+            break;
         }
         case napi_boolean: {
             bool value = false;
             napi_get_value_bool(env, args[1], &value);
             GetNativePredicates(env, info)->NotEqualTo(field, value);
+            break;
         }
         case napi_string: {
             std::string value = DataShareJSUtils::Convert2String(env, args[1], DataShareJSUtils::DEFAULT_BUF_SIZE);
             GetNativePredicates(env, info)->NotEqualTo(field, value);
+            break;
         }
         default:
             break;
@@ -418,16 +421,19 @@ napi_value DataSharePredicatesProxy::GreaterThan(napi_env env, napi_callback_inf
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::GreaterThan Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, args[1], &valueType);
+    napi_status status = napi_typeof(env, args[1], &valueType);
+    LOG_INFO("napi_typeof status : %{public}d", status);
     switch (valueType) {
         case napi_number: {
             double value;
             napi_get_value_double(env, args[1], &value);
             GetNativePredicates(env, info)->GreaterThan(field, value);
+            break;
         }
         case napi_string: {
             std::string value = DataShareJSUtils::Convert2String(env, args[1], DataShareJSUtils::DEFAULT_BUF_SIZE);
             GetNativePredicates(env, info)->GreaterThan(field, value);
+            break;
         }
         default:
             break;
@@ -451,10 +457,12 @@ napi_value DataSharePredicatesProxy::LessThan(napi_env env, napi_callback_info i
             double value;
             napi_get_value_double(env, args[1], &value);
             GetNativePredicates(env, info)->LessThan(field, value);
+            break;
         }
         case napi_string: {
             std::string value = DataShareJSUtils::Convert2String(env, args[1], DataShareJSUtils::DEFAULT_BUF_SIZE);
             GetNativePredicates(env, info)->LessThan(field, value);
+            break;
         }
         default:
             break;
@@ -472,16 +480,19 @@ napi_value DataSharePredicatesProxy::GreaterThanOrEqualTo(napi_env env, napi_cal
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::GreaterThanOrEqualTo Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, args[1], &valueType);
+    napi_status status = napi_typeof(env, args[1], &valueType);
+    LOG_INFO("napi_typeof status : %{public}d", status);
     switch (valueType) {
         case napi_number: {
             double value;
             napi_get_value_double(env, args[1], &value);
             GetNativePredicates(env, info)->GreaterThanOrEqualTo(field, value);
+            break;
         }
         case napi_string: {
             std::string value = DataShareJSUtils::Convert2String(env, args[1], DataShareJSUtils::DEFAULT_BUF_SIZE);
             GetNativePredicates(env, info)->GreaterThanOrEqualTo(field, value);
+            break;
         }
         default:
             break;
@@ -499,16 +510,19 @@ napi_value DataSharePredicatesProxy::LessThanOrEqualTo(napi_env env, napi_callba
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::LessThanOrEqualTo Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, args[1], &valueType);
+    napi_status status = napi_typeof(env, args[1], &valueType);
+    LOG_INFO("napi_typeof status : %{public}d", status);
     switch (valueType) {
         case napi_number: {
             double value;
             napi_get_value_double(env, args[1], &value);
             GetNativePredicates(env, info)->LessThanOrEqualTo(field, value);
+            break;
         }
         case napi_string: {
             std::string value = DataShareJSUtils::Convert2String(env, args[1], DataShareJSUtils::DEFAULT_BUF_SIZE);
             GetNativePredicates(env, info)->LessThanOrEqualTo(field, value);
+            break;
         }
         default:
             break;
@@ -560,24 +574,12 @@ napi_value DataSharePredicatesProxy::Limit(napi_env env, napi_callback_info info
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::Limit Invalid argvs!");
     int number = 0;
-    napi_get_value_int32(env, args[0], &number);
+    napi_status status = napi_get_value_int32(env, args[0], &number);
+    LOG_INFO("number, napi_get_value_int32 : %{public}d", status);
     int offset = 0;
-    napi_get_value_int32(env, args[1], &offset);
+    status = napi_get_value_int32(env, args[1], &offset);
+    LOG_INFO("offset, napi_get_value_int32 : %{public}d", status);
     GetNativePredicates(env, info)->Limit(number, offset);
-    return thiz;
-}
-
-napi_value DataSharePredicatesProxy::Offset(napi_env env, napi_callback_info info)
-{
-    LOG_DEBUG("DataSharePredicatesProxy::Offset on called.");
-    napi_value thiz;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::Offset Invalid argvs!");
-    int32_t offset = 0;
-    napi_get_value_int32(env, args[0], &offset);
-    GetNativePredicates(env, info)->Offset(offset);
     return thiz;
 }
 
@@ -643,28 +645,6 @@ std::shared_ptr<DataSharePredicates> DataSharePredicatesProxy::GetPredicates() c
     return this->predicates_;
 }
 
-napi_value DataSharePredicatesProxy::Reset(napi_env env, napi_callback_info info)
-{
-    LOG_DEBUG("DataSharePredicatesProxy::Reset on called.");
-    napi_value thiz;
-    napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
-    GetNativePredicates(env, info)->Reset();
-    return thiz;
-}
-
-napi_value DataSharePredicatesProxy::SetSuggestIndex(napi_env env, napi_callback_info info)
-{
-    LOG_DEBUG("DataSharePredicatesProxy::SetSuggestIndex on called.");
-    napi_value thiz;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::SetSuggestIndex Invalid argvs!");
-    std::string index = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
-    GetNativePredicates(env, info)->SetSuggestIndex(index);
-    return thiz;
-}
-
 napi_value DataSharePredicatesProxy::PrefixKey(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("DataSharePredicatesProxy::PrefixKey on called.");
@@ -678,26 +658,17 @@ napi_value DataSharePredicatesProxy::PrefixKey(napi_env env, napi_callback_info 
     return thiz;
 }
 
-napi_value DataSharePredicatesProxy::InDevices(napi_env env, napi_callback_info info)
+napi_value DataSharePredicatesProxy::InKeys(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataSharePredicatesProxy::InDevices on called.");
+    LOG_DEBUG("DataSharePredicatesProxy::InKeys on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::InDevices Invalid argvs!");
-    std::vector<std::string> devices = DataShareJSUtils::Convert2StrVector(env,
+    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::InKeys Invalid argvs!");
+    std::vector<std::string> keys = DataShareJSUtils::Convert2StrVector(env,
         args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
-    GetNativePredicates(env, info)->InDevices(devices);
-    return thiz;
-}
-
-napi_value DataSharePredicatesProxy::InAllDevices(napi_env env, napi_callback_info info)
-{
-    LOG_DEBUG("DataSharePredicatesProxy::InAllDevices on called.");
-    napi_value thiz;
-    napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
-    GetNativePredicates(env, info)->InAllDevices();
+    GetNativePredicates(env, info)->InKeys(keys);
     return thiz;
 }
 

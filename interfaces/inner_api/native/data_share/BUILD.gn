@@ -99,13 +99,12 @@ ohos_shared_library("datashare_abilitykit") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
-    "bytrace_standard:bytrace_core",
     "ipc:ipc_core",
     "ipc_js:rpc",
     "native_appdatamgr:native_dataability",
+    "native_appdatamgr:native_rdb",
     "permission_standard:libpermissionsdk_standard",
     "utils_base:utils",
-    "native_appdatamgr:native_rdb",
   ]
 
   public_deps = [

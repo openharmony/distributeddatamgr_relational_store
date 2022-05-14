@@ -14,6 +14,7 @@
  */
 
 #include "datashare_js_utils.h"
+#include "datashare_log.h"
 
 #include "securec.h"
 
@@ -123,14 +124,16 @@ std::string DataShareJSUtils::ConvertAny2String(napi_env env, napi_value jsValue
 double DataShareJSUtils::Convert2Value(napi_env env, napi_value jsValue, double TypeValue)
 {
     double valueNumber;
-    napi_get_value_double(env, jsValue, &valueNumber);
+    napi_status status = napi_get_value_double(env, jsValue, &valueNumber);
+    LOG_INFO("napi_get_value_double : %{public}d", status);
     return valueNumber;
 }
 
 bool DataShareJSUtils::Convert2Value(napi_env env, napi_value jsValue, bool TypeValue)
 {
     bool valueBool = false;
-    napi_get_value_bool(env, jsValue, &valueBool);
+    napi_status status = napi_get_value_bool(env, jsValue, &valueBool);
+    LOG_INFO("napi_get_value_bool : %{public}d", status);
     return valueBool;
 }
 
