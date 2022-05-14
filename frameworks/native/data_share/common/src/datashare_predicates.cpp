@@ -738,6 +738,14 @@ DataSharePredicates *DataSharePredicates::InKeys(const std::vector<std::string> 
 }
 
 /**
+ * Obtains the table name.
+ */
+std::string DataSharePredicates::GetTableName() const
+{
+    return predicates_.tableName;
+}
+
+/**
  * GetOperationList
  */
 const std::list<OperationItem>& DataSharePredicates::GetOperationList() const

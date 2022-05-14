@@ -78,6 +78,17 @@ public:
     virtual int GetRowCount(int &count) = 0;
 
     /**
+     * Returns the current position of the cursor in the result set.
+     * The value is zero-based. When the result set is first returned the cursor
+     * will be at position -1, which is before the first row.
+     * After the last row is returned another call to next() will leave the cursor past
+     * the last entry, at a position of count().
+     *
+     * return the current cursor position.
+     */
+    virtual int GetRowIndex(int &position) const = 0;
+
+    /**
      * Move the cursor a relative amount from current position. Positive offset move forward,
      * negative offset move backward.
      *
@@ -121,6 +132,36 @@ public:
      * return whether the requested move succeeded.
      */
     virtual int GoToPreviousRow() = 0;
+
+    /**
+     * Returns whether the cursor is pointing to the position after the last
+     * row.
+     *
+     * return whether the cursor is before the first row.
+     */
+    virtual int IsEnded(bool &result) = 0;
+
+    /**
+     * Returns whether the cursor is pointing to the position before the first
+     * row.
+     *
+     * return whether the cursor is before the first row.
+     */
+    virtual int IsStarted(bool &result) const = 0;
+
+    /**
+     * Returns whether the cursor is pointing to the first row.
+     *
+     * return whether the cursor is pointing at the first entry.
+     */
+    virtual int IsAtFirstRow(bool &result) const = 0;
+
+    /**
+     * Returns whether the cursor is pointing to the last row.
+     *
+     * return whether the cursor is pointing at the last entry.
+     */
+    virtual int IsAtLastRow(bool &result) = 0;
 
     /**
      * Returns the value of the requested column as a byte array.

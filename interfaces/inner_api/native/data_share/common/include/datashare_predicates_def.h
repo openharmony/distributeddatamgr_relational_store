@@ -49,6 +49,7 @@ typedef enum {
     ORDER_BY_ASC,
     ORDER_BY_DESC,
     LIMIT,
+    OFFSET,
     BEGIN_WARP,
     END_WARP,
     BEGIN_WITH,
