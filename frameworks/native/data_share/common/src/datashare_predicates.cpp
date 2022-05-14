@@ -17,6 +17,7 @@
 
 #include <cinttypes>
 #include "datashare_log.h"
+#include "datashare_errno.h"
 namespace OHOS {
 namespace DataShare {
 DataSharePredicates::DataSharePredicates()
@@ -26,16 +27,6 @@ DataSharePredicates::DataSharePredicates()
 DataSharePredicates::DataSharePredicates(Predicates &predicates)
     : predicates_(predicates)
 {
-}
-
-DataSharePredicates::DataSharePredicates(std::string &tablename)
-{
-    if (tablename.empty()) {
-        this->predicates_.tableName = "";
-        LOG_INFO("no tableName specified.");
-        return;
-    }
-    this->predicates_.tableName = tablename;
 }
 
 DataSharePredicates::~DataSharePredicates()
@@ -685,22 +676,8 @@ DataSharePredicates *DataSharePredicates::Limit(const int number, const int offs
     DataSharePredicatesObject para1(number);
     DataSharePredicatesObject para2(offset);
     DataSharePredicatesObject para3;
-    SetOperationList(LIMIT, para1, para2, para3, ONE_COUNT);
+    SetOperationList(LIMIT, para1, para2, para3, TWO_COUNT);
     LOG_DEBUG("DataSharePredicates::Limit End");
-    return this;
-}
-
-/**
- * Offset
- */
-DataSharePredicates *DataSharePredicates::Offset(int rowOffset)
-{
-    LOG_DEBUG("DataSharePredicates::Offset Start rowOffset%{public}d", rowOffset);
-    DataSharePredicatesObject para1(rowOffset);
-    DataSharePredicatesObject para2;
-    DataSharePredicatesObject para3;
-    SetOperationList(OFFSET, para1, para2, para3, ONE_COUNT);
-    LOG_DEBUG("DataSharePredicates::Offset End");
     return this;
 }
 
@@ -733,17 +710,6 @@ DataSharePredicates *DataSharePredicates::IndexedBy(const std::string &indexName
 }
 
 /**
- * Reset
- */
-DataSharePredicates *DataSharePredicates::Reset()
-{
-    LOG_DEBUG("DataSharePredicates::Reset Start");
-    predicates_.operationList.clear();
-    LOG_DEBUG("DataSharePredicates::Reset End");
-    return this;
-}
-
-/**
  * KeyPrefix
  */
 DataSharePredicates *DataSharePredicates::KeyPrefix(const std::string &prefix)
@@ -754,48 +720,6 @@ DataSharePredicates *DataSharePredicates::KeyPrefix(const std::string &prefix)
     DataSharePredicatesObject para3;
     SetOperationList(KEY_PREFIX, para1, para2, para3, ONE_COUNT);
     LOG_DEBUG("DataSharePredicates::KeyPrefix End");
-    return this;
-}
-
-/**
- * InDevices
- */
-DataSharePredicates *DataSharePredicates::InDevices(const std::vector<std::string> &devices)
-{
-    LOG_DEBUG("DataSharePredicates::InDevices Start prefix%{public}s", devices.at(0).c_str());
-    DataSharePredicatesObject para1(devices);
-    DataSharePredicatesObject para2;
-    DataSharePredicatesObject para3;
-    SetOperationList(IN_DEVICES, para1, para2, para3, ONE_COUNT);
-    LOG_DEBUG("DataSharePredicates::InDevices End");
-    return this;
-}
-
-/**
- * InAllDevices
- */
-DataSharePredicates *DataSharePredicates::InAllDevices()
-{
-    LOG_DEBUG("DataSharePredicates::InAllDevices Start");
-    DataSharePredicatesObject para1;
-    DataSharePredicatesObject para2;
-    DataSharePredicatesObject para3;
-    SetOperationList(IN_ALL_DEVICES, para1, para2, para3, ZERO_COUNT);
-    LOG_DEBUG("DataSharePredicates::InAllDevices End");
-    return this;
-}
-
-/**
- * SetSuggestIndex
- */
-DataSharePredicates *DataSharePredicates::SetSuggestIndex(const std::string &index)
-{
-    LOG_DEBUG("DataSharePredicates::SetSuggestIndex Start index%{public}s", index.c_str());
-    DataSharePredicatesObject para1(index);
-    DataSharePredicatesObject para2;
-    DataSharePredicatesObject para3;
-    SetOperationList(SET_SUGGEST_INDEX, para1, para2, para3, ONE_COUNT);
-    LOG_DEBUG("DataSharePredicates::SetSuggestIndex End");
     return this;
 }
 
@@ -813,14 +737,12 @@ DataSharePredicates *DataSharePredicates::InKeys(const std::vector<std::string> 
     return this;
 }
 
-void DataSharePredicates::SetTableName(std::string &tableName) const
+/**
+ * Obtains the table name.
+ */
+std::string DataSharePredicates::GetTableName() const
 {
-    if (tableName.empty()) {
-        this->predicates_.tableName = "";
-        LOG_INFO("no tableName specified.");
-        return;
-    }
-    this->predicates_.tableName = tableName;
+    return predicates_.tableName;
 }
 
 /**
@@ -832,11 +754,95 @@ const std::list<OperationItem>& DataSharePredicates::GetOperationList() const
 }
 
 /**
- * Obtains the table name.
+ * Get WhereClause
  */
-std::string DataSharePredicates::GetTableName() const
+std::string DataSharePredicates::GetWhereClause() const
 {
-    return predicates_.tableName;
+    return whereClause_;
+}
+
+/**
+ * Set WhereClause
+ */
+int DataSharePredicates::SetWhereClause(const std::string &whereClause)
+{
+    if ((settingMode_ != PREDICATES_METHOD) && (!whereClause.empty())) {
+        this->whereClause_ = whereClause;
+        settingMode_ = QUERY_LANGUAGE;
+        return E_OK;
+    }
+    return E_ERROR;
+}
+
+/**
+ * Get WhereArgs
+ */
+std::vector<std::string> DataSharePredicates::GetWhereArgs() const
+{
+    return whereArgs_;
+}
+
+/**
+ * Get WhereArgs
+ */
+int DataSharePredicates::SetWhereArgs(const std::vector<std::string> &whereArgs)
+{
+    if ((settingMode_ != PREDICATES_METHOD) && (!whereArgs.empty())) {
+        if (!whereArgs.empty()) {
+            this->whereArgs_ = whereArgs;
+            settingMode_ = QUERY_LANGUAGE;
+            return E_OK;
+        }
+    }
+    return E_ERROR;
+}
+
+/**
+ * Get Order
+ */
+std::string DataSharePredicates::GetOrder() const
+{
+    return order_;
+}
+
+/**
+ * Set Order
+ */
+int DataSharePredicates::SetOrder(const std::string &order)
+{
+    LOG_DEBUG("DataSharePredicates::SetOrder Start order%{public}s", order.c_str());
+    if ((settingMode_ != PREDICATES_METHOD) && (!order.empty())) {
+        this->order_ = order;
+        settingMode_ = QUERY_LANGUAGE;
+        return E_OK;
+    }
+    return E_ERROR;
+}
+
+/**
+ * Clear Query Language
+ */
+void DataSharePredicates::ClearQueryLanguage()
+{
+    whereClause_ = "";
+    whereArgs_ = {};
+    order_ = "";
+}
+
+/**
+ * Set Setting Mode
+ */
+void DataSharePredicates::SetSettingMode(const SettingMode &settingMode)
+{
+    settingMode_ = settingMode;
+}
+
+/**
+ * Get Setting Mode
+ */
+SettingMode DataSharePredicates::GetSettingMode() const
+{
+    return settingMode_;
 }
 
 /**
@@ -853,7 +859,11 @@ void DataSharePredicates::SetOperationList(OperationType operationType, DataShar
     operationItem.para3 = para3;
     operationItem.parameterCount = parameterCount;
     predicates_.operationList.push_back(operationItem);
-    LOG_DEBUG("DataSharePredicates::SetOperationList END");
+    if (settingMode_ != PREDICATES_METHOD) {
+        ClearQueryLanguage();
+        settingMode_ = PREDICATES_METHOD;
+    }
+    LOG_DEBUG("DataSharePredicates::SetOperationList END settingMode_%{public}d", settingMode_);
 }
 
 /**
@@ -862,7 +872,6 @@ void DataSharePredicates::SetOperationList(OperationType operationType, DataShar
 bool DataSharePredicates::Marshalling(OHOS::Parcel &parcel) const
 {
     LOG_DEBUG("DataSharePredicates::Marshalling Start");
-    parcel.WriteString(predicates_.tableName);
     parcel.WriteInt32(predicates_.operationList.size());
     for (auto &it : predicates_.operationList) {
         parcel.WriteInt64(static_cast<int64_t>(it.operation));
@@ -871,6 +880,10 @@ bool DataSharePredicates::Marshalling(OHOS::Parcel &parcel) const
         parcel.WriteParcelable(&it.para3);
         parcel.WriteInt64(static_cast<int64_t>(it.parameterCount));
     }
+    parcel.WriteString(whereClause_);
+    parcel.WriteStringVector(whereArgs_);
+    parcel.WriteString(order_);
+    parcel.WriteInt64(static_cast<int64_t>(settingMode_));
     LOG_DEBUG("DataSharePredicates::Marshalling End");
     return true;
 }
@@ -881,10 +894,12 @@ bool DataSharePredicates::Marshalling(OHOS::Parcel &parcel) const
 DataSharePredicates* DataSharePredicates::Unmarshalling(OHOS::Parcel &parcel)
 {
     LOG_DEBUG("DataSharePredicates::Unmarshalling Start");
-    Predicates predicates;
+    Predicates predicates {};
     OperationItem listitem {};
-    predicates.tableName = "";
-    parcel.ReadString(predicates.tableName);
+    std::string whereClause = "";
+    std::vector<std::string> whereArgs;
+    std::string order = "";
+    int64_t settingMode = INVALID_MODE;
     int listSize = parcel.ReadInt32();
     for (int i = 0; i < listSize; i++) {
         listitem.operation = static_cast<OperationType>(parcel.ReadInt64());
@@ -897,8 +912,18 @@ DataSharePredicates* DataSharePredicates::Unmarshalling(OHOS::Parcel &parcel)
         listitem.parameterCount = static_cast<ParameterCount>(parcel.ReadInt64());
         predicates.operationList.push_back(listitem);
     }
+    parcel.ReadString(whereClause);
+    parcel.ReadStringVector(&whereArgs);
+    parcel.ReadString(order);
+    parcel.ReadInt64(settingMode);
+    SettingMode settingmode = static_cast<SettingMode>(settingMode);
+    auto predicatesObject = new DataSharePredicates(predicates);
+    predicatesObject->SetWhereClause(whereClause);
+    predicatesObject->SetWhereArgs(whereArgs);
+    predicatesObject->SetOrder(order);
+    predicatesObject->SetSettingMode(settingmode);
     LOG_DEBUG("DataSharePredicates::Unmarshalling End");
-    return new DataSharePredicates(predicates);
+    return predicatesObject;
 }
 } // namespace DataShare
 } // namespace OHOS

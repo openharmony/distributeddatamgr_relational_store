@@ -48,10 +48,6 @@ napi_value DataShareResultSetProxy::NewInstance(napi_env env, std::shared_ptr<Da
         return instance;
     }
 
-    if (resultSet->GetBlock() != nullptr) {
-        proxy->sharedBlockName_ = resultSet->GetBlock()->Name();
-        proxy->sharedBlockAshmemFd_ = resultSet->GetBlock()->GetFd();
-    }
     *proxy = std::move(resultSet);
     return instance;
 }
@@ -89,27 +85,17 @@ napi_value DataShareResultSetProxy::GetConstructor(napi_env env)
         DECLARE_NAPI_FUNCTION("goToRow", GoToRow),
         DECLARE_NAPI_FUNCTION("getBlob", GetBlob),
         DECLARE_NAPI_FUNCTION("getString", GetString),
-        DECLARE_NAPI_FUNCTION("getInt", GetInt),
         DECLARE_NAPI_FUNCTION("getLong", GetLong),
         DECLARE_NAPI_FUNCTION("getDouble", GetDouble),
-        DECLARE_NAPI_FUNCTION("isColumnOrKeyNull", IsColumnOrKeyNull),
         DECLARE_NAPI_FUNCTION("close", Close),
-        DECLARE_NAPI_FUNCTION("getColumnOrKeyIndex", GetColumnOrKeyIndex),
-        DECLARE_NAPI_FUNCTION("getColumnOrKeyName", GetColumnOrKeyName),
+        DECLARE_NAPI_FUNCTION("getColumnIndex", GetColumnIndex),
+        DECLARE_NAPI_FUNCTION("getColumnName", GetColumnName),
         DECLARE_NAPI_FUNCTION("getDataType", GetDataType),
 
-        DECLARE_NAPI_GETTER("columnOrKeyNames", GetAllColumnOrKeyNames),
-        DECLARE_NAPI_GETTER("columnOrKeyCount", GetColumnOrKeyCount),
+        DECLARE_NAPI_GETTER("columnNames", GetAllColumnNames),
+        DECLARE_NAPI_GETTER("columnCount", GetColumnCount),
         DECLARE_NAPI_GETTER("rowCount", GetRowCount),
-        DECLARE_NAPI_GETTER("rowIndex", GetRowIndex),
-        DECLARE_NAPI_GETTER("isAtFirstRow", IsAtFirstRow),
-        DECLARE_NAPI_GETTER("isAtLastRow", IsAtLastRow),
-        DECLARE_NAPI_GETTER("isEnded", IsEnded),
-        DECLARE_NAPI_GETTER("isStarted", IsStarted),
         DECLARE_NAPI_GETTER("isClosed", IsClosed),
-
-        DECLARE_NAPI_GETTER("sharedBlockName", GetSharedBlockName),
-        DECLARE_NAPI_GETTER("sharedBlockAshmemFd", GetSharedBlockAshmemFd),
     };
     NAPI_CALL(env, napi_define_class(env, "DataShareResultSet", NAPI_AUTO_LENGTH, Initialize, nullptr,
         sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
@@ -242,14 +228,14 @@ napi_value DataShareResultSetProxy::GoToRow(napi_env env, napi_callback_info inf
 
 napi_value DataShareResultSetProxy::GetBlob(napi_env env, napi_callback_info info)
 {
-    int32_t columnOrkeyIndex = -1;
+    int32_t columnIndex = -1;
     std::vector<uint8_t> blob;
     size_t argc = MAX_INPUT_COUNT;
     napi_value args[MAX_INPUT_COUNT] = { 0 };
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     NAPI_ASSERT(env, argc > 0, "Invalid argvs!");
-    NAPI_CALL(env, napi_get_value_int32(env, args[0], &columnOrkeyIndex));
-    int errCode = GetInnerResultSet(env, info)->GetBlob(columnOrkeyIndex, blob);
+    NAPI_CALL(env, napi_get_value_int32(env, args[0], &columnIndex));
+    int errCode = GetInnerResultSet(env, info)->GetBlob(columnIndex, blob);
     if (errCode != E_OK) {
         LOG_ERROR("GetBlob failed code:%{public}d", errCode);
     }
@@ -258,46 +244,30 @@ napi_value DataShareResultSetProxy::GetBlob(napi_env env, napi_callback_info inf
 
 napi_value DataShareResultSetProxy::GetString(napi_env env, napi_callback_info info)
 {
-    int32_t columnOrkeyIndex = -1;
+    int32_t columnIndex = -1;
     std::string value;
     size_t argc = MAX_INPUT_COUNT;
     napi_value args[MAX_INPUT_COUNT] = { 0 };
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     NAPI_ASSERT(env, argc > 0, "Invalid argvs!");
-    NAPI_CALL(env, napi_get_value_int32(env, args[0], &columnOrkeyIndex));
-    int errCode = GetInnerResultSet(env, info)->GetString(columnOrkeyIndex, value);
+    NAPI_CALL(env, napi_get_value_int32(env, args[0], &columnIndex));
+    int errCode = GetInnerResultSet(env, info)->GetString(columnIndex, value);
     if (errCode != E_OK) {
         LOG_ERROR("GetString failed code:%{public}d", errCode);
     }
     return DataShareJSUtils::Convert2JSValue(env, value);
 }
 
-napi_value DataShareResultSetProxy::GetInt(napi_env env, napi_callback_info info)
-{
-    int32_t columnOrkeyIndex = -1;
-    int32_t value;
-    size_t argc = MAX_INPUT_COUNT;
-    napi_value args[MAX_INPUT_COUNT] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    NAPI_ASSERT(env, argc > 0, "Invalid argvs!");
-    NAPI_CALL(env, napi_get_value_int32(env, args[0], &columnOrkeyIndex));
-    int errCode = GetInnerResultSet(env, info)->GetInt(columnOrkeyIndex, value);
-    if (errCode != E_OK) {
-        LOG_ERROR("GetInt failed code:%{public}d", errCode);
-    }
-    return DataShareJSUtils::Convert2JSValue(env, value);
-}
-
 napi_value DataShareResultSetProxy::GetLong(napi_env env, napi_callback_info info)
 {
-    int32_t columnOrkeyIndex = -1;
+    int32_t columnIndex = -1;
     int64_t value = -1;
     size_t argc = MAX_INPUT_COUNT;
     napi_value args[MAX_INPUT_COUNT] = { 0 };
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     NAPI_ASSERT(env, argc > 0, "Invalid argvs!");
-    NAPI_CALL(env, napi_get_value_int32(env, args[0], &columnOrkeyIndex));
-    int errCode = GetInnerResultSet(env, info)->GetLong(columnOrkeyIndex, value);
+    NAPI_CALL(env, napi_get_value_int32(env, args[0], &columnIndex));
+    int errCode = GetInnerResultSet(env, info)->GetLong(columnIndex, value);
     if (errCode != E_OK) {
         LOG_ERROR("GetLong failed code:%{public}d", errCode);
     }
@@ -306,36 +276,18 @@ napi_value DataShareResultSetProxy::GetLong(napi_env env, napi_callback_info inf
 
 napi_value DataShareResultSetProxy::GetDouble(napi_env env, napi_callback_info info)
 {
-    int32_t columnOrkeyIndex = -1;
+    int32_t columnIndex = -1;
     double value = 0.0;
     size_t argc = MAX_INPUT_COUNT;
     napi_value args[MAX_INPUT_COUNT] = { 0 };
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     NAPI_ASSERT(env, argc > 0, "Invalid argvs!");
-    NAPI_CALL(env, napi_get_value_int32(env, args[0], &columnOrkeyIndex));
-    int errCode = GetInnerResultSet(env, info)->GetDouble(columnOrkeyIndex, value);
+    NAPI_CALL(env, napi_get_value_int32(env, args[0], &columnIndex));
+    int errCode = GetInnerResultSet(env, info)->GetDouble(columnIndex, value);
     if (errCode != E_OK) {
         LOG_ERROR("GetDouble failed code:%{public}d", errCode);
     }
     return DataShareJSUtils::Convert2JSValue(env, value);
-}
-
-napi_value DataShareResultSetProxy::IsColumnOrKeyNull(napi_env env, napi_callback_info info)
-{
-    int32_t columnOrkeyIndex = -1;
-    bool isNull = false;
-    size_t argc = MAX_INPUT_COUNT;
-    napi_value args[MAX_INPUT_COUNT] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    NAPI_ASSERT(env, argc > 0, "Invalid argvs!");
-    NAPI_CALL(env, napi_get_value_int32(env, args[0], &columnOrkeyIndex));
-    int errCode = GetInnerResultSet(env, info)->IsColumnNull(columnOrkeyIndex, isNull);
-    if (errCode != E_OK) {
-        LOG_ERROR("IsColumnNull failed code:%{public}d", errCode);
-    }
-    napi_value output;
-    napi_get_boolean(env, isNull, &output);
-    return output;
 }
 
 napi_value DataShareResultSetProxy::Close(napi_env env, napi_callback_info info)
@@ -347,64 +299,64 @@ napi_value DataShareResultSetProxy::Close(napi_env env, napi_callback_info info)
     return DataShareJSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
-napi_value DataShareResultSetProxy::GetColumnOrKeyIndex(napi_env env, napi_callback_info info)
+napi_value DataShareResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
 {
-    int32_t columnOrKeyIndex = -1;
+    int32_t columnIndex = -1;
     size_t argc = MAX_INPUT_COUNT;
     napi_value args[MAX_INPUT_COUNT] = { 0 };
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     NAPI_ASSERT(env, argc > 0, "Invalid argvs!");
-    std::string columnOrKeyName = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
-    int errCode = GetInnerResultSet(env, info)->GetColumnIndex(columnOrKeyName, columnOrKeyIndex);
+    std::string columnName = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
+    int errCode = GetInnerResultSet(env, info)->GetColumnIndex(columnName, columnIndex);
     if (errCode != E_OK) {
         LOG_ERROR("GetColumnIndex failed code:%{public}d", errCode);
     }
-    return DataShareJSUtils::Convert2JSValue(env, columnOrKeyIndex);
+    return DataShareJSUtils::Convert2JSValue(env, columnIndex);
 }
 
-napi_value DataShareResultSetProxy::GetColumnOrKeyName(napi_env env, napi_callback_info info)
+napi_value DataShareResultSetProxy::GetColumnName(napi_env env, napi_callback_info info)
 {
-    int32_t columnOrKeyIndex = -1;
-    std::string columnOrKeyName;
+    int32_t columnIndex = -1;
+    std::string columnName;
     size_t argc = MAX_INPUT_COUNT;
     napi_value args[MAX_INPUT_COUNT] = { 0 };
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     NAPI_ASSERT(env, argc > 0, "Invalid argvs!");
-    NAPI_CALL(env, napi_get_value_int32(env, args[0], &columnOrKeyIndex));
-    int errCode = GetInnerResultSet(env, info)->GetColumnName(columnOrKeyIndex, columnOrKeyName);
+    NAPI_CALL(env, napi_get_value_int32(env, args[0], &columnIndex));
+    int errCode = GetInnerResultSet(env, info)->GetColumnName(columnIndex, columnName);
     if (errCode != E_OK) {
         LOG_ERROR("GetColumnName failed code:%{public}d", errCode);
     }
-    return DataShareJSUtils::Convert2JSValue(env, columnOrKeyName);
+    return DataShareJSUtils::Convert2JSValue(env, columnName);
 }
 
 napi_value DataShareResultSetProxy::GetDataType(napi_env env, napi_callback_info info)
 {
-    int32_t columnOrKeyIndex = -1;
+    int32_t columnIndex = -1;
     DataType dataType = DataType::TYPE_NULL;
     size_t argc = MAX_INPUT_COUNT;
     napi_value args[MAX_INPUT_COUNT] = { 0 };
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     NAPI_ASSERT(env, argc > 0, "Invalid argvs!");
-    NAPI_CALL(env, napi_get_value_int32(env, args[0], &columnOrKeyIndex));
-    int errCode = GetInnerResultSet(env, info)->GetDataType(columnOrKeyIndex, dataType);
+    NAPI_CALL(env, napi_get_value_int32(env, args[0], &columnIndex));
+    int errCode = GetInnerResultSet(env, info)->GetDataType(columnIndex, dataType);
     if (errCode != E_OK) {
         LOG_ERROR("GetColumnType failed code:%{public}d", errCode);
     }
     return DataShareJSUtils::Convert2JSValue(env, int32_t(dataType));
 }
 
-napi_value DataShareResultSetProxy::GetAllColumnOrKeyNames(napi_env env, napi_callback_info info)
+napi_value DataShareResultSetProxy::GetAllColumnNames(napi_env env, napi_callback_info info)
 {
-    std::vector<std::string> columnOrKeyNames;
-    int errCode = GetInnerResultSet(env, info)->GetAllColumnNames(columnOrKeyNames);
+    std::vector<std::string> columnNames;
+    int errCode = GetInnerResultSet(env, info)->GetAllColumnNames(columnNames);
     if (errCode != E_OK) {
         LOG_ERROR("GetAllColumnNames failed code:%{public}d", errCode);
     }
-    return DataShareJSUtils::Convert2JSValue(env, columnOrKeyNames);
+    return DataShareJSUtils::Convert2JSValue(env, columnNames);
 }
 
-napi_value DataShareResultSetProxy::GetColumnOrKeyCount(napi_env env, napi_callback_info info)
+napi_value DataShareResultSetProxy::GetColumnCount(napi_env env, napi_callback_info info)
 {
     int32_t count = -1;
     int errCode = GetInnerResultSet(env, info)->GetColumnCount(count);
@@ -424,84 +376,12 @@ napi_value DataShareResultSetProxy::GetRowCount(napi_env env, napi_callback_info
     return DataShareJSUtils::Convert2JSValue(env, count);
 }
 
-napi_value DataShareResultSetProxy::GetRowIndex(napi_env env, napi_callback_info info)
-{
-    int32_t position = -1;
-    int errCode = GetInnerResultSet(env, info)->GetRowIndex(position);
-    if (errCode != E_OK) {
-        LOG_ERROR("GetRowIndex failed code:%{public}d", errCode);
-    }
-    return DataShareJSUtils::Convert2JSValue(env, position);
-}
-
-napi_value DataShareResultSetProxy::IsAtFirstRow(napi_env env, napi_callback_info info)
-{
-    bool result = false;
-    int errCode = GetInnerResultSet(env, info)->IsAtFirstRow(result);
-    if (errCode != E_OK) {
-        LOG_ERROR("IsAtFirstRow failed code:%{public}d", errCode);
-    }
-    return DataShareJSUtils::Convert2JSValue(env, result);
-}
-
-napi_value DataShareResultSetProxy::IsAtLastRow(napi_env env, napi_callback_info info)
-{
-    bool result = false;
-    int errCode = GetInnerResultSet(env, info)->IsAtLastRow(result);
-    if (errCode != E_OK) {
-        LOG_ERROR("IsAtLastRow failed code:%{public}d", errCode);
-    }
-    return DataShareJSUtils::Convert2JSValue(env, result);
-}
-
-napi_value DataShareResultSetProxy::IsEnded(napi_env env, napi_callback_info info)
-{
-    bool result = false;
-    int errCode = GetInnerResultSet(env, info)->IsEnded(result);
-    if (errCode != E_OK) {
-        LOG_ERROR("IsEnded failed code:%{public}d", errCode);
-    }
-    return DataShareJSUtils::Convert2JSValue(env, result);
-}
-
-napi_value DataShareResultSetProxy::IsStarted(napi_env env, napi_callback_info info)
-{
-    bool result = false;
-    int errCode = GetInnerResultSet(env, info)->IsStarted(result);
-    if (errCode != E_OK) {
-        LOG_ERROR("IsBegin failed code:%{public}d", errCode);
-    }
-    return DataShareJSUtils::Convert2JSValue(env, result);
-}
-
 napi_value DataShareResultSetProxy::IsClosed(napi_env env, napi_callback_info info)
 {
     bool result = GetInnerResultSet(env, info)->IsClosed();
     napi_value output;
     napi_get_boolean(env, result, &output);
     return output;
-}
-
-napi_value DataShareResultSetProxy::GetSharedBlockName(napi_env env, napi_callback_info info)
-{
-    napi_value thiz;
-    NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr));
-
-    DataShareResultSetProxy *proxy;
-    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy)));
-
-    return DataShareJSUtils::Convert2JSValue(env, proxy->sharedBlockName_);
-}
-
-napi_value DataShareResultSetProxy::GetSharedBlockAshmemFd(napi_env env, napi_callback_info info)
-{
-    napi_value thiz;
-    NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr));
-
-    DataShareResultSetProxy *proxy;
-    NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy)));
-
-    return DataShareJSUtils::Convert2JSValue(env, proxy->sharedBlockAshmemFd_);
 }
 
 napi_value GetNapiResultSetObject(napi_env env, DataShareResultSet *resultSet)

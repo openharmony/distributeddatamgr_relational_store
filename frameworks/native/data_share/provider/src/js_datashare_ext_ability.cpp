@@ -379,7 +379,7 @@ int JsDataShareExtAbility::Update(const Uri &uri, const DataShareValuesBucket &v
     NativeValue* nativeUri = reinterpret_cast<NativeValue*>(napiUri);
     NativeValue* nativeValue = reinterpret_cast<NativeValue*>(napiValue);
     NativeValue* nativePredicates = reinterpret_cast<NativeValue*>(napiPredicates);
-    NativeValue* argv[] = {nativeUri, nativeValue, nativePredicates};
+    NativeValue* argv[] = {nativeUri, nativePredicates, nativeValue};
     NativeValue* nativeResult = CallObjectMethod("update", argv, ARGC_THREE);
     if (nativeResult == nullptr) {
         LOG_ERROR("%{public}s call update with return null.", __func__);
