@@ -225,7 +225,7 @@ public:
      */
     virtual std::vector<std::shared_ptr<DataShareResult>> ExecuteBatch(
         const std::vector<std::shared_ptr<DataShareOperation>> &operations);
-        
+
     /**
      * @brief Set a creator function.
      *
