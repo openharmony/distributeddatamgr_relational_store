@@ -22,8 +22,12 @@ config("module_private_config") {
   include_dirs = [
     "../include/",
     "../../../../interfaces/inner_api/native/rdb/include",
+    "../../../../frameworks/native/data_share/common/include",
     "../../../../frameworks/native/rdb/src",
     "../../../../interfaces/inner_api/native/appdatafwk/include",
+    "../../../../interfaces/inner_api/native/data_share/common/include",
+    "../../../../interfaces/inner_api/native/data_share/consumer/include",
+    "../../../../interfaces/inner_api/native/data_share/provider/include",
     "//utils/native/base/include",
   ]
 
@@ -50,6 +54,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_predicates_test.cpp",
     "unittest/rdb_sqlite_shared_result_set_test.cpp",
     "unittest/rdb_step_result_set_test.cpp",
+    "unittest/rdb_step_shared_result_set_test.cpp",
     "unittest/rdb_store_concurrent_test.cpp",
     "unittest/rdb_store_config_test.cpp",
     "unittest/rdb_store_interface_test.cpp",
