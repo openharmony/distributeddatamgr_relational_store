@@ -62,7 +62,8 @@ typedef enum {
     GLOB,
     BETWEEN,
     NOTBETWEEN,
-    KEY_PREFIX
+    KEY_PREFIX,
+    LAST_TYPE
 } OperationType;
 
 typedef struct {
