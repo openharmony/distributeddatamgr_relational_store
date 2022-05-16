@@ -19,10 +19,8 @@
 #include "datashare_abs_predicates.h"
 
 #include <parcel.h>
-#include <list>
 #include <string>
 
-#include "datashare_predicates_def.h"
 #include "datashare_predicates_object.h"
 
 namespace OHOS {
@@ -31,7 +29,6 @@ class DataSharePredicates : public virtual DataShareAbsPredicates, public virtua
 public:
     DataSharePredicates();
     explicit DataSharePredicates(Predicates &predicates);
-    explicit DataSharePredicates(std::string &tablename);
     ~DataSharePredicates();
     DataSharePredicates *EqualTo(const std::string &field, const int value)override;
     DataSharePredicates *EqualTo(const std::string &field, const int64_t value)override;
@@ -85,27 +82,22 @@ public:
     DataSharePredicates *OrderByDesc(const std::string &field)override;
     DataSharePredicates *Distinct()override;
     DataSharePredicates *Limit(const int number, const int offset)override;
-    DataSharePredicates *Offset(int rowOffset)override;
     DataSharePredicates *GroupBy(const std::vector<std::string> &fields)override;
     DataSharePredicates *IndexedBy(const std::string &indexName)override;
-    DataSharePredicates *Reset()override;
-    DataSharePredicates *KeyPrefix(const std::string &prefix);
-    DataSharePredicates *InDevices(const std::vector<std::string> &devices);
-    DataSharePredicates *InAllDevices();
-    DataSharePredicates *SetSuggestIndex(const std::string &index);
-    DataSharePredicates *InKeys(const std::vector<std::string> &keys);
+    DataSharePredicates *KeyPrefix(const std::string &prefix)override;
+    DataSharePredicates *InKeys(const std::vector<std::string> &keys)override;
+    const std::list<OperationItem>& GetOperationList() const override;
+    std::string GetWhereClause() const override;
+    int SetWhereClause(const std::string &whereClause)override;
+    std::vector<std::string> GetWhereArgs() const override;
+    int SetWhereArgs(const std::vector<std::string> &whereArgs)override;
+    std::string GetOrder() const override;
+    int SetOrder(const std::string &order)override;
+    SettingMode GetSettingMode() const override;
     bool Marshalling(OHOS::Parcel &parcel) const override;
     static DataSharePredicates *Unmarshalling(OHOS::Parcel &parcel);
-    const std::list<OperationItem>& GetOperationList() const;
-    void SetTableName(std::string &tableName) const;
     std::string GetTableName() const;
-    std::string GetWhereClause() const;
-    int SetWhereClause(const std::string &whereClause);
-    std::vector<std::string> GetWhereArgs() const;
-    int SetWhereArgs(const std::vector<std::string> &whereArgs);
-    std::string GetOrder() const;
-    int SetOrder(const std::string &order);
-    SettingMode GetSettingMode() const;
+
 private:
     void SetOperationList(OperationType operationType, DataSharePredicatesObject &para1,
         DataSharePredicatesObject &para2, DataSharePredicatesObject &para3, ParameterCount parameterCount);

@@ -239,18 +239,13 @@ public:
         const std::vector<std::shared_ptr<DataShareOperation>> &operations) override;
 
 private:
-    NativeValue* CallObjectMethod(const char *name, NativeValue * const *argv = nullptr, size_t argc = 0,
-        bool isAsync = true);
+    NativeValue* CallObjectMethod(const char *name, NativeValue * const *argv = nullptr, size_t argc = 0);
     void GetSrcPath(std::string &srcPath);
     bool CheckCallingPermission(const std::string &permission);
     napi_value MakePredicates(napi_env env, const DataSharePredicates &predicates);
-    static NativeValue* AsyncCallback(NativeEngine* engine, NativeCallbackInfo* info);
-    NativeValue* OnAsyncCallback(NativeEngine& engine, NativeCallbackInfo& info);
 
     JsRuntime& jsRuntime_;
     std::unique_ptr<NativeReference> jsObj_;
-    bool isBlockWaiting_ = false;
-    NativeValue* callbackData_ = nullptr;
 };
 } // namespace DataShare
 } // namespace OHOS

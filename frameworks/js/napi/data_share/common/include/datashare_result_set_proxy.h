@@ -47,32 +47,19 @@ private:
     static napi_value GoToRow(napi_env env, napi_callback_info info);
     static napi_value GetBlob(napi_env env, napi_callback_info info);
     static napi_value GetString(napi_env env, napi_callback_info info);
-    static napi_value GetInt(napi_env env, napi_callback_info info);
     static napi_value GetLong(napi_env env, napi_callback_info info);
     static napi_value GetDouble(napi_env env, napi_callback_info info);
-    static napi_value IsColumnOrKeyNull(napi_env env, napi_callback_info info);
     static napi_value Close(napi_env env, napi_callback_info info);
-    static napi_value GetColumnOrKeyIndex(napi_env env, napi_callback_info info);
-    static napi_value GetColumnOrKeyName(napi_env env, napi_callback_info info);
+    static napi_value GetColumnIndex(napi_env env, napi_callback_info info);
+    static napi_value GetColumnName(napi_env env, napi_callback_info info);
     static napi_value GetDataType(napi_env env, napi_callback_info info);
 
-    static napi_value GetAllColumnOrKeyNames(napi_env env, napi_callback_info info);
-    static napi_value GetColumnOrKeyCount(napi_env env, napi_callback_info info);
+    static napi_value GetAllColumnNames(napi_env env, napi_callback_info info);
+    static napi_value GetColumnCount(napi_env env, napi_callback_info info);
     static napi_value GetRowCount(napi_env env, napi_callback_info info);
-    static napi_value GetRowIndex(napi_env env, napi_callback_info info);
-    static napi_value IsAtFirstRow(napi_env env, napi_callback_info info);
-    static napi_value IsAtLastRow(napi_env env, napi_callback_info info);
-    static napi_value IsEnded(napi_env env, napi_callback_info info);
-    static napi_value IsStarted(napi_env env, napi_callback_info info);
     static napi_value IsClosed(napi_env env, napi_callback_info info);
 
-    static napi_value GetSharedBlockName(napi_env env, napi_callback_info info);
-    static napi_value GetSharedBlockAshmemFd(napi_env env, napi_callback_info info);
-
     std::shared_ptr<DataShareResultSet> resultSet_;
-
-    std::string sharedBlockName_;
-    int32_t sharedBlockAshmemFd_ = -1;
 };
 napi_value GetNapiResultSetObject(napi_env env, DataShareResultSet *resultSet);
 DataShareResultSet *GetResultSetProxyObject(const napi_env &env, const napi_value &arg);

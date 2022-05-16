@@ -29,16 +29,6 @@ DataSharePredicates::DataSharePredicates(Predicates &predicates)
 {
 }
 
-DataSharePredicates::DataSharePredicates(std::string &tablename)
-{
-    if (tablename.empty()) {
-        this->predicates_.tableName = "";
-        LOG_INFO("no tableName specified.");
-        return;
-    }
-    this->predicates_.tableName = tablename;
-}
-
 DataSharePredicates::~DataSharePredicates()
 {
 }
@@ -686,22 +676,8 @@ DataSharePredicates *DataSharePredicates::Limit(const int number, const int offs
     DataSharePredicatesObject para1(number);
     DataSharePredicatesObject para2(offset);
     DataSharePredicatesObject para3;
-    SetOperationList(LIMIT, para1, para2, para3, ONE_COUNT);
+    SetOperationList(LIMIT, para1, para2, para3, TWO_COUNT);
     LOG_DEBUG("DataSharePredicates::Limit End");
-    return this;
-}
-
-/**
- * Offset
- */
-DataSharePredicates *DataSharePredicates::Offset(int rowOffset)
-{
-    LOG_DEBUG("DataSharePredicates::Offset Start rowOffset%{public}d", rowOffset);
-    DataSharePredicatesObject para1(rowOffset);
-    DataSharePredicatesObject para2;
-    DataSharePredicatesObject para3;
-    SetOperationList(OFFSET, para1, para2, para3, ONE_COUNT);
-    LOG_DEBUG("DataSharePredicates::Offset End");
     return this;
 }
 
@@ -734,17 +710,6 @@ DataSharePredicates *DataSharePredicates::IndexedBy(const std::string &indexName
 }
 
 /**
- * Reset
- */
-DataSharePredicates *DataSharePredicates::Reset()
-{
-    LOG_DEBUG("DataSharePredicates::Reset Start");
-    predicates_.operationList.clear();
-    LOG_DEBUG("DataSharePredicates::Reset End");
-    return this;
-}
-
-/**
  * KeyPrefix
  */
 DataSharePredicates *DataSharePredicates::KeyPrefix(const std::string &prefix)
@@ -755,48 +720,6 @@ DataSharePredicates *DataSharePredicates::KeyPrefix(const std::string &prefix)
     DataSharePredicatesObject para3;
     SetOperationList(KEY_PREFIX, para1, para2, para3, ONE_COUNT);
     LOG_DEBUG("DataSharePredicates::KeyPrefix End");
-    return this;
-}
-
-/**
- * InDevices
- */
-DataSharePredicates *DataSharePredicates::InDevices(const std::vector<std::string> &devices)
-{
-    LOG_DEBUG("DataSharePredicates::InDevices Start prefix%{public}s", devices.at(0).c_str());
-    DataSharePredicatesObject para1(devices);
-    DataSharePredicatesObject para2;
-    DataSharePredicatesObject para3;
-    SetOperationList(IN_DEVICES, para1, para2, para3, ONE_COUNT);
-    LOG_DEBUG("DataSharePredicates::InDevices End");
-    return this;
-}
-
-/**
- * InAllDevices
- */
-DataSharePredicates *DataSharePredicates::InAllDevices()
-{
-    LOG_DEBUG("DataSharePredicates::InAllDevices Start");
-    DataSharePredicatesObject para1;
-    DataSharePredicatesObject para2;
-    DataSharePredicatesObject para3;
-    SetOperationList(IN_ALL_DEVICES, para1, para2, para3, ZERO_COUNT);
-    LOG_DEBUG("DataSharePredicates::InAllDevices End");
-    return this;
-}
-
-/**
- * SetSuggestIndex
- */
-DataSharePredicates *DataSharePredicates::SetSuggestIndex(const std::string &index)
-{
-    LOG_DEBUG("DataSharePredicates::SetSuggestIndex Start index%{public}s", index.c_str());
-    DataSharePredicatesObject para1(index);
-    DataSharePredicatesObject para2;
-    DataSharePredicatesObject para3;
-    SetOperationList(SET_SUGGEST_INDEX, para1, para2, para3, ONE_COUNT);
-    LOG_DEBUG("DataSharePredicates::SetSuggestIndex End");
     return this;
 }
 
@@ -814,14 +737,12 @@ DataSharePredicates *DataSharePredicates::InKeys(const std::vector<std::string> 
     return this;
 }
 
-void DataSharePredicates::SetTableName(std::string &tableName) const
+/**
+ * Obtains the table name.
+ */
+std::string DataSharePredicates::GetTableName() const
 {
-    if (tableName.empty()) {
-        this->predicates_.tableName = "";
-        LOG_INFO("no tableName specified.");
-        return;
-    }
-    this->predicates_.tableName = tableName;
+    return predicates_.tableName;
 }
 
 /**
@@ -830,14 +751,6 @@ void DataSharePredicates::SetTableName(std::string &tableName) const
 const std::list<OperationItem>& DataSharePredicates::GetOperationList() const
 {
     return predicates_.operationList;
-}
-
-/**
- * Obtains the table name.
- */
-std::string DataSharePredicates::GetTableName() const
-{
-    return predicates_.tableName;
 }
 
 /**
@@ -959,7 +872,6 @@ void DataSharePredicates::SetOperationList(OperationType operationType, DataShar
 bool DataSharePredicates::Marshalling(OHOS::Parcel &parcel) const
 {
     LOG_DEBUG("DataSharePredicates::Marshalling Start");
-    parcel.WriteString(predicates_.tableName);
     parcel.WriteInt32(predicates_.operationList.size());
     for (auto &it : predicates_.operationList) {
         parcel.WriteInt64(static_cast<int64_t>(it.operation));
@@ -984,12 +896,10 @@ DataSharePredicates* DataSharePredicates::Unmarshalling(OHOS::Parcel &parcel)
     LOG_DEBUG("DataSharePredicates::Unmarshalling Start");
     Predicates predicates {};
     OperationItem listitem {};
-    predicates.tableName = "";
     std::string whereClause = "";
     std::vector<std::string> whereArgs;
     std::string order = "";
     int64_t settingMode = INVALID_MODE;
-    parcel.ReadString(predicates.tableName);
     int listSize = parcel.ReadInt32();
     for (int i = 0; i < listSize; i++) {
         listitem.operation = static_cast<OperationType>(parcel.ReadInt64());
