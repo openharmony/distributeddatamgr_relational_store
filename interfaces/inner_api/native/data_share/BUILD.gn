@@ -28,7 +28,6 @@ config("ability_config") {
     "//foundation/aafwk/standard/frameworks/kits/ability/native/include/continuation/distributed",
     "//foundation/aafwk/standard/frameworks/kits/ability/native/include/continuation/kits",
     "//foundation/aafwk/standard/interfaces/kits/napi/aafwk/inner/napi_common",
-    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base/include",
     "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb/include",
     "//foundation/distributeddatamgr/distributeddatamgr/frameworks/innerkitsimpl/rdb/include",
   ]
@@ -127,7 +126,7 @@ ohos_shared_library("datashare_ext_ability_module") {
   deps = [
     ":datashare_abilitykit",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
-    "//foundation/appexecfwk/standard/common:libappexecfwk_common",
+    "//foundation/bundlemanager/bundle_framework/common:libappexecfwk_common",
   ]
 
   external_deps = [
