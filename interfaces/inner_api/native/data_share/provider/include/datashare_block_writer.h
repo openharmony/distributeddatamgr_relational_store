@@ -21,35 +21,14 @@
 namespace OHOS {
 namespace DataShare {
 /**
- * This class stores a set of rows from a database in a buffer，
- * which is used as the set of query result.
+ * This class provides methods for writing DatasShare shared block.
  */
 class DataShareBlockWriter {
 public:
     /**
-     * SharedBlock Deconstruction.
-     */
-    virtual ~DataShareBlockWriter() {}
-
-    /**
-     * Clear current shared block.
-     */
-    virtual int Clear() = 0;
-
-    /**
-     * Set a shared block column.
-     */
-    virtual int SetColumnNum(uint32_t numColumns) = 0;
-
-    /**
      * Allocate a row unit and its directory.
      */
     virtual int AllocRow() = 0;
-
-    /**
-     * Release the value of the last row.
-     */
-    virtual int FreeLastRow() = 0;
 
     /**
      * Write blob data to the shared block.
@@ -75,36 +54,6 @@ public:
      * Write Null data to the shared block.
      */
     virtual int WriteNull(uint32_t row, uint32_t column) = 0;
-
-    /**
-     * Size of the used byte in the block.
-     */
-    virtual size_t GetUsedBytes() = 0;
-
-    /**
-     * The name of the current result set.
-     */
-    virtual std::string Name() = 0;
-
-    /**
-     * The size of the current result set.
-     */
-    virtual size_t Size() = 0;
-
-    /**
-     * The row number of the current result set.
-     */
-    virtual uint32_t GetRowNum() = 0;
-
-    /**
-     * The column number of the current result set.
-     */
-    virtual uint32_t GetColumnNum() = 0;
-
-    /**
-     * Write raw data in block.
-     */
-    virtual size_t SetRawData(const void *rawData, size_t size) = 0;
 };
 } // namespace DataShare
 } // namespace OHOS

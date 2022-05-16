@@ -41,17 +41,17 @@ public:
     /**
      * SharedBlock Deconstruction.
      */
-    ~DataShareBlockWriterImpl();
+    virtual ~DataShareBlockWriterImpl();
 
     /**
      * Clear current shared block.
      */
-    int Clear() override;
+    int Clear();
 
     /**
      * Set a shared block column.
      */
-    int SetColumnNum(uint32_t numColumns) override;
+    int SetColumnNum(uint32_t numColumns);
 
     /**
      * Allocate a row unit and its directory.
@@ -61,7 +61,7 @@ public:
     /**
      * Release the value of the last row.
      */
-    int FreeLastRow() override;
+    int FreeLastRow();
 
     /**
      * Write blob data to the shared block.
@@ -96,32 +96,32 @@ public:
     /**
      * Size of the used byte in the block.
      */
-    size_t GetUsedBytes() override;
+    size_t GetUsedBytes();
 
     /**
      * The name of the current result set.
      */
-    std::string Name() override;
+    std::string Name();
 
     /**
      * The size of the current result set.
      */
-    size_t Size() override;
+    size_t Size();
 
     /**
      * The row number of the current result set.
      */
-    uint32_t GetRowNum() override;
+    uint32_t GetRowNum();
 
     /**
      * The column number of the current result set.
      */
-    uint32_t GetColumnNum() override;
+    uint32_t GetColumnNum();
 
     /**
      * Write raw data in block.
      */
-    size_t SetRawData(const void *rawData, size_t size) override;
+    size_t SetRawData(const void *rawData, size_t size);
 
     /**
      * The fd of shared memory
@@ -133,7 +133,16 @@ public:
      */
     AppDataFwk::SharedBlock *GetBlock() const;
 
+    /**
+     * Set Position Offset
+     */
+    void SetPositionOffset(uint32_t offset)
+    {
+        posOffset_ = offset;
+    }
+
 private:
+    uint32_t posOffset_ = 0;
     AppDataFwk::SharedBlock *shareBlock_;
 };
 } // namespace DataShare

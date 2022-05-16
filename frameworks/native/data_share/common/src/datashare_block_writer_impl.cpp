@@ -74,7 +74,7 @@ int DataShareBlockWriterImpl::WriteBlob(uint32_t row, uint32_t column, const voi
         LOG_INFO("DataShareBlockWriterImpl::WriteBlob shareBlock_ is nullptr");
         return E_ERROR;
     }
-    return shareBlock_->PutBlob(row, column, value, size);
+    return shareBlock_->PutBlob(row - posOffset_, column, value, size);
 }
 
 int DataShareBlockWriterImpl::WriteString(uint32_t row, uint32_t column, const char *value, size_t sizeIncludingNull)
@@ -83,7 +83,7 @@ int DataShareBlockWriterImpl::WriteString(uint32_t row, uint32_t column, const c
         LOG_INFO("DataShareBlockWriterImpl::WriteString shareBlock_ is nullptr");
         return E_ERROR;
     }
-    return shareBlock_->PutString(row, column, value, sizeIncludingNull);
+    return shareBlock_->PutString(row - posOffset_, column, value, sizeIncludingNull);
 }
 
 int DataShareBlockWriterImpl::WriteLong(uint32_t row, uint32_t column, int64_t value)
@@ -92,7 +92,7 @@ int DataShareBlockWriterImpl::WriteLong(uint32_t row, uint32_t column, int64_t v
         LOG_INFO("DataShareBlockWriterImpl::WriteLong shareBlock_ is nullptr");
         return E_ERROR;
     }
-    return shareBlock_->PutLong(row, column, value);
+    return shareBlock_->PutLong(row - posOffset_, column, value);
 }
 
 int DataShareBlockWriterImpl::WriteDouble(uint32_t row, uint32_t column, double value)
@@ -101,7 +101,7 @@ int DataShareBlockWriterImpl::WriteDouble(uint32_t row, uint32_t column, double 
         LOG_INFO("DataShareBlockWriterImpl::WriteDouble shareBlock_ is nullptr");
         return E_ERROR;
     }
-    return shareBlock_->PutDouble(row, column, value);
+    return shareBlock_->PutDouble(row - posOffset_, column, value);
 }
 
 int DataShareBlockWriterImpl::WriteNull(uint32_t row, uint32_t column)
@@ -110,7 +110,7 @@ int DataShareBlockWriterImpl::WriteNull(uint32_t row, uint32_t column)
         LOG_INFO("DataShareBlockWriterImpl::WriteNull shareBlock_ is nullptr");
         return E_ERROR;
     }
-    return shareBlock_->PutNull(row, column);
+    return shareBlock_->PutNull(row - posOffset_, column);
 }
 
 const void *DataShareBlockWriterImpl::GetHeader()
