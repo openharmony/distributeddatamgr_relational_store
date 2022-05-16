@@ -234,16 +234,6 @@ public:
      */
     Uri DenormalizeUri(Uri &uri);
 
-    /**
-     * @brief Performs batch operations on the database.
-     *
-     * @param uri Indicates the path of data to operate.
-     * @param operations Indicates a list of database operations on the database.
-     * @return Returns the result of each operation, in array.
-     */
-    std::vector<std::shared_ptr<DataShareResult>> ExecuteBatch(
-        const Uri &uri, const std::vector<std::shared_ptr<DataShareOperation>> &operations);
-
 private:
     DataShareHelper(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const AAFwk::Want &want);
     DataShareHelper(const std::shared_ptr<Context> &context, const AAFwk::Want &want,

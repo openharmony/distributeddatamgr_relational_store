@@ -18,12 +18,14 @@
 
 #include <string>
 #include <vector>
+#include <list>
+#include "datashare_predicates_def.h"
 
 namespace OHOS {
 namespace DataShare {
 class DataShareAbsPredicates {
 public:
-    virtual ~DataShareAbsPredicates() {};
+    virtual ~DataShareAbsPredicates() {}
     virtual DataShareAbsPredicates *EqualTo(const std::string &field, const int value) = 0;
     virtual DataShareAbsPredicates *EqualTo(const std::string &field, const int64_t value) = 0;
     virtual DataShareAbsPredicates *EqualTo(const std::string &field, const double value) = 0;
@@ -69,10 +71,8 @@ public:
     virtual DataShareAbsPredicates *OrderByDesc(const std::string &field) = 0;
     virtual DataShareAbsPredicates *Distinct() = 0;
     virtual DataShareAbsPredicates *Limit(const int number, const int offset) = 0;
-    virtual DataShareAbsPredicates *Offset(const int rowOffset) = 0;
     virtual DataShareAbsPredicates *GroupBy(const std::vector<std::string> &fields) = 0;
     virtual DataShareAbsPredicates *IndexedBy(const std::string &indexName) = 0;
-    virtual DataShareAbsPredicates *Reset() = 0;
     virtual DataShareAbsPredicates *In(const std::string &field, const std::vector<int> &value) = 0;
     virtual DataShareAbsPredicates *In(const std::string &field, const std::vector<int64_t> &value) = 0;
     virtual DataShareAbsPredicates *In(const std::string &field, const std::vector<double> &value) = 0;
@@ -81,6 +81,16 @@ public:
     virtual DataShareAbsPredicates *NotIn(const std::string &field, const std::vector<int64_t> &value) = 0;
     virtual DataShareAbsPredicates *NotIn(const std::string &field, const std::vector<double> &value) = 0;
     virtual DataShareAbsPredicates *NotIn(const std::string &field, const std::vector<std::string> &value) = 0;
+    virtual DataShareAbsPredicates *KeyPrefix(const std::string &prefix) = 0;
+    virtual DataShareAbsPredicates *InKeys(const std::vector<std::string> &keys) = 0;
+    virtual const std::list<OperationItem>& GetOperationList() const = 0;
+    virtual std::string GetWhereClause() const = 0;
+    virtual int SetWhereClause(const std::string &whereClause) = 0;
+    virtual std::vector<std::string> GetWhereArgs() const = 0;
+    virtual int SetWhereArgs(const std::vector<std::string> &whereArgs) = 0;
+    virtual std::string GetOrder() const = 0;
+    virtual int SetOrder(const std::string &order) = 0;
+    virtual SettingMode GetSettingMode() const = 0;
 };
 } // namespace DataShare
 } // namespace OHOS

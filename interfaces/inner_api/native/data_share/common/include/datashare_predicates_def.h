@@ -54,9 +54,6 @@ typedef enum {
     END_WARP,
     BEGIN_WITH,
     END_WITH,
-    IN_DEVICES,
-    IN_ALL_DEVICES,
-    SET_SUGGEST_INDEX,
     IN_KEY,
     DISTINCT,
     GROUP_BY,
@@ -80,6 +77,12 @@ typedef struct {
     std::string tableName;
     std::list<OperationItem> operationList;
 } Predicates;
+
+typedef enum {
+    INVALID_MODE,
+    QUERY_LANGUAGE,
+    PREDICATES_METHOD
+} SettingMode;
 } // namespace DataShare
 } // namespace OHOS
 

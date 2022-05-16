@@ -15,8 +15,8 @@
 
 #include "napi_datashare_helper.h"
 
-#include <cstring>
 #include <uv.h>
+#include <cstring>
 #include <vector>
 
 #include "datashare_helper.h"
@@ -2164,9 +2164,9 @@ napi_value UpdateWrap(napi_env env, napi_callback_info info, DSHelperUpdateCB *u
         LOG_INFO("%{public}s,uri=%{public}s", __func__, updateCB->uri.c_str());
     }
 
+    UnwrapDataSharePredicates(updateCB->predicates, env, args[PARAM1]);
     updateCB->valueBucket.Clear();
-    AnalysisValuesBucket(updateCB->valueBucket, env, args[PARAM1]);
-    UnwrapDataSharePredicates(updateCB->predicates, env, args[PARAM2]);
+    AnalysisValuesBucket(updateCB->valueBucket, env, args[PARAM2]);
     DataShareHelper *objectInfo = nullptr;
     napi_unwrap(env, thisVar, (void **)&objectInfo);
     LOG_INFO("%{public}s,DataShareHelper objectInfo = %{public}p", __func__, objectInfo);
