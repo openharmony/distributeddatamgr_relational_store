@@ -33,7 +33,6 @@ config("module_private_config") {
     "//foundation/aafwk/standard/frameworks/kits/ability/native/include/continuation/distributed",
     "//foundation/aafwk/standard/frameworks/kits/ability/native/include/continuation/kits",
     "//foundation/aafwk/standard/interfaces/kits/napi/aafwk/inner/napi_common",
-    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base/include",
   ]
 }
 

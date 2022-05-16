@@ -17,7 +17,6 @@ import(
 
 config("ability_config") {
   visibility = [ ":*" ]
-  include_dirs = [ "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base/include" ]
 
   cflags = []
   if (target_cpu == "arm") {
@@ -63,7 +62,7 @@ ohos_shared_library("datashare_common") {
   configs = [ ":ability_config" ]
 
   deps = [
-    "//foundation/appexecfwk/standard/common:libappexecfwk_common",
+    "//foundation/bundlemanager/bundle_framework/common:libappexecfwk_common",
     "//utils/native/base:utils",
   ]
 
