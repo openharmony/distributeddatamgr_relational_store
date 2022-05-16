@@ -45,7 +45,7 @@ constexpr int INVALID_VALUE = -1;
 }
 
 void PrintPredicates(const DataSharePredicates &predicates);
-bool MakeNapiColumn(napi_env env, napi_value &napiColumns, const std::vector<std::string> columns);
+bool MakeNapiColumn(napi_env env, napi_value &napiColumns, const std::vector<std::string> &columns);
 
 using namespace OHOS::AppExecFwk;
 using OHOS::Security::AccessToken::AccessTokenKit;
@@ -379,7 +379,7 @@ int JsDataShareExtAbility::Update(const Uri &uri, const DataShareValuesBucket &v
     NativeValue* nativeUri = reinterpret_cast<NativeValue*>(napiUri);
     NativeValue* nativeValue = reinterpret_cast<NativeValue*>(napiValue);
     NativeValue* nativePredicates = reinterpret_cast<NativeValue*>(napiPredicates);
-    NativeValue* argv[] = {nativeUri, nativeValue, nativePredicates};
+    NativeValue* argv[] = {nativeUri, nativePredicates, nativeValue};
     NativeValue* nativeResult = CallObjectMethod("update", argv, ARGC_THREE);
     if (nativeResult == nullptr) {
         LOG_ERROR("%{public}s call update with return null.", __func__);
@@ -733,7 +733,7 @@ void PrintPredicates(const DataSharePredicates &predicates)
     }
 }
 
-bool MakeNapiColumn(napi_env env, napi_value &napiColumns, const std::vector<std::string> columns)
+bool MakeNapiColumn(napi_env env, napi_value &napiColumns, const std::vector<std::string> &columns)
 {
     napi_status status = napi_create_array(env, &napiColumns);
     if (status != napi_ok) {

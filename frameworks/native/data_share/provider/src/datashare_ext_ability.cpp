@@ -37,7 +37,7 @@ DataShareExtAbility* DataShareExtAbility::Create(const std::unique_ptr<Runtime>&
     if (!runtime) {
         return new DataShareExtAbility();
     }
-    
+
     if (creator_) {
         return creator_(runtime);
     }

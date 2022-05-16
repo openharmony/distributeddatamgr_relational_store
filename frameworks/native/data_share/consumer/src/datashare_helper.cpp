@@ -1062,49 +1062,5 @@ DataShareDeathRecipient::DataShareDeathRecipient(RemoteDiedHandler handler) : ha
 
 DataShareDeathRecipient::~DataShareDeathRecipient()
 {}
-
-std::vector<std::shared_ptr<DataShareResult>> DataShareHelper::ExecuteBatch(
-    const Uri &uri, const std::vector<std::shared_ptr<DataShareOperation>> &operations)
-{
-    LOG_INFO("DataShareHelper::ExecuteBatch start");
-    std::vector<std::shared_ptr<DataShareResult>> results;
-    if (!CheckUriParam(uri)) {
-        LOG_ERROR("DataShareHelper::ExecuteBatch. CheckUriParam uri failed");
-        return results;
-    }
-    if (uri_ == nullptr) {
-        LOG_INFO("DataShareHelper::ExecuteBatch before ConnectDataShareExtAbility.");
-        if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(want_, token_);
-        }
-        dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
-        LOG_INFO("DataShareHelper::ExecuteBatch after ConnectDataShareExtAbility.");
-        if (dataShareProxy_ == nullptr) {
-            LOG_ERROR("DataShareHelper::ExecuteBatch failed dataShareProxy_ == nullptr");
-            return results;
-        }
-    } else {
-        dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
-    }
-
-    if (dataShareProxy_ == nullptr) {
-        LOG_ERROR("%{public}s failed with invalid dataShareProxy_", __func__);
-        return results;
-    }
-
-    LOG_INFO("DataShareHelper::ExecuteBatch before dataShareProxy_->ExecuteBatch.");
-    results = dataShareProxy_->ExecuteBatch(operations);
-    LOG_INFO("DataShareHelper::ExecuteBatch after dataShareProxy_->ExecuteBatch.");
-    if (uri_ == nullptr) {
-        LOG_INFO("DataShareHelper::ExecuteBatch before DisconnectDataShareExtAbility.");
-        if (dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->DisconnectDataShareExtAbility();
-        }
-        LOG_INFO("DataShareHelper::ExecuteBatch after DisconnectDataShareExtAbility.");
-        dataShareProxy_ = nullptr;
-    }
-    LOG_INFO("DataShareHelper::ExecuteBatch end");
-    return results;
-}
 }  // namespace DataShare
 }  // namespace OHOS
