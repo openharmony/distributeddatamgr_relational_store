@@ -35,5 +35,4 @@ extern "C" __attribute__((visibility("default"))) void SetCreator(const CreatorF
 {
     return DataShareExtAbility::SetCreator(creator);
 }
-
 } // namespace OHOS::DataShare

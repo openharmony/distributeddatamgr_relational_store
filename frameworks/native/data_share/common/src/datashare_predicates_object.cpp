@@ -77,8 +77,8 @@ DataSharePredicatesObject::DataSharePredicatesObject(const std::vector<int> &val
 {
     std::vector<int64_t> int64val {};
     if (!val.empty()) {
-        for (int i = 0; i < val.size(); i++) {
-            int64val.push_back(static_cast<int64_t>(val[i]));
+        for (const auto &it : val) {
+            int64val.push_back(static_cast<int64_t>(it));
         }
         value = int64val;
     }
@@ -306,8 +306,8 @@ void DataSharePredicatesObject::UnmarshallingVector(DataSharePredicatesObjectTyp
             std::vector<int> intval {};
             parcel.ReadInt64Vector(&int64val);
             if (!int64val.empty()) {
-                for (int i = 0; i < int64val.size(); i++) {
-                    intval.push_back(static_cast<int>(int64val[i]));
+                for (const auto &it : int64val) {
+                    intval.push_back(static_cast<int>(it));
                 }
             }
             pValueObject->value = intval;

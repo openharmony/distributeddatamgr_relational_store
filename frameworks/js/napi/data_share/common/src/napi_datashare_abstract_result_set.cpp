@@ -23,7 +23,6 @@
 namespace OHOS {
 namespace DataShare {
 static napi_ref __thread ctorRef_ = nullptr;
-static const int E_OK = 0;
 napi_value NapiDataShareAbstractResultSet::NewInstance(napi_env env,
     std::shared_ptr<DataShareAbstractResultSet> resultSet)
 {
@@ -74,10 +73,7 @@ napi_value NapiDataShareAbstractResultSet::GetConstructor(napi_env env)
         return cons;
     }
     LOG_INFO("GetConstructor DataShareAbstractResultSet constructor");
-    napi_property_descriptor clzDes[] = {
-        DECLARE_NAPI_GETTER("rowCount", GetRowCount),
-        DECLARE_NAPI_GETTER("columnNames", GetAllColumnNames),
-    };
+    napi_property_descriptor clzDes[] = {};
     NAPI_CALL(env, napi_define_class(env, "DataShareAbstractResultSet", NAPI_AUTO_LENGTH, Initialize, nullptr,
         sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
     NAPI_CALL(env, napi_create_reference(env, cons, 1, &ctorRef_));
@@ -133,26 +129,6 @@ std::shared_ptr<DataShareAbstractResultSet> &NapiDataShareAbstractResultSet::Get
     napi_get_cb_info(env, info, nullptr, nullptr, &self, nullptr);
     napi_unwrap(env, self, reinterpret_cast<void **>(&resultSet));
     return resultSet->resultSet_;
-}
-
-napi_value NapiDataShareAbstractResultSet::GetRowCount(napi_env env, napi_callback_info info)
-{
-    int32_t count = -1;
-    int errCode = GetInnerAbstractResultSet(env, info)->GetRowCount(count);
-    if (errCode != E_OK) {
-        LOG_ERROR("GetRowCount failed code:%{public}d", errCode);
-    }
-    return DataShareJSUtils::Convert2JSValue(env, count);
-}
-
-napi_value NapiDataShareAbstractResultSet::GetAllColumnNames(napi_env env, napi_callback_info info)
-{
-    std::vector<std::string> columnNames;
-    int errCode = GetInnerAbstractResultSet(env, info)->GetAllColumnOrKeyName(columnNames);
-    if (errCode != E_OK) {
-        LOG_ERROR("GetAllColumnNames failed code:%{public}d", errCode);
-    }
-    return DataShareJSUtils::Convert2JSValue(env, columnNames);
 }
 
 napi_value GetNapiAbstractResultSetObject(napi_env env, DataShareAbstractResultSet *resultSet)

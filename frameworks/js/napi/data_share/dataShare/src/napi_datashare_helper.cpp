@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "napi_datashare_helper.h"
 
 #include <uv.h>
@@ -210,18 +211,21 @@ napi_value DataShareHelperConstructor(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr));
     NAPI_ASSERT(env, argc > 0, "Wrong number of arguments");
     AAFwk::Want want;
-    OHOS::AppExecFwk::UnwrapWant(env, argv[PARAM1], want);
-    std::string strUri = NapiValueToStringUtf8(env, argv[PARAM2]);
+    std::string strUri;
     std::shared_ptr<DataShareHelper> dataShareHelper = nullptr;
     bool isStageMode = false;
     napi_status status = AbilityRuntime::IsStageContext(env, argv[PARAM0], isStageMode);
     if (status != napi_ok || !isStageMode) {
         auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);
+        OHOS::AppExecFwk::UnwrapWant(env, argv[PARAM0], want);
+        strUri = NapiValueToStringUtf8(env, argv[PARAM1]);
         NAPI_ASSERT(env, ability != nullptr, "DataShareHelperConstructor: failed to get native ability");
         LOG_INFO("FA Model: strUri = %{public}s", strUri.c_str());
         dataShareHelper = DataShareHelper::Creator(ability->GetContext(), want, std::make_shared<Uri>(strUri));
     } else {
         auto context = OHOS::AbilityRuntime::GetStageModeContext(env, argv[PARAM0]);
+        OHOS::AppExecFwk::UnwrapWant(env, argv[PARAM1], want);
+        strUri = NapiValueToStringUtf8(env, argv[PARAM2]);
         NAPI_ASSERT(env, context != nullptr, "DataShareHelperConstructor: failed to get native context");
         LOG_INFO("Stage Model: strUri = %{public}s", strUri.c_str());
         dataShareHelper = DataShareHelper::Creator(context, want, std::make_shared<Uri>(strUri));
@@ -2160,9 +2164,9 @@ napi_value UpdateWrap(napi_env env, napi_callback_info info, DSHelperUpdateCB *u
         LOG_INFO("%{public}s,uri=%{public}s", __func__, updateCB->uri.c_str());
     }
 
+    UnwrapDataSharePredicates(updateCB->predicates, env, args[PARAM1]);
     updateCB->valueBucket.Clear();
-    AnalysisValuesBucket(updateCB->valueBucket, env, args[PARAM1]);
-    UnwrapDataSharePredicates(updateCB->predicates, env, args[PARAM2]);
+    AnalysisValuesBucket(updateCB->valueBucket, env, args[PARAM2]);
     DataShareHelper *objectInfo = nullptr;
     napi_unwrap(env, thisVar, (void **)&objectInfo);
     LOG_INFO("%{public}s,DataShareHelper objectInfo = %{public}p", __func__, objectInfo);
@@ -2783,9 +2787,11 @@ napi_value QueryWrap(napi_env env, napi_callback_info info, DSHelperQueryCB *que
         LOG_INFO("%{public}s,uri=%{public}s", __func__, queryCB->uri.c_str());
     }
 
+    UnwrapDataSharePredicates(queryCB->predicates, env, args[PARAM1]);
+
     std::vector<std::string> result;
     bool arrayStringbool = false;
-    arrayStringbool = NapiValueToArrayStringUtf8(env, args[PARAM1], result);
+    arrayStringbool = NapiValueToArrayStringUtf8(env, args[PARAM2], result);
     if (!arrayStringbool) {
         LOG_ERROR("%{public}s, The return value of arraystringbool is false", __func__);
     }
@@ -2794,7 +2800,6 @@ napi_value QueryWrap(napi_env env, napi_callback_info info, DSHelperQueryCB *que
         LOG_INFO("%{public}s,columns=%{public}s", __func__, queryCB->columns.at(i).c_str());
     }
 
-    UnwrapDataSharePredicates(queryCB->predicates, env, args[PARAM2]);
     DataShareHelper *objectInfo = nullptr;
     napi_unwrap(env, thisVar, (void **)&objectInfo);
     LOG_INFO("%{public}s,DataShareHelper objectInfo = %{public}p", __func__, objectInfo);

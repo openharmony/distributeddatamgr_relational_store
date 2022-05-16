@@ -181,7 +181,6 @@ HWTEST_F(DataShareHelperTest, DataShare_Insert_001, TestSize.Level1)
     std::vector<uint8_t> value {20, 30};
     val.PutString("name", "ZhangSan");
     val.PutInt("age", 20);
-    sleep(1);
     int result = dataShareHelper->Insert(*uri, val);
     EXPECT_NE(result, 0);
     LOG_INFO("DataShare_Insert_001 ----- end, result : %{public}d", result);
@@ -208,7 +207,6 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_001, TestSize.Level1)
     val.PutInt("age", 30);
     DataSharePredicates predicates;
     predicates.EqualTo("age", 20);
-    sleep(1);
     int result = dataShareHelper->Update(*uri, val, predicates);
     EXPECT_NE(result, 0);
     LOG_INFO("DataShare_Update_001 ----- end, result : %{public}d", result);
@@ -261,7 +259,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_001, TestSize.Level1)
     if (resultSet != nullptr) {
         resultSet->GetRowCount(result);
     }
-    EXPECT_NE(result, 0);
+    EXPECT_NE(result, -1);
     LOG_INFO("DataShare_Query_001 ----- end, result : %{public}d", result);
 }
 
@@ -282,7 +280,7 @@ HWTEST_F(DataShareHelperTest, DataShare_GetType_001, TestSize.Level1)
     std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
     std::string result = dataShareHelper->GetType(*uri);
-    EXPECT_NE(result, "");
+    EXPECT_NE(result.c_str(), "");
     LOG_INFO("DataShare_GetType_001 ----- end, result : %{public}s", result.c_str());
 }
 
@@ -408,29 +406,6 @@ HWTEST_F(DataShareHelperTest, DataShare_DenormalizeUri_001, TestSize.Level1)
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
     dataShareHelper->DenormalizeUri(*uri);
     LOG_INFO("DataShare_DenormalizeUri_001 ----- end");
-}
-
-/**
- * @tc.name: DataShare_ExecuteBatch_001
- * @tc.desc:
- * @tc.type: FUNC
- */
-HWTEST_F(DataShareHelperTest, DataShare_ExecuteBatch_001, TestSize.Level1)
-{
-    LOG_INFO("DataShare_ExecuteBatch_001 ----- start");
-    std::shared_ptr<Ability> ability = std::make_shared<Ability>();
-    std::shared_ptr<Context> context(ability);
-    std::string abilityName = ABILITYNAME;
-    std::string bundleName = BUNDLENAME;
-    AAFwk::Want want;
-    want.SetElementName(bundleName, abilityName);
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
-    std::shared_ptr<DataShareOperation> operation = std::make_shared<DataShareOperation>();
-    std::vector<std::shared_ptr<DataShareOperation>> datashareoperation;
-    datashareoperation.push_back(operation);
-    dataShareHelper->ExecuteBatch(*uri, datashareoperation);
-    LOG_INFO("DataShare_ExecuteBatch_001 ----- end");
 }
 } // namespace DataShare
 } // namespace OHOS
