@@ -53,9 +53,8 @@ public:
     int Close() override;
     int FinishStep();
     int PrepareStep();
-    int GetAllColumnOrKeyName(std::vector<std::string> &columnOrKeyNames) override;
-    bool OnGo(int oldRowIndex, int newRowIndex,
-        const std::shared_ptr<DataShare::DataShareBlockWriter> &writer) override;
+    int GetAllColumnName(std::vector<std::string> &columnOrKeyNames) override;
+    bool OnGo(int startRowInde, int targetRowIndex, DataShare::DataShareBlockWriter &writer) override;
 
 private:
     int CheckSession();
@@ -76,9 +75,9 @@ private:
     static const int STEP_QUERY_RETRY_INTERVAL = 1000;
 
     void GetColumnTypes(int columnCount, DataShare::DataType columnTypes[]);
-    void WriteBlock(int columnCount, DataShare::DataType columnTypes[],
-        const std::shared_ptr<DataShare::DataShareBlockWriter> &writer);
-    bool WriteBlobData(int row, int column, const std::shared_ptr<DataShare::DataShareBlockWriter> &writer);
+    void WriteBlock(int start, int target, int columnCount, DataShare::DataType columnTypes[],
+        DataShare::DataShareBlockWriter &writer);
+    bool WriteBlobData(int row, int column, DataShare::DataShareBlockWriter &writer);
 };
 
 } // namespace NativeRdb

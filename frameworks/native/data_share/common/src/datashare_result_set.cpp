@@ -48,7 +48,7 @@ int DataShareResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
         LOG_ERROR("resultSet_ is null!");
         return E_ERROR;
     }
-    return resultSet_->GetAllColumnOrKeyName(columnNames);
+    return resultSet_->GetAllColumnName(columnNames);
 }
 
 int DataShareResultSet::GetRowCount(int &count)
@@ -60,13 +60,13 @@ int DataShareResultSet::GetRowCount(int &count)
     return resultSet_->GetRowCount(count);
 }
 
-bool DataShareResultSet::OnGo(int oldRowIndex, int newRowIndex)
+bool DataShareResultSet::OnGo(int startRowIndex, int targetRowIndex)
 {
-    if (resultSet_ == nullptr) {
-        LOG_ERROR("resultSet_ is null!");
+    if (resultSet_ == nullptr || blockWriter_ == nullptr) {
+        LOG_ERROR("resultSet_ or blockWriter_ is null!");
         return E_ERROR;
     }
-    return resultSet_->OnGo(oldRowIndex, newRowIndex, std::dynamic_pointer_cast<DataShareBlockWriter>(blockWriter_));
+    return resultSet_->OnGo(startRowIndex, targetRowIndex, *blockWriter_.get());
 }
 
 void DataShareResultSet::FillBlock(int startRowIndex, AppDataFwk::SharedBlock *block)
@@ -84,7 +84,7 @@ AppDataFwk::SharedBlock *DataShareResultSet::GetBlock() const
 
 int DataShareResultSet::GetDataType(int columnIndex, DataType &dataType)
 {
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit((uint32_t)rowPos_, (uint32_t)columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit((uint32_t)rowPos_ - startRowPos_, (uint32_t)columnIndex);
     if (!cellUnit) {
         LOG_ERROR("DataShareResultSet::GetDataType cellUnit is null!");
         return E_ERROR;
@@ -95,6 +95,10 @@ int DataShareResultSet::GetDataType(int columnIndex, DataType &dataType)
 
 int DataShareResultSet::GoToRow(int position)
 {
+    if (sharedBlock_ == nullptr) {
+        LOG_ERROR("sharedBlock_ is null!");
+        return E_ERROR;
+    }
     int rowCnt = 0;
     GetRowCount(rowCnt);
     if (position >= rowCnt) {
@@ -109,11 +113,23 @@ int DataShareResultSet::GoToRow(int position)
         return E_OK;
     }
     bool result = true;
-    if (sharedBlock_ == nullptr || (uint32_t)position >= sharedBlock_->GetRowNum()) {
-        result = OnGo(rowPos_, position);
+    if (position > endRowPos_ || position < startRowPos_) {
+        std::vector<std::string> columnNames;
+        GetAllColumnNames(columnNames);
+        sharedBlock_->Clear();
+        sharedBlock_->SetColumnNum(columnNames.size());
+        blockWriter_->SetPositionOffset((uint32_t)position);
+        result = OnGo(position, std::min(position + STEP_LENGTH, rowCnt));
+        if (result) {
+            startRowPos_ = position;
+            endRowPos_ = position + sharedBlock_->GetRowNum() -1;
+        }
     }
+
     if (!result) {
         rowPos_ = INIT_POS;
+        startRowPos_ = INIT_POS;
+        endRowPos_ = INIT_POS;
         return E_ERROR;
     } else {
         rowPos_ = position;
@@ -128,7 +144,7 @@ int DataShareResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &value)
         return errorCode;
     }
 
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos_, columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos_ - startRowPos_, columnIndex);
     if (!cellUnit) {
         LOG_ERROR("DataShareResultSet::GetBlob cellUnit is null!");
         return E_ERROR;
@@ -168,7 +184,7 @@ int DataShareResultSet::GetString(int columnIndex, std::string &value)
     if (errorCode != E_OK) {
         return errorCode;
     }
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos_, columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos_ - startRowPos_, columnIndex);
     if (!cellUnit) {
         LOG_ERROR("DataShareResultSet::GetString cellUnit is null!");
         return E_ERROR;
@@ -207,7 +223,7 @@ int DataShareResultSet::GetString(int columnIndex, std::string &value)
 
 int DataShareResultSet::GetInt(int columnIndex, int &value)
 {
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos_, columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos_ - startRowPos_, columnIndex);
     if (!cellUnit) {
         LOG_ERROR("DataShareResultSet::GetInt cellUnit is null!");
         return E_ERROR;
@@ -222,7 +238,7 @@ int DataShareResultSet::GetLong(int columnIndex, int64_t &value)
     if (errorCode != E_OK) {
         return errorCode;
     }
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos_, columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos_ - startRowPos_, columnIndex);
     if (!cellUnit) {
         LOG_ERROR("DataShareResultSet::GetLong cellUnit is null!");
         return E_ERROR;
@@ -262,7 +278,7 @@ int DataShareResultSet::GetDouble(int columnIndex, double &value)
     if (errorCode != E_OK) {
         return errorCode;
     }
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos_, columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos_ - startRowPos_, columnIndex);
     if (!cellUnit) {
         LOG_ERROR("DataShareResultSet::GetDouble cellUnit is null!");
         return E_ERROR;
@@ -300,7 +316,7 @@ int DataShareResultSet::IsColumnNull(int columnIndex, bool &isNull)
     if (errorCode != E_OK) {
         return errorCode;
     }
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos_, columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos_ - startRowPos_, columnIndex);
     if (!cellUnit) {
         LOG_ERROR("DataShareResultSet::IsColumnNull cellUnit is null!");
         return E_ERROR;

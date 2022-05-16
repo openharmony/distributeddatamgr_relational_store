@@ -47,7 +47,7 @@ public:
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int GetRowCount(int &count) override;
     AppDataFwk::SharedBlock *GetBlock() const override;
-    bool OnGo(int oldRowIndex, int newRowIndex) override;
+    bool OnGo(int startRowIndex, int targetRowIndex) override;
     void FillBlock(int startRowIndex, AppDataFwk::SharedBlock *block) override;
     virtual void SetBlock(AppDataFwk::SharedBlock *block);
     int Close() override;
@@ -69,6 +69,12 @@ private:
     static const int INIT_POS = -1;
     static const size_t DEFAULT_BLOCK_SIZE = 2 * 1024 * 1024;
     static int blockId_;
+    // Equivalent to filling in setp + 1 rows each time
+    static const int STEP_LENGTH = 2;
+    // The actual position of the first row of data in the shareblock
+    int startRowPos_ = -1;
+    // The actual position of the last row of data in the shareblock
+    int endRowPos_ = -1;
     // The SharedBlock owned by this DataShareResultSet
     AppDataFwk::SharedBlock *sharedBlock_  = nullptr;
     std::shared_ptr<DataShareBlockWriterImpl> blockWriter_ = nullptr;

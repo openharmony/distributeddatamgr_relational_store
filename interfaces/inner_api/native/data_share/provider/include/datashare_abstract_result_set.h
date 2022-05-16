@@ -30,7 +30,7 @@ public:
      *
      * return the names of the columns contains in this query result.
      */
-    virtual int GetAllColumnOrKeyName(std::vector<std::string> &columnOrKeyNames) = 0;
+    virtual int GetAllColumnName(std::vector<std::string> &columnNames) = 0;
 
     /**
      * return the numbers of rows in the result set.
@@ -40,7 +40,7 @@ public:
     /**
      * Called when the position of the result set changes
      */
-    virtual bool OnGo(int oldRowIndex, int targetRowIndex, const std::shared_ptr<DataShareBlockWriter>& writer) = 0;
+    virtual bool OnGo(int startRowIndex, int targetRowIndex, DataShareBlockWriter &writer) = 0;
 };
 } // namespace DataShare
 } // namespace OHOS
