@@ -13,9 +13,9 @@
 
 import("//build/test.gni")
 
-module_output_path = "relational_store/rdb"
+module_output_path = "prefrences/storage"
 
-ohos_js_unittest("RdbJsTest") {
+ohos_js_unittest("StorageJsTest") {
   module_out_path = module_output_path
 
   hap_profile = "./config.json"
@@ -30,5 +30,5 @@ ohos_js_unittest("RdbJsTest") {
 
 group("unittest") {
   testonly = true
-  deps = [ ":RdbJsTest" ]
+  deps = [ ":StorageJsTest" ]
 }

@@ -56,11 +56,11 @@ ohos_shared_library("rdb") {
     "ability_runtime:napi_base_context",
     "hilog_native:libhilog",
     "napi:ace_napi",
-    "native_appdatamgr:native_appdatafwk",
-    "native_appdatamgr:native_rdb",
+    "relational_store:native_appdatafwk",
+    "relational_store:native_rdb",
   ]
 
   subsystem_name = "distributeddatamgr"
-  part_name = "native_appdatamgr"
+  part_name = "relational_store"
   relative_install_dir = "module/data"
 }

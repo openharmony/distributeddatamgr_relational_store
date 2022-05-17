@@ -1,0 +1,119 @@
+{
+    "name": "@ohos/distributeddatamgr_appdatamgr",
+    "version": "3.1.0",
+    "description": "Local Data Management",
+    "homePage": "https://gitee.com/openharmony",
+    "license": "Apache V2",
+    "repository": "https://gitee.com/openharmony/distributeddatamgr_appdatamgr",
+    "domain": "os",
+    "language": "",
+    "publishAs": "code-segment",
+    "private": false,
+    "scripts": {},
+    "tags": [
+        "foundation"
+    ],
+    "keywords": [
+        "distributeddatamgr",
+        "appdatamgr"
+    ],
+    "envs": [],
+    "dirs": {},
+    "author": {
+        "name": "",
+        "email": "",
+        "url": ""
+    },
+    "contributors": [
+        {
+            "name": "",
+            "email": "",
+            "url": ""
+        }
+    ],
+    "segment": {
+        "destPath": "foundation/distributeddatamgr/appdatamgr"
+    },
+    "component": {
+        "name": "data_share",
+        "subsystem": "distributeddatamgr",
+        "syscap": [
+            "SystemCapability.DistributedDataManager.DataShare.Core",
+            "SystemCapability.DistributedDataManager.DataShare.Consumer",
+            "SystemCapability.DistributedDataManager.DataShare.Provider"
+        ],
+        "features": [],
+        "adapted_system_type": [
+            "standard"
+        ],
+        "rom": "",
+        "ram": "",
+        "deps": {
+            "components": [
+                "ability_base",
+                "ability_runtime",
+                "want",
+                "libhilog",
+                "ipc_core",
+                "ace_napi",
+                "samgr_proxy"
+            ],
+            "third_party": [
+                "sqlite",
+                "shared_icuuc",
+                "shared_icui18n",
+                "libxml2",
+                "libsec_shared",
+                "gtest_main"
+            ]
+        },
+        "build": {
+            "sub_component": [
+                "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share:datashare_abilitykit",
+                "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share:datashare_ext_ability_module",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/common:datashare_common",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/data_share:datashare_napi_packages"
+            ],
+            "inner_kits": [
+                {
+                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share:datashare_abilitykit",
+                    "header": {
+                        "header_files": [
+                            "datashare_helper.h",
+                            "datashare_result_set.h"
+                        ],
+                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share/consumer/include"
+                    }
+                },
+                {
+                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share:datashare_abilitykit",
+                    "header": {
+                        "header_files": [
+                            "datashare_abstract_result_set.h",
+                            "datashare_block_writer.h"
+                        ],
+                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share/provider/include"
+                    }
+                },
+                {
+                    "name": "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/common:datashare_common",
+                    "header": {
+                        "header_files": [
+                            "datashare_errno.h",
+                            "datashare_predicates_def.h",
+                            "datashare_predicates_object.h",
+                            "datashare_predicates.h",
+                            "datashare_value_object.h",
+                            "datashare_values_bucket.h"
+                        ],
+                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share/common/include"
+                    }
+                }
+            ],
+            "test": [
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/test:unittest",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/data_share/dataShare/test:unittest"
+            ]
+        }
+    }
+}
