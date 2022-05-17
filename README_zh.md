@@ -138,6 +138,5 @@ KV存储能力继承自公共基础库原始设计，在原有能力基础上进
 
 分布式数据管理子系统
 
-[distributeddatamgr\_appdatamgr](https://gitee.com/openharmony/distributeddatamgr_appdatamgr)
-
-[third\_party\_sqlite](https://gitee.com/openharmony/third_party_sqlite)
+- [distributeddatamgr\_appdatamgr](https://gitee.com/openharmony/distributeddatamgr_appdatamgr)
+- [third\_party\_sqlite](https://gitee.com/openharmony/third_party_sqlite)

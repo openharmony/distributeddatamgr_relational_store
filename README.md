@@ -104,7 +104,7 @@ To avoid a high memory cost, it is recommended that the preferences database sto
 
 Distributed Data Management subsystem
 
-distributeddatamgr\_appdatamgr
+- [distributeddatamgr\_appdatamgr](https://gitee.com/openharmony/distributeddatamgr_appdatamgr)
 
-third\_party\_sqlite
+- [third\_party\_sqlite](https://gitee.com/openharmony/third_party_sqlite)
 
