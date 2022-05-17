@@ -121,7 +121,7 @@ void SetValuesBucketObject(
         LOG_INFO("ValueObject type:%{public}d, key:%{public}s, value:null", valueType, keyStr.c_str());
     } else if (valueType == napi_object) {
         LOG_INFO("ValueObject type:%{public}d, key:%{public}s, value:Uint8Array", valueType, keyStr.c_str());
-        valuesBucket.PutBlob(keyStr, DataShareJSUtils::ConvertU8Vector(env, value));
+        valuesBucket.PutBlob(keyStr, DataShareJSUtils::Convert2U8Vector(env, value));
     } else {
         LOG_ERROR("valuesBucket error");
     }
