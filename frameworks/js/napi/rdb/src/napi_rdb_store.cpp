@@ -415,7 +415,7 @@ void ParseValuesBucket(const napi_env &env, const napi_value &arg, RdbStoreConte
     }
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value key;
-        status = napi_get_element(env, keys, i, &key);
+        napi_get_element(env, keys, i, &key);
         std::string keyStr = JSUtils::Convert2String(env, key);
         napi_value value;
         napi_get_property(env, arg, key, &value);
