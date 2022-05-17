@@ -87,9 +87,11 @@ void DataShareConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
 /**
  * @brief connect remote ability of DataShareExtAbility.
  */
-void DataShareConnection::ConnectDataShareExtAbility(const AAFwk::Want &want, const sptr<IRemoteObject> &token)
+void DataShareConnection::ConnectDataShareExtAbility(const Uri &uri, const sptr<IRemoteObject> &token)
 {
     LOG_INFO("called begin");
+    AAFwk::Want want;
+    want.SetUri(uri);
     ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, this, token);
     LOG_INFO("called end, ret=%{public}d", ret);
 }

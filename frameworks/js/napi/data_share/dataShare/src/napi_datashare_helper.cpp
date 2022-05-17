@@ -205,30 +205,27 @@ napi_value DataShareHelperInit(napi_env env, napi_value exports)
 napi_value DataShareHelperConstructor(napi_env env, napi_callback_info info)
 {
     LOG_INFO("%{public}s, called", __func__);
-    size_t argc = ARGS_THREE;
-    napi_value argv[ARGS_THREE] = {nullptr};
+    size_t argc = ARGS_TWO;
+    napi_value argv[ARGS_TWO] = {nullptr};
     napi_value thisVar = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr));
     NAPI_ASSERT(env, argc > 0, "Wrong number of arguments");
-    AAFwk::Want want;
     std::string strUri;
     std::shared_ptr<DataShareHelper> dataShareHelper = nullptr;
     bool isStageMode = false;
     napi_status status = AbilityRuntime::IsStageContext(env, argv[PARAM0], isStageMode);
     if (status != napi_ok || !isStageMode) {
         auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);
-        OHOS::AppExecFwk::UnwrapWant(env, argv[PARAM0], want);
-        strUri = NapiValueToStringUtf8(env, argv[PARAM1]);
+        strUri = NapiValueToStringUtf8(env, argv[PARAM0]);
         NAPI_ASSERT(env, ability != nullptr, "DataShareHelperConstructor: failed to get native ability");
         LOG_INFO("FA Model: strUri = %{public}s", strUri.c_str());
-        dataShareHelper = DataShareHelper::Creator(ability->GetContext(), want, std::make_shared<Uri>(strUri));
+        dataShareHelper = DataShareHelper::Creator(ability->GetContext(), strUri);
     } else {
         auto context = OHOS::AbilityRuntime::GetStageModeContext(env, argv[PARAM0]);
-        OHOS::AppExecFwk::UnwrapWant(env, argv[PARAM1], want);
-        strUri = NapiValueToStringUtf8(env, argv[PARAM2]);
+        strUri = NapiValueToStringUtf8(env, argv[PARAM1]);
         NAPI_ASSERT(env, context != nullptr, "DataShareHelperConstructor: failed to get native context");
         LOG_INFO("Stage Model: strUri = %{public}s", strUri.c_str());
-        dataShareHelper = DataShareHelper::Creator(context, want, std::make_shared<Uri>(strUri));
+        dataShareHelper = DataShareHelper::Creator(context, strUri);
     }
     NAPI_ASSERT(env, dataShareHelper != nullptr, "DataShareHelperConstructor: dataShareHelper is nullptr");
     g_dataShareHelperList.emplace_back(dataShareHelper);
@@ -503,7 +500,6 @@ void InsertPromiseCompleteCB(napi_env env, napi_status status, void *data)
 /**
  * @brief Parse the ValuesBucket parameters.
  *
- * @param param Indicates the want parameters saved the parse result.
  * @param env The environment that the Node-API call is invoked under.
  * @param args Indicates the arguments passed into the callback.
  *
