@@ -13,7 +13,7 @@
 import("//build/test.gni")
 import("//foundation/distributeddatamgr/appdatamgr/appdatamgr.gni")
 
-module_output_path = "native_appdatamgr/native_rdb"
+module_output_path = "relational_store/native_rdb"
 
 ###############################################################################
 config("module_private_config") {
@@ -31,7 +31,7 @@ config("module_private_config") {
     "//utils/native/base/include",
   ]
 
-  if (native_appdatamgr_rdb_support_icu) {
+  if (relational_store_rdb_support_icu) {
     include_dirs += [
       "//third_party/icu/icu4c/source/i18n",
       "//third_party/icu/icu4c/source/common",
@@ -69,7 +69,7 @@ ohos_unittest("NativeRdbTest") {
   external_deps = [
     "hilog_native:libhilog",
     "ipc:ipc_core",
-    "native_appdatamgr:native_rdb",
+    "relational_store:native_rdb",
   ]
 
   deps = [

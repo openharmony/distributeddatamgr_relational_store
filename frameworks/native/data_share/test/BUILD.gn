@@ -14,7 +14,7 @@ import("//build/test.gni")
 import(
     "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/common/datashare.gni")
 
-module_output_path = "native_appdatamgr/native_datashare"
+module_output_path = "data_share/native_datashare"
 
 ###############################################################################
 
@@ -57,7 +57,7 @@ ohos_unittest("NativeDataShareTest") {
     "bundle_framework:appexecfwk_core",
     "ipc:ipc_core",
     "ipc_js:rpc",
-    "native_appdatamgr:native_dataability",
+    "dataability:native_dataability",
     "permission_standard:libpermissionsdk_standard",
     "utils_base:utils",
   ]

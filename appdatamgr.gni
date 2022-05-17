@@ -12,5 +12,5 @@
 # limitations under the License.
 
 declare_args() {
-  native_appdatamgr_rdb_support_icu = true
+  relational_store_rdb_support_icu = true
 }

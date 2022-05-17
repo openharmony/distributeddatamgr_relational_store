@@ -46,5 +46,5 @@ ohos_shared_library("datashareextensionability_napi") {
 
   relative_install_dir = "module/application"
   subsystem_name = "distributeddatamgr"
-  part_name = "native_appdatamgr"
+  part_name = "data_share"
 }

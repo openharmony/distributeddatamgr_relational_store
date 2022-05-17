@@ -56,16 +56,16 @@ ohos_shared_library("datashare") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
-    "native_appdatamgr:datashare_abilitykit",
-    "native_appdatamgr:datashare_common",
-    "native_appdatamgr:native_appdatafwk",
-    "native_appdatamgr:native_dataability",
-    "native_appdatamgr:native_rdb",
+    "data_share:datashare_abilitykit",
+    "data_share:datashare_common",
+    "relational_store:native_appdatafwk",
+    "dataability:native_dataability",
+    "relational_store:native_rdb",
     "utils_base:utils",
   ]
 
   relative_install_dir = "module/data"
 
   subsystem_name = "distributeddatamgr"
-  part_name = "native_appdatamgr"
+  part_name = "data_share"
 }

@@ -35,16 +35,12 @@
         "destPath": "foundation/distributeddatamgr/appdatamgr"
     },
     "component": {
-        "name": "native_appdatamgr",
+        "name": "relational_store",
         "subsystem": "distributeddatamgr",
         "syscap": [
-            "SystemCapability.DistributedDataManager.DataShare.Core",
-            "SystemCapability.DistributedDataManager.DataShare.Consumer",
-            "SystemCapability.DistributedDataManager.DataShare.Provider",
-            "SystemCapability.DistributedDataManager.RelationalStore.Core",
-            "SystemCapability.DistributedDataManager.Preferences.Core"
+            "SystemCapability.DistributedDataManager.RelationalStore.Core"
         ],
-        "features": ["native_appdatamgr_rdb_support_icu"],
+        "features": ["relational_store_rdb_support_icu"],
         "adapted_system_type": [
             "standard"
         ],
@@ -72,18 +68,8 @@
         "build": {
             "sub_component": [
                 "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/appdatafwk:native_appdatafwk",
-                "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/preferences:native_preferences",
-                "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/dataability:native_dataability",
                 "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb:native_rdb",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/dataability:dataability",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/preferences:preferences",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/preferences:storage",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/preferences:storage_napi",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/rdb:rdb",
-                "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share:datashare_abilitykit",
-                "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share:datashare_ext_ability_module",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/common:datashare_common",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/data_share:datashare_napi_packages"
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/rdb:rdb"
             ],
             "inner_kits": [
                 {
@@ -109,20 +95,6 @@
                     }
                 },
                 {
-                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/preferences:native_preferences",
-                    "header": {
-                        "header_files": [
-                            "preferences.h",
-                            "preferences_observer.h",
-                            "preferences_helper.h",
-                            "preferences_errno.h",
-                            "preferences_xml_utils.h",
-                            "preferences_value.h"
-                        ],
-                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/preferences/include"
-                    }
-                },
-                {
                     "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/appdatafwk:native_appdatafwk",
                     "header": {
                         "header_files": [
@@ -130,61 +102,11 @@
                         ],
                         "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/appdatafwk/include"
                     }
-                },
-                {
-                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/dataability:native_dataability",
-                    "header": {
-                        "header_files": [
-                            "data_ability_predicates.h",
-                            "predicates_utils.h"
-                        ],
-                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/dataability/include"
-                    }
-                },
-                {
-                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share:datashare_abilitykit",
-                    "header": {
-                        "header_files": [
-                            "datashare_helper.h",
-                            "datashare_result_set.h"
-                        ],
-                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share/consumer/include"
-                    }
-                },
-                {
-                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share:datashare_abilitykit",
-                    "header": {
-                        "header_files": [
-                            "datashare_abstract_result_set.h",
-                            "datashare_block_writer.h"
-                        ],
-                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share/provider/include"
-                    }
-                },
-                {
-                    "name": "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/common:datashare_common",
-                    "header": {
-                        "header_files": [
-                            "datashare_errno.h",
-                            "datashare_predicates_def.h",
-                            "datashare_predicates_object.h",
-                            "datashare_predicates.h",
-                            "datashare_value_object.h",
-                            "datashare_values_bucket.h"
-                        ],
-                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share/common/include"
-                    }
                 }
             ],
             "test": [
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/native/preferences/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/native/dataability/test:unittest",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/native/rdb/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/rdb/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/preferences/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/dataability/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/data_share/dataShare/test:unittest"
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/rdb/test:unittest"
             ]
         }
     }
