@@ -64,7 +64,7 @@ public:
     /**
      * @brief connect remote ability of DataShareExtAbility.
      */
-    void ConnectDataShareExtAbility(const AAFwk::Want &want, const sptr<IRemoteObject> &token);
+    void ConnectDataShareExtAbility(const Uri &uri, const sptr<IRemoteObject> &token);
 
     /**
      * @brief disconnect remote ability of DataShareExtAbility.

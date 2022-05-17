@@ -21,19 +21,16 @@
 #include "datashare_helper.h"
 #include "datashare_operation.h"
 #include "data_ability_observer_interface.h"
-#include "want.h"
 #include "datashare_log.h"
 #include "datashare_predicates.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AbilityRuntime;
-
+using Uri = OHOS::Uri;
 namespace OHOS {
 namespace DataShare {
-std::string ABILITYNAME = "DataShareExtAbility";
-std::string BUNDLENAME = "com.samples.datasharetest";
-std::string URI = "datashare:///com.samples.datasharetest.DataShare";
+std::string URI = "datashare:///com.ohos.data.datasharetest.DataShare";
 
 class DataShareHelperTest : public testing::Test {
 public:
@@ -82,17 +79,13 @@ HWTEST_F(DataShareHelperTest, DataShare_Release_001, TestSize.Level1)
     LOG_INFO("DataShare_Release_001 ----- start");
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
-    std::string abilityName = ABILITYNAME;
-    std::string bundleName = BUNDLENAME;
-    AAFwk::Want want;
-    want.SetElementName(bundleName, abilityName);
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri->GetScheme().c_str());
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
+    Uri uri(URI);
+    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::string mimeTypeFilter("mimeTypeFiltertest");
     bool result = dataShareHelper->Release();
     EXPECT_EQ(result, true);
-    LOG_INFO("DataShare_Release_001 ----- end, result : %{public}d", result);
+    LOG_INFO("DataShare_Release_001 ----- end");
 }
 
 /**
@@ -105,16 +98,13 @@ HWTEST_F(DataShareHelperTest, DataShare_GetFileTypes_001, TestSize.Level1)
     LOG_INFO("DataShare_GetFileTypes_001 ----- start");
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
-    std::string abilityName = ABILITYNAME;
-    std::string bundleName = BUNDLENAME;
-    AAFwk::Want want;
-    want.SetElementName(bundleName, abilityName);
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
+    Uri uri(URI);
+    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::string mimeTypeFilter("mimeTypeFiltertest");
-    std::vector<std::string> result = dataShareHelper->GetFileTypes(*uri, mimeTypeFilter);
+    std::vector<std::string> result = dataShareHelper->GetFileTypes(uri, mimeTypeFilter);
     EXPECT_EQ(result.size(), 0);
-    LOG_INFO("DataShare_GetFileTypes_001 ----- end, result.size : %{public}d", result.size());
+    LOG_INFO("DataShare_GetFileTypes_001 ----- end");
 }
 
 /**
@@ -127,16 +117,13 @@ HWTEST_F(DataShareHelperTest, DataShare_OpenFile_001, TestSize.Level1)
     LOG_INFO("DataShare_OpenFile_001 ----- start");
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
-    std::string abilityName = ABILITYNAME;
-    std::string bundleName = BUNDLENAME;
-    AAFwk::Want want;
-    want.SetElementName(bundleName, abilityName);
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
+    Uri uri(URI);
+    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI); 
     std::string mode("modetest");
-    int result = dataShareHelper->OpenFile(*uri, mode);
+    int result = dataShareHelper->OpenFile(uri, mode);
     EXPECT_NE(result, 0);
-    LOG_INFO("DataShare_OpenFile_001 ----- end, result : %{public}d", result);
+    LOG_INFO("DataShare_OpenFile_001 ----- end");
 }
 
 /**
@@ -149,16 +136,13 @@ HWTEST_F(DataShareHelperTest, DataShare_OpenRawFile_001, TestSize.Level1)
     LOG_INFO("DataShare_OpenRawFile_001 ----- start");
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
-    std::string abilityName = ABILITYNAME;
-    std::string bundleName = BUNDLENAME;
-    AAFwk::Want want;
-    want.SetElementName(bundleName, abilityName);
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
+    Uri uri(URI);
+    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI); 
     std::string mode("modetest");
-    int result = dataShareHelper->OpenRawFile(*uri, mode);
+    int result = dataShareHelper->OpenRawFile(uri, mode);
     EXPECT_NE(result, 0);
-    LOG_INFO("DataShare_OpenRawFile_001 ----- end, result : %{public}d", result);
+    LOG_INFO("DataShare_OpenRawFile_001 ----- end");
 }
 
 /**
@@ -171,19 +155,16 @@ HWTEST_F(DataShareHelperTest, DataShare_Insert_001, TestSize.Level1)
     LOG_INFO("DataShare_Insert_001 ----- start");
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
-    std::string abilityName = ABILITYNAME;
-    std::string bundleName = BUNDLENAME;
-    AAFwk::Want want;
-    want.SetElementName(bundleName, abilityName);
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
+    Uri uri(URI);
+    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     std::vector<uint8_t> value {20, 30};
     val.PutString("name", "ZhangSan");
     val.PutInt("age", 20);
-    int result = dataShareHelper->Insert(*uri, val);
+    int result = dataShareHelper->Insert(uri, val);
     EXPECT_NE(result, 0);
-    LOG_INFO("DataShare_Insert_001 ----- end, result : %{public}d", result);
+    LOG_INFO("DataShare_Insert_001 ----- end");
 }
 
 /**
@@ -196,20 +177,16 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_001, TestSize.Level1)
     LOG_INFO("DataShare_Update_001 ----- start");
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
-    std::string abilityName = ABILITYNAME;
-    std::string bundleName = "com.samples.datasharetest";
-    AAFwk::Want want;
-    want.SetElementName(bundleName, abilityName);
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
+    Uri uri(URI);
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     val.PutString("name", "ZhangSan");
     val.PutInt("age", 30);
     DataSharePredicates predicates;
     predicates.EqualTo("age", 20);
-    int result = dataShareHelper->Update(*uri, val, predicates);
+    int result = dataShareHelper->Update(uri, val, predicates);
     EXPECT_NE(result, 0);
-    LOG_INFO("DataShare_Update_001 ----- end, result : %{public}d", result);
+    LOG_INFO("DataShare_Update_001 ----- end");
 }
 
 /**
@@ -222,17 +199,14 @@ HWTEST_F(DataShareHelperTest, DataShare_Delete_001, TestSize.Level1)
     LOG_INFO("DataShare_Delete_001 ----- start");
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
-    std::string abilityName = ABILITYNAME;
-    std::string bundleName = BUNDLENAME;
-    AAFwk::Want want;
-    want.SetElementName(bundleName, abilityName);
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
+    Uri uri(URI);
+    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataSharePredicates predicates;
     predicates.EqualTo("age", 20);
-    int result = dataShareHelper->Delete(*uri, predicates);
+    int result = dataShareHelper->Delete(uri, predicates);
     EXPECT_NE(result, 0);
-    LOG_INFO("DataShare_Delete_001 ----- end, result : %{public}d", result);
+    LOG_INFO("DataShare_Delete_001 ----- end");
 }
 
 /**
@@ -245,22 +219,19 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_001, TestSize.Level1)
     LOG_INFO("DataShare_Query_001 ----- start");
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
-    std::string abilityName = ABILITYNAME;
-    std::string bundleName = BUNDLENAME;
-    AAFwk::Want want;
-    want.SetElementName(bundleName, abilityName);
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
+    Uri uri(URI);
+    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::vector<std::string> columns {"Querytest1", "Querytest2"};
     DataSharePredicates predicates;
     predicates.EqualTo("predicatestest", 20);
-    std::shared_ptr<DataShareResultSet> resultSet = dataShareHelper->Query(*uri, columns, predicates);
+    std::shared_ptr<DataShareResultSet> resultSet = dataShareHelper->Query(uri, columns, predicates);
     int result = 0;
     if (resultSet != nullptr) {
         resultSet->GetRowCount(result);
     }
     EXPECT_NE(result, -1);
-    LOG_INFO("DataShare_Query_001 ----- end, result : %{public}d", result);
+    LOG_INFO("DataShare_Query_001 ----- end");
 }
 
 /**
@@ -273,13 +244,10 @@ HWTEST_F(DataShareHelperTest, DataShare_GetType_001, TestSize.Level1)
     LOG_INFO("DataShare_GetType_001 ----- start");
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
-    std::string abilityName = ABILITYNAME;
-    std::string bundleName = BUNDLENAME;
-    AAFwk::Want want;
-    want.SetElementName(bundleName, abilityName);
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
-    std::string result = dataShareHelper->GetType(*uri);
+    Uri uri(URI);
+    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
+    std::string result = dataShareHelper->GetType(uri);
     EXPECT_NE(result.c_str(), "");
     LOG_INFO("DataShare_GetType_001 ----- end, result : %{public}s", result.c_str());
 }
@@ -294,16 +262,13 @@ HWTEST_F(DataShareHelperTest, DataShare_BatchInsert_001, TestSize.Level1)
     LOG_INFO("DataShare_BatchInsert_001 ----- start");
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
-    std::string abilityName = ABILITYNAME;
-    std::string bundleName = BUNDLENAME;
-    AAFwk::Want want;
-    want.SetElementName(bundleName, abilityName);
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
+    Uri uri(URI);
+    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::vector<DataShareValuesBucket> values;
-    int result = dataShareHelper->BatchInsert(*uri, values);
+    int result = dataShareHelper->BatchInsert(uri, values);
     EXPECT_NE(result, 0);
-    LOG_INFO("DataShare_BatchInsert_001 ----- end, result : %{public}d", result);
+    LOG_INFO("DataShare_BatchInsert_001 ----- end");
 }
 
 /**
@@ -316,14 +281,11 @@ HWTEST_F(DataShareHelperTest, DataShare_RegisterObserver_001, TestSize.Level1)
     LOG_INFO("DataShare_RegisterObserver_001 ----- start");
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
-    std::string abilityName = ABILITYNAME;
-    std::string bundleName = BUNDLENAME;
-    AAFwk::Want want;
-    want.SetElementName(bundleName, abilityName);
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
+    Uri uri(URI);
+    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     sptr<IDataShareObserverTest> dataObserver;
-    dataShareHelper->RegisterObserver(*uri, dataObserver);
+    dataShareHelper->RegisterObserver(uri, dataObserver);
     LOG_INFO("DataShare_RegisterObserver_001 ----- end");
 }
 
@@ -337,14 +299,11 @@ HWTEST_F(DataShareHelperTest, DataShare_UnregisterObserver_001, TestSize.Level1)
     LOG_INFO("DataShare_UnregisterObserver_001 ----- start");
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
-    std::string abilityName = ABILITYNAME;
-    std::string bundleName = BUNDLENAME;
-    AAFwk::Want want;
-    want.SetElementName(bundleName, abilityName);
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
+    Uri uri(URI);
+    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     sptr<IDataShareObserverTest> dataObserver;
-    dataShareHelper->UnregisterObserver(*uri, dataObserver);
+    dataShareHelper->UnregisterObserver(uri, dataObserver);
     LOG_INFO("DataShare_UnregisterObserver_001 ----- end");
 }
 
@@ -358,13 +317,10 @@ HWTEST_F(DataShareHelperTest, DataShare_NotifyChange_001, TestSize.Level1)
     LOG_INFO("DataShare_NotifyChange_001 ----- start");
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
-    std::string abilityName = ABILITYNAME;
-    std::string bundleName = BUNDLENAME;
-    AAFwk::Want want;
-    want.SetElementName(bundleName, abilityName);
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
-    dataShareHelper->NotifyChange(*uri);
+    Uri uri(URI);
+    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
+    dataShareHelper->NotifyChange(uri);
     LOG_INFO("DataShare_NotifyChange_001 ----- end");
 }
 
@@ -378,13 +334,10 @@ HWTEST_F(DataShareHelperTest, DataShare_NormalizeUri_001, TestSize.Level1)
     LOG_INFO("DataShare_NormalizeUri_001 ----- start");
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
-    std::string abilityName = ABILITYNAME;
-    std::string bundleName = BUNDLENAME;
-    AAFwk::Want want;
-    want.SetElementName(bundleName, abilityName);
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
-    dataShareHelper->NormalizeUri(*uri);
+    Uri uri(URI);
+    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
+    dataShareHelper->NormalizeUri(uri);
     LOG_INFO("DataShare_NormalizeUri_001 ----- end");
 }
 
@@ -398,13 +351,10 @@ HWTEST_F(DataShareHelperTest, DataShare_DenormalizeUri_001, TestSize.Level1)
     LOG_INFO("DataShare_DenormalizeUri_001 ----- start");
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
-    std::string abilityName = ABILITYNAME;
-    std::string bundleName = BUNDLENAME;
-    AAFwk::Want want;
-    want.SetElementName(bundleName, abilityName);
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(URI);
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, want, uri);
-    dataShareHelper->DenormalizeUri(*uri);
+    Uri uri(URI);
+    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
+    dataShareHelper->DenormalizeUri(uri);
     LOG_INFO("DataShare_DenormalizeUri_001 ----- end");
 }
 } // namespace DataShare
