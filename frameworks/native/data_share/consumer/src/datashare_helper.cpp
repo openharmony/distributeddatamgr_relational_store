@@ -34,25 +34,12 @@ constexpr int INVALID_VALUE = -1;
 }  // namespace
 
 std::mutex DataShareHelper::oplock_;
-DataShareHelper::DataShareHelper(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
-    const AAFwk::Want &want)
-{
-    LOG_INFO("DataShareHelper::DataShareHelper with context and want start");
-    token_ = context->GetToken();
-    want_ = want;
-    uri_ = nullptr;
-    dataShareProxy_ = nullptr;
-    dataShareConnection_ = DataShareConnection::GetInstance();
-    LOG_INFO("DataShareHelper::DataShareHelper with context and want end");
-}
-
-DataShareHelper::DataShareHelper(const std::shared_ptr<Context> &context, const AAFwk::Want &want,
-    const std::shared_ptr<Uri> &uri, const sptr<IDataShare> &dataShareProxy)
+DataShareHelper::DataShareHelper(const std::shared_ptr<Context> &context,
+    const Uri &uri, const sptr<IDataShare> &dataShareProxy)
 {
     LOG_INFO("DataShareHelper::DataShareHelper start");
     token_ = context->GetToken();
     context_ = std::shared_ptr<Context>(context);
-    want_ = want;
     uri_ = uri;
     dataShareProxy_ = dataShareProxy;
     dataShareConnection_ = DataShareConnection::GetInstance();
@@ -60,11 +47,10 @@ DataShareHelper::DataShareHelper(const std::shared_ptr<Context> &context, const 
 }
 
 DataShareHelper::DataShareHelper(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
-    const AAFwk::Want &want, const std::shared_ptr<Uri> &uri, const sptr<IDataShare> &dataShareProxy)
+    const Uri &uri, const sptr<IDataShare> &dataShareProxy)
 {
     LOG_INFO("DataShareHelper::DataShareHelper start");
     token_ = context->GetToken();
-    want_ = want;
     uri_ = uri;
     dataShareProxy_ = dataShareProxy;
     dataShareConnection_ = DataShareConnection::GetInstance();
@@ -95,42 +81,7 @@ void DataShareHelper::OnSchedulerDied(const wptr<IRemoteObject> &remote)
     auto object = remote.promote();
     object = nullptr;
     dataShareProxy_ = nullptr;
-    uri_ = nullptr;
     LOG_INFO("DataShareHelper::OnSchedulerDied end.");
-}
-
-/**
- * @brief Creates a DataShareHelper instance without specifying the Uri based on the given Context.
- *
- * @param context Indicates the Context object on OHOS.
- * @param want Indicates the Want containing information about the target extension ability to connect.
- *
- * @return Returns the created DataShareHelper instance where Uri is not specified.
- */
-std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
-    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const AAFwk::Want &want)
-{
-    LOG_INFO("DataShareHelper::Creator with context start.");
-    if (context == nullptr) {
-        LOG_ERROR("DataShareHelper::Creator (context) failed, context == nullptr");
-        return nullptr;
-    }
-
-    LOG_INFO("DataShareHelper::Creator before ConnectDataShareExtAbility.");
-    sptr<DataShareConnection> dataShareConnection = DataShareConnection::GetInstance();
-    if (!dataShareConnection->IsExtAbilityConnected()) {
-        dataShareConnection->ConnectDataShareExtAbility(want, context->GetToken());
-    }
-    LOG_INFO("DataShareHelper::Creator after ConnectDataShareExtAbility.");
-
-    DataShareHelper *ptrDataShareHelper = new (std::nothrow) DataShareHelper(context, want);
-    if (ptrDataShareHelper == nullptr) {
-        LOG_ERROR("DataShareHelper::Creator (context) failed, create DataShareHelper failed");
-        return nullptr;
-    }
-
-    LOG_INFO("DataShareHelper::Creator with context end.");
-    return std::shared_ptr<DataShareHelper>(ptrDataShareHelper);
 }
 
 /**
@@ -139,28 +90,23 @@ std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
  * a DataShareHelper instance.
  *
  * @param context Indicates the Context object on OHOS.
- * @param want Indicates the Want containing information about the target extension ability to connect.
- * @param uri Indicates the database table or disk file to operate.
- *
+ * @param strUri Indicates the database table or disk file to operate.
+ 
  * @return Returns the created DataShareHelper instance.
  */
 std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
-    const std::shared_ptr<Context> &context, const AAFwk::Want &want, const std::shared_ptr<Uri> &uri)
+    const std::shared_ptr<Context> &context, const std::string &strUri)
 {
-    LOG_INFO("DataShareHelper::Creator with context, want and uri called start.");
+    LOG_INFO("DataShareHelper::Creator with context and uri called start.");
     if (context == nullptr) {
         LOG_ERROR("DataShareHelper::Creator failed, context == nullptr");
         return nullptr;
     }
 
-    if (uri == nullptr) {
-        LOG_ERROR("DataShareHelper::Creator failed, uri == nullptr");
-        return nullptr;
-    }
-
-    if (uri->GetScheme() != SCHEME_DATASHARE) {
+    Uri uri(strUri);
+    if (uri.GetScheme() != SCHEME_DATASHARE) {
         LOG_ERROR("DataShareHelper::Creator failed, the Scheme is not datashare, Scheme: %{public}s",
-            uri->GetScheme().c_str());
+            uri.GetScheme().c_str());
         return nullptr;
     }
 
@@ -169,7 +115,7 @@ std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
 
     sptr<DataShareConnection> dataShareConnection = DataShareConnection::GetInstance();
     if (!dataShareConnection->IsExtAbilityConnected()) {
-        dataShareConnection->ConnectDataShareExtAbility(want, context->GetToken());
+        dataShareConnection->ConnectDataShareExtAbility(uri, context->GetToken());
     }
     dataShareProxy = dataShareConnection->GetDataShareProxy();
     if (dataShareProxy == nullptr) {
@@ -177,7 +123,7 @@ std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
     }
     LOG_INFO("DataShareHelper::Creator after ConnectDataShareExtAbility.");
 
-    DataShareHelper *ptrDataShareHelper = new (std::nothrow) DataShareHelper(context, want, uri, dataShareProxy);
+    DataShareHelper *ptrDataShareHelper = new (std::nothrow) DataShareHelper(context, uri, dataShareProxy);
     if (ptrDataShareHelper == nullptr) {
         LOG_ERROR("DataShareHelper::Creator failed, create DataShareHelper failed");
         return nullptr;
@@ -193,29 +139,22 @@ std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
  * a DataShareHelper instance.
  *
  * @param context Indicates the Context object on OHOS.
- * @param want Indicates the Want containing information about the target extension ability to connect.
- * @param uri Indicates the database table or disk file to operate.
+ * @param strUri Indicates the database table or disk file to operate.
  *
  * @return Returns the created DataShareHelper instance.
  */
 std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
-    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const AAFwk::Want &want,
-    const std::shared_ptr<Uri> &uri)
+    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const std::string &strUri)
 {
-    LOG_INFO("DataShareHelper::Creator with runtime context, want and uri called start.");
+    LOG_INFO("DataShareHelper::Creator with runtime context and uri called start.");
     if (context == nullptr) {
         LOG_ERROR("DataShareHelper::Creator failed, context == nullptr");
         return nullptr;
     }
-
-    if (uri == nullptr) {
-        LOG_ERROR("DataShareHelper::Creator failed, uri == nullptr");
-        return nullptr;
-    }
-
-    if (uri->GetScheme() != SCHEME_DATASHARE) {
+    Uri uri(strUri);
+    if (uri.GetScheme() != SCHEME_DATASHARE) {
         LOG_ERROR("DataShareHelper::Creator failed, the Scheme is not datashare, Scheme: %{public}s",
-            uri->GetScheme().c_str());
+            uri.GetScheme().c_str());
         return nullptr;
     }
 
@@ -224,7 +163,7 @@ std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
 
     sptr<DataShareConnection> dataShareConnection = DataShareConnection::GetInstance();
     if (!dataShareConnection->IsExtAbilityConnected()) {
-        dataShareConnection->ConnectDataShareExtAbility(want, context->GetToken());
+        dataShareConnection->ConnectDataShareExtAbility(uri, context->GetToken());
     }
     dataShareProxy = dataShareConnection->GetDataShareProxy();
     if (dataShareProxy == nullptr) {
@@ -232,13 +171,13 @@ std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
     }
     LOG_INFO("DataShareHelper::Creator after ConnectDataShareExtAbility.");
 
-    DataShareHelper *ptrDataShareHelper = new (std::nothrow) DataShareHelper(context, want, uri, dataShareProxy);
+    DataShareHelper *ptrDataShareHelper = new (std::nothrow) DataShareHelper(context, uri, dataShareProxy);
     if (ptrDataShareHelper == nullptr) {
         LOG_ERROR("DataShareHelper::Creator failed, create DataShareHelper failed");
         return nullptr;
     }
 
-    LOG_INFO("DataShareHelper::Creator with runtime context, want and uri called end.");
+    LOG_INFO("DataShareHelper::Creator with runtime context and uri called end.");
     return std::shared_ptr<DataShareHelper>(ptrDataShareHelper);
 }
 
@@ -251,18 +190,13 @@ std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
 bool DataShareHelper::Release()
 {
     LOG_INFO("DataShareHelper::Release start.");
-    if (uri_ == nullptr) {
-        LOG_ERROR("DataShareHelper::Release failed, uri_ is nullptr");
-        return false;
-    }
-
     LOG_INFO("DataShareHelper::Release before DisconnectDataShareExtAbility.");
     if (dataShareConnection_->IsExtAbilityConnected()) {
         dataShareConnection_->DisconnectDataShareExtAbility();
     }
     LOG_INFO("DataShareHelper::Release after DisconnectDataShareExtAbility.");
     dataShareProxy_ = nullptr;
-    uri_.reset();
+    uri_ = Uri("");
     LOG_INFO("DataShareHelper::Release end.");
     return true;
 }
@@ -284,10 +218,10 @@ std::vector<std::string> DataShareHelper::GetFileTypes(Uri &uri, const std::stri
         return matchedMIMEs;
     }
 
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::GetFileTypes before ConnectDataShareExtAbility.");
         if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(want_, token_);
+            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
         }
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
         LOG_INFO("DataShareHelper::GetFileTypes after ConnectDataShareExtAbility.");
@@ -306,7 +240,7 @@ std::vector<std::string> DataShareHelper::GetFileTypes(Uri &uri, const std::stri
     LOG_INFO("DataShareHelper::GetFileTypes before dataShareProxy_->GetFileTypes.");
     matchedMIMEs = dataShareProxy_->GetFileTypes(uri, mimeTypeFilter);
     LOG_INFO("DataShareHelper::GetFileTypes after dataShareProxy_->GetFileTypes.");
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::GetFileTypes before DisconnectDataShareExtAbility.");
         if (dataShareConnection_->IsExtAbilityConnected()) {
             dataShareConnection_->DisconnectDataShareExtAbility();
@@ -339,10 +273,10 @@ int DataShareHelper::OpenFile(Uri &uri, const std::string &mode)
         return fd;
     }
 
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::OpenFile before ConnectDataShareExtAbility.");
         if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(want_, token_);
+            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
         }
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
         LOG_INFO("DataShareHelper::OpenFile after ConnectDataShareExtAbility.");
@@ -361,7 +295,7 @@ int DataShareHelper::OpenFile(Uri &uri, const std::string &mode)
     LOG_INFO("DataShareHelper::OpenFile before dataShareProxy_->OpenFile.");
     fd = dataShareProxy_->OpenFile(uri, mode);
     LOG_INFO("DataShareHelper::OpenFile after dataShareProxy_->OpenFile.");
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::OpenFile before DisconnectDataShareExtAbility.");
         if (dataShareConnection_->IsExtAbilityConnected()) {
             dataShareConnection_->DisconnectDataShareExtAbility();
@@ -394,10 +328,10 @@ int DataShareHelper::OpenRawFile(Uri &uri, const std::string &mode)
         return fd;
     }
 
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::OpenRawFile before ConnectDataShareExtAbility.");
         if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(want_, token_);
+            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
         }
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
         LOG_INFO("DataShareHelper::OpenRawFile after ConnectDataShareExtAbility.");
@@ -416,7 +350,7 @@ int DataShareHelper::OpenRawFile(Uri &uri, const std::string &mode)
     LOG_INFO("DataShareHelper::OpenRawFile before dataShareProxy_->OpenRawFile.");
     fd = dataShareProxy_->OpenRawFile(uri, mode);
     LOG_INFO("DataShareHelper::OpenRawFile after dataShareProxy_->OpenRawFile.");
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::OpenRawFile before DisconnectDataShareExtAbility.");
         if (dataShareConnection_->IsExtAbilityConnected()) {
             dataShareConnection_->DisconnectDataShareExtAbility();
@@ -445,10 +379,10 @@ int DataShareHelper::Insert(Uri &uri, const DataShareValuesBucket &value)
         return index;
     }
 
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::Insert before ConnectDataShareExtAbility.");
         if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(want_, token_);
+            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
         }
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
         LOG_INFO("DataShareHelper::Insert after ConnectDataShareExtAbility.");
@@ -467,7 +401,7 @@ int DataShareHelper::Insert(Uri &uri, const DataShareValuesBucket &value)
     LOG_INFO("DataShareHelper::Insert before dataShareProxy_->Insert.");
     index = dataShareProxy_->Insert(uri, value);
     LOG_INFO("DataShareHelper::Insert after dataShareProxy_->Insert.");
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::Insert before DisconnectDataShareExtAbility.");
         if (dataShareConnection_->IsExtAbilityConnected()) {
             dataShareConnection_->DisconnectDataShareExtAbility();
@@ -498,10 +432,10 @@ int DataShareHelper::Update(
         return index;
     }
 
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::Update before ConnectDataShareExtAbility.");
         if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(want_, token_);
+            dataShareConnection_->ConnectDataShareExtAbility(uri , token_);
         }
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
         LOG_INFO("DataShareHelper::Update after ConnectDataShareExtAbility.");
@@ -520,7 +454,7 @@ int DataShareHelper::Update(
     LOG_INFO("DataShareHelper::Update before dataShareProxy_->Update.");
     index = dataShareProxy_->Update(uri, value, predicates);
     LOG_INFO("DataShareHelper::Update after dataShareProxy_->Update.");
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::Update before DisconnectDataShareExtAbility.");
         if (dataShareConnection_->IsExtAbilityConnected()) {
             dataShareConnection_->DisconnectDataShareExtAbility();
@@ -549,10 +483,10 @@ int DataShareHelper::Delete(Uri &uri, const DataSharePredicates &predicates)
         return index;
     }
 
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::Delete before ConnectDataShareExtAbility.");
         if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(want_, token_);
+            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
         }
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
         LOG_INFO("DataShareHelper::Delete after ConnectDataShareExtAbility.");
@@ -571,7 +505,7 @@ int DataShareHelper::Delete(Uri &uri, const DataSharePredicates &predicates)
     LOG_INFO("DataShareHelper::Delete before dataShareProxy_->Delete.");
     index = dataShareProxy_->Delete(uri, predicates);
     LOG_INFO("DataShareHelper::Delete after dataShareProxy_->Delete.");
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::Delete before DisconnectDataShareExtAbility.");
         if (dataShareConnection_->IsExtAbilityConnected()) {
             dataShareConnection_->DisconnectDataShareExtAbility();
@@ -603,10 +537,10 @@ std::shared_ptr<DataShareResultSet> DataShareHelper::Query(
         return resultset;
     }
 
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::Query before ConnectDataShareExtAbility.");
         if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(want_, token_);
+            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
         }
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
         LOG_INFO("DataShareHelper::Query after ConnectDataShareExtAbility.");
@@ -625,7 +559,7 @@ std::shared_ptr<DataShareResultSet> DataShareHelper::Query(
     LOG_INFO("DataShareHelper::Query before dataShareProxy_->Query.");
     resultset = dataShareProxy_->Query(uri, columns, predicates);
     LOG_INFO("DataShareHelper::Query after dataShareProxy_->Query.");
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::Query before DisconnectDataShareExtAbility.");
         if (dataShareConnection_->IsExtAbilityConnected()) {
             dataShareConnection_->DisconnectDataShareExtAbility();
@@ -654,10 +588,10 @@ std::string DataShareHelper::GetType(Uri &uri)
         return type;
     }
 
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::GetType before ConnectDataShareExtAbility.");
         if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(want_, token_);
+            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
         }
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
         LOG_INFO("DataShareHelper::GetType after ConnectDataShareExtAbility.");
@@ -676,7 +610,7 @@ std::string DataShareHelper::GetType(Uri &uri)
     LOG_INFO("DataShareHelper::GetType before dataShareProxy_->GetType.");
     type = dataShareProxy_->GetType(uri);
     LOG_INFO("DataShareHelper::GetType after dataShareProxy_->GetType.");
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::GetType before DisconnectDataShareExtAbility.");
         if (dataShareConnection_->IsExtAbilityConnected()) {
             dataShareConnection_->DisconnectDataShareExtAbility();
@@ -705,10 +639,10 @@ int DataShareHelper::BatchInsert(Uri &uri, const std::vector<DataShareValuesBuck
         return ret;
     }
 
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::BatchInsert before ConnectDataShareExtAbility.");
         if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(want_, token_);
+            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
         }
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
         LOG_INFO("DataShareHelper::BatchInsert after ConnectDataShareExtAbility.");
@@ -727,7 +661,7 @@ int DataShareHelper::BatchInsert(Uri &uri, const std::vector<DataShareValuesBuck
     LOG_INFO("DataShareHelper::BatchInsert before dataShareProxy_->BatchInsert.");
     ret = dataShareProxy_->BatchInsert(uri, values);
     LOG_INFO("DataShareHelper::BatchInsert after dataShareProxy_->BatchInsert.");
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::BatchInsert before DisconnectDataShareExtAbility.");
         if (dataShareConnection_->IsExtAbilityConnected()) {
             dataShareConnection_->DisconnectDataShareExtAbility();
@@ -748,8 +682,8 @@ bool DataShareHelper::CheckUriParam(const Uri &uri)
         return false;
     }
 
-    if (uri_ != nullptr) {
-        if (!CheckOhosUri(*uri_)) {
+    if (uri_.ToString().empty()) {
+        if (!CheckOhosUri(uri_)) {
             LOG_ERROR("DataShareHelper::CheckUriParam failed. CheckOhosUri uri_ failed");
             return false;
         }
@@ -758,7 +692,7 @@ bool DataShareHelper::CheckUriParam(const Uri &uri)
         checkUri.GetPathSegments(checkSegments);
 
         std::vector<std::string> segments;
-        uri_->GetPathSegments(segments);
+        uri_.GetPathSegments(segments);
 
         if (checkSegments[0] != segments[0]) {
             LOG_ERROR("DataShareHelper::CheckUriParam failed. the datashare in uri doesn't equal the one in uri_.");
@@ -814,11 +748,11 @@ void DataShareHelper::RegisterObserver(const Uri &uri, const sptr<AAFwk::IDataAb
 
     Uri tmpUri(uri.ToString());
     std::lock_guard<std::mutex> lock_l(oplock_);
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         auto datashare = registerMap_.find(dataObserver);
         if (datashare == registerMap_.end()) {
             if (!dataShareConnection_->IsExtAbilityConnected()) {
-                dataShareConnection_->ConnectDataShareExtAbility(want_, token_);
+                dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
             }
             dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
             registerMap_.emplace(dataObserver, dataShareProxy_);
@@ -867,7 +801,7 @@ void DataShareHelper::UnregisterObserver(const Uri &uri, const sptr<AAFwk::IData
 
     Uri tmpUri(uri.ToString());
     std::lock_guard<std::mutex> lock_l(oplock_);
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         auto datashare = registerMap_.find(dataObserver);
         if (datashare == registerMap_.end()) {
             return;
@@ -889,7 +823,7 @@ void DataShareHelper::UnregisterObserver(const Uri &uri, const sptr<AAFwk::IData
     }
 
     dataShareProxy_->UnregisterObserver(uri, dataObserver);
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::UnregisterObserver before DisconnectDataShareExtAbility.");
         if (dataShareConnection_->IsExtAbilityConnected()) {
             dataShareConnection_->DisconnectDataShareExtAbility();
@@ -917,7 +851,7 @@ void DataShareHelper::NotifyChange(const Uri &uri)
 
     if (dataShareProxy_ == nullptr) {
         if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(want_, token_);
+            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
         }
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
     } else {
@@ -931,7 +865,7 @@ void DataShareHelper::NotifyChange(const Uri &uri)
 
     dataShareProxy_->NotifyChange(uri);
 
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         if (dataShareConnection_->IsExtAbilityConnected()) {
             dataShareConnection_->DisconnectDataShareExtAbility();
         }
@@ -961,10 +895,10 @@ Uri DataShareHelper::NormalizeUri(Uri &uri)
         return urivalue;
     }
 
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::NormalizeUri before ConnectDataShareExtAbility.");
         if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(want_, token_);
+            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
         }
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
         LOG_INFO("DataShareHelper::NormalizeUri after ConnectDataShareExtAbility.");
@@ -983,7 +917,7 @@ Uri DataShareHelper::NormalizeUri(Uri &uri)
     LOG_INFO("DataShareHelper::NormalizeUri before dataShareProxy_->NormalizeUri.");
     urivalue = dataShareProxy_->NormalizeUri(uri);
     LOG_INFO("DataShareHelper::NormalizeUri after dataShareProxy_->NormalizeUri.");
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::NormalizeUri before DisconnectDataShareExtAbility.");
         if (dataShareConnection_->IsExtAbilityConnected()) {
             dataShareConnection_->DisconnectDataShareExtAbility();
@@ -1014,10 +948,10 @@ Uri DataShareHelper::DenormalizeUri(Uri &uri)
         return urivalue;
     }
 
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::DenormalizeUri before ConnectDataShareExtAbility.");
         if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(want_, token_);
+            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
         }
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
         LOG_INFO("DataShareHelper::DenormalizeUri after ConnectDataShareExtAbility.");
@@ -1036,7 +970,7 @@ Uri DataShareHelper::DenormalizeUri(Uri &uri)
     LOG_INFO("DataShareHelper::DenormalizeUri before dataShareProxy_->DenormalizeUri.");
     urivalue = dataShareProxy_->DenormalizeUri(uri);
     LOG_INFO("DataShareHelper::DenormalizeUri after dataShareProxy_->DenormalizeUri.");
-    if (uri_ == nullptr) {
+    if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::DenormalizeUri before DisconnectDataShareExtAbility.");
         if (dataShareConnection_->IsExtAbilityConnected()) {
             dataShareConnection_->DisconnectDataShareExtAbility();
