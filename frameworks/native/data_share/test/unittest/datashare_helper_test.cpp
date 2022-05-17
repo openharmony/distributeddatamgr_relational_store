@@ -119,7 +119,7 @@ HWTEST_F(DataShareHelperTest, DataShare_OpenFile_001, TestSize.Level1)
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
     LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper :: Creator(context, URI); 
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::string mode("modetest");
     int result = dataShareHelper->OpenFile(uri, mode);
     EXPECT_NE(result, 0);
@@ -138,7 +138,7 @@ HWTEST_F(DataShareHelperTest, DataShare_OpenRawFile_001, TestSize.Level1)
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
     LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
-    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper :: Creator(context, URI); 
+    std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::string mode("modetest");
     int result = dataShareHelper->OpenRawFile(uri, mode);
     EXPECT_NE(result, 0);
