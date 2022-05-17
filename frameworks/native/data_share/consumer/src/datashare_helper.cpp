@@ -435,7 +435,7 @@ int DataShareHelper::Update(
     if (uri_.ToString().empty()) {
         LOG_INFO("DataShareHelper::Update before ConnectDataShareExtAbility.");
         if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(uri , token_);
+            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
         }
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
         LOG_INFO("DataShareHelper::Update after ConnectDataShareExtAbility.");
