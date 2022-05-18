@@ -57,11 +57,7 @@
                 "samgr_proxy"
             ],
             "third_party": [
-                "sqlite",
-                "shared_icuuc",
-                "shared_icui18n",
                 "libxml2",
-                "libsec_shared",
                 "gtest_main"
             ]
         },
