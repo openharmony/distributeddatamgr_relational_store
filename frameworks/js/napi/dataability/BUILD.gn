@@ -39,9 +39,9 @@ ohos_shared_library("dataability") {
   deps = [ "../rdb:rdb" ]
 
   external_deps = [
+    "dataability:native_dataability",
     "hilog_native:libhilog",
     "napi:ace_napi",
-    "dataability:native_dataability",
     "relational_store:native_rdb",
   ]
 
