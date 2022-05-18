@@ -90,8 +90,8 @@ int DataShareExtAbility::Insert(const Uri &uri, const DataShareValuesBucket &val
     return 0;
 }
 
-int DataShareExtAbility::Update(const Uri &uri, const DataShareValuesBucket &value,
-    const DataSharePredicates &predicates)
+int DataShareExtAbility::Update(const Uri &uri, const DataSharePredicates &predicates,
+    const DataShareValuesBucket &value)
 {
     LOG_INFO("begin.");
     LOG_INFO("end.");
@@ -106,7 +106,7 @@ int DataShareExtAbility::Delete(const Uri &uri, const DataSharePredicates &predi
 }
 
 std::shared_ptr<DataShareAbstractResultSet> DataShareExtAbility::Query(const Uri &uri,
-    std::vector<std::string> &columns, const DataSharePredicates &predicates)
+    const DataSharePredicates &predicates, std::vector<std::string> &columns)
 {
     LOG_INFO("begin.");
     std::shared_ptr<DataShareAbstractResultSet> ret;
