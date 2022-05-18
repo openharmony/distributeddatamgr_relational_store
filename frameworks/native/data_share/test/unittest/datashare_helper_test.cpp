@@ -207,7 +207,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_001, TestSize.Level1)
     val.PutInt("age", 30);
     DataSharePredicates predicates;
     predicates.EqualTo("age", 20);
-    int result = dataShareHelper->Update(*uri, val, predicates);
+    int result = dataShareHelper->Update(*uri, predicates, val);
     EXPECT_NE(result, 0);
     LOG_INFO("DataShare_Update_001 ----- end, result : %{public}d", result);
 }
@@ -254,7 +254,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_001, TestSize.Level1)
     std::vector<std::string> columns {"Querytest1", "Querytest2"};
     DataSharePredicates predicates;
     predicates.EqualTo("predicatestest", 20);
-    std::shared_ptr<DataShareResultSet> resultSet = dataShareHelper->Query(*uri, columns, predicates);
+    std::shared_ptr<DataShareResultSet> resultSet = dataShareHelper->Query(*uri, predicates, columns);
     int result = 0;
     if (resultSet != nullptr) {
         resultSet->GetRowCount(result);

@@ -483,13 +483,13 @@ int DataShareHelper::Insert(Uri &uri, const DataShareValuesBucket &value)
  * @brief Updates data records in the database.
  *
  * @param uri Indicates the path of data to update.
- * @param value Indicates the data to update. This parameter can be null.
  * @param predicates Indicates filter criteria. You should define the processing logic when this parameter is null.
+ * @param value Indicates the data to update. This parameter can be null.
  *
  * @return Returns the number of data records updated.
  */
 int DataShareHelper::Update(
-    Uri &uri, const DataShareValuesBucket &value, const DataSharePredicates &predicates)
+    Uri &uri, const DataSharePredicates &predicates, const DataShareValuesBucket &value)
 {
     LOG_INFO("DataShareHelper::Update start.");
     int index = INVALID_VALUE;
@@ -518,7 +518,7 @@ int DataShareHelper::Update(
     }
 
     LOG_INFO("DataShareHelper::Update before dataShareProxy_->Update.");
-    index = dataShareProxy_->Update(uri, value, predicates);
+    index = dataShareProxy_->Update(uri, predicates, value);
     LOG_INFO("DataShareHelper::Update after dataShareProxy_->Update.");
     if (uri_ == nullptr) {
         LOG_INFO("DataShareHelper::Update before DisconnectDataShareExtAbility.");
@@ -587,13 +587,13 @@ int DataShareHelper::Delete(Uri &uri, const DataSharePredicates &predicates)
  * @brief Deletes one or more data records from the database.
  *
  * @param uri Indicates the path of data to query.
- * @param columns Indicates the columns to query. If this parameter is null, all columns are queried.
  * @param predicates Indicates filter criteria. You should define the processing logic when this parameter is null.
+ * @param columns Indicates the columns to query. If this parameter is null, all columns are queried.
  *
  * @return Returns the query result.
  */
 std::shared_ptr<DataShareResultSet> DataShareHelper::Query(
-    Uri &uri, std::vector<std::string> &columns, const DataSharePredicates &predicates)
+    Uri &uri, const DataSharePredicates &predicates, std::vector<std::string> &columns)
 {
     LOG_INFO("DataShareHelper::Query start.");
     std::shared_ptr<DataShareResultSet> resultset = nullptr;
@@ -623,7 +623,7 @@ std::shared_ptr<DataShareResultSet> DataShareHelper::Query(
     }
 
     LOG_INFO("DataShareHelper::Query before dataShareProxy_->Query.");
-    resultset = dataShareProxy_->Query(uri, columns, predicates);
+    resultset = dataShareProxy_->Query(uri, predicates, columns);
     LOG_INFO("DataShareHelper::Query after dataShareProxy_->Query.");
     if (uri_ == nullptr) {
         LOG_INFO("DataShareHelper::Query before DisconnectDataShareExtAbility.");
