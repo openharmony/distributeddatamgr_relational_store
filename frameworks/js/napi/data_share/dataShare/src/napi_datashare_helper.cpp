@@ -2243,7 +2243,7 @@ void UpdateExecuteCB(napi_env env, void *data)
         updateCB->execResult = INVALID_PARAMETER;
         if (!updateCB->uri.empty()) {
             OHOS::Uri uri(updateCB->uri);
-            updateCB->result = updateCB->dataShareHelper->Update(uri, updateCB->valueBucket, updateCB->predicates);
+            updateCB->result = updateCB->dataShareHelper->Update(uri, updateCB->predicates, updateCB->valueBucket);
             updateCB->execResult = NO_ERROR;
         } else {
             LOG_ERROR("NAPI_Update, dataShareHelper uri is empty");
@@ -2889,7 +2889,7 @@ void QueryExecuteCB(napi_env env, void *data)
         queryCB->execResult = INVALID_PARAMETER;
         if (!queryCB->uri.empty()) {
             OHOS::Uri uri(queryCB->uri);
-            auto resultset = queryCB->dataShareHelper->Query(uri, queryCB->columns, queryCB->predicates);
+            auto resultset = queryCB->dataShareHelper->Query(uri, queryCB->predicates, queryCB->columns);
             if (resultset != nullptr) {
                 queryCB->result = resultset;
                 queryCB->execResult = NO_ERROR;
