@@ -33,8 +33,8 @@ ohos_unittest("NativeDataAbilityTest") {
   configs = [ ":module_private_config" ]
 
   external_deps = [
-    "hilog_native:libhilog",
     "dataability:native_dataability",
+    "hilog_native:libhilog",
     "relational_store:native_rdb",
   ]
 
