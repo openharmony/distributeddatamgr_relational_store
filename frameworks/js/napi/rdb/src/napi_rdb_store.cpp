@@ -410,12 +410,15 @@ void ParseValuesBucket(const napi_env &env, const napi_value &arg, RdbStoreConte
     uint32_t arrLen = 0;
     napi_status status = napi_get_array_length(env, keys, &arrLen);
     if (status != napi_ok) {
-        LOG_DEBUG("ValuesBucket errr");
+        LOG_DEBUG("ValuesBucket get_array_length errr");
         return;
     }
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value key;
-        napi_get_element(env, keys, i, &key);
+        status = napi_get_element(env, keys, i, &key);
+        if (status != napi_ok) {
+            LOG_DEBUG("ValuesBucket get_element errr");
+        }
         std::string keyStr = JSUtils::Convert2String(env, key);
         napi_value value;
         napi_get_property(env, arg, key, &value);
