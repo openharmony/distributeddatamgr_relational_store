@@ -43,13 +43,13 @@ public:
 
     int Insert(const Uri &uri, const DataShareValuesBucket &value) override;
 
-    int Update(const Uri &uri, const DataShareValuesBucket &value,
-        const DataSharePredicates &predicates) override;
+    int Update(const Uri &uri, const DataSharePredicates &predicates,
+        const DataShareValuesBucket &value) override;
 
     int Delete(const Uri &uri, const DataSharePredicates &predicates) override;
 
     std::shared_ptr<DataShareResultSet> Query(const Uri &uri,
-        std::vector<std::string> &columns, const DataSharePredicates &predicates) override;
+        const DataSharePredicates &predicates, std::vector<std::string> &columns) override;
 
     std::string GetType(const Uri &uri) override;
 
