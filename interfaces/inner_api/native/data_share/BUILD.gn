@@ -98,11 +98,11 @@ ohos_shared_library("datashare_abilitykit") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
+    "dataability:native_dataability",
     "ipc:ipc_core",
     "ipc_js:rpc",
-    "native_appdatamgr:native_dataability",
-    "native_appdatamgr:native_rdb",
     "permission_standard:libpermissionsdk_standard",
+    "relational_store:native_rdb",
     "utils_base:utils",
   ]
 
@@ -112,7 +112,7 @@ ohos_shared_library("datashare_abilitykit") {
   ]
 
   subsystem_name = "distributeddatamgr"
-  part_name = "native_appdatamgr"
+  part_name = "data_share"
 }
 
 ohos_shared_library("datashare_ext_ability_module") {
@@ -133,10 +133,10 @@ ohos_shared_library("datashare_ext_ability_module") {
     "ability_base:want",
     "ability_runtime:runtime",
     "hiviewdfx_hilog_native:libhilog",
-    "native_appdatamgr:native_appdatafwk",
+    "relational_store:native_appdatafwk",
     "utils_base:utils",
   ]
 
   subsystem_name = "distributeddatamgr"
-  part_name = "native_appdatamgr"
+  part_name = "data_share"
 }

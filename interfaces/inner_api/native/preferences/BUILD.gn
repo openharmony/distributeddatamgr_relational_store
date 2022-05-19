@@ -49,5 +49,5 @@ ohos_shared_library("native_preferences") {
   public_configs = [ ":native_preferences_public_config" ]
 
   subsystem_name = "distributeddatamgr"
-  part_name = "native_appdatamgr"
+  part_name = "preferences"
 }

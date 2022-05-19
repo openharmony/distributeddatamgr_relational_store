@@ -32,7 +32,7 @@ config("native_rdb_config") {
     "SQLITE_DISTRIBUTE_RELATIONAL",
   ]
 
-  if (native_appdatamgr_rdb_support_icu) {
+  if (relational_store_rdb_support_icu) {
     include_dirs += [
       "//third_party/icu/icu4c/source",
       "//third_party/icu/icu4c/source/i18n",
@@ -51,7 +51,7 @@ config("native_rdb_public_config") {
 }
 
 ohos_shared_library("native_rdb") {
-  part_name = "native_appdatamgr"
+  part_name = "relational_store"
   sources = [
     "../../../../frameworks/native/rdb/src/abs_predicates.cpp",
     "../../../../frameworks/native/rdb/src/abs_rdb_predicates.cpp",

@@ -1,0 +1,78 @@
+{
+    "name": "@ohos/distributeddatamgr_appdatamgr",
+    "version": "3.1.0",
+    "description": "Local Data Management",
+    "homePage": "https://gitee.com/openharmony",
+    "license": "Apache V2",
+    "repository": "https://gitee.com/openharmony/distributeddatamgr_appdatamgr",
+    "domain": "os",
+    "language": "",
+    "publishAs": "code-segment",
+    "private": false,
+    "scripts": {},
+    "tags": [
+        "foundation"
+    ],
+    "keywords": [
+        "distributeddatamgr",
+        "appdatamgr"
+    ],
+    "envs": [],
+    "dirs": {},
+    "author": {
+        "name": "",
+        "email": "",
+        "url": ""
+    },
+    "contributors": [
+        {
+            "name": "",
+            "email": "",
+            "url": ""
+        }
+    ],
+    "segment": {
+        "destPath": "foundation/distributeddatamgr/appdatamgr"
+    },
+    "component": {
+        "name": "dataability",
+        "subsystem": "distributeddatamgr",
+        "syscap": [
+            "SystemCapability.DistributedDataManager.DataShare.Core"
+        ],
+        "features": [],
+        "adapted_system_type": [
+            "standard"
+        ],
+        "rom": "",
+        "ram": "",
+        "deps": {
+            "components": [
+                "libhilog"
+            ],
+            "third_party": []
+        },
+        "build": {
+            "sub_component": [
+                "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/dataability:native_dataability",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/dataability:dataability"
+            ],
+            "inner_kits": [
+                {
+                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/dataability:native_dataability",
+                    "header": {
+                        "header_files": [
+                            "data_ability_predicates.h",
+                            "predicates_utils.h"
+                        ],
+                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/dataability/include"
+                    }
+                }
+            ],
+            "test": [
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/native/dataability/test:unittest",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/dataability/test:unittest"
+            ]
+        }
+    }
+}

@@ -38,11 +38,11 @@ ohos_shared_library("storage") {
     "hilog_native:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
-    "native_appdatamgr:native_preferences",
+    "preferences:native_preferences",
   ]
 
   subsystem_name = "distributeddatamgr"
-  part_name = "native_appdatamgr"
+  part_name = "preferences"
   relative_install_dir = "module/data"
 }
 
@@ -69,11 +69,11 @@ ohos_shared_library("storage_napi") {
     "hilog_native:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
-    "native_appdatamgr:native_preferences",
+    "preferences:native_preferences",
   ]
 
   subsystem_name = "distributeddatamgr"
-  part_name = "native_appdatamgr"
+  part_name = "preferences"
   relative_install_dir = "module"
 }
 
@@ -101,10 +101,10 @@ ohos_shared_library("preferences") {
     "hilog_native:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
-    "native_appdatamgr:native_preferences",
+    "preferences:native_preferences",
   ]
 
   subsystem_name = "distributeddatamgr"
-  part_name = "native_appdatamgr"
+  part_name = "preferences"
   relative_install_dir = "module/data"
 }
