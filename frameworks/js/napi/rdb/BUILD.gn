@@ -12,6 +12,8 @@
 # limitations under the License.
 import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
+import(
+    "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/common/datashare.gni")
 
 ohos_copy("appdatamgr_declaration") {
   sources = [ "./api" ]
@@ -45,7 +47,7 @@ ohos_shared_library("rdb") {
   ]
 
   deps = [
-    "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
+    "${aafwk_kits_path}/ability/native:abilitykit_native",
     "//utils/native/base:utils",
   ]
 

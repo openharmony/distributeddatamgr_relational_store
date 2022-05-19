@@ -26,12 +26,12 @@ config("module_private_config") {
     "${datashare_native_consumer_path}/include",
     "${datashare_native_provider_path}/include",
     "//foundation/windowmanager/interfaces/innerkits/wm",
-    "//foundation/aafwk/standard/frameworks/kits/appkit/native/ability_runtime/app",
-    "//foundation/aafwk/standard/frameworks/kits/appkit/native/app/include",
-    "//foundation/aafwk/standard/frameworks/kits/appkit/native/ability_runtime/context",
-    "//foundation/aafwk/standard/services/common/include",
-    "//foundation/aafwk/standard/frameworks/kits/ability/native/include/continuation/distributed",
-    "//foundation/aafwk/standard/frameworks/kits/ability/native/include/continuation/kits",
+    "${aafwk_kits_path}/appkit/native/ability_runtime/app",
+    "${aafwk_kits_path}/appkit/native/app/include",
+    "${aafwk_kits_path}/appkit/native/ability_runtime/context",
+    "${aafwk_services_path}/common/include",
+    "${aafwk_kits_path}/ability/native/include/continuation/distributed",
+    "${aafwk_kits_path}/ability/native/include/continuation/kits",
     "//foundation/aafwk/standard/interfaces/kits/napi/aafwk/inner/napi_common",
   ]
 }
@@ -63,8 +63,8 @@ ohos_unittest("NativeDataShareTest") {
   ]
 
   deps = [
+    "${aafwk_kits_path}/appkit:app_context",
     "${datashare_common_native_path}:datashare_common",
-    "//foundation/aafwk/standard/frameworks/kits/appkit:app_context",
     "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share:datashare_abilitykit",
     "//third_party/googletest:gtest_main",
     "//third_party/icu/icu4c:shared_icui18n",
