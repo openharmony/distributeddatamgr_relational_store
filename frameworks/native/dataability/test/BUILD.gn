@@ -12,7 +12,7 @@
 # limitations under the License.
 import("//build/test.gni")
 
-module_output_path = "native_appdatamgr/native_dataability"
+module_output_path = "dataability/native_dataability"
 
 ###############################################################################
 config("module_private_config") {
@@ -20,7 +20,7 @@ config("module_private_config") {
 
   include_dirs = [
     "../include/",
-      "../../../../interfaces/inner_api/native/dataability/include",
+    "../../../../interfaces/inner_api/native/dataability/include",
     "//utils/native/base/include",
   ]
 }
@@ -33,9 +33,9 @@ ohos_unittest("NativeDataAbilityTest") {
   configs = [ ":module_private_config" ]
 
   external_deps = [
+    "dataability:native_dataability",
     "hilog_native:libhilog",
-    "native_appdatamgr:native_dataability",
-    "native_appdatamgr:native_rdb",
+    "relational_store:native_rdb",
   ]
 
   deps = [

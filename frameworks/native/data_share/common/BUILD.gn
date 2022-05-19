@@ -72,9 +72,9 @@ ohos_shared_library("datashare_common") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
-    "native_appdatamgr:native_appdatafwk",
+    "relational_store:native_appdatafwk",
   ]
 
   subsystem_name = "distributeddatamgr"
-  part_name = "native_appdatamgr"
+  part_name = "data_share"
 }

@@ -31,7 +31,7 @@ config("native_dataability_public_config") {
 }
 
 ohos_shared_library("native_dataability") {
-  part_name = "native_appdatamgr"
+  part_name = "dataability"
   sources = [
     "../../../../frameworks/native/dataability/src/data_ability_predicates.cpp",
     "../../../../frameworks/native/dataability/src/ishared_result_set.cpp",
@@ -48,7 +48,7 @@ ohos_shared_library("native_dataability") {
   external_deps = [
     "hilog_native:libhilog",
     "ipc:ipc_core",
-    "native_appdatamgr:native_rdb",
+    "relational_store:native_rdb",
   ]
 
   public_configs = [ ":native_dataability_public_config" ]

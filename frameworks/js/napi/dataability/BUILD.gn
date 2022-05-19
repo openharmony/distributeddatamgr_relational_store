@@ -39,13 +39,13 @@ ohos_shared_library("dataability") {
   deps = [ "../rdb:rdb" ]
 
   external_deps = [
+    "dataability:native_dataability",
     "hilog_native:libhilog",
     "napi:ace_napi",
-    "native_appdatamgr:native_dataability",
-    "native_appdatamgr:native_rdb",
+    "relational_store:native_rdb",
   ]
 
   subsystem_name = "distributeddatamgr"
-  part_name = "native_appdatamgr"
+  part_name = "dataability"
   relative_install_dir = "module/data"
 }
