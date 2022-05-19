@@ -20,7 +20,7 @@ config("module_private_config") {
 
   include_dirs = [
     "../include/",
-      "../../../../interfaces/inner_api/native/dataability/include",
+    "../../../../interfaces/inner_api/native/dataability/include",
     "//utils/native/base/include",
   ]
 }
