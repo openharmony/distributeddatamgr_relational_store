@@ -92,8 +92,8 @@ int DataShareStubImpl::Insert(const Uri &uri, const DataShareValuesBucket &value
     return ret;
 }
 
-int DataShareStubImpl::Update(const Uri &uri, const DataShareValuesBucket &value,
-    const DataSharePredicates &predicates)
+int DataShareStubImpl::Update(const Uri &uri, const DataSharePredicates &predicates,
+    const DataShareValuesBucket &value)
 {
     LOG_INFO("begin.");
     int ret = 0;
@@ -103,7 +103,7 @@ int DataShareStubImpl::Update(const Uri &uri, const DataShareValuesBucket &value
             LOG_ERROR("%{public}s end failed.", __func__);
             return;
         }
-        ret = extension->Update(uri, value, predicates);
+        ret = extension->Update(uri, predicates, value);
     };
     uvQueue_->SyncCall(syncTaskFunc);
     LOG_INFO("end successfully.");
@@ -128,7 +128,7 @@ int DataShareStubImpl::Delete(const Uri &uri, const DataSharePredicates &predica
 }
 
 std::shared_ptr<DataShareResultSet> DataShareStubImpl::Query(const Uri &uri,
-    std::vector<std::string> &columns, const DataSharePredicates &predicates)
+    const DataSharePredicates &predicates, std::vector<std::string> &columns)
 {
     LOG_INFO("begin.");
     std::shared_ptr<ResultSetBridge> ret = nullptr;
@@ -138,7 +138,7 @@ std::shared_ptr<DataShareResultSet> DataShareStubImpl::Query(const Uri &uri,
             LOG_ERROR("%{public}s end failed.", __func__);
             return;
         }
-        ret = extension->Query(uri, columns, predicates);
+        ret = extension->Query(uri, predicates, columns);
     };
     uvQueue_->SyncCall(syncTaskFunc);
     std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>(ret);

@@ -161,18 +161,18 @@ ErrCode DataShareStub::CmdUpdate(MessageParcel &data, MessageParcel &reply)
         LOG_ERROR("DataShareStub uri is nullptr");
         return ERR_INVALID_VALUE;
     }
-    std::shared_ptr<DataShareValuesBucket> value(data.ReadParcelable<DataShareValuesBucket>());
-    if (value == nullptr) {
-        LOG_ERROR("ReadParcelable value is nullptr");
-        return ERR_INVALID_VALUE;
-    }
     std::shared_ptr<DataSharePredicates> predicates(
         data.ReadParcelable<DataSharePredicates>());
     if (predicates == nullptr) {
         LOG_ERROR("ReadParcelable predicates is nullptr");
         return ERR_INVALID_VALUE;
     }
-    int index = Update(*uri, *value, *predicates);
+    std::shared_ptr<DataShareValuesBucket> value(data.ReadParcelable<DataShareValuesBucket>());
+    if (value == nullptr) {
+        LOG_ERROR("ReadParcelable value is nullptr");
+        return ERR_INVALID_VALUE;
+    }
+    int index = Update(*uri, *predicates, *value);
     if (!reply.WriteInt32(index)) {
         LOG_ERROR("fail to WriteInt32 index");
         return ERR_INVALID_VALUE;
@@ -208,18 +208,18 @@ ErrCode DataShareStub::CmdQuery(MessageParcel &data, MessageParcel &reply)
         LOG_ERROR("DataShareStub uri is nullptr");
         return ERR_INVALID_VALUE;
     }
-    std::vector<std::string> columns;
-    if (!data.ReadStringVector(&columns)) {
-        LOG_ERROR("fail to ReadStringVector columns");
-        return ERR_INVALID_VALUE;
-    }
     std::shared_ptr<DataSharePredicates> predicates(
         data.ReadParcelable<DataSharePredicates>());
     if (predicates == nullptr) {
         LOG_ERROR("ReadParcelable predicates is nullptr");
         return ERR_INVALID_VALUE;
     }
-    auto resultSet = Query(*uri, columns, *predicates);
+    std::vector<std::string> columns;
+    if (!data.ReadStringVector(&columns)) {
+        LOG_ERROR("fail to ReadStringVector columns");
+        return ERR_INVALID_VALUE;
+    }
+    auto resultSet = Query(*uri, *predicates, columns);
     if (resultSet == nullptr) {
         LOG_ERROR("fail to WriteParcelable resultSet");
         return ERR_INVALID_VALUE;

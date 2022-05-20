@@ -343,8 +343,8 @@ int JsDataShareExtAbility::Insert(const Uri &uri, const DataShareValuesBucket &v
     return ret;
 }
 
-int JsDataShareExtAbility::Update(const Uri &uri, const DataShareValuesBucket &value,
-    const DataSharePredicates &predicates)
+int JsDataShareExtAbility::Update(const Uri &uri, const DataSharePredicates &predicates,
+    const DataShareValuesBucket &value)
 {
     LOG_INFO("begin.");
     PrintPredicates(predicates);
@@ -354,7 +354,7 @@ int JsDataShareExtAbility::Update(const Uri &uri, const DataShareValuesBucket &v
         return ret;
     }
 
-    ret = DataShareExtAbility::Update(uri, value, predicates);
+    ret = DataShareExtAbility::Update(uri, predicates, value);
 
     HandleScope handleScope(jsRuntime_);
     napi_env env = reinterpret_cast<napi_env>(&jsRuntime_.GetNativeEngine());
@@ -364,11 +364,6 @@ int JsDataShareExtAbility::Update(const Uri &uri, const DataShareValuesBucket &v
         LOG_ERROR("napi_create_string_utf8 status : %{public}d", status);
         return ret;
     }
-    napi_value napiValue = DataShareValueBucketNewInstance(env, const_cast<DataShareValuesBucket&>(value));
-    if (napiValue == nullptr) {
-        LOG_ERROR("%{public}s failed to make new instance of rdbValueBucket.", __func__);
-        return ret;
-    }
 
     napi_value napiPredicates = MakePredicates(env, predicates);
     if (napiPredicates == nullptr) {
@@ -376,9 +371,15 @@ int JsDataShareExtAbility::Update(const Uri &uri, const DataShareValuesBucket &v
         return ret;
     }
 
+    napi_value napiValue = DataShareValueBucketNewInstance(env, const_cast<DataShareValuesBucket&>(value));
+    if (napiValue == nullptr) {
+        LOG_ERROR("%{public}s failed to make new instance of rdbValueBucket.", __func__);
+        return ret;
+    }
+
     NativeValue* nativeUri = reinterpret_cast<NativeValue*>(napiUri);
-    NativeValue* nativeValue = reinterpret_cast<NativeValue*>(napiValue);
     NativeValue* nativePredicates = reinterpret_cast<NativeValue*>(napiPredicates);
+    NativeValue* nativeValue = reinterpret_cast<NativeValue*>(napiValue);
     NativeValue* argv[] = {nativeUri, nativePredicates, nativeValue};
     NativeValue* nativeResult = CallObjectMethod("update", argv, ARGC_THREE);
     if (nativeResult == nullptr) {
@@ -432,7 +433,7 @@ int JsDataShareExtAbility::Delete(const Uri &uri, const DataSharePredicates &pre
 }
 
 std::shared_ptr<ResultSetBridge> JsDataShareExtAbility::Query(const Uri &uri,
-    std::vector<std::string> &columns, const DataSharePredicates &predicates)
+    const DataSharePredicates &predicates, std::vector<std::string> &columns)
 {
     LOG_INFO("begin.");
     PrintPredicates(predicates);
@@ -442,7 +443,7 @@ std::shared_ptr<ResultSetBridge> JsDataShareExtAbility::Query(const Uri &uri,
         return ret;
     }
 
-    ret = DataShareExtAbility::Query(uri, columns, predicates);
+    ret = DataShareExtAbility::Query(uri, predicates, columns);
 
     HandleScope handleScope(jsRuntime_);
     napi_env env = reinterpret_cast<napi_env>(&jsRuntime_.GetNativeEngine());
@@ -453,21 +454,21 @@ std::shared_ptr<ResultSetBridge> JsDataShareExtAbility::Query(const Uri &uri,
         return ret;
     }
 
-    napi_value napiColumns = nullptr;
-    if (!MakeNapiColumn(env, napiColumns, columns)) {
-        LOG_ERROR("MakeNapiColumn failed");
-        return ret;
-    }
-
     napi_value napiPredicates = MakePredicates(env, predicates);
     if (napiPredicates == nullptr) {
         LOG_ERROR("%{public}s failed to make new instance of dataAbilityPredicates.", __func__);
         return ret;
     }
 
+    napi_value napiColumns = nullptr;
+    if (!MakeNapiColumn(env, napiColumns, columns)) {
+        LOG_ERROR("MakeNapiColumn failed");
+        return ret;
+    }
+
     NativeValue* nativeUri = reinterpret_cast<NativeValue*>(napiUri);
-    NativeValue* nativeColumns = reinterpret_cast<NativeValue*>(napiColumns);
     NativeValue* nativePredicates = reinterpret_cast<NativeValue*>(napiPredicates);
+    NativeValue* nativeColumns = reinterpret_cast<NativeValue*>(napiColumns);
     NativeValue* argv[] = {nativeUri, nativePredicates, nativeColumns};
     NativeValue* nativeResult = CallObjectMethod("query", argv, ARGC_THREE);
     if (nativeResult == nullptr) {
