@@ -24,22 +24,27 @@ namespace OHOS {
 namespace RdbDataShareAdapter {
 using namespace OHOS::NativeRdb;
 RdbResultSetBridge::RdbResultSetBridge(std::shared_ptr<ResultSet> resultSet)
-    : rdbResultSet_(resultSet) {
+    : rdbResultSet_(resultSet)
+{
 }
 
-RdbResultSetBridge::~RdbResultSetBridge() {
+RdbResultSetBridge::~RdbResultSetBridge()
+{
     rdbResultSet_->Close();
 }
 
-int RdbResultSetBridge::GetRowCount(int &count) {
+int RdbResultSetBridge::GetRowCount(int &count)
+{
     return rdbResultSet_->GetRowCount(count);
 }
 
-int RdbResultSetBridge::GetAllColumnNames(std::vector<std::string> &columnOrKeyNames) {
+int RdbResultSetBridge::GetAllColumnNames(std::vector<std::string> &columnOrKeyNames)
+{
     return rdbResultSet_->GetAllColumnNames(columnOrKeyNames);
 }
 
-bool RdbResultSetBridge::OnGo(int32_t start, int32_t target, Writer& writer) {
+bool RdbResultSetBridge::OnGo(int32_t start, int32_t target, Writer& writer)
+{
     int rowCount;
     rdbResultSet_->GetRowCount(rowCount);
     if (start < 0 || target < 0 || target >= rowCount) {
@@ -74,7 +79,8 @@ bool RdbResultSetBridge::OnGo(int32_t start, int32_t target, Writer& writer) {
     return true;
 }
 
-void RdbResultSetBridge::GetColumnTypes(int columnCount, ColumnType columnTypes[]) {
+void RdbResultSetBridge::GetColumnTypes(int columnCount, ColumnType columnTypes[])
+{
     for (int i = 0; i < columnCount; ++i) {
         ColumnType type;
         rdbResultSet_->GetColumnType(i, type);
@@ -83,7 +89,8 @@ void RdbResultSetBridge::GetColumnTypes(int columnCount, ColumnType columnTypes[
 }
 
 void RdbResultSetBridge::WriteBlock(int32_t start, int32_t target,
-        int columnCount, ColumnType columnTypes[], Writer& writer) {
+        int columnCount, ColumnType columnTypes[], Writer& writer)
+{
     bool isFull = false;
     int errCode = 0;
     int row = start;
@@ -102,7 +109,8 @@ void RdbResultSetBridge::WriteBlock(int32_t start, int32_t target,
     }
 }
 
-void RdbResultSetBridge::WriteColumn(int columnCount, const ColumnType *columnTypes, Writer& writer, int row) {
+void RdbResultSetBridge::WriteColumn(int columnCount, const ColumnType *columnTypes, Writer& writer, int row)
+{
     for (int i = 0; i < columnCount; i++) {
         LOG_DEBUG("Write data of row: %{public}d, column: %{public}d", row, i);
         switch (columnTypes[i]) {
@@ -140,7 +148,8 @@ void RdbResultSetBridge::WriteColumn(int columnCount, const ColumnType *columnTy
     }
 }
 
-bool RdbResultSetBridge::WriteBlobData(int column, Writer& writer) {
+bool RdbResultSetBridge::WriteBlobData(int column, Writer& writer)
+{
     std::vector<uint8_t> blobValue;
     rdbResultSet_->GetBlob(column, blobValue);
 
