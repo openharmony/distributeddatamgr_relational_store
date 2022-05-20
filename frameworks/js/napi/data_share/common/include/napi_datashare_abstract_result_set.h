@@ -17,7 +17,7 @@
 #define NAPI_DATASHARE_ABSTRACT_RESULT_SET_H
 
 #include <memory>
-#include "datashare_abstract_result_set.h"
+#include "result_set_bridge.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -28,22 +28,22 @@ class NapiDataShareAbstractResultSet final {
 public:
     NapiDataShareAbstractResultSet() = default;
     ~NapiDataShareAbstractResultSet();
-    explicit NapiDataShareAbstractResultSet(std::shared_ptr<DataShareAbstractResultSet> resultSet);
-    NapiDataShareAbstractResultSet &operator=(std::shared_ptr<DataShareAbstractResultSet> resultSet);
-    static napi_value NewInstance(napi_env env, std::shared_ptr<DataShareAbstractResultSet> resultSet);
-    static std::shared_ptr<DataShareAbstractResultSet> GetNativeObject(
+    explicit NapiDataShareAbstractResultSet(std::shared_ptr<ResultSetBridge> resultSet);
+    NapiDataShareAbstractResultSet &operator=(std::shared_ptr<ResultSetBridge> resultSet);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<ResultSetBridge> resultSet);
+    static std::shared_ptr<ResultSetBridge> GetNativeObject(
         const napi_env &env, const napi_value &arg);
     static napi_value GetConstructor(napi_env env);
 
 private:
-    static std::shared_ptr<DataShareAbstractResultSet> &GetInnerAbstractResultSet(napi_env env,
+    static std::shared_ptr<ResultSetBridge> &GetInnerAbstractResultSet(napi_env env,
         napi_callback_info info);
     static napi_value Initialize(napi_env env, napi_callback_info info);
 
-    std::shared_ptr<DataShareAbstractResultSet> resultSet_;
+    std::shared_ptr<ResultSetBridge> resultSet_;
 };
-napi_value GetNapiAbstractResultSetObject(napi_env env, DataShareAbstractResultSet *resultSet);
-DataShareAbstractResultSet *GetNativeAbstractResultSetObject(const napi_env &env, const napi_value &arg);
+napi_value GetNapiAbstractResultSetObject(napi_env env, ResultSetBridge *resultSet);
+ResultSetBridge *GetNativeAbstractResultSetObject(const napi_env &env, const napi_value &arg);
 } // namespace DataShare
 } // namespace OHOS
 #endif // NAPI_DATASHARE_ABSTRACT_RESULT_SET_H

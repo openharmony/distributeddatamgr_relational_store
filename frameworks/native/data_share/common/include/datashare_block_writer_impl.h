@@ -16,9 +16,9 @@
 #ifndef DATASHARE_BLOCK_WRITER_IMPL_H
 #define DATASHARE_BLOCK_WRITER_IMPL_H
 
-#include <string>
 #include "shared_block.h"
-#include "datashare_block_writer.h"
+#include "result_set_bridge.h"
+#include "datashare_errno.h"
 
 namespace OHOS {
 namespace DataShare {
@@ -26,7 +26,7 @@ namespace DataShare {
  * This class stores a set of rows from a database in a buffer，
  * which is used as the set of query result.
  */
-class DataShareBlockWriterImpl : public virtual DataShareBlockWriter {
+class DataShareBlockWriterImpl : public virtual ResultSetBridge::Writer {
 public:
     /**
      * SharedBlock constructor.
@@ -64,29 +64,29 @@ public:
     int FreeLastRow();
 
     /**
-     * Write blob data to the shared block.
+     * Write Null data to the shared block.
      */
-    int WriteBlob(uint32_t row, uint32_t column, const void *value, size_t Size) override;
-
-    /**
-     * Write string data to the shared block.
-     */
-    int WriteString(uint32_t row, uint32_t column, const char *value, size_t sizeIncludingNull) override;
+    virtual int Write(uint32_t column) override;
 
     /**
      * Write long data to the shared block.
      */
-    int WriteLong(uint32_t row, uint32_t column, int64_t value) override;
+    virtual int Write(uint32_t column, int64_t value) override;
 
     /**
      * Write Double data to the shared block.
      */
-    int WriteDouble(uint32_t row, uint32_t column, double value) override;
+    virtual int Write(uint32_t column, double value) override;
 
     /**
-     * Write Null data to the shared block.
+     * Write blob data to the shared block.
      */
-    int WriteNull(uint32_t row, uint32_t column) override;
+    virtual int Write(uint32_t column, const uint8_t *value, size_t Size) override;
+
+    /**
+     * Write string data to the shared block.
+     */
+    virtual int Write(uint32_t column, const char *value, size_t sizeIncludingNull) override;
 
     /**
      * The mHeader of the current result set.
@@ -133,16 +133,21 @@ public:
      */
     AppDataFwk::SharedBlock *GetBlock() const;
 
+private:
     /**
-     * Set Position Offset
+     * The fd of shared memory
      */
-    void SetPositionOffset(uint32_t offset)
+    bool GetCurrentRowIndex(uint32_t &rowIndex);
+
+    /**
+     * Convert ShareBlock error code to DataShare format
+     */
+    int ConvertErrorCode(int shareBlockErr)
     {
-        posOffset_ = offset;
+        return shareBlockErr == AppDataFwk::SharedBlock::SHARED_BLOCK_OK ? E_OK : E_ERROR;
     }
 
 private:
-    uint32_t posOffset_ = 0;
     AppDataFwk::SharedBlock *shareBlock_;
 };
 } // namespace DataShare

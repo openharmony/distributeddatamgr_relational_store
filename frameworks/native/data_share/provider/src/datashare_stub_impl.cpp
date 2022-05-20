@@ -131,7 +131,7 @@ std::shared_ptr<DataShareResultSet> DataShareStubImpl::Query(const Uri &uri,
     std::vector<std::string> &columns, const DataSharePredicates &predicates)
 {
     LOG_INFO("begin.");
-    std::shared_ptr<DataShareAbstractResultSet> ret = nullptr;
+    std::shared_ptr<ResultSetBridge> ret = nullptr;
     std::function<void()> syncTaskFunc = [=, &columns, &ret, client = sptr<DataShareStubImpl>(this)]() {
         auto extension = client->GetOwner();
         if (extension == nullptr) {

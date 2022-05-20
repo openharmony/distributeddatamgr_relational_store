@@ -29,8 +29,8 @@ DataShareResultSet::DataShareResultSet()
 {
 }
 
-DataShareResultSet::DataShareResultSet(std::shared_ptr<DataShareAbstractResultSet> &resultSet)
-    : resultSet_(resultSet)
+DataShareResultSet::DataShareResultSet(std::shared_ptr<ResultSetBridge> &bridge)
+    : bridge_(bridge)
 {
     std::string name = "DataShare" + std::to_string(blockId_++);
     blockWriter_ = std::make_shared<DataShareBlockWriterImpl>(name, DEFAULT_BLOCK_SIZE);
@@ -44,29 +44,29 @@ DataShareResultSet::~DataShareResultSet()
 
 int DataShareResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
-    if (resultSet_ == nullptr) {
-        LOG_ERROR("resultSet_ is null!");
+    if (bridge_ == nullptr) {
+        LOG_ERROR("bridge_ is null!");
         return E_ERROR;
     }
-    return resultSet_->GetAllColumnName(columnNames);
+    return bridge_->GetAllColumnNames(columnNames);
 }
 
 int DataShareResultSet::GetRowCount(int &count)
 {
-    if (resultSet_ == nullptr) {
-        LOG_ERROR("resultSet_ is null!");
+    if (bridge_ == nullptr) {
+        LOG_ERROR("bridge_ is null!");
         return E_ERROR;
     }
-    return resultSet_->GetRowCount(count);
+    return bridge_->GetRowCount(count);
 }
 
 bool DataShareResultSet::OnGo(int startRowIndex, int targetRowIndex)
 {
-    if (resultSet_ == nullptr || blockWriter_ == nullptr) {
-        LOG_ERROR("resultSet_ or blockWriter_ is null!");
+    if (bridge_ == nullptr || blockWriter_ == nullptr) {
+        LOG_ERROR("bridge_ or blockWriter_ is null!");
         return E_ERROR;
     }
-    return resultSet_->OnGo(startRowIndex, targetRowIndex, *blockWriter_.get());
+    return bridge_->OnGo(startRowIndex, targetRowIndex, *blockWriter_);
 }
 
 void DataShareResultSet::FillBlock(int startRowIndex, AppDataFwk::SharedBlock *block)
@@ -118,8 +118,7 @@ int DataShareResultSet::GoToRow(int position)
         GetAllColumnNames(columnNames);
         sharedBlock_->Clear();
         sharedBlock_->SetColumnNum(columnNames.size());
-        blockWriter_->SetPositionOffset((uint32_t)position);
-        result = OnGo(position, std::min(position + STEP_LENGTH, rowCnt));
+        result = OnGo(position, std::min(position + STEP_LENGTH, rowCnt - 1));
         if (result) {
             startRowPos_ = position;
             endRowPos_ = position + sharedBlock_->GetRowNum() -1;
