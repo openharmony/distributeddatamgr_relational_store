@@ -34,7 +34,7 @@ class DataShareExtensionAbility {
         console.log('insert, uri:' + uri);
     }
 
-    update(uri, value, predicates) {
+    update(uri, predicates, value) {
         console.log('update, uri:' + uri);
     }
 
@@ -42,7 +42,7 @@ class DataShareExtensionAbility {
         console.log('delete, uri:' + uri);
     }
 
-    query(uri, columns, predicates) {
+    query(uri, predicates, columns) {
         console.log('query, uri:' + uri);
     }
 

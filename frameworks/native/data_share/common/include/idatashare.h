@@ -104,13 +104,13 @@ public:
      * @brief Updates data records in the database.
      *
      * @param uri Indicates the path of data to update.
-     * @param value Indicates the data to update. This parameter can be null.
      * @param predicates Indicates filter criteria. You should define the processing logic when this parameter is null.
+     * @param value Indicates the data to update. This parameter can be null.
      *
      * @return Returns the number of data records updated.
      */
-    virtual int Update(const Uri &uri, const DataShareValuesBucket &value,
-        const DataSharePredicates &predicates) = 0;
+    virtual int Update(const Uri &uri, const DataSharePredicates &predicates,
+        const DataShareValuesBucket &value) = 0;
 
     /**
      * @brief Deletes one or more data records from the database.
@@ -126,13 +126,13 @@ public:
      * @brief Deletes one or more data records from the database.
      *
      * @param uri Indicates the path of data to query.
-     * @param columns Indicates the columns to query. If this parameter is null, all columns are queried.
      * @param predicates Indicates filter criteria. You should define the processing logic when this parameter is null.
+     * @param columns Indicates the columns to query. If this parameter is null, all columns are queried.
      *
      * @return Returns the query result.
      */
     virtual std::shared_ptr<DataShareResultSet> Query(
-        const Uri &uri, std::vector<std::string> &columns, const DataSharePredicates &predicates) = 0;
+        const Uri &uri, const DataSharePredicates &predicates, std::vector<std::string> &columns) = 0;
 
     /**
      * @brief Obtains the MIME type matching the data specified by the URI of the Data ability. This method should be
