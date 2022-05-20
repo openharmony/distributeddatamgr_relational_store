@@ -23,10 +23,10 @@ config("ability_config") {
     "provider/include",
     "${datashare_native_consumer_path}/include",
     "${datashare_native_provider_path}/include",
-    "//foundation/aafwk/standard/frameworks/kits/appkit/native/app/include",
-    "//foundation/aafwk/standard/services/common/include",
-    "//foundation/aafwk/standard/frameworks/kits/ability/native/include/continuation/distributed",
-    "//foundation/aafwk/standard/frameworks/kits/ability/native/include/continuation/kits",
+    "${aafwk_kits_path}/appkit/native/app/include",
+    "${aafwk_services_path}/common/include",
+    "${aafwk_kits_path}/ability/native/include/continuation/distributed",
+    "${aafwk_kits_path}/ability/native/include/continuation/kits",
     "//foundation/aafwk/standard/interfaces/kits/napi/aafwk/inner/napi_common",
     "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb/include",
     "//foundation/distributeddatamgr/distributeddatamgr/frameworks/innerkitsimpl/rdb/include",
@@ -53,9 +53,9 @@ config("ability_public_config") {
     "${datashare_native_consumer_path}/include",
     "${datashare_native_provider_path}/include",
     "//foundation/windowmanager/interfaces/innerkits/wm",
-    "//foundation/aafwk/standard/frameworks/kits/appkit/native/ability_runtime/app",
-    "//foundation/aafwk/standard/frameworks/kits/appkit/native/app/include",
-    "//foundation/aafwk/standard/frameworks/kits/appkit/native/ability_runtime/context",
+    "${aafwk_kits_path}/appkit/native/ability_runtime/app",
+    "${aafwk_kits_path}/appkit/native/app/include",
+    "${aafwk_kits_path}/appkit/native/ability_runtime/context",
   ]
 }
 
@@ -77,14 +77,14 @@ ohos_shared_library("datashare_abilitykit") {
   configs = [ ":ability_config" ]
   public_configs = [
     ":ability_public_config",
-    "//foundation/aafwk/standard/frameworks/kits/ability/ability_runtime:ability_context_public_config",
+    "${aafwk_kits_path}/ability/ability_runtime:ability_context_public_config",
   ]
 
   deps = [
+    "${aafwk_inner_api_path}/dataobs_manager:dataobs_manager",
+    "${aafwk_kits_path}/ability/native:abilitykit_native",
+    "${aafwk_kits_path}/appkit:app_context",
     "${datashare_common_native_path}:datashare_common",
-    "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
-    "//foundation/aafwk/standard/frameworks/kits/appkit:app_context",
-    "//foundation/aafwk/standard/interfaces/innerkits/dataobs_manager:dataobs_manager",
   ]
 
   external_deps = [
@@ -125,7 +125,7 @@ ohos_shared_library("datashare_ext_ability_module") {
 
   deps = [
     ":datashare_abilitykit",
-    "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
+    "${aafwk_kits_path}/ability/native:abilitykit_native",
     "//foundation/bundlemanager/bundle_framework/common:libappexecfwk_common",
   ]
 
