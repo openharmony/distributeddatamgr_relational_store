@@ -177,8 +177,8 @@ int DataShareProxy::Insert(const Uri &uri, const DataShareValuesBucket &value)
     return index;
 }
 
-int DataShareProxy::Update(const Uri &uri, const DataShareValuesBucket &value,
-    const DataSharePredicates &predicates)
+int DataShareProxy::Update(const Uri &uri, const DataSharePredicates &predicates,
+    const DataShareValuesBucket &value)
 {
     LOG_INFO("begin.");
     int index = -1;
@@ -193,13 +193,13 @@ int DataShareProxy::Update(const Uri &uri, const DataShareValuesBucket &value,
         return index;
     }
 
-    if (!data.WriteParcelable(&value)) {
-        LOG_ERROR("fail to WriteParcelable value");
+    if (!data.WriteParcelable(&predicates)) {
+        LOG_ERROR("fail to WriteParcelable predicates");
         return index;
     }
 
-    if (!data.WriteParcelable(&predicates)) {
-        LOG_ERROR("fail to WriteParcelable predicates");
+    if (!data.WriteParcelable(&value)) {
+        LOG_ERROR("fail to WriteParcelable value");
         return index;
     }
 
@@ -258,7 +258,7 @@ int DataShareProxy::Delete(const Uri &uri, const DataSharePredicates &predicates
 }
 
 std::shared_ptr<DataShareResultSet> DataShareProxy::Query(const Uri &uri,
-    std::vector<std::string> &columns, const DataSharePredicates &predicates)
+    const DataSharePredicates &predicates, std::vector<std::string> &columns)
 {
     LOG_INFO("begin.");
     MessageParcel data;
@@ -272,13 +272,13 @@ std::shared_ptr<DataShareResultSet> DataShareProxy::Query(const Uri &uri,
         return nullptr;
     }
 
-    if (!data.WriteStringVector(columns)) {
-        LOG_ERROR("fail to WriteStringVector columns");
+    if (!data.WriteParcelable(&predicates)) {
+        LOG_ERROR("fail to WriteParcelable predicates");
         return nullptr;
     }
 
-    if (!data.WriteParcelable(&predicates)) {
-        LOG_ERROR("fail to WriteParcelable predicates");
+    if (!data.WriteStringVector(columns)) {
+        LOG_ERROR("fail to WriteStringVector columns");
         return nullptr;
     }
 
