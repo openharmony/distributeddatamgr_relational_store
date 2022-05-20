@@ -26,7 +26,7 @@
 #include "parcel.h"
 #include "shared_block.h"
 #include "datashare_shared_result_set.h"
-#include "datashare_abstract_result_set.h"
+#include "result_set_bridge.h"
 #include "datashare_block_writer_impl.h"
 
 namespace OHOS {
@@ -34,7 +34,7 @@ namespace DataShare {
 class DataShareResultSet : public DataShareAbsResultSet, public DataShareSharedResultSet {
 public:
     DataShareResultSet();
-    explicit DataShareResultSet(std::shared_ptr<DataShareAbstractResultSet> &resultSet);
+    explicit DataShareResultSet(std::shared_ptr<ResultSetBridge> &bridge);
     virtual ~DataShareResultSet();
     int GetBlob(int columnIndex, std::vector<uint8_t> &blob) override;
     int GetString(int columnIndex, std::string &value) override;
@@ -78,7 +78,7 @@ private:
     // The SharedBlock owned by this DataShareResultSet
     AppDataFwk::SharedBlock *sharedBlock_  = nullptr;
     std::shared_ptr<DataShareBlockWriterImpl> blockWriter_ = nullptr;
-    std::shared_ptr<DataShareAbstractResultSet> resultSet_ = nullptr;
+    std::shared_ptr<ResultSetBridge> bridge_ = nullptr;
 };
 } // namespace DataShare
 } // namespace OHOS
