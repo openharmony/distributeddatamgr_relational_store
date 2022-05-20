@@ -12,6 +12,8 @@
 # limitations under the License.
 import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
+import(
+    "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/common/datashare.gni")
 
 ohos_copy("appdatamgr_declaration") {
   sources = [ "./api" ]
@@ -61,7 +63,7 @@ ohos_shared_library("storage_napi") {
     "src/napi_system_storage.cpp",
   ]
 
-  deps = [ "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native" ]
+  deps = [ "${aafwk_kits_path}/ability/native:abilitykit_native" ]
 
   external_deps = [
     "ability_runtime:ability_manager",
@@ -93,7 +95,7 @@ ohos_shared_library("preferences") {
     "src/napi_preferences_helper.cpp",
   ]
 
-  deps = [ "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native" ]
+  deps = [ "${aafwk_kits_path}/ability/native:abilitykit_native" ]
 
   external_deps = [
     "ability_runtime:ability_manager",

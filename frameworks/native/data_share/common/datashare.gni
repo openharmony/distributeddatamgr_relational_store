@@ -11,6 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+aafwk_inner_api_path = "//foundation/aafwk/standard/interfaces/innerkits"
+
+aafwk_kits_path = "//foundation/aafwk/standard/frameworks/kits"
+
+aafwk_services_path = "//foundation/aafwk/standard/services"
+
 datashare_base_path = "//foundation/distributeddatamgr/appdatamgr"
 
 datashare_common_native_path =
