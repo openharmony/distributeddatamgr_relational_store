@@ -154,7 +154,7 @@ public:
      *
      * @return Returns the query result.
      */
-    std::shared_ptr<DataShareAbstractResultSet> Query(const Uri &uri, const DataSharePredicates &predicates,
+    std::shared_ptr<ResultSetBridge> Query(const Uri &uri, const DataSharePredicates &predicates,
         std::vector<std::string> &columns) override;
 
     /**

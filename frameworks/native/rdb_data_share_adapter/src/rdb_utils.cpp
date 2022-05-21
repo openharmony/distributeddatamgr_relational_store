@@ -14,12 +14,14 @@
  */
 
 #include "rdb_utils.h"
-#include "logger.h"
 
-using namespace OHOS::NativeRdb;
+#include "rdb_logger.h"
+
+using namespace OHOS::RdbDataShareAdapter;
 using namespace OHOS::DataShare;
+using namespace OHOS::NativeRdb;
 
-ValuesBucket RdbUtils::ConvertToValuesBucket(DataShareValuesBucket dataShareValuesBucket)
+ValuesBucket RdbUtils::ToValuesBucket(const DataShareValuesBucket &dataShareValuesBucket)
 {
     std::map<std::string, ValueObject> valuesMap;
     std::map<std::string, DataShareValueObject> dataShareValuesMap;
@@ -52,8 +54,8 @@ ValuesBucket RdbUtils::ConvertToValuesBucket(DataShareValuesBucket dataShareValu
     return ValuesBucket(valuesMap);
 }
 
-void RdbUtils::ToOperateFirst(std::list<OperationItem>::iterator operations,
-    std::shared_ptr<AbsRdbPredicates> predicates)
+void RdbUtils::ToOperateFirst(
+        const std::list<OperationItem>::iterator operations, std::shared_ptr<RdbPredicates> &predicates)
 {
     switch (operations->operation) {
         case OperationType::EQUAL_TO:
@@ -81,16 +83,17 @@ void RdbUtils::ToOperateFirst(std::list<OperationItem>::iterator operations,
             predicates->BeginWrap();
             break;
         case OperationType::BETWEEN:
-            predicates->Between(ToString(operations->para1), ToString(operations->para2), ToString(operations->para3));
+            predicates->Between(
+                    ToString(operations->para1), ToString(operations->para2), ToString(operations->para3));
             break;
         default:
-            LOG_INFO("RdbUtils::ToOperateFirst default");
+            LOG_INFO("RdbUtils::ToOperateFirst successful");
             return;
     }
 }
 
-void RdbUtils::ToOperateSecond(std::list<OperationItem>::iterator operations,
-    std::shared_ptr<AbsRdbPredicates> predicates)
+void RdbUtils::ToOperateSecond(
+        const std::list<OperationItem>::iterator operations, std::shared_ptr<RdbPredicates> &predicates)
 {
     switch (operations->operation) {
         case OperationType::BEGIN_WITH:
@@ -103,7 +106,7 @@ void RdbUtils::ToOperateSecond(std::list<OperationItem>::iterator operations,
             predicates->Distinct();
             break;
         case OperationType::IN:
-            predicates->BeginsWith(ToString(operations->para1), ToString(operations->para2));
+            predicates->In(ToString(operations->para1), std::get<std::vector<std::string>>(operations->para2.value));
             break;
         case OperationType::GLOB:
             predicates->Glob(ToString(operations->para1), ToString(operations->para2));
@@ -115,19 +118,20 @@ void RdbUtils::ToOperateSecond(std::list<OperationItem>::iterator operations,
             predicates->IndexedBy(ToString(operations->para1));
             break;
         case OperationType::NOTBETWEEN:
-            predicates->NotBetween(ToString(operations->para1), ToString(operations->para2), ToString(operations->para3));
+            predicates->NotBetween(
+                    ToString(operations->para1), ToString(operations->para2), ToString(operations->para3));
             break;
         case OperationType::ORDER_BY_ASC:
             predicates->OrderByAsc(ToString(operations->para1));
             break;
         default:
-            LOG_INFO("RdbUtils::ToOperateSecond default");
+            LOG_INFO("RdbUtils::ToOperateFirst successful");
             return;
     }
 }
 
-void RdbUtils::ToOperateThird(std::list<OperationItem>::iterator operations,
-    std::shared_ptr<AbsRdbPredicates> predicates)
+void RdbUtils::ToOperateThird(
+        const std::list<OperationItem>::iterator operations, std::shared_ptr<RdbPredicates> &predicates)
 {
     switch (operations->operation) {
         case OperationType::ORDER_BY_DESC:
@@ -142,11 +146,17 @@ void RdbUtils::ToOperateThird(std::list<OperationItem>::iterator operations,
         case OperationType::IS_NOT_NULL:
             predicates->IsNotNull(ToString(operations->para1));
             break;
+        case OperationType::OFFSET:
+            int offsetVal;
+            operations->para1.GetInt(offsetVal);
+            predicates->Offset(offsetVal);
+            break;
         case OperationType::LESS_THAN_OR_EQUAL_TO:
             predicates->LessThanOrEqualTo(ToString(operations->para1), ToString(operations->para2));
             break;
         case OperationType::NOT_IN:
-            predicates->NotIn(ToString(operations->para1), std::get<std::vector<std::string>>(operations->para2.value));
+            predicates->NotIn(
+                    ToString(operations->para1), std::get<std::vector<std::string>>(operations->para2.value));
             break;
         case OperationType::LIKE:
             predicates->Like(ToString(operations->para1), ToString(operations->para2));
@@ -155,23 +165,22 @@ void RdbUtils::ToOperateThird(std::list<OperationItem>::iterator operations,
             int val;
             operations->para1.GetInt(val);
             predicates->Limit(val);
-            operations->para2.GetInt(val);
-            predicates->Offset(val);
             break;
         case OperationType::GROUP_BY:
             predicates->GroupBy(std::get<std::vector<std::string>>(operations->para1.value));
             break;
         default:
-            LOG_INFO("RdbUtils::ToOperateThird default");
+            LOG_INFO("RdbUtils::ToOperateFirst successful");
             return;
     }
 }
 
-std::shared_ptr<AbsRdbPredicates> RdbUtils::ToOperate(const DataSharePredicates &dataSharePredicates)
+RdbPredicates RdbUtils::ToPredicates(const DataSharePredicates &dataSharePredicates,
+    const std::string &table)
 {
-    std::shared_ptr<AbsRdbPredicates> predicates = std::make_shared<AbsRdbPredicates>(
-        dataSharePredicates.GetTableName());
-    if (dataSharePredicates.GetSettingMode() == DataShare::QUERY_LANGUAGE) {
+    std::shared_ptr<RdbPredicates> predicates = std::make_shared<RdbPredicates>(
+            dataSharePredicates.GetTableName());
+    if (dataSharePredicates.GetSettingMode() == QUERY_LANGUAGE) {
         predicates->SetWhereClause(dataSharePredicates.GetWhereClause());
         predicates->SetWhereArgs(dataSharePredicates.GetWhereArgs());
         predicates->SetOrder(dataSharePredicates.GetOrder());
@@ -184,10 +193,10 @@ std::shared_ptr<AbsRdbPredicates> RdbUtils::ToOperate(const DataSharePredicates 
             ToOperateThird(operations, predicates);
         }
     }
-    return predicates;
+    return *(predicates.get());
 }
 
-std::string RdbUtils::ToString(const DataShare::DataSharePredicatesObject &predicatesObject)
+std::string RdbUtils::ToString(const DataSharePredicatesObject &predicatesObject)
 {
     std::string str = " ";
     switch (predicatesObject.GetType()) {
@@ -221,6 +230,10 @@ std::string RdbUtils::ToString(const DataShare::DataSharePredicatesObject &predi
     return str;
 }
 
+std::shared_ptr<ResultSetBridge> RdbUtils::ToResultSetBridge(std::shared_ptr<ResultSet> resultSet) {
+    return std::make_shared<RdbResultSetBridge>(resultSet);
+}
+
 RdbUtils::RdbUtils()
 {
 }
@@ -228,3 +241,5 @@ RdbUtils::RdbUtils()
 RdbUtils::~RdbUtils()
 {
 }
+
+

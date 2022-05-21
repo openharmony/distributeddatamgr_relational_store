@@ -103,7 +103,7 @@ private:
         DataSharePredicatesObject &para2, DataSharePredicatesObject &para3, ParameterCount parameterCount);
     void ClearQueryLanguage();
     void SetSettingMode(const SettingMode &settingMode);
-    mutable Predicates predicates_;
+    Predicates predicates_;
     std::string whereClause_;
     std::vector<std::string> whereArgs_;
     std::string order_;
