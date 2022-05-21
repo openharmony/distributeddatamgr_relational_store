@@ -24,7 +24,7 @@ namespace OHOS {
 namespace DataShare {
 static napi_ref __thread ctorRef_ = nullptr;
 napi_value NapiDataShareAbstractResultSet::NewInstance(napi_env env,
-    std::shared_ptr<DataShareAbstractResultSet> resultSet)
+    std::shared_ptr<ResultSetBridge> resultSet)
 {
     napi_value cons = GetConstructor(env);
     if (cons == nullptr) {
@@ -49,7 +49,7 @@ napi_value NapiDataShareAbstractResultSet::NewInstance(napi_env env,
     return instance;
 }
 
-std::shared_ptr<DataShareAbstractResultSet> NapiDataShareAbstractResultSet::GetNativeObject(
+std::shared_ptr<ResultSetBridge> NapiDataShareAbstractResultSet::GetNativeObject(
     napi_env const &env, napi_value const &arg)
 {
     if (arg == nullptr) {
@@ -72,9 +72,9 @@ napi_value NapiDataShareAbstractResultSet::GetConstructor(napi_env env)
         NAPI_CALL(env, napi_get_reference_value(env, ctorRef_, &cons));
         return cons;
     }
-    LOG_INFO("GetConstructor DataShareAbstractResultSet constructor");
+    LOG_INFO("GetConstructor ResultSetBridge constructor");
     napi_property_descriptor clzDes[] = {};
-    NAPI_CALL(env, napi_define_class(env, "DataShareAbstractResultSet", NAPI_AUTO_LENGTH, Initialize, nullptr,
+    NAPI_CALL(env, napi_define_class(env, "ResultSetBridge", NAPI_AUTO_LENGTH, Initialize, nullptr,
         sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
     NAPI_CALL(env, napi_create_reference(env, cons, 1, &ctorRef_));
     return cons;
@@ -103,7 +103,7 @@ NapiDataShareAbstractResultSet::~NapiDataShareAbstractResultSet()
     LOG_INFO("NapiDataShareAbstractResultSet destructor!");
 }
 
-NapiDataShareAbstractResultSet::NapiDataShareAbstractResultSet(std::shared_ptr<DataShareAbstractResultSet> resultSet)
+NapiDataShareAbstractResultSet::NapiDataShareAbstractResultSet(std::shared_ptr<ResultSetBridge> resultSet)
 {
     if (resultSet_ == resultSet) {
         return;
@@ -112,7 +112,7 @@ NapiDataShareAbstractResultSet::NapiDataShareAbstractResultSet(std::shared_ptr<D
 }
 
 NapiDataShareAbstractResultSet &NapiDataShareAbstractResultSet::operator=(
-    std::shared_ptr<DataShareAbstractResultSet> resultSet)
+    std::shared_ptr<ResultSetBridge> resultSet)
 {
     if (resultSet_ == resultSet) {
         return *this;
@@ -121,7 +121,7 @@ NapiDataShareAbstractResultSet &NapiDataShareAbstractResultSet::operator=(
     return *this;
 }
 
-std::shared_ptr<DataShareAbstractResultSet> &NapiDataShareAbstractResultSet::GetInnerAbstractResultSet(napi_env env,
+std::shared_ptr<ResultSetBridge> &NapiDataShareAbstractResultSet::GetInnerAbstractResultSet(napi_env env,
     napi_callback_info info)
 {
     NapiDataShareAbstractResultSet *resultSet = nullptr;
@@ -131,12 +131,12 @@ std::shared_ptr<DataShareAbstractResultSet> &NapiDataShareAbstractResultSet::Get
     return resultSet->resultSet_;
 }
 
-napi_value GetNapiAbstractResultSetObject(napi_env env, DataShareAbstractResultSet *resultSet)
+napi_value GetNapiAbstractResultSetObject(napi_env env, ResultSetBridge *resultSet)
 {
-    return NapiDataShareAbstractResultSet::NewInstance(env, std::shared_ptr<DataShareAbstractResultSet>(resultSet));
+    return NapiDataShareAbstractResultSet::NewInstance(env, std::shared_ptr<ResultSetBridge>(resultSet));
 }
 
-DataShareAbstractResultSet *GetNativeAbstractResultSetObject(const napi_env &env, const napi_value &arg)
+ResultSetBridge *GetNativeAbstractResultSetObject(const napi_env &env, const napi_value &arg)
 {
     auto resultSet = NapiDataShareAbstractResultSet::GetNativeObject(env, arg);
     return resultSet.get();

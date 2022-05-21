@@ -75,6 +75,7 @@
                 "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/preferences:native_preferences",
                 "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/dataability:native_dataability",
                 "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb:native_rdb",
+                "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb_data_share_adapter:native_rdb_data_share_adapter",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/dataability:dataability",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/preferences:preferences",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/preferences:storage",
@@ -155,8 +156,7 @@
                     "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share:datashare_abilitykit",
                     "header": {
                         "header_files": [
-                            "datashare_abstract_result_set.h",
-                            "datashare_block_writer.h"
+                            "result_set_bridge.h"
                         ],
                         "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share/provider/include"
                     }
@@ -174,12 +174,22 @@
                         ],
                         "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share/common/include"
                     }
+                },
+                {
+                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb_data_share_adapter:native_rdb_data_share_adapter",
+                    "header": {
+                        "header_files": [
+                            "rdb_utils.h"
+                        ],
+                        "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb_data_share_adapter/include"
+                    }
                 }
             ],
             "test": [
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/native/preferences/test:unittest",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/native/dataability/test:unittest",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/native/rdb/test:unittest",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/native/rdb_data_share_adapter/test:unittest",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/test:unittest",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/rdb/test:unittest",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/preferences/test:unittest",

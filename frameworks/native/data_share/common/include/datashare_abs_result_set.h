@@ -54,6 +54,7 @@ public:
 protected:
     // The default position of the result set
     static const int INIT_POS = -1;
+    // Current row position
     int rowPos_;
     // Indicates whether the result set is closed
     bool isClosed_;

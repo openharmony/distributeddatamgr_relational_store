@@ -26,7 +26,6 @@
 namespace OHOS {
 namespace DataShare {
 static napi_ref __thread ctorRef_ = nullptr;
-static const int E_OK = 0;
 napi_value DataShareResultSetProxy::NewInstance(napi_env env, std::shared_ptr<DataShareResultSet> resultSet)
 {
     napi_value cons = GetConstructor(env);
