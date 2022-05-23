@@ -77,24 +77,18 @@ void ParseFunction(napi_env env, napi_value &object, const char *name, napi_ref 
 
 const std::string GetMessageInfo(int errCode)
 {
-    std::string message;
     switch (errCode) {
         case E_KEY_EMPTY:
-            message = "The key string is null or empty.";
-            break;
+            return "The key string is null or empty.";
         case E_KEY_EXCEED_LENGTH_LIMIT:
-            message = "The key string length should shorter than 32.";
-            break;
+            return "The key string length should shorter than 32.";
         case E_VALUE_EXCEED_LENGTH_LIMIT:
-            message = "The value string length should shorter than 128.";
-            break;
+            return "The value string length should shorter than 128.";
         case E_DEFAULT_EXCEED_LENGTH_LIMIT:
-            message = "The default string length should shorter than 128.";
-            break;
+            return "The default string length should shorter than 128.";
         default:
-            message = "unknown err";
+            return "unknown err";
     }
-    return message;
 }
 
 void Complete(napi_env env, napi_status status, void *data)
@@ -164,7 +158,6 @@ napi_value Operate(napi_env env, napi_callback_info info, const char *resource, 
     NAPI_ASSERT(env, valueType == napi_object, "Wrong argument type, object expected.");
 
     AsyncContext *context = new AsyncContext();
-
     context->prefName = GetPrefName(env);
 
     ParseString(env, argv[0], "key", parseStrFlag, context->key);
@@ -175,14 +168,31 @@ napi_value Operate(napi_env env, napi_callback_info info, const char *resource, 
     ParseFunction(env, argv[0], "fail", context->fail);
     ParseFunction(env, argv[0], "complete", context->complete);
 
-    napi_value resourceName = nullptr;
-    NAPI_CALL(env, napi_create_string_utf8(env, resource, NAPI_AUTO_LENGTH, &resourceName));
-
     napi_value ret = nullptr;
-    napi_create_promise(env, &context->deferred, &ret);
-
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, execute, Complete, context, &context->request));
-    NAPI_CALL(env, napi_queue_async_work(env, context->request));
+    napi_value resourceName = nullptr;
+    napi_status status = napi_create_string_utf8(env, resource, NAPI_AUTO_LENGTH, &resourceName);
+    if (status != napi_ok) {
+        LOG_ERROR("Operate get resourceName failed, status = %{public}d", status);
+        delete context;
+        return ret;
+    }
+    status = napi_create_promise(env, &context->deferred, &ret);
+    if (status != napi_ok) {
+        LOG_ERROR("Operate create promise failed, status = %{public}d", status);
+        delete context;
+        return ret;
+    }
+    status = napi_create_async_work(env, nullptr, resourceName, execute, Complete, context, &context->request);
+    if (status != napi_ok) {
+        LOG_ERROR("Operate create asyncWork failed, status = %{public}d", status);
+        delete context;
+        return ret;
+    }
+    status = napi_queue_async_work(env, context->request);
+    if (status != napi_ok) {
+        LOG_ERROR("Operate queue asyncWork failed, status = %{public}d", status);
+        delete context;
+    }
     return ret;
 }
 
