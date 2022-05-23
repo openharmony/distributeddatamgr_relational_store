@@ -27,7 +27,7 @@ namespace OHOS {
 namespace DataShare {
 class DataSharePredicates : public virtual DataShareAbsPredicates, public virtual OHOS::Parcelable {
 public:
-    DataSharePredicates() = default;
+    DataSharePredicates();
     explicit DataSharePredicates(Predicates &predicates);
     ~DataSharePredicates();
     DataSharePredicates *EqualTo(const std::string &field, const int value)override;
@@ -107,7 +107,7 @@ private:
     std::string whereClause_;
     std::vector<std::string> whereArgs_;
     std::string order_;
-    SettingMode settingMode_ = INVALID_MODE; 
+    SettingMode settingMode_(SettingMode::INVALID_MODE);
 };
 } // namespace DataShare
 } // namespace OHOS
