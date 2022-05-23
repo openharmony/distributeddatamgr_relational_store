@@ -71,20 +71,20 @@ public:
 };
 
 int RdbStepSharedResultSetOpenCallback::OnCreate(RdbStore &store) {
-    return E_OK;
+    return OHOS::NativeRdb::E_OK;
 }
 
 int RdbStepSharedResultSetOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion) {
-    return E_OK;
+    return OHOS::NativeRdb::E_OK;
 }
 
 void RdbDataShareAdapterTest::SetUpTestCase(void) {
-    int errCode = E_OK;
+    int errCode = OHOS::NativeRdb::E_OK;
     RdbStoreConfig config(RdbDataShareAdapterTest::DATABASE_NAME);
     RdbStepSharedResultSetOpenCallback helper;
     RdbDataShareAdapterTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(RdbDataShareAdapterTest::store, nullptr);
-    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(errCode, OHOS::NativeRdb::E_OK);
 }
 
 void RdbDataShareAdapterTest::TearDownTestCase(void) {
