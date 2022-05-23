@@ -107,7 +107,7 @@ private:
     std::string whereClause_;
     std::vector<std::string> whereArgs_;
     std::string order_;
-    SettingMode settingMode_(SettingMode::INVALID_MODE);
+    SettingMode settingMode_ = {0};
 };
 } // namespace DataShare
 } // namespace OHOS
