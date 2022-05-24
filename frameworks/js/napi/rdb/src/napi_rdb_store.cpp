@@ -348,8 +348,7 @@ void ParsePredicates(const napi_env &env, const napi_value &arg, RdbStoreContext
     napi_value rdbPredicatesConstructor = nullptr;
     status = napi_get_named_property(env, global, "RdbPredicatesConstructor", &rdbPredicatesConstructor);
     NAPI_ASSERT_RETURN_VOID(env, status == napi_ok, "get RdbPredicates constructor failed");
-    status = napi_instanceof(env, arg,rdbPredicatesConstructor, &result);
-
+    status = napi_instanceof(env, arg, rdbPredicatesConstructor, &result);
     if ((status == napi_ok) && (result != false)) {
         LOG_DEBUG("Parse RDB Predicates");
         napi_unwrap(env, arg, reinterpret_cast<void **>(&asyncContext->predicatesProxy));
