@@ -213,6 +213,41 @@ std::string RdbStoreConfig::GetBundleName() const
     return bundleName_;
 }
 
+void RdbStoreConfig::SetRelativePath(const std::string &relativePath)
+{
+    relativePath_ = relativePath;
+}
+
+std::string RdbStoreConfig::GetRelativePath() const
+{
+    return relativePath_;
+}
+
+void RdbStoreConfig::SetAppModuleName(const std::string &moduleName)
+{
+    moduleName_ = moduleName;
+}
+
+std::string RdbStoreConfig::GetAppModuleName() const
+{
+    return moduleName_;
+}
+
+void RdbStoreConfig::SetServiceName(const std::string &serviceName)
+{
+    SetBundleName(serviceName);
+}
+
+void RdbStoreConfig::SetEncryptLevel(const std::string &secLevel)
+{
+    encryptLevel_ = secLevel;
+}
+
+std::string RdbStoreConfig::GetEncryptLevel() const
+{
+    return encryptLevel_;
+}
+
 std::string RdbStoreConfig::GetJournalModeValue(JournalMode journalMode)
 {
     std::string value = "";
