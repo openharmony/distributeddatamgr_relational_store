@@ -31,6 +31,7 @@ Context::Context(AppExecFwk::Ability *featureAbility)
     databaseDir_ = featureAbility->GetDatabaseDir();
     preferencesDir_ = featureAbility->GetAbilityContext()->GetStorageDir();
     bundleName_ = featureAbility->GetBundleName();
+    auto abilityContext = featureAbility->GetAbilityContext();
     auto abilityInfo = abilityContext->GetAbilityInfo();
     if (abilityInfo != nullptr) {
         moduleName_ = abilityInfo->moduleName;
