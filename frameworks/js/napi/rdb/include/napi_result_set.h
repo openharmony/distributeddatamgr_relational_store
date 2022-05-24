@@ -21,10 +21,11 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "result_set_bridge.h"
 
 namespace OHOS {
 namespace RdbJsKit {
-class ResultSetProxy final {
+class ResultSetProxy final : public DataShare::ResultSetBridge::Creator {
 public:
     ResultSetProxy() = default;
     ~ResultSetProxy();
@@ -34,6 +35,7 @@ public:
     static std::shared_ptr<NativeRdb::AbsSharedResultSet> GetNativeObject(
         const napi_env &env, const napi_value &arg);
     static napi_value GetConstructor(napi_env env);
+    std::shared_ptr<DataShare::ResultSetBridge> Create() override;
 
 private:
     static std::shared_ptr<NativeRdb::AbsSharedResultSet> &GetInnerResultSet(napi_env env, napi_callback_info info);

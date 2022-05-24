@@ -86,9 +86,8 @@ int DataShareAbsResultSet::GoTo(int offset)
     int ret = GoToRow(rowPos_ + offset);
     if (ret != E_OK) {
         LOG_ERROR("DataShareAbsResultSet::GoTo return ret is wrong!");
-        return ret;
     }
-    return E_OK;
+    return ret;
 }
 
 int DataShareAbsResultSet::GoToFirstRow()
@@ -96,9 +95,8 @@ int DataShareAbsResultSet::GoToFirstRow()
     int ret = GoToRow(0);
     if (ret != E_OK) {
         LOG_ERROR("DataShareAbsResultSet::GoToFirstRow return ret is wrong!");
-        return ret;
     }
-    return E_OK;
+    return ret;
 }
 
 int DataShareAbsResultSet::GoToLastRow()
@@ -113,9 +111,8 @@ int DataShareAbsResultSet::GoToLastRow()
     ret = GoToRow(rowCnt - 1);
     if (ret != E_OK) {
         LOG_ERROR("DataShareAbsResultSet::GoToLastRow  return GoToRow::ret is wrong!");
-        return ret;
     }
-    return E_OK;
+    return ret;
 }
 
 int DataShareAbsResultSet::GoToNextRow()
@@ -123,9 +120,8 @@ int DataShareAbsResultSet::GoToNextRow()
     int ret = GoToRow(rowPos_ + 1);
     if (ret != E_OK) {
         LOG_ERROR("DataShareAbsResultSet::GoToNextRow  return GoToRow::ret is wrong!");
-        return ret;
     }
-    return E_OK;
+    return ret;
 }
 
 int DataShareAbsResultSet::GoToPreviousRow()
@@ -133,9 +129,8 @@ int DataShareAbsResultSet::GoToPreviousRow()
     int ret = GoToRow(rowPos_ - 1);
     if (ret != E_OK) {
         LOG_ERROR("DataShareAbsResultSet::GoToPreviousRow  return GoToRow::ret is wrong!");
-        return ret;
     }
-    return E_OK;
+    return ret;
 }
 
 int DataShareAbsResultSet::IsAtFirstRow(bool &result) const

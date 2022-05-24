@@ -104,17 +104,17 @@ public:
     virtual bool IsMemoryRdb() const = 0;
     virtual int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
         const std::vector<uint8_t> &newKey) = 0;
-
+    
     virtual bool SetDistributedTables(const std::vector<std::string>& tables) = 0;
-
+    
     virtual std::string ObtainDistributedTableName(const std::string& device, const std::string& table) = 0;
-
+    
     virtual bool Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) = 0;
-
+    
     virtual bool Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
-
+    
     virtual bool UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
-
+    
     // user must use UDID
     virtual bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) = 0;
 };

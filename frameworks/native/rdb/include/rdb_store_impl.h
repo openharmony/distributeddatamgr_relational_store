@@ -27,6 +27,7 @@
 #include "sqlite_connection_pool.h"
 #include "sqlite_statement.h"
 #include "store_session.h"
+
 #include "transaction_observer.h"
 
 namespace OHOS::NativeRdb {
@@ -99,22 +100,23 @@ public:
     std::unique_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
 
+
     std::unique_ptr<AbsSharedResultSet> Query(const AbsRdbPredicates &predicates,
         const std::vector<std::string> columns) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
     int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
-
+    
     bool SetDistributedTables(const std::vector<std::string>& tables) override;
-
+    
     std::string ObtainDistributedTableName(const std::string& device, const std::string& table) override;
-
+    
     bool Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) override;
-
+    
     bool Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;
-
+    
     bool UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;
-
+    
     // user must use UDID
     bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) override;
 
@@ -142,5 +144,4 @@ private:
     DistributedRdb::RdbSyncerParam syncerParam_;
 };
 } // namespace OHOS::NativeRdb
-
 #endif

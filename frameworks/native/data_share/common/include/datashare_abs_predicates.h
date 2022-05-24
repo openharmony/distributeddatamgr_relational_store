@@ -26,16 +26,14 @@ namespace DataShare {
 class DataShareAbsPredicates {
 public:
     virtual ~DataShareAbsPredicates() {}
-    virtual DataShareAbsPredicates *EqualTo(const std::string &field, const int value) = 0;
-    virtual DataShareAbsPredicates *EqualTo(const std::string &field, const int64_t value) = 0;
-    virtual DataShareAbsPredicates *EqualTo(const std::string &field, const double value) = 0;
-    virtual DataShareAbsPredicates *EqualTo(const std::string &field, const std::string &value) = 0;
-    virtual DataShareAbsPredicates *EqualTo(const std::string &field, const bool value) = 0;
-    virtual DataShareAbsPredicates *NotEqualTo(const std::string &field, const int value) = 0;
-    virtual DataShareAbsPredicates *NotEqualTo(const std::string &field, const int64_t value) = 0;
-    virtual DataShareAbsPredicates *NotEqualTo(const std::string &field, const double value) = 0;
-    virtual DataShareAbsPredicates *NotEqualTo(const std::string &field, const std::string &value) = 0;
-    virtual DataShareAbsPredicates *NotEqualTo(const std::string &field, const bool value) = 0;
+    virtual DataShareAbsPredicates *EqualTo(const std::string &field, const DataSharePredicatesObject &value) = 0;
+    virtual DataShareAbsPredicates *NotEqualTo(const std::string &field, const DataSharePredicatesObject &value) = 0;
+    virtual DataShareAbsPredicates *GreaterThan(const std::string &field, const DataSharePredicatesObject &value) = 0;
+    virtual DataShareAbsPredicates *LessThan(const std::string &field, const DataSharePredicatesObject &value) = 0;
+    virtual DataShareAbsPredicates *GreaterThanOrEqualTo(const std::string &field, const DataSharePredicatesObject &value) = 0;
+    virtual DataShareAbsPredicates *LessThanOrEqualTo(const std::string &field, const DataSharePredicatesObject & value) = 0;
+    virtual DataShareAbsPredicates *In(const std::string &field, const DataSharePredicatesObject &value) = 0;
+    virtual DataShareAbsPredicates *NotIn(const std::string &field, const DataSharePredicatesObject &value) = 0;
     virtual DataShareAbsPredicates *BeginWrap() = 0;
     virtual DataShareAbsPredicates *EndWrap() = 0;
     virtual DataShareAbsPredicates *Or() = 0;
@@ -51,36 +49,12 @@ public:
         const std::string &low, const std::string &high) = 0;
     virtual DataShareAbsPredicates *NotBetween(const std::string &field,
         const std::string &low, const std::string &high) = 0;
-    virtual DataShareAbsPredicates *GreaterThan(const std::string &field, const int value) = 0;
-    virtual DataShareAbsPredicates *GreaterThan(const std::string &field, const int64_t value) = 0;
-    virtual DataShareAbsPredicates *GreaterThan(const std::string &field, const double value) = 0;
-    virtual DataShareAbsPredicates *GreaterThan(const std::string &field, const std::string &value) = 0;
-    virtual DataShareAbsPredicates *LessThan(const std::string &field, const int value) = 0;
-    virtual DataShareAbsPredicates *LessThan(const std::string &field, const int64_t value) = 0;
-    virtual DataShareAbsPredicates *LessThan(const std::string &field, const double value) = 0;
-    virtual DataShareAbsPredicates *LessThan(const std::string &field, const std::string &value) = 0;
-    virtual DataShareAbsPredicates *GreaterThanOrEqualTo(const std::string &field, const int value) = 0;
-    virtual DataShareAbsPredicates *GreaterThanOrEqualTo(const std::string &field, const int64_t value) = 0;
-    virtual DataShareAbsPredicates *GreaterThanOrEqualTo(const std::string &field, const double value) = 0;
-    virtual DataShareAbsPredicates *GreaterThanOrEqualTo(const std::string &field, const std::string &value) = 0;
-    virtual DataShareAbsPredicates *LessThanOrEqualTo(const std::string &field, const int value) = 0;
-    virtual DataShareAbsPredicates *LessThanOrEqualTo(const std::string &field, const int64_t value) = 0;
-    virtual DataShareAbsPredicates *LessThanOrEqualTo(const std::string &field, const double value) = 0;
-    virtual DataShareAbsPredicates *LessThanOrEqualTo(const std::string &field, const std::string &value) = 0;
     virtual DataShareAbsPredicates *OrderByAsc(const std::string &field) = 0;
     virtual DataShareAbsPredicates *OrderByDesc(const std::string &field) = 0;
     virtual DataShareAbsPredicates *Distinct() = 0;
     virtual DataShareAbsPredicates *Limit(const int number, const int offset) = 0;
     virtual DataShareAbsPredicates *GroupBy(const std::vector<std::string> &fields) = 0;
     virtual DataShareAbsPredicates *IndexedBy(const std::string &indexName) = 0;
-    virtual DataShareAbsPredicates *In(const std::string &field, const std::vector<int> &value) = 0;
-    virtual DataShareAbsPredicates *In(const std::string &field, const std::vector<int64_t> &value) = 0;
-    virtual DataShareAbsPredicates *In(const std::string &field, const std::vector<double> &value) = 0;
-    virtual DataShareAbsPredicates *In(const std::string &field, const std::vector<std::string> &value) = 0;
-    virtual DataShareAbsPredicates *NotIn(const std::string &field, const std::vector<int> &value) = 0;
-    virtual DataShareAbsPredicates *NotIn(const std::string &field, const std::vector<int64_t> &value) = 0;
-    virtual DataShareAbsPredicates *NotIn(const std::string &field, const std::vector<double> &value) = 0;
-    virtual DataShareAbsPredicates *NotIn(const std::string &field, const std::vector<std::string> &value) = 0;
     virtual DataShareAbsPredicates *KeyPrefix(const std::string &prefix) = 0;
     virtual DataShareAbsPredicates *InKeys(const std::vector<std::string> &keys) = 0;
     virtual const std::list<OperationItem>& GetOperationList() const = 0;
