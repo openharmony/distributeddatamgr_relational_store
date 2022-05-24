@@ -384,7 +384,7 @@ bool DataShareProxy::RegisterObserver(const Uri &uri, const sptr<AAFwk::IDataAbi
         return false;
     }
 
-    if (!data.WriteParcelable(dataObserver->AsObject())) {
+    if (!data.WriteRemoteObject(dataObserver->AsObject())) {
         LOG_ERROR("%{public}s failed to WriteParcelable dataObserver ", __func__);
         return false;
     }
@@ -416,7 +416,7 @@ bool DataShareProxy::UnregisterObserver(const Uri &uri, const sptr<AAFwk::IDataA
         return false;
     }
 
-    if (!data.WriteParcelable(dataObserver->AsObject())) {
+    if (!data.WriteRemoteObject(dataObserver->AsObject())) {
         LOG_ERROR("%{public}s failed to WriteParcelable dataObserver ", __func__);
         return false;
     }
