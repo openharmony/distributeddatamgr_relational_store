@@ -128,9 +128,9 @@ void RdbDataShareAdapterTest::GenerateDefaultTable()
 
     /* insert third entry data */
     store->ExecuteSql(
-        insertSql, std::vector<ValueObject>{
+        insertSql, std::vector<ValueObject> {
                        ValueObject(std::string("hello world")), ValueObject((int)3), ValueObject((double)1.8),
-                       ValueObject(std::vector<uint8_t>{ 4, 5, 6 }) // set int value 3, double 1.8
+                       ValueObject(std::vector<uint8_t>{4, 5, 6 }) // set int value 3, double 1.8
                    });
 
     /* insert four entry data */
@@ -258,7 +258,7 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_004, TestSize.Level1)
     std::string table = "test";
     OHOS::DataShare::DataSharePredicates predicates;
     predicates.SetWhereClause("`data2` > ?");
-    predicates.SetWhereArgs(std::vector<std::string>{ "-5" });
+    predicates.SetWhereArgs(std::vector<std::string>{"-5"});
     predicates.SetOrder("data3");
     std::vector<std::string> columns;
     std::shared_ptr<AbsSharedResultSet> allDataTypes =
