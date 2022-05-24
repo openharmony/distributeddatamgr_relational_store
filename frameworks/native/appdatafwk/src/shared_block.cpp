@@ -125,7 +125,7 @@ int SharedBlock::ReadMessageParcel(MessageParcel &parcel, SharedBlock *&block)
         ashmem->CloseAshmem();
         return SHARED_BLOCK_SET_PORT_ERROR;
     }
-    block = new (std::nothrow) SharedBlock(name, ashmem, ashmem->GetAshmemSize(), true);
+    block = new (std::nothrow) SharedBlock(name, ashmem, ashmem->GetAshmemSize(), false);
     if (block == nullptr) {
         LOG_ERROR("ReadMessageParcel new SharedBlock error.");
         return SHARED_BLOCK_BAD_VALUE;
