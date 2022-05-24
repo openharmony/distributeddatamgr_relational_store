@@ -183,7 +183,7 @@
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/test:unittest",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/rdb/test:unittest",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/preferences/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/dataability/test:unittest",
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/dataability/test:unittest"
             ]
         }
     }
