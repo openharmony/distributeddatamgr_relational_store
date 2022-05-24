@@ -29,13 +29,7 @@
 #include "store_session.h"
 #include "transaction_observer.h"
 
-namespace OHOS {
-namespace DataShare {
-class DataShareValuesBucket;
-class DataSharePredicates;
-class DataShareAbstractResultSet;
-}
-namespace NativeRdb {
+namespace OHOS::NativeRdb {
 class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
 public:
     static std::shared_ptr<RdbStore> Open(const RdbStoreConfig &config, int &errCode);
@@ -43,17 +37,11 @@ public:
     ~RdbStoreImpl() override;
 
     int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
-    int Insert(int64_t &outRowId, const std::string &table,
-        const DataShare::DataShareValuesBucket &initialValues) override;
     int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
-    int Replace(int64_t &outRowId, const std::string &table,
-        const DataShare::DataShareValuesBucket &initialValues) override;
     int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues,
         ConflictResolution conflictResolution) override;
     int Update(int &changedRows, const std::string &table, const ValuesBucket &values, const std::string &whereClause,
         const std::vector<std::string> &whereArgs) override;
-    int Update(int &changedRows, const std::string &table, const DataShare::DataShareValuesBucket &values,
-        const std::string &whereClause, const std::vector<std::string> &whereArgs) override;
     int UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
         const std::string &whereClause, const std::vector<std::string> &whereArgs,
         ConflictResolution conflictResolution) override;
@@ -108,23 +96,14 @@ public:
     std::string GetFileSecurityLevel();
     int ExecuteForSharedBlock(int &rowNum, AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos,
         bool isCountAllRows, std::string sql, std::vector<ValueObject> &bindArgVec);
-    std::shared_ptr<DataShare::DataShareAbstractResultSet> DataShareQueryByStep(const std::string &sql,
-        const std::vector<std::string> &selectionArgs) override;
     std::unique_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
 
-
     std::unique_ptr<AbsSharedResultSet> Query(const AbsRdbPredicates &predicates,
         const std::vector<std::string> columns) override;
-    std::shared_ptr<DataShare::DataShareAbstractResultSet> Query(const DataShare::DataSharePredicates &predicates,
-        const std::vector<std::string> columns) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
-    int Count(int64_t &outValue, const DataShare::DataSharePredicates &predicates) override;
     int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
-    int Update(int &changedRows, const DataShare::DataShareValuesBucket &values,
-        const DataShare::DataSharePredicates &predicates) override;
     int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
-    int Delete(int &deletedRows, const DataShare::DataSharePredicates &predicates) override;
 
     bool SetDistributedTables(const std::vector<std::string>& tables) override;
 
@@ -162,7 +141,6 @@ private:
     
     DistributedRdb::RdbSyncerParam syncerParam_;
 };
-} // namespace NativeRdb
-} // namespace OHOS
+} // namespace OHOS::NativeRdb
 
 #endif
