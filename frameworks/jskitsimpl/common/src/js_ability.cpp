@@ -31,6 +31,10 @@ Context::Context(AppExecFwk::Ability *featureAbility)
     databaseDir_ = featureAbility->GetDatabaseDir();
     preferencesDir_ = featureAbility->GetAbilityContext()->GetStorageDir();
     bundleName_ = featureAbility->GetBundleName();
+    auto abilityInfo = abilityContext->GetAbilityInfo();
+    if (abilityInfo != nullptr) {
+        moduleName_ = abilityInfo->moduleName;
+    }
 }
 
 std::string Context::GetDatabaseDir()
@@ -46,6 +50,11 @@ std::string Context::GetPreferencesDir()
 std::string Context::GetBundleName()
 {
     return bundleName_;
+}
+
+std::string Context::GetModuleName()
+{
+    return moduleName_;
 }
 
 bool JSAbility::CheckContext(napi_env env, napi_callback_info info)
