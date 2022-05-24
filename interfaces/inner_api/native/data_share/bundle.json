@@ -104,8 +104,7 @@
                 }
             ],
             "test": [
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/data_share/dataShare/test:unittest"
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/test:unittest"
             ]
         }
     }
