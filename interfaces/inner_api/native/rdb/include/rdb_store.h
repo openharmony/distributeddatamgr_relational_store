@@ -27,13 +27,7 @@
 #include "values_bucket.h"
 #include "rdb_types.h"
 
-namespace OHOS {
-namespace DataShare {
-class DataShareValuesBucket;
-class DataSharePredicates;
-class DataShareAbstractResultSet;
-}
-namespace NativeRdb {
+namespace OHOS::NativeRdb {
 enum class ConflictResolution {
     ON_CONFLICT_NONE = 0,
     ON_CONFLICT_ROLLBACK,
@@ -54,19 +48,13 @@ public:
     
     virtual ~RdbStore() {}
     virtual int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) = 0;
-    virtual int Insert(int64_t &outRowId, const std::string &table,
-        const DataShare::DataShareValuesBucket &initialValues) = 0;
     virtual int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) = 0;
-    virtual int Replace(int64_t &outRowId, const std::string &table,
-        const DataShare::DataShareValuesBucket &initialValues) = 0;
     virtual int InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
         const ValuesBucket &initialValues,
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
     virtual int Update(int &changedRows, const std::string &table, const ValuesBucket &values,
         const std::string &whereClause = "",
         const std::vector<std::string> &whereArgs = std::vector<std::string>()) = 0;
-    virtual int Update(int &changedRows, const std::string &table, const DataShare::DataShareValuesBucket &values,
-        const std::string &whereClause, const std::vector<std::string> &whereArgs = std::vector<std::string>()) = 0;
     virtual int UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
         const std::string &whereClause = "", const std::vector<std::string> &whereArgs = std::vector<std::string>(),
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
@@ -79,8 +67,6 @@ public:
     virtual std::unique_ptr<AbsSharedResultSet> QuerySql(
         const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
     virtual std::unique_ptr<ResultSet> QueryByStep(
-        const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
-    virtual std::shared_ptr<DataShare::DataShareAbstractResultSet> DataShareQueryByStep(
         const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
     virtual int ExecuteSql(
         const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
@@ -97,16 +83,10 @@ public:
         const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey) = 0;
 
     virtual int Count(int64_t &outValue, const AbsRdbPredicates &predicates) = 0;
-    virtual int Count(int64_t &outValue, const DataShare::DataSharePredicates &predicates) = 0;
     virtual std::unique_ptr<AbsSharedResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) = 0;
-    virtual std::shared_ptr<DataShare::DataShareAbstractResultSet> Query(
-        const DataShare::DataSharePredicates &predicates, const std::vector<std::string> columns) = 0;
     virtual int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) = 0;
-    virtual int Update(int &changedRows, const DataShare::DataShareValuesBucket &values,
-        const DataShare::DataSharePredicates &predicates) = 0;
     virtual int Delete(int &deletedRows, const AbsRdbPredicates &predicates) = 0;
-    virtual int Delete(int &deletedRows, const DataShare::DataSharePredicates &predicates) = 0;
 
     virtual int GetVersion(int &version) = 0;
     virtual int SetVersion(int version) = 0;
@@ -138,6 +118,5 @@ public:
     // user must use UDID
     virtual bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) = 0;
 };
-} // namespace NativeRdb
-} // namespace OHOS
+} // namespace OHOS::NativeRdb
 #endif
