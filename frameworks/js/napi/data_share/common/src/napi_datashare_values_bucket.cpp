@@ -70,6 +70,39 @@ napi_value DataShareValueBucketNewInstance(napi_env env, DataShareValuesBucket &
     return ret;
 }
 
+void SetValuesBucketObject(
+    DataShareValuesBucket &valuesBucket, const napi_env &env, std::string keyStr, napi_value value)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, value, &valueType);
+    if (valueType == napi_string) {
+        std::string valueString = DataShareJSUtils::UnwrapStringFromJS(env, value);
+        LOG_INFO("ValueObject type:%{public}d, key:%{public}s, value:%{public}s",
+            valueType, keyStr.c_str(), valueString.c_str());
+        valuesBucket.PutString(keyStr, valueString);
+    } else if (valueType == napi_number) {
+        double valueNumber = 0;
+        napi_get_value_double(env, value, &valueNumber);
+        valuesBucket.PutDouble(keyStr, valueNumber);
+        LOG_INFO(
+            "ValueObject type:%{public}d, key:%{public}s, value:%{public}lf", valueType, keyStr.c_str(), valueNumber);
+    } else if (valueType == napi_boolean) {
+        bool valueBool = false;
+        napi_get_value_bool(env, value, &valueBool);
+        LOG_INFO(
+            "ValueObject type:%{public}d, key:%{public}s, value:%{public}d", valueType, keyStr.c_str(), valueBool);
+        valuesBucket.PutBool(keyStr, valueBool);
+    } else if (valueType == napi_null) {
+        valuesBucket.PutNull(keyStr);
+        LOG_INFO("ValueObject type:%{public}d, key:%{public}s, value:null", valueType, keyStr.c_str());
+    } else if (valueType == napi_object) {
+        LOG_INFO("ValueObject type:%{public}d, key:%{public}s, value:Uint8Array", valueType, keyStr.c_str());
+        valuesBucket.PutBlob(keyStr, DataShareJSUtils::Convert2U8Vector(env, value));
+    } else {
+        LOG_ERROR("valuesBucket error");
+    }
+}
+
 void AnalysisValuesBucket(DataShareValuesBucket &valuesBucket, const napi_env &env, const napi_value &arg)
 {
     napi_value keys = 0;
@@ -89,41 +122,6 @@ void AnalysisValuesBucket(DataShareValuesBucket &valuesBucket, const napi_env &e
         napi_get_property(env, arg, key, &value);
 
         SetValuesBucketObject(valuesBucket, env, keyStr, value);
-    }
-}
-
-void SetValuesBucketObject(
-    DataShareValuesBucket &valuesBucket, const napi_env &env, std::string keyStr, napi_value value)
-{
-    napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, value, &valueType);
-    if (valueType == napi_string) {
-        std::string valueString = DataShareJSUtils::UnwrapStringFromJS(env, value);
-        LOG_INFO("ValueObject type:%{public}d, key:%{public}s, value:%{public}s",
-            valueType,
-            keyStr.c_str(),
-            valueString.c_str());
-        valuesBucket.PutString(keyStr, valueString);
-    } else if (valueType == napi_number) {
-        double valueNumber = 0;
-        napi_get_value_double(env, value, &valueNumber);
-        valuesBucket.PutDouble(keyStr, valueNumber);
-        LOG_INFO(
-            "ValueObject type:%{public}d, key:%{public}s, value:%{public}lf", valueType, keyStr.c_str(), valueNumber);
-    } else if (valueType == napi_boolean) {
-        bool valueBool = false;
-        napi_get_value_bool(env, value, &valueBool);
-        LOG_INFO(
-            "ValueObject type:%{public}d, key:%{public}s, value:%{public}d", valueType, keyStr.c_str(), valueBool);
-        valuesBucket.PutBool(keyStr, valueBool);
-    } else if (valueType == napi_null) {
-        valuesBucket.PutNull(keyStr);
-        LOG_INFO("ValueObject type:%{public}d, key:%{public}s, value:null", valueType, keyStr.c_str());
-    } else if (valueType == napi_object) {
-        LOG_INFO("ValueObject type:%{public}d, key:%{public}s, value:Uint8Array", valueType, keyStr.c_str());
-        valuesBucket.PutBlob(keyStr, DataShareJSUtils::ConvertU8Vector(env, value));
-    } else {
-        LOG_ERROR("valuesBucket error");
     }
 }
 

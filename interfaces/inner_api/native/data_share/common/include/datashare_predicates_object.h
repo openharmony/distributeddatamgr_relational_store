@@ -42,18 +42,18 @@ public:
     ~DataSharePredicatesObject();
     DataSharePredicatesObject(DataSharePredicatesObject &&DataSharePredicatesObject) noexcept;
     DataSharePredicatesObject(const DataSharePredicatesObject &DataSharePredicatesObject);
-    explicit DataSharePredicatesObject(int val);
-    explicit DataSharePredicatesObject(int16_t val);
-    explicit DataSharePredicatesObject(int64_t val);
-    explicit DataSharePredicatesObject(double val);
-    explicit DataSharePredicatesObject(bool val);
-    explicit DataSharePredicatesObject(const std::string &val);
-    explicit DataSharePredicatesObject(const std::vector<int> &val);
-    explicit DataSharePredicatesObject(const std::vector<int64_t> &val);
-    explicit DataSharePredicatesObject(const std::vector<double> &val);
-    explicit DataSharePredicatesObject(const std::vector<std::string> &val);
     DataSharePredicatesObject &operator=(DataSharePredicatesObject &&DataSharePredicatesObject) noexcept;
     DataSharePredicatesObject &operator=(const DataSharePredicatesObject &DataSharePredicatesObject);
+    DataSharePredicatesObject(int val);
+    DataSharePredicatesObject(int64_t val);
+    DataSharePredicatesObject(double val);
+    DataSharePredicatesObject(bool val);
+    DataSharePredicatesObject(const std::string &val);
+    DataSharePredicatesObject(const std::vector<int> &val);
+    DataSharePredicatesObject(const std::vector<int64_t> &val);
+    DataSharePredicatesObject(const std::vector<double> &val);
+    DataSharePredicatesObject(const std::vector<std::string> &val);
+
     DataSharePredicatesObjectType GetType() const;
     int GetInt(int &val) const;
     int GetLong(int64_t &val) const;
@@ -66,8 +66,13 @@ public:
     int GetStringVector(std::vector<std::string> &val) const;
     bool Marshalling(Parcel &parcel) const override;
     static DataSharePredicatesObject *Unmarshalling(Parcel &parcel);
-    std::variant<int, int64_t, double, std::string, bool, std::vector<int>, std::vector<int64_t>,
+    std::variant<std::monostate, int, int64_t, double, std::string, bool, std::vector<int>, std::vector<int64_t>,
         std::vector<std::string>, std::vector<double>> value;
+    template<typename T>
+    operator T () const 
+    { 
+        return std::get<T>(value);
+    }
 
 private:
     void MarshallingVector(Parcel &parcel) const;

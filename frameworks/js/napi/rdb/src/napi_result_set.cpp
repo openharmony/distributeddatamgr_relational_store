@@ -22,6 +22,7 @@
 #include "js_utils.h"
 #include "napi_async_proxy.h"
 #include "string_ex.h"
+#include "rdb_result_set_bridge.h"
 
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
@@ -73,6 +74,11 @@ std::shared_ptr<NativeRdb::AbsSharedResultSet> ResultSetProxy::GetNativeObject(
         return nullptr;
     }
     return proxy->resultSet_;
+}
+
+std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
+{
+    return std::make_shared<RdbDataShareAdapter::RdbResultSetBridge>(resultSet_);
 }
 
 napi_value ResultSetProxy::GetConstructor(napi_env env)

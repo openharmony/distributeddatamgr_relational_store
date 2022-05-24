@@ -16,9 +16,9 @@
 #ifndef DATASHARE_BLOCK_WRITER_IMPL_H
 #define DATASHARE_BLOCK_WRITER_IMPL_H
 
-#include <string>
 #include "shared_block.h"
-#include "datashare_block_writer.h"
+#include "result_set_bridge.h"
+#include "datashare_errno.h"
 
 namespace OHOS {
 namespace DataShare {
@@ -26,7 +26,7 @@ namespace DataShare {
  * This class stores a set of rows from a database in a buffer，
  * which is used as the set of query result.
  */
-class DataShareBlockWriterImpl : public virtual DataShareBlockWriter {
+class DataShareBlockWriterImpl : public virtual ResultSetBridge::Writer {
 public:
     /**
      * SharedBlock constructor.
@@ -41,17 +41,17 @@ public:
     /**
      * SharedBlock Deconstruction.
      */
-    ~DataShareBlockWriterImpl();
+    virtual ~DataShareBlockWriterImpl();
 
     /**
      * Clear current shared block.
      */
-    int Clear() override;
+    int Clear();
 
     /**
      * Set a shared block column.
      */
-    int SetColumnNum(uint32_t numColumns) override;
+    int SetColumnNum(uint32_t numColumns);
 
     /**
      * Allocate a row unit and its directory.
@@ -61,32 +61,32 @@ public:
     /**
      * Release the value of the last row.
      */
-    int FreeLastRow() override;
-
-    /**
-     * Write blob data to the shared block.
-     */
-    int WriteBlob(uint32_t row, uint32_t column, const void *value, size_t Size) override;
-
-    /**
-     * Write string data to the shared block.
-     */
-    int WriteString(uint32_t row, uint32_t column, const char *value, size_t sizeIncludingNull) override;
-
-    /**
-     * Write long data to the shared block.
-     */
-    int WriteLong(uint32_t row, uint32_t column, int64_t value) override;
-
-    /**
-     * Write Double data to the shared block.
-     */
-    int WriteDouble(uint32_t row, uint32_t column, double value) override;
+    int FreeLastRow();
 
     /**
      * Write Null data to the shared block.
      */
-    int WriteNull(uint32_t row, uint32_t column) override;
+    virtual int Write(uint32_t column) override;
+
+    /**
+     * Write long data to the shared block.
+     */
+    virtual int Write(uint32_t column, int64_t value) override;
+
+    /**
+     * Write Double data to the shared block.
+     */
+    virtual int Write(uint32_t column, double value) override;
+
+    /**
+     * Write blob data to the shared block.
+     */
+    virtual int Write(uint32_t column, const uint8_t *value, size_t Size) override;
+
+    /**
+     * Write string data to the shared block.
+     */
+    virtual int Write(uint32_t column, const char *value, size_t sizeIncludingNull) override;
 
     /**
      * The mHeader of the current result set.
@@ -96,32 +96,32 @@ public:
     /**
      * Size of the used byte in the block.
      */
-    size_t GetUsedBytes() override;
+    size_t GetUsedBytes();
 
     /**
      * The name of the current result set.
      */
-    std::string Name() override;
+    std::string Name();
 
     /**
      * The size of the current result set.
      */
-    size_t Size() override;
+    size_t Size();
 
     /**
      * The row number of the current result set.
      */
-    uint32_t GetRowNum() override;
+    uint32_t GetRowNum();
 
     /**
      * The column number of the current result set.
      */
-    uint32_t GetColumnNum() override;
+    uint32_t GetColumnNum();
 
     /**
      * Write raw data in block.
      */
-    size_t SetRawData(const void *rawData, size_t size) override;
+    size_t SetRawData(const void *rawData, size_t size);
 
     /**
      * The fd of shared memory
@@ -132,6 +132,20 @@ public:
      * Get Block
      */
     AppDataFwk::SharedBlock *GetBlock() const;
+
+private:
+    /**
+     * The fd of shared memory
+     */
+    bool GetCurrentRowIndex(uint32_t &rowIndex);
+
+    /**
+     * Convert ShareBlock error code to DataShare format
+     */
+    int ConvertErrorCode(int shareBlockErr)
+    {
+        return shareBlockErr == AppDataFwk::SharedBlock::SHARED_BLOCK_OK ? E_OK : E_ERROR;
+    }
 
 private:
     AppDataFwk::SharedBlock *shareBlock_;

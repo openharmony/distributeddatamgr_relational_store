@@ -36,7 +36,15 @@ std::vector<std::string> DataShareStubImpl::GetFileTypes(const Uri &uri, const s
         }
         ret = extension->GetFileTypes(uri, mimeTypeFilter);
     };
-    uvQueue_->SyncCall(syncTaskFunc);
+    std::function<void()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() {
+        auto extension = client->GetOwner();
+        if (extension == nullptr) {
+            LOG_ERROR("%{public}s end failed.", __func__);
+            return;
+        }
+        extension->GetResult(ret);
+    };
+    uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
     return ret;
 }
@@ -53,7 +61,15 @@ int DataShareStubImpl::OpenFile(const Uri &uri, const std::string &mode)
         }
         ret = extension->OpenFile(uri, mode);
     };
-    uvQueue_->SyncCall(syncTaskFunc);
+    std::function<void()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() {
+        auto extension = client->GetOwner();
+        if (extension == nullptr) {
+            LOG_ERROR("%{public}s end failed.", __func__);
+            return;
+        }
+        extension->GetResult(ret);
+    };
+    uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
     return ret;
 }
@@ -87,7 +103,15 @@ int DataShareStubImpl::Insert(const Uri &uri, const DataShareValuesBucket &value
         }
         ret = extension->Insert(uri, value);
     };
-    uvQueue_->SyncCall(syncTaskFunc);
+    std::function<void()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() {
+        auto extension = client->GetOwner();
+        if (extension == nullptr) {
+            LOG_ERROR("%{public}s end failed.", __func__);
+            return;
+        }
+        extension->GetResult(ret);
+    };
+    uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
     return ret;
 }
@@ -105,7 +129,15 @@ int DataShareStubImpl::Update(const Uri &uri, const DataSharePredicates &predica
         }
         ret = extension->Update(uri, predicates, value);
     };
-    uvQueue_->SyncCall(syncTaskFunc);
+    std::function<void()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() {
+        auto extension = client->GetOwner();
+        if (extension == nullptr) {
+            LOG_ERROR("%{public}s end failed.", __func__);
+            return;
+        }
+        extension->GetResult(ret);
+    };
+    uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
     return ret;
 }
@@ -122,7 +154,15 @@ int DataShareStubImpl::Delete(const Uri &uri, const DataSharePredicates &predica
         }
         ret = extension->Delete(uri, predicates);
     };
-    uvQueue_->SyncCall(syncTaskFunc);
+    std::function<void()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() {
+        auto extension = client->GetOwner();
+        if (extension == nullptr) {
+            LOG_ERROR("%{public}s end failed.", __func__);
+            return;
+        }
+        extension->GetResult(ret);
+    };
+    uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
     return ret;
 }
@@ -131,7 +171,7 @@ std::shared_ptr<DataShareResultSet> DataShareStubImpl::Query(const Uri &uri,
     const DataSharePredicates &predicates, std::vector<std::string> &columns)
 {
     LOG_INFO("begin.");
-    std::shared_ptr<DataShareAbstractResultSet> ret = nullptr;
+    std::shared_ptr<ResultSetBridge> ret = nullptr;
     std::function<void()> syncTaskFunc = [=, &columns, &ret, client = sptr<DataShareStubImpl>(this)]() {
         auto extension = client->GetOwner();
         if (extension == nullptr) {
@@ -140,8 +180,18 @@ std::shared_ptr<DataShareResultSet> DataShareStubImpl::Query(const Uri &uri,
         }
         ret = extension->Query(uri, predicates, columns);
     };
-    uvQueue_->SyncCall(syncTaskFunc);
     std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>(ret);
+    std::function<void()> getRetFunc = [=, &resultSet, &ret, client = sptr<DataShareStubImpl>(this)]() {
+        auto extension = client->GetOwner();
+        if (extension == nullptr) {
+            LOG_ERROR("%{public}s end failed.", __func__);
+            return;
+        }
+        extension->GetResult(ret);
+        std::shared_ptr<DataShareResultSet> tmpResultSet = std::make_shared<DataShareResultSet>(ret);
+        resultSet = std::move(tmpResultSet);
+    };
+    uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
     return resultSet;
 }
@@ -158,7 +208,15 @@ std::string DataShareStubImpl::GetType(const Uri &uri)
         }
         ret = extension->GetType(uri);
     };
-    uvQueue_->SyncCall(syncTaskFunc);
+    std::function<void()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() {
+        auto extension = client->GetOwner();
+        if (extension == nullptr) {
+            LOG_ERROR("%{public}s end failed.", __func__);
+            return;
+        }
+        extension->GetResult(ret);
+    };
+    uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
     return ret;
 }
@@ -175,7 +233,15 @@ int DataShareStubImpl::BatchInsert(const Uri &uri, const std::vector<DataShareVa
         }
         ret = extension->BatchInsert(uri, values);
     };
-    uvQueue_->SyncCall(syncTaskFunc);
+    std::function<void()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() {
+        auto extension = client->GetOwner();
+        if (extension == nullptr) {
+            LOG_ERROR("%{public}s end failed.", __func__);
+            return;
+        }
+        extension->GetResult(ret);
+    };
+    uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
     return ret;
 }
@@ -243,7 +309,18 @@ Uri DataShareStubImpl::NormalizeUri(const Uri &uri)
         }
         urivalue = extension->NormalizeUri(uri);
     };
-    uvQueue_->SyncCall(syncTaskFunc);
+    std::function<void()> getRetFunc = [=, &urivalue, client = sptr<DataShareStubImpl>(this)]() {
+        auto extension = client->GetOwner();
+        if (extension == nullptr) {
+            LOG_ERROR("%{public}s end failed.", __func__);
+            return;
+        }
+        std::string ret;
+        extension->GetResult(ret);
+        Uri tmp(ret);
+        urivalue = tmp;
+    };
+    uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
     return urivalue;
 }
@@ -260,7 +337,18 @@ Uri DataShareStubImpl::DenormalizeUri(const Uri &uri)
         }
         urivalue = extension->DenormalizeUri(uri);
     };
-    uvQueue_->SyncCall(syncTaskFunc);
+    std::function<void()> getRetFunc = [=, &urivalue, client = sptr<DataShareStubImpl>(this)]() {
+        auto extension = client->GetOwner();
+        if (extension == nullptr) {
+            LOG_ERROR("%{public}s end failed.", __func__);
+            return;
+        }
+        std::string ret;
+        extension->GetResult(ret);
+        Uri tmp(ret);
+        urivalue = tmp;
+    };
+    uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
     return urivalue;
 }

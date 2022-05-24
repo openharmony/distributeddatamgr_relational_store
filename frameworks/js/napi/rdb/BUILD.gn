@@ -60,6 +60,9 @@ ohos_shared_library("rdb") {
     "napi:ace_napi",
     "relational_store:native_appdatafwk",
     "relational_store:native_rdb",
+    "data_share:datashare_abilitykit",
+    "relational_store:native_rdb_data_share_adapter",
+    "data_share:datashare_common",
   ]
 
   subsystem_name = "distributeddatamgr"
