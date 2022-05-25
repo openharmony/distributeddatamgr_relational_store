@@ -84,7 +84,8 @@ AppDataFwk::SharedBlock *DataShareResultSet::GetBlock() const
 
 int DataShareResultSet::GetDataType(int columnIndex, DataType &dataType)
 {
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit((uint32_t)rowPos_ - startRowPos_, (uint32_t)columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit =
+        sharedBlock_->GetCellUnit((uint32_t)rowPos_ - startRowPos_, (uint32_t)columnIndex);
     if (!cellUnit) {
         LOG_ERROR("DataShareResultSet::GetDataType cellUnit is null!");
         return E_ERROR;

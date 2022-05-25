@@ -34,6 +34,8 @@ public:
 
     void SyncCall(NapiVoidFunc func = NapiVoidFunc(), NapiVoidFunc retFunc = NapiVoidFunc());
 
+    void CheckFuncAndExec(NapiVoidFunc retFunc);
+
 private:
     struct UvEntry {
         napi_env env;

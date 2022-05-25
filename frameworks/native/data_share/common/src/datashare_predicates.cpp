@@ -80,7 +80,8 @@ DataSharePredicates *DataSharePredicates::LessThan(const std::string &field, con
 /**
  * GreaterThanOrEqualTo
  */
-DataSharePredicates *DataSharePredicates::GreaterThanOrEqualTo(const std::string &field, const DataSharePredicatesObject &value)
+DataSharePredicates *DataSharePredicates::GreaterThanOrEqualTo(const std::string &field,
+    const DataSharePredicatesObject &value)
 {
     LOG_DEBUG("%{public}s call field%{public}s", __func__, field.c_str());
     SetOperationList(GREATER_THAN_OR_EQUAL_TO, field, value, {}, TWO_COUNT);
@@ -91,7 +92,8 @@ DataSharePredicates *DataSharePredicates::GreaterThanOrEqualTo(const std::string
 /**
  * LessThanOrEqualTo
  */
-DataSharePredicates *DataSharePredicates::LessThanOrEqualTo(const std::string &field, const DataSharePredicatesObject &value)
+DataSharePredicates *DataSharePredicates::LessThanOrEqualTo(const std::string &field,
+    const DataSharePredicatesObject &value)
 {
     LOG_DEBUG("%{public}s call field%{public}s", __func__, field.c_str());
     SetOperationList(GREATER_THAN_OR_EQUAL_TO, field, value, {}, TWO_COUNT);
