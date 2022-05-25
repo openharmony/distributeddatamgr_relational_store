@@ -170,23 +170,6 @@ void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
 HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_001, TestSize.Level1)
 {
     EXPECT_NE(rdbStore, nullptr) << "get rdb store failed";
-    EXPECT_EQ(rdbStore->SetDistributedTables({ "employee" }), true) << "set distributed tables failed";
-}
-
-/**
- * @tc.name: RdbStore_Distributed_Test_002
- * @tc.desc: rdbStore can work after distributeddata process reboot
- * @tc.type: FUNC
- * @tc.require: AR000GK58F
- * @tc.author: wuchunbo
- */
-
-HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_002, TestSize.Level1)
-{
-    EXPECT_NE(rdbStore, nullptr) << "get rdb store failed";
-    std::vector<std::string> empty;
-    EXPECT_EQ(rdbStore->SetDistributedTables(empty), true) << "set distributed tables failed";
-
     InsertValue(rdbStore);
     CheckResultSet(rdbStore);
 }

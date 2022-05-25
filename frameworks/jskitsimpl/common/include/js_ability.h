@@ -29,15 +29,17 @@ namespace AppDataMgrJsKit {
 class Context {
 public:
     Context(std::shared_ptr<AbilityRuntime::Context> stageContext);
-    Context(AppExecFwk::Ability *featureAbility);
+    Context(std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext);
     std::string GetDatabaseDir();
     std::string GetPreferencesDir();
     std::string GetBundleName();
+    std::string GetModuleName();
 
 private:
     std::string databaseDir_;
     std::string preferencesDir_;
     std::string bundleName_;
+    std::string moduleName_;
 };
 
 class JSAbility final {
