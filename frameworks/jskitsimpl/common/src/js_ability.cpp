@@ -26,12 +26,11 @@ Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
     bundleName_ = stageContext->GetBundleName();
 }
 
-Context::Context(AppExecFwk::Ability *featureAbility)
+Context::Context(std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext)
 {
-    databaseDir_ = featureAbility->GetDatabaseDir();
-    preferencesDir_ = featureAbility->GetAbilityContext()->GetStorageDir();
-    bundleName_ = featureAbility->GetBundleName();
-    auto abilityContext = featureAbility->GetAbilityContext();
+    databaseDir_ = abilityContext->GetDatabaseDir();
+    preferencesDir_ = abilityContext->GetStorageDir();
+    bundleName_ = abilityContext->GetBundleName();
     auto abilityInfo = abilityContext->GetAbilityInfo();
     if (abilityInfo != nullptr) {
         moduleName_ = abilityInfo->moduleName;
@@ -88,7 +87,14 @@ std::shared_ptr<Context> JSAbility::GetContext(napi_env env, napi_value value)
         LOG_ERROR("GetCurrentAbility failed.");
         return nullptr;
     }
-    return std::make_shared<Context>(featureAbility);
+
+    auto abilityContext = featureAbility->GetAbilityContext();
+    if (abilityContext == nullptr) {
+        LOG_ERROR("GetAbilityContext failed.");
+        return nullptr;
+    }
+
+    return std::make_shared<Context>(abilityContext);
 }
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
