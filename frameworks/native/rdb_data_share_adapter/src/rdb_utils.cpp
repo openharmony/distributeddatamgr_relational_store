@@ -175,7 +175,8 @@ void RdbUtils::ToOperateThird(
     }
 }
 
-RdbPredicates RdbUtils::ToPredicates(const DataSharePredicates &dataSharePredicates, const std::string &table)
+RdbPredicates RdbUtils::ToPredicates(const DataSharePredicates &dataSharePredicates,
+    const std::string &table)
 {
     std::shared_ptr<RdbPredicates> predicates = std::make_shared<RdbPredicates>(table);
     std::list<OperationItem> operationLists = dataSharePredicates.GetOperationList();

@@ -30,8 +30,10 @@ public:
     virtual DataShareAbsPredicates *NotEqualTo(const std::string &field, const DataSharePredicatesObject &value) = 0;
     virtual DataShareAbsPredicates *GreaterThan(const std::string &field, const DataSharePredicatesObject &value) = 0;
     virtual DataShareAbsPredicates *LessThan(const std::string &field, const DataSharePredicatesObject &value) = 0;
-    virtual DataShareAbsPredicates *GreaterThanOrEqualTo(const std::string &field, const DataSharePredicatesObject &value) = 0;
-    virtual DataShareAbsPredicates *LessThanOrEqualTo(const std::string &field, const DataSharePredicatesObject & value) = 0;
+    virtual DataShareAbsPredicates *GreaterThanOrEqualTo(const std::string &field,
+        const DataSharePredicatesObject &value) = 0;
+    virtual DataShareAbsPredicates *LessThanOrEqualTo(const std::string &field,
+        const DataSharePredicatesObject & value) = 0;
     virtual DataShareAbsPredicates *In(const std::string &field, const DataSharePredicatesObject &value) = 0;
     virtual DataShareAbsPredicates *NotIn(const std::string &field, const DataSharePredicatesObject &value) = 0;
     virtual DataShareAbsPredicates *BeginWrap() = 0;

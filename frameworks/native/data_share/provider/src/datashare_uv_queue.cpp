@@ -66,10 +66,7 @@ void DataShareUvQueue::SyncCall(NapiVoidFunc func, NapiVoidFunc retFunc)
         if (uvEntry->condition.wait_for(lock, std::chrono::seconds(WAIT_TIME), [uvEntry] { return uvEntry->done; })) {
             LOG_INFO("Wait uv_queue_work timeout.");
         }
-        if (uvEntry->retFunc) {
-            sleep(1);
-            uvEntry->retFunc();
-        }
+        CheckFuncAndExec(uvEntry->retFunc);
         if (!uvEntry->done && !uv_cancel((uv_req_t*)&work)) {
             LOG_ERROR("%{public}s uv_cancel failed.", __func__);
             uvEntry->purge = true;
@@ -100,6 +97,14 @@ void DataShareUvQueue::Purge(uv_work_t* work)
     delete work;
     work = nullptr;
     LOG_INFO("end.");
+}
+
+void DataShareUvQueue::CheckFuncAndExec(NapiVoidFunc retFunc)
+{
+    if (retFunc) {
+        sleep(1);
+        retFunc();
+    }
 }
 } // namespace DataShare
 } // namespace OHOS
