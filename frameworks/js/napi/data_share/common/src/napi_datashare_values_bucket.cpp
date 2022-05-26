@@ -113,7 +113,7 @@ void AnalysisValuesBucket(DataShareValuesBucket &valuesBucket, const napi_env &e
         LOG_ERROR("ValuesBucket errr");
         return;
     }
-    LOG_INFO("ValuesBucket num:%{public}d ", arrLen);
+    LOG_INFO("ValuesBucket num : %{public}u", arrLen);
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value key = 0;
         status = napi_get_element(env, keys, i, &key);

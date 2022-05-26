@@ -154,7 +154,7 @@ public:
      *
      * @return Returns the query result.
      */
-    std::shared_ptr<ResultSetBridge> Query(const Uri &uri, const DataSharePredicates &predicates,
+    std::shared_ptr<DataShareResultSet> Query(const Uri &uri, const DataSharePredicates &predicates,
         std::vector<std::string> &columns) override;
 
     /**
@@ -287,34 +287,24 @@ public:
         callbackResultStringArr_ = value;
     }
 
-    void GetResult(std::shared_ptr<ResultSetBridge> &value)
+    void GetResult(std::shared_ptr<DataShareResultSet> &value)
     {
-        value = std::move(callbackResultObject_);
+        value = callbackResultObject_;
     }
 
-    void SetResult(const std::shared_ptr<ResultSetBridge> value)
+    void SetResult(const std::shared_ptr<DataShareResultSet> value)
     {
         callbackResultObject_ = value;
     }
 
 private:
-    enum AsyncType {
-        ASYNC_DEFAULT = 0,
-        ASYNC_NUMBER,
-        ASYNC_STRING,
-        ASYNC_STRARR,
-        ASYNC_OBJECT,
-    };
-
     NativeValue* CallObjectMethod(const char *name, NativeValue * const *argv = nullptr, size_t argc = 0,
-        AsyncType asyncType = ASYNC_DEFAULT);
+        bool isAsync = true);
     void GetSrcPath(std::string &srcPath);
     bool CheckCallingPermission(const std::string &permission);
     napi_value MakePredicates(napi_env env, const DataSharePredicates &predicates);
-    static NativeValue* AsyncCallbackNumber(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* AsyncCallbackString(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* AsyncCallbackStrArr(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* AsyncCallbackObject(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* AsyncCallback(NativeEngine* engine, NativeCallbackInfo* info);
+    void CheckAndSetAsyncResult(NativeEngine* engine);
 
     JsRuntime& jsRuntime_;
     std::unique_ptr<NativeReference> jsObj_;
@@ -323,7 +313,7 @@ private:
     int callbackResultNumber_ = -1;
     std::string callbackResultString_ = "";
     std::vector<std::string> callbackResultStringArr_ = {};
-    std::shared_ptr<ResultSetBridge> callbackResultObject_ = nullptr;
+    std::shared_ptr<DataShareResultSet> callbackResultObject_ = nullptr;
 };
 } // namespace DataShare
 } // namespace OHOS
