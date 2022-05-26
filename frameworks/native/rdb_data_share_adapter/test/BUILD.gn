@@ -13,7 +13,7 @@
 import("//build/test.gni")
 import("//foundation/distributeddatamgr/appdatamgr/appdatamgr.gni")
 
-module_output_path = "relational_store/native_rdb_data_share_adapter"
+module_output_path = "relational_store/rdb_data_share_adapter"
 
 ###############################################################################
 config("module_private_config") {
@@ -51,7 +51,7 @@ ohos_unittest("RdbDataShareAdapterTest") {
     "data_share:datashare_common",
     "hilog_native:libhilog",
     "relational_store:native_rdb",
-    "relational_store:native_rdb_data_share_adapter",
+    "relational_store:rdb_data_share_adapter",
   ]
 
   deps = [

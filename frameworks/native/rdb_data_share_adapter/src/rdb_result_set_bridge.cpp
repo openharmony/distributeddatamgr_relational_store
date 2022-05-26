@@ -109,7 +109,8 @@ void RdbResultSetBridge::WriteBlock(
     }
 }
 
-void RdbResultSetBridge::WriteColumn(int columnCount, const std::vector<ColumnType> &columnTypes, Writer &writer, int row)
+void RdbResultSetBridge::WriteColumn(
+    int columnCount, const std::vector<ColumnType> &columnTypes, Writer &writer, int row)
 {
     for (int i = 0; i < columnCount; i++) {
         LOG_DEBUG("Write data of row: %{public}d, column: %{public}d", row, i);

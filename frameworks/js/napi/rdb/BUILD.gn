@@ -56,13 +56,13 @@ ohos_shared_library("rdb") {
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
     "ability_runtime:napi_base_context",
+    "data_share:datashare_abilitykit",
+    "data_share:datashare_common",
     "hilog_native:libhilog",
     "napi:ace_napi",
     "relational_store:native_appdatafwk",
     "relational_store:native_rdb",
-    "data_share:datashare_abilitykit",
-    "relational_store:native_rdb_data_share_adapter",
-    "data_share:datashare_common",
+    "relational_store:rdb_data_share_adapter",
   ]
 
   subsystem_name = "distributeddatamgr"
