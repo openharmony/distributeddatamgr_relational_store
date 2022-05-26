@@ -68,6 +68,11 @@ public:
     static DataSharePredicatesObject *Unmarshalling(Parcel &parcel);
     std::variant<int, int64_t, double, std::string, bool, std::vector<int>, std::vector<int64_t>,
         std::vector<std::string>, std::vector<double>> value;
+    template<typename T>
+    operator T () const 
+    { 
+        return std::get<T>(value);
+    }
 
 private:
     void MarshallingVector(Parcel &parcel) const;
