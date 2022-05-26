@@ -38,12 +38,12 @@ public:
     ~DataShareValueObject();
     DataShareValueObject(DataShareValueObject &&DataShareValueObject) noexcept;
     DataShareValueObject(const DataShareValueObject &DataShareValueObject);
-    explicit DataShareValueObject(int val);
-    explicit DataShareValueObject(int64_t val);
-    explicit DataShareValueObject(double val);
-    explicit DataShareValueObject(bool val);
-    explicit DataShareValueObject(const std::string &val);
-    explicit DataShareValueObject(const std::vector<uint8_t> &blob);
+    DataShareValueObject(int val);
+    DataShareValueObject(int64_t val);
+    DataShareValueObject(double val);
+    DataShareValueObject(bool val);
+    DataShareValueObject(const std::string &val);
+    DataShareValueObject(const std::vector<uint8_t> &blob);
     DataShareValueObject &operator=(DataShareValueObject &&DataShareValueObject) noexcept;
     DataShareValueObject &operator=(const DataShareValueObject &DataShareValueObject);
 
@@ -54,13 +54,15 @@ public:
     int GetBool(bool &val) const;
     int GetString(std::string &val) const;
     int GetBlob(std::vector<uint8_t> &val) const;
-
     bool Marshalling(Parcel &parcel) const override;
     static DataShareValueObject *Unmarshalling(Parcel &parcel);
-
-private:
+    template<typename T>
+    operator T () const
+    {
+        return std::get<T>(value);
+    }
     DataShareValueObjectType type;
-    std::variant<int64_t, double, std::string, bool, std::vector<uint8_t>> value;
+    std::variant<std::monostate, int64_t, double, std::string, bool, std::vector<uint8_t>> value;
 };
 } // namespace DataShare
 } // namespace OHOS

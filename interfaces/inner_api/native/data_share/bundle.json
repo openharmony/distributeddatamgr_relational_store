@@ -82,8 +82,7 @@
                     "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share:datashare_abilitykit",
                     "header": {
                         "header_files": [
-                            "datashare_abstract_result_set.h",
-                            "datashare_block_writer.h"
+                            "result_set_bridge.h"
                         ],
                         "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share/provider/include"
                     }

@@ -1,0 +1,71 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/test.gni")
+import("//foundation/distributeddatamgr/appdatamgr/appdatamgr.gni")
+
+module_output_path = "relational_store/rdb_data_share_adapter"
+
+###############################################################################
+config("module_private_config") {
+  visibility = [ ":*" ]
+
+  include_dirs = [
+    "../include/",
+    "../../../../frameworks/native/data_share/common/include",
+    "../../../../frameworks/native/rdb/src",
+    "../../../../frameworks/native/rdb_data_share_adapter/src",
+    "../../../../interfaces/inner_api/native/data_share/common/include",
+    "../../../../interfaces/inner_api/native/data_share/consumer/include",
+    "../../../../interfaces/inner_api/native/data_share/provider/include",
+    "../../../../interfaces/inner_api/native/rdb/include",
+    "../../../../interfaces/inner_api/native/rdb_data_share_adapter/include",
+    "//utils/native/base/include",
+  ]
+
+  if (relational_store_rdb_support_icu) {
+    include_dirs += [
+      "//third_party/icu/icu4c/source/i18n",
+      "//third_party/icu/icu4c/source/common",
+    ]
+  }
+}
+
+ohos_unittest("RdbDataShareAdapterTest") {
+  module_out_path = module_output_path
+
+  sources = [ "unittest/rdb_data_share_adapter_test.cpp" ]
+
+  configs = [ ":module_private_config" ]
+
+  external_deps = [
+    "data_share:datashare_common",
+    "hilog_native:libhilog",
+    "relational_store:native_rdb",
+    "relational_store:rdb_data_share_adapter",
+  ]
+
+  deps = [
+    "//third_party/googletest:gtest_main",
+    "//third_party/icu/icu4c:shared_icui18n",
+    "//third_party/icu/icu4c:shared_icuuc",
+    "//utils/native/base:utils",
+  ]
+}
+
+###############################################################################
+group("unittest") {
+  testonly = true
+
+  deps = [ ":RdbDataShareAdapterTest" ]
+}
+###############################################################################

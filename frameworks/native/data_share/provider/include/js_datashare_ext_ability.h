@@ -154,7 +154,7 @@ public:
      *
      * @return Returns the query result.
      */
-    std::shared_ptr<DataShareAbstractResultSet> Query(const Uri &uri, const DataSharePredicates &predicates,
+    std::shared_ptr<DataShareResultSet> Query(const Uri &uri, const DataSharePredicates &predicates,
         std::vector<std::string> &columns) override;
 
     /**
@@ -238,14 +238,82 @@ public:
     std::vector<std::shared_ptr<DataShareResult>> ExecuteBatch(
         const std::vector<std::shared_ptr<DataShareOperation>> &operations) override;
 
+    bool GetBlockWaiting() const
+    {
+        return isBlockWaiting_;
+    }
+    void SetBlockWaiting(bool blockWaiting)
+    {
+        isBlockWaiting_ = blockWaiting;
+    }
+
+    NativeValue* GetAsyncResult() const
+    {
+        return callbackData_;
+    }
+
+    void SetAsyncResult(NativeValue* asyncResult)
+    {
+        callbackData_ = asyncResult;
+    }
+
+    void GetResult(int &value)
+    {
+        value = callbackResultNumber_;
+    }
+
+    void SetResult(const int value)
+    {
+        callbackResultNumber_ = value;
+    }
+
+    void GetResult(std::string &value)
+    {
+        value = callbackResultString_;
+    }
+
+    void SetResult(const std::string value)
+    {
+        callbackResultString_ = value;
+    }
+
+    void GetResult(std::vector<std::string> &value)
+    {
+        value = callbackResultStringArr_;
+    }
+
+    void SetResult(const std::vector<std::string> value)
+    {
+        callbackResultStringArr_ = value;
+    }
+
+    void GetResult(std::shared_ptr<DataShareResultSet> &value)
+    {
+        value = callbackResultObject_;
+    }
+
+    void SetResult(const std::shared_ptr<DataShareResultSet> value)
+    {
+        callbackResultObject_ = value;
+    }
+
 private:
-    NativeValue* CallObjectMethod(const char *name, NativeValue * const *argv = nullptr, size_t argc = 0);
+    NativeValue* CallObjectMethod(const char *name, NativeValue * const *argv = nullptr, size_t argc = 0,
+        bool isAsync = true);
     void GetSrcPath(std::string &srcPath);
     bool CheckCallingPermission(const std::string &permission);
     napi_value MakePredicates(napi_env env, const DataSharePredicates &predicates);
+    static NativeValue* AsyncCallback(NativeEngine* engine, NativeCallbackInfo* info);
+    void CheckAndSetAsyncResult(NativeEngine* engine);
 
     JsRuntime& jsRuntime_;
     std::unique_ptr<NativeReference> jsObj_;
+    bool isBlockWaiting_ = false;
+    NativeValue* callbackData_ = nullptr;
+    int callbackResultNumber_ = -1;
+    std::string callbackResultString_ = "";
+    std::vector<std::string> callbackResultStringArr_ = {};
+    std::shared_ptr<DataShareResultSet> callbackResultObject_ = nullptr;
 };
 } // namespace DataShare
 } // namespace OHOS
