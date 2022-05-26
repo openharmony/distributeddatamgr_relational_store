@@ -68,7 +68,7 @@
         "build": {
             "sub_component": [
                 "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/appdatafwk:native_appdatafwk",
-                "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb_data_share_adapter:native_rdb_data_share_adapter",
+                "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb_data_share_adapter:rdb_data_share_adapter",
                 "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb:native_rdb",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/rdb:rdb"
             ],
@@ -105,7 +105,7 @@
                     }
                 },
                 {
-                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb_data_share_adapter:native_rdb_data_share_adapter",
+                    "name": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb_data_share_adapter:rdb_data_share_adapter",
                     "header": {
                         "header_files": [
                             "rdb_utils.h"

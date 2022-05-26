@@ -14,8 +14,6 @@
  */
 
 #include "datashare_predicates.h"
-
-#include <cinttypes>
 #include "datashare_log.h"
 #include "datashare_errno.h"
 namespace OHOS {

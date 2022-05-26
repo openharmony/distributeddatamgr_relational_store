@@ -22,6 +22,9 @@
 namespace OHOS {
 namespace DataShare {
 static __thread napi_ref constructor_ = nullptr;
+static constexpr int ARGC_ZERO = 0;
+static constexpr int ARGC_ONE = 1;
+static constexpr int ARGC_TWO = 2;
 
 void DataSharePredicatesProxy::Init(napi_env env, napi_value exports)
 {
@@ -168,7 +171,7 @@ napi_value DataSharePredicatesProxy::EqualTo(napi_env env, napi_callback_info in
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 1, "DataSharePredicatesProxy::EqualTo Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ONE, "DataSharePredicatesProxy::EqualTo Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     napi_valuetype valueType = napi_undefined;
     napi_status status = napi_typeof(env, args[1], &valueType);
@@ -212,7 +215,7 @@ napi_value DataSharePredicatesProxy::NotEqualTo(napi_env env, napi_callback_info
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 1, "DataSharePredicatesProxy::NotEqualTo Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ONE, "DataSharePredicatesProxy::NotEqualTo Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     napi_valuetype valueType = napi_undefined;
     napi_status status = napi_typeof(env, args[1], &valueType);
@@ -312,7 +315,7 @@ napi_value DataSharePredicatesProxy::Contains(napi_env env, napi_callback_info i
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 1, "DataSharePredicatesProxy::Contains Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ONE, "DataSharePredicatesProxy::Contains Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::string value = DataShareJSUtils::ConvertAny2String(env, args[1]);
 
@@ -332,7 +335,7 @@ napi_value DataSharePredicatesProxy::BeginsWith(napi_env env, napi_callback_info
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 1, "DataSharePredicatesProxy::BeginsWith Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ONE, "DataSharePredicatesProxy::BeginsWith Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::string value = DataShareJSUtils::ConvertAny2String(env, args[1]);
     std::shared_ptr<DataSharePredicates> nativePredicates = GetNativePredicates(env, info);
@@ -351,7 +354,7 @@ napi_value DataSharePredicatesProxy::EndsWith(napi_env env, napi_callback_info i
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 1, "DataSharePredicatesProxy::EndsWith Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ONE, "DataSharePredicatesProxy::EndsWith Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::string value = DataShareJSUtils::ConvertAny2String(env, args[1]);
     std::shared_ptr<DataSharePredicates> nativePredicates = GetNativePredicates(env, info);
@@ -370,7 +373,7 @@ napi_value DataSharePredicatesProxy::IsNull(napi_env env, napi_callback_info inf
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::IsNull Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ZERO, "DataSharePredicatesProxy::IsNull Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::shared_ptr<DataSharePredicates> nativePredicates = GetNativePredicates(env, info);
     if (nativePredicates == nullptr) {
@@ -388,7 +391,7 @@ napi_value DataSharePredicatesProxy::IsNotNull(napi_env env, napi_callback_info 
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::IsNotNull Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ZERO, "DataSharePredicatesProxy::IsNotNull Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::shared_ptr<DataSharePredicates> nativePredicates = GetNativePredicates(env, info);
     if (nativePredicates == nullptr) {
@@ -406,7 +409,7 @@ napi_value DataSharePredicatesProxy::Like(napi_env env, napi_callback_info info)
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 1, "DataSharePredicatesProxy::Like Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ONE, "DataSharePredicatesProxy::Like Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::string value = DataShareJSUtils::ConvertAny2String(env, args[1]);
     std::shared_ptr<DataSharePredicates> nativePredicates = GetNativePredicates(env, info);
@@ -425,7 +428,7 @@ napi_value DataSharePredicatesProxy::Unlike(napi_env env, napi_callback_info inf
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 1, "DataSharePredicatesProxy::Unlike Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ONE, "DataSharePredicatesProxy::Unlike Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::string value = DataShareJSUtils::ConvertAny2String(env, args[1]);
     std::shared_ptr<DataSharePredicates> nativePredicates = GetNativePredicates(env, info);
@@ -444,7 +447,7 @@ napi_value DataSharePredicatesProxy::Glob(napi_env env, napi_callback_info info)
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 1, "DataSharePredicatesProxy::Glob Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ONE, "DataSharePredicatesProxy::Glob Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::string value = DataShareJSUtils::ConvertAny2String(env, args[1]);
     std::shared_ptr<DataSharePredicates> nativePredicates = GetNativePredicates(env, info);
@@ -463,7 +466,7 @@ napi_value DataSharePredicatesProxy::Between(napi_env env, napi_callback_info in
     size_t argc = 3;
     napi_value args[3] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 2, "DataSharePredicatesProxy::Between Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_TWO, "DataSharePredicatesProxy::Between Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::string low = DataShareJSUtils::ConvertAny2String(env, args[1]);
     std::string high = DataShareJSUtils::ConvertAny2String(env, args[2]);
@@ -483,7 +486,7 @@ napi_value DataSharePredicatesProxy::NotBetween(napi_env env, napi_callback_info
     size_t argc = 3;
     napi_value args[3] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 2, "DataSharePredicatesProxy::NotBetween Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_TWO, "DataSharePredicatesProxy::NotBetween Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::string low = DataShareJSUtils::ConvertAny2String(env, args[1]);
     std::string high = DataShareJSUtils::ConvertAny2String(env, args[2]);
@@ -503,7 +506,7 @@ napi_value DataSharePredicatesProxy::GreaterThan(napi_env env, napi_callback_inf
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 1, "DataSharePredicatesProxy::GreaterThan Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ONE, "DataSharePredicatesProxy::GreaterThan Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     napi_valuetype valueType = napi_undefined;
     napi_status status = napi_typeof(env, args[1], &valueType);
@@ -541,7 +544,7 @@ napi_value DataSharePredicatesProxy::LessThan(napi_env env, napi_callback_info i
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 1, "DataSharePredicatesProxy::LessThan Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ONE, "DataSharePredicatesProxy::LessThan Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     napi_valuetype valueType = napi_undefined;
     napi_status status = napi_typeof(env, args[1], &valueType);
@@ -579,7 +582,7 @@ napi_value DataSharePredicatesProxy::GreaterThanOrEqualTo(napi_env env, napi_cal
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 1, "DataSharePredicatesProxy::GreaterThanOrEqualTo Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ONE, "DataSharePredicatesProxy::GreaterThanOrEqualTo Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     napi_valuetype valueType = napi_undefined;
     napi_status status = napi_typeof(env, args[1], &valueType);
@@ -617,7 +620,7 @@ napi_value DataSharePredicatesProxy::LessThanOrEqualTo(napi_env env, napi_callba
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 1, "DataSharePredicatesProxy::LessThanOrEqualTo Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ONE, "DataSharePredicatesProxy::LessThanOrEqualTo Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     napi_valuetype valueType = napi_undefined;
     napi_status status = napi_typeof(env, args[1], &valueType);
@@ -655,7 +658,7 @@ napi_value DataSharePredicatesProxy::OrderByAsc(napi_env env, napi_callback_info
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::OrderByAsc Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ZERO, "DataSharePredicatesProxy::OrderByAsc Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::shared_ptr<DataSharePredicates> nativePredicates = GetNativePredicates(env, info);
     if (nativePredicates == nullptr) {
@@ -673,7 +676,7 @@ napi_value DataSharePredicatesProxy::OrderByDesc(napi_env env, napi_callback_inf
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::OrderByDesc Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ZERO, "DataSharePredicatesProxy::OrderByDesc Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::shared_ptr<DataSharePredicates> nativePredicates = GetNativePredicates(env, info);
     if (nativePredicates == nullptr) {
@@ -705,7 +708,7 @@ napi_value DataSharePredicatesProxy::Limit(napi_env env, napi_callback_info info
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 1, "DataSharePredicatesProxy::Limit Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ONE, "DataSharePredicatesProxy::Limit Invalid argvs!");
     int number = 0;
     napi_status status = napi_get_value_int32(env, args[0], &number);
     LOG_INFO("number, napi_get_value_int32 : %{public}d", status);
@@ -728,7 +731,7 @@ napi_value DataSharePredicatesProxy::GroupBy(napi_env env, napi_callback_info in
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::GroupBy Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ZERO, "DataSharePredicatesProxy::GroupBy Invalid argvs!");
     std::vector<std::string> fields = DataShareJSUtils::Convert2StrVector(env,
         args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::shared_ptr<DataSharePredicates> nativePredicates = GetNativePredicates(env, info);
@@ -747,7 +750,7 @@ napi_value DataSharePredicatesProxy::IndexedBy(napi_env env, napi_callback_info 
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::IndexedBy Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ZERO, "DataSharePredicatesProxy::IndexedBy Invalid argvs!");
     std::string indexName = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::shared_ptr<DataSharePredicates> nativePredicates = GetNativePredicates(env, info);
     if (nativePredicates == nullptr) {
@@ -765,7 +768,7 @@ napi_value DataSharePredicatesProxy::In(napi_env env, napi_callback_info info)
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 1, "DataSharePredicatesProxy::In Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ONE, "DataSharePredicatesProxy::In Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::vector<std::string> values = DataShareJSUtils::Convert2StrVector(env,
         args[1], DataShareJSUtils::DEFAULT_BUF_SIZE);
@@ -785,7 +788,7 @@ napi_value DataSharePredicatesProxy::NotIn(napi_env env, napi_callback_info info
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 1, "DataSharePredicatesProxy::NotIn Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ONE, "DataSharePredicatesProxy::NotIn Invalid argvs!");
     std::string field = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::vector<std::string> values = DataShareJSUtils::Convert2StrVector(env,
         args[1], DataShareJSUtils::DEFAULT_BUF_SIZE);
@@ -810,7 +813,7 @@ napi_value DataSharePredicatesProxy::PrefixKey(napi_env env, napi_callback_info 
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::PrefixKey Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ZERO, "DataSharePredicatesProxy::PrefixKey Invalid argvs!");
     std::string prefix = DataShareJSUtils::Convert2String(env, args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::shared_ptr<DataSharePredicates> nativePredicates = GetNativePredicates(env, info);
     if (nativePredicates == nullptr) {
@@ -828,7 +831,7 @@ napi_value DataSharePredicatesProxy::InKeys(napi_env env, napi_callback_info inf
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "DataSharePredicatesProxy::InKeys Invalid argvs!");
+    NAPI_ASSERT(env, argc > ARGC_ZERO, "DataSharePredicatesProxy::InKeys Invalid argvs!");
     std::vector<std::string> keys = DataShareJSUtils::Convert2StrVector(env,
         args[0], DataShareJSUtils::DEFAULT_BUF_SIZE);
     std::shared_ptr<DataSharePredicates> nativePredicates = GetNativePredicates(env, info);
