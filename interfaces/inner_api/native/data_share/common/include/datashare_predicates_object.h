@@ -69,8 +69,8 @@ public:
     std::variant<std::monostate, int, int64_t, double, std::string, bool, std::vector<int>, std::vector<int64_t>,
         std::vector<std::string>, std::vector<double>> value;
     template<typename T>
-    operator T () const 
-    { 
+    operator T () const
+    {
         return std::get<T>(value);
     }
 
