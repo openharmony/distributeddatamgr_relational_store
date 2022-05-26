@@ -171,25 +171,22 @@ std::shared_ptr<DataShareResultSet> DataShareStubImpl::Query(const Uri &uri,
     const DataSharePredicates &predicates, std::vector<std::string> &columns)
 {
     LOG_INFO("begin.");
-    std::shared_ptr<ResultSetBridge> ret = nullptr;
-    std::function<void()> syncTaskFunc = [=, &columns, &ret, client = sptr<DataShareStubImpl>(this)]() {
+    std::shared_ptr<DataShareResultSet> resultSet = nullptr;
+    std::function<void()> syncTaskFunc = [=, &columns, &resultSet, client = sptr<DataShareStubImpl>(this)]() {
         auto extension = client->GetOwner();
         if (extension == nullptr) {
             LOG_ERROR("%{public}s end failed.", __func__);
             return;
         }
-        ret = extension->Query(uri, predicates, columns);
+        resultSet = extension->Query(uri, predicates, columns);
     };
-    std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>(ret);
-    std::function<void()> getRetFunc = [=, &resultSet, &ret, client = sptr<DataShareStubImpl>(this)]() {
+    std::function<void()> getRetFunc = [=, &resultSet, client = sptr<DataShareStubImpl>(this)]() {
         auto extension = client->GetOwner();
         if (extension == nullptr) {
             LOG_ERROR("%{public}s end failed.", __func__);
             return;
         }
-        extension->GetResult(ret);
-        std::shared_ptr<DataShareResultSet> tmpResultSet = std::make_shared<DataShareResultSet>(ret);
-        resultSet = std::move(tmpResultSet);
+        extension->GetResult(resultSet);
     };
     uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");

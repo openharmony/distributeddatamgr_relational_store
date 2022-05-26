@@ -472,19 +472,21 @@ void ParseValuesBucket(const napi_env &env, const napi_value &arg, RdbStoreConte
     LOG_DEBUG("ParseValuesBucket end");
 }
 
-bool IsString(napi_env env, napi_callback_info info)
+bool IsNapiString(napi_env env, napi_callback_info info)
 {
-    bool ret = false;
-    size_t argc = 1;
+    constexpr size_t MIN_ARGC = 1;
+    size_t argc = MIN_ARGC;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    //NAPI_ASSERT(env, argc > 0, "Invalid argvs!");
+    if (argc < MIN_ARGC) {
+        return false;
+    }
     napi_valuetype type;
     napi_typeof(env, args[0], &type);
     if (type == napi_string) {
-        ret = true;
+        return true;
     }
-    return ret;
+    return false;
 }
 
 napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
@@ -521,8 +523,7 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
     NapiAsyncProxy<RdbStoreContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    bool isString = IsString(env, info);
-    if (isString) {
+    if (IsNapiString(env, info)) {
         parsers.push_back(ParseTableName);
     }
     parsers.push_back(ParsePredicates);
@@ -551,8 +552,7 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
     NapiAsyncProxy<RdbStoreContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    bool isString = IsString(env, info);
-    if (isString) {
+    if (IsNapiString(env, info)) {
         parsers.push_back(ParseTableName);
     }
     parsers.push_back(ParseValuesBucket);
@@ -584,8 +584,7 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
     NapiAsyncProxy<RdbStoreContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    bool isString = IsString(env, info);
-    if (isString) {
+    if (IsNapiString(env, info)) {
         parsers.push_back(ParseTableName);
     }
     parsers.push_back(ParsePredicates);

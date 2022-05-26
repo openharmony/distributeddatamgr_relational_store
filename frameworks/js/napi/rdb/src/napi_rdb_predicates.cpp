@@ -25,6 +25,15 @@ namespace OHOS {
 namespace RdbJsKit {
 static __thread napi_ref constructor_ = nullptr;
 
+void SetGlobalNamedProperty(napi_env env, const char *name, napi_value constructor)
+{
+    napi_value global = nullptr;
+    napi_status status = napi_get_global(env, &global);
+    NAPI_ASSERT_RETURN_VOID(env, status == napi_ok, "RdbPredicatesProxy get napi global failed");
+    status = napi_set_named_property(env, global, name, constructor);
+    NAPI_ASSERT_RETURN_VOID(env, status == napi_ok, "RdbPredicatesProxy set RdbPredicates Constructor failed");
+}
+
 void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
 {
     LOG_INFO("RdbPredicatesProxy::Init");
@@ -79,11 +88,7 @@ void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
 
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, exports, "RdbPredicates", cons));
 
-    napi_value global = nullptr;
-    napi_status status = napi_get_global(env, &global);
-    NAPI_ASSERT_RETURN_VOID(env, status == napi_ok, "RdbPredicatesProxy get napi global failed");
-    status = napi_set_named_property(env, global, "RdbPredicatesConstructor", cons);
-    NAPI_ASSERT_RETURN_VOID(env, status == napi_ok, "RdbPredicatesProxy set RdbPredicates Constructor failed");
+    SetGlobalNamedProperty(env, "RdbPredicatesConstructor", cons);
     LOG_DEBUG("RdbPredicatesProxy::Init end");
 }
 
