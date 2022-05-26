@@ -64,6 +64,18 @@ public:
         const std::string &strUri);
 
     /**
+     * @brief You can use this method to specify the Uri of the data to operate and set the binding relationship
+     * between the ability using the Data template (data share for short) and the associated client process in
+     * a DataShareHelper instance.
+     *
+     * @param token Indicates the System token.
+     * @param strUri Indicates the database table or disk file to operate.
+     *
+     * @return Returns the created DataShareHelper instance.
+     */
+    std::shared_ptr<DataShareHelper> Creator(const sptr<IRemoteObject> &token, const std::string &strUri);
+
+    /**
      * @brief Releases the client resource of the Data share.
      * You should call this method to releases client resource after the data operations are complete.
      *
@@ -225,6 +237,7 @@ private:
         const Uri &uri, const sptr<IDataShare> &dataShareProxy);
     DataShareHelper(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
         const Uri &uri, const sptr<IDataShare> &dataShareProxy);
+    DataShareHelper(const sptr<IRemoteObject> &token, const Uri &uri, const sptr<IDataShare> &dataShareProxy);
     void AddDataShareDeathRecipient(const sptr<IRemoteObject> &token);
     void OnSchedulerDied(const wptr<IRemoteObject> &remote);
     bool CheckUriParam(const Uri &uri);
