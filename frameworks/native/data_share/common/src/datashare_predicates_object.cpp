@@ -264,35 +264,37 @@ DataSharePredicatesObject *DataSharePredicatesObject::Unmarshalling(Parcel &parc
 {
     LOG_DEBUG("DataSharePredicatesObject::Unmarshalling Start");
     auto *pValueObject = new DataSharePredicatesObject();
-    pValueObject->type = (DataSharePredicatesObjectType)parcel.ReadInt16();
-    switch (pValueObject->type) {
-        case DataSharePredicatesObjectType::TYPE_NULL: {
-            break;
+    if (pValueObject != nullptr) {
+        pValueObject->type = (DataSharePredicatesObjectType)parcel.ReadInt16();
+        switch (pValueObject->type) {
+            case DataSharePredicatesObjectType::TYPE_NULL: {
+                break;
+            }
+            case DataSharePredicatesObjectType::TYPE_INT: {
+                pValueObject->value = static_cast<int>(parcel.ReadInt64());
+                break;
+            }
+            case DataSharePredicatesObjectType::TYPE_LONG: {
+                pValueObject->value = parcel.ReadInt64();
+                break;
+            }
+            case DataSharePredicatesObjectType::TYPE_DOUBLE: {
+                pValueObject->value = parcel.ReadDouble();
+                break;
+            }
+            case DataSharePredicatesObjectType::TYPE_STRING: {
+                pValueObject->value = parcel.ReadString();
+                break;
+            }
+            case DataSharePredicatesObjectType::TYPE_BOOL: {
+                pValueObject->value = parcel.ReadBool();
+                break;
+            }
+            default:
+                break;
         }
-        case DataSharePredicatesObjectType::TYPE_INT: {
-            pValueObject->value = static_cast<int>(parcel.ReadInt64());
-            break;
-        }
-        case DataSharePredicatesObjectType::TYPE_LONG: {
-            pValueObject->value = parcel.ReadInt64();
-            break;
-        }
-        case DataSharePredicatesObjectType::TYPE_DOUBLE: {
-            pValueObject->value = parcel.ReadDouble();
-            break;
-        }
-        case DataSharePredicatesObjectType::TYPE_STRING: {
-            pValueObject->value = parcel.ReadString();
-            break;
-        }
-        case DataSharePredicatesObjectType::TYPE_BOOL: {
-            pValueObject->value = parcel.ReadBool();
-            break;
-        }
-        default:
-            break;
+        UnmarshallingVector(pValueObject->type, pValueObject, parcel);
     }
-    UnmarshallingVector(pValueObject->type, pValueObject, parcel);
     LOG_DEBUG("DataSharePredicatesObject::Unmarshalling End");
     return pValueObject;
 }

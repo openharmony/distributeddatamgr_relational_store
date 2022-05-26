@@ -59,7 +59,7 @@ std::shared_ptr<RdbStore> RdbDataShareAdapterTest::store = nullptr;
 
 class RdbStepSharedResultSetOpenCallback : public RdbOpenCallback {
 public:
-    int OnCreate(RdbStore& rdbStore) override;
+    int OnCreate(RdbStore &rdbStore) override;
 
     int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
 

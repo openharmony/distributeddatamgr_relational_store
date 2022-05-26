@@ -40,7 +40,7 @@ config("module_private_config") {
   }
 }
 
-ohos_unittest("NativeRdbDataShareAdapterTest") {
+ohos_unittest("RdbDataShareAdapterTest") {
   module_out_path = module_output_path
 
   sources = [ "unittest/rdb_data_share_adapter_test.cpp" ]
@@ -66,6 +66,6 @@ ohos_unittest("NativeRdbDataShareAdapterTest") {
 group("unittest") {
   testonly = true
 
-  deps = [ ":NativeRdbDataShareAdapterTest" ]
+  deps = [ ":RdbDataShareAdapterTest" ]
 }
 ###############################################################################
