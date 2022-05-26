@@ -57,10 +57,16 @@ public:
 
     bool Marshalling(Parcel &parcel) const override;
     static DataShareValueObject *Unmarshalling(Parcel &parcel);
+    std::variant<int64_t, double, std::string, bool, std::vector<uint8_t>> value;
+    template<typename T>
+    operator T () const
+    {
+        return std::get<T>(value);
+    }
 
 private:
     DataShareValueObjectType type;
-    std::variant<int64_t, double, std::string, bool, std::vector<uint8_t>> value;
+   
 };
 } // namespace DataShare
 } // namespace OHOS
