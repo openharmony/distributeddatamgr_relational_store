@@ -30,40 +30,14 @@ public:
     DataSharePredicates();
     explicit DataSharePredicates(Predicates &predicates);
     ~DataSharePredicates();
-    DataSharePredicates *EqualTo(const std::string &field, const int value)override;
-    DataSharePredicates *EqualTo(const std::string &field, const int64_t value)override;
-    DataSharePredicates *EqualTo(const std::string &field, const double value)override;
-    DataSharePredicates *EqualTo(const std::string &field, const std::string &value)override;
-    DataSharePredicates *EqualTo(const std::string &field, const bool value)override;
-    DataSharePredicates *NotEqualTo(const std::string &field, const int value)override;
-    DataSharePredicates *NotEqualTo(const std::string &field, const int64_t value)override;
-    DataSharePredicates *NotEqualTo(const std::string &field, const double value)override;
-    DataSharePredicates *NotEqualTo(const std::string &field, const std::string &value)override;
-    DataSharePredicates *NotEqualTo(const std::string &field, const bool value)override;
-    DataSharePredicates *GreaterThan(const std::string &field, const int value)override;
-    DataSharePredicates *GreaterThan(const std::string &field, const int64_t value)override;
-    DataSharePredicates *GreaterThan(const std::string &field, const double value)override;
-    DataSharePredicates *GreaterThan(const std::string &field, const std::string &value)override;
-    DataSharePredicates *LessThan(const std::string &field, const int value)override;
-    DataSharePredicates *LessThan(const std::string &field, const int64_t value)override;
-    DataSharePredicates *LessThan(const std::string &field, const double value)override;
-    DataSharePredicates *LessThan(const std::string &field, const std::string &value)override;
-    DataSharePredicates *GreaterThanOrEqualTo(const std::string &field, const int value)override;
-    DataSharePredicates *GreaterThanOrEqualTo(const std::string &field, const int64_t value)override;
-    DataSharePredicates *GreaterThanOrEqualTo(const std::string &field, const double value)override;
-    DataSharePredicates *GreaterThanOrEqualTo(const std::string &field, const std::string &value)override;
-    DataSharePredicates *LessThanOrEqualTo(const std::string &field, const int value)override;
-    DataSharePredicates *LessThanOrEqualTo(const std::string &field, const int64_t value)override;
-    DataSharePredicates *LessThanOrEqualTo(const std::string &field, const double value)override;
-    DataSharePredicates *LessThanOrEqualTo(const std::string &field, const std::string &value)override;
-    DataSharePredicates *In(const std::string &field, const std::vector<int> &values)override;
-    DataSharePredicates *In(const std::string &field, const std::vector<int64_t> &values)override;
-    DataSharePredicates *In(const std::string &field, const std::vector<double> &values)override;
-    DataSharePredicates *In(const std::string &field, const std::vector<std::string> &values)override;
-    DataSharePredicates *NotIn(const std::string &field, const std::vector<int> &values)override;
-    DataSharePredicates *NotIn(const std::string &field, const std::vector<int64_t> &values)override;
-    DataSharePredicates *NotIn(const std::string &field, const std::vector<double> &values)override;
-    DataSharePredicates *NotIn(const std::string &field, const std::vector<std::string> &values)override;
+    DataSharePredicates *EqualTo(const std::string &field, const DataSharePredicatesObject &value)override;
+    DataSharePredicates *NotEqualTo(const std::string &field, const DataSharePredicatesObject &value)override;
+    DataSharePredicates *GreaterThan(const std::string &field, const DataSharePredicatesObject &value)override;
+    DataSharePredicates *LessThan(const std::string &field, const DataSharePredicatesObject &value)override;
+    DataSharePredicates *GreaterThanOrEqualTo(const std::string &field, const DataSharePredicatesObject &value)override;
+    DataSharePredicates *LessThanOrEqualTo(const std::string &field, const DataSharePredicatesObject &value)override;
+    DataSharePredicates *In(const std::string &field, const DataSharePredicatesObject &values)override;
+    DataSharePredicates *NotIn(const std::string &field, const DataSharePredicatesObject &values)override;
     DataSharePredicates *BeginWrap()override;
     DataSharePredicates *EndWrap()override;
     DataSharePredicates *Or()override;
@@ -99,11 +73,11 @@ public:
     std::string GetTableName() const;
 
 private:
-    void SetOperationList(OperationType operationType, DataSharePredicatesObject &para1,
-        DataSharePredicatesObject &para2, DataSharePredicatesObject &para3, ParameterCount parameterCount);
+    void SetOperationList(OperationType operationType, const DataSharePredicatesObject &para1,
+        const DataSharePredicatesObject &para2, const DataSharePredicatesObject &para3, ParameterCount parameterCount);
     void ClearQueryLanguage();
     void SetSettingMode(const SettingMode &settingMode);
-    mutable Predicates predicates_;
+    Predicates predicates_;
     std::string whereClause_;
     std::vector<std::string> whereArgs_;
     std::string order_;

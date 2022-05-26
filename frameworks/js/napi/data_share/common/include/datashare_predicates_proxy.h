@@ -76,7 +76,7 @@ private:
     napi_ref wrapper_;
 };
 
-napi_value GetNapiObject(napi_env env, OHOS::DataShare::DataSharePredicates *predicates);
+napi_value GetNapiObject(napi_env env, DataSharePredicates *predicates);
 DataSharePredicates *GetNativePredicatesObject(const napi_env &env, const napi_value &arg);
 } // namespace DataShare
 } // namespace OHOS

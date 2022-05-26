@@ -70,28 +70,6 @@ napi_value DataShareValueBucketNewInstance(napi_env env, DataShareValuesBucket &
     return ret;
 }
 
-void AnalysisValuesBucket(DataShareValuesBucket &valuesBucket, const napi_env &env, const napi_value &arg)
-{
-    napi_value keys = 0;
-    napi_get_property_names(env, arg, &keys);
-    uint32_t arrLen = 0;
-    napi_status status = napi_get_array_length(env, keys, &arrLen);
-    if (status != napi_ok) {
-        LOG_ERROR("ValuesBucket errr");
-        return;
-    }
-    LOG_INFO("ValuesBucket num:%{public}d ", arrLen);
-    for (size_t i = 0; i < arrLen; ++i) {
-        napi_value key = 0;
-        status = napi_get_element(env, keys, i, &key);
-        std::string keyStr = DataShareJSUtils::UnwrapStringFromJS(env, key);
-        napi_value value = 0;
-        napi_get_property(env, arg, key, &value);
-
-        SetValuesBucketObject(valuesBucket, env, keyStr, value);
-    }
-}
-
 void SetValuesBucketObject(
     DataShareValuesBucket &valuesBucket, const napi_env &env, std::string keyStr, napi_value value)
 {
@@ -100,9 +78,7 @@ void SetValuesBucketObject(
     if (valueType == napi_string) {
         std::string valueString = DataShareJSUtils::UnwrapStringFromJS(env, value);
         LOG_INFO("ValueObject type:%{public}d, key:%{public}s, value:%{public}s",
-            valueType,
-            keyStr.c_str(),
-            valueString.c_str());
+            valueType, keyStr.c_str(), valueString.c_str());
         valuesBucket.PutString(keyStr, valueString);
     } else if (valueType == napi_number) {
         double valueNumber = 0;
@@ -121,9 +97,31 @@ void SetValuesBucketObject(
         LOG_INFO("ValueObject type:%{public}d, key:%{public}s, value:null", valueType, keyStr.c_str());
     } else if (valueType == napi_object) {
         LOG_INFO("ValueObject type:%{public}d, key:%{public}s, value:Uint8Array", valueType, keyStr.c_str());
-        valuesBucket.PutBlob(keyStr, DataShareJSUtils::ConvertU8Vector(env, value));
+        valuesBucket.PutBlob(keyStr, DataShareJSUtils::Convert2U8Vector(env, value));
     } else {
         LOG_ERROR("valuesBucket error");
+    }
+}
+
+void AnalysisValuesBucket(DataShareValuesBucket &valuesBucket, const napi_env &env, const napi_value &arg)
+{
+    napi_value keys = 0;
+    napi_get_property_names(env, arg, &keys);
+    uint32_t arrLen = 0;
+    napi_status status = napi_get_array_length(env, keys, &arrLen);
+    if (status != napi_ok) {
+        LOG_ERROR("ValuesBucket errr");
+        return;
+    }
+    LOG_INFO("ValuesBucket num : %{public}u", arrLen);
+    for (size_t i = 0; i < arrLen; ++i) {
+        napi_value key = 0;
+        status = napi_get_element(env, keys, i, &key);
+        std::string keyStr = DataShareJSUtils::UnwrapStringFromJS(env, key);
+        napi_value value = 0;
+        napi_get_property(env, arg, key, &value);
+
+        SetValuesBucketObject(valuesBucket, env, keyStr, value);
     }
 }
 

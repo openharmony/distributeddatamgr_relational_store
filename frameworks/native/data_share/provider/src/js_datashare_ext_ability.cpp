@@ -31,7 +31,6 @@
 #include "napi_remote_object.h"
 
 #include "napi_datashare_values_bucket.h"
-#include "napi_datashare_abstract_result_set.h"
 #include "datashare_predicates_proxy.h"
 
 namespace OHOS {
@@ -42,6 +41,7 @@ constexpr size_t ARGC_ONE = 1;
 constexpr size_t ARGC_TWO = 2;
 constexpr size_t ARGC_THREE = 3;
 constexpr int INVALID_VALUE = -1;
+const std::string ASYNC_CALLBACK_NAME = "AsyncCallback";
 }
 
 void PrintPredicates(const DataSharePredicates &predicates);
@@ -131,7 +131,7 @@ void JsDataShareExtAbility::OnStart(const AAFwk::Want &want)
     napi_value napiWant = OHOS::AppExecFwk::WrapWant(env, want);
     NativeValue* nativeWant = reinterpret_cast<NativeValue*>(napiWant);
     NativeValue* argv[] = {nativeWant};
-    CallObjectMethod("onCreate", argv, ARGC_ONE);
+    CallObjectMethod("onCreate", argv, ARGC_ONE, false);
     LOG_INFO("end.");
 }
 
@@ -150,7 +150,77 @@ sptr<IRemoteObject> JsDataShareExtAbility::OnConnect(const AAFwk::Want &want)
     return remoteObject->AsObject();
 }
 
-NativeValue* JsDataShareExtAbility::CallObjectMethod(const char* name, NativeValue* const* argv, size_t argc)
+void JsDataShareExtAbility::CheckAndSetAsyncResult(NativeEngine* engine)
+{
+    auto result = GetAsyncResult();
+    auto type = result->TypeOf();
+    LOG_DEBUG("type : %{public}d", type);
+    if (type == NATIVE_NUMBER) {
+        int32_t value = OHOS::AppExecFwk::UnwrapInt32FromJS(reinterpret_cast<napi_env>(engine),
+            reinterpret_cast<napi_value>(result));
+        SetResult(value);
+    } else if (type == NATIVE_STRING) {
+        std::string value = OHOS::AppExecFwk::UnwrapStringFromJS(reinterpret_cast<napi_env>(engine),
+            reinterpret_cast<napi_value>(result));
+        SetResult(value);
+    } else if (type == NATIVE_OBJECT) {
+        ResultSetBridge::Creator *proxy = nullptr;
+        napi_unwrap(reinterpret_cast<napi_env>(engine), reinterpret_cast<napi_value>(result),
+            reinterpret_cast<void **>(&proxy));
+        if (proxy == nullptr) {
+            LOG_DEBUG("proxy == nullptr. STRARR.");
+            std::vector<std::string> value;
+            OHOS::AppExecFwk::UnwrapArrayStringFromJS(reinterpret_cast<napi_env>(engine),
+                reinterpret_cast<napi_value>(result), value);
+            SetResult(value);
+        } else {
+            std::shared_ptr<ResultSetBridge> value = proxy->Create();
+            std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>(value);
+            SetResult(resultSet);
+        }
+    } else {
+        callbackResultNumber_ = -1;
+        callbackResultString_ = "";
+        callbackResultStringArr_ = {};
+        callbackResultObject_ = nullptr;
+    }
+}
+
+NativeValue* JsDataShareExtAbility::AsyncCallback(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    LOG_INFO("engine == nullptr : %{public}d, info == nullptr : %{public}d.", engine == nullptr, info == nullptr);
+    if (engine == nullptr || info == nullptr) {
+        LOG_ERROR("%{public}s invalid param.", __func__);
+        return nullptr;
+    }
+    if (info->argc < ARGC_TWO || info->argv[0] == nullptr || info->argv[1] == nullptr) {
+        LOG_ERROR("%{public}s invalid args.", __func__);
+        return engine->CreateUndefined();
+    }
+
+    int32_t value = -1;
+    if ((info->argv[0])->TypeOf() == NATIVE_NUMBER) {
+        value = OHOS::AppExecFwk::UnwrapInt32FromJS(reinterpret_cast<napi_env>(engine),
+            reinterpret_cast<napi_value>(info->argv[0]));
+        LOG_INFO("%{public}s value_number : %{public}d.", __func__, value);
+    }
+
+    if (info->functionInfo == nullptr || info->functionInfo->data == nullptr) {
+        LOG_ERROR("%{public}s invalid object.", __func__);
+        return engine->CreateUndefined();
+    }
+
+    JsDataShareExtAbility* instance = static_cast<JsDataShareExtAbility*>(info->functionInfo->data);
+    instance->SetBlockWaiting(true);
+    instance->SetAsyncResult(info->argv[1]);
+    instance->CheckAndSetAsyncResult(engine);
+
+    LOG_INFO("%{public}s end.", __func__);
+    return engine->CreateUndefined();
+}
+
+NativeValue* JsDataShareExtAbility::CallObjectMethod(const char* name, NativeValue* const* argv, size_t argc,
+    bool isAsync)
 {
     LOG_INFO("JsDataShareExtAbility::CallObjectMethod(%{public}s), begin", name);
 
@@ -174,8 +244,24 @@ NativeValue* JsDataShareExtAbility::CallObjectMethod(const char* name, NativeVal
         LOG_ERROR("Failed to get '%{public}s' from DataShareExtAbility object", name);
         return nullptr;
     }
-    LOG_INFO("JsDataShareExtAbility::CallFunction(%{public}s), success", name);
-    return handleScope.Escape(nativeEngine.CallFunction(value, method, argv, argc));
+
+    size_t count = argc + 1;
+    NativeValue **args = new NativeValue *[count];
+    for (size_t i = 0; i < argc; i++) {
+        args[i] = argv[i];
+    }
+
+    if (isAsync) {
+        args[argc] = nativeEngine.CreateFunction(ASYNC_CALLBACK_NAME.c_str(),
+            ASYNC_CALLBACK_NAME.length(), JsDataShareExtAbility::AsyncCallback, this);
+        LOG_INFO("AsyncType::ASYNC_COMMON.");
+    } else {
+        args[argc] = nullptr;
+    }
+
+    SetBlockWaiting(false);
+    LOG_INFO("%{public}s(%{public}s) end", __func__, name);
+    return handleScope.Escape(nativeEngine.CallFunction(value, method, args, count));
 }
 
 void JsDataShareExtAbility::GetSrcPath(std::string &srcPath)
@@ -294,7 +380,7 @@ int JsDataShareExtAbility::OpenRawFile(const Uri &uri, const std::string &mode)
     NativeValue* nativeUri = reinterpret_cast<NativeValue*>(napiUri);
     NativeValue* nativeMode = reinterpret_cast<NativeValue*>(napiMode);
     NativeValue* argv[] = {nativeUri, nativeMode};
-    NativeValue* nativeResult = CallObjectMethod("openRawFile", argv, ARGC_TWO);
+    NativeValue* nativeResult = CallObjectMethod("openRawFile", argv, ARGC_TWO, false);
     if (nativeResult == nullptr) {
         LOG_ERROR("%{public}s call openRawFile with return null.", __func__);
         return ret;
@@ -432,12 +518,12 @@ int JsDataShareExtAbility::Delete(const Uri &uri, const DataSharePredicates &pre
     return ret;
 }
 
-std::shared_ptr<DataShareAbstractResultSet> JsDataShareExtAbility::Query(const Uri &uri,
+std::shared_ptr<DataShareResultSet> JsDataShareExtAbility::Query(const Uri &uri,
     const DataSharePredicates &predicates, std::vector<std::string> &columns)
 {
     LOG_INFO("begin.");
     PrintPredicates(predicates);
-    std::shared_ptr<DataShareAbstractResultSet> ret;
+    std::shared_ptr<DataShareResultSet> ret;
     if (!CheckCallingPermission(abilityInfo_->readPermission)) {
         LOG_ERROR("%{public}s Check calling permission failed.", __func__);
         return ret;
@@ -476,14 +562,17 @@ std::shared_ptr<DataShareAbstractResultSet> JsDataShareExtAbility::Query(const U
         return ret;
     }
 
-    auto nativeObject = GetNativeAbstractResultSetObject(env, reinterpret_cast<napi_value>(nativeResult));
-    if (nativeObject == nullptr) {
-        return ret;
+    ResultSetBridge::Creator *proxy = nullptr;
+    napi_unwrap(env, reinterpret_cast<napi_value>(nativeResult), reinterpret_cast<void **>(&proxy));
+    if (proxy == nullptr) {
+        LOG_ERROR("unwrap ResultSetBridge::Creator proxy is null.");
+        return nullptr;
     }
 
-    ret.reset(nativeObject);
-    LOG_INFO("end.");
-    return ret;
+    std::shared_ptr<ResultSetBridge> bridge = proxy->Create();
+    LOG_INFO("ret == nullptr : %{public}d.", bridge == nullptr);
+    std::shared_ptr<DataShareResultSet> resultSet = std::make_shared<DataShareResultSet>(bridge);
+    return resultSet;
 }
 
 std::string JsDataShareExtAbility::GetType(const Uri &uri)

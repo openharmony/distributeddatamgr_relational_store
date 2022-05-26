@@ -14,7 +14,7 @@
  */
 
 #include "datashare_uv_queue.h"
-
+#include <unistd.h>
 #include "datashare_log.h"
 
 namespace OHOS {
@@ -26,14 +26,14 @@ DataShareUvQueue::DataShareUvQueue(napi_env env)
     napi_get_uv_event_loop(env, &loop_);
 }
 
-void DataShareUvQueue::SyncCall(NapiVoidFunc func)
+void DataShareUvQueue::SyncCall(NapiVoidFunc func, NapiVoidFunc retFunc)
 {
     LOG_INFO("begin.");
     uv_work_t* work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
         return;
     }
-    work->data = new UvEntry {env_, std::move(func), false, false, {}, {}};
+    work->data = new UvEntry {env_, std::move(func), false, false, {}, {}, std::move(retFunc)};
     auto status = uv_queue_work(
         loop_, work, [](uv_work_t* work) {},
         [](uv_work_t* work, int uvstatus) {
@@ -66,6 +66,7 @@ void DataShareUvQueue::SyncCall(NapiVoidFunc func)
         if (uvEntry->condition.wait_for(lock, std::chrono::seconds(WAIT_TIME), [uvEntry] { return uvEntry->done; })) {
             LOG_INFO("Wait uv_queue_work timeout.");
         }
+        CheckFuncAndExec(uvEntry->retFunc);
         if (!uvEntry->done && !uv_cancel((uv_req_t*)&work)) {
             LOG_ERROR("%{public}s uv_cancel failed.", __func__);
             uvEntry->purge = true;
@@ -96,6 +97,14 @@ void DataShareUvQueue::Purge(uv_work_t* work)
     delete work;
     work = nullptr;
     LOG_INFO("end.");
+}
+
+void DataShareUvQueue::CheckFuncAndExec(NapiVoidFunc retFunc)
+{
+    if (retFunc) {
+        sleep(1);
+        retFunc();
+    }
 }
 } // namespace DataShare
 } // namespace OHOS

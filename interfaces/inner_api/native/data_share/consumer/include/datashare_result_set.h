@@ -26,7 +26,7 @@
 #include "parcel.h"
 #include "shared_block.h"
 #include "datashare_shared_result_set.h"
-#include "datashare_abstract_result_set.h"
+#include "result_set_bridge.h"
 #include "datashare_block_writer_impl.h"
 
 namespace OHOS {
@@ -34,7 +34,7 @@ namespace DataShare {
 class DataShareResultSet : public DataShareAbsResultSet, public DataShareSharedResultSet {
 public:
     DataShareResultSet();
-    explicit DataShareResultSet(std::shared_ptr<DataShareAbstractResultSet> &resultSet);
+    explicit DataShareResultSet(std::shared_ptr<ResultSetBridge> &bridge);
     virtual ~DataShareResultSet();
     int GetBlob(int columnIndex, std::vector<uint8_t> &blob) override;
     int GetString(int columnIndex, std::string &value) override;
@@ -47,7 +47,7 @@ public:
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int GetRowCount(int &count) override;
     AppDataFwk::SharedBlock *GetBlock() const override;
-    bool OnGo(int oldRowIndex, int newRowIndex) override;
+    bool OnGo(int startRowIndex, int targetRowIndex) override;
     void FillBlock(int startRowIndex, AppDataFwk::SharedBlock *block) override;
     virtual void SetBlock(AppDataFwk::SharedBlock *block);
     int Close() override;
@@ -69,10 +69,16 @@ private:
     static const int INIT_POS = -1;
     static const size_t DEFAULT_BLOCK_SIZE = 2 * 1024 * 1024;
     static int blockId_;
+    // Equivalent to filling in setp + 1 rows each time
+    static const int STEP_LENGTH = 2;
+    // The actual position of the first row of data in the shareblock
+    int startRowPos_ = -1;
+    // The actual position of the last row of data in the shareblock
+    int endRowPos_ = -1;
     // The SharedBlock owned by this DataShareResultSet
     AppDataFwk::SharedBlock *sharedBlock_  = nullptr;
     std::shared_ptr<DataShareBlockWriterImpl> blockWriter_ = nullptr;
-    std::shared_ptr<DataShareAbstractResultSet> resultSet_ = nullptr;
+    std::shared_ptr<ResultSetBridge> bridge_ = nullptr;
 };
 } // namespace DataShare
 } // namespace OHOS
