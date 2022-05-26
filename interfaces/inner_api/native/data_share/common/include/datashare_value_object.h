@@ -54,10 +54,13 @@ public:
     int GetBool(bool &val) const;
     int GetString(std::string &val) const;
     int GetBlob(std::vector<uint8_t> &val) const;
-
     bool Marshalling(Parcel &parcel) const override;
     static DataShareValueObject *Unmarshalling(Parcel &parcel);
-
+    template<typename T>
+    operator T () const
+    {
+        return std::get<T>(value);
+    }
     DataShareValueObjectType type;
     std::variant<std::monostate, int64_t, double, std::string, bool, std::vector<uint8_t>> value;
 };

@@ -21,7 +21,7 @@
 namespace OHOS {
 namespace RdbDataShareAdapter {
 static const OHOS::HiviewDFX::HiLogLabel DATA_SHARE_ADAPTER_LABEL = { LOG_CORE, 0xD001650,
-    "DATA_SHARE_ADAPTER_NATIVE" };
+    "DATA_SHARE_ADAPTER" };
 
 #define LOG_DEBUG(...) ((void)OHOS::HiviewDFX::HiLog::Debug(DATA_SHARE_ADAPTER_LABEL, __VA_ARGS__))
 #define LOG_INFO(...) ((void)OHOS::HiviewDFX::HiLog::Info(DATA_SHARE_ADAPTER_LABEL, __VA_ARGS__))

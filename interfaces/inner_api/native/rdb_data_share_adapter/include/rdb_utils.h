@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_RDB_UTILS_H
-#define NATIVE_RDB_UTILS_H
+#ifndef RDB_UTILS_H
+#define RDB_UTILS_H
 
 #include <list>
 #include <memory>
@@ -63,4 +63,4 @@ private:
 };
 } // namespace RdbDataShareAdapter
 } // namespace OHOS
-#endif // NATIVE_RDB_UTILS_H
+#endif // RDB_UTILS_H

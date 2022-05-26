@@ -72,24 +72,24 @@ bool RdbResultSetBridge::OnGo(int32_t start, int32_t target, Writer &writer)
         return false;
     }
 
-    ColumnType columnTypes[columnCount];
+    std::vector<ColumnType> columnTypes;
     GetColumnTypes(columnCount, columnTypes);
     WriteBlock(start, target, columnCount, columnTypes, writer);
 
     return true;
 }
 
-void RdbResultSetBridge::GetColumnTypes(int columnCount, ColumnType columnTypes[])
+void RdbResultSetBridge::GetColumnTypes(int columnCount, std::vector<ColumnType> &columnTypes)
 {
     for (int i = 0; i < columnCount; ++i) {
         ColumnType type;
         rdbResultSet_->GetColumnType(i, type);
-        columnTypes[i] = type;
+        columnTypes.push_back(type);
     }
 }
 
 void RdbResultSetBridge::WriteBlock(
-    int32_t start, int32_t target, int columnCount, ColumnType columnTypes[], Writer &writer)
+    int32_t start, int32_t target, int columnCount, const std::vector<ColumnType> &columnTypes, Writer &writer)
 {
     bool isFull = false;
     int errCode = 0;
@@ -109,7 +109,7 @@ void RdbResultSetBridge::WriteBlock(
     }
 }
 
-void RdbResultSetBridge::WriteColumn(int columnCount, const ColumnType *columnTypes, Writer &writer, int row)
+void RdbResultSetBridge::WriteColumn(int columnCount, const std::vector<ColumnType> &columnTypes, Writer &writer, int row)
 {
     for (int i = 0; i < columnCount; i++) {
         LOG_DEBUG("Write data of row: %{public}d, column: %{public}d", row, i);
