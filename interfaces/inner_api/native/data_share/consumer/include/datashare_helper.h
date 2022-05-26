@@ -73,7 +73,7 @@ public:
      *
      * @return Returns the created DataShareHelper instance.
      */
-    std::shared_ptr<DataShareHelper> Creator(const sptr<IRemoteObject> &token, const std::string &strUri);
+    static std::shared_ptr<DataShareHelper> Creator(const sptr<IRemoteObject> &token, const std::string &strUri);
 
     /**
      * @brief Releases the client resource of the Data share.
