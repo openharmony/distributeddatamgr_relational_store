@@ -109,7 +109,7 @@ bool DataShareValueObject::Marshalling(const DataShareValueObject &valueObject, 
         }
         case DataShareValueObjectType::TYPE_BLOB: {
             parcel.WriteInt16((int16_t) DataShareValueObjectType::TYPE_BLOB);
-            parcel.WriteUInt8Vector(std::get<std::vector<uint8_t>>(value));
+            parcel.WriteUInt8Vector(std::get<std::vector<uint8_t>>(valueObject.value));
             break;
         }
         case DataShareValueObjectType::TYPE_BOOL: {
