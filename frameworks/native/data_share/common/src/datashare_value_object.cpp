@@ -87,7 +87,7 @@ int DataShareValueObject::GetBlob(std::vector<uint8_t> &val) const
 
 bool DataShareValueObject::Marshalling(const DataShareValueObject &valueObject, Parcel &parcel)
 {
-    switch (this->type) {
+    switch (valueObject.type) {
         case DataShareValueObjectType::TYPE_NULL: {
             parcel.WriteInt16((int16_t) DataShareValueObjectType::TYPE_NULL);
             break;

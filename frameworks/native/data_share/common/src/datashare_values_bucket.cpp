@@ -98,8 +98,8 @@ void DataShareValuesBucket::GetAll(std::map<std::string, DataShareValueObject> &
 
 bool DataShareValuesBucket::Marshalling(const DataShareValuesBucket &valuesBucket, Parcel &parcel)
 {
-    parcel.WriteInt32(valuesMap.size());
-    for (auto &it : valuesMap) {
+    parcel.WriteInt32(valuesBucket.valuesMap.size());
+    for (auto &it : valuesBucket.valuesMap) {
         parcel.WriteString(it.first);
         DataShareValueObject::Marshalling(it.second, parcel);
     }
