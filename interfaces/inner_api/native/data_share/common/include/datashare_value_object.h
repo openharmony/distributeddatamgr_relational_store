@@ -32,7 +32,7 @@ enum DataShareValueObjectType : int32_t {
     TYPE_BLOB,
 };
 
-class DataShareValueObject : public virtual OHOS::Parcelable {
+class DataShareValueObject {
 public:
     DataShareValueObject() : type(TYPE_NULL){};
     ~DataShareValueObject() = default;
@@ -72,7 +72,7 @@ public:
     int GetBool(bool &val) const;
     int GetString(std::string &val) const;
     int GetBlob(std::vector<uint8_t> &val) const;
-    bool Marshalling(Parcel &parcel) const override;
+    static bool Marshalling(const DataShareValueObject &valueObject, Parcel &parcel);
     static DataShareValueObject *Unmarshalling(Parcel &parcel);
     template<typename T>
     operator T () const

@@ -155,7 +155,7 @@ int DataShareProxy::Insert(const Uri &uri, const DataShareValuesBucket &value)
         return index;
     }
 
-    if (!data.WriteParcelable(&value)) {
+    if (!DataShareValuesBucket::Marshalling(&value)) {
         LOG_ERROR("fail to WriteParcelable value");
         return index;
     }
@@ -198,7 +198,7 @@ int DataShareProxy::Update(const Uri &uri, const DataSharePredicates &predicates
         return index;
     }
 
-    if (!data.WriteParcelable(&value)) {
+    if (!DataShareValuesBucket::Marshalling(value, data)) {
         LOG_ERROR("fail to WriteParcelable value");
         return index;
     }
@@ -347,7 +347,7 @@ int DataShareProxy::BatchInsert(const Uri &uri, const std::vector<DataShareValue
     }
 
     for (int i = 0; i < count; i++) {
-        if (!data.WriteParcelable(&values[i])) {
+        if (!DataShareValuesBucket::Marshalling(values[i], data)) {
             LOG_ERROR("fail to WriteParcelable ret, index = %{public}d", i);
             return ret;
         }
