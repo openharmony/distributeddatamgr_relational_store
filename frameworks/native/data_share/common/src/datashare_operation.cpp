@@ -291,7 +291,7 @@ bool DataShareOperation::Marshalling(Parcel &out) const
             return false;
         }
 
-        if (!out.WriteParcelable(valuesBucket_.get())) {
+        if (!DataShareValuesBucket::Marshalling(*valuesBucket_, out)) {
             LOG_ERROR("DataShareOperation::Marshalling WriteInt32(VALUE_OBJECT) error");
             return false;
         }
@@ -322,7 +322,7 @@ bool DataShareOperation::Marshalling(Parcel &out) const
             LOG_ERROR("DataShareOperation::Marshalling WriteInt32(VALUE_OBJECT) error");
             return false;
         }
-        if (!out.WriteParcelable(valuesBucketReferences_.get())) {
+        if (!DataShareValuesBucket::Marshalling(*valuesBucketReferences_, out)) {
             LOG_ERROR("DataShareOperation::Marshalling WriteInt32(VALUE_OBJECT) error");
             return false;
         }
