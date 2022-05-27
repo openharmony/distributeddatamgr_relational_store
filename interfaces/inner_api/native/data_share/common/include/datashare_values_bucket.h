@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace DataShare {
-class DataShareValuesBucket : public virtual OHOS::Parcelable {
+class DataShareValuesBucket {
 public:
     DataShareValuesBucket() = default;
     explicit DataShareValuesBucket(std::map<std::string, DataShareValueObject> &values) : valuesMap(values){};
@@ -48,7 +48,7 @@ public:
     bool GetObject(const std::string &columnName, DataShareValueObject &value) const;
     void GetAll(std::map<std::string, DataShareValueObject> &valuesMap) const;
 
-    bool Marshalling(Parcel &parcel) const override;
+    static bool Marshalling(const DataShareValuesBucket &valuesBucket, Parcel &parcel);
     static DataShareValuesBucket *Unmarshalling(Parcel &parcel);
 
     std::map<std::string, DataShareValueObject> valuesMap;

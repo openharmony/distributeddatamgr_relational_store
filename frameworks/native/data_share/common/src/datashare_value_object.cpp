@@ -85,7 +85,7 @@ int DataShareValueObject::GetBlob(std::vector<uint8_t> &val) const
     return E_OK;
 }
 
-bool DataShareValueObject::Marshalling(Parcel &parcel) const
+bool DataShareValueObject::Marshalling(const DataShareValueObject &valueObject, Parcel &parcel)
 {
     switch (this->type) {
         case DataShareValueObjectType::TYPE_NULL: {
@@ -94,17 +94,17 @@ bool DataShareValueObject::Marshalling(Parcel &parcel) const
         }
         case DataShareValueObjectType::TYPE_INT: {
             parcel.WriteInt16((int16_t) DataShareValueObjectType::TYPE_INT);
-            parcel.WriteInt64(std::get<int64_t>(value));
+            parcel.WriteInt64(std::get<int64_t>(valueObject.value));
             break;
         }
         case DataShareValueObjectType::TYPE_DOUBLE: {
             parcel.WriteInt16((int16_t) DataShareValueObjectType::TYPE_DOUBLE);
-            parcel.WriteDouble(std::get<double>(value));
+            parcel.WriteDouble(std::get<double>(valueObject.value));
             break;
         }
         case DataShareValueObjectType::TYPE_STRING: {
             parcel.WriteInt16((int16_t) DataShareValueObjectType::TYPE_STRING);
-            parcel.WriteString(std::get<std::string>(value));
+            parcel.WriteString(std::get<std::string>(valueObject.value));
             break;
         }
         case DataShareValueObjectType::TYPE_BLOB: {
@@ -114,7 +114,7 @@ bool DataShareValueObject::Marshalling(Parcel &parcel) const
         }
         case DataShareValueObjectType::TYPE_BOOL: {
             parcel.WriteInt16((int16_t) DataShareValueObjectType::TYPE_BOOL);
-            parcel.WriteBool(std::get<bool>(value));
+            parcel.WriteBool(std::get<bool>(valueObject.value));
             break;
         }
         default:
