@@ -17,19 +17,6 @@
 
 namespace OHOS {
 namespace DataShare {
-DataShareValuesBucket::DataShareValuesBucket()
-{
-}
-
-DataShareValuesBucket::DataShareValuesBucket(std::map<std::string, DataShareValueObject> &valuesMap)
-    : valuesMap(valuesMap)
-{
-}
-
-DataShareValuesBucket::~DataShareValuesBucket()
-{
-}
-
 void DataShareValuesBucket::PutString(const std::string &columnName, const std::string &value)
 {
     valuesMap.insert(std::make_pair(columnName, DataShareValueObject(value)));
