@@ -57,6 +57,17 @@ DataShareHelper::DataShareHelper(const std::shared_ptr<OHOS::AbilityRuntime::Con
     LOG_INFO("DataShareHelper::DataShareHelper end");
 }
 
+DataShareHelper::DataShareHelper(const sptr<IRemoteObject> &token,
+    const Uri &uri, const sptr<IDataShare> &dataShareProxy)
+{
+    LOG_INFO("DataShareHelper::DataShareHelper start");
+    token_ = token;
+    uri_ = uri;
+    dataShareProxy_ = dataShareProxy;
+    dataShareConnection_ = DataShareConnection::GetInstance();
+    LOG_INFO("DataShareHelper::DataShareHelper end");
+}
+
 void DataShareHelper::AddDataShareDeathRecipient(const sptr<IRemoteObject> &token)
 {
     LOG_INFO("DataShareHelper::AddDataShareDeathRecipient start.");
@@ -178,6 +189,49 @@ std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
     }
 
     LOG_INFO("DataShareHelper::Creator with runtime context and uri called end.");
+    return std::shared_ptr<DataShareHelper>(ptrDataShareHelper);
+}
+
+/**
+ * @brief You can use this method to specify the Uri of the data to operate and set the binding relationship
+ * between the ability using the Data template (data share for short) and the associated client process in
+ * a DataShareHelper instance.
+ *
+ * @param token Indicates the System token.
+ * @param strUri Indicates the database table or disk file to operate.
+ *
+ * @return Returns the created DataShareHelper instance.
+ */
+std::shared_ptr<DataShareHelper> DataShareHelper::Creator(const sptr<IRemoteObject> &token, const std::string &strUri)
+{
+    LOG_INFO("DataShareHelper::Creator with runtime token and uri called start.");
+    Uri uri(strUri);
+    if (uri.GetScheme() != SCHEME_DATASHARE) {
+        LOG_ERROR("DataShareHelper::Creator failed, the Scheme is not datashare, Scheme: %{public}s",
+            uri.GetScheme().c_str());
+        return nullptr;
+    }
+
+    LOG_INFO("DataShareHelper::Creator before ConnectDataShareExtAbility.");
+    sptr<IDataShare> dataShareProxy = nullptr;
+
+    sptr<DataShareConnection> dataShareConnection = DataShareConnection::GetInstance();
+    if (!dataShareConnection->IsExtAbilityConnected()) {
+        dataShareConnection->ConnectDataShareExtAbility(uri, token);
+    }
+    dataShareProxy = dataShareConnection->GetDataShareProxy();
+    if (dataShareProxy == nullptr) {
+        LOG_WARN("DataShareHelper::Creator get invalid dataShareProxy");
+    }
+    LOG_INFO("DataShareHelper::Creator after ConnectDataShareExtAbility.");
+
+    DataShareHelper *ptrDataShareHelper = new (std::nothrow) DataShareHelper(token, uri, dataShareProxy);
+    if (ptrDataShareHelper == nullptr) {
+        LOG_ERROR("DataShareHelper::Creator failed, create DataShareHelper failed");
+        return nullptr;
+    }
+
+    LOG_INFO("DataShareHelper::Creator with runtime token and uri called end.");
     return std::shared_ptr<DataShareHelper>(ptrDataShareHelper);
 }
 
