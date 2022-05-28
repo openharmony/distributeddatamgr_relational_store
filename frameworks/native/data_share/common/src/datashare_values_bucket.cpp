@@ -17,19 +17,6 @@
 
 namespace OHOS {
 namespace DataShare {
-DataShareValuesBucket::DataShareValuesBucket()
-{
-}
-
-DataShareValuesBucket::DataShareValuesBucket(std::map<std::string, DataShareValueObject> &valuesMap)
-    : valuesMap(valuesMap)
-{
-}
-
-DataShareValuesBucket::~DataShareValuesBucket()
-{
-}
-
 void DataShareValuesBucket::PutString(const std::string &columnName, const std::string &value)
 {
     valuesMap.insert(std::make_pair(columnName, DataShareValueObject(value)));
@@ -109,12 +96,12 @@ void DataShareValuesBucket::GetAll(std::map<std::string, DataShareValueObject> &
     outValuesMap = valuesMap;
 }
 
-bool DataShareValuesBucket::Marshalling(Parcel &parcel) const
+bool DataShareValuesBucket::Marshalling(const DataShareValuesBucket &valuesBucket, Parcel &parcel)
 {
-    parcel.WriteInt32(valuesMap.size());
-    for (auto &it : valuesMap) {
+    parcel.WriteInt32(valuesBucket.valuesMap.size());
+    for (auto &it : valuesBucket.valuesMap) {
         parcel.WriteString(it.first);
-        parcel.WriteParcelable(&it.second);
+        DataShareValueObject::Marshalling(it.second, parcel);
     }
     return true;
 }

@@ -19,81 +19,6 @@
 
 namespace OHOS {
 namespace DataShare {
-DataShareValueObject::DataShareValueObject() : type(DataShareValueObjectType::TYPE_NULL)
-{
-}
-
-DataShareValueObject::DataShareValueObject(DataShareValueObject &&DataShareValueObject) noexcept
-{
-    if (this == &DataShareValueObject) {
-        return;
-    }
-    type = DataShareValueObject.type;
-    value = std::move(DataShareValueObject.value);
-    DataShareValueObject.type = DataShareValueObjectType::TYPE_NULL;
-}
-
-DataShareValueObject::DataShareValueObject(const DataShareValueObject &DataShareValueObject)
-{
-    if (this == &DataShareValueObject) {
-        return;
-    }
-    type = DataShareValueObject.type;
-    value = DataShareValueObject.value;
-}
-
-DataShareValueObject::~DataShareValueObject()
-{
-}
-
-DataShareValueObject::DataShareValueObject(int val) : type(DataShareValueObjectType::TYPE_INT)
-{
-    value = static_cast<int64_t>(val);
-}
-
-DataShareValueObject::DataShareValueObject(int64_t val) : type(DataShareValueObjectType::TYPE_INT)
-{
-    value = val;
-}
-DataShareValueObject::DataShareValueObject(double val) : type(DataShareValueObjectType::TYPE_DOUBLE)
-{
-    value = val;
-}
-DataShareValueObject::DataShareValueObject(bool val) : type(DataShareValueObjectType::TYPE_BOOL)
-{
-    value = val;
-}
-DataShareValueObject::DataShareValueObject(const std::string &val) : type(DataShareValueObjectType::TYPE_STRING)
-{
-    value = val;
-}
-DataShareValueObject::DataShareValueObject(const std::vector<uint8_t> &val) : type(DataShareValueObjectType::TYPE_BLOB)
-{
-    std::vector<uint8_t> blob = val;
-    value = blob;
-}
-
-DataShareValueObject &DataShareValueObject::operator=(DataShareValueObject &&DataShareValueObject) noexcept
-{
-    if (this == &DataShareValueObject) {
-        return *this;
-    }
-    type = DataShareValueObject.type;
-    value = std::move(DataShareValueObject.value);
-    DataShareValueObject.type = DataShareValueObjectType::TYPE_NULL;
-    return *this;
-}
-
-DataShareValueObject &DataShareValueObject::operator=(const DataShareValueObject &DataShareValueObject)
-{
-    if (this == &DataShareValueObject) {
-        return *this;
-    }
-    type = DataShareValueObject.type;
-    value = DataShareValueObject.value;
-    return *this;
-}
-
 DataShareValueObjectType DataShareValueObject::GetType() const
 {
     return type;
@@ -160,36 +85,36 @@ int DataShareValueObject::GetBlob(std::vector<uint8_t> &val) const
     return E_OK;
 }
 
-bool DataShareValueObject::Marshalling(Parcel &parcel) const
+bool DataShareValueObject::Marshalling(const DataShareValueObject &valueObject, Parcel &parcel)
 {
-    switch (this->type) {
+    switch (valueObject.type) {
         case DataShareValueObjectType::TYPE_NULL: {
             parcel.WriteInt16((int16_t) DataShareValueObjectType::TYPE_NULL);
             break;
         }
         case DataShareValueObjectType::TYPE_INT: {
             parcel.WriteInt16((int16_t) DataShareValueObjectType::TYPE_INT);
-            parcel.WriteInt64(std::get<int64_t>(value));
+            parcel.WriteInt64(std::get<int64_t>(valueObject.value));
             break;
         }
         case DataShareValueObjectType::TYPE_DOUBLE: {
             parcel.WriteInt16((int16_t) DataShareValueObjectType::TYPE_DOUBLE);
-            parcel.WriteDouble(std::get<double>(value));
+            parcel.WriteDouble(std::get<double>(valueObject.value));
             break;
         }
         case DataShareValueObjectType::TYPE_STRING: {
             parcel.WriteInt16((int16_t) DataShareValueObjectType::TYPE_STRING);
-            parcel.WriteString(std::get<std::string>(value));
+            parcel.WriteString(std::get<std::string>(valueObject.value));
             break;
         }
         case DataShareValueObjectType::TYPE_BLOB: {
             parcel.WriteInt16((int16_t) DataShareValueObjectType::TYPE_BLOB);
-            parcel.WriteUInt8Vector(std::get<std::vector<uint8_t>>(value));
+            parcel.WriteUInt8Vector(std::get<std::vector<uint8_t>>(valueObject.value));
             break;
         }
         case DataShareValueObjectType::TYPE_BOOL: {
             parcel.WriteInt16((int16_t) DataShareValueObjectType::TYPE_BOOL);
-            parcel.WriteBool(std::get<bool>(value));
+            parcel.WriteBool(std::get<bool>(valueObject.value));
             break;
         }
         default:

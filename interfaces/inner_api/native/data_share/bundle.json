@@ -92,6 +92,7 @@
                     "header": {
                         "header_files": [
                             "datashare_errno.h",
+                            "datashare_abs_predicates.h",
                             "datashare_predicates_def.h",
                             "datashare_predicates_object.h",
                             "datashare_predicates.h",
