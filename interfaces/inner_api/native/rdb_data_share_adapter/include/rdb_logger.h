@@ -20,14 +20,15 @@
 
 namespace OHOS {
 namespace RdbDataShareAdapter {
-static const OHOS::HiviewDFX::HiLogLabel DATA_SHARE_ADAPTER_LABEL = { LOG_CORE, 0xD001650, "DATA_SHARE_ADAPTER_NATIVE" };
+static const OHOS::HiviewDFX::HiLogLabel DATA_SHARE_ADAPTER_LABEL = { LOG_CORE, 0xD001650,
+    "DATA_SHARE_ADAPTER" };
 
 #define LOG_DEBUG(...) ((void)OHOS::HiviewDFX::HiLog::Debug(DATA_SHARE_ADAPTER_LABEL, __VA_ARGS__))
 #define LOG_INFO(...) ((void)OHOS::HiviewDFX::HiLog::Info(DATA_SHARE_ADAPTER_LABEL, __VA_ARGS__))
 #define LOG_WARN(...) ((void)OHOS::HiviewDFX::HiLog::Warn(DATA_SHARE_ADAPTER_LABEL, __VA_ARGS__))
 #define LOG_ERROR(...) ((void)OHOS::HiviewDFX::HiLog::Error(DATA_SHARE_ADAPTER_LABEL, __VA_ARGS__))
 #define LOG_FATAL(...) ((void)OHOS::HiviewDFX::HiLog::Fatal(DATA_SHARE_ADAPTER_LABEL, __VA_ARGS__))
-} // namespace RDBResultSetBridge
+} // namespace RdbDataShareAdapter
 } // namespace OHOS
 
 #endif // DATA_SHARE_ADAPTER_LOGGER_H
