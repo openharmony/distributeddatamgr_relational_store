@@ -156,7 +156,7 @@ describe('rdbResultSetTest', function () {
                 const id = resultSet.getLong(resultSet.getColumnIndex("id"))
                 const data4 = resultSet.getBlob(resultSet.getColumnIndex("data4"))
                 console.log(TAG + "id=" + id + ", data4=" + data4);
-                expect("").assertEqual(data4);
+                expect("").assertEqual("" + data4);
             }
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -1526,7 +1526,7 @@ describe('rdbResultSetTest', function () {
             let resultSet = await rdbStore.query(predicates)
             {
                 resultSet.goToRow(5)
-                expect(true).assertEqual(resultSet.isColumnNull(1))
+                expect(false).assertEqual(resultSet.isColumnNull(1));
             }
             resultSet = null;
             done();
@@ -1546,6 +1546,7 @@ describe('rdbResultSetTest', function () {
             {
                 resultSet.goToRow(2)
                 expect(false).assertEqual(resultSet.isColumnNull(1))
+                expect(true).assertEqual(resultSet.isColumnNull(4))
             }
             resultSet = null;
             done();
