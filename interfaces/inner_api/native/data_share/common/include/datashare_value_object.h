@@ -23,29 +23,47 @@
 
 namespace OHOS {
 namespace DataShare {
-enum class DataShareValueObjectType {
+enum DataShareValueObjectType : int32_t {
     TYPE_NULL = 0,
     TYPE_INT,
     TYPE_DOUBLE,
     TYPE_STRING,
-    TYPE_BLOB,
     TYPE_BOOL,
+    TYPE_BLOB,
 };
 
-class DataShareValueObject : public virtual OHOS::Parcelable {
+class DataShareValueObject {
 public:
-    DataShareValueObject();
-    ~DataShareValueObject();
-    DataShareValueObject(DataShareValueObject &&DataShareValueObject) noexcept;
-    DataShareValueObject(const DataShareValueObject &DataShareValueObject);
-    DataShareValueObject(int val);
-    DataShareValueObject(int64_t val);
-    DataShareValueObject(double val);
-    DataShareValueObject(bool val);
-    DataShareValueObject(const std::string &val);
-    DataShareValueObject(const std::vector<uint8_t> &blob);
-    DataShareValueObject &operator=(DataShareValueObject &&DataShareValueObject) noexcept;
-    DataShareValueObject &operator=(const DataShareValueObject &DataShareValueObject);
+    DataShareValueObject() : type(TYPE_NULL){};
+    ~DataShareValueObject() = default;
+    DataShareValueObject(DataShareValueObject &&object) noexcept : type(object.type), value(std::move(object.value)){};
+    DataShareValueObject(const DataShareValueObject &object) : type(object.type), value(object.value){};
+    DataShareValueObject(int val) : DataShareValueObject(static_cast<int64_t>(val)) {};
+    DataShareValueObject(int64_t val) : type(TYPE_INT), value(val){};
+    DataShareValueObject(double val) : type(TYPE_DOUBLE), value(val){};
+    DataShareValueObject(bool val) : type(TYPE_BOOL), value(val){};
+    DataShareValueObject(const std::string &val) : type(TYPE_STRING), value(val){};
+    DataShareValueObject(const char *val) : DataShareValueObject(std::string(val)){};
+    DataShareValueObject(std::vector<uint8_t> blob) : type(TYPE_BLOB), value(std::move(blob)){};
+    DataShareValueObject &operator=(DataShareValueObject &&object) noexcept
+    {
+        if (this == &object) {
+            return *this;
+        }
+        type = object.type;
+        value = std::move(object.value);
+        object.type = TYPE_NULL;
+        return *this;
+    };
+    DataShareValueObject &operator=(const DataShareValueObject &object)
+    {
+        if (this == &object) {
+            return *this;
+        }
+        type = object.type;
+        value = object.value;
+        return *this;
+    }
 
     DataShareValueObjectType GetType() const;
     int GetInt(int &val) const;
@@ -54,7 +72,7 @@ public:
     int GetBool(bool &val) const;
     int GetString(std::string &val) const;
     int GetBlob(std::vector<uint8_t> &val) const;
-    bool Marshalling(Parcel &parcel) const override;
+    static bool Marshalling(const DataShareValueObject &valueObject, Parcel &parcel);
     static DataShareValueObject *Unmarshalling(Parcel &parcel);
     template<typename T>
     operator T () const
