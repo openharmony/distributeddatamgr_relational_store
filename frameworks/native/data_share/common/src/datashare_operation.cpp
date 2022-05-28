@@ -407,7 +407,7 @@ bool DataShareOperation::ReadFromParcel(Parcel &in)
     LOG_DEBUG("DataShareOperation::ReadFromParcel empty is %{public}s",
         empty == VALUE_OBJECT ? "VALUE_OBJECT" : "VALUE_NULL");
     if (empty == VALUE_OBJECT) {
-        valuesBucket_.reset(in.ReadParcelable<DataShareValuesBucket>());
+        valuesBucket_.reset(DataShareValuesBucket::Unmarshalling(in));
     } else {
         valuesBucket_.reset();
     }
@@ -431,7 +431,7 @@ bool DataShareOperation::ReadFromParcel(Parcel &in)
     LOG_DEBUG("DataShareOperation::ReadFromParcel empty is %{public}s",
         (empty == VALUE_OBJECT) ? "VALUE_OBJECT" : "VALUE_NULL");
     if (empty == VALUE_OBJECT) {
-        valuesBucketReferences_.reset(in.ReadParcelable<DataShareValuesBucket>());
+        valuesBucketReferences_.reset(DataShareValuesBucket::Unmarshalling(in));
     } else {
         valuesBucketReferences_.reset();
     }
