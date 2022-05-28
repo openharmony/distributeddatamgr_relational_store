@@ -117,7 +117,8 @@
             "test": [
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/native/rdb/test:unittest",
                 "//foundation/distributeddatamgr/appdatamgr/frameworks/js/napi/rdb/test:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/native/rdb_data_share_adapter/test:unittest"
+                "//foundation/distributeddatamgr/appdatamgr/frameworks/native/rdb_data_share_adapter/test:unittest",
+				"//foundation/distributeddatamgr/appdatamgr/frameworks/native/rdb/test:fuzztest"
             ]
         }
     }
