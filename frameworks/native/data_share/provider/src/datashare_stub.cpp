@@ -140,7 +140,7 @@ ErrCode DataShareStub::CmdInsert(MessageParcel &data, MessageParcel &reply)
         LOG_ERROR("DataShareStub uri is nullptr");
         return ERR_INVALID_VALUE;
     }
-    std::shared_ptr<DataShareValuesBucket> value(data.ReadParcelable<DataShareValuesBucket>());
+    std::shared_ptr<DataShareValuesBucket> value(DataShareValuesBucket::Unmarshalling(data));
     if (value == nullptr) {
         LOG_ERROR("ReadParcelable value is nullptr");
         return ERR_INVALID_VALUE;
@@ -167,7 +167,7 @@ ErrCode DataShareStub::CmdUpdate(MessageParcel &data, MessageParcel &reply)
         LOG_ERROR("ReadParcelable predicates is nullptr");
         return ERR_INVALID_VALUE;
     }
-    std::shared_ptr<DataShareValuesBucket> value(data.ReadParcelable<DataShareValuesBucket>());
+    std::shared_ptr<DataShareValuesBucket> value(DataShareValuesBucket::Unmarshalling(data));
     if (value == nullptr) {
         LOG_ERROR("ReadParcelable value is nullptr");
         return ERR_INVALID_VALUE;
@@ -264,7 +264,7 @@ ErrCode DataShareStub::CmdBatchInsert(MessageParcel &data, MessageParcel &reply)
 
     std::vector<DataShareValuesBucket> values;
     for (int i = 0; i < count; i++) {
-        std::unique_ptr<DataShareValuesBucket> value(data.ReadParcelable<DataShareValuesBucket>());
+        std::unique_ptr<DataShareValuesBucket> value(DataShareValuesBucket::Unmarshalling(data));
         if (value == nullptr) {
             LOG_ERROR("DataShareStub value is nullptr, index = %{public}d", i);
             return ERR_INVALID_VALUE;
