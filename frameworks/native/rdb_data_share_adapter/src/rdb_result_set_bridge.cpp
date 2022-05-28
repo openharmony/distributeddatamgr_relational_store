@@ -15,16 +15,16 @@
 
 #define LOG_TAG "RdbResultSetBridge"
 
-#include "rdb_logger.h"
 #include "rdb_result_set_bridge.h"
+
 #include "rdb_errno.h"
+#include "rdb_logger.h"
 #include "result_set.h"
 
 namespace OHOS {
 namespace RdbDataShareAdapter {
 using namespace OHOS::NativeRdb;
-RdbResultSetBridge::RdbResultSetBridge(std::shared_ptr<ResultSet> resultSet)
-    : rdbResultSet_(resultSet)
+RdbResultSetBridge::RdbResultSetBridge(std::shared_ptr<ResultSet> resultSet) : rdbResultSet_(resultSet)
 {
 }
 
@@ -43,7 +43,7 @@ int RdbResultSetBridge::GetAllColumnNames(std::vector<std::string> &columnOrKeyN
     return rdbResultSet_->GetAllColumnNames(columnOrKeyNames);
 }
 
-bool RdbResultSetBridge::OnGo(int32_t start, int32_t target, Writer& writer)
+bool RdbResultSetBridge::OnGo(int32_t start, int32_t target, Writer &writer)
 {
     int rowCount;
     rdbResultSet_->GetRowCount(rowCount);
@@ -60,11 +60,11 @@ bool RdbResultSetBridge::OnGo(int32_t start, int32_t target, Writer& writer)
     }
     LOG_DEBUG("rowCount: %{public}d, columnCount: %{public}d.", rowCount, columnCount);
 
-      bool bResultSet = false;
-      rdbResultSet_->IsStarted(bResultSet);
-      if (!bResultSet) {
-          rdbResultSet_->GoToFirstRow();
-      }
+    bool bResultSet = false;
+    rdbResultSet_->IsStarted(bResultSet);
+    if (!bResultSet) {
+        rdbResultSet_->GoToFirstRow();
+    }
 
     int errCode = rdbResultSet_->GoToRow(start);
     if (errCode) {
@@ -72,24 +72,24 @@ bool RdbResultSetBridge::OnGo(int32_t start, int32_t target, Writer& writer)
         return false;
     }
 
-    ColumnType columnTypes[columnCount];
+    std::vector<ColumnType> columnTypes;
     GetColumnTypes(columnCount, columnTypes);
     WriteBlock(start, target, columnCount, columnTypes, writer);
 
     return true;
 }
 
-void RdbResultSetBridge::GetColumnTypes(int columnCount, ColumnType columnTypes[])
+void RdbResultSetBridge::GetColumnTypes(int columnCount, std::vector<ColumnType> &columnTypes)
 {
     for (int i = 0; i < columnCount; ++i) {
         ColumnType type;
         rdbResultSet_->GetColumnType(i, type);
-        columnTypes[i] = type;
+        columnTypes.push_back(type);
     }
 }
 
-void RdbResultSetBridge::WriteBlock(int32_t start, int32_t target,
-        int columnCount, ColumnType columnTypes[], Writer& writer)
+void RdbResultSetBridge::WriteBlock(
+    int32_t start, int32_t target, int columnCount, const std::vector<ColumnType> &columnTypes, Writer &writer)
 {
     bool isFull = false;
     int errCode = 0;
@@ -109,7 +109,8 @@ void RdbResultSetBridge::WriteBlock(int32_t start, int32_t target,
     }
 }
 
-void RdbResultSetBridge::WriteColumn(int columnCount, const ColumnType *columnTypes, Writer& writer, int row)
+void RdbResultSetBridge::WriteColumn(
+    int columnCount, const std::vector<ColumnType> &columnTypes, Writer &writer, int row)
 {
     for (int i = 0; i < columnCount; i++) {
         LOG_DEBUG("Write data of row: %{public}d, column: %{public}d", row, i);
@@ -141,14 +142,14 @@ void RdbResultSetBridge::WriteColumn(int columnCount, const ColumnType *columnTy
             default:
                 std::string stringValue;
                 rdbResultSet_->GetString(i, stringValue);
-                if (writer.Write(i, (char *) stringValue.c_str(), strlen(stringValue.c_str()) + 1)) {
+                if (writer.Write(i, (char *)stringValue.c_str(), strlen(stringValue.c_str()) + 1)) {
                     LOG_DEBUG("WriteString failed of row: %{public}d, column: %{public}d", row, i);
                 }
         }
     }
 }
 
-bool RdbResultSetBridge::WriteBlobData(int column, Writer& writer)
+bool RdbResultSetBridge::WriteBlobData(int column, Writer &writer)
 {
     std::vector<uint8_t> blobValue;
     rdbResultSet_->GetBlob(column, blobValue);
@@ -164,4 +165,3 @@ bool RdbResultSetBridge::WriteBlobData(int column, Writer& writer)
 }
 } // namespace RdbDataShareAdapter
 } // namespace OHOS
-

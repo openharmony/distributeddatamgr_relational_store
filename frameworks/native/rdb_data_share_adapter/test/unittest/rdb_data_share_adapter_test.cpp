@@ -14,18 +14,14 @@
  */
 
 #include <gtest/gtest.h>
-
 #include <string>
 
-#include "datashare_block_writer_impl.h"
 #include "datashare_predicates.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_utils.h"
-#include "datashare_result_set.h"
-
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -70,15 +66,18 @@ public:
     static const std::string CREATE_TABLE_TEST;
 };
 
-int RdbStepSharedResultSetOpenCallback::OnCreate(RdbStore &store) {
+int RdbStepSharedResultSetOpenCallback::OnCreate(RdbStore &store)
+{
     return OHOS::NativeRdb::E_OK;
 }
 
-int RdbStepSharedResultSetOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion) {
+int RdbStepSharedResultSetOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
+{
     return OHOS::NativeRdb::E_OK;
 }
 
-void RdbDataShareAdapterTest::SetUpTestCase(void) {
+void RdbDataShareAdapterTest::SetUpTestCase(void)
+{
     int errCode = OHOS::NativeRdb::E_OK;
     RdbStoreConfig config(RdbDataShareAdapterTest::DATABASE_NAME);
     RdbStepSharedResultSetOpenCallback helper;
@@ -87,19 +86,23 @@ void RdbDataShareAdapterTest::SetUpTestCase(void) {
     EXPECT_EQ(errCode, OHOS::NativeRdb::E_OK);
 }
 
-void RdbDataShareAdapterTest::TearDownTestCase(void) {
+void RdbDataShareAdapterTest::TearDownTestCase(void)
+{
     RdbHelper::DeleteRdbStore(RdbDataShareAdapterTest::DATABASE_NAME);
 }
 
-void RdbDataShareAdapterTest::SetUp(void) {
+void RdbDataShareAdapterTest::SetUp(void)
+{
     store->ExecuteSql("DROP TABLE IF EXISTS test");
 }
 
-void RdbDataShareAdapterTest::TearDown(void) {
+void RdbDataShareAdapterTest::TearDown(void)
+{
     RdbHelper::ClearCache();
 }
 
-void RdbDataShareAdapterTest::GenerateDefaultTable() {
+void RdbDataShareAdapterTest::GenerateDefaultTable()
+{
     std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ") +
                                  std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
     store->ExecuteSql(createTableSql);
@@ -110,32 +113,33 @@ void RdbDataShareAdapterTest::GenerateDefaultTable() {
     uint8_t uValue = 66;
     std::vector<uint8_t> typeBlob;
     typeBlob.push_back(uValue);
-    store->ExecuteSql(insertSql, std::vector<ValueObject>{
-            ValueObject(std::string("hello")), ValueObject((int) 10),
-            ValueObject((double) 1.0), ValueObject((std::vector<uint8_t>) typeBlob)
+    store->ExecuteSql(insertSql, std::vector<ValueObject> {
+        ValueObject(std::string("hello")), ValueObject((int)10),
+        ValueObject((double)1.0), ValueObject((std::vector<uint8_t>)typeBlob)
     });
 
     /* insert second entry data */
     typeBlob.clear();
-    store->ExecuteSql(insertSql, std::vector<ValueObject>{
-            ValueObject(std::string("2")), ValueObject((int) -5), ValueObject((double) 2.5),
-            ValueObject() // set double value 2.5
+    store->ExecuteSql(insertSql, std::vector<ValueObject> {
+        ValueObject(std::string("2")), ValueObject((int)-5), ValueObject((double)2.5),
+        ValueObject() // set double value 2.5
     });
 
     /* insert third entry data */
-    store->ExecuteSql(insertSql, std::vector<ValueObject>{
-            ValueObject(std::string("hello world")), ValueObject((int) 3),
-            ValueObject((double) 1.8), ValueObject(std::vector<uint8_t>{ 4, 5, 6 }) // set int value 3, double 1.8
+    store->ExecuteSql(insertSql, std::vector<ValueObject> {
+        ValueObject(std::string("hello world")), ValueObject((int)3), ValueObject((double)1.8),
+        ValueObject(std::vector<uint8_t> { 4, 5, 6 }) // set int value 3, double 1.8
     });
 
     /* insert four entry data */
-    store->ExecuteSql(insertSql, std::vector<ValueObject>{
-            ValueObject(std::string("new world")), ValueObject((int) 5),
-            ValueObject((double) 5.8), ValueObject() // set int value 5, double 5.8
+    store->ExecuteSql(insertSql, std::vector<ValueObject> {
+        ValueObject(std::string("new world")), ValueObject((int)5),
+        ValueObject((double)5.8), ValueObject() // set int value 5, double 5.8
     });
 }
 
-void RdbDataShareAdapterTest::GenerateDefaultEmptyTable() {
+void RdbDataShareAdapterTest::GenerateDefaultEmptyTable()
+{
     std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ") +
                                  std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
     store->ExecuteSql(createTableSql);
@@ -173,16 +177,9 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_002, TestSize.Level1)
     DataSharePredicates predicates;
     predicates.EqualTo(column, value);
     std::vector<std::string> columns;
-    std::shared_ptr<AbsSharedResultSet> allDataTypes =
-            store->Query(RdbUtils::ToPredicates(predicates, table), columns);
-    int rdbRowCount;
-    allDataTypes.get()->GetRowCount(rdbRowCount);
-    EXPECT_EQ(rdbRowCount, 1);
-
-    std::shared_ptr<ResultSetBridge> resultSetBridge = RdbUtils::ToResultSetBridge(allDataTypes);
-
+    std::shared_ptr<AbsSharedResultSet> allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
     int rowCount;
-    resultSetBridge->GetRowCount(rowCount);
+    allDataTypes.get()->GetRowCount(rowCount);
     EXPECT_EQ(rowCount, 1);
 }
 
@@ -199,42 +196,28 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_003, TestSize.Level1)
     OHOS::DataShare::DataSharePredicates predicates;
     predicates.GreaterThan("data2", -5);
     std::vector<std::string> columns;
-    std::shared_ptr<AbsSharedResultSet> allDataTypes =
-            store->Query(RdbUtils::ToPredicates(predicates, table), columns);
+    std::shared_ptr<AbsSharedResultSet> allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
     int rdbRowCount;
     allDataTypes.get()->GetRowCount(rdbRowCount);
     EXPECT_EQ(rdbRowCount, 3);
 
-    std::shared_ptr<ResultSetBridge> resultSetBridge = RdbUtils::ToResultSetBridge(allDataTypes);
-
-    int bridgeRowCount;
-    resultSetBridge->GetRowCount(bridgeRowCount);
-    EXPECT_EQ(bridgeRowCount, 3);
-
-    std::shared_ptr<DataShareResultSet> dataShareResultSet =
-            std::make_shared<OHOS::DataShare::DataShareResultSet>(resultSetBridge);
-
-    dataShareResultSet->GoToFirstRow();
-
-    int dataShareRowCount;
-    dataShareResultSet->GetRowCount(dataShareRowCount);
-    EXPECT_EQ(dataShareRowCount, 3);
+    allDataTypes->GoToFirstRow();
 
     std::string strValue;
-    dataShareResultSet->GetString(1, strValue);
+    allDataTypes->GetString(1, strValue);
     EXPECT_EQ("hello", strValue);
 
     int intValue;
-    dataShareResultSet->GetInt(2, intValue);
+    allDataTypes->GetInt(2, intValue);
     EXPECT_EQ(intValue, 10);
 
     std::vector<uint8_t> blobValue;
     uint8_t blobData = 66;
-    dataShareResultSet->GetBlob(4, blobValue);
+    allDataTypes->GetBlob(4, blobValue);
     EXPECT_EQ(blobData, blobValue[0]);
 
-    dataShareResultSet->GoToNextRow();
-    dataShareResultSet->GetBlob(4, blobValue);
+    allDataTypes->GoToNextRow();
+    allDataTypes->GetBlob(4, blobValue);
     EXPECT_EQ(3, static_cast<int>(blobValue.size()));
     blobData = 5;
     EXPECT_EQ(blobData, blobValue[1]);
@@ -252,51 +235,91 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_004, TestSize.Level1)
     std::string table = "test";
     OHOS::DataShare::DataSharePredicates predicates;
     predicates.SetWhereClause("`data2` > ?");
-    predicates.SetWhereArgs(std::vector<std::string>{"-5"});
+    predicates.SetWhereArgs(std::vector<std::string> { "-5" });
     predicates.SetOrder("data3");
     std::vector<std::string> columns;
-    std::shared_ptr<AbsSharedResultSet> allDataTypes =
-            store->Query(RdbUtils::ToPredicates(predicates, table), columns);
+    std::shared_ptr<AbsSharedResultSet> allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
     int rowCount;
     allDataTypes.get()->GetRowCount(rowCount);
     EXPECT_EQ(rowCount, 3);
 
-    std::shared_ptr<ResultSetBridge> resultSetBridge = RdbUtils::ToResultSetBridge(allDataTypes);
-
-    std::shared_ptr<DataShareResultSet> dataShareResultSet =
-            std::make_shared<OHOS::DataShare::DataShareResultSet>(resultSetBridge);
-
-    dataShareResultSet->GoToFirstRow();
-
-    int dataShareRowCount;
-    dataShareResultSet->GetRowCount(dataShareRowCount);
-    EXPECT_EQ(dataShareRowCount, 3);
+    allDataTypes->GoToFirstRow();
 
     std::string strValue;
-    dataShareResultSet->GetString(1, strValue);
+    allDataTypes->GetString(1, strValue);
     EXPECT_EQ("hello", strValue);
 
     int intValue;
-    dataShareResultSet->GetInt(2, intValue);
+    allDataTypes->GetInt(2, intValue);
     EXPECT_EQ(intValue, 10);
 
     std::vector<uint8_t> blobValue;
-    dataShareResultSet->GetBlob(4, blobValue);
+    allDataTypes->GetBlob(4, blobValue);
     EXPECT_EQ(1, static_cast<int>(blobValue.size()));
 
-    dataShareResultSet->GoToNextRow();
+    allDataTypes->GoToNextRow();
 
-    std::string strValue3;
-    dataShareResultSet->GetString(1, strValue3);
-    EXPECT_EQ("hello world", strValue3);
+    allDataTypes->GetString(1, strValue);
+    EXPECT_EQ("hello world", strValue);
 
-    int intValue3;
-    dataShareResultSet->GetInt(2, intValue3);
-    EXPECT_EQ(intValue3, 3);
+    allDataTypes->GetInt(2, intValue);
+    EXPECT_EQ(intValue, 3);
 
-    std::vector<uint8_t> blobValue2;
-    dataShareResultSet->GetBlob(4, blobValue2);
-    EXPECT_EQ(3, static_cast<int>(blobValue2.size()));
+    allDataTypes->GetBlob(4, blobValue);
+    EXPECT_EQ(3, static_cast<int>(blobValue.size()));
     uint8_t blobData = 5;
-    EXPECT_EQ(blobData, blobValue2[1]);
+    EXPECT_EQ(blobData, blobValue[1]);
+}
+
+/* *
+ * @tc.name: Rdb_DataShare_Adapter_005
+ * @tc.desc: normal testcase of RdbDataShareAdapter
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_005, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    DataShareValuesBucket values;
+    int64_t id;
+    int changedRows;
+    values.PutString("data1", std::string("tulip"));
+    values.PutInt("data2", 100);
+    values.PutDouble("data3", 50.5);
+    values.PutBlob("data4", std::vector<uint8_t> { 20, 21, 22 });
+
+    int ret = store->Insert(id, "test", RdbUtils::ToValuesBucket(values));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(5, id);
+
+    std::string table = "test";
+    OHOS::DataShare::DataSharePredicates predicates;
+    std::string value = "tulip";
+    predicates.EqualTo("data1", value);
+    std::vector<std::string> columns;
+    std::shared_ptr<AbsSharedResultSet> allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
+    int rowCount;
+    allDataTypes.get()->GetRowCount(rowCount);
+    EXPECT_EQ(rowCount, 1);
+
+    allDataTypes.get()->Close();
+
+    values.Clear();
+    values.PutDouble("data3", 300.5);
+    values.PutBlob("data4", std::vector<uint8_t> { 17, 18, 19 });
+    ret = store->Update(
+        changedRows, "test", RdbUtils::ToValuesBucket(values), "data1 = ?", std::vector<std::string> { "tulip" });
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, changedRows);
+
+    allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
+    allDataTypes->GoToFirstRow();
+
+    double doubleVal;
+    allDataTypes->GetDouble(3, doubleVal);
+    EXPECT_EQ(300.5, doubleVal);
+
+    int deletedRows;
+    ret = store->Delete(deletedRows, RdbUtils::ToPredicates(predicates, table));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, deletedRows);
 }

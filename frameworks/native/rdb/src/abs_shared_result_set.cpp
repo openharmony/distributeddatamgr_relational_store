@@ -197,6 +197,10 @@ int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
 
 int AbsSharedResultSet::GetInt(int columnIndex, int &value)
 {
+    int errorCode = CheckState(columnIndex);
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
     AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(rowPos, columnIndex);
     if (!cellUnit) {
         LOG_ERROR("AbsSharedResultSet::GetInt cellUnit is null!");
