@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright (C) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,11 +30,12 @@ describe('rdbStoreUpdateTest', function () {
     })
 
     beforeEach(async function () {
-        await rdbStore.executeSql("DELETE FROM test");
+        await rdbStore.executeSql(CREATE_TABLE_TEST, null);
         console.info(TAG + 'beforeEach')
     })
 
-    afterEach(function () {
+    afterEach(async function () {
+        await rdbStore.executeSql("DROP TABLE IF EXISTS test");
         console.info(TAG + 'afterEach')
     })
 
