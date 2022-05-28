@@ -155,7 +155,7 @@ int DataShareProxy::Insert(const Uri &uri, const DataShareValuesBucket &value)
         return index;
     }
 
-    if (!DataShareValuesBucket::Marshalling(value)) {
+    if (!DataShareValuesBucket::Marshalling(value, data)) {
         LOG_ERROR("fail to WriteParcelable value");
         return index;
     }
