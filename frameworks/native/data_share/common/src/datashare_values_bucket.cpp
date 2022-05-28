@@ -112,8 +112,9 @@ DataShareValuesBucket *DataShareValuesBucket::Unmarshalling(Parcel &parcel)
     std::map<std::string, DataShareValueObject> valuesMap;
     for (int i = 0; i < mapSize; i++) {
         std::string key = parcel.ReadString();
-        DataShareValueObject *value = parcel.ReadParcelable<DataShareValueObject>();
+        DataShareValueObject *value = DataShareValueObject::Unmarshalling(parcel);
         valuesMap.insert(std::make_pair(key, *value));
+        delete value;
     }
     return new DataShareValuesBucket(valuesMap);
 }
