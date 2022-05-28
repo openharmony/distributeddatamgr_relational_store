@@ -13,23 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_RDB_UTILS_H
-#define NATIVE_RDB_UTILS_H
+#ifndef RDB_UTILS_H
+#define RDB_UTILS_H
 
+#include <list>
 #include <memory>
 #include <string>
 #include <vector>
-#include <list>
-#include "../../rdb/include/result_set.h"
 
+#include "../../rdb/include/result_set.h"
 #include "abs_predicates.h"
-#include "rdb_predicates.h"
 #include "datashare_predicates.h"
 #include "datashare_values_bucket.h"
+#include "rdb_predicates.h"
+#include "rdb_result_set_bridge.h"
+#include "result_set_bridge.h"
 #include "value_object.h"
 #include "values_bucket.h"
-#include "result_set_bridge.h"
-#include "rdb_result_set_bridge.h"
 
 namespace OHOS {
 namespace RdbDataShareAdapter {
@@ -53,15 +53,14 @@ public:
 private:
     RdbUtils();
     ~RdbUtils();
-    static void ToOperateThird(const std::list<OperationItem>::iterator operations,
-                                   std::shared_ptr<RdbPredicates> &predicates);
-    static void ToOperateSecond(const std::list<OperationItem>::iterator operations,
-                                    std::shared_ptr<RdbPredicates> &predicates);
-    static void ToOperateFirst(const std::list<OperationItem>::iterator operations,
-                                   std::shared_ptr<RdbPredicates> &predicates);
+    static void ToOperateThird(
+        const std::list<OperationItem>::iterator operations, std::shared_ptr<RdbPredicates> &predicates);
+    static void ToOperateSecond(
+        const std::list<OperationItem>::iterator operations, std::shared_ptr<RdbPredicates> &predicates);
+    static void ToOperateFirst(
+        const std::list<OperationItem>::iterator operations, std::shared_ptr<RdbPredicates> &predicates);
     static std::string ToString(const DataSharePredicatesObject &predicatesObject);
-
-    };
+};
 } // namespace RdbDataShareAdapter
 } // namespace OHOS
-#endif // NATIVE_RDB_UTILS_H
+#endif // RDB_UTILS_H
