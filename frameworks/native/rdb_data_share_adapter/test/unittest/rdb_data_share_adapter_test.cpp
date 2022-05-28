@@ -270,3 +270,56 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_004, TestSize.Level1)
     uint8_t blobData = 5;
     EXPECT_EQ(blobData, blobValue[1]);
 }
+
+/* *
+ * @tc.name: Rdb_DataShare_Adapter_005
+ * @tc.desc: normal testcase of RdbDataShareAdapter
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_005, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    DataShareValuesBucket values;
+    int64_t id;
+    int changedRows;
+    values.PutString("data1", std::string("tulip"));
+    values.PutInt("data2", 100);
+    values.PutDouble("data3", 50.5);
+    values.PutBlob("data4", std::vector<uint8_t> { 20, 21, 22 });
+
+    int ret = store->Insert(id, "test", RdbUtils::ToValuesBucket(values));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(5, id);
+
+    std::string table = "test";
+    OHOS::DataShare::DataSharePredicates predicates;
+    std::string value = "tulip";
+    predicates.EqualTo("data1", value);
+    std::vector<std::string> columns;
+    std::shared_ptr<AbsSharedResultSet> allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
+    int rowCount;
+    allDataTypes.get()->GetRowCount(rowCount);
+    EXPECT_EQ(rowCount, 1);
+
+    allDataTypes.get()->Close();
+
+    values.Clear();
+    values.PutDouble("data3", 300.5);
+    values.PutBlob("data4", std::vector<uint8_t> { 17, 18, 19 });
+    ret = store->Update(
+        changedRows, "test", RdbUtils::ToValuesBucket(values), "data1 = ?", std::vector<std::string> { "tulip" });
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, changedRows);
+
+    allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
+    allDataTypes->GoToFirstRow();
+
+    double doubleVal;
+    allDataTypes->GetDouble(3, doubleVal);
+    EXPECT_EQ(300.5, doubleVal);
+
+    int deletedRows;
+    ret = store->Delete(deletedRows, RdbUtils::ToPredicates(predicates, table));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, deletedRows);
+}
