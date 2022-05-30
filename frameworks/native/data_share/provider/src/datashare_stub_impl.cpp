@@ -19,6 +19,7 @@
 
 namespace OHOS {
 namespace DataShare {
+constexpr int DEFAULT_NUMBER = -1;
 std::shared_ptr<JsDataShareExtAbility> DataShareStubImpl::GetOwner()
 {
     return extension_;
@@ -36,13 +37,14 @@ std::vector<std::string> DataShareStubImpl::GetFileTypes(const Uri &uri, const s
         }
         ret = extension->GetFileTypes(uri, mimeTypeFilter);
     };
-    std::function<void()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() {
+    std::function<bool()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() -> bool {
         auto extension = client->GetOwner();
         if (extension == nullptr) {
             LOG_ERROR("%{public}s end failed.", __func__);
-            return;
+            return false;
         }
         extension->GetResult(ret);
+        return (ret.size() != 0);
     };
     uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
@@ -61,13 +63,14 @@ int DataShareStubImpl::OpenFile(const Uri &uri, const std::string &mode)
         }
         ret = extension->OpenFile(uri, mode);
     };
-    std::function<void()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() {
+    std::function<bool()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() -> bool {
         auto extension = client->GetOwner();
         if (extension == nullptr) {
             LOG_ERROR("%{public}s end failed.", __func__);
-            return;
+            return false;
         }
         extension->GetResult(ret);
+        return (ret != DEFAULT_NUMBER);
     };
     uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
@@ -103,13 +106,14 @@ int DataShareStubImpl::Insert(const Uri &uri, const DataShareValuesBucket &value
         }
         ret = extension->Insert(uri, value);
     };
-    std::function<void()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() {
+    std::function<bool()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() -> bool {
         auto extension = client->GetOwner();
         if (extension == nullptr) {
             LOG_ERROR("%{public}s end failed.", __func__);
-            return;
+            return false;
         }
         extension->GetResult(ret);
+        return (ret != DEFAULT_NUMBER);
     };
     uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
@@ -129,13 +133,14 @@ int DataShareStubImpl::Update(const Uri &uri, const DataSharePredicates &predica
         }
         ret = extension->Update(uri, predicates, value);
     };
-    std::function<void()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() {
+    std::function<bool()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() -> bool {
         auto extension = client->GetOwner();
         if (extension == nullptr) {
             LOG_ERROR("%{public}s end failed.", __func__);
-            return;
+            return false;
         }
         extension->GetResult(ret);
+        return (ret != DEFAULT_NUMBER);
     };
     uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
@@ -154,13 +159,14 @@ int DataShareStubImpl::Delete(const Uri &uri, const DataSharePredicates &predica
         }
         ret = extension->Delete(uri, predicates);
     };
-    std::function<void()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() {
+    std::function<bool()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() -> bool {
         auto extension = client->GetOwner();
         if (extension == nullptr) {
             LOG_ERROR("%{public}s end failed.", __func__);
-            return;
+            return false;
         }
         extension->GetResult(ret);
+        return (ret != DEFAULT_NUMBER);
     };
     uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
@@ -180,13 +186,14 @@ std::shared_ptr<DataShareResultSet> DataShareStubImpl::Query(const Uri &uri,
         }
         resultSet = extension->Query(uri, predicates, columns);
     };
-    std::function<void()> getRetFunc = [=, &resultSet, client = sptr<DataShareStubImpl>(this)]() {
+    std::function<bool()> getRetFunc = [=, &resultSet, client = sptr<DataShareStubImpl>(this)]() -> bool {
         auto extension = client->GetOwner();
         if (extension == nullptr) {
             LOG_ERROR("%{public}s end failed.", __func__);
-            return;
+            return false;
         }
         extension->GetResult(resultSet);
+        return (resultSet != nullptr);
     };
     uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
@@ -205,13 +212,14 @@ std::string DataShareStubImpl::GetType(const Uri &uri)
         }
         ret = extension->GetType(uri);
     };
-    std::function<void()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() {
+    std::function<bool()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() -> bool {
         auto extension = client->GetOwner();
         if (extension == nullptr) {
             LOG_ERROR("%{public}s end failed.", __func__);
-            return;
+            return false;
         }
         extension->GetResult(ret);
+        return (ret != "");
     };
     uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
@@ -230,13 +238,14 @@ int DataShareStubImpl::BatchInsert(const Uri &uri, const std::vector<DataShareVa
         }
         ret = extension->BatchInsert(uri, values);
     };
-    std::function<void()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() {
+    std::function<bool()> getRetFunc = [=, &ret, client = sptr<DataShareStubImpl>(this)]() -> bool {
         auto extension = client->GetOwner();
         if (extension == nullptr) {
             LOG_ERROR("%{public}s end failed.", __func__);
-            return;
+            return false;
         }
         extension->GetResult(ret);
+        return (ret != DEFAULT_NUMBER);
     };
     uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
@@ -306,16 +315,17 @@ Uri DataShareStubImpl::NormalizeUri(const Uri &uri)
         }
         urivalue = extension->NormalizeUri(uri);
     };
-    std::function<void()> getRetFunc = [=, &urivalue, client = sptr<DataShareStubImpl>(this)]() {
+    std::function<bool()> getRetFunc = [=, &urivalue, client = sptr<DataShareStubImpl>(this)]() -> bool {
         auto extension = client->GetOwner();
         if (extension == nullptr) {
             LOG_ERROR("%{public}s end failed.", __func__);
-            return;
+            return false;
         }
         std::string ret;
         extension->GetResult(ret);
         Uri tmp(ret);
         urivalue = tmp;
+        return (urivalue.ToString() != "");
     };
     uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");
@@ -334,16 +344,17 @@ Uri DataShareStubImpl::DenormalizeUri(const Uri &uri)
         }
         urivalue = extension->DenormalizeUri(uri);
     };
-    std::function<void()> getRetFunc = [=, &urivalue, client = sptr<DataShareStubImpl>(this)]() {
+    std::function<bool()> getRetFunc = [=, &urivalue, client = sptr<DataShareStubImpl>(this)]() -> bool {
         auto extension = client->GetOwner();
         if (extension == nullptr) {
             LOG_ERROR("%{public}s end failed.", __func__);
-            return;
+            return false;
         }
         std::string ret;
         extension->GetResult(ret);
         Uri tmp(ret);
         urivalue = tmp;
+        return (urivalue.ToString() != "");
     };
     uvQueue_->SyncCall(syncTaskFunc, getRetFunc);
     LOG_INFO("end successfully.");

@@ -14,19 +14,20 @@
  */
 
 #include "datashare_uv_queue.h"
-#include <unistd.h>
+#include <thread>
 #include "datashare_log.h"
 
 namespace OHOS {
 namespace DataShare {
 constexpr int WAIT_TIME = 3;
+constexpr int SLEEP_TIME = 100;
 DataShareUvQueue::DataShareUvQueue(napi_env env)
     : env_(env)
 {
     napi_get_uv_event_loop(env, &loop_);
 }
 
-void DataShareUvQueue::SyncCall(NapiVoidFunc func, NapiVoidFunc retFunc)
+void DataShareUvQueue::SyncCall(NapiVoidFunc func, NapiBoolFunc retFunc)
 {
     LOG_INFO("begin.");
     uv_work_t* work = new (std::nothrow) uv_work_t;
@@ -99,11 +100,15 @@ void DataShareUvQueue::Purge(uv_work_t* work)
     LOG_INFO("end.");
 }
 
-void DataShareUvQueue::CheckFuncAndExec(NapiVoidFunc retFunc)
+void DataShareUvQueue::CheckFuncAndExec(NapiBoolFunc retFunc)
 {
     if (retFunc) {
-        sleep(1);
-        retFunc();
+        int tryTimes = 20;
+        while (retFunc() != true && tryTimes > 0) {
+            LOG_ERROR("tryTimes : %{public}d.", tryTimes);
+            std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
+            tryTimes--;
+        }
     }
 }
 } // namespace DataShare

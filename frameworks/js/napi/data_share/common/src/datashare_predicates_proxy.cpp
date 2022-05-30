@@ -17,7 +17,6 @@
 
 #include "datashare_log.h"
 #include "datashare_js_utils.h"
-#include "napi_datashare_async_proxy.h"
 
 namespace OHOS {
 namespace DataShare {
