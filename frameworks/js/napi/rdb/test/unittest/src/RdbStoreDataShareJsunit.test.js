@@ -18,9 +18,9 @@ import ability_featureAbility from '@ohos.ability.featureAbility'
 import dataShare from '@ohos.data.dataShare'
 
 const TAG = "[RDB_JSKITS_TEST]"
-const CREATE_TABLE_SQL = "CREATE TABLE IF NOT EXISTS test"+" (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-"name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)"
-const DROP_TABLE_SQL = "DROP TABLE test"
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+    + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)"
+const DROP_TABLE_TEST = "drop table test"
 
 const STORE_CONFIG = {
     name: "DataShareTest.db",
@@ -36,12 +36,12 @@ describe('rdbStoreDataSharePredicatesTest', function () {
 
     beforeEach(async function () {
         console.info(TAG + 'beforeEach')
-        await rdbStore.executeSql(CREATE_TABLE_SQL, null)
+        await rdbStore.executeSql(CREATE_TABLE_TEST, null)
     })
 
     afterEach(async function () {
         console.info(TAG + 'afterEach')
-        await rdbStore.executeSql(DROP_TABLE_SQL, null)
+        await rdbStore.executeSql(DROP_TABLE_TEST, null)
     })
 
     afterAll(async function () {
@@ -88,7 +88,6 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             const age = resultSet.getLong(resultSet.getColumnIndex("age"))
             const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
             const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
-            console.log("ResultSet column names: " + resultSet.columnNames)
             expect("zhangsan").assertEqual(name)
             expect(18).assertEqual(age)
             expect(100.5).assertEqual(salary)
