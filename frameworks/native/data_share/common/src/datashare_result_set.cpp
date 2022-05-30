@@ -24,6 +24,13 @@
 
 namespace OHOS {
 namespace DataShare {
+namespace {
+    // The default position of the cursor
+    static const int INITIAL_POS = -1;
+    static const size_t DEFAULT_SHARE_BLOCK_SIZE = 2 * 1024 * 1024;
+    // Equivalent to filling in setp + 1 rows each time
+    static const int STEP_LEN = 2;
+} // namespace
 int DataShareResultSet::blockId_ = 0;
 DataShareResultSet::DataShareResultSet()
 {
@@ -33,7 +40,7 @@ DataShareResultSet::DataShareResultSet(std::shared_ptr<ResultSetBridge> &bridge)
     : bridge_(bridge)
 {
     std::string name = "DataShare" + std::to_string(blockId_++);
-    blockWriter_ = std::make_shared<DataShareBlockWriterImpl>(name, DEFAULT_BLOCK_SIZE);
+    blockWriter_ = std::make_shared<DataShareBlockWriterImpl>(name, DEFAULT_SHARE_BLOCK_SIZE);
     sharedBlock_ = blockWriter_->GetBlock();
 }
 
@@ -107,7 +114,7 @@ int DataShareResultSet::GoToRow(int position)
         return E_ERROR;
     }
     if (position < 0) {
-        rowPos_ = INIT_POS;
+        rowPos_ = INITIAL_POS;
         return E_ERROR;
     }
     if (position == rowPos_) {
@@ -118,14 +125,14 @@ int DataShareResultSet::GoToRow(int position)
         result = OnGo(position, std::min(position + STEP_LENGTH, rowCnt - 1));
         if (result) {
             startRowPos_ = position;
-            endRowPos_ = position + sharedBlock_->GetRowNum() -1;
+            endRowPos_ = position + static_cast<int>(sharedBlock_->GetRowNum()) -1;
         }
     }
 
     if (!result) {
-        rowPos_ = INIT_POS;
-        startRowPos_ = INIT_POS;
-        endRowPos_ = INIT_POS;
+        rowPos_ = INITIAL_POS;
+        startRowPos_ = INITIAL_POS;
+        endRowPos_ = INITIAL_POS;
         return E_ERROR;
     } else {
         rowPos_ = position;
