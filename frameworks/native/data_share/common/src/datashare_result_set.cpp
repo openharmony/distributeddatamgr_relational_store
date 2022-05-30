@@ -122,7 +122,7 @@ int DataShareResultSet::GoToRow(int position)
     }
     bool result = true;
     if (position > endRowPos_ || position < startRowPos_) {
-        result = OnGo(position, std::min(position + STEP_LENGTH, rowCnt - 1));
+        result = OnGo(position, std::min(position + STEP_LEN, rowCnt - 1));
         if (result) {
             startRowPos_ = position;
             endRowPos_ = position + static_cast<int>(sharedBlock_->GetRowNum()) -1;
