@@ -17,7 +17,7 @@
 #include "napi/native_node_api.h"
 
 #include "datashare_log.h"
-#include "napi_datashare_helper.h"
+#include "datashare_predicates_proxy.h"
 
 namespace OHOS {
 namespace DataShare {
@@ -27,12 +27,9 @@ EXTERN_C_START
  */
 static napi_value Init(napi_env env, napi_value exports)
 {
-    LOG_DEBUG("Init in");
-    napi_property_descriptor desc[] = {
-        DECLARE_NAPI_FUNCTION("createDataShareHelper", NapiDataShareHelper::Napi_CreateDataShareHelper),
-    };
-    napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
-    LOG_DEBUG("Init napi_define_properties status : %{public}d", status);
+    LOG_INFO("DataSharePredicatesProxy module Init in");
+    DataSharePredicatesProxy::Init(env, exports);
+    LOG_INFO("DataSharePredicatesProxy module Init out");
     return exports;
 }
 EXTERN_C_END
@@ -45,7 +42,7 @@ static napi_module _module = {
     .nm_flags = 0,
     .nm_filename = nullptr,
     .nm_register_func = Init,
-    .nm_modname = "data.dataShare",
+    .nm_modname = "data.DataSharePredicates",
     .nm_priv = ((void *)0),
     .reserved = {0}
 };
