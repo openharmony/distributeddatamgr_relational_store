@@ -65,12 +65,7 @@ protected:
     bool Marshalling(MessageParcel &parcel);
 
 private:
-    // The default position of the cursor
-    static const int INIT_POS = -1;
-    static const size_t DEFAULT_BLOCK_SIZE = 2 * 1024 * 1024;
     static int blockId_;
-    // Equivalent to filling in setp + 1 rows each time
-    static const int STEP_LENGTH = 2;
     // The actual position of the first row of data in the shareblock
     int startRowPos_ = -1;
     // The actual position of the last row of data in the shareblock
