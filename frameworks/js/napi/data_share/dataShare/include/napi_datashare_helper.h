@@ -41,7 +41,7 @@ public:
     static napi_value Napi_DenormalizeUri(napi_env env, napi_callback_info info);
     static napi_value Napi_NotifyChange(napi_env env, napi_callback_info info);
 private:
-    static napi_value GetCtor(napi_env env);
+    static napi_value GetConstructor(napi_env env);
     static napi_value Initialize(napi_env env, napi_callback_info info);
 
     static napi_value RegisterWrap(napi_env env, napi_callback_info info, DSHelperOnOffCB *onCB);

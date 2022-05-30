@@ -21,6 +21,7 @@ namespace OHOS {
 namespace DataShare {
 constexpr int WAIT_TIME = 3;
 constexpr int SLEEP_TIME = 100;
+constexpr int TRY_TIMES = 20;
 DataShareUvQueue::DataShareUvQueue(napi_env env)
     : env_(env)
 {
@@ -103,9 +104,9 @@ void DataShareUvQueue::Purge(uv_work_t* work)
 void DataShareUvQueue::CheckFuncAndExec(NapiBoolFunc retFunc)
 {
     if (retFunc) {
-        int tryTimes = 20;
+        int tryTimes = TRY_TIMES;
         while (retFunc() != true && tryTimes > 0) {
-            LOG_ERROR("tryTimes : %{public}d.", tryTimes);
+            LOG_DEBUG("tryTimes : %{public}d.", tryTimes);
             std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
             tryTimes--;
         }

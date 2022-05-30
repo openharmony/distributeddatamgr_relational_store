@@ -254,6 +254,10 @@ NativeValue* JsDataShareExtAbility::CallObjectMethod(const char* name, NativeVal
     }
 
     if (isAsync) {
+        callbackResultNumber_ = -1;
+        callbackResultString_ = "";
+        callbackResultStringArr_ = {};
+        callbackResultObject_ = nullptr;
         args[argc] = nativeEngine.CreateFunction(ASYNC_CALLBACK_NAME.c_str(),
             ASYNC_CALLBACK_NAME.length(), JsDataShareExtAbility::AsyncCallback, this);
         LOG_INFO("AsyncType::ASYNC_COMMON.");
