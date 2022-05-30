@@ -94,7 +94,7 @@ napi_value NapiDataShareHelper::Napi_CreateDataShareHelper(napi_env env, napi_ca
         LOG_DEBUG("CreateDataShareHelper parser to native params %{public}d", static_cast<int>(argc));
         NAPI_ASSERT_BASE(env, (argc > 1) && (argc < 4), " need 2 or 3 parameters!", napi_invalid_arg);
         napi_value helperProxy = nullptr;
-        napi_status status = napi_new_instance(env, GetCtor(env), argc, argv, &helperProxy);
+        napi_status status = napi_new_instance(env, GetConstructor(env), argc, argv, &helperProxy);
         if ((helperProxy == nullptr) || (status != napi_ok)) {
             return napi_generic_failure;
         }
@@ -111,7 +111,7 @@ napi_value NapiDataShareHelper::Napi_CreateDataShareHelper(napi_env env, napi_ca
     return asyncCall.Call(env);
 }
 
-napi_value NapiDataShareHelper::GetCtor(napi_env env)
+napi_value NapiDataShareHelper::GetConstructor(napi_env env)
 {
     napi_value cons = nullptr;
     napi_property_descriptor clzDes[] = {
