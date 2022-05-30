@@ -85,11 +85,16 @@ public:
      */
     sptr<IDataShare> GetDataShareProxy();
 
+    struct ConnectCondition {
+        std::condition_variable condition;
+        std::mutex mutex;
+    };
 private:
     static sptr<DataShareConnection> instance_;
     static std::mutex mutex_;
     std::atomic<bool> isConnected_ = {false};
     sptr<IDataShare> dataShareProxy_;
+    ConnectCondition condition_;
 };
 }  // namespace DataShare
 }  // namespace OHOS

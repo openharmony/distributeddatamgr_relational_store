@@ -22,6 +22,7 @@
 namespace OHOS {
 namespace DataShare {
 using namespace AppExecFwk;
+constexpr int WAIT_TIME = 1;
 sptr<DataShareConnection> DataShareConnection::instance_ = nullptr;
 std::mutex DataShareConnection::mutex_;
 
@@ -59,6 +60,8 @@ void DataShareConnection::OnAbilityConnectDone(
         return;
     }
     dataShareProxy_ = iface_cast<DataShareProxy>(remoteObject);
+    std::unique_lock<std::mutex> lock(condition_.mutex);
+    condition_.condition.notify_all();
     if (dataShareProxy_ == nullptr) {
         LOG_ERROR("DataShareConnection::OnAbilityConnectDone failed, dataShareProxy_ is nullptr");
         return;
@@ -90,9 +93,14 @@ void DataShareConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
 void DataShareConnection::ConnectDataShareExtAbility(const Uri &uri, const sptr<IRemoteObject> &token)
 {
     LOG_INFO("called begin");
+    std::unique_lock<std::mutex> lock(condition_.mutex);
     AAFwk::Want want;
     want.SetUri(uri);
     ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, this, token);
+    if (condition_.condition.wait_for(lock, std::chrono::seconds(WAIT_TIME),
+            [this] { return dataShareProxy_ != nullptr; })) {
+        LOG_INFO("Wait connect timeout.");
+    }
     LOG_INFO("called end, ret=%{public}d", ret);
 }
 
