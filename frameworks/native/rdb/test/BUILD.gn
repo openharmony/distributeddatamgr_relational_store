@@ -82,4 +82,12 @@ group("unittest") {
 
   deps = [ ":NativeRdbTest" ]
 }
+
+###############################################################################
+
+group("fuzztest") {
+  testonly = true
+  deps = []
+  deps += [ "fuzztest/rdbimpl_fuzzer:fuzztest" ]
+}
 ###############################################################################
