@@ -98,7 +98,7 @@ void DataShareConnection::ConnectDataShareExtAbility(const Uri &uri, const sptr<
     want.SetUri(uri);
     ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, this, token);
     if (condition_.condition.wait_for(lock, std::chrono::seconds(WAIT_TIME),
-            [this] { return dataShareProxy_ != nullptr; })) {
+        [this] { return dataShareProxy_ != nullptr; })) {
         LOG_INFO("Wait connect timeout.");
     }
     LOG_INFO("called end, ret=%{public}d", ret);
