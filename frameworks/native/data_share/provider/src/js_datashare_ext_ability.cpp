@@ -795,16 +795,14 @@ bool JsDataShareExtAbility::CheckCallingPermission(const std::string &permission
 napi_value JsDataShareExtAbility::MakePredicates(napi_env env, const DataSharePredicates &predicates)
 {
     LOG_INFO("begin.");
-    DataSharePredicates* predicatesPtr = new (std::nothrow) DataSharePredicates();
+    std::shared_ptr<DataSharePredicates> predicatesPtr = std::make_shared<DataSharePredicates>(predicates);
     if (predicatesPtr == nullptr) {
         LOG_ERROR("%{public}s No memory allocated for predicates", __func__);
         return nullptr;
     }
-    *predicatesPtr = predicates;
     napi_value napiPredicates = GetNapiObject(env, predicatesPtr);
     if (napiPredicates == nullptr) {
         LOG_ERROR("%{public}s failed to make new instance of DataSharePredicates.", __func__);
-        delete predicatesPtr;
     }
     LOG_INFO("end.");
     return napiPredicates;

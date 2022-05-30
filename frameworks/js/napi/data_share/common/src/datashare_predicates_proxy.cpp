@@ -842,10 +842,9 @@ napi_value DataSharePredicatesProxy::InKeys(napi_env env, napi_callback_info inf
     return thiz;
 }
 
-napi_value GetNapiObject(napi_env env, DataSharePredicates *predicates)
+napi_value GetNapiObject(napi_env env, std::shared_ptr<DataSharePredicates> predicates)
 {
-    return DataSharePredicatesProxy::NewInstance(
-        env, std::shared_ptr<DataSharePredicates>(predicates));
+    return DataSharePredicatesProxy::NewInstance(env, predicates);
 }
 
 DataSharePredicates *GetNativePredicatesObject(const napi_env &env, const napi_value &arg)
