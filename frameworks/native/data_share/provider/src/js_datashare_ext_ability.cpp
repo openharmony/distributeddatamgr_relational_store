@@ -131,7 +131,7 @@ void JsDataShareExtAbility::OnStart(const AAFwk::Want &want)
     napi_value napiWant = OHOS::AppExecFwk::WrapWant(env, want);
     NativeValue* nativeWant = reinterpret_cast<NativeValue*>(napiWant);
     NativeValue* argv[] = {nativeWant};
-    CallObjectMethod("onCreate", argv, ARGC_ONE, false);
+    CallObjectMethod("onCreate", argv, ARGC_ONE);
     LOG_INFO("end.");
 }
 
@@ -211,9 +211,11 @@ NativeValue* JsDataShareExtAbility::AsyncCallback(NativeEngine* engine, NativeCa
     }
 
     JsDataShareExtAbility* instance = static_cast<JsDataShareExtAbility*>(info->functionInfo->data);
-    instance->SetBlockWaiting(true);
-    instance->SetAsyncResult(info->argv[1]);
-    instance->CheckAndSetAsyncResult(engine);
+    if (instance != nullptr) {
+        instance->SetBlockWaiting(true);
+        instance->SetAsyncResult(info->argv[1]);
+        instance->CheckAndSetAsyncResult(engine);
+    }
 
     LOG_INFO("%{public}s end.", __func__);
     return engine->CreateUndefined();
@@ -252,6 +254,10 @@ NativeValue* JsDataShareExtAbility::CallObjectMethod(const char* name, NativeVal
     }
 
     if (isAsync) {
+        callbackResultNumber_ = -1;
+        callbackResultString_ = "";
+        callbackResultStringArr_ = {};
+        callbackResultObject_ = nullptr;
         args[argc] = nativeEngine.CreateFunction(ASYNC_CALLBACK_NAME.c_str(),
             ASYNC_CALLBACK_NAME.length(), JsDataShareExtAbility::AsyncCallback, this);
         LOG_INFO("AsyncType::ASYNC_COMMON.");

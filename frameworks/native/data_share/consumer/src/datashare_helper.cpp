@@ -102,7 +102,7 @@ void DataShareHelper::OnSchedulerDied(const wptr<IRemoteObject> &remote)
  *
  * @param context Indicates the Context object on OHOS.
  * @param strUri Indicates the database table or disk file to operate.
-
+ *
  * @return Returns the created DataShareHelper instance.
  */
 std::shared_ptr<DataShareHelper> DataShareHelper::Creator(

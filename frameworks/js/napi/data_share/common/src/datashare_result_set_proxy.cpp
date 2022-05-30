@@ -19,12 +19,12 @@
 
 #include "datashare_result_set.h"
 #include "datashare_js_utils.h"
-#include "napi_datashare_async_proxy.h"
 #include "string_ex.h"
 #include "datashare_log.h"
 
 namespace OHOS {
 namespace DataShare {
+constexpr int MAX_INPUT_COUNT = 10;
 static napi_ref __thread ctorRef_ = nullptr;
 napi_value DataShareResultSetProxy::NewInstance(napi_env env, std::shared_ptr<DataShareResultSet> resultSet)
 {
