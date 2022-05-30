@@ -105,7 +105,11 @@ int ISharedResultSetStub::HandleOnGoRequest(MessageParcel &data, MessageParcel &
     resultSet_->GetAllColumnNames(columnNames);
     auto block = resultSet_->GetBlock();
     int errCode = block->Clear();
-    errCode |= block->SetColumnNum(columnNames.size());
+    if (errCode != E_OK) {
+        reply.WriteInt32(errCode);
+        return NO_ERROR;
+    }
+    errCode = block->SetColumnNum(columnNames.size());
     if (errCode == E_OK) {
         errCode = resultSet_->OnGo(oldRow, newRow);
     }

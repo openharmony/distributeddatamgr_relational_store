@@ -14,51 +14,51 @@
  */
 
 class DataShareExtensionAbility {
-    onCreate(want) {
+    onCreate(want, callback) {
         console.log('onCreate, want:' + want.abilityName);
     }
 
-    getFileTypes(uri, mimeTypeFilter) {
+    getFileTypes(uri, mimeTypeFilter, callback) {
         console.log('getFileTypes, uri:' + uri);
     }
 
-    openFile(uri, mode) {
+    openFile(uri, mode, callback) {
         console.log('openFile, uri:' + uri);
     }
 
-    openRawFile(uri, mode) {
+    openRawFile(uri, mode, callback) {
         console.log('openRawFile, uri:' + uri);
     }
 
-    insert(uri, value) {
+    insert(uri, value, callback) {
         console.log('insert, uri:' + uri);
     }
 
-    update(uri, predicates, value) {
+    update(uri, predicates, value, callback) {
         console.log('update, uri:' + uri);
     }
 
-    delete(uri, predicates) {
+    delete(uri, predicates, callback) {
         console.log('delete, uri:' + uri);
     }
 
-    query(uri, predicates, columns) {
+    query(uri, predicates, columns, callback) {
         console.log('query, uri:' + uri);
     }
 
-    getType(uri) {
+    getType(uri, callback) {
         console.log('getType, uri:' + uri);
     }
 
-    batchInsert(uri, values) {
+    batchInsert(uri, values, callback) {
         console.log('batchInsert, uri:' + uri);
     }
 
-    normalizeUri(uri) {
+    normalizeUri(uri, callback) {
         console.log('normalizeUri, uri:' + uri);
     }
 
-    denormalizeUri(uri) {
+    denormalizeUri(uri, callback) {
         console.log('denormalizeUri, uri:' + uri);
     }
 }
