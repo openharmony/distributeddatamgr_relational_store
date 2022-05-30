@@ -17,12 +17,10 @@ import data_rdb from '@ohos.data.rdb'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 import dataShare from '@ohos.data.dataShare'
 
-
 const TAG = "[RDB_JSKITS_TEST]"
-
-const CREATE_TABLE_SQL1 = "CREATE TABLE IF NOT EXISTS "
-const CREATE_TABLE_SQL2 = " (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-    "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)"
+const CREATE_TABLE_SQL = "CREATE TABLE IF NOT EXISTS test"+" (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+"name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)"
+const DROP_TABLE_SQL = "DROP TABLE test"
 
 const STORE_CONFIG = {
     name: "DataShareTest.db",
@@ -38,10 +36,12 @@ describe('rdbStoreDataSharePredicatesTest', function () {
 
     beforeEach(async function () {
         console.info(TAG + 'beforeEach')
+        await rdbStore.executeSql(CREATE_TABLE_SQL, null)
     })
 
     afterEach(async function () {
         console.info(TAG + 'afterEach')
+        await rdbStore.executeSql(DROP_TABLE_SQL, null)
     })
 
     afterAll(async function () {
@@ -60,8 +60,6 @@ describe('rdbStoreDataSharePredicatesTest', function () {
      */
     it('testRdbStoreDataShareFunc0001', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDataShareFunc0001 start *************")
-        let TABLE_NAME = "test001"
-        await rdbStore.executeSql(CREATE_TABLE_SQL1 + TABLE_NAME + CREATE_TABLE_SQL2, null)
         let u8 = new Uint8Array([1, 2, 3])
         const valueBucket = {
             "name": "zhangsan",
@@ -69,7 +67,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             "salary": 100.5,
             "blobType": u8,
         }
-        let insertPromise = rdbStore.insert(TABLE_NAME, valueBucket)
+        let insertPromise = rdbStore.insert("test", valueBucket)
         insertPromise.then(async (ret) => {
             expect(1).assertEqual(ret)
             console.log(TAG + "Insert done: " + ret)
@@ -80,7 +78,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         await insertPromise
         console.log("insert end")
 
-        let predicates = new data_rdb.RdbPredicates(TABLE_NAME)
+        let predicates = new data_rdb.RdbPredicates("test")
         predicates.equalTo("name", "zhangsan")
         let resultSet = await rdbStore.query(predicates)
         try {
@@ -114,8 +112,6 @@ describe('rdbStoreDataSharePredicatesTest', function () {
      */
     it('testRdbStoreDataShareFunc0002', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDataShareFunc0002 start *************")
-        let TABLE_NAME = "test002"
-        await rdbStore.executeSql(CREATE_TABLE_SQL1 + TABLE_NAME + CREATE_TABLE_SQL2, null)
         let u8 = new Uint8Array([1, 2, 3])
         let valueBucket = {
             "name": "zhangsan",
@@ -123,7 +119,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             "salary": 100.5,
             "blobType": u8,
         }
-        await rdbStore.insert(TABLE_NAME, valueBucket)
+        await rdbStore.insert("test", valueBucket)
 
         u8 = new Uint8Array([4, 5, 6])
         valueBucket = {
@@ -135,7 +131,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
 
         let predicates = new dataShare.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
-        let promiseUpdate = rdbStore.update(TABLE_NAME, valueBucket, predicates)
+        let promiseUpdate = rdbStore.update("test", valueBucket, predicates)
         promiseUpdate.then(async (ret) => {
             expect(1).assertEqual(ret)
             console.log(TAG + "Update done: " + ret)
@@ -145,7 +141,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         })
         await promiseUpdate
 
-        let rdbPredicates = await new data_rdb.RdbPredicates(TABLE_NAME)
+        let rdbPredicates = await new data_rdb.RdbPredicates("test")
         rdbPredicates.equalTo("name", "lisi")
         let resultSet = await rdbStore.query(rdbPredicates)
         expect(true).assertEqual(resultSet.goToFirstRow())
@@ -177,8 +173,6 @@ describe('rdbStoreDataSharePredicatesTest', function () {
      */
     it('testRdbStoreDataShareFunc0003', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDataShareFunc0003 start *************")
-        let TABLE_NAME = "test003"
-        await rdbStore.executeSql(CREATE_TABLE_SQL1 + TABLE_NAME + CREATE_TABLE_SQL2, null)
         let u8 = new Uint8Array([1, 2, 3])
         let valueBucket = {
             "name": "zhangsan",
@@ -186,7 +180,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             "salary": 100.5,
             "blobType": u8,
         }
-        await rdbStore.insert(TABLE_NAME, valueBucket)
+        await rdbStore.insert("test", valueBucket)
 
         u8 = new Uint8Array([4, 5, 6])
         valueBucket = {
@@ -199,14 +193,14 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         let predicates = new dataShare.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
 
-        await rdbStore.update(TABLE_NAME, valueBucket, predicates, async function (err, ret) {
+        await rdbStore.update("test", valueBucket, predicates, async function (err, ret) {
             if (err) {
                 console.info("Update err: " + err)
                 expect(false).assertTrue()
             }
             expect(1).assertEqual(ret)
             console.log("Update done: " + ret)
-            let rdbPredicates = await new data_rdb.RdbPredicates(TABLE_NAME)
+            let rdbPredicates = await new data_rdb.RdbPredicates("test")
             rdbPredicates.equalTo("name", "lisi")
             let resultSet = await rdbStore.query(rdbPredicates)
             expect(1).assertEqual(resultSet.rowCount)
@@ -239,8 +233,6 @@ describe('rdbStoreDataSharePredicatesTest', function () {
      */
     it('testRdbStoreDataShareFunc0004', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDataShareFunc0004 start *************")
-        let TABLE_NAME = "test004"
-        await rdbStore.executeSql(CREATE_TABLE_SQL1 + TABLE_NAME + CREATE_TABLE_SQL2, null)
         let u8 = new Uint8Array([4, 5, 6])
         let valueBucket = {
             "name": "zhangsan",
@@ -248,11 +240,11 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             "salary": 100.5,
             "blobType": u8,
         }
-        await rdbStore.insert(TABLE_NAME, valueBucket)
+        await rdbStore.insert("test", valueBucket)
 
         let predicates = new dataShare.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
-        let queryPromise = rdbStore.query(TABLE_NAME, predicates)
+        let queryPromise = rdbStore.query("test", predicates)
         queryPromise.then((resultSet) => {
             console.log(TAG + "DataShare Query done: ")
             expect(true).assertEqual(resultSet.goToFirstRow())
@@ -285,8 +277,6 @@ describe('rdbStoreDataSharePredicatesTest', function () {
      */
     it('testRdbStoreDataShareFunc0005', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDataShareFunc0005 start *************")
-        let TABLE_NAME = "test005"
-        await rdbStore.executeSql(CREATE_TABLE_SQL1 + TABLE_NAME + CREATE_TABLE_SQL2, null)
         let u8 = new Uint8Array([4, 5, 6])
         let valueBucket = {
             "name": "zhangsan",
@@ -294,12 +284,12 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             "salary": 100.5,
             "blobType": u8,
         }
-        await rdbStore.insert(TABLE_NAME, valueBucket)
+        await rdbStore.insert("test", valueBucket)
 
         let predicates = new dataShare.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
 
-        await rdbStore.query(TABLE_NAME, predicates, ["ID", "NAME", "AGE", "SALARY", "blobType"],
+        await rdbStore.query("test", predicates, ["ID", "NAME", "AGE", "SALARY", "blobType"],
             function (err, resultSet) {
                 if (err) {
                     console.info("Query err: " + err)
@@ -330,8 +320,6 @@ describe('rdbStoreDataSharePredicatesTest', function () {
      */
     it('testRdbStoreDataShareFunc0006', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDataShareFunc0006 start *************")
-        let TABLE_NAME = "test006"
-        await rdbStore.executeSql(CREATE_TABLE_SQL1 + TABLE_NAME + CREATE_TABLE_SQL2, null)
         let u8 = new Uint8Array([1, 2, 3])
         let valueBucket = {
             "name": "zhangsan",
@@ -340,10 +328,10 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             "blobType": u8,
         }
 
-        await rdbStore.insert(TABLE_NAME, valueBucket)
+        await rdbStore.insert("test", valueBucket)
         let predicates = new dataShare.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
-        let deletePromise = rdbStore.delete(TABLE_NAME, predicates)
+        let deletePromise = rdbStore.delete("test", predicates)
         deletePromise.then(async (ret) => {
             expect(1).assertEqual(ret)
             console.log(TAG + "Delete done: " + ret)
@@ -353,7 +341,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         })
         await deletePromise
 
-        let rdbPredicates = await new data_rdb.RdbPredicates(TABLE_NAME)
+        let rdbPredicates = await new data_rdb.RdbPredicates("test")
         rdbPredicates.equalTo("name", "zhangsan")
         let resultSet = await rdbStore.query(rdbPredicates)
         expect(false).assertEqual(resultSet.goToFirstRow())
@@ -370,8 +358,6 @@ describe('rdbStoreDataSharePredicatesTest', function () {
      */
     it('testRdbStoreDataShareFunc0007', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDataShareFunc0007 start *************")
-        let TABLE_NAME = "test007"
-        await rdbStore.executeSql(CREATE_TABLE_SQL1 + TABLE_NAME + CREATE_TABLE_SQL2, null)
         let u8 = new Uint8Array([1, 2, 3])
         let valueBucket = {
             "name": "zhangsan",
@@ -379,19 +365,19 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             "salary": 100.5,
             "blobType": u8,
         }
-        await rdbStore.insert(TABLE_NAME, valueBucket)
+        await rdbStore.insert("test", valueBucket)
 
         let predicates = new dataShare.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
 
-        await rdbStore.delete(TABLE_NAME, predicates, async function (err, ret) {
+        await rdbStore.delete("test", predicates, async function (err, ret) {
             if (err) {
                 console.info("Delete err: " + err)
                 expect(false).assertTrue()
             }
             expect(1).assertEqual(ret)
             console.log("Delete done: " + ret)
-            let rdbPredicates = await new data_rdb.RdbPredicates(TABLE_NAME)
+            let rdbPredicates = await new data_rdb.RdbPredicates("test")
             rdbPredicates.equalTo("name", "zhangsan")
             let resultSet = await rdbStore.query(rdbPredicates)
             expect(false).assertEqual(resultSet.goToFirstRow())
