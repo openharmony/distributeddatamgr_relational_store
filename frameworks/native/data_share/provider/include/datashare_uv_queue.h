@@ -27,14 +27,15 @@ namespace OHOS {
 namespace DataShare {
 class DataShareUvQueue {
     using NapiVoidFunc = std::function<void()>;
+    using NapiBoolFunc = std::function<bool()>;
 
 public:
     explicit DataShareUvQueue(napi_env env);
     virtual ~DataShareUvQueue() = default;
 
-    void SyncCall(NapiVoidFunc func = NapiVoidFunc(), NapiVoidFunc retFunc = NapiVoidFunc());
+    void SyncCall(NapiVoidFunc func = NapiVoidFunc(), NapiBoolFunc retFunc = NapiBoolFunc());
 
-    void CheckFuncAndExec(NapiVoidFunc retFunc);
+    void CheckFuncAndExec(NapiBoolFunc retFunc);
 
 private:
     struct UvEntry {
@@ -44,7 +45,7 @@ private:
         bool purge;
         std::condition_variable condition;
         std::mutex mutex;
-        NapiVoidFunc retFunc;
+        NapiBoolFunc retFunc;
     };
 
     static void Purge(uv_work_t* work);
