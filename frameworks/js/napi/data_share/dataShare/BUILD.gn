@@ -70,4 +70,3 @@ ohos_shared_library("datashare") {
   subsystem_name = "distributeddatamgr"
   part_name = "data_share"
 }
-
