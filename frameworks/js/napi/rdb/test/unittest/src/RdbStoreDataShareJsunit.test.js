@@ -17,7 +17,6 @@ import data_rdb from '@ohos.data.rdb'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 import dataShare from '@ohos.data.dataShare'
 
-
 const TAG = "[RDB_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
     + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)"
@@ -52,6 +51,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
     })
 
     console.log(TAG + "*************Unit Test Begin*************")
+
 
     /**
      * @tc.name rdb DataShare insert test
@@ -88,7 +88,6 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             const age = resultSet.getLong(resultSet.getColumnIndex("age"))
             const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
             const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
-
             expect("zhangsan").assertEqual(name)
             expect(18).assertEqual(age)
             expect(100.5).assertEqual(salary)
@@ -108,7 +107,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
     /**
      * @tc.name rdb DataShare update test
      * @tc.number testRdbStoreDataShareFunc0020
-     * @tc.desc rdb DataShare update Func test
+     * @tc.desc rdb DataShare update promise Func test
      */
     it('testRdbStoreDataShareFunc0002', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDataShareFunc0002 start *************")
@@ -158,8 +157,8 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         expect(5).assertEqual(blobType[1])
         expect(6).assertEqual(blobType[2])
 
-        console.log(TAG + "dataShare update: {id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary
-            + ", blobType=" + blobType)
+        console.log(TAG + "dataShare update: {id=" + id + ", name=" + name + ", " +
+            "age=" + age + ", salary=" + salary + ", blobType=" + blobType)
         resultSet = null
 
         done()
@@ -167,12 +166,72 @@ describe('rdbStoreDataSharePredicatesTest', function () {
     })
 
     /**
-     * @tc.name rdb DataShare query test
+     * @tc.name rdb DataShare update test
      * @tc.number testRdbStoreDataShareFunc0030
-     * @tc.desc rdb DataShare query Func test
+     * @tc.desc rdb DataShare update callback Func test
      */
     it('testRdbStoreDataShareFunc0003', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDataShareFunc0003 start *************")
+        let u8 = new Uint8Array([1, 2, 3])
+        let valueBucket = {
+            "name": "zhangsan",
+            "age": 18,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        await rdbStore.insert("test", valueBucket)
+
+        u8 = new Uint8Array([4, 5, 6])
+        valueBucket = {
+            "name": "lisi",
+            "age": 28,
+            "salary": 200.5,
+            "blobType": u8,
+        }
+
+        let predicates = new dataShare.DataSharePredicates()
+        predicates.equalTo("name", "zhangsan")
+
+        await rdbStore.update("test", valueBucket, predicates, async function (err, ret) {
+            if (err) {
+                console.info("Update err: " + err)
+                expect(false).assertTrue()
+            }
+            expect(1).assertEqual(ret)
+            console.log("Update done: " + ret)
+            let rdbPredicates = await new data_rdb.RdbPredicates("test")
+            rdbPredicates.equalTo("name", "lisi")
+            let resultSet = await rdbStore.query(rdbPredicates)
+            expect(1).assertEqual(resultSet.rowCount)
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const id = resultSet.getLong(resultSet.getColumnIndex("id"))
+            const name = resultSet.getString(resultSet.getColumnIndex("name"))
+            const age = resultSet.getLong(resultSet.getColumnIndex("age"))
+            const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
+            const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+
+            expect("lisi").assertEqual(name)
+            expect(28).assertEqual(age)
+            expect(200.5).assertEqual(salary)
+            expect(4).assertEqual(blobType[0])
+            expect(5).assertEqual(blobType[1])
+            expect(6).assertEqual(blobType[2])
+            console.log(TAG + "dataShare update: {id=" + id + ", name=" + name + ", " +
+                "age=" + age + ", salary=" + salary + ", blobType=" + blobType)
+            resultSet = null
+        })
+
+        done()
+        console.log(TAG + "************* testRdbStoreDelete0003 end *************")
+    })
+
+    /**
+     * @tc.name rdb DataShare query test
+     * @tc.number testRdbStoreDataShareFunc0040
+     * @tc.desc rdb DataShare query promise Func test
+     */
+    it('testRdbStoreDataShareFunc0004', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreDataShareFunc0004 start *************")
         let u8 = new Uint8Array([4, 5, 6])
         let valueBucket = {
             "name": "zhangsan",
@@ -207,16 +266,59 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         await queryPromise
 
         done()
-        console.log(TAG + "************* testRdbStoreDataShareFunc0003 end *************")
+        console.log(TAG + "************* testRdbStoreDataShareFunc0004 end *************")
+    })
+
+    /**
+     * @tc.name rdb DataShare query test
+     * @tc.number testRdbStoreDataShareFunc0050
+     * @tc.desc rdb DataShare query callback Func test
+     */
+    it('testRdbStoreDataShareFunc0005', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreDataShareFunc0005 start *************")
+        let u8 = new Uint8Array([4, 5, 6])
+        let valueBucket = {
+            "name": "zhangsan",
+            "age": 18,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        await rdbStore.insert("test", valueBucket)
+
+        let predicates = new dataShare.DataSharePredicates()
+        predicates.equalTo("name", "zhangsan")
+
+        await rdbStore.query("test", predicates, ["ID", "NAME", "AGE", "SALARY", "blobType"],
+            function (err, resultSet) {
+                if (err) {
+                    console.info("Query err: " + err)
+                    expect(false).assertTrue()
+                }
+                expect(true).assertEqual(resultSet.goToFirstRow())
+                const name = resultSet.getString(resultSet.getColumnIndex("name"))
+                const age = resultSet.getLong(resultSet.getColumnIndex("age"))
+                const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+
+                expect("zhangsan").assertEqual(name)
+                expect(18).assertEqual(age)
+                expect(100.5).assertEqual(salary)
+                expect(4).assertEqual(blobType[0])
+                expect(5).assertEqual(blobType[1])
+                expect(6).assertEqual(blobType[2])
+            })
+
+        done()
+        console.log(TAG + "************* testRdbStoreDataShareFunc0005 end *************")
     })
 
     /**
      * @tc.name rdb DataShare delete test
-     * @tc.number testRdbStoreDataShareFunc0040
+     * @tc.number testRdbStoreDataShareFunc0060
      * @tc.desc rdb DataShare delete Func test
      */
-    it('testRdbStoreDataShareFunc0004', 0, async function (done) {
-        console.log(TAG + "************* testRdbStoreDataShareFunc0004 start *************")
+    it('testRdbStoreDataShareFunc0006', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreDataShareFunc0006 start *************")
         let u8 = new Uint8Array([1, 2, 3])
         let valueBucket = {
             "name": "zhangsan",
@@ -245,8 +347,44 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         resultSet = null
 
         done()
-        console.log(TAG + "************* testRdbStoreDataShareFunc0004 end *************")
+        console.log(TAG + "************* testRdbStoreDataShareFunc0006 end *************")
     })
 
+    /**
+     * @tc.name rdb DataShare delete test
+     * @tc.number testRdbStoreDataShareFunc0070
+     * @tc.desc rdb DataShare delete Func test
+     */
+    it('testRdbStoreDataShareFunc0007', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreDataShareFunc0007 start *************")
+        let u8 = new Uint8Array([1, 2, 3])
+        let valueBucket = {
+            "name": "zhangsan",
+            "age": 18,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        await rdbStore.insert("test", valueBucket)
+
+        let predicates = new dataShare.DataSharePredicates()
+        predicates.equalTo("name", "zhangsan")
+
+        await rdbStore.delete("test", predicates, async function (err, ret) {
+            if (err) {
+                console.info("Delete err: " + err)
+                expect(false).assertTrue()
+            }
+            expect(1).assertEqual(ret)
+            console.log("Delete done: " + ret)
+            let rdbPredicates = await new data_rdb.RdbPredicates("test")
+            rdbPredicates.equalTo("name", "zhangsan")
+            let resultSet = await rdbStore.query(rdbPredicates)
+            expect(false).assertEqual(resultSet.goToFirstRow())
+            resultSet = null
+        })
+
+        done()
+        console.log(TAG + "************* testRdbStoreDataShareFunc0007 end *************")
+    })
     console.log(TAG + "*************Unit Test End*************")
 })
