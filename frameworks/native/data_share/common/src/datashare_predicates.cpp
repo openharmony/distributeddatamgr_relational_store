@@ -94,7 +94,7 @@ DataSharePredicates *DataSharePredicates::LessThanOrEqualTo(const std::string &f
     const DataSharePredicatesObject &value)
 {
     LOG_DEBUG("%{public}s call field%{public}s", __func__, field.c_str());
-    SetOperationList(GREATER_THAN_OR_EQUAL_TO, field, value, {}, TWO_COUNT);
+    SetOperationList(LESS_THAN_OR_EQUAL_TO, field, value, {}, TWO_COUNT);
     LOG_DEBUG("DataSharePredicates::LessThanOrEqualTo End");
     return this;
 }
