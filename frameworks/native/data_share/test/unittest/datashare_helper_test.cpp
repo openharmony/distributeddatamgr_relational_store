@@ -907,7 +907,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_007, TestSize.Level1)
     std::shared_ptr<DataShareResultSet> resultSet = dataShareHelper->Query(uri, predicates, columns);
     if (resultSet != nullptr) {
         bool closeresult = resultSet->IsClosed();
-        if(!closeresult) {
+        if (!closeresult) {
             resultSet->Close();
         }
     }
