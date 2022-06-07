@@ -80,7 +80,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Release_001, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::string mimeTypeFilter("mimeTypeFiltertest");
     bool result = dataShareHelper->Release();
@@ -99,7 +99,7 @@ HWTEST_F(DataShareHelperTest, DataShare_GetFileTypes_001, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::string mimeTypeFilter("mimeTypeFiltertest");
     std::vector<std::string> result = dataShareHelper->GetFileTypes(uri, mimeTypeFilter);
@@ -118,7 +118,7 @@ HWTEST_F(DataShareHelperTest, DataShare_OpenFile_001, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::string mode("modetest");
     int result = dataShareHelper->OpenFile(uri, mode);
@@ -137,7 +137,7 @@ HWTEST_F(DataShareHelperTest, DataShare_OpenRawFile_001, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::string mode("modetest");
     int result = dataShareHelper->OpenRawFile(uri, mode);
@@ -156,7 +156,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Insert_001, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     std::string name = "Wangwu";
@@ -177,7 +177,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Insert_002, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     val.PutInt("age", 20);
@@ -197,7 +197,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Insert_003, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     int64_t i = 18;
@@ -218,7 +218,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Insert_004, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     val.PutDouble("weight", 108.7);
@@ -238,7 +238,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Insert_005, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     val.PutBool("isStudent", true);
@@ -258,7 +258,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Insert_006, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     std::vector<uint8_t> value {20, 30};
@@ -279,7 +279,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Insert_007, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     val.PutNull("NULL");
@@ -299,7 +299,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Insert_101, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     int result = dataShareHelper->Insert(uri, val);
@@ -318,7 +318,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_001, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     std::string testname = "Lisa";
@@ -347,7 +347,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_002, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     int64_t i = 33;
@@ -374,7 +374,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_003, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     std::string name = "Wangwu";
@@ -401,7 +401,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_004, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     val.PutBool("isStudent", true);
@@ -425,7 +425,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_005, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     val.PutNull("NULL");
@@ -450,7 +450,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_006, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     std::string name = "ZhangSan";
@@ -477,7 +477,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_007, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     std::string name = "ZhangSan";
@@ -502,7 +502,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_008, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     val.PutNull("NULL");
@@ -527,7 +527,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_101, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     std::string name = "ZhangSan";
@@ -550,7 +550,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Delete_001, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataSharePredicates predicates;
     std::string str = "ZhangSan";
@@ -573,7 +573,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Delete_002, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataSharePredicates predicates;
     predicates.IsNull("name");
@@ -593,7 +593,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Delete_003, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataSharePredicates predicates;
     std::string str = "ZhangSan";
@@ -618,7 +618,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Delete_004, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataSharePredicates predicates;
     int64_t i = 57;
@@ -644,7 +644,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Delete_005, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::vector<int> age {18, 20};
     std::string str = "hongmeng";
@@ -667,7 +667,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Delete_006, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataSharePredicates predicates;
     std::string str = "ZhangSan";
@@ -691,7 +691,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Delete_101, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataSharePredicates predicates;
     std::string str = "ZhangSan";
@@ -713,7 +713,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_001, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::vector<std::string> columns {"Querytest1", "Querytest2"};
     DataSharePredicates predicates;
@@ -746,7 +746,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_002, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::vector<std::string> columns {"Querytest1","Querytest2"};
     DataSharePredicates predicates;
@@ -779,7 +779,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_003, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::vector<std::string> columns {"Querytest1", "Querytest2"};
     DataSharePredicates predicates;
@@ -808,7 +808,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_004, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::vector<std::string> columns {"Querytest1", "Querytest2"};
     DataSharePredicates predicates;
@@ -837,7 +837,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_005, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::vector<std::string> columns {"Querytest4", "Querytest5"};
     DataSharePredicates predicates;
@@ -867,7 +867,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_006, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::vector<std::string> columns {"Querytest4", "Querytest5"};
     DataSharePredicates predicates;
@@ -894,7 +894,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_007, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::vector<std::string> columns {"Querytest4", "Querytest5"};
     DataSharePredicates predicates;
@@ -925,7 +925,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_008, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::vector<std::string> columns {"Querytest4", "Querytest5"};
     DataSharePredicates predicates;
@@ -959,7 +959,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_101, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::vector<std::string> columns {"Querytest4", "Querytest5"};
     DataSharePredicates predicates;
@@ -984,7 +984,7 @@ HWTEST_F(DataShareHelperTest, DataShare_GetType_001, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     std::string result = dataShareHelper->GetType(uri);
     EXPECT_NE(result.c_str(), "");
@@ -1002,7 +1002,7 @@ HWTEST_F(DataShareHelperTest, DataShare_BatchInsert_001, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     val.PutString("name", "ZhangSan");
@@ -1025,7 +1025,7 @@ HWTEST_F(DataShareHelperTest, DataShare_BatchInsert_002, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     val.PutBool("isStudent", true);
@@ -1048,7 +1048,7 @@ HWTEST_F(DataShareHelperTest, DataShare_BatchInsert_003, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     DataShareValuesBucket val;
     std::vector<uint8_t> value {20, 30};
@@ -1072,7 +1072,7 @@ HWTEST_F(DataShareHelperTest, DataShare_RegisterObserver_001, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     sptr<IDataShareObserverTest> dataObserver;
     dataObserver->OnChange();
@@ -1091,7 +1091,7 @@ HWTEST_F(DataShareHelperTest, DataShare_RegisterObserver_101, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     dataShareHelper->RegisterObserver(uri, nullptr);
     LOG_INFO("DataShare_RegisterObserver_101 end");
@@ -1108,7 +1108,7 @@ HWTEST_F(DataShareHelperTest, DataShare_UnregisterObserver_001, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     sptr<IDataShareObserverTest> dataObserver;
     dataObserver->OnChange();
@@ -1127,7 +1127,7 @@ HWTEST_F(DataShareHelperTest, DataShare_NotifyChange_001, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     dataShareHelper->NotifyChange(uri);
     LOG_INFO("DataShare_NotifyChange_001 end");
@@ -1144,7 +1144,7 @@ HWTEST_F(DataShareHelperTest, DataShare_NormalizeUri_001, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     dataShareHelper->NormalizeUri(uri);
     LOG_INFO("DataShare_NormalizeUri_001 end");
@@ -1161,7 +1161,7 @@ HWTEST_F(DataShareHelperTest, DataShare_DenormalizeUri_001, TestSize.Level1)
     std::shared_ptr<Ability> ability = std::make_shared<Ability>();
     std::shared_ptr<Context> context(ability);
     Uri uri(URI);
-    LOG_INFO("addr : %{public}p, uri : %{public}s", &uri, uri.GetScheme().c_str());
+    LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
     dataShareHelper->DenormalizeUri(uri);
     LOG_INFO("DataShare_DenormalizeUri_001 end");
