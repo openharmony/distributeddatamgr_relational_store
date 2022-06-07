@@ -20,6 +20,7 @@
 #include "rdb_errno.h"
 #include "rdb_logger.h"
 #include "result_set.h"
+#include "securec.h"
 
 namespace OHOS {
 namespace RdbDataShareAdapter {
@@ -157,11 +158,12 @@ bool RdbResultSetBridge::WriteBlobData(int column, Writer &writer)
     if (blobValue.empty()) {
         return false;
     }
-
-    std::string str;
-    str.assign(blobValue.begin(), blobValue.end());
-    const char *value = str.c_str();
-    return writer.Write(column, value, strlen(value));
+    size_t size = blobValue.size() * sizeof(uint8_t);
+    uint8_t *value = (uint8_t *)malloc(size);
+    if (memcpy_s(value, size, &blobValue[0], size) != EOK) {
+        return false;
+    }
+    return writer.Write(column, value, size);
 }
 } // namespace RdbDataShareAdapter
 } // namespace OHOS
