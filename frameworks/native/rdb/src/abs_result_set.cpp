@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
-#include "abs_result_set.h"
 #include <algorithm>
 #include <string>
+
+#include "abs_result_set.h"
+#include "dds_trace.h"
 #include "logger.h"
 #include "rdb_errno.h"
 
@@ -84,6 +86,7 @@ int AbsResultSet::GetRowIndex(int &position) const
 
 int AbsResultSet::GoTo(int offset)
 {
+    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::", __FUNCTION__));
     int ret = GoToRow(rowPos + offset);
     if (ret != E_OK) {
         LOG_ERROR("AbsResultSet::GoTo return ret is wrong!");
@@ -94,6 +97,7 @@ int AbsResultSet::GoTo(int offset)
 
 int AbsResultSet::GoToFirstRow()
 {
+    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::", __FUNCTION__));
     int ret = GoToRow(0);
     if (ret != E_OK) {
         LOG_ERROR("AbsResultSet::GoToFirstRow return ret is wrong!");
@@ -104,6 +108,7 @@ int AbsResultSet::GoToFirstRow()
 
 int AbsResultSet::GoToLastRow()
 {
+    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::", __FUNCTION__));
     int rowCnt = 0;
     int ret = GetRowCount(rowCnt);
     if (ret != E_OK) {
@@ -121,6 +126,7 @@ int AbsResultSet::GoToLastRow()
 
 int AbsResultSet::GoToNextRow()
 {
+    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::", __FUNCTION__));
     int ret = GoToRow(rowPos + 1);
     if (ret != E_OK) {
         LOG_ERROR("AbsResultSet::GoToNextRow  return GoToRow::ret is wrong!");
@@ -131,6 +137,7 @@ int AbsResultSet::GoToNextRow()
 
 int AbsResultSet::GoToPreviousRow()
 {
+    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::", __FUNCTION__));
     int ret = GoToRow(rowPos - 1);
     if (ret != E_OK) {
         LOG_ERROR("AbsResultSet::GoToPreviousRow  return GoToRow::ret is wrong!");
