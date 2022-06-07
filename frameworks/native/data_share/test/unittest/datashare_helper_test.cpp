@@ -407,7 +407,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_004, TestSize.Level1)
     val.PutBool("isStudent", true);
     DataSharePredicates predicates;
     predicates.LessThanOrEqualTo("age", 20);
-    predicates.EqualTo("isStudent",false);
+    predicates.EqualTo("isStudent", false);
     predicates.NotEqualTo("weight", 54.3);
     int result = dataShareHelper->Update(uri, predicates, val);
     EXPECT_NE(result, 0);
@@ -555,7 +555,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Delete_001, TestSize.Level1)
     DataSharePredicates predicates;
     std::string str = "ZhangSan";
     predicates.EqualTo("age", 18);
-    predicates.GreaterThan("age",67.3);
+    predicates.GreaterThan("age", 67.3);
     predicates.GreaterThan("name", str);
     int result = dataShareHelper->Delete(uri, predicates);
     EXPECT_NE(result, 0);
@@ -728,7 +728,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_001, TestSize.Level1)
     std::vector<uint8_t> blob {20, 30};
     if (resultSet != nullptr) {
         resultSet->GetRowCount(result);
-        resultSet->GetBlob(2 ,blob);
+        resultSet->GetBlob(2, blob);
         resultSet->GetAllColumnNames(columnOrKeyNames);
     }
     EXPECT_EQ(result, 0);
@@ -748,7 +748,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_002, TestSize.Level1)
     Uri uri(URI);
     LOG_INFO("uri : %{public}s", uri.GetScheme().c_str());
     std::shared_ptr<DataShareHelper> dataShareHelper = DataShareHelper::Creator(context, URI);
-    std::vector<std::string> columns {"Querytest1","Querytest2"};
+    std::vector<std::string> columns {"Querytest1", "Querytest2"};
     DataSharePredicates predicates;
     std::string str = "si";
     int64_t i = 18;
@@ -878,7 +878,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_006, TestSize.Level1)
     if (resultSet != nullptr) {
         resultSet->GoToNextRow();
         resultSet->GoTo(2);
-        resultSet->OnGo(1,4);
+        resultSet->OnGo(1, 4);
     }
     LOG_INFO("DataShare_Query_006 end, result : %{public}d", result);
 }
@@ -907,7 +907,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_007, TestSize.Level1)
     std::shared_ptr<DataShareResultSet> resultSet = dataShareHelper->Query(uri, predicates, columns);
     if (resultSet != nullptr) {
         bool closeresult = resultSet->IsClosed();
-        if(closeresult == false){
+        if(!closeresult) {
             resultSet->Close();
         }
     }
