@@ -29,8 +29,8 @@ std::map<std::string, std::shared_ptr<RdbStore>> RdbHelper::storeCache_;
 std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode)
 {
-    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__),
-        DistributedKv::SwitchOption::BYTRACE_ON | DistributedKv::SwitchOption::TRACE_CHAIN_ON);
+    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::", __FUNCTION__),
+        DistributedKv::TraceSwitch::BYTRACE_ON | DistributedKv::TraceSwitch::TRACE_CHAIN_ON);
     SqliteGlobalConfig::InitSqliteGlobalConfig();
     std::shared_ptr<RdbStore> rdbStore;
     {
@@ -101,7 +101,7 @@ void RdbHelper::ClearCache()
 
 int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
 {
-    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::", __FUNCTION__));
     if (dbFileName.empty()) {
         return E_EMPTY_FILE_NAME;
     }
