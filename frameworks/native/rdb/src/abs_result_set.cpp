@@ -16,10 +16,10 @@
 #include <algorithm>
 #include <string>
 
-#include "abs_result_set.h"
 #include "dds_trace.h"
 #include "logger.h"
 #include "rdb_errno.h"
+#include "abs_result_set.h"
 
 namespace OHOS {
 namespace NativeRdb {
