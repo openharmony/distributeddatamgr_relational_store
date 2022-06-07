@@ -328,7 +328,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_001, TestSize.Level1)
     DataSharePredicates predicates;
     predicates.EqualTo("name", testname);
     predicates.OrderByAsc("age");
-    predicates.GreaterThan("age" ,18);
+    predicates.GreaterThan("age", 18);
     predicates.NotIn("age", age);
     predicates.NotIn("age", intage);
     int result = dataShareHelper->Update(uri, predicates, val);
@@ -357,7 +357,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_002, TestSize.Level1)
     DataSharePredicates predicates;
     std::string str = "ZhangSan";
     predicates.NotEqualTo("name", str);
-    predicates.Limit(number ,offset);
+    predicates.Limit(number, offset);
     int result = dataShareHelper->Update(uri, predicates, val);
     EXPECT_NE(result, 0);
     LOG_INFO("DataShare_Update_002 end, result : %{public}d", result);
@@ -406,9 +406,9 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_004, TestSize.Level1)
     DataShareValuesBucket val;
     val.PutBool("isStudent", true);
     DataSharePredicates predicates;
-    predicates.LessThanOrEqualTo("age" ,20);
+    predicates.LessThanOrEqualTo("age", 20);
     predicates.EqualTo("isStudent",false);
-    predicates.NotEqualTo("weight" ,54.3);
+    predicates.NotEqualTo("weight", 54.3);
     int result = dataShareHelper->Update(uri, predicates, val);
     EXPECT_NE(result, 0);
     LOG_INFO("DataShare_Update_004 end, result : %{public}d", result);
@@ -431,9 +431,9 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_005, TestSize.Level1)
     val.PutNull("NULL");
     DataSharePredicates predicates;
     std::string str = "ZhangSan";
-    predicates.LessThan("name" ,str);
-    predicates.LessThan("age" ,35);
-    predicates.LessThan("weight" ,67.9);
+    predicates.LessThan("name", str);
+    predicates.LessThan("age", 35);
+    predicates.LessThan("weight", 67.9);
     int result = dataShareHelper->Update(uri, predicates, val);
     EXPECT_NE(result, 0);
     LOG_INFO("DataShare_Update_005 end, result : %{public}d", result);
@@ -508,9 +508,9 @@ HWTEST_F(DataShareHelperTest, DataShare_Update_008, TestSize.Level1)
     val.PutNull("NULL");
     DataSharePredicates predicates;
     std::string str = "ZhangSan";
-    predicates.LessThan("name" ,str);
-    predicates.LessThan("age" ,35);
-    predicates.LessThan("weight" ,67.9);
+    predicates.LessThan("name", str);
+    predicates.LessThan("age", 35);
+    predicates.LessThan("weight", 67.9);
     int result = dataShareHelper->Update(uri, predicates, val);
     EXPECT_NE(result, 0);
     LOG_INFO("DataShare_Update_008 end, result : %{public}d", result);
@@ -556,7 +556,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Delete_001, TestSize.Level1)
     std::string str = "ZhangSan";
     predicates.EqualTo("age", 18);
     predicates.GreaterThan("age",67.3);
-    predicates.GreaterThan("name" ,str);
+    predicates.GreaterThan("name", str);
     int result = dataShareHelper->Delete(uri, predicates);
     EXPECT_NE(result, 0);
     LOG_INFO("DataShare_Delete_001 end, result : %{public}d", result);
@@ -599,9 +599,9 @@ HWTEST_F(DataShareHelperTest, DataShare_Delete_003, TestSize.Level1)
     std::string str = "ZhangSan";
     int64_t i = 65;
     predicates.Like("name", str);
-    predicates.NotEqualTo("age" ,18);
-    predicates.GreaterThanOrEqualTo("age" ,17);
-    predicates.LessThan("weight" ,i);
+    predicates.NotEqualTo("age", 18);
+    predicates.GreaterThanOrEqualTo("age", 17);
+    predicates.LessThan("weight", i);
     int result = dataShareHelper->Delete(uri, predicates);
     EXPECT_NE(result, 0);
     LOG_INFO("DataShare_Delete_003 end, result : %{public}d", result);
@@ -623,11 +623,11 @@ HWTEST_F(DataShareHelperTest, DataShare_Delete_004, TestSize.Level1)
     DataSharePredicates predicates;
     int64_t i = 57;
     std::string str = "Wangwu";
-    predicates.NotEqualTo("age" ,i);
-    predicates.LessThanOrEqualTo("age" ,i);
-    predicates.NotEqualTo("isStudent" ,true);
+    predicates.NotEqualTo("age", i);
+    predicates.LessThanOrEqualTo("age", i);
+    predicates.NotEqualTo("isStudent", true);
     predicates.Unlike("name", str);
-    predicates.GreaterThanOrEqualTo("weight" ,89.7);
+    predicates.GreaterThanOrEqualTo("weight", 89.7);
     int result = dataShareHelper->Delete(uri, predicates);
     EXPECT_NE(result, 0);
     LOG_INFO("DataShare_Delete_004 end, result : %{public}d", result);
@@ -650,7 +650,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Delete_005, TestSize.Level1)
     std::string str = "hongmeng";
     DataSharePredicates predicates;
     predicates.In("age", age);
-    predicates.GreaterThanOrEqualTo("name" ,str);
+    predicates.GreaterThanOrEqualTo("name", str);
     int result = dataShareHelper->Delete(uri, predicates);
     EXPECT_NE(result, 0);
     LOG_INFO("DataShare_Delete_005 end, result : %{public}d", result);
@@ -672,9 +672,9 @@ HWTEST_F(DataShareHelperTest, DataShare_Delete_006, TestSize.Level1)
     DataSharePredicates predicates;
     std::string str = "ZhangSan";
     int64_t i = 67;
-    predicates.GreaterThanOrEqualTo("age" ,i);
-    predicates.LessThanOrEqualTo("weight" ,67.9);
-    predicates.LessThanOrEqualTo("name" ,str);
+    predicates.GreaterThanOrEqualTo("age", i);
+    predicates.LessThanOrEqualTo("weight", 67.9);
+    predicates.LessThanOrEqualTo("name", str);
     int result = dataShareHelper->Delete(uri, predicates);
     EXPECT_NE(result, 0);
     LOG_INFO("DataShare_Delete_006 end, result : %{public}d", result);
@@ -696,7 +696,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Delete_101, TestSize.Level1)
     DataSharePredicates predicates;
     std::string str = "ZhangSan";
     int64_t i = 67;
-    predicates.GreaterThanOrEqualTo("age" ,i);
+    predicates.GreaterThanOrEqualTo("age", i);
     int result = dataShareHelper->Delete(uri, predicates);
     EXPECT_NE(result, 0);
     LOG_INFO("DataShare_Delete_101 end, result : %{public}d", result);
@@ -719,9 +719,9 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_001, TestSize.Level1)
     DataSharePredicates predicates;
     int64_t age = 23;
     std::string str = "Li";
-    predicates.BeginsWith("name" ,str);
+    predicates.BeginsWith("name", str);
     predicates.EqualTo("weight", 108.7);
-    predicates.GreaterThan("age" ,age);
+    predicates.GreaterThan("age", age);
     std::shared_ptr<DataShareResultSet> resultSet = dataShareHelper->Query(uri, predicates, columns);
     int result = 0;
     std::vector<std::string> columnOrKeyNames;
@@ -752,8 +752,8 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_002, TestSize.Level1)
     DataSharePredicates predicates;
     std::string str = "si";
     int64_t i = 18;
-    predicates.EqualTo("age" ,i);
-    predicates.EndsWith("name" ,str);
+    predicates.EqualTo("age", i);
+    predicates.EndsWith("name", str);
     std::shared_ptr<DataShareResultSet> resultSet = dataShareHelper->Query(uri, predicates, columns);
     int rowindex = 0;
     bool isStartResult = false;
@@ -902,8 +902,8 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_007, TestSize.Level1)
     std::vector<string> name {"Zhaosi", "LiMing"};
     std::vector<double> weight {67.7, 56.9};
     predicates.NotIn("age", age);
-    predicates.NotIn("name" ,name);
-    predicates.NotIn("weight" ,weight);
+    predicates.NotIn("name", name);
+    predicates.NotIn("weight", weight);
     std::shared_ptr<DataShareResultSet> resultSet = dataShareHelper->Query(uri, predicates, columns);
     if (resultSet != nullptr) {
         bool closeresult = resultSet->IsClosed();
@@ -933,16 +933,16 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_008, TestSize.Level1)
     std::vector<string> name {"Zhaosi", "LiMing"};
     std::vector<double> weight {67.7, 56.9};
     predicates.NotIn("age", age);
-    predicates.NotIn("name" ,name);
-    predicates.NotIn("weight" ,weight);
+    predicates.NotIn("name", name);
+    predicates.NotIn("weight", weight);
     std::shared_ptr<DataShareResultSet> resultSet = dataShareHelper->Query(uri, predicates, columns);
     DataType datatype;
     int columnIndex = 3;
     std::string columnname = "";
     if (resultSet != nullptr) {
-        resultSet->GetColumnIndex("age" ,columnIndex);
-        resultSet->GetColumnName(3 ,columnname);
-        resultSet->GetDataType(2,datatype);
+        resultSet->GetColumnIndex("age", columnIndex);
+        resultSet->GetColumnName(3, columnname);
+        resultSet->GetDataType(2, datatype);
         resultSet->GetBlock();
     }
     LOG_INFO("DataShare_Query_008 end");
@@ -968,7 +968,7 @@ HWTEST_F(DataShareHelperTest, DataShare_Query_101, TestSize.Level1)
     std::shared_ptr<DataShareResultSet> resultSet = dataShareHelper->Query(uri, predicates, columns);
     int columnIndex = 3;
     if (resultSet != nullptr) {
-        resultSet->GetColumnIndex("age" ,columnIndex);
+        resultSet->GetColumnIndex("age", columnIndex);
     }
     LOG_INFO("DataShare_Query_101 end");
 }
