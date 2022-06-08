@@ -47,7 +47,6 @@ ohos_shared_library("rdb_data_share_adapter") {
   deps = [ "//utils/native/base:utils" ]
 
   external_deps = [
-    "data_share:datashare_common",
     "hilog_native:libhilog",
     "relational_store:native_rdb",
   ]
