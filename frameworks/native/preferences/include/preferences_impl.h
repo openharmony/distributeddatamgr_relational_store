@@ -46,8 +46,8 @@ public:
 
     int GetInt(const std::string &key, int defValue) override
     {
-        PreferencesValue preferencesValue =  Get(key, defValue);
-        if(!preferencesValue.IsInt()){
+        PreferencesValue preferencesValue = Get(key, defValue);
+        if (!preferencesValue.IsInt()) {
             return defValue;
         }
         return preferencesValue;
@@ -55,8 +55,8 @@ public:
 
     std::string GetString(const std::string &key, const std::string &defValue) override
     {
-        PreferencesValue preferencesValue =  Get(key, defValue);
-        if(!preferencesValue.IsString()){
+        PreferencesValue preferencesValue = Get(key, defValue);
+        if (!preferencesValue.IsString()) {
             return defValue;
         }
         return preferencesValue;
@@ -64,8 +64,8 @@ public:
 
     bool GetBool(const std::string &key, bool defValue) override
     {
-        PreferencesValue preferencesValue =  Get(key, defValue);
-        if(!preferencesValue.IsBool()){
+        PreferencesValue preferencesValue = Get(key, defValue);
+        if (!preferencesValue.IsBool()) {
             return defValue;
         }
         return preferencesValue;
@@ -73,8 +73,8 @@ public:
 
     float GetFloat(const std::string &key, float defValue) override
     {
-        PreferencesValue preferencesValue =  Get(key, defValue);
-        if(!preferencesValue.IsFloat()){
+        PreferencesValue preferencesValue = Get(key, defValue);
+        if (!preferencesValue.IsFloat()) {
             return defValue;
         }
         return preferencesValue;
@@ -82,8 +82,8 @@ public:
 
     double GetDouble(const std::string &key, double defValue) override
     {
-        PreferencesValue preferencesValue =  Get(key, defValue);
-        if(!preferencesValue.IsDouble()){
+        PreferencesValue preferencesValue = Get(key, defValue);
+        if (!preferencesValue.IsDouble()) {
             return defValue;
         }
         return preferencesValue;
@@ -91,8 +91,8 @@ public:
 
     int64_t GetLong(const std::string &key, int64_t defValue) override
     {
-        PreferencesValue preferencesValue =  Get(key, defValue);
-        if(!preferencesValue.IsLong()){
+        PreferencesValue preferencesValue = Get(key, defValue);
+        if (!preferencesValue.IsLong()) {
             return defValue;
         }
         return preferencesValue;

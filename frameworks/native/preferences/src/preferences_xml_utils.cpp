@@ -119,7 +119,7 @@ bool ParsePrimitiveNodeElement(const xmlNode *node, Element &element)
     bool success = false;
     if (value != nullptr) {
         element.tag_ = std::string(reinterpret_cast<const char *>(node->name));
-        if(key != nullptr){
+        if (key != nullptr) {
             element.key_ = std::string(reinterpret_cast<char *>(key));
         }
         element.value_ = std::string(reinterpret_cast<char *>(value));
