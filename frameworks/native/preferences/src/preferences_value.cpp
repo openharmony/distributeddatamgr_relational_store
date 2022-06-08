@@ -161,6 +161,5 @@ bool PreferencesValue::operator==(const PreferencesValue &value)
 {
     return (this->value_ == value.value_);
 }
-
 } // End of namespace NativePreferences
 } // End of namespace OHOS

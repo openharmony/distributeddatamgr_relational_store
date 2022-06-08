@@ -160,49 +160,119 @@ void ParseKey(const napi_env &env, const napi_value &arg, PreferencesAysncContex
     asyncContext->key = key;
 }
 
-void ParseDefObject(const napi_env &env, const napi_value &arg, PreferencesAysncContext *asyncContext)
+int32_t ParseDoubleElement(
+    const napi_env &env, const napi_value &arg, PreferencesAysncContext *asyncContext, size_t arrLen)
+{
+    std::vector<double> doubleArray;
+    napi_value doubleElement;
+    for (size_t i = 0; i < arrLen; i++) {
+        napi_status status = napi_get_element(env, arg, i, &doubleElement);
+        if (status != napi_ok) {
+            LOG_ERROR("ParseObjectElement get doubleElement failed, status = %{public}d", status);
+            return E_ERROR;
+        }
+        double number = 0.0;
+        status = napi_get_value_double(env, doubleElement, &number);
+        if (status != napi_ok) {
+            LOG_ERROR("ParseObjectElement get doubleElement failed, status = %{public}d", status);
+            return E_ERROR;
+        }
+        doubleArray.push_back(number);
+    }
+    PreferencesValue value((std::vector<double>)doubleArray);
+    asyncContext->defValue = value;
+    return E_OK;
+}
+
+int32_t ParseBoolElement(
+    const napi_env &env, const napi_value &arg, PreferencesAysncContext *asyncContext, size_t arrLen)
+{
+    std::vector<bool> boolArray;
+    napi_value boolElement;
+    for (int32_t i = 0; i < arrLen; i++) {
+        napi_status status = napi_get_element(env, arg, i, &boolElement);
+        if (status != napi_ok) {
+            LOG_ERROR("ParseObjectElement get boolElement failed, status = %{public}d", status);
+            return E_ERROR;
+        }
+        bool bValue = false;
+        napi_get_value_bool(env, boolElement, &bValue);
+        if (status != napi_ok) {
+            LOG_ERROR("ParseObjectElement get boolElement failed, status = %{public}d", status);
+            return E_ERROR;
+        }
+        boolArray.push_back(bValue);
+    }
+    PreferencesValue value((std::vector<bool>)boolArray);
+    asyncContext->defValue = value;
+    return E_OK;
+}
+
+int32_t ParseStringElement(
+    const napi_env &env, const napi_value &arg, PreferencesAysncContext *asyncContext, size_t arrLen)
+{
+    std::vector<std::string> stringArray;
+    napi_value stringElement = nullptr;
+    for (int32_t i = 0; i < arrLen; i++) {
+        napi_status status = napi_get_element(env, arg, i, &stringElement);
+        if (status != napi_ok) {
+            LOG_ERROR("ParseObjectElement get stringElement failed, status = %{public}d", status);
+            return E_ERROR;
+        }
+        char *str = new char[MAX_VALUE_LENGTH];
+        size_t valueSize = 0;
+        napi_get_value_string_utf8(env, stringElement, str, MAX_VALUE_LENGTH, &valueSize);
+        if (status != napi_ok) {
+            LOG_ERROR("ParseObjectElement get stringElement failed, status = %{public}d", status);
+            return E_ERROR;
+        }
+        stringArray.push_back((std::string)str);
+    }
+    PreferencesValue value((std::vector<std::string>)stringArray);
+    asyncContext->defValue = value;
+    return E_OK;
+}
+
+int32_t ParseObjectElement(napi_valuetype valueType, const napi_env &env, const napi_value &arg,
+    PreferencesAysncContext *asyncContext, size_t arrLen)
+{
+    if (valueType == napi_number) {
+        return ParseDoubleElement(env, arg, asyncContext, arrLen);
+    } else if (valueType == napi_boolean) {
+        return ParseBoolElement(env, arg, asyncContext, arrLen);
+    } else if (valueType == napi_string) {
+        return ParseStringElement(env, arg, asyncContext, arrLen);
+    } else {
+        LOG_ERROR("ParseObjectElement unexpected valueType");
+        return E_ERROR;
+    }
+}
+
+int32_t ParseDefObject(const napi_env &env, const napi_value &arg, PreferencesAysncContext *asyncContext)
 {
     napi_valuetype valueType = napi_undefined;
     uint32_t arrLen = 0;
-    napi_get_array_length(env, arg, &arrLen);
-    napi_value flag = nullptr;
-    napi_get_element(env, arg, 0, &flag);
-    napi_typeof(env, flag, &valueType);
-    if (valueType == napi_number) {
-        std::vector<double> doubleArray;
-        napi_value doubleElement;
-        for (size_t i = 0; i < arrLen; i++) {
-            napi_get_element(env, arg, i, &doubleElement);
-            double number = 0.0;
-            napi_get_value_double(env, doubleElement, &number);
-            doubleArray.push_back(number);
-        }
-        PreferencesValue value((std::vector<double>)doubleArray);
-        asyncContext->defValue = value;
-    } else if (valueType == napi_boolean) {
-        std::vector<bool> boolArray;
-        napi_value boolElement;
-        for (int32_t i = 0; i < arrLen; i++) {
-            napi_get_element(env, arg, i, &boolElement);
-            bool bValue = false;
-            napi_get_value_bool(env, boolElement, &bValue);
-            boolArray.push_back(bValue);
-        }
-        PreferencesValue value((std::vector<bool>)boolArray);
-        asyncContext->defValue = value;
-    } else if (valueType == napi_string) {
-        std::vector<std::string> stringArray;
-        napi_value stringElement = nullptr;
-        for (int32_t i = 0; i < arrLen; i++) {
-            napi_get_element(env, arg, i, &stringElement);
-            char *str = new char[MAX_VALUE_LENGTH];
-            size_t valueSize = 0;
-            napi_get_value_string_utf8(env, stringElement, str, MAX_VALUE_LENGTH, &valueSize);
-            stringArray.push_back((std::string)str);
-        }
-        PreferencesValue value((std::vector<std::string>)stringArray);
-        asyncContext->defValue = value;
+    napi_status status = napi_get_array_length(env, arg, &arrLen);
+    if (status != napi_ok) {
+        LOG_ERROR("ParseDefObject get array failed, status = %{public}d", status);
+        return E_ERROR;
     }
+    napi_value flag = nullptr;
+    status = napi_get_element(env, arg, 0, &flag);
+    if (status != napi_ok) {
+        LOG_ERROR("ParseDefObject get array element failed, status = %{public}d", status);
+        return E_ERROR;
+    }
+    status = napi_typeof(env, flag, &valueType);
+    if (status != napi_ok) {
+        LOG_ERROR("ParseDefObject get array element type failed, status = %{public}d", status);
+        return E_ERROR;
+    }
+    if (ParseObjectElement(valueType, env, arg, asyncContext, arrLen) != E_OK) {
+        LOG_ERROR("ParseDefObject parse array element failed, status = %{public}d", status);
+        return E_ERROR;
+    }
+    return E_OK;
 }
 
 void ParseDefValue(const napi_env &env, const napi_value &arg, PreferencesAysncContext *asyncContext)
@@ -227,7 +297,9 @@ void ParseDefValue(const napi_env &env, const napi_value &arg, PreferencesAysncC
         PreferencesValue value((bool)(bValue));
         asyncContext->defValue = value;
     } else if (valueType == napi_object) {
-        ParseDefObject(env, arg, asyncContext);
+        if (ParseDefObject(env, arg, asyncContext) != E_OK) {
+            LOG_ERROR("ParseDefValue::ParseDefObject failed");
+        }
     } else {
         LOG_ERROR("Wrong second parameter type");
     }

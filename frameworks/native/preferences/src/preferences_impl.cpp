@@ -245,20 +245,20 @@ void ReadXmlElement(
         prefMap.insert(std::make_pair(element.key_, PreferencesValue(element.value_)));
     } else if (element.tag_.compare("doubleArray") == 0) {
         std::vector<double> values;
-        for (auto child : element.children_) {
+        for (auto &child : element.children_) {
             double value = std::stod(child.value_);
             values.push_back(value);
         }
         prefMap.insert(std::make_pair(element.key_, PreferencesValue(values)));
     } else if (element.tag_.compare("stringArray") == 0) {
         std::vector<std::string> values;
-        for (auto child : element.children_) {
+        for (auto &child : element.children_) {
             values.push_back(child.value_);
         }
         prefMap.insert(std::make_pair(element.key_, PreferencesValue(values)));
     } else if (element.tag_.compare("boolArray") == 0) {
         std::vector<bool> values;
-        for (auto child : element.children_) {
+        for (auto &child : element.children_) {
             bool value = std::stod(child.value_);
             values.push_back(value);
         }
@@ -391,7 +391,6 @@ int PreferencesImpl::Put(const std::string &key, const PreferencesValue &value)
         return errCode;
     }
     if (value.IsString()) {
-        std::string tmp = (std::string)value;
         errCode = CheckStringValue((std::string)value);
         if (errCode != E_OK) {
             LOG_ERROR("PreferencesImpl::Put string value length should shorter than 8*1024");
@@ -491,6 +490,7 @@ std::shared_ptr<PreferencesImpl::MemoryToDiskRequest> PreferencesImpl::commitToM
     std::vector<std::weak_ptr<PreferencesObserver>> preferencesObservers;
     std::map<std::string, PreferencesValue> writeToDiskMap;
     writeToDiskMap = map_;
+
     if (!modifiedKeys_.empty()) {
         currentMemoryStateGeneration_++;
         keysModified = modifiedKeys_;
