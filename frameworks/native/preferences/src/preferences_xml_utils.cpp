@@ -345,7 +345,7 @@ xmlNode *CreateArrayNode(Element &element)
                 xmlFreeNode(childNode);
             }
         }
-    }else if (flag.tag_.compare("string") == 0) {
+    } else if (flag.tag_.compare("string") == 0) {
         for (Element child : element.children_) {
             xmlNode *childNode = CreateStringNode(child);
             if (childNode == nullptr) {
