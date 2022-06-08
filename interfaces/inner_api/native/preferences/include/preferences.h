@@ -34,6 +34,10 @@ public:
 
     static const unsigned int MAX_VALUE_LENGTH = 8 * 1024;
 
+    virtual PreferencesValue Get(const std::string &key, const PreferencesValue &defValue) = 0;
+
+    virtual int Put(const std::string &key, const PreferencesValue &value) = 0;
+
     virtual int GetInt(const std::string &key, int defValue) = 0;
 
     virtual std::string GetString(const std::string &key, const std::string &defValue) = 0;
@@ -45,8 +49,6 @@ public:
     virtual double GetDouble(const std::string &key, double defValue) = 0;
 
     virtual int64_t GetLong(const std::string &key, int64_t defValue) = 0;
-
-    virtual std::set<std::string> GetStringSet(const std::string &key, std::set<std::string> &defValue) = 0;
 
     virtual std::map<std::string, PreferencesValue> GetAll() = 0;
 
@@ -63,8 +65,6 @@ public:
     virtual int PutFloat(const std::string &key, float value) = 0;
 
     virtual int PutDouble(const std::string &key, double value) = 0;
-
-    virtual int PutStringSet(const std::string &key, const std::set<std::string> &value) = 0;
 
     virtual int Delete(const std::string &key) = 0;
 

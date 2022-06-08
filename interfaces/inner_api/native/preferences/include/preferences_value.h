@@ -18,7 +18,7 @@
 
 #include <string>
 #include <variant>
-#include <set>
+#include <vector>
 
 namespace OHOS {
 namespace NativePreferences {
@@ -26,13 +26,16 @@ class PreferencesValue {
 public:
     ~PreferencesValue() {}
 
-    explicit PreferencesValue(int value);
-    explicit PreferencesValue(int64_t value);
-    explicit PreferencesValue(float value);
-    explicit PreferencesValue(double value);
-    explicit PreferencesValue(bool value);
-    explicit PreferencesValue(std::string value);
-    explicit PreferencesValue(std::set<std::string> value);
+    PreferencesValue(int value);
+    PreferencesValue(int64_t value);
+    PreferencesValue(float value);
+    PreferencesValue(double value);
+    PreferencesValue(bool value);
+    PreferencesValue(const std::string &value);
+    PreferencesValue(const char *value);
+    PreferencesValue(const std::vector<double> &value);
+    PreferencesValue(const std::vector<std::string> &value);
+    PreferencesValue(const std::vector<bool> &value);
 
     bool IsInt() const;
     bool IsLong() const;
@@ -40,7 +43,9 @@ public:
     bool IsDouble() const;
     bool IsBool() const;
     bool IsString() const;
-    bool IsSet() const;
+    bool IsStringArray() const;
+    bool IsBoolArray() const;
+    bool IsDoubleArray() const;
 
     operator int() const;
     operator float() const;
@@ -48,12 +53,16 @@ public:
     operator bool() const;
     operator int64_t() const;
     operator std::string() const;
-    operator std::set<std::string>() const;
+    operator std::vector<double>() const;
+    operator std::vector<bool>() const;
+    operator std::vector<std::string>() const;
 
     bool operator==(const PreferencesValue &value);
 
 private:
-    std::variant<int, int64_t, float, double, bool, std::string, std::set<std::string>> data_;
+    std::variant<int, int64_t, float, double, bool, std::string, std::vector<std::string>, std::vector<bool>,
+        std::vector<double>>
+        value_;
 };
 } // End of namespace NativePreferences
 } // End of namespace OHOS
