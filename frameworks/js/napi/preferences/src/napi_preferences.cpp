@@ -160,6 +160,51 @@ void ParseKey(const napi_env &env, const napi_value &arg, PreferencesAysncContex
     asyncContext->key = key;
 }
 
+void ParseDefObject(const napi_env &env, const napi_value &arg, PreferencesAysncContext *asyncContext)
+{
+    napi_valuetype valueType = napi_undefined;
+    uint32_t arrLen = 0;
+    napi_get_array_length(env, arg, &arrLen);
+    napi_value flag = nullptr;
+    napi_get_element(env, arg, 0, &flag);
+    napi_typeof(env, flag, &valueType);
+    if (valueType == napi_number) {
+        std::vector<double> doubleArray;
+        napi_value doubleElement;
+        for (size_t i = 0; i < arrLen; i++) {
+            napi_get_element(env, arg, i, &doubleElement);
+            double number = 0.0;
+            napi_get_value_double(env, doubleElement, &number);
+            doubleArray.push_back(number);
+        }
+        PreferencesValue value((std::vector<double>)doubleArray);
+        asyncContext->defValue = value;
+    } else if (valueType == napi_boolean) {
+        std::vector<bool> boolArray;
+        napi_value boolElement;
+        for (int32_t i = 0; i < arrLen; i++) {
+            napi_get_element(env, arg, i, &boolElement);
+            bool bValue = false;
+            napi_get_value_bool(env, boolElement, &bValue);
+            boolArray.push_back(bValue);
+        }
+        PreferencesValue value((std::vector<bool>)boolArray);
+        asyncContext->defValue = value;
+    } else if (valueType == napi_string) {
+        std::vector<std::string> stringArray;
+        napi_value stringElement = nullptr;
+        for (int32_t i = 0; i < arrLen; i++) {
+            napi_get_element(env, arg, i, &stringElement);
+            char *str = new char[MAX_VALUE_LENGTH];
+            size_t valueSize = 0;
+            napi_get_value_string_utf8(env, stringElement, str, MAX_VALUE_LENGTH, &valueSize);
+            stringArray.push_back((std::string)str);
+        }
+        PreferencesValue value((std::vector<std::string>)stringArray);
+        asyncContext->defValue = value;
+    }
+}
+
 void ParseDefValue(const napi_env &env, const napi_value &arg, PreferencesAysncContext *asyncContext)
 {
     napi_valuetype valueType = napi_undefined;
@@ -181,9 +226,58 @@ void ParseDefValue(const napi_env &env, const napi_value &arg, PreferencesAysncC
         napi_get_value_bool(env, arg, &bValue);
         PreferencesValue value((bool)(bValue));
         asyncContext->defValue = value;
+    } else if (valueType == napi_object) {
+        ParseDefObject(env, arg, asyncContext);
     } else {
         LOG_ERROR("Wrong second parameter type");
     }
+}
+
+int32_t GetAllArr(
+    const std::string &key, const PreferencesValue &value, PreferencesAysncContext *asyncContext, napi_value &output)
+{
+    napi_value jsArr = nullptr;
+    if (value.IsDoubleArray()) {
+        std::vector<double> arrays = (std::vector<double>)value;
+        size_t arrLen = arrays.size();
+        napi_create_array_with_length(asyncContext->env, arrLen, &jsArr);
+        for (size_t i = 0; i < arrLen; i++) {
+            napi_value val = nullptr;
+            napi_create_double(asyncContext->env, arrays[i], &val);
+            napi_set_element(asyncContext->env, jsArr, i, val);
+        }
+        if (napi_set_named_property(asyncContext->env, output, key.c_str(), jsArr) != napi_ok) {
+            LOG_ERROR("PreferencesProxy::GetAll set property doubleArr failed");
+            return ERR;
+        }
+    } else if (value.IsStringArray()) {
+        std::vector<std::string> arrays = (std::vector<std::string>)value;
+        size_t arrLen = arrays.size();
+        napi_create_array_with_length(asyncContext->env, arrLen, &jsArr);
+        for (size_t i = 0; i < arrLen; i++) {
+            napi_value val = nullptr;
+            napi_create_string_utf8(asyncContext->env, arrays[i].c_str(), arrays[i].size(), &val);
+            napi_set_element(asyncContext->env, jsArr, i, val);
+        }
+        if (napi_set_named_property(asyncContext->env, output, key.c_str(), jsArr) != napi_ok) {
+            LOG_ERROR("PreferencesProxy::GetAll set property stringArr failed");
+            return ERR;
+        }
+    } else if (value.IsBoolArray()) {
+        std::vector<bool> arrays = (std::vector<bool>)value;
+        size_t arrLen = arrays.size();
+        napi_create_array_with_length(asyncContext->env, arrLen, &jsArr);
+        for (size_t i = 0; i < arrLen; i++) {
+            napi_value val = nullptr;
+            napi_get_boolean(asyncContext->env, arrays[i], &val);
+            napi_set_element(asyncContext->env, jsArr, i, val);
+        }
+        if (napi_set_named_property(asyncContext->env, output, key.c_str(), jsArr) != napi_ok) {
+            LOG_ERROR("PreferencesProxy::GetAll set property boolArr failed");
+            return ERR;
+        }
+    }
+    return OK;
 }
 
 int32_t GetAllExecute(PreferencesAysncContext *asyncContext, napi_value &output)
@@ -192,36 +286,40 @@ int32_t GetAllExecute(PreferencesAysncContext *asyncContext, napi_value &output)
         LOG_ERROR("PreferencesProxy::GetAll creat object failed");
         return ERR;
     }
-    napi_value num;
-    napi_value str;
-    napi_value boolVal;
+    napi_value jsVal = nullptr;
     for (const auto &[key, value] : asyncContext->allElements) {
         if (value.IsBool()) {
-            if (napi_get_boolean(asyncContext->env, value, &boolVal) != napi_ok) {
+            if (napi_get_boolean(asyncContext->env, value, &jsVal) != napi_ok) {
                 LOG_ERROR("PreferencesProxy::GetAll get property bool failed");
                 return ERR;
             }
-            if (napi_set_named_property(asyncContext->env, output, key.c_str(), boolVal) != napi_ok) {
+            if (napi_set_named_property(asyncContext->env, output, key.c_str(), jsVal) != napi_ok) {
                 LOG_ERROR("PreferencesProxy::GetAll set property bool failed");
                 return ERR;
             }
         } else if (value.IsDouble()) {
-            if (napi_create_double(asyncContext->env, value, &num) != napi_ok) {
+            if (napi_create_double(asyncContext->env, value, &jsVal) != napi_ok) {
                 LOG_ERROR("PreferencesProxy::GetAll get property double failed");
                 return ERR;
             }
-            if (napi_set_named_property(asyncContext->env, output, key.c_str(), num) != napi_ok) {
+            if (napi_set_named_property(asyncContext->env, output, key.c_str(), jsVal) != napi_ok) {
                 LOG_ERROR("PreferencesProxy::GetAll set property double failed");
                 return ERR;
             }
-        } else {
+        } else if (value.IsString()) {
             std::string tempStr = (std::string)value;
-            if (napi_create_string_utf8(asyncContext->env, tempStr.c_str(), tempStr.size(), &str) != napi_ok) {
+            if (napi_create_string_utf8(asyncContext->env, tempStr.c_str(), tempStr.size(), &jsVal) != napi_ok) {
                 LOG_ERROR("PreferencesProxy::GetAll get property string failed");
                 return ERR;
             }
-            if (napi_set_named_property(asyncContext->env, output, key.c_str(), str) != napi_ok) {
+            if (napi_set_named_property(asyncContext->env, output, key.c_str(), jsVal) != napi_ok) {
                 LOG_ERROR("PreferencesProxy::GetAll set property string failed");
+                return ERR;
+            }
+        } else {
+            int errCode = GetAllArr(key, value, asyncContext, output);
+            if (errCode != OK) {
+                LOG_ERROR("PreferencesProxy::GetAll set property array failed");
                 return ERR;
             }
         }
@@ -245,6 +343,38 @@ napi_value PreferencesProxy::GetAll(napi_env env, napi_callback_info info)
         GetAllExecute);
 }
 
+void GetArrayValue(PreferencesAysncContext *asyncContext, napi_value &output)
+{
+    if (asyncContext->defValue.IsDoubleArray()) {
+        std::vector<double> arrays = (std::vector<double>)asyncContext->defValue;
+        size_t arrLen = arrays.size();
+        napi_create_array_with_length(asyncContext->env, arrLen, &output);
+        for (size_t i = 0; i < arrLen; i++) {
+            napi_value value = nullptr;
+            napi_create_double(asyncContext->env, arrays[i], &value);
+            napi_set_element(asyncContext->env, output, i, value);
+        }
+    } else if (asyncContext->defValue.IsStringArray()) {
+        std::vector<std::string> arrays = (std::vector<std::string>)asyncContext->defValue;
+        size_t arrLen = arrays.size();
+        napi_create_array_with_length(asyncContext->env, arrLen, &output);
+        for (size_t i = 0; i < arrLen; i++) {
+            napi_value value = nullptr;
+            napi_create_string_utf8(asyncContext->env, arrays[i].c_str(), arrays[i].size(), &value);
+            napi_set_element(asyncContext->env, output, i, value);
+        }
+    } else if (asyncContext->defValue.IsBoolArray()) {
+        std::vector<bool> arrays = (std::vector<bool>)asyncContext->defValue;
+        size_t arrLen = arrays.size();
+        napi_create_array_with_length(asyncContext->env, arrLen, &output);
+        for (size_t i = 0; i < arrLen; i++) {
+            napi_value value = nullptr;
+            napi_get_boolean(asyncContext->env, arrays[i], &value);
+            napi_set_element(asyncContext->env, output, i, value);
+        }
+    }
+}
+
 napi_value PreferencesProxy::GetValue(napi_env env, napi_callback_info info)
 {
     NapiAsyncProxy<PreferencesAysncContext> proxy;
@@ -259,19 +389,7 @@ napi_value PreferencesProxy::GetValue(napi_env env, napi_callback_info info)
         [](PreferencesAysncContext *asyncContext) {
             int errCode = OK;
             PreferencesProxy *obj = reinterpret_cast<PreferencesProxy *>(asyncContext->boundObj);
-            if (asyncContext->defValue.IsBool()) {
-                bool tmpValue = (bool)obj->value_->GetBool(asyncContext->key, (bool)asyncContext->defValue);
-                asyncContext->defValue = PreferencesValue((bool)tmpValue);
-            } else if (asyncContext->defValue.IsString()) {
-                std::string tmpValue = obj->value_->GetString(asyncContext->key, (std::string)asyncContext->defValue);
-                asyncContext->defValue = PreferencesValue((std::string)tmpValue);
-            } else if (asyncContext->defValue.IsDouble()) {
-                double tmpValue = obj->value_->GetDouble(asyncContext->key, (double)asyncContext->defValue);
-                asyncContext->defValue = PreferencesValue((double)tmpValue);
-            } else {
-                errCode = ERR;
-            }
-
+            asyncContext->defValue = obj->value_->Get(asyncContext->key, asyncContext->defValue);
             return errCode;
         },
         [](PreferencesAysncContext *asyncContext, napi_value &output) {
@@ -283,6 +401,9 @@ napi_value PreferencesProxy::GetValue(napi_env env, napi_callback_info info)
                 napi_create_string_utf8(asyncContext->env, tempStr.c_str(), tempStr.size(), &output);
             } else if (asyncContext->defValue.IsDouble()) {
                 napi_create_double(asyncContext->env, (double)asyncContext->defValue, &output);
+            } else if (asyncContext->defValue.IsDoubleArray() || asyncContext->defValue.IsStringArray()
+                       || asyncContext->defValue.IsBoolArray()) {
+                GetArrayValue(asyncContext, output);
             } else {
                 errCode = ERR;
             }
@@ -303,18 +424,9 @@ napi_value PreferencesProxy::SetValue(napi_env env, napi_callback_info info)
     return proxy.DoAsyncWork(
         "SetValue",
         [](PreferencesAysncContext *asyncContext) {
-            int errCode = OK;
+            int errCode = ERR;
             PreferencesProxy *obj = reinterpret_cast<PreferencesProxy *>(asyncContext->boundObj);
-            if (asyncContext->defValue.IsBool()) {
-                errCode = obj->value_->PutBool(asyncContext->key, (bool)asyncContext->defValue);
-            } else if (asyncContext->defValue.IsString()) {
-                errCode = obj->value_->PutString(asyncContext->key, (std::string)asyncContext->defValue);
-            } else if (asyncContext->defValue.IsDouble()) {
-                errCode = obj->value_->PutDouble(asyncContext->key, (double)asyncContext->defValue);
-            } else {
-                errCode = ERR;
-            }
-
+            errCode = obj->value_->Put(asyncContext->key, asyncContext->defValue);
             return errCode;
         },
         [](PreferencesAysncContext *asyncContext, napi_value &output) {

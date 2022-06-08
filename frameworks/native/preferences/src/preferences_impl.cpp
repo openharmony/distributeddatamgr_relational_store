@@ -18,7 +18,6 @@
 #include <cinttypes>
 #include <climits>
 #include <cstdlib>
-
 #include <functional>
 
 #include "logger.h"
@@ -202,151 +201,19 @@ bool PreferencesImpl::CheckRequestValidForStateGeneration(const MemoryToDiskRequ
     return valid;
 }
 
-int PreferencesImpl::GetInt(const std::string &key, int defValue)
+PreferencesValue PreferencesImpl::Get(const std::string &key, const PreferencesValue &defValue)
 {
     if (CheckKey(key) != E_OK) {
         return defValue;
     }
 
     AwaitLoadFile();
-
     std::lock_guard<std::mutex> lock(mutex_);
-    int ret = defValue;
-
     auto iter = map_.find(key);
     if (iter != map_.end()) {
-        PreferencesValue val = iter->second;
-        if (val.IsInt()) {
-            ret = val;
-        }
+        return iter->second;
     }
-    return ret;
-}
-
-std::string PreferencesImpl::GetString(const std::string &key, const std::string &defValue)
-{
-    if (CheckKey(key) != E_OK) {
-        return defValue;
-    }
-
-    AwaitLoadFile();
-
-    std::lock_guard<std::mutex> lock(mutex_);
-    std::string ret = defValue;
-
-    auto iter = map_.find(key);
-    if (iter != map_.end()) {
-        PreferencesValue val = iter->second;
-        if (val.IsString()) {
-            ret = (std::string)val;
-        }
-    }
-    return ret;
-}
-
-bool PreferencesImpl::GetBool(const std::string &key, bool defValue)
-{
-    if (CheckKey(key) != E_OK) {
-        return defValue;
-    }
-
-    AwaitLoadFile();
-
-    std::lock_guard<std::mutex> lock(mutex_);
-    bool ret = defValue;
-
-    auto iter = map_.find(key);
-    if (iter != map_.end()) {
-        PreferencesValue val = iter->second;
-        if (val.IsBool()) {
-            ret = val;
-        }
-    }
-    return ret;
-}
-
-float PreferencesImpl::GetFloat(const std::string &key, float defValue)
-{
-    if (CheckKey(key) != E_OK) {
-        return defValue;
-    }
-
-    AwaitLoadFile();
-
-    std::lock_guard<std::mutex> lock(mutex_);
-    float ret = defValue;
-
-    auto iter = map_.find(key);
-    if (iter != map_.end()) {
-        PreferencesValue val = iter->second;
-        if (val.IsFloat()) {
-            ret = val;
-        }
-    }
-    return ret;
-}
-
-double PreferencesImpl::GetDouble(const std::string &key, double defValue)
-{
-    if (CheckKey(key) != E_OK) {
-        return defValue;
-    }
-
-    AwaitLoadFile();
-
-    std::lock_guard<std::mutex> lock(mutex_);
-    double ret = defValue;
-
-    auto iter = map_.find(key);
-    if (iter != map_.end()) {
-        PreferencesValue val = iter->second;
-        if (val.IsDouble()) {
-            ret = val;
-        }
-    }
-    return ret;
-}
-
-int64_t PreferencesImpl::GetLong(const std::string &key, int64_t defValue)
-{
-    if (CheckKey(key) != E_OK) {
-        return defValue;
-    }
-
-    AwaitLoadFile();
-
-    std::lock_guard<std::mutex> lock(mutex_);
-    int64_t ret = defValue;
-
-    auto iter = map_.find(key);
-    if (iter != map_.end()) {
-        PreferencesValue val = iter->second;
-        if (val.IsLong()) {
-            ret = val;
-        }
-    }
-    return ret;
-}
-
-std::set<std::string> PreferencesImpl::GetStringSet(const std::string &key, std::set<std::string> &defValue)
-{
-    if (CheckKey(key) != E_OK) {
-        return defValue;
-    }
-
-    AwaitLoadFile();
-
-    std::lock_guard<std::mutex> lock(mutex_);
-    std::set<std::string> ret = defValue;
-
-    auto iter = map_.find(key);
-    if (iter != map_.end()) {
-        PreferencesValue val = iter->second;
-        if (val.IsSet()) {
-            ret = val;
-        }
-    }
-    return ret;
+    return defValue;
 }
 
 std::map<std::string, PreferencesValue> PreferencesImpl::GetAll()
@@ -354,6 +221,51 @@ std::map<std::string, PreferencesValue> PreferencesImpl::GetAll()
     AwaitLoadFile();
 
     return map_;
+}
+
+void ReadXmlElement(
+    Element element, std::map<std::string, PreferencesValue> &prefMap, const std::filesystem::path &prefPath)
+{
+    if (element.tag_.compare("int") == 0) {
+        int value = std::stoi(element.value_);
+        prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
+    } else if (element.tag_.compare("bool") == 0) {
+        bool value = (element.value_.compare("true") == 0) ? true : false;
+        prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
+    } else if (element.tag_.compare("long") == 0) {
+        int64_t value = static_cast<int64_t>(std::stoll(element.value_));
+        prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
+    } else if (element.tag_.compare("float") == 0) {
+        float value = std::stof(element.value_);
+        prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
+    } else if (element.tag_.compare("double") == 0) {
+        double value = std::stod(element.value_);
+        prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
+    } else if (element.tag_.compare("string") == 0) {
+        prefMap.insert(std::make_pair(element.key_, PreferencesValue(element.value_)));
+    } else if (element.tag_.compare("doubleArray") == 0) {
+        std::vector<double> values;
+        for (auto child : element.children_) {
+            double value = std::stod(child.value_);
+            values.push_back(value);
+        }
+        prefMap.insert(std::make_pair(element.key_, PreferencesValue(values)));
+    } else if (element.tag_.compare("stringArray") == 0) {
+        std::vector<std::string> values;
+        for (auto child : element.children_) {
+            values.push_back(child.value_);
+        }
+        prefMap.insert(std::make_pair(element.key_, PreferencesValue(values)));
+    } else if (element.tag_.compare("boolArray") == 0) {
+        std::vector<bool> values;
+        for (auto child : element.children_) {
+            bool value = std::stod(child.value_);
+            values.push_back(value);
+        }
+        prefMap.insert(std::make_pair(element.key_, PreferencesValue(values)));
+    } else {
+        LOG_WARN("ReadSettingXml:%{private}s, unknown element tag:%{public}s.", prefPath.c_str(), element.tag_.c_str());
+    }
 }
 
 bool PreferencesImpl::ReadSettingXml(
@@ -367,35 +279,61 @@ bool PreferencesImpl::ReadSettingXml(
 
     for (auto it = settings.begin(); it != settings.end(); it++) {
         Element element = *it;
-        if (element.tag_.compare("int") == 0) {
-            int value = std::stoi(element.value_);
-            prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
-        } else if (element.tag_.compare("bool") == 0) {
-            bool value = (element.value_.compare("true") == 0) ? true : false;
-            prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
-        } else if (element.tag_.compare("long") == 0) {
-            int64_t value = static_cast<int64_t>(std::stoll(element.value_));
-            prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
-        } else if (element.tag_.compare("float") == 0) {
-            float value = std::stof(element.value_);
-            prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
-        } else if (element.tag_.compare("double") == 0) {
-            double value = std::stod(element.value_);
-            prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
-        } else if (element.tag_.compare("string") == 0) {
-            prefMap.insert(std::make_pair(element.key_, PreferencesValue(element.value_)));
-        } else if (element.tag_.compare("set") == 0) {
-            std::set<std::string> values;
-            for (auto child : element.children_) {
-                values.insert(child.value_);
-            }
-            prefMap.insert(std::make_pair(element.key_, PreferencesValue(values)));
-        } else {
-            LOG_WARN(
-                "ReadSettingXml:%{private}s, unknown element tag:%{public}s.", prefPath.c_str(), element.tag_.c_str());
-        }
+        ReadXmlElement(element, prefMap, prefPath);
     }
     return true;
+}
+
+void WriteXmlElement(Element &elem, PreferencesValue value, const std::filesystem::path filePath)
+{
+    if (value.IsDoubleArray()) {
+        elem.tag_ = std::string("doubleArray");
+        auto values = (std::vector<double>)value;
+        for (double val : values) {
+            Element element;
+            element.tag_ = std::string("double");
+            element.value_ = std::to_string((double)val);
+            elem.children_.push_back(element);
+        }
+    } else if (value.IsBoolArray()) {
+        elem.tag_ = std::string("boolArray");
+        auto values = (std::vector<bool>)value;
+        for (bool val : values) {
+            Element element;
+            element.tag_ = std::string("bool");
+            element.value_ = std::to_string((bool)val);
+            elem.children_.push_back(element);
+        }
+    } else if (value.IsStringArray()) {
+        elem.tag_ = std::string("stringArray");
+        auto values = (std::vector<std::string>)value;
+        for (std::string val : values) {
+            Element element;
+            element.tag_ = std::string("string");
+            element.value_ = (std::string)val;
+            elem.children_.push_back(element);
+        }
+    } else if (value.IsInt()) {
+        elem.tag_ = std::string("int");
+        elem.value_ = std::to_string((int)value);
+    } else if (value.IsBool()) {
+        elem.tag_ = std::string("bool");
+        elem.value_ = std::to_string((bool)value);
+    } else if (value.IsLong()) {
+        elem.tag_ = std::string("long");
+        elem.value_ = std::to_string((int64_t)value);
+    } else if (value.IsFloat()) {
+        elem.tag_ = std::string("float");
+        elem.value_ = std::to_string((float)value);
+    } else if (value.IsDouble()) {
+        elem.tag_ = std::string("double");
+        elem.value_ = std::to_string((double)value);
+    } else if (value.IsString()) {
+        elem.tag_ = std::string("string");
+        elem.value_ = (std::string)value;
+    } else {
+        LOG_WARN("WriteSettingXml:%{private}s, unknown element type.", filePath.c_str());
+    }
 }
 
 bool PreferencesImpl::WriteSettingXml(
@@ -405,39 +343,9 @@ bool PreferencesImpl::WriteSettingXml(
     for (auto it = prefMap.begin(); it != prefMap.end(); it++) {
         Element elem;
         elem.key_ = it->first;
-
         PreferencesValue value = it->second;
-        if (value.IsInt()) {
-            elem.tag_ = std::string("int");
-            elem.value_ = std::to_string((int)value);
-        } else if (value.IsBool()) {
-            elem.tag_ = std::string("bool");
-            elem.value_ = std::to_string((bool)value);
-        } else if (value.IsLong()) {
-            elem.tag_ = std::string("long");
-            elem.value_ = std::to_string((int64_t)value);
-        } else if (value.IsFloat()) {
-            elem.tag_ = std::string("float");
-            elem.value_ = std::to_string((float)value);
-        } else if (value.IsDouble()) {
-            elem.tag_ = std::string("double");
-            elem.value_ = std::to_string((double)value);
-        } else if (value.IsString()) {
-            elem.tag_ = std::string("string");
-            elem.value_ = (std::string)value;
-        } else if (value.IsSet()) {
-            elem.tag_ = std::string("set");
-            auto values = (std::set<std::string>)value;
-            for (std::string val : values) {
-                Element element;
-                element.tag_ = std::string("string");
-                element.value_ = (std::string)val;
-                elem.children_.push_back(element);
-            }
-        } else {
-            LOG_WARN("WriteSettingXml:%{private}s, unknown element type.", filePath_.c_str());
-            continue;
-        }
+
+        WriteXmlElement(elem, value, filePath_);
         settings.push_back(elem);
     }
 
@@ -476,8 +384,21 @@ void PreferencesImpl::UnRegisterObserver(std::shared_ptr<PreferencesObserver> pr
     }
 }
 
-void PreferencesImpl::PutPreferencesValue(const std::string &key, const PreferencesValue &value)
+int PreferencesImpl::Put(const std::string &key, const PreferencesValue &value)
 {
+    int errCode = CheckKey(key);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    if (value.IsString()) {
+        std::string tmp = (std::string)value;
+        errCode = CheckStringValue((std::string)value);
+        if (errCode != E_OK) {
+            LOG_ERROR("PreferencesImpl::Put string value length should shorter than 8*1024");
+            return errCode;
+        }
+    }
+
     AwaitLoadFile();
 
     std::lock_guard<std::mutex> lock(mutex_);
@@ -486,21 +407,12 @@ void PreferencesImpl::PutPreferencesValue(const std::string &key, const Preferen
     if (iter != map_.end()) {
         PreferencesValue &val = iter->second;
         if (val == value) {
-            return;
+            return E_OK;
         }
     }
 
     map_.insert_or_assign(key, value);
     modifiedKeys_.push_back(key);
-}
-
-int PreferencesImpl::PutInt(const std::string &key, int value)
-{
-    int errCode = CheckKey(key);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    PutPreferencesValue(key, PreferencesValue(value));
     return E_OK;
 }
 
@@ -510,75 +422,6 @@ int PreferencesImpl::CheckStringValue(const std::string &value)
         LOG_ERROR("The value string length should shorter than 8 * 1024.");
         return E_VALUE_EXCEED_MAX_LENGTH;
     }
-    return E_OK;
-}
-
-int PreferencesImpl::PutString(const std::string &key, const std::string &value)
-{
-    int errCode = CheckKey(key);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    errCode = CheckStringValue(value);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    PutPreferencesValue(key, PreferencesValue(value));
-    return E_OK;
-}
-
-int PreferencesImpl::PutBool(const std::string &key, bool value)
-{
-    int errCode = CheckKey(key);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    PutPreferencesValue(key, PreferencesValue(value));
-    return E_OK;
-}
-
-int PreferencesImpl::PutLong(const std::string &key, int64_t value)
-{
-    int errCode = CheckKey(key);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    PutPreferencesValue(key, PreferencesValue(value));
-    return E_OK;
-}
-
-int PreferencesImpl::PutFloat(const std::string &key, float value)
-{
-    int errCode = CheckKey(key);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    PutPreferencesValue(key, PreferencesValue(value));
-    return E_OK;
-}
-
-int PreferencesImpl::PutDouble(const std::string &key, double value)
-{
-    int errCode = CheckKey(key);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    PutPreferencesValue(key, PreferencesValue(value));
-    return E_OK;
-}
-
-int PreferencesImpl::PutStringSet(const std::string &key, const std::set<std::string> &value)
-{
-    int errCode = CheckKey(key);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    for (auto child : value) {
-        if (CheckStringValue(child) != E_OK) {
-            return errCode;
-        }
-    }
-    PutPreferencesValue(key, PreferencesValue(value));
     return E_OK;
 }
 

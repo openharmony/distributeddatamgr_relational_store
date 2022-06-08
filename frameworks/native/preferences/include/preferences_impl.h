@@ -40,35 +40,95 @@ public:
 
     int Init();
 
-    int GetInt(const std::string &key, int defValue) override;
+    PreferencesValue Get(const std::string &key, const PreferencesValue &defValue) override;
 
-    std::string GetString(const std::string &key, const std::string &defValue) override;
+    int Put(const std::string &key, const PreferencesValue &value) override;
 
-    bool GetBool(const std::string &key, bool defValue) override;
+    int GetInt(const std::string &key, int defValue) override
+    {
+        PreferencesValue preferencesValue =  Get(key, defValue);
+        if(!preferencesValue.IsInt()){
+            return defValue;
+        }
+        return preferencesValue;
+    }
 
-    float GetFloat(const std::string &key, float defValue) override;
+    std::string GetString(const std::string &key, const std::string &defValue) override
+    {
+        PreferencesValue preferencesValue =  Get(key, defValue);
+        if(!preferencesValue.IsString()){
+            return defValue;
+        }
+        return preferencesValue;
+    }
 
-    double GetDouble(const std::string &key, double defValue) override;
+    bool GetBool(const std::string &key, bool defValue) override
+    {
+        PreferencesValue preferencesValue =  Get(key, defValue);
+        if(!preferencesValue.IsBool()){
+            return defValue;
+        }
+        return preferencesValue;
+    }
 
-    int64_t GetLong(const std::string &key, int64_t defValue) override;
+    float GetFloat(const std::string &key, float defValue) override
+    {
+        PreferencesValue preferencesValue =  Get(key, defValue);
+        if(!preferencesValue.IsFloat()){
+            return defValue;
+        }
+        return preferencesValue;
+    }
 
-    std::set<std::string> GetStringSet(const std::string &key, std::set<std::string> &defValue) override;
+    double GetDouble(const std::string &key, double defValue) override
+    {
+        PreferencesValue preferencesValue =  Get(key, defValue);
+        if(!preferencesValue.IsDouble()){
+            return defValue;
+        }
+        return preferencesValue;
+    }
+
+    int64_t GetLong(const std::string &key, int64_t defValue) override
+    {
+        PreferencesValue preferencesValue =  Get(key, defValue);
+        if(!preferencesValue.IsLong()){
+            return defValue;
+        }
+        return preferencesValue;
+    }
 
     bool HasKey(const std::string &key) override;
 
-    int PutInt(const std::string &key, int value) override;
+    int PutInt(const std::string &key, int value) override
+    {
+        return Put(key, value);
+    }
 
-    int PutString(const std::string &key, const std::string &value) override;
+    int PutString(const std::string &key, const std::string &value) override
+    {
+        return Put(key, value);
+    }
 
-    int PutBool(const std::string &key, bool value) override;
+    int PutBool(const std::string &key, bool value) override
+    {
+        return Put(key, value);
+    }
 
-    int PutLong(const std::string &key, int64_t value) override;
+    int PutLong(const std::string &key, int64_t value) override
+    {
+        return Put(key, value);
+    }
 
-    int PutFloat(const std::string &key, float value) override;
+    int PutFloat(const std::string &key, float value) override
+    {
+        return Put(key, value);
+    }
 
-    int PutDouble(const std::string &key, double value) override;
-
-    int PutStringSet(const std::string &key, const std::set<std::string> &value) override;
+    int PutDouble(const std::string &key, double value) override
+    {
+        return Put(key, value);
+    }
 
     std::map<std::string, PreferencesValue> GetAll() override;
 
@@ -93,7 +153,9 @@ private:
         MemoryToDiskRequest(const std::map<std::string, PreferencesValue> &writeToDiskMap,
             const std::list<std::string> &keysModified,
             const std::vector<std::weak_ptr<PreferencesObserver>> preferencesObservers, int64_t memStataGeneration);
-        ~MemoryToDiskRequest() {}
+        ~MemoryToDiskRequest()
+        {
+        }
         void SetDiskWriteResult(bool wasWritten, int result);
 
         bool isSyncRequest_;
@@ -111,7 +173,6 @@ private:
 
     std::shared_ptr<MemoryToDiskRequest> commitToMemory();
     void notifyPreferencesObserver(const MemoryToDiskRequest &request);
-    void PutPreferencesValue(const std::string &key, const PreferencesValue &value);
     void StartLoadFromDisk();
     int CheckKey(const std::string &key);
     int CheckStringValue(const std::string &value);
