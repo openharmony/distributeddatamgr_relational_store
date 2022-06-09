@@ -84,28 +84,24 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
         it('RdbBackupRestoreTest_0010', 0, async function (done) {
             await console.log(TAG + "************* RdbBackupRestoreTest_0010 start *************")
             const STORE_CONFIG = {
-                name: "BackupResotreTest.db",
+                name: "BackupResotreTest001.db",
             }
             const DATABASE_BACKUP_NAME = "backup001.db"
-            const DATABASE_RESTORE_NAME = "restore001.db"
             let context = ability_featureAbility.getContext()
             let rdbStore = await creatRdbStore(context, STORE_CONFIG)
 
             // RDB backup function test
             let promiseBackup = rdbStore.backup(DATABASE_BACKUP_NAME)
-            promiseBackup.then(() => {
+            promiseBackup.then((err) => {
+                if (err) {
+                    console.info("backup err: " + err)
+                    expect(false).assertTrue()
+                }
                 try {
                     fileio.accessSync(DATABASE_DIR + DATABASE_BACKUP_NAME)
                     fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name)
                 } catch (err) {
                     expect(false).assertTrue()
-                }
-
-                try {
-                    fileio.accessSync(DATABASE_DIR + DATABASE_RESTORE_NAME)
-                    expect(false).assertTrue()
-                } catch (err) {
-                    expect(true).assertTrue()
                 }
             }).catch((err) => {
                 expect(false).assertTrue()
@@ -113,14 +109,12 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
             await promiseBackup
 
             // RDB restore function test
-            let promiseRestore = rdbStore.restore(DATABASE_RESTORE_NAME, DATABASE_BACKUP_NAME)
-            promiseRestore.then(() => {
-                try {
-                    fileio.accessSync(DATABASE_DIR + DATABASE_RESTORE_NAME)
-                } catch (err) {
+            let promiseRestore = rdbStore.restore(DATABASE_BACKUP_NAME)
+            promiseRestore.then((err) => {
+                if (err) {
+                    console.info("restore err: " + err)
                     expect(false).assertTrue()
                 }
-
                 try {
                     fileio.accessSync(DATABASE_DIR + DATABASE_BACKUP_NAME)
                     expect(false).assertTrue()
@@ -130,9 +124,9 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
 
                 try {
                     fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name)
-                    expect(false).assertTrue()
-                } catch (err) {
                     expect(true).assertTrue()
+                } catch (err) {
+                    expect(false).assertTrue()
                 }
             }).catch((err) => {
                 expect(false).assertTrue()
@@ -159,7 +153,6 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
             rdbStore = null
             await data_rdb.deleteRdbStore(context, STORE_CONFIG.name)
             await data_rdb.deleteRdbStore(context, DATABASE_BACKUP_NAME)
-            await data_rdb.deleteRdbStore(context, DATABASE_RESTORE_NAME)
             done()
             await console.log(TAG + "************* RdbBackupRestoreTest_0010 end *************")
         })
@@ -172,7 +165,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
         it('RdbBackupRestoreTest_0020', 0, async function (done) {
             await console.log(TAG + "************* RdbBackupRestoreTest_0020 start *************")
             const STORE_CONFIG = {
-                name: "BackupTest.db",
+                name: "BackupTest002.db",
             }
             let context = ability_featureAbility.getContext()
             let rdbStore = await creatRdbStore(context, STORE_CONFIG)
@@ -217,16 +210,16 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
         it('RdbBackupRestoreTest_0030', 0, async function (done) {
             await console.log(TAG + "************* RdbBackupRestoreTest_0030 start *************")
             const STORE_CONFIG = {
-                name: "RestoreTest.db",
+                name: "RestoreTest003.db",
             }
             let context = ability_featureAbility.getContext()
             let rdbStore = await creatRdbStore(context, STORE_CONFIG)
-            let backupName = "RestoreTest_bak.db"
+            let backupName = "BackupTest004.db"
             await rdbStore.backup(backupName)
 
-            // RDB restore function test, restore file name empty
+            // RDB restore function test, backup file name empty
             try {
-                let promiseRestore = rdbStore.restore("", backupName)
+                let promiseRestore = rdbStore.restore("")
                 promiseRestore.then(() => {
                     expect(false).assertTrue()
                 }).catch((err) => {
@@ -237,9 +230,9 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
                 expect(true).assertTrue()
             }
 
-            // RDB restore function test, restore file and backup file have same name
+            // RDB restore function test, backup file is specified to database name
             try {
-                let promiseRestore = rdbStore.restore(backupName, backupName)
+                let promiseRestore = rdbStore.restore(STORE_CONFIG.name)
                 promiseRestore.then(() => {
                     expect(false).assertTrue()
                 }).catch((err) => {
@@ -248,28 +241,6 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
                 await promiseRestore
             } catch {
                 expect(true).assertTrue()
-            }
-
-            // RDB restore function test, restore file and database file have same name
-            {
-                let promiseRestore = rdbStore.restore(STORE_CONFIG.name, backupName)
-                promiseRestore.then(() => {
-                    try {
-                        fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name)
-                    } catch (err) {
-                        expect(false).assertTrue()
-                    }
-
-                    try {
-                        fileio.accessSync(DATABASE_DIR + backupName)
-                        expect(false).assertTrue()
-                    } catch (err) {
-                        expect(true).assertTrue()
-                    }
-                }).catch((err) => {
-                    expect(false).assertTrue()
-                })
-                await promiseRestore
             }
 
             rdbStore = null
@@ -287,7 +258,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
         it('RdbBackupRestoreTest_0040', 0, async function (done) {
             await console.log(TAG + "************* RdbBackupRestoreTest_0040 start *************")
             const STORE_CONFIG = {
-                name: "BackupRestoreTest001.db",
+                name: "BackupRestoreTest004.db",
             }
             let context = ability_featureAbility.getContext()
             let rdbStore = await creatRdbStore(context, STORE_CONFIG)
@@ -299,7 +270,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
                 expect(false).assertTrue()
             } catch {
                 try {
-                    let promiseRestore = rdbStore.restore(STORE_CONFIG.name, dbName)
+                    let promiseRestore = rdbStore.restore(dbName)
                     promiseRestore.then(() => {
                         expect(false).assertTrue()
                     }).catch((err) => {

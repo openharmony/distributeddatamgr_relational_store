@@ -88,6 +88,7 @@ public:
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
 #endif
+    int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey) override;
     int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
         const std::vector<uint8_t> &newKey) override;
     std::string GetName();
