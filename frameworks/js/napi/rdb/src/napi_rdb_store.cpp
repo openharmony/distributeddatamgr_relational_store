@@ -66,7 +66,7 @@ public:
     ValuesBucket *valuesBucket;
     std::map<std::string, ValueObject> numberMaps;
     std::vector<ValueObject> bindArgs;
-    int rowId;
+    uint64_t rowId;
     std::vector<uint8_t> newKey;
     std::unique_ptr<AbsSharedResultSet> resultSet;
     std::unique_ptr<ResultSet> resultSet_value;
