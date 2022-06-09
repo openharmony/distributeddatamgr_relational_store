@@ -66,7 +66,7 @@ public:
     ValuesBucket *valuesBucket;
     std::map<std::string, ValueObject> numberMaps;
     std::vector<ValueObject> bindArgs;
-    uint64_t rowId;
+    int rowId;
     std::vector<uint8_t> newKey;
     std::unique_ptr<AbsSharedResultSet> resultSet;
     std::unique_ptr<ResultSet> resultSet_value;
@@ -185,7 +185,7 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER_SETTER("version", GetVersion, SetVersion),
         DECLARE_NAPI_FUNCTION("markAsCommit", MarkAsCommit),
         DECLARE_NAPI_FUNCTION("endTransaction", EndTransaction),
-        DECLARE_NAPI_FUNCTION("restore", ChangeDbFileForRestore),
+        DECLARE_NAPI_FUNCTION("restore", Restore),
         DECLARE_NAPI_FUNCTION("changeEncryptKey", ChangeEncryptKey),
         DECLARE_NAPI_GETTER("isInTransaction", IsInTransaction),
         DECLARE_NAPI_GETTER("isOpen", IsOpen),
@@ -967,29 +967,28 @@ napi_value RdbStoreProxy::EndTransaction(napi_env env, napi_callback_info info)
         });
 }
 
-napi_value RdbStoreProxy::ChangeDbFileForRestore(napi_env env, napi_callback_info info)
+napi_value RdbStoreProxy::Restore(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::ChangeDbFileForRestore start");
+    LOG_DEBUG("RdbStoreProxy::Restore start");
     NapiAsyncProxy<RdbStoreContext> proxy;
     proxy.Init(env, info);
     std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    parsers.push_back(ParseDestName);
     parsers.push_back(ParseSrcName);
     proxy.ParseInputs(parsers, ParseThis);
     return proxy.DoAsyncWork(
         "Restore",
         [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::ChangeDbFileForRestore Async");
+            LOG_DEBUG("RdbStoreProxy::Restore Async");
             RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
             int errCode = 0;
-            errCode = obj->rdbStore_->ChangeDbFileForRestore(context->destName, context->srcName, context->newKey);
-            LOG_DEBUG("RdbStoreProxy::ChangeDbFileForRestore errCode is : %{public}d", errCode);
+            errCode = obj->rdbStore_->Restore(context->srcName, context->newKey);
+            LOG_DEBUG("RdbStoreProxy::Restore errCode is : %{public}d", errCode);
             return (errCode == E_OK) ? OK : ERR;
         },
 
         [](RdbStoreContext *context, napi_value &output) {
             napi_status status = napi_get_undefined(context->env, &output);
-            LOG_DEBUG("RdbStoreProxy::ChangeDbFileForRestore end");
+            LOG_DEBUG("RdbStoreProxy::Restore end");
             return (status == napi_ok) ? OK : ERR;
         });
 }
