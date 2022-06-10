@@ -92,11 +92,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
 
             // RDB backup function test
             let promiseBackup = rdbStore.backup(DATABASE_BACKUP_NAME)
-            promiseBackup.then((err) => {
-                if (err) {
-                    console.info("backup err: " + err)
-                    expect(false).assertTrue()
-                }
+            promiseBackup.then(() => {
                 try {
                     fileio.accessSync(DATABASE_DIR + DATABASE_BACKUP_NAME)
                     fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name)
@@ -110,11 +106,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
 
             // RDB restore function test
             let promiseRestore = rdbStore.restore(DATABASE_BACKUP_NAME)
-            promiseRestore.then((err) => {
-                if (err) {
-                    console.info("restore err: " + err)
-                    expect(false).assertTrue()
-                }
+            promiseRestore.then(() => {
                 try {
                     fileio.accessSync(DATABASE_DIR + DATABASE_BACKUP_NAME)
                     expect(false).assertTrue()
