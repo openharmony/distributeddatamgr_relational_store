@@ -22,6 +22,7 @@
 #include <limits>
 
 #include "js_logger.h"
+#include "js_utils.h"
 #include "napi_async_proxy.h"
 #include "preferences.h"
 #include "preferences_errno.h"
@@ -160,105 +161,65 @@ void ParseKey(const napi_env &env, const napi_value &arg, PreferencesAysncContex
     asyncContext->key = key;
 }
 
-int32_t ParseDoubleElement(
-    const napi_env &env, const napi_value &arg, PreferencesAysncContext *asyncContext, size_t arrLen)
+int32_t ParseDoubleElement(const napi_env &env, const napi_value &jsVal, PreferencesAysncContext *asyncContext)
 {
-    std::vector<double> doubleArray;
-    napi_value doubleElement;
-    for (size_t i = 0; i < arrLen; i++) {
-        napi_status status = napi_get_element(env, arg, i, &doubleElement);
-        if (status != napi_ok) {
-            LOG_ERROR("ParseObjectElement get doubleElement failed, status = %{public}d", status);
-            return E_ERROR;
-        }
-        double number = 0.0;
-        status = napi_get_value_double(env, doubleElement, &number);
-        if (status != napi_ok) {
-            LOG_ERROR("ParseObjectElement get doubleElement failed, status = %{public}d", status);
-            return E_ERROR;
-        }
-        doubleArray.push_back(number);
+    std::vector<double> array;
+    if (JSUtils::Convert2DoubleVector(env, jsVal, array) != E_OK) {
+        LOG_ERROR("ParseDoubleElement Convert2DoubleVector failed");
+        return E_ERROR;
     }
-    PreferencesValue value((std::vector<double>)doubleArray);
-    asyncContext->defValue = value;
+    asyncContext->defValue = array;
     return E_OK;
 }
 
-int32_t ParseBoolElement(
-    const napi_env &env, const napi_value &arg, PreferencesAysncContext *asyncContext, size_t arrLen)
+int32_t ParseBoolElement(const napi_env &env, const napi_value &jsVal, PreferencesAysncContext *asyncContext)
 {
-    std::vector<bool> boolArray;
-    napi_value boolElement;
-    for (int32_t i = 0; i < arrLen; i++) {
-        napi_status status = napi_get_element(env, arg, i, &boolElement);
-        if (status != napi_ok) {
-            LOG_ERROR("ParseObjectElement get boolElement failed, status = %{public}d", status);
-            return E_ERROR;
-        }
-        bool bValue = false;
-        napi_get_value_bool(env, boolElement, &bValue);
-        if (status != napi_ok) {
-            LOG_ERROR("ParseObjectElement get boolElement failed, status = %{public}d", status);
-            return E_ERROR;
-        }
-        boolArray.push_back(bValue);
+    std::vector<bool> array;
+    if (JSUtils::Convert2BoolVector(env, jsVal, array) != E_OK) {
+        LOG_ERROR("ParseBoolElement Convert2BoolVector failed");
+        return E_ERROR;
     }
-    PreferencesValue value((std::vector<bool>)boolArray);
-    asyncContext->defValue = value;
+    asyncContext->defValue = array;
     return E_OK;
 }
 
-int32_t ParseStringElement(
-    const napi_env &env, const napi_value &arg, PreferencesAysncContext *asyncContext, size_t arrLen)
+int32_t ParseStringElement(const napi_env &env, const napi_value &jsVal, PreferencesAysncContext *asyncContext)
 {
-    std::vector<std::string> stringArray;
-    napi_value stringElement = nullptr;
-    for (int32_t i = 0; i < arrLen; i++) {
-        napi_status status = napi_get_element(env, arg, i, &stringElement);
-        if (status != napi_ok) {
-            LOG_ERROR("ParseObjectElement get stringElement failed, status = %{public}d", status);
-            return E_ERROR;
-        }
-        char *str = new char[MAX_VALUE_LENGTH];
-        size_t valueSize = 0;
-        napi_get_value_string_utf8(env, stringElement, str, MAX_VALUE_LENGTH, &valueSize);
-        if (status != napi_ok) {
-            LOG_ERROR("ParseObjectElement get stringElement failed, status = %{public}d", status);
-            return E_ERROR;
-        }
-        stringArray.push_back((std::string)str);
+    std::vector<std::string> array;
+    if (JSUtils::Convert2StrVector(env, jsVal, array) != E_OK) {
+        LOG_ERROR("ParseStringElement Convert2StrVector failed");
+        return E_ERROR;
     }
-    PreferencesValue value((std::vector<std::string>)stringArray);
-    asyncContext->defValue = value;
+    asyncContext->defValue = array;
     return E_OK;
 }
 
-int32_t ParseObjectElement(napi_valuetype valueType, const napi_env &env, const napi_value &arg,
-    PreferencesAysncContext *asyncContext, size_t arrLen)
+int32_t ParseObjectElement(
+    napi_valuetype valueType, const napi_env &env, const napi_value &jsVal, PreferencesAysncContext *asyncContext)
 {
     if (valueType == napi_number) {
-        return ParseDoubleElement(env, arg, asyncContext, arrLen);
+        return ParseDoubleElement(env, jsVal, asyncContext);
     } else if (valueType == napi_boolean) {
-        return ParseBoolElement(env, arg, asyncContext, arrLen);
+        return ParseBoolElement(env, jsVal, asyncContext);
     } else if (valueType == napi_string) {
-        return ParseStringElement(env, arg, asyncContext, arrLen);
+        return ParseStringElement(env, jsVal, asyncContext);
     } else {
         LOG_ERROR("ParseObjectElement unexpected valueType");
         return E_ERROR;
     }
 }
 
-int32_t ParseDefObject(const napi_env &env, const napi_value &arg, PreferencesAysncContext *asyncContext)
+int32_t ParseDefObject(const napi_env &env, const napi_value &jsVal, PreferencesAysncContext *asyncContext)
 {
     napi_valuetype valueType = napi_undefined;
     uint32_t arrLen = 0;
-    napi_status status = napi_get_array_length(env, arg, &arrLen);
+    napi_status status = napi_get_array_length(env, jsVal, &arrLen);
     if (status != napi_ok) {
         LOG_ERROR("ParseDefObject get array failed, status = %{public}d", status);
         return E_ERROR;
     }
     napi_value flag = nullptr;
-    status = napi_get_element(env, arg, 0, &flag);
+    status = napi_get_element(env, jsVal, 0, &flag);
     if (status != napi_ok) {
         LOG_ERROR("ParseDefObject get array element failed, status = %{public}d", status);
         return E_ERROR;
@@ -268,36 +229,40 @@ int32_t ParseDefObject(const napi_env &env, const napi_value &arg, PreferencesAy
         LOG_ERROR("ParseDefObject get array element type failed, status = %{public}d", status);
         return E_ERROR;
     }
-    if (ParseObjectElement(valueType, env, arg, asyncContext, arrLen) != E_OK) {
+    if (ParseObjectElement(valueType, env, jsVal, asyncContext) != E_OK) {
         LOG_ERROR("ParseDefObject parse array element failed, status = %{public}d", status);
         return E_ERROR;
     }
     return E_OK;
 }
 
-void ParseDefValue(const napi_env &env, const napi_value &arg, PreferencesAysncContext *asyncContext)
+void ParseDefValue(const napi_env &env, const napi_value &jsVal, PreferencesAysncContext *asyncContext)
 {
     napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, arg, &valueType);
+    napi_typeof(env, jsVal, &valueType);
     if (valueType == napi_number) {
         double number = 0.0;
-        napi_get_value_double(env, arg, &number);
-        PreferencesValue value((double)number);
-        asyncContext->defValue = value;
+        if (JSUtils::Convert2Double(env, jsVal, number) != E_OK) {
+            LOG_ERROR("ParseDefValue Convert2Double error");
+            return;
+        }
+        asyncContext->defValue = number;
     } else if (valueType == napi_string) {
-        char *str = new char[MAX_VALUE_LENGTH];
-        size_t valueSize = 0;
-        napi_get_value_string_utf8(env, arg, str, MAX_VALUE_LENGTH, &valueSize);
-        PreferencesValue value((std::string)(str));
-        asyncContext->defValue = value;
-        delete[] str;
+        std::string str;
+        if (JSUtils::Convert2String(env, jsVal, str) != E_OK) {
+            LOG_ERROR("ParseDefValue Convert2String error");
+            return;
+        }
+        asyncContext->defValue = str;
     } else if (valueType == napi_boolean) {
         bool bValue = false;
-        napi_get_value_bool(env, arg, &bValue);
-        PreferencesValue value((bool)(bValue));
-        asyncContext->defValue = value;
+        if (JSUtils::Convert2Bool(env, jsVal, bValue) != E_OK) {
+            LOG_ERROR("ParseDefValue Convert2Bool error");
+            return;
+        }
+        asyncContext->defValue = bValue;
     } else if (valueType == napi_object) {
-        if (ParseDefObject(env, arg, asyncContext) != E_OK) {
+        if (ParseDefObject(env, jsVal, asyncContext) != E_OK) {
             LOG_ERROR("ParseDefValue::ParseDefObject failed");
         }
     } else {
@@ -310,42 +275,32 @@ int32_t GetAllArr(
 {
     napi_value jsArr = nullptr;
     if (value.IsDoubleArray()) {
-        std::vector<double> arrays = (std::vector<double>)value;
-        size_t arrLen = arrays.size();
-        napi_create_array_with_length(asyncContext->env, arrLen, &jsArr);
-        for (size_t i = 0; i < arrLen; i++) {
-            napi_value val = nullptr;
-            napi_create_double(asyncContext->env, arrays[i], &val);
-            napi_set_element(asyncContext->env, jsArr, i, val);
+        if (JSUtils::Convert2JSDoubleArr(asyncContext->env, (std::vector<double>)value, jsArr) != E_OK) {
+            LOG_ERROR("PreferencesProxy::GetAllArr Convert2JSValue failed");
+            return ERR;
         }
         if (napi_set_named_property(asyncContext->env, output, key.c_str(), jsArr) != napi_ok) {
-            LOG_ERROR("PreferencesProxy::GetAll set property doubleArr failed");
+            LOG_ERROR("PreferencesProxy::GetAllArr set property doubleArr failed");
             return ERR;
         }
     } else if (value.IsStringArray()) {
-        std::vector<std::string> arrays = (std::vector<std::string>)value;
-        size_t arrLen = arrays.size();
-        napi_create_array_with_length(asyncContext->env, arrLen, &jsArr);
-        for (size_t i = 0; i < arrLen; i++) {
-            napi_value val = nullptr;
-            napi_create_string_utf8(asyncContext->env, arrays[i].c_str(), arrays[i].size(), &val);
-            napi_set_element(asyncContext->env, jsArr, i, val);
+        if (JSUtils::Convert2JSStringArr(asyncContext->env, (std::vector<std::string>)value, jsArr) != E_OK) {
+            LOG_ERROR("PreferencesProxy::GetAllArr Convert2JSValue failed");
+            return ERR;
         }
         if (napi_set_named_property(asyncContext->env, output, key.c_str(), jsArr) != napi_ok) {
             LOG_ERROR("PreferencesProxy::GetAll set property stringArr failed");
             return ERR;
         }
     } else if (value.IsBoolArray()) {
-        std::vector<bool> arrays = (std::vector<bool>)value;
-        size_t arrLen = arrays.size();
-        napi_create_array_with_length(asyncContext->env, arrLen, &jsArr);
-        for (size_t i = 0; i < arrLen; i++) {
-            napi_value val = nullptr;
-            napi_get_boolean(asyncContext->env, arrays[i], &val);
-            napi_set_element(asyncContext->env, jsArr, i, val);
+        if (JSUtils::Convert2JSBoolArr(asyncContext->env, (std::vector<bool>)value, jsArr) != E_OK) {
+            LOG_ERROR("PreferencesProxy::GetAllArr Convert2JSValue failed");
+            return ERR;
         }
-        if (napi_set_named_property(asyncContext->env, output, key.c_str(), jsArr) != napi_ok) {
-            LOG_ERROR("PreferencesProxy::GetAll set property boolArr failed");
+
+        napi_status status = napi_set_named_property(asyncContext->env, output, key.c_str(), jsArr);
+        if (status != napi_ok) {
+            LOG_ERROR("PreferencesProxy::GetAll set property boolArr failed, status = %{public}d", status);
             return ERR;
         }
     }
@@ -361,7 +316,7 @@ int32_t GetAllExecute(PreferencesAysncContext *asyncContext, napi_value &output)
     napi_value jsVal = nullptr;
     for (const auto &[key, value] : asyncContext->allElements) {
         if (value.IsBool()) {
-            if (napi_get_boolean(asyncContext->env, value, &jsVal) != napi_ok) {
+            if (JSUtils::Convert2JSValue(asyncContext->env, (bool)value, jsVal) != E_OK) {
                 LOG_ERROR("PreferencesProxy::GetAll get property bool failed");
                 return ERR;
             }
@@ -370,7 +325,7 @@ int32_t GetAllExecute(PreferencesAysncContext *asyncContext, napi_value &output)
                 return ERR;
             }
         } else if (value.IsDouble()) {
-            if (napi_create_double(asyncContext->env, value, &jsVal) != napi_ok) {
+            if (JSUtils::Convert2JSValue(asyncContext->env, (double)value, jsVal) != E_OK) {
                 LOG_ERROR("PreferencesProxy::GetAll get property double failed");
                 return ERR;
             }
@@ -380,7 +335,7 @@ int32_t GetAllExecute(PreferencesAysncContext *asyncContext, napi_value &output)
             }
         } else if (value.IsString()) {
             std::string tempStr = (std::string)value;
-            if (napi_create_string_utf8(asyncContext->env, tempStr.c_str(), tempStr.size(), &jsVal) != napi_ok) {
+            if (JSUtils::Convert2JSValue(asyncContext->env, (std::string)value, jsVal) != napi_ok) {
                 LOG_ERROR("PreferencesProxy::GetAll get property string failed");
                 return ERR;
             }
@@ -415,36 +370,28 @@ napi_value PreferencesProxy::GetAll(napi_env env, napi_callback_info info)
         GetAllExecute);
 }
 
-void GetArrayValue(PreferencesAysncContext *asyncContext, napi_value &output)
+int32_t GetArrayValue(PreferencesAysncContext *asyncContext, napi_value &output)
 {
     if (asyncContext->defValue.IsDoubleArray()) {
-        std::vector<double> arrays = (std::vector<double>)asyncContext->defValue;
-        size_t arrLen = arrays.size();
-        napi_create_array_with_length(asyncContext->env, arrLen, &output);
-        for (size_t i = 0; i < arrLen; i++) {
-            napi_value value = nullptr;
-            napi_create_double(asyncContext->env, arrays[i], &value);
-            napi_set_element(asyncContext->env, output, i, value);
+        if (JSUtils::Convert2JSDoubleArr(asyncContext->env, (std::vector<double>)asyncContext->defValue, output)
+            != E_OK) {
+            LOG_ERROR("GetArrayValue Convert2JSValue get doubleArray failed");
+            return E_NAPI_GET_ERROR;
         }
     } else if (asyncContext->defValue.IsStringArray()) {
-        std::vector<std::string> arrays = (std::vector<std::string>)asyncContext->defValue;
-        size_t arrLen = arrays.size();
-        napi_create_array_with_length(asyncContext->env, arrLen, &output);
-        for (size_t i = 0; i < arrLen; i++) {
-            napi_value value = nullptr;
-            napi_create_string_utf8(asyncContext->env, arrays[i].c_str(), arrays[i].size(), &value);
-            napi_set_element(asyncContext->env, output, i, value);
+        if (JSUtils::Convert2JSStringArr(asyncContext->env, (std::vector<std::string>)asyncContext->defValue, output)
+            != E_OK) {
+            LOG_ERROR("GetArrayValue Convert2JSValue get stringArray failed");
+            return E_NAPI_GET_ERROR;
         }
     } else if (asyncContext->defValue.IsBoolArray()) {
-        std::vector<bool> arrays = (std::vector<bool>)asyncContext->defValue;
-        size_t arrLen = arrays.size();
-        napi_create_array_with_length(asyncContext->env, arrLen, &output);
-        for (size_t i = 0; i < arrLen; i++) {
-            napi_value value = nullptr;
-            napi_get_boolean(asyncContext->env, arrays[i], &value);
-            napi_set_element(asyncContext->env, output, i, value);
+        std::vector<bool> array = asyncContext->defValue;
+        if (JSUtils::Convert2JSBoolArr(asyncContext->env, (std::vector<bool>)asyncContext->defValue, output) != E_OK) {
+            LOG_ERROR("GetArrayValue Convert2JSValue get boolArray failed");
+            return E_NAPI_GET_ERROR;
         }
     }
+    return E_OK;
 }
 
 napi_value PreferencesProxy::GetValue(napi_env env, napi_callback_info info)
@@ -467,15 +414,26 @@ napi_value PreferencesProxy::GetValue(napi_env env, napi_callback_info info)
         [](PreferencesAysncContext *asyncContext, napi_value &output) {
             int errCode = OK;
             if (asyncContext->defValue.IsBool()) {
-                napi_get_boolean(asyncContext->env, (bool)asyncContext->defValue, &output);
+                if (JSUtils::Convert2JSValue(asyncContext->env, (bool)asyncContext->defValue, output) != E_OK) {
+                    LOG_ERROR("PreferencesProxy::GetValue Convert2JSValue boolVal failed");
+                    errCode = ERR;
+                }
             } else if (asyncContext->defValue.IsString()) {
-                std::string tempStr = (std::string)asyncContext->defValue;
-                napi_create_string_utf8(asyncContext->env, tempStr.c_str(), tempStr.size(), &output);
+                if (JSUtils::Convert2JSValue(asyncContext->env, (std::string)asyncContext->defValue, output) != E_OK) {
+                    LOG_ERROR("PreferencesProxy::GetValue Convert2JSValue stringVal failed");
+                    errCode = ERR;
+                }
             } else if (asyncContext->defValue.IsDouble()) {
-                napi_create_double(asyncContext->env, (double)asyncContext->defValue, &output);
+                if (JSUtils::Convert2JSValue(asyncContext->env, (double)asyncContext->defValue, output) != E_OK) {
+                    LOG_ERROR("PreferencesProxy::GetValue Convert2JSValue boolVal failed");
+                    errCode = ERR;
+                }
             } else if (asyncContext->defValue.IsDoubleArray() || asyncContext->defValue.IsStringArray()
                        || asyncContext->defValue.IsBoolArray()) {
-                GetArrayValue(asyncContext, output);
+                if (GetArrayValue(asyncContext, output) != E_OK) {
+                    LOG_ERROR("PreferencesProxy::GetValue GetArrayValue failed");
+                    errCode = ERR;
+                }
             } else {
                 errCode = ERR;
             }

@@ -356,7 +356,6 @@ xmlNode *CreateArrayNode(Element &element)
             }
         }
     }
-
     return node;
 }
 

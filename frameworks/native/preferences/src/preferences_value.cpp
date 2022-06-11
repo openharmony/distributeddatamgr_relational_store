@@ -17,6 +17,23 @@
 
 namespace OHOS {
 namespace NativePreferences {
+
+PreferencesValue::PreferencesValue(const PreferencesValue &preferencesValue)
+{
+    if (this == &preferencesValue) {
+        return;
+    }
+    value_ = preferencesValue.value_;
+}
+
+PreferencesValue::PreferencesValue(PreferencesValue &&preferencesValue) noexcept
+{
+    if (this == &preferencesValue) {
+        return;
+    }
+    value_ = std::move(preferencesValue.value_);
+}
+
 PreferencesValue::PreferencesValue(int value)
 {
     value_ = value;
@@ -47,24 +64,42 @@ PreferencesValue::PreferencesValue(const char *value)
     PreferencesValue((std::string)value);
 }
 
-PreferencesValue::PreferencesValue(const std::string &value)
+PreferencesValue::PreferencesValue(std::string value)
 {
     value_ = value;
 }
 
-PreferencesValue::PreferencesValue(const std::vector<double> &value)
+PreferencesValue::PreferencesValue(std::vector<double> value)
 {
     value_ = value;
 }
 
-PreferencesValue::PreferencesValue(const std::vector<std::string> &value)
+PreferencesValue::PreferencesValue(std::vector<std::string> value)
 {
     value_ = value;
 }
 
-PreferencesValue::PreferencesValue(const std::vector<bool> &value)
+PreferencesValue::PreferencesValue(std::vector<bool> value)
 {
     value_ = value;
+}
+
+PreferencesValue &PreferencesValue::operator=(PreferencesValue &&preferencesValue) noexcept
+{
+    if (this == &preferencesValue) {
+        return *this;
+    }
+    value_ = std::move(preferencesValue.value_);
+    return *this;
+}
+
+PreferencesValue &PreferencesValue::operator=(const PreferencesValue &preferencesValue)
+{
+    if (this == &preferencesValue) {
+        return *this;
+    }
+    value_ = preferencesValue.value_;
+    return *this;
 }
 
 bool PreferencesValue::IsInt() const
