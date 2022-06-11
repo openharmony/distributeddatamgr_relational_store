@@ -391,7 +391,7 @@ int PreferencesImpl::Put(const std::string &key, const PreferencesValue &value)
         return errCode;
     }
     if (value.IsString()) {
-        errCode = CheckStringValue((std::string)value);
+        errCode = CheckStringValue(value);
         if (errCode != E_OK) {
             LOG_ERROR("PreferencesImpl::Put string value length should shorter than 8*1024");
             return errCode;

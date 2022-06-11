@@ -24,18 +24,25 @@ namespace OHOS {
 namespace NativePreferences {
 class PreferencesValue {
 public:
-    ~PreferencesValue() {}
+    ~PreferencesValue()
+    {
+    }
+
+    PreferencesValue(PreferencesValue &&preferencesValue) noexcept;
+    PreferencesValue(const PreferencesValue &preferencesValue);
 
     PreferencesValue(int value);
     PreferencesValue(int64_t value);
     PreferencesValue(float value);
     PreferencesValue(double value);
     PreferencesValue(bool value);
-    PreferencesValue(const std::string &value);
+    PreferencesValue(std::string value);
     PreferencesValue(const char *value);
-    PreferencesValue(const std::vector<double> &value);
-    PreferencesValue(const std::vector<std::string> &value);
-    PreferencesValue(const std::vector<bool> &value);
+    PreferencesValue(std::vector<double> value);
+    PreferencesValue(std::vector<std::string> value);
+    PreferencesValue(std::vector<bool> value);
+    PreferencesValue &operator=(PreferencesValue &&preferencesValue) noexcept;
+    PreferencesValue &operator=(const PreferencesValue &preferencesValue);
 
     bool IsInt() const;
     bool IsLong() const;
