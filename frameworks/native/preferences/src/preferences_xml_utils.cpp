@@ -28,11 +28,11 @@ namespace NativePreferences {
 static bool ParseNodeElement(const xmlNode *node, Element &element);
 static bool ParsePrimitiveNodeElement(const xmlNode *node, Element &element);
 static bool ParseStringNodeElement(const xmlNode *node, Element &element);
-static bool ParseSetNodeElement(const xmlNode *node, Element &element);
+static bool ParseArrayNodeElement(const xmlNode *node, Element &element);
 static xmlNode *CreateElementNode(Element &element);
 static xmlNode *CreatePrimitiveNode(Element &element);
 static xmlNode *CreateStringNode(Element &element);
-static xmlNode *CreateSetNode(Element &element);
+static xmlNode *CreateArrayNode(Element &element);
 /* static */
 bool PreferencesXmlUtils::ReadSettingXml(const std::string &fileName, std::vector<Element> &settings)
 {
@@ -95,8 +95,11 @@ bool ParseNodeElement(const xmlNode *node, Element &element)
         return ParseStringNodeElement(node, element);
     }
 
-    if (!xmlStrcmp(node->name, reinterpret_cast<const xmlChar *>("set"))) {
-        return ParseSetNodeElement(node, element);
+    if (!xmlStrcmp(node->name, reinterpret_cast<const xmlChar *>("boolArray"))
+        || !xmlStrcmp(node->name, reinterpret_cast<const xmlChar *>("stringArray"))
+        || !xmlStrcmp(node->name, reinterpret_cast<const xmlChar *>("doubleArray"))
+        || !xmlStrcmp(node->name, reinterpret_cast<const xmlChar *>("set"))) {
+        return ParseArrayNodeElement(node, element);
     }
 
     LOG_ERROR("An unsupported element type was encountered in parsing = %{public}s.", node->name);
@@ -114,9 +117,11 @@ bool ParsePrimitiveNodeElement(const xmlNode *node, Element &element)
     xmlChar *value = xmlGetProp(node, reinterpret_cast<const xmlChar *>("value"));
 
     bool success = false;
-    if (key != nullptr && value != nullptr) {
+    if (value != nullptr) {
         element.tag_ = std::string(reinterpret_cast<const char *>(node->name));
-        element.key_ = std::string(reinterpret_cast<char *>(key));
+        if (key != nullptr) {
+            element.key_ = std::string(reinterpret_cast<char *>(key));
+        }
         element.value_ = std::string(reinterpret_cast<char *>(value));
         success = true;
     } else {
@@ -164,7 +169,7 @@ bool ParseStringNodeElement(const xmlNode *node, Element &element)
 }
 
 /* static */
-bool ParseSetNodeElement(const xmlNode *node, Element &element)
+bool ParseArrayNodeElement(const xmlNode *node, Element &element)
 {
     if (node == nullptr) {
         return false;
@@ -186,13 +191,13 @@ bool ParseSetNodeElement(const xmlNode *node, Element &element)
                 element.children_.push_back(child);
             } else {
                 finishTravelChild = false;
-                LOG_ERROR("Failed to parse the Set element and could not be completed successfully.");
+                LOG_ERROR("Failed to parse the Array element and could not be completed successfully.");
                 break;
             }
         }
         success = finishTravelChild;
     } else {
-        LOG_ERROR("Failed to obtain a valid key or value when parsing a Set element.");
+        LOG_ERROR("Failed to obtain a valid key or value when parsing a Array element.");
     }
 
     if (key != nullptr) {
@@ -270,8 +275,9 @@ xmlNode *CreateElementNode(Element &element)
         return CreateStringNode(element);
     }
 
-    if (element.tag_.compare("set") == 0) {
-        return CreateSetNode(element);
+    if ((element.tag_.compare("doubleArray") == 0) || (element.tag_.compare("stringArray") == 0)
+        || (element.tag_.compare("boolArray") == 0)) {
+        return CreateArrayNode(element);
     }
 
     LOG_ERROR("An unsupported element type was encountered in parsing = %{public}s.", element.tag_.c_str());
@@ -286,9 +292,10 @@ xmlNode *CreatePrimitiveNode(Element &element)
         LOG_ERROR("The xmlDoc failed to initialize the primitive element node.");
         return nullptr;
     }
-
-    const char *key = element.key_.c_str();
-    xmlNewProp(node, BAD_CAST "key", BAD_CAST key);
+    if (!element.key_.empty()) {
+        const char *key = element.key_.c_str();
+        xmlNewProp(node, BAD_CAST "key", BAD_CAST key);
+    }
 
     const char *value = element.value_.c_str();
     xmlNewProp(node, BAD_CAST "value", BAD_CAST value);
@@ -316,24 +323,37 @@ xmlNode *CreateStringNode(Element &element)
     return node;
 }
 
-xmlNode *CreateSetNode(Element &element)
+xmlNode *CreateArrayNode(Element &element)
 {
     xmlNode *node = xmlNewNode(NULL, BAD_CAST element.tag_.c_str());
     if (node == nullptr) {
-        LOG_ERROR("The xmlDoc failed to initialize the set element node.");
+        LOG_ERROR("The xmlDoc failed to initialize the array element node.");
         return nullptr;
     }
 
     const char *key = element.key_.c_str();
     xmlNewProp(node, BAD_CAST "key", BAD_CAST key);
 
-    for (Element child : element.children_) {
-        xmlNode *childNode = CreateElementNode(child);
-        if (childNode == nullptr) {
-            continue;
+    Element flag = element.children_[0];
+    if ((flag.tag_.compare("bool") == 0) || (flag.tag_.compare("double") == 0)) {
+        for (Element &child : element.children_) {
+            xmlNode *childNode = CreatePrimitiveNode(child);
+            if (childNode == nullptr) {
+                continue;
+            }
+            if (xmlAddChild(node, childNode) == nullptr) {
+                xmlFreeNode(childNode);
+            }
         }
-        if (xmlAddChild(node, childNode) == nullptr) {
-            xmlFreeNode(childNode);
+    } else if (flag.tag_.compare("string") == 0) {
+        for (Element child : element.children_) {
+            xmlNode *childNode = CreateStringNode(child);
+            if (childNode == nullptr) {
+                continue;
+            }
+            if (xmlAddChild(node, childNode) == nullptr) {
+                xmlFreeNode(childNode);
+            }
         }
     }
     return node;
