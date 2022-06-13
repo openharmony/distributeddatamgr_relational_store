@@ -19,6 +19,7 @@
 #include <climits>
 #include <cstdlib>
 #include <functional>
+#include <sstream>
 
 #include "logger.h"
 #include "preferences_errno.h"
@@ -223,30 +224,15 @@ std::map<std::string, PreferencesValue> PreferencesImpl::GetAll()
     return map_;
 }
 
-void ReadXmlElement(
-    Element element, std::map<std::string, PreferencesValue> &prefMap, const std::filesystem::path &prefPath)
+void ReadXmlArrayElement(Element element, std::map<std::string, PreferencesValue> &prefMap)
 {
-    if (element.tag_.compare("int") == 0) {
-        int value = std::stoi(element.value_);
-        prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
-    } else if (element.tag_.compare("bool") == 0) {
-        bool value = (element.value_.compare("true") == 0) ? true : false;
-        prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
-    } else if (element.tag_.compare("long") == 0) {
-        int64_t value = static_cast<int64_t>(std::stoll(element.value_));
-        prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
-    } else if (element.tag_.compare("float") == 0) {
-        float value = std::stof(element.value_);
-        prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
-    } else if (element.tag_.compare("double") == 0) {
-        double value = std::stod(element.value_);
-        prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
-    } else if (element.tag_.compare("string") == 0) {
-        prefMap.insert(std::make_pair(element.key_, PreferencesValue(element.value_)));
-    } else if (element.tag_.compare("doubleArray") == 0) {
+    if (element.tag_.compare("doubleArray") == 0) {
         std::vector<double> values;
         for (auto &child : element.children_) {
-            double value = std::stod(child.value_);
+            std::stringstream ss;
+            ss << child.value_;
+            double value = 0.0;
+            ss >> value;
             values.push_back(value);
         }
         prefMap.insert(std::make_pair(element.key_, PreferencesValue(values)));
@@ -259,10 +245,51 @@ void ReadXmlElement(
     } else if (element.tag_.compare("boolArray") == 0) {
         std::vector<bool> values;
         for (auto &child : element.children_) {
-            bool value = std::stod(child.value_);
+            std::stringstream ss;
+            ss << child.value_;
+            int32_t value = 0;
+            ss >> value;
             values.push_back(value);
         }
         prefMap.insert(std::make_pair(element.key_, PreferencesValue(values)));
+    }
+}
+
+void ReadXmlElement(
+    Element element, std::map<std::string, PreferencesValue> &prefMap, const std::filesystem::path &prefPath)
+{
+    if (element.tag_.compare("int") == 0) {
+        std::stringstream ss;
+        ss << element.value_;
+        int value = 0;
+        ss >> value;
+        prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
+    } else if (element.tag_.compare("bool") == 0) {
+        bool value = (element.value_.compare("true") == 0) ? true : false;
+        prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
+    } else if (element.tag_.compare("long") == 0) {
+        std::stringstream ss;
+        ss << element.value_;
+        int64_t value = 0;
+        ss >> value;
+        prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
+    } else if (element.tag_.compare("float") == 0) {
+        std::stringstream ss;
+        ss << element.value_;
+        float value = 0.0;
+        ss >> value;
+        prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
+    } else if (element.tag_.compare("double") == 0) {
+        std::stringstream ss;
+        ss << element.value_;
+        double value = 0.0;
+        ss >> value;
+        prefMap.insert(std::make_pair(element.key_, PreferencesValue(value)));
+    } else if (element.tag_.compare("string") == 0) {
+        prefMap.insert(std::make_pair(element.key_, PreferencesValue(element.value_)));
+    } else if (element.tag_.compare("doubleArray") == 0 || element.tag_.compare("stringArray") == 0
+               || element.tag_.compare("boolArray") == 0) {
+        ReadXmlArrayElement(element, prefMap);
     } else {
         LOG_WARN("ReadSettingXml:%{private}s, unknown element tag:%{public}s.", prefPath.c_str(), element.tag_.c_str());
     }
