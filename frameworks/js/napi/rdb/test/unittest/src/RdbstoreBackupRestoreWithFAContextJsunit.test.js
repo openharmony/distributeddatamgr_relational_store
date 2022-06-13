@@ -62,8 +62,7 @@ async function CreatRdbStore(context, STORE_CONFIG) {
     return rdbStore
 }
 
-async function BackupTest(backupName)
-{
+async function BackupTest(backupName) {
     try {
         let promiseRestore = rdbStore.backup(backupName)
         promiseRestore.then(() => {
@@ -78,8 +77,8 @@ async function BackupTest(backupName)
 
     rdbStore = null
 }
-async function RestoreTest(restoreName)
-{
+
+async function RestoreTest(restoreName) {
     try {
         let promiseRestore = rdbStore.restore(restoreName)
         promiseRestore.then(() => {
@@ -102,8 +101,8 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
 
         beforeEach(async function () {
             console.info(TAG + 'beforeEach')
-            context=ability_featureAbility.getContext()
-            rdbStore=await CreatRdbStore(context, STORE_CONFIG)
+            context = ability_featureAbility.getContext()
+            rdbStore = await CreatRdbStore(context, STORE_CONFIG)
         })
 
         afterEach(async function () {
