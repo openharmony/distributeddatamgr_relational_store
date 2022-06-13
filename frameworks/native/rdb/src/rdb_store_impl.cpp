@@ -662,6 +662,11 @@ int RdbStoreImpl::ConfigLocale(const std::string localeStr)
 }
 #endif
 
+int RdbStoreImpl::Restore(const std::string backupPath, const std::vector<uint8_t> &newKey)
+{
+    return ChangeDbFileForRestore(path, backupPath, newKey);
+}
+
 /**
  * Restores a database from a specified encrypted or unencrypted database file.
  */
@@ -704,6 +709,10 @@ int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::s
     }
     if (backupFilePath == restoreFilePath) {
         LOG_ERROR("ChangeDbFileForRestore:The backupPath and newPath should not be same.");
+        return E_INVALID_FILE_PATH;
+    }
+    if (backupFilePath == path) {
+        LOG_ERROR("ChangeDbFileForRestore:The backupPath and path should not be same.");
         return E_INVALID_FILE_PATH;
     }
 

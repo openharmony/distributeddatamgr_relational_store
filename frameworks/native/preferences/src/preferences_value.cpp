@@ -17,121 +17,183 @@
 
 namespace OHOS {
 namespace NativePreferences {
+PreferencesValue::PreferencesValue(const PreferencesValue &preferencesValue)
+{
+    if (this == &preferencesValue) {
+        return;
+    }
+    value_ = preferencesValue.value_;
+}
+
+PreferencesValue::PreferencesValue(PreferencesValue &&preferencesValue) noexcept
+{
+    if (this == &preferencesValue) {
+        return;
+    }
+    value_ = std::move(preferencesValue.value_);
+}
+
 PreferencesValue::PreferencesValue(int value)
 {
-    data_ = value;
+    value_ = value;
 }
 
 PreferencesValue::PreferencesValue(int64_t value)
 {
-    data_ = value;
+    value_ = value;
 }
 
 PreferencesValue::PreferencesValue(float value)
 {
-    data_ = value;
+    value_ = value;
 }
 
 PreferencesValue::PreferencesValue(double value)
 {
-    data_ = value;
+    value_ = value;
 }
 
 PreferencesValue::PreferencesValue(bool value)
 {
-    data_ = value;
+    value_ = value;
+}
+
+PreferencesValue::PreferencesValue(const char *value)
+{
+    PreferencesValue((std::string)value);
 }
 
 PreferencesValue::PreferencesValue(std::string value)
 {
-    data_ = value;
+    value_ = value;
 }
 
-PreferencesValue::PreferencesValue(std::set<std::string> value)
+PreferencesValue::PreferencesValue(std::vector<double> value)
 {
-    data_ = std::move(value);
+    value_ = value;
+}
+
+PreferencesValue::PreferencesValue(std::vector<std::string> value)
+{
+    value_ = value;
+}
+
+PreferencesValue::PreferencesValue(std::vector<bool> value)
+{
+    value_ = value;
+}
+
+PreferencesValue &PreferencesValue::operator=(PreferencesValue &&preferencesValue) noexcept
+{
+    if (this == &preferencesValue) {
+        return *this;
+    }
+    value_ = std::move(preferencesValue.value_);
+    return *this;
+}
+
+PreferencesValue &PreferencesValue::operator=(const PreferencesValue &preferencesValue)
+{
+    if (this == &preferencesValue) {
+        return *this;
+    }
+    value_ = preferencesValue.value_;
+    return *this;
 }
 
 bool PreferencesValue::IsInt() const
 {
-    auto pVal = std::get_if<int>(&data_);
-    return (pVal != nullptr);
+    return std::holds_alternative<int>(value_);
 }
 
 bool PreferencesValue::IsLong() const
 {
-    auto pVal = std::get_if<int64_t>(&data_);
-    return (pVal != nullptr);
+    return std::holds_alternative<int64_t>(value_);
 }
 
 bool PreferencesValue::IsFloat() const
 {
-    auto pVal = std::get_if<float>(&data_);
-    return (pVal != nullptr);
+    return std::holds_alternative<float>(value_);
 }
 
 bool PreferencesValue::IsDouble() const
 {
-    auto pVal = std::get_if<double>(&data_);
-    return (pVal != nullptr);
+    return std::holds_alternative<double>(value_);
 }
 
 bool PreferencesValue::IsBool() const
 {
-    auto pVal = std::get_if<bool>(&data_);
-    return (pVal != nullptr);
+    return std::holds_alternative<bool>(value_);
 }
 
 bool PreferencesValue::IsString() const
 {
-    auto pVal = std::get_if<std::string>(&data_);
-    return (pVal != nullptr);
+    return std::holds_alternative<std::string>(value_);
 }
 
-bool PreferencesValue::IsSet() const
+bool PreferencesValue::IsDoubleArray() const
 {
-    auto pVal = std::get_if<std::set<std::string>>(&data_);
-    return (pVal != nullptr);
+    return std::holds_alternative<std::vector<double>>(value_);
+}
+
+bool PreferencesValue::IsStringArray() const
+{
+    return std::holds_alternative<std::vector<std::string>>(value_);
+}
+
+bool PreferencesValue::IsBoolArray() const
+{
+    return std::holds_alternative<std::vector<bool>>(value_);
 }
 
 PreferencesValue::operator int() const
 {
-    return std::get<int>(data_);
+    return std::get<int>(value_);
 }
 
 PreferencesValue::operator int64_t() const
 {
-    return std::get<int64_t>(data_);
+    return std::get<int64_t>(value_);
 }
 
 PreferencesValue::operator float() const
 {
-    return std::get<float>(data_);
+    return std::get<float>(value_);
 }
 
 PreferencesValue::operator double() const
 {
-    return std::get<double>(data_);
+    return std::get<double>(value_);
 }
 
 PreferencesValue::operator bool() const
 {
-    return std::get<bool>(data_);
+    return std::get<bool>(value_);
 }
 
 PreferencesValue::operator std::string() const
 {
-    return std::get<std::string>(data_);
+    return std::get<std::string>(value_);
 }
 
-PreferencesValue::operator std::set<std::string>() const
+PreferencesValue::operator std::vector<double>() const
 {
-    return std::get<std::set<std::string>>(data_);
+    return std::get<std::vector<double>>(value_);
 }
 
-bool PreferencesValue::operator == (const PreferencesValue &value)
+PreferencesValue::operator std::vector<bool>() const
 {
-    return (this->data_ == value.data_);
+    return std::get<std::vector<bool>>(value_);
+}
+
+PreferencesValue::operator std::vector<std::string>() const
+{
+    return std::get<std::vector<std::string>>(value_);
+}
+
+bool PreferencesValue::operator==(const PreferencesValue &value)
+{
+    return (this->value_ == value.value_);
 }
 } // End of namespace NativePreferences
 } // End of namespace OHOS
