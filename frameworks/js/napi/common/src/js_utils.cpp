@@ -416,6 +416,5 @@ int32_t JSUtils::Convert2JSStringArr(napi_env env, std::vector<std::string> valu
     }
     return OK;
 }
-
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
