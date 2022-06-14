@@ -28,6 +28,7 @@
 #include "sqlite_shared_result_set.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
+#include "reporter.h"
 #include "step_result_set.h"
 
 
@@ -133,7 +134,7 @@ void RdbStoreImpl::ReleaseThreadSession()
 
 int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)
 {
-    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
     return InsertWithConflictResolution(outRowId, table, initialValues, ConflictResolution::ON_CONFLICT_NONE);
 }
 
@@ -186,7 +187,7 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
 int RdbStoreImpl::Update(int &changedRows, const std::string &table, const ValuesBucket &values,
     const std::string &whereClause, const std::vector<std::string> &whereArgs)
 {
-    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
     return UpdateWithConflictResolution(
         changedRows, table, values, whereClause, whereArgs, ConflictResolution::ON_CONFLICT_NONE);
 }
@@ -242,7 +243,7 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
 
 int RdbStoreImpl::Delete(int &deletedRows, const AbsRdbPredicates &predicates)
 {
-    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
     return Delete(deletedRows, predicates.GetTableName(), predicates.GetWhereClause(), predicates.GetWhereArgs());
 }
 
@@ -273,7 +274,7 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
 std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
-    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreImpl::Query on called.");
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
@@ -285,7 +286,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool disti
     const std::vector<std::string> &selectionArgs, const std::string &groupBy, const std::string &having,
     const std::string &orderBy, const std::string &limit)
 {
-    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
     std::string sql;
     errCode = SqliteSqlBuilder::BuildQueryString(distinct, table, columns, selection, groupBy, having, orderBy, limit,
         "", sql);
@@ -300,7 +301,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool disti
 std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sql,
     const std::vector<std::string> &selectionArgs)
 {
-    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
     auto resultSet = std::make_unique<SqliteSharedResultSet>(shared_from_this(), path, sql, selectionArgs);
     return resultSet;
 }
@@ -322,7 +323,7 @@ int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
 
 int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
-    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
     int errCode = CheckAttach(sql);
     if (errCode != E_OK) {
         return errCode;
@@ -454,7 +455,7 @@ int RdbStoreImpl::SetVersion(int version)
  */
 int RdbStoreImpl::BeginTransaction()
 {
-    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int errCode = session->BeginTransaction();
     if (errCode != E_OK) {
@@ -468,7 +469,7 @@ int RdbStoreImpl::BeginTransaction()
 */
 int RdbStoreImpl::RollBack()
 {
-    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int errCode = session->RollBack();
     if (errCode != E_OK) {
@@ -482,7 +483,7 @@ int RdbStoreImpl::RollBack()
 */
 int RdbStoreImpl::Commit()
 {
-    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
     LOG_DEBUG("Enter Commit");
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int errCode = session->Commit();
@@ -543,8 +544,13 @@ bool RdbStoreImpl::IsInTransaction()
 
 int RdbStoreImpl::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
 {
-    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
-    return connectionPool->ChangeEncryptKey(newKey);
+    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    auto ret =  connectionPool->ChangeEncryptKey(newKey);
+    if (ret != E_OK) {
+        DistributedDataDfx::Reporter::GetInstance()->DatabaseFault()->Report(
+            {syncerParam_.bundleName_, name, "rdb", DistributedDataDfx::Fault::DF_DB_REKEY_FAILED});
+    }
+    return ret;
 }
 
 std::shared_ptr<SqliteStatement> RdbStoreImpl::BeginStepQuery(
@@ -745,8 +751,8 @@ std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
 
 bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
 {
-    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__),
-        DistributedKv::TraceSwitch::BYTRACE_ON | DistributedKv::TraceSwitch::TRACE_CHAIN_ON);
+    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__),
+        DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
     auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
     if (service == nullptr) {
         return false;
@@ -761,8 +767,8 @@ bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
 
 std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, const std::string &table)
 {
-    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__),
-        DistributedKv::TraceSwitch::BYTRACE_ON | DistributedKv::TraceSwitch::TRACE_CHAIN_ON);
+    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__),
+        DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
     auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
     if (service == nullptr) {
         return "";
@@ -773,8 +779,8 @@ std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, 
 
 bool RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const SyncCallback &callback)
 {
-    DistributedKv::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__),
-        DistributedKv::TraceSwitch::BYTRACE_ON | DistributedKv::TraceSwitch::TRACE_CHAIN_ON);
+    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__),
+        DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
     auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
     if (service == nullptr) {
         return false;
