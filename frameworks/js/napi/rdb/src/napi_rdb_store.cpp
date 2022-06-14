@@ -17,7 +17,6 @@
 
 #include <cinttypes>
 
-#include "datashare_predicates_proxy.h"
 #include "js_logger.h"
 #include "js_utils.h"
 #include "napi_async_proxy.h"
@@ -27,6 +26,7 @@
 #include "rdb_utils.h"
 #include "securec.h"
 
+using namespace OHOS::DataShare;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 using OHOS::DistributedRdb::SubscribeMode;
@@ -36,6 +36,9 @@ using OHOS::DistributedRdb::SyncResult;
 
 namespace OHOS {
 namespace RdbJsKit {
+struct PredicatesProxy {
+    std::shared_ptr<DataShareAbsPredicates> predicates_;
+};
 class RdbStoreContext : public NapiAsyncProxy<RdbStoreContext>::AysncContext {
 public:
     RdbStoreContext() : AysncContext(), predicatesProxy(nullptr), valuesBucket(nullptr), rowId(0), enumArg(0)
@@ -356,8 +359,9 @@ void ParsePredicates(const napi_env &env, const napi_value &arg, RdbStoreContext
         asyncContext->rdbPredicates = asyncContext->predicatesProxy->GetPredicates();
     } else {
         LOG_DEBUG("Parse DataShare Predicates");
-        std::shared_ptr<DataShare::DataSharePredicates> dsPredicates =
-            DataShare::DataSharePredicatesProxy::GetNativePredicates(env, arg);
+        PredicatesProxy *proxy = nullptr;
+        napi_unwrap(env, arg, reinterpret_cast<void **>(&proxy));
+        std::shared_ptr<DataShareAbsPredicates> dsPredicates = proxy->predicates_;
         asyncContext->rdbPredicates = std::make_shared<RdbPredicates>(
             RdbDataShareAdapter::RdbUtils::ToPredicates(*dsPredicates, asyncContext->tableName));
     }

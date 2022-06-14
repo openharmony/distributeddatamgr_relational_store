@@ -23,7 +23,7 @@
 
 #include "../../rdb/include/result_set.h"
 #include "abs_predicates.h"
-#include "datashare_predicates.h"
+#include "datashare_abs_predicates.h"
 #include "datashare_values_bucket.h"
 #include "rdb_predicates.h"
 #include "rdb_result_set_bridge.h"
@@ -39,27 +39,85 @@ public:
     using ResultSet = NativeRdb::ResultSet;
     using ValuesBucket = NativeRdb::ValuesBucket;
     using DataShareValuesBucket = DataShare::DataShareValuesBucket;
-    using DataSharePredicates = DataShare::DataSharePredicates;
+    using DataShareAbsPredicates = DataShare::DataShareAbsPredicates;
     using ResultSetBridge = DataShare::ResultSetBridge;
     using OperationItem = DataShare::OperationItem;
     using DataSharePredicatesObject = DataShare::DataSharePredicatesObject;
 
     static ValuesBucket ToValuesBucket(const DataShareValuesBucket &bucket);
 
-    static RdbPredicates ToPredicates(const DataSharePredicates &predicates, const std::string &table);
+    static RdbPredicates ToPredicates(const DataShareAbsPredicates &predicates, const std::string &table);
 
     static std::shared_ptr<ResultSetBridge> ToResultSetBridge(std::shared_ptr<ResultSet> resultSet);
 
 private:
+    static void NoSupport(const OperationItem &item, RdbPredicates &query);
+    static void EqualTo(const OperationItem &item, RdbPredicates &predicates);
+    static void NotEqualTo(const OperationItem &item, RdbPredicates &predicates);
+    static void GreaterThan(const OperationItem &item, RdbPredicates &predicates);
+    static void LessThan(const OperationItem &item, RdbPredicates &predicates);
+    static void GreaterThanOrEqualTo(const OperationItem &item, RdbPredicates &predicates);
+    static void LessThanOrEqualTo(const OperationItem &item, RdbPredicates &predicates);
+    static void And(const OperationItem &item, RdbPredicates &predicates);
+    static void Or(const OperationItem &item, RdbPredicates &predicates);
+    static void IsNull(const OperationItem &item, RdbPredicates &predicates);
+    static void IsNotNull(const OperationItem &item, RdbPredicates &predicates);
+    static void In(const OperationItem &item, RdbPredicates &predicates);
+    static void NotIn(const OperationItem &item, RdbPredicates &predicates);
+    static void Like(const OperationItem &item, RdbPredicates &predicates);
+    static void OrderByAsc(const OperationItem &item, RdbPredicates &predicates);
+    static void OrderByDesc(const OperationItem &item, RdbPredicates &predicates);
+    static void Limit(const OperationItem &item, RdbPredicates &predicates);
+    static void Offset(const OperationItem &item, RdbPredicates &predicates);
+    static void BeginWrap(const OperationItem &item, RdbPredicates &predicates);
+    static void EndWrap(const OperationItem &item, RdbPredicates &predicates);
+    static void BeginsWith(const OperationItem &item, RdbPredicates &predicates);
+    static void EndsWith(const OperationItem &item, RdbPredicates &predicates);
+    static void Distinct(const OperationItem &item, RdbPredicates &predicates);
+    static void GroupBy(const OperationItem &item, RdbPredicates &predicates);
+    static void IndexedBy(const OperationItem &item, RdbPredicates &predicates);
+    static void Contains(const OperationItem &item, RdbPredicates &predicates);
+    static void Glob(const OperationItem &item, RdbPredicates &predicates);
+    static void Between(const OperationItem &item, RdbPredicates &predicates);
+    static void NotBetween(const OperationItem &item, RdbPredicates &predicates);
     RdbUtils();
     ~RdbUtils();
-    static void ToOperateThird(
-        const std::list<OperationItem>::iterator operations, std::shared_ptr<RdbPredicates> &predicates);
-    static void ToOperateSecond(
-        const std::list<OperationItem>::iterator operations, std::shared_ptr<RdbPredicates> &predicates);
-    static void ToOperateFirst(
-        const std::list<OperationItem>::iterator operations, std::shared_ptr<RdbPredicates> &predicates);
     static std::string ToString(const DataSharePredicatesObject &predicatesObject);
+    using OperateHandler = void (*)(const OperationItem &, RdbPredicates &);
+    static constexpr OperateHandler HANDLERS[DataShare::LAST_TYPE] = {
+        [DataShare::INVALID_OPERATION] = &RdbUtils::NoSupport,
+        [DataShare::EQUAL_TO] = &RdbUtils::EqualTo,
+        [DataShare::NOT_EQUAL_TO] = &RdbUtils::NotEqualTo,
+        [DataShare::GREATER_THAN] = &RdbUtils::GreaterThan,
+        [DataShare::LESS_THAN] = &RdbUtils::LessThan,
+        [DataShare::GREATER_THAN_OR_EQUAL_TO] = &RdbUtils::GreaterThanOrEqualTo,
+        [DataShare::LESS_THAN_OR_EQUAL_TO] = &RdbUtils::LessThanOrEqualTo,
+        [DataShare::AND] = &RdbUtils::And,
+        [DataShare::OR] = &RdbUtils::Or,
+        [DataShare::IS_NULL] = &RdbUtils::IsNull,
+        [DataShare::IS_NOT_NULL] = &RdbUtils::IsNotNull,
+        [DataShare::IN] = &RdbUtils::In,
+        [DataShare::NOT_IN] = &RdbUtils::NotIn,
+        [DataShare::LIKE] = &RdbUtils::Like,
+        [DataShare::UNLIKE] = &RdbUtils::NoSupport,
+        [DataShare::ORDER_BY_ASC] = &RdbUtils::OrderByAsc,
+        [DataShare::ORDER_BY_DESC] = &RdbUtils::OrderByDesc,
+        [DataShare::LIMIT] = &RdbUtils::Limit,
+        [DataShare::OFFSET] = &RdbUtils::Offset,
+        [DataShare::BEGIN_WARP] = &RdbUtils::BeginWrap,
+        [DataShare::END_WARP] = &RdbUtils::EndWrap,
+        [DataShare::BEGIN_WITH] = &RdbUtils::BeginsWith,
+        [DataShare::END_WITH] = &RdbUtils::EndsWith,
+        [DataShare::IN_KEY] = &RdbUtils::NoSupport,
+        [DataShare::DISTINCT] = &RdbUtils::Distinct,
+        [DataShare::GROUP_BY] = &RdbUtils::GroupBy,
+        [DataShare::INDEXED_BY] = &RdbUtils::IndexedBy,
+        [DataShare::CONTAINS] = &RdbUtils::Contains,
+        [DataShare::GLOB] = &RdbUtils::Glob,
+        [DataShare::BETWEEN] = &RdbUtils::Between,
+        [DataShare::NOTBETWEEN] = &RdbUtils::NotBetween,
+        [DataShare::KEY_PREFIX] = &RdbUtils::NoSupport,
+    };
 };
 } // namespace RdbDataShareAdapter
 } // namespace OHOS

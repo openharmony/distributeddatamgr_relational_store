@@ -26,7 +26,7 @@ ohos_shared_library("rdb") {
   include_dirs = [
     "include",
     "../common/include",
-    "../resultset/include",
+    "../../../../interfaces/inner_api/native/data_share/common/include/",
     "//third_party/node/src",
     "//utils/native/base/include",
     "//foundation/distributeddatamgr/distributeddatamgr/frameworks/innerkitsimpl/rdb/include",
@@ -56,8 +56,6 @@ ohos_shared_library("rdb") {
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
     "ability_runtime:napi_base_context",
-    "data_share:datashare_abilitykit",
-    "data_share:datashare_common",
     "hilog_native:libhilog",
     "napi:ace_napi",
     "relational_store:native_appdatafwk",

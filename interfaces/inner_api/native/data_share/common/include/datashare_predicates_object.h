@@ -66,19 +66,51 @@ public:
     int GetStringVector(std::vector<std::string> &val) const;
     bool Marshalling(Parcel &parcel) const override;
     static DataSharePredicatesObject *Unmarshalling(Parcel &parcel);
+    DataSharePredicatesObjectType type;
     std::variant<std::monostate, int, int64_t, double, std::string, bool, std::vector<int>, std::vector<int64_t>,
         std::vector<std::string>, std::vector<double>> value;
-    template<typename T>
-    operator T () const
+
+    operator int () const
     {
-        return std::get<T>(value);
+        return static_cast<int>(std::get<int64_t>(value));
+    }
+    operator int64_t () const
+    {
+        return std::get<int64_t>(value);
+    }
+    operator double () const
+    {
+        return std::get<double>(value);
+    }
+    operator bool () const
+    {
+        return std::get<bool>(value);
+    }
+    operator std::string () const
+    {
+        return std::get<std::string>(value);
+    }
+    operator std::vector<int> () const
+    {
+        return std::get<std::vector<int>>(value);
+    }
+    operator std::vector<int64_t> () const
+    {
+        return std::get<std::vector<int64_t>>(value);
+    }
+    operator std::vector<std::string> () const
+    {
+        return std::get<std::vector<std::string>>(value);
+    }
+    operator std::vector<double> () const
+    {
+        return std::get<std::vector<double>>(value);
     }
 
 private:
     void MarshallingVector(Parcel &parcel) const;
     static void UnmarshallingVector(DataSharePredicatesObjectType type, DataSharePredicatesObject *pValueObject,
         Parcel &parcel);
-    DataSharePredicatesObjectType type;
 };
 } // namespace DataShare
 } // namespace OHOS
