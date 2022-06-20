@@ -58,7 +58,6 @@ ohos_unittest("NativeDataShareTest") {
     "dataability:native_dataability",
     "ipc:ipc_core",
     "ipc_js:rpc",
-    "permission_standard:libpermissionsdk_standard",
     "utils_base:utils",
   ]
 
