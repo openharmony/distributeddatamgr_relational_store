@@ -20,14 +20,19 @@
 
 namespace OHOS {
 namespace DataShare {
-static __thread napi_ref constructor_ = nullptr;
+static napi_ref __thread constructor_ = nullptr;
 static constexpr int ARGC_ZERO = 0;
 static constexpr int ARGC_ONE = 1;
 static constexpr int ARGC_TWO = 2;
 
-void DataSharePredicatesProxy::Init(napi_env env, napi_value exports)
+napi_value DataSharePredicatesProxy::GetConstructor(napi_env env)
 {
-    LOG_INFO("Init DataSharePredicatesProxy");
+    napi_value cons;
+    if (constructor_ != nullptr) {
+        NAPI_CALL(env, napi_get_reference_value(env, constructor_, &cons));
+        return cons;
+    }
+    LOG_INFO("GetConstructor DataSharePredicates constructor");
     napi_property_descriptor descriptors[] = {
         DECLARE_NAPI_FUNCTION("equalTo", EqualTo),
         DECLARE_NAPI_FUNCTION("notEqualTo", NotEqualTo),
@@ -60,15 +65,18 @@ void DataSharePredicatesProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("prefixKey", PrefixKey),
         DECLARE_NAPI_FUNCTION("inKeys", InKeys),
     };
+    NAPI_CALL(env, napi_define_class(env, "DataSharePredicates", NAPI_AUTO_LENGTH, New, nullptr,
+        sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons));
+    NAPI_CALL(env, napi_create_reference(env, cons, 1, &constructor_));
+    return cons;
+}
 
-    napi_value cons;
-    NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "DataSharePredicates", NAPI_AUTO_LENGTH, New, nullptr,
-                                   sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons));
-
-    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, cons, 1, &constructor_));
-
+void DataSharePredicatesProxy::Init(napi_env env, napi_value exports)
+{
+    LOG_INFO("Init DataSharePredicatesProxy in.");
+    napi_value cons = GetConstructor(env);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, exports, "DataSharePredicates", cons));
-    LOG_DEBUG("Init DataSharePredicatesProxy end");
+    LOG_DEBUG("Init DataSharePredicatesProxy out.");
 }
 
 napi_value DataSharePredicatesProxy::New(napi_env env, napi_callback_info info)
@@ -100,15 +108,14 @@ napi_value DataSharePredicatesProxy::New(napi_env env, napi_callback_info info)
 napi_value DataSharePredicatesProxy::NewInstance(
     napi_env env, std::shared_ptr<DataSharePredicates> value)
 {
-    napi_value cons;
-    napi_status status = napi_get_reference_value(env, constructor_, &cons);
-    if (status != napi_ok) {
-        LOG_ERROR("DataSharePredicatesProxy get constructor failed! napi_status:%{public}d!", status);
+    napi_value cons = GetConstructor(env);
+    if (cons == nullptr) {
+        LOG_ERROR("DataSharePredicatesProxy GetConstructor failed.");
         return nullptr;
     }
 
     napi_value instance = nullptr;
-    status = napi_new_instance(env, cons, 0, nullptr, &instance);
+    napi_status status = napi_new_instance(env, cons, 0, nullptr, &instance);
     if (status != napi_ok) {
         LOG_ERROR("DataSharePredicatesProxy napi_new_instance failed! napi_status:%{public}d!", status);
         return nullptr;

@@ -17,7 +17,6 @@
 #include "napi/native_node_api.h"
 
 #include "datashare_log.h"
-#include "datashare_predicates_proxy.h"
 #include "napi_datashare_helper.h"
 
 namespace OHOS {
@@ -29,7 +28,6 @@ EXTERN_C_START
 static napi_value Init(napi_env env, napi_value exports)
 {
     LOG_DEBUG("Init in");
-    DataSharePredicatesProxy::Init(env, exports);
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("createDataShareHelper", NapiDataShareHelper::Napi_CreateDataShareHelper),
     };

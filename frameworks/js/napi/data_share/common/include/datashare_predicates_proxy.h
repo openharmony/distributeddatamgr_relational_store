@@ -34,6 +34,7 @@ public:
 
     DataSharePredicatesProxy();
     std::shared_ptr<DataSharePredicates> GetPredicates() const;
+    static napi_value GetConstructor(napi_env env);
 
 private:
     ~DataSharePredicatesProxy();
