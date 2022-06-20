@@ -102,9 +102,6 @@
                         "header_base": "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/data_share/common/include"
                     }
                 }
-            ],
-            "test": [
-                "//foundation/distributeddatamgr/appdatamgr/frameworks/native/data_share/test:unittest"
             ]
         }
     }
