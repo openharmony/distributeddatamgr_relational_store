@@ -22,9 +22,6 @@ ohos_shared_library("datashare") {
     "${datashare_common_native_path}/include",
     "//third_party/node/src",
     "//third_party/libuv/include",
-    "${aafwk_kits_path}/ability/native/include",
-    "//foundation/ability/ability_runtime/frameworks/js/napi/aafwk/dataShare",
-    "//foundation/ability/ability_runtime/frameworks/js/napi/aafwk/inner/napi_common",
   ]
 
   sources = [
@@ -36,7 +33,6 @@ ohos_shared_library("datashare") {
 
   deps = [
     "${aafwk_inner_api_path}/dataobs_manager:dataobs_manager",
-    "${aafwk_kits_path}/appkit:appkit_native",
     "${datashare_common_native_path}:datashare_common",
     "//foundation/ability/ability_runtime/frameworks/js/napi/aafwk/inner/napi_common:napi_common",
     "//third_party/libuv:uv",
@@ -46,9 +42,7 @@ ohos_shared_library("datashare") {
     "ability_base:base",
     "ability_base:want",
     "ability_base:zuri",
-    "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
-    "ability_runtime:app_manager",
     "ability_runtime:napi_base_context",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
