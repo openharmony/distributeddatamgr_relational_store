@@ -1,0 +1,36 @@
+{
+    "name": "@openharmony/kv_store",
+    "version": "3.1.0",
+    "license": "Apache License 2.0",
+    "description": "",
+    "publishAs": "code-segment",
+    "segment": {
+        "destPath": "foundation/distributeddatamgr/appdatamgr/kv_store/interfaces/inner_api/kv_store"
+    },
+    "dirs": {},
+    "scripts": {},
+    "component": {
+        "name": "kv_store",
+        "subsystem": "distributeddatamgr",
+        "features": [],
+        "adapted_system_type": [
+            "mini",
+            "small"
+        ],
+        "rom": "13KB",
+        "ram": "80KB",
+        "deps": {
+            "thrid_party": [ "bounds_checking_function" ],
+            "kernel_special": {},
+            "board_special": {},
+            "components": [
+                "utils_lite"
+            ]
+        },
+        "build": {
+            "sub_component": [ "//foundation/distributeddatamgr/appdatamgr/kv_store/interfaces/inner_api/kv_store" ],
+            "inner_kits": [],
+            "test": []
+        }
+    }
+}

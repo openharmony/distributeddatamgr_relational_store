@@ -1,0 +1,53 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/ohos.gni")
+import("//foundation/distributeddatamgr/appdatamgr/preference/preference.gni")
+config("native_preference_config") {
+  visibility = [ ":*" ]
+  include_dirs = [
+    "include",
+    "${preference_native_path}/include",
+    "//utils/native/base/include",
+  ]
+}
+
+config("native_preference_public_config") {
+  visibility = [ "//foundation/distributeddatamgr/appdatamgr:*" ]
+  include_dirs = [ "include" ]
+}
+
+ohos_shared_library("native_preference") {
+  sources = [
+    "${preference_native_path}/src/preferences_helper.cpp",
+    "${preference_native_path}/src/preferences_impl.cpp",
+    "${preference_native_path}/src/preferences_observer.cpp",
+    "${preference_native_path}/src/preferences_value.cpp",
+    "${preference_native_path}/src/preferences_xml_utils.cpp",
+    "${preference_native_path}/src/task_pool.cpp",
+    "${preference_native_path}/src/task_queue.cpp",
+  ]
+
+  configs = [ ":native_preference_config" ]
+
+  deps = [
+    "//third_party/libxml2:libxml2",
+    "//utils/native/base:utils",
+  ]
+
+  external_deps = [ "hilog_native:libhilog" ]
+
+  public_configs = [ ":native_preference_public_config" ]
+
+  subsystem_name = "distributeddatamgr"
+  part_name = "preference"
+}
