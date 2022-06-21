@@ -21,12 +21,9 @@ config("ability_config") {
     "common/include",
     "consumer/include",
     "provider/include",
+    "${aafwk_services_path}/common/include",
     "${datashare_native_consumer_path}/include",
     "${datashare_native_provider_path}/include",
-    "${aafwk_kits_path}/appkit/native/app/include",
-    "${aafwk_services_path}/common/include",
-    "${aafwk_kits_path}/ability/native/include/continuation/distributed",
-    "${aafwk_kits_path}/ability/native/include/continuation/kits",
     "//foundation/ability/ability_runtime/frameworks/js/napi/aafwk/inner/napi_common",
     "//foundation/distributeddatamgr/appdatamgr/interfaces/inner_api/native/rdb/include",
     "//foundation/distributeddatamgr/distributeddatamgr/frameworks/innerkitsimpl/rdb/include",
@@ -53,9 +50,6 @@ config("ability_public_config") {
     "${datashare_native_consumer_path}/include",
     "${datashare_native_provider_path}/include",
     "//foundation/windowmanager/interfaces/innerkits/wm",
-    "${aafwk_kits_path}/appkit/native/ability_runtime/app",
-    "${aafwk_kits_path}/appkit/native/app/include",
-    "${aafwk_kits_path}/appkit/native/ability_runtime/context",
   ]
 }
 
@@ -75,10 +69,7 @@ ohos_shared_library("datashare_abilitykit") {
     "${datashare_native_provider_path}/src/js_datashare_ext_ability_context.cpp",
   ]
   configs = [ ":ability_config" ]
-  public_configs = [
-    ":ability_public_config",
-    "${aafwk_kits_path}/ability/ability_runtime:ability_context_public_config",
-  ]
+  public_configs = [ ":ability_public_config" ]
 
   deps = [
     "${aafwk_inner_api_path}/dataobs_manager:dataobs_manager",
@@ -92,9 +83,7 @@ ohos_shared_library("datashare_abilitykit") {
     "ability_base:zuri",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
-    "ability_runtime:app_manager",
     "ability_runtime:runtime",
-    "ability_runtime:wantagent_innerkits",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",

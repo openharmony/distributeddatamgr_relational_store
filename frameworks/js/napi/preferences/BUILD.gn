@@ -63,10 +63,11 @@ ohos_shared_library("storage_napi") {
     "src/napi_system_storage.cpp",
   ]
 
-  deps = [ "${aafwk_kits_path}/ability/native:abilitykit_native" ]
+  deps = []
 
   external_deps = [
-    "ability_runtime:ability_manager",
+    "ability_base:want",
+    "ability_runtime:abilitykit_native",
     "ability_runtime:napi_base_context",
     "hilog_native:libhilog",
     "ipc:ipc_core",
@@ -95,10 +96,11 @@ ohos_shared_library("preferences") {
     "src/napi_preferences_helper.cpp",
   ]
 
-  deps = [ "${aafwk_kits_path}/ability/native:abilitykit_native" ]
+  deps = []
 
   external_deps = [
-    "ability_runtime:ability_manager",
+    "ability_base:want",
+    "ability_runtime:abilitykit_native",
     "ability_runtime:napi_base_context",
     "hilog_native:libhilog",
     "ipc:ipc_core",
