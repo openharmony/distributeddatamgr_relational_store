@@ -1,0 +1,5 @@
+datasharehelper里面include "ability_thread.h"是否有用到
+不用需要删掉
+现在dataability兼容datashare有个循环依赖的问题
+datasharehelper.cpp #include "ability_thread.h" 对应的gn也会依赖到
+ datashare            native:abilitykit_native         dataability   循环依赖

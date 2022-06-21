@@ -459,7 +459,7 @@ int JsDataShareExtAbility::Update(const Uri &uri, const DataSharePredicates &pre
 
     napi_value napiPredicates = MakePredicates(env, predicates);
     if (napiPredicates == nullptr) {
-        LOG_ERROR("%{public}s failed to make new instance of dataSharePredicates.", __func__);
+        LOG_DEBUG("%{public}s failed to make new instance of dataSharePredicates.", __func__);
         return ret;
     }
 
@@ -506,7 +506,7 @@ int JsDataShareExtAbility::Delete(const Uri &uri, const DataSharePredicates &pre
 
     napi_value napiPredicates = MakePredicates(env, predicates);
     if (napiPredicates == nullptr) {
-        LOG_ERROR("%{public}s failed to make new instance of dataSharePredicates.", __func__);
+        LOG_DEBUG("%{public}s failed to make new instance of dataSharePredicates.", __func__);
         return ret;
     }
 
@@ -548,7 +548,7 @@ std::shared_ptr<DataShareResultSet> JsDataShareExtAbility::Query(const Uri &uri,
 
     napi_value napiPredicates = MakePredicates(env, predicates);
     if (napiPredicates == nullptr) {
-        LOG_ERROR("%{public}s failed to make new instance of dataSharePredicates.", __func__);
+        LOG_DEBUG("%{public}s failed to make new instance of dataSharePredicates.", __func__);
         return ret;
     }
 
