@@ -76,7 +76,7 @@ ohos_shared_library("datasharepredicates") {
     "${datashare_napi_path}/dataShare/src/native_datashare_predicates_module.cpp",
   ]
 
-  deps = [ "${datashare_common_native_path}:datashare_common" ]
+  deps = [ "${datashare_innerapi_path}:datashare_common" ]
 
   external_deps = [
     "data_share:datashare_abilitykit",
