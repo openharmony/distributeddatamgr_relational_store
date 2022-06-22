@@ -12,7 +12,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_preferences from '@ohos.data.preferences'
 import featureAbility from '@ohos.ability.FeatureAbility';
 
@@ -22,6 +22,9 @@ const KEY_TEST_LONG_ELEMENT = 'key_test_long';
 const KEY_TEST_FLOAT_ELEMENT = 'key_test_float';
 const KEY_TEST_BOOLEAN_ELEMENT = 'key_test_boolean';
 const KEY_TEST_STRING_ELEMENT = 'key_test_string';
+const KEY_TEST_NUMBER_ARRAY_ELEMENT = 'key_test_number_array'
+const KEY_TEST_STRING_ARRAY_ELEMENT = 'key_test_string_array'
+const KEY_TEST_BOOL_ARRAY_ELEMENT = 'key_test_bool_array'
 var mPreferences;
 var context;
 
@@ -35,6 +38,122 @@ describe('preferencesTest', function () {
     afterAll(async function () {
         console.info('afterAll')
         await data_preferences.deletePreferences(context, NAME);
+    })
+
+    /**
+     * @tc.name put StringArray promise interface test
+     * @tc.number SUB_DDM_AppDataFWK_JSPreferences_Preferences_0131
+     * @tc.desc put StringArray promise interface test
+     */
+    it('testPreferencesPutStringArray0131', 0, async function (done) {
+        await mPreferences.clear();
+        var stringArr = ['1', '2', '3']
+        let promise1 = mPreferences.put(KEY_TEST_STRING_ARRAY_ELEMENT, stringArr)
+        await promise1
+        let promise2 = mPreferences.get(KEY_TEST_STRING_ARRAY_ELEMENT, ['123', '321'])
+        promise2.then((pre) => {
+            for (let i = 0; i < stringArr.length; i++) {
+                expect(stringArr[i]).assertEqual(pre[i]);
+            }
+
+        }).catch((err) => {
+            expect(null).assertFail();
+        })
+        await promise2
+
+        done();
+    });
+
+    /**
+     * @tc.name put NumberArray promise interface test
+     * @tc.number SUB_DDM_AppDataFWK_JSPreferences_Preferences_0132
+     * @tc.desc put NumberArray promise interface test
+     */
+    it('testPreferencesPutNumberArray0132', 0, async function (done) {
+        await mPreferences.clear();
+        var numberArr = [11, 22, 33, 44, 55]
+        let promise1 = mPreferences.put(KEY_TEST_NUMBER_ARRAY_ELEMENT, numberArr)
+        await promise1
+        let promise2 = mPreferences.get(KEY_TEST_NUMBER_ARRAY_ELEMENT, [123, 321])
+        promise2.then((pre) => {
+            for (let i = 0; i < numberArr.length; i++) {
+                expect(numberArr[i]).assertEqual(pre[i]);
+            }
+        }).catch((err) => {
+            expect(null).assertFail();
+        })
+        await promise2
+
+        done();
+    });
+
+    /**
+     * @tc.name put BoolArray promise interface test
+     * @tc.number SUB_DDM_AppDataFWK_JSPreferences_Preferences_0133
+     * @tc.desc put BoolArray promise interface test
+     */
+    it('testPreferencesPutBoolArray0133', 0, async function (done) {
+        await mPreferences.clear();
+        var boolArr = [true, true, false]
+        let promise1 = mPreferences.put(KEY_TEST_BOOL_ARRAY_ELEMENT, boolArr)
+        await promise1
+        let promise2 = mPreferences.get(KEY_TEST_BOOL_ARRAY_ELEMENT, [false, true])
+        promise2.then((pre) => {
+            for (let i = 0; i < boolArr.length; i++) {
+                expect(boolArr[i]).assertEqual(pre[i]);
+            }
+        }).catch((err) => {
+            expect(null).assertFail();
+        })
+        await promise2
+
+        done();
+    });
+
+    /**
+     * @tc.name getAll promise interface test
+     * @tc.number SUB_DDM_AppDataFWK_JSPreferences_Preferences_0133
+     * @tc.desc getAll promise interface test
+     */
+    it('testPreferencesGetAll0001', 0, async function (done) {
+        await mPreferences.clear();
+        let doubleArr = [11, 22, 33]
+        let stringArr = ['11', '22', '33']
+        let boolArr = [true, false, false, true]
+        await mPreferences.put(KEY_TEST_STRING_ARRAY_ELEMENT, stringArr)
+        await mPreferences.put(KEY_TEST_BOOL_ARRAY_ELEMENT, boolArr)
+        await mPreferences.put(KEY_TEST_NUMBER_ARRAY_ELEMENT, doubleArr)
+        await mPreferences.put(KEY_TEST_BOOLEAN_ELEMENT, false)
+        await mPreferences.put(KEY_TEST_STRING_ELEMENT, "123")
+        await mPreferences.put(KEY_TEST_FLOAT_ELEMENT, 123.1)
+
+        await mPreferences.flush()
+
+        let promise = mPreferences.getAll()
+        promise.then((obj) => {
+            expect(false).assertEqual(obj.key_test_boolean)
+            expect("123").assertEqual(obj.key_test_string)
+            expect(123.1).assertEqual(obj.key_test_float)
+            let sArr = obj.key_test_string_array
+            for (let i = 0; i < sArr.length; i++) {
+                expect(sArr[i]).assertEqual(stringArr[i]);
+            }
+
+            let bArr = obj.key_test_bool_array
+            for (let i = 0; i < bArr.length; i++) {
+                expect(bArr[i]).assertEqual(boolArr[i]);
+            }
+
+            let nArr = obj.key_test_number_array
+            for (let i = 0; i < nArr.length; i++) {
+                expect(nArr[i]).assertEqual(doubleArr[i]);
+            }
+        }).catch((err) => {
+            expect(null).assertFail();
+        })
+        await promise
+
+        done();
     })
 
     /**

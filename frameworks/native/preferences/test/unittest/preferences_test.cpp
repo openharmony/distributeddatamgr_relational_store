@@ -501,8 +501,7 @@ HWTEST_F(PreferencesTest, NativePreferencesTest_015, TestSize.Level1)
  */
 HWTEST_F(PreferencesTest, NativePreferencesTest_016, TestSize.Level1)
 {
-    std::shared_ptr<PreferencesObserver> counter =
-        std::make_shared<PreferencesObserverCounter>();
+    std::shared_ptr<PreferencesObserver> counter = std::make_shared<PreferencesObserverCounter>();
     pref->RegisterObserver(counter);
 
     pref->PutString(PreferencesTest::KEY_TEST_STRING_ELEMENT, "test");
@@ -527,8 +526,7 @@ HWTEST_F(PreferencesTest, NativePreferencesTest_016, TestSize.Level1)
  */
 HWTEST_F(PreferencesTest, NativePreferencesTest_017, TestSize.Level1)
 {
-    std::shared_ptr<PreferencesObserver> counter =
-        std::make_shared<PreferencesObserverCounter>();
+    std::shared_ptr<PreferencesObserver> counter = std::make_shared<PreferencesObserverCounter>();
     pref->RegisterObserver(counter);
 
     pref->PutInt(PreferencesTest::KEY_TEST_INT_ELEMENT, 2);
@@ -594,4 +592,115 @@ HWTEST_F(PreferencesTest, NativePreferencesTest_019, TestSize.Level1)
 
     ret = pref->GetDouble(PreferencesTest::KEY_TEST_STRING_ELEMENT, 3.99);
     EXPECT_EQ(ret, 3.99);
+}
+
+/**
+ * @tc.name: NativePreferencesTest_020
+ * @tc.desc: normal testcase of GetDouble without defaultValue
+ * @tc.type: FUNC
+ * @tc.require: Na
+ * @tc.author: lijuntao
+ */
+HWTEST_F(PreferencesTest, NativePreferencesTest_020, TestSize.Level1)
+{
+    pref->PutDouble(PreferencesTest::KEY_TEST_DOUBLE_ELEMENT, (std::numeric_limits<double>::max)());
+    pref->Flush();
+
+    double ret = pref->GetDouble(PreferencesTest::KEY_TEST_DOUBLE_ELEMENT);
+    EXPECT_EQ(ret, (std::numeric_limits<double>::max)());
+}
+
+/**
+ * @tc.name: NativePreferencesTest_021
+ * @tc.desc: normal testcase of GetString without defaultValue
+ * @tc.type: FUNC
+ * @tc.require: Na
+ * @tc.author: lijuntao
+ */
+HWTEST_F(PreferencesTest, NativePreferencesTest_021, TestSize.Level1)
+{
+    pref->PutString(PreferencesTest::LONG_KEY, "test");
+    pref->PutString(PreferencesTest::KEY_TEST_STRING_ELEMENT, "test");
+    pref->Flush();
+
+    std::string ret = pref->GetString(PreferencesTest::LONG_KEY);
+    EXPECT_EQ(ret, "test");
+    ret = pref->GetString(PreferencesTest::KEY_TEST_STRING_ELEMENT);
+    EXPECT_EQ(ret, "test");
+}
+
+/**
+ * @tc.name: NativePreferencesTest_022
+ * @tc.desc: normal testcase of GetLong without defaultValue
+ * @tc.type: FUNC
+ * @tc.require: Na
+ * @tc.author: lijuntao
+ */
+HWTEST_F(PreferencesTest, NativePreferencesTest_022, TestSize.Level1)
+{
+    pref->PutLong(PreferencesTest::LONG_KEY, 3L);
+    pref->PutLong(PreferencesTest::KEY_TEST_LONG_ELEMENT, 3L);
+    pref->Flush();
+
+    int64_t ret = pref->GetLong(PreferencesTest::LONG_KEY);
+    EXPECT_EQ(ret, 3L);
+    ret = pref->GetLong(PreferencesTest::KEY_TEST_LONG_ELEMENT);
+    EXPECT_EQ(ret, 3L);
+}
+
+/**
+ * @tc.name: NativePreferencesTest_023
+ * @tc.desc: normal testcase of GetInt without defaultValue
+ * @tc.type: FUNC
+ * @tc.require: Na
+ * @tc.author: lijuntao
+ */
+HWTEST_F(PreferencesTest, NativePreferencesTest_023, TestSize.Level1)
+{
+    pref->PutInt(PreferencesTest::LONG_KEY, 3);
+    pref->PutInt(PreferencesTest::KEY_TEST_INT_ELEMENT, 3);
+    pref->Flush();
+
+    int32_t ret = pref->GetInt(PreferencesTest::LONG_KEY);
+    EXPECT_EQ(ret, 3);
+    ret = pref->GetInt(PreferencesTest::KEY_TEST_INT_ELEMENT);
+    EXPECT_EQ(ret, 3);
+}
+
+/**
+ * @tc.name: NativePreferencesTest_024
+ * @tc.desc: normal testcase of GetFloat without defaultValue
+ * @tc.type: FUNC
+ * @tc.require: Na
+ * @tc.author: lijuntao
+ */
+HWTEST_F(PreferencesTest, NativePreferencesTest_024, TestSize.Level1)
+{
+    pref->PutFloat(PreferencesTest::LONG_KEY, 3.0f);
+    pref->PutFloat(PreferencesTest::KEY_TEST_FLOAT_ELEMENT, 3.0f);
+    pref->Flush();
+
+    float ret = pref->GetFloat(PreferencesTest::LONG_KEY);
+    EXPECT_EQ(ret, 3.0f);
+    ret = pref->GetFloat(PreferencesTest::KEY_TEST_FLOAT_ELEMENT);
+    EXPECT_EQ(ret, 3.0f);
+}
+
+/**
+ * @tc.name: NativePreferencesTest_025
+ * @tc.desc: normal testcase of GetBool without defaultValue
+ * @tc.type: FUNC
+ * @tc.require: Na
+ * @tc.author: lijuntao
+ */
+HWTEST_F(PreferencesTest, NativePreferencesTest_025, TestSize.Level1)
+{
+    pref->PutBool(PreferencesTest::LONG_KEY, true);
+    pref->PutBool(PreferencesTest::KEY_TEST_BOOL_ELEMENT, true);
+    pref->Flush();
+
+    bool ret = pref->GetBool(PreferencesTest::LONG_KEY);
+    EXPECT_EQ(ret, true);
+    ret = pref->GetBool(PreferencesTest::KEY_TEST_BOOL_ELEMENT);
+    EXPECT_EQ(ret, true);
 }

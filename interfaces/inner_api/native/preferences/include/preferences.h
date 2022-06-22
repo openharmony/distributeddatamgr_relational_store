@@ -16,10 +16,10 @@
 #ifndef PREFERENCES_H
 #define PREFERENCES_H
 
-#include <string>
 #include <map>
-#include <vector>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "preferences_observer.h"
 #include "preferences_value.h"
@@ -28,7 +28,9 @@ namespace OHOS {
 namespace NativePreferences {
 class Preferences {
 public:
-    virtual ~Preferences() {}
+    virtual ~Preferences()
+    {
+    }
 
     static const unsigned int MAX_KEY_LENGTH = 80;
 
@@ -38,17 +40,17 @@ public:
 
     virtual int Put(const std::string &key, const PreferencesValue &value) = 0;
 
-    virtual int GetInt(const std::string &key, int defValue) = 0;
+    virtual int GetInt(const std::string &key, const int &defValue = {}) = 0;
 
-    virtual std::string GetString(const std::string &key, const std::string &defValue) = 0;
+    virtual std::string GetString(const std::string &key, const std::string &defValue = {}) = 0;
 
-    virtual bool GetBool(const std::string &key, bool defValue) = 0;
+    virtual bool GetBool(const std::string &key, const bool &defValue = {}) = 0;
 
-    virtual float GetFloat(const std::string &key, float defValue) = 0;
+    virtual float GetFloat(const std::string &key, const float &defValue = {}) = 0;
 
-    virtual double GetDouble(const std::string &key, double defValue) = 0;
+    virtual double GetDouble(const std::string &key, const double &defValue = {}) = 0;
 
-    virtual int64_t GetLong(const std::string &key, int64_t defValue) = 0;
+    virtual int64_t GetLong(const std::string &key, const int64_t &defValue = {}) = 0;
 
     virtual std::map<std::string, PreferencesValue> GetAll() = 0;
 
