@@ -44,7 +44,7 @@ public:
 
     int Put(const std::string &key, const PreferencesValue &value) override;
 
-    int GetInt(const std::string &key, int defValue) override
+    int GetInt(const std::string &key, const int &defValue) override
     {
         PreferencesValue preferencesValue = Get(key, defValue);
         if (!preferencesValue.IsInt()) {
@@ -62,7 +62,7 @@ public:
         return preferencesValue;
     }
 
-    bool GetBool(const std::string &key, bool defValue) override
+    bool GetBool(const std::string &key, const bool &defValue) override
     {
         PreferencesValue preferencesValue = Get(key, defValue);
         if (!preferencesValue.IsBool()) {
@@ -71,7 +71,7 @@ public:
         return preferencesValue;
     }
 
-    float GetFloat(const std::string &key, float defValue) override
+    float GetFloat(const std::string &key, const float &defValue) override
     {
         PreferencesValue preferencesValue = Get(key, defValue);
         if (!preferencesValue.IsFloat()) {
@@ -80,7 +80,7 @@ public:
         return preferencesValue;
     }
 
-    double GetDouble(const std::string &key, double defValue) override
+    double GetDouble(const std::string &key, const double &defValue) override
     {
         PreferencesValue preferencesValue = Get(key, defValue);
         if (!preferencesValue.IsDouble()) {
@@ -89,7 +89,7 @@ public:
         return preferencesValue;
     }
 
-    int64_t GetLong(const std::string &key, int64_t defValue) override
+    int64_t GetLong(const std::string &key, const int64_t &defValue) override
     {
         PreferencesValue preferencesValue = Get(key, defValue);
         if (!preferencesValue.IsLong()) {
