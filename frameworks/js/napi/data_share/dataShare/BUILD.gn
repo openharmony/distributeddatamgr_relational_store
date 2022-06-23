@@ -32,9 +32,9 @@ ohos_shared_library("datashare") {
   ]
 
   deps = [
-    "${aafwk_inner_api_path}/dataobs_manager:dataobs_manager",
+    "${ability_runtime_inner_api_path}/dataobs_manager:dataobs_manager",
     "${datashare_common_native_path}:datashare_common",
-    "//foundation/ability/ability_runtime/frameworks/js/napi/aafwk/inner/napi_common:napi_common",
+    "${ability_runtime_napi_path}/inner/napi_common:napi_common",
     "//third_party/libuv:uv",
   ]
 
