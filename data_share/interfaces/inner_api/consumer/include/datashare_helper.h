@@ -22,7 +22,7 @@
 
 #include "context.h"
 #include "datashare_connection.h"
-#include "foundation/ability/ability_runtime/frameworks/kits/appkit/native/ability_runtime/context/context.h"
+#include "foundation/ability/ability_runtime/interfaces/kits/native/appkit/ability_runtime/context/context.h"
 #include "idatashare.h"
 #include "uri.h"
 #include "datashare_operation.h"
