@@ -22,6 +22,9 @@ const KEY_TEST_LONG_ELEMENT = 'key_test_long';
 const KEY_TEST_FLOAT_ELEMENT = 'key_test_float';
 const KEY_TEST_BOOLEAN_ELEMENT = 'key_test_boolean';
 const KEY_TEST_STRING_ELEMENT = 'key_test_string';
+const KEY_TEST_NUMBER_ARRAY_ELEMENT = 'key_test_number_array';
+const KEY_TEST_STRING_ARRAY_ELEMENT = 'key_test_string_array';
+const KEY_TEST_BOOL_ARRAY_ELEMENT = 'key_test_bool_array';
 var mPreferences;
 var context;
 
@@ -313,5 +316,101 @@ describe('preferencesTest', function () {
                 })
             });
         });
+    })
+
+    /**
+     * @tc.name put StringArray callback interface test
+     * @tc.number SUB_DDM_AppDataFWK_JSPreferences_CallBack_0001
+     * @tc.desc put String callback interface test
+     */
+    it('testPreferencesPutStringArray0001', 0, async function (done) {
+        await mPreferences.clear();
+        var stringArr = ['11', '22', '33']
+        await mPreferences.put(KEY_TEST_STRING_ARRAY_ELEMENT, stringArr, async function (err, ret) {
+            let pre = await mPreferences.get(KEY_TEST_STRING_ARRAY_ELEMENT, ['123', '321'])
+            for (let i = 0; i < stringArr.length; i++) {
+                expect(stringArr[i]).assertEqual(pre[i]);
+            }
+
+            done();
+        });
+    })
+
+    /**
+     * @tc.name put NumberArray callback interface test
+     * @tc.number SUB_DDM_AppDataFWK_JSPreferences_CallBack_0002
+     * @tc.desc put String callback interface test
+     */
+    it('testPreferencesPutNumArray0001', 0, async function (done) {
+        await mPreferences.clear();
+        var doubleArr = [11, 22, 33]
+        await mPreferences.put(KEY_TEST_NUMBER_ARRAY_ELEMENT, doubleArr, async function (err, ret) {
+            let pre = await mPreferences.get(KEY_TEST_NUMBER_ARRAY_ELEMENT, [123, 321])
+            for (let i = 0; i < doubleArr.length; i++) {
+                expect(doubleArr[i]).assertEqual(pre[i]);
+            }
+
+            done();
+        });
+    })
+
+    /**
+     * @tc.name put BoolArray callback interface test
+     * @tc.number SUB_DDM_AppDataFWK_JSPreferences_CallBack_0003
+     * @tc.desc put String callback interface test
+     */
+    it('testPreferencesPutBoolArray0001', 0, async function (done) {
+        await mPreferences.clear();
+        let boolArr = [true, false, false, true]
+        await mPreferences.put(KEY_TEST_BOOL_ARRAY_ELEMENT, boolArr, async function (err, ret) {
+            let pre = await mPreferences.get(KEY_TEST_BOOL_ARRAY_ELEMENT, [true, false])
+            for (let i = 0; i < boolArr.length; i++) {
+                expect(boolArr[i]).assertEqual(pre[i]);
+            }
+
+            done();
+        });
+    })
+
+    /**
+     * @tc.name getAll callback interface test
+     * @tc.number SUB_DDM_AppDataFWK_JSPreferences_CallBack_0004
+     * @tc.desc getAll callback interface test
+     */
+    it('testPreferencesGetAll0001', 0, async function (done) {
+        await mPreferences.clear();
+        let doubleArr = [11, 22, 33]
+        let stringArr = ['11', '22', '33']
+        let boolArr = [true, false, false, true]
+        await mPreferences.put(KEY_TEST_STRING_ARRAY_ELEMENT, stringArr)
+        await mPreferences.put(KEY_TEST_BOOL_ARRAY_ELEMENT, boolArr)
+        await mPreferences.put(KEY_TEST_NUMBER_ARRAY_ELEMENT, doubleArr)
+        await mPreferences.put(KEY_TEST_BOOLEAN_ELEMENT, false)
+        await mPreferences.put(KEY_TEST_STRING_ELEMENT, "123")
+        await mPreferences.put(KEY_TEST_FLOAT_ELEMENT, 123.1)
+
+        await mPreferences.flush()
+
+        await mPreferences.getAll(function (err, obj) {
+            expect(false).assertEqual(obj.key_test_boolean)
+            expect("123").assertEqual(obj.key_test_string)
+            expect(123.1).assertEqual(obj.key_test_float)
+            let sArr = obj.key_test_string_array
+            for (let i = 0; i < sArr.length; i++) {
+                expect(sArr[i]).assertEqual(stringArr[i]);
+            }
+
+            let bArr = obj.key_test_bool_array
+            for (let i = 0; i < bArr.length; i++) {
+                expect(bArr[i]).assertEqual(boolArr[i]);
+            }
+
+            let nArr = obj.key_test_number_array
+            for (let i = 0; i < nArr.length; i++) {
+                expect(nArr[i]).assertEqual(doubleArr[i]);
+            }
+
+            done()
+        })
     })
 })
