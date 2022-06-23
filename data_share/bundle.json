@@ -1,0 +1,108 @@
+{
+    "name": "@ohos/distributeddatamgr_appdatamgr",
+    "version": "3.1.0",
+    "description": "Local Data Management",
+    "homePage": "https://gitee.com/openharmony",
+    "license": "Apache V2",
+    "repository": "https://gitee.com/openharmony/distributeddatamgr_appdatamgr",
+    "domain": "os",
+    "language": "",
+    "publishAs": "code-segment",
+    "private": false,
+    "scripts": {},
+    "tags": [
+        "foundation"
+    ],
+    "keywords": [
+        "distributeddatamgr",
+        "appdatamgr"
+    ],
+    "envs": [],
+    "dirs": {},
+    "author": {
+        "name": "",
+        "email": "",
+        "url": ""
+    },
+    "contributors": [
+        {
+            "name": "",
+            "email": "",
+            "url": ""
+        }
+    ],
+    "segment": {
+        "destPath": "foundation/distributeddatamgr/appdatamgr"
+    },
+    "component": {
+        "name": "data_share",
+        "subsystem": "distributeddatamgr",
+        "syscap": [
+            "SystemCapability.DistributedDataManager.DataShare.Core",
+            "SystemCapability.DistributedDataManager.DataShare.Consumer",
+            "SystemCapability.DistributedDataManager.DataShare.Provider"
+        ],
+        "features": [],
+        "adapted_system_type": [
+            "standard"
+        ],
+        "rom": "",
+        "ram": "",
+        "deps": {
+            "components": [
+                "ability_base",
+                "ability_runtime",
+                "want",
+                "libhilog",
+                "ipc_core",
+                "ace_napi",
+                "samgr_proxy"
+            ],
+            "third_party": []
+        },
+        "build": {
+            "sub_component": [
+                "//foundation/distributeddatamgr/appdatamgr/data_share/interfaces/inner_api:datashare_abilitykit",
+                "//foundation/distributeddatamgr/appdatamgr/data_share/interfaces/inner_api:datashare_ext_ability_module",
+                "//foundation/distributeddatamgr/appdatamgr/data_share/frameworks/js/napi:datashare_napi_packages",
+                "//foundation/distributeddatamgr/appdatamgr/data_share/interfaces/inner_api/common:datashare_common"
+            ],
+            "inner_kits": [
+                {
+                    "name": "//foundation/distributeddatamgr/appdatamgr/data_share/interfaces/inner_api:datashare_abilitykit",
+                    "header": {
+                        "header_files": [
+                            "datashare_helper.h",
+                            "datashare_result_set.h"
+                        ],
+                        "header_base": "//foundation/distributeddatamgr/appdatamgr/data_share/interfaces/inner_api/consumer/include"
+                    }
+                },
+                {
+                    "name": "//foundation/distributeddatamgr/appdatamgr/data_share/interfaces/inner_api:datashare_abilitykit",
+                    "header": {
+                        "header_files": [
+                            "result_set_bridge.h"
+                        ],
+                        "header_base": "//foundation/distributeddatamgr/appdatamgr/data_share/interfaces/inner_api/provider/include"
+                    }
+                },
+                {
+                    "name": "//foundation/distributeddatamgr/appdatamgr/data_share/interfaces/inner_api/common:datashare_common",
+                    "header": {
+                        "header_files": [
+                            "datashare_errno.h",
+                            "datashare_abs_predicates.h",
+                            "datashare_predicates_def.h",
+                            "datashare_predicates_object.h",
+                            "datashare_predicates.h",
+                            "datashare_value_object.h",
+                            "datashare_values_bucket.h"
+                        ],
+                        "header_base": "//foundation/distributeddatamgr/appdatamgr/data_share/interfaces/inner_api/common/include"
+                    }
+                }
+            ]
+        }
+    }
+}
