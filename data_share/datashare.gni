@@ -18,6 +18,8 @@ aafwk_kits_path = "//foundation/ability/ability_runtime/frameworks/kits"
 
 aafwk_services_path = "//foundation/ability/ability_runtime/services"
 
+aafwk_path = "//foundation/ability/ability_runtime"
+
 datashare_base_path = "//foundation/distributeddatamgr/appdatamgr/data_share"
 
 datashare_common_native_path = "${datashare_base_path}/frameworks/native/common"
