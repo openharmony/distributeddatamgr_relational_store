@@ -292,6 +292,7 @@ describe('rdbStoreInsertTest', function () {
                 const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
                 const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
                 expect(nameStr).assertEqual(name)
+                expect(2012).assertEqual(name.length)
                 expect(28).assertEqual(age)
                 expect(100.5).assertEqual(salary)
                 expect(1).assertEqual(blobType[0])
