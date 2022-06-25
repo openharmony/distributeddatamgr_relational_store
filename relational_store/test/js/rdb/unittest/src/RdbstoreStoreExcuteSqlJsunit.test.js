@@ -263,7 +263,9 @@ describe('rdbStoreInsertTest', function () {
             await insertPromise
         }
         {
-            let querySqlPromise = rdbStore.querySql("SELECT * FROM test WHERE name ='" + nameStr + "'")
+            let predicates = await new dataRdb.RdbPredicates("test")
+            predicates.equalTo("name", nameStr)
+            let querySqlPromise = rdbStore.query(predicates)
             querySqlPromise.then(async (resultSet) => {
                 await expect(2).assertEqual(resultSet.rowCount)
             }).catch((err) => {
@@ -284,6 +286,15 @@ describe('rdbStoreInsertTest', function () {
             let querySqlPromise = rdbStore.querySql("SELECT * FROM test WHERE name ='" + nameStr + "'")
             querySqlPromise.then(async (resultSet) => {
                 await expect(1).assertEqual(resultSet.rowCount)
+                expect(true).assertEqual(resultSet.goToFirstRow())
+                const name = resultSet.getString(resultSet.getColumnIndex("name"))
+                const age = resultSet.getLong(resultSet.getColumnIndex("age"))
+                const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                expect(nameStr).assertEqual(name)
+                expect(28).assertEqual(age)
+                expect(100.5).assertEqual(salary)
+                expect(1).assertEqual(blobType[0])
             }).catch((err) => {
                 expect(null).assertFail();
             })
