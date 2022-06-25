@@ -15,7 +15,7 @@
 */
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
 import data_preferences from '@ohos.data.preferences'
-import featureAbility from '@ohos.ability.FeatureAbility';
+import featureAbility from '@ohos.ability.featureAbility';
 
 const NAME = 'test_preferences';
 const KEY_TEST_STRING_ELEMENT = 'key_test_string';
