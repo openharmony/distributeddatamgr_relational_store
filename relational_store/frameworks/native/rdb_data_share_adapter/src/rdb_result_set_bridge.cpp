@@ -160,10 +160,17 @@ bool RdbResultSetBridge::WriteBlobData(int column, Writer &writer)
     }
     size_t size = blobValue.size() * sizeof(uint8_t);
     uint8_t *value = (uint8_t *)malloc(size);
-    if (memcpy_s(value, size, &blobValue[0], size) != EOK) {
+    if (!value) {
+        LOG_ERROR("%s: malloc failed.", __func__);
         return false;
     }
-    return writer.Write(column, value, size);
+    if (memcpy_s(value, size, &blobValue[0], size) != EOK) {
+        free(value);
+        return false;
+    }
+    int ret = writer.Write(column, value, size);
+    free(value);
+    return ret;
 }
 } // namespace RdbDataShareAdapter
 } // namespace OHOS
