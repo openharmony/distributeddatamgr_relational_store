@@ -12,8 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import(
-    "//foundation/distributeddatamgr/appdatamgr/data_share/datashare.gni")
+import("//foundation/distributeddatamgr/appdatamgr/data_share/datashare.gni")
 
 ohos_shared_library("datashare") {
   include_dirs = [
@@ -33,7 +32,7 @@ ohos_shared_library("datashare") {
 
   deps = [
     "${ability_runtime_inner_api_path}/dataobs_manager:dataobs_manager",
-    "${datashare_common_native_path}:datashare_common",
+    "${datashare_innerapi_path}/common:datashare_common",
     "${ability_runtime_napi_path}/inner/napi_common:napi_common",
     "//third_party/libuv:uv",
   ]

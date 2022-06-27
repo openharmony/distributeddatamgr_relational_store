@@ -12,8 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import(
-    "//foundation/distributeddatamgr/appdatamgr/data_share/datashare.gni")
+import("//foundation/distributeddatamgr/appdatamgr/data_share/datashare.gni")
 
 config("ability_config") {
   visibility = [ ":*" ]
@@ -73,9 +72,9 @@ ohos_shared_library("datashare_abilitykit") {
 
   deps = [
     "${ability_runtime_inner_api_path}/dataobs_manager:dataobs_manager",
-    "${ability_runtime_kits_path}/ability/native:abilitykit_native",
-    "${ability_runtime_kits_path}/appkit:app_context",
-    "${datashare_common_native_path}:datashare_common",
+    "${ability_runtime_path}/frameworks/native/ability/native:abilitykit_native",
+    "${ability_runtime_path}/frameworks/native/appkit:app_context",
+    "${datashare_innerapi_path}/common:datashare_common",
   ]
 
   external_deps = [
@@ -113,7 +112,7 @@ ohos_shared_library("datashare_ext_ability_module") {
 
   deps = [
     ":datashare_abilitykit",
-    "${ability_runtime_kits_path}/ability/native:abilitykit_native",
+    "${ability_runtime_path}/frameworks/native/ability/native:abilitykit_native",
     "//foundation/bundlemanager/bundle_framework/common:libappexecfwk_common",
   ]
 
