@@ -16,7 +16,7 @@ import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from '
 import dataRdb from '@ohos.data.rdb';
 
 const TAG = "[RDB_JSKITS_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
 const STORE_CONFIG = {
     name: "ExcuteSqlTest.db",
@@ -212,6 +212,7 @@ describe('rdbStoreInsertTest', function () {
     it('ExcuteSqlTest0003', 0, async function (done) {
         console.log(TAG + "************* ExcuteSqlTest0003 start *************");
         var u8 = new Uint8Array([3, 4, 5])
+        var nameStr = "lisi" + "e".repeat(2000) + "zhangsan"
         //插入
         {
             const valueBucket = {
@@ -231,7 +232,7 @@ describe('rdbStoreInsertTest', function () {
         }
         {
             const valueBucket = {
-                "name": "lisi",
+                "name": nameStr,
                 "age": 19,
                 "salary": 100.5,
                 "blobType": u8,
@@ -247,7 +248,7 @@ describe('rdbStoreInsertTest', function () {
         }
         {
             const valueBucket = {
-                "name": "lisi",
+                "name": nameStr,
                 "age": 28,
                 "salary": 100.5,
                 "blobType": u8,
@@ -255,6 +256,106 @@ describe('rdbStoreInsertTest', function () {
             let insertPromise = rdbStore.insert("test", valueBucket)
             insertPromise.then(async (ret) => {
                 expect(9).assertEqual(ret);
+                await console.log(TAG + "insert done: " + ret);
+            }).catch((err) => {
+                expect(null).assertFail();
+            })
+            await insertPromise
+        }
+        {
+            let predicates = await new dataRdb.RdbPredicates("test")
+            predicates.equalTo("name", nameStr)
+            let querySqlPromise = rdbStore.query(predicates)
+            querySqlPromise.then(async (resultSet) => {
+                await expect(2).assertEqual(resultSet.rowCount)
+            }).catch((err) => {
+                expect(null).assertFail();
+            })
+            await querySqlPromise
+        }
+        {
+            let executeSqlPromise = rdbStore.executeSql("DELETE FROM test WHERE age = 19 AND name ='" + nameStr + "'")
+            executeSqlPromise.then(async () => {
+                await console.log(TAG + "executeSql done." );
+            }).catch((err) => {
+                expect(null).assertFail();
+            })
+            await executeSqlPromise
+        }
+        {
+            let querySqlPromise = rdbStore.querySql("SELECT * FROM test WHERE name ='" + nameStr + "'")
+            querySqlPromise.then(async (resultSet) => {
+                await expect(1).assertEqual(resultSet.rowCount)
+                expect(true).assertEqual(resultSet.goToFirstRow())
+                const name = resultSet.getString(resultSet.getColumnIndex("name"))
+                const age = resultSet.getLong(resultSet.getColumnIndex("age"))
+                const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                expect(nameStr).assertEqual(name)
+                expect(2012).assertEqual(name.length)
+                expect(28).assertEqual(age)
+                expect(100.5).assertEqual(salary)
+                expect(1).assertEqual(blobType[0])
+            }).catch((err) => {
+                expect(null).assertFail();
+            })
+            await querySqlPromise
+        }
+        done();
+        console.log(TAG + "************* ExcuteSqlTest0003 end   *************");
+    })
+
+    /**
+     * @tc.name resultSet ExcuteSql normal test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExcuteSql_0040
+     * @tc.desc resultSet ExcuteSql normal test
+     */
+    it('ExcuteSqlTest0004', 0, async function (done) {
+        console.log(TAG + "************* ExcuteSqlTest0004 start *************");
+        var u8 = new Uint8Array([3, 4, 5])
+        //插入
+        {
+            const valueBucket = {
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            let insertPromise = rdbStore.insert("test", valueBucket)
+            insertPromise.then(async (ret) => {
+                expect(10).assertEqual(ret);
+                await console.log(TAG + "insert done: " + ret);
+            }).catch((err) => {
+                expect(null).assertFail();
+            })
+            await insertPromise
+        }
+        {
+            const valueBucket = {
+                "name": "lisi",
+                "age": 19,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            let insertPromise = rdbStore.insert("test", valueBucket)
+            insertPromise.then(async (ret) => {
+                expect(11).assertEqual(ret);
+                await console.log(TAG + "insert done: " + ret);
+            }).catch((err) => {
+                expect(null).assertFail();
+            })
+            await insertPromise
+        }
+        {
+            const valueBucket = {
+                "name": "lisi",
+                "age": 28,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            let insertPromise = rdbStore.insert("test", valueBucket)
+            insertPromise.then(async (ret) => {
+                expect(12).assertEqual(ret);
                 await console.log(TAG + "insert done: " + ret);
             }).catch((err) => {
                 expect(null).assertFail();
@@ -271,7 +372,9 @@ describe('rdbStoreInsertTest', function () {
             await QuerySqlPromise
         }
         done();
-        console.log(TAG + "************* ExcuteSqlTest0003 end   *************");
+        console.log(TAG + "************* ExcuteSqlTest0004 end   *************");
     })
+
+
     console.log(TAG + "*************Unit Test End*************");
 })
