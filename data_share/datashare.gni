@@ -13,8 +13,7 @@
 
 ability_runtime_path = "//foundation/ability/ability_runtime"
 
-ability_runtime_inner_api_path =
-    "${ability_runtime_path}/interfaces/inner_api"
+ability_runtime_inner_api_path = "${ability_runtime_path}/interfaces/inner_api"
 
 ability_runtime_kits_path = "${ability_runtime_path}/frameworks/kits"
 
