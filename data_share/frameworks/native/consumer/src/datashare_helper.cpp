@@ -15,15 +15,10 @@
 
 #include "datashare_helper.h"
 
-#include "ability_scheduler_interface.h"
-#include "ability_thread.h"
 #include "datashare_result_set.h"
 #include "data_ability_observer_interface.h"
-#include "data_ability_operation.h"
-#include "data_ability_predicates.h"
 #include "datashare_log.h"
 #include "idatashare.h"
-#include "values_bucket.h"
 
 namespace OHOS {
 namespace DataShare {
@@ -34,37 +29,15 @@ constexpr int INVALID_VALUE = -1;
 }  // namespace
 
 std::mutex DataShareHelper::oplock_;
-DataShareHelper::DataShareHelper(const std::shared_ptr<Context> &context,
-    const Uri &uri, const sptr<IDataShare> &dataShareProxy)
-{
-    LOG_INFO("DataShareHelper::DataShareHelper start");
-    token_ = context->GetToken();
-    context_ = std::shared_ptr<Context>(context);
-    uri_ = uri;
-    dataShareProxy_ = dataShareProxy;
-    dataShareConnection_ = DataShareConnection::GetInstance();
-    LOG_INFO("DataShareHelper::DataShareHelper end");
-}
-
-DataShareHelper::DataShareHelper(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
-    const Uri &uri, const sptr<IDataShare> &dataShareProxy)
-{
-    LOG_INFO("DataShareHelper::DataShareHelper start");
-    token_ = context->GetToken();
-    uri_ = uri;
-    dataShareProxy_ = dataShareProxy;
-    dataShareConnection_ = DataShareConnection::GetInstance();
-    LOG_INFO("DataShareHelper::DataShareHelper end");
-}
 
 DataShareHelper::DataShareHelper(const sptr<IRemoteObject> &token,
-    const Uri &uri, const sptr<IDataShare> &dataShareProxy)
+    const Uri &uri, const sptr<IDataShare> &dataShareProxy, sptr<DataShareConnection> dataShareConnection)
 {
     LOG_INFO("DataShareHelper::DataShareHelper start");
     token_ = token;
     uri_ = uri;
     dataShareProxy_ = dataShareProxy;
-    dataShareConnection_ = DataShareConnection::GetInstance();
+    dataShareConnection_ = dataShareConnection;
     LOG_INFO("DataShareHelper::DataShareHelper end");
 }
 
@@ -113,35 +86,8 @@ std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
         LOG_ERROR("DataShareHelper::Creator failed, context == nullptr");
         return nullptr;
     }
-
-    Uri uri(strUri);
-    if (uri.GetScheme() != SCHEME_DATASHARE) {
-        LOG_ERROR("DataShareHelper::Creator failed, the Scheme is not datashare, Scheme: %{public}s",
-            uri.GetScheme().c_str());
-        return nullptr;
-    }
-
-    LOG_INFO("DataShareHelper::Creator before ConnectDataShareExtAbility.");
-    sptr<IDataShare> dataShareProxy = nullptr;
-
-    sptr<DataShareConnection> dataShareConnection = DataShareConnection::GetInstance();
-    if (!dataShareConnection->IsExtAbilityConnected()) {
-        dataShareConnection->ConnectDataShareExtAbility(uri, context->GetToken());
-    }
-    dataShareProxy = dataShareConnection->GetDataShareProxy();
-    if (dataShareProxy == nullptr) {
-        LOG_WARN("DataShareHelper::Creator get invalid dataShareProxy");
-    }
-    LOG_INFO("DataShareHelper::Creator after ConnectDataShareExtAbility.");
-
-    DataShareHelper *ptrDataShareHelper = new (std::nothrow) DataShareHelper(context, uri, dataShareProxy);
-    if (ptrDataShareHelper == nullptr) {
-        LOG_ERROR("DataShareHelper::Creator failed, create DataShareHelper failed");
-        return nullptr;
-    }
-
-    LOG_INFO("DataShareHelper::Creator with context, want and uri called end.");
-    return std::shared_ptr<DataShareHelper>(ptrDataShareHelper);
+    sptr<IRemoteObject> token = context->GetToken();
+    return Creator(token, strUri);
 }
 
 /**
@@ -162,34 +108,8 @@ std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
         LOG_ERROR("DataShareHelper::Creator failed, context == nullptr");
         return nullptr;
     }
-    Uri uri(strUri);
-    if (uri.GetScheme() != SCHEME_DATASHARE) {
-        LOG_ERROR("DataShareHelper::Creator failed, the Scheme is not datashare, Scheme: %{public}s",
-            uri.GetScheme().c_str());
-        return nullptr;
-    }
-
-    LOG_INFO("DataShareHelper::Creator before ConnectDataShareExtAbility.");
-    sptr<IDataShare> dataShareProxy = nullptr;
-
-    sptr<DataShareConnection> dataShareConnection = DataShareConnection::GetInstance();
-    if (!dataShareConnection->IsExtAbilityConnected()) {
-        dataShareConnection->ConnectDataShareExtAbility(uri, context->GetToken());
-    }
-    dataShareProxy = dataShareConnection->GetDataShareProxy();
-    if (dataShareProxy == nullptr) {
-        LOG_WARN("DataShareHelper::Creator get invalid dataShareProxy");
-    }
-    LOG_INFO("DataShareHelper::Creator after ConnectDataShareExtAbility.");
-
-    DataShareHelper *ptrDataShareHelper = new (std::nothrow) DataShareHelper(context, uri, dataShareProxy);
-    if (ptrDataShareHelper == nullptr) {
-        LOG_ERROR("DataShareHelper::Creator failed, create DataShareHelper failed");
-        return nullptr;
-    }
-
-    LOG_INFO("DataShareHelper::Creator with runtime context and uri called end.");
-    return std::shared_ptr<DataShareHelper>(ptrDataShareHelper);
+    sptr<IRemoteObject> token = context->GetToken();
+    return Creator(token, strUri);
 }
 
 /**
@@ -205,6 +125,11 @@ std::shared_ptr<DataShareHelper> DataShareHelper::Creator(
 std::shared_ptr<DataShareHelper> DataShareHelper::Creator(const sptr<IRemoteObject> &token, const std::string &strUri)
 {
     LOG_INFO("DataShareHelper::Creator with runtime token and uri called start.");
+    if (token == nullptr) {
+        LOG_ERROR("DataShareHelper::Creator failed, token == nullptr");
+        return nullptr;
+    }
+
     Uri uri(strUri);
     if (uri.GetScheme() != SCHEME_DATASHARE) {
         LOG_ERROR("DataShareHelper::Creator failed, the Scheme is not datashare, Scheme: %{public}s",
@@ -213,25 +138,31 @@ std::shared_ptr<DataShareHelper> DataShareHelper::Creator(const sptr<IRemoteObje
     }
 
     LOG_INFO("DataShareHelper::Creator before ConnectDataShareExtAbility.");
-    sptr<IDataShare> dataShareProxy = nullptr;
-
-    sptr<DataShareConnection> dataShareConnection = DataShareConnection::GetInstance();
+    sptr<DataShareConnection> dataShareConnection = new (std::nothrow) DataShareConnection(uri);
     if (!dataShareConnection->IsExtAbilityConnected()) {
         dataShareConnection->ConnectDataShareExtAbility(uri, token);
     }
-    dataShareProxy = dataShareConnection->GetDataShareProxy();
+    sptr<IDataShare> dataShareProxy = dataShareConnection->GetDataShareProxy();
     if (dataShareProxy == nullptr) {
-        LOG_WARN("DataShareHelper::Creator get invalid dataShareProxy");
+        LOG_ERROR("DataShareHelper::Creator get invalid dataShareProxy");
+        if (dataShareConnection->IsExtAbilityConnected()) {
+            dataShareConnection->DisconnectDataShareExtAbility();
+        }
+        return nullptr;
     }
     LOG_INFO("DataShareHelper::Creator after ConnectDataShareExtAbility.");
 
-    DataShareHelper *ptrDataShareHelper = new (std::nothrow) DataShareHelper(token, uri, dataShareProxy);
+    DataShareHelper *ptrDataShareHelper =
+        new (std::nothrow) DataShareHelper(token, uri, dataShareProxy, dataShareConnection);
     if (ptrDataShareHelper == nullptr) {
         LOG_ERROR("DataShareHelper::Creator failed, create DataShareHelper failed");
+        if (dataShareConnection->IsExtAbilityConnected()) {
+            dataShareConnection->DisconnectDataShareExtAbility();
+        }
         return nullptr;
     }
 
-    LOG_INFO("DataShareHelper::Creator with runtime token and uri called end.");
+    LOG_INFO("DataShareHelper::Creator out.");
     return std::shared_ptr<DataShareHelper>(ptrDataShareHelper);
 }
 
@@ -250,6 +181,7 @@ bool DataShareHelper::Release()
     }
     LOG_INFO("DataShareHelper::Release after DisconnectDataShareExtAbility.");
     dataShareProxy_ = nullptr;
+    dataShareConnection_ = nullptr;
     uri_ = Uri("");
     LOG_INFO("DataShareHelper::Release end.");
     return true;
@@ -272,21 +204,13 @@ std::vector<std::string> DataShareHelper::GetFileTypes(Uri &uri, const std::stri
         return matchedMIMEs;
     }
 
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::GetFileTypes before ConnectDataShareExtAbility.");
-        if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
-        }
-        dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
-        LOG_INFO("DataShareHelper::GetFileTypes after ConnectDataShareExtAbility.");
-        if (isSystemCaller_ && dataShareProxy_) {
-            AddDataShareDeathRecipient(dataShareProxy_->AsObject());
-        }
-    } else {
+    if (dataShareProxy_ == nullptr) {
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
     }
 
-    if (dataShareProxy_ == nullptr) {
+    if (dataShareProxy_) {
+        AddDataShareDeathRecipient(dataShareProxy_->AsObject());
+    } else {
         LOG_ERROR("%{public}s failed with invalid dataShareProxy_", __func__);
         return matchedMIMEs;
     }
@@ -294,14 +218,6 @@ std::vector<std::string> DataShareHelper::GetFileTypes(Uri &uri, const std::stri
     LOG_INFO("DataShareHelper::GetFileTypes before dataShareProxy_->GetFileTypes.");
     matchedMIMEs = dataShareProxy_->GetFileTypes(uri, mimeTypeFilter);
     LOG_INFO("DataShareHelper::GetFileTypes after dataShareProxy_->GetFileTypes.");
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::GetFileTypes before DisconnectDataShareExtAbility.");
-        if (dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->DisconnectDataShareExtAbility();
-        }
-        LOG_INFO("DataShareHelper::GetFileTypes after DisconnectDataShareExtAbility.");
-        dataShareProxy_ = nullptr;
-    }
 
     LOG_INFO("DataShareHelper::GetFileTypes end.");
     return matchedMIMEs;
@@ -327,21 +243,13 @@ int DataShareHelper::OpenFile(Uri &uri, const std::string &mode)
         return fd;
     }
 
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::OpenFile before ConnectDataShareExtAbility.");
-        if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
-        }
-        dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
-        LOG_INFO("DataShareHelper::OpenFile after ConnectDataShareExtAbility.");
-        if (isSystemCaller_ && dataShareProxy_) {
-            AddDataShareDeathRecipient(dataShareProxy_->AsObject());
-        }
-    } else {
+    if (dataShareProxy_ == nullptr) {
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
     }
 
-    if (dataShareProxy_ == nullptr) {
+    if (dataShareProxy_) {
+        AddDataShareDeathRecipient(dataShareProxy_->AsObject());
+    } else {
         LOG_ERROR("%{public}s failed with invalid dataShareProxy_", __func__);
         return fd;
     }
@@ -349,14 +257,7 @@ int DataShareHelper::OpenFile(Uri &uri, const std::string &mode)
     LOG_INFO("DataShareHelper::OpenFile before dataShareProxy_->OpenFile.");
     fd = dataShareProxy_->OpenFile(uri, mode);
     LOG_INFO("DataShareHelper::OpenFile after dataShareProxy_->OpenFile.");
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::OpenFile before DisconnectDataShareExtAbility.");
-        if (dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->DisconnectDataShareExtAbility();
-        }
-        LOG_INFO("DataShareHelper::OpenFile after DisconnectDataShareExtAbility.");
-        dataShareProxy_ = nullptr;
-    }
+
     LOG_INFO("DataShareHelper::OpenFile end.");
     return fd;
 }
@@ -382,21 +283,13 @@ int DataShareHelper::OpenRawFile(Uri &uri, const std::string &mode)
         return fd;
     }
 
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::OpenRawFile before ConnectDataShareExtAbility.");
-        if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
-        }
-        dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
-        LOG_INFO("DataShareHelper::OpenRawFile after ConnectDataShareExtAbility.");
-        if (isSystemCaller_ && dataShareProxy_) {
-            AddDataShareDeathRecipient(dataShareProxy_->AsObject());
-        }
-    } else {
+    if (dataShareProxy_ == nullptr) {
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
     }
 
-    if (dataShareProxy_ == nullptr) {
+    if (dataShareProxy_) {
+        AddDataShareDeathRecipient(dataShareProxy_->AsObject());
+    } else {
         LOG_ERROR("%{public}s failed with invalid dataShareProxy_", __func__);
         return fd;
     }
@@ -404,14 +297,7 @@ int DataShareHelper::OpenRawFile(Uri &uri, const std::string &mode)
     LOG_INFO("DataShareHelper::OpenRawFile before dataShareProxy_->OpenRawFile.");
     fd = dataShareProxy_->OpenRawFile(uri, mode);
     LOG_INFO("DataShareHelper::OpenRawFile after dataShareProxy_->OpenRawFile.");
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::OpenRawFile before DisconnectDataShareExtAbility.");
-        if (dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->DisconnectDataShareExtAbility();
-        }
-        LOG_INFO("DataShareHelper::OpenRawFile after DisconnectDataShareExtAbility.");
-        dataShareProxy_ = nullptr;
-    }
+
     LOG_INFO("DataShareHelper::OpenRawFile end.");
     return fd;
 }
@@ -433,21 +319,13 @@ int DataShareHelper::Insert(Uri &uri, const DataShareValuesBucket &value)
         return index;
     }
 
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::Insert before ConnectDataShareExtAbility.");
-        if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
-        }
-        dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
-        LOG_INFO("DataShareHelper::Insert after ConnectDataShareExtAbility.");
-        if (isSystemCaller_ && dataShareProxy_) {
-            AddDataShareDeathRecipient(dataShareProxy_->AsObject());
-        }
-    } else {
+    if (dataShareProxy_ == nullptr) {
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
     }
 
-    if (dataShareProxy_ == nullptr) {
+    if (dataShareProxy_) {
+        AddDataShareDeathRecipient(dataShareProxy_->AsObject());
+    } else {
         LOG_ERROR("%{public}s failed with invalid dataShareProxy_", __func__);
         return index;
     }
@@ -455,14 +333,7 @@ int DataShareHelper::Insert(Uri &uri, const DataShareValuesBucket &value)
     LOG_INFO("DataShareHelper::Insert before dataShareProxy_->Insert.");
     index = dataShareProxy_->Insert(uri, value);
     LOG_INFO("DataShareHelper::Insert after dataShareProxy_->Insert.");
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::Insert before DisconnectDataShareExtAbility.");
-        if (dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->DisconnectDataShareExtAbility();
-        }
-        LOG_INFO("DataShareHelper::Insert after DisconnectDataShareExtAbility.");
-        dataShareProxy_ = nullptr;
-    }
+
     LOG_INFO("DataShareHelper::Insert end.");
     return index;
 }
@@ -486,21 +357,13 @@ int DataShareHelper::Update(
         return index;
     }
 
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::Update before ConnectDataShareExtAbility.");
-        if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
-        }
-        dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
-        LOG_INFO("DataShareHelper::Update after ConnectDataShareExtAbility.");
-        if (isSystemCaller_ && dataShareProxy_) {
-            AddDataShareDeathRecipient(dataShareProxy_->AsObject());
-        }
-    } else {
+    if (dataShareProxy_ == nullptr) {
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
     }
 
-    if (dataShareProxy_ == nullptr) {
+    if (dataShareProxy_) {
+        AddDataShareDeathRecipient(dataShareProxy_->AsObject());
+    } else {
         LOG_ERROR("%{public}s failed with invalid dataShareProxy_", __func__);
         return index;
     }
@@ -508,14 +371,7 @@ int DataShareHelper::Update(
     LOG_INFO("DataShareHelper::Update before dataShareProxy_->Update.");
     index = dataShareProxy_->Update(uri, predicates, value);
     LOG_INFO("DataShareHelper::Update after dataShareProxy_->Update.");
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::Update before DisconnectDataShareExtAbility.");
-        if (dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->DisconnectDataShareExtAbility();
-        }
-        LOG_INFO("DataShareHelper::Update after DisconnectDataShareExtAbility.");
-        dataShareProxy_ = nullptr;
-    }
+
     LOG_INFO("DataShareHelper::Update end.");
     return index;
 }
@@ -537,21 +393,13 @@ int DataShareHelper::Delete(Uri &uri, const DataSharePredicates &predicates)
         return index;
     }
 
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::Delete before ConnectDataShareExtAbility.");
-        if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
-        }
-        dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
-        LOG_INFO("DataShareHelper::Delete after ConnectDataShareExtAbility.");
-        if (isSystemCaller_ && dataShareProxy_) {
-            AddDataShareDeathRecipient(dataShareProxy_->AsObject());
-        }
-    } else {
+    if (dataShareProxy_ == nullptr) {
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
     }
 
-    if (dataShareProxy_ == nullptr) {
+    if (dataShareProxy_) {
+        AddDataShareDeathRecipient(dataShareProxy_->AsObject());
+    } else {
         LOG_ERROR("%{public}s failed with invalid dataShareProxy_", __func__);
         return index;
     }
@@ -559,14 +407,7 @@ int DataShareHelper::Delete(Uri &uri, const DataSharePredicates &predicates)
     LOG_INFO("DataShareHelper::Delete before dataShareProxy_->Delete.");
     index = dataShareProxy_->Delete(uri, predicates);
     LOG_INFO("DataShareHelper::Delete after dataShareProxy_->Delete.");
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::Delete before DisconnectDataShareExtAbility.");
-        if (dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->DisconnectDataShareExtAbility();
-        }
-        LOG_INFO("DataShareHelper::Delete after DisconnectDataShareExtAbility.");
-        dataShareProxy_ = nullptr;
-    }
+
     LOG_INFO("DataShareHelper::Delete end.");
     return index;
 }
@@ -591,21 +432,13 @@ std::shared_ptr<DataShareResultSet> DataShareHelper::Query(
         return resultset;
     }
 
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::Query before ConnectDataShareExtAbility.");
-        if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
-        }
-        dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
-        LOG_INFO("DataShareHelper::Query after ConnectDataShareExtAbility.");
-        if (isSystemCaller_ && dataShareProxy_) {
-            AddDataShareDeathRecipient(dataShareProxy_->AsObject());
-        }
-    } else {
+    if (dataShareProxy_ == nullptr) {
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
     }
 
-    if (dataShareProxy_ == nullptr) {
+    if (dataShareProxy_) {
+        AddDataShareDeathRecipient(dataShareProxy_->AsObject());
+    } else {
         LOG_ERROR("%{public}s failed with invalid dataShareProxy_", __func__);
         return resultset;
     }
@@ -613,14 +446,7 @@ std::shared_ptr<DataShareResultSet> DataShareHelper::Query(
     LOG_INFO("DataShareHelper::Query before dataShareProxy_->Query.");
     resultset = dataShareProxy_->Query(uri, predicates, columns);
     LOG_INFO("DataShareHelper::Query after dataShareProxy_->Query.");
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::Query before DisconnectDataShareExtAbility.");
-        if (dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->DisconnectDataShareExtAbility();
-        }
-        LOG_INFO("DataShareHelper::Query after DisconnectDataShareExtAbility.");
-        dataShareProxy_ = nullptr;
-    }
+
     LOG_INFO("DataShareHelper::Query end.");
     return resultset;
 }
@@ -642,21 +468,13 @@ std::string DataShareHelper::GetType(Uri &uri)
         return type;
     }
 
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::GetType before ConnectDataShareExtAbility.");
-        if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
-        }
-        dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
-        LOG_INFO("DataShareHelper::GetType after ConnectDataShareExtAbility.");
-        if (isSystemCaller_ && dataShareProxy_) {
-            AddDataShareDeathRecipient(dataShareProxy_->AsObject());
-        }
-    } else {
+    if (dataShareProxy_ == nullptr) {
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
     }
 
-    if (dataShareProxy_ == nullptr) {
+    if (dataShareProxy_) {
+        AddDataShareDeathRecipient(dataShareProxy_->AsObject());
+    } else {
         LOG_ERROR("%{public}s failed with invalid dataShareProxy_", __func__);
         return type;
     }
@@ -664,14 +482,7 @@ std::string DataShareHelper::GetType(Uri &uri)
     LOG_INFO("DataShareHelper::GetType before dataShareProxy_->GetType.");
     type = dataShareProxy_->GetType(uri);
     LOG_INFO("DataShareHelper::GetType after dataShareProxy_->GetType.");
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::GetType before DisconnectDataShareExtAbility.");
-        if (dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->DisconnectDataShareExtAbility();
-        }
-        LOG_INFO("DataShareHelper::GetType after DisconnectDataShareExtAbility.");
-        dataShareProxy_ = nullptr;
-    }
+
     LOG_INFO("DataShareHelper::GetType end.");
     return type;
 }
@@ -693,21 +504,13 @@ int DataShareHelper::BatchInsert(Uri &uri, const std::vector<DataShareValuesBuck
         return ret;
     }
 
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::BatchInsert before ConnectDataShareExtAbility.");
-        if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
-        }
-        dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
-        LOG_INFO("DataShareHelper::BatchInsert after ConnectDataShareExtAbility.");
-        if (isSystemCaller_ && dataShareProxy_) {
-            AddDataShareDeathRecipient(dataShareProxy_->AsObject());
-        }
-    } else {
+    if (dataShareProxy_ == nullptr) {
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
     }
 
-    if (dataShareProxy_ == nullptr) {
+    if (dataShareProxy_) {
+        AddDataShareDeathRecipient(dataShareProxy_->AsObject());
+    } else {
         LOG_ERROR("%{public}s failed with invalid dataShareProxy_", __func__);
         return ret;
     }
@@ -715,14 +518,7 @@ int DataShareHelper::BatchInsert(Uri &uri, const std::vector<DataShareValuesBuck
     LOG_INFO("DataShareHelper::BatchInsert before dataShareProxy_->BatchInsert.");
     ret = dataShareProxy_->BatchInsert(uri, values);
     LOG_INFO("DataShareHelper::BatchInsert after dataShareProxy_->BatchInsert.");
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::BatchInsert before DisconnectDataShareExtAbility.");
-        if (dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->DisconnectDataShareExtAbility();
-        }
-        LOG_INFO("DataShareHelper::BatchInsert after DisconnectDataShareExtAbility.");
-        dataShareProxy_ = nullptr;
-    }
+
     LOG_INFO("DataShareHelper::BatchInsert end.");
     return ret;
 }
@@ -904,27 +700,20 @@ void DataShareHelper::NotifyChange(const Uri &uri)
     }
 
     if (dataShareProxy_ == nullptr) {
-        if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
-        }
-        dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
-    } else {
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
     }
 
-    if (dataShareProxy_ == nullptr) {
+    if (dataShareProxy_) {
+        AddDataShareDeathRecipient(dataShareProxy_->AsObject());
+    } else {
         LOG_ERROR("%{public}s failed with invalid dataShareProxy_", __func__);
         return;
     }
 
+    LOG_INFO("DataShareHelper::NotifyChange before dataShareProxy_->NotifyChange.");
     dataShareProxy_->NotifyChange(uri);
+    LOG_INFO("DataShareHelper::NotifyChange after dataShareProxy_->NotifyChange.");
 
-    if (uri_.ToString().empty()) {
-        if (dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->DisconnectDataShareExtAbility();
-        }
-        dataShareProxy_ = nullptr;
-    }
     LOG_INFO("DataShareHelper::NotifyChange end.");
 }
 
@@ -949,21 +738,13 @@ Uri DataShareHelper::NormalizeUri(Uri &uri)
         return urivalue;
     }
 
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::NormalizeUri before ConnectDataShareExtAbility.");
-        if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
-        }
-        dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
-        LOG_INFO("DataShareHelper::NormalizeUri after ConnectDataShareExtAbility.");
-        if (isSystemCaller_ && dataShareProxy_) {
-            AddDataShareDeathRecipient(dataShareProxy_->AsObject());
-        }
-    } else {
+    if (dataShareProxy_ == nullptr) {
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
     }
 
-    if (dataShareProxy_ == nullptr) {
+    if (dataShareProxy_) {
+        AddDataShareDeathRecipient(dataShareProxy_->AsObject());
+    } else {
         LOG_ERROR("%{public}s failed with invalid dataShareProxy_", __func__);
         return urivalue;
     }
@@ -971,14 +752,7 @@ Uri DataShareHelper::NormalizeUri(Uri &uri)
     LOG_INFO("DataShareHelper::NormalizeUri before dataShareProxy_->NormalizeUri.");
     urivalue = dataShareProxy_->NormalizeUri(uri);
     LOG_INFO("DataShareHelper::NormalizeUri after dataShareProxy_->NormalizeUri.");
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::NormalizeUri before DisconnectDataShareExtAbility.");
-        if (dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->DisconnectDataShareExtAbility();
-        }
-        LOG_INFO("DataShareHelper::NormalizeUri after DisconnectDataShareExtAbility.");
-        dataShareProxy_ = nullptr;
-    }
+
     LOG_INFO("DataShareHelper::NormalizeUri end.");
     return urivalue;
 }
@@ -1002,21 +776,13 @@ Uri DataShareHelper::DenormalizeUri(Uri &uri)
         return urivalue;
     }
 
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::DenormalizeUri before ConnectDataShareExtAbility.");
-        if (!dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->ConnectDataShareExtAbility(uri, token_);
-        }
-        dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
-        LOG_INFO("DataShareHelper::DenormalizeUri after ConnectDataShareExtAbility.");
-        if (isSystemCaller_ && dataShareProxy_) {
-            AddDataShareDeathRecipient(dataShareProxy_->AsObject());
-        }
-    } else {
+    if (dataShareProxy_ == nullptr) {
         dataShareProxy_ = dataShareConnection_->GetDataShareProxy();
     }
 
-    if (dataShareProxy_ == nullptr) {
+    if (dataShareProxy_) {
+        AddDataShareDeathRecipient(dataShareProxy_->AsObject());
+    } else {
         LOG_ERROR("%{public}s failed with invalid dataShareProxy_", __func__);
         return urivalue;
     }
@@ -1024,14 +790,7 @@ Uri DataShareHelper::DenormalizeUri(Uri &uri)
     LOG_INFO("DataShareHelper::DenormalizeUri before dataShareProxy_->DenormalizeUri.");
     urivalue = dataShareProxy_->DenormalizeUri(uri);
     LOG_INFO("DataShareHelper::DenormalizeUri after dataShareProxy_->DenormalizeUri.");
-    if (uri_.ToString().empty()) {
-        LOG_INFO("DataShareHelper::DenormalizeUri before DisconnectDataShareExtAbility.");
-        if (dataShareConnection_->IsExtAbilityConnected()) {
-            dataShareConnection_->DisconnectDataShareExtAbility();
-        }
-        LOG_INFO("DataShareHelper::DenormalizeUri after DisconnectDataShareExtAbility.");
-        dataShareProxy_ = nullptr;
-    }
+
     LOG_INFO("DataShareHelper::DenormalizeUri end.");
     return urivalue;
 }

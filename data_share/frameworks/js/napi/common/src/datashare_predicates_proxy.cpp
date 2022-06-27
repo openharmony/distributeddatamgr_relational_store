@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace DataShare {
-    static napi_ref __thread constructor_ = nullptr;
+static napi_ref __thread constructor_ = nullptr;
 static constexpr int ARGC_ZERO = 0;
 static constexpr int ARGC_ONE = 1;
 static constexpr int ARGC_TWO = 2;

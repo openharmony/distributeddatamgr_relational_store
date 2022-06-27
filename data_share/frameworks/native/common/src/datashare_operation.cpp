@@ -19,24 +19,24 @@
 namespace OHOS {
 namespace DataShare {
 DataShareOperation::DataShareOperation(
-    const std::shared_ptr<DataShareOperation> &dataAbilityOperation, const std::shared_ptr<Uri> &withUri)
+    const std::shared_ptr<DataShareOperation> &dataShareOperation, const std::shared_ptr<Uri> &withUri)
 {
     uri_ = withUri;
-    if (dataAbilityOperation != nullptr) {
-        type_ = dataAbilityOperation->type_;
-        valuesBucket_ = dataAbilityOperation->valuesBucket_;
-        expectedCount_ = dataAbilityOperation->expectedCount_;
-        dataAbilityPredicates_ = dataAbilityOperation->dataAbilityPredicates_;
-        valuesBucketReferences_ = dataAbilityOperation->valuesBucketReferences_;
-        dataAbilityPredicatesBackReferences_ = dataAbilityOperation->dataAbilityPredicatesBackReferences_;
-        interrupted_ = dataAbilityOperation->interrupted_;
+    if (dataShareOperation != nullptr) {
+        type_ = dataShareOperation->type_;
+        valuesBucket_ = dataShareOperation->valuesBucket_;
+        expectedCount_ = dataShareOperation->expectedCount_;
+        dataSharePredicates_ = dataShareOperation->dataSharePredicates_;
+        valuesBucketReferences_ = dataShareOperation->valuesBucketReferences_;
+        dataSharePredicatesBackReferences_ = dataShareOperation->dataSharePredicatesBackReferences_;
+        interrupted_ = dataShareOperation->interrupted_;
     } else {
         type_ = 0;
         expectedCount_ = 0;
         valuesBucket_ = std::make_shared<DataShareValuesBucket>();
-        dataAbilityPredicates_ = std::make_shared<DataSharePredicates>();
+        dataSharePredicates_ = std::make_shared<DataSharePredicates>();
         valuesBucketReferences_ = std::make_shared<DataShareValuesBucket>();
-        dataAbilityPredicatesBackReferences_.clear();
+        dataSharePredicatesBackReferences_.clear();
         interrupted_ = false;
     }
 }
@@ -51,9 +51,9 @@ DataShareOperation::DataShareOperation(const std::shared_ptr<DataShareOperationB
         uri_ = builder->uri_;
         valuesBucket_ = builder->valuesBucket_;
         expectedCount_ = builder->expectedCount_;
-        dataAbilityPredicates_ = builder->dataAbilityPredicates_;
+        dataSharePredicates_ = builder->dataSharePredicates_;
         valuesBucketReferences_ = builder->valuesBucketReferences_;
-        dataAbilityPredicatesBackReferences_ = builder->dataAbilityPredicatesBackReferences_;
+        dataSharePredicatesBackReferences_ = builder->dataSharePredicatesBackReferences_;
         interrupted_ = builder->interrupted_;
     }
 }
@@ -64,15 +64,15 @@ DataShareOperation::DataShareOperation()
     uri_ = nullptr;
     expectedCount_ = 0;
     valuesBucket_ = std::make_shared<DataShareValuesBucket>();
-    dataAbilityPredicates_ = std::make_shared<DataSharePredicates>();
+    dataSharePredicates_ = std::make_shared<DataSharePredicates>();
     valuesBucketReferences_ = std::make_shared<DataShareValuesBucket>();
-    dataAbilityPredicatesBackReferences_.clear();
+    dataSharePredicatesBackReferences_.clear();
     interrupted_ = false;
 }
 
 DataShareOperation::~DataShareOperation()
 {
-    dataAbilityPredicatesBackReferences_.clear();
+    dataSharePredicatesBackReferences_.clear();
 }
 
 bool DataShareOperation::operator==(const DataShareOperation &other) const
@@ -89,22 +89,22 @@ bool DataShareOperation::operator==(const DataShareOperation &other) const
     if (valuesBucket_ != other.valuesBucket_) {
         return false;
     }
-    if (dataAbilityPredicates_ != other.dataAbilityPredicates_) {
+    if (dataSharePredicates_ != other.dataSharePredicates_) {
         return false;
     }
     if (valuesBucketReferences_ != other.valuesBucketReferences_) {
         return false;
     }
-    size_t backReferencesCount = dataAbilityPredicatesBackReferences_.size();
-    size_t otherBackReferencesCount = other.dataAbilityPredicatesBackReferences_.size();
+    size_t backReferencesCount = dataSharePredicatesBackReferences_.size();
+    size_t otherBackReferencesCount = other.dataSharePredicatesBackReferences_.size();
     if (backReferencesCount != otherBackReferencesCount) {
         return false;
     }
 
-    std::map<int, int>::const_iterator it = dataAbilityPredicatesBackReferences_.begin();
-    while (it != dataAbilityPredicatesBackReferences_.end()) {
-        std::map<int, int>::const_iterator otherIt = other.dataAbilityPredicatesBackReferences_.find(it->first);
-        if (otherIt != other.dataAbilityPredicatesBackReferences_.end()) {
+    std::map<int, int>::const_iterator it = dataSharePredicatesBackReferences_.begin();
+    while (it != dataSharePredicatesBackReferences_.end()) {
+        std::map<int, int>::const_iterator otherIt = other.dataSharePredicatesBackReferences_.find(it->first);
+        if (otherIt != other.dataSharePredicatesBackReferences_.end()) {
             if (otherIt->second != it->second) {
                 return false;
             }
@@ -127,9 +127,9 @@ DataShareOperation &DataShareOperation::operator=(const DataShareOperation &othe
         uri_ = other.uri_;
         expectedCount_ = other.expectedCount_;
         valuesBucket_ = other.valuesBucket_;
-        dataAbilityPredicates_ = other.dataAbilityPredicates_;
+        dataSharePredicates_ = other.dataSharePredicates_;
         valuesBucketReferences_ = other.valuesBucketReferences_;
-        dataAbilityPredicatesBackReferences_ = other.dataAbilityPredicatesBackReferences_;
+        dataSharePredicatesBackReferences_ = other.dataSharePredicatesBackReferences_;
         interrupted_ = other.interrupted_;
     }
     return *this;
@@ -211,10 +211,10 @@ int DataShareOperation::GetExpectedCount() const
     return expectedCount_;
 }
 
-std::shared_ptr<DataSharePredicates> DataShareOperation::GetDataAbilityPredicates() const
+std::shared_ptr<DataSharePredicates> DataShareOperation::GetDataSharePredicates() const
 {
-    LOG_DEBUG("DataShareOperation::GetDataAbilityPredicates");
-    return dataAbilityPredicates_;
+    LOG_DEBUG("DataShareOperation::GetDataSharePredicates");
+    return dataSharePredicates_;
 }
 
 std::shared_ptr<DataShareValuesBucket> DataShareOperation::GetValuesBucketReferences() const
@@ -222,10 +222,10 @@ std::shared_ptr<DataShareValuesBucket> DataShareOperation::GetValuesBucketRefere
     LOG_DEBUG("DataShareOperation::GetValuesBucketReferences");
     return valuesBucketReferences_;
 }
-std::map<int, int> DataShareOperation::GetDataAbilityPredicatesBackReferences() const
+std::map<int, int> DataShareOperation::GetDataSharePredicatesBackReferences() const
 {
-    LOG_DEBUG("DataShareOperation::GetDataAbilityPredicatesBackReferences");
-    return dataAbilityPredicatesBackReferences_;
+    LOG_DEBUG("DataShareOperation::GetDataSharePredicatesBackReferences");
+    return dataSharePredicatesBackReferences_;
 }
 bool DataShareOperation::IsInsertOperation() const
 {
@@ -302,12 +302,12 @@ bool DataShareOperation::Marshalling(Parcel &out) const
         }
     }
 
-    if (dataAbilityPredicates_ != nullptr) {
+    if (dataSharePredicates_ != nullptr) {
         if (!out.WriteInt32(VALUE_OBJECT)) {
             LOG_ERROR("DataShareOperation::Marshalling WriteInt32(VALUE_OBJECT) error");
             return false;
         }
-        if (!out.WriteParcelable(dataAbilityPredicates_.get())) {
+        if (!out.WriteParcelable(dataSharePredicates_.get())) {
             LOG_ERROR("DataShareOperation::Marshalling WriteInt32(VALUE_OBJECT) error");
             return false;
         }
@@ -333,8 +333,8 @@ bool DataShareOperation::Marshalling(Parcel &out) const
     }
 
     int referenceSize = 0;
-    if (!dataAbilityPredicatesBackReferences_.empty()) {
-        referenceSize = (int)dataAbilityPredicatesBackReferences_.size();
+    if (!dataSharePredicatesBackReferences_.empty()) {
+        referenceSize = (int)dataSharePredicatesBackReferences_.size();
         if (!out.WriteInt32(referenceSize)) {
             LOG_ERROR("DataShareOperation::Marshalling WriteInt32(VALUE_OBJECT) error");
             return false;
@@ -343,7 +343,7 @@ bool DataShareOperation::Marshalling(Parcel &out) const
             LOG_INFO("DataShareOperation::Marshalling referenceSize >= REFERENCE_THRESHOLD");
             return true;
         }
-        for (auto it = dataAbilityPredicatesBackReferences_.begin(); it != dataAbilityPredicatesBackReferences_.end();
+        for (auto it = dataSharePredicatesBackReferences_.begin(); it != dataSharePredicatesBackReferences_.end();
              it++) {
             if (!out.WriteInt32(it->first)) {
                 LOG_ERROR("DataShareOperation::Marshalling WriteInt32(VALUE_OBJECT) error");
@@ -355,7 +355,7 @@ bool DataShareOperation::Marshalling(Parcel &out) const
             }
         }
     } else {
-        LOG_DEBUG("DataShareOperation::Marshalling dataAbilityPredicatesBackReferences_ is empty");
+        LOG_DEBUG("DataShareOperation::Marshalling dataSharePredicatesBackReferences_ is empty");
         if (!out.WriteInt32(referenceSize)) {
             LOG_ERROR("DataShareOperation::Marshalling WriteInt32(VALUE_OBJECT) error");
             return false;
@@ -368,14 +368,14 @@ bool DataShareOperation::Marshalling(Parcel &out) const
 DataShareOperation *DataShareOperation::Unmarshalling(Parcel &in)
 {
     LOG_DEBUG("DataShareOperation::Unmarshalling start");
-    DataShareOperation *dataAbilityOperation = new (std::nothrow) DataShareOperation();
-    if (dataAbilityOperation != nullptr && !dataAbilityOperation->ReadFromParcel(in)) {
-        LOG_ERROR("DataShareOperation::Unmarshalling dataAbilityOperation error");
-        delete dataAbilityOperation;
-        dataAbilityOperation = nullptr;
+    DataShareOperation *dataShareOperation = new (std::nothrow) DataShareOperation();
+    if (dataShareOperation != nullptr && !dataShareOperation->ReadFromParcel(in)) {
+        LOG_ERROR("DataShareOperation::Unmarshalling dataShareOperation error");
+        delete dataShareOperation;
+        dataShareOperation = nullptr;
     }
     LOG_DEBUG("DataShareOperation::Unmarshalling end");
-    return dataAbilityOperation;
+    return dataShareOperation;
 }
 bool DataShareOperation::ReadFromParcel(Parcel &in)
 {
@@ -419,9 +419,9 @@ bool DataShareOperation::ReadFromParcel(Parcel &in)
     LOG_DEBUG("DataShareOperation::ReadFromParcel empty is %{public}s",
         empty == VALUE_OBJECT ? "VALUE_OBJECT" : "VALUE_NULL");
     if (empty == VALUE_OBJECT) {
-        dataAbilityPredicates_.reset(in.ReadParcelable<DataSharePredicates>());
+        dataSharePredicates_.reset(in.ReadParcelable<DataSharePredicates>());
     } else {
-        dataAbilityPredicates_.reset();
+        dataSharePredicates_.reset();
     }
     empty = VALUE_NULL;
     if (!in.ReadInt32(empty)) {
@@ -456,7 +456,7 @@ bool DataShareOperation::ReadFromParcel(Parcel &in)
             LOG_ERROR("DataShareOperation::ReadFromParcel end");
             return false;
         }
-        dataAbilityPredicatesBackReferences_.insert(std::make_pair(first, second));
+        dataSharePredicatesBackReferences_.insert(std::make_pair(first, second));
     }
     LOG_DEBUG("DataShareOperation::ReadFromParcel end");
     return true;
@@ -474,7 +474,7 @@ void DataShareOperation::PutMap(Parcel &in)
     int count = in.ReadInt32();
     if (count > 0 && count < REFERENCE_THRESHOLD) {
         for (int i = 0; i < count; ++i) {
-            dataAbilityPredicatesBackReferences_.insert(std::make_pair(in.ReadInt32(), in.ReadInt32()));
+            dataSharePredicatesBackReferences_.insert(std::make_pair(in.ReadInt32(), in.ReadInt32()));
         }
     }
     LOG_DEBUG("DataShareOperation::PutMap end");
