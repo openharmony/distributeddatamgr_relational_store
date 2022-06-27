@@ -32,8 +32,8 @@ ohos_shared_library("datashare") {
 
   deps = [
     "${ability_runtime_inner_api_path}/dataobs_manager:dataobs_manager",
-    "${datashare_innerapi_path}/common:datashare_common",
     "${ability_runtime_napi_path}/inner/napi_common:napi_common",
+    "${datashare_innerapi_path}/common:datashare_common",
     "//third_party/libuv:uv",
   ]
 
