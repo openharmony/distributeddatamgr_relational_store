@@ -28,7 +28,7 @@ namespace DataShare {
 using namespace AppExecFwk;
 class DataShareConnection : public AAFwk::AbilityConnectionStub {
 public:
-    DataShareConnection(const Uri uri) : uri_(uri) {}
+    DataShareConnection(const Uri &uri) : uri_(uri) {}
     virtual ~DataShareConnection() = default;
 
     /**
