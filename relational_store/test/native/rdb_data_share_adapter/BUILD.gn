@@ -12,8 +12,7 @@
 # limitations under the License.
 import("//build/test.gni")
 import("//foundation/distributeddatamgr/appdatamgr/appdatamgr.gni")
-import(
-    "//foundation/distributeddatamgr/appdatamgr/data_share/datashare.gni")
+import("//foundation/distributeddatamgr/appdatamgr/data_share/datashare.gni")
 import(
     "//foundation/distributeddatamgr/appdatamgr/relational_store/relational_store.gni")
 

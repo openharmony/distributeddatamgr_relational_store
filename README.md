@@ -102,9 +102,9 @@ To avoid a high memory cost, it is recommended that the preferences database sto
 
 ## Repositories Involved<a name="section1371113476307"></a>
 
-Distributed Data Management subsystem
+- [Distributed Data Management subsystem](https://gitee.com/openharmony/docs/blob/master/en/readme/distributed-data-management.md)
 
-- [distributeddatamgr\_appdatamgr](https://gitee.com/openharmony/distributeddatamgr_appdatamgr)
+- **distributeddatamgr\_appdatamgr**
 
 - [third\_party\_sqlite](https://gitee.com/openharmony/third_party_sqlite)
 
