@@ -20,12 +20,7 @@ ohos_js_unittest("DataAbJsTest") {
 
   hap_profile = "./config.json"
 
-  if (is_standard_system) {
-    certificate_profile = "//test/developertest/signature/openharmony_sx.p7b"
-  } else {
-    deps = [ "//test/developertest/adapter/examples/app_info/test/common/main:get_app_info_test_lib" ]
-    entry_app_dep = [ "//test/developertest/adapter/examples/app_info/test/common/shell:build_shell_execute" ]
-  }
+  certificate_profile = "//test/developertest/signature/openharmony_sx.p7b"
 }
 
 group("unittest") {
