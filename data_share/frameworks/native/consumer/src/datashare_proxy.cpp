@@ -19,8 +19,7 @@
 
 #include "datashare_result_set.h"
 #include "data_ability_observer_interface.h"
-#include "data_ability_operation.h"
-#include "data_ability_predicates.h"
+#include "datashare_operation.h"
 #include "datashare_log.h"
 #include "ipc_types.h"
 #include "ishared_result_set.h"
@@ -571,8 +570,8 @@ std::vector<std::shared_ptr<DataShareResult>> DataShareProxy::ExecuteBatch(
             LOG_ERROR("result is nullptr, index = %{public}d", i);
             return results;
         }
-        std::shared_ptr<DataShareResult> dataAbilityResult(result);
-        results.push_back(dataAbilityResult);
+        std::shared_ptr<DataShareResult> dataShareResult(result);
+        results.push_back(dataShareResult);
     }
     LOG_INFO("end successfully.");
     return results;

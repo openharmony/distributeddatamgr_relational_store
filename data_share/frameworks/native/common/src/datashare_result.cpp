@@ -84,11 +84,11 @@ int DataShareResult::GetCount()
  */
 DataShareResult *DataShareResult::CreateFromParcel(Parcel &parcel)
 {
-    DataShareResult *dataAbilityResult = new (std::nothrow) DataShareResult(parcel);
-    if (dataAbilityResult == nullptr) {
-        LOG_ERROR("DataShareResult::CreateFromParcel dataAbilityResult is nullptr");
+    DataShareResult *dataShareResult = new (std::nothrow) DataShareResult(parcel);
+    if (dataShareResult == nullptr) {
+        LOG_ERROR("DataShareResult::CreateFromParcel dataShareResult is nullptr");
     }
-    return dataAbilityResult;
+    return dataShareResult;
 }
 
 /**
@@ -139,15 +139,15 @@ bool DataShareResult::Marshalling(Parcel &parcel) const
  */
 DataShareResult *DataShareResult::Unmarshalling(Parcel &parcel)
 {
-    DataShareResult *dataAbilityResult = new (std::nothrow) DataShareResult(0);
-    if (dataAbilityResult != nullptr) {
-        if (!dataAbilityResult->ReadFromParcel(parcel)) {
-            delete dataAbilityResult;
-            dataAbilityResult = nullptr;
+    DataShareResult *dataShareResult = new (std::nothrow) DataShareResult(0);
+    if (dataShareResult != nullptr) {
+        if (!dataShareResult->ReadFromParcel(parcel)) {
+            delete dataShareResult;
+            dataShareResult = nullptr;
         }
     }
 
-    return dataAbilityResult;
+    return dataShareResult;
 }
 
 bool DataShareResult::ReadFromParcel(Parcel &parcel)

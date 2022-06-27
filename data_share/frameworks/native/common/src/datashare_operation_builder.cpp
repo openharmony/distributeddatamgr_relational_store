@@ -25,13 +25,13 @@ DataShareOperationBuilder::DataShareOperationBuilder(const int type, const std::
     expectedCount_ = 0;
     interrupted_ = false;
     valuesBucket_ = nullptr;
-    dataAbilityPredicates_ = nullptr;
+    dataSharePredicates_ = nullptr;
     valuesBucketReferences_ = nullptr;
-    dataAbilityPredicatesBackReferences_.clear();
+    dataSharePredicatesBackReferences_.clear();
 }
 DataShareOperationBuilder::~DataShareOperationBuilder()
 {
-    dataAbilityPredicatesBackReferences_.clear();
+    dataSharePredicatesBackReferences_.clear();
 }
 
 std::shared_ptr<DataShareOperation> DataShareOperationBuilder::Build()
@@ -76,7 +76,7 @@ std::shared_ptr<DataShareOperationBuilder> DataShareOperationBuilder::WithPredic
             type_);
         return nullptr;
     }
-    dataAbilityPredicates_ = predicates;
+    dataSharePredicates_ = predicates;
     LOG_DEBUG("DataShareOperationBuilder::WithPredicates end");
     return shared_from_this();
 }
@@ -111,7 +111,7 @@ std::shared_ptr<DataShareOperationBuilder> DataShareOperationBuilder::WithPredic
             type_);
         return nullptr;
     }
-    dataAbilityPredicatesBackReferences_.insert(std::make_pair(requestArgIndex, previousResult));
+    dataSharePredicatesBackReferences_.insert(std::make_pair(requestArgIndex, previousResult));
     LOG_DEBUG("DataShareOperationBuilder::WithPredicatesBackReference end");
     return shared_from_this();
 }

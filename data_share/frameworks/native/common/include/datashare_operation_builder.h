@@ -61,7 +61,7 @@ public:
     /**
      * @brief Adds a back reference to be used as a filter criterion in withPredicates(DataSharePredicates).
      * @param requestArgIndex Indicates the index referencing the predicate parameter whose value is to be replaced.
-     * @param previousResult Indicates the index referencing the historical DataAbilityResult used to replace the value
+     * @param previousResult Indicates the index referencing the historical DataShareResult used to replace the value
      * of the specified predicate parameter.
      * @return Returns a DataShareOperationBuilder object containing the given requestArgIndex and previousResult
      * parameters.
@@ -90,9 +90,9 @@ private:
     bool interrupted_;
     std::shared_ptr<Uri> uri_;
     std::shared_ptr<DataShareValuesBucket> valuesBucket_;
-    std::shared_ptr<DataSharePredicates> dataAbilityPredicates_;
+    std::shared_ptr<DataSharePredicates> dataSharePredicates_;
     std::shared_ptr<DataShareValuesBucket> valuesBucketReferences_;
-    std::map<int, int> dataAbilityPredicatesBackReferences_;
+    std::map<int, int> dataSharePredicatesBackReferences_;
 };
 }  // namespace DataShare
 }  // namespace OHOS
