@@ -34,7 +34,7 @@ public:
     ~DataShareOperation();
 
     DataShareOperation(
-        const std::shared_ptr<DataShareOperation> &dataAbilityOperation, const std::shared_ptr<Uri> &withUri);
+        const std::shared_ptr<DataShareOperation> &dataShareOperation, const std::shared_ptr<Uri> &withUri);
     explicit DataShareOperation(Parcel &in);
     explicit DataShareOperation(const std::shared_ptr<DataShareOperationBuilder> &builder);
     DataShareOperation();
@@ -86,18 +86,18 @@ public:
      * @brief Obtains the value of the dataBasePredicates attribute included in this DataShareOperation.
      * @return Returns the dataBasePredicates included in this DataShareOperation.
      */
-    std::shared_ptr<DataSharePredicates> GetDataAbilityPredicates() const;
+    std::shared_ptr<DataSharePredicates> GetDataSharePredicates() const;
     /**
      * @brief Obtains the value of the valuesBucketReferences attribute included in this DataShareOperation.
      * @return Returns the valuesBucketReferences included in this DataShareOperation.
      */
     std::shared_ptr<DataShareValuesBucket> GetValuesBucketReferences() const;
     /**
-     * @brief Obtains the value of the dataAbilityPredicatesBackReferences attribute included in this
+     * @brief Obtains the value of the dataSharePredicatesBackReferences attribute included in this
      * DataShareOperation.
-     * @return Returns the dataAbilityPredicatesBackReferences included in this DataShareOperation.
+     * @return Returns the dataSharePredicatesBackReferences included in this DataShareOperation.
      */
-    std::map<int, int> GetDataAbilityPredicatesBackReferences() const;
+    std::map<int, int> GetDataSharePredicatesBackReferences() const;
     /**
      * @brief Checks whether an insert operation is created.
      * @return Returns true if it is an insert operation; returns false otherwise.
@@ -157,9 +157,9 @@ private:
     bool interrupted_ = false;
     std::shared_ptr<Uri> uri_ = nullptr;
     std::shared_ptr<DataShareValuesBucket> valuesBucket_ = nullptr;
-    std::shared_ptr<DataSharePredicates> dataAbilityPredicates_ = nullptr;
+    std::shared_ptr<DataSharePredicates> dataSharePredicates_ = nullptr;
     std::shared_ptr<DataShareValuesBucket> valuesBucketReferences_ = nullptr;
-    std::map<int, int> dataAbilityPredicatesBackReferences_;
+    std::map<int, int> dataSharePredicatesBackReferences_;
 };
 }  // namespace DataShare
 }  // namespace OHOS

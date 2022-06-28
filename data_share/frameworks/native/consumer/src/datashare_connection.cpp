@@ -27,22 +27,6 @@ sptr<DataShareConnection> DataShareConnection::instance_ = nullptr;
 std::mutex DataShareConnection::mutex_;
 
 /**
- * @brief get singleton of Class DataShareConnection
- *
- * @return The singleton of DataShareConnection
- */
-sptr<DataShareConnection> DataShareConnection::GetInstance()
-{
-    if (instance_ == nullptr) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (instance_ == nullptr) {
-            instance_ = sptr<DataShareConnection>(new (std::nothrow) DataShareConnection());
-        }
-    }
-    return instance_;
-}
-
-/**
  * @brief This method is called back to receive the connection result after an ability calls the
  * ConnectAbility method to connect it to an extension ability.
  *

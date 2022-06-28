@@ -28,15 +28,8 @@ namespace DataShare {
 using namespace AppExecFwk;
 class DataShareConnection : public AAFwk::AbilityConnectionStub {
 public:
-    DataShareConnection() = default;
+    DataShareConnection(const Uri &uri) : uri_(uri) {}
     virtual ~DataShareConnection() = default;
-
-    /**
-     * @brief get singleton of Class DataShareConnection
-     *
-     * @return The singleton of DataShareConnection
-     */
-    static sptr<DataShareConnection> GetInstance();
 
     /**
      * @brief This method is called back to receive the connection result after an ability calls the
@@ -95,6 +88,7 @@ private:
     std::atomic<bool> isConnected_ = {false};
     sptr<IDataShare> dataShareProxy_;
     ConnectCondition condition_;
+    Uri uri_;
 };
 }  // namespace DataShare
 }  // namespace OHOS

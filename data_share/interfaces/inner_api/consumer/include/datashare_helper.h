@@ -82,6 +82,7 @@ public:
      * @return Returns true if the resource is successfully released; returns false otherwise.
      */
     bool Release();
+
     /**
      * @brief Obtains the MIME types of files supported.
      *
@@ -233,21 +234,16 @@ public:
     Uri DenormalizeUri(Uri &uri);
 
 private:
-    DataShareHelper(const std::shared_ptr<Context> &context,
-        const Uri &uri, const sptr<IDataShare> &dataShareProxy);
-    DataShareHelper(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
-        const Uri &uri, const sptr<IDataShare> &dataShareProxy);
-    DataShareHelper(const sptr<IRemoteObject> &token, const Uri &uri, const sptr<IDataShare> &dataShareProxy);
+    DataShareHelper(const sptr<IRemoteObject> &token, const Uri &uri, const sptr<IDataShare> &dataShareProxy,
+        const sptr<DataShareConnection> dataShareConnection);
     void AddDataShareDeathRecipient(const sptr<IRemoteObject> &token);
     void OnSchedulerDied(const wptr<IRemoteObject> &remote);
     bool CheckUriParam(const Uri &uri);
     bool CheckOhosUri(const Uri &uri);
 
     sptr<IRemoteObject> token_ = {};
-    std::shared_ptr<Context> context_ = nullptr;
     Uri uri_ = Uri("");
     sptr<IDataShare> dataShareProxy_ = nullptr;
-    bool isSystemCaller_ = false;
     static std::mutex oplock_;
     sptr<IRemoteObject::DeathRecipient> callerDeathRecipient_ = nullptr;
     std::map<sptr<AAFwk::IDataAbilityObserver>, sptr<IDataShare>> registerMap_;

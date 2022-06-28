@@ -389,8 +389,8 @@ ErrCode DataShareStub::CmdExecuteBatch(MessageParcel &data, MessageParcel &reply
             LOG_ERROR("DataShareStub::CmdExecuteBatchInner operation is nullptr, index = %{public}d", i);
             return ERR_INVALID_VALUE;
         }
-        std::shared_ptr<DataShareOperation> dataAbilityOperation(operation);
-        operations.push_back(dataAbilityOperation);
+        std::shared_ptr<DataShareOperation> dataShareOperation(operation);
+        operations.push_back(dataShareOperation);
     }
 
     std::vector<std::shared_ptr<DataShareResult>> results = ExecuteBatch(operations);
