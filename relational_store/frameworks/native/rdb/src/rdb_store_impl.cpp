@@ -138,6 +138,26 @@ int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const Valu
     return InsertWithConflictResolution(outRowId, table, initialValues, ConflictResolution::ON_CONFLICT_NONE);
 }
 
+int RdbStoreImpl::BatchInsert(int64_t &outRowId, const std::string &table,
+    const std::vector<ValuesBucket> &initialBatchValues)
+{
+    int errCode = BeginTransaction();
+    if (errCode != E_OK) {
+        LOG_ERROR("Begin transaction with error code %{public}d.", errCode);
+        return errCode;
+    }
+    
+    for (auto const &value : initialBatchValues) {
+        if (RdbStoreImpl::Insert(outRowId, table, value) != E_OK) {
+            LOG_WARN("Roll back in batch insert.");
+            outRowId = -1;
+            return RollBack();
+        }
+    }
+    
+    return Commit();
+}
+
 int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)
 {
     return InsertWithConflictResolution(outRowId, table, initialValues, ConflictResolution::ON_CONFLICT_REPLACE);
@@ -488,6 +508,7 @@ int RdbStoreImpl::Commit()
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int errCode = session->Commit();
     if (errCode != E_OK) {
+        LOG_ERROR("RdbStoreImpl::Commit with error code %{public}d.", errCode);
         ReleaseThreadSession();
     }
     return errCode;

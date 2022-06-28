@@ -56,7 +56,6 @@ public:
     }
 
     void BindArgs(napi_env env, napi_value arg);
-    void JSNumber2NativeType(std::shared_ptr<OHOS::NativeRdb::RdbStore> &rdbStore);
     std::string device;
     std::string tableName;
     std::vector<std::string> tablesName;
@@ -67,6 +66,7 @@ public:
     RdbPredicatesProxy *predicatesProxy;
     std::vector<std::string> columns;
     ValuesBucket *valuesBucket;
+    std::vector<ValuesBucket> valuesBuckets;
     std::map<std::string, ValueObject> numberMaps;
     std::vector<ValueObject> bindArgs;
     uint64_t rowId;
@@ -127,38 +127,6 @@ void RdbStoreContext::BindArgs(napi_env env, napi_value arg)
     }
 }
 
-void RdbStoreContext::JSNumber2NativeType(std::shared_ptr<OHOS::NativeRdb::RdbStore> &rdbStore)
-{
-    std::unique_ptr<ResultSet> result = rdbStore->QueryByStep(std::string("SELECT * FROM ") + tableName + " LIMIT 1");
-    result->GoToFirstRow();
-    for (std::map<std::string, ValueObject>::iterator it = numberMaps.begin(); it != numberMaps.end(); ++it) {
-        int index = -1;
-        result->GetColumnIndex(it->first, index);
-        ColumnType columnType = ColumnType::TYPE_FLOAT;
-        result->GetColumnType(index, columnType);
-        double value;
-        it->second.GetDouble(value);
-        switch (columnType) {
-            case ColumnType::TYPE_FLOAT:
-                LOG_DEBUG("JSNumber2NativeType type:float");
-                valuesBucket->PutDouble(it->first, value);
-                break;
-            case ColumnType::TYPE_INTEGER:
-                LOG_DEBUG("JSNumber2NativeType type:integer");
-                valuesBucket->PutLong(it->first, int64_t(value));
-                break;
-            default:
-                LOG_DEBUG("JSNumber2NativeType type:%{public}d", int(columnType));
-                valuesBucket->PutDouble(it->first, value);
-                break;
-        }
-    }
-    result->Close();
-    result = nullptr;
-    numberMaps.clear();
-    LOG_DEBUG("JSNumber2NativeType end");
-}
-
 RdbStoreProxy::RdbStoreProxy()
 {
 }
@@ -174,6 +142,7 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("delete", Delete),
         DECLARE_NAPI_FUNCTION("update", Update),
         DECLARE_NAPI_FUNCTION("insert", Insert),
+        DECLARE_NAPI_FUNCTION("batchInsert", BatchInsert),
         DECLARE_NAPI_FUNCTION("querySql", QuerySql),
         DECLARE_NAPI_FUNCTION("query", Query),
         DECLARE_NAPI_FUNCTION("executeSql", ExecuteSql),
@@ -456,7 +425,7 @@ void ParseValuesBucket(const napi_env &env, const napi_value &arg, RdbStoreConte
         } else if (valueType == napi_number) {
             double valueNumber;
             napi_get_value_double(env, value, &valueNumber);
-            context->numberMaps.insert(std::make_pair(keyStr, ValueObject(valueNumber)));
+            context->valuesBucket->PutDouble(keyStr, valueNumber);
             LOG_DEBUG("ValueObject type napi_number");
         } else if (valueType == napi_boolean) {
             bool valueBool = false;
@@ -474,6 +443,21 @@ void ParseValuesBucket(const napi_env &env, const napi_value &arg, RdbStoreConte
         }
     }
     LOG_DEBUG("ParseValuesBucket end");
+}
+
+void ParseValuesBuckets(const napi_env &env, const napi_value &arg, RdbStoreContext *context)
+{
+    uint32_t arrLen = 0;
+    napi_status status = napi_get_array_length(env, arg, &arrLen);
+    NAPI_ASSERT_RETURN_VOID(env, status == napi_ok && arrLen > 0, "ParseValuesBuckets fail to get array length.");
+    for (uint32_t i = 0; i < arrLen; i++) {
+        napi_value obj = nullptr;
+        status = napi_get_element(env, arg, i, &obj);
+        NAPI_ASSERT_RETURN_VOID(env, status == napi_ok, "ParseValuesBuckets get element error.");
+        ParseValuesBucket(env, obj, context);
+        context->valuesBuckets.push_back(*(context->valuesBucket));
+        context->valuesBucket->Clear();
+    }
 }
 
 bool IsNapiString(napi_env env, napi_callback_info info)
@@ -508,7 +492,6 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
             RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
             int64_t rowId = 0;
             LOG_DEBUG("RdbStoreProxy::Insert Async");
-            context->JSNumber2NativeType(obj->rdbStore_);
             int errCode = obj->rdbStore_->Insert(rowId, context->tableName, *(context->valuesBucket));
             context->rowId = rowId;
             LOG_DEBUG("RdbStoreProxy::Insert errCode is: %{public}d", errCode);
@@ -517,6 +500,32 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
         [](RdbStoreContext *context, napi_value &output) {
             napi_status status = napi_create_int64(context->env, context->rowId, &output);
             LOG_DEBUG("RdbStoreProxy::Insert end");
+            return (status == napi_ok) ? OK : ERR;
+        });
+}
+
+napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbStoreProxy::BatchInsert start.");
+    NapiAsyncProxy<RdbStoreContext> proxy;
+    proxy.Init(env, info);
+    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
+    parsers.push_back(ParseTableName);
+    parsers.push_back(ParseValuesBuckets);
+    proxy.ParseInputs(parsers, ParseThis);
+    return proxy.DoAsyncWork(
+        "BatchInsert",
+        [](RdbStoreContext *context) {
+            LOG_INFO("RdbStoreProxy::BatchInsert Async.");
+            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+            int64_t rowId = 0;
+            int errCode = obj->rdbStore_->BatchInsert(rowId, context->tableName, context->valuesBuckets);
+            context->rowId = rowId;
+            return errCode;
+        },
+        [](RdbStoreContext *context, napi_value &output) {
+            napi_status status = napi_create_int64(context->env, context->rowId, &output);
+            LOG_DEBUG("RdbStoreProxy::BatchInsert end.");
             return (status == napi_ok) ? OK : ERR;
         });
 }
@@ -568,7 +577,6 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
             LOG_DEBUG("RdbStoreProxy::Update Async");
             RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
             int changedRows = 0;
-            context->JSNumber2NativeType(obj->rdbStore_);
             int errCode =
                 obj->rdbStore_->Update(changedRows, *(context->valuesBucket), *(context->rdbPredicates));
             context->rowId = changedRows;
@@ -704,7 +712,6 @@ napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
             LOG_DEBUG("RdbStoreProxy::Replace Async");
             RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
             int64_t rowId = 0;
-            context->JSNumber2NativeType(obj->rdbStore_);
             int errCode = obj->rdbStore_->Replace(rowId, context->tableName, *(context->valuesBucket));
             context->rowId = rowId;
             LOG_DEBUG("RdbStoreProxy::Replace errCode is:%{public}d", errCode);
