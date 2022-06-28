@@ -811,7 +811,7 @@ napi_value JsDataShareExtAbility::MakePredicates(napi_env env, const DataSharePr
 void PrintPredicates(const DataSharePredicates &predicates)
 {
     std::list<OperationItem> preList = predicates.GetOperationList();
-    for (int i = 0; i < preList.size(); i++) {
+    for (auto i = 0; i < preList.size(); i++) {
         std::string str1 = "";
         std::string str2 = "";
         std::string str3 = "";
