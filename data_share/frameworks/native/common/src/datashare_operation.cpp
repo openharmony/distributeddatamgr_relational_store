@@ -343,13 +343,12 @@ bool DataShareOperation::Marshalling(Parcel &out) const
             LOG_INFO("DataShareOperation::Marshalling referenceSize >= REFERENCE_THRESHOLD");
             return true;
         }
-        for (auto it = dataSharePredicatesBackReferences_.begin(); it != dataSharePredicatesBackReferences_.end();
-             it++) {
-            if (!out.WriteInt32(it->first)) {
+        for (auto &it : dataSharePredicatesBackReferences_) {
+            if (!out.WriteInt32(it.first)) {
                 LOG_ERROR("DataShareOperation::Marshalling WriteInt32(VALUE_OBJECT) error");
                 return false;
             }
-            if (!out.WriteInt32(it->second)) {
+            if (!out.WriteInt32(it.second)) {
                 LOG_ERROR("DataShareOperation::Marshalling WriteInt32(VALUE_OBJECT) error");
                 return false;
             }

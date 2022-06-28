@@ -48,7 +48,7 @@ DataSharePredicatesObject::~DataSharePredicatesObject()
 
 DataSharePredicatesObject::DataSharePredicatesObject(int val) : type(DataSharePredicatesObjectType::TYPE_INT)
 {
-    value = static_cast<int64_t>(val);
+    value = val;
 }
 
 DataSharePredicatesObject::DataSharePredicatesObject(int64_t val) : type(DataSharePredicatesObjectType::TYPE_LONG)
@@ -139,8 +139,7 @@ int DataSharePredicatesObject::GetInt(int &val) const
         return E_INVALID_OBJECT_TYPE;
     }
 
-    int64_t v = std::get<int64_t>(value);
-    val = static_cast<int>(v);
+    val = std::get<int>(value);
     return E_OK;
 }
 
@@ -233,7 +232,7 @@ bool DataSharePredicatesObject::Marshalling(Parcel &parcel) const
             break;
         }
         case DataSharePredicatesObjectType::TYPE_INT: {
-            parcel.WriteInt64(std::get<int64_t>(value));
+            parcel.WriteInt32(std::get<int>(value));
             break;
         }
         case DataSharePredicatesObjectType::TYPE_LONG: {
@@ -271,7 +270,7 @@ DataSharePredicatesObject *DataSharePredicatesObject::Unmarshalling(Parcel &parc
                 break;
             }
             case DataSharePredicatesObjectType::TYPE_INT: {
-                pValueObject->value = static_cast<int>(parcel.ReadInt64());
+                pValueObject->value = parcel.ReadInt32();
                 break;
             }
             case DataSharePredicatesObjectType::TYPE_LONG: {
@@ -304,14 +303,8 @@ void DataSharePredicatesObject::UnmarshallingVector(DataSharePredicatesObjectTyp
 {
     switch (type) {
         case DataSharePredicatesObjectType::TYPE_INT_VECTOR: {
-            std::vector<int64_t> int64val {};
             std::vector<int> intval {};
-            parcel.ReadInt64Vector(&int64val);
-            if (!int64val.empty()) {
-                for (const auto &it : int64val) {
-                    intval.push_back(static_cast<int>(it));
-                }
-            }
+            parcel.ReadInt32Vector(&intval);
             pValueObject->value = intval;
             break;
         }
@@ -342,7 +335,7 @@ void DataSharePredicatesObject::MarshallingVector(Parcel &parcel) const
 {
     switch (this->type) {
         case DataSharePredicatesObjectType::TYPE_INT_VECTOR: {
-            parcel.WriteInt64Vector(std::get<std::vector<int64_t>>(value));
+            parcel.WriteInt32Vector(std::get<std::vector<int>>(value));
             break;
         }
         case DataSharePredicatesObjectType::TYPE_LONG_VECTOR: {
