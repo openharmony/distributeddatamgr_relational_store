@@ -35,7 +35,7 @@
         "destPath": "foundation/distributeddatamgr/appdatamgr"
     },
     "component": {
-        "name": "preference",
+        "name": "preferences",
         "subsystem": "distributeddatamgr",
         "syscap": [
             "SystemCapability.DistributedDataManager.Preferences.Core"
@@ -63,14 +63,14 @@
         },
         "build": {
             "sub_component": [
-                "//foundation/distributeddatamgr/appdatamgr/preference/interfaces/inner_api:native_preference",
-                "//foundation/distributeddatamgr/appdatamgr/preference/frameworks/js/napi:preferences",
-                "//foundation/distributeddatamgr/appdatamgr/preference/frameworks/js/napi:storage",
-                "//foundation/distributeddatamgr/appdatamgr/preference/frameworks/js/napi:storage_napi"
+                "//foundation/distributeddatamgr/appdatamgr/preferences/interfaces/inner_api:native_preferences",
+                "//foundation/distributeddatamgr/appdatamgr/preferences/frameworks/js/napi:preferences",
+                "//foundation/distributeddatamgr/appdatamgr/preferences/frameworks/js/napi:storage",
+                "//foundation/distributeddatamgr/appdatamgr/preferences/frameworks/js/napi:storage_napi"
             ],
             "inner_kits": [
                 {
-                    "name": "//foundation/distributeddatamgr/appdatamgr/preference/interfaces/inner_api:native_preference",
+                    "name": "//foundation/distributeddatamgr/appdatamgr/preferences/interfaces/inner_api:native_preferences",
                     "header": {
                         "header_files": [
                             "preferences.h",
@@ -80,13 +80,13 @@
                             "preferences_xml_utils.h",
                             "preferences_value.h"
                         ],
-                        "header_base": "//foundation/distributeddatamgr/appdatamgr/preference/interfaces/inner_api/include"
+                        "header_base": "//foundation/distributeddatamgr/appdatamgr/preferences/interfaces/inner_api/include"
                     }
                 }
             ],
             "test": [
-                "//foundation/distributeddatamgr/appdatamgr/preference/test/native:unittest",
-                "//foundation/distributeddatamgr/appdatamgr/preference/test/js:unittest"
+                "//foundation/distributeddatamgr/appdatamgr/preferences/test/native:unittest",
+                "//foundation/distributeddatamgr/appdatamgr/preferences/test/js:unittest"
             ]
         }
     }
