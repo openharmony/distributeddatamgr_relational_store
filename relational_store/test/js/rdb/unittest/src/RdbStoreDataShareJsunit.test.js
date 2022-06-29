@@ -15,7 +15,7 @@
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
 import data_rdb from '@ohos.data.rdb'
 import ability_featureAbility from '@ohos.ability.featureAbility'
-import dataShare from '@ohos.data.dataShare'
+import data_dataSharePredicates from '@ohos.data.dataSharePredicates'
 
 const TAG = "[RDB_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -128,7 +128,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             "blobType": u8,
         }
 
-        let predicates = new dataShare.DataSharePredicates()
+        let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
         let promiseUpdate = rdbStore.update("test", valueBucket, predicates)
         promiseUpdate.then(async (ret) => {
@@ -189,7 +189,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             "blobType": u8,
         }
 
-        let predicates = new dataShare.DataSharePredicates()
+        let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
 
         await rdbStore.update("test", valueBucket, predicates, async function (err, ret) {
@@ -241,7 +241,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         }
         await rdbStore.insert("test", valueBucket)
 
-        let predicates = new dataShare.DataSharePredicates()
+        let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
         let queryPromise = rdbStore.query("test", predicates)
         queryPromise.then((resultSet) => {
@@ -285,7 +285,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         }
         await rdbStore.insert("test", valueBucket)
 
-        let predicates = new dataShare.DataSharePredicates()
+        let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
 
         await rdbStore.query("test", predicates, ["ID", "NAME", "AGE", "SALARY", "blobType"],
@@ -328,7 +328,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         }
 
         await rdbStore.insert("test", valueBucket)
-        let predicates = new dataShare.DataSharePredicates()
+        let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
         let deletePromise = rdbStore.delete("test", predicates)
         deletePromise.then(async (ret) => {
@@ -366,7 +366,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         }
         await rdbStore.insert("test", valueBucket)
 
-        let predicates = new dataShare.DataSharePredicates()
+        let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
 
         await rdbStore.delete("test", predicates, async function (err, ret) {
