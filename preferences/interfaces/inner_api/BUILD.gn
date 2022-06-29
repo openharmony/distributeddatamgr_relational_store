@@ -11,33 +11,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/ohos.gni")
-import("//foundation/distributeddatamgr/appdatamgr/preference/preference.gni")
-config("native_preference_config") {
+import("//foundation/distributeddatamgr/appdatamgr/preferences/preferences.gni")
+config("native_preferences_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
-    "${preference_native_path}/include",
+    "${preferences_native_path}/include",
     "//utils/native/base/include",
   ]
 }
 
-config("native_preference_public_config") {
+config("native_preferences_public_config") {
   visibility = [ "//foundation/distributeddatamgr/appdatamgr:*" ]
   include_dirs = [ "include" ]
 }
 
-ohos_shared_library("native_preference") {
+ohos_shared_library("native_preferences") {
   sources = [
-    "${preference_native_path}/src/preferences_helper.cpp",
-    "${preference_native_path}/src/preferences_impl.cpp",
-    "${preference_native_path}/src/preferences_observer.cpp",
-    "${preference_native_path}/src/preferences_value.cpp",
-    "${preference_native_path}/src/preferences_xml_utils.cpp",
-    "${preference_native_path}/src/task_pool.cpp",
-    "${preference_native_path}/src/task_queue.cpp",
+    "${preferences_native_path}/src/preferences_helper.cpp",
+    "${preferences_native_path}/src/preferences_impl.cpp",
+    "${preferences_native_path}/src/preferences_observer.cpp",
+    "${preferences_native_path}/src/preferences_value.cpp",
+    "${preferences_native_path}/src/preferences_xml_utils.cpp",
+    "${preferences_native_path}/src/task_pool.cpp",
+    "${preferences_native_path}/src/task_queue.cpp",
   ]
 
-  configs = [ ":native_preference_config" ]
+  configs = [ ":native_preferences_config" ]
 
   deps = [
     "//third_party/libxml2:libxml2",
@@ -46,8 +46,8 @@ ohos_shared_library("native_preference") {
 
   external_deps = [ "hilog_native:libhilog" ]
 
-  public_configs = [ ":native_preference_public_config" ]
+  public_configs = [ ":native_preferences_public_config" ]
 
   subsystem_name = "distributeddatamgr"
-  part_name = "preference"
+  part_name = "preferences"
 }
