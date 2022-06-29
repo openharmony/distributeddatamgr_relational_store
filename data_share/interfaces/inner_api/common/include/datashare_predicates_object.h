@@ -72,7 +72,7 @@ public:
 
     operator int () const
     {
-        return static_cast<int>(std::get<int64_t>(value));
+        return std::get<int>(value);
     }
     operator int64_t () const
     {

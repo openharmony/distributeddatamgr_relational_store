@@ -317,7 +317,7 @@ DataSharePredicates *DataSharePredicates::Distinct()
  */
 DataSharePredicates *DataSharePredicates::Limit(const int number, const int offset)
 {
-    LOG_DEBUG("DataSharePredicates::Limit Start number%{public}d offset%{public}d", number, offset);
+    LOG_DEBUG("DataSharePredicates::Limit Start number : %{public}d, offset : %{public}d", number, offset);
     SetOperationList(LIMIT, number, offset, {}, TWO_COUNT);
     LOG_DEBUG("DataSharePredicates::Limit End");
     return this;
