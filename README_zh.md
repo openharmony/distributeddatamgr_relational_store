@@ -6,15 +6,6 @@
     -   [数据共享（DataShare）](data_share/README_zh.md)
     -   [轻量系统KV数据库（Lightweight KV store）](kv_store/README_zh.md)
 -   [目录](#section161941989596)
-
--   [关系型数据库（RDB）](relational_store/README_zh.md)
-
--   [首选项（Preferences）](preferences/README_zh.md)
-
--   [数据共享（DataShare）](data_share/README_zh.md)
-
--   [轻量系统KV数据库（Lightweight KV store）](kv_store/README_zh.md)
-
 -   [相关仓](#section1371113476307)
 
 ## 简介<a name="section11660541593"></a>
@@ -44,11 +35,38 @@
 │       └── native            # C++用例
 │
 ├── preferences               # 首选项（Preferences）
-│   ....
+│   ├── frameworks            # 框架层代码
+│   │   └── js                # JS API的实现
+│   │   │   └── napi          # napi代码实现
+│   │   └── native            # 内部接口实现
+│   ├── interfaces            # 接口代码
+│   │   └── inner_api         # 内部接口声明
+│   │       └── native        # C/C++接口
+│   └── test                  # 测试用例
+│       ├── js                # js用例
+│       └── native            # C++用例
 ├── data_share                # 数据共享（DataShare）
-│   ....
+│   ├── frameworks            # 框架层代码
+│   │   └── js                # JS API的实现
+│   │   │   └── napi          # napi代码实现
+│   │   └── native            # 内部接口实现
+│   ├── interfaces            # 接口代码
+│   │   └── inner_api         # 内部接口声明
+│   │       └── native        # C/C++接口
+│   └── test                  # 测试用例
+│       ├── js                # js用例
+│       └── native            # C++用例
 ├── kv_store                  # 轻量系统KV数据库（Lightweight KV store）
-│   ....
+│   ├── frameworks            # 框架层代码
+│   │   └── js                # JS API的实现
+│   │   │   └── napi          # napi代码实现
+│   │   └── native            # 内部接口实现
+│   ├── interfaces            # 接口代码
+│   │   └── inner_api         # 内部接口声明
+│   │       └── native        # C/C++接口
+│   └── test                  # 测试用例
+│       ├── js                # js用例
+│       └── native            # C++用例
 ```
 
 
