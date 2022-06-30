@@ -6,7 +6,7 @@
 
 **图 1**  逻辑架构图<a name="fig4166312527"></a>  
 
-![](../figures/zh-cn_dataShare.png)
+![](figures/zh-cn_dataShare.png)
 
 DataShareHelper模块为数据访问者提供操作DataShareExtAbility即数据提供者模块的接口。
 
