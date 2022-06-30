@@ -1,19 +1,50 @@
-# 轻量系统KV数据库（Lightweight KV store）<a name="ZH-CN_TOPIC_0000001124534865"></a>
+# 本地数据管理组件<a name="ZH-CN_TOPIC_0000001124534865"></a>
 
--   [本地数据管理组件](../README_zh.md)
 -   [简介](#section11660541593)
-    -   [轻量系统KV数据库（Lightweight KV store）](#section762641474721)
+    -   [关系型数据库（RDB）](#section1589234172717)
+    -   [首选项（Preferences）](#section1287582752719)
+    -   [轻量系统KV数据库（Lightweight KV store）](#section1287582752720)
 -   [目录](#section161941989596)
--   [轻量系统KV数据库（Lightweight KV store）](#section762641474722)
-    -   [说明](#section1944481420489)
+-   [关系型数据库（RDB）](#section101010894114)
+    -   [约束](#section18387142613414)
+
+-   [首选项（Preferences）](#section762641474720)
+    -   [约束](#section1944481420489)
+
+-   [轻量系统KV数据库（Lightweight KV store）](#section762641474721)
     -   [约束](#section1944481420490)
+
 -   [相关仓](#section1371113476307)
 
 ## 简介<a name="section11660541593"></a>
 
+**关系型数据库（Relational Database，RDB）** 是一种基于关系模型来管理数据的数据库。OpenHarmony关系型数据库基于SQLite组件提供了一套完整的对本地数据库进行管理的机制。
+
+**首选项（Preferences）** 主要提供轻量级Key-Value操作，支持本地应用存储少量数据，数据存储在本地文件中，同时也加载在内存中，所以访问速度更快，效率更高。首选项提供非关系型数据存储，不宜存储大量数据，经常用于操作键值对形式数据的场景。
+
 **轻量系统KV数据库（Lightweight KV store）** 依托当前公共基础库提供的KV存储能力开发，为轻量系统设备应用提供键值对数据管理能力。在有进程的平台上，KV存储提供的参数管理，供单进程访问不能被其他进程使用。在此类平台上，KV存储作为基础库加载在应用进程，以保障不被其他进程访问。
 
-### 轻量系统KV数据库（Lightweight KV store）<a name="section762641474721"></a>
+### 关系型数据库（RDB）<a name="section1589234172717"></a>
+
+OpenHarmony关系型数据库底层使用SQLite作为持久化存储引擎，支持SQLite具有的所有数据库特性，包括但不限于事务、索引、视图、触发器、外键、参数化查询和预编译SQL语句。
+
+**图 1**  关系型数据库运作机制<a name="fig3330103712254"></a>
+
+
+![](figures/zh-cn_关系型数据库运作机制.png)
+
+### 首选项（Preferences）<a name="section1287582752719"></a>
+
+1.  本模块提供首选项的操作类，应用通过这些操作类完成首选项操作。
+2.  借助getPreferences，可以将指定文件的内容加载到Preferences实例，每个文件最多有一个Preferences实例，系统会通过静态容器将该实例存储在内存中，直到主动从内存中移除该实例或者删除该文件。
+3.  获取Preferences实例后，可以借助Preferences类的函数，从Preferences实例中读取数据或者将数据写入Preferences实例，通过flush将Preferences实例持久化。
+
+**图 2**  首选项运行机制<a name="fig833053712258"></a>
+
+![](figures/zh-cn_首选项运行机制.png)
+
+
+### 轻量系统KV数据库（Lightweight KV store）<a name="section1287582752720"></a>
 
 > 当前先支持轻量键值（KV）本地数据存储能力，后续会逐步支持其他更丰富的数据类型。
 >
@@ -27,22 +58,66 @@
 
 ```
 //foundation/distributeddatamgr/appdatamgr
-├── kv_store                  # 轻量系统KV数据库（Lightweight KV store）
-│   ├── frameworks            # 框架层代码
-│   │   └── js                # JS API的实现
-│   │   │   └── napi          # napi代码实现
-│   │   └── native            # 内部接口实现
-│   ├── interfaces            # 接口代码
-│   │   └── inner_api         # 内部接口声明
-│   │       └── native        # C/C++接口
-│   └── test                  # 测试用例
-│       ├── js                # js用例
-│       └── native            # C++用例
+├── frameworks            # 框架层代码
+│   └── js                # JS API的实现
+│   │   └── napi          # napi代码实现
+│   └── native            # 内部接口实现
+└── interfaces            # 接口代码
+    └── inner_api         # 内部接口声明
+        └── native        # C/C++接口
 ```
 
-## 轻量系统KV数据库（Lightweight KV store）<a name="section762641474722"></a>
+## 关系型数据库（RDB）<a name="section101010894114"></a>
 
-### 说明<a name="section1944481420489"></a>
+以下是几个基本概念：
+
+-   **关系型数据库**
+
+    创建在关系模型基础上的数据库，以行和列的形式存储数据。
+
+-   **结果集**
+
+    指用户查询之后的结果集合，可以对数据进行访问。结果集提供了灵活的数据访问方式，可以更方便的拿到用户想要的数据。
+
+-   **SQLite数据库**
+
+    一款轻量级的数据库，是遵守ACID的关系型数据库组件。它是一个开源的项目。
+
+
+### 约束<a name="section18387142613414"></a>
+
+数据库中连接池的最大数量是4个，用以管理用户的读写操作。
+
+为保证数据的准确性，数据库同一时间只能支持一个写操作。
+
+## 首选项（Preferences）<a name="section762641474720"></a>
+
+以下是几个基本概念：
+
+-   **Key-Value数据库**
+
+    一种以键值对存储数据的一种数据库。Key是关键字，Value是值。
+
+-   **非关系型数据库**
+
+    区别于关系数据库，不保证遵循ACID（Atomic、Consistency、Isolation及Durability）特性，不采用关系模型来组织数据，数据之间无关系，扩展性好。
+
+-   **偏好数据**
+
+    用户经常访问和使用的数据。
+
+
+### 约束<a name="section1944481420489"></a>
+
+Key键为String类型，要求非空且长度不超过80个字符。
+
+如果Value值为String类型，可以为空但是长度不超过8192个字符。
+
+存储的数据量应该是轻量级的，建议存储的数据不超过一万条，否则会在内存方面产生较大的开销。
+
+## 轻量系统KV数据库（Lightweight KV store）<a name="section762641474721"></a>
+
+### 说明
 
 KV存储能力继承自公共基础库原始设计，在原有能力基础上进行增强，新增提供数据删除及二进制value读写能力的同时，保证操作的原子性；
 
