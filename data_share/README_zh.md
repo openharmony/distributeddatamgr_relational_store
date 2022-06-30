@@ -1,32 +1,26 @@
-# 首选项（Preferences）<a name="ZH-CN_TOPIC_0000001124534865"></a>
+# 数据共享（DataShare）<a name="ZH-CN_TOPIC_0000001124534865"></a>
 
 -   [本地数据管理组件](../README_zh.md)
 -   [简介](#section11660541593)
-    -   [首选项（Preferences）](#section1287582752719)
+    -   [数据共享（DataShare）](#section1287582752720)
 -   [目录](#section161941989596)
--   [首选项（Preferences）](#section762641474720)
+-   [数据共享（DataShare）](#section762641474721)
     -   [约束](#section1944481420489)
 -   [相关仓](#section1371113476307)
 
 ## 简介<a name="section11660541593"></a>
 
-**首选项（Preferences）** 主要提供轻量级Key-Value操作，支持本地应用存储少量数据，数据存储在本地文件中，同时也加载在内存中，所以访问速度更快，效率更高。首选项提供非关系型数据存储，不宜存储大量数据，经常用于操作键值对形式数据的场景。
+**数据共享（DataShare）** 主要用于应用管理其自身数据，同时支持同个设备上不同应用间的数据共享
 
-### 首选项（Preferences）<a name="section1287582752719"></a>
+### 数据共享（DataShare）<a name="section1287582752720"></a>
 
-1.  本模块提供首选项的操作类，应用通过这些操作类完成首选项操作。
-2.  借助getPreferences，可以将指定文件的内容加载到Preferences实例，每个文件最多有一个Preferences实例，系统会通过静态容器将该实例存储在内存中，直到主动从内存中移除该实例或者删除该文件。
-3.  获取Preferences实例后，可以借助Preferences类的函数，从Preferences实例中读取数据或者将数据写入Preferences实例，通过flush将Preferences实例持久化。
-
-**图 2**  首选项运行机制<a name="fig833053712258"></a>
-
-![](figures/zh-cn_首选项运行机制.png)
+> 主要用于应用管理其自身数据，同时支持同个设备上不同应用间的数据共享
 
 ## 目录<a name="section161941989596"></a>
 
 ```
 //foundation/distributeddatamgr/appdatamgr
-├── preferences               # 首选项（Preferences）
+├── data_share                # 数据共享（DataShare）
 │   ├── frameworks            # 框架层代码
 │   │   └── js                # JS API的实现
 │   │   │   └── napi          # napi代码实现
@@ -38,7 +32,8 @@
 │       ├── js                # js用例
 │       └── native            # C++用例
 ```
-## 首选项（Preferences）<a name="section762641474720"></a>
+
+## 数据共享（DataShare）<a name="section762641474721"></a>
 
 以下是几个基本概念：
 
@@ -53,7 +48,6 @@
 -   **偏好数据**
 
     用户经常访问和使用的数据。
-
 
 ### 约束<a name="section1944481420489"></a>
 
