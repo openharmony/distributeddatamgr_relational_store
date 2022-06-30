@@ -1,5 +1,6 @@
-# 关系型数据库<a name="ZH-CN_TOPIC_0000001124534865"></a>
+# 关系型数据库（Relational Database，RDB）<a name="ZH-CN_TOPIC_0000001124534865"></a>
 
+-   [本地数据管理组件](../README_zh.md)
 -   [简介](#section11660541593)
     -   [关系型数据库（RDB）](#section1589234172717)
 -   [目录](#section161941989596)
