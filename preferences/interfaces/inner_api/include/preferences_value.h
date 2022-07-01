@@ -17,6 +17,7 @@
 #define PREFERENCES_VALUE_H
 
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace OHOS {
