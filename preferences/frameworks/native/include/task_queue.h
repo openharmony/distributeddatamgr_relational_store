@@ -17,6 +17,7 @@
 #define TASK_QUEUE_H
 
 #include <queue>
+#include <thread>
 
 namespace OHOS {
 namespace NativePreferences {
