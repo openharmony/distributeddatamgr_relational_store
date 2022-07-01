@@ -1544,3 +1544,39 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep010, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
 }
+
+/* *
+ * @tc.name: testSqlStep011
+ * @tc.desc: normal testcase of SqlStep for GetString()
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(RdbStepResultSetTest, testSqlStep011, TestSize.Level1)
+{
+    GenerateDefaultEmptyTable();
+
+    std::string insertSql = "INSERT INTO test (data1, data2, data3, data4) VALUES (?, ?, ?, ?);";
+    const char arr[] = { 0X11, 0X22, 0X33, 0X44, 0X55, 0X00, 0X66, 0X77, 0X00 };
+    size_t arrLen = sizeof(arr);
+    uint8_t uValue = 66;
+    std::vector<uint8_t> typeBlob;
+    typeBlob.push_back(uValue);
+    store->ExecuteSql(
+        insertSql, std::vector<ValueObject> { ValueObject(std::string(arr, arrLen)), ValueObject((int)10),
+                       ValueObject((double)1.0), ValueObject((std::vector<uint8_t>)typeBlob) });
+    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
+    EXPECT_NE(resultSet, nullptr);
+
+    int iRet = resultSet->GoToFirstRow();
+    EXPECT_EQ(E_OK, iRet);
+    bool bResultSet = false;
+    iRet = resultSet->IsAtFirstRow(bResultSet);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(bResultSet, true);
+
+    std::string stringValue;
+    iRet = resultSet->GetString(0, stringValue);
+    size_t stringValueLen = stringValue.length();
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(arrLen, stringValueLen);
+}
