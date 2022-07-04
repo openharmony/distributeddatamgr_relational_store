@@ -11,17 +11,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/test.gni")
-import("//foundation/distributeddatamgr/appdatamgr/preference/preference.gni")
+import("//foundation/distributeddatamgr/appdatamgr/preferences/preferences.gni")
 
-module_output_path = "preference/native_preference"
+module_output_path = "preferences/native_preferences"
 
 ###############################################################################
 config("module_private_config") {
   visibility = [ ":*" ]
 
   include_dirs = [
-    "${preference_native_path}/include/",
-    "${preference_innerapi_path}/include",
+    "${preferences_native_path}/include/",
+    "${preferences_innerapi_path}/include",
   ]
 }
 
@@ -39,7 +39,7 @@ ohos_unittest("NativePreferencesTest") {
   external_deps = [ "hilog_native:libhilog" ]
 
   deps = [
-    "${preference_innerapi_path}:native_preference",
+    "${preferences_innerapi_path}:native_preferences",
     "//third_party/googletest:gtest_main",
   ]
 }
