@@ -1,5 +1,6 @@
-# 关系型数据库<a name="ZH-CN_TOPIC_0000001124534865"></a>
+# 关系型数据库（Relational Database，RDB）<a name="ZH-CN_TOPIC_0000001124534865"></a>
 
+-   [本地数据管理组件](../README_zh.md)
 -   [简介](#section11660541593)
     -   [关系型数据库（RDB）](#section1589234172717)
 -   [目录](#section161941989596)
@@ -62,7 +63,8 @@ OpenHarmony关系型数据库底层使用SQLite作为持久化存储引擎，支
 
 ## 相关仓<a name="section1371113476307"></a>
 
-分布式数据管理子系统
+- [分布式数据管理子系统](https://gitee.com/openharmony/docs/blob/master/zh-cn/readme/%E5%88%86%E5%B8%83%E5%BC%8F%E6%95%B0%E6%8D%AE%E7%AE%A1%E7%90%86%E5%AD%90%E7%B3%BB%E7%BB%9F.md)
 
-- [distributeddatamgr\_appdatamgr](https://gitee.com/openharmony/distributeddatamgr_appdatamgr)
+- [**distributeddatamgr\_appdatamgr**](https://gitee.com/openharmony/distributeddatamgr_appdatamgr/blob/master/README_zh.md)
+
 - [third\_party\_sqlite](https://gitee.com/openharmony/third_party_sqlite)
