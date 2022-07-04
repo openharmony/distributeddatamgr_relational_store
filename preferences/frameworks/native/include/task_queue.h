@@ -18,7 +18,6 @@
 
 #include <queue>
 #include <thread>
-#include <functional>
 
 namespace OHOS {
 namespace NativePreferences {

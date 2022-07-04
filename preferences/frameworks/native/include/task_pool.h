@@ -17,7 +17,6 @@
 #define TASK_POOL_H
 
 #include <condition_variable>
-#include <functional>
 #include <map>
 #include <mutex>
 #include <string>
