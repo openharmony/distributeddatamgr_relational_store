@@ -22,10 +22,10 @@
 
 ```
 //foundation/distributeddatamgr/appdatamgr
-├── relational_store          # 关系型数据库（RDB）
-├── preferences               # 首选项（Preferences）
 ├── data_share                # 数据共享（DataShare）
 ├── kv_store                  # 轻量系统KV数据库（Lightweight KV store）
+├── preferences               # 首选项（Preferences）
+└── relational_store          # 关系型数据库（RDB）
 ```
 
 
