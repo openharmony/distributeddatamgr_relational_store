@@ -54,7 +54,11 @@
                 "libhilog",
                 "ipc_core",
                 "ace_napi",
-                "samgr_proxy"
+                "samgr_proxy",
+                "napi",
+                "hilog_native",
+                "ipc",
+                "utils_base"
             ],
             "third_party": [
                 "libxml2",

@@ -54,7 +54,15 @@
                 "libhilog",
                 "ipc_core",
                 "ace_napi",
-                "samgr_proxy"
+                "samgr_proxy",
+                "hitrace_native",
+                "common",
+                "napi",
+                "hilog_native",
+                "icu",
+                "samgr_standard",
+                "ipc",
+                "utils_base"
             ],
             "third_party": [
                 "sqlite",
