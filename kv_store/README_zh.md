@@ -26,15 +26,13 @@
 ## 目录<a name="section161941989596"></a>
 
 ```
-//foundation/distributeddatamgr/appdatamgr
-├── kv_store                  # 轻量系统KV数据库（Lightweight KV store）
-│   ├── frameworks            # 框架层代码
-│   │   └── js                # JS API的实现
-│   │   │   └── napi          # napi代码实现
-│   │   └── native            # 内部接口实现
-│   ├── interfaces            # 接口代码
-│   │   └── inner_api         # 内部接口声明
-│   │       └── native        # C/C++接口
+//foundation/distributeddatamgr/appdatamgr/kv_store
+├── frameworks            # 框架层代码
+│   └── js                # JS API的实现
+│   │   └── napi          # napi代码实现
+│   └── native            # 内部接口实现
+├── interfaces            # 接口代码
+    └── inner_api         # 内部接口声明
 ```
 
 ## 轻量系统KV数据库（Lightweight KV store）<a name="section762641474722"></a>

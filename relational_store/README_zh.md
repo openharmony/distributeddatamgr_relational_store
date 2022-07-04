@@ -24,18 +24,16 @@ OpenHarmony关系型数据库底层使用SQLite作为持久化存储引擎，支
 ## 目录<a name="section161941989596"></a>
 
 ```
-//foundation/distributeddatamgr/appdatamgr/
-├── relational_store          # 关系型数据库（RDB）
-│   ├── frameworks            # 框架层代码
-│   │   └── js                # JS API的实现
-│   │   │   └── napi          # napi代码实现
-│   │   └── native            # 内部接口实现
-│   ├── interfaces            # 接口代码
-│   │   └── inner_api         # 内部接口声明
-│   │       └── native        # C/C++接口
-│   └── test                  # 测试用例
-│       ├── js                # js用例
-│       └── native            # C++用例
+//foundation/distributeddatamgr/appdatamgr/relational_store/
+├── frameworks            # 框架层代码
+│   └── js                # JS API的实现
+│   │   └── napi          # napi代码实现
+│   └── native            # 内部接口实现
+├── interfaces            # 接口代码
+│   └── inner_api         # 内部接口声明
+└── test                  # 测试用例
+    ├── js                # js用例
+    └── native            # C++用例
 ```
 
 ## 关系型数据库（RDB）<a name="section101010894114"></a>

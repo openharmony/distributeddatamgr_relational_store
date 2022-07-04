@@ -25,17 +25,16 @@
 ## 目录<a name="section161941989596"></a>
 
 ```
-//foundation/distributeddatamgr/appdatamgr
-├── preferences               # 首选项（Preferences）
-│   ├── frameworks            # 框架层代码
-│   │   └── js                # JS API的实现
-│   │   │   └── napi          # napi代码实现
-│   │   └── native            # 内部接口实现
-│   ├── interfaces            # 接口代码
-│   │   └── inner_api         # 内部接口声明
-│   └── test                  # 测试用例
-│       ├── js                # js用例
-│       └── native            # C++用例
+//foundation/distributeddatamgr/appdatamgr/preferences
+├── frameworks            # 框架层代码
+│   └── js                # JS API的实现
+│   │   └── napi          # napi代码实现
+│   └── native            # 内部接口实现
+├── interfaces            # 接口代码
+│   └── inner_api         # 内部接口声明
+└── test                  # 测试用例
+    ├── js                # js用例
+    └── native            # C++用例
 ```
 ## 首选项（Preferences）<a name="section762641474720"></a>
 
