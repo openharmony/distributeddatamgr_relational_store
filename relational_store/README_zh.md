@@ -1,7 +1,5 @@
 # 关系型数据库（Relational Database，RDB）
 
-## [本地数据管理组件](../README_zh.md)
-
 ## 简介
 
 **关系型数据库（Relational Database，RDB）** 是一种基于关系模型来管理数据的数据库。OpenHarmony关系型数据库基于SQLite组件提供了一套完整的对本地数据库进行管理的机制。
