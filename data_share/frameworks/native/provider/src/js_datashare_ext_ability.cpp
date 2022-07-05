@@ -44,7 +44,6 @@ constexpr int INVALID_VALUE = -1;
 const std::string ASYNC_CALLBACK_NAME = "AsyncCallback";
 }
 
-void PrintPredicates(const DataSharePredicates &predicates);
 bool MakeNapiColumn(napi_env env, napi_value &napiColumns, const std::vector<std::string> &columns);
 
 using namespace OHOS::AppExecFwk;
@@ -439,7 +438,6 @@ int JsDataShareExtAbility::Update(const Uri &uri, const DataSharePredicates &pre
     const DataShareValuesBucket &value)
 {
     LOG_INFO("begin.");
-    PrintPredicates(predicates);
     int ret = INVALID_VALUE;
     if (!CheckCallingPermission(abilityInfo_->writePermission)) {
         LOG_ERROR("%{public}s Check calling permission failed.", __func__);
@@ -487,7 +485,6 @@ int JsDataShareExtAbility::Update(const Uri &uri, const DataSharePredicates &pre
 int JsDataShareExtAbility::Delete(const Uri &uri, const DataSharePredicates &predicates)
 {
     LOG_INFO("begin.");
-    PrintPredicates(predicates);
     int ret = INVALID_VALUE;
     if (!CheckCallingPermission(abilityInfo_->writePermission)) {
         LOG_ERROR("%{public}s Check calling permission failed.", __func__);
@@ -528,7 +525,6 @@ std::shared_ptr<DataShareResultSet> JsDataShareExtAbility::Query(const Uri &uri,
     const DataSharePredicates &predicates, std::vector<std::string> &columns)
 {
     LOG_INFO("begin.");
-    PrintPredicates(predicates);
     std::shared_ptr<DataShareResultSet> ret;
     if (!CheckCallingPermission(abilityInfo_->readPermission)) {
         LOG_ERROR("%{public}s Check calling permission failed.", __func__);
@@ -806,25 +802,6 @@ napi_value JsDataShareExtAbility::MakePredicates(napi_env env, const DataSharePr
     }
     LOG_INFO("end.");
     return napiPredicates;
-}
-
-void PrintPredicates(const DataSharePredicates &predicates)
-{
-    std::list<OperationItem> preList = predicates.GetOperationList();
-    for (auto i = 0; i < preList.size(); i++) {
-        std::string str1 = "";
-        std::string str2 = "";
-        std::string str3 = "";
-        OperationItem op = static_cast<OperationItem>(preList.front());
-        preList.pop_front();
-        op.para1.GetString(str1);
-        op.para2.GetString(str2);
-        op.para3.GetString(str3);
-        LOG_INFO("operation = %{public}d, count = %{public}d", op.operation, op.parameterCount);
-        LOG_INFO("type1 = %{public}d, para1 = %{public}s", op.para1.GetType(), str1.c_str());
-        LOG_INFO("type2 = %{public}d, para2 = %{public}s", op.para2.GetType(), str2.c_str());
-        LOG_INFO("type3 = %{public}d, para3 = %{public}s", op.para3.GetType(), str3.c_str());
-    }
 }
 
 bool MakeNapiColumn(napi_env env, napi_value &napiColumns, const std::vector<std::string> &columns)
