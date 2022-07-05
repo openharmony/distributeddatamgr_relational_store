@@ -49,8 +49,14 @@ void DataShareHelper::AddDataShareDeathRecipient(const sptr<IRemoteObject> &toke
         token->RemoveDeathRecipient(callerDeathRecipient_);
     }
     if (callerDeathRecipient_ == nullptr) {
+        std::weak_ptr<DataShareHelper> thisWeakPtr(shared_from_this());
         callerDeathRecipient_ =
-            new DataShareDeathRecipient(std::bind(&DataShareHelper::OnSchedulerDied, this, std::placeholders::_1));
+            new DataShareDeathRecipient([thisWeakPtr](const wptr<IRemoteObject> &remote) {
+                auto dataShareHelper = thisWeakPtr.lock();
+                if (dataShareHelper) {
+                    dataShareHelper->OnSchedulerDied(remote);
+                }
+            });
     }
     if (token != nullptr) {
         LOG_INFO("token AddDeathRecipient.");
@@ -62,9 +68,11 @@ void DataShareHelper::AddDataShareDeathRecipient(const sptr<IRemoteObject> &toke
 void DataShareHelper::OnSchedulerDied(const wptr<IRemoteObject> &remote)
 {
     LOG_INFO("start.");
+    std::lock_guard<std::mutex> guard(lock_);
     auto object = remote.promote();
     object = nullptr;
     dataShareProxy_ = nullptr;
+    dataShareConnection_->ConnectDataShareExtAbility(uri_, token_);
     LOG_INFO("DataShareHelper::OnSchedulerDied end.");
 }
 
