@@ -19,7 +19,7 @@ ability_runtime_kits_path = "${ability_runtime_path}/frameworks/kits"
 
 ability_runtime_services_path = "${ability_runtime_path}/services"
 
-ability_runtime_napi_path = "${ability_runtime_path}/frameworks/js/napi/aafwk"
+ability_runtime_napi_path = "${ability_runtime_path}/frameworks/js/napi"
 
 datashare_base_path = "//foundation/distributeddatamgr/appdatamgr/data_share"
 
