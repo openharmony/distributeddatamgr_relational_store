@@ -1,42 +1,14 @@
-# 首选项（Preferences）<a name="ZH-CN_TOPIC_0000001124534865"></a>
+# 首选项（Preferences）
 
--   [本地数据管理组件](../README_zh.md)
--   [简介](#section11660541593)
-    -   [首选项（Preferences）](#section1287582752719)
--   [目录](#section161941989596)
--   [首选项（Preferences）](#section762641474720)
-    -   [约束](#section1944481420489)
--   [相关仓](#section1371113476307)
+## [本地数据管理组件](../README_zh.md)
 
-## 简介<a name="section11660541593"></a>
+## 简介
 
 **首选项（Preferences）** 主要提供轻量级Key-Value操作，支持本地应用存储少量数据，数据存储在本地文件中，同时也加载在内存中，所以访问速度更快，效率更高。首选项提供非关系型数据存储，不宜存储大量数据，经常用于操作键值对形式数据的场景。
-
-### 首选项（Preferences）<a name="section1287582752719"></a>
 
 1.  本模块提供首选项的操作类，应用通过这些操作类完成首选项操作。
 2.  借助getPreferences，可以将指定文件的内容加载到Preferences实例，每个文件最多有一个Preferences实例，系统会通过静态容器将该实例存储在内存中，直到主动从内存中移除该实例或者删除该文件。
 3.  获取Preferences实例后，可以借助Preferences类的函数，从Preferences实例中读取数据或者将数据写入Preferences实例，通过flush将Preferences实例持久化。
-
-**图 2**  首选项运行机制<a name="fig833053712258"></a>
-
-![](figures/zh-cn_首选项运行机制.png)
-
-## 目录<a name="section161941989596"></a>
-
-```
-//foundation/distributeddatamgr/appdatamgr/preferences
-├── frameworks            # 框架层代码
-│   └── js                # JS API的实现
-│   │   └── napi          # napi代码实现
-│   └── native            # 内部接口实现
-├── interfaces            # 接口代码
-│   └── inner_api         # 内部接口声明
-└── test                  # 测试用例
-    ├── js                # js用例
-    └── native            # C++用例
-```
-## 首选项（Preferences）<a name="section762641474720"></a>
 
 以下是几个基本概念：
 
@@ -52,8 +24,25 @@
 
     用户经常访问和使用的数据。
 
+**图 2**  首选项运行机制
 
-### 约束<a name="section1944481420489"></a>
+![](figures/zh-cn_首选项运行机制.png)
+
+## 目录
+
+```
+//foundation/distributeddatamgr/appdatamgr/preferences
+├── frameworks            # 框架层代码
+│   └── js                # JS API的实现
+│   │   └── napi          # napi代码实现
+│   └── native            # 内部接口实现
+├── interfaces            # 接口代码
+│   └── inner_api         # 内部接口声明
+└── test                  # 测试用例
+    ├── js                # js用例
+    └── native            # C++用例
+```
+## 约束
 
 Key键为String类型，要求非空且长度不超过80个字符。
 
@@ -61,7 +50,7 @@ Key键为String类型，要求非空且长度不超过80个字符。
 
 存储的数据量应该是轻量级的，建议存储的数据不超过一万条，否则会在内存方面产生较大的开销。
 
-## 相关仓<a name="section1371113476307"></a>
+## 相关仓
 
 - [分布式数据管理子系统](https://gitee.com/openharmony/docs/blob/master/zh-cn/readme/%E5%88%86%E5%B8%83%E5%BC%8F%E6%95%B0%E6%8D%AE%E7%AE%A1%E7%90%86%E5%AD%90%E7%B3%BB%E7%BB%9F.md)
 
