@@ -295,7 +295,7 @@ describe('rdbStoreInsertTest', function () {
                 expect(2012).assertEqual(name.length)
                 expect(28).assertEqual(age)
                 expect(100.5).assertEqual(salary)
-                expect(1).assertEqual(blobType[0])
+                expect(3).assertEqual(blobType[0])
             }).catch((err) => {
                 expect(null).assertFail();
             })
