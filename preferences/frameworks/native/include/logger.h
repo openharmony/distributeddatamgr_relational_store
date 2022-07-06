@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace NativePreferences {
-static const OHOS::HiviewDFX::HiLogLabel DFS_LABEL = { LOG_CORE, 0xD001650, "NativePreferences" };
+static const OHOS::HiviewDFX::HiLogLabel DFS_LABEL = { LOG_CORE, 0xD001653, "NativePreferences" };
 
 #define LOG_DEBUG(...) ((void)OHOS::HiviewDFX::HiLog::Debug(DFS_LABEL, __VA_ARGS__))
 #define LOG_INFO(...) ((void)OHOS::HiviewDFX::HiLog::Info(DFS_LABEL, __VA_ARGS__))

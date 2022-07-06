@@ -32,10 +32,6 @@ config("ability_config") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  defines = [
-    "AMS_LOG_TAG = \"Ability\"",
-    "AMS_LOG_DOMAIN = 0xD002200",
-  ]
 }
 
 config("ability_public_config") {
