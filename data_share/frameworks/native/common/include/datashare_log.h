@@ -23,7 +23,7 @@
 #include "hilog/log.h"
 
 namespace OHOS::DataShare {
-static const OHOS::HiviewDFX::HiLogLabel DATASHARE_LABEL = { LOG_CORE, 0xD002000, "DataShare" };
+static const OHOS::HiviewDFX::HiLogLabel DATASHARE_LABEL = { LOG_CORE, 0xD001651, "DataShare" };
 
 #define __FILENAME__ (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
 
