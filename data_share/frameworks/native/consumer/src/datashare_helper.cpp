@@ -41,26 +41,29 @@ DataShareHelper::DataShareHelper(const sptr<IRemoteObject> &token,
     LOG_INFO("DataShareHelper::DataShareHelper end");
 }
 
+~DataShareHelper::DataShareHelper()
+{
+    if (callerDeathRecipient_ != nullptr) {
+        dataShareProxy_->AsObject()->RemoveDeathRecipient(callerDeathRecipient_);
+        callerDeathRecipient_ = nullptr;
+    }
+}
+
 void DataShareHelper::AddDataShareDeathRecipient(const sptr<IRemoteObject> &token)
 {
     LOG_INFO("DataShareHelper::AddDataShareDeathRecipient start.");
     if (token != nullptr && callerDeathRecipient_ != nullptr) {
-        LOG_INFO("token RemoveDeathRecipient.");
-        token->RemoveDeathRecipient(callerDeathRecipient_);
+        LOG_INFO("exist callerDeathRecipient_.");
+        return;
     }
-    if (callerDeathRecipient_ == nullptr) {
-        std::weak_ptr<DataShareHelper> thisWeakPtr(shared_from_this());
+    if (token != nullptr && callerDeathRecipient_ == nullptr) {
         callerDeathRecipient_ =
-            new DataShareDeathRecipient([thisWeakPtr](const wptr<IRemoteObject> &remote) {
-                auto dataShareHelper = thisWeakPtr.lock();
-                if (dataShareHelper) {
-                    dataShareHelper->OnSchedulerDied(remote);
-                }
-            });
-    }
-    if (token != nullptr) {
+            new DataShareDeathRecipient(std::bind(&DataShareHelper::OnSchedulerDied, this, std::placeholders::_1));
+
         LOG_INFO("token AddDeathRecipient.");
         token->AddDeathRecipient(callerDeathRecipient_);
+    } else {
+        LOG_DEBUG("token != nullptr");
     }
     LOG_INFO("DataShareHelper::AddDataShareDeathRecipient end.");
 }
@@ -68,9 +71,10 @@ void DataShareHelper::AddDataShareDeathRecipient(const sptr<IRemoteObject> &toke
 void DataShareHelper::OnSchedulerDied(const wptr<IRemoteObject> &remote)
 {
     LOG_INFO("start.");
-    std::lock_guard<std::mutex> guard(lock_);
-    auto object = remote.promote();
-    object = nullptr;
+    if (callerDeathRecipient_ != nullptr) {
+        dataShareProxy_->AsObject()->RemoveDeathRecipient(callerDeathRecipient_);
+        callerDeathRecipient_ = nullptr;
+    }
     dataShareProxy_ = nullptr;
     dataShareConnection_->ConnectDataShareExtAbility(uri_, token_);
     LOG_INFO("DataShareHelper::OnSchedulerDied end.");
