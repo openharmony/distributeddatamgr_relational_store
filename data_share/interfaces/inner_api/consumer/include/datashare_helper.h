@@ -39,7 +39,7 @@ namespace DataShare {
 using string = std::string;
 class DataShareHelper final : public std::enable_shared_from_this<DataShareHelper> {
 public:
-    ~DataShareHelper() = default;
+    ~DataShareHelper();
 
     /**
      * @brief Creates a DataShareHelper instance with the Uri specified based on the given Context.
