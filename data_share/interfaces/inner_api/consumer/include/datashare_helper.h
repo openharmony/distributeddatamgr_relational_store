@@ -245,7 +245,6 @@ private:
     Uri uri_ = Uri("");
     sptr<IDataShare> dataShareProxy_ = nullptr;
     static std::mutex oplock_;
-    std::mutex lock_;
     sptr<IRemoteObject::DeathRecipient> callerDeathRecipient_ = nullptr;
     std::map<sptr<AAFwk::IDataAbilityObserver>, sptr<IDataShare>> registerMap_;
     std::map<sptr<AAFwk::IDataAbilityObserver>, std::string> uriMap_;
