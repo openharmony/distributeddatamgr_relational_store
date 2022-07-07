@@ -41,7 +41,7 @@ DataShareHelper::DataShareHelper(const sptr<IRemoteObject> &token,
     LOG_INFO("DataShareHelper::DataShareHelper end");
 }
 
-~DataShareHelper::DataShareHelper()
+DataShareHelper::~DataShareHelper()
 {
     if (callerDeathRecipient_ != nullptr) {
         dataShareProxy_->AsObject()->RemoveDeathRecipient(callerDeathRecipient_);
