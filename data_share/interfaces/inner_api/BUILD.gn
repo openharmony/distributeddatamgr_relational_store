@@ -44,7 +44,7 @@ config("ability_public_config") {
     "${datashare_common_native_path}/include",
     "${datashare_native_consumer_path}/include",
     "${datashare_native_provider_path}/include",
-    "//foundation/windowmanager/interfaces/innerkits/wm",
+    "//foundation/window/window_manager/interfaces/innerkits/wm",
   ]
 }
 
