@@ -49,17 +49,17 @@ ValuesBucket RdbUtils::ToValuesBucket(const DataShareValuesBucket &valuesBucket)
 RdbPredicates RdbUtils::ToPredicates(const DataShareAbsPredicates &predicates, const std::string &table)
 {
     RdbPredicates rdbPredicates(table);
+    if (predicates.GetSettingMode() == QUERY_LANGUAGE) {
+        rdbPredicates.SetWhereClause(predicates.GetWhereClause());
+        rdbPredicates.SetWhereArgs(predicates.GetWhereArgs());
+        rdbPredicates.SetOrder(predicates.GetOrder());
+    }
+
     const auto &operations = predicates.GetOperationList();
     for (const auto &oper : operations) {
         if (oper.operation >= 0 && oper.operation < LAST_TYPE) {
             (*HANDLERS[oper.operation])(oper, rdbPredicates);
         }
-    }
-
-    if (predicates.GetSettingMode() == QUERY_LANGUAGE) {
-        rdbPredicates.SetWhereClause(predicates.GetWhereClause());
-        rdbPredicates.SetWhereArgs(predicates.GetWhereArgs());
-        rdbPredicates.SetOrder(predicates.GetOrder());
     }
     return rdbPredicates;
 }
