@@ -116,7 +116,7 @@ void RdbStoreContext::BindArgs(napi_env env, napi_value arg)
                 bindArgs.push_back(ValueObject());
                 break;
             case napi_string:
-                bindArgs.push_back(ValueObject(JSUtils::Convert2String(env, element)));
+                bindArgs.push_back(ValueObject(JSUtils::Convert2String(env, element, false)));
                 break;
             case napi_object:
                 bindArgs.push_back(ValueObject(JSUtils::Convert2U8Vector(env, element)));
@@ -424,7 +424,7 @@ void ParseSelectionArgs(const napi_env &env, const napi_value &arg, RdbStoreCont
 
 void ParseSql(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
 {
-    asyncContext->sql = JSUtils::Convert2String(env, arg);
+    asyncContext->sql = JSUtils::Convert2String(env, arg, false);
     LOG_DEBUG("ParseSql end");
 }
 
