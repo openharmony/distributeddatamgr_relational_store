@@ -15,6 +15,10 @@
 
 #include "datashare_operation_builder.h"
 #include "datashare_log.h"
+#include "datashare_operation.h"
+#include "datashare_value_object.h"
+#include "datashare_values_bucket.h"
+namespace OHOS::DataShare { class DataSharePredicates; }
 
 namespace OHOS {
 namespace DataShare {
