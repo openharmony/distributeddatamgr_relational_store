@@ -41,30 +41,43 @@ DataShareHelper::DataShareHelper(const sptr<IRemoteObject> &token,
     LOG_INFO("DataShareHelper::DataShareHelper end");
 }
 
+DataShareHelper::~DataShareHelper()
+{
+    if (callerDeathRecipient_ != nullptr) {
+        dataShareProxy_->AsObject()->RemoveDeathRecipient(callerDeathRecipient_);
+        callerDeathRecipient_ = nullptr;
+    }
+}
+
 void DataShareHelper::AddDataShareDeathRecipient(const sptr<IRemoteObject> &token)
 {
     LOG_INFO("DataShareHelper::AddDataShareDeathRecipient start.");
-    if (token != nullptr && callerDeathRecipient_ != nullptr) {
-        LOG_INFO("token RemoveDeathRecipient.");
-        token->RemoveDeathRecipient(callerDeathRecipient_);
+    if (token == nullptr) {
+        LOG_INFO("token is nullptr");
+        return;
     }
-    if (callerDeathRecipient_ == nullptr) {
-        callerDeathRecipient_ =
-            new DataShareDeathRecipient(std::bind(&DataShareHelper::OnSchedulerDied, this, std::placeholders::_1));
+    if (callerDeathRecipient_ != nullptr) {
+        LOG_INFO("exist callerDeathRecipient_.");
+        return;
     }
-    if (token != nullptr) {
-        LOG_INFO("token AddDeathRecipient.");
-        token->AddDeathRecipient(callerDeathRecipient_);
-    }
+
+    LOG_INFO("token AddDeathRecipient.");
+    callerDeathRecipient_ =
+        new DataShareDeathRecipient(std::bind(&DataShareHelper::OnSchedulerDied, this, std::placeholders::_1));
+    token->AddDeathRecipient(callerDeathRecipient_);
+
     LOG_INFO("DataShareHelper::AddDataShareDeathRecipient end.");
 }
 
 void DataShareHelper::OnSchedulerDied(const wptr<IRemoteObject> &remote)
 {
     LOG_INFO("start.");
-    auto object = remote.promote();
-    object = nullptr;
+    if (callerDeathRecipient_ != nullptr) {
+        dataShareProxy_->AsObject()->RemoveDeathRecipient(callerDeathRecipient_);
+        callerDeathRecipient_ = nullptr;
+    }
     dataShareProxy_ = nullptr;
+    dataShareConnection_->ConnectDataShareExtAbility(uri_, token_);
     LOG_INFO("DataShareHelper::OnSchedulerDied end.");
 }
 
