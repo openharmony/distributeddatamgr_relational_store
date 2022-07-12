@@ -14,6 +14,7 @@
  */
 
 #include "datashare_values_bucket.h"
+#include "datashare_value_object.h"
 
 namespace OHOS {
 namespace DataShare {
