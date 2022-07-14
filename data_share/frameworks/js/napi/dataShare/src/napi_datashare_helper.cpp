@@ -654,7 +654,7 @@ napi_value NapiDataShareHelper::Napi_On(napi_env env, napi_callback_info info)
     size_t argc = MAX_ARGC;
     napi_value argv[MAX_ARGC] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
-    NAPI_ASSERT(env, argc == 3, "wrong count of args");
+    NAPI_ASSERT(env, argc == ARGS_THREE, "wrong count of args");
 
     NapiDataShareHelper *proxy = nullptr;
     NAPI_CALL_BASE(env, napi_unwrap(env, self, reinterpret_cast<void **>(&proxy)), nullptr);
@@ -699,7 +699,7 @@ napi_value NapiDataShareHelper::Napi_Off(napi_env env, napi_callback_info info)
     size_t argc = MAX_ARGC;
     napi_value argv[MAX_ARGC] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
-    NAPI_ASSERT(env, argc == 2 || argc == 3, "wrong count of args");
+    NAPI_ASSERT(env, argc == ARGS_TWO || argc == ARGS_THREE, "wrong count of args");
 
     NapiDataShareHelper *proxy = nullptr;
     NAPI_CALL_BASE(env, napi_unwrap(env, self, reinterpret_cast<void **>(&proxy)), nullptr);
@@ -722,7 +722,7 @@ napi_value NapiDataShareHelper::Napi_Off(napi_env env, napi_callback_info info)
     NAPI_ASSERT_BASE(env, valueType == napi_string, "uri is not string", nullptr);
     std::string uri = DataShareJSUtils::Convert2String(env, argv[PARAM1]);
 
-    if (argc == 3) {
+    if (argc == ARGS_THREE) {
         NAPI_CALL(env, napi_typeof(env, argv[PARAM2], &valueType));
         NAPI_ASSERT_BASE(env, valueType == napi_function, "callback is not a function", nullptr);
     }
