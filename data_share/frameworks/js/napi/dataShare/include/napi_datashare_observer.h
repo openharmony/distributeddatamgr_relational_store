@@ -15,38 +15,30 @@
 
 #ifndef NAPI_DATASHARE_OBSERVER_H
 #define NAPI_DATASHARE_OBSERVER_H
+
+#include <uv.h>
 #include "data_ability_observer_stub.h"
-#include "data_share_common.h"
+#include "napi/native_common.h"
+#include "napi/native_api.h"
+#include "napi/native_node_api.h"
 
 namespace OHOS {
 namespace DataShare {
 class NAPIDataShareObserver : public AAFwk::DataAbilityObserverStub {
 public:
+    NAPIDataShareObserver(napi_env env, napi_value callback);
+    virtual ~NAPIDataShareObserver();
     void OnChange() override;
-    void SetEnv(const napi_env &env);
-    void SetCallbackRef(const napi_ref &ref);
-    void ReleaseJSCallback();
-
-    void SetAssociatedObject(DSHelperOnOffCB* object);
-    const DSHelperOnOffCB* GetAssociatedObject(void);
-
-    void ChangeWorkPre();
-    void ChangeWorkRun();
-    void ChangeWorkInt();
-    void ChangeWorkPreDone();
-    void ChangeWorkRunDone();
-    int GetWorkPre();
-    int GetWorkRun();
-    int GetWorkInt();
-
 private:
-    napi_env env_ = nullptr;
+    struct ObserverWorker {
+        const NAPIDataShareObserver *observer_ = nullptr;
+        napi_env env_;
+        ObserverWorker(const NAPIDataShareObserver *observerIn) : observer_(observerIn) {}
+    };
+
+    napi_env env_;
     napi_ref ref_ = nullptr;
-    DSHelperOnOffCB* onCB_ = nullptr;
-    int workPre_ = 0;
-    int workRun_ = 0;
-    int intrust_ = 0;
-    std::mutex mutex_;
+    uv_loop_s *loop_ = nullptr;
 };
 }  // namespace DataShare
 }  // namespace OHOS
