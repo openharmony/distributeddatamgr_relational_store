@@ -37,7 +37,7 @@ SharedBlock::~SharedBlock()
     if (ashmem_ != nullptr) {
         ashmem_->UnmapAshmem();
         ashmem_->CloseAshmem();
-        LOG_ERROR("SharedBlock: close ashmem");
+        LOG_WARN("SharedBlock: close ashmem");
     }
 }
 
