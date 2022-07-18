@@ -89,7 +89,7 @@ int AbsResultSet::GoTo(int offset)
     DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
     int ret = GoToRow(rowPos + offset);
     if (ret != E_OK) {
-        LOG_ERROR("AbsResultSet::GoTo return ret is wrong!");
+        LOG_WARN("AbsResultSet::GoTo return ret is wrong!");
         return ret;
     }
     return E_OK;
@@ -100,7 +100,7 @@ int AbsResultSet::GoToFirstRow()
     DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
     int ret = GoToRow(0);
     if (ret != E_OK) {
-        LOG_ERROR("AbsResultSet::GoToFirstRow return ret is wrong!");
+        LOG_WARN("AbsResultSet::GoToFirstRow return ret is wrong!");
         return ret;
     }
     return E_OK;
@@ -112,13 +112,13 @@ int AbsResultSet::GoToLastRow()
     int rowCnt = 0;
     int ret = GetRowCount(rowCnt);
     if (ret != E_OK) {
-        LOG_ERROR("AbsResultSet::GoToLastRow  return GetRowCount::ret is wrong!");
+        LOG_WARN("AbsResultSet::GoToLastRow  return GetRowCount::ret is wrong!");
         return ret;
     }
 
     ret = GoToRow(rowCnt - 1);
     if (ret != E_OK) {
-        LOG_ERROR("AbsResultSet::GoToLastRow  return GoToRow::ret is wrong!");
+        LOG_WARN("AbsResultSet::GoToLastRow  return GoToRow::ret is wrong!");
         return ret;
     }
     return E_OK;
@@ -129,7 +129,7 @@ int AbsResultSet::GoToNextRow()
     DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
     int ret = GoToRow(rowPos + 1);
     if (ret != E_OK) {
-        LOG_ERROR("AbsResultSet::GoToNextRow  return GoToRow::ret is wrong!");
+        LOG_WARN("AbsResultSet::GoToNextRow  return GoToRow::ret is wrong!");
         return ret;
     }
     return E_OK;
@@ -140,7 +140,7 @@ int AbsResultSet::GoToPreviousRow()
     DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
     int ret = GoToRow(rowPos - 1);
     if (ret != E_OK) {
-        LOG_ERROR("AbsResultSet::GoToPreviousRow  return GoToRow::ret is wrong!");
+        LOG_WARN("AbsResultSet::GoToPreviousRow  return GoToRow::ret is wrong!");
         return ret;
     }
     return E_OK;
