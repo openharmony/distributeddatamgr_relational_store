@@ -18,7 +18,6 @@
 #include "napi_common_util.h"
 #include "datashare_helper.h"
 #include "datashare_log.h"
-#include "data_share_common.h"
 #include "napi_base_context.h"
 #include "napi_datashare_values_bucket.h"
 #include "datashare_predicates_proxy.h"
@@ -29,10 +28,8 @@ using namespace OHOS::AppExecFwk;
 
 namespace OHOS {
 namespace DataShare {
-constexpr int NO_ERROR = 0;
-constexpr int INVALID_PARAMETER = -1;
+constexpr int MAX_ARGC = 6;
 
-static std::vector<DSHelperOnOffCB *> registerInstances_;
 std::list<std::shared_ptr<DataShareHelper>> g_dataShareHelperList;
 
 void UnwrapDataSharePredicates(DataSharePredicates &predicates, napi_env env, napi_value value)
@@ -165,16 +162,7 @@ napi_value NapiDataShareHelper::Initialize(napi_env env, napi_callback_info info
     g_dataShareHelperList.emplace_back(proxy->datashareHelper_);
     auto finalize = [](napi_env env, void * data, void * hint) {
         NapiDataShareHelper *proxy = reinterpret_cast<NapiDataShareHelper *>(data);
-        auto helper = std::find_if(registerInstances_.begin(), registerInstances_.end(),
-            [&proxy](const DSHelperOnOffCB *helper) {
-                return helper->dataShareHelper == proxy->datashareHelper_.get();
-            });
-        if (helper != registerInstances_.end()) {
-            LOG_INFO("DataShareHelper finalize_cb find helper");
-            (*helper)->dataShareHelper->Release();
-            delete *helper;
-            registerInstances_.erase(helper);
-        }
+        delete proxy;
     };
     if (napi_wrap(env, self, proxy, finalize, nullptr, nullptr) != napi_ok) {
         finalize(env, proxy, nullptr);
@@ -662,396 +650,92 @@ napi_value NapiDataShareHelper::Napi_NotifyChange(napi_env env, napi_callback_in
 napi_value NapiDataShareHelper::Napi_On(napi_env env, napi_callback_info info)
 {
     LOG_INFO("Napi_On in");
-    DSHelperOnOffCB *onCB = new (std::nothrow) DSHelperOnOffCB;
-    if (onCB == nullptr) {
-        LOG_ERROR("Napi_On onCB == nullptr.");
-        return WrapVoidToJS(env);
+    napi_value self = nullptr;
+    size_t argc = MAX_ARGC;
+    napi_value argv[MAX_ARGC] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
+    NAPI_ASSERT(env, argc == ARGS_THREE, "wrong count of args");
+
+    NapiDataShareHelper *proxy = nullptr;
+    NAPI_CALL_BASE(env, napi_unwrap(env, self, reinterpret_cast<void **>(&proxy)), nullptr);
+    NAPI_ASSERT_BASE(env, proxy != nullptr, "there is no NapiDataShareHelper instance", nullptr);
+    NAPI_ASSERT_BASE(env, proxy->datashareHelper_ != nullptr, "there is no DataShareHelper instance", nullptr);
+
+    napi_valuetype valueType;
+    NAPI_CALL(env, napi_typeof(env, argv[PARAM0], &valueType));
+    if (valueType != napi_string) {
+        LOG_ERROR("type is not string");
+        return nullptr;
     }
-    onCB->cbBase.cbInfo.env = env;
-    onCB->cbBase.asyncWork = nullptr;
-    onCB->cbBase.deferred = nullptr;
-    onCB->cbBase.ability = nullptr;
-
-    napi_value ret = RegisterWrap(env, info, onCB);
-    if (ret == nullptr) {
-        LOG_ERROR("ret == nullptr.");
-        delete onCB;
-        onCB = nullptr;
-        ret = WrapVoidToJS(env);
-    }
-    LOG_INFO("Napi_On out");
-    return ret;
-}
-
-napi_value NapiDataShareHelper::RegisterWrap(napi_env env, napi_callback_info info, DSHelperOnOffCB *onCB)
-{
-    LOG_INFO("RegisterWrap in");
-    size_t argcAsync = ARGS_THREE;
-    const size_t argcPromise = ARGS_TWO;
-    const size_t argCountWithAsync = argcPromise + ARGS_ASYNC_COUNT;
-    napi_value args[ARGS_MAX_COUNT] = {nullptr};
-    napi_value ret = 0;
-    napi_value thisVar = nullptr;
-
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, &thisVar, nullptr));
-    if (argcAsync > argCountWithAsync || argcAsync > ARGS_MAX_COUNT) {
-        LOG_ERROR("Wrong argument count.");
+    std::string type = DataShareJSUtils::Convert2String(env, argv[PARAM0]);
+    if (type != "dataChange") {
+        LOG_ERROR("wrong register type : %{public}s", type.c_str());
         return nullptr;
     }
 
-    onCB->result = NO_ERROR;
-    napi_valuetype valuetype = napi_undefined;
-    NAPI_CALL(env, napi_typeof(env, args[PARAM0], &valuetype));
-    if (valuetype == napi_string) {
-        std::string type = DataShareJSUtils::Convert2String(env, args[PARAM0]);
-        if (type == "dataChange") {
-            LOG_INFO("Wrong type : %{public}s", type.c_str());
-        } else {
-            LOG_ERROR("Wrong argument type is %{public}s.", type.c_str());
-            onCB->result = INVALID_PARAMETER;
-        }
-    } else {
-        LOG_ERROR("Wrong argument type.");
-        onCB->result = INVALID_PARAMETER;
+    NAPI_CALL(env, napi_typeof(env, argv[PARAM1], &valueType));
+    NAPI_ASSERT_BASE(env, valueType == napi_string, "uri is not string", nullptr);
+    std::string uri = DataShareJSUtils::Convert2String(env, argv[PARAM1]);
+
+    NAPI_CALL(env, napi_typeof(env, argv[PARAM2], &valueType));
+    NAPI_ASSERT_BASE(env, valueType == napi_function, "callback is not a function", nullptr);
+    sptr<NAPIDataShareObserver> observer(new (std::nothrow) NAPIDataShareObserver(env, argv[PARAM2]));
+
+    auto obs = proxy->observerMap_.find(uri);
+    if (obs != proxy->observerMap_.end()) {
+        proxy->datashareHelper_->UnregisterObserver(Uri(uri), obs->second);
+        proxy->observerMap_.erase(uri);
     }
+    proxy->datashareHelper_->RegisterObserver(Uri(uri), observer);
+    proxy->observerMap_.emplace(uri, observer);
 
-    NAPI_CALL(env, napi_typeof(env, args[PARAM1], &valuetype));
-    if (valuetype == napi_string) {
-        onCB->uri = DataShareJSUtils::Convert2String(env, args[PARAM1]);
-        LOG_INFO("uri : %{public}s", onCB->uri.c_str());
-    } else {
-        LOG_ERROR("Wrong argument type.");
-        onCB->result = INVALID_PARAMETER;
-    }
-
-    NapiDataShareHelper *objectInfo = nullptr;
-    napi_unwrap(env, thisVar, (void **)&objectInfo);
-    LOG_INFO("Set NapiDataShareHelper objectInfo");
-    onCB->dataShareHelper = objectInfo->datashareHelper_.get();
-
-    ret = RegisterAsync(env, args, argcAsync, argcPromise, onCB);
-    return ret;
-}
-
-napi_value NapiDataShareHelper::RegisterAsync(
-    napi_env env, napi_value *args, size_t argcAsync, const size_t argcPromise, DSHelperOnOffCB *onCB)
-{
-    LOG_INFO("RegisterAsync in.");
-    if (args == nullptr || onCB == nullptr) {
-        LOG_ERROR("param == nullptr.");
-        return nullptr;
-    }
-    napi_value resourceName = 0;
-    NAPI_CALL(env, napi_create_string_latin1(env, __func__, NAPI_AUTO_LENGTH, &resourceName));
-
-    napi_valuetype valuetype = napi_undefined;
-    NAPI_CALL(env, napi_typeof(env, args[argcPromise], &valuetype));
-    if (valuetype == napi_function) {
-        LOG_INFO("valuetype is napi_function");
-        NAPI_CALL(env, napi_create_reference(env, args[argcPromise], 1, &onCB->cbBase.cbInfo.callback));
-    } else {
-        LOG_INFO("not valuetype isn't napi_function");
-        onCB->result = INVALID_PARAMETER;
-    }
-
-    sptr<NAPIDataShareObserver> observer(new (std::nothrow) NAPIDataShareObserver());
-    observer->SetEnv(env);
-    observer->SetCallbackRef(onCB->cbBase.cbInfo.callback);
-    onCB->observer = observer;
-
-    if (onCB->result == NO_ERROR) {
-        registerInstances_.emplace_back(onCB);
-    }
-
-    NAPI_CALL(env,
-        napi_create_async_work(
-            env,
-            nullptr,
-            resourceName,
-            RegisterExecuteCB,
-            RegisterCompleteCB,
-            (void *)onCB,
-            &onCB->cbBase.asyncWork));
-    NAPI_CALL(env, napi_queue_async_work(env, onCB->cbBase.asyncWork));
-    napi_value result = 0;
-    NAPI_CALL(env, napi_get_null(env, &result));
-    return result;
-}
-
-void NapiDataShareHelper::RegisterExecuteCB(napi_env env, void *data)
-{
-    LOG_INFO("RegisterExecuteCB in.");
-    DSHelperOnOffCB *onCB = static_cast<DSHelperOnOffCB *>(data);
-    if (onCB->dataShareHelper != nullptr) {
-        if (onCB->result != INVALID_PARAMETER && !onCB->uri.empty() && onCB->cbBase.cbInfo.callback != nullptr) {
-            OHOS::Uri uri(onCB->uri);
-            onCB->dataShareHelper->RegisterObserver(uri, onCB->observer);
-        } else {
-            LOG_ERROR("dataShareHelper uri is empty or callback is nullptr.");
-        }
-    }
-}
-
-void NapiDataShareHelper::RegisterCompleteCB(napi_env env, napi_status status, void *data)
-{
-    LOG_INFO("RegisterCompleteCB in.");
-    DSHelperOnOffCB *onCB = static_cast<DSHelperOnOffCB *>(data);
-    if (onCB == nullptr) {
-        LOG_ERROR("input params onCB is nullptr.");
-        return;
-    }
-    if (onCB->result == NO_ERROR) {
-        return;
-    }
-    if (onCB->observer) {
-        LOG_INFO("RegisterCompleteCB, call ReleaseJSCallback");
-        onCB->observer->ReleaseJSCallback();
-    }
-    delete onCB;
-    onCB = nullptr;
-    LOG_INFO("RegisterCompleteCB out.");
+    return nullptr;
 }
 
 napi_value NapiDataShareHelper::Napi_Off(napi_env env, napi_callback_info info)
 {
     LOG_INFO("Napi_Off in");
-    DSHelperOnOffCB *offCB = new (std::nothrow) DSHelperOnOffCB;
-    if (offCB == nullptr) {
-        LOG_ERROR("offCB == nullptr.");
-        return WrapVoidToJS(env);
-    }
-    offCB->cbBase.cbInfo.env = env;
-    offCB->cbBase.asyncWork = nullptr;
-    offCB->cbBase.deferred = nullptr;
-    offCB->cbBase.ability = nullptr;
+    napi_value self = nullptr;
+    size_t argc = MAX_ARGC;
+    napi_value argv[MAX_ARGC] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
+    NAPI_ASSERT(env, argc == ARGS_TWO || argc == ARGS_THREE, "wrong count of args");
 
-    napi_value ret = UnRegisterWrap(env, info, offCB);
-    if (ret == nullptr) {
-        LOG_ERROR("ret == nullptr.");
-        delete offCB;
-        offCB = nullptr;
-        ret = WrapVoidToJS(env);
-    }
-    LOG_INFO("Napi_Off out");
-    return ret;
-}
+    NapiDataShareHelper *proxy = nullptr;
+    NAPI_CALL_BASE(env, napi_unwrap(env, self, reinterpret_cast<void **>(&proxy)), nullptr);
+    NAPI_ASSERT_BASE(env, proxy != nullptr, "there is no NapiDataShareHelper instance", nullptr);
+    NAPI_ASSERT_BASE(env, proxy->datashareHelper_ != nullptr, "there is no DataShareHelper instance", nullptr);
 
-napi_value NapiDataShareHelper::UnRegisterWrap(napi_env env, napi_callback_info info, DSHelperOnOffCB *offCB)
-{
-    LOG_INFO("UnRegisterWrap in");
-    size_t argc = ARGS_THREE;
-    const size_t argcPromise = ARGS_TWO;
-    const size_t argCountWithAsync = argcPromise + ARGS_ASYNC_COUNT;
-    napi_value args[ARGS_MAX_COUNT] = {nullptr};
-    napi_value ret = 0;
-    napi_value thisVar = nullptr;
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thisVar, nullptr));
-    NAPI_ASSERT(env, argc <= argCountWithAsync && argc <= ARGS_MAX_COUNT, "UnRegisterWrap: Wrong argument count");
-    offCB->result = INVALID_PARAMETER;
-    napi_valuetype valuetype = napi_undefined;
-    NAPI_CALL(env, napi_typeof(env, args[PARAM0], &valuetype));
-    if (valuetype == napi_string) {
-        std::string type = DataShareJSUtils::Convert2String(env, args[PARAM0]);
-        if (type == "dataChange") {
-            offCB->result = NO_ERROR;
-        }
-    }
-    offCB->uri = "";
-    if (argc > ARGS_TWO) {
-        NAPI_CALL(env, napi_typeof(env, args[PARAM1], &valuetype));
-        if (valuetype == napi_string) {
-            offCB->uri = DataShareJSUtils::Convert2String(env, args[PARAM1]);
-        } else {
-            offCB->result = INVALID_PARAMETER;
-        }
-        NAPI_CALL(env, napi_typeof(env, args[PARAM2], &valuetype));
-        if (valuetype == napi_function) {
-            NAPI_CALL(env, napi_create_reference(env, args[PARAM2], 1, &offCB->cbBase.cbInfo.callback));
-        } else {
-            offCB->result = INVALID_PARAMETER;
-        }
-    } else {
-        NAPI_CALL(env, napi_typeof(env, args[PARAM1], &valuetype));
-        if (valuetype == napi_string) {
-            offCB->uri = DataShareJSUtils::Convert2String(env, args[PARAM1]);
-        } else if (valuetype == napi_function) {
-            NAPI_CALL(env, napi_create_reference(env, args[PARAM1], 1, &offCB->cbBase.cbInfo.callback));
-        } else {
-            offCB->result = INVALID_PARAMETER;
-        }
-    }
-    LOG_INFO("uri : %{public}s", offCB->uri.c_str());
-    NapiDataShareHelper *objectInfo = nullptr;
-    napi_unwrap(env, thisVar, (void **)&objectInfo);
-    offCB->dataShareHelper = objectInfo->datashareHelper_.get();
-    ret = UnRegisterAsync(env, args, argc, argcPromise, offCB);
-    return ret;
-}
-
-napi_value NapiDataShareHelper::UnRegisterAsync(
-    napi_env env, napi_value *args, size_t argc, const size_t argcPromise, DSHelperOnOffCB *offCB)
-{
-    LOG_INFO("UnRegisterAsync in.");
-    if (args == nullptr || offCB == nullptr) {
-        LOG_ERROR("param == nullptr.");
+    napi_valuetype valueType;
+    NAPI_CALL(env, napi_typeof(env, argv[PARAM0], &valueType));
+    if (valueType != napi_string) {
+        LOG_ERROR("type is not string");
         return nullptr;
     }
-    napi_value resourceName = 0;
-    NAPI_CALL(env, napi_create_string_latin1(env, __func__, NAPI_AUTO_LENGTH, &resourceName));
-
-    if (offCB->result == NO_ERROR) {
-        FindRegisterObs(env, offCB);
+    std::string type = DataShareJSUtils::Convert2String(env, argv[PARAM0]);
+    if (type != "dataChange") {
+        LOG_ERROR("wrong register type : %{public}s", type.c_str());
+        return nullptr;
     }
 
-    NAPI_CALL(env,
-        napi_create_async_work(
-            env,
-            nullptr,
-            resourceName,
-            UnRegisterExecuteCB,
-            UnRegisterCompleteCB,
-            (void *)offCB,
-            &offCB->cbBase.asyncWork));
-    NAPI_CALL(env, napi_queue_async_work(env, offCB->cbBase.asyncWork));
-    napi_value result = 0;
-    NAPI_CALL(env, napi_get_null(env, &result));
-    return result;
-}
+    NAPI_CALL(env, napi_typeof(env, argv[PARAM1], &valueType));
+    NAPI_ASSERT_BASE(env, valueType == napi_string, "uri is not string", nullptr);
+    std::string uri = DataShareJSUtils::Convert2String(env, argv[PARAM1]);
 
-void NapiDataShareHelper::UnRegisterExecuteCB(napi_env env, void *data)
-{
-    LOG_INFO("UnRegisterExecuteCB in.");
-    DSHelperOnOffCB *offCB = static_cast<DSHelperOnOffCB *>(data);
-    if (offCB == nullptr || offCB->dataShareHelper == nullptr) {
-        LOG_ERROR("NAPI_UnRegister, param is null.");
-        if (offCB != nullptr) {
-            delete offCB;
-            offCB = nullptr;
-        }
-        return;
-    }
-    LOG_INFO("UnRegisterExecuteCB, offCB->DestoryList size is %{public}zu", offCB->NotifyList.size());
-    for (auto &iter : offCB->NotifyList) {
-        if (iter != nullptr && iter->observer != nullptr) {
-            OHOS::Uri uri(iter->uri);
-            iter->dataShareHelper->UnregisterObserver(uri, iter->observer);
-            offCB->DestoryList.emplace_back(iter);
-        }
-    }
-    offCB->NotifyList.clear();
-    LOG_INFO("UnRegisterExecuteCB out.");
-}
-
-void NapiDataShareHelper::UnRegisterCompleteCB(napi_env env, napi_status status, void *data)
-{
-    LOG_INFO("UnRegisterCompleteCB in.");
-    // cannot run it in executeCB, because need to use napi_strict_equals compare callbacks.
-    DSHelperOnOffCB *offCB = static_cast<DSHelperOnOffCB *>(data);
-    if (offCB == nullptr || offCB->dataShareHelper == nullptr) {
-        LOG_ERROR("NAPI_UnRegister, param is null.");
-        if (offCB != nullptr) {
-            delete offCB;
-            offCB = nullptr;
-        }
-        return;
-    }
-    LOG_INFO("UnRegisterCompleteCB, offCB->DestoryList size is %{public}zu", offCB->DestoryList.size());
-    for (auto &iter : offCB->DestoryList) {
-        if (iter->observer != nullptr) {
-            if (iter->observer->GetWorkPre() == 1 && iter->observer->GetWorkRun() == 0) {
-                iter->observer->SetAssociatedObject(iter);
-                iter->observer->ChangeWorkInt();
-                LOG_INFO("UnRegisterCompleteCB ChangeWorkInt");
-            } else {
-                iter->observer->ReleaseJSCallback();
-                delete iter;
-                iter = nullptr;
-                LOG_INFO("UnRegisterCompleteCB ReleaseJSCallback");
-            }
-        }
+    if (argc == ARGS_THREE) {
+        NAPI_CALL(env, napi_typeof(env, argv[PARAM2], &valueType));
+        NAPI_ASSERT_BASE(env, valueType == napi_function, "callback is not a function", nullptr);
     }
 
-    offCB->DestoryList.clear();
-    delete offCB;
-    offCB = nullptr;
-    LOG_INFO("UnRegisterCompleteCB out");
-}
-
-void NapiDataShareHelper::FindRegisterObs(napi_env env, DSHelperOnOffCB *data)
-{
-    LOG_INFO("FindRegisterObs in.");
-    if (data == nullptr || data->dataShareHelper == nullptr) {
-        LOG_ERROR("FindRegisterObs, param is null.");
-        return;
-    }
-    if (data->cbBase.cbInfo.callback != nullptr) {
-        LOG_INFO("FindRegisterObs, UnRegisterExecuteCB callback is not null.");
-        FindRegisterObsByCallBack(env, data);
+    auto obs = proxy->observerMap_.find(uri);
+    if (obs != proxy->observerMap_.end()) {
+        proxy->datashareHelper_->UnregisterObserver(Uri(uri), obs->second);
+        proxy->observerMap_.erase(uri);
     } else {
-        if (data->uri.empty()) {
-            LOG_ERROR("FindRegisterObs, error: uri is empty.");
-            return;
-        }
-
-        LOG_INFO("FindRegisterObs, uri : %{public}s.", data->uri.c_str());
-        std::string strUri = data->uri;
-        do {
-            auto helper = std::find_if(registerInstances_.begin(), registerInstances_.end(),
-                [strUri](const DSHelperOnOffCB *helper) { return helper->uri == strUri; });
-            if (helper != registerInstances_.end()) {
-                OHOS::Uri uri((*helper)->uri);
-                data->NotifyList.emplace_back(*helper);
-                registerInstances_.erase(helper);
-                LOG_INFO("FindRegisterObs Instances erase size : %{public}zu", registerInstances_.size());
-            } else {
-                LOG_INFO("FindRegisterObs not match any uri.");
-                break;
-            }
-        } while (true);
+        LOG_DEBUG("this uri hasn't been registered");
     }
-    LOG_INFO("FindRegisterObs out, data->NotifyList.size : %{public}zu", data->NotifyList.size());
-}
 
-void NapiDataShareHelper::FindRegisterObsByCallBack(napi_env env, DSHelperOnOffCB *data)
-{
-    LOG_INFO("FindRegisterObsByCallBack in.");
-    if (data == nullptr || data->dataShareHelper == nullptr) {
-        LOG_ERROR("FindRegisterObsByCallBack, param is null.");
-        return;
-    }
-    napi_value callbackA = 0;
-    napi_get_reference_value(data->cbBase.cbInfo.env, data->cbBase.cbInfo.callback, &callbackA);
-    std::string strUri = data->uri;
-    do {
-        auto helper = std::find_if(
-            registerInstances_.begin(),
-            registerInstances_.end(),
-            [callbackA, strUri](const DSHelperOnOffCB *helper) {
-                bool result = false;
-                if (helper == nullptr || helper->cbBase.cbInfo.callback == nullptr) {
-                    LOG_ERROR("%{public}s is nullptr", ((helper == nullptr) ? "helper" : "cbBase.cbInfo.callback"));
-                    return result;
-                }
-                if (helper->uri != strUri) {
-                    LOG_ERROR("uri inconsistent, h=[%{public}s] u=[%{public}s]", helper->uri.c_str(), strUri.c_str());
-                    return result;
-                }
-                napi_value callbackB = 0;
-                napi_get_reference_value(helper->cbBase.cbInfo.env, helper->cbBase.cbInfo.callback, &callbackB);
-                auto ret = napi_strict_equals(helper->cbBase.cbInfo.env, callbackA, callbackB, &result);
-                LOG_INFO("FindRegisterObsByCallBack cb equals status : %{public}d result : %{public}d.", ret, result);
-                return result;
-            });
-        if (helper != registerInstances_.end()) {
-            data->NotifyList.emplace_back(*helper);
-            registerInstances_.erase(helper);
-            LOG_INFO("FindRegisterObsByCallBack Instances erase size = %{public}zu", registerInstances_.size());
-        } else {
-            LOG_INFO("FindRegisterObsByCallBack not match any callback. %{public}zu", registerInstances_.size());
-            break;
-        }
-    } while (true);
-    LOG_INFO("FindRegisterObsByCallBack out.");
+    return nullptr;
 }
 }  // namespace DataShare
 }  // namespace OHOS
