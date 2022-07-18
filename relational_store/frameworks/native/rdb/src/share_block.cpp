@@ -116,10 +116,10 @@ void FillSharedBlockOpt(SharedBlockInfo *info)
     while (!gotException) {
         int err = sqlite3_step(info->statement);
         if (err == SQLITE_DONE) {
-            LOG_ERROR("Processed all rows after optimization.");
+            LOG_WARN("Processed all rows after optimization.");
             break;
         } else if (err == SQLITE_LOCKED || err == SQLITE_BUSY) {
-            LOG_ERROR("Database locked, retrying");
+            LOG_WARN("Database locked, retrying");
             if (retryCount > RETRY_TIME) {
                 gotException = true;
             } else {
@@ -159,10 +159,10 @@ void FillSharedBlock(SharedBlockInfo *info)
             isFull = info->isFull;
             hasException = info->hasException;
         } else if (err == SQLITE_DONE) {
-            LOG_ERROR("Processed all rows");
+            LOG_WARN("Processed all rows");
             break;
         } else if (err == SQLITE_LOCKED || err == SQLITE_BUSY) {
-            LOG_ERROR("Database locked, retrying");
+            LOG_WARN("Database locked, retrying");
             if (retryCount > RETRY_TIME) {
                 LOG_ERROR("Bailing on database busy retry");
                 hasException = true;
