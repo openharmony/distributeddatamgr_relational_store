@@ -59,6 +59,7 @@ private:
     static void FindRegisterObsByCallBack(napi_env env, DSHelperOnOffCB *data);
 
     std::shared_ptr<DataShareHelper> datashareHelper_ = nullptr;
+    std::map<std::string, sptr<AAFwk::IDataAbilityObserver>> observerMap_;
 
     struct ContextInfo : public AsyncCall::Context {
         NapiDataShareHelper *proxy = nullptr;
