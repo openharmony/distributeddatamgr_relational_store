@@ -154,7 +154,8 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("rollBack", RollBack),
         DECLARE_NAPI_FUNCTION("commit", Commit),
         DECLARE_NAPI_FUNCTION("queryByStep", QueryByStep),
-        DECLARE_NAPI_GETTER_SETTER("version", GetVersion, SetVersion),
+        DECLARE_NAPI_FUNCTION("getVersion", GetVersion),
+        DECLARE_NAPI_FUNCTION("setVersion", SetVersion),
         DECLARE_NAPI_FUNCTION("markAsCommit", MarkAsCommit),
         DECLARE_NAPI_FUNCTION("endTransaction", EndTransaction),
         DECLARE_NAPI_FUNCTION("restore", Restore),
@@ -910,10 +911,10 @@ napi_value RdbStoreProxy::GetVersion(napi_env env, napi_callback_info info)
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
     NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
-    int32_t getVersion = 0;
-    int out = rdbStoreProxy->rdbStore_->GetVersion(getVersion);
+    int32_t version = 0;
+    int out = rdbStoreProxy->rdbStore_->GetVersion(version);
     LOG_DEBUG("RdbStoreProxy::GetVersion out is : %{public}d", out);
-    return JSUtils::Convert2JSValue(env, out);
+    return JSUtils::Convert2JSValue(env, version);
 }
 
 napi_value RdbStoreProxy::SetVersion(napi_env env, napi_callback_info info)
@@ -925,11 +926,11 @@ napi_value RdbStoreProxy::SetVersion(napi_env env, napi_callback_info info)
     NAPI_ASSERT(env, argc == 1, "RdbStoreProxy::SetVersion Invalid argvs!");
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thiz);
     NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
-    int32_t setVersion = 0;
-    napi_get_value_int32(env, args[0], &setVersion);
-    int out = rdbStoreProxy->rdbStore_->SetVersion(setVersion);
+    int32_t version = 0;
+    napi_get_value_int32(env, args[0], &version);
+    int out = rdbStoreProxy->rdbStore_->SetVersion(version);
     LOG_DEBUG("RdbStoreProxy::SetVersion out is : %{public}d", out);
-    return thiz;
+    return nullptr;
 }
 
 napi_value RdbStoreProxy::MarkAsCommit(napi_env env, napi_callback_info info)
