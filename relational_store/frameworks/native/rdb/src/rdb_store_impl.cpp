@@ -44,16 +44,6 @@ std::shared_ptr<RdbStore> RdbStoreImpl::Open(const RdbStoreConfig &config, int &
     return rdbStore;
 }
 
-static std::string RemoveSuffix(const std::string& name)
-{
-    std::string suffix(".db");
-    auto pos = name.rfind(suffix);
-    if (pos == std::string::npos || pos < name.length() - suffix.length()) {
-        return name;
-    }
-    return std::string(name, 0, pos);
-}
-
 int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
 {
     int errCode = E_OK;
@@ -71,7 +61,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     fileType = config.GetDatabaseFileType();
     syncerParam_.bundleName_ = config.GetBundleName();
     syncerParam_.hapName_ = config.GetModuleName();
-    syncerParam_.storeName_ = RemoveSuffix(config.GetName());
+    syncerParam_.storeName_ = config.GetName();
     syncerParam_.area_ = config.GetArea();
     syncerParam_.level_ = config.GetSecurityLevel();
     syncerParam_.type_ = config.GetDistributedType();
