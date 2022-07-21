@@ -152,6 +152,21 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_002, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, currentVersion);
 
+    store->SetVersion(5);
+    ret = store->GetVersion(currentVersion);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(5, currentVersion);
+
+    store->SetVersion(2147483647);
+    ret = store->GetVersion(currentVersion);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2147483647, currentVersion);
+
+    store->SetVersion(-2147483648);
+    ret = store->GetVersion(currentVersion);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(-2147483648, currentVersion);
+
     std::string journalMode;
     ret = store->ExecuteAndGetString(journalMode, "PRAGMA journal_mode");
     EXPECT_EQ(ret, E_OK);

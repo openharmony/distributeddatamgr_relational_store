@@ -138,5 +138,41 @@ describe('rdbStoreTest', function () {
         console.log(TAG + "************* testRdbStore0004 end   *************");
     })
 
+    /**
+     * @tc.name rdb store setVersion & getVersion
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0050
+     * @tc.desc rdb store setVersion & getVersion
+     */
+    it('testRdbStore0005', 0, async function (done) {
+        console.log(TAG + "************* testRdbStore0005 start *************");
+
+        let storePromise = dataRdb.getRdbStore(STORE_CONFIG, 2);
+        storePromise.then(async (store) => {
+            try {
+                expect(2).assertEqual(store.getVersion())
+                store.setVersion(5)
+                expect(5).assertEqual(store.getVersion())
+                store.setVersion(2147483647)
+                expect(2147483647).assertEqual(store.getVersion())
+                store.setVersion(-2147483648)
+                expect(-2147483648).assertEqual(store.getVersion())
+
+                // Exceeds the range of 32-bit signed integer value.
+                store.setVersion(2147483647000)
+                expect(-1000).assertEqual(store.getVersion())
+                store.setVersion(-2147483648100)
+                expect(-100).assertEqual(store.getVersion())
+            } catch (e) {
+                expect(null).assertFail();
+            }
+        }).catch((err) => {
+            expect(null).assertFail();
+        })
+        await storePromise
+        storePromise = null
+        await dataRdb.deleteRdbStore("rdbstore.db");
+        done();
+        console.log(TAG + "************* testRdbStore0005 end   *************");
+    })
     console.log(TAG + "*************Unit Test End*************");
 })
