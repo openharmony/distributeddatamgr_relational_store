@@ -12,8 +12,7 @@
 # limitations under the License.
 import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/data_share/datashare.gni")
-import(
-    "//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 config("rdb_data_share_adapter_config") {
   visibility = [ ":*" ]

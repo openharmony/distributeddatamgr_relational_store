@@ -12,8 +12,7 @@
 # limitations under the License.
 import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
-import(
-    "//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 ohos_copy("relational_store_declaration") {
   sources = [ "./api" ]
