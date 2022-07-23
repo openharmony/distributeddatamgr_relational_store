@@ -86,7 +86,7 @@ void RdbStoreInsertTest::TearDownTestCase(void)
 
 void RdbStoreInsertTest::SetUp(void)
 {
-    store->ExecuteSql("DELETE FROM test");
+    store->ExecuteSql("DROP TABLE IF EXISTS test");
 }
 
 void RdbStoreInsertTest::TearDown(void)
