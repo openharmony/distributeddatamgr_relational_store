@@ -12,7 +12,7 @@
 # limitations under the License.
 import("//build/ohos.gni")
 import(
-    "//foundation/distributeddatamgr/appdatamgr/relational_store/relational_store.gni")
+    "//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 config("appdatafwk_config") {
   visibility = [ ":*" ]

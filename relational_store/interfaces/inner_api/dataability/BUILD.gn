@@ -12,7 +12,7 @@
 # limitations under the License.
 import("//build/ohos.gni")
 import(
-    "//foundation/distributeddatamgr/appdatamgr/relational_store/relational_store.gni")
+    "//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 config("native_dataability_config") {
   visibility = [ ":*" ]
@@ -27,7 +27,7 @@ config("native_dataability_config") {
 }
 
 config("native_dataability_public_config") {
-  visibility = [ "//foundation/distributeddatamgr/appdatamgr:*" ]
+  visibility = [ "//foundation/distributeddatamgr/relational_store:*" ]
   include_dirs = [ "include" ]
 }
 
