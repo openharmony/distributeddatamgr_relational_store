@@ -57,7 +57,7 @@
                 "utils_base",
                 "common",
                 "icu",
-                "samgr_standard"
+                "samgr"
             ],
             "third_party": [
                 "sqlite",

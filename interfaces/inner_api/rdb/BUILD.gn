@@ -101,7 +101,7 @@ ohos_shared_library("native_rdb") {
     "hitrace_native:hitrace_meter",
     "hitrace_native:libhitrace",
     "ipc:ipc_core",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 
   public_configs = [ ":native_rdb_public_config" ]
