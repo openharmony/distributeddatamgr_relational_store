@@ -22,7 +22,14 @@
 namespace OHOS::NativeRdb {
 ResultSetProxy::ResultSetProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IResultSet>(impl)
 {
-  LOG_INFO("Init result set proxy.");
+    LOG_INFO("Init result set proxy.");
+    remote_ = Remote();
+}
+
+ResultSetProxy::~ResultSetProxy()
+{
+    LOG_INFO("Result set destroy, close result.");
+    Close();
 }
 
 int ResultSetProxy::GetAllColumnNames(std::vector<std::string> &columnNames)
@@ -33,7 +40,7 @@ int ResultSetProxy::GetAllColumnNames(std::vector<std::string> &columnNames)
         return E_ERROR;
     }
     MessageOption mo { MessageOption::TF_SYNC };
-    int32_t error = Remote()->SendRequest(CMD_GET_ALL_COLUMN_NAMES, data, reply, mo);
+    int32_t error = remote_->SendRequest(CMD_GET_ALL_COLUMN_NAMES, data, reply, mo);
     if (error != 0) {
         LOG_ERROR("SendRequest failed, error is %{public}d, code is %{public}d.", error, CMD_GET_ALL_COLUMN_NAMES);
         return E_ERROR;
@@ -44,8 +51,8 @@ int ResultSetProxy::GetAllColumnNames(std::vector<std::string> &columnNames)
         return status;
     }
     if (!reply.ReadStringVector(&columnNames)) {
-      LOG_ERROR("Read columnNames failed.");
-      return E_ERROR;
+        LOG_ERROR("Read columnNames failed.");
+        return E_ERROR;
     }
     return E_OK;
 }
@@ -78,7 +85,7 @@ int ResultSetProxy::GetColumnIndex(const std::string &columnName, int &columnInd
         return E_ERROR;
     }
     MessageOption mo { MessageOption::TF_SYNC };
-    int32_t error = Remote()->SendRequest(CMD_GET_COLUMN_INDEX, data, reply, mo);
+    int32_t error = remote_->SendRequest(CMD_GET_COLUMN_INDEX, data, reply, mo);
     if (error != 0) {
         LOG_ERROR("SendRequest failed, error is %{public}d, code is %{public}d.", error, CMD_GET_COLUMN_INDEX);
         return E_ERROR;
@@ -110,7 +117,7 @@ int ResultSetProxy::GetRowCount(int &count)
 
 int ResultSetProxy::GetRowIndex(int &position) const
 {
-    return const_cast<ResultSetProxy&>(*this).SendRequestRetInt(CMD_GET_ROW_INDEX, position);
+    return SendRequestRetInt(CMD_GET_ROW_INDEX, position);
 }
 
 int ResultSetProxy::GoTo(int offset)
@@ -150,12 +157,12 @@ int ResultSetProxy::IsEnded(bool &result)
 
 int ResultSetProxy::IsStarted(bool &result) const
 {
-    return const_cast<ResultSetProxy&>(*this).SendRequestRetBool(CMD_IS_STARTED_ROW, result);
+    return SendRequestRetBool(CMD_IS_STARTED_ROW, result);
 }
 
 int ResultSetProxy::IsAtFirstRow(bool &result) const
 {
-    return const_cast<ResultSetProxy&>(*this).SendRequestRetBool(CMD_IS_AT_FIRST_ROW, result);
+    return SendRequestRetBool(CMD_IS_AT_FIRST_ROW, result);
 }
 
 int ResultSetProxy::IsAtLastRow(bool &result)
@@ -171,8 +178,8 @@ int ResultSetProxy::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
         return status;
     }
     if (!reply.ReadUInt8Vector(&blob)) {
-      LOG_ERROR("Read blob failed.");
-      return E_ERROR;
+        LOG_ERROR("Read blob failed.");
+        return E_ERROR;
     }
     return E_OK;
 }
@@ -240,7 +247,7 @@ bool ResultSetProxy::IsClosed() const
         return false;
     }
     MessageOption mo { MessageOption::TF_SYNC };
-    int32_t error = const_cast<ResultSetProxy&>(*this).Remote()->SendRequest(CMD_IS_CLOSED, data, reply, mo);
+    int32_t error = remote_->SendRequest(CMD_IS_CLOSED, data, reply, mo);
     if (error != 0) {
         LOG_ERROR("SendRequest failed, error is %{public}d, code is %{public}d.", error, CMD_IS_CLOSED);
         return false;
@@ -261,7 +268,7 @@ int ResultSetProxy::SendRequest(uint32_t code)
         return E_ERROR;
     }
     MessageOption mo { MessageOption::TF_SYNC };
-    int32_t error = Remote()->SendRequest(code, data, reply, mo);
+    int32_t error = remote_->SendRequest(code, data, reply, mo);
     if (error != 0) {
         LOG_ERROR("SendRequest failed, error is %{public}d, code is %{public}d.", error, code);
         return E_ERROR;
@@ -286,7 +293,7 @@ int ResultSetProxy::SendIntRequest(uint32_t code, int value)
         return E_ERROR;
     }
     MessageOption mo { MessageOption::TF_SYNC };
-    int32_t error = Remote()->SendRequest(code, data, reply, mo);
+    int32_t error = remote_->SendRequest(code, data, reply, mo);
     if (error != 0) {
         LOG_ERROR("SendRequest failed, error is %{public}d, code is %{public}d.", error, code);
         return E_ERROR;
@@ -299,7 +306,7 @@ int ResultSetProxy::SendIntRequest(uint32_t code, int value)
     return E_OK;
 }
 
-int ResultSetProxy::SendRequestRetBool(uint32_t code, bool &result)
+int ResultSetProxy::SendRequestRetBool(uint32_t code, bool &result) const
 {
     MessageParcel data, reply;
     if (!data.WriteInterfaceToken(ResultSetProxy::GetDescriptor())) {
@@ -307,7 +314,7 @@ int ResultSetProxy::SendRequestRetBool(uint32_t code, bool &result)
         return E_ERROR;
     }
     MessageOption mo { MessageOption::TF_SYNC };
-    int32_t error = Remote()->SendRequest(code, data, reply, mo);
+    int32_t error = remote_->SendRequest(code, data, reply, mo);
     if (error != 0) {
         LOG_ERROR("SendRequest failed, error is %{public}d, code is %{public}d.", error, code);
         return E_ERROR;
@@ -321,7 +328,7 @@ int ResultSetProxy::SendRequestRetBool(uint32_t code, bool &result)
     return E_OK;
 }
 
-int ResultSetProxy::SendRequestRetInt(uint32_t code, int &result)
+int ResultSetProxy::SendRequestRetInt(uint32_t code, int &result) const
 {
     MessageParcel data, reply;
     if (!data.WriteInterfaceToken(ResultSetProxy::GetDescriptor())) {
@@ -329,7 +336,7 @@ int ResultSetProxy::SendRequestRetInt(uint32_t code, int &result)
         return E_ERROR;
     }
     MessageOption mo { MessageOption::TF_SYNC };
-    int32_t error = Remote()->SendRequest(code, data, reply, mo);
+    int32_t error = remote_->SendRequest(code, data, reply, mo);
     if (error != 0) {
         LOG_ERROR("SendRequest failed, error is %{public}d, code is %{public}d.", error, code);
         return E_ERROR;
@@ -355,7 +362,7 @@ int ResultSetProxy::SendRequestRetReply(uint32_t code, int columnIndex, MessageP
         return E_ERROR;
     }
     MessageOption mo { MessageOption::TF_SYNC };
-    int32_t error = Remote()->SendRequest(code, data, reply, mo);
+    int32_t error = remote_->SendRequest(code, data, reply, mo);
     if (error != 0) {
         LOG_ERROR("SendRequest failed, error is %{public}d, code is %{public}d.", error, code);
         return E_ERROR;

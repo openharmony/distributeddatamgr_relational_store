@@ -72,6 +72,7 @@ public:
     uint64_t rowId;
     std::vector<uint8_t> newKey;
     std::unique_ptr<AbsSharedResultSet> resultSet;
+    std::shared_ptr<ResultSet> newResultSet;
     std::unique_ptr<ResultSet> resultSet_value;
     std::string aliasName;
     std::string pathName;
@@ -637,18 +638,17 @@ napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
         [](RdbStoreContext *context) {
             LOG_DEBUG("RdbStoreProxy::RemoteQuery Async");
             RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            context->resultSet =
+            context->newResultSet =
                 obj->rdbStore_->RemoteQuery(context->device, *(context->rdbPredicates), context->columns);
             LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr ? %{public}d", (context->resultSet == nullptr));
             return (context->resultSet != nullptr) ? OK : ERR;
         },
         [](RdbStoreContext *context, napi_value &output) {
             if (context->resultSet == nullptr) {
-              LOG_ERROR("RdbStoreProxy::RemoteQuery result is nullptr");
+              LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr ? %{public}d", (context->resultSet == nullptr));
               return ERR;
             }
-            output = ResultSetProxy::NewInstance(
-                context->env, std::shared_ptr<AbsSharedResultSet>(context->resultSet.release()));
+            output = ResultSetProxy::NewInstance(context->env, context->newResultSet);
             LOG_DEBUG("RdbStoreProxy::RemoteQuery end");
             return (output != nullptr) ? OK : ERR;
         });

@@ -23,7 +23,7 @@ namespace OHOS::NativeRdb {
 class ResultSetProxy : public IRemoteProxy<IResultSet> {
 public:
     explicit ResultSetProxy(const sptr<IRemoteObject> &impl);
-    ~ResultSetProxy() = default;
+    ~ResultSetProxy();
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int GetColumnCount(int &count) override;
     int GetColumnType(int columnIndex, ColumnType &columnType) override;
@@ -50,15 +50,14 @@ public:
     bool IsClosed() const override;
     int Close() override;
 
+private:
     // the max capacity for ipc is 800KB.
     static const size_t MAX_IPC_CAPACITY = 800 * 1024;
-
-private:
-    static inline BrokerDelegator<ResultSetProxy> delegator_;
+    sptr<IRemoteObject> remote_;
     int SendRequest(uint32_t code);
     int SendIntRequest(uint32_t code, int value);
-    int SendRequestRetBool(uint32_t code, bool &result);
-    int SendRequestRetInt(uint32_t code, int &result);
+    int SendRequestRetBool(uint32_t code, bool &result) const;
+    int SendRequestRetInt(uint32_t code, int &result) const;
     int SendRequestRetReply(uint32_t code, int columnIndex, MessageParcel &reply);
 };
 } // namespace OHOS::NativeRdb

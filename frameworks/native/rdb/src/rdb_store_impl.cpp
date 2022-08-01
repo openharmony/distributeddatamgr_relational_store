@@ -19,7 +19,6 @@
 #include <sstream>
 #include <unistd.h>
 
-#include "abs_shared_result_set_client.h"
 #include "dds_trace.h"
 #include "directory_ex.h"
 #include "iresult_set.h"
@@ -31,6 +30,7 @@
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
 #include "reporter.h"
+#include "result_set_proxy.h"
 #include "step_result_set.h"
 
 
@@ -297,8 +297,8 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     return QuerySql(sql, selectionArgs);
 }
 
-std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::RemoteQuery(const std::string device,
-     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
+std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
     DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreImpl::RemoteQuery on called.");
@@ -314,9 +314,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::RemoteQuery(const std::string 
         LOG_ERROR("RdbStoreImpl::RemoteQuery service RemoteQuery failed");
         return nullptr;
     }
-    sptr<IResultSet> resultSetProxy = iface_cast<IResultSet>(remoteResultSet);
-    auto resultSet = std::make_unique<AbsSharedResultSetClient>(resultSetProxy);
-    return resultSet;
+    return std::make_shared<ResultSetProxy>(remoteResultSet);
 }
 
 std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool distinct, const std::string &table,
