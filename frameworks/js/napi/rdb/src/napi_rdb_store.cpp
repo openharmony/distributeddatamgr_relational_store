@@ -643,6 +643,10 @@ napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
             return (context->resultSet != nullptr) ? OK : ERR;
         },
         [](RdbStoreContext *context, napi_value &output) {
+            if (context->resultSet == nullptr) {
+              LOG_ERROR("RdbStoreProxy::RemoteQuery result is nullptr");
+              return ERR;
+            }
             output = ResultSetProxy::NewInstance(
                 context->env, std::shared_ptr<AbsSharedResultSet>(context->resultSet.release()));
             LOG_DEBUG("RdbStoreProxy::RemoteQuery end");
