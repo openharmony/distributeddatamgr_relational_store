@@ -645,7 +645,7 @@ napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
         },
         [](RdbStoreContext *context, napi_value &output) {
             if (context->resultSet == nullptr) {
-              LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr ? %{public}d", (context->resultSet == nullptr));
+              LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr");
               return ERR;
             }
             output = ResultSetProxy::NewInstance(context->env, context->newResultSet);
