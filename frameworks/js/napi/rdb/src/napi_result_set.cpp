@@ -182,6 +182,15 @@ ResultSetProxy &ResultSetProxy::operator=(std::shared_ptr<AbsSharedResultSet> re
     return *this;
 }
 
+ResultSetProxy &ResultSetProxy::operator=(std::shared_ptr<ResultSet> resultSet)
+{
+  if (resultSet_ == resultSet) {
+    return *this;
+  }
+  resultSet_ = std::move(resultSet);
+  return *this;
+}
+
 std::shared_ptr<NativeRdb::ResultSet> &ResultSetProxy::GetInnerResultSet(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSet = nullptr;
