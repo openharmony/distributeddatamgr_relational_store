@@ -53,7 +53,6 @@ ohos_shared_library("native_rdb") {
     "${relational_store_native_path}/rdb/src/abs_rdb_predicates.cpp",
     "${relational_store_native_path}/rdb/src/abs_result_set.cpp",
     "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
-    "${relational_store_native_path}/rdb/src/abs_shared_result_set_client.cpp",
     "${relational_store_native_path}/rdb/src/base_transaction.cpp",
     "${relational_store_native_path}/rdb/src/base_transaction.h",
     "${relational_store_native_path}/rdb/src/logger.h",
