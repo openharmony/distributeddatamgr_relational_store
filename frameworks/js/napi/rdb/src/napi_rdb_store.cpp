@@ -640,11 +640,11 @@ napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
             RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
             context->newResultSet =
                 obj->rdbStore_->RemoteQuery(context->device, *(context->rdbPredicates), context->columns);
-            LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr ? %{public}d", (context->resultSet == nullptr));
-            return (context->resultSet != nullptr) ? OK : ERR;
+            LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr ? %{public}d", (context->newResultSet == nullptr));
+            return (context->newResultSet != nullptr) ? OK : ERR;
         },
         [](RdbStoreContext *context, napi_value &output) {
-            if (context->resultSet == nullptr) {
+            if (context->newResultSet == nullptr) {
               LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr");
               return ERR;
             }
