@@ -281,16 +281,11 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
     int errorCode = E_OK;
     std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, name, errorCode);
     NAPI_ASSERT_RETURN_VOID(env, errorCode == E_OK, "Get database real path failed.");
-    LOG_DEBUG("XXXXXXXXXXXXXXXXXX databaseDir: %{public}s", databaseDir.c_str());
-    LOG_DEBUG("XXXXXXXXXXXXXXXXXX Name: %{public}s", name.c_str());
-    LOG_DEBUG("XXXXXXXXXXXXXXXXXX RealPath: %{public}s", realPath.c_str());
     asyncContext->config.SetName(std::move(name));
     asyncContext->config.SetPath(std::move(realPath));
     asyncContext->config.SetModuleName(asyncContext->context->GetModuleName());
-    int32_t area = asyncContext->context->GetArea();
-    asyncContext->config.SetArea(area);
+    asyncContext->config.SetArea(asyncContext->context->GetArea());
     asyncContext->config.SetBundleName(asyncContext->context->GetBundleName());
-    LOG_DEBUG("XXXXXXXXXXXXXXXXXX Area: %{public}d", area);
     LOG_DEBUG("ParseStoreConfig end");
 }
 
