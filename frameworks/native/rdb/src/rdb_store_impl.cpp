@@ -19,8 +19,10 @@
 #include <sstream>
 #include <unistd.h>
 
+#include "abs_shared_result_set_client.h"
 #include "dds_trace.h"
 #include "directory_ex.h"
+#include "iresult_set.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_manager.h"
@@ -293,6 +295,28 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
     return QuerySql(sql, selectionArgs);
+}
+
+std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::RemoteQuery(const std::string device,
+     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
+{
+    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    LOG_DEBUG("RdbStoreImpl::RemoteQuery on called.");
+    std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
+    std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
+    auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
+    if (service == nullptr) {
+        LOG_ERROR("RdbStoreImpl::RemoteQuery get service failed");
+        return nullptr;
+    }
+    sptr<IRemoteObject> remoteResultSet;
+    if (service->RemoteQuery(syncerParam_, device, sql, selectionArgs, remoteResultSet) != E_OK) {
+        LOG_ERROR("RdbStoreImpl::RemoteQuery service RemoteQuery failed");
+        return nullptr;
+    }
+    sptr<IResultSet> resultSetProxy = iface_cast<IResultSet>(remoteResultSet);
+    auto resultSet = std::make_unique<AbsSharedResultSetClient>(resultSetProxy);
+    return resultSet;
 }
 
 std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool distinct, const std::string &table,
