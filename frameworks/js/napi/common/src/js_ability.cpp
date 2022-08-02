@@ -41,6 +41,8 @@ Context::Context(std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext)
     LOG_DEBUG("FA: PreferencesDir %{public}s", preferencesDir_.c_str());
     bundleName_ = abilityContext->GetBundleName();
     LOG_DEBUG("FA: BundleName %{public}s", bundleName_.c_str());
+    area_ = abilityContext->GetArea();
+    LOG_DEBUG("FA: Area %{public}d", area_);
     auto abilityInfo = abilityContext->GetAbilityInfo();
     if (abilityInfo != nullptr) {
         moduleName_ = abilityInfo->moduleName;

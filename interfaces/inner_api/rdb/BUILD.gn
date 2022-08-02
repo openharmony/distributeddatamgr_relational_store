@@ -60,6 +60,7 @@ ohos_shared_library("native_rdb") {
     "${relational_store_native_path}/rdb/src/rdb_predicates.cpp",
     "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
     "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
+    "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
     "${relational_store_native_path}/rdb/src/share_block.cpp",
     "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_config.cpp",

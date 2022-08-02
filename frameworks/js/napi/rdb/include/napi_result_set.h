@@ -29,16 +29,17 @@ class ResultSetProxy final : public DataShare::ResultSetBridge::Creator {
 public:
     ResultSetProxy() = default;
     ~ResultSetProxy();
-    ResultSetProxy(std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
-    ResultSetProxy &operator=(std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
+    ResultSetProxy(std::shared_ptr<NativeRdb::ResultSet> resultSet);
+    ResultSetProxy &operator=(std::shared_ptr<NativeRdb::ResultSet> resultSet);
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet);
     static std::shared_ptr<NativeRdb::AbsSharedResultSet> GetNativeObject(
         const napi_env &env, const napi_value &arg);
     static napi_value GetConstructor(napi_env env);
     std::shared_ptr<DataShare::ResultSetBridge> Create() override;
 
 private:
-    static std::shared_ptr<NativeRdb::AbsSharedResultSet> &GetInnerResultSet(napi_env env, napi_callback_info info);
+    static std::shared_ptr<NativeRdb::ResultSet> &GetInnerResultSet(napi_env env, napi_callback_info info);
     static napi_value Initialize(napi_env env, napi_callback_info info);
     static napi_value GetAllColumnNames(napi_env env, napi_callback_info info);
     static napi_value GoToRow(napi_env env, napi_callback_info info);
@@ -69,7 +70,8 @@ private:
     static napi_value GetSharedBlockName(napi_env env, napi_callback_info info);
     static napi_value GetSharedBlockAshmemFd(napi_env env, napi_callback_info info);
 
-    std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet_;
+    std::shared_ptr<NativeRdb::ResultSet> resultSet_;
+    std::shared_ptr<NativeRdb::AbsSharedResultSet> sharedResultSet_;
 
     std::string sharedBlockName_;
     int32_t sharedBlockAshmemFd_ = -1;

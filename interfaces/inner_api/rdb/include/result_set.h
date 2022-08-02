@@ -32,6 +32,35 @@ enum class ColumnType {
 
 class ResultSet {
 public:
+    enum {
+        CMD_GET_ALL_COLUMN_NAMES,
+        CMD_GET_COLUMN_COUNT,
+        CMD_GET_COLUMN_TYPE,
+        CMD_GET_COLUMN_INDEX,
+        CMD_GET_COLUMN_NAME,
+        CMD_GET_ROW_COUNT,
+        CMD_GET_ROW_INDEX,
+        CMD_GO_TO,
+        CMD_GO_TO_ROW,
+        CMD_GO_TO_FIRST_ROW,
+        CMD_GO_TO_LAST_ROW,
+        CMD_GO_TO_NEXT_ROW,
+        CMD_GO_TO_PREV_ROW,
+        CMD_IS_ENDED_ROW,
+        CMD_IS_STARTED_ROW,
+        CMD_IS_AT_FIRST_ROW,
+        CMD_IS_AT_LAST_ROW,
+        CMD_GET_BLOB,
+        CMD_GET_STRING,
+        CMD_GET_INT,
+        CMD_GET_LONG,
+        CMD_GET_DOUBLE,
+        CMD_IS_COLUMN_NULL,
+        CMD_IS_CLOSED,
+        CMD_CLOSE,
+        CMD_MAX
+    };
+
     virtual ~ResultSet() {}
 
     /**
