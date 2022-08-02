@@ -176,7 +176,7 @@ ResultSetProxy::ResultSetProxy(std::shared_ptr<ResultSet> resultSet)
 ResultSetProxy &ResultSetProxy::operator=(std::shared_ptr<ResultSet> resultSet)
 {
     if (resultSet_ == resultSet) {
-      return *this;
+        return *this;
     }
     resultSet_ = std::move(resultSet);
     return *this;
