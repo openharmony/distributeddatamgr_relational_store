@@ -30,7 +30,6 @@ public:
     ResultSetProxy() = default;
     ~ResultSetProxy();
     ResultSetProxy(std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    ResultSetProxy &operator=(std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
     ResultSetProxy &operator=(std::shared_ptr<NativeRdb::ResultSet> resultSet);
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet);
