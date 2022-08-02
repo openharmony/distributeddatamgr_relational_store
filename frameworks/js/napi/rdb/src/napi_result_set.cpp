@@ -33,6 +33,24 @@ static napi_ref __thread ctorRef_ = nullptr;
 static const int E_OK = 0;
 napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<AbsSharedResultSet> resultSet)
 {
+    auto instance = NewInstance(env, std::static_pointer_cast<NativeRdb::ResultSet>(resultSet));
+    ResultSetProxy *proxy = nullptr;
+    auto status = napi_unwrap(env, instance, reinterpret_cast<void **>(&proxy));
+    if (proxy == nullptr) {
+        LOG_ERROR("NewInstance native instance is nullptr! code:%{public}d!", status);
+        return instance;
+    }
+
+    if (resultSet->GetBlock() != nullptr) {
+        proxy->sharedBlockName_ = resultSet->GetBlock()->Name();
+        proxy->sharedBlockAshmemFd_ = resultSet->GetBlock()->GetFd();
+    }
+    proxy->sharedResultSet_ = resultSet;
+    return instance;
+}
+
+napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet)
+{
     napi_value cons = GetConstructor(env);
     if (cons == nullptr) {
         LOG_ERROR("NewInstance GetConstructor is nullptr!");
@@ -51,11 +69,6 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<AbsSharedRe
         LOG_ERROR("NewInstance native instance is nullptr! code:%{public}d!", status);
         return instance;
     }
-
-    if (resultSet->GetBlock() != nullptr) {
-        proxy->sharedBlockName_ = resultSet->GetBlock()->Name();
-        proxy->sharedBlockAshmemFd_ = resultSet->GetBlock()->GetFd();
-    }
     *proxy = std::move(resultSet);
     return instance;
 }
@@ -73,7 +86,7 @@ std::shared_ptr<NativeRdb::AbsSharedResultSet> ResultSetProxy::GetNativeObject(
         LOG_ERROR("ResultSetProxy GetNativeObject proxy is null.");
         return nullptr;
     }
-    return proxy->resultSet_;
+    return proxy->sharedResultSet_;
 }
 
 std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
@@ -152,7 +165,7 @@ ResultSetProxy::~ResultSetProxy()
     }
 }
 
-ResultSetProxy::ResultSetProxy(std::shared_ptr<AbsSharedResultSet> resultSet)
+ResultSetProxy::ResultSetProxy(std::shared_ptr<ResultSet> resultSet)
 {
     if (resultSet_ == resultSet) {
         return;
@@ -160,7 +173,7 @@ ResultSetProxy::ResultSetProxy(std::shared_ptr<AbsSharedResultSet> resultSet)
     resultSet_ = std::move(resultSet);
 }
 
-ResultSetProxy &ResultSetProxy::operator=(std::shared_ptr<AbsSharedResultSet> resultSet)
+ResultSetProxy &ResultSetProxy::operator=(std::shared_ptr<ResultSet> resultSet)
 {
     if (resultSet_ == resultSet) {
         return *this;
@@ -169,7 +182,7 @@ ResultSetProxy &ResultSetProxy::operator=(std::shared_ptr<AbsSharedResultSet> re
     return *this;
 }
 
-std::shared_ptr<NativeRdb::AbsSharedResultSet> &ResultSetProxy::GetInnerResultSet(napi_env env, napi_callback_info info)
+std::shared_ptr<NativeRdb::ResultSet> &ResultSetProxy::GetInnerResultSet(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSet = nullptr;
     napi_value self = nullptr;

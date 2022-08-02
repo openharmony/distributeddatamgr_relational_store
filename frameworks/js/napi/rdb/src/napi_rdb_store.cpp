@@ -72,6 +72,7 @@ public:
     uint64_t rowId;
     std::vector<uint8_t> newKey;
     std::unique_ptr<AbsSharedResultSet> resultSet;
+    std::shared_ptr<ResultSet> newResultSet;
     std::unique_ptr<ResultSet> resultSet_value;
     std::string aliasName;
     std::string pathName;
@@ -145,6 +146,7 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("batchInsert", BatchInsert),
         DECLARE_NAPI_FUNCTION("querySql", QuerySql),
         DECLARE_NAPI_FUNCTION("query", Query),
+        DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery),
         DECLARE_NAPI_FUNCTION("executeSql", ExecuteSql),
         DECLARE_NAPI_FUNCTION("replace", Replace),
         DECLARE_NAPI_FUNCTION("backup", Backup),
@@ -616,6 +618,38 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
             output = ResultSetProxy::NewInstance(
                 context->env, std::shared_ptr<AbsSharedResultSet>(context->resultSet.release()));
             LOG_DEBUG("RdbStoreProxy::Query end");
+            return (output != nullptr) ? OK : ERR;
+        });
+}
+
+napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbStoreProxy::RemoteQuery start");
+    NapiAsyncProxy<RdbStoreContext> proxy;
+    proxy.Init(env, info);
+    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
+    parsers.push_back(ParseDevice);
+    parsers.push_back(ParseTableName);
+    parsers.push_back(ParsePredicates);
+    parsers.push_back(ParseColumns);
+    proxy.ParseInputs(parsers, ParseThis);
+    return proxy.DoAsyncWork(
+        "RemoteQuery",
+        [](RdbStoreContext *context) {
+            LOG_DEBUG("RdbStoreProxy::RemoteQuery Async");
+            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+            context->newResultSet =
+                obj->rdbStore_->RemoteQuery(context->device, *(context->rdbPredicates), context->columns);
+            LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr ? %{public}d", (context->newResultSet == nullptr));
+            return (context->newResultSet != nullptr) ? OK : ERR;
+        },
+        [](RdbStoreContext *context, napi_value &output) {
+            if (context->newResultSet == nullptr) {
+                LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr");
+                return ERR;
+            }
+            output = ResultSetProxy::NewInstance(context->env, context->newResultSet);
+            LOG_DEBUG("RdbStoreProxy::RemoteQuery end");
             return (output != nullptr) ? OK : ERR;
         });
 }
