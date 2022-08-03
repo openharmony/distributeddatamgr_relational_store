@@ -20,7 +20,7 @@ import fileio from '@ohos.fileio'
 const TAG = "[RDB_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
     + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)"
-const DATABASE_DIR = "/data/storage/el2/database/entry/db/"
+const DATABASE_DIR = "/data/storage/el2/database/entry/rdb/"
 var rdbStore
 var context
 const STORE_CONFIG = {
@@ -206,8 +206,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
          */
         it('RdbBackupRestoreTest_0030', 0, async function (done) {
             await console.log(TAG + "************* RdbBackupRestoreTest_0030 start *************")
-            let backupName = "BackupTest003.db"
-            await rdbStore.backup(backupName)
+            await rdbStore.backup(DATABASE_BACKUP_NAME)
 
             // RDB restore function test, backup file name empty
             RestoreTest("")
