@@ -134,7 +134,7 @@ int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const Valu
     return InsertWithConflictResolution(outRowId, table, initialValues, ConflictResolution::ON_CONFLICT_NONE);
 }
 
-int RdbStoreImpl::BatchInsert(int64_t &outRowId, const std::string &table,
+int RdbStoreImpl::BatchInsert(const std::string &table,
     const std::vector<ValuesBucket> &initialBatchValues)
 {
     int errCode = BeginTransaction();
@@ -142,7 +142,7 @@ int RdbStoreImpl::BatchInsert(int64_t &outRowId, const std::string &table,
         LOG_ERROR("Begin transaction with error code %{public}d.", errCode);
         return errCode;
     }
-    
+    int64_t outRowId = 0;
     for (auto const &value : initialBatchValues) {
         if (RdbStoreImpl::Insert(outRowId, table, value) != E_OK) {
             LOG_WARN("Roll back in batch insert.");
