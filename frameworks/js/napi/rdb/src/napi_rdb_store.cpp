@@ -70,6 +70,7 @@ public:
     std::map<std::string, ValueObject> numberMaps;
     std::vector<ValueObject> bindArgs;
     uint64_t rowId;
+    uint64_t insertNum;
     std::vector<uint8_t> newKey;
     std::unique_ptr<AbsSharedResultSet> resultSet;
     std::shared_ptr<ResultSet> newResultSet;
@@ -453,6 +454,7 @@ void ParseValuesBuckets(const napi_env &env, const napi_value &arg, RdbStoreCont
     uint32_t arrLen = 0;
     napi_status status = napi_get_array_length(env, arg, &arrLen);
     NAPI_ASSERT_RETURN_VOID(env, status == napi_ok && arrLen > 0, "ParseValuesBuckets fail to get array length.");
+    context->insertNum = arrLen;
     for (uint32_t i = 0; i < arrLen; i++) {
         napi_value obj = nullptr;
         status = napi_get_element(env, arg, i, &obj);
@@ -521,13 +523,11 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
         [](RdbStoreContext *context) {
             LOG_INFO("RdbStoreProxy::BatchInsert Async.");
             RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            int64_t rowId = 0;
-            int errCode = obj->rdbStore_->BatchInsert(rowId, context->tableName, context->valuesBuckets);
-            context->rowId = rowId;
+            int errCode = obj->rdbStore_->BatchInsert(context->tableName, context->valuesBuckets);
             return errCode;
         },
         [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_create_int64(context->env, context->rowId, &output);
+            napi_status status = napi_create_int64(context->env, context->insertNum, &output);
             LOG_DEBUG("RdbStoreProxy::BatchInsert end.");
             return (status == napi_ok) ? OK : ERR;
         });
