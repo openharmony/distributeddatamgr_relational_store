@@ -711,8 +711,10 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_BatchInsert_001, TestSize.Level1)
     for (int i = 0; i < 100; i++) {
         valuesBuckets.push_back(values);
     }
-    int ret = store->BatchInsert("test", valuesBuckets);
+    int64_t insertNum = 0;
+    int ret = store->BatchInsert(insertNum, "test", valuesBuckets);
     EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(100, insertNum);
     std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     int rowCount = 0;
     resultSet->GetRowCount(rowCount);
