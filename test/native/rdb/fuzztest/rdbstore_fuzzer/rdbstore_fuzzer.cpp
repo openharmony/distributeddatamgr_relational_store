@@ -22,9 +22,10 @@
 using namespace OHOS;
 using namespace OHOS::NativeRdb;
 namespace OHOS {
-constexpr int agedis = 2;
-constexpr double salarydis1 = 100;
-constexpr double salarydis2 = 200;
+/* change value */
+constexpr int ageChange = 2;
+constexpr double salaryChange = 100;
+constexpr double salaryChanges = 200;
 
 class RdbStoreFuzzTest {
 public:
@@ -92,8 +93,8 @@ bool RdbInsertFuzz(const uint8_t *data, size_t size)
     values.Clear();
     values.PutString("name", valName + "test2");
     values.PutInt("age", valAge + 1);
-    values.PutDouble("salary", valSalary + salarydis1);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *(data + 1)});
+    values.PutDouble("salary", valSalary + salaryChange);
+    values.PutBlob("blobType", std::vector<uint8_t> {*data, *data + 1});
     store->Insert(id, "test", values);
     if (errCode != E_OK) {
         result = false;
@@ -122,8 +123,8 @@ bool RdbDeleteFuzz(const uint8_t *data, size_t size)
     values.Clear();
     values.PutString("name", valName + "test2");
     values.PutInt("age", valAge + 1);
-    values.PutDouble("salary", valSalary + salarydis1);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *(data + 1)});
+    values.PutDouble("salary", valSalary + salaryChange);
+    values.PutBlob("blobType", std::vector<uint8_t> {*data, *data + 1});
     store->Insert(id, "test", values);
     int errCode = store->Delete(deletedRows, "test", "id = 1");
     if (errCode != E_OK) {
@@ -153,8 +154,8 @@ bool RdbUpdateFuzz(const uint8_t *data, size_t size)
     values.Clear();
     values.PutString("name", valName + "test2");
     values.PutInt("age", valAge + 1);
-    values.PutDouble("salary", valSalary + salarydis1);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *(data + 1)});
+    values.PutDouble("salary", valSalary + salaryChange);
+    values.PutBlob("blobType", std::vector<uint8_t> {*data, *data + 1});
     int errCode = store->Update(changedRows, "test", values, "name = ?",
         std::vector<std::string> { valName + "test1" });
     if (errCode != E_OK) {
@@ -178,22 +179,22 @@ void DBInsert(std::string &valName, int &valAge, double &valSalary,
     values.Clear();
     values.PutString("name", valName + "test2");
     values.PutInt("age", valAge + 1);
-    values.PutDouble("salary", valSalary + salarydis1);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *(data + 1)});
+    values.PutDouble("salary", valSalary + salaryChange);
+    values.PutBlob("blobType", std::vector<uint8_t> {*data, *data + 1});
     store->Insert(id, "test", values);
 
     values.Clear();
     values.PutString("name", valName + "test3");
-    values.PutInt("age", valAge + agedis);
-    values.PutDouble("salary", valSalary + salarydis2);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *(data + 1), *(data + 2)});
+    values.PutInt("age", valAge + ageChange);
+    values.PutDouble("salary", valSalary + salaryChanges);
+    values.PutBlob("blobType", std::vector<uint8_t> {*data, *data + 1});
     store->Insert(id, "test", values);
 
     values.Clear();
     values.PutString("name", valName + "test4");
-    values.PutInt("age", valAge + agedis);
-    values.PutDouble("salary", valSalary + salarydis2);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *(data + 1), *(data + 2)});
+    values.PutInt("age", valAge + ageChange);
+    values.PutDouble("salary", valSalary + salaryChanges);
+    values.PutBlob("blobType", std::vector<uint8_t> {*data, *data + 1});
     store->Insert(id, "test", values);
 }
 
@@ -236,7 +237,7 @@ void RdbQueryFuzz1(const uint8_t *data, size_t size)
     store->Query(predicates, columns);
 
     predicates.Clear();
-    predicates.Glob("name", valName + "test1");
+    predicates.Glob("name", valName + "?est1");
     store->Query(predicates, columns);
     store->ExecuteSql("DELETE FROM test");
 }
@@ -257,7 +258,7 @@ void RdbQueryFuzz2(const uint8_t *data, size_t size)
     DBInsert(valName, valAge, valSalary, store, data);
 
     predicates.Clear();
-    predicates.Between("age", std::to_string(valAge), std::to_string(valAge + agedis));
+    predicates.Between("age", std::to_string(valAge), std::to_string(valAge + ageChange));
     store->Query(predicates, columns);
 
     predicates.Clear();
@@ -269,7 +270,7 @@ void RdbQueryFuzz2(const uint8_t *data, size_t size)
     store->Query(predicates, columns);
 
     predicates.Clear();
-    predicates.LessThan("age", std::to_string(valAge + agedis));
+    predicates.LessThan("age", std::to_string(valAge + ageChange));
     store->Query(predicates, columns);
 
     predicates.Clear();
@@ -277,7 +278,7 @@ void RdbQueryFuzz2(const uint8_t *data, size_t size)
     store->Query(predicates, columns);
 
     predicates.Clear();
-    predicates.LessThanOrEqualTo("age", std::to_string(valAge + agedis));
+    predicates.LessThanOrEqualTo("age", std::to_string(valAge + ageChange));
     store->Query(predicates, columns);
 
     std::vector<std::string> agrsIn = {std::to_string(INT_MAX)};
