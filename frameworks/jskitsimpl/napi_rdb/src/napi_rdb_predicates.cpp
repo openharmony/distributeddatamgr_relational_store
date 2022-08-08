@@ -96,7 +96,7 @@ napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
         napi_valuetype valueType;
         NAPI_CALL(env, napi_typeof(env, args[0], &valueType));
         NAPI_ASSERT(env, valueType == napi_string, "Table name should be a string.");
-        std::string tableName = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+        std::string tableName = JSUtils::Convert2String(env, args[0]);
         auto *proxy = new RdbPredicatesProxy(tableName);
         proxy->env_ = env;
         NAPI_CALL(env, napi_wrap(env, thiz, proxy, RdbPredicatesProxy::Destructor, nullptr, &proxy->wrapper_));
@@ -179,7 +179,7 @@ napi_value RdbPredicatesProxy::EqualTo(napi_env env, napi_callback_info info)
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::EqualTo Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->EqualTo(field, value);
     LOG_DEBUG("RdbPredicatesProxy::EqualTo end");
@@ -193,7 +193,7 @@ napi_value RdbPredicatesProxy::NotEqualTo(napi_env env, napi_callback_info info)
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::NotEqualTo Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->NotEqualTo(field, value);
     LOG_DEBUG("RdbPredicatesProxy::NotEqualTo end");
@@ -243,7 +243,7 @@ napi_value RdbPredicatesProxy::Contains(napi_env env, napi_callback_info info)
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::Contains Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->Contains(field, value);
     LOG_DEBUG("RdbPredicatesProxy::Contains end");
@@ -257,7 +257,7 @@ napi_value RdbPredicatesProxy::BeginsWith(napi_env env, napi_callback_info info)
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::BeginsWith Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->BeginsWith(field, value);
     LOG_DEBUG("RdbPredicatesProxy::BeginsWith end");
@@ -271,7 +271,7 @@ napi_value RdbPredicatesProxy::EndsWith(napi_env env, napi_callback_info info)
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::EndsWith Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->EndsWith(field, value);
     LOG_DEBUG("RdbPredicatesProxy::EndsWith end");
@@ -285,7 +285,7 @@ napi_value RdbPredicatesProxy::IsNull(napi_env env, napi_callback_info info)
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::IsNull Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     GetNativePredicates(env, info)->IsNull(field);
     LOG_DEBUG("RdbPredicatesProxy::IsNull end");
     return thiz;
@@ -298,7 +298,7 @@ napi_value RdbPredicatesProxy::IsNotNull(napi_env env, napi_callback_info info)
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::IsNotNull Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     GetNativePredicates(env, info)->IsNotNull(field);
     LOG_DEBUG("RdbPredicatesProxy::IsNotNull end");
     return thiz;
@@ -311,7 +311,7 @@ napi_value RdbPredicatesProxy::Like(napi_env env, napi_callback_info info)
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::Like Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->Like(field, value);
     LOG_DEBUG("RdbPredicatesProxy::Like end");
@@ -325,7 +325,7 @@ napi_value RdbPredicatesProxy::Glob(napi_env env, napi_callback_info info)
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::Glob Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->Glob(field, value);
     LOG_DEBUG("RdbPredicatesProxy::Glob end");
@@ -339,7 +339,7 @@ napi_value RdbPredicatesProxy::Between(napi_env env, napi_callback_info info)
     napi_value args[3] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::Between Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string low = JSUtils::ConvertAny2String(env, args[1]);
     std::string high = JSUtils::ConvertAny2String(env, args[2]);
     GetNativePredicates(env, info)->Between(field, low, high);
@@ -354,7 +354,7 @@ napi_value RdbPredicatesProxy::NotBetween(napi_env env, napi_callback_info info)
     napi_value args[3] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::NotBetween Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string low = JSUtils::ConvertAny2String(env, args[1]);
     std::string high = JSUtils::ConvertAny2String(env, args[2]);
     GetNativePredicates(env, info)->NotBetween(field, low, high);
@@ -369,7 +369,7 @@ napi_value RdbPredicatesProxy::GreaterThan(napi_env env, napi_callback_info info
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::GreaterThan Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->GreaterThan(field, value);
     LOG_DEBUG("RdbPredicatesProxy::GreaterThan end");
@@ -383,7 +383,7 @@ napi_value RdbPredicatesProxy::LessThan(napi_env env, napi_callback_info info)
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::LessThan Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->LessThan(field, value);
     LOG_DEBUG("RdbPredicatesProxy::LessThan end");
@@ -397,7 +397,7 @@ napi_value RdbPredicatesProxy::GreaterThanOrEqualTo(napi_env env, napi_callback_
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::GreaterThanOrEqualTo Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->GreaterThanOrEqualTo(field, value);
     LOG_DEBUG("RdbPredicatesProxy::GreaterThanOrEqualTo end");
@@ -411,7 +411,7 @@ napi_value RdbPredicatesProxy::LessThanOrEqualTo(napi_env env, napi_callback_inf
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::LessThanOrEqualTo Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->LessThanOrEqualTo(field, value);
     LOG_DEBUG("RdbPredicatesProxy::LessThanOrEqualTo end");
@@ -425,7 +425,7 @@ napi_value RdbPredicatesProxy::OrderByAsc(napi_env env, napi_callback_info info)
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::OrderByAsc Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     GetNativePredicates(env, info)->OrderByAsc(field);
     LOG_DEBUG("RdbPredicatesProxy::OrderByAsc end");
     return thiz;
@@ -438,7 +438,7 @@ napi_value RdbPredicatesProxy::OrderByDesc(napi_env env, napi_callback_info info
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::OrderByDesc Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     GetNativePredicates(env, info)->OrderByDesc(field);
     LOG_DEBUG("RdbPredicatesProxy::OrderByDesc end");
     return thiz;
@@ -488,7 +488,7 @@ napi_value RdbPredicatesProxy::GroupBy(napi_env env, napi_callback_info info)
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::GroupBy Invalid argvs!");
-    std::vector<std::string> fields = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::vector<std::string> fields = JSUtils::Convert2StrVector(env, args[0]);
     GetNativePredicates(env, info)->GroupBy(fields);
     LOG_DEBUG("RdbPredicatesProxy::GroupBy end");
     return thiz;
@@ -501,7 +501,7 @@ napi_value RdbPredicatesProxy::IndexedBy(napi_env env, napi_callback_info info)
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::IndexedBy Invalid argvs!");
-    std::string indexName = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string indexName = JSUtils::Convert2String(env, args[0]);
     GetNativePredicates(env, info)->IndexedBy(indexName);
     LOG_DEBUG("RdbPredicatesProxy::IndexedBy end");
     return thiz;
@@ -514,8 +514,8 @@ napi_value RdbPredicatesProxy::In(napi_env env, napi_callback_info info)
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::In Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
-    std::vector<std::string> values = JSUtils::Convert2StrVector(env, args[1], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
+    std::vector<std::string> values = JSUtils::Convert2StrVector(env, args[1]);
     GetNativePredicates(env, info)->In(field, values);
     LOG_DEBUG("RdbPredicatesProxy::In end");
     return thiz;
@@ -528,8 +528,8 @@ napi_value RdbPredicatesProxy::NotIn(napi_env env, napi_callback_info info)
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::NotIn Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
-    std::vector<std::string> values = JSUtils::Convert2StrVector(env, args[1], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
+    std::vector<std::string> values = JSUtils::Convert2StrVector(env, args[1]);
     GetNativePredicates(env, info)->NotIn(field, values);
     LOG_DEBUG("RdbPredicatesProxy::NotIn end");
     return thiz;
@@ -542,7 +542,7 @@ napi_value RdbPredicatesProxy::Using(napi_env env, napi_callback_info info)
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::Using Invalid argvs!");
-    auto fields = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    auto fields = JSUtils::Convert2StrVector(env, args[0]);
     GetNativePredicates(env, info)->Using(fields);
     LOG_DEBUG("RdbPredicatesProxy::Using end");
     return thiz;
@@ -555,7 +555,7 @@ napi_value RdbPredicatesProxy::LeftOuterJoin(napi_env env, napi_callback_info in
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::LeftOuterJoin Invalid argvs!");
-    std::string tablename = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string tablename = JSUtils::Convert2String(env, args[0]);
     GetNativePredicates(env, info)->LeftOuterJoin(tablename);
     LOG_DEBUG("RdbPredicatesProxy::LeftOuterJoin end");
     return thiz;
@@ -568,7 +568,7 @@ napi_value RdbPredicatesProxy::InnerJoin(napi_env env, napi_callback_info info)
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::InnerJoin Invalid argvs!");
-    std::string tablename = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string tablename = JSUtils::Convert2String(env, args[0]);
     GetNativePredicates(env, info)->InnerJoin(tablename);
     LOG_DEBUG("RdbPredicatesProxy::InnerJoin end");
     return thiz;
@@ -581,7 +581,7 @@ napi_value RdbPredicatesProxy::On(napi_env env, napi_callback_info info)
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::On Invalid argvs!");
-    auto clauses = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    auto clauses = JSUtils::Convert2StrVector(env, args[0]);
     GetNativePredicates(env, info)->On(clauses);
     LOG_DEBUG("RdbPredicatesProxy::On end");
     return thiz;
@@ -603,7 +603,7 @@ napi_value RdbPredicatesProxy::CrossJoin(napi_env env, napi_callback_info info)
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::CrossJoin Invalid argvs!");
-    std::string tablename = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string tablename = JSUtils::Convert2String(env, args[0]);
     GetNativePredicates(env, info)->CrossJoin(tablename);
     LOG_DEBUG("RdbPredicatesProxy::CrossJoin end");
     return thiz;
@@ -666,7 +666,7 @@ napi_value RdbPredicatesProxy::SetJoinConditions(napi_env env, napi_callback_inf
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::SetJoinConditions Invalid argvs!");
-    auto joinConditions = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    auto joinConditions = JSUtils::Convert2StrVector(env, args[0]);
     GetNativePredicates(env, info)->SetJoinConditions(joinConditions);
     LOG_DEBUG("RdbPredicatesProxy::SetJoinConditions end");
     return thiz;
@@ -679,7 +679,7 @@ napi_value RdbPredicatesProxy::SetJoinTableNames(napi_env env, napi_callback_inf
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::SetJoinTableNames Invalid argvs!");
-    auto joinNames = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    auto joinNames = JSUtils::Convert2StrVector(env, args[0]);
     GetNativePredicates(env, info)->SetJoinTableNames(joinNames);
     LOG_DEBUG("RdbPredicatesProxy::SetJoinTableNames end");
     return thiz;
@@ -692,7 +692,7 @@ napi_value RdbPredicatesProxy::SetJoinTypes(napi_env env, napi_callback_info inf
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::SetJoinTypes Invalid argvs!");
-    auto joinTypes = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    auto joinTypes = JSUtils::Convert2StrVector(env, args[0]);
     GetNativePredicates(env, info)->SetJoinTypes(joinTypes);
     LOG_DEBUG("RdbPredicatesProxy::SetJoinTypes end");
     return thiz;
@@ -710,7 +710,7 @@ napi_value RdbPredicatesProxy::InDevices(napi_env env, napi_callback_info info)
     napi_value args[1] = { nullptr };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::InDevices Invalid args!");
-    auto devices = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    auto devices = JSUtils::Convert2StrVector(env, args[0]);
     GetNativePredicates(env, info)->InDevices(devices);
     LOG_DEBUG("RdbPredicatesProxy::InDevices end");
     return thiz;

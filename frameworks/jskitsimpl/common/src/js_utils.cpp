@@ -19,21 +19,24 @@
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
-std::string JSUtils::Convert2String(napi_env env, napi_value jsStr, const size_t max)
+std::string JSUtils::Convert2String(napi_env env, napi_value jsStr, bool useDefaultBufSize)
 {
-    NAPI_ASSERT_BASE(env, max > 0, "failed on max > 0", std::string());
-    char *buf = new char[max + 1];
+    size_t str_buffer_size = 0;
+    napi_get_value_string_utf8(env, jsStr, nullptr, 0, &str_buffer_size);
+    str_buffer_size = (useDefaultBufSize && (str_buffer_size > DEFAULT_BUF_SIZE))
+                          ? (DEFAULT_BUF_SIZE + BUF_CACHE_MARGIN)
+                          : (str_buffer_size + BUF_CACHE_MARGIN);
+    char *buf = new char[str_buffer_size + 1];
     size_t len = 0;
-    napi_get_value_string_utf8(env, jsStr, buf, max, &len);
+    napi_get_value_string_utf8(env, jsStr, buf, str_buffer_size, &len);
     buf[len] = 0;
     std::string value(buf);
     delete[] buf;
     return value;
 }
 
-std::vector<std::string> JSUtils::Convert2StrVector(napi_env env, napi_value value, const size_t strMax)
+std::vector<std::string> JSUtils::Convert2StrVector(napi_env env, napi_value value)
 {
-    NAPI_ASSERT_BASE(env, strMax > 0, "failed on strMax > 0",  std::vector<std::string>());
     uint32_t arrLen = 0;
     napi_get_array_length(env, value, &arrLen);
     if (arrLen == 0) {
@@ -73,7 +76,7 @@ std::string JSUtils::ConvertAny2String(napi_env env, napi_value jsValue)
     napi_valuetype valueType = napi_undefined;
     NAPI_CALL_BASE(env, napi_typeof(env, jsValue, &valueType), "napi_typeof failed");
     if (valueType == napi_string) {
-        return JSUtils::Convert2String(env, jsValue, JSUtils::DEFAULT_BUF_SIZE);
+        return JSUtils::Convert2String(env, jsValue, false);
     } else if (valueType == napi_number) {
         double valueNumber;
         napi_get_value_double(env, jsValue, &valueNumber);

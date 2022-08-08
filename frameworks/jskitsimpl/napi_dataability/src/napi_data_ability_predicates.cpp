@@ -182,7 +182,7 @@ napi_value DataAbilityPredicatesProxy::EqualTo(napi_env env, napi_callback_info 
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::EqualTo Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->EqualTo(field, value);
     return thiz;
@@ -196,7 +196,7 @@ napi_value DataAbilityPredicatesProxy::NotEqualTo(napi_env env, napi_callback_in
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::NotEqualTo Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->NotEqualTo(field, value);
     return thiz;
@@ -246,7 +246,7 @@ napi_value DataAbilityPredicatesProxy::Contains(napi_env env, napi_callback_info
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::Contains Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
 
     GetNativePredicates(env, info)->Contains(field, value);
@@ -261,7 +261,7 @@ napi_value DataAbilityPredicatesProxy::BeginsWith(napi_env env, napi_callback_in
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::BeginsWith Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->BeginsWith(field, value);
     return thiz;
@@ -275,7 +275,7 @@ napi_value DataAbilityPredicatesProxy::EndsWith(napi_env env, napi_callback_info
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::EndsWith Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->EndsWith(field, value);
     return thiz;
@@ -289,7 +289,7 @@ napi_value DataAbilityPredicatesProxy::IsNull(napi_env env, napi_callback_info i
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::IsNull Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     GetNativePredicates(env, info)->IsNull(field);
     return thiz;
 }
@@ -302,7 +302,7 @@ napi_value DataAbilityPredicatesProxy::IsNotNull(napi_env env, napi_callback_inf
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::IsNotNull Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     GetNativePredicates(env, info)->IsNotNull(field);
     return thiz;
 }
@@ -315,7 +315,7 @@ napi_value DataAbilityPredicatesProxy::Like(napi_env env, napi_callback_info inf
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::Like Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->Like(field, value);
     return thiz;
@@ -329,7 +329,7 @@ napi_value DataAbilityPredicatesProxy::Glob(napi_env env, napi_callback_info inf
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::Glob Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->Glob(field, value);
     return thiz;
@@ -343,7 +343,7 @@ napi_value DataAbilityPredicatesProxy::Between(napi_env env, napi_callback_info 
     napi_value args[3] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::Between Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string low = JSUtils::ConvertAny2String(env, args[1]);
     std::string high = JSUtils::ConvertAny2String(env, args[2]);
     GetNativePredicates(env, info)->Between(field, low, high);
@@ -358,7 +358,7 @@ napi_value DataAbilityPredicatesProxy::NotBetween(napi_env env, napi_callback_in
     napi_value args[3] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::NotBetween Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string low = JSUtils::ConvertAny2String(env, args[1]);
     std::string high = JSUtils::ConvertAny2String(env, args[2]);
     GetNativePredicates(env, info)->NotBetween(field, low, high);
@@ -373,7 +373,7 @@ napi_value DataAbilityPredicatesProxy::GreaterThan(napi_env env, napi_callback_i
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::GreaterThan Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->GreaterThan(field, value);
     return thiz;
@@ -387,7 +387,7 @@ napi_value DataAbilityPredicatesProxy::LessThan(napi_env env, napi_callback_info
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::LessThan Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->LessThan(field, value);
     return thiz;
@@ -401,7 +401,7 @@ napi_value DataAbilityPredicatesProxy::GreaterThanOrEqualTo(napi_env env, napi_c
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::GreaterThanOrEqualTo Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->GreaterThanOrEqualTo(field, value);
     return thiz;
@@ -415,7 +415,7 @@ napi_value DataAbilityPredicatesProxy::LessThanOrEqualTo(napi_env env, napi_call
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::LessThanOrEqualTo Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
     GetNativePredicates(env, info)->LessThanOrEqualTo(field, value);
     return thiz;
@@ -429,7 +429,7 @@ napi_value DataAbilityPredicatesProxy::OrderByAsc(napi_env env, napi_callback_in
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::OrderByAsc Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     GetNativePredicates(env, info)->OrderByAsc(field);
     return thiz;
 }
@@ -442,7 +442,7 @@ napi_value DataAbilityPredicatesProxy::OrderByDesc(napi_env env, napi_callback_i
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::OrderByDesc Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
     GetNativePredicates(env, info)->OrderByDesc(field);
     return thiz;
 }
@@ -492,7 +492,7 @@ napi_value DataAbilityPredicatesProxy::GroupBy(napi_env env, napi_callback_info 
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::GroupBy Invalid argvs!");
-    std::vector<std::string> fields = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::vector<std::string> fields = JSUtils::Convert2StrVector(env, args[0]);
     GetNativePredicates(env, info)->GroupBy(fields);
     return thiz;
 }
@@ -505,7 +505,7 @@ napi_value DataAbilityPredicatesProxy::IndexedBy(napi_env env, napi_callback_inf
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::IndexedBy Invalid argvs!");
-    std::string indexName = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string indexName = JSUtils::Convert2String(env, args[0]);
     GetNativePredicates(env, info)->IndexedBy(indexName);
     return thiz;
 }
@@ -518,8 +518,8 @@ napi_value DataAbilityPredicatesProxy::In(napi_env env, napi_callback_info info)
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::In Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
-    std::vector<std::string> values = JSUtils::Convert2StrVector(env, args[1], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
+    std::vector<std::string> values = JSUtils::Convert2StrVector(env, args[1]);
     GetNativePredicates(env, info)->In(field, values);
     return thiz;
 }
@@ -532,8 +532,8 @@ napi_value DataAbilityPredicatesProxy::NotIn(napi_env env, napi_callback_info in
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::NotIn Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
-    std::vector<std::string> values = JSUtils::Convert2StrVector(env, args[1], JSUtils::DEFAULT_BUF_SIZE);
+    std::string field = JSUtils::Convert2String(env, args[0]);
+    std::vector<std::string> values = JSUtils::Convert2StrVector(env, args[1]);
     GetNativePredicates(env, info)->NotIn(field, values);
     return thiz;
 }
@@ -575,7 +575,7 @@ napi_value DataAbilityPredicatesProxy::SetWhereClause(napi_env env, napi_callbac
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::SetWhereClause Invalid argvs!");
 
-    std::string whereClause = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string whereClause = JSUtils::Convert2String(env, args[0]);
     GetNativePredicates(env, info)->SetWhereClause(whereClause);
 
     return thiz;
@@ -595,7 +595,7 @@ napi_value DataAbilityPredicatesProxy::SetWhereArgs(napi_env env, napi_callback_
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::SetWhereArgs Invalid argvs!");
 
-    std::vector<std::string> whereArgs = JSUtils::Convert2StrVector(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::vector<std::string> whereArgs = JSUtils::Convert2StrVector(env, args[0]);
     GetNativePredicates(env, info)->SetWhereArgs(whereArgs);
 
     return thiz;
@@ -615,7 +615,7 @@ napi_value DataAbilityPredicatesProxy::SetOrder(napi_env env, napi_callback_info
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::SetOrder Invalid argvs!");
 
-    std::string order = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string order = JSUtils::Convert2String(env, args[0]);
     GetNativePredicates(env, info)->SetOrder(order);
 
     return thiz;
