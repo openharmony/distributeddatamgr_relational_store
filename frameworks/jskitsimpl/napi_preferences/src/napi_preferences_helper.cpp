@@ -47,7 +47,7 @@ void ParseName(const napi_env &env, const napi_value &value, HelperAysncContext 
 {
     LOG_DEBUG("ParseName start");
     NAPI_ASSERT_RETURN_VOID(env, asyncContext->context != nullptr, "ParseName context is null.");
-    std::string name = JSUtils::Convert2String(env, value, JSUtils::DEFAULT_BUF_SIZE);
+    std::string name = JSUtils::Convert2String(env, value);
     NAPI_ASSERT_RETURN_VOID(env, !name.empty(), "Get preferences name empty.");
 
     size_t pos = name.find_first_of('/');

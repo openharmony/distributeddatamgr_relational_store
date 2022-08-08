@@ -37,7 +37,7 @@ napi_value CreateRdbPredicates(napi_env env, napi_callback_info info)
     napi_valuetype valueType;
     NAPI_CALL(env, napi_typeof(env, args[0], &valueType));
     NAPI_ASSERT(env, valueType == napi_string, "Table name should be a string.");
-    std::string tableName = JSUtils::Convert2String(env, args[0], JSUtils::DEFAULT_BUF_SIZE);
+    std::string tableName = JSUtils::Convert2String(env, args[0]);
 
     NAPI_CALL(env, napi_typeof(env, args[1], &valueType));
     NAPI_ASSERT(env, valueType == napi_object, "Table name should be an object.");
