@@ -19,7 +19,7 @@ config("native_rdb_config") {
   include_dirs = [
     "include",
     "${relational_store_native_path}/rdb/include",
-    "//foundation/distributeddatamgr/distributeddatamgr/services/distributeddataservice/adapter/include/dfx",
+    "//foundation/distributeddatamgr/datamgr_service/services/distributeddataservice/adapter/include/dfx",
   ]
 
   defines = [
@@ -91,9 +91,9 @@ ohos_shared_library("native_rdb") {
 
   public_deps = [
     "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
-    "//foundation/distributeddatamgr/distributeddatamgr/interfaces/innerkits/distributeddata:distributeddata_inner",
-    "//foundation/distributeddatamgr/distributeddatamgr/services/distributeddataservice/adapter/dfx:distributeddata_dfx_static",
-    "//foundation/distributeddatamgr/distributeddatamgr/services/distributeddataservice/libs/distributeddb:distributeddb",
+    "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner",
+    "//foundation/distributeddatamgr/datamgr_service/services/distributeddataservice/adapter/dfx:distributeddata_dfx_static",
+    "//foundation/distributeddatamgr/kv_store/frameworks/innerkitsimpl/kvdb/distributeddb:distributeddb",
   ]
 
   external_deps = [
