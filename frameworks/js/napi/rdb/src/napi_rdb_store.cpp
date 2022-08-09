@@ -451,10 +451,20 @@ void ParseValuesBucket(const napi_env &env, const napi_value &arg, RdbStoreConte
 
 void ParseValuesBuckets(const napi_env &env, const napi_value &arg, RdbStoreContext *context)
 {
+    bool isArray = false;
+    napi_is_array(env, arg, &isArray);
+    if (!isArray) {
+        context->insertNum = -1;
+        LOG_ERROR("input is not an array");
+        return;
+    }
     uint32_t arrLen = 0;
     napi_status status = napi_get_array_length(env, arg, &arrLen);
-    NAPI_ASSERT_RETURN_VOID(env, status == napi_ok && arrLen > 0, "ParseValuesBuckets fail to get array length.");
-    for (uint32_t i = 0; i < arrLen; i++) {
+    if (status != napi_ok && arrLen < 0) {
+        LOG_ERROR("get array length error");
+        return;
+    }
+    for (uint32_t i = 0; i < arrLen; ++i) {
         napi_value obj = nullptr;
         status = napi_get_element(env, arg, i, &obj);
         NAPI_ASSERT_RETURN_VOID(env, status == napi_ok, "ParseValuesBuckets get element error.");
@@ -522,6 +532,9 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
         [](RdbStoreContext *context) {
             LOG_INFO("RdbStoreProxy::BatchInsert Async.");
             RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+            if (context->insertNum == -1) {
+                return E_OK;
+            }
             int64_t outInsertNum = 0;
             int errCode = obj->rdbStore_->BatchInsert(outInsertNum, context->tableName, context->valuesBuckets);
             context->insertNum = outInsertNum;
