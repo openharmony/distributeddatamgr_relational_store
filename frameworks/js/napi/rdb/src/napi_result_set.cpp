@@ -17,12 +17,15 @@
 
 #include <functional>
 
-#include "abs_shared_result_set.h"
 #include "js_logger.h"
 #include "js_utils.h"
 #include "napi_async_proxy.h"
-#include "string_ex.h"
+
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#include "abs_shared_result_set.h"
 #include "rdb_result_set_bridge.h"
+#include "string_ex.h"
+#endif
 
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
@@ -31,6 +34,7 @@ namespace OHOS {
 namespace RdbJsKit {
 static napi_ref __thread ctorRef_ = nullptr;
 static const int E_OK = 0;
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<AbsSharedResultSet> resultSet)
 {
     auto instance = NewInstance(env, std::static_pointer_cast<NativeRdb::ResultSet>(resultSet));
@@ -48,6 +52,7 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<AbsSharedRe
     proxy->sharedResultSet_ = resultSet;
     return instance;
 }
+#endif
 
 napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet)
 {
@@ -73,6 +78,7 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::
     return instance;
 }
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 std::shared_ptr<NativeRdb::AbsSharedResultSet> ResultSetProxy::GetNativeObject(
     napi_env const &env, napi_value const &arg)
 {
@@ -93,6 +99,7 @@ std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 {
     return std::make_shared<RdbDataShareAdapter::RdbResultSetBridge>(resultSet_);
 }
+#endif
 
 napi_value ResultSetProxy::GetConstructor(napi_env env)
 {
@@ -527,6 +534,7 @@ napi_value ResultSetProxy::GetSharedBlockAshmemFd(napi_env env, napi_callback_in
 } // namespace RdbJsKit
 } // namespace OHOS
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 EXTERN_C_START
 __attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_NewInstance(
     napi_env env, OHOS::NativeRdb::AbsSharedResultSet *resultSet)
@@ -543,3 +551,4 @@ NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_GetNativeObject(const napi_env &env, cons
     return resultSet.get();
 }
 EXTERN_C_END
+#endif

@@ -76,8 +76,10 @@ void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER_SETTER("joinConditions", GetJoinConditions, SetJoinConditions),
         DECLARE_NAPI_GETTER_SETTER("joinNames", GetJoinTableNames, SetJoinTableNames),
         DECLARE_NAPI_GETTER_SETTER("joinTypes", GetJoinTypes, SetJoinTypes),
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
         DECLARE_NAPI_FUNCTION("inDevices", InDevices),
         DECLARE_NAPI_FUNCTION("inAllDevices", InAllDevices),
+#endif
     };
 
     napi_value cons;
@@ -714,6 +716,7 @@ std::shared_ptr<NativeRdb::RdbPredicates> RdbPredicatesProxy::GetPredicates() co
     return this->predicates_;
 }
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 napi_value RdbPredicatesProxy::InDevices(napi_env env, napi_callback_info info)
 {
     napi_value thiz = nullptr;
@@ -735,5 +738,6 @@ napi_value RdbPredicatesProxy::InAllDevices(napi_env env, napi_callback_info inf
     LOG_DEBUG("RdbPredicatesProxy::InAllDevices end");
     return thiz;
 }
+#endif
 } // namespace RdbJsKit
 } // namespace OHOS
