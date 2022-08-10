@@ -16,23 +16,35 @@
 #define LOG_TAG "RdbStoreImpl"
 
 #include "rdb_store_impl.h"
+
 #include <sstream>
 #include <unistd.h>
 
-#include "dds_trace.h"
-#include "directory_ex.h"
-#include "iresult_set.h"
 #include "logger.h"
 #include "rdb_errno.h"
-#include "rdb_manager.h"
-#include "relational_store_manager.h"
-#include "sqlite_shared_result_set.h"
+#include "rdb_trace.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
-#include "reporter.h"
-#include "result_set_proxy.h"
 #include "step_result_set.h"
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#include "directory_ex.h"
+#include "iresult_set.h"
+#include "result_set_proxy.h"
+#include "sqlite_shared_result_set.h"
+#endif
+
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#include "rdb_manager.h"
+#include "relational_store_manager.h"
+#include "reporter.h"
+#endif
+
+#ifdef WINDOWS_PLATFORM
+#define ISFILE(filePath) ((filePath.find("\\") == std::string::npos))
+#else
+#define ISFILE(filePath) ((filePath.find("/") == std::string::npos))
+#endif
 
 namespace OHOS::NativeRdb {
 std::shared_ptr<RdbStore> RdbStoreImpl::Open(const RdbStoreConfig &config, int &errCode)
@@ -61,12 +73,14 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     name = config.GetName();
     fileSecurityLevel = config.GetDatabaseFileSecurityLevel();
     fileType = config.GetDatabaseFileType();
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     syncerParam_.bundleName_ = config.GetBundleName();
     syncerParam_.hapName_ = config.GetModuleName();
     syncerParam_.storeName_ = config.GetName();
     syncerParam_.area_ = config.GetArea();
     syncerParam_.level_ = config.GetSecurityLevel();
     syncerParam_.type_ = config.GetDistributedType();
+#endif
     return E_OK;
 }
 
@@ -130,7 +144,7 @@ void RdbStoreImpl::ReleaseThreadSession()
 
 int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DDS_TRACE();
     return InsertWithConflictResolution(outRowId, table, initialValues, ConflictResolution::ON_CONFLICT_NONE);
 }
 
@@ -152,7 +166,7 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
             return RollBack();
         }
     }
-    
+
     return Commit();
 }
 
@@ -205,7 +219,7 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
 int RdbStoreImpl::Update(int &changedRows, const std::string &table, const ValuesBucket &values,
     const std::string &whereClause, const std::vector<std::string> &whereArgs)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DDS_TRACE();
     return UpdateWithConflictResolution(
         changedRows, table, values, whereClause, whereArgs, ConflictResolution::ON_CONFLICT_NONE);
 }
@@ -261,7 +275,7 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
 
 int RdbStoreImpl::Delete(int &deletedRows, const AbsRdbPredicates &predicates)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DDS_TRACE();
     return Delete(deletedRows, predicates.GetTableName(), predicates.GetWhereClause(), predicates.GetWhereArgs());
 }
 
@@ -289,10 +303,11 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
     return errCode;
 }
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DDS_TRACE();
     LOG_DEBUG("RdbStoreImpl::Query on called.");
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
@@ -302,7 +317,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
 std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
     const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DDS_TRACE();
     LOG_DEBUG("RdbStoreImpl::RemoteQuery on called.");
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
@@ -324,7 +339,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool disti
     const std::vector<std::string> &selectionArgs, const std::string &groupBy, const std::string &having,
     const std::string &orderBy, const std::string &limit)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DDS_TRACE();
     std::string sql;
     errCode = SqliteSqlBuilder::BuildQueryString(distinct, table, columns, selection, groupBy, having, orderBy, limit,
         "", sql);
@@ -339,10 +354,23 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool disti
 std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sql,
     const std::vector<std::string> &selectionArgs)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DDS_TRACE();
     auto resultSet = std::make_unique<SqliteSharedResultSet>(shared_from_this(), path, sql, selectionArgs);
     return resultSet;
 }
+#endif
+
+#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
+std::unique_ptr<ResultSet> RdbStoreImpl::Query(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
+{
+    DDS_TRACE();
+    LOG_DEBUG("RdbStoreImpl::Query on called.");
+    std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
+    std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
+    return QueryByStep(sql, selectionArgs);
+}
+#endif
 
 int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
 {
@@ -361,7 +389,7 @@ int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
 
 int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DDS_TRACE();
     int errCode = CheckAttach(sql);
     if (errCode != E_OK) {
         return errCode;
@@ -429,7 +457,7 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
         return E_INVALID_FILE_PATH;
     }
     std::string backupFilePath;
-    if (databasePath.find("/") == std::string::npos) {
+    if (ISFILE(databasePath)) {
         backupFilePath = ExtractFilePath(path) + databasePath;
     } else {
         if (!PathToRealPath(ExtractFilePath(databasePath), backupFilePath)) {
@@ -493,7 +521,7 @@ int RdbStoreImpl::SetVersion(int version)
  */
 int RdbStoreImpl::BeginTransaction()
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DDS_TRACE();
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int errCode = session->BeginTransaction();
     if (errCode != E_OK) {
@@ -507,7 +535,7 @@ int RdbStoreImpl::BeginTransaction()
 */
 int RdbStoreImpl::RollBack()
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DDS_TRACE();
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int errCode = session->RollBack();
     if (errCode != E_OK) {
@@ -521,7 +549,7 @@ int RdbStoreImpl::RollBack()
 */
 int RdbStoreImpl::Commit()
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DDS_TRACE();
     LOG_DEBUG("Enter Commit");
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int errCode = session->Commit();
@@ -583,12 +611,14 @@ bool RdbStoreImpl::IsInTransaction()
 
 int RdbStoreImpl::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DDS_TRACE();
     auto ret =  connectionPool->ChangeEncryptKey(newKey);
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     if (ret != E_OK) {
         DistributedDataDfx::Reporter::GetInstance()->DatabaseFault()->Report(
             {syncerParam_.bundleName_, name, "rdb", DistributedDataDfx::Fault::DF_DB_REKEY_FAILED});
     }
+#endif
     return ret;
 }
 
@@ -638,6 +668,39 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
 
     return E_OK;
 }
+#ifdef WINDOWS_PLATFORM
+std::string RdbStoreImpl::ExtractFilePath(const std::string &fileFullName)
+{
+    return std::string(fileFullName).substr(0, fileFullName.rfind("\\") + 1);
+}
+
+bool RdbStoreImpl::PathToRealPath(const std::string &path, std::string &realPath)
+{
+    if (path.empty()) {
+        LOG_ERROR("path is empty!");
+        return false;
+    }
+
+    if ((path.length() >= PATH_MAX)) {
+        LOG_ERROR("path len is error, the len is: [%{public}zu]", path.length());
+        return false;
+    }
+
+    char tmpPath[PATH_MAX] = { 0 };
+
+    if (_fullpath(tmpPath, path.c_str(), PATH_MAX) == NULL) {
+        LOG_ERROR("path to realpath error");
+        return false;
+    }
+
+    realPath = tmpPath;
+    if (access(realPath.c_str(), F_OK) != 0) {
+        LOG_ERROR("check realpath (%{public}s) error", realPath.c_str());
+        return false;
+    }
+    return true;
+}
+#endif
 
 bool RdbStoreImpl::IsOpen() const
 {
@@ -733,7 +796,7 @@ int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::s
     }
     std::string backupFilePath;
     std::string restoreFilePath;
-    if (backupPath.find("/") == std::string::npos) {
+    if (ISFILE(backupPath)) {
         backupFilePath = ExtractFilePath(path) + backupPath;
     } else {
         backupFilePath = backupPath;
@@ -743,7 +806,7 @@ int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::s
         return E_INVALID_FILE_PATH;
     }
 
-    if (newPath.find("/") == std::string::npos) {
+    if (ISFILE(newPath)) {
         restoreFilePath = ExtractFilePath(path) + newPath;
     } else {
         if (!PathToRealPath(ExtractFilePath(newPath), restoreFilePath)) {
@@ -767,6 +830,8 @@ int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::s
     }
     return ret;
 }
+
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 int RdbStoreImpl::ExecuteForSharedBlock(int &rowNum, AppDataFwk::SharedBlock *sharedBlock, int startPos,
     int requiredPos, bool isCountAllRows, std::string sql, std::vector<ValueObject> &bindArgVec)
 {
@@ -776,6 +841,7 @@ int RdbStoreImpl::ExecuteForSharedBlock(int &rowNum, AppDataFwk::SharedBlock *sh
     ReleaseThreadSession();
     return errCode;
 }
+#endif
 
 /**
  * Queries data in the database based on specified conditions.
@@ -788,10 +854,10 @@ std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
     return resultSet;
 }
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__),
-        DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
+    DDS_TRACE(DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
     auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
     if (service == nullptr) {
         return false;
@@ -806,8 +872,7 @@ bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
 
 std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, const std::string &table)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__),
-        DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
+    DDS_TRACE(DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
     auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
     if (service == nullptr) {
         return "";
@@ -818,8 +883,7 @@ std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, 
 
 bool RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const SyncCallback &callback)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__),
-        DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
+    DDS_TRACE(DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
     auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
     if (service == nullptr) {
         return false;
@@ -857,4 +921,5 @@ bool RdbStoreImpl::DropDeviceData(const std::vector<std::string> &devices, const
     LOG_INFO("not implement");
     return true;
 }
+#endif
 } // namespace OHOS::NativeRdb

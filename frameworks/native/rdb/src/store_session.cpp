@@ -19,7 +19,9 @@
 #include <thread>
 #include "logger.h"
 #include "rdb_errno.h"
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "shared_block.h"
+#endif
 #include "sqlite_database_utils.h"
 #include "sqlite_utils.h"
 #include "base_transaction.h"
@@ -431,6 +433,7 @@ int StoreSession::EndStepQuery()
     return errCode;
 }
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 int StoreSession::ExecuteForSharedBlock(int &rowNum, std::string sql, const std::vector<ValueObject> &bindArgs,
     AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows)
 {
@@ -443,6 +446,7 @@ int StoreSession::ExecuteForSharedBlock(int &rowNum, std::string sql, const std:
     ReleaseConnection();
     return errCode;
 }
+#endif
 
 int StoreSession::BeginTransaction()
 {

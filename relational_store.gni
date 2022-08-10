@@ -26,3 +26,6 @@ relational_store_native_path = "${relational_store_base_path}/frameworks/native"
 
 relational_store_innerapi_path =
     "${relational_store_base_path}/interfaces/inner_api"
+
+use_mingw_win = "${current_os}_${current_cpu}" == "mingw_x86_64"
+use_clang_mac = "${current_os}_${current_cpu}" == "mac_x64"

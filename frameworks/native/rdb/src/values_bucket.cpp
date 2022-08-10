@@ -108,6 +108,7 @@ void ValuesBucket::GetAll(std::map<std::string, ValueObject> &outValuesMap) cons
     outValuesMap = valuesMap;
 }
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 bool ValuesBucket::Marshalling(Parcel &parcel) const
 {
     parcel.WriteInt32(valuesMap.size());
@@ -131,5 +132,6 @@ ValuesBucket *ValuesBucket::Unmarshalling(Parcel &parcel)
     value = nullptr;
     return new ValuesBucket(valuesMap);
 }
+#endif
 } // namespace NativeRdb
 } // namespace OHOS
