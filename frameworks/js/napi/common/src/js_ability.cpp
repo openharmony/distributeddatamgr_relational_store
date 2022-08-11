@@ -29,24 +29,22 @@ Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
     if (hapInfo != nullptr) {
         moduleName_ = hapInfo->moduleName;
     }
-    LOG_DEBUG("Stage: area:%{public}d database:%{public}s preferences:%{public}s bundle:%{public}s hap:%{public}s",
-        area_, databaseDir_.c_str(), preferencesDir_.c_str(), bundleName_.c_str(), moduleName_.c_str());
+    LOG_DEBUG("Stage: area:%{public}d database:%{private}s preferences:%{private}s bundle:%{public}s hap:%{public}s",
+              area_, databaseDir_.c_str(), preferencesDir_.c_str(), bundleName_.c_str(), moduleName_.c_str());
 }
 
 Context::Context(std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext)
 {
     databaseDir_ = abilityContext->GetDatabaseDir();
-    LOG_DEBUG("FA: DatabaseDir %{public}s", databaseDir_.c_str());
     preferencesDir_ = abilityContext->GetPreferencesDir();
-    LOG_DEBUG("FA: PreferencesDir %{public}s", preferencesDir_.c_str());
     bundleName_ = abilityContext->GetBundleName();
-    LOG_DEBUG("FA: BundleName %{public}s", bundleName_.c_str());
     area_ = abilityContext->GetArea();
-    LOG_DEBUG("FA: Area %{public}d", area_);
     auto abilityInfo = abilityContext->GetAbilityInfo();
     if (abilityInfo != nullptr) {
         moduleName_ = abilityInfo->moduleName;
     }
+    LOG_DEBUG("FA: area:%{public}d database:%{private}s preferences:%{private}s bundle:%{public}s hap:%{public}s",
+              area_, databaseDir_.c_str(), preferencesDir_.c_str(), bundleName_.c_str(), moduleName_.c_str());
 }
 
 std::string Context::GetDatabaseDir()
