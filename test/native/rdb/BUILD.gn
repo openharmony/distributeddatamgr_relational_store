@@ -88,6 +88,9 @@ group("unittest") {
 group("fuzztest") {
   testonly = true
   deps = []
-  deps += [ "fuzztest/rdbimpl_fuzzer:fuzztest" ]
+  deps += [
+    "fuzztest/rdbimpl_fuzzer:fuzztest",
+    "fuzztest/rdbstore_fuzzer:fuzztest",
+  ]
 }
 ###############################################################################
