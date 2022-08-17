@@ -21,11 +21,22 @@
 
 #include <algorithm>
 #include <cstdio>
+#ifdef WINDOWS_PLATFORM
+#include <dir.h>
+#endif
 #include <fstream>
 #include <climits>
 
 #include "logger.h"
 #include "rdb_errno.h"
+
+#ifdef WINDOWS_PLATFORM
+#define REALPATH(relPath, absPath, ...) (_fullpath(absPath, relPath, ##__VA_ARGS__))
+#define MKDIR(filePath) (mkdir(filePath))
+#else
+#define REALPATH(absPath, relPath, ...) (realpath(absPath, relPath))
+#define MKDIR(filePath) (mkdir(filePath, g_mkdirMode))
+#endif
 
 namespace OHOS {
 namespace NativeRdb {
@@ -120,24 +131,32 @@ std::string SqliteDatabaseUtils::GetDefaultDatabasePath(std::string &baseDir, st
 {
     std::unique_lock<std::mutex> lock(g_locker);
     if (access(baseDir.c_str(), F_OK) != 0) {
-        if (mkdir(baseDir.c_str(), g_mkdirMode)) {
+        if (MKDIR(baseDir.c_str())) {
             errorCode = E_CREATE_FOLDER_FAIL;
         }
     }
+#if defined(WINDOWS_PLATFORM)
+    std::string databasePath = baseDir + "\\rdb";
+#else
     std::string databasePath = baseDir + "/rdb";
+#endif
     if (access(databasePath.c_str(), F_OK) != 0) {
-        if (mkdir(databasePath.c_str(), g_mkdirMode)) {
+        if (MKDIR(databasePath.c_str())) {
             errorCode = E_CREATE_FOLDER_FAIL;
         }
     }
     char canonicalPath[PATH_MAX + 1] = { 0 };
-    if (realpath(databasePath.c_str(), canonicalPath) == nullptr) {
+    if (REALPATH(databasePath.c_str(), canonicalPath, PATH_MAX) == nullptr) {
         LOG_ERROR("Failed to obtain real path, errno:%{public}d", errno);
         errorCode = E_INVALID_FILE_PATH;
         return "";
     }
     std::string realFilePath(canonicalPath);
+#if defined(WINDOWS_PLATFORM)
+    realFilePath = realFilePath.append("\\").append(name);
+#else
     realFilePath = realFilePath.append("/").append(name);
+#endif
     return realFilePath;
 }
 
@@ -167,7 +186,7 @@ std::string SqliteDatabaseUtils::GetCorruptPath(std::string &path, int &errorCod
     std::string corruptPath = databaseDir + "/" + corruptTypeDir;
 
     if (access(corruptPath.c_str(), F_OK) != 0) {
-        if (mkdir(corruptPath.c_str(), g_mkdirMode)) {
+        if (MKDIR(corruptPath.c_str())) {
             errorCode = E_CREATE_FOLDER_FAIL;
         }
     }
@@ -185,7 +204,7 @@ std::string SqliteDatabaseUtils::GetDatabasePathNoName(std::string &context, Rdb
     std::string databasePath = context + "/" + databaseDir;
     std::unique_lock<std::mutex> lock(g_locker);
     if (access(databasePath.c_str(), F_OK) != 0) {
-        if (mkdir(databasePath.c_str(), g_mkdirMode)) {
+        if (MKDIR(databasePath.c_str())) {
             errorCode = E_CREATE_FOLDER_FAIL;
         }
     }
