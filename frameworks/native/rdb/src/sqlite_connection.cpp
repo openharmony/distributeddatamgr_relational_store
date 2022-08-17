@@ -15,30 +15,35 @@
 
 #include "sqlite_connection.h"
 
+#include <cerrno>
 #include <memory>
-#include <securec.h>
 #include <sqlite3sym.h>
 #include <sys/stat.h>
 #ifdef RDB_SUPPORT_ICU
 #include <unicode/ucol.h>
 #endif
-#include <unistd.h>
 
-#include <cerrno>
+#include <securec.h>
+#include <unistd.h>
 
 #include "logger.h"
 #include "rdb_errno.h"
-#include "share_block.h"
-#include "shared_block_serializer_info.h"
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
+
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "relational/relational_store_sqlite_ext.h"
+#include "share_block.h"
+#include "shared_block_serializer_info.h"
+#endif
 
 namespace OHOS {
 namespace NativeRdb {
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 // error status
 const int ERROR_STATUS = -1;
+#endif
 
 SqliteConnection *SqliteConnection::Open(const SqliteConfig &config, bool isWriteConnection, int &errCode)
 {
@@ -70,7 +75,7 @@ int SqliteConnection::InnerOpen(const SqliteConfig &config)
     } else if (config.GetPath().empty()) {
         LOG_ERROR("SqliteConnection InnerOpen input empty database path");
         return E_EMPTY_FILE_NAME;
-    } else if (config.GetPath().front() != '/') { // change this to starts_with() after c++20
+    } else if (config.GetPath().front() != '/' && config.GetPath().at(1) != ':') {
         LOG_ERROR("SqliteConnection InnerOpen input relative path");
         return E_RELATIVE_PATH;
     } else {
@@ -638,6 +643,7 @@ int SqliteConnection::ConfigLocale(const std::string localeStr)
 }
 #endif
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 /**
  * Executes a statement and populates the specified with a range of results.
  */
@@ -688,5 +694,6 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     errCode = statement.ResetStatementAndClearBindings();
     return errCode;
 }
+#endif
 } // namespace NativeRdb
 } // namespace OHOS
