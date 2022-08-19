@@ -61,7 +61,11 @@ protected:
     friend class ISharedResultSetProxy;
     bool Unmarshalling(MessageParcel &parcel);
     bool Marshalling(MessageParcel &parcel);
-    
+
+    int startPos_;
+    int lastPos_;
+    uint32_t blockPos_;
+
 private:
     // The default position of the cursor
     static const int INIT_POS = -1;
