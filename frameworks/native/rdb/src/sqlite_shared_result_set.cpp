@@ -91,7 +91,7 @@ bool SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
         FillSharedBlock(newPosition);
         return true;
     }
-    if (newPosition < startPos_ || newPosition > lastPos_) {
+    if (newPosition >= (int)GetBlock()->GetRowNum()) {
         FillSharedBlock(newPosition);
     }
     return true;
@@ -125,19 +125,10 @@ void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
     if (rowNum == NO_COUNT) {
         rdbStoreImpl->ExecuteForSharedBlock(rowNum, GetBlock(), requiredPos, requiredPos, true, qrySql, bindArgs);
         resultSetBlockCapacity = static_cast<int>(GetBlock()->GetRowNum());
-        startPos_ = requiredPos;
-        blockPos_ = requiredPos;
-        lastPos_ = startPos_ + resultSetBlockCapacity - 1;
     } else {
-        int blockRowNum = rowNum;
-        startPos_ =
+        int startPos =
             isOnlyFillResultSetBlock ? requiredPos : PickFillBlockStartPosition(requiredPos, resultSetBlockCapacity);
-        rdbStoreImpl->ExecuteForSharedBlock(blockRowNum, GetBlock(), startPos_, requiredPos, false, qrySql, bindArgs);
-        int currentBlockCapacity = static_cast<int>(GetBlock()->GetRowNum());
-        blockPos_ = requiredPos - startPos_;
-        lastPos_ = startPos_ + currentBlockCapacity - 1;
-        LOG_INFO("requiredPos= %{public}d, startPos_= %{public}d, lastPos_= %{public}d, blockPos_= %{public}d",
-            requiredPos, startPos_, lastPos_, blockPos_);
+        rdbStoreImpl->ExecuteForSharedBlock(rowNum, GetBlock(), startPos, requiredPos, false, qrySql, bindArgs);
     }
 }
 
