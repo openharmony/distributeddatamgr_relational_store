@@ -102,32 +102,32 @@ void RdbUtils::NoSupport(const OperationItem &item, RdbPredicates &query)
 
 void RdbUtils::EqualTo(const OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.EqualTo(item.para1, ToString(item.para2));
+    predicates.EqualTo(item.singleParams[0], ToString(item.singleParams[1]));
 }
 
 void RdbUtils::NotEqualTo(const OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.NotEqualTo(item.para1, ToString(item.para2));
+    predicates.NotEqualTo(item.singleParams[0], ToString(item.singleParams[1]));
 }
 
 void RdbUtils::GreaterThan(const OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.GreaterThan(item.para1, ToString(item.para2));
+    predicates.GreaterThan(item.singleParams[0], ToString(item.singleParams[1]));
 }
 
 void RdbUtils::LessThan(const OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.LessThan(item.para1, ToString(item.para2));
+    predicates.LessThan(item.singleParams[0], ToString(item.singleParams[1]));
 }
 
 void RdbUtils::GreaterThanOrEqualTo(const OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.GreaterThanOrEqualTo(item.para1, ToString(item.para2));
+    predicates.GreaterThanOrEqualTo(item.singleParams[0], ToString(item.singleParams[1]));
 }
 
 void RdbUtils::LessThanOrEqualTo(const OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.LessThanOrEqualTo(item.para1, ToString(item.para2));
+    predicates.LessThanOrEqualTo(item.singleParams[0], ToString(item.singleParams[1]));
 }
 
 void RdbUtils::And(const DataShare::OperationItem &item, RdbPredicates &predicates)
@@ -142,45 +142,47 @@ void RdbUtils::Or(const DataShare::OperationItem &item, RdbPredicates &predicate
 
 void RdbUtils::IsNull(const OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.IsNull(item.para1);
+    predicates.IsNull(item.singleParams[0]);
 }
 
 void RdbUtils::IsNotNull(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.IsNotNull(item.para1);
+    predicates.IsNotNull(item.singleParams[0]);
 }
+
 void RdbUtils::In(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.In(item.para1, std::get<std::vector<std::string>>(item.para2.value));
+    predicates.In(item.singleParams[0], item.multiParams[0]);
 }
 
 void RdbUtils::NotIn(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.NotIn(item.para1, std::get<std::vector<std::string>>(item.para2.value));
+    predicates.NotIn(item.singleParams[0], item.multiParams[0]);
 }
 
 void RdbUtils::Like(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.Like(item.para1, ToString(item.para2));
+    predicates.Like(item.singleParams[0], ToString(item.singleParams[1]));
 }
 
 void RdbUtils::OrderByAsc(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.OrderByAsc(item.para1);
+    predicates.OrderByAsc(item.singleParams[0]);
 }
 
 void RdbUtils::OrderByDesc(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.OrderByDesc(item.para1);
+    predicates.OrderByDesc(item.singleParams[0]);
 }
+
 void RdbUtils::Limit(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.Limit(item.para1.operator int());
+    predicates.Limit(item.singleParams[0].operator int());
 }
 
 void RdbUtils::Offset(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.Offset(item.para1.operator int());
+    predicates.Offset(item.singleParams[0].operator int());
 }
 
 void RdbUtils::BeginWrap(const DataShare::OperationItem &item, RdbPredicates &predicates)
@@ -195,12 +197,12 @@ void RdbUtils::EndWrap(const DataShare::OperationItem &item, RdbPredicates &pred
 
 void RdbUtils::BeginsWith(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.BeginsWith(item.para1, ToString(item.para2));
+    predicates.BeginsWith(item.singleParams[0], ToString(item.singleParams[1]));
 }
 
 void RdbUtils::EndsWith(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.EndsWith(item.para1, ToString(item.para2));
+    predicates.EndsWith(item.singleParams[0], ToString(item.singleParams[1]));
 }
 
 void RdbUtils::Distinct(const DataShare::OperationItem &item, RdbPredicates &predicates)
@@ -210,32 +212,32 @@ void RdbUtils::Distinct(const DataShare::OperationItem &item, RdbPredicates &pre
 
 void RdbUtils::GroupBy(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.GroupBy(std::get<std::vector<std::string>>(item.para1.value));
+    predicates.GroupBy(item.multiParams[0]);
 }
 
 void RdbUtils::IndexedBy(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.IndexedBy(item.para1);
+    predicates.IndexedBy(item.singleParams[0]);
 }
 
 void RdbUtils::Contains(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.Contains(item.para1, ToString(item.para2));
+    predicates.Contains(item.singleParams[0], ToString(item.singleParams[1]));
 }
 
 void RdbUtils::Glob(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.Glob(item.para1, ToString(item.para2));
+    predicates.Glob(item.singleParams[0], ToString(item.singleParams[1]));
 }
 
 void RdbUtils::Between(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.Between(item.para1, ToString(item.para2), ToString(item.para3));
+    predicates.Between(item.singleParams[0], ToString(item.singleParams[1]), ToString(item.singleParams[2]));
 }
 
 void RdbUtils::NotBetween(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
-    predicates.NotBetween(item.para1, ToString(item.para2), ToString(item.para3));
+    predicates.NotBetween(item.singleParams[0], ToString(item.singleParams[1]), ToString(item.singleParams[2]));
 }
 
 RdbUtils::RdbUtils()
