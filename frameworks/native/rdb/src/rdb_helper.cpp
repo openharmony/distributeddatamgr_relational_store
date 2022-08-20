@@ -18,9 +18,9 @@
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_store_impl.h"
+#include "rdb_trace.h"
 #include "sqlite_global_config.h"
 #include "unistd.h"
-#include "dds_trace.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -29,8 +29,7 @@ std::map<std::string, std::shared_ptr<RdbStore>> RdbHelper::storeCache_;
 std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__),
-        DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
+    DDS_TRACE(DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
     SqliteGlobalConfig::InitSqliteGlobalConfig();
     std::shared_ptr<RdbStore> rdbStore;
     {
@@ -101,7 +100,7 @@ void RdbHelper::ClearCache()
 
 int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DDS_TRACE();
     if (dbFileName.empty()) {
         return E_EMPTY_FILE_NAME;
     }

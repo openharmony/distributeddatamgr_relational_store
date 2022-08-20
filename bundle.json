@@ -57,7 +57,7 @@
                 "utils_base",
                 "common",
                 "icu",
-                "samgr_standard"
+                "samgr"
             ],
             "third_party": [
                 "sqlite",
@@ -126,6 +126,15 @@
                             "rdb_utils.h"
                         ],
                         "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_share_adapter/include"
+                    }
+                },
+                {
+                    "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_ability_adapter:rdb_data_ability_adapter",
+                    "header": {
+                        "header_files": [
+                            "rdb_data_ability_utils.h"
+                        ],
+                        "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_ability_adapter/include"
                     }
                 }
             ],

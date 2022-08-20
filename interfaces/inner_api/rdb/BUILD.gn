@@ -16,16 +16,23 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 config("native_rdb_config") {
   visibility = [ ":*" ]
 
-  include_dirs = [
-    "include",
-    "${relational_store_native_path}/rdb/include",
-    "//foundation/distributeddatamgr/datamgr_service/services/distributeddataservice/adapter/include/dfx",
-  ]
+  if (use_mingw_win || use_clang_mac) {
+    include_dirs = [
+      "mock/include",
+      "${relational_store_native_path}/rdb/mock/include",
+      "//commonlibrary/c_utils/base/include",
+      "include",
+    ]
+  } else {
+    include_dirs = [
+      "include",
+      "${relational_store_native_path}/rdb/include",
+    ]
+  }
 
   defines = [
     "RELATIONAL_STORE",
     "SQLITE_HAS_CODEC",
-    "SQLITE_DISTRIBUTE_RELATIONAL",
   ]
 
   if (relational_store_rdb_support_icu) {
@@ -36,12 +43,34 @@ config("native_rdb_config") {
     ]
     defines += [ "RDB_SUPPORT_ICU" ]
   }
+
+  if (use_mingw_win) {
+    defines += [ "WINDOWS_PLATFORM" ]
+    include_dirs += [ "//third_party/sqlite/include" ]
+
+    libs = [ "//prebuilts/mingw-w64/ohos/linux-x86_64/clang-mingw/x86_64-w64-mingw32/lib/libws2_32.a" ]
+
+    cflags_cc = [ "-std=c++17" ]
+  } else if (use_clang_mac) {
+    defines += [ "MAC_PLATFORM" ]
+    include_dirs += [ "//third_party/sqlite/include" ]
+  } else {
+    defines += [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
+    include_dirs += [ "//foundation/distributeddatamgr/datamgr_service/services/distributeddataservice/adapter/include/dfx" ]
+  }
 }
 
 config("native_rdb_public_config") {
   visibility = [ "//foundation/distributeddatamgr/relational_store:*" ]
 
-  include_dirs = [ "include" ]
+  if (use_mingw_win || use_clang_mac) {
+    include_dirs = [
+      "mock/include",
+      "include",
+    ]
+  } else {
+    include_dirs = [ "include" ]
+  }
 
   defines = [ "SQLITE_HAS_CODEC" ]
 }
@@ -52,7 +81,6 @@ ohos_shared_library("native_rdb") {
     "${relational_store_native_path}/rdb/src/abs_predicates.cpp",
     "${relational_store_native_path}/rdb/src/abs_rdb_predicates.cpp",
     "${relational_store_native_path}/rdb/src/abs_result_set.cpp",
-    "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
     "${relational_store_native_path}/rdb/src/base_transaction.cpp",
     "${relational_store_native_path}/rdb/src/base_transaction.h",
     "${relational_store_native_path}/rdb/src/logger.h",
@@ -60,15 +88,11 @@ ohos_shared_library("native_rdb") {
     "${relational_store_native_path}/rdb/src/rdb_predicates.cpp",
     "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
     "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
-    "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
-    "${relational_store_native_path}/rdb/src/share_block.cpp",
-    "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_config.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_connection.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_connection_pool.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_database_utils.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_global_config.cpp",
-    "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_sql_builder.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_statement.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
@@ -81,29 +105,48 @@ ohos_shared_library("native_rdb") {
 
   configs = [ ":native_rdb_config" ]
 
-  ldflags = [ "-Wl,--exclude-libs=libdistributeddata_dfx_static.a" ]
-
   deps = [
     "//third_party/icu/icu4c:shared_icui18n",
     "//third_party/icu/icu4c:shared_icuuc",
-    "//third_party/sqlite:sqlite",
   ]
 
-  public_deps = [
-    "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
-    "//foundation/distributeddatamgr/datamgr_service/services/distributeddataservice/adapter/dfx:distributeddata_dfx_static",
-    "//foundation/distributeddatamgr/kv_store/frameworks/innerkitsimpl/kvdb/distributeddb:distributeddb",
-    "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner",
-  ]
+  if (use_mingw_win) {
+    deps += [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows(//build/toolchain/mingw:mingw_x86_64)",
+      "//third_party/sqlite:sqlite_sdk",
+    ]
+  } else if (use_clang_mac) {
+    deps += [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac(//build/toolchain/mac/:mac_x64)",
+      "//third_party/sqlite:sqlite_sdk",
+    ]
+  } else {
+    deps += [ "//third_party/sqlite:sqlite" ]
+    ldflags = [ "-Wl,--exclude-libs=libdistributeddata_dfx_static.a" ]
 
-  external_deps = [
-    "c_utils:utils",
-    "hilog_native:libhilog",
-    "hitrace_native:hitrace_meter",
-    "hitrace_native:libhitrace",
-    "ipc:ipc_core",
-    "samgr_standard:samgr_proxy",
-  ]
+    sources += [
+      "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
+      "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
+      "${relational_store_native_path}/rdb/src/share_block.cpp",
+      "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
+      "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
+    ]
+    public_deps = [
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
+      "//foundation/distributeddatamgr/datamgr_service/services/distributeddataservice/adapter/dfx:distributeddata_dfx_static",
+      "//foundation/distributeddatamgr/kv_store/frameworks/innerkitsimpl/kvdb/distributeddb:distributeddb",
+      "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner",
+    ]
+
+    external_deps = [
+      "c_utils:utils",
+      "hilog_native:libhilog",
+      "hitrace_native:hitrace_meter",
+      "hitrace_native:libhitrace",
+      "ipc:ipc_core",
+      "samgr:samgr_proxy",
+    ]
+  }
 
   public_configs = [ ":native_rdb_public_config" ]
 
