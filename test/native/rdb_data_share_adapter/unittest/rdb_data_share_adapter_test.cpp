@@ -282,10 +282,10 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_005, TestSize.Level1)
     DataShareValuesBucket values;
     int64_t id;
     int changedRows;
-    values.PutString("data1", std::string("tulip"));
-    values.PutInt("data2", 100);
-    values.PutDouble("data3", 50.5);
-    values.PutBlob("data4", std::vector<uint8_t> { 20, 21, 22 });
+    values.Put("data1", std::string("tulip"));
+    values.Put("data2", 100);
+    values.Put("data3", 50.5);
+    values.Put("data4", std::vector<uint8_t> { 20, 21, 22 });
 
     int ret = store->Insert(id, "test", RdbUtils::ToValuesBucket(values));
     EXPECT_EQ(ret, E_OK);
@@ -304,8 +304,8 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_005, TestSize.Level1)
     allDataTypes.get()->Close();
 
     values.Clear();
-    values.PutDouble("data3", 300.5);
-    values.PutBlob("data4", std::vector<uint8_t> { 17, 18, 19 });
+    values.Put("data3", 300.5);
+    values.Put("data4", std::vector<uint8_t> { 17, 18, 19 });
     ret = store->Update(
         changedRows, "test", RdbUtils::ToValuesBucket(values), "data1 = ?", std::vector<std::string> { "tulip" });
     EXPECT_EQ(ret, E_OK);

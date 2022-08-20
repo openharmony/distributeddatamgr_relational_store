@@ -14,12 +14,15 @@
  */
 
 #include "napi_rdb_const_properties.h"
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_types.h"
 
 using OHOS::DistributedRdb::SyncMode;
 using OHOS::DistributedRdb::SubscribeMode;
+#endif
 
 namespace OHOS::RdbJsKit {
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 static napi_status SetNamedProperty(napi_env env, napi_value& obj, const std::string& name, int32_t value)
 {
     napi_value property = nullptr;
@@ -53,12 +56,15 @@ static napi_value ExportSubscribeType(napi_env env)
     napi_object_freeze(env, subscribeType);
     return subscribeType;
 }
+#endif
 
 napi_status InitConstProperties(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
         DECLARE_NAPI_PROPERTY("SyncMode", ExportSyncMode(env)),
         DECLARE_NAPI_PROPERTY("SubscribeType", ExportSubscribeType(env)),
+#endif
     };
 
     size_t count = sizeof(properties) / sizeof(properties[0]);

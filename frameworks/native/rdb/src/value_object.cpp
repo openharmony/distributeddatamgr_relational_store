@@ -161,6 +161,7 @@ int ValueObject::GetBlob(std::vector<uint8_t> &val) const
     return E_OK;
 }
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 bool ValueObject::Marshalling(Parcel &parcel) const
 {
     switch (this->type) {
@@ -239,5 +240,6 @@ ValueObject *ValueObject::Unmarshalling(Parcel &parcel)
     }
     return pValueObject;
 }
+#endif
 } // namespace NativeRdb
 } // namespace OHOS

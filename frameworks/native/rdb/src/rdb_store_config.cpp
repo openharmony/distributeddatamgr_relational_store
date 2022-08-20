@@ -183,6 +183,7 @@ void RdbStoreConfig::ClearEncryptKey()
     encryptKey.clear();
 }
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 int RdbStoreConfig::SetDistributedType(DistributedType type)
 {
     if (type < DistributedType::RDB_DEVICE_COLLABORATION || type >= DistributedType::RDB_DISTRIBUTED_TYPE_MAX) {
@@ -197,6 +198,7 @@ DistributedType RdbStoreConfig::GetDistributedType() const
 {
     return distributedType_;
 }
+#endif
 
 int RdbStoreConfig::SetBundleName(const std::string &bundleName)
 {

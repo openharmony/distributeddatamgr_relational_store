@@ -17,8 +17,10 @@
 
 #include "abs_rdb_predicates.h"
 #include "logger.h"
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_manager.h"
 #include "rdb_service.h"
+#endif
 
 namespace OHOS::NativeRdb {
 AbsRdbPredicates::AbsRdbPredicates(std::string tableName)
@@ -29,7 +31,9 @@ AbsRdbPredicates::AbsRdbPredicates(std::string tableName)
         return;
     }
     this->tableName = tableName;
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     predicates_.table_ = tableName;
+#endif
 }
 
 void AbsRdbPredicates::Clear()
@@ -137,6 +141,7 @@ std::string AbsRdbPredicates::ToString() const
            + ", isSorted:" + std::to_string(IsSorted()) + "}";
 }
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 AbsRdbPredicates* AbsRdbPredicates::InDevices(std::vector<std::string> &devices)
 {
     for (const auto& device : devices) {
@@ -204,4 +209,5 @@ AbsRdbPredicates* AbsRdbPredicates::OrderByDesc(std::string field)
     predicates_.AddOperation(DistributedRdb::ORDER_BY, field, isAsc);
     return (AbsRdbPredicates *)AbsPredicates::OrderByDesc(field);
 }
+#endif
 } // namespace OHOS::NativeRdb
