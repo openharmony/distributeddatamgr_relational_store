@@ -59,6 +59,31 @@ public:
     bool Marshalling(Parcel &parcel) const override;
     static ValueObject *Unmarshalling(Parcel &parcel);
     
+    operator int () const
+    {
+        return static_cast<int>(std::get<int64_t>(value));
+    }
+    operator int64_t () const
+    {
+        return std::get<int64_t>(value);
+    }
+    operator double () const
+    {
+        return std::get<double>(value);
+    }
+    operator bool () const
+    {
+        return std::get<bool>(value);
+    }
+    operator std::string () const
+    {
+        return std::get<std::string>(value);
+    }
+    operator std::vector<uint8_t> () const
+    {
+        return std::get<std::vector<uint8_t>>(value);
+    }
+
 private:
     ValueObjectType type;
     std::variant<int64_t, double, std::string, bool, std::vector<uint8_t>> value;
