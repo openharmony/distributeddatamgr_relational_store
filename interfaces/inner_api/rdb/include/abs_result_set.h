@@ -57,10 +57,7 @@ public:
 protected:
     // The default position of the result set
     static const int INIT_POS = -1;
-    int rowPos_;
-    uint32_t startPos_;
-    uint32_t lastPos_;
-    uint32_t blockPos_;
+    int rowPos;
     // Indicates whether the result set is closed
     bool isClosed;
 };
