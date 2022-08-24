@@ -694,7 +694,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_006_007, Test
  * @tc.name: RdbStore_BatchInsert_001
  * @tc.desc: test RdbStore BatchInsert
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
+ * @tc.require: I5GZGX
  */
 HWTEST_F(RdbStoreInsertTest, RdbStore_BatchInsert_001, TestSize.Level1)
 {
