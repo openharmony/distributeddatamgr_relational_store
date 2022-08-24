@@ -23,8 +23,7 @@
 
 namespace OHOS {
 namespace NativeRdb {
-AbsResultSet::AbsResultSet()
-    : rowPos_(INIT_POS), startPos_(0), lastPos_(0), blockPos_(0), isClosed(false)
+AbsResultSet::AbsResultSet() : rowPos(INIT_POS), isClosed(false)
 {}
 
 AbsResultSet::~AbsResultSet() {}
@@ -81,14 +80,14 @@ int AbsResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 
 int AbsResultSet::GetRowIndex(int &position) const
 {
-    position = rowPos_;
+    position = rowPos;
     return E_OK;
 }
 
 int AbsResultSet::GoTo(int offset)
 {
     DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
-    int ret = GoToRow(rowPos_ + offset);
+    int ret = GoToRow(rowPos + offset);
     if (ret != E_OK) {
         LOG_WARN("AbsResultSet::GoTo return ret is wrong!");
         return ret;
@@ -128,7 +127,7 @@ int AbsResultSet::GoToLastRow()
 int AbsResultSet::GoToNextRow()
 {
     DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
-    int ret = GoToRow(rowPos_ + 1);
+    int ret = GoToRow(rowPos + 1);
     if (ret != E_OK) {
         LOG_WARN("AbsResultSet::GoToNextRow  return GoToRow::ret is wrong!");
         return ret;
@@ -139,7 +138,7 @@ int AbsResultSet::GoToNextRow()
 int AbsResultSet::GoToPreviousRow()
 {
     DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
-    int ret = GoToRow(rowPos_ - 1);
+    int ret = GoToRow(rowPos - 1);
     if (ret != E_OK) {
         LOG_WARN("AbsResultSet::GoToPreviousRow  return GoToRow::ret is wrong!");
         return ret;
@@ -149,7 +148,7 @@ int AbsResultSet::GoToPreviousRow()
 
 int AbsResultSet::IsAtFirstRow(bool &result) const
 {
-    result = (rowPos_ == 0);
+    result = (rowPos == 0);
     return E_OK;
 }
 
@@ -161,13 +160,13 @@ int AbsResultSet::IsAtLastRow(bool &result)
         LOG_ERROR("AbsResultSet::IsAtLastRow  return GetRowCount::ret is wrong!");
         return ret;
     }
-    result = (rowPos_ == (rowCnt - 1));
+    result = (rowPos == (rowCnt - 1));
     return E_OK;
 }
 
 int AbsResultSet::IsStarted(bool &result) const
 {
-    result = (rowPos_ != INIT_POS);
+    result = (rowPos != INIT_POS);
     return E_OK;
 }
 
@@ -179,7 +178,7 @@ int AbsResultSet::IsEnded(bool &result)
         LOG_ERROR("AbsResultSet::IsEnded  return GetRowCount::ret is wrong!");
         return ret;
     }
-    result = (rowCnt == 0) ? true : (rowPos_ == rowCnt);
+    result = (rowCnt == 0) ? true : (rowPos == rowCnt);
     return E_OK;
 }
 
