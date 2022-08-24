@@ -108,7 +108,8 @@ int AbsSharedResultSet::GoToRow(int position)
         rowPos_ = 0;
     }
     bool result = true;
-    if (sharedBlock_ == nullptr || position < startPos_ || position >= lastPos_) {
+    if (sharedBlock_ == nullptr || position < startPos_ || (lastPos_ > 0 && position >= lastPos_) ||
+        rowPos_ == rowCnt) {
         result = OnGo(rowPos_, position);
     } else {
         if (position > rowPos_) {
