@@ -21,7 +21,7 @@ namespace OHOS {
 void RdbStoreImplFuzz(const uint8_t *data, size_t size)
 {
     RdbStoreImpl rdbStoreImpl;
-    std::string rawString(reinterpret_cast<const char *>(data), size);
+    std::string rawString(reinterpret_cast<const char *>(data), size + 1);
     std::vector<std::string> tables;
     tables.push_back(rawString);
     rdbStoreImpl.SetDistributedTables(tables);

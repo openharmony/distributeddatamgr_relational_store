@@ -20,12 +20,12 @@ const TAG = "[RDB_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY, " + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
 const STORE_CONFIG = {
-    name: "TransactionTest.db",
+    name: "InsertTest.db",
 }
 
 var rdbStore = undefined;
 
-describe('rdbStoreTransactionTest', function () {
+describe('rdbStoreInsertTest', function () {
     beforeAll(async function () {
         console.info(TAG + 'beforeAll')
         rdbStore = await dataRdb.getRdbStore(STORE_CONFIG, 1);
@@ -45,7 +45,7 @@ describe('rdbStoreTransactionTest', function () {
     afterAll(async function () {
         console.info(TAG + 'afterAll')
         rdbStore = null
-        await dataRdb.deleteRdbStore("TransactionTest.db");
+        await dataRdb.deleteRdbStore("InsertTest.db");
     })
 
     console.log(TAG + "*************Unit Test Begin*************");
