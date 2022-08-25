@@ -269,9 +269,10 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
-     * @tc.name rdb batchInsert test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_batchInsert_0001
-     * @tc.desc rdb batchInsert test
+     * @tc.name: rdb batchInsert test
+     * @tc.number: SUB_DDM_AppDataFWK_JSRDB_batchInsert_0001
+     * @tc.desc: rdb batchInsert test
+     * @tc.require: I5GZGX
      */
     it('testRdbStorebatchInsert001', 0, async function () {
         console.log(TAG + "************* testRdbStorebatchInsert001 start *************");
