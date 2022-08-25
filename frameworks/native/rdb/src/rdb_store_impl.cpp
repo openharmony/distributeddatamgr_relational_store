@@ -699,8 +699,7 @@ bool RdbStoreImpl::PathToRealPath(const std::string &path, std::string &realPath
         return false;
     }
 #else
-    if (realpath(path.c_str(), tmpPath) == NULL)
-    {
+    if (realpath(path.c_str(), tmpPath) == NULL) {
         LOG_ERROR("path to realpath error");
         return false;
     }
