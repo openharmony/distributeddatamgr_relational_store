@@ -20,7 +20,7 @@ const TAG = "[RDB_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
 const STORE_CONFIG = {
-    name: "CreateDeleteFA.db",
+    name: "Delete.db",
 }
 
 describe('rdbStoreCreateDeleteWithFAContextTest', function () {
@@ -51,7 +51,7 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
         let context = featureAbility.getContext()
         var rdbStore = await dataRdb.getRdbStore(context, STORE_CONFIG, 1);
         rdbStore = null
-        await dataRdb.deleteRdbStore(context, "CreateDeleteFA.db");
+        await dataRdb.deleteRdbStore(context, "Delete.db");
         done()
         console.log(TAG + "************* testRdbStoreDelete0001 end *************");
     })
@@ -110,7 +110,7 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
         }
         await rdbStore.executeSql("DELETE FROM test");
         rdbStore = null
-        await dataRdb.deleteRdbStore(context, "CreateDeleteFA.db");
+        await dataRdb.deleteRdbStore(context, "Delete.db");
         done()
         console.log(TAG + "************* testRdbStoreDelete0002 end *************");
     })
