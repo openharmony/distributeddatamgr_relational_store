@@ -18,6 +18,7 @@
 
 #include <map>
 #include <string>
+#include <mutex>
 
 #include "rdb_store_config.h"
 

@@ -17,6 +17,7 @@
 #define NATIVE_RDB_VALUE_OBJECT_H
 
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace OHOS {
