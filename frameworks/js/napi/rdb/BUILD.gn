@@ -23,26 +23,7 @@ ohos_copy("relational_store_declaration") {
 }
 
 ohos_shared_library("rdb") {
-  if (use_mingw_win || use_clang_mac) {
-    include_dirs = [
-      "mock/include",
-      "${relational_store_js_common_path}/mock/include",
-      "${relational_store_napi_path}/rdb/mock/include",
-      "//commonlibrary/c_utils/base/include",
-      "include",
-      "${relational_store_js_common_path}/include",
-    ]
-  } else {
-    include_dirs = [
-      "include",
-      "${relational_store_js_common_path}/include",
-      "${relational_store_napi_path}/rdb/include",
-      "${datashare_base_path}/interfaces/inner_api/common/include/",
-    ]
-  }
-
   sources = [
-    "${relational_store_js_common_path}/src/js_utils.cpp",
     "src/entry_point.cpp",
     "src/napi_rdb_const_properties.cpp",
     "src/napi_rdb_predicates.cpp",
@@ -53,24 +34,46 @@ ohos_shared_library("rdb") {
     "src/napi_values_bucket.cpp",
   ]
 
-  if (use_mingw_win) {
-    sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
-    deps = [
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows(//build/toolchain/mingw:mingw_x86_64)",
-      "//foundation/arkui/napi:ace_napi",
-      "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb(//build/toolchain/mingw:mingw_x86_64)",
+  if (is_mingw || is_mac) {
+    include_dirs = [
+      "mock/include",
+      "${relational_store_js_common_path}/mock/include",
+      "${relational_store_napi_path}/rdb/mock/include",
+      "//commonlibrary/c_utils/base/include",
+      "include",
+      "${relational_store_js_common_path}/include",
     ]
-    defines = [ "WINDOWS_PLATFORM" ]
-
-    cflags_cc = [ "-std=c++17" ]
-  } else if (use_clang_mac) {
-    defines = [ "MAC_PLATFORM" ]
+    cflags_cc = [
+      "-std=c++17",
+      "-stdlib=libc++",
+    ]
+    if (is_mac) {
+      buildos = "mac"
+      defines = [ "MAC_PLATFORM" ]
+    } else {
+      buildos = "windows"
+      defines = [ "WINDOWS_PLATFORM" ]
+    }
+    sources += [
+      "${relational_store_js_common_path}/mock/src/js_ability.cpp",
+      "${relational_store_js_common_path}/mock/src/js_utils.cpp",
+    ]
+    deps = [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${buildos}",
+      "//foundation/arkui/napi:ace_napi",
+      "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
+    ]
   } else {
-    include_dirs +=
-        [ "${datashare_base_path}/interfaces/inner_api/common/include/" ]
+    include_dirs = [
+      "include",
+      "${relational_store_js_common_path}/include",
+      "${relational_store_napi_path}/rdb/include",
+      "${datashare_base_path}/interfaces/inner_api/common/include/",
+    ]
     defines = [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
     sources += [
       "${relational_store_js_common_path}/src/js_ability.cpp",
+      "${relational_store_js_common_path}/src/js_utils.cpp",
       "src/napi_rdb_store_observer.cpp",
     ]
 

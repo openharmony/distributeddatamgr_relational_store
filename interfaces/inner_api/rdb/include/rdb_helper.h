@@ -25,7 +25,6 @@
 
 namespace OHOS {
 namespace NativeRdb {
-
 class RdbHelper final {
 public:
     static std::shared_ptr<RdbStore> GetRdbStore(
@@ -39,7 +38,6 @@ private:
     static std::mutex mutex_;
     static std::map<std::string, std::shared_ptr<RdbStore>> storeCache_;
 };
-
 } // namespace NativeRdb
 } // namespace OHOS
 #endif

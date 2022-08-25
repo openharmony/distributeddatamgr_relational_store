@@ -16,7 +16,7 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 config("native_rdb_config") {
   visibility = [ ":*" ]
 
-  if (use_mingw_win || use_clang_mac) {
+  if (is_mingw || is_mac) {
     include_dirs = [
       "mock/include",
       "${relational_store_native_path}/rdb/mock/include",
@@ -44,16 +44,17 @@ config("native_rdb_config") {
     defines += [ "RDB_SUPPORT_ICU" ]
   }
 
-  if (use_mingw_win) {
+  if (is_mingw) {
     defines += [ "WINDOWS_PLATFORM" ]
     include_dirs += [ "//third_party/sqlite/include" ]
 
     libs = [ "//prebuilts/mingw-w64/ohos/linux-x86_64/clang-mingw/x86_64-w64-mingw32/lib/libws2_32.a" ]
 
     cflags_cc = [ "-std=c++17" ]
-  } else if (use_clang_mac) {
+  } else if (is_mac) {
     defines += [ "MAC_PLATFORM" ]
     include_dirs += [ "//third_party/sqlite/include" ]
+    cflags_cc = [ "-std=c++17" ]
   } else {
     defines += [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
     include_dirs += [ "//foundation/distributeddatamgr/distributeddatamgr/services/distributeddataservice/adapter/include/dfx" ]
@@ -63,7 +64,7 @@ config("native_rdb_config") {
 config("native_rdb_public_config") {
   visibility = [ "//foundation/distributeddatamgr/relational_store:*" ]
 
-  if (use_mingw_win || use_clang_mac) {
+  if (is_mingw || is_mac) {
     include_dirs = [
       "mock/include",
       "include",
@@ -110,14 +111,14 @@ ohos_shared_library("native_rdb") {
     "//third_party/icu/icu4c:shared_icuuc",
   ]
 
-  if (use_mingw_win) {
+  if (is_mingw) {
     deps += [
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows(//build/toolchain/mingw:mingw_x86_64)",
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
     ]
-  } else if (use_clang_mac) {
+  } else if (is_mac) {
     deps += [
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac(//build/toolchain/mac/:mac_x64)",
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
     ]
   } else {
