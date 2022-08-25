@@ -23,11 +23,11 @@ ohos_fuzztest("RdbImplFuzzTest") {
   include_dirs = [
     "${relational_store_native_path}/rdb/include",
     "${relational_store_innerapi_path}/rdb/include",
-    "//foundation/distributeddatamgr/distributeddatamgr/frameworks/innerkitsimpl/rdb",
-    "//foundation/distributeddatamgr/distributeddatamgr/frameworks/innerkitsimpl/rdb/include",
+    "//foundation/distributeddatamgr/kv_store/frameworks/innerkitsimpl/rdb",
+    "//foundation/distributeddatamgr/kv_store/frameworks/innerkitsimpl/rdb/include",
     "//commonlibrary/c_utils/base/include",
     "//third_party/sqlite/include",
-    "//foundation/distributeddatamgr/distributeddatamgr/services/distributeddataservice/libs/distributeddb/common/include/relational",
+    "//foundation/distributeddatamgr/kv_store/frameworks/innerkitsimpl/kvdb/distributeddb/common/include/relational",
     "//third_party/jsoncpp/include/json",
     "//third_party/skia/third_party/externals/spirv-headers/tools/buildHeaders/jsoncpp/dist/json",
     "//third_party/skia/third_party/externals/swiftshader/third_party/SPIRV-Headers/tools/buildHeaders/jsoncpp/dist/json",
@@ -53,7 +53,7 @@ ohos_fuzztest("RdbImplFuzzTest") {
   sources = [ "rdbimpl_fuzzer.cpp" ]
 
   deps = [
-    "//foundation/distributeddatamgr/distributeddatamgr/services/distributeddataservice/libs/distributeddb:distributeddb",
+    "//foundation/distributeddatamgr/kv_store/frameworks/innerkitsimpl/kvdb/distributeddb:distributeddb",
     "//third_party/jsoncpp:jsoncpp",
   ]
 
