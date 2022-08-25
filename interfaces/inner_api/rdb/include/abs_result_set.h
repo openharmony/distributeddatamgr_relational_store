@@ -19,8 +19,8 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "result_set.h"
 
+#include "result_set.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -53,7 +53,7 @@ public:
     int GetColumnName(int columnIndex, std::string &columnName) override;
     bool IsClosed() const override;
     int Close() override;
-    
+
 protected:
     // The default position of the result set
     static const int INIT_POS = -1;
@@ -62,9 +62,7 @@ protected:
      * flag position, and [0, n-1] represents the real data index.
      */
     int rowPos_;
-    uint32_t startPos_;
-    uint32_t lastPos_;
-    uint32_t blockPos_;
+
     // Indicates whether the result set is closed
     bool isClosed;
 };
