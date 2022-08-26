@@ -43,6 +43,7 @@ int32_t JSUtils::Convert2String(napi_env env, napi_value jsStr, std::string &out
     napi_status status = napi_get_value_string_utf8(env, jsStr, str, MAX_VALUE_LENGTH, &valueSize);
     if (status != napi_ok) {
         LOG_ERROR("JSUtils::Convert2String get jsVal failed, status = %{public}d", status);
+        delete[] str;
         return ERR;
     }
     output = (std::string)str;
