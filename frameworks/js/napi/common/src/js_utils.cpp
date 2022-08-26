@@ -46,7 +46,7 @@ int32_t JSUtils::Convert2String(napi_env env, napi_value jsStr, std::string &out
         delete[] str;
         return ERR;
     }
-    output = (std::string)str;
+    output = std::string(str);
     delete[] str;
     return OK;
 }
@@ -323,7 +323,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<std::string, in
 
 int32_t JSUtils::Convert2JSValue(napi_env env, std::string value, napi_value &output)
 {
-    std::string tempStr = (std::string)value;
+    std::string tempStr = std::string(value);
     if (napi_create_string_utf8(env, tempStr.c_str(), tempStr.size(), &output) != napi_ok) {
         LOG_ERROR("Convert2JSValue create JS string failed");
         return ERR;
