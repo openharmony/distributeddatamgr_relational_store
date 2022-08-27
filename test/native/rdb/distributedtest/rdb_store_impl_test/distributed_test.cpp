@@ -123,7 +123,6 @@ HWTEST_F(DistributedTest, RemoteQuery001, TestSize.Level1)
     AbsRdbPredicates predicate(tables[0]);
     predicate.EqualTo("name", "zhangsan");
     std::vector<std::string> columns;
-    std::cout << deviceInfos_[1].deviceId << std::endl;
     std::shared_ptr<ResultSet> resultSet = store_-> RemoteQuery(deviceInfos_[0].deviceId,predicate,columns);
     
     EXPECT_TRUE(ret > 0);
