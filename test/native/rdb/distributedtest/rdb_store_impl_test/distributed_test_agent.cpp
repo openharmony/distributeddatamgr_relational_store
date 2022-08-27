@@ -142,7 +142,7 @@ int DistributedTestAgent::OnProcessMsg(const std::string &strMsg, int len, std::
         resultSet->GoToFirstRow();
         ret = resultSet->GetColumnIndex("name", columnIndex);
         resultSet->GetString(columnIndex, strVal);
-        strReturnValue = strVal; 
+        strReturnValue = strVal;
     } else {
         strReturnValue = std::to_string(status);
     }
