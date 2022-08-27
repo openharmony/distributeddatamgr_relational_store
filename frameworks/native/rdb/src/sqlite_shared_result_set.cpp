@@ -91,7 +91,8 @@ bool SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
         FillSharedBlock(newPosition);
         return true;
     }
-    if (newPosition < GetBlock()->GetStartPos() || newPosition >= GetBlock()->GetLastPos() || oldPosition == rowNum) {
+    if ((uint32_t)newPosition < GetBlock()->GetStartPos() || (uint32_t)newPosition >= GetBlock()->GetLastPos() ||
+        oldPosition == rowNum) {
         FillSharedBlock(newPosition);
     }
     return true;
@@ -132,12 +133,12 @@ void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
         }
     } else {
         int blockRowNum = rowNum;
-        uint32_t startPos = GetBlock()->GetStartPos();
+        int startPos = (int)GetBlock()->GetStartPos();
         startPos =
             isOnlyFillResultSetBlock ? requiredPos : PickFillBlockStartPosition(requiredPos, resultSetBlockCapacity);
         rdbStoreImpl->ExecuteForSharedBlock(blockRowNum, GetBlock(), startPos, requiredPos, false, qrySql, bindArgs);
         int currentBlockCapacity = static_cast<int>(GetBlock()->GetRowNum());
-        GetBlock()->SetStartPos(startPos);
+        GetBlock()->SetStartPos((uint32_t)startPos);
         GetBlock()->SetBlockPos(requiredPos - startPos);
         GetBlock()->SetLastPos(startPos + currentBlockCapacity);
         LOG_INFO("requiredPos= %{public}d, startPos_= %{public}" PRIu32 ", lastPos_= %{public}" PRIu32
