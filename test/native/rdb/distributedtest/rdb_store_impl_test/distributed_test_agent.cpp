@@ -40,6 +40,8 @@ using namespace OHOS::DistributedKv;
 namespace {
 constexpr HiLogLabel LABEL = {LOG_CORE, 0, "DistributedTestAgent"};
 static const std::string RDB_TEST_PATH = "/data/test/";
+static constexpr int AGE = 18;
+static constexpr int SALARY = 100.5;
 class DistributedTestAgent : public DistributedAgent {
 public:
     DistributedTestAgent();
@@ -51,7 +53,7 @@ public:
     static DistributedKvDataManager manager_;
     static std::vector <DeviceInfo> deviceInfos_;
 
-    virtual int OnProcessMsg(const std::string &strMsg, int len, std::string &strReturnValue, int returnBufLen);
+    virtual int OnProcessMsg(const std::string &strMsg, int len, std::string &strReturnValue, int returnBufL);
     using SyncOption = DistributedRdb::SyncOption;
     using SyncCallback = DistributedRdb::SyncCallback;
 };
@@ -100,7 +102,7 @@ bool DistributedTestAgent::TearDown()
     return true;
 }
 
-int DistributedTestAgent::OnProcessMsg(const std::string &strMsg, int len, std::string &strReturnValue, int returnBufLen)
+int DistributedTestAgent::OnProcessMsg(const std::string &strMsg, int len, std::string &strReturnValue, int returnBufL)
 {
     int errCode = E_OK;
     RdbStoreConfig config(DistributedTestAgent::DATABASE_NAME);
@@ -114,9 +116,9 @@ int DistributedTestAgent::OnProcessMsg(const std::string &strMsg, int len, std::
     ValuesBucket values;
     values.PutInt("id", 1);
     values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    values.PutInt("age", AGE);
+    values.PutDouble("salary", SALARY);
+    values.PutBlob("blobType", std::vector<uint8_t> { 1, 2, 3 });
     int status = -2;
 
     std::vector<std::string> tables = {"test"};
@@ -129,7 +131,7 @@ int DistributedTestAgent::OnProcessMsg(const std::string &strMsg, int len, std::
     predicate.InAllDevices();
 
     std::unique_ptr<ResultSet> resultSet =
-        store_->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+        store_->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string> { "zhangsan" });
     if (resultSet!= nullptr) {
         int ret;
         int position;
@@ -144,11 +146,10 @@ int DistributedTestAgent::OnProcessMsg(const std::string &strMsg, int len, std::
     } else {
         strReturnValue = std::to_string(status);
     }
-
     return strReturnValue.size();
 }
-
 }
+
 int main()
 {
     DistributedTestAgent obj;

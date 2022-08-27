@@ -106,6 +106,12 @@ void DistributedTest::SetUp(void)
 void DistributedTest::TearDown(void)
 {}
 
+/**
+ * @tc.name: RemoteQuery001
+ * @tc.desc: normal testcase of DistributedTest
+ * @tc.type: FUNC
+ * @tc.require:issueI5JV75
+ */
 HWTEST_F(DistributedTest, RemoteQuery001, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store_ = DistributedTest::store_;
