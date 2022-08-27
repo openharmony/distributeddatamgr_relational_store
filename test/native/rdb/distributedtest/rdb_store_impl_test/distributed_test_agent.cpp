@@ -42,11 +42,6 @@ constexpr HiLogLabel LABEL = {LOG_CORE, 0, "DistributedTestAgent"};
 static const std::string RDB_TEST_PATH = "/data/test/";
 class DistributedTestAgent : public DistributedAgent {
 public:
-enum position {
-        FRIST,
-        SECOND,
-        THIRD
-};
     DistributedTestAgent();
     ~DistributedTestAgent();
     virtual bool SetUp();
@@ -56,7 +51,7 @@ enum position {
     static DistributedKvDataManager manager_;
     static std::vector <DeviceInfo> deviceInfos_;
 
-    virtual int OnProcessMsg(const std::string &dtrMsg, int len, std::string &strReturnValue, int returnBufLen);
+    virtual int OnProcessMsg(const std::string &strMsg, int len, std::string &strReturnValue, int returnBufLen);
     using SyncOption = DistributedRdb::SyncOption;
     using SyncCallback = DistributedRdb::SyncCallback;
 };
@@ -75,9 +70,9 @@ public:
 };
 
 const std::string DistributedTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABLE IF NOT EXISTS test ")
-                                                                   + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                                                 "name TEXT NOT NULL, age INTEGER, salary "
-                                                                                 "REAL, blobType BLOB)");
+                                                                + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                                              "name TEXT NOT NULL, age INTEGER, salary "
+                                                                              "REAL, blobType BLOB)");
 
 int DistributedTestOpenCallback::OnCreate(RdbStore &store_)
 {
@@ -135,8 +130,7 @@ int DistributedTestAgent::OnProcessMsg(const std::string &strMsg, int len, std::
 
     std::unique_ptr<ResultSet> resultSet =
         store_->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
-    if (resultSet!= nullptr)
-    {
+    if (resultSet!= nullptr) {
         int ret;
         int position;
         int columnIndex;
@@ -147,7 +141,7 @@ int DistributedTestAgent::OnProcessMsg(const std::string &strMsg, int len, std::
         ret = resultSet->GetColumnIndex("name", columnIndex);
         resultSet->GetString(columnIndex, strVal);
         strReturnValue = strVal; 
-    }else{
+    } else {
         strReturnValue = std::to_string(status);
     }
 
