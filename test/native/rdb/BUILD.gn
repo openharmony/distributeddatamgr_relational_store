@@ -93,6 +93,7 @@ group("fuzztest") {
     "fuzztest/rdbstore_fuzzer:fuzztest",
   ]
 }
+
 ###############################################################################
 
 group("distributedtest") {
