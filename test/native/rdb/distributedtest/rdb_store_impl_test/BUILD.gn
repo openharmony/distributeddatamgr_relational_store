@@ -35,31 +35,32 @@ config("module_private_config") {
   }
 }
 
-ohos_unittest("NativeRdbTest") {
+ohos_distributedtest("DistributedTest") {
   module_out_path = module_output_path
 
-  sources = [
-    "unittest/rdb_attach_test.cpp",
-    "unittest/rdb_delete_test.cpp",
-    "unittest/rdb_distributed_test.cpp",
-    "unittest/rdb_execute_test.cpp",
-    "unittest/rdb_helper_test.cpp",
-    "unittest/rdb_insert_test.cpp",
-    "unittest/rdb_open_callback_test.cpp",
-    "unittest/rdb_predicates_join_test.cpp",
-    "unittest/rdb_predicates_test.cpp",
-    "unittest/rdb_sqlite_shared_result_set_test.cpp",
-    "unittest/rdb_step_result_set_test.cpp",
-    "unittest/rdb_store_concurrent_test.cpp",
-    "unittest/rdb_store_config_test.cpp",
-    "unittest/rdb_store_interface_test.cpp",
-    "unittest/rdb_transaction_test.cpp",
-    "unittest/rdb_update_test.cpp",
-    "unittest/rdb_upgrade_test.cpp",
-    "unittest/rdb_value_bucket_test.cpp",
+  configs = [ ":module_private_config" ]
+  sources = []
+  sources += [ "distributed_test.cpp" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog_native:libhilog",
+    "ipc:ipc_core",
+    "relational_store:native_rdb",
   ]
 
+  deps = [
+    "//third_party/googletest:gtest_main",
+    "//third_party/icu/icu4c:shared_icui18n",
+    "//third_party/icu/icu4c:shared_icuuc",
+    "//third_party/sqlite:sqlite",
+  ]
+}
+
+ohos_distributedtest("DistributedTestAgent") {
+  module_out_path = module_output_path
   configs = [ ":module_private_config" ]
+  sources = [ "distributed_test_agent.cpp" ]
 
   external_deps = [
     "c_utils:utils",
@@ -77,28 +78,14 @@ ohos_unittest("NativeRdbTest") {
 }
 
 ###############################################################################
-group("unittest") {
+group("distributedtest") {
   testonly = true
 
-  deps = [ ":NativeRdbTest" ]
-}
-
-###############################################################################
-
-group("fuzztest") {
-  testonly = true
-  deps = []
-  deps += [
-    "fuzztest/rdbimpl_fuzzer:fuzztest",
-    "fuzztest/rdbstore_fuzzer:fuzztest",
+  deps = [
+    ":DistributedTest",
+    ":DistributedTestAgent",
   ]
 }
 
 ###############################################################################
 
-group("distributedtest") {
-  testonly = true
-  deps = []
-  deps += [ "distributedtest/rdb_store_impl_test:distributedtest" ]
-}
-###############################################################################
