@@ -67,9 +67,9 @@ public:
 };
 
 const std::string DistributedTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABLE IF NOT EXISTS test ")
-                                                                   + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                                                 "name TEXT NOT NULL, age INTEGER, salary "
-                                                                                 "REAL, blobType BLOB)");
+                                                                + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                                              "name TEXT NOT NULL, age INTEGER, salary "
+                                                                              "REAL, blobType BLOB)");
 
 int DistributedTestOpenCallback::OnCreate(RdbStore &store_)
 {
@@ -123,7 +123,7 @@ HWTEST_F(DistributedTest, RemoteQuery001, TestSize.Level1)
     AbsRdbPredicates predicate(tables[0]);
     predicate.EqualTo("name", "zhangsan");
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> resultSet = store_-> RemoteQuery(deviceInfos_[0].deviceId,predicate,columns);
+    std::shared_ptr<ResultSet> resultSet = store_-> RemoteQuery(deviceInfos_[0].deviceId, predicate, columns);
     
     EXPECT_TRUE(ret > 0);
     EXPECT_EQ(returvalue, "zhangsan");
