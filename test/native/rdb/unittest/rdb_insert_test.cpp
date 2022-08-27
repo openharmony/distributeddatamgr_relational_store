@@ -187,7 +187,7 @@ void RdbStoreInsertTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->GetColumnType(columnIndex, columnType);
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_OK);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
