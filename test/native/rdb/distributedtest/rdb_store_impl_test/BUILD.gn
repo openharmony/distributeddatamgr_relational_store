@@ -38,12 +38,11 @@ config("module_private_config") {
 ohos_distributedtest("DistributedTest") {
   module_out_path = module_output_path
 
-configs = [ ":module_private_config" ]
-  sources = [
-  ]
+  configs = [ ":module_private_config" ]
+  sources = []
   sources += [ "distributed_test.cpp" ]
 
-    external_deps = [
+  external_deps = [
     "c_utils:utils",
     "hilog_native:libhilog",
     "ipc:ipc_core",
@@ -60,10 +59,10 @@ configs = [ ":module_private_config" ]
 
 ohos_distributedtest("DistributedTestAgent") {
   module_out_path = module_output_path
-configs = [ ":module_private_config" ]
+  configs = [ ":module_private_config" ]
   sources = [ "distributed_test_agent.cpp" ]
-  
-    external_deps = [
+
+  external_deps = [
     "c_utils:utils",
     "hilog_native:libhilog",
     "ipc:ipc_core",
@@ -77,6 +76,7 @@ configs = [ ":module_private_config" ]
     "//third_party/sqlite:sqlite",
   ]
 }
+
 ###############################################################################
 group("distributedtest") {
   testonly = true
@@ -86,5 +86,6 @@ group("distributedtest") {
     ":DistributedTestAgent",
   ]
 }
+
 ###############################################################################
 
