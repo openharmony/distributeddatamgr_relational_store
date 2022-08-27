@@ -109,15 +109,15 @@ int AbsSharedResultSet::GoToRow(int position)
         rowPos_ = 0;
     }
     bool result = true;
-    if (sharedBlock_ == nullptr || position < sharedBlock_->GetStartPos() || position >= sharedBlock_->GetLastPos() ||
-        rowPos_ == rowCnt) {
+    if (sharedBlock_ == nullptr || (uint32_t)position < sharedBlock_->GetStartPos() ||
+        (uint32_t)position >= sharedBlock_->GetLastPos() || rowPos_ == rowCnt) {
         result = OnGo(rowPos_, position);
     } else {
         uint32_t blockPos = sharedBlock_->GetBlockPos();
         if (position > rowPos_) {
-            blockPos += position - rowPos_;
+            blockPos += (uint32_t)(position - rowPos_);
         } else {
-            int offset = rowPos_ - position;
+            uint32_t offset = (uint32_t)(rowPos_ - position);
             if (blockPos >= offset) {
                 blockPos -= offset;
             } else {
