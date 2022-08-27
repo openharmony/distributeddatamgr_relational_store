@@ -41,7 +41,7 @@ namespace {
 constexpr HiLogLabel LABEL = {LOG_CORE, 0, "DistributedTestAgent"};
 static const std::string RDB_TEST_PATH = "/data/test/";
 static constexpr int AGE = 18;
-static constexpr int SALARY = 100.5;
+static constexpr double SALARY = 100.5;
 class DistributedTestAgent : public DistributedAgent {
 public:
     DistributedTestAgent();
