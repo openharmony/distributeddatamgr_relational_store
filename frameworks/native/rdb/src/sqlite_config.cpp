@@ -32,6 +32,7 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     if (journalMode.empty()) {
         journalMode = SqliteGlobalConfig::GetDefaultJournalMode();
     }
+    isEncrypt = config.GetEncryptStatus();
 }
 
 SqliteConfig::~SqliteConfig()
@@ -101,6 +102,16 @@ void SqliteConfig::ClearEncryptKey()
 std::string SqliteConfig::GetDatabaseFileType() const
 {
     return databaseFileType;
+}
+
+bool SqliteConfig::GetEncryptStatus() const
+{
+    return isEncrypt;
+}
+
+std::string SqliteConfig::GetBundleName() const
+{
+    return bundleName;
 }
 } // namespace NativeRdb
 } // namespace OHOS
