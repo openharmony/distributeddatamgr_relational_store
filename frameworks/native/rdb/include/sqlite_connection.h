@@ -67,6 +67,12 @@ private:
     int SetWalSyncMode(const std::string &syncMode);
     int PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void LimitPermission(const std::string &dbPath) const;
+    int ManageKey(const SqliteConfig &config);
+    int Rekey();
+    int InitKey();
+    int GetKeyFromFile();
+    int GetKeyFromBakFile();
+    int FindCorrectKeyFromFile();
 
     int SetPersistWal();
     int SetBusyTimeout(int timeout);

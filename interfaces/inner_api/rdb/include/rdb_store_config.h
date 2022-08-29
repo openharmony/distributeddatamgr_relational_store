@@ -79,6 +79,8 @@ public:
     std::string GetDatabaseFileType() const;
     std::string GetDatabaseFileSecurityLevel() const;
     int32_t GetSecurityLevel() const;
+    void SetEncryptStatus(const bool status);
+    bool GetEncryptStatus() const;
 
     // set the journal mode, if not set, the default mode is WAL
     void SetName(std::string name);
@@ -122,6 +124,8 @@ private:
     int32_t area_ = 0;
     std::string bundleName_;
     std::string moduleName_;
+
+    bool isEncrypt_ = false;
 };
 } // namespace OHOS::NativeRdb
 
