@@ -96,7 +96,7 @@ private:
         [DataShare::OR] = &RdbUtils::Or,
         [DataShare::IS_NULL] = &RdbUtils::IsNull,
         [DataShare::IS_NOT_NULL] = &RdbUtils::IsNotNull,
-        [DataShare::IN] = &RdbUtils::In,
+        [DataShare::SQL_IN] = &RdbUtils::In,
         [DataShare::NOT_IN] = &RdbUtils::NotIn,
         [DataShare::LIKE] = &RdbUtils::Like,
         [DataShare::UNLIKE] = &RdbUtils::NoSupport,
