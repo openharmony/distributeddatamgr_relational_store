@@ -152,7 +152,7 @@ bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &path, RdbSecretK
 int RdbSecurityManager::GenerateRootKey()
 {
     LOG_INFO("RDB GenerateRootKey begin.");
-    struct HksBlob rootKeyName = { uint32_t(vecRootKeyAlias_.size()), vecRootKeyAlias_.data() };
+    struct HksBlob rootKeyName = { uint32_t(rootKeyAlias_.size()), rootKeyAlias_.data() };
     struct HksParamSet *params = nullptr;
     int32_t ret = HksInitParamSet(&params);
     if (ret != HKS_SUCCESS) {
@@ -196,7 +196,7 @@ std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(const std::vector<uint8_
 {
     struct HksBlob blobAad = { uint32_t(vecAad_.size()), vecAad_.data() };
     struct HksBlob blobNonce = { uint32_t(vecNonce_.size()), vecNonce_.data() };
-    struct HksBlob rootKeyName = { uint32_t(vecRootKeyAlias_.size()), vecRootKeyAlias_.data() };
+    struct HksBlob rootKeyName = { uint32_t(rootKeyAlias_.size()), rootKeyAlias_.data() };
     struct HksBlob plainKey = { uint32_t(key.size()), const_cast<uint8_t *>(key.data()) };
     struct HksParamSet *params = nullptr;
     int32_t ret = HksInitParamSet(&params);
@@ -246,7 +246,7 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
 {
     struct HksBlob blobAad = { uint32_t(vecAad_.size()), &(vecAad_[0]) };
     struct HksBlob blobNonce = { uint32_t(vecNonce_.size()), &(vecNonce_[0]) };
-    struct HksBlob rootKeyName = { uint32_t(vecRootKeyAlias_.size()), &(vecRootKeyAlias_[0]) };
+    struct HksBlob rootKeyName = { uint32_t(rootKeyAlias_.size()), &(rootKeyAlias_[0]) };
     struct HksBlob encryptedKeyBlob = { uint32_t(source.size()), source.data() };
 
     struct HksParamSet *params = nullptr;
@@ -294,7 +294,7 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
 
 void RdbSecurityManager::Init(const std::string &bundleName, const std::string &path)
 {
-    vecRootKeyAlias_ = GenerateRootKeyAlias(bundleName);
+    rootKeyAlias_ = GenerateRootKeyAlias(bundleName);
     vecNonce_ =
         std::vector<uint8_t>(RDB_HKS_BLOB_TYPE_NONCE, RDB_HKS_BLOB_TYPE_NONCE + strlen(RDB_HKS_BLOB_TYPE_NONCE));
     vecAad_ = std::vector<uint8_t>(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD));
@@ -321,7 +321,7 @@ void RdbSecurityManager::Init(const std::string &bundleName, const std::string &
 bool RdbSecurityManager::CheckRootKeyExists()
 {
     LOG_INFO("RDB checkRootKeyExist begin.");
-    struct HksBlob rootKeyName = { uint32_t(vecRootKeyAlias_.size()), vecRootKeyAlias_.data() };
+    struct HksBlob rootKeyName = { uint32_t(rootKeyAlias_.size()), rootKeyAlias_.data() };
     struct HksParamSet *params = nullptr;
     int32_t ret = HksInitParamSet(&params);
     if (ret != HKS_SUCCESS) {
@@ -390,22 +390,20 @@ bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSe
         return false;
     }
 
-    std::vector<uint8_t> distributeVec;
+    std::vector<uint8_t> distribute;
     auto iter = content.begin();
-    for (int i = 0; i < static_cast<int>(sizeof(uint8_t) / sizeof(uint8_t)); i++) {
-        distributeVec.push_back(*iter);
-        iter++;
-    }
-    uint8_t distributeStatus = TransferByteArrayToType<uint8_t>(distributeVec);
+    distribute.push_back(*iter);
+    iter++;
+    uint8_t distributeStatus = TransferByteArrayToType<uint8_t>(distribute);
 
-    std::vector<uint8_t> timeVec;
+    std::vector<uint8_t> createTime;
     for (int i = 0; i < static_cast<int>(sizeof(time_t) / sizeof(uint8_t)); i++) {
-        timeVec.push_back(*iter);
+        createTime.push_back(*iter);
         iter++;
     }
 
     keyData.distributed = distributeStatus;
-    keyData.timeValue = TransferByteArrayToType<time_t>(timeVec);
+    keyData.timeValue = TransferByteArrayToType<time_t>(createTime);
     keyData.secretKey.insert(keyData.secretKey.end(), iter, content.end());
 
     return true;
@@ -447,9 +445,7 @@ std::vector<uint8_t> RdbSecurityManager::GenerateRootKeyAlias(const std::string 
     }
     std::vector<uint8_t> rootKeyAlias = std::vector<uint8_t>(
         RDB_ROOT_KEY_ALIAS_PREFIX, RDB_ROOT_KEY_ALIAS_PREFIX + strlen(RDB_ROOT_KEY_ALIAS_PREFIX));
-    for (auto &ch : bundleName) {
-        rootKeyAlias.emplace_back(static_cast<uint8_t>(ch));
-    }
+    rootKeyAlias.insert(rootKeyAlias.end(), bundleName.begin(), bundleName.end());
     return rootKeyAlias;
 }
 
@@ -545,7 +541,7 @@ int RdbSecurityManager::SetKeyDistributedStatus(KeyFileType keyFile, bool status
         return E_ERROR;
     }
 
-    keyData.distributed = status ? DISTRIBUTED : UNDISTRIBUTED;
+    keyData.distributed = (status ? DISTRIBUTED : UNDISTRIBUTED);
     if (!SaveSecretKeyToDisk(keyPath, keyData)) {
         LOG_ERROR("SetKeyDistributedStatus failed!");
         return E_ERROR;

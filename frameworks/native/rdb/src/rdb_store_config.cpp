@@ -333,7 +333,7 @@ void RdbStoreConfig::SetEncryptStatus(const bool status)
     this->isEncrypt_ = status;
 }
 
-bool RdbStoreConfig::GetEncryptStatus() const
+bool RdbStoreConfig::IsEncrypt() const
 {
     return this->isEncrypt_;
 }

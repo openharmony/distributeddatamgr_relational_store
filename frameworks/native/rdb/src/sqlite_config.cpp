@@ -32,7 +32,7 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     if (journalMode.empty()) {
         journalMode = SqliteGlobalConfig::GetDefaultJournalMode();
     }
-    isEncrypt = config.GetEncryptStatus();
+    isEncrypt = config.IsEncrypt();
 }
 
 SqliteConfig::~SqliteConfig()
@@ -104,7 +104,7 @@ std::string SqliteConfig::GetDatabaseFileType() const
     return databaseFileType;
 }
 
-bool SqliteConfig::GetEncryptStatus() const
+bool SqliteConfig::IsEncrypt() const
 {
     return isEncrypt;
 }
