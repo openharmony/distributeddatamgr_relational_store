@@ -95,7 +95,12 @@ RdbStoreImpl::~RdbStoreImpl()
     threadMap.clear();
     idleSessions.clear();
 }
-
+#ifdef WINDOWS_PLATFORM
+void RdbStoreImpl::Clear()
+{
+    delete connectionPool;
+}
+#endif
 std::shared_ptr<StoreSession> RdbStoreImpl::GetThreadSession()
 {
     std::thread::id tid = std::this_thread::get_id();
