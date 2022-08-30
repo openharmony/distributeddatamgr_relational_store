@@ -109,8 +109,7 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
         std::lock_guard<std::mutex> lock(mutex_);
         if (storeCache_.find(dbFileName) != storeCache_.end()) {
 #ifdef WINDOWS_PLATFORM
-            std::shared_ptr<RdbStore> rdbstore = storeCache_[dbFileName];
-            rdbstore->Clear();            
+            storeCache_[dbFileName]->Clear();
 #endif
             storeCache_.erase(dbFileName);
         }
