@@ -269,6 +269,14 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
     NAPI_ASSERT_RETURN_VOID(env, !name.empty(), "Get database name empty.");
 
     value = nullptr;
+    napi_get_named_property(env, object, "encrypt", &value);
+    if (value != nullptr) {
+        bool isEncrypt = false;
+        JSUtils::Convert2Bool(env, value, isEncrypt);
+        asyncContext->config.SetEncryptStatus(isEncrypt);
+    }
+
+    value = nullptr;
     napi_get_named_property(env, object, "encryptKey", &value);
     if (value != nullptr) {
         asyncContext->config.SetEncryptKey(JSUtils::Convert2U8Vector(env, value));
