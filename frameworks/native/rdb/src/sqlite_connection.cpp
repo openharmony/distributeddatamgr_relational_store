@@ -26,6 +26,9 @@
 #include <securec.h>
 #include <unistd.h>
 
+#include "file_ex.h"
+#include "rdb_security_manager.h"
+#include "sqlite_database_utils.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite_errno.h"
@@ -124,6 +127,10 @@ int SqliteConnection::Config(const SqliteConfig &config)
     std::vector<uint8_t> encryptKey = config.GetEncryptKey();
     errCode = SetEncryptKey(encryptKey);
     std::fill(encryptKey.begin(), encryptKey.end(), 0);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    errCode = ManageKey(config);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -695,5 +702,128 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     return errCode;
 }
 #endif
+
+int SqliteConnection::ManageKey(const SqliteConfig &config)
+{
+    if (!config.IsEncrypt()) {
+        return E_OK;
+    }
+    bool isKeyFileExists =
+        RdbSecurityManager::GetInstance().CheckKeyDataFileExists(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+    bool isKeyBakFileExists =
+        RdbSecurityManager::GetInstance().CheckKeyDataFileExists(RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE);
+    if (!isKeyFileExists && !isKeyBakFileExists) {
+        LOG_INFO("ManageKey Init");
+        return InitKey();
+    }
+
+    if (isKeyFileExists && !isKeyBakFileExists) {
+        return GetKeyFromFile();
+    }
+
+    if (!isKeyFileExists && isKeyBakFileExists) {
+        return GetKeyFromBakFile();
+    }
+
+    if (isKeyFileExists && isKeyBakFileExists) {
+        return FindCorrectKeyFromFile();
+    }
+
+    return E_OK;
+}
+
+int SqliteConnection::InitKey()
+{
+    LOG_INFO("Init pub_key file");
+    std::vector<uint8_t> key = RdbSecurityManager::GetInstance().GenerateRandomNum(RdbSecurityManager::RDB_KEY_SIZE);
+    if (SetEncryptKey(key) != E_OK) {
+        LOG_ERROR("Init key failed!");
+        return E_ERROR;
+    }
+    if (RdbSecurityManager::GetInstance().SaveSecretKeyToFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, key)) {
+        key.assign(key.size(), 0);
+        return E_OK;
+    }
+    LOG_ERROR("Init key failed!");
+    return E_ERROR;
+}
+
+int SqliteConnection::GetKeyFromFile()
+{
+    LOG_INFO("Get key from pub_key file");
+    bool outdated = false;
+    RdbPassword key =
+        RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, outdated);
+    if (key.GetSize() == 0) {
+        return E_ERROR;
+    }
+    if (SetEncryptKey(std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize())) != E_OK) {
+        LOG_ERROR("Invalid key file!");
+        return E_ERROR;
+    }
+    if (outdated) {
+        LOG_ERROR("The key has expired");
+        return Rekey();
+    }
+    return E_OK;
+}
+
+int SqliteConnection::GetKeyFromBakFile()
+{
+    LOG_INFO("Get key from pub_key.bak file");
+    bool outdated = false;
+    RdbPassword key =
+        RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, outdated);
+    if (SetEncryptKey(std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize())) == E_OK) {
+        if (RdbSecurityManager::GetInstance().RenameKeyBakFileToKeyFile()) {
+            return E_OK;
+        }
+        LOG_ERROR("Rename key file to bak file failed!");
+        return E_ERROR;
+    }
+    LOG_ERROR("Invalid key_bak file!");
+    return E_ERROR;
+}
+
+int SqliteConnection::FindCorrectKeyFromFile()
+{
+    LOG_INFO("FindCorrectKeyFromFile start");
+    bool outdated;
+    RdbPassword key =
+        RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, outdated);
+    RdbPassword keyBak =
+        RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE, outdated);
+
+    if (SetEncryptKey(std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize())) == E_OK) {
+        RdbSecurityManager::GetInstance().DelRdbSecretDataFile(RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE);
+        return E_OK;
+    }
+
+    if (SetEncryptKey(std::vector<uint8_t>(keyBak.GetData(), keyBak.GetData() + keyBak.GetSize())) == E_OK) {
+        RdbSecurityManager::GetInstance().DelRdbSecretDataFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        if (RdbSecurityManager::GetInstance().RenameKeyBakFileToKeyFile()) {
+            return E_OK;
+        }
+        LOG_ERROR("Rename key file to bak file failed!");
+        return E_ERROR;
+    }
+    return E_ERROR;
+}
+
+int SqliteConnection::Rekey()
+{
+    LOG_INFO("Rekey start");
+    std::vector<uint8_t> key = RdbSecurityManager::GetInstance().GenerateRandomNum(RdbSecurityManager::RDB_KEY_SIZE);
+    if (ChangeEncryptKey(key) == E_OK) {
+        RdbSecurityManager::GetInstance().SaveSecretKeyToFile(RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE, key);
+        RdbSecurityManager::GetInstance().DelRdbSecretDataFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        RdbSecurityManager::GetInstance().RenameKeyBakFileToKeyFile();
+        LOG_INFO("Rekey successful.");
+        key.assign(key.size(), 0);
+        return E_OK;
+    }
+    LOG_ERROR("Rekey failed.");
+    return E_ERROR;
+}
 } // namespace NativeRdb
 } // namespace OHOS

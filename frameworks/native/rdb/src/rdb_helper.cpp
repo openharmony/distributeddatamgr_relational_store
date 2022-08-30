@@ -21,6 +21,8 @@
 #include "rdb_trace.h"
 #include "sqlite_global_config.h"
 #include "unistd.h"
+#include "rdb_security_manager.h"
+
 
 namespace OHOS {
 namespace NativeRdb {
@@ -31,6 +33,9 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
 {
     DDS_TRACE(DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
     SqliteGlobalConfig::InitSqliteGlobalConfig();
+    if (config.IsEncrypt()) {
+        RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
+    }
     std::shared_ptr<RdbStore> rdbStore;
     {
         std::lock_guard<std::mutex> lock(mutex_);
