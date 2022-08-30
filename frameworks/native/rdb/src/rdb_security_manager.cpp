@@ -194,8 +194,8 @@ int RdbSecurityManager::GenerateRootKey()
 
 std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(const std::vector<uint8_t> &key)
 {
-    struct HksBlob blobAad = { uint32_t(vecAad_.size()), vecAad_.data() };
-    struct HksBlob blobNonce = { uint32_t(vecNonce_.size()), vecNonce_.data() };
+    struct HksBlob blobAad = { uint32_t(aad_.size()), aad_.data() };
+    struct HksBlob blobNonce = { uint32_t(nonce_.size()), nonce_.data() };
     struct HksBlob rootKeyName = { uint32_t(rootKeyAlias_.size()), rootKeyAlias_.data() };
     struct HksBlob plainKey = { uint32_t(key.size()), const_cast<uint8_t *>(key.data()) };
     struct HksParamSet *params = nullptr;
@@ -244,8 +244,8 @@ std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(const std::vector<uint8_
 
 bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vector<uint8_t> &key)
 {
-    struct HksBlob blobAad = { uint32_t(vecAad_.size()), &(vecAad_[0]) };
-    struct HksBlob blobNonce = { uint32_t(vecNonce_.size()), &(vecNonce_[0]) };
+    struct HksBlob blobAad = { uint32_t(aad_.size()), &(aad_[0]) };
+    struct HksBlob blobNonce = { uint32_t(nonce_.size()), &(nonce_[0]) };
     struct HksBlob rootKeyName = { uint32_t(rootKeyAlias_.size()), &(rootKeyAlias_[0]) };
     struct HksBlob encryptedKeyBlob = { uint32_t(source.size()), source.data() };
 
@@ -295,9 +295,9 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
 void RdbSecurityManager::Init(const std::string &bundleName, const std::string &path)
 {
     rootKeyAlias_ = GenerateRootKeyAlias(bundleName);
-    vecNonce_ =
+    nonce_ =
         std::vector<uint8_t>(RDB_HKS_BLOB_TYPE_NONCE, RDB_HKS_BLOB_TYPE_NONCE + strlen(RDB_HKS_BLOB_TYPE_NONCE));
-    vecAad_ = std::vector<uint8_t>(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD));
+    aad_ = std::vector<uint8_t>(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD));
 
     ParsePath(path);
 
