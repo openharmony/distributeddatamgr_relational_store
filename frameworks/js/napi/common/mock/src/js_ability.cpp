@@ -33,7 +33,8 @@ Context::Context()
 #endif
 
 #ifdef MAC_PLATFORM
-    baseDir = getenv("TMPDIR");
+    baseDir = getenv("LOGNAME");
+    baseDir = "/Users/" + baseDir + "/Library/Caches";
     if (!baseDir.empty()) {
         databaseDir_ = baseDir + "/HuaweiDevEcoStudioDatabases";
         preferencesDir_ = baseDir + "/HuaweiDevEcoStudioPreferences";
