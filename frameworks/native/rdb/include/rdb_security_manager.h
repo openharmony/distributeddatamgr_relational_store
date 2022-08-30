@@ -110,9 +110,9 @@ private:
     static constexpr uint8_t UNDISTRIBUTED = 0;
     static constexpr uint8_t DISTRIBUTED = 1;
 
-    std::vector<uint8_t> vecRootKeyAlias_ {};
-    std::vector<uint8_t> vecNonce_ {};
-    std::vector<uint8_t> vecAad_ {};
+    std::vector<uint8_t> rootKeyAlias_ {};
+    std::vector<uint8_t> nonce_ {};
+    std::vector<uint8_t> aad_ {};
 };
 
 template<typename T> std::vector<uint8_t> TransferTypeToByteArray(const T &t)

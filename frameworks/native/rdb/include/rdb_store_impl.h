@@ -146,7 +146,6 @@ private:
     
     DistributedRdb::RdbSyncerParam syncerParam_;
     bool isEncrypt_;
-    static const int ITERATE_TIMES = 5000;
 };
 } // namespace OHOS::NativeRdb
 #endif

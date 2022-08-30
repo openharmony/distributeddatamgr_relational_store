@@ -33,7 +33,7 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
 {
     DDS_TRACE(DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
     SqliteGlobalConfig::InitSqliteGlobalConfig();
-    if (config.GetEncryptStatus()) {
+    if (config.IsEncrypt()) {
         RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
     }
     std::shared_ptr<RdbStore> rdbStore;

@@ -71,7 +71,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     orgPath = path;
     isReadOnly = config.IsReadOnly();
     isMemoryRdb = config.IsMemoryRdb();
-    isEncrypt_ = config.GetEncryptStatus();
+    isEncrypt_ = config.IsEncrypt();
     name = config.GetName();
     fileSecurityLevel = config.GetDatabaseFileSecurityLevel();
     fileType = config.GetDatabaseFileType();
@@ -82,8 +82,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.area_ = config.GetArea();
     syncerParam_.level_ = config.GetSecurityLevel();
     syncerParam_.type_ = config.GetDistributedType();
-    syncerParam_.isEncrypt_ = config.GetEncryptStatus();
-    syncerParam_.iterateTimes_ = ITERATE_TIMES;
+    syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
 #endif
     return E_OK;
@@ -881,6 +880,7 @@ bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
     }
     if (service->SetDistributedTables(syncerParam_, tables) != 0) {
         LOG_ERROR("failed");
+        syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
         return false;
     }
 

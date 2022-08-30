@@ -80,7 +80,7 @@ public:
     std::string GetDatabaseFileSecurityLevel() const;
     int32_t GetSecurityLevel() const;
     void SetEncryptStatus(const bool status);
-    bool GetEncryptStatus() const;
+    bool IsEncrypt() const;
 
     // set the journal mode, if not set, the default mode is WAL
     void SetName(std::string name);

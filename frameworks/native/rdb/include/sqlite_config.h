@@ -40,7 +40,7 @@ public:
     std::vector<uint8_t> GetEncryptKey() const;
     void UpdateEncryptKey(const std::vector<uint8_t> &newKey);
     void ClearEncryptKey();
-    bool GetEncryptStatus() const;
+    bool IsEncrypt() const;
     std::string GetBundleName() const;
 private:
     std::string path;

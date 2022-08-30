@@ -705,7 +705,7 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
 
 int SqliteConnection::ManageKey(const SqliteConfig &config)
 {
-    if (!config.GetEncryptStatus()) {
+    if (!config.IsEncrypt()) {
         return E_OK;
     }
     bool isKeyFileExists =
@@ -792,7 +792,7 @@ int SqliteConnection::FindCorrectKeyFromFile()
     RdbPassword key =
         RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, outdated);
     RdbPassword keyBak =
-        RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, outdated);
+        RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE, outdated);
 
     if (SetEncryptKey(std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize())) == E_OK) {
         RdbSecurityManager::GetInstance().DelRdbSecretDataFile(RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE);
