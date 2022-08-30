@@ -36,6 +36,7 @@ public:
     RdbStoreImpl();
     ~RdbStoreImpl() override;
 
+    void Clear() override;
     int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
     int BatchInsert(int64_t &outInsertNum, const std::string &table,
         const std::vector<ValuesBucket> &initialBatchValues) override;
