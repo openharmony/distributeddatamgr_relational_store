@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <mutex>
 #include "rdb_open_callback.h"
 #include "rdb_store.h"
 #include "rdb_store_config.h"

@@ -27,17 +27,17 @@
 #include "sqlite_utils.h"
 #include "step_result_set.h"
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#ifndef WINDOWS_PLATFORM
 #include "directory_ex.h"
-#include "iresult_set.h"
-#include "result_set_proxy.h"
-#include "sqlite_shared_result_set.h"
 #endif
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#include "iresult_set.h"
 #include "rdb_manager.h"
 #include "relational_store_manager.h"
 #include "reporter.h"
+#include "result_set_proxy.h"
+#include "sqlite_shared_result_set.h"
 #endif
 
 #ifdef WINDOWS_PLATFORM
@@ -668,10 +668,16 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
 
     return E_OK;
 }
-#ifdef WINDOWS_PLATFORM
+
+#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
+
 std::string RdbStoreImpl::ExtractFilePath(const std::string &fileFullName)
 {
+#ifdef WINDOWS_PLATFORM
     return std::string(fileFullName).substr(0, fileFullName.rfind("\\") + 1);
+#else
+    return std::string(fileFullName).substr(0, fileFullName.rfind("/") + 1);
+#endif
 }
 
 bool RdbStoreImpl::PathToRealPath(const std::string &path, std::string &realPath)
@@ -687,12 +693,17 @@ bool RdbStoreImpl::PathToRealPath(const std::string &path, std::string &realPath
     }
 
     char tmpPath[PATH_MAX] = { 0 };
-
+#ifdef WINDOWS_PLATFORM
     if (_fullpath(tmpPath, path.c_str(), PATH_MAX) == NULL) {
         LOG_ERROR("path to realpath error");
         return false;
     }
-
+#else
+    if (realpath(path.c_str(), tmpPath) == NULL) {
+        LOG_ERROR("path to realpath error");
+        return false;
+    }
+#endif
     realPath = tmpPath;
     if (access(realPath.c_str(), F_OK) != 0) {
         LOG_ERROR("check realpath (%{public}s) error", realPath.c_str());
