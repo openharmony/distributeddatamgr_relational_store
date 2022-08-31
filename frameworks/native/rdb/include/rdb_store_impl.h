@@ -145,7 +145,6 @@ private:
     std::stack<TransactionObserver *> transactionObserverStack;
     
     DistributedRdb::RdbSyncerParam syncerParam_;
-    bool isEncrypt_;
 };
 } // namespace OHOS::NativeRdb
 #endif

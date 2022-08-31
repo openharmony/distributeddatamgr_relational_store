@@ -40,8 +40,7 @@ public:
     std::vector<uint8_t> GetEncryptKey() const;
     void UpdateEncryptKey(const std::vector<uint8_t> &newKey);
     void ClearEncryptKey();
-    bool IsEncrypt() const;
-    std::string GetBundleName() const;
+
 private:
     std::string path;
     StorageMode storageMode;
@@ -52,10 +51,6 @@ private:
     bool initEncrypted;
     std::string databaseFileType;
     std::vector<uint8_t> encryptKey;
-
-    // Encryption
-    bool isEncrypt = false;
-    std::string bundleName;
 };
 
 } // namespace NativeRdb
