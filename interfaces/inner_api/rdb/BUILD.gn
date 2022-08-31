@@ -87,7 +87,6 @@ ohos_shared_library("native_rdb") {
     "${relational_store_native_path}/rdb/src/logger.h",
     "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
     "${relational_store_native_path}/rdb/src/rdb_predicates.cpp",
-    "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
     "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
     "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_config.cpp",
@@ -145,7 +144,6 @@ ohos_shared_library("native_rdb") {
       "hilog_native:libhilog",
       "hitrace_native:hitrace_meter",
       "hitrace_native:libhitrace",
-      "huks:libhukssdk",
       "ipc:ipc_core",
       "samgr:samgr_proxy",
     ]
