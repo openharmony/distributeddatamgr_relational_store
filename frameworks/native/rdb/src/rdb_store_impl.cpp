@@ -91,18 +91,15 @@ RdbStoreImpl::RdbStoreImpl()
 
 RdbStoreImpl::~RdbStoreImpl()
 {
-    if (connectionPool != nullptr) {
-        delete connectionPool;
-    }
+    delete connectionPool;
     threadMap.clear();
     idleSessions.clear();
 }
 #ifdef WINDOWS_PLATFORM
 void RdbStoreImpl::Clear()
 {
-    if (connectionPool != nullptr) {
-        delete connectionPool;
-    }
+    delete connectionPool;
+    connectionPool = nullptr;
 }
 #endif
 std::shared_ptr<StoreSession> RdbStoreImpl::GetThreadSession()
