@@ -410,6 +410,10 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
     }
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
+        if (connectionPool == nullptr) {
+            LOG_ERROR("connectionPool is null");
+            return E_ERROR;
+        }
         errCode = connectionPool->ReOpenAvailableReadConnections();
     }
     ReleaseThreadSession();
@@ -618,7 +622,11 @@ bool RdbStoreImpl::IsInTransaction()
 int RdbStoreImpl::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
 {
     DDS_TRACE();
-    auto ret =  connectionPool->ChangeEncryptKey(newKey);
+    if (connectionPool == nullptr){
+        LOG_ERROR("connectionPool is null");
+        return E_ERROR;
+    }
+    auto ret = connectionPool->ChangeEncryptKey(newKey);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     if (ret != E_OK) {
         DistributedDataDfx::Reporter::GetInstance()->DatabaseFault()->Report(
