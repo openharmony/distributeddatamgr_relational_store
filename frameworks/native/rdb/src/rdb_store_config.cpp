@@ -327,4 +327,14 @@ int32_t RdbStoreConfig::GetSecurityLevel() const
 {
     return 0;
 }
+
+void RdbStoreConfig::SetEncryptStatus(const bool status)
+{
+    this->isEncrypt_ = status;
+}
+
+bool RdbStoreConfig::IsEncrypt() const
+{
+    return this->isEncrypt_;
+}
 } // namespace OHOS::NativeRdb

@@ -22,6 +22,10 @@
 #include "sqlite_global_config.h"
 #include "unistd.h"
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#include "rdb_security_manager.h"
+#endif
+
 namespace OHOS {
 namespace NativeRdb {
 std::mutex RdbHelper::mutex_;
@@ -31,6 +35,13 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
 {
     DDS_TRACE(DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
     SqliteGlobalConfig::InitSqliteGlobalConfig();
+
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+    if (config.IsEncrypt()) {
+        RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
+    }
+#endif
+
     std::shared_ptr<RdbStore> rdbStore;
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -98,6 +109,15 @@ void RdbHelper::ClearCache()
     storeCache_.clear();
 }
 
+
+static void DeleteRdbKeyFiles(const std::string &dbFileName)
+{
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+    RdbSecurityManager::GetInstance().DelRdbSecretDataFile(dbFileName);
+#endif
+}
+
+
 int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
 {
     DDS_TRACE();
@@ -147,6 +167,7 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
             errCode = E_REMOVE_FILE;
         }
     }
+    DeleteRdbKeyFiles(dbFileName);
 
     return errCode;
 }
