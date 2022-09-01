@@ -622,7 +622,7 @@ bool RdbStoreImpl::IsInTransaction()
 int RdbStoreImpl::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
 {
     DDS_TRACE();
-    if (connectionPool == nullptr){
+    if (connectionPool == nullptr) {
         LOG_ERROR("connectionPool is null");
         return E_ERROR;
     }
