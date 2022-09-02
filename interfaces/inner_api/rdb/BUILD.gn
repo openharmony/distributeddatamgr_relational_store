@@ -127,6 +127,7 @@ ohos_shared_library("native_rdb") {
 
     sources += [
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
+      "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
       "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
       "${relational_store_native_path}/rdb/src/share_block.cpp",
       "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
@@ -144,6 +145,7 @@ ohos_shared_library("native_rdb") {
       "hilog_native:libhilog",
       "hitrace_native:hitrace_meter",
       "hitrace_native:libhitrace",
+      "huks:libhukssdk",
       "ipc:ipc_core",
       "samgr:samgr_proxy",
     ]

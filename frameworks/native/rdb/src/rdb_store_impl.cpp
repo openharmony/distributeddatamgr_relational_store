@@ -33,6 +33,7 @@
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "iresult_set.h"
+#include "rdb_security_manager.h"
 #include "rdb_manager.h"
 #include "relational_store_manager.h"
 #include "reporter.h"
@@ -80,6 +81,9 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.area_ = config.GetArea();
     syncerParam_.level_ = config.GetSecurityLevel();
     syncerParam_.type_ = config.GetDistributedType();
+    syncerParam_.isEncrypt_ = config.IsEncrypt();
+    syncerParam_.password_ = {};
+    isEncrypt_ = config.IsEncrypt();
 #endif
     return E_OK;
 }
@@ -869,14 +873,34 @@ std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
 bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
 {
     DDS_TRACE(DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
+    if (isEncrypt_) {
+        bool status = false;
+        RdbSecurityManager::GetInstance().GetKeyDistributedStatus(
+            RdbSecurityManager::KeyFileType::PUB_KEY_FILE, status);
+        if (!status) {
+            bool outdated;
+            RdbPassword key = RdbSecurityManager::GetInstance().GetRdbPassword(
+                RdbSecurityManager::KeyFileType::PUB_KEY_FILE, outdated);
+            syncerParam_.password_ = std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize());
+        }
+    }
+
     auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
     if (service == nullptr) {
         return false;
     }
     if (service->SetDistributedTables(syncerParam_, tables) != 0) {
         LOG_ERROR("failed");
+        syncerParam_.password_.clear();
         return false;
     }
+
+    if (isEncrypt_) {
+        syncerParam_.password_.clear();
+        RdbSecurityManager::GetInstance().SetKeyDistributedStatus(
+            RdbSecurityManager::KeyFileType::PUB_KEY_FILE, true);
+    }
+
     LOG_ERROR("success");
     return true;
 }

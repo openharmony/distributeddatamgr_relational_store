@@ -32,6 +32,9 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     if (journalMode.empty()) {
         journalMode = SqliteGlobalConfig::GetDefaultJournalMode();
     }
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+    isEncrypt = config.IsEncrypt();
+#endif
 }
 
 SqliteConfig::~SqliteConfig()
@@ -102,5 +105,17 @@ std::string SqliteConfig::GetDatabaseFileType() const
 {
     return databaseFileType;
 }
+
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+bool SqliteConfig::IsEncrypt() const
+{
+    return isEncrypt;
+}
+
+std::string SqliteConfig::GetBundleName() const
+{
+    return bundleName;
+}
+#endif
 } // namespace NativeRdb
 } // namespace OHOS
