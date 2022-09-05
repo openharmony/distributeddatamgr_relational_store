@@ -38,7 +38,9 @@ enum class ConflictResolution {
 class RdbStore {
 public:
     virtual ~RdbStore() {}
+#ifdef WINDOWS_PLATFORM
     virtual void Clear();
+#endif
     virtual int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) = 0;
     virtual int BatchInsert(int64_t &outInsertNum, const std::string &table,
         const std::vector<ValuesBucket> &initialBatchValues) = 0;
