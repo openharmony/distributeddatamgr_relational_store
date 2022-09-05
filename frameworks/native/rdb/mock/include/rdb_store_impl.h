@@ -35,8 +35,9 @@ public:
     static std::shared_ptr<RdbStore> Open(const RdbStoreConfig &config, int &errCode);
     RdbStoreImpl();
     ~RdbStoreImpl() override;
-
+#ifdef WINDOWS_PLATFORM
     void Clear() override;
+#endif
     int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
     int BatchInsert(int64_t &outInsertNum, const std::string &table,
         const std::vector<ValuesBucket> &initialBatchValues) override;
