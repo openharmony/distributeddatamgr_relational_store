@@ -905,11 +905,13 @@ bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
     }
     if (service->SetDistributedTables(syncerParam_, tables) != 0) {
         LOG_ERROR("failed");
+        syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
         syncerParam_.password_.clear();
         return false;
     }
 
     if (isEncrypt_) {
+        syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
         syncerParam_.password_.clear();
         RdbSecurityManager::GetInstance().SetKeyDistributedStatus(
             RdbSecurityManager::KeyFileType::PUB_KEY_FILE, true);
