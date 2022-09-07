@@ -146,7 +146,7 @@ ohos_shared_library("native_rdb") {
       "hitrace_native:libhitrace",
       "huks:libhukssdk",
       "ipc:ipc_core",
-      "kv_store:distributeddata_inner"
+      "kv_store:distributeddata_inner",
       "samgr:samgr_proxy",
     ]
   }
