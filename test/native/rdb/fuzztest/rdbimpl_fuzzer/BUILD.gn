@@ -27,7 +27,7 @@ ohos_fuzztest("RdbImplFuzzTest") {
     "//foundation/distributeddatamgr/kv_store/frameworks/innerkitsimpl/rdb/include",
     "//commonlibrary/c_utils/base/include",
     "//third_party/sqlite/include",
-    "//foundation/distributeddatamgr/kv_store/frameworks/innerkitsimpl/kvdb/distributeddb/common/include/relational",
+    "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb/common/include/relational",
     "//third_party/jsoncpp/include/json",
     "//third_party/skia/third_party/externals/spirv-headers/tools/buildHeaders/jsoncpp/dist/json",
     "//third_party/skia/third_party/externals/swiftshader/third_party/SPIRV-Headers/tools/buildHeaders/jsoncpp/dist/json",
@@ -53,7 +53,7 @@ ohos_fuzztest("RdbImplFuzzTest") {
   sources = [ "rdbimpl_fuzzer.cpp" ]
 
   deps = [
-    "//foundation/distributeddatamgr/kv_store/frameworks/innerkitsimpl/kvdb/distributeddb:distributeddb",
+    "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb:distributeddb",
     "//third_party/jsoncpp:jsoncpp",
   ]
 
