@@ -136,9 +136,6 @@ napi_value ResultSetProxy::GetConstructor(napi_env env)
         DECLARE_NAPI_GETTER("rowIndex", GetRowIndex),
         DECLARE_NAPI_GETTER("isAtFirstRow", IsAtFirstRow),
         DECLARE_NAPI_GETTER("isAtLastRow", IsAtLastRow),
-
-        DECLARE_NAPI_GETTER("sharedBlockName", GetSharedBlockName),
-        DECLARE_NAPI_GETTER("sharedBlockAshmemFd", GetSharedBlockAshmemFd),
     };
     NAPI_CALL(env, napi_define_class(env, "ResultSet", NAPI_AUTO_LENGTH, Initialize, nullptr,
         sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
