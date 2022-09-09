@@ -58,7 +58,7 @@ describe('rdbStorePredicatesJoinTest', function () {
 
     afterAll(async function () {
         console.info(TAG + 'afterAll')
-        await dataRdb.deleteRdbStore("InsertTest.db");
+        await dataRdb.deleteRdbStore("RdbJoinTest.db");
         rdbStore = null
         console.info(TAG + 'afterAll end')
     })
