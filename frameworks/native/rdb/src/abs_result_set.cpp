@@ -212,14 +212,17 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
     }
 
     columnIndex = 0;
+    std::string columnNameList = "";
     for (const auto& name : columnNames) {
         std::string lowerName = name;
+        columnNameList = columnNameList + "," + name;
         transform(name.begin(), name.end(), lowerName.begin(), ::tolower);
         if (lowerName == columnNameLower) {
             return E_OK;
         }
         columnIndex++;
     }
+    LOG_ERROR("XXX  GetAllColumnNames = [%{public}s], columnNameLower = %{public}s", columnNameList.c_str(), columnNameLower.c_str());
     columnIndex = -1;
     return E_ERROR;
 }
