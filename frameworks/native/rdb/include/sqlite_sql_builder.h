@@ -24,7 +24,6 @@
 #include "rdb_store.h"
 namespace OHOS {
 namespace NativeRdb {
-
 class SqliteSqlBuilder {
 public:
     SqliteSqlBuilder();
@@ -53,8 +52,7 @@ public:
         const std::string &group, const std::string &order, int limit, int offset);
     static std::string Normalize(const std::string &source, int &errorCode);
 
-    static std::string BuildQueryString(const AbsRdbPredicates &predicates,
-        const std::vector<std::string> &columns);
+    static std::string BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
     static std::string BuildCountString(const AbsRdbPredicates &predicates);
     static std::string BuildSqlStringFromPredicates(const AbsRdbPredicates &predicates);
 
@@ -63,9 +61,13 @@ private:
     static void AppendColumns(std::string &builder, const std::vector<std::string> &columns, int &errorCode);
     static void AppendExpr(std::string &builder, std::vector<std::string> &exprs);
     static bool IsNotEmptyString(const std::string &str);
-    static std::string NormalizeComplexPattern(const std::string &source, int &errorCode);
+    static std::string NormalizeWords(const std::string &source, int &errorCode);
+    static std::string NormalizeTableColumn(const std::string &source, int &errorCode);
+    static std::string NormalizeMethodPattern(const std::string &source, int &errorCode);
+    static std::string NormalizeAlias(const std::string &source, int &errorCode);
+    static const std::string patternWords_;
+    static const std::string patternTableColumn_;
 };
-
 } // namespace NativeRdb
 } // namespace OHOS
 #endif
