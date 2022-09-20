@@ -50,7 +50,6 @@ ohos_unittest("RdbDataShareAdapterTest") {
 
   external_deps = [
     "c_utils:utils",
-    "data_share:datashare_common",
     "hilog_native:libhilog",
     "relational_store:native_rdb",
     "relational_store:rdb_data_share_adapter",
