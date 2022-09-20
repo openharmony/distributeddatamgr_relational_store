@@ -16,7 +16,6 @@
 #ifndef NATIVE_RDB_STRINGUTILS_H
 #define NATIVE_RDB_STRINGUTILS_H
 
-
 #include <string>
 #include <vector>
 
@@ -25,11 +24,22 @@ namespace NativeRdb {
 class StringUtils {
 public:
     static std::string SurroundWithQuote(std::string value, std::string quote);
-    static std::string SurroundWithFunction(std::string function, std::string separator,
-        std::vector<std::string> array);
+    static std::string SurroundWithFunction(
+        std::string function, std::string separator, std::vector<std::string> array);
     static bool IsEmpty(std::string source)
     {
         return (source.empty());
+    }
+
+    static std::string Trim(const std::string &source)
+    {
+        if (source.empty()) {
+            return "";
+        }
+        std::string replaceResult = source;
+        replaceResult.erase(0, replaceResult.find_first_not_of(" "));
+        replaceResult.erase(replaceResult.find_last_not_of(" ") + 1);
+        return source;
     }
 
 private:
