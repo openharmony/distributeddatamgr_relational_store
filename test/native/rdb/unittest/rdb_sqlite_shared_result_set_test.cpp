@@ -805,7 +805,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_014, TestSize.Le
 
     std::string path = RdbSqliteSharedResultSetTest::store->GetPath();
     std::string path1 = pBk->Name();
-	
+
     EXPECT_EQ(path,  "/data/test/shared_test.db");
     EXPECT_EQ(path1, "/data/test/shared_test.db");
 
