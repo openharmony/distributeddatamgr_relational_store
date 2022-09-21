@@ -288,7 +288,7 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_005, TestSize.Level1)
     values.Put("data4", std::vector<uint8_t> { 20, 21, 22 });
 
     int ret = store->Insert(id, "test", RdbUtils::ToValuesBucket(values));
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, OHOS::NativeRdb::E_OK);
     EXPECT_EQ(5, id);
 
     std::string table = "test";
@@ -308,7 +308,7 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_005, TestSize.Level1)
     values.Put("data4", std::vector<uint8_t> { 17, 18, 19 });
     ret = store->Update(
         changedRows, "test", RdbUtils::ToValuesBucket(values), "data1 = ?", std::vector<std::string> { "tulip" });
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, OHOS::NativeRdb::E_OK);
     EXPECT_EQ(1, changedRows);
 
     allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
@@ -320,6 +320,6 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_005, TestSize.Level1)
 
     int deletedRows;
     ret = store->Delete(deletedRows, RdbUtils::ToPredicates(predicates, table));
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, OHOS::NativeRdb::E_OK);
     EXPECT_EQ(1, deletedRows);
 }
