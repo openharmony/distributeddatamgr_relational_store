@@ -20,6 +20,7 @@
 
 #include "logger.h"
 #include "string_utils.h"
+#include "sqlite_sql_builder.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -57,7 +58,8 @@ AbsPredicates *AbsPredicates::EqualTo(std::string field, std::string value)
     } else {
         isNeedAnd = true;
     }
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     whereClause = whereClause + normalizedField + " = ? ";
     whereArgs.push_back(value);
     return this;
@@ -74,7 +76,8 @@ AbsPredicates *AbsPredicates::NotEqualTo(std::string field, std::string value)
         return this;
     }
     CheckIsNeedAnd();
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     whereClause = whereClause + normalizedField + " <> ? ";
     whereArgs.push_back(value);
     return this;
@@ -133,7 +136,8 @@ AbsPredicates *AbsPredicates::Contains(std::string field, std::string value)
         return this;
     }
     CheckIsNeedAnd();
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     whereClause = whereClause + normalizedField + " LIKE ? ";
     whereArgs.push_back("%" + value + "%");
     return this;
@@ -150,7 +154,8 @@ AbsPredicates *AbsPredicates::BeginsWith(std::string field, std::string value)
         return this;
     }
     CheckIsNeedAnd();
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     whereClause = whereClause + normalizedField + " LIKE ? ";
     whereArgs.push_back(value + "%");
     return this;
@@ -167,7 +172,8 @@ AbsPredicates *AbsPredicates::EndsWith(std::string field, std::string value)
         return this;
     }
     CheckIsNeedAnd();
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     whereClause = whereClause + normalizedField + " LIKE ? ";
     whereArgs.push_back("%" + value);
     return this;
@@ -184,7 +190,8 @@ AbsPredicates *AbsPredicates::IsNull(std::string field)
         return this;
     }
     CheckIsNeedAnd();
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     whereClause = whereClause + normalizedField + " is null ";
     return this;
 }
@@ -200,7 +207,8 @@ AbsPredicates *AbsPredicates::IsNotNull(std::string field)
         return this;
     }
     CheckIsNeedAnd();
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     whereClause = whereClause + normalizedField + " is not null ";
     return this;
 }
@@ -216,7 +224,8 @@ AbsPredicates *AbsPredicates::Like(std::string field, std::string value)
         return this;
     }
     CheckIsNeedAnd();
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     whereClause = whereClause + normalizedField + " LIKE ? ";
     whereArgs.push_back(value);
     return this;
@@ -233,7 +242,8 @@ AbsPredicates *AbsPredicates::Glob(std::string field, std::string value)
         return this;
     }
     CheckIsNeedAnd();
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     whereClause = whereClause + normalizedField + " GLOB ? ";
     whereArgs.push_back(value);
     return this;
@@ -250,7 +260,8 @@ AbsPredicates *AbsPredicates::Between(std::string field, std::string low, std::s
         return this;
     }
     CheckIsNeedAnd();
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     whereClause = whereClause + normalizedField + " BETWEEN ? AND ? ";
     whereArgs.push_back(low);
     whereArgs.push_back(high);
@@ -268,7 +279,8 @@ AbsPredicates *AbsPredicates::NotBetween(std::string field, std::string low, std
         return this;
     }
     CheckIsNeedAnd();
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     whereClause = whereClause + normalizedField + " NOT BETWEEN ? AND ? ";
     whereArgs.push_back(low);
     whereArgs.push_back(high);
@@ -286,7 +298,8 @@ AbsPredicates *AbsPredicates::GreaterThan(std::string field, std::string value)
         return this;
     }
     CheckIsNeedAnd();
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     whereClause = whereClause + normalizedField + " > ? ";
     whereArgs.push_back(value);
     return this;
@@ -303,7 +316,8 @@ AbsPredicates *AbsPredicates::LessThan(std::string field, std::string value)
         return this;
     }
     CheckIsNeedAnd();
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     whereClause = whereClause + normalizedField + " < ? ";
     whereArgs.push_back(value);
     return this;
@@ -320,7 +334,8 @@ AbsPredicates *AbsPredicates::GreaterThanOrEqualTo(std::string field, std::strin
         return this;
     }
     CheckIsNeedAnd();
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     whereClause = whereClause + normalizedField + " >= ? ";
     whereArgs.push_back(value);
     return this;
@@ -337,7 +352,8 @@ AbsPredicates *AbsPredicates::LessThanOrEqualTo(std::string field, std::string v
         return this;
     }
     CheckIsNeedAnd();
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     whereClause = whereClause + normalizedField + " <= ? ";
     whereArgs.push_back(value);
     return this;
@@ -357,7 +373,8 @@ AbsPredicates *AbsPredicates::OrderByAsc(std::string field)
     if (isSorted) {
         order += ',';
     }
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     order = order + normalizedField + " ASC ";
     isSorted = true;
     return this;
@@ -377,7 +394,8 @@ AbsPredicates *AbsPredicates::OrderByDesc(std::string field)
     if (isSorted) {
         order += ',';
     }
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     order = order + normalizedField + " DESC ";
     isSorted = true;
     return this;
@@ -438,7 +456,8 @@ AbsPredicates *AbsPredicates::GroupBy(std::vector<std::string> fields)
             LOG_WARN("AbsPredicates: GroupBy() fails because Invalid parameter.");
             return this;
         }
-        std::string normalizedField = Normalized(RemoveQuotes(field));
+        int errorCode = 0;
+        std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
         group = group + normalizedField + ",";
     }
     size_t pos = group.find_last_of(",");
@@ -598,7 +617,8 @@ void AbsPredicates::CheckIsNeedAnd()
 void AbsPredicates::AppendWhereClauseWithInOrNotIn(
     std::string methodName, std::string field, std::vector<std::string> replaceValues)
 {
-    std::string normalizedField = Normalized(RemoveQuotes(field));
+    int errorCode = 0;
+    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
     whereClause = whereClause + normalizedField + StringUtils::SurroundWithFunction(methodName, ",", replaceValues);
 }
 
