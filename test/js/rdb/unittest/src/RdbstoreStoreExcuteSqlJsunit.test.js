@@ -53,7 +53,6 @@ describe('rdbStoreInsertTest', function () {
     it('ExcuteSqlTest0001', 0, async function (done) {
         console.log(TAG + "************* ExcuteSqlTest0001 start *************");
         var u8 = new Uint8Array([1, 2, 3])
-        //插入
         {
             const valueBucket = {
                 "name": "zhangsan",
@@ -102,7 +101,6 @@ describe('rdbStoreInsertTest', function () {
             })
             await insertPromise
         }
-        //sql删除
         {
             let executeSqlPromise = rdbStore.executeSql("DELETE FROM test WHERE age = ? OR age = ?", ["18", "20"])
             executeSqlPromise.then(async (resultSet) => {
@@ -133,7 +131,6 @@ describe('rdbStoreInsertTest', function () {
     it('ExcuteSqlTest0002', 0, async function (done) {
         console.log(TAG + "************* ExcuteSqlTest0002 start *************");
         var u8 = new Uint8Array([2, 3, 4])
-        //插入
         {
             const valueBucket = {
                 "name": "zhangsan",
@@ -213,7 +210,6 @@ describe('rdbStoreInsertTest', function () {
         console.log(TAG + "************* ExcuteSqlTest0003 start *************");
         var u8 = new Uint8Array([3, 4, 5])
         var nameStr = "lisi" + "e".repeat(2000) + "zhangsan"
-        //插入
         {
             const valueBucket = {
                 "name": "zhangsan",
@@ -313,7 +309,6 @@ describe('rdbStoreInsertTest', function () {
     it('ExcuteSqlTest0004', 0, async function (done) {
         console.log(TAG + "************* ExcuteSqlTest0004 start *************");
         var u8 = new Uint8Array([3, 4, 5])
-        //插入
         {
             const valueBucket = {
                 "name": "zhangsan",

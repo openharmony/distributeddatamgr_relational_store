@@ -28,7 +28,7 @@ namespace OHOS {
 namespace AppDataFwk {
 static const uint32_t INVALID_ROW_RECORD = 0xFFFFFFFF;
 /**
- * This class stores a set of rows from a database in a buffer，
+ * This class stores a set of rows from a database in a buffer,
  * which is used as the set of query result.
  */
 class SharedBlock {
