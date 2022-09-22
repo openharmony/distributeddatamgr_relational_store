@@ -81,7 +81,6 @@ describe('rdbStoreDeleteTest', function () {
             }
             await rdbStore.insert("test", valueBucket)
         }
-        //删除
         {
             let predicates = await new dataRdb.RdbPredicates("test")
             let deletePromise = rdbStore.delete(predicates)
@@ -132,7 +131,6 @@ describe('rdbStoreDeleteTest', function () {
             }
             await rdbStore.insert("test", valueBucket)
         }
-        //删除
         {
             let predicates = await new dataRdb.RdbPredicates("test")
             predicates.equalTo("name", "zhangsan")
@@ -175,14 +173,12 @@ describe('rdbStoreDeleteTest', function () {
             }
             await rdbStore.insert("test", valueBucket)
         }
-        //删除前查询
         {
             let predicates = await new dataRdb.RdbPredicates("test")
             predicates.equalTo("age", 28)
             let resultSet = await rdbStore.query(predicates)
             expect(1).assertEqual(resultSet.rowCount)
         }
-        //删除
         {
             let predicates = await new dataRdb.RdbPredicates("test")
             predicates.equalTo("age", 28)
@@ -195,7 +191,6 @@ describe('rdbStoreDeleteTest', function () {
             })
             await deletePromise
         }
-        //删除后查询
         {
             let predicates = await new dataRdb.RdbPredicates("test")
             predicates.equalTo("age", 28)
@@ -241,7 +236,6 @@ describe('rdbStoreDeleteTest', function () {
             }
             await rdbStore.insert("test", valueBucket)
         }
-        //删除
         {
             let predicates = await new dataRdb.RdbPredicates("test")
             predicates.equalTo("aaa id", 1)
@@ -292,7 +286,6 @@ describe('rdbStoreDeleteTest', function () {
             }
             await rdbStore.insert("test", valueBucket)
         }
-        //删除
         {
             let predicates = await new dataRdb.RdbPredicates("test")
             predicates.equalTo("name", "lisi")
@@ -344,7 +337,6 @@ describe('rdbStoreDeleteTest', function () {
             }
             await rdbStore.insert("test", valueBucket)
         }
-        //删除
         {
             let predicates = await new dataRdb.RdbPredicates("")
             let deletePromise = rdbStore.delete(predicates)

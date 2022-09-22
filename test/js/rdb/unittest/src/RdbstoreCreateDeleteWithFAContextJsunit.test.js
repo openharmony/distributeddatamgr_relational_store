@@ -95,7 +95,6 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
             }
             await rdbStore.insert("test", valueBucket)
         }
-        //删除
         {
             let predicates = await new dataRdb.RdbPredicates("test")
             predicates.equalTo("name", "zhangsan")
@@ -115,7 +114,7 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
         console.log(TAG + "************* testRdbStoreCreateDeleteWithFAContextTest0002 end *************");
     })
 
-        /**
+    /**
      * @tc.name rdb delete test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0030
      * @tc.desc rdb delete test
@@ -161,7 +160,7 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
                                 console.info("Delete RdbStore failed, err: " + err)
                                 return
                             }
-                            console.log("Delete RdbStore successfully.")                            
+                            console.log("Delete RdbStore successfully.")
                             done()
                             console.log(TAG + "************* testRdbStoreCreateDeleteWithFAContextTest0003 end *************");
                         });
@@ -171,7 +170,7 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
         })
     })
 
-        /**
+    /**
      * @tc.name rdb delete test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0040
      * @tc.desc rdb delete test
@@ -193,7 +192,7 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
                     console.log("Insert is successful, rowId = " + rowId)
                     let predicates = new dataRdb.RdbPredicates("test")
                     predicates.equalTo("name", "zhangsan")
-                    rdbStore.delete(predicates).then((rows) => { 
+                    rdbStore.delete(predicates).then((rows) => {
                         console.log("Delete rows: " + rows)
                         expect(1).assertEqual(rows)
                         dataRdb.deleteRdbStore(context, "CreateDeleteWithFAContextTest.db").then(() => {
