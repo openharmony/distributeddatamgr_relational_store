@@ -443,18 +443,6 @@ std::vector<uint8_t> RdbSecurityManager::GenerateRootKeyAlias(const std::string 
     return rootKeyAlias;
 }
 
-void RdbSecurityManager::DelRdbSecretDataFile(KeyFileType keyFile)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (keyFile == KeyFileType::PUB_KEY_FILE) {
-        LOG_INFO("Delete pub_key file.");
-        SqliteDatabaseUtils::DeleteFile(keyPath_);
-    } else {
-        LOG_INFO("Delete pub_key.bak file.");
-        SqliteDatabaseUtils::DeleteFile(keyBakPath_);
-    }
-}
-
 void RdbSecurityManager::DelRdbSecretDataFile(const std::string &path)
 {
     LOG_INFO("Delete all key files begin.");
@@ -503,15 +491,6 @@ bool RdbSecurityManager::CheckKeyDataFileExists(RdbSecurityManager::KeyFileType 
     } else {
         return FileExists(keyBakPath_);
     }
-}
-
-bool RdbSecurityManager::RenameKeyBakFileToKeyFile()
-{
-    if (RemoveFile(keyPath_)) {
-        return SqliteDatabaseUtils::RenameFile(keyBakPath_, keyPath_);
-    }
-    LOG_ERROR("Rename key file to bak file failed!");
-    return false;
 }
 
 int RdbSecurityManager::GetKeyDistributedStatus(KeyFileType keyFile, bool &status)
