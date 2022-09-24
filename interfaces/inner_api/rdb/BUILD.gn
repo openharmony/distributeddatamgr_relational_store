@@ -123,7 +123,7 @@ ohos_shared_library("native_rdb") {
     ]
   } else {
     deps += [ "//third_party/sqlite:sqlite" ]
-    ldflags = [ "-Wl,--exclude-libs=ALL" ]
+    ldflags = [ "-Wl,--exclude-libs,ALL" ]
 
     sources += [
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
