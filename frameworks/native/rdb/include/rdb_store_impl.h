@@ -104,6 +104,8 @@ public:
 
     std::unique_ptr<AbsSharedResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) override;
+    std::unique_ptr<ResultSet> QueryByStep(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> columns) override;
     std::shared_ptr<ResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
         const std::vector<std::string> &columns) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
@@ -143,7 +145,7 @@ private:
     std::string fileSecurityLevel;
     std::string fileType;
     std::stack<TransactionObserver *> transactionObserverStack;
-    
+    bool isShared_;
     DistributedRdb::RdbSyncerParam syncerParam_;
     bool isEncrypt_;
 };

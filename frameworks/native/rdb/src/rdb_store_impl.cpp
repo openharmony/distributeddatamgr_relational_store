@@ -85,11 +85,27 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.password_ = {};
     isEncrypt_ = config.IsEncrypt();
 #endif
+    // open uri share
+    if (!config.GetUri().empty()) {
+        auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
+        if (service == nullptr) {
+            LOG_ERROR("RdbStoreImpl::InnerOpen get service failed");
+            return -1;
+        }
+        LOG_ERROR("Uri =%{public}s",config.GetUri().c_str());
+        LOG_ERROR("WritePermission =%{public}s",config.GetWritePermission().c_str());
+        LOG_ERROR("ReadPermission =%{public}s",config.GetReadPermission().c_str());
+        if (service->CreateRDBTable(syncerParam_, config.GetWritePermission(), config.GetReadPermission()) != E_OK) {
+            LOG_ERROR("RdbStoreImpl::InnerOpen service CreateRDBTable failed");
+            return -1;
+        }
+        isShared_ = true;
+    }
     return E_OK;
 }
 
 RdbStoreImpl::RdbStoreImpl()
-    : connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false), isMemoryRdb(false)
+    : connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false), isMemoryRdb(false), isShared_(false)
 {
 }
 
@@ -98,6 +114,16 @@ RdbStoreImpl::~RdbStoreImpl()
     delete connectionPool;
     threadMap.clear();
     idleSessions.clear();
+    if (isShared_) {
+        auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
+        if (service == nullptr) {
+            LOG_ERROR("RdbStoreImpl::~RdbStoreImpl get service failed");
+            return;
+        }
+        if (service->DestroyRDBTable(syncerParam_) != E_OK) {
+            LOG_ERROR("RdbStoreImpl::~RdbStoreImpl service DestroyRDBTable failed");
+        }
+    }
 }
 #ifdef WINDOWS_PLATFORM
 void RdbStoreImpl::Clear()
@@ -322,6 +348,16 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
     return QuerySql(sql, selectionArgs);
+}
+
+std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
+{
+    DDS_TRACE();
+    LOG_DEBUG("RdbStoreImpl::QueryByStep on called.");
+    std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
+    std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
+    return QueryByStep(sql, selectionArgs);
 }
 
 std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,

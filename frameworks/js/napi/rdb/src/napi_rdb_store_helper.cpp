@@ -294,6 +294,9 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
     asyncContext->config.SetModuleName(asyncContext->context->GetModuleName());
     asyncContext->config.SetArea(asyncContext->context->GetArea());
     asyncContext->config.SetBundleName(asyncContext->context->GetBundleName());
+    asyncContext->config.SetUri(asyncContext->context->GetUri());
+    asyncContext->config.SetReadPermission(asyncContext->context->GetReadPermission());
+    asyncContext->config.SetWritePermission(asyncContext->context->GetWritePermission());
     LOG_DEBUG("ParseStoreConfig end");
 }
 
