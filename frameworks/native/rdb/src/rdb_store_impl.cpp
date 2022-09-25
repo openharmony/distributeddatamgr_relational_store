@@ -84,7 +84,6 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
     isEncrypt_ = config.IsEncrypt();
-#endif
     // open uri share
     if (!config.GetUri().empty()) {
         auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
@@ -101,6 +100,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
         }
         isShared_ = true;
     }
+#endif
     return E_OK;
 }
 
@@ -114,6 +114,7 @@ RdbStoreImpl::~RdbStoreImpl()
     delete connectionPool;
     threadMap.clear();
     idleSessions.clear();
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     if (isShared_) {
         auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
         if (service == nullptr) {
@@ -124,6 +125,7 @@ RdbStoreImpl::~RdbStoreImpl()
             LOG_ERROR("RdbStoreImpl::~RdbStoreImpl service DestroyRDBTable failed");
         }
     }
+#endif
 }
 #ifdef WINDOWS_PLATFORM
 void RdbStoreImpl::Clear()
