@@ -32,6 +32,9 @@ public:
     std::string GetPreferencesDir();
     std::string GetBundleName();
     std::string GetModuleName();
+    std::string GetUri();
+    std::string GetReadPermission();
+    std::string GetWritePermission();
     int32_t GetArea() const;
 
 private:
