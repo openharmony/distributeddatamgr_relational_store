@@ -97,6 +97,12 @@ public:
     void SetServiceName(const std::string& serviceName);
     void SetArea(int32_t area);
     int32_t GetArea() const;
+    std::string GetUri() const;
+    void SetUri(const std::string& uri);
+    std::string GetReadPermission() const;
+    void SetReadPermission(const std::string& permission);
+    std::string GetWritePermission() const;
+    void SetWritePermission(const std::string& permission);
 
     static std::string GetJournalModeValue(JournalMode journalMode);
     static std::string GetSyncModeValue(SyncMode syncMode);
@@ -119,6 +125,9 @@ private:
     std::string moduleName_;
 
     bool isEncrypt_ = false;
+    std::string uri_;
+    std::string readPermission_;
+    std::string writePermission_;
 };
 } // namespace OHOS::NativeRdb
 
