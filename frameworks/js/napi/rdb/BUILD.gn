@@ -78,7 +78,6 @@ ohos_shared_library("rdb") {
     ]
 
     external_deps = [
-      "ability_base:want",
       "ability_runtime:abilitykit_native",
       "ability_runtime:napi_base_context",
       "c_utils:utils",
