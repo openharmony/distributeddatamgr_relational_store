@@ -304,19 +304,17 @@ std::string SqliteSqlBuilder::NormalizeWords(const std::string &source, int &err
         return "";
     }
     std::string strTrimed = StringUtils::Trim(source);
-    // Input source is like "*"
     std::string obj = "*";
     if (obj == strTrimed) {
         return "*";
     }
-    // Input source is like : address | 'address' | 'address name' | 'add ress name'  "['\"`]?(\\w+)['\"`]?|['\"`]([^`\"']+)['\"`]";
     std::regex pattern("^(" + patternWords_ + ")$");
     std::smatch result;
     auto wordMatcher = std::regex_match(strTrimed, result, pattern);
     if (!wordMatcher) {
         return "";
     }
-    std::string words = StringUtils::IsEmpty(result[2]) ? result[3] : result[2]; //2:'address' 3:'add ress'
+    std::string words = StringUtils::IsEmpty(result[2]) ? result[3] : result[2];
     return StringUtils::SurroundWithQuote(words, "`");
 }
 
@@ -327,7 +325,6 @@ std::string SqliteSqlBuilder::NormalizeTableColumn(const std::string &source, in
         return "";
     }
     std::string strTrimed = StringUtils::Trim(source);
-    // Input source is like : table.column | table.* | 'table'.column | table.'column' | 'table'.'column'
     std::regex pattern_table("^(" + patternWords_ + ")[.](" + patternWords_ + "|\\*)$");
     std::smatch result;
     bool columnMatcher = std::regex_match(strTrimed, result, pattern_table);
@@ -335,15 +332,15 @@ std::string SqliteSqlBuilder::NormalizeTableColumn(const std::string &source, in
         return "";
     }
     std::string firstName = StringUtils::IsEmpty(result[2]) ? StringUtils::Trim(result[3])
-                                                            : StringUtils::Trim(result[2]); //2:'table'  3:'ta ble'
+                                                            : StringUtils::Trim(result[2]);
     std::string lastName = StringUtils::IsEmpty(result[5]) ? StringUtils::Trim(result[6])
-                                                           : StringUtils::Trim(result[5]); //5:'column' 6:'col umn'
-    lastName = StringUtils::IsEmpty(lastName) ? StringUtils::Trim(result[4]) : lastName;   //4:*
+                                                           : StringUtils::Trim(result[5]);
+    lastName = StringUtils::IsEmpty(lastName) ? StringUtils::Trim(result[4]) : lastName;
     std::string aresult(StringUtils::SurroundWithQuote(firstName, "`"));
     std::string obj = "*";
-    if (obj == lastName) { // table.*
+    if (obj == lastName) {
         aresult.append(".").append(lastName);
-    } else { // table.column
+    } else {
         aresult.append(".").append(StringUtils::SurroundWithQuote(lastName, "`"));
     }
     return aresult;
@@ -362,10 +359,9 @@ std::string SqliteSqlBuilder::NormalizeMethodPattern(const std::string &source, 
     if (!columnMatcher) {
         return StringUtils::SurroundWithQuote(strTrimed, "`");
     }
-    std::string methodName = StringUtils::Trim(result[1]);   //Method
-    std::string methodParams = StringUtils::Trim(result[3]); //Params
+    std::string methodName = StringUtils::Trim(result[1]);
+    std::string methodParams = StringUtils::Trim(result[3]);
     if (StringUtils::IsEmpty(methodParams)) {
-        //Like GETDATE()
         return methodName.append("()");
     }
     return methodName.append("(").append(methodParams).append(")");
@@ -374,17 +370,14 @@ std::string SqliteSqlBuilder::NormalizeMethodPattern(const std::string &source, 
 std::string SqliteSqlBuilder::Normalize(const std::string &words, int &errorCode)
 {
     errorCode = 0;
-    //words is like : address | 'address' | 'address name' | 'add ress name'
     std::string aresult = NormalizeWords(words, errorCode);
     if (!StringUtils::IsEmpty(aresult)) {
         return aresult;
     }
-    //words is like : table.column | table.* | 'table'.column | table.'column' | 'table'.'column'
     aresult = NormalizeTableColumn(words, errorCode);
     if (!StringUtils::IsEmpty(aresult)) {
         return aresult;
     }
-    //words is like : Method(params)
     aresult = NormalizeMethodPattern(words, errorCode);
     if (!StringUtils::IsEmpty(aresult)) {
         return aresult;
@@ -399,10 +392,7 @@ std::string SqliteSqlBuilder::NormalizeAlias(const std::string &source, int &err
         return "";
     }
     std::string strTrimed = StringUtils::Trim(source);
-    // ** AS alias
-    // Input source is like ** AS alias | ** AS 'alias'
     std::regex pattern("^(.+)\\s+(AS|as)\\s+(" + patternWords_ + ")$");
-    //^(.+)\\s+(AS|as)\\s+(['\"`]?(\\w+)['\"`]?|['\"`]([^`\"']+)['\"`])$
     std::smatch result;
     bool columnMatcher = std::regex_match(strTrimed, result, pattern);
     if (!columnMatcher) {
@@ -427,7 +417,6 @@ std::string SqliteSqlBuilder::NormalizeAlias(const std::string &source, int &err
     }
     std::string obj = aresult.substr(aresult.length() - 1, 1);
     if ("*" == obj) {
-        // Illegal pattern: table.* as alias
         errorCode = E_SQLITE_SQL_BUILDER_NORMALIZE_FAIL;
         return "";
     }
