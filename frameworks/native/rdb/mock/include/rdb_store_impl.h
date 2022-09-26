@@ -123,7 +123,6 @@ private:
     std::string fileSecurityLevel;
     std::string fileType;
     std::stack<TransactionObserver *> transactionObserverStack;
-    bool isShared_;
 };
 } // namespace OHOS::NativeRdb
 #endif
