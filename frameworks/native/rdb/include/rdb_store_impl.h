@@ -145,7 +145,7 @@ private:
     std::string fileSecurityLevel;
     std::string fileType;
     std::stack<TransactionObserver *> transactionObserverStack;
-    bool isShared_;
+    bool isShared_ = false;
     DistributedRdb::RdbSyncerParam syncerParam_;
     bool isEncrypt_;
 };
