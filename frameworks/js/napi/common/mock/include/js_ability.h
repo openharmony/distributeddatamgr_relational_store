@@ -43,6 +43,9 @@ private:
     std::string preferencesDir_;
     std::string bundleName_;
     std::string moduleName_;
+    std::string uri_;
+    std::string readPermission_;
+    std::string writePermission_;
 };
 
 class JSAbility final {
