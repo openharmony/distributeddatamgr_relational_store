@@ -230,3 +230,126 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_04, TestSize.Level1)
     ret = access(keyPath.c_str(), F_OK);
     EXPECT_EQ(ret, -1);
 }
+
+/**
+ * @tc.name: RdbStore_Encrypt_Decrypt_Test_005
+ * @tc.desc: test RdbStore Get Encrypted Store with empty boundlename
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_05, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("");
+    EncryptTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStore_Encrypt_Decrypt_Test_006
+ * @tc.desc: test SaveSecretKeyToFile when KeyFileType isNot PUB_KEY_FILE
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_06, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.TestEncrypt6");
+    EncryptTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    bool ret =
+        RdbSecurityManager::GetInstance().CheckKeyDataFileExists(RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE);
+    EXPECT_EQ(ret, false);
+    std::vector<uint8_t> key = RdbSecurityManager::GetInstance().GenerateRandomNum(RdbSecurityManager::RDB_KEY_SIZE);
+    bool flag = RdbSecurityManager::GetInstance().SaveSecretKeyToFile(
+        RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE, key);
+    EXPECT_EQ(flag, true);
+}
+
+/**
+ * @tc.name: RdbStore_Encrypt_Decrypt_Test_007
+ * @tc.desc: test GetRdbPassword when KeyFileType isNot PUB_KEY_FILE
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_07, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.TestEncrypt7");
+    EncryptTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    bool outdated;
+    auto key = RdbSecurityManager::GetInstance().GetRdbPassword(
+        RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE, outdated);
+    RdbPassword password = {};
+    EXPECT_EQ(key, password);
+}
+
+/**
+ * @tc.name: RdbStore_Encrypt_Decrypt_Test_008
+ * @tc.desc: test RemoveSuffix when pos == std::string::npos
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_08, TestSize.Level1)
+{
+    std::string path = RDB_TEST_PATH + "test";
+    RdbStoreConfig config(path);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.TestEncrypt8");
+    EncryptTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStore_Encrypt_Decrypt_Test_009
+ * @tc.desc: test GetKeyDistributedStatus and SetKeyDistributedStatus
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_09, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.TestEncrypt9");
+    EncryptTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    bool distributedStatus = false;
+    int ret = RdbSecurityManager::GetInstance().GetKeyDistributedStatus(
+        RdbSecurityManager::KeyFileType::PUB_KEY_FILE, distributedStatus);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(distributedStatus, false);
+    ret = RdbSecurityManager::GetInstance().GetKeyDistributedStatus(
+        RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE, distributedStatus);
+    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(distributedStatus, false);
+    ret = RdbSecurityManager::GetInstance().SetKeyDistributedStatus(
+        RdbSecurityManager::KeyFileType::PUB_KEY_FILE, true);
+    EXPECT_EQ(ret, E_OK);
+    ret = RdbSecurityManager::GetInstance().GetKeyDistributedStatus(
+        RdbSecurityManager::KeyFileType::PUB_KEY_FILE, distributedStatus);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(distributedStatus, true);
+    ret = RdbSecurityManager::GetInstance().SetKeyDistributedStatus(
+        RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE, distributedStatus);
+    EXPECT_EQ(ret, E_ERROR);
+}
