@@ -712,23 +712,12 @@ int SqliteConnection::ManageKey(const SqliteConfig &config)
     }
     bool isKeyFileExists =
         RdbSecurityManager::GetInstance().CheckKeyDataFileExists(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-    bool isKeyBakFileExists =
-        RdbSecurityManager::GetInstance().CheckKeyDataFileExists(RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE);
-    if (!isKeyFileExists && !isKeyBakFileExists) {
+   
+    if (!isKeyFileExists ) {
         LOG_INFO("ManageKey Init");
         return InitKey();
-    }
-
-    if (isKeyFileExists && !isKeyBakFileExists) {
+    } else {
         return GetKeyFromFile();
-    }
-
-    if (!isKeyFileExists && isKeyBakFileExists) {
-        return GetKeyFromBakFile();
-    }
-
-    if (isKeyFileExists && isKeyBakFileExists) {
-        return FindCorrectKeyFromFile();
     }
 
     return E_OK;
@@ -743,11 +732,12 @@ int SqliteConnection::InitKey()
         return E_ERROR;
     }
     if (RdbSecurityManager::GetInstance().SaveSecretKeyToFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, key)) {
+        LOG_ERROR("Init key failed!");
         key.assign(key.size(), 0);
-        return E_OK;
+        return E_ERROR;
     }
-    LOG_ERROR("Init key failed!");
-    return E_ERROR;
+    key.assign(key.size(), 0);
+    return E_OK;
 }
 
 int SqliteConnection::GetKeyFromFile()
@@ -765,67 +755,9 @@ int SqliteConnection::GetKeyFromFile()
     }
     if (outdated) {
         LOG_ERROR("The key has expired");
-        return Rekey();
+        return E_OK;
     }
     return E_OK;
-}
-
-int SqliteConnection::GetKeyFromBakFile()
-{
-    LOG_INFO("Get key from pub_key.bak file");
-    bool outdated = false;
-    RdbPassword key =
-        RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, outdated);
-    if (SetEncryptKey(std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize())) == E_OK) {
-        if (RdbSecurityManager::GetInstance().RenameKeyBakFileToKeyFile()) {
-            return E_OK;
-        }
-        LOG_ERROR("Rename key file to bak file failed!");
-        return E_ERROR;
-    }
-    LOG_ERROR("Invalid key_bak file!");
-    return E_ERROR;
-}
-
-int SqliteConnection::FindCorrectKeyFromFile()
-{
-    LOG_INFO("FindCorrectKeyFromFile start");
-    bool outdated;
-    RdbPassword key =
-        RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, outdated);
-    RdbPassword keyBak =
-        RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE, outdated);
-
-    if (SetEncryptKey(std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize())) == E_OK) {
-        RdbSecurityManager::GetInstance().DelRdbSecretDataFile(RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE);
-        return E_OK;
-    }
-
-    if (SetEncryptKey(std::vector<uint8_t>(keyBak.GetData(), keyBak.GetData() + keyBak.GetSize())) == E_OK) {
-        RdbSecurityManager::GetInstance().DelRdbSecretDataFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-        if (RdbSecurityManager::GetInstance().RenameKeyBakFileToKeyFile()) {
-            return E_OK;
-        }
-        LOG_ERROR("Rename key file to bak file failed!");
-        return E_ERROR;
-    }
-    return E_ERROR;
-}
-
-int SqliteConnection::Rekey()
-{
-    LOG_INFO("Rekey start");
-    std::vector<uint8_t> key = RdbSecurityManager::GetInstance().GenerateRandomNum(RdbSecurityManager::RDB_KEY_SIZE);
-    if (ChangeEncryptKey(key) == E_OK) {
-        RdbSecurityManager::GetInstance().SaveSecretKeyToFile(RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE, key);
-        RdbSecurityManager::GetInstance().DelRdbSecretDataFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-        RdbSecurityManager::GetInstance().RenameKeyBakFileToKeyFile();
-        LOG_INFO("Rekey successful.");
-        key.assign(key.size(), 0);
-        return E_OK;
-    }
-    LOG_ERROR("Rekey failed.");
-    return E_ERROR;
 }
 #endif
 } // namespace NativeRdb

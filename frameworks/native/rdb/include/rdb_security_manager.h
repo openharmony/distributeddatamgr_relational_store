@@ -66,12 +66,10 @@ public:
     enum class KeyFileType { PUB_KEY_FILE = 1, PUB_KEY_BAK_FILE };
 
     RdbPassword GetRdbPassword(KeyFileType keyFile, bool &outdated);
-    void DelRdbSecretDataFile(KeyFileType keyFile);
     void DelRdbSecretDataFile(const std::string &path);
     bool CheckKeyDataFileExists(RdbSecurityManager::KeyFileType keyFile);
     bool SaveSecretKeyToFile(RdbSecurityManager::KeyFileType keyFile, const std::vector<uint8_t> &key);
     static RdbSecurityManager &GetInstance();
-    bool RenameKeyBakFileToKeyFile();
     int GetKeyDistributedStatus(KeyFileType keyFile, bool &status);
     int SetKeyDistributedStatus(KeyFileType keyFile, bool status);
     void Init(const std::string &bundleName, const std::string &path);

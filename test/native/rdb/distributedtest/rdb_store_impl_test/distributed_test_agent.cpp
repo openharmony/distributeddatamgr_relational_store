@@ -108,6 +108,7 @@ int DistributedTestAgent::OnProcessMsg(const std::string &strMsg, int len, std::
     RdbStoreConfig config(DistributedTestAgent::DATABASE_NAME);
     config.SetBundleName("com.example.distributed.rdb");
     config.SetName("distributed_rdb.db");
+    config.SetEncryptStatus(true);
     DistributedTestOpenCallback helper;
     DistributedTestAgent::store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     std::shared_ptr<RdbStore> &store_ = DistributedTestAgent::store_;
