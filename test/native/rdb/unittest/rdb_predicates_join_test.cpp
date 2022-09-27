@@ -51,12 +51,11 @@ public:
 const std::string RdbStorePredicateJoinTest::DATABASE_NAME = RDB_TEST_PATH + "predicates_join_test.db";
 std::shared_ptr<RdbStore> RdbStorePredicateJoinTest::store = nullptr;
 const std::string CREATE_TABLE_USER_SQL = std::string("CREATE TABLE IF NOT EXISTS user ") +
-        std::string("(userId INTEGER PRIMARY KEY AUTOINCREMENT, firstName TEXT , lastName TEXT , ") +
-        std::string("age INTEGER , balance REAL  NOT NULL)");
-const std::string CREATE_TABLE_BOOK_SQL = std::string("CREATE TABLE IF NOT EXISTS Book ") +
-        std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT, userId INTEGER , ") +
-        std::string("FOREIGN KEY (userId) REFERENCES user (userId) ON UPDATE NO ACTION ON DELETE CASCADE)");
-
+      std::string("(userId INTEGER PRIMARY KEY AUTOINCREMENT, firstName TEXT, lastName TEXT,") +
+      std::string("age INTEGER , balance REAL  NOT NULL)");
+const std::string CREATE_TABLE_BOOK_SQL = std::string("CREATE TABLE IF NOT EXISTS book ") +
+      std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT, userId INTEGER,") +
+      std::string("FOREIGN KEY (userId) REFERENCES user (userId) ON UPDATE NO ACTION ON DELETE CASCADE)");
 
 class PredicateJoinTestOpenCallback : public RdbOpenCallback {
 public:
@@ -110,7 +109,7 @@ void RdbStorePredicateJoinTest::InsertUserDates()
 
     values.PutInt("userId", 1);
     values.PutString("firstName", std::string("Zhang"));
-    values.PutString("LastName", std::string("San"));
+    values.PutString("lastName", std::string("San"));
     values.PutInt("age", 29);
     values.PutDouble("balance", 100.51);
     store->Insert(id, "user", values);
@@ -118,7 +117,7 @@ void RdbStorePredicateJoinTest::InsertUserDates()
     values.Clear();
     values.PutInt("userId", 2);
     values.PutString("firstName", std::string("Li"));
-    values.PutString("LastName", std::string("Si"));
+    values.PutString("lastName", std::string("Si"));
     values.PutInt("age", 30);
     values.PutDouble("balance", 200.51);
     store->Insert(id, "user", values);
@@ -126,7 +125,7 @@ void RdbStorePredicateJoinTest::InsertUserDates()
     values.Clear();
     values.PutInt("userId", 3);
     values.PutString("firstName", std::string("Wang"));
-    values.PutString("LastName", std::string("Wu"));
+    values.PutString("lastName", std::string("Wu"));
     values.PutInt("age", 30);
     values.PutDouble("balance", 300.51);
     store->Insert(id, "user", values);
@@ -134,7 +133,7 @@ void RdbStorePredicateJoinTest::InsertUserDates()
     values.Clear();
     values.PutInt("userId", 4);
     values.PutString("firstName", std::string("Sun"));
-    values.PutString("LastName", std::string("Liu"));
+    values.PutString("lastName", std::string("Liu"));
     values.PutInt("age", 31);
     values.PutDouble("balance", 400.51);
     store->Insert(id, "user", values);
@@ -142,7 +141,7 @@ void RdbStorePredicateJoinTest::InsertUserDates()
     values.Clear();
     values.PutInt("userId", 5);
     values.PutString("firstName", std::string("Ma"));
-    values.PutString("LastName", std::string("Qi"));
+    values.PutString("lastName", std::string("Qi"));
     values.PutInt("age", 32);
     values.PutDouble("balance", 500.51);
     store->Insert(id, "user", values);
@@ -160,7 +159,7 @@ void RdbStorePredicateJoinTest::InsertBookDates()
 
     values.Clear();
     values.PutInt("id", 2);
-    values.PutString("name", std::string("XiYouJI"));
+    values.PutString("name", std::string("XiYouJi"));
     values.PutInt("userId", 2);
     store->Insert(id, "book", values);
 
@@ -193,19 +192,52 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_CrossJoin_001, TestSize.Level1)
     RdbPredicates predicates("user");
 
     std::vector<std::string> clauses;
-    clauses.push_back("user.userId = Book.id");
-    predicates.CrossJoin("Book")->On(clauses);
+    clauses.push_back("user.userId = book.userId");
+    predicates.CrossJoin("book")->On(clauses);
 
     std::vector<std::string> joinTypes;
     joinTypes.push_back("CROSS JOIN");
     EXPECT_EQ(joinTypes, predicates.GetJoinTypes());
-    EXPECT_EQ("Book", predicates.GetJoinTableNames()[0]);
-    EXPECT_EQ("ON(user.userId = Book.id)", predicates.GetJoinConditions()[0]);
-    EXPECT_EQ("user CROSS JOIN Book ON(user.userId = Book.id)", predicates.GetJoinClause());
+    EXPECT_EQ("book", predicates.GetJoinTableNames()[0]);
+    EXPECT_EQ("ON(user.userId = book.userId)", predicates.GetJoinConditions()[0]);
+    EXPECT_EQ("user CROSS JOIN book ON(user.userId = book.userId)", predicates.GetJoinClause());
 
     std::vector<std::string> columns;
     std::unique_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
+
+    EXPECT_EQ(E_OK, allDataTypes->GoToFirstRow());
+    int userId;
+    EXPECT_EQ(E_OK, allDataTypes->GetInt(0, userId));
+    EXPECT_EQ(1, userId);
+
+    std::string firstName;
+    EXPECT_EQ(E_OK, allDataTypes->GetString(1, firstName));
+    EXPECT_EQ("Zhang", firstName);
+
+    std::string lastName;
+    EXPECT_EQ(E_OK, allDataTypes->GetString(2, lastName));
+    EXPECT_EQ("San", lastName);
+
+    int age;
+    EXPECT_EQ(E_OK, allDataTypes->GetInt(3, age));
+    EXPECT_EQ(29, age);
+
+    double balance;
+    EXPECT_EQ(E_OK, allDataTypes->GetDouble(4, balance));
+    EXPECT_EQ(100.51, balance);
+
+    int id;
+    EXPECT_EQ(E_OK, allDataTypes->GetInt(5, id));
+    EXPECT_EQ(1, id);
+
+    std::string name;
+    EXPECT_EQ(E_OK, allDataTypes->GetString(6, name));
+    EXPECT_EQ("SanGuo", name);
+
+    int userId_1;
+    EXPECT_EQ(E_OK, allDataTypes->GetInt(7, userId_1));
+    EXPECT_EQ(1, userId_1);
 }
 
 /* *
@@ -218,13 +250,13 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_InnerJoin_002, TestSize.Level1)
     RdbPredicates predicates("user");
 
     std::vector<std::string> clauses;
-    clauses.push_back("user.userId = Book.id");
-    predicates.InnerJoin("Book")->On(clauses)->EqualTo("Book.name", "SanGuo");
+    clauses.push_back("user.userId = book.userId");
+    predicates.InnerJoin("book")->On(clauses)->EqualTo("book.name", "SanGuo");
 
     std::vector<std::string> joinTypes;
     joinTypes.push_back("INNER JOIN");
     EXPECT_EQ(joinTypes, predicates.GetJoinTypes());
-    EXPECT_EQ("ON(user.userId = Book.id)", predicates.GetJoinConditions()[0]);
+    EXPECT_EQ("ON(user.userId = book.userId)", predicates.GetJoinConditions()[0]);
 
     std::vector<std::string> columns;
     std::unique_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
@@ -256,8 +288,8 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_InnerJoin_002, TestSize.Level1)
     EXPECT_EQ(1, id);
 
     std::string name;
-    EXPECT_EQ(E_OK, allDataTypes->GetString(6, lastName));
-    EXPECT_EQ("SanGuo", lastName);
+    EXPECT_EQ(E_OK, allDataTypes->GetString(6, name));
+    EXPECT_EQ("SanGuo", name);
 
     int userId_1;
     EXPECT_EQ(E_OK, allDataTypes->GetInt(7, userId_1));
@@ -275,7 +307,7 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_LeftOuterJoin_003, TestSize.Level1)
 
     std::vector<std::string> fields;
     fields.push_back("userId");
-    predicates.LeftOuterJoin("Book")->Using(fields)->EqualTo("name", "SanGuo");
+    predicates.LeftOuterJoin("book")->Using(fields)->EqualTo("name", "SanGuo");
 
     std::vector<std::string> joinTypes;
     joinTypes.push_back("LEFT OUTER JOIN");
@@ -327,13 +359,13 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_LeftOuterJoin_004, TestSize.Level1)
     RdbPredicates predicates("user");
 
     std::vector<std::string> clauses;
-    clauses.push_back("user.userId = Book.id");
+    clauses.push_back("user.userId = book.userId");
     std::vector<std::string> joinTypes;
     joinTypes.push_back("LEFT OUTER JOIN");
 
-    predicates.LeftOuterJoin("Book")->On(clauses);
+    predicates.LeftOuterJoin("book")->On(clauses);
     EXPECT_EQ(joinTypes, predicates.GetJoinTypes());
-    EXPECT_EQ("ON(user.userId = Book.id)", predicates.GetJoinConditions()[0]);
+    EXPECT_EQ("ON(user.userId = book.userId)", predicates.GetJoinConditions()[0]);
 
     std::vector<std::string> columns;
     std::unique_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
