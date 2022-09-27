@@ -47,7 +47,6 @@ ohos_shared_library("rdb_data_ability_adapter") {
 
   external_deps = [
     "c_utils:utils",
-    "hilog_native:libhilog",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
   ]
