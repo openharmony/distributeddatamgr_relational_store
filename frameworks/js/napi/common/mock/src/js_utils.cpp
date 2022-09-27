@@ -17,12 +17,8 @@
 
 #include "js_logger.h"
 
-#ifdef MAC_PLATFORM
-#include <string.h>
-#define MEMCPY(dest, numberOfElements, src, count) (memcpy(dest, src, count))
-#else
+#ifndef MAC_PLATFORM
 #include "securec.h"
-#define MEMCPY(dest, numberOfElements, src, count) (memcpy_s(dest, numberOfElements, src, count))
 #endif
 
 namespace OHOS {
@@ -254,9 +250,11 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<uint8_t> &va
         return nullptr;
     }
 #ifdef MAC_PLATFORM
-    memcpy(native, value.data(), value.size());
+    for (int i = 0; i < value.size(); i++) {
+        *(static_cast<uint8_t *>(native) + i) = value[i];
+    }
 #else
-    int result = MEMCPY(native, value.size(), value.data(), value.size());
+    int result = memcpy_s(native, value.size(), value.data(), value.size());
     if (result != EOK && value.size() > 0) {
         return nullptr;
     }
