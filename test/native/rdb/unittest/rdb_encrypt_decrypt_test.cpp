@@ -258,20 +258,20 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_05, TestSize.Level1)
  */
 HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_06, TestSize.Level1)
 {
-  RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
-  config.SetEncryptStatus(true);
-  config.SetBundleName("com.example.TestEncrypt6");
-  EncryptTestOpenCallback helper;
-  int errCode;
-  std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-  EXPECT_NE(store, nullptr);
-  bool ret =
-      RdbSecurityManager::GetInstance().CheckKeyDataFileExists(RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE);
-  EXPECT_EQ(ret, false);
-  std::vector<uint8_t> key = RdbSecurityManager::GetInstance().GenerateRandomNum(RdbSecurityManager::RDB_KEY_SIZE);
-  bool flag = RdbSecurityManager::GetInstance().SaveSecretKeyToFile(
-      RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE, key);
-  EXPECT_EQ(flag, true);
+    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.TestEncrypt6");
+    EncryptTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    bool ret =
+        RdbSecurityManager::GetInstance().CheckKeyDataFileExists(RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE);
+    EXPECT_EQ(ret, false);
+    std::vector<uint8_t> key = RdbSecurityManager::GetInstance().GenerateRandomNum(RdbSecurityManager::RDB_KEY_SIZE);
+    bool flag = RdbSecurityManager::GetInstance().SaveSecretKeyToFile(
+        RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE, key);
+    EXPECT_EQ(flag, true);
 }
 
 /**
