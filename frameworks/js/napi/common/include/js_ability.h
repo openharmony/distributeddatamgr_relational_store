@@ -35,6 +35,9 @@ public:
     std::string GetPreferencesDir();
     std::string GetBundleName();
     std::string GetModuleName();
+    std::string GetUri();
+    std::string GetReadPermission();
+    std::string GetWritePermission();
     int32_t GetArea() const;
 
 private:
@@ -43,6 +46,9 @@ private:
     std::string preferencesDir_;
     std::string bundleName_;
     std::string moduleName_;
+    std::string uri_;
+    std::string readPermission_;
+    std::string writePermission_;
 };
 
 class JSAbility final {

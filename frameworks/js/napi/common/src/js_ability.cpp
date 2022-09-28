@@ -15,6 +15,7 @@
 
 #include "js_ability.h"
 
+#include "extension_context.h"
 #include "js_logger.h"
 
 namespace OHOS {
@@ -29,6 +30,15 @@ Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
     if (hapInfo != nullptr) {
         moduleName_ = hapInfo->moduleName;
     }
+    auto extensionContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::ExtensionContext>(stageContext);
+	if(extensionContext != nullptr) {
+	    auto abilityInfo = extensionContext->GetAbilityInfo();
+		uri_ = abilityInfo->uri;
+		writePermission_ = abilityInfo->writePermission;
+		readPermission_ = abilityInfo->readPermission;
+		LOG_INFO("QueryAbilityInfo success, uri: %{public}s, readPermission: %{public}s, writePermission: %{public}s.", 
+		         abilityInfo->uri.c_str(), abilityInfo->readPermission.c_str(), abilityInfo->writePermission.c_str());
+	}
     LOG_DEBUG("Stage: area:%{public}d database:%{private}s preferences:%{private}s bundle:%{public}s hap:%{public}s",
               area_, databaseDir_.c_str(), preferencesDir_.c_str(), bundleName_.c_str(), moduleName_.c_str());
 }
@@ -70,6 +80,18 @@ std::string Context::GetModuleName()
 int32_t Context::GetArea() const
 {
     return area_;
+}
+std::string Context::GetUri()
+{
+    return uri_;
+}
+std::string Context::GetReadPermission()
+{
+    return readPermission_;
+}
+std::string Context::GetWritePermission()
+{
+    return writePermission_;
 }
 
 bool JSAbility::CheckContext(napi_env env, napi_callback_info info)
