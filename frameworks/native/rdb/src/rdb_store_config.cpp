@@ -337,4 +337,33 @@ bool RdbStoreConfig::IsEncrypt() const
 {
     return this->isEncrypt_;
 }
+std::string RdbStoreConfig::GetUri() const
+{
+    return uri_;
+}
+
+void RdbStoreConfig::SetUri(const std::string &uri)
+{
+    uri_ = uri;
+}
+
+std::string RdbStoreConfig::GetReadPermission() const
+{
+    return readPermission_;
+}
+
+void RdbStoreConfig::SetReadPermission(const std::string &permission)
+{
+    readPermission_ = permission;
+}
+
+std::string RdbStoreConfig::GetWritePermission() const
+{
+    return writePermission_;
+}
+
+void RdbStoreConfig::SetWritePermission(const std::string &permission)
+{
+    writePermission_ = permission;
+}
 } // namespace OHOS::NativeRdb

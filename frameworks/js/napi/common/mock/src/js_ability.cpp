@@ -68,6 +68,21 @@ int32_t Context::GetArea() const
     return area_;
 }
 
+std::string Context::GetUri()
+{
+    return uri_;
+}
+
+std::string Context::GetReadPermission()
+{
+    return readPermission_;
+}
+
+std::string Context::GetWritePermission()
+{
+    return writePermission_;
+}
+
 bool JSAbility::CheckContext(napi_env env, napi_callback_info info)
 {
     return true;

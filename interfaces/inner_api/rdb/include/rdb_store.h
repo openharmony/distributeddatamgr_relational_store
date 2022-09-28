@@ -87,6 +87,8 @@ public:
     virtual int Count(int64_t &outValue, const AbsRdbPredicates &predicates) = 0;
     virtual std::unique_ptr<AbsSharedResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) = 0;
+    virtual std::unique_ptr<ResultSet> QueryByStep(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> columns) = 0;
     virtual std::shared_ptr<ResultSet> RemoteQuery(const std::string &device,
         const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) = 0;
     virtual int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) = 0;
