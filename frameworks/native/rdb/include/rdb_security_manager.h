@@ -56,7 +56,7 @@ public:
     int Clear();
 
 private:
-    static const size_t MAX_PASSWORD_SIZE = 128;
+    static constexpr size_t MAX_PASSWORD_SIZE = 128;
     uint8_t data_[MAX_PASSWORD_SIZE] = { UCHAR_MAX };
     size_t size_ = 0;
 };
