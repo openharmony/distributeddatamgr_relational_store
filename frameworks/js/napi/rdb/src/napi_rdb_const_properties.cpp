@@ -15,10 +15,12 @@
 
 #include "napi_rdb_const_properties.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#include "rdb_store_config.h"
 #include "rdb_types.h"
 
 using OHOS::DistributedRdb::SyncMode;
 using OHOS::DistributedRdb::SubscribeMode;
+using OHOS::NativeRdb::DatabaseFileSecurityLevel;
 #endif
 
 namespace OHOS::RdbJsKit {
@@ -56,6 +58,19 @@ static napi_value ExportSubscribeType(napi_env env)
     napi_object_freeze(env, subscribeType);
     return subscribeType;
 }
+
+static napi_value ExportSecurityLevel(napi_env env)
+{
+    napi_value securityLevel = nullptr;
+    napi_create_object(env, &securityLevel);
+
+    for (int32_t i = 1; i < static_cast<int32_t>(DatabaseFileSecurityLevel::LAST); i++) {
+        (void)SetNamedProperty(env, securityLevel, NativeRdb::DatabaseFileSecurityLabel[i],
+            static_cast<int32_t>(static_cast<DatabaseFileSecurityLevel>(i)));
+    }
+    napi_object_freeze(env, securityLevel);
+    return securityLevel;
+}
 #endif
 
 napi_status InitConstProperties(napi_env env, napi_value exports)
@@ -64,6 +79,7 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
         DECLARE_NAPI_PROPERTY("SyncMode", ExportSyncMode(env)),
         DECLARE_NAPI_PROPERTY("SubscribeType", ExportSubscribeType(env)),
+        DECLARE_NAPI_PROPERTY("SecurityLevel", ExportSecurityLevel(env)),
 #endif
     };
 

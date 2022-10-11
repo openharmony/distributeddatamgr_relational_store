@@ -323,9 +323,14 @@ std::string RdbStoreConfig::GetDatabaseFileSecurityLevelValue(DatabaseFileSecuri
     return value;
 }
 
+void RdbStoreConfig::SetSecurityLevel(const int32_t &secLevel)
+{
+    securityLevel_ = secLevel;
+}
+
 int32_t RdbStoreConfig::GetSecurityLevel() const
 {
-    return 0;
+    return securityLevel_;
 }
 
 void RdbStoreConfig::SetEncryptStatus(const bool status)
