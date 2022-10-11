@@ -728,11 +728,11 @@ int SqliteConnection::InitKey()
     LOG_INFO("Init pub_key file");
     std::vector<uint8_t> key = RdbSecurityManager::GetInstance().GenerateRandomNum(RdbSecurityManager::RDB_KEY_SIZE);
     if (SetEncryptKey(key) != E_OK) {
-        LOG_ERROR("Init key failed!");
+        LOG_ERROR("Init key SetEncryptKey failed!");
         return E_ERROR;
     }
-    if (RdbSecurityManager::GetInstance().SaveSecretKeyToFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, key)) {
-        LOG_ERROR("Init key failed!");
+    if (!RdbSecurityManager::GetInstance().SaveSecretKeyToFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, key)) {
+        LOG_ERROR("Init key SaveSecretKeyToFile failed!");
         key.assign(key.size(), 0);
         return E_ERROR;
     }
