@@ -28,6 +28,7 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     initEncrypted = !encryptKey.empty();
     journalMode = config.GetJournalMode();
     databaseFileType = config.GetDatabaseFileType();
+    securityLevel = config.GetSecurityLevel();
     syncMode = config.GetSyncMode();
     if (journalMode.empty()) {
         journalMode = SqliteGlobalConfig::GetDefaultJournalMode();
@@ -99,6 +100,11 @@ void SqliteConfig::ClearEncryptKey()
 {
     std::fill(encryptKey.begin(), encryptKey.end(), 0);
     encryptKey.clear();
+}
+
+int32_t SqliteConfig::GetSecurityLevel() const
+{
+    return securityLevel;
 }
 
 std::string SqliteConfig::GetDatabaseFileType() const

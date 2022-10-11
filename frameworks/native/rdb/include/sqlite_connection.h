@@ -73,6 +73,7 @@ private:
 
     int SetPersistWal();
     int SetBusyTimeout(int timeout);
+    int SetSecurityLabel(const std::string &dbPath, const SqliteConfig &config, const bool &isDbFileExist);
 
     sqlite3 *dbHandle;
     bool isWriteConnection;

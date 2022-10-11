@@ -70,7 +70,10 @@ config("native_rdb_public_config") {
       "include",
     ]
   } else {
-    include_dirs = [ "include" ]
+    include_dirs = [
+      "include",
+      "//foundation/distributeddatamgr/distributedfile/interfaces/kits/js/src/mod_securitylabel",
+    ]
   }
 
   defines = [ "SQLITE_HAS_CODEC" ]

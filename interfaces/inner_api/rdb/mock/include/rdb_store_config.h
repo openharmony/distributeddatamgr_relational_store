@@ -48,14 +48,17 @@ enum class DatabaseFileType {
     CORRUPT,
 };
 
-enum class DatabaseFileSecurityLevel {
-    S4,
-    S3,
-    S2,
-    S1,
+enum class DatabaseFileSecurityLevel : int32_t {
+    NO_LEVEL = 0,
     S0,
-    NO_LEVEL,
+    S1,
+    S2,
+    S3,
+    S4,
+    LAST,
 };
+
+static const char *DatabaseFileSecurityLabel[] = { "", "S0", "S1", "S2", "S3", "S4" };
 
 class RdbStoreConfig {
 public:
@@ -87,6 +90,7 @@ public:
     void SetStorageMode(StorageMode storageMode);
     void SetDatabaseFileType(DatabaseFileType type);
     void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
+    void SetSecurityLevel(const int32_t& secLevel);
     void ClearEncryptKey();
 
     // distributed rdb
@@ -125,6 +129,7 @@ private:
     std::string moduleName_;
 
     bool isEncrypt_ = false;
+    int32_t securityLevel_ = 0;
     std::string uri_;
     std::string readPermission_;
     std::string writePermission_;
