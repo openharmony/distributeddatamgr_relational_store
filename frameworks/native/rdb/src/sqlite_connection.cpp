@@ -131,7 +131,7 @@ int SqliteConnection::Config(const SqliteConfig &config)
         return errCode;
     }
 
-    errCode = SetEncryptAlgorithm();
+    errCode = SetEncryptAlgo();
     if (errCode != E_OK) {
         return errCode;
     }
@@ -200,7 +200,7 @@ int SqliteConnection::SetPageSize()
     return errCode;
 }
 
-int SqliteConnection::SetEncryptAlgorithm()
+int SqliteConnection::SetEncryptAlgo()
 {
     int errCode = ExecuteSql("PRAGMA codec_hmac_algo=sha256");
     if (errCode != E_OK) {
