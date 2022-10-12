@@ -131,11 +131,6 @@ int SqliteConnection::Config(const SqliteConfig &config)
         return errCode;
     }
 
-    errCode = SetEncryptAlgorithm();
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     errCode = ManageKey(config);
     if (errCode != E_OK) {
@@ -196,15 +191,6 @@ int SqliteConnection::SetPageSize()
     errCode = ExecuteSql("PRAGMA page_size=" + std::to_string(targetValue));
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetPageSize fail to set page size : %{public}d", errCode);
-    }
-    return errCode;
-}
-
-int SqliteConnection::SetEncryptAlgorithm()
-{
-    int errCode = ExecuteSql("PRAGMA codec_hmac_algo=sha256");
-    if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection SetEncryptAlgorithm fail, err = %{public}d", errCode);
     }
     return errCode;
 }
