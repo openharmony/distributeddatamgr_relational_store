@@ -276,12 +276,6 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
         asyncContext->config.SetEncryptStatus(isEncrypt);
     }
 
-    value = nullptr;
-    napi_get_named_property(env, object, "encryptKey", &value);
-    if (value != nullptr) {
-        asyncContext->config.SetEncryptKey(JSUtils::Convert2U8Vector(env, value));
-    }
-
     if (asyncContext->context == nullptr) {
         ParseContext(env, nullptr, asyncContext); // when no context as arg got from application.
     }
@@ -299,6 +293,30 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
     asyncContext->config.SetWritePermission(asyncContext->context->GetWritePermission());
     LOG_DEBUG("ParseStoreConfig end");
 }
+
+void ParseStoreConfigSecurityLevel(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
+{
+    LOG_DEBUG("ParseStoreConfigSecurityLevel begin");
+    napi_value value = nullptr;
+    bool hasProp = false;
+    napi_status status = napi_has_named_property(env, object, "securityLevel", &hasProp);
+
+    if ((status == napi_ok) && hasProp && (napi_get_named_property(env, object, "securityLevel", &value) == napi_ok)) {
+        int32_t securityLevel;
+        napi_get_value_int32(env, value, &securityLevel);
+        bool isValidSecurityLevel =
+            static_cast<DatabaseFileSecurityLevel>(securityLevel) >= DatabaseFileSecurityLevel::S0
+            && static_cast<DatabaseFileSecurityLevel>(securityLevel) <= DatabaseFileSecurityLevel::S4;
+        LOG_DEBUG("Get securityLevel %{public}d", securityLevel);
+        if (!isValidSecurityLevel) {
+            LOG_ERROR("The securityLevel should be S0-S4!");
+            return;
+        }
+        asyncContext->config.SetSecurityLevel(securityLevel);
+    }
+    LOG_DEBUG("ParseStoreConfigSecurityLevel end");
+}
+
 
 void ParsePath(const napi_env &env, const napi_value &arg, HelperRdbContext *asyncContext)
 {
@@ -370,6 +388,40 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         });
 }
 
+napi_value GetRdbStoreV9(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbJsKit::GetRdbStoreV9 start");
+    NapiAsyncProxy<HelperRdbContext> proxy;
+    proxy.Init(env, info);
+    std::vector<NapiAsyncProxy<HelperRdbContext>::InputParser> parsers;
+
+    if (JSAbility::CheckContext(env, info)) {
+        parsers.push_back(ParseContext);
+    }
+    parsers.push_back(ParseStoreConfig);
+    parsers.push_back(ParseStoreConfigSecurityLevel);
+    parsers.push_back(ParseVersion);
+    proxy.ParseInputs(parsers);
+    return proxy.DoAsyncWork(
+        "getRdbStoreV9",
+        [](HelperRdbContext *context) {
+            LOG_DEBUG("RdbJsKit::GetRdbStoreV9 Async");
+            int errCode = OK;
+            DefaultOpenCallback callback;
+            context->proxy = RdbHelper::GetRdbStore(context->config, context->version, callback, errCode);
+            if (errCode != E_OK) {
+                LOG_DEBUG("GetRdbStoreV9 failed %{public}d", errCode);
+            }
+            return (errCode == E_OK) ? OK : ERR;
+        },
+        [](HelperRdbContext *context, napi_value &output) {
+            output = RdbStoreProxy::NewInstance(context->env, context->proxy);
+            context->openCallback.DelayNotify();
+            LOG_DEBUG("RdbJsKit::GetRdbStoreV9 end");
+            return (output != nullptr) ? OK : ERR;
+        });
+}
+
 napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbJsKit::DeleteRdbStore start");
@@ -400,6 +452,7 @@ napi_value InitRdbHelper(napi_env env, napi_value exports)
     LOG_INFO("RdbJsKit::InitRdbHelper begin");
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("getRdbStore", GetRdbStore),
+        DECLARE_NAPI_FUNCTION("getRdbStoreV9", GetRdbStoreV9),
         DECLARE_NAPI_FUNCTION("deleteRdbStore", DeleteRdbStore),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));

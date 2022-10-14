@@ -174,5 +174,57 @@ describe('rdbStoreTest', function () {
         done();
         console.log(TAG + "************* testRdbStore0005 end   *************");
     })
+
+    /**
+     * @tc.name rdb store getRdbStoreV9 with securityLevel
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0060
+     * @tc.desc rdb store getRdbStoreV9 with securityLevel
+     * @tc.require: I5PIL6
+     */
+    it('testRdbStore0006', 0, async function (done) {
+        console.log(TAG + "************* testRdbStore0006 start *************");
+        let config = {
+            name: "secure.db",
+            securityLevel: dataRdb.SecurityLevel.S3
+        }
+        let storePromise = dataRdb.getRdbStoreV9(config, 1);
+        storePromise.then(async (store) => {
+            try {
+                await store.executeSql(CREATE_TABLE_TEST);
+            } catch (e) {
+                expect(null).assertFail();
+            }
+        }).catch((err) => {
+            expect(null).assertFail();
+        })
+        await storePromise
+        storePromise = null
+        await dataRdb.deleteRdbStore("secure.db");
+        done();
+        console.log(TAG + "************* testRdbStore0006 end   *************");
+    })
+
+    /**
+     * @tc.name rdb store getRdbStoreV9 with invalid securityLevel
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0070
+     * @tc.desc rdb store getRdbStoreV9 with invalid securityLevel
+     * @tc.require: I5PIL6
+     */
+    it('testRdbStore0007', 0, async function (done) {
+        console.log(TAG + "************* testRdbStore0007 start *************");
+        let config = {
+            name: "secure.db",
+            securityLevel: 8
+        }
+        let storePromise = dataRdb.getRdbStoreV9(config, 1);
+        storePromise.then(async (ret) => {
+            expect(null).assertFail();
+        }).catch((err) => {
+            console.log(TAG + "getRdbStoreV9 with invalid securityLevel");
+        })
+        storePromise = null
+        done();
+        console.log(TAG + "************* testRdbStore0007 end   *************");
+    })
     console.log(TAG + "*************Unit Test End*************");
 })
