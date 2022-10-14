@@ -60,6 +60,7 @@ private:
     int InnerOpen(const SqliteConfig &config);
     int Config(const SqliteConfig &config);
     int SetPageSize();
+    int SetEncryptAlgo();
     int SetEncryptKey(const std::vector<uint8_t> &encryptKey);
     int SetJournalMode(const std::string &journalMode, const std::string &synclMode);
     int SetJournalSizeLimit();
