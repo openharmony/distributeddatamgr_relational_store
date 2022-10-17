@@ -804,14 +804,18 @@ int SqliteConnection::GetKeyFromFile()
     if (key.GetSize() == 0) {
         return E_ERROR;
     }
-    if (SetEncryptKey(std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize())) != E_OK) {
+    auto keyTemp = std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize());
+    if (SetEncryptKey(keyTemp) != E_OK) {
+        keyTemp.assign(keyTemp.size(), 0);
         LOG_ERROR("Invalid key file!");
         return E_ERROR;
     }
     if (outdated) {
+        keyTemp.assign(keyTemp.size(), 0);
         LOG_ERROR("The key has expired");
         return E_OK;
     }
+    keyTemp.assign(keyTemp.size(), 0);
     return E_OK;
 }
 #endif
