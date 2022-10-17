@@ -29,14 +29,16 @@ enum class ValueObjectType {
     TYPE_INT,
     TYPE_DOUBLE,
     TYPE_STRING,
-    TYPE_BLOB,
     TYPE_BOOL,
+    TYPE_BLOB,
 };
 
 class ValueObject : public virtual OHOS::Parcelable {
 public:
+    using Type = std::variant<std::monostate, int64_t, double, std::string, bool, std::vector<uint8_t>>;
     ValueObject();
     ~ValueObject();
+    ValueObject(Type valueObject) noexcept;
     ValueObject(ValueObject &&valueObject) noexcept;
     ValueObject(const ValueObject &valueObject);
     explicit ValueObject(int val);
@@ -83,10 +85,14 @@ public:
     {
         return std::get<std::vector<uint8_t>>(value);
     }
+    operator Type() const
+    {
+        return value;
+    }
 
 private:
     ValueObjectType type;
-    std::variant<int64_t, double, std::string, bool, std::vector<uint8_t>> value;
+    Type value;
 };
 
 } // namespace NativeRdb

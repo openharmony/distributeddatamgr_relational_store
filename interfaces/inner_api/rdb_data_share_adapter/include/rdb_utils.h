@@ -42,7 +42,7 @@ public:
     using DataShareAbsPredicates = DataShare::DataShareAbsPredicates;
     using ResultSetBridge = DataShare::ResultSetBridge;
     using OperationItem = DataShare::OperationItem;
-    using DataSharePredicatesObject = DataShare::DataSharePredicatesObject;
+    using DataSharePredicatesObject = DataShare::SingleValue;
 
     static ValuesBucket ToValuesBucket(const DataShareValuesBucket &bucket);
 

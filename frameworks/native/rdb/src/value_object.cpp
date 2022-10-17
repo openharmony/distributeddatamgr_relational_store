@@ -24,6 +24,11 @@ ValueObject::ValueObject() : type(ValueObjectType::TYPE_NULL)
 {
 }
 
+ValueObject::ValueObject(ValueObject::Type valueObject) noexcept : value(std::move(valueObject))
+{
+    type = ValueObjectType(value.index());
+}
+
 ValueObject::ValueObject(ValueObject &&valueObject) noexcept
 {
     if (this == &valueObject) {

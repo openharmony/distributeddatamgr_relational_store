@@ -27,13 +27,15 @@ enum class ValueObjectType {
     TYPE_INT,
     TYPE_DOUBLE,
     TYPE_STRING,
-    TYPE_BLOB,
     TYPE_BOOL,
+    TYPE_BLOB,
 };
 class ValueObject {
 public:
+    using Type = std::variant<std::monostate, int64_t, double, std::string, bool, std::vector<uint8_t>>;
     ValueObject();
     ~ValueObject();
+    ValueObject(Type valueObject) noexcept;
     ValueObject(ValueObject &&valueObject) noexcept;
     ValueObject(const ValueObject &valueObject);
     explicit ValueObject(int val);
@@ -53,9 +55,38 @@ public:
     int GetString(std::string &val) const;
     int GetBlob(std::vector<uint8_t> &val) const;
 
+    operator int () const
+    {
+        return static_cast<int>(std::get<int64_t>(value));
+    }
+    operator int64_t () const
+    {
+        return std::get<int64_t>(value);
+    }
+    operator double () const
+    {
+        return std::get<double>(value);
+    }
+    operator bool () const
+    {
+        return std::get<bool>(value);
+    }
+    operator std::string () const
+    {
+        return std::get<std::string>(value);
+    }
+    operator std::vector<uint8_t> () const
+    {
+        return std::get<std::vector<uint8_t>>(value);
+    }
+    operator Type() const
+    {
+        return value;
+    }
+
 private:
     ValueObjectType type;
-    std::variant<int64_t, double, std::string, bool, std::vector<uint8_t>> value;
+    Type value;
 };
 } // namespace NativeRdb
 } // namespace OHOS
