@@ -74,6 +74,10 @@ AppDataFwk::SharedBlock *AbsSharedResultSet::GetBlock() const
 
 int AbsSharedResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 {
+    int errorCode = CheckState(columnIndex);
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
     AppDataFwk::SharedBlock::CellUnit *cellUnit =
         sharedBlock_->GetCellUnit(sharedBlock_->GetBlockPos(), (uint32_t)columnIndex);
     if (!cellUnit) {
