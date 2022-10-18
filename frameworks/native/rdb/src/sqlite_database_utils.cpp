@@ -81,7 +81,7 @@ int SqliteDatabaseUtils::GetSqlStatementType(std::string sql)
         return STATEMENT_OTHER;
     }
     sql = sql.substr(0, SQL_FIRST_CHARACTER);
-    std::string prefixSql;
+    std::string prefixSql = sql;
     transform(sql.begin(), sql.end(), prefixSql.begin(), ::toupper);
     prefixSql = prefixSql.c_str();
     auto iter = g_statementType.find(prefixSql);
