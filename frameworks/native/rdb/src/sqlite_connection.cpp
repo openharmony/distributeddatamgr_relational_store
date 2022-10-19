@@ -172,17 +172,17 @@ int SqliteConnection::Config(const SqliteConfig &config)
         return errCode;
     }
 
-    errCode = SetEncryptAlgo();
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     errCode = ManageKey(config);
     if (errCode != E_OK) {
         return errCode;
     }
 #endif
+
+    errCode = SetEncryptAlgo();
+    if (errCode != E_OK) {
+        return errCode;
+    }
 
     errCode = SetJournalMode(config.GetJournalMode(), config.GetSyncMode());
     if (errCode != E_OK) {
