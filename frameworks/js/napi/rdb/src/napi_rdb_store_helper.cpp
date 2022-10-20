@@ -348,7 +348,8 @@ void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbCo
     ParseDatabaseName(env, object, asyncContext);
     ParseIsEncrypt(env, object, asyncContext);
     ParseContextProperty(env, asyncContext);
-    ParseDatabaseDir(env, asyncContext, asyncContext->config.GetName());
+    std::string name = asyncContext->config.GetName();
+    ParseDatabaseDir(env, asyncContext, name);
     LOG_DEBUG("ParseStoreConfig end");
 }
 
@@ -359,7 +360,8 @@ void ParseStoreConfigV9(const napi_env &env, const napi_value &object, HelperRdb
     ParseIsEncrypt(env, object, asyncContext);
     ParseSecurityLevel(env, object, asyncContext);
     ParseContextProperty(env, asyncContext);
-    ParseDatabaseDir(env, asyncContext, asyncContext->config.GetName());
+    std::string name = asyncContext->config.GetName();
+    ParseDatabaseDir(env, asyncContext, name);
     LOG_DEBUG("ParseStoreConfigV9 end");
 }
 
