@@ -302,16 +302,13 @@ void ParseStoreConfigSecurityLevel(const napi_env &env, const napi_value &object
     napi_status status = napi_has_named_property(env, object, "securityLevel", &hasProp);
     if (status != napi_ok) {
         LOG_ERROR("napi_has_named_property failed! code:%{public}d!", status);
-        return;
     }
     if (hasProp == false) {
         LOG_ERROR("no database securityLevel found in config!");
-        return;
     }
     status = napi_get_named_property(env, object, "securityLevel", &value);
     if (status != napi_ok) {
         LOG_ERROR("napi_get_named_property failed! code:%{public}d!", status);
-        return;
     }
 
     if ((status == napi_ok) && hasProp && (napi_get_named_property(env, object, "securityLevel", &value) == napi_ok)) {
