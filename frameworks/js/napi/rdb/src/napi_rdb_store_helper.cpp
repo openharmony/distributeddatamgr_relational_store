@@ -250,28 +250,30 @@ public:
     std::shared_ptr<Context> context;
 };
 
-void ParseContext(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
+bool ParseContext(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
 {
     LOG_DEBUG("ParseContext begin");
     auto context = JSAbility::GetContext(env, object);
-    NAPI_ASSERT_RETURN_VOID(env, context != nullptr, "ParseContext get context failed.");
+    NAPI_ASSERT_BASE(env, context != nullptr, "ParseContext get context failed.", false);
     asyncContext->context = context;
     LOG_DEBUG("ParseContext end");
+    return true;
 }
 
-void ParseDatabaseName(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
+bool ParseDatabaseName(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
 {
     LOG_DEBUG("ParseDatabaseName begin");
     napi_value value;
     napi_get_named_property(env, object, "name", &value);
     NAPI_ASSERT_RETURN_VOID(env, value != nullptr, "no database name found in config.");
     std::string name = JSUtils::Convert2String(env, value);
-    NAPI_ASSERT_RETURN_VOID(env, !name.empty(), "Get database name empty.");
+    NAPI_ASSERT_BASE(env, !name.empty(), "Get database name empty.", false);
     asyncContext->config.SetName(std::move(name));
-    LOG_DEBUG("ParseDatabaseName end");
+    LOG_DEBUG("ParseDatabaseName end, name:%{public}s", name);
+    return true;
 }
 
-void ParseIsEncrypt(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
+bool ParseIsEncrypt(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
 {
     LOG_DEBUG("ParseIsEncrypt begin");
     napi_value value = nullptr;
@@ -281,15 +283,16 @@ void ParseIsEncrypt(const napi_env &env, const napi_value &object, HelperRdbCont
         JSUtils::Convert2Bool(env, value, isEncrypt);
         asyncContext->config.SetEncryptStatus(isEncrypt);
     }
-    LOG_DEBUG("ParseIsEncrypt end");
+    LOG_DEBUG("ParseIsEncrypt end, isEncrypt:%{public}d", isEncrypt);
+    return true;
 }
 
-void ParseContextProperty(const napi_env &env, HelperRdbContext *asyncContext)
+bool ParseContextProperty(const napi_env &env, HelperRdbContext *asyncContext)
 {
     LOG_DEBUG("ParseContextProperty begin");
     if (asyncContext->context == nullptr) {
         ParseContext(env, nullptr, asyncContext); // when no context as arg got from application.
-        NAPI_ASSERT_RETURN_VOID(env, asyncContext->context != nullptr, "Context is NULL.");
+        NAPI_ASSERT_BASE(env, asyncContext->context != nullptr, "Context is NULL.", false);
     }
     asyncContext->config.SetModuleName(asyncContext->context->GetModuleName());
     asyncContext->config.SetArea(asyncContext->context->GetArea());
@@ -297,72 +300,64 @@ void ParseContextProperty(const napi_env &env, HelperRdbContext *asyncContext)
     asyncContext->config.SetUri(asyncContext->context->GetUri());
     asyncContext->config.SetReadPermission(asyncContext->context->GetReadPermission());
     asyncContext->config.SetWritePermission(asyncContext->context->GetWritePermission());
-    LOG_DEBUG("ParseContextProperty end");
+    return true;
 }
 
-void ParseDatabaseDir(const napi_env &env, HelperRdbContext *asyncContext, std::string &name)
+bool ParseDatabaseDir(const napi_env &env, HelperRdbContext *asyncContext)
 {
     LOG_DEBUG("ParseDatabaseDir begin");
+    if (asyncContext->context == nullptr) {
+        ParseContext(env, nullptr, asyncContext); // when no context as arg got from application.
+        NAPI_ASSERT_BASE(env, asyncContext->context != nullptr, "Context is NULL.", false);
+    }
     std::string databaseDir = asyncContext->context->GetDatabaseDir();
     int errorCode = E_OK;
-    std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, name, errorCode);
-    NAPI_ASSERT_RETURN_VOID(env, errorCode == E_OK, "Get database real path failed.");
+    std::string realPath =
+        SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, asyncContext->context->GetName(), errorCode);
+    NAPI_ASSERT_BASE(env, errorCode == E_OK, "Get database real path failed.", false);
     asyncContext->config.SetPath(std::move(realPath));
-    LOG_DEBUG("ParseDatabaseDir end");
+    return true;
 }
 
-void ParseSecurityLevel(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
+bool ParseSecurityLevel(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
 {
     LOG_DEBUG("ParseSecurityLevel begin");
     napi_value value = nullptr;
     bool hasProp = false;
     napi_status status = napi_has_named_property(env, object, "securityLevel", &hasProp);
-    if (status != napi_ok || !hasProp) {
-        LOG_ERROR("napi_has_named_property failed! code:%{public}d!, hasProp:%{public}d", status, hasProp);
-        return;
-    }
+    LOG_DEBUG("napi_has_named_property failed! code:%{public}d!, hasProp:%{public}d", status, hasProp);
+    NAPI_ASSERT_BASE(env, status == napi_ok && hasProp, "Parse SecurityLevel failed.", false);
+
     status = napi_get_named_property(env, object, "securityLevel", &value);
-    if (status != napi_ok) {
-        LOG_ERROR("napi_get_named_property failed! code:%{public}d!", status);
-        return;
-    }
+    LOG_DEBUG("napi_get_named_property failed! code:%{public}d!", status);
+    NAPI_ASSERT_BASE(env, status == napi_ok, "Parse SecurityLevel failed.", false);
 
     int32_t securityLevel;
     napi_get_value_int32(env, value, &securityLevel);
     bool isValidSecurityLevel = static_cast<DatabaseFileSecurityLevel>(securityLevel) >= DatabaseFileSecurityLevel::S0
                                 && static_cast<DatabaseFileSecurityLevel>(securityLevel)
                                        <= DatabaseFileSecurityLevel::S4;
-    LOG_DEBUG("Get sl:%{public}d", securityLevel);
-    if (!isValidSecurityLevel) {
-        LOG_ERROR("The securityLevel should be S0-S4!");
-        return;
-    }
+
+    NAPI_ASSERT_BASE(env, isValidSecurityLevel, "The sl should be S0-S4!", false);
     asyncContext->config.SetSecurityLevel(securityLevel);
 
-    LOG_DEBUG("ParseSecurityLevel end");
+    LOG_DEBUG("ParseSecurityLevel end, sl:%{public}d", securityLevel);
+    return true;
 }
 
-void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
+bool ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
 {
     LOG_DEBUG("ParseStoreConfig begin");
-    ParseDatabaseName(env, object, asyncContext);
-    ParseIsEncrypt(env, object, asyncContext);
-    ParseContextProperty(env, asyncContext);
-    std::string name = asyncContext->config.GetName();
-    ParseDatabaseDir(env, asyncContext, name);
-    LOG_DEBUG("ParseStoreConfig end");
+    return ParseDatabaseName(env, object, asyncContext) && ParseIsEncrypt(env, object, asyncContext)
+           && ParseContextProperty(env, asyncContext) && ParseDatabaseDir(env, asyncContext);
 }
 
-void ParseStoreConfigV9(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
+bool ParseStoreConfigV9(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
 {
     LOG_DEBUG("ParseStoreConfigV9 begin");
-    ParseDatabaseName(env, object, asyncContext);
-    ParseIsEncrypt(env, object, asyncContext);
-    ParseSecurityLevel(env, object, asyncContext);
-    ParseContextProperty(env, asyncContext);
-    std::string name = asyncContext->config.GetName();
-    ParseDatabaseDir(env, asyncContext, name);
-    LOG_DEBUG("ParseStoreConfigV9 end");
+    return ParseDatabaseName(env, object, asyncContext) && ParseIsEncrypt(env, object, asyncContext)
+           && ParseSecurityLevel(env, object, asyncContext) && ParseContextProperty(env, asyncContext)
+           && ParseDatabaseDir(env, asyncContext);
 }
 
 void ParsePath(const napi_env &env, const napi_value &arg, HelperRdbContext *asyncContext)
