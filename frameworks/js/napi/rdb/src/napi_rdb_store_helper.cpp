@@ -511,7 +511,7 @@ napi_value GetRdbStoreV9(napi_env env, napi_callback_info info)
     return InnerGetRdbStore(env, info, context, ParseStoreConfigV9);
 }
 
-napi_value InnerDeleteRdbStore(napi_env env, napi_callback_info info)
+napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
 {    
     auto context = std::make_shared<HelperRdbContext>();
     LOG_DEBUG("RdbJsKit::DeleteRdbStore start");
