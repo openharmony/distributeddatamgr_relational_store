@@ -337,7 +337,7 @@ int ParseDatabaseDir(const napi_env &env, std::shared_ptr<HelperRdbContext> cont
     LOG_DEBUG("ParseDatabaseDir begin");
     std::string databaseDir = context->abilitycontext->GetDatabaseDir();
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("context", "a Context.");
-    RDB_CHECK_RETURN_CALL_RESULT(asyncContext->context != nullptr, context->SetError(paramError));
+    RDB_CHECK_RETURN_CALL_RESULT(context->abilitycontext != nullptr, context->SetError(paramError));
     int errorCode = E_OK;
     std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, name, errorCode);
     paramError = std::make_shared<ParamTypeError>("config", "a StoreConfig.");
@@ -511,8 +511,9 @@ napi_value GetRdbStoreV9(napi_env env, napi_callback_info info)
     return InnerGetRdbStore(env, info, context, ParseStoreConfigV9);
 }
 
-napi_value DeleteRdbStore(napi_env env, napi_callback_info info, std::shared_ptr<HelperRdbContext> context)
-{
+napi_value InnerDeleteRdbStore(napi_env env, napi_callback_info info)
+{    
+    auto context = std::make_shared<HelperRdbContext>();
     LOG_DEBUG("RdbJsKit::DeleteRdbStore start");
     context->iscontext = JSAbility::CheckContext(env, info);
     // context: Context, config: StoreConfig, version: number
