@@ -24,6 +24,7 @@ ohos_copy("relational_store_declaration") {
 
 ohos_shared_library("rdb") {
   sources = [
+    "${relational_store_js_common_path}/src/napi_async_call.cpp",
     "src/entry_point.cpp",
     "src/napi_rdb_const_properties.cpp",
     "src/napi_rdb_predicates.cpp",

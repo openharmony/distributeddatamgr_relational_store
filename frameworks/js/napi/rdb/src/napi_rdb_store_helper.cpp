@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,15 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "napi_rdb_store_helper.h"
-
 #include <functional>
+#include <string>
+#include <vector>
 
 #include "js_ability.h"
 #include "js_logger.h"
 #include "js_utils.h"
-#include "napi_async_proxy.h"
+#include "napi_async_call.h"
+#include "napi_rdb_error.h"
 #include "napi_rdb_store.h"
+#include "napi_rdb_store_helper.h"
 #include "rdb_errno.h"
 #include "rdb_open_callback.h"
 #include "rdb_store_config.h"
@@ -32,6 +34,7 @@ using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS {
 namespace RdbJsKit {
+
 class OpenCallback : public OHOS::NativeRdb::RdbOpenCallback {
 public:
     OpenCallback() = default;
@@ -238,40 +241,66 @@ private:
     std::vector<std::function<int(void)>> callbacks_;
 };
 
-class HelperRdbContext : public NapiAsyncProxy<HelperRdbContext>::AysncContext {
-public:
-    HelperRdbContext() : AysncContext(), config(""), version(0), openCallback(), proxy(nullptr)
-    {
-    }
+struct HelperRdbContext : public AsyncCall::Context {
     RdbStoreConfig config;
     int32_t version;
+    bool iscontext;
     OpenCallback openCallback;
     std::shared_ptr<RdbStore> proxy;
-    std::shared_ptr<Context> context;
+    std::shared_ptr<OHOS::AppDataMgrJsKit::Context> abilitycontext;
+
+    HelperRdbContext()
+        : Context(nullptr, nullptr), config(""), version(0), iscontext(false), openCallback(), proxy(nullptr)
+    {
+    }
+    HelperRdbContext(InputAction input, OutputAction output)
+        : Context(std::move(input), std::move(output)), config(""), version(0), iscontext(false), openCallback(),
+          proxy(nullptr)
+    {
+    }
+    virtual ~HelperRdbContext(){};
+
+    int operator()(napi_env env, size_t argc, napi_value *argv, napi_value self) override
+    {
+        napi_unwrap(env, self, &boundObj);
+        return Context::operator()(env, argc, argv, self);
+    }
+    int operator()(napi_env env, napi_value &result) override
+    {
+        return Context::operator()(env, result);
+    }
 };
 
-void ParseContext(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
+using ParseStoreConfigFunction = int (*)(
+    const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
+
+    int ParseContext(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
     LOG_DEBUG("ParseContext begin");
-    auto context = JSAbility::GetContext(env, object);
-    NAPI_ASSERT_RETURN_VOID(env, context != nullptr, "ParseContext get context failed.");
-    asyncContext->context = context;
+    auto abilitycontext = JSAbility::GetContext(env, object);
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("context", "a Context.");
+    RDB_CHECK_RETURN_CALL_RESULT(abilitycontext != nullptr, context->SetError(paramError));
+    context->abilitycontext = abilitycontext;
     LOG_DEBUG("ParseContext end");
+    return OK;
 }
 
-void ParseDatabaseName(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
+int ParseDatabaseName(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
     LOG_DEBUG("ParseDatabaseName begin");
     napi_value value;
     napi_get_named_property(env, object, "name", &value);
-    NAPI_ASSERT_RETURN_VOID(env, value != nullptr, "no database name found in config.");
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("config", "a StoreConfig.");
+    RDB_CHECK_RETURN_CALL_RESULT(value != nullptr, context->SetError(paramError));
+
     std::string name = JSUtils::Convert2String(env, value);
-    NAPI_ASSERT_RETURN_VOID(env, !name.empty(), "Get database name empty.");
-    asyncContext->config.SetName(std::move(name));
+    RDB_CHECK_RETURN_CALL_RESULT(!name.empty(), context->SetError(paramError));
+    context->config.SetName(std::move(name));
     LOG_DEBUG("ParseDatabaseName end");
+    return OK;
 }
 
-void ParseIsEncrypt(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
+int ParseIsEncrypt(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
     LOG_DEBUG("ParseIsEncrypt begin");
     napi_value value = nullptr;
@@ -279,53 +308,60 @@ void ParseIsEncrypt(const napi_env &env, const napi_value &object, HelperRdbCont
     if (value != nullptr) {
         bool isEncrypt = false;
         JSUtils::Convert2Bool(env, value, isEncrypt);
-        asyncContext->config.SetEncryptStatus(isEncrypt);
+        context->config.SetEncryptStatus(isEncrypt);
     }
     LOG_DEBUG("ParseIsEncrypt end");
+    return OK;
 }
 
-void ParseContextProperty(const napi_env &env, HelperRdbContext *asyncContext)
+int ParseContextProperty(const napi_env &env, std::shared_ptr<HelperRdbContext> context)
 {
     LOG_DEBUG("ParseContextProperty begin");
-    if (asyncContext->context == nullptr) {
-        ParseContext(env, nullptr, asyncContext); // when no context as arg got from application.
-        NAPI_ASSERT_RETURN_VOID(env, asyncContext->context != nullptr, "Context is NULL.");
+    if (context->abilitycontext == nullptr) {
+        int status = ParseContext(env, nullptr, context); // when no context as arg got from application.
+        std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("context", "a Context.");
+        RDB_CHECK_RETURN_CALL_RESULT(status == OK, context->SetError(paramError));
     }
-    asyncContext->config.SetModuleName(asyncContext->context->GetModuleName());
-    asyncContext->config.SetArea(asyncContext->context->GetArea());
-    asyncContext->config.SetBundleName(asyncContext->context->GetBundleName());
-    asyncContext->config.SetUri(asyncContext->context->GetUri());
-    asyncContext->config.SetReadPermission(asyncContext->context->GetReadPermission());
-    asyncContext->config.SetWritePermission(asyncContext->context->GetWritePermission());
+    context->config.SetModuleName(context->abilitycontext->GetModuleName());
+    context->config.SetArea(context->abilitycontext->GetArea());
+    context->config.SetBundleName(context->abilitycontext->GetBundleName());
+    context->config.SetUri(context->abilitycontext->GetUri());
+    context->config.SetReadPermission(context->abilitycontext->GetReadPermission());
+    context->config.SetWritePermission(context->abilitycontext->GetWritePermission());
     LOG_DEBUG("ParseContextProperty end");
+    return OK;
 }
 
-void ParseDatabaseDir(const napi_env &env, HelperRdbContext *asyncContext, std::string &name)
+int ParseDatabaseDir(const napi_env &env, std::shared_ptr<HelperRdbContext> context, std::string &name)
 {
     LOG_DEBUG("ParseDatabaseDir begin");
-    std::string databaseDir = asyncContext->context->GetDatabaseDir();
-    NAPI_ASSERT_RETURN_VOID(env, asyncContext->context != nullptr, "Context is NULL.");
+    std::string databaseDir = context->abilitycontext->GetDatabaseDir();
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("context", "a Context.");
+    RDB_CHECK_RETURN_CALL_RESULT(status == OK, context->SetError(paramError));
     int errorCode = E_OK;
     std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, name, errorCode);
-    NAPI_ASSERT_RETURN_VOID(env, errorCode == E_OK, "Get database real path failed.");
-    asyncContext->config.SetPath(std::move(realPath));
+    paramError = std::make_shared<ParamTypeError>("config", "a StoreConfig.");
+    RDB_CHECK_RETURN_CALL_RESULT(errorCode == E_OK, context->SetError(paramError));
+    context->config.SetPath(std::move(realPath));
     LOG_DEBUG("ParseDatabaseDir end");
+    return OK;
 }
 
-void ParseSecurityLevel(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
+int ParseSecurityLevel(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
     LOG_DEBUG("ParseSecurityLevel begin");
     napi_value value = nullptr;
     bool hasProp = false;
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("config", "a StoreConfig.");
     napi_status status = napi_has_named_property(env, object, "securityLevel", &hasProp);
     if (status != napi_ok || !hasProp) {
         LOG_ERROR("napi_has_named_property failed! code:%{public}d!, hasProp:%{public}d!", status, hasProp);
-        return;
+        RDB_CHECK_RETURN_CALL_RESULT(errorCode == E_OK, context->SetError(paramError));
     }
     status = napi_get_named_property(env, object, "securityLevel", &value);
     if (status != napi_ok) {
         LOG_ERROR("napi_get_named_property failed! code:%{public}d!", status);
-        return;
+        RDB_CHECK_RETURN_CALL_RESULT(errorCode == E_OK, context->SetError(paramError));
     }
 
     int32_t securityLevel;
@@ -336,59 +372,72 @@ void ParseSecurityLevel(const napi_env &env, const napi_value &object, HelperRdb
     LOG_DEBUG("Get sl:%{public}d", securityLevel);
     if (!isValidSecurityLevel) {
         LOG_ERROR("The securityLevel should be S0-S4!");
-        return;
+        RDB_CHECK_RETURN_CALL_RESULT(errorCode == E_OK, context->SetError(paramError));
     }
-    asyncContext->config.SetSecurityLevel(securityLevel);
+    context->config.SetSecurityLevel(securityLevel);
 
     LOG_DEBUG("ParseSecurityLevel end");
+    return OK;
 }
 
-void ParseStoreConfig(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
+int ParseStoreConfig(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
     LOG_DEBUG("ParseStoreConfig begin");
-    ParseDatabaseName(env, object, asyncContext);
-    ParseIsEncrypt(env, object, asyncContext);
-    ParseContextProperty(env, asyncContext);
-    std::string name = asyncContext->config.GetName();
-    ParseDatabaseDir(env, asyncContext, name);
+    RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDatabaseName(env, object, context));
+    RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseIsEncrypt(env, object, context));
+    RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseContextProperty(env, context));
+    std::string name = context->config.GetName();
+    RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDatabaseDir(env, context, name));
     LOG_DEBUG("ParseStoreConfig end");
+    return OK;
 }
 
-void ParseStoreConfigV9(const napi_env &env, const napi_value &object, HelperRdbContext *asyncContext)
+int ParseStoreConfigV9(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
     LOG_DEBUG("ParseStoreConfigV9 begin");
-    ParseDatabaseName(env, object, asyncContext);
-    ParseIsEncrypt(env, object, asyncContext);
-    ParseSecurityLevel(env, object, asyncContext);
-    ParseContextProperty(env, asyncContext);
-    std::string name = asyncContext->config.GetName();
-    ParseDatabaseDir(env, asyncContext, name);
+    RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDatabaseName(env, object, context));
+    RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseIsEncrypt(env, object, context));
+    RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseSecurityLevel(env, object, context));
+    RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseContextProperty(env, context));
+    std::string name = context->config.GetName();
+    RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDatabaseDir(env, context, name));
     LOG_DEBUG("ParseStoreConfigV9 end");
+    return OK;
 }
 
-void ParsePath(const napi_env &env, const napi_value &arg, HelperRdbContext *asyncContext)
+int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<HelperRdbContext> context)
 {
     LOG_DEBUG("ParsePath begin");
     std::string path = JSUtils::Convert2String(env, arg);
-    NAPI_ASSERT_RETURN_VOID(env, !path.empty(), "Get database name empty.");
-    size_t pos = path.find_first_of('/');
-    NAPI_ASSERT_RETURN_VOID(env, pos == std::string::npos, "A name without path should be input.");
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("name", "a without path non empty string.");
+    RDB_CHECK_RETURN_CALL_RESULT(!path.empty(), context->SetError(paramError));
 
-    if (asyncContext->context == nullptr) {
-        ParseContext(env, nullptr, asyncContext); // when no context as arg got from application.
+    size_t pos = path.find_first_of('/');
+    RDB_CHECK_RETURN_CALL_RESULT(pos == std::string::npos, context->SetError(paramError));
+
+    if (context->abilitycontext == nullptr) {
+        // when no context as arg got from application.
+        ParseContext(env, nullptr, context);
     }
-    std::string databaseDir = asyncContext->context->GetDatabaseDir();
+    std::string databaseDir = context->abilitycontext->GetDatabaseDir();
     int errorCode = E_OK;
     std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, path, errorCode);
-    NAPI_ASSERT_RETURN_VOID(env, errorCode == E_OK, "Get database real path failed.");
-    asyncContext->config.SetPath(realPath);
+    RDB_CHECK_RETURN_CALL_RESULT(errorCode == E_OK, context->SetError(paramError));
+
+    context->config.SetPath(realPath);
     LOG_DEBUG("ParsePath end");
+    return OK;
 }
 
-void ParseVersion(const napi_env &env, const napi_value &arg, HelperRdbContext *asyncContext)
+int ParseVersion(const napi_env &env, const napi_value &arg, std::shared_ptr<HelperRdbContext> context)
 {
-    napi_get_value_int32(env, arg, &asyncContext->version);
+    LOG_DEBUG("ParseVersion begin");
+    napi_get_value_int32(env, arg, &context->version);
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("version", "an integer greater than 0.");
+    RDB_CHECK_RETURN_CALL_RESULT(context->version > 0, context->SetError(paramError));
+
     LOG_DEBUG("ParseVersion end");
+    return OK;
 }
 
 class DefaultOpenCallback : public RdbOpenCallback {
@@ -403,95 +452,98 @@ public:
     }
 };
 
-napi_value GetRdbStore(napi_env env, napi_callback_info info)
+napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_ptr<HelperRdbContext> context,
+    ParseStoreConfigFunction parseStoreConfig)
 {
     LOG_DEBUG("RdbJsKit::GetRdbStore start");
-    NapiAsyncProxy<HelperRdbContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<HelperRdbContext>::InputParser> parsers;
+    context->iscontext = JSAbility::CheckContext(env, info);
+    // context: Context, config: StoreConfig, version: number
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        if (context->iscontext) {
+            std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("3 or 4");
+            RDB_CHECK_RETURN_CALL_RESULT(argc == 3 || argc == 4, context->SetError(paramNumError));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseContext(env, argv[0], context));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseVersion(env, argv[2], context));
+        } else {
+            std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
+            RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(parseStoreConfig(env, argv[0], context));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseVersion(env, argv[1], context));
+        }
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) -> int {
+        LOG_DEBUG("RdbJsKit::GetRdbStore Async");
+        int errCode = OK;
+        DefaultOpenCallback callback;
+        context->proxy = RdbHelper::GetRdbStore(context->config, context->version, callback, errCode);
+        std::shared_ptr<Error> dbInvalidError = std::make_shared<DbInvalidError>();
+        RDB_CHECK_RETURN_CALL_RESULT(
+            errCode != E_EMPTY_FILE_NAME && errCode != E_RELATIVE_PATH, context->SetError(dbInvalidError));
+        std::shared_ptr<Error> dbCorruptedError = std::make_shared<DbCorruptedError>();
+        RDB_CHECK_RETURN_CALL_RESULT(errCode >= 0, context->SetError(dbCorruptedError));
+        return (errCode == E_OK) ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        result = RdbStoreProxy::NewInstance(env, context->proxy);
+        context->openCallback.DelayNotify();
+        LOG_DEBUG("RdbJsKit::GetRdbStore end");
+        return (result != nullptr) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
+}
 
-    if (JSAbility::CheckContext(env, info)) {
-        parsers.push_back(ParseContext);
-    }
-    parsers.push_back(ParseStoreConfig);
-    parsers.push_back(ParseVersion);
-    proxy.ParseInputs(parsers);
-    return proxy.DoAsyncWork(
-        "getRdbStore",
-        [](HelperRdbContext *context) {
-            LOG_DEBUG("RdbJsKit::GetRdbStore Async");
-            int errCode = OK;
-            DefaultOpenCallback callback;
-            context->proxy = RdbHelper::GetRdbStore(context->config, context->version, callback, errCode);
-            if (errCode != E_OK) {
-                LOG_DEBUG("GetRdbStore failed %{public}d", errCode);
-            }
-            return (errCode == E_OK) ? OK : ERR;
-        },
-        [](HelperRdbContext *context, napi_value &output) {
-            output = RdbStoreProxy::NewInstance(context->env, context->proxy);
-            context->openCallback.DelayNotify();
-            LOG_DEBUG("RdbJsKit::GetRdbStore end");
-            return (output != nullptr) ? OK : ERR;
-        });
+napi_value GetRdbStore(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<HelperRdbContext>();
+    context->apiversion = 8;
+    return InnerGetRdbStore(env, info, context, ParseStoreConfig);
 }
 
 napi_value GetRdbStoreV9(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbJsKit::GetRdbStoreV9 start");
-    NapiAsyncProxy<HelperRdbContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<HelperRdbContext>::InputParser> parsers;
-
-    if (JSAbility::CheckContext(env, info)) {
-        parsers.push_back(ParseContext);
-    }
-    parsers.push_back(ParseStoreConfigV9);
-    parsers.push_back(ParseVersion);
-    proxy.ParseInputs(parsers);
-    return proxy.DoAsyncWork(
-        "getRdbStoreV9",
-        [](HelperRdbContext *context) {
-            LOG_DEBUG("RdbJsKit::GetRdbStoreV9 Async");
-            int errCode = OK;
-            DefaultOpenCallback callback;
-            context->proxy = RdbHelper::GetRdbStore(context->config, context->version, callback, errCode);
-            if (errCode != E_OK) {
-                LOG_DEBUG("GetRdbStoreV9 failed %{public}d", errCode);
-            }
-            return (errCode == E_OK) ? OK : ERR;
-        },
-        [](HelperRdbContext *context, napi_value &output) {
-            output = RdbStoreProxy::NewInstance(context->env, context->proxy);
-            context->openCallback.DelayNotify();
-            LOG_DEBUG("RdbJsKit::GetRdbStoreV9 end");
-            return (output != nullptr) ? OK : ERR;
-        });
+    auto context = std::make_shared<HelperRdbContext>();
+    context->apiversion = 9;
+    return InnerGetRdbStore(env, info, context, ParseStoreConfigV9);
 }
 
-napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
+napi_value DeleteRdbStore(napi_env env, napi_callback_info info, std::shared_ptr<HelperRdbContext> context)
 {
     LOG_DEBUG("RdbJsKit::DeleteRdbStore start");
-    NapiAsyncProxy<HelperRdbContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<HelperRdbContext>::InputParser> parsers;
-
-    if (JSAbility::CheckContext(env, info)) {
-        parsers.push_back(ParseContext);
-    }
-    parsers.push_back(ParsePath);
-    proxy.ParseInputs(parsers);
-    return proxy.DoAsyncWork(
-        "deleteRdbStore",
-        [](HelperRdbContext *context) {
-            int ret = RdbHelper::DeleteRdbStore(context->config.GetPath());
-            return (ret == E_OK) ? OK : ERR;
-        },
-        [](HelperRdbContext *context, napi_value &output) {
-            napi_status status = napi_create_int64(context->env, E_OK, &output);
-            LOG_DEBUG("RdbJsKit::DeleteRdbStore end");
-            return (status == napi_ok) ? OK : ERR;
-        });
+    context->iscontext = JSAbility::CheckContext(env, info);
+    // context: Context, config: StoreConfig, version: number
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        if (context->iscontext) {
+            std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
+            RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseContext(env, argv[0], context));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePath(env, argv[1], context));
+        } else {
+            std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1 or 2");
+            RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2, context->SetError(paramNumError));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePath(env, argv[0], context));
+        }
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) -> int {
+        int errCode = RdbHelper::DeleteRdbStore(context->config.GetPath());
+        LOG_DEBUG("DeleteRdbStoreV9 failed %{public}d", errCode);
+        std::shared_ptr<Error> dbInvalidError = std::make_shared<DbInvalidError>();
+        RDB_CHECK_RETURN_CALL_RESULT(errCode != E_EMPTY_FILE_NAME, context->SetError(dbInvalidError));
+        return (errCode == E_OK) ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        napi_status status = napi_create_int64(env, OK, &result);
+        LOG_DEBUG("RdbJsKit::DeleteRdbStore end");
+        return (status == napi_ok) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 napi_value InitRdbHelper(napi_env env, napi_value exports)
@@ -499,8 +551,9 @@ napi_value InitRdbHelper(napi_env env, napi_value exports)
     LOG_INFO("RdbJsKit::InitRdbHelper begin");
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("getRdbStore", GetRdbStore),
-        DECLARE_NAPI_FUNCTION("getRdbStoreV9", GetRdbStoreV9),
         DECLARE_NAPI_FUNCTION("deleteRdbStore", DeleteRdbStore),
+        DECLARE_NAPI_FUNCTION("getRdbStoreV9", GetRdbStoreV9),
+        DECLARE_NAPI_FUNCTION("deleteRdbStoreV9", DeleteRdbStore),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
     LOG_INFO("RdbJsKit::InitRdbHelper end");
