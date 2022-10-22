@@ -272,9 +272,9 @@ struct HelperRdbContext : public AsyncCall::Context {
 };
 
 using ParseStoreConfigFunction = int (*)(
-    const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
+    const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context);
 
-    int ParseContext(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
+int ParseContext(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
     LOG_DEBUG("ParseContext begin");
     auto abilitycontext = JSAbility::GetContext(env, object);
