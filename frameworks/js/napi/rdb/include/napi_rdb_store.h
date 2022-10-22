@@ -18,12 +18,12 @@
 
 #include <list>
 #include <mutex>
+
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-
-#include "rdb_helper.h"
 #include "napi_rdb_store_observer.h"
+#include "rdb_helper.h"
 #include "rdb_types.h"
 
 namespace OHOS {
@@ -76,8 +76,8 @@ private:
     static constexpr int MIN_ON_EVENT_ARG_NUM = 2;
     static constexpr int MAX_ON_EVENT_ARG_NUM = 5;
 
-    void OnDataChangeEvent(napi_env env, size_t argc, napi_value* argv);
-    void OffDataChangeEvent(napi_env env, size_t argc, napi_value* argv);
+    void OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv);
+    void OffDataChangeEvent(napi_env env, size_t argc, napi_value *argv);
 
     std::mutex mutex_;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
