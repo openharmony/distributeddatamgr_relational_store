@@ -404,7 +404,7 @@ int ParseNewKey(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbS
     return OK;
 }
 
-int ParseDestName(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
+int ParseDestName(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
     asyncContext->destName = JSUtils::Convert2String(env, arg);
 	std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("destName", "a non empty string.");
@@ -548,9 +548,9 @@ int ParseValuesBuckets(const napi_env &env, const napi_value &arg, std::shared_p
 {
     bool isArray = false;
     napi_is_array(env, arg, &isArray);
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("values", "a ValuesBucket array.");
     if (!isArray) {
-        context->insertNum = -1;
-        std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("values", "a ValuesBucket array.");
+        context->insertNum = -1;        
         RDB_CHECK_RETURN_CALL_RESULT(isArray, context->SetError(paramError));
     }
     uint32_t arrLen = 0;

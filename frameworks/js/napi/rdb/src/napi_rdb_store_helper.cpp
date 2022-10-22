@@ -337,7 +337,7 @@ int ParseDatabaseDir(const napi_env &env, std::shared_ptr<HelperRdbContext> cont
     LOG_DEBUG("ParseDatabaseDir begin");
     std::string databaseDir = context->abilitycontext->GetDatabaseDir();
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("context", "a Context.");
-    RDB_CHECK_RETURN_CALL_RESULT(status == OK, context->SetError(paramError));
+    RDB_CHECK_RETURN_CALL_RESULT(asyncContext->context != nullptr, context->SetError(paramError));
     int errorCode = E_OK;
     std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, name, errorCode);
     paramError = std::make_shared<ParamTypeError>("config", "a StoreConfig.");
@@ -356,12 +356,12 @@ int ParseSecurityLevel(const napi_env &env, const napi_value &object, std::share
     napi_status status = napi_has_named_property(env, object, "securityLevel", &hasProp);
     if (status != napi_ok || !hasProp) {
         LOG_ERROR("napi_has_named_property failed! code:%{public}d!, hasProp:%{public}d!", status, hasProp);
-        RDB_CHECK_RETURN_CALL_RESULT(errorCode == E_OK, context->SetError(paramError));
+        RDB_CHECK_RETURN_CALL_RESULT(true, context->SetError(paramError));
     }
     status = napi_get_named_property(env, object, "securityLevel", &value);
     if (status != napi_ok) {
         LOG_ERROR("napi_get_named_property failed! code:%{public}d!", status);
-        RDB_CHECK_RETURN_CALL_RESULT(errorCode == E_OK, context->SetError(paramError));
+        RDB_CHECK_RETURN_CALL_RESULT(true, context->SetError(paramError));
     }
 
     int32_t securityLevel;
@@ -372,7 +372,7 @@ int ParseSecurityLevel(const napi_env &env, const napi_value &object, std::share
     LOG_DEBUG("Get sl:%{public}d", securityLevel);
     if (!isValidSecurityLevel) {
         LOG_ERROR("The securityLevel should be S0-S4!");
-        RDB_CHECK_RETURN_CALL_RESULT(errorCode == E_OK, context->SetError(paramError));
+        RDB_CHECK_RETURN_CALL_RESULT(true, context->SetError(paramError));
     }
     context->config.SetSecurityLevel(securityLevel);
 
@@ -458,11 +458,12 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
     LOG_DEBUG("RdbJsKit::GetRdbStore start");
     context->iscontext = JSAbility::CheckContext(env, info);
     // context: Context, config: StoreConfig, version: number
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+    auto input = [context,parseStoreConfig](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         if (context->iscontext) {
             std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("3 or 4");
             RDB_CHECK_RETURN_CALL_RESULT(argc == 3 || argc == 4, context->SetError(paramNumError));
             RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseContext(env, argv[0], context));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(parseStoreConfig(env, argv[1], context));
             RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseVersion(env, argv[2], context));
         } else {
             std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
