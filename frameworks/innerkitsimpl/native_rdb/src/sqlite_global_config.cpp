@@ -64,10 +64,10 @@ void SqliteGlobalConfig::SqliteLogCallback(const void *data, int err, const char
     if (errType == 0 || errType == SQLITE_CONSTRAINT || errType == SQLITE_SCHEMA || errType == SQLITE_NOTICE
         || err == SQLITE_WARNING_AUTOINDEX) {
         if (verboseLog) {
-            LOG_INFO("SQLite Error(%{public}d) %{public}s ", err, msg);
+            LOG_INFO("SQLite Error");
         }
     } else {
-        LOG_ERROR("SQLite Error(%{public}d) %{public}s", err, msg);
+        LOG_ERROR("SQLite Error");
     }
 }
 
