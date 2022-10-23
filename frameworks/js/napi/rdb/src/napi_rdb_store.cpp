@@ -404,15 +404,6 @@ int ParseNewKey(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbS
     return OK;
 }
 
-int ParseDestName(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
-{
-    asyncContext->destName = JSUtils::Convert2String(env, arg);
-	std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("destName", "a non empty string.");
-    RDB_CHECK_RETURN_CALL_RESULT(!context->destName.empty(), context->SetError(paramError));
-    LOG_DEBUG("DestName end");
-	return OK;
-}
-
 int ParseSrcName(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->srcName = JSUtils::Convert2String(env, arg);
