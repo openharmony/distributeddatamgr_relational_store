@@ -28,7 +28,6 @@ RdbStoreConfig::RdbStoreConfig(const RdbStoreConfig &config)
     storageMode = config.GetStorageMode();
     journalMode = config.GetJournalMode();
     syncMode = config.GetSyncMode();
-    encryptKey = config.GetEncryptKey();
     readOnly = config.IsReadOnly();
     databaseFileType = config.GetDatabaseFileType();
     databaseFileSecurityLevel = config.GetDatabaseFileSecurityLevel();
@@ -42,16 +41,12 @@ RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode,
       storageMode(storageMode),
       journalMode(journalMode),
       syncMode(syncMode),
-      encryptKey(encryptKey),
       readOnly(isReadOnly),
       databaseFileType(databaseFileType),
       databaseFileSecurityLevel(databaseFileSecurityLevel)
 {}
 
-RdbStoreConfig::~RdbStoreConfig()
-{
-    ClearEncryptKey();
-}
+RdbStoreConfig::~RdbStoreConfig() = default;
 
 /**
  * Obtains the database name.
@@ -91,22 +86,6 @@ std::string RdbStoreConfig::GetJournalMode() const
 std::string RdbStoreConfig::GetSyncMode() const
 {
     return syncMode;
-}
-
-/**
- * Obtains the encrypt key in this {@code StoreConfig} object.
- */
-std::vector<uint8_t> RdbStoreConfig::GetEncryptKey() const
-{
-    return encryptKey;
-}
-
-/**
- * Sets the encrypt key for the object.
- */
-void RdbStoreConfig::SetEncryptKey(const std::vector<uint8_t> &encryptKey)
-{
-    this->encryptKey = encryptKey;
 }
 
 /**
@@ -175,12 +154,6 @@ void RdbStoreConfig::SetStorageMode(StorageMode storageMode)
 void RdbStoreConfig::SetReadOnly(bool readOnly)
 {
     this->readOnly = readOnly;
-}
-
-void RdbStoreConfig::ClearEncryptKey()
-{
-    std::fill(encryptKey.begin(), encryptKey.end(), 0);
-    encryptKey.clear();
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)

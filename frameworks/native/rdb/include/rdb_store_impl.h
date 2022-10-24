@@ -74,7 +74,6 @@ public:
     int MarkAsCommit() override;
     int EndTransaction() override;
     bool IsInTransaction() override;
-    int ChangeEncryptKey(const std::vector<uint8_t> &newKey) override;
     std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string sql,
         const std::vector<std::string> &bindArgs);
     int EndStepQuery();
