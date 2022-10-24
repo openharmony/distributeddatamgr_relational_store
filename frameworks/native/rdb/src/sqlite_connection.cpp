@@ -165,9 +165,7 @@ int SqliteConnection::Config(const SqliteConfig &config)
         return errCode;
     }
 
-    std::vector<uint8_t> encryptKey = config.GetEncryptKey();
-    errCode = SetEncryptKey(encryptKey);
-    std::fill(encryptKey.begin(), encryptKey.end(), 0);
+    errCode = SetEncryptAlgo();
     if (errCode != E_OK) {
         return errCode;
     }
@@ -178,11 +176,6 @@ int SqliteConnection::Config(const SqliteConfig &config)
         return errCode;
     }
 #endif
-
-    errCode = SetEncryptAlgo();
-    if (errCode != E_OK) {
-        return errCode;
-    }
 
     errCode = SetJournalMode(config.GetJournalMode(), config.GetSyncMode());
     if (errCode != E_OK) {
@@ -612,27 +605,6 @@ std::shared_ptr<SqliteStatement> SqliteConnection::BeginStepQuery(
 int SqliteConnection::EndStepQuery()
 {
     return stepStatement->ResetStatementAndClearBindings();
-}
-
-int SqliteConnection::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
-{
-    int errCode = sqlite3_rekey(dbHandle, static_cast<const void *>(newKey.data()), newKey.size());
-    if (errCode != SQLITE_OK) {
-        LOG_ERROR("SqliteConnection ChangeEncryptKey fail, err = %{public}d", errCode);
-        return SQLiteError::ErrNo(errCode);
-    }
-
-    errCode = statement.Finalize();
-    if (errCode != SQLITE_OK) {
-        return errCode;
-    }
-
-    errCode = stepStatement->Finalize();
-    if (errCode != SQLITE_OK) {
-        return errCode;
-    }
-
-    return E_OK;
 }
 
 void SqliteConnection::LimitPermission(const std::string &dbPath) const
