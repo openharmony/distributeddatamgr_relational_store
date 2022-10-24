@@ -66,7 +66,6 @@ private:
     static napi_value MarkAsCommit(napi_env env, napi_callback_info info);
     static napi_value EndTransaction(napi_env env, napi_callback_info info);
     static napi_value Restore(napi_env env, napi_callback_info info);
-    static napi_value ChangeEncryptKey(napi_env env, napi_callback_info info);
     static napi_value SetDistributedTables(napi_env env, napi_callback_info info);
     static napi_value ObtainDistributedTableName(napi_env env, napi_callback_info info);
     static napi_value Sync(napi_env env, napi_callback_info info);

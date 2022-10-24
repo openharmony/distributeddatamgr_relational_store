@@ -63,7 +63,6 @@ private:
     static napi_value MarkAsCommit(napi_env env, napi_callback_info info);
     static napi_value EndTransaction(napi_env env, napi_callback_info info);
     static napi_value Restore(napi_env env, napi_callback_info info);
-    static napi_value ChangeEncryptKey(napi_env env, napi_callback_info info);
     std::mutex mutex_;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
     napi_ref ref_ = nullptr;

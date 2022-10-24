@@ -37,7 +37,6 @@ public:
     ~SqliteConnectionPool();
     SqliteConnection *AcquireConnection(bool isReadOnly);
     void ReleaseConnection(SqliteConnection *connection);
-    int ChangeEncryptKey(const std::vector<uint8_t> &newKey);
     int ReOpenAvailableReadConnections();
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
