@@ -214,14 +214,13 @@ std::string SqliteDatabaseUtils::GetDatabasePathNoName(std::string &context, Rdb
 std::string SqliteDatabaseUtils::GetDatabaseDir(RdbStoreConfig &fileConfig, std::string &securityLevel)
 {
     std::string databaseTypeDir = fileConfig.GetDatabaseFileType();
-    std::string suffix = fileConfig.GetEncryptKey().empty() ? "" : "_encrypt";
     std::string prefix;
     if (!securityLevel.compare("S3") || !securityLevel.compare("S4")) {
         prefix = "sece_";
     } else {
         prefix = "";
     }
-    return prefix + databaseTypeDir + suffix;
+    return prefix + databaseTypeDir;
 }
 } // namespace NativeRdb
 } // namespace OHOS
