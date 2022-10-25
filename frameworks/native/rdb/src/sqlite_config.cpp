@@ -69,9 +69,9 @@ bool SqliteConfig::IsReadOnly() const
     return readOnly;
 }
 
-void SqliteConfig::SetCreateNecessary(bool IsCreateNecessary)
+void SqliteConfig::SetCreateNecessary(bool isCreateNecessary)
 {
-    this->IsCreateNecessary_ = IsCreateNecessary;
+    this->isCreateNecessary_ = isCreateNecessary;
 }
 int32_t SqliteConfig::GetSecurityLevel() const
 {

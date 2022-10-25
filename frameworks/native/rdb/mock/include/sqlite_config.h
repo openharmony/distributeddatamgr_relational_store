@@ -41,7 +41,7 @@ public:
     void ClearEncryptKey();
     int32_t GetSecurityLevel() const;
     bool IsCreateNecessary() const;
-    void SetCreateNecessary(bool IsCreateNecessary);
+    void SetCreateNecessary(bool isCreateNecessary);
 
 private:
     std::string path;
