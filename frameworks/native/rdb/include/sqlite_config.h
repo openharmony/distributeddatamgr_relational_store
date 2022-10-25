@@ -38,6 +38,8 @@ public:
     bool IsEncrypt() const;
     std::string GetBundleName() const;
     int32_t GetSecurityLevel() const;
+    bool IsCreateNecessary() const;
+
 private:
     std::string path;
     StorageMode storageMode;
@@ -50,6 +52,7 @@ private:
     bool isEncrypt = false;
     std::string bundleName;
     int32_t securityLevel = 0;
+    bool isCreateNecessary;
 };
 
 } // namespace NativeRdb

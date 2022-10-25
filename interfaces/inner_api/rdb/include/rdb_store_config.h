@@ -66,7 +66,7 @@ using DistributedType = OHOS::DistributedRdb::RdbDistributedType;
 class RdbStoreConfig {
 public:
     RdbStoreConfig(const RdbStoreConfig &config);
-    RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
+    RdbStoreConfig(const std::string &path, bool isCreateNecessary = true, bool isCreateStorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
         const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(), const std::string &journalMode = "",
         const std::string &syncMode = "", const std::string &databaseFileType = "",
         const std::string &databaseFileSecurityLevel = "");
@@ -83,7 +83,7 @@ public:
     int32_t GetSecurityLevel() const;
     void SetEncryptStatus(const bool status);
     bool IsEncrypt() const;
-
+    bool IsCreateNecessary() const;
     // set the journal mode, if not set, the default mode is WAL
     void SetName(std::string name);
     void SetJournalMode(JournalMode journalMode);
@@ -136,6 +136,7 @@ private:
     std::string uri_;
     std::string readPermission_;
     std::string writePermission_;
+    bool isCreateNecessary_;
 };
 } // namespace OHOS::NativeRdb
 
