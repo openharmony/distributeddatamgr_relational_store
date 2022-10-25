@@ -27,12 +27,12 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     databaseFileType = config.GetDatabaseFileType();
     securityLevel = config.GetSecurityLevel();
     syncMode = config.GetSyncMode();
-    isCreateNecessary = config.IsCreateNecessary();
     if (journalMode.empty()) {
         journalMode = SqliteGlobalConfig::GetDefaultJournalMode();
     }
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     isEncrypt = config.IsEncrypt();
+    isCreateNecessary = config.IsCreateNecessary();
 #endif
 }
 
