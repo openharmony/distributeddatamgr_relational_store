@@ -42,9 +42,9 @@ describe('V9_rdbStorePromiseTest', function () {
 
     console.log(TAG + "*************Unit Test Begin*************");
     /**
-     * @tc.name rdb delete test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0040
-     * @tc.desc rdb delete test
+     * @tc.name rdb V9 base use
+     * @tc.number testV9RdbStorePromiseTest0001
+     * @tc.desc rdb V9 base use
      */
     it('testV9RdbStorePromiseTest0001', 0, async function (done) {
         console.log(TAG + "************* testV9RdbStorePromiseTest0001 start *************");
@@ -98,7 +98,11 @@ describe('V9_rdbStorePromiseTest', function () {
         done()
     })
     
-    // getRdbStoreV9 err params
+    /**
+     * @tc.name rdb getRdbStoreV9 err params
+     * @tc.number testV9RdbStorePromiseTest0002
+     * @tc.desc rdb getRdbStoreV9 err params
+     */
     it('testV9RdbStorePromiseTest0002', 0, async function (done) {
         console.log(TAG + "************* testV9RdbStorePromiseTest0002 start *************")
         let context = featureAbility.getContext()
@@ -112,13 +116,18 @@ describe('V9_rdbStorePromiseTest', function () {
             })
         } catch(err) {
             console.info("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
-            expect("401").equalTo(err.code)
-            console.log(TAG + "************* testV9RdbStorePromiseTest0002 end *************")
+            expect("401").assertEqual(err.code)
+            done()
         }
         done()
+        console.log(TAG + "************* testV9RdbStorePromiseTest0002 end *************")
     })
     
-    // getRdbStoreV9 OK params
+    /**
+     * @tc.name rdb getRdbStoreV9 ok params
+     * @tc.number testV9RdbStorePromiseTest0003
+     * @tc.desc rdb getRdbStoreV9 ok params
+     */
     it('testV9RdbStorePromiseTest0003', 0, async function (done) {
         console.log(TAG + "************* testV9RdbStorePromiseTest0003 start *************");
         let context = featureAbility.getContext()
@@ -126,7 +135,6 @@ describe('V9_rdbStorePromiseTest', function () {
             dataRdb.getRdbStoreV9(context, STORE_CONFIG, 1).then((rdbStoreV9) => {
                 console.log("Get RdbStore successfully.")
                 done()
-                console.log(TAG + "************* testV9RdbStorePromiseTest0003 end *************")
             }).catch((err) => {
                 console.info("Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
                 expect(false).assertTrue()
@@ -136,9 +144,14 @@ describe('V9_rdbStorePromiseTest', function () {
             expect(false).assertTrue()
         }
         done()
+        console.log(TAG + "************* testV9RdbStorePromiseTest0003 end *************")
     })
 
-    // deleteRdbStoreV9 err params
+    /**
+     * @tc.name rdb deleteRdbStoreV9 err params
+     * @tc.number testV9RdbStorePromiseTest0004
+     * @tc.desc rdb deleteRdbStoreV9 err params
+     */
     it('testV9RdbStorePromiseTest0004', 0, async function (done) {
         console.log(TAG + "************* testV9RdbStorePromiseTest0004 start *************")
         let context = featureAbility.getContext()        
@@ -153,14 +166,18 @@ describe('V9_rdbStorePromiseTest', function () {
             })
         } catch(err) {
             console.info("catch err: Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
-            expect("401").equalTo(err.code)
+            expect("401").assertEqual(err.code)
             done()
-            console.log(TAG + "************* testV9RdbStorePromiseTest0004 end *************")
         }
         done()
+        console.log(TAG + "************* testV9RdbStorePromiseTest0004 end *************")
     })
     
-    // deleteRdbStoreV9 OK params
+    /**
+     * @tc.name rdb deleteRdbStoreV9 OK params
+     * @tc.number testV9RdbStorePromiseTest0004
+     * @tc.desc rdb deleteRdbStoreV9 OK params
+     */
     it('testV9RdbStorePromiseTest0005', 0, async function (done) {
         console.log(TAG + "************* testV9RdbStorePromiseTest0005 start *************");
         let context = featureAbility.getContext()
@@ -169,7 +186,6 @@ describe('V9_rdbStorePromiseTest', function () {
             dataRdb.deleteRdbStoreV9(context, "V9_RDBCallbackTest.db").then((err) => {
                 console.log("Delete RdbStore successfully.")
                 done()
-                console.log(TAG + "************* testV9RdbStorePromiseTest0005 end *************")
             }).catch((err) => {
                 console.info("Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
                 expect(false).assertTrue()
@@ -179,6 +195,7 @@ describe('V9_rdbStorePromiseTest', function () {
             expect(false).assertTrue()
         }
         done()
+        console.log(TAG + "************* testV9RdbStorePromiseTest0005 end *************")
     })
 
     console.log(TAG + "*************Unit Test End*************");

@@ -168,7 +168,8 @@ describe('rdbStoreInsertTest', function () {
                 })
             } catch(err) {
                 console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
-                expect("401").equalTo(err.code);
+                expect("401").assertEqual(err.code)
+                done()
             }
         }
         done()

@@ -143,7 +143,7 @@ describe('rdbStoreUpdateTest', function () {
             } catch (err) {
                 console.log(
                     "catch err: update with null table name failed, err: code=" + err.code + " message=" + err.message)
-                expect("401").equalTo(err.code);
+                expect("401").assertEqual(err.code)
             }
             try {
                 const emptyBucket = {};
@@ -158,7 +158,7 @@ describe('rdbStoreUpdateTest', function () {
             } catch (err) {
                 console.log("catch err: update with wrong valueBucket failed, err: code=" + err.code
                             + " message=" + err.message)
-                expect("401").equalTo(err.code)
+                expect("401").assertEqual(err.code)
             }
             try {
                 let predicates = await new dataRdb.RdbPredicates("test")

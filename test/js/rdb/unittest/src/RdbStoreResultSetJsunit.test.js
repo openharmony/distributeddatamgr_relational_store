@@ -1661,10 +1661,13 @@ describe('rdbResultSetTest', function () {
         {
             let predicates = await new dataRdb.RdbPredicates("test")
             let resultSet = await rdbStore.query(predicates)
-            expect(-1).assertEqual(resultSet.getColumnIndex(""))
-
-            resultSet = null;
-            done();
+            try{
+                expect(-1).assertEqual(resultSet.getColumnIndex(""))
+            } catch(err) {
+                expect("401").assertEqual(err.code)
+            }
+            resultSet = null
+            done()
             console.log(TAG + "************* testGetColumnIndex0004 end *************");
         }
     })
@@ -1920,12 +1923,15 @@ describe('rdbResultSetTest', function () {
             expect("test0").assertEqual(resultSet.getString(1))
 
             let rows = [1, 2, -1, -2];
-            for (const i of rows) {
-                resultSet.goToRow(i);
-                expect(true).assertEqual(resultSet.isStarted);
-                expect("").assertEqual(resultSet.getString(1))
+            try{
+                for (const i of rows) {
+                    resultSet.goToRow(i)
+                    expect(true).assertEqual(resultSet.isStarted)
+                    expect("").assertEqual(resultSet.getString(1))
+                }
+            } catch(err) {
+                expect("14800012").assertEqual(err.code)
             }
-
             resultSet.close()
             expect(true).assertEqual(resultSet.isClosed)
             resultSet = null;
@@ -1958,10 +1964,14 @@ describe('rdbResultSetTest', function () {
             }
 
             rows = [2, 3, 4, -1, -2];
-            for (const i of rows) {
-                resultSet.goToRow(i);
-                expect(true).assertEqual(resultSet.isStarted);
-                expect("").assertEqual(resultSet.getString(1))
+            try{
+                for (const i of rows) {
+                    resultSet.goToRow(i);
+                    expect(true).assertEqual(resultSet.isStarted);
+                    expect("").assertEqual(resultSet.getString(1))
+                }
+            } catch(err) {
+                expect("14800012").assertEqual(err.code)
             }
 
             resultSet.close()

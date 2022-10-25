@@ -121,7 +121,7 @@ describe('rdbStoreTest', function () {
     it('testRdbStore0004', 0, async function (done) {
         console.log(TAG + "************* testRdbStore0004 start *************");
 
-        let storePromise = dataRdb.getRdbStore(STORE_CONFIG, 6);
+        let storePromise = dataRdb.getRdbStore(STORE_CONFIG, 5);
         storePromise.then(async (store) => {
             try {
                 await store.executeSql(CREATE_TABLE_TEST);
