@@ -25,7 +25,7 @@ AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Cont
     napi_value self = nullptr;
     napi_value argv[MAX_INPUT_COUNT] = { nullptr };
     NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
-    
+
     context_ = new AsyncContext();
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, argv[argc - 1], &valueType);
@@ -79,7 +79,7 @@ napi_value AsyncCall::Call(napi_env env, Context::ExecAction exec)
     return promise;
 }
 
-//sync call, no used.
+// sync call, no used.
 napi_value AsyncCall::SyncCall(napi_env env, AsyncCall::Context::ExecAction exec)
 {
     if ((context_ == nullptr) || (context_->ctx == nullptr)) {
@@ -108,7 +108,7 @@ void AsyncCall::OnExecute(napi_env env, void *data)
 void AsyncCall::SetBusinessError(napi_env env, napi_value *businessError, std::shared_ptr<Error> error, int apiversion)
 {
     napi_create_object(env, businessError);
-    //if error is not inner error
+    // if error is not inner error
     if (error != nullptr && error->GetCode() != E_INNER_ERROR) {
         napi_value code = nullptr;
         napi_value msg = nullptr;

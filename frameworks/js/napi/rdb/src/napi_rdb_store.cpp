@@ -413,8 +413,6 @@ int ParsePredicates(const napi_env &env, const napi_value &arg, std::shared_ptr<
 int ParseNewKey(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->newKey = JSUtils::Convert2U8Vector(env, arg);
-    //std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("keys", "a U8 array.");
-    // RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok, context->SetError(paramError));
     LOG_DEBUG("ParseNewKey end");
     return OK;
 }
@@ -740,7 +738,6 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::Query start");
     auto context = std::make_shared<RdbStoreContext>();
     context->isNapiString = IsNapiString(env, info);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
@@ -764,7 +761,6 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
         return OK;
     };
     auto exec = [context](AsyncCall::Context *ctx) {
-        LOG_DEBUG("RdbStoreProxy::Query Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
         context->resultSet_value = obj->rdbStore_->Query(*(context->rdbPredicates), context->columns);
@@ -782,7 +778,6 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
 #else
         result = ResultSetProxy::NewInstance(env, std::shared_ptr<AbsSharedResultSet>(context->resultSet.release()));
 #endif
-        LOG_DEBUG("RdbStoreProxy::Query end");
         return (result != nullptr) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));

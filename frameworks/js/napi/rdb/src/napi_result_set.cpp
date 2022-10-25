@@ -257,12 +257,6 @@ napi_value ResultSetProxy::GoToRow(napi_env env, napi_callback_info info)
     auto resultSetProxy = ParseInt32FieldByName(env, info, position, "position");
     RDB_NAPI_ASSERT(env, resultSetProxy != nullptr, std::make_shared<ResultGotoError>());
     int errCode = resultSetProxy->resultSet_->GoToRow(position);
-    // if (errCode != E_OK) {
-    //     LOG_ERROR("GoToRow failed code:%{public}d", errCode);
-    // }
-    // napi_value output;
-    // napi_get_undefined(env, &output);
-    // return output;
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
@@ -314,10 +308,9 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
     auto resultSetProxy = ParseFieldByName(env, info, input, "columnName");
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->GetColumnIndex(input, result);
-    // if (errCode != E_OK) {
-    //     LOG_ERROR("GetColumnIndex failed code:%{public}d", errCode);
-    // }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<ResultGetError>());
+    if (errCode != E_OK) {
+        LOG_ERROR("GetColumnIndex failed code:%{public}d", errCode);
+    }
     return JSUtils::Convert2JSValue(env, result);
 }
 
@@ -339,7 +332,9 @@ napi_value ResultSetProxy::GetColumnName(napi_env env, napi_callback_info info)
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->GetColumnName(columnIndex, result);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<ResultGetError>());
+    if (errCode != E_OK) {
+        LOG_ERROR("GetColumnName failed code:%{public}d", errCode);
+    }
     return JSUtils::Convert2JSValue(env, result);
 }
 
