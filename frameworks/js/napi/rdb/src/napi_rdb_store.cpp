@@ -196,7 +196,6 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("markAsCommit", MarkAsCommit),
         DECLARE_NAPI_FUNCTION("endTransaction", EndTransaction),
         DECLARE_NAPI_FUNCTION("restore", Restore),
-        DECLARE_NAPI_FUNCTION("changeEncryptKey", ChangeEncryptKey),
         DECLARE_NAPI_GETTER("isInTransaction", IsInTransaction),
         DECLARE_NAPI_GETTER("isOpen", IsOpen),
         DECLARE_NAPI_GETTER("path", GetPath),
@@ -1287,35 +1286,6 @@ napi_value RdbStoreProxy::Restore(napi_env env, napi_callback_info info)
     auto output = [context](napi_env env, napi_value &result) -> int {
         napi_status status = napi_get_undefined(env, &result);
         LOG_DEBUG("RdbStoreProxy::Restore end");
-        return (status == napi_ok) ? OK : ERR;
-    };
-    context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
-    return asyncCall.Call(env, exec);
-}
-
-napi_value RdbStoreProxy::ChangeEncryptKey(napi_env env, napi_callback_info info)
-{
-    LOG_DEBUG("RdbStoreProxy::ChangeEncryptKey start");
-    auto context = std::make_shared<RdbStoreContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
-        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1 or 2");
-        RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2, context->SetError(paramNumError));
-        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseNewKey(env, argv[0], context));
-        ParserThis(env, self, context);
-        return OK;
-    };
-    auto exec = [context](AsyncCall::Context *ctx) {
-        LOG_DEBUG("RdbStoreProxy::ChangeEncryptKey Async");
-        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        int errCode = obj->rdbStore_->ChangeEncryptKey(context->newKey);
-        LOG_DEBUG("RdbStoreProxy::ChangeEncryptKey errCode is : %{public}d", errCode);
-        return (errCode == E_OK) ? OK : ERR;
-    };
-    auto output = [context](napi_env env, napi_value &result) -> int {
-        napi_status status = napi_get_undefined(env, &result);
-        LOG_DEBUG("RdbStoreProxy::ChangeEncryptKey end");
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
