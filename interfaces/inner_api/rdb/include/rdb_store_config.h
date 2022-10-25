@@ -76,7 +76,6 @@ public:
     StorageMode GetStorageMode() const;
     std::string GetJournalMode() const;
     std::string GetSyncMode() const;
-    std::vector<uint8_t> GetEncryptKey() const;
     bool IsReadOnly() const;
     bool IsMemoryRdb() const;
     std::string GetDatabaseFileType() const;
@@ -92,9 +91,7 @@ public:
     void SetReadOnly(bool readOnly);
     void SetStorageMode(StorageMode storageMode);
     void SetDatabaseFileType(DatabaseFileType type);
-    void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
     void SetSecurityLevel(const int32_t& secLevel);
-    void ClearEncryptKey();
 
     // distributed rdb
     int SetBundleName(const std::string &bundleName);
@@ -124,7 +121,6 @@ private:
     StorageMode storageMode;
     std::string journalMode;
     std::string syncMode;
-    std::vector<uint8_t> encryptKey;
     bool readOnly;
     std::string databaseFileType;
     std::string databaseFileSecurityLevel;
