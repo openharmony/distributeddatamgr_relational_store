@@ -23,7 +23,7 @@ const STORE_CONFIG = {
     name: "V9_RDBCallbackTest.db",
 }
 
-describe('V9_rdbStoreCallBackTest', function () {
+describe('V9_rdbStoreCallBackTest', async function () {
     beforeAll(function () {
         console.log(TAG + 'beforeAll')
     })
@@ -44,81 +44,58 @@ describe('V9_rdbStoreCallBackTest', function () {
     
     /**
      * @tc.name rdb callback test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CallBack_0001
+     * @tc.number testV9RdbStoreCallBackTest0001
      * @tc.desc rdb callback test
      */
-    it('testV9RdbStoreCallBackTest0001', 0, function (done) {
+    it('testV9RdbStoreCallBackTest0001', 0, async function (done) {
         console.log(TAG + "************* testV9RdbStoreCallBackTest0001 start *************");
         let context = featureAbility.getContext()
         try{
-            dataRdb.getRdbStoreV9(context, STORE_CONFIG, 1, (err, rdbStoreV9) => {
+            await dataRdb.getRdbStoreV9(context, STORE_CONFIG, 1, async (err, rdbStoreV9) => {
                 if (err) {
                     console.log("Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
                     expect(false).assertTrue()
                 }
                 console.log("Get RdbStore successfully.")
-                rdbStoreV9.executeSql(CREATE_TABLE_TEST, null, (err) => {
+                await rdbStoreV9.executeSql(CREATE_TABLE_TEST, null)
+                const valueBucket = {
+                    "name": "zhangsan",
+                    "age": 18,
+                    "salary": 100.5,
+                    "blobType": new Uint8Array([1, 2, 3]),
+                }
+                let rowId = await rdbStoreV9.insert("test", valueBucket)
+                console.log("Insert is successful, rowId = " + rowId)
+                let predicates = new dataRdb.RdbPredicatesV9("test")
+                predicates.equalTo("name", "zhangsan")
+                let resultSetV9 = await rdbStoreV9.query(predicates,[])
+                expect(1).assertEqual(resultSetV9.rowCount)
+                expect(true).assertEqual(resultSetV9.goToFirstRow())
+                const id = resultSetV9.getLong(resultSetV9.getColumnIndex("id"))
+                const name = resultSetV9.getString(resultSetV9.getColumnIndex("name"))
+                const age = resultSetV9.getLong(resultSetV9.getColumnIndex("age"))
+                const salary = resultSetV9.getDouble(resultSetV9.getColumnIndex("salary"))
+                const blobType = resultSetV9.getBlob(resultSetV9.getColumnIndex("blobType"))
+                console.log(TAG + "id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
+                expect(1).assertEqual(id);
+                expect("zhangsan").assertEqual(name);
+                expect(18).assertEqual(age);
+                expect(100.5).assertEqual(salary);
+                expect(1).assertEqual(blobType[0]);
+                expect(2).assertEqual(blobType[1]);
+                expect(3).assertEqual(blobType[2]);
+                expect(false).assertEqual(resultSetV9.goToNextRow())
+                let rows = await rdbStoreV9.delete(predicates)
+                expect(1).assertEqual(rows)
+                dataRdb.deleteRdbStoreV9(context, "V9_RDBCallbackTest.db", (err) => {
                     if (err) {
-                        console.log("executeSql CREATE_TABLE_TEST failed, err: code=" + err.code + " message=" + err.message)
+                        console.log("Delete RdbStore is failed, err: code=" + err.code + " message=" + err.message)
                         expect(false).assertTrue()
                     }
-                    console.log("executeSql CREATE_TABLE_TEST successfully.")
-                    const valueBucket = {
-                        "name": "zhangsan",
-                        "age": 18,
-                        "salary": 100.5,
-                        "blobType": new Uint8Array([1, 2, 3]),
-                    }
-                    rdbStoreV9.insert("test", valueBucket, (err, rowId) => {
-                        if (err) {
-                            console.log("Insert is failed, err: code=" + err.code + " message=" + err.message)
-                            expect(false).assertTrue()
-                        }
-                        console.log("Insert is successful, rowId = " + rowId)
-                        let predicates = new dataRdb.RdbPredicatesV9("test")
-                        console.log("Create RdbPredicates OK")
-                        predicates.equalTo("name", "zhangsan")
-                        rdbStoreV9.query(predicates,[],(err, resultSetV9)=>{
-                            if (err) {
-                                console.log("Query is failed, err: code=" + err.code + " message=" + err.message)
-                                expect(false).assertTrue()
-                            }
-                            expect(1).assertEqual(resultSetV9.rowCount)
-                            expect(true).assertEqual(resultSetV9.goToFirstRow())
-                            const id = resultSetV9.getLong(resultSetV9.getColumnIndex("id"))
-                            const name = resultSetV9.getString(resultSetV9.getColumnIndex("name"))
-                            const age = resultSetV9.getLong(resultSetV9.getColumnIndex("age"))
-                            const salary = resultSetV9.getDouble(resultSetV9.getColumnIndex("salary"))
-                            const blobType = resultSetV9.getBlob(resultSetV9.getColumnIndex("blobType"))
-                            console.log(TAG + "id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
-                            expect(1).assertEqual(id);
-                            expect("zhangsan").assertEqual(name);
-                            expect(18).assertEqual(age);
-                            expect(100.5).assertEqual(salary);
-                            expect(1).assertEqual(blobType[0]);
-                            expect(2).assertEqual(blobType[1]);
-                            expect(3).assertEqual(blobType[2]);
-                            expect(false).assertEqual(resultSetV9.goToNextRow())
-                            rdbStoreV9.delete(predicates, (err, rows) => {
-                                if (err) {
-                                    console.log("Delete is failed, err: code=" + err.code + " message=" + err.message)
-                                    expect(false).assertTrue()
-                                }
-                                console.log("Delete rows: " + rows)
-                                expect(1).assertEqual(rows)
-                                dataRdb.deleteRdbStoreV9(context, "V9_RDBCallbackTest.db", (err) => {
-                                    if (err) {
-                                        console.log("Delete RdbStore is failed, err: code=" + err.code + " message=" + err.message)
-                                        expect(false).assertTrue()
-                                    }
-                                    console.log("Delete RdbStore successfully.")
-                                    done()
-                                    console.log(TAG + "************* testV9RdbStoreCallBackTest0001 end *************");
-                                });
-                            })
-                        })
-                    })
-                })
+                    console.log("Delete RdbStore successfully.")
+                    done()
+                    console.log(TAG + "************* testV9RdbStoreCallBackTest0001 end *************")
+                });
             })
         } catch(err) {
             console.log("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
@@ -126,7 +103,11 @@ describe('V9_rdbStoreCallBackTest', function () {
         }
     })
 
-    // getRdbStoreV9 err params
+    /**
+     * @tc.name rdb callback test getRdbStoreV9 err params
+     * @tc.number testV9RdbStoreCallBackTest0002
+     * @tc.desc rdb callback test getRdbStoreV9 err params
+     */
     it('testV9RdbStoreCallBackTest0002', 0, function (done) {
         console.log(TAG + "************* testV9RdbStoreCallBackTest0002 start *************")
         let context = featureAbility.getContext()
@@ -141,12 +122,18 @@ describe('V9_rdbStoreCallBackTest', function () {
             })
         } catch(err) {
             console.log("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
-            done()
-            console.log(TAG + "************* testV9RdbStoreCallBackTest0002 end *************")
+            expect("401").equalTo(err.code)
         }
+        
+        done()
+        console.log(TAG + "************* testV9RdbStoreCallBackTest0002 end *************")
     })
     
-    // getRdbStoreV9 ok params
+    /**
+     * @tc.name rdb callback test getRdbStoreV9 ok params
+     * @tc.number testV9RdbStoreCallBackTest0003
+     * @tc.desc rdb callback test getRdbStoreV9 ok params
+     */
     it('testV9RdbStoreCallBackTest0003', 0, function (done) {
         console.log(TAG + "************* testV9RdbStoreCallBackTest0003 start *************")
         let context = featureAbility.getContext()
@@ -166,7 +153,11 @@ describe('V9_rdbStoreCallBackTest', function () {
         }
     })
 
-    // deleteRdbStoreV9 err params
+    /**
+     * @tc.name rdb callback test deleteRdbStoreV9 err params
+     * @tc.number testV9RdbStoreCallBackTest0004
+     * @tc.desc rdb callback test deleteRdbStoreV9 err params
+     */
     it('testV9RdbStoreCallBackTest0004', 0, async function (done) {
         console.log(TAG + "************* testV9RdbStoreCallBackTest0004 start *************");
         let context = featureAbility.getContext()
@@ -188,33 +179,17 @@ describe('V9_rdbStoreCallBackTest', function () {
             });
         } catch(err) {
             console.log("111catch err: Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
+            expect("401").equalTo(err.code)
             done()
             console.log(TAG + "************* testV9RdbStoreCallBackTest0004 end *************");
         }
     })
-
-    // deleteRdbStoreV9 err params
-    it('testV9RdbStoreCallBackTest0006', 0, async function (done) {
-        console.log(TAG + "************* testV9RdbStoreCallBackTest0006 start *************");
-        let context = featureAbility.getContext()
-        let rdbStoreV9 = await dataRdb.getRdbStoreV9(context, STORE_CONFIG, 1)
-        try{
-            dataRdb.deleteRdbStoreV9(context, 12345, (err) => {
-                if (err) {
-                    console.log("Delete RdbStore is failed, err: code=" + err.code + " message=" + err.message)
-                    expect(false).assertTrue()
-                }
-                console.log("Delete RdbStore successfully.")
-                expect(false).assertTrue()
-            });
-        } catch(err) {
-            console.log("333catch err: Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
-            done()
-            console.log(TAG + "************* testV9RdbStoreCallBackTest0006 end *************");
-        }
-    })
     
-    // deleteRdbStoreV9 OK params
+    /**
+     * @tc.name rdb callback test deleteRdbStoreV9 OK params
+     * @tc.number testV9RdbStoreCallBackTest0004
+     * @tc.desc rdb callback test deleteRdbStoreV9 OK params
+     */
     it('testV9RdbStoreCallBackTest0005', 0, async function (done) {
         console.log(TAG + "************* testV9RdbStoreCallBackTest0005 start *************")
         let context = featureAbility.getContext()

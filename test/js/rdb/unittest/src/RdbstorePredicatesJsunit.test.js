@@ -2191,10 +2191,14 @@ describe('rdbPredicatesTest', function () {
     it('testIndexedBy0002', 0, async function (done) {
         console.log(TAG + "************* testIndexedBy0002 start *************");
         let predicates = await new dataRdb.RdbPredicates("AllDataType");
-        predicates.like("stringValue", "ABCDEFGHIJKLMN").indexedBy(["characterValueX"]);
-        let result = await rdbStore.query(predicates);
-        expect(3).assertEqual(result.rowCount);
-        result = null
+        try {
+            predicates.like("stringValue", "ABCDEFGHIJKLMN").indexedBy(["characterValueX"]);
+            let result = await rdbStore.query(predicates);
+            expect(3).assertEqual(result.rowCount);
+            result = null
+        } catch (err) {
+            console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+        }
         done();
         console.log(TAG + "************* testIndexedBy0002 end *************");
     })

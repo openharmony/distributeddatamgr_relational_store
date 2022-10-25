@@ -77,7 +77,7 @@ public:
             return output_(env, result);
         }
 
-        //execute function
+        // execute function
         virtual void Exec()
         {
             if (exec_ == nullptr) {

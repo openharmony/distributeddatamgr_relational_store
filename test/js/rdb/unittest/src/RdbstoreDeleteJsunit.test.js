@@ -309,35 +309,8 @@ describe('rdbStoreDeleteTest', function () {
      */
     it('testRdbStoreDelete0006', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDelete0006 start *************");
-        var u8 = new Uint8Array([1, 2, 3])
-        {
-            const valueBucket = {
-                "name": "zhangsan",
-                "age": 18,
-                "salary": 100.5,
-                "blobType": u8,
-            }
-            await rdbStore.insert("test", valueBucket)
-        }
-        {
-            const valueBucket = {
-                "name": "lisi",
-                "age": 28,
-                "salary": 100.5,
-                "blobType": u8,
-            }
-            await rdbStore.insert("test", valueBucket)
-        }
-        {
-            const valueBucket = {
-                "name": "lisi",
-                "age": 38,
-                "salary": 100.5,
-                "blobType": u8,
-            }
-            await rdbStore.insert("test", valueBucket)
-        }
-        {
+
+        try {
             let predicates = await new dataRdb.RdbPredicates("")
             let deletePromise = rdbStore.delete(predicates)
             deletePromise.then(async (ret) => {
@@ -346,6 +319,9 @@ describe('rdbStoreDeleteTest', function () {
             }).catch((err) => {
                 console.log(TAG + "delete with null")
             })
+        } catch (err) {
+            console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+            expect("401").equalTo(err.code);
         }
         done()
         console.log(TAG + "************* testRdbStoreDelete0006 end *************");
