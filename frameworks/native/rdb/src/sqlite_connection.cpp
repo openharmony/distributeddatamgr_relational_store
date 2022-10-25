@@ -739,8 +739,7 @@ int SqliteConnection::ManageKey(const SqliteConfig &config)
     }
     bool isKeyFileExists =
         RdbSecurityManager::GetInstance().CheckKeyDataFileExists(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-   
-    if (!isKeyFileExists ) {
+    if (!isKeyFileExists) {
         LOG_INFO("ManageKey Init");
         return InitKey();
     } else {
