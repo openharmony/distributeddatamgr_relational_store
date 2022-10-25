@@ -349,4 +349,9 @@ bool RdbStoreConfig::IsCreateNecessary() const
 {
     return isCreateNecessary_;
 }
+
+void RdbStoreConfig::SetCreateNecessary(bool isCreateNecessary)
+{
+    isCreateNecessary_ = isCreateNecessary;
+}
 } // namespace OHOS::NativeRdb
