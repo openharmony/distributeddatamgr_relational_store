@@ -34,6 +34,8 @@ using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS {
 namespace RdbJsKit {
+const int APIVERSION_V9 = 9;
+const int APIVERSION_V8 = 8;
 
 class OpenCallback : public OHOS::NativeRdb::RdbOpenCallback {
 public:
@@ -462,7 +464,7 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
     LOG_DEBUG("RdbJsKit::GetRdbStore start");
     context->iscontext = JSAbility::CheckContext(env, info);
     // context: Context, config: StoreConfig, version: number
-    auto input = [context,parseStoreConfig](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+    auto input = [context, parseStoreConfig](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         if (context->iscontext) {
             std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("3 or 4");
             RDB_CHECK_RETURN_CALL_RESULT(argc == 3 || argc == 4, context->SetError(paramNumError));
@@ -505,19 +507,19 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
 napi_value GetRdbStore(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<HelperRdbContext>();
-    context->apiversion = 8;
+    context->apiversion = APIVERSION_V8;
     return InnerGetRdbStore(env, info, context, ParseStoreConfig);
 }
 
 napi_value GetRdbStoreV9(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<HelperRdbContext>();
-    context->apiversion = 9;
+    context->apiversion = APIVERSION_V9;
     return InnerGetRdbStore(env, info, context, ParseStoreConfigV9);
 }
 
 napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
-{    
+{
     auto context = std::make_shared<HelperRdbContext>();
     LOG_DEBUG("RdbJsKit::DeleteRdbStore start");
     context->iscontext = JSAbility::CheckContext(env, info);
