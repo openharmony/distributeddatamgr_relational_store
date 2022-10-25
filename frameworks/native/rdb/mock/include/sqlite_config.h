@@ -40,6 +40,8 @@ public:
     void UpdateEncryptKey(const std::vector<uint8_t> &newKey);
     void ClearEncryptKey();
     int32_t GetSecurityLevel() const;
+    bool IsCreateNecessary() const;
+    void SetCreateNecessary(bool IsCreateNecessary);
 
 private:
     std::string path;
