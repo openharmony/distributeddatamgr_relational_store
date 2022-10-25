@@ -32,6 +32,7 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     }
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     isEncrypt = config.IsEncrypt();
+    isCreateNecessary = config.IsCreateNecessary();
 #endif
 }
 
@@ -88,6 +89,16 @@ std::string SqliteConfig::GetBundleName() const
 {
     return bundleName;
 }
+bool SqliteConfig::IsCreateNecessary() const
+{
+    return isCreateNecessary;
+}
+
+void SqliteConfig::SetCreateNecessary(bool CreateNecessary)
+{
+    this->isCreateNecessary = CreateNecessary;
+}
+
 #endif
 } // namespace NativeRdb
 } // namespace OHOS
