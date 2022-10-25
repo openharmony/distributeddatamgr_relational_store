@@ -91,9 +91,6 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
             LOG_ERROR("RdbStoreImpl::InnerOpen get service failed");
             return -1;
         }
-        LOG_ERROR("Uri =%{public}s",config.GetUri().c_str());
-        LOG_ERROR("WritePermission =%{public}s",config.GetWritePermission().c_str());
-        LOG_ERROR("ReadPermission =%{public}s",config.GetReadPermission().c_str());
         if (service->CreateRDBTable(syncerParam_, config.GetWritePermission(), config.GetReadPermission()) != E_OK) {
             LOG_ERROR("RdbStoreImpl::InnerOpen service CreateRDBTable failed");
             return -1;
