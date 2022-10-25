@@ -32,14 +32,19 @@ constexpr int E_DB_CORRUPTED = 14800011;
 constexpr int E_RESULT_GET_ERROR = 14800012;
 constexpr int E_RESULT_GOTO_ERROR = 14800013;
 
-#define RDB_NAPI_ASSERT_BASE(env, assertion, error, retVal)                                                 \
-    do {                                                                                                    \
-        if (!(assertion)) {                                                                                 \
-            LOG_ERROR("throw error: code = %{public}d , message = %{public}s", error->GetCode(),            \
-                error->GetMessage().c_str());                                                               \
-            napi_throw_error((env), std::to_string(error->GetCode()).c_str(), error->GetMessage().c_str()); \
-            return retVal;                                                                                  \
-        }                                                                                                   \
+#define RDB_NAPI_ASSERT_BASE(env, assertion, error, retVal)                                                     \
+    do {                                                                                                        \
+        if (!(assertion)) {                                                                                     \
+            if (error != nullptr) {                                                                             \
+                LOG_ERROR("throw error: code = %{public}d , message = %{public}s", error->GetCode(),            \
+                    error->GetMessage().c_str());                                                               \
+                napi_throw_error((env), std::to_string(error->GetCode()).c_str(), error->GetMessage().c_str()); \
+                return retVal;                                                                                  \
+            }                                                                                                   \
+            LOG_ERROR("throw error: error message is empty");                                                   \
+            napi_throw_error((env), nullptr, "error message is empty");                                         \
+            return retVal;                                                                                      \
+        }                                                                                                       \
     } while (0)
 
 #define RDB_NAPI_ASSERT(env, assertion, error) RDB_NAPI_ASSERT_BASE(env, assertion, error, nullptr)
@@ -65,7 +70,8 @@ constexpr int E_RESULT_GOTO_ERROR = 14800013;
 #define RDB_CHECK_RETURN_CALL_RESULT(assertion, theCall) \
     do {                                                 \
         if (!(assertion)) {                              \
-            return (theCall);                            \
+            (theCall);                                   \
+            return ERR;                                  \
         }                                                \
     } while (0)
 
@@ -74,6 +80,19 @@ public:
     virtual ~Error(){};
     virtual std::string GetMessage() = 0;
     virtual int GetCode() = 0;
+};
+
+class InnerError : public Error {
+public:
+    InnerError() = default;
+    std::string GetMessage() override
+    {
+        return "System error.";
+    };
+    int GetCode() override
+    {
+        return E_INNER_ERROR;
+    };
 };
 
 class ParamTypeError : public Error {
@@ -106,7 +125,6 @@ public:
     };
 
 private:
-    std::string apiname;
     std::string wantNum;
 };
 
@@ -121,9 +139,6 @@ public:
     {
         return E_DB_INVALID;
     };
-
-private:
-    std::string apiname;
 };
 
 class DbCorruptedError : public Error {
@@ -137,9 +152,6 @@ public:
     {
         return E_DB_CORRUPTED;
     };
-
-private:
-    std::string apiname;
 };
 
 class ResultGetError : public Error {
@@ -153,9 +165,6 @@ public:
     {
         return E_RESULT_GET_ERROR;
     };
-
-private:
-    std::string apiname;
 };
 
 class ResultGotoError : public Error {
@@ -169,9 +178,6 @@ public:
     {
         return E_RESULT_GOTO_ERROR;
     };
-
-private:
-    std::string apiname;
 };
 } // namespace AppDataMgrJsKit
 } // namespace OHOS

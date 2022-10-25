@@ -53,10 +53,9 @@ public:
             SetAction(nullptr, std::move(output));
         }
 
-        int SetError(std::shared_ptr<Error> err)
+        void SetError(std::shared_ptr<Error> err)
         {
             error = err;
-            return err->GetCode();
         }
 
         // input function

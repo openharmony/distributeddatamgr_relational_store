@@ -116,6 +116,7 @@ describe('V9_rdbStorePromiseTest', function () {
             console.info("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
             expect(null).assertFail()
         }
+        done()
     })
     
     // getRdbStoreV9 err params
@@ -132,9 +133,9 @@ describe('V9_rdbStorePromiseTest', function () {
             })
         } catch(err) {
             console.info("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
-            done();
             console.log(TAG + "************* testV9RdbStorePromiseTest0002 end *************")
         }
+        done()
     })
     
     // getRdbStoreV9 OK params
@@ -154,6 +155,7 @@ describe('V9_rdbStorePromiseTest', function () {
             console.info("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
             expect(false).assertTrue()
         }
+        done()
     })
 
     // deleteRdbStoreV9 err params
@@ -162,7 +164,7 @@ describe('V9_rdbStorePromiseTest', function () {
         let context = featureAbility.getContext()        
         let rdbStoreV9 = await dataRdb.getRdbStoreV9(context, STORE_CONFIG, 1)
         try{
-            dataRdb.deleteRdbStoreV9(context, "V9_RDBCallbackTest.db").then((rdbStoreV9) => {
+            dataRdb.deleteRdbStoreV9(context, 123454345).then((rdbStoreV9) => {
                 console.log("Delete RdbStore successfully.")
                 expect(false).assertTrue()
             }).catch((err) => {
@@ -171,9 +173,10 @@ describe('V9_rdbStorePromiseTest', function () {
             })
         } catch(err) {
             console.info("catch err: Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
-            done();
+            done()
             console.log(TAG + "************* testV9RdbStorePromiseTest0004 end *************")
         }
+        done()
     })
     
     // deleteRdbStoreV9 OK params
@@ -194,6 +197,7 @@ describe('V9_rdbStorePromiseTest', function () {
             console.info("catch err: Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
             expect(false).assertTrue()
         }
+        done()
     })
 
     console.log(TAG + "*************Unit Test End*************");

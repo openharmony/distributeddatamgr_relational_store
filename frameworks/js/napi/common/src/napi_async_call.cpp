@@ -24,13 +24,14 @@ AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Cont
     size_t argc = MAX_INPUT_COUNT;
     napi_value self = nullptr;
     napi_value argv[MAX_INPUT_COUNT] = { nullptr };
-    napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
-
+    NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
+    
     context_ = new AsyncContext();
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, argv[argc - 1], &valueType);
     if (valueType == napi_function) {
-        napi_create_reference(env, argv[argc - 1], 1, &context_->callback);
+        LOG_DEBUG("asyncCall set callback");
+        NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, argv[argc - 1], 1, &context_->callback));
         argc = argc - 1;
     }
     // int -->input_(env, argc, argv, self)
@@ -57,7 +58,7 @@ napi_value AsyncCall::Call(napi_env env, Context::ExecAction exec)
         LOG_DEBUG("context_ or context_->ctx is null");
         return nullptr;
     }
-    LOG_DEBUG("async call exec");
+    LOG_DEBUG("async call exec begin");
     context_->ctx->exec_ = std::move(exec);
     napi_value promise = nullptr;
     if (context_->callback == nullptr) {
@@ -74,7 +75,7 @@ napi_value AsyncCall::Call(napi_env env, Context::ExecAction exec)
     context_ = nullptr;
     // add async work to execute queue
     napi_queue_async_work(env, work);
-    LOG_DEBUG("async call exec");
+    LOG_DEBUG("async call exec end");
     return promise;
 }
 
@@ -107,8 +108,8 @@ void AsyncCall::OnExecute(napi_env env, void *data)
 void AsyncCall::SetBusinessError(napi_env env, napi_value *businessError, std::shared_ptr<Error> error, int apiversion)
 {
     napi_create_object(env, businessError);
-    //if error is not inner error, and api version greater 8
-    if (error != nullptr || apiversion > 8) {
+    //if error is not inner error
+    if (error != nullptr && error->GetCode() != E_INNER_ERROR) {
         napi_value code = nullptr;
         napi_value msg = nullptr;
         napi_create_int32(env, error->GetCode(), &code);

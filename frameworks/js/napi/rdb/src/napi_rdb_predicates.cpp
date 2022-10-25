@@ -88,13 +88,15 @@ void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
     NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, cons, 1, &constructor_));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, exports, "RdbPredicates", cons));
 
-    NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "RdbPredicatesV9", NAPI_AUTO_LENGTH, New, nullptr,
-                                   sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons));
-    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, cons, 1, &constructor_));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, exports, "RdbPredicatesV9", cons));
-
     SetGlobalNamedProperty(env, "RdbPredicatesConstructor", cons);
 
+    napi_value consV9;
+    NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "RdbPredicatesV9", NAPI_AUTO_LENGTH, New, nullptr,
+                                   sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &consV9));
+    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, consV9, 1, &constructor_));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, exports, "RdbPredicatesV9", consV9));
+
+    SetGlobalNamedProperty(env, "RdbPredicatesConstructorV9", consV9);
     LOG_DEBUG("RdbPredicatesProxy::Init end");
 }
 
@@ -202,8 +204,8 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldArrayByName(napi_env env, napi
     RDB_NAPI_ASSERT(env, argc == 1, std::make_shared<ParamNumError>("1"));
 
     fieldarray = JSUtils::Convert2StrVector(env, args[0]);
-    RDB_NAPI_ASSERT(env, fieldarray.size() > 0,
-        std::make_shared<ParamTypeError>(fieldName, "a non empty " + fieldType + " array."));
+    RDB_NAPI_ASSERT(
+        env, fieldarray.size() >= 0, std::make_shared<ParamTypeError>(fieldName, "a " + fieldType + " array."));
 
     LOG_DEBUG("Check field array ok");
     return predicatesProxy;
@@ -237,7 +239,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseInt32FieldByName(
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
     LOG_DEBUG("Get native predicates ok");
     RDB_NAPI_ASSERT(env, argc == 1, std::make_shared<ParamNumError>("1"));
-
+    
     napi_status status = napi_get_value_int32(env, args[0], &field);
     RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamTypeError>(fieldName, "a number."));
 
@@ -261,7 +263,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValueArray(napi_env env, na
 
     value = JSUtils::Convert2StrVector(env, args[1]);
     RDB_NAPI_ASSERT(
-        env, value.size() > 0, std::make_shared<ParamTypeError>("value", "a non empty " + valueType + " array."));
+        env, value.size() >= 0, std::make_shared<ParamTypeError>("value", "a " + valueType + " array."));
 
     LOG_DEBUG("Check field and value array ok");
     return predicatesProxy;
@@ -282,7 +284,6 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValue(napi_env env, napi_ca
     RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamTypeError>("field", "a non empty string."));
 
     value = JSUtils::ConvertAny2String(env, args[1]);
-    RDB_NAPI_ASSERT(env, !value.empty(), std::make_shared<ParamTypeError>("value", "a non empty " + valueType + "."));
 
     LOG_DEBUG("Check field and value ok");
     return predicatesProxy;
