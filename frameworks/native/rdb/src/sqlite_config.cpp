@@ -69,11 +69,6 @@ bool SqliteConfig::IsReadOnly() const
     return readOnly;
 }
 
-void SqliteConfig::SetCreateNecessary(bool CreateNecessary)
-{
-    this->isCreateNecessary = CreateNecessary;
-}
-
 int32_t SqliteConfig::GetSecurityLevel() const
 {
     return securityLevel;
@@ -98,6 +93,12 @@ bool SqliteConfig::IsCreateNecessary() const
 {
     return isCreateNecessary;
 }
+
+void SqliteConfig::SetCreateNecessary(bool CreateNecessary)
+{
+    this->isCreateNecessary = CreateNecessary;
+}
+
 #endif
 } // namespace NativeRdb
 } // namespace OHOS
