@@ -35,7 +35,7 @@ RdbStoreConfig::RdbStoreConfig(const RdbStoreConfig &config)
 
 RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode, bool isReadOnly,
     const std::vector<uint8_t> &encryptKey, const std::string &journalMode, const std::string &syncMode,
-    const std::string &databaseFileType, const std::string &databaseFileSecurityLevel)
+    const std::string &databaseFileType, const std::string &databaseFileSecurityLevel, bool isCreateNecessary)
     : name(name),
       path(name),
       storageMode(storageMode),
@@ -43,7 +43,8 @@ RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode,
       syncMode(syncMode),
       readOnly(isReadOnly),
       databaseFileType(databaseFileType),
-      databaseFileSecurityLevel(databaseFileSecurityLevel)
+      databaseFileSecurityLevel(databaseFileSecurityLevel),
+      isCreateNecessary_(isCreateNecessary)
 {}
 
 RdbStoreConfig::~RdbStoreConfig() = default;
@@ -343,5 +344,14 @@ std::string RdbStoreConfig::GetWritePermission() const
 void RdbStoreConfig::SetWritePermission(const std::string &permission)
 {
     writePermission_ = permission;
+}
+bool RdbStoreConfig::IsCreateNecessary() const
+{
+    return isCreateNecessary_;
+}
+
+void RdbStoreConfig::SetCreateNecessary(bool isCreateNecessary)
+{
+    isCreateNecessary_ = isCreateNecessary;
 }
 } // namespace OHOS::NativeRdb

@@ -69,7 +69,7 @@ public:
     RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
         const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(), const std::string &journalMode = "",
         const std::string &syncMode = "", const std::string &databaseFileType = "",
-        const std::string &databaseFileSecurityLevel = "");
+        const std::string &databaseFileSecurityLevel = "", bool isCreateNecessary = true);
     ~RdbStoreConfig();
     std::string GetName() const;
     std::string GetPath() const;
@@ -83,7 +83,7 @@ public:
     int32_t GetSecurityLevel() const;
     void SetEncryptStatus(const bool status);
     bool IsEncrypt() const;
-
+    bool IsCreateNecessary() const;
     // set the journal mode, if not set, the default mode is WAL
     void SetName(std::string name);
     void SetJournalMode(JournalMode journalMode);
@@ -92,6 +92,7 @@ public:
     void SetStorageMode(StorageMode storageMode);
     void SetDatabaseFileType(DatabaseFileType type);
     void SetSecurityLevel(const int32_t& secLevel);
+    void SetCreateNecessary(bool isCreateNecessary);
 
     // distributed rdb
     int SetBundleName(const std::string &bundleName);
@@ -136,6 +137,7 @@ private:
     std::string uri_;
     std::string readPermission_;
     std::string writePermission_;
+    bool isCreateNecessary_;
 };
 } // namespace OHOS::NativeRdb
 
