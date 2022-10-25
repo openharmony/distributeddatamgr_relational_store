@@ -23,9 +23,6 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     path = config.GetPath();
     storageMode = config.GetStorageMode();
     readOnly = config.IsReadOnly();
-    encryptKey = config.GetEncryptKey();
-    encrypted = !encryptKey.empty();
-    initEncrypted = !encryptKey.empty();
     journalMode = config.GetJournalMode();
     databaseFileType = config.GetDatabaseFileType();
     securityLevel = config.GetSecurityLevel();
@@ -38,10 +35,7 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
 #endif
 }
 
-SqliteConfig::~SqliteConfig()
-{
-    ClearEncryptKey();
-}
+SqliteConfig::~SqliteConfig() = default;
 
 std::string SqliteConfig::GetPath() const
 {
@@ -72,34 +66,6 @@ std::string SqliteConfig::GetSyncMode() const
 bool SqliteConfig::IsReadOnly() const
 {
     return readOnly;
-}
-
-bool SqliteConfig::IsEncrypted() const
-{
-    return encrypted;
-}
-
-bool SqliteConfig::IsInitEncrypted() const
-{
-    return initEncrypted;
-}
-
-std::vector<uint8_t> SqliteConfig::GetEncryptKey() const
-{
-    return encryptKey;
-}
-
-void SqliteConfig::UpdateEncryptKey(const std::vector<uint8_t> &newKey)
-{
-    std::fill(encryptKey.begin(), encryptKey.end(), 0);
-    encryptKey = newKey;
-    encrypted = !encryptKey.empty();
-}
-
-void SqliteConfig::ClearEncryptKey()
-{
-    std::fill(encryptKey.begin(), encryptKey.end(), 0);
-    encryptKey.clear();
 }
 
 int32_t SqliteConfig::GetSecurityLevel() const

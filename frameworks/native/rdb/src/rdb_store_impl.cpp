@@ -661,23 +661,6 @@ bool RdbStoreImpl::IsInTransaction()
     return inTransaction;
 }
 
-int RdbStoreImpl::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
-{
-    DDS_TRACE();
-    if (connectionPool == nullptr) {
-        LOG_ERROR("connectionPool is null");
-        return E_ERROR;
-    }
-    auto ret = connectionPool->ChangeEncryptKey(newKey);
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    if (ret != E_OK) {
-        DistributedDataDfx::Reporter::GetInstance()->DatabaseFault()->Report(
-            {syncerParam_.bundleName_, name, "rdb", DistributedDataDfx::Fault::DF_DB_REKEY_FAILED});
-    }
-#endif
-    return ret;
-}
-
 std::shared_ptr<SqliteStatement> RdbStoreImpl::BeginStepQuery(
     int &errCode, const std::string sql, const std::vector<std::string> &bindArgs)
 {
