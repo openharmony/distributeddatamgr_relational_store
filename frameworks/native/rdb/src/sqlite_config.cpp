@@ -27,6 +27,7 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     databaseFileType = config.GetDatabaseFileType();
     securityLevel = config.GetSecurityLevel();
     syncMode = config.GetSyncMode();
+    isCreateNecessary = config.IsCreateNecessary();
     if (journalMode.empty()) {
         journalMode = SqliteGlobalConfig::GetDefaultJournalMode();
     }
@@ -87,6 +88,10 @@ bool SqliteConfig::IsEncrypt() const
 std::string SqliteConfig::GetBundleName() const
 {
     return bundleName;
+}
+bool SqliteConfig::IsCreateNecessary() const
+{
+    return isCreateNecessary;
 }
 #endif
 } // namespace NativeRdb
