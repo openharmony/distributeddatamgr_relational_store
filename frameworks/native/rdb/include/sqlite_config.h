@@ -39,7 +39,7 @@ public:
     std::string GetBundleName() const;
     int32_t GetSecurityLevel() const;
     bool IsCreateNecessary() const;
-    void SetCreateNecessary(bool isCreateNecessary);
+    void SetCreateNecessary(bool CreateNecessary);
 
 private:
     std::string path;
