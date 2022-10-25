@@ -33,7 +33,6 @@ using namespace OHOS::AppDataMgrJsKit;
 namespace OHOS {
 namespace RdbJsKit {
 static napi_ref __thread ctorRef_ = nullptr;
-static napi_ref __thread ctorRefV9_ = nullptr;
 static const int E_OK = 0;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<AbsSharedResultSet> resultSet)
@@ -55,9 +54,9 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<AbsSharedRe
 }
 #endif
 
-napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet, int version)
+napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet)
 {
-    napi_value cons = GetConstructor(env, version);
+    napi_value cons = GetConstructor(env);
     if (cons == nullptr) {
         LOG_ERROR("NewInstance GetConstructor is nullptr!");
         return nullptr;
@@ -76,7 +75,6 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::
         return instance;
     }
     *proxy = std::move(resultSet);
-    proxy->apiversion = version;
     return instance;
 }
 
@@ -103,15 +101,11 @@ std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 }
 #endif
 
-napi_value ResultSetProxy::GetConstructor(napi_env env, int version)
+napi_value ResultSetProxy::GetConstructor(napi_env env)
 {
     napi_value cons;
-    if (version<9 && ctorRef_ != nullptr) {
+    if (ctorRef_ != nullptr) {
         NAPI_CALL(env, napi_get_reference_value(env, ctorRef_, &cons));
-        return cons;
-    }
-    if (version >8 && ctorRefV9_ != nullptr) {
-        NAPI_CALL(env, napi_get_reference_value(env, ctorRefV9_, &cons));
         return cons;
     }
 
@@ -145,15 +139,13 @@ napi_value ResultSetProxy::GetConstructor(napi_env env, int version)
         DECLARE_NAPI_GETTER("isAtLastRow", IsAtLastRow),
     };
 
-    if (version > 8) {
-        NAPI_CALL(env, napi_define_class(env, "ResultSetV9", NAPI_AUTO_LENGTH, Initialize, nullptr,
-                           sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
-        NAPI_CALL(env, napi_create_reference(env, cons, 1, &ctorRefV9_));
-    } else {
-        NAPI_CALL(env, napi_define_class(env, "ResultSet", NAPI_AUTO_LENGTH, Initialize, nullptr,
-                           sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
-        NAPI_CALL(env, napi_create_reference(env, cons, 1, &ctorRef_));
-    }
+    NAPI_CALL(env, napi_define_class(env, "ResultSetV9", NAPI_AUTO_LENGTH, Initialize, nullptr,
+                       sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
+    NAPI_CALL(env, napi_create_reference(env, cons, 1, &ctorRef_));
+
+    NAPI_CALL(env, napi_define_class(env, "ResultSet", NAPI_AUTO_LENGTH, Initialize, nullptr,
+                       sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
+    NAPI_CALL(env, napi_create_reference(env, cons, 1, &ctorRef_));
 
     return cons;
 }
@@ -260,7 +252,7 @@ napi_value ResultSetProxy::GetAllColumnNames(napi_env env, napi_callback_info in
 }
 
 napi_value ResultSetProxy::GoToRow(napi_env env, napi_callback_info info)
-{//跟老板对齐，看这里怎么修改
+{
     int32_t position;
     auto resultSetProxy = ParseInt32FieldByName(env, info, position, "position");
     RDB_NAPI_ASSERT(env, resultSetProxy != nullptr, std::make_shared<ResultGotoError>());
@@ -316,7 +308,7 @@ napi_value ResultSetProxy::GoTo(napi_env env, napi_callback_info info)
 }
 
 napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
-{//这个需要跟老板确定一下，未找到的返回-1，不再报错
+{
     std::string input;
     int32_t result = -1;
     auto resultSetProxy = ParseFieldByName(env, info, input, "columnName");

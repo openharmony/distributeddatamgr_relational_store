@@ -399,7 +399,7 @@ int ParsePredicates(const napi_env &env, const napi_value &arg, std::shared_ptr<
         PredicatesProxy *proxy = nullptr;
         napi_unwrap(env, arg, reinterpret_cast<void **>(&proxy));
         std::shared_ptr<DataShareAbsPredicates> dsPredicates = proxy->predicates_;
-        LOG_ERROR("xxx dsPredicates is null ? %{public}d", (dsPredicates == nullptr));
+        LOG_ERROR("dsPredicates is null ? %{public}d", (dsPredicates == nullptr));
         paramError = std::make_shared<ParamTypeError>("predicates", "an DataShare Predicates.");
         RDB_CHECK_RETURN_CALL_RESULT(dsPredicates != nullptr, context->SetError(paramError));
         context->rdbPredicates = std::make_shared<RdbPredicates>(
