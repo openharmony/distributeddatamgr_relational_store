@@ -33,18 +33,18 @@ RdbStoreConfig::RdbStoreConfig(const RdbStoreConfig &config)
     databaseFileSecurityLevel = config.GetDatabaseFileSecurityLevel();
 }
 
-RdbStoreConfig::RdbStoreConfig(const std::string &name, bool isCreateNecessary, StorageMode storageMode, bool isReadOnly,
+RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode, bool isReadOnly,
     const std::vector<uint8_t> &encryptKey, const std::string &journalMode, const std::string &syncMode,
-    const std::string &databaseFileType, const std::string &databaseFileSecurityLevel)
+    const std::string &databaseFileType, const std::string &databaseFileSecurityLevel, bool isCreateNecessary)
     : name(name),
-    isCreateNecessary_(isCreateNecessary),
       path(name),
       storageMode(storageMode),
       journalMode(journalMode),
       syncMode(syncMode),
       readOnly(isReadOnly),
       databaseFileType(databaseFileType),
-      databaseFileSecurityLevel(databaseFileSecurityLevel)
+      databaseFileSecurityLevel(databaseFileSecurityLevel),
+      isCreateNecessary_(isCreateNecessary)
 {}
 
 RdbStoreConfig::~RdbStoreConfig() = default;

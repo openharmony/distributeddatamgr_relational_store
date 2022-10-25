@@ -66,10 +66,10 @@ using DistributedType = OHOS::DistributedRdb::RdbDistributedType;
 class RdbStoreConfig {
 public:
     RdbStoreConfig(const RdbStoreConfig &config);
-    RdbStoreConfig(const std::string &path, bool isCreateNecessary = true, bool isCreateStorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
+    RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
         const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(), const std::string &journalMode = "",
         const std::string &syncMode = "", const std::string &databaseFileType = "",
-        const std::string &databaseFileSecurityLevel = "");
+        const std::string &databaseFileSecurityLevel = "", bool isCreateNecessary = true);
     ~RdbStoreConfig();
     std::string GetName() const;
     std::string GetPath() const;
@@ -92,6 +92,7 @@ public:
     void SetStorageMode(StorageMode storageMode);
     void SetDatabaseFileType(DatabaseFileType type);
     void SetSecurityLevel(const int32_t& secLevel);
+    void SetCreateNecessary(bool isCreateNecessary);
 
     // distributed rdb
     int SetBundleName(const std::string &bundleName);
