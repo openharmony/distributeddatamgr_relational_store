@@ -94,13 +94,14 @@ describe('V9_rdbStoreCallBackTest', async function () {
                     }
                     console.log("Delete RdbStore successfully.")
                     done()
-                    console.log(TAG + "************* testV9RdbStoreCallBackTest0001 end *************")
                 });
             })
         } catch(err) {
             console.log("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
             expect(false).assertTrue()
         }
+        done()
+        console.log(TAG + "************* testV9RdbStoreCallBackTest0001 end *************")
     })
 
     /**
@@ -122,7 +123,7 @@ describe('V9_rdbStoreCallBackTest', async function () {
             })
         } catch(err) {
             console.log("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
-            expect("401").equalTo(err.code)
+            expect("401").assertEqual(err.code)
         }
         
         done()
@@ -145,12 +146,13 @@ describe('V9_rdbStoreCallBackTest', async function () {
                 }
                 console.log("Get RdbStore successfully.")
                 done()
-                console.log(TAG + "************* testV9RdbStoreCallBackTest0003 end *************")
             })
         } catch(err) {
             console.log("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
             expect(false).assertTrue()
         }
+        done()
+        console.log(TAG + "************* testV9RdbStoreCallBackTest0003 end *************")
     })
 
     /**
@@ -178,11 +180,12 @@ describe('V9_rdbStoreCallBackTest', async function () {
                 expect(false).assertTrue()
             });
         } catch(err) {
-            console.log("111catch err: Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
-            expect("401").equalTo(err.code)
+            console.log("catch err: Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
+            expect("401").assertEqual(err.code)
             done()
-            console.log(TAG + "************* testV9RdbStoreCallBackTest0004 end *************");
         }
+        done()
+        console.log(TAG + "************* testV9RdbStoreCallBackTest0004 end *************");
     })
     
     /**
