@@ -33,12 +33,12 @@ public:
 
     explicit RdbPredicatesProxy(std::string &tableName);
     std::shared_ptr<NativeRdb::RdbPredicates> GetPredicates() const;
-    
+
 private:
     ~RdbPredicatesProxy();
 
     static napi_value New(napi_env env, napi_callback_info info);
-    static std::shared_ptr<NativeRdb::RdbPredicates> GetNativePredicates(napi_env env, napi_callback_info info);    
+    static std::shared_ptr<NativeRdb::RdbPredicates> GetNativePredicates(napi_env env, napi_callback_info info);
 
     static RdbPredicatesProxy *ParseFieldArrayByName(napi_env env, napi_callback_info info, napi_value &thiz,
         std::vector<std::string> &fieldarray, const std::string fieldName, const std::string fieldType);
