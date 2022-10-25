@@ -262,7 +262,6 @@ struct HelperRdbContext : public AsyncCall::Context {
 
     int operator()(napi_env env, size_t argc, napi_value *argv, napi_value self) override
     {
-        napi_unwrap(env, self, &boundObj);
         return Context::operator()(env, argc, argv, self);
     }
     int operator()(napi_env env, napi_value &result) override
@@ -273,6 +272,11 @@ struct HelperRdbContext : public AsyncCall::Context {
 
 using ParseStoreConfigFunction = int (*)(
     const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context);
+
+void ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<HelperRdbContext> context)
+{
+    napi_unwrap(env, self, &context->boundObj);
+}
 
 int ParseContext(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
@@ -471,6 +475,7 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
             RDB_ASYNC_PARAM_CHECK_FUNCTION(parseStoreConfig(env, argv[0], context));
             RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseVersion(env, argv[1], context));
         }
+        ParserThis(env, self, context);
         return OK;
     };
     auto exec = [context](AsyncCall::Context *ctx) -> int {
@@ -532,7 +537,7 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
     };
     auto exec = [context](AsyncCall::Context *ctx) -> int {
         int errCode = RdbHelper::DeleteRdbStore(context->config.GetPath());
-        LOG_DEBUG("DeleteRdbStoreV9 failed %{public}d", errCode);
+        LOG_DEBUG("RdbJsKit::DeleteRdbStore failed %{public}d", errCode);
         std::shared_ptr<Error> dbInvalidError = std::make_shared<DbInvalidError>();
         RDB_CHECK_RETURN_CALL_RESULT(errCode != E_EMPTY_FILE_NAME, context->SetError(dbInvalidError));
         return (errCode == E_OK) ? OK : ERR;
