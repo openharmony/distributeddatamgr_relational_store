@@ -121,11 +121,13 @@ describe('rdbStoreTest', function () {
     it('testRdbStore0004', 0, async function (done) {
         console.log(TAG + "************* testRdbStore0004 start *************");
 
-        let storePromise = dataRdb.getRdbStore(STORE_CONFIG, 5);
+        let storePromise = dataRdb.getRdbStore(STORE_CONFIG, 6);
         storePromise.then(async (store) => {
+            console.log(TAG + "getRdbStore done:" + store);
             try {
                 await store.executeSql(CREATE_TABLE_TEST);
             } catch (e) {
+                console.log(TAG + "create table error");
                 expect(null).assertFail();
             }
         }).catch((err) => {
