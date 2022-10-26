@@ -395,16 +395,16 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_011, TestSize.Level1)
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_012, TestSize.Level1)
 {
-const std::string dbPath = RDB_TEST_PATH + "config_test.db";
-RdbStoreConfig config(dbPath);
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
 
-const ::string readPermission = "readPermission";
-config.SetReadPermission(readPermission);
-std::string getReadPermission = config.GetReadPermission();
-EXPECT_EQ(getReadPermission, readPermission);
+    const ::string readPermission = "readPermission";
+    config.SetReadPermission(readPermission);
+    std::string getReadPermission = config.GetReadPermission();
+    EXPECT_EQ(getReadPermission, readPermission);
 
-const ::string writePermission = "writePermission";
-config.SetWritePermission(writePermission);
-std::string getWritePermission = config.GetWritePermission();
-EXPECT_EQ(getWritePermission, writePermission);
+    const ::string writePermission = "writePermission";
+    config.SetWritePermission(writePermission);
+    std::string getWritePermission = config.GetWritePermission();
+    EXPECT_EQ(getWritePermission, writePermission);
 }
