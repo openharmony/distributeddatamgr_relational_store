@@ -30,23 +30,13 @@ RdbDataAbilityUtils::~RdbDataAbilityUtils()
 
 DataShareValuesBucket RdbDataAbilityUtils::ToDataShareValuesBucket(const ValuesBucket &valuesBucket)
 {
-    std::map<std::string, DataShareValueObject> values;
+    std::map<std::string, DataShareValueObject::Type> values;
     std::map<std::string, ValueObject> valuesMap;
     valuesBucket.GetAll(valuesMap);
     for (auto &[key, value] : valuesMap) {
-        if (value.GetType() == ValueObjectType::TYPE_BOOL) {
-            values.insert(std::make_pair(key, DataShareValueObject(value.operator bool())));
-        } else if (value.GetType() == ValueObjectType::TYPE_INT) {
-            values.insert(std::make_pair(key, DataShareValueObject(value.operator int())));
-        } else if (value.GetType() == ValueObjectType::TYPE_DOUBLE) {
-            values.insert(std::make_pair(key, DataShareValueObject(value.operator double())));
-        } else if (value.GetType() == ValueObjectType::TYPE_STRING) {
-            values.insert(std::make_pair(key, DataShareValueObject(value.operator std::string())));
-        } else if (value.GetType() == ValueObjectType::TYPE_BLOB) {
-            values.insert(std::make_pair(key, DataShareValueObject(value.operator std::vector<uint8_t>())));
-        }
+        values.insert({key, value});
     }
-    return DataShareValuesBucket(values);
+    return DataShareValuesBucket(std::move(values));
 }
 
 DataSharePredicates RdbDataAbilityUtils::ToDataSharePredicates(const DataAbilityPredicates &predicates)
