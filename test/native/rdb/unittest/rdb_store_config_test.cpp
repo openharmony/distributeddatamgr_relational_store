@@ -385,3 +385,26 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_011, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(currentMode, "off");
 }
+
+/**
+ * @tc.name: RdbStoreConfig_012
+ * @tc.desc: test RdbStoreConfig SetReadPermission/GetReadPermission/SetWritePermission/GetWritePermission
+ * @tc.type: FUNC
+ * @tc.require: AR000CU2BO
+ * @tc.author: chenxi
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_012, TestSize.Level1)
+{
+const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+RdbStoreConfig config(dbPath);
+
+const ::string readPermission = "readPermission";
+config.SetReadPermission(readPermission);
+std::string getReadPermission = config.GetReadPermission();
+EXPECT_EQ(getReadPermission, readPermission);
+
+const ::string writePermission = "writePermission";
+config.SetWritePermission(writePermission);
+std::string getWritePermission = config.GetWritePermission();
+EXPECT_EQ(getWritePermission, writePermission);
+}
