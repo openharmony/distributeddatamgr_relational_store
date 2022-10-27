@@ -129,14 +129,40 @@ describe('V9_rdbStoreCallBackTest', async function () {
         done()
         console.log(TAG + "************* testV9RdbStoreCallBackTest0002 end *************")
     })
+
+    /**
+     * @tc.name rdb callback test getRdbStoreV9 err params
+     * @tc.number testV9RdbStoreCallBackTest0003
+     * @tc.desc rdb callback test getRdbStoreV9 err params
+     */
+     it('testV9RdbStoreCallBackTest0003', 0, function (done) {
+        console.log(TAG + "************* testV9RdbStoreCallBackTest0003 start *************")
+        let context = featureAbility.getContext()
+        try{
+            dataRdb.getRdbStoreV9(null, {name: "V9_RDBCallbackTest.db"}, 1, (err, rdbStoreV9) => {
+                if (err) {
+                    console.log("Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
+                    expect(false).assertTrue()
+                }
+                console.log("Get RdbStore successfully.")
+                expect(false).assertTrue()
+            })
+        } catch(err) {
+            console.log("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
+            expect("401").assertEqual(err.code)
+        }
+        
+        done()
+        console.log(TAG + "************* testV9RdbStoreCallBackTest0003 end *************")
+    })
     
     /**
      * @tc.name rdb callback test getRdbStoreV9 ok params
-     * @tc.number testV9RdbStoreCallBackTest0003
+     * @tc.number testV9RdbStoreCallBackTest0004
      * @tc.desc rdb callback test getRdbStoreV9 ok params
      */
-    it('testV9RdbStoreCallBackTest0003', 0, function (done) {
-        console.log(TAG + "************* testV9RdbStoreCallBackTest0003 start *************")
+    it('testV9RdbStoreCallBackTest0004', 0, function (done) {
+        console.log(TAG + "************* testV9RdbStoreCallBackTest0004 start *************")
         let context = featureAbility.getContext()
         try{
             dataRdb.getRdbStoreV9(context, STORE_CONFIG, 1, (err, rdbStoreV9) => {
@@ -152,16 +178,16 @@ describe('V9_rdbStoreCallBackTest', async function () {
             expect(false).assertTrue()
         }
         done()
-        console.log(TAG + "************* testV9RdbStoreCallBackTest0003 end *************")
+        console.log(TAG + "************* testV9RdbStoreCallBackTest0004 end *************")
     })
 
     /**
      * @tc.name rdb callback test deleteRdbStoreV9 err params
-     * @tc.number testV9RdbStoreCallBackTest0004
+     * @tc.number testV9RdbStoreCallBackTest0005
      * @tc.desc rdb callback test deleteRdbStoreV9 err params
      */
-    it('testV9RdbStoreCallBackTest0004', 0, async function (done) {
-        console.log(TAG + "************* testV9RdbStoreCallBackTest0004 start *************");
+    it('testV9RdbStoreCallBackTest0005', 0, async function (done) {
+        console.log(TAG + "************* testV9RdbStoreCallBackTest0005 start *************");
         let context = featureAbility.getContext()
         let rdbStoreV9;
         try{
@@ -185,16 +211,16 @@ describe('V9_rdbStoreCallBackTest', async function () {
             done()
         }
         done()
-        console.log(TAG + "************* testV9RdbStoreCallBackTest0004 end *************");
+        console.log(TAG + "************* testV9RdbStoreCallBackTest0005 end *************");
     })
     
     /**
      * @tc.name rdb callback test deleteRdbStoreV9 OK params
-     * @tc.number testV9RdbStoreCallBackTest0004
+     * @tc.number testV9RdbStoreCallBackTest0006
      * @tc.desc rdb callback test deleteRdbStoreV9 OK params
      */
-    it('testV9RdbStoreCallBackTest0005', 0, async function (done) {
-        console.log(TAG + "************* testV9RdbStoreCallBackTest0005 start *************")
+    it('testV9RdbStoreCallBackTest0006', 0, async function (done) {
+        console.log(TAG + "************* testV9RdbStoreCallBackTest0006 start *************")
         let context = featureAbility.getContext()
         dataRdb.getRdbStoreV9(context, STORE_CONFIG, 1).then((rdbStoreV9)=>{
             try{
@@ -205,7 +231,7 @@ describe('V9_rdbStoreCallBackTest', async function () {
                     }
                     console.log("Delete RdbStore successfully.")
                     done()
-                    console.log(TAG + "************* testV9RdbStoreCallBackTest0005 end *************")
+                    console.log(TAG + "************* testV9RdbStoreCallBackTest0006 end *************")
                 });
             } catch(err) {
                 console.log("222catch err: Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
