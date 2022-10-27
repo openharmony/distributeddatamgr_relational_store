@@ -563,7 +563,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_008, TestSize.Le
 
     ColumnType colType;
     int ret = rstSet->GetColumnType(0, colType);
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_INVALID_STATEMENT);
     int retF = rstSet->GoToFirstRow();
     EXPECT_EQ(retF, E_OK);
 
@@ -591,7 +591,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_008, TestSize.Le
     int colCnt = 0;
     rstSet->GetColumnCount(colCnt);
     int ret1 = rstSet->GetColumnType(colCnt, colType);
-    EXPECT_EQ(ret1, E_ERROR);
+    EXPECT_EQ(ret1, E_INVALID_COLUMN_INDEX);
 
     rstSet->Close();
     bool isClosedFlag = rstSet->IsClosed();
