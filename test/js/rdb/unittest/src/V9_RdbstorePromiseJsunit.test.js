@@ -21,6 +21,7 @@ const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIM
 
 const STORE_CONFIG = {
     name: "V9_RDBPromiseTest.db",
+    securityLevel: dataRdb.SecurityLevel.S1,
 }
 
 describe('V9_rdbStorePromiseTest', function () {

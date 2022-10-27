@@ -21,6 +21,7 @@ const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIM
 
 const STORE_CONFIG = {
     name: "V9_RDBCallbackTest.db",
+    securityLevel: dataRdb.SecurityLevel.S1,
 }
 
 describe('V9_rdbStoreCallBackTest', async function () {
@@ -193,7 +194,7 @@ describe('V9_rdbStoreCallBackTest', async function () {
         try{
             rdbStoreV9 = await dataRdb.getRdbStoreV9(context, STORE_CONFIG, 1)
         } catch(err) {
-            console.log("112catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
+            console.log("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
             expect(false).assertTrue()
         }
         try{
