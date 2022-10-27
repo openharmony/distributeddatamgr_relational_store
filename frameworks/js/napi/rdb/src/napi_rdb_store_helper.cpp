@@ -518,9 +518,8 @@ napi_value GetRdbStoreV9(napi_env env, napi_callback_info info)
     return InnerGetRdbStore(env, info, context, ParseStoreConfigV9);
 }
 
-napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
+napi_value InnerDeleteRdbStore(napi_env env, napi_callback_info info, std::shared_ptr<HelperRdbContext> context)
 {
-    auto context = std::make_shared<HelperRdbContext>();
     LOG_DEBUG("RdbJsKit::DeleteRdbStore start");
     context->iscontext = JSAbility::CheckContext(env, info);
     // context: Context, config: StoreConfig, version: number
@@ -555,6 +554,20 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
     return asyncCall.Call(env, exec);
 }
 
+napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<HelperRdbContext>();
+    context->apiversion = APIVERSION_V8;
+    return InnerDeleteRdbStore(env, info, context);
+}
+
+napi_value DeleteRdbStoreV9(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<HelperRdbContext>();
+    context->apiversion = APIVERSION_V9;
+    return InnerDeleteRdbStore(env, info, context);
+}
+
 napi_value InitRdbHelper(napi_env env, napi_value exports)
 {
     LOG_INFO("RdbJsKit::InitRdbHelper begin");
@@ -562,7 +575,7 @@ napi_value InitRdbHelper(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getRdbStore", GetRdbStore),
         DECLARE_NAPI_FUNCTION("deleteRdbStore", DeleteRdbStore),
         DECLARE_NAPI_FUNCTION("getRdbStoreV9", GetRdbStoreV9),
-        DECLARE_NAPI_FUNCTION("deleteRdbStoreV9", DeleteRdbStore),
+        DECLARE_NAPI_FUNCTION("deleteRdbStoreV9", DeleteRdbStoreV9),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
     LOG_INFO("RdbJsKit::InitRdbHelper end");

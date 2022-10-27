@@ -15,6 +15,8 @@
 
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
 import dataRdb from '@ohos.data.rdb';
+import ability_featureAbility from '@ohos.ability.featureAbility'
+var context
 
 const TAG = "[RDB_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
@@ -189,7 +191,8 @@ describe('rdbStoreTest', function () {
             name: "secure.db",
             securityLevel: dataRdb.SecurityLevel.S3
         }
-        let storePromise = dataRdb.getRdbStoreV9(config, 1);
+        context = ability_featureAbility.getContext()
+        let storePromise = dataRdb.getRdbStoreV9(context, config, 1);
         storePromise.then(async (store) => {
             try {
                 await store.executeSql(CREATE_TABLE_TEST);
@@ -218,7 +221,8 @@ describe('rdbStoreTest', function () {
             name: "secure.db",
             securityLevel: 8
         }
-        let storePromise = dataRdb.getRdbStoreV9(config, 1);
+        context = ability_featureAbility.getContext()
+        let storePromise = dataRdb.getRdbStoreV9(context, config, 1);
         storePromise.then(async (ret) => {
             expect(null).assertFail();
         }).catch((err) => {
