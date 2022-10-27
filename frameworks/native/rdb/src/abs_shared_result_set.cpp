@@ -21,10 +21,10 @@
 #include <sstream>
 #include <string>
 
-#include "dds_trace.h"
 #include "logger.h"
 #include "parcel.h"
 #include "rdb_errno.h"
+#include "rdb_trace.h"
 #include "shared_block.h"
 #include "string_ex.h"
 
@@ -90,7 +90,7 @@ int AbsSharedResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 
 int AbsSharedResultSet::GoToRow(int position)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int rowCnt = 0;
     GetRowCount(rowCnt);
     if (rowCnt == 0) {
@@ -142,7 +142,7 @@ int AbsSharedResultSet::GoToRow(int position)
 
 int AbsSharedResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &value)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int errorCode = CheckState(columnIndex);
     if (errorCode != E_OK) {
         return errorCode;
@@ -184,7 +184,7 @@ int AbsSharedResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &value)
 
 int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int errorCode = CheckState(columnIndex);
     if (errorCode != E_OK) {
         return errorCode;
@@ -228,7 +228,7 @@ int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
 
 int AbsSharedResultSet::GetInt(int columnIndex, int &value)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int errorCode = CheckState(columnIndex);
     if (errorCode != E_OK) {
         return errorCode;
@@ -244,7 +244,7 @@ int AbsSharedResultSet::GetInt(int columnIndex, int &value)
 
 int AbsSharedResultSet::GetLong(int columnIndex, int64_t &value)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int errorCode = CheckState(columnIndex);
     if (errorCode != E_OK) {
         return errorCode;
@@ -285,7 +285,7 @@ int AbsSharedResultSet::GetLong(int columnIndex, int64_t &value)
 
 int AbsSharedResultSet::GetDouble(int columnIndex, double &value)
 {
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__));
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int errorCode = CheckState(columnIndex);
     if (errorCode != E_OK) {
         return errorCode;

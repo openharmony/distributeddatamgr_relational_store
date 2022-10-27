@@ -36,7 +36,6 @@
 #include "rdb_security_manager.h"
 #include "rdb_manager.h"
 #include "relational_store_manager.h"
-#include "reporter.h"
 #include "result_set_proxy.h"
 #include "sqlite_shared_result_set.h"
 #endif
@@ -179,7 +178,7 @@ void RdbStoreImpl::ReleaseThreadSession()
 
 int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     return InsertWithConflictResolution(outRowId, table, initialValues, ConflictResolution::ON_CONFLICT_NONE);
 }
 
@@ -254,7 +253,7 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
 int RdbStoreImpl::Update(int &changedRows, const std::string &table, const ValuesBucket &values,
     const std::string &whereClause, const std::vector<std::string> &whereArgs)
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     return UpdateWithConflictResolution(
         changedRows, table, values, whereClause, whereArgs, ConflictResolution::ON_CONFLICT_NONE);
 }
@@ -310,7 +309,7 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
 
 int RdbStoreImpl::Delete(int &deletedRows, const AbsRdbPredicates &predicates)
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     return Delete(deletedRows, predicates.GetTableName(), predicates.GetWhereClause(), predicates.GetWhereArgs());
 }
 
@@ -342,7 +341,7 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
 std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreImpl::Query on called.");
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
@@ -352,7 +351,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
 std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(
     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreImpl::QueryByStep on called.");
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
@@ -362,7 +361,7 @@ std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(
 std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
     const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreImpl::RemoteQuery on called.");
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
@@ -384,7 +383,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool disti
     const std::vector<std::string> &selectionArgs, const std::string &groupBy, const std::string &having,
     const std::string &orderBy, const std::string &limit)
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::string sql;
     errCode = SqliteSqlBuilder::BuildQueryString(distinct, table, columns, selection, groupBy, having, orderBy, limit,
         "", sql);
@@ -399,7 +398,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool disti
 std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sql,
     const std::vector<std::string> &selectionArgs)
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto resultSet = std::make_unique<SqliteSharedResultSet>(shared_from_this(), path, sql, selectionArgs);
     return resultSet;
 }
@@ -409,7 +408,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
 std::unique_ptr<ResultSet> RdbStoreImpl::Query(
     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreImpl::Query on called.");
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
@@ -434,7 +433,7 @@ int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
 
 int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int errCode = CheckAttach(sql);
     if (errCode != E_OK) {
         return errCode;
@@ -570,7 +569,7 @@ int RdbStoreImpl::SetVersion(int version)
  */
 int RdbStoreImpl::BeginTransaction()
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int errCode = session->BeginTransaction();
     if (errCode != E_OK) {
@@ -584,7 +583,7 @@ int RdbStoreImpl::BeginTransaction()
 */
 int RdbStoreImpl::RollBack()
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int errCode = session->RollBack();
     if (errCode != E_OK) {
@@ -598,7 +597,7 @@ int RdbStoreImpl::RollBack()
 */
 int RdbStoreImpl::Commit()
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("Enter Commit");
     std::shared_ptr<StoreSession> session = GetThreadSession();
     int errCode = session->Commit();
@@ -904,7 +903,7 @@ std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
 {
-    DDS_TRACE(DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isEncrypt_) {
         bool status = false;
         RdbSecurityManager::GetInstance().GetKeyDistributedStatus(
@@ -941,7 +940,7 @@ bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
 
 std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, const std::string &table)
 {
-    DDS_TRACE(DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
     if (service == nullptr) {
         return "";
@@ -952,7 +951,7 @@ std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, 
 
 bool RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const SyncCallback &callback)
 {
-    DDS_TRACE(DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
     if (service == nullptr) {
         return false;
