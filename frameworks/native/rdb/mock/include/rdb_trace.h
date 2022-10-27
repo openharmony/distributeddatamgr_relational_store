@@ -15,12 +15,18 @@
 #ifndef NATIVE_RDB_RDB_TRACE_H
 #define NATIVE_RDB_RDB_TRACE_H
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-#include "dds_trace.h"
-#define DDS_TRACE(...) \
-    DistributedDataDfx::DdsTrace trace(std::string(LOG_TAG "::") + std::string(__FUNCTION__), ##__VA_ARGS__)
+#define DO_NOTHING
+
+#ifdef WINDOWS_PLATFORM
+#define DISTRIBUTED_DATA_HITRACE(trace) DO_NOTHING
+
+#elif MAC_PLATFORM
+#define DISTRIBUTED_DATA_HITRACE(trace) DO_NOTHING
+
 #else
-#define DDS_TRACE(...)
+#include "hitrace.h"
+#define DISTRIBUTED_DATA_HITRACE(trace) HiTrace hitrace(trace)
+
 #endif
 
 #endif

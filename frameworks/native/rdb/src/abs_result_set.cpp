@@ -88,7 +88,7 @@ int AbsResultSet::GetRowIndex(int &position) const
 
 int AbsResultSet::GoTo(int offset)
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int ret = GoToRow(rowPos_ + offset);
     if (ret != E_OK) {
         LOG_WARN("AbsResultSet::GoTo return ret is wrong!");
@@ -99,7 +99,7 @@ int AbsResultSet::GoTo(int offset)
 
 int AbsResultSet::GoToFirstRow()
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int ret = GoToRow(0);
     if (ret != E_OK) {
         LOG_WARN("AbsResultSet::GoToFirstRow return ret is wrong!");
@@ -110,7 +110,7 @@ int AbsResultSet::GoToFirstRow()
 
 int AbsResultSet::GoToLastRow()
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int rowCnt = 0;
     int ret = GetRowCount(rowCnt);
     if (ret != E_OK) {
@@ -128,7 +128,7 @@ int AbsResultSet::GoToLastRow()
 
 int AbsResultSet::GoToNextRow()
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int ret = GoToRow(rowPos_ + 1);
     if (ret != E_OK) {
         LOG_WARN("AbsResultSet::GoToNextRow  return GoToRow::ret is wrong!");
@@ -139,7 +139,7 @@ int AbsResultSet::GoToNextRow()
 
 int AbsResultSet::GoToPreviousRow()
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int ret = GoToRow(rowPos_ - 1);
     if (ret != E_OK) {
         LOG_WARN("AbsResultSet::GoToPreviousRow  return GoToRow::ret is wrong!");
