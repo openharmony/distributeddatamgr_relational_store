@@ -465,7 +465,7 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
     context->iscontext = JSAbility::CheckContext(env, info);
     // context: Context, config: StoreConfig, version: number
     auto input = [context, parseStoreConfig](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
-        if (context->iscontext) {
+        if (context->iscontext || context->apiversion > APIVERSION_V8) {
             std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("3 or 4");
             RDB_CHECK_RETURN_CALL_RESULT(argc == 3 || argc == 4, context->SetError(paramNumError));
             RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseContext(env, argv[0], context));
@@ -525,7 +525,7 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
     context->iscontext = JSAbility::CheckContext(env, info);
     // context: Context, config: StoreConfig, version: number
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
-        if (context->iscontext) {
+        if (context->iscontext || context->apiversion > APIVERSION_V8) {
             std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
             RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
             RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseContext(env, argv[0], context));
