@@ -222,12 +222,17 @@ describe('rdbStoreTest', function () {
             securityLevel: 8
         }
         context = ability_featureAbility.getContext()
-        let storePromise = dataRdb.getRdbStoreV9(context, config, 1);
-        storePromise.then(async (ret) => {
-            expect(null).assertFail();
-        }).catch((err) => {
-            console.log(TAG + "getRdbStoreV9 with invalid securityLevel");
-        })
+        try{
+            let storePromise = dataRdb.getRdbStoreV9(context, config, 1);
+            storePromise.then(async (ret) => {
+                expect(null).assertFail();
+            }).catch((err) => {
+                console.log(TAG + "getRdbStoreV9 with invalid securityLevel");
+            })
+        } catch (err) {
+            expect("401").assertEqual(err.code)
+            done()
+        }
         storePromise = null
         done();
         console.log(TAG + "************* testRdbStore0007 end   *************");

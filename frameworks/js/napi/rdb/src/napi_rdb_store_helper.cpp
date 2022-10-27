@@ -362,12 +362,12 @@ int ParseSecurityLevel(const napi_env &env, const napi_value &object, std::share
     napi_status status = napi_has_named_property(env, object, "securityLevel", &hasProp);
     if (status != napi_ok || !hasProp) {
         LOG_ERROR("napi_has_named_property failed! code:%{public}d!, hasProp:%{public}d!", status, hasProp);
-        RDB_CHECK_RETURN_CALL_RESULT(true, context->SetError(paramError));
+        RDB_CHECK_RETURN_CALL_RESULT(false, context->SetError(paramError));
     }
     status = napi_get_named_property(env, object, "securityLevel", &value);
     if (status != napi_ok) {
         LOG_ERROR("napi_get_named_property failed! code:%{public}d!", status);
-        RDB_CHECK_RETURN_CALL_RESULT(true, context->SetError(paramError));
+        RDB_CHECK_RETURN_CALL_RESULT(false, context->SetError(paramError));
     }
 
     int32_t securityLevel;
@@ -378,7 +378,7 @@ int ParseSecurityLevel(const napi_env &env, const napi_value &object, std::share
     LOG_DEBUG("Get sl:%{public}d", securityLevel);
     if (!isValidSecurityLevel) {
         LOG_ERROR("The securityLevel should be S0-S4!");
-        RDB_CHECK_RETURN_CALL_RESULT(true, context->SetError(paramError));
+        RDB_CHECK_RETURN_CALL_RESULT(false, context->SetError(paramError));
     }
     context->config.SetSecurityLevel(securityLevel);
 
