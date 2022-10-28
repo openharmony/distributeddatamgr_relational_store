@@ -72,7 +72,7 @@ HWTEST_F(ValuesBucketTest, Values_Bucket_001, TestSize.Level1)
     OHOS::MessageParcel data;
     data.WriteParcelable(&values);
 
-    ValuesBucket *valuesBucket = data.ReadParcelable<ValuesBucket>();
+    auto valuesBucket = std::shared_ptr<ValuesBucket>(data.ReadParcelable<ValuesBucket>());
     ValueObject valueObject;
 
     valuesBucket->GetObject("id", valueObject);
@@ -204,7 +204,9 @@ HWTEST_F(ValuesBucketTest, Values_Bucket_004, TestSize.Level1)
     values.PutNull("mark");
 
     EXPECT_EQ(true, values.Marshalling(parcel));
-    EXPECT_EQ(7, values.Unmarshalling(parcel)->Size());
-    values.Unmarshalling(parcel)->Clear();
-    EXPECT_EQ(true, values.Unmarshalling(parcel)->IsEmpty());
+    auto valuesBucket = std::shared_ptr<ValuesBucket>(ValuesBucket::Unmarshalling(parcel));
+    EXPECT_EQ(7, valuesBucket->Size());
+    valuesBucket->Clear();
+    valuesBucket = std::shared_ptr<ValuesBucket>(ValuesBucket::Unmarshalling(parcel));
+    EXPECT_EQ(true, valuesBucket->IsEmpty());
 }
