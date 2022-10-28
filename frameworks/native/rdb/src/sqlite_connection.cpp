@@ -91,8 +91,8 @@ int SqliteConnection::InnerOpen(const SqliteConfig &config)
         return E_STEP_STATEMENT_NOT_INIT;
     }
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
     // db not exist
+    bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
     if ((!config.IsCreateNecessary()) && !isDbFileExist) {
         LOG_ERROR("SqliteConnection InnerOpen db not exist");
         return E_DB_NOT_EXIST;
@@ -109,12 +109,6 @@ int SqliteConnection::InnerOpen(const SqliteConfig &config)
     SetPersistWal();
     SetBusyTimeout(DEFAULT_BUSY_TIMEOUT_MS);
     LimitPermission(dbPath);
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    errCode = SetSecurityLabel(dbPath, config, isDbFileExist);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-#endif
 
     errCode = Config(config);
     if (errCode != E_OK) {
@@ -126,38 +120,6 @@ int SqliteConnection::InnerOpen(const SqliteConfig &config)
 
     return E_OK;
 }
-
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-int SqliteConnection::SetSecurityLabel(const std::string &dbPath, const SqliteConfig &config, const bool &isDbFileExist)
-{
-    if (isWriteConnection && config.GetSecurityLevel() != 0) {
-        std::string currentLevel = SqliteUtils::GetFileSecurityLevel(dbPath);
-        if (currentLevel.empty()) {
-            LOG_DEBUG("Set database SecurityLabel");
-            int errCode = SqliteUtils::SetFileSecurityLevel(dbPath, config.GetSecurityLevel());
-            if (errCode != E_OK) {
-                LOG_ERROR("Set database securityLabel failed, path = %{public}s", dbPath.c_str());
-                if (!isDbFileExist) {
-                    bool ret = RemoveFile(ExtractFilePath(dbPath));
-                    if (ret == false) {
-                        LOG_ERROR("Delete dbFile error");
-                    }
-                    return errCode;
-                }
-                return E_OK;
-            }
-        } else {
-            std::string inputLevel = SqliteUtils::DATA_LEVEL[config.GetSecurityLevel()];
-            if (inputLevel != currentLevel) {
-                LOG_WARN("The input securityLabel is inconsistent with the current database securityLabel %{public}s.",
-                    currentLevel.c_str());
-                return E_OK;
-            }
-        }
-    }
-    return E_OK;
-}
-#endif
 
 int SqliteConnection::Config(const SqliteConfig &config)
 {

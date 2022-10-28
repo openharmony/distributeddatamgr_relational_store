@@ -193,34 +193,5 @@ std::string SqliteDatabaseUtils::GetCorruptPath(std::string &path, int &errorCod
     corruptPath = corruptPath + "/" + name;
     return corruptPath;
 }
-
-/**
- * Get and Check no dbname path.
- */
-std::string SqliteDatabaseUtils::GetDatabasePathNoName(std::string &context, RdbStoreConfig &fileConfig, int &errorCode)
-{
-    std::string securityLevel = fileConfig.GetDatabaseFileSecurityLevel();
-    std::string databaseDir = GetDatabaseDir(fileConfig, securityLevel);
-    std::string databasePath = context + "/" + databaseDir;
-    std::unique_lock<std::mutex> lock(g_locker);
-    if (access(databasePath.c_str(), F_OK) != 0) {
-        if (MKDIR(databasePath.c_str())) {
-            errorCode = E_CREATE_FOLDER_FAIL;
-        }
-    }
-    return databasePath;
-}
-
-std::string SqliteDatabaseUtils::GetDatabaseDir(RdbStoreConfig &fileConfig, std::string &securityLevel)
-{
-    std::string databaseTypeDir = fileConfig.GetDatabaseFileType();
-    std::string prefix;
-    if (!securityLevel.compare("S3") || !securityLevel.compare("S4")) {
-        prefix = "sece_";
-    } else {
-        prefix = "";
-    }
-    return prefix + databaseTypeDir;
-}
 } // namespace NativeRdb
 } // namespace OHOS
