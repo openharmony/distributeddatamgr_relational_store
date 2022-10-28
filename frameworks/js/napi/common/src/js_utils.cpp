@@ -100,7 +100,8 @@ int32_t JSUtils::Convert2StrVector(napi_env env, napi_value value, std::vector<s
         return ERR;
     }
     if (arrLen == 0) {
-        return {};
+        output = {};
+        return OK;
     }
     napi_value element = nullptr;
     for (size_t i = 0; i < arrLen; ++i) {
