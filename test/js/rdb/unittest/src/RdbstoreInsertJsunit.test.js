@@ -156,14 +156,21 @@ describe('rdbStoreInsertTest', function () {
                 "salary": 100.5,
                 "blobType": u8,
             }
-            let insertPromise = rdbStore.insert(null, valueBucket)
-            insertPromise.then(async (ret) => {
-                expect(1).assertEqual(ret)
-                console.log(TAG + "insert first done: " + ret)
-                expect(null).assertFail()
-            }).catch((err) => {
-                console.log(TAG + "insert with null table")
-            })
+            try {
+                let insertPromise = rdbStore.insert(null, valueBucket)            
+                insertPromise.then(async (ret) => {
+                    expect(1).assertEqual(ret)
+                    console.log(TAG + "insert first done: " + ret)
+                    expect(null).assertFail()
+                }).catch((err) => {
+                    console.log(TAG + "insert with null table")
+                    expect(null).assertFail()
+                })
+            } catch(err) {
+                console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+                expect("401").assertEqual(err.code)
+                done()
+            }
         }
         done()
         console.log(TAG + "************* testRdbStoreInsert0003 end   *************");

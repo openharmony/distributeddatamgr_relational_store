@@ -49,17 +49,13 @@ enum class DatabaseFileType {
     CORRUPT,
 };
 
-enum class DatabaseFileSecurityLevel : int32_t {
-    NO_LEVEL = 0,
-    S0,
-    S1,
+enum class SecurityLevel : int32_t {
+    S1 = 1,
     S2,
     S3,
     S4,
-    LAST,
+    LAST
 };
-
-static const char *DatabaseFileSecurityLabel[] = { "", "S0", "S1", "S2", "S3", "S4" };
 
 using DistributedType = OHOS::DistributedRdb::RdbDistributedType;
 
@@ -69,22 +65,20 @@ public:
     RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
         const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(), const std::string &journalMode = "",
         const std::string &syncMode = "", const std::string &databaseFileType = "",
-        const std::string &databaseFileSecurityLevel = "");
+        SecurityLevel securityLevel = SecurityLevel::LAST, bool isCreateNecessary = true);
     ~RdbStoreConfig();
     std::string GetName() const;
     std::string GetPath() const;
     StorageMode GetStorageMode() const;
     std::string GetJournalMode() const;
     std::string GetSyncMode() const;
-    std::vector<uint8_t> GetEncryptKey() const;
     bool IsReadOnly() const;
     bool IsMemoryRdb() const;
     std::string GetDatabaseFileType() const;
-    std::string GetDatabaseFileSecurityLevel() const;
-    int32_t GetSecurityLevel() const;
+    SecurityLevel GetSecurityLevel() const;
     void SetEncryptStatus(const bool status);
     bool IsEncrypt() const;
-
+    bool IsCreateNecessary() const;
     // set the journal mode, if not set, the default mode is WAL
     void SetName(std::string name);
     void SetJournalMode(JournalMode journalMode);
@@ -92,9 +86,8 @@ public:
     void SetReadOnly(bool readOnly);
     void SetStorageMode(StorageMode storageMode);
     void SetDatabaseFileType(DatabaseFileType type);
-    void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
-    void SetSecurityLevel(const int32_t& secLevel);
-    void ClearEncryptKey();
+    void SetSecurityLevel(SecurityLevel secLevel);
+    void SetCreateNecessary(bool isCreateNecessary);
 
     // distributed rdb
     int SetBundleName(const std::string &bundleName);
@@ -116,7 +109,6 @@ public:
     static std::string GetJournalModeValue(JournalMode journalMode);
     static std::string GetSyncModeValue(SyncMode syncMode);
     static std::string GetDatabaseFileTypeValue(DatabaseFileType databaseFileType);
-    static std::string GetDatabaseFileSecurityLevelValue(DatabaseFileSecurityLevel databaseFileSecurityLevel);
 
 private:
     std::string name;
@@ -124,10 +116,8 @@ private:
     StorageMode storageMode;
     std::string journalMode;
     std::string syncMode;
-    std::vector<uint8_t> encryptKey;
     bool readOnly;
     std::string databaseFileType;
-    std::string databaseFileSecurityLevel;
 
     // distributed rdb
     DistributedType distributedType_ = DistributedRdb::RdbDistributedType::RDB_DEVICE_COLLABORATION;
@@ -136,10 +126,11 @@ private:
     std::string moduleName_;
 
     bool isEncrypt_ = false;
-    int32_t securityLevel_ = 0;
+    SecurityLevel securityLevel = SecurityLevel::LAST;
     std::string uri_;
     std::string readPermission_;
     std::string writePermission_;
+    bool isCreateNecessary_;
 };
 } // namespace OHOS::NativeRdb
 
