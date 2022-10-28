@@ -33,7 +33,7 @@ std::map<std::string, std::shared_ptr<RdbStore>> RdbHelper::storeCache_;
 std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode)
 {
-    DDS_TRACE(DistributedDataDfx::TraceSwitch::BYTRACE_ON | DistributedDataDfx::TraceSwitch::TRACE_CHAIN_ON);
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     SqliteGlobalConfig::InitSqliteGlobalConfig();
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
@@ -120,7 +120,7 @@ static void DeleteRdbKeyFiles(const std::string &dbFileName)
 
 int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
 {
-    DDS_TRACE();
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (dbFileName.empty()) {
         return E_EMPTY_FILE_NAME;
     }
