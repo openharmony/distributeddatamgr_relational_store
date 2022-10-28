@@ -86,7 +86,6 @@ public:
     virtual int MarkAsCommit() = 0;
     virtual int EndTransaction() = 0;
     virtual bool IsInTransaction() = 0;
-    virtual int ChangeEncryptKey(const std::vector<uint8_t> &newKey) = 0;
     virtual std::string GetPath() = 0;
     virtual bool IsHoldingConnection() = 0;
     virtual bool IsOpen() const = 0;

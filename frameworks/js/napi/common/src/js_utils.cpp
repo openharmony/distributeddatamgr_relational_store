@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
-#include "js_utils.h"
-
 #include "js_logger.h"
+#include "js_utils.h"
 #include "securec.h"
 
 namespace OHOS {
@@ -99,6 +98,9 @@ int32_t JSUtils::Convert2StrVector(napi_env env, napi_value value, std::vector<s
         LOG_ERROR("JSUtils::Convert2StrVector get arrLength failed, status = %{public}d", status);
         output = {};
         return ERR;
+    }
+    if (arrLen == 0) {
+        return {};
     }
     napi_value element = nullptr;
     for (size_t i = 0; i < arrLen; ++i) {
