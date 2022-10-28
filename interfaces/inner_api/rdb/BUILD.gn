@@ -57,7 +57,6 @@ config("native_rdb_config") {
     cflags_cc = [ "-std=c++17" ]
   } else {
     defines += [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
-    include_dirs += [ "//foundation/distributeddatamgr/datamgr_service/services/distributeddataservice/adapter/include/dfx" ]
   }
 }
 
@@ -138,7 +137,6 @@ ohos_shared_library("native_rdb") {
     ]
     public_deps = [
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
-      "//foundation/distributeddatamgr/datamgr_service/services/distributeddataservice/adapter/dfx:distributeddata_dfx_static",
       "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb:distributeddb",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner",
     ]
