@@ -413,8 +413,8 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_012, TestSize.Level1)
     std::string getUri = config.GetUri();
     EXPECT_EQ(getUri, uri);
 
-    int32_t securityLevel = 1;
+    SecurityLevel securityLevel = SecurityLevel::S1;
     config.SetSecurityLevel(securityLevel);
-    int32_t getSecurityLevel = config.GetSecurityLevel();
+    SecurityLevel getSecurityLevel = config.GetSecurityLevel();
     EXPECT_EQ(getSecurityLevel, securityLevel);
 }
