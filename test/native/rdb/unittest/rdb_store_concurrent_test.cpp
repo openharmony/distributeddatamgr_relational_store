@@ -81,6 +81,7 @@ int ConcurrentTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int n
 void RdbConcurrentTest::SetUpTestCase(void)
 {
     int errCode = E_OK;
+    RdbHelper::DeleteRdbStore(RdbConcurrentTest::DATABASE_NAME);
     RdbStoreConfig config(RdbConcurrentTest::DATABASE_NAME);
     ConcurrentTestOpenCallback helper;
     RdbConcurrentTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);

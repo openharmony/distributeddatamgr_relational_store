@@ -59,6 +59,7 @@ int ConfigTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVe
 
 void RdbStoreConfigTest::SetUpTestCase(void)
 {
+    RdbHelper::DeleteRdbStore(RDB_TEST_PATH + "config_test.db");
 }
 
 void RdbStoreConfigTest::TearDownTestCase(void)
