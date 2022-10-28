@@ -282,18 +282,15 @@ void ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<Hel
 
 int ParseContext(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
-    LOG_DEBUG("ParseContext begin");
     auto abilitycontext = JSAbility::GetContext(env, object);
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("context", "a Context.");
     RDB_CHECK_RETURN_CALL_RESULT(abilitycontext != nullptr, context->SetError(paramError));
     context->abilitycontext = abilitycontext;
-    LOG_DEBUG("ParseContext end");
     return OK;
 }
 
 int ParseDatabaseName(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
-    LOG_DEBUG("ParseDatabaseName begin");
     napi_value value;
     napi_get_named_property(env, object, "name", &value);
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("config", "a StoreConfig.");
@@ -302,13 +299,11 @@ int ParseDatabaseName(const napi_env &env, const napi_value &object, std::shared
     std::string name = JSUtils::Convert2String(env, value);
     RDB_CHECK_RETURN_CALL_RESULT(!name.empty(), context->SetError(paramError));
     context->config.SetName(std::move(name));
-    LOG_DEBUG("ParseDatabaseName end");
     return OK;
 }
 
 int ParseIsEncrypt(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
-    LOG_DEBUG("ParseIsEncrypt begin");
     napi_value value = nullptr;
     napi_get_named_property(env, object, "encrypt", &value);
     if (value != nullptr) {
@@ -316,13 +311,11 @@ int ParseIsEncrypt(const napi_env &env, const napi_value &object, std::shared_pt
         JSUtils::Convert2Bool(env, value, isEncrypt);
         context->config.SetEncryptStatus(isEncrypt);
     }
-    LOG_DEBUG("ParseIsEncrypt end");
     return OK;
 }
 
 int ParseContextProperty(const napi_env &env, std::shared_ptr<HelperRdbContext> context)
 {
-    LOG_DEBUG("ParseContextProperty begin");
     if (context->abilitycontext == nullptr) {
         int status = ParseContext(env, nullptr, context); // when no context as arg got from application.
         std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("context", "a Context.");
@@ -334,28 +327,25 @@ int ParseContextProperty(const napi_env &env, std::shared_ptr<HelperRdbContext> 
     context->config.SetUri(context->abilitycontext->GetUri());
     context->config.SetReadPermission(context->abilitycontext->GetReadPermission());
     context->config.SetWritePermission(context->abilitycontext->GetWritePermission());
-    LOG_DEBUG("ParseContextProperty end");
     return OK;
 }
 
-int ParseDatabaseDir(const napi_env &env, std::shared_ptr<HelperRdbContext> context, std::string &name)
+int ParseDatabaseDir(const napi_env &env, std::shared_ptr<HelperRdbContext> context)
 {
-    LOG_DEBUG("ParseDatabaseDir begin");
     std::string databaseDir = context->abilitycontext->GetDatabaseDir();
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("context", "a Context.");
     RDB_CHECK_RETURN_CALL_RESULT(context->abilitycontext != nullptr, context->SetError(paramError));
     int errorCode = E_OK;
-    std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, name, errorCode);
+    std::string databaseName = context->config.GetName();
+    std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, databaseName, errorCode);
     paramError = std::make_shared<ParamTypeError>("config", "a StoreConfig.");
     RDB_CHECK_RETURN_CALL_RESULT(errorCode == E_OK, context->SetError(paramError));
     context->config.SetPath(std::move(realPath));
-    LOG_DEBUG("ParseDatabaseDir end");
     return OK;
 }
 
 int ParseSecurityLevel(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
-    LOG_DEBUG("ParseSecurityLevel begin");
     napi_value value = nullptr;
     bool hasProp = false;
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("config", "a StoreConfig.");
@@ -372,15 +362,15 @@ int ParseSecurityLevel(const napi_env &env, const napi_value &object, std::share
 
     int32_t securityLevel;
     napi_get_value_int32(env, value, &securityLevel);
-    bool isValidSecurityLevel = static_cast<DatabaseFileSecurityLevel>(securityLevel) >= DatabaseFileSecurityLevel::S0
-                                && static_cast<DatabaseFileSecurityLevel>(securityLevel)
-                                       <= DatabaseFileSecurityLevel::S4;
+    SecurityLevel sl = static_cast<SecurityLevel>(securityLevel);
     LOG_DEBUG("Get sl:%{public}d", securityLevel);
+
+    bool isValidSecurityLevel = sl >= SecurityLevel::S1 && sl < SecurityLevel::LAST;
     if (!isValidSecurityLevel) {
-        LOG_ERROR("The securityLevel should be S0-S4!");
+        LOG_ERROR("The securityLevel should be S1-S4!");
         RDB_CHECK_RETURN_CALL_RESULT(false, context->SetError(paramError));
     }
-    context->config.SetSecurityLevel(securityLevel);
+    context->config.SetSecurityLevel(sl);
 
     LOG_DEBUG("ParseSecurityLevel end");
     return OK;
@@ -388,32 +378,25 @@ int ParseSecurityLevel(const napi_env &env, const napi_value &object, std::share
 
 int ParseStoreConfig(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
-    LOG_DEBUG("ParseStoreConfig begin");
     RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDatabaseName(env, object, context));
     RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseIsEncrypt(env, object, context));
     RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseContextProperty(env, context));
-    std::string name = context->config.GetName();
-    RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDatabaseDir(env, context, name));
-    LOG_DEBUG("ParseStoreConfig end");
+    RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDatabaseDir(env, context));
     return OK;
 }
 
 int ParseStoreConfigV9(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
-    LOG_DEBUG("ParseStoreConfigV9 begin");
     RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDatabaseName(env, object, context));
     RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseIsEncrypt(env, object, context));
     RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseSecurityLevel(env, object, context));
     RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseContextProperty(env, context));
-    std::string name = context->config.GetName();
-    RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDatabaseDir(env, context, name));
-    LOG_DEBUG("ParseStoreConfigV9 end");
+    RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDatabaseDir(env, context));
     return OK;
 }
 
 int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<HelperRdbContext> context)
 {
-    LOG_DEBUG("ParsePath begin");
     std::string path = JSUtils::Convert2String(env, arg);
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("name", "a without path non empty string.");
     RDB_CHECK_RETURN_CALL_RESULT(!path.empty(), context->SetError(paramError));
@@ -431,18 +414,14 @@ int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<Helper
     RDB_CHECK_RETURN_CALL_RESULT(errorCode == E_OK, context->SetError(paramError));
 
     context->config.SetPath(realPath);
-    LOG_DEBUG("ParsePath end");
     return OK;
 }
 
 int ParseVersion(const napi_env &env, const napi_value &arg, std::shared_ptr<HelperRdbContext> context)
 {
-    LOG_DEBUG("ParseVersion begin");
     napi_get_value_int32(env, arg, &context->version);
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("version", "an integer greater than 0.");
     RDB_CHECK_RETURN_CALL_RESULT(context->version > 0, context->SetError(paramError));
-
-    LOG_DEBUG("ParseVersion end");
     return OK;
 }
 

@@ -25,7 +25,6 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     readOnly = config.IsReadOnly();
     journalMode = config.GetJournalMode();
     databaseFileType = config.GetDatabaseFileType();
-    securityLevel = config.GetSecurityLevel();
     syncMode = config.GetSyncMode();
     if (journalMode.empty()) {
         journalMode = SqliteGlobalConfig::GetDefaultJournalMode();
@@ -67,11 +66,6 @@ std::string SqliteConfig::GetSyncMode() const
 bool SqliteConfig::IsReadOnly() const
 {
     return readOnly;
-}
-
-int32_t SqliteConfig::GetSecurityLevel() const
-{
-    return securityLevel;
 }
 
 std::string SqliteConfig::GetDatabaseFileType() const
