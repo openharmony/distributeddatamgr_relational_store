@@ -91,7 +91,6 @@ public:
     std::string GetName();
     std::string GetOrgPath();
     std::string GetFileType();
-    std::string GetFileSecurityLevel();
     std::unique_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
     std::unique_ptr<ResultSet> Query(
@@ -119,7 +118,6 @@ private:
     bool isReadOnly;
     bool isMemoryRdb;
     std::string name;
-    std::string fileSecurityLevel;
     std::string fileType;
     std::stack<TransactionObserver *> transactionObserverStack;
 };

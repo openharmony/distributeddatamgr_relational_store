@@ -95,7 +95,6 @@ public:
     std::string GetName();
     std::string GetOrgPath();
     std::string GetFileType();
-    std::string GetFileSecurityLevel();
     int ExecuteForSharedBlock(int &rowNum, AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos,
         bool isCountAllRows, std::string sql, std::vector<ValueObject> &bindArgVec);
     std::unique_ptr<ResultSet> QueryByStep(const std::string &sql,
@@ -141,7 +140,6 @@ private:
     bool isReadOnly;
     bool isMemoryRdb;
     std::string name;
-    std::string fileSecurityLevel;
     std::string fileType;
     std::stack<TransactionObserver *> transactionObserverStack;
     bool isShared_ = false;

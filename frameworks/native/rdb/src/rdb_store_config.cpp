@@ -30,12 +30,12 @@ RdbStoreConfig::RdbStoreConfig(const RdbStoreConfig &config)
     syncMode = config.GetSyncMode();
     readOnly = config.IsReadOnly();
     databaseFileType = config.GetDatabaseFileType();
-    databaseFileSecurityLevel = config.GetDatabaseFileSecurityLevel();
+    securityLevel = config.GetSecurityLevel();
 }
 
 RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode, bool isReadOnly,
     const std::vector<uint8_t> &encryptKey, const std::string &journalMode, const std::string &syncMode,
-    const std::string &databaseFileType, const std::string &databaseFileSecurityLevel, bool isCreateNecessary)
+    const std::string &databaseFileType, SecurityLevel securityLevel, bool isCreateNecessary)
     : name(name),
       path(name),
       storageMode(storageMode),
@@ -43,7 +43,7 @@ RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode,
       syncMode(syncMode),
       readOnly(isReadOnly),
       databaseFileType(databaseFileType),
-      databaseFileSecurityLevel(databaseFileSecurityLevel),
+      securityLevel(securityLevel),
       isCreateNecessary_(isCreateNecessary)
 {}
 
@@ -111,14 +111,6 @@ bool RdbStoreConfig::IsMemoryRdb() const
 std::string RdbStoreConfig::GetDatabaseFileType() const
 {
     return databaseFileType;
-}
-
-/**
- * Obtains the security level of the database file.
- */
-std::string RdbStoreConfig::GetDatabaseFileSecurityLevel() const
-{
-    return databaseFileSecurityLevel;
 }
 
 void RdbStoreConfig::SetName(std::string name)
@@ -273,38 +265,14 @@ std::string RdbStoreConfig::GetDatabaseFileTypeValue(DatabaseFileType databaseFi
     return value;
 }
 
-std::string RdbStoreConfig::GetDatabaseFileSecurityLevelValue(DatabaseFileSecurityLevel databaseFileSecurityLevel)
+void RdbStoreConfig::SetSecurityLevel(SecurityLevel sl)
 {
-    std::string value = "";
-
-    switch (databaseFileSecurityLevel) {
-        case DatabaseFileSecurityLevel::S4:
-            return "S4";
-        case DatabaseFileSecurityLevel::S3:
-            return "S3";
-        case DatabaseFileSecurityLevel::S2:
-            return "S2";
-        case DatabaseFileSecurityLevel::S1:
-            return "S1";
-        case DatabaseFileSecurityLevel::S0:
-            return "S0";
-        case DatabaseFileSecurityLevel::NO_LEVEL:
-            return "NO_LEVEL";
-        default:
-            break;
-    }
-
-    return value;
+    securityLevel = sl;
 }
 
-void RdbStoreConfig::SetSecurityLevel(const int32_t &secLevel)
+SecurityLevel RdbStoreConfig::GetSecurityLevel() const
 {
-    securityLevel_ = secLevel;
-}
-
-int32_t RdbStoreConfig::GetSecurityLevel() const
-{
-    return securityLevel_;
+    return securityLevel;
 }
 
 void RdbStoreConfig::SetEncryptStatus(const bool status)
