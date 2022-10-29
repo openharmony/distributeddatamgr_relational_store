@@ -29,8 +29,8 @@ constexpr int E_INNER_ERROR = 14800000;
 
 constexpr int E_DB_INVALID = 14800010;
 constexpr int E_DB_CORRUPTED = 14800011;
-constexpr int E_RESULT_GET_ERROR = 14800012;
-constexpr int E_RESULT_GOTO_ERROR = 14800013;
+constexpr int E_RESULT_GET_ERROR = 14800013;
+constexpr int E_RESULT_GOTO_ERROR = 14800012;
 
 #define RDB_NAPI_ASSERT_BASE(env, assertion, error, retVal)                                                     \
     do {                                                                                                        \
