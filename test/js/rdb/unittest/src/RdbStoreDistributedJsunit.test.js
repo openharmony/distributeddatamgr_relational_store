@@ -75,6 +75,7 @@ describe('rdbStoreDistributedTest', function () {
             try {
                 await rdbStore.executeSql(sqlStatement, null)
                 console.log(TAG + "create table product success")
+                done()
             } catch (err) {
                 console.log(TAG + "create table product failed")
                 expect(null).assertFail()
