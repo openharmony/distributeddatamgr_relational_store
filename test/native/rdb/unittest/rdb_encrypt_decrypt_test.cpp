@@ -82,6 +82,9 @@ void RdbEncryptTest::TearDownTestCase(void)
 
 void RdbEncryptTest::SetUp(void)
 {
+    RdbHelper::ClearCache();
+    RdbHelper::DeleteRdbStore(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(RdbEncryptTest::UNENCRYPTED_DATABASE_NAME);
 }
 
 void RdbEncryptTest::TearDown(void)
@@ -226,6 +229,7 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_04, TestSize.Level1)
     int ret = access(keyPath.c_str(), F_OK);
     EXPECT_EQ(ret, 0);
 
+    store = nullptr;
     RdbHelper::DeleteRdbStore(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
     ret = access(keyPath.c_str(), F_OK);
     EXPECT_EQ(ret, -1);
@@ -307,6 +311,7 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_07, TestSize.Level1)
 HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_08, TestSize.Level1)
 {
     std::string path = RDB_TEST_PATH + "test";
+    RdbHelper::DeleteRdbStore(path);
     RdbStoreConfig config(path);
     config.SetEncryptStatus(true);
     config.SetBundleName("com.example.TestEncrypt8");

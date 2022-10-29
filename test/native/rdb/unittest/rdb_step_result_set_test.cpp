@@ -64,6 +64,7 @@ int RdbStepResultSetOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int
 void RdbStepResultSetTest::SetUpTestCase(void)
 {
     int errCode = E_OK;
+    RdbHelper::DeleteRdbStore(DATABASE_NAME);
     RdbStoreConfig config(RdbStepResultSetTest::DATABASE_NAME);
     RdbStepResultSetOpenCallback helper;
     RdbStepResultSetTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);

@@ -251,6 +251,8 @@ HWTEST_F(RdbStoreInterfaceTest, ValuesBucket_002, TestSize.Level1)
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_ERROR);
 
+    resultSet->Close();
+    resultSet = nullptr;
     store = nullptr;
     ret = RdbHelper::DeleteRdbStore(dbPath);
     EXPECT_EQ(ret, E_OK);
