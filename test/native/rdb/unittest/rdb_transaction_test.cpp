@@ -68,6 +68,7 @@ int TransactionTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int 
 void RdbTransactionTest::SetUpTestCase(void)
 {
     int errCode = E_OK;
+    RdbHelper::DeleteRdbStore(DATABASE_NAME);
     RdbStoreConfig config(RdbTransactionTest::DATABASE_NAME);
     TransactionTestOpenCallback helper;
     RdbTransactionTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -77,6 +78,7 @@ void RdbTransactionTest::SetUpTestCase(void)
 
 void RdbTransactionTest::TearDownTestCase(void)
 {
+    store = nullptr;
     RdbHelper::DeleteRdbStore(RdbTransactionTest::DATABASE_NAME);
 }
 

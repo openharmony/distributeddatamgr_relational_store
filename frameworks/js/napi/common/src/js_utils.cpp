@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "js_logger.h"
 #include "js_utils.h"
+
+#include "js_logger.h"
 #include "securec.h"
 
 namespace OHOS {

@@ -82,6 +82,7 @@ void RdbStoreDistributedTest::SetUpTestCase()
 {
     int errCode = 0;
     std::string path = RdbStoreDistributedTest::DRDB_PATH + RdbStoreDistributedTest::DRDB_NAME;
+    RdbHelper::DeleteRdbStore(path);
     int fd = open(path.c_str(), O_CREAT, S_IRWXU | S_IRWXG);
     if (fd < 0) {
         std::cout << "open file failed" << std::endl;
