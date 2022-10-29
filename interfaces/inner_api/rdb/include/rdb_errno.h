@@ -65,6 +65,7 @@ constexpr int E_NOT_SUPPORT = (E_BASE + 41);
 constexpr int E_INVALID_PARCEL = (E_BASE + 42);
 constexpr int E_INVALID_FILE_PATH = (E_BASE + 43);
 constexpr int E_SET_PERSIST_WAL = (E_BASE + 44);
+constexpr int E_DB_NOT_EXIST = (E_BASE + 45);
 } // namespace NativeRdb
 } // namespace OHOS
 

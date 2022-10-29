@@ -91,7 +91,12 @@ int SqliteConnection::InnerOpen(const SqliteConfig &config)
         return E_STEP_STATEMENT_NOT_INIT;
     }
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+    // db not exist
     bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
+    if ((!config.IsCreateNecessary()) && !isDbFileExist) {
+        LOG_ERROR("SqliteConnection InnerOpen db not exist");
+        return E_DB_NOT_EXIST;
+    }
 #endif
     isReadOnly = !isWriteConnection || config.IsReadOnly();
     int openFileFlags = config.IsReadOnly() ? SQLITE_OPEN_READONLY : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
@@ -104,12 +109,6 @@ int SqliteConnection::InnerOpen(const SqliteConfig &config)
     SetPersistWal();
     SetBusyTimeout(DEFAULT_BUSY_TIMEOUT_MS);
     LimitPermission(dbPath);
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    errCode = SetSecurityLabel(dbPath, config, isDbFileExist);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-#endif
 
     errCode = Config(config);
     if (errCode != E_OK) {
@@ -122,38 +121,6 @@ int SqliteConnection::InnerOpen(const SqliteConfig &config)
     return E_OK;
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-int SqliteConnection::SetSecurityLabel(const std::string &dbPath, const SqliteConfig &config, const bool &isDbFileExist)
-{
-    if (isWriteConnection && config.GetSecurityLevel() != 0) {
-        std::string currentLevel = SqliteUtils::GetFileSecurityLevel(dbPath);
-        if (currentLevel.empty()) {
-            LOG_DEBUG("Set database SecurityLabel");
-            int errCode = SqliteUtils::SetFileSecurityLevel(dbPath, config.GetSecurityLevel());
-            if (errCode != E_OK) {
-                LOG_ERROR("Set database securityLabel failed, path = %{public}s", dbPath.c_str());
-                if (!isDbFileExist) {
-                    bool ret = RemoveFile(ExtractFilePath(dbPath));
-                    if (ret == false) {
-                        LOG_ERROR("Delete dbFile error");
-                    }
-                    return errCode;
-                }
-                return E_OK;
-            }
-        } else {
-            std::string inputLevel = SqliteUtils::DATA_LEVEL[config.GetSecurityLevel()];
-            if (inputLevel != currentLevel) {
-                LOG_WARN("The input securityLabel is inconsistent with the current database securityLabel %{public}s.",
-                    currentLevel.c_str());
-                return E_OK;
-            }
-        }
-    }
-    return E_OK;
-}
-#endif
-
 int SqliteConnection::Config(const SqliteConfig &config)
 {
     if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
@@ -161,13 +128,6 @@ int SqliteConnection::Config(const SqliteConfig &config)
     }
 
     int errCode = SetPageSize();
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    std::vector<uint8_t> encryptKey = config.GetEncryptKey();
-    errCode = SetEncryptKey(encryptKey);
-    std::fill(encryptKey.begin(), encryptKey.end(), 0);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -614,27 +574,6 @@ int SqliteConnection::EndStepQuery()
     return stepStatement->ResetStatementAndClearBindings();
 }
 
-int SqliteConnection::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
-{
-    int errCode = sqlite3_rekey(dbHandle, static_cast<const void *>(newKey.data()), newKey.size());
-    if (errCode != SQLITE_OK) {
-        LOG_ERROR("SqliteConnection ChangeEncryptKey fail, err = %{public}d", errCode);
-        return SQLiteError::ErrNo(errCode);
-    }
-
-    errCode = statement.Finalize();
-    if (errCode != SQLITE_OK) {
-        return errCode;
-    }
-
-    errCode = stepStatement->Finalize();
-    if (errCode != SQLITE_OK) {
-        return errCode;
-    }
-
-    return E_OK;
-}
-
 void SqliteConnection::LimitPermission(const std::string &dbPath) const
 {
     struct stat st = { 0 };
@@ -767,8 +706,7 @@ int SqliteConnection::ManageKey(const SqliteConfig &config)
     }
     bool isKeyFileExists =
         RdbSecurityManager::GetInstance().CheckKeyDataFileExists(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-   
-    if (!isKeyFileExists ) {
+    if (!isKeyFileExists) {
         LOG_INFO("ManageKey Init");
         return InitKey();
     } else {

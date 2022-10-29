@@ -13,14 +13,16 @@
  * limitations under the License.
  */
 
-#include "napi_rdb_store.h"
-
 #include <cinttypes>
+#include <string>
+#include <vector>
 
 #include "js_logger.h"
 #include "js_utils.h"
-#include "napi_async_proxy.h"
+#include "napi_async_call.h"
+#include "napi_rdb_error.h"
 #include "napi_rdb_predicates.h"
+#include "napi_rdb_store.h"
 #include "napi_result_set.h"
 #include "rdb_errno.h"
 #include "securec.h"
@@ -47,23 +49,9 @@ struct PredicatesProxy {
     std::shared_ptr<DataShareAbsPredicates> predicates_;
 };
 #endif
-class RdbStoreContext : public NapiAsyncProxy<RdbStoreContext>::AysncContext {
-public:
-    RdbStoreContext() : AysncContext(), predicatesProxy(nullptr), valuesBucket(nullptr), rowId(0), enumArg(0)
-    {
-        valuesBucket = new ValuesBucket();
-    }
-
-    virtual ~RdbStoreContext()
-    {
-        auto *obj = reinterpret_cast<RdbStoreProxy *>(boundObj);
-        if (obj != nullptr) {
-            obj->Release(env);
-        }
-        delete valuesBucket;
-    }
-
-    void BindArgs(napi_env env, napi_value arg);
+struct RdbStoreContext : public AsyncCall::Context {
+    bool isNapiString;
+    int BindArgs(napi_env env, napi_value arg);
     std::string device;
     std::string tableName;
     std::vector<std::string> tablesName;
@@ -94,17 +82,48 @@ public:
     DistributedRdb::SyncResult syncResult;
 #endif
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
+
+    RdbStoreContext()
+        : Context(nullptr, nullptr), predicatesProxy(nullptr), valuesBucket(nullptr), rowId(0), enumArg(0)
+    {
+        isNapiString = false;
+        valuesBucket = new ValuesBucket();
+    }
+    RdbStoreContext(InputAction input, OutputAction output)
+        : Context(std::move(input), std::move(output)), predicatesProxy(nullptr), valuesBucket(nullptr), rowId(0),
+          enumArg(0)
+    {
+        isNapiString = false;
+        valuesBucket = new ValuesBucket();
+    }
+    virtual ~RdbStoreContext()
+    {
+        auto *obj = reinterpret_cast<RdbStoreProxy *>(boundObj);
+        if (obj != nullptr) {
+            obj->Release(_env);
+        }
+        delete valuesBucket;
+    }
+
+    int operator()(napi_env env, size_t argc, napi_value *argv, napi_value self) override
+    {
+        return Context::operator()(env, argc, argv, self);
+    }
+    int operator()(napi_env env, napi_value &result) override
+    {
+        return Context::operator()(env, result);
+    }
 };
 
 static __thread napi_ref constructor_ = nullptr;
 
-void RdbStoreContext::BindArgs(napi_env env, napi_value arg)
+int RdbStoreContext::BindArgs(napi_env env, napi_value arg)
 {
     bindArgs.clear();
     uint32_t arrLen = 0;
     napi_get_array_length(env, arg, &arrLen);
     if (arrLen == 0) {
-        return;
+        return OK;
     }
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value element;
@@ -113,19 +132,19 @@ void RdbStoreContext::BindArgs(napi_env env, napi_value arg)
         napi_typeof(env, element, &type);
         switch (type) {
             case napi_boolean: {
-                    bool value = false;
-                    napi_status status = napi_get_value_bool(env, element, &value);
-                    if (status == napi_ok) {
-                        bindArgs.push_back(ValueObject(value));
-                    }
-                } break;
+                bool value = false;
+                napi_status status = napi_get_value_bool(env, element, &value);
+                if (status == napi_ok) {
+                    bindArgs.push_back(ValueObject(value));
+                }
+            } break;
             case napi_number: {
-                    double value;
-                    napi_status status = napi_get_value_double(env, element, &value);
-                    if (status == napi_ok) {
-                        bindArgs.push_back(ValueObject(value));
-                    }
-                } break;
+                double value;
+                napi_status status = napi_get_value_double(env, element, &value);
+                if (status == napi_ok) {
+                    bindArgs.push_back(ValueObject(value));
+                }
+            } break;
             case napi_null:
                 bindArgs.push_back(ValueObject());
                 break;
@@ -139,6 +158,7 @@ void RdbStoreContext::BindArgs(napi_env env, napi_value arg)
                 break;
         }
     }
+    return OK;
 }
 
 RdbStoreProxy::RdbStoreProxy()
@@ -176,7 +196,6 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("markAsCommit", MarkAsCommit),
         DECLARE_NAPI_FUNCTION("endTransaction", EndTransaction),
         DECLARE_NAPI_FUNCTION("restore", Restore),
-        DECLARE_NAPI_FUNCTION("changeEncryptKey", ChangeEncryptKey),
         DECLARE_NAPI_GETTER("isInTransaction", IsInTransaction),
         DECLARE_NAPI_GETTER("isOpen", IsOpen),
         DECLARE_NAPI_GETTER("path", GetPath),
@@ -192,10 +211,14 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
 #endif
     };
     napi_value cons = nullptr;
-    napi_define_class(env, "RdbStore", NAPI_AUTO_LENGTH, Initialize, nullptr,
-        sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons);
+    NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "RdbStore", NAPI_AUTO_LENGTH, Initialize, nullptr,
+                                   sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons));
+    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, cons, 1, &constructor_));
 
-    napi_create_reference(env, cons, 1, &constructor_);
+    NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "RdbStoreV9", NAPI_AUTO_LENGTH, Initialize, nullptr,
+                                   sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons));
+    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, cons, 1, &constructor_));
+
     LOG_DEBUG("Init RdbStoreProxy end");
 }
 
@@ -282,36 +305,43 @@ void RdbStoreProxy::Release(napi_env env)
     }
 
     if (status != napi_ok) {
-        LOG_ERROR("RdbStoreProxy::Release napi_reference_unref failed! code:%{public}d!, count:%{public}u",
-            status, count);
+        LOG_ERROR(
+            "RdbStoreProxy::Release napi_reference_unref failed! code:%{public}d!, count:%{public}u", status, count);
     }
 }
 
-void ParseThis(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
+void ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<RdbStoreContext> context)
 {
-    asyncContext->boundObj = RdbStoreProxy::GetNativeInstance(env, arg);
-    LOG_DEBUG("ParseThis end");
+    context->boundObj = RdbStoreProxy::GetNativeInstance(env, self);
 }
 
-void ParseTableName(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
+int ParseTableName(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-    asyncContext->tableName = JSUtils::Convert2String(env, arg);
+    context->tableName = JSUtils::Convert2String(env, arg);
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("table", "a non empty string.");
+    RDB_CHECK_RETURN_CALL_RESULT(!context->tableName.empty(), context->SetError(paramError));
+
     LOG_DEBUG("ParseTableName end");
+    return OK;
 }
 
-void ParseDevice(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
+int ParseDevice(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-    asyncContext->device = JSUtils::Convert2String(env, arg);
+    context->device = JSUtils::Convert2String(env, arg);
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("device", "a non empty string.");
+    RDB_CHECK_RETURN_CALL_RESULT(!context->device.empty(), context->SetError(paramError));
+
     LOG_DEBUG("ParseDevice end");
+    return OK;
 }
 
-void ParseTablesName(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
+int ParseTablesName(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
     uint32_t arrLen = 0;
     napi_get_array_length(env, arg, &arrLen);
-    if (arrLen == 0) {
-        return;
-    }
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("tables", "a string array.");
+    RDB_CHECK_RETURN_CALL_RESULT(arrLen >= 0, context->SetError(paramError));
+
     for (uint32_t i = 0; i < arrLen; ++i) {
         napi_value element;
         napi_get_element(env, arg, i, &element);
@@ -319,122 +349,171 @@ void ParseTablesName(const napi_env &env, const napi_value &arg, RdbStoreContext
         napi_typeof(env, element, &type);
         if (type == napi_string) {
             std::string table = JSUtils::Convert2String(env, element);
-            asyncContext->tablesName.push_back(table);
+            context->tablesName.push_back(table);
         }
     }
     LOG_DEBUG("ParseTablesName end");
+    return OK;
 }
 
-void ParseEnumArg(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
+int ParseEnumArg(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-    napi_get_value_int32(env, arg, &asyncContext->enumArg);
+    napi_get_value_int32(env, arg, &context->enumArg);
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("mode", "a SyncMode.");
+    RDB_CHECK_RETURN_CALL_RESULT(context->enumArg == 0 || context->enumArg == 1, context->SetError(paramError));
+
     LOG_DEBUG("ParseEnumArg end");
+    return OK;
 }
 
-void ParsePredicates(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
+int ParsePredicates(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-    bool result = false;
     napi_value global = nullptr;
     napi_status status = napi_get_global(env, &global);
-    NAPI_ASSERT_RETURN_VOID(env, status == napi_ok, "get napi global failed");
-    napi_value rdbPredicatesConstructor = nullptr;
-    status = napi_get_named_property(env, global, "RdbPredicatesConstructor", &rdbPredicatesConstructor);
-    NAPI_ASSERT_RETURN_VOID(env, status == napi_ok, "get RdbPredicates constructor failed");
-    status = napi_instanceof(env, arg, rdbPredicatesConstructor, &result);
-    if ((status == napi_ok) && (result != false)) {
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("predicates", "an RdbPredicates.");
+    RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok, context->SetError(paramError));
+
+    bool result = false;
+    napi_value RdbPredicatesConstructor = nullptr;
+    status = napi_get_named_property(env, global, "RdbPredicatesConstructor", &RdbPredicatesConstructor);
+    RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok, context->SetError(paramError));
+    status = napi_instanceof(env, arg, RdbPredicatesConstructor, &result);
+
+    napi_value RdbPredicatesConstructorV9 = nullptr;
+    napi_status statusv9 =
+        napi_get_named_property(env, global, "RdbPredicatesConstructorV9", &RdbPredicatesConstructorV9);
+    RDB_CHECK_RETURN_CALL_RESULT(statusv9 == napi_ok, context->SetError(paramError));
+    bool resultv9 = false;
+    statusv9 = napi_instanceof(env, arg, RdbPredicatesConstructorV9, &resultv9);
+
+    LOG_DEBUG("Parse RDB Predicates status=%{public}d, result=%{public}d,statusv9=%{public}d, resultv9=%{public}d",
+        status, result, statusv9, resultv9);
+    if ((status == napi_ok && result != false) || (statusv9 == napi_ok && resultv9 != false)) {
         LOG_DEBUG("Parse RDB Predicates");
-        napi_unwrap(env, arg, reinterpret_cast<void **>(&asyncContext->predicatesProxy));
-        asyncContext->tableName = asyncContext->predicatesProxy->GetPredicates()->GetTableName();
-        asyncContext->rdbPredicates = asyncContext->predicatesProxy->GetPredicates();
+        napi_unwrap(env, arg, reinterpret_cast<void **>(&context->predicatesProxy));
+        context->tableName = context->predicatesProxy->GetPredicates()->GetTableName();
+        context->rdbPredicates = context->predicatesProxy->GetPredicates();
     } else {
         LOG_DEBUG("Parse DataShare Predicates");
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
         PredicatesProxy *proxy = nullptr;
         napi_unwrap(env, arg, reinterpret_cast<void **>(&proxy));
         std::shared_ptr<DataShareAbsPredicates> dsPredicates = proxy->predicates_;
-        asyncContext->rdbPredicates = std::make_shared<RdbPredicates>(
-            RdbDataShareAdapter::RdbUtils::ToPredicates(*dsPredicates, asyncContext->tableName));
+        LOG_ERROR("dsPredicates is null ? %{public}d", (dsPredicates == nullptr));
+        paramError = std::make_shared<ParamTypeError>("predicates", "an DataShare Predicates.");
+        RDB_CHECK_RETURN_CALL_RESULT(dsPredicates != nullptr, context->SetError(paramError));
+        context->rdbPredicates = std::make_shared<RdbPredicates>(
+            RdbDataShareAdapter::RdbUtils::ToPredicates(*dsPredicates, context->tableName));
 #endif
     }
     LOG_DEBUG("ParsePredicates end");
+    return OK;
 }
 
-void ParseNewKey(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
+int ParseNewKey(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-    asyncContext->newKey = JSUtils::Convert2U8Vector(env, arg);
+    context->newKey = JSUtils::Convert2U8Vector(env, arg);
     LOG_DEBUG("ParseNewKey end");
+    return OK;
 }
 
-void ParseDestName(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
+int ParseSrcName(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-    asyncContext->destName = JSUtils::Convert2String(env, arg);
-    LOG_DEBUG("DestName end");
-}
+    context->srcName = JSUtils::Convert2String(env, arg);
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("srcName", "a non empty string.");
+    RDB_CHECK_RETURN_CALL_RESULT(!context->srcName.empty(), context->SetError(paramError));
 
-void ParseSrcName(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
-{
-    asyncContext->srcName = JSUtils::Convert2String(env, arg);
     LOG_DEBUG("ParseSrcName end");
+    return OK;
 }
 
-void ParseColumns(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
+int ParseColumns(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-    asyncContext->columns = JSUtils::Convert2StrVector(env, arg);
+    int status = JSUtils::Convert2StrVector(env, arg, context->columns);
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("columns", "a string array.");
+    RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok, context->SetError(paramError));
+
     LOG_DEBUG("ParseColumns end");
+    return OK;
 }
 
-void ParseWhereClause(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
+int ParseWhereClause(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-    asyncContext->whereClause = JSUtils::Convert2String(env, arg);
+    context->whereClause = JSUtils::Convert2String(env, arg);
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("whereClause", "a non empty string.");
+    RDB_CHECK_RETURN_CALL_RESULT(!context->whereClause.empty(), context->SetError(paramError));
+
     LOG_DEBUG("ParseWhereClause end");
+    return OK;
 }
 
-void ParseAlias(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
+int ParseAlias(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-    asyncContext->aliasName = JSUtils::Convert2String(env, arg);
+    context->aliasName = JSUtils::Convert2String(env, arg);
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("aliasName", "a non empty string.");
+    RDB_CHECK_RETURN_CALL_RESULT(!context->aliasName.empty(), context->SetError(paramError));
+
     LOG_DEBUG("ParseAlias end");
+    return OK;
 }
 
-void ParsePath(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
+int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-    asyncContext->pathName = JSUtils::Convert2String(env, arg);
+    context->pathName = JSUtils::Convert2String(env, arg);
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("pathName", "a non empty string.");
+    RDB_CHECK_RETURN_CALL_RESULT(!context->pathName.empty(), context->SetError(paramError));
+
     LOG_DEBUG("ParsePath end");
+    return OK;
 }
 
-void ParseWhereArgs(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
+int ParseWhereArgs(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-    asyncContext->whereArgs = JSUtils::Convert2StrVector(env, arg);
+    context->whereArgs = JSUtils::Convert2StrVector(env, arg);
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("whereArgs", "a non empty string.");
+    RDB_CHECK_RETURN_CALL_RESULT(!context->pathName.empty(), context->SetError(paramError));
+
     LOG_DEBUG("ParseWhereArgs end");
+    return OK;
 }
 
-void ParseSelectionArgs(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
+int ParseSelectionArgs(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-    asyncContext->selectionArgs = JSUtils::Convert2StrVector(env, arg);
+    int status = JSUtils::Convert2StrVector(env, arg, context->selectionArgs);
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("bindArgs", "a ValueType array.");
+    RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok, context->SetError(paramError));
+
     LOG_DEBUG("ParseSelectionArgs end");
+    return OK;
 }
 
-void ParseSql(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
+int ParseSql(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-    asyncContext->sql = JSUtils::Convert2String(env, arg, false);
+    context->sql = JSUtils::Convert2String(env, arg, false);
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("sql", "a non empty string.");
+    RDB_CHECK_RETURN_CALL_RESULT(!context->sql.empty(), context->SetError(paramError));
+
     LOG_DEBUG("ParseSql end");
+    return OK;
 }
 
-void ParseValuesBucket(const napi_env &env, const napi_value &arg, RdbStoreContext *context)
+int ParseValuesBucket(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
     napi_value keys = 0;
     napi_get_property_names(env, arg, &keys);
     uint32_t arrLen = 0;
     napi_status status = napi_get_array_length(env, keys, &arrLen);
-    if (status != napi_ok) {
-        LOG_DEBUG("ValuesBucket errr");
-        return;
-    }
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("values", "a ValuesBucket.");
+    RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok, context->SetError(paramError));
+
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value key;
         status = napi_get_element(env, keys, i, &key);
         if (status != napi_ok) {
             LOG_DEBUG("ValuesBucket get_element errr");
         }
+        RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok, context->SetError(paramError));
+
         std::string keyStr = JSUtils::Convert2String(env, key);
         napi_value value;
         napi_get_property(env, arg, key, &value);
@@ -461,35 +540,37 @@ void ParseValuesBucket(const napi_env &env, const napi_value &arg, RdbStoreConte
             context->valuesBucket->PutBlob(keyStr, JSUtils::Convert2U8Vector(env, value));
             LOG_DEBUG("ValueObject type napi_object");
         } else {
+            RDB_CHECK_RETURN_CALL_RESULT(OK == OK, context->SetError(paramError));
             LOG_WARN("valuesBucket error");
         }
     }
     LOG_DEBUG("ParseValuesBucket end");
+    return OK;
 }
 
-void ParseValuesBuckets(const napi_env &env, const napi_value &arg, RdbStoreContext *context)
+int ParseValuesBuckets(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
     bool isArray = false;
     napi_is_array(env, arg, &isArray);
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("values", "a ValuesBucket array.");
     if (!isArray) {
         context->insertNum = -1;
-        LOG_ERROR("input is not an array");
-        return;
+        RDB_CHECK_RETURN_CALL_RESULT(isArray, context->SetError(paramError));
     }
     uint32_t arrLen = 0;
     napi_status status = napi_get_array_length(env, arg, &arrLen);
-    if (status != napi_ok && arrLen < 0) {
-        LOG_ERROR("get array length error");
-        return;
-    }
+    RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok || arrLen >= 0, context->SetError(paramError));
+
     for (uint32_t i = 0; i < arrLen; ++i) {
         napi_value obj = nullptr;
         status = napi_get_element(env, arg, i, &obj);
-        NAPI_ASSERT_RETURN_VOID(env, status == napi_ok, "ParseValuesBuckets get element error.");
+        RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok || arrLen >= 0, context->SetError(paramError));
+
         ParseValuesBucket(env, obj, context);
         context->valuesBuckets.push_back(*(context->valuesBucket));
         context->valuesBucket->Clear();
     }
+    return OK;
 }
 
 bool IsNapiString(napi_env env, napi_callback_info info)
@@ -512,361 +593,449 @@ bool IsNapiString(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Insert start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    parsers.push_back(ParseTableName);
-    parsers.push_back(ParseValuesBucket);
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "Insert",
-        [](RdbStoreContext *context) {
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            int64_t rowId = 0;
-            LOG_DEBUG("RdbStoreProxy::Insert Async");
-            int errCode = obj->rdbStore_->Insert(rowId, context->tableName, *(context->valuesBucket));
-            context->rowId = rowId;
-            LOG_DEBUG("RdbStoreProxy::Insert errCode is: %{public}d", errCode);
-            return errCode;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_create_int64(context->env, context->rowId, &output);
-            LOG_DEBUG("RdbStoreProxy::Insert end");
-            return (status == napi_ok) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseTableName(env, argv[0], context));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseValuesBucket(env, argv[1], context));
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        int64_t rowId = 0;
+        LOG_DEBUG("RdbStoreProxy::Insert Async");
+        int errCode = obj->rdbStore_->Insert(rowId, context->tableName, *(context->valuesBucket));
+        context->rowId = rowId;
+        LOG_DEBUG("RdbStoreProxy::Insert errCode is: %{public}d", errCode);
+        return (errCode == E_OK) ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        napi_status status = napi_create_int64(env, context->rowId, &result);
+        LOG_DEBUG("RdbStoreProxy::Insert end");
+        return (status == napi_ok) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::BatchInsert start.");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    parsers.push_back(ParseTableName);
-    parsers.push_back(ParseValuesBuckets);
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "BatchInsert",
-        [](RdbStoreContext *context) {
-            LOG_INFO("RdbStoreProxy::BatchInsert Async.");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            if (context->insertNum == -1) {
-                return E_OK;
-            }
-            int64_t outInsertNum = 0;
-            int errCode = obj->rdbStore_->BatchInsert(outInsertNum, context->tableName, context->valuesBuckets);
-            context->insertNum = outInsertNum;
-            return errCode;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_create_int64(context->env, context->insertNum, &output);
-            LOG_DEBUG("RdbStoreProxy::BatchInsert end.");
-            return (status == napi_ok) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseTableName(env, argv[0], context));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseValuesBuckets(env, argv[1], context));
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_INFO("RdbStoreProxy::BatchInsert Async.");
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        if (context->insertNum == -1) {
+            return E_OK;
+        }
+        int64_t outInsertNum = 0;
+        int errCode = obj->rdbStore_->BatchInsert(outInsertNum, context->tableName, context->valuesBuckets);
+        context->insertNum = outInsertNum;
+        return (errCode == E_OK) ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        napi_status status = napi_create_int64(env, context->insertNum, &result);
+        LOG_DEBUG("RdbStoreProxy::BatchInsert end.");
+        return (status == napi_ok) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Delete start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    if (IsNapiString(env, info)) {
-        parsers.push_back(ParseTableName);
-    }
-    parsers.push_back(ParsePredicates);
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "Delete",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::Delete Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            int deletedRows = 0;
-            int errCode = obj->rdbStore_->Delete(deletedRows, *(context->rdbPredicates));
-            context->rowId = deletedRows;
-            LOG_DEBUG("RdbStoreProxy::Delete errCode is: %{public}d", errCode);
-            return errCode;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_create_int64(context->env, context->rowId, &output);
-            LOG_DEBUG("RdbStoreProxy::Delete end");
-            return (status == napi_ok) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    context->isNapiString = IsNapiString(env, info);
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        if (context->isNapiString) {
+            std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
+            RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseTableName(env, argv[0], context));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePredicates(env, argv[1], context));
+        } else {
+            std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1 or 2");
+            RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2, context->SetError(paramNumError));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePredicates(env, argv[0], context));
+        }
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_DEBUG("RdbStoreProxy::Delete Async");
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        int deletedRows = 0;
+        int errCode = obj->rdbStore_->Delete(deletedRows, *(context->rdbPredicates));
+        context->rowId = deletedRows;
+        LOG_DEBUG("RdbStoreProxy::Delete errCode is: %{public}d", errCode);
+        return (errCode == E_OK) ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        napi_status status = napi_create_int64(env, context->rowId, &result);
+        LOG_DEBUG("RdbStoreProxy::Delete end");
+        return (status == napi_ok) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Update start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    if (IsNapiString(env, info)) {
-        parsers.push_back(ParseTableName);
-    }
-    parsers.push_back(ParseValuesBucket);
-    parsers.push_back(ParsePredicates);
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "Update",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::Update Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            int changedRows = 0;
-            int errCode =
-                obj->rdbStore_->Update(changedRows, *(context->valuesBucket), *(context->rdbPredicates));
-            context->rowId = changedRows;
-            LOG_DEBUG("RdbStoreProxy::Update errCode is: %{public}d", errCode);
-            return errCode;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_create_int64(context->env, context->rowId, &output);
-            LOG_DEBUG("RdbStoreProxy::Update end");
-            return (status == napi_ok) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    context->isNapiString = IsNapiString(env, info);
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        if (context->isNapiString) {
+            std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("3 or 4");
+            RDB_CHECK_RETURN_CALL_RESULT(argc == 3 || argc == 4, context->SetError(paramNumError));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseTableName(env, argv[0], context));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseValuesBucket(env, argv[1], context));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePredicates(env, argv[2], context));
+        } else {
+            std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
+            RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseValuesBucket(env, argv[0], context));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePredicates(env, argv[1], context));
+        }
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_DEBUG("RdbStoreProxy::Update Async");
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        int changedRows = 0;
+        int errCode = obj->rdbStore_->Update(changedRows, *(context->valuesBucket), *(context->rdbPredicates));
+        context->rowId = changedRows;
+        LOG_DEBUG("RdbStoreProxy::Update errCode is: %{public}d", errCode);
+        return (errCode == E_OK) ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        napi_status status = napi_create_int64(env, context->rowId, &result);
+        LOG_DEBUG("RdbStoreProxy::Update end");
+        return (status == napi_ok) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::Query start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    if (IsNapiString(env, info)) {
-        parsers.push_back(ParseTableName);
-    }
-    parsers.push_back(ParsePredicates);
-    parsers.push_back(ParseColumns);
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "Query",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::Query Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+    auto context = std::make_shared<RdbStoreContext>();
+    context->isNapiString = IsNapiString(env, info);
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        if (context->isNapiString) {
+            std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1, 2 or 3");
+            RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2 || argc == 3, context->SetError(paramNumError));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseTableName(env, argv[0], context));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePredicates(env, argv[1], context));
+            if (argc > 2) {
+                RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseColumns(env, argv[2], context));
+            }
+        } else {
+            std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1 or 2");
+            RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2, context->SetError(paramNumError));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePredicates(env, argv[0], context));
+            if (argc > 1) {
+                RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseColumns(env, argv[1], context));
+            }
+        }
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
-            context->resultSet_value = obj->rdbStore_->Query(*(context->rdbPredicates), context->columns);
-            LOG_DEBUG("RdbStoreProxy::Query result is nullptr ? %{public}d", (context->resultSet_value == nullptr));
-            return (context->resultSet_value != nullptr) ? OK : ERR;
+        context->resultSet_value = obj->rdbStore_->Query(*(context->rdbPredicates), context->columns);
+        LOG_DEBUG("RdbStoreProxy::Query result is nullptr ? %{public}d", (context->resultSet_value == nullptr));
+        return (context->resultSet_value != nullptr) ? OK : ERR;
 #else
-            context->resultSet = obj->rdbStore_->Query(*(context->rdbPredicates), context->columns);
-            LOG_DEBUG("RdbStoreProxy::Query result is nullptr ? %{public}d", (context->resultSet == nullptr));
-            return (context->resultSet != nullptr) ? OK : ERR;
+        context->resultSet = obj->rdbStore_->Query(*(context->rdbPredicates), context->columns);
+        LOG_DEBUG("RdbStoreProxy::Query result is nullptr ? %{public}d", (context->resultSet == nullptr));
+        return (context->resultSet != nullptr) ? OK : ERR;
 #endif
-        },
-        [](RdbStoreContext *context, napi_value &output) {
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
-            output = ResultSetProxy::NewInstance(
-                context->env, std::shared_ptr<ResultSet>(context->resultSet_value.release()));
+        result = ResultSetProxy::NewInstance(env, std::shared_ptr<ResultSet>(context->resultSet_value.release()));
 #else
-            output = ResultSetProxy::NewInstance(
-                context->env, std::shared_ptr<AbsSharedResultSet>(context->resultSet.release()));
+        result = ResultSetProxy::NewInstance(env, std::shared_ptr<AbsSharedResultSet>(context->resultSet.release()));
 #endif
-            LOG_DEBUG("RdbStoreProxy::Query end");
-            return (output != nullptr) ? OK : ERR;
-        });
+        return (result != nullptr) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::RemoteQuery start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    parsers.push_back(ParseDevice);
-    parsers.push_back(ParseTableName);
-    parsers.push_back(ParsePredicates);
-    parsers.push_back(ParseColumns);
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "RemoteQuery",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::RemoteQuery Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            context->newResultSet =
-                obj->rdbStore_->RemoteQuery(context->device, *(context->rdbPredicates), context->columns);
-            LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr ? %{public}d", (context->newResultSet == nullptr));
-            return (context->newResultSet != nullptr) ? OK : ERR;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            if (context->newResultSet == nullptr) {
-                LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr");
-                return ERR;
-            }
-            output = ResultSetProxy::NewInstance(context->env, context->newResultSet);
-            LOG_DEBUG("RdbStoreProxy::RemoteQuery end");
-            return (output != nullptr) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("4 or 5");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 4 || argc == 5, context->SetError(paramNumError));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDevice(env, argv[0], context));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseTableName(env, argv[1], context));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePredicates(env, argv[2], context));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseColumns(env, argv[3], context));
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_DEBUG("RdbStoreProxy::RemoteQuery Async");
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        context->newResultSet =
+            obj->rdbStore_->RemoteQuery(context->device, *(context->rdbPredicates), context->columns);
+        LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr ? %{public}d", (context->newResultSet == nullptr));
+        return (context->newResultSet != nullptr) ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        if (context->newResultSet == nullptr) {
+            LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr");
+            return ERR;
+        }
+        result = ResultSetProxy::NewInstance(env, context->newResultSet);
+        LOG_DEBUG("RdbStoreProxy::RemoteQuery end");
+        return (result != nullptr) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 #endif
 
 napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::QuerySql start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    parsers.push_back(ParseSql);
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1, 2 or 3");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2 || argc == 3, context->SetError(paramNumError));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseSql(env, argv[0], context));
+        if (argc > 1) {
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
-    parsers.push_back(ParseColumns);
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseColumns(env, argv[1], context));
 #else
-    parsers.push_back(ParseSelectionArgs);
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseSelectionArgs(env, argv[1], context));
 #endif
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "QuerySql",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::QuerySql Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        }
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_DEBUG("RdbStoreProxy::QuerySql Async");
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
-            context->resultSet_value = obj->rdbStore_->QueryByStep(context->sql, context->columns);
-            LOG_ERROR("RdbStoreProxy::QuerySql is nullptr ? %{public}d ", context->resultSet_value == nullptr);
-            return (context->resultSet_value != nullptr) ? OK : ERR;
+        context->resultSet_value = obj->rdbStore_->QueryByStep(context->sql, context->columns);
+        LOG_ERROR("RdbStoreProxy::QuerySql is nullptr ? %{public}d ", context->resultSet_value == nullptr);
+        return (context->resultSet_value != nullptr) ? OK : ERR;
 #else
-            context->resultSet = obj->rdbStore_->QuerySql(context->sql, context->selectionArgs);
-            LOG_DEBUG("RdbStoreProxy::QuerySql is nullptr ? %{public}d", (context->resultSet == nullptr));
-            return (context->resultSet != nullptr) ? OK : ERR;
+        std::string selectionArgs = ",";
+        for (int i = 0; i < context->selectionArgs.size(); i++) {
+            selectionArgs += context->selectionArgs[i];
+        }
+        LOG_DEBUG(
+            "RdbStoreProxy::QuerySql sql=%{public}s, args=%{public}s", context->sql.c_str(), selectionArgs.c_str());
+        context->resultSet = obj->rdbStore_->QuerySql(context->sql, context->selectionArgs);
+        LOG_DEBUG("RdbStoreProxy::QuerySql is nullptr ? %{public}d", (context->resultSet == nullptr));
+        return (context->resultSet != nullptr) ? OK : ERR;
 #endif
-        },
-        [](RdbStoreContext *context, napi_value &output) {
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
-            output = ResultSetProxy::NewInstance(
-                context->env, std::shared_ptr<ResultSet>(context->resultSet_value.release()));
+        result = ResultSetProxy::NewInstance(env, std::shared_ptr<ResultSet>(context->resultSet_value.release()));
 #else
-            output = ResultSetProxy::NewInstance(
-                context->env, std::shared_ptr<AbsSharedResultSet>(context->resultSet.release()));
+        result = ResultSetProxy::NewInstance(env, std::shared_ptr<AbsSharedResultSet>(context->resultSet.release()));
 #endif
-            LOG_DEBUG("RdbStoreProxy::QuerySql end");
-            return (output != nullptr) ? OK : ERR;
-        });
+        LOG_DEBUG("RdbStoreProxy::QuerySql end");
+        return (result != nullptr) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
+}
+
+int ParseBindArgs(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+{
+    context->BindArgs(env, arg);
+    return OK;
 }
 
 napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::ExecuteSql start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    parsers.push_back(ParseSql);
-    parsers.push_back(
-        [](const napi_env &env, const napi_value &arg, RdbStoreContext *ctx) { ctx->BindArgs(env, arg); });
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "ExecuteSql",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::ExecuteSql Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            int errCode = obj->rdbStore_->ExecuteSql(context->sql, context->bindArgs);
-            LOG_DEBUG("RdbStoreProxy::ExecuteSql errCode is: %{public}d", errCode);
-            return errCode;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_get_undefined(context->env, &output);
-            LOG_DEBUG("RdbStoreProxy::ExecuteSql end");
-            return (status == napi_ok) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1, 2 or 3");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2 || argc == 3, context->SetError(paramNumError));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseSql(env, argv[0], context));
+        if (argc > 1) {
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseBindArgs(env, argv[1], context));
+        }
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_DEBUG("RdbStoreProxy::ExecuteSql Async");
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        int errCode = obj->rdbStore_->ExecuteSql(context->sql, context->bindArgs);
+        LOG_DEBUG("RdbStoreProxy::ExecuteSql errCode is: %{public}d", errCode);
+        return (errCode == E_OK) ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        napi_status status = napi_get_undefined(env, &result);
+        LOG_DEBUG("RdbStoreProxy::ExecuteSql end");
+        return (status == napi_ok) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 napi_value RdbStoreProxy::Count(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Count start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    parsers.push_back(ParsePredicates);
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "Count",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::Count Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            std::int64_t temp = 0;
-            int errCode = obj->rdbStore_->Count(temp, *(context->predicatesProxy->GetPredicates()));
-            context->rowId = temp;
-            LOG_DEBUG("RdbStoreProxy::Count errCode is: %{public}d", errCode);
-            return errCode;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_create_int64(context->env, context->rowId, &output);
-            LOG_DEBUG("RdbStoreProxy::Count end");
-            return (status == napi_ok) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1 or 2");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2, context->SetError(paramNumError));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePredicates(env, argv[0], context));
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_DEBUG("RdbStoreProxy::Count Async");
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        std::int64_t temp = 0;
+        int errCode = obj->rdbStore_->Count(temp, *(context->predicatesProxy->GetPredicates()));
+        context->rowId = temp;
+        LOG_DEBUG("RdbStoreProxy::Count errCode is: %{public}d", errCode);
+        return (errCode == E_OK) ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        napi_status status = napi_create_int64(env, context->rowId, &result);
+        LOG_DEBUG("RdbStoreProxy::Count end");
+        return (status == napi_ok) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Replace start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    parsers.push_back(ParseTableName);
-    parsers.push_back(ParseValuesBucket);
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "Replace",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::Replace Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            int64_t rowId = 0;
-            int errCode = obj->rdbStore_->Replace(rowId, context->tableName, *(context->valuesBucket));
-            context->rowId = rowId;
-            LOG_DEBUG("RdbStoreProxy::Replace errCode is:%{public}d", errCode);
-            return errCode;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_create_int64(context->env, context->rowId, &output);
-            LOG_DEBUG("RdbStoreProxy::Replace end");
-            return (status == napi_ok) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseTableName(env, argv[0], context));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseValuesBucket(env, argv[1], context));
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_DEBUG("RdbStoreProxy::Replace Async");
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        int64_t rowId = 0;
+        int errCode = obj->rdbStore_->Replace(rowId, context->tableName, *(context->valuesBucket));
+        context->rowId = rowId;
+        LOG_DEBUG("RdbStoreProxy::Replace errCode is:%{public}d", errCode);
+        return (errCode == E_OK) ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        napi_status status = napi_create_int64(env, context->rowId, &result);
+        LOG_DEBUG("RdbStoreProxy::Replace end");
+        return (status == napi_ok) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 napi_value RdbStoreProxy::Backup(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Backup start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    parsers.push_back(ParseTableName);
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "Backup",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::Backup Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            int errCode = obj->rdbStore_->Backup(context->tableName, context->newKey);
-            LOG_DEBUG("RdbStoreProxy::Backup errCode is: %{public}d", errCode);
-            return (errCode == E_OK) ? OK : ERR;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_get_undefined(context->env, &output);
-            LOG_DEBUG("RdbStoreProxy::Backup end");
-            return (status == napi_ok) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1 or 2");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2, context->SetError(paramNumError));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseTableName(env, argv[0], context));
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_DEBUG("RdbStoreProxy::Backup Async");
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        int errCode = obj->rdbStore_->Backup(context->tableName, context->newKey);
+        LOG_DEBUG("RdbStoreProxy::Backup errCode is: %{public}d", errCode);
+        return (errCode == E_OK) ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        napi_status status = napi_get_undefined(env, &result);
+        LOG_DEBUG("RdbStoreProxy::Backup end");
+        return (status == napi_ok) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 napi_value RdbStoreProxy::Attach(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Attach start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    parsers.push_back(ParseAlias);
-    parsers.push_back(ParsePath);
-    parsers.push_back(ParseNewKey);
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "Attach",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::Attach Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            int errCode = obj->rdbStore_->Attach(context->aliasName, context->pathName, context->newKey);
-            LOG_ERROR("RdbStoreProxy::Attach errCode is:%{public}d ", errCode);
-            return (errCode != E_OK) ? OK : ERR;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_get_undefined(context->env, &output);
-            LOG_DEBUG("RdbStoreProxy::Attach end");
-            return (status == napi_ok) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("3 or 4");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 3 || argc == 4, context->SetError(paramNumError));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseAlias(env, argv[0], context));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePath(env, argv[1], context));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseNewKey(env, argv[2], context));
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_DEBUG("RdbStoreProxy::Attach Async");
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        int errCode = obj->rdbStore_->Attach(context->aliasName, context->pathName, context->newKey);
+        LOG_ERROR("RdbStoreProxy::Attach errCode is:%{public}d ", errCode);
+        return (errCode != E_OK) ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        napi_status status = napi_get_undefined(env, &result);
+        LOG_DEBUG("RdbStoreProxy::Attach end");
+        return (status == napi_ok) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 napi_value RdbStoreProxy::IsHoldingConnection(napi_env env, napi_callback_info info)
@@ -955,29 +1124,33 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::QueryByStep start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    parsers.push_back(ParseSql);
-    parsers.push_back(ParseColumns);
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "QueryByStep",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::QueryByStep Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            context->resultSet_value = obj->rdbStore_->QueryByStep(context->sql, context->columns);
-            LOG_ERROR("RdbStoreProxy::QueryByStep is nullptr ? %{public}d ", context->resultSet_value == nullptr);
-            return (context->resultSet_value != nullptr) ? OK : ERR;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            if (context->resultSet_value != nullptr) {
-                output = ResultSetProxy::NewInstance(
-                    context->env, std::shared_ptr<ResultSet>(context->resultSet_value.release()));
-            }
-            LOG_DEBUG("RdbStoreProxy::QueryByStep end");
-            return (output != nullptr) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseSql(env, argv[0], context));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseColumns(env, argv[1], context));
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_DEBUG("RdbStoreProxy::QueryByStep Async");
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        context->resultSet_value = obj->rdbStore_->QueryByStep(context->sql, context->columns);
+        LOG_ERROR("RdbStoreProxy::QueryByStep is nullptr ? %{public}d ", context->resultSet_value == nullptr);
+        return (context->resultSet_value != nullptr) ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        if (context->resultSet_value != nullptr) {
+            result = ResultSetProxy::NewInstance(env, std::shared_ptr<ResultSet>(context->resultSet_value.release()));
+        }
+        LOG_DEBUG("RdbStoreProxy::QueryByStep end");
+        return (result != nullptr) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 napi_value RdbStoreProxy::IsInTransaction(napi_env env, napi_callback_info info)
@@ -1033,178 +1206,183 @@ napi_value RdbStoreProxy::SetVersion(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::MarkAsCommit(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::MarkAsCommit start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "MarkAsCommit",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::MarkAsCommit Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            int errCode = obj->rdbStore_->MarkAsCommit();
-            LOG_ERROR("RdbStoreProxy::MarkAsCommit errCode is : %{public}d", errCode);
-            return (errCode == E_OK) ? OK : ERR;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_get_undefined(context->env, &output);
-            LOG_DEBUG("RdbStoreProxy::MarkAsCommit end");
-            return (status == napi_ok) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("0 or 1");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 0 || argc == 1, context->SetError(paramNumError));
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_DEBUG("RdbStoreProxy::MarkAsCommit Async");
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        int errCode = obj->rdbStore_->MarkAsCommit();
+        LOG_ERROR("RdbStoreProxy::MarkAsCommit errCode is : %{public}d", errCode);
+        return (errCode == E_OK) ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        napi_status status = napi_get_undefined(env, &result);
+        LOG_DEBUG("RdbStoreProxy::MarkAsCommit end");
+        return (status == napi_ok) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 napi_value RdbStoreProxy::EndTransaction(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::EndTransaction start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "EndTranscation",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::EndTransaction Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            int errCode = obj->rdbStore_->EndTransaction();
-            LOG_DEBUG("RdbStoreProxy::EndTransaction errCode is : %{public}d", errCode);
-            return (errCode != E_OK) ? OK : ERR;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_get_undefined(context->env, &output);
-            LOG_DEBUG("RdbStoreProxy::EndTransaction end");
-            return (status == napi_ok) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("0 or 1");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 0 || argc == 1, context->SetError(paramNumError));
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_DEBUG("RdbStoreProxy::EndTransaction Async");
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        int errCode = obj->rdbStore_->EndTransaction();
+        LOG_DEBUG("RdbStoreProxy::EndTransaction errCode is : %{public}d", errCode);
+        return (errCode != E_OK) ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        napi_status status = napi_get_undefined(env, &result);
+        LOG_DEBUG("RdbStoreProxy::EndTransaction end");
+        return (status == napi_ok) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 napi_value RdbStoreProxy::Restore(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Restore start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    parsers.push_back(ParseSrcName);
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "Restore",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::Restore Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            int errCode = 0;
-            errCode = obj->rdbStore_->Restore(context->srcName, context->newKey);
-            LOG_DEBUG("RdbStoreProxy::Restore errCode is : %{public}d", errCode);
-            return (errCode == E_OK) ? OK : ERR;
-        },
-
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_get_undefined(context->env, &output);
-            LOG_DEBUG("RdbStoreProxy::Restore end");
-            return (status == napi_ok) ? OK : ERR;
-        });
-}
-
-napi_value RdbStoreProxy::ChangeEncryptKey(napi_env env, napi_callback_info info)
-{
-    LOG_DEBUG("RdbStoreProxy::ChangeEncryptKey start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    parsers.push_back(ParseNewKey);
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "ChangeEncryptKey",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::ChangeEncryptKey Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            int errCode = obj->rdbStore_->ChangeEncryptKey(context->newKey);
-            LOG_DEBUG("RdbStoreProxy::ChangeEncryptKey errCode is : %{public}d", errCode);
-            return (errCode == E_OK) ? OK : ERR;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_get_undefined(context->env, &output);
-            LOG_DEBUG("RdbStoreProxy::ChangeEncryptKey end");
-            return (status == napi_ok) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1 or 2");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2, context->SetError(paramNumError));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseSrcName(env, argv[0], context));
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_DEBUG("RdbStoreProxy::Restore Async");
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        int errCode = 0;
+        errCode = obj->rdbStore_->Restore(context->srcName, context->newKey);
+        LOG_DEBUG("RdbStoreProxy::Restore errCode is : %{public}d", errCode);
+        return (errCode == E_OK) ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        napi_status status = napi_get_undefined(env, &result);
+        LOG_DEBUG("RdbStoreProxy::Restore end");
+        return (status == napi_ok) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::SetDistributedTables start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    parsers.push_back(ParseTablesName);
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "SetDistributedTables",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::SetDistributedTables Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            bool res = obj->rdbStore_->SetDistributedTables(context->tablesName);
-            LOG_DEBUG("RdbStoreProxy::SetDistributedTables res is : %{public}d", res);
-            return res ? OK : ERR;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_get_undefined(context->env, &output);
-            LOG_DEBUG("RdbStoreProxy::SetDistributedTables end");
-            return (status == napi_ok) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1 or 2");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2, context->SetError(paramNumError));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseTablesName(env, argv[0], context));
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_DEBUG("RdbStoreProxy::SetDistributedTables Async");
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        bool res = obj->rdbStore_->SetDistributedTables(context->tablesName);
+        LOG_DEBUG("RdbStoreProxy::SetDistributedTables res is : %{public}d", res);
+        return res ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        napi_status status = napi_get_undefined(env, &result);
+        LOG_DEBUG("RdbStoreProxy::SetDistributedTables end");
+        return (status == napi_ok) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 napi_value RdbStoreProxy::ObtainDistributedTableName(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::ObtainDistributedTableName start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    parsers.push_back(ParseDevice);
-    parsers.push_back(ParseTableName);
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "ObtainDistributedTableName",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::ObtainDistributedTableName Async");
-            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            auto name = obj->rdbStore_->ObtainDistributedTableName(context->device, context->tableName);
-            LOG_INFO("RdbStoreProxy::ObtainDistributedTableName name is empty ? : %{public}d", name.empty());
-            context->tableName = name;
-            return name.empty() ? ERR : OK;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            napi_status status = napi_create_string_utf8(
-                context->env, context->tableName.c_str(), context->tableName.length(), &output);
-            LOG_DEBUG("RdbStoreProxy::ObtainDistributedTableName end");
-            return (status == napi_ok) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDevice(env, argv[0], context));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseTableName(env, argv[1], context));
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_DEBUG("RdbStoreProxy::ObtainDistributedTableName Async");
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        auto name = obj->rdbStore_->ObtainDistributedTableName(context->device, context->tableName);
+        LOG_INFO("RdbStoreProxy::ObtainDistributedTableName name is empty ? : %{public}d", name.empty());
+        context->tableName = name;
+        return name.empty() ? ERR : OK;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        napi_status status =
+            napi_create_string_utf8(env, context->tableName.c_str(), context->tableName.length(), &result);
+        LOG_DEBUG("RdbStoreProxy::ObtainDistributedTableName end");
+        return (status == napi_ok) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Sync start");
-    NapiAsyncProxy<RdbStoreContext> proxy;
-    proxy.Init(env, info);
-    std::vector<NapiAsyncProxy<RdbStoreContext>::InputParser> parsers;
-    parsers.push_back(ParseEnumArg);
-    parsers.push_back(ParsePredicates);
-    proxy.ParseInputs(parsers, ParseThis);
-    return proxy.DoAsyncWork(
-        "Sync",
-        [](RdbStoreContext *context) {
-            LOG_DEBUG("RdbStoreProxy::Sync Async");
-            auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            SyncOption option;
-            option.mode = static_cast<DistributedRdb::SyncMode>(context->enumArg);
-            option.isBlock = true;
-            bool res = obj->rdbStore_->Sync(option, *context->predicatesProxy->GetPredicates(),
-                [context](const SyncResult &result) { context->syncResult = result; });
-            LOG_INFO("RdbStoreProxy::Sync res is : %{public}d", res);
-            return res ? OK : ERR;
-        },
-        [](RdbStoreContext *context, napi_value &output) {
-            output = JSUtils::Convert2JSValue(context->env, context->syncResult);
-            LOG_DEBUG("RdbStoreProxy::Sync end");
-            return (output != nullptr) ? OK : ERR;
-        });
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseEnumArg(env, argv[0], context));
+        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePredicates(env, argv[1], context));
+        ParserThis(env, self, context);
+        return OK;
+    };
+    auto exec = [context](AsyncCall::Context *ctx) {
+        LOG_DEBUG("RdbStoreProxy::Sync Async");
+        auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        SyncOption option;
+        option.mode = static_cast<DistributedRdb::SyncMode>(context->enumArg);
+        option.isBlock = true;
+        bool res = obj->rdbStore_->Sync(option, *context->predicatesProxy->GetPredicates(),
+            [context](const SyncResult &result) { context->syncResult = result; });
+        LOG_INFO("RdbStoreProxy::Sync res is : %{public}d", res);
+        return res ? OK : ERR;
+    };
+    auto output = [context](napi_env env, napi_value &result) -> int {
+        result = JSUtils::Convert2JSValue(env, context->syncResult);
+        LOG_DEBUG("RdbStoreProxy::Sync end");
+        return (result != nullptr) ? OK : ERR;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    return asyncCall.Call(env, exec);
 }
 
 void RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv)
@@ -1286,7 +1464,7 @@ void RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *ar
 napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
 {
     size_t argc = MAX_ON_EVENT_ARG_NUM;
-    napi_value argv[MAX_ON_EVENT_ARG_NUM] {};
+    napi_value argv[MAX_ON_EVENT_ARG_NUM]{};
     napi_value self = nullptr;
     if (napi_get_cb_info(env, info, &argc, argv, &self, nullptr) != napi_ok) {
         LOG_ERROR("RdbStoreProxy::OnEvent: get args failed");
@@ -1311,7 +1489,7 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
 {
     size_t argc = MAX_ON_EVENT_ARG_NUM;
-    napi_value argv[MAX_ON_EVENT_ARG_NUM] {};
+    napi_value argv[MAX_ON_EVENT_ARG_NUM]{};
     napi_value self = nullptr;
     if (napi_get_cb_info(env, info, &argc, argv, &self, nullptr) != napi_ok) {
         LOG_ERROR("RdbStoreProxy::OffEvent: get args failed");
