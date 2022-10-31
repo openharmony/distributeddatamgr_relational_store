@@ -17,19 +17,19 @@ import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from '
 import dataRdb from '@ohos.data.rdb';
 
 const USER_TABLE = "CREATE TABLE IF NOT EXISTS user "
-    + "(userId INTEGER PRIMARY KEY AUTOINCREMENT, firstName TEXT , lastName TEXT ,"
-    + "age INTEGER , balance REAL  NOT NULL)";
++ "(userId INTEGER PRIMARY KEY AUTOINCREMENT, firstName TEXT , lastName TEXT ,"
++ "age INTEGER , balance REAL  NOT NULL)";
 
-const BOOK_TABLE = "CREATE TABLE IF NOT EXISTS book"
-    + "(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT, userId INTEGER , "
-    + "FOREIGN KEY (userId) REFERENCES user (userId) ON UPDATE NO ACTION ON DELETE CASCADE)";
+const BOOK_TABLE = "CREATE TABLE IF NOT EXISTS Book (id INTEGER PRIMARY KEY AUTOINCREMENT,"
++ "name TEXT, userId INTEGER , "
++ "FOREIGN KEY (userId) REFERENCES user (userId) ON UPDATE NO ACTION ON DELETE CASCADE)";
 
 const USER_BULK_INSERT_STATEMENT = "INSERT INTO user"
-    + "(userId, firstName, lastName, age, balance) VALUES "
-    + "(?,?,?,?,?),(?,?,?,?,?),(?,?,?,?,?),(?,?,?,?,?),(?,?,?,?,?)";
++ "(userId, firstName, lastName, age, balance) VALUES "
++ "(?,?,?,?,?),(?,?,?,?,?),(?,?,?,?,?),(?,?,?,?,?),(?,?,?,?,?)";
 
-const BOOK_BULK_INSERT_STATEMENT = "INSERT INTO book (id, name, userId) "
-    + "VALUES (?,?,?),(?,?,?),(?,?,?)";
+const BOOK_BULK_INSERT_STATEMENT = "INSERT INTO Book (id, name, userId) "
++ "VALUES (?,?,?),(?,?,?),(?,?,?)";
 
 const STORE_CONFIG = { name: "RdbJoinTest.db" }
 
@@ -93,9 +93,9 @@ describe('rdbStorePredicatesJoinTest', function () {
         await rdbStore.executeSql(BOOK_TABLE);
 
         var books = [
-            {id:1, name:"SanGuo", userId:1},
-            {id:2, name:"XiYouJi", userId:2},
-            {id:3, name:"ShuiHuZhuan", userId:3},
+            {id:1, name:"sanguo", userId:1},
+            {id:2, name:"xiyouji", userId:2},
+            {id:3, name:"shuihuchuan", userId:3},
         ]
 
         var objects = new Array();
@@ -120,7 +120,7 @@ describe('rdbStorePredicatesJoinTest', function () {
     it('testRdbJoin001', 0, async function (done) {
         console.log(TAG + "testRdbJoin001 begin.");
         let resultSet = await rdbStore.querySql(
-            "SELECT * FROM user INNER JOIN book ON user.userId = Book.userId WHERE book.name = 'SanGuo'")
+            "SELECT * FROM user INNER JOIN Book ON user.userId = Book.id WHERE Book.name = 'sanguo'")
 
         expect(1).assertEqual(resultSet.rowCount);
         expect(true).assertEqual(resultSet.goToFirstRow());
@@ -130,7 +130,7 @@ describe('rdbStorePredicatesJoinTest', function () {
         expect(29).assertEqual(resultSet.getInt(3));
         expect(100.51).assertEqual(resultSet.getDouble(4));
         expect(1).assertEqual(resultSet.getInt(5));
-        expect("SanGuo").assertEqual(resultSet.getString(6));
+        expect("sanguo").assertEqual(resultSet.getString(6));
         expect(1).assertEqual(resultSet.getInt(7));
         done();
     })
@@ -144,31 +144,22 @@ describe('rdbStorePredicatesJoinTest', function () {
     it('testRdbJoin002', 0, async function (done) {
         console.log(TAG + "testRdbJoin002 begin.");
         let resultSet = await rdbStore.querySql(
-            "SELECT * FROM user CROSS JOIN book ON user.userId = book.userId");
+            "SELECT * FROM user CROSS JOIN Book ON user.userId = Book.id");
 
         expect(3).assertEqual(resultSet.rowCount);
-        expect(true).assertEqual(resultSet.goToFirstRow());
-        expect(1).assertEqual(resultSet.getInt(0));
-        expect("Zhang").assertEqual(resultSet.getString(1));
-        expect("San").assertEqual(resultSet.getString(2));
-        expect(29).assertEqual(resultSet.getInt(3));
-        expect(100.51).assertEqual(resultSet.getDouble(4));
-        expect(1).assertEqual(resultSet.getInt(5));
-        expect("SanGuo").assertEqual(resultSet.getString(6));
-        expect(1).assertEqual(resultSet.getInt(7));
         done();
     })
 
     /**
      * @tc.name: testRdbJoin003
-     * @tc.desc: normal testcase of Rdb_Left_Outer_Join
+     * @tc.desc: normal testcase of Rdb_Left_Outher_Join
      * @tc.type: FUNC
      * @tc.require: I4NZP6
      */
     it('testRdbJoin003', 0, async function (done) {
         console.log(TAG + "testRdbJoin003 begin.");
         let resultSet = await rdbStore.querySql(
-            "SELECT * FROM user LEFT OUTER JOIN book ON user.userId = book.userId");
+            "SELECT * FROM user LEFT OUTER JOIN Book ON user.userId = Book.id");
 
         expect(5).assertEqual(resultSet.rowCount);
         done();
@@ -182,8 +173,8 @@ describe('rdbStorePredicatesJoinTest', function () {
      */
     it('testRdbJoin004', 0, async function (done) {
         console.log(TAG + "testRdbJoin004 begin.");
-        let resultSet = await rdbStore.querySql(
-            "SELECT * FROM user LEFT OUTER JOIN book USING(userId) WHERE book.name = 'SanGuo'");
+        let resultSet = await rdbStore.querySql("" +
+            "SELECT * FROM user LEFT OUTER JOIN Book USING(userId) WHERE Book.name = 'sanguo'");
 
         expect(1).assertEqual(resultSet.rowCount);
 
@@ -194,7 +185,7 @@ describe('rdbStorePredicatesJoinTest', function () {
         expect(29).assertEqual(resultSet.getInt(3));
         expect(100.51).assertEqual(resultSet.getDouble(4));
         expect(1).assertEqual(resultSet.getInt(5));
-        expect("SanGuo").assertEqual(resultSet.getString(6));
+        expect("sanguo").assertEqual(resultSet.getString(6));
         done();
     })
 
