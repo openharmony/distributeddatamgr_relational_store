@@ -109,7 +109,7 @@ describe('rdbStoreUpdateTest', function () {
                 console.log(TAG + "update error");
                 expect(null).assertFail();
             })
-            // await updatePromise
+            //await updatePromise
         }
 
         done();
@@ -131,7 +131,7 @@ describe('rdbStoreUpdateTest', function () {
                 "salary": 100.5,
                 "blobType": u8,
             }
-            try {
+            {
                 let predicates = new dataRdb.RdbPredicates("")
                 let updatePromise = rdbStore.update(valueBucket, predicates)
                 updatePromise.then(async (ret) => {
@@ -140,12 +140,8 @@ describe('rdbStoreUpdateTest', function () {
                 }).catch((err) => {
                     console.log(TAG + "update with null table name");
                 })
-            } catch (err) {
-                console.log(
-                    "catch err: update with null table name failed, err: code=" + err.code + " message=" + err.message)
-                expect("401").assertEqual(err.code)
             }
-            try {
+            {
                 const emptyBucket = {};
                 let predicates = await new dataRdb.RdbPredicates("test")
                 let updatePromise = rdbStore.update(emptyBucket, predicates)
@@ -155,12 +151,8 @@ describe('rdbStoreUpdateTest', function () {
                 }).catch((err) => {
                     console.log(TAG + "update with wrong valueBucket");
                 })
-            } catch (err) {
-                console.log("catch err: update with wrong valueBucket failed, err: code=" + err.code
-                            + " message=" + err.message)
-                expect("401").assertEqual(err.code)
             }
-            try {
+            {
                 let predicates = await new dataRdb.RdbPredicates("test")
                 await predicates.equalTo("aaa", "null")
                 let updatePromise = rdbStore.update(valueBucket, predicates)
@@ -170,9 +162,6 @@ describe('rdbStoreUpdateTest', function () {
                 }).catch((err) => {
                     console.log(TAG + "update with wrong condition");
                 })
-            } catch (err) {
-                console.log("catch err: update with wrong condition failed, err: code=" + err.code
-                            + " message=" + err.message)
             }
         }
         done();
@@ -204,7 +193,7 @@ describe('rdbStoreUpdateTest', function () {
                 }).catch((err) => {
                     console.log(TAG + "update with wrong table name");
                 })
-                // await updatePromise
+                //await updatePromise
             }
             {
                 let predicates = await new dataRdb.RdbPredicates("test")
@@ -215,7 +204,7 @@ describe('rdbStoreUpdateTest', function () {
                 }).catch((err) => {
                     console.log(TAG + "update with wrong column name");
                 })
-                // await updatePromise
+                //await updatePromise
             }
         }
         done();
@@ -247,7 +236,7 @@ describe('rdbStoreUpdateTest', function () {
                 }).catch((err) => {
                     console.log(TAG + "update with wrong condition");
                 })
-                // await updatePromise
+                //await updatePromise
             }
             {
                 const emptyBucket = {};

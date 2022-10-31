@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,7 +17,6 @@
 #define RDB_JSKIT_NAPI_RESULT_SET_H
 
 #include <memory>
-
 #include "abs_shared_result_set.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
@@ -34,17 +33,13 @@ public:
     ResultSetProxy &operator=(std::shared_ptr<NativeRdb::ResultSet> resultSet);
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    static std::shared_ptr<NativeRdb::AbsSharedResultSet> GetNativeObject(const napi_env &env, const napi_value &arg);
+    static std::shared_ptr<NativeRdb::AbsSharedResultSet> GetNativeObject(
+        const napi_env &env, const napi_value &arg);
     static napi_value GetConstructor(napi_env env);
     std::shared_ptr<DataShare::ResultSetBridge> Create() override;
 
 private:
     static std::shared_ptr<NativeRdb::ResultSet> &GetInnerResultSet(napi_env env, napi_callback_info info);
-    static ResultSetProxy *ParseInt32FieldByName(
-        napi_env env, napi_callback_info info, int32_t &field, const std::string fieldName);
-    static ResultSetProxy *ParseFieldByName(
-        napi_env env, napi_callback_info info, std::string &field, const std::string fieldName);
-
     static napi_value Initialize(napi_env env, napi_callback_info info);
     static napi_value GetAllColumnNames(napi_env env, napi_callback_info info);
     static napi_value GoToRow(napi_env env, napi_callback_info info);

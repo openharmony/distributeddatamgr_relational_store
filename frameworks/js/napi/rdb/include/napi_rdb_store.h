@@ -18,12 +18,12 @@
 
 #include <list>
 #include <mutex>
-
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "napi_rdb_store_observer.h"
+
 #include "rdb_helper.h"
+#include "napi_rdb_store_observer.h"
 #include "rdb_types.h"
 
 namespace OHOS {
@@ -66,6 +66,7 @@ private:
     static napi_value MarkAsCommit(napi_env env, napi_callback_info info);
     static napi_value EndTransaction(napi_env env, napi_callback_info info);
     static napi_value Restore(napi_env env, napi_callback_info info);
+    static napi_value ChangeEncryptKey(napi_env env, napi_callback_info info);
     static napi_value SetDistributedTables(napi_env env, napi_callback_info info);
     static napi_value ObtainDistributedTableName(napi_env env, napi_callback_info info);
     static napi_value Sync(napi_env env, napi_callback_info info);
@@ -75,8 +76,8 @@ private:
     static constexpr int MIN_ON_EVENT_ARG_NUM = 2;
     static constexpr int MAX_ON_EVENT_ARG_NUM = 5;
 
-    void OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv);
-    void OffDataChangeEvent(napi_env env, size_t argc, napi_value *argv);
+    void OnDataChangeEvent(napi_env env, size_t argc, napi_value* argv);
+    void OffDataChangeEvent(napi_env env, size_t argc, napi_value* argv);
 
     std::mutex mutex_;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
