@@ -102,9 +102,6 @@ int32_t JSUtils::Convert2StrVector(napi_env env, napi_value value, std::vector<s
         output = {};
         return ERR;
     }
-    if (arrLen == 0) {
-        return {};
-    }
     napi_value element = nullptr;
     for (size_t i = 0; i < arrLen; ++i) {
         status = napi_get_element(env, value, i, &element);
@@ -335,7 +332,8 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<std::string, in
 
 int32_t JSUtils::Convert2JSValue(napi_env env, std::string value, napi_value &output)
 {
-    if (napi_create_string_utf8(env, value.c_str(), value.size(), &output) != napi_ok) {
+    std::string tempStr = (std::string)value;
+    if (napi_create_string_utf8(env, tempStr.c_str(), tempStr.size(), &output) != napi_ok) {
         LOG_ERROR("Convert2JSValue create JS string failed");
         return ERR;
     }

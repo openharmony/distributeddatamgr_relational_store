@@ -27,11 +27,7 @@ sptr<ISharedResultSet> ISharedResultSetStub::CreateStub(std::shared_ptr<AbsShare
     OHOS::MessageParcel &parcel)
 {
     sptr<ISharedResultSet> stub = new ISharedResultSetStub(result);
-    if (result == nullptr) {
-        LOG_ERROR("result is nullptr");
-        return nullptr;
-    }
-    parcel.WriteRemoteObject(stub->AsObject());
+    parcel.WriteRemoteObject(stub->AsObject().GetRefPtr());
     result->Marshalling(parcel);
     return stub;
 }

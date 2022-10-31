@@ -23,19 +23,25 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     path = config.GetPath();
     storageMode = config.GetStorageMode();
     readOnly = config.IsReadOnly();
+    encryptKey = config.GetEncryptKey();
+    encrypted = !encryptKey.empty();
+    initEncrypted = !encryptKey.empty();
     journalMode = config.GetJournalMode();
     databaseFileType = config.GetDatabaseFileType();
+    securityLevel = config.GetSecurityLevel();
     syncMode = config.GetSyncMode();
     if (journalMode.empty()) {
         journalMode = SqliteGlobalConfig::GetDefaultJournalMode();
     }
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     isEncrypt = config.IsEncrypt();
-    isCreateNecessary = config.IsCreateNecessary();
 #endif
 }
 
-SqliteConfig::~SqliteConfig() = default;
+SqliteConfig::~SqliteConfig()
+{
+    ClearEncryptKey();
+}
 
 std::string SqliteConfig::GetPath() const
 {
@@ -68,6 +74,39 @@ bool SqliteConfig::IsReadOnly() const
     return readOnly;
 }
 
+bool SqliteConfig::IsEncrypted() const
+{
+    return encrypted;
+}
+
+bool SqliteConfig::IsInitEncrypted() const
+{
+    return initEncrypted;
+}
+
+std::vector<uint8_t> SqliteConfig::GetEncryptKey() const
+{
+    return encryptKey;
+}
+
+void SqliteConfig::UpdateEncryptKey(const std::vector<uint8_t> &newKey)
+{
+    std::fill(encryptKey.begin(), encryptKey.end(), 0);
+    encryptKey = newKey;
+    encrypted = !encryptKey.empty();
+}
+
+void SqliteConfig::ClearEncryptKey()
+{
+    std::fill(encryptKey.begin(), encryptKey.end(), 0);
+    encryptKey.clear();
+}
+
+int32_t SqliteConfig::GetSecurityLevel() const
+{
+    return securityLevel;
+}
+
 std::string SqliteConfig::GetDatabaseFileType() const
 {
     return databaseFileType;
@@ -83,16 +122,6 @@ std::string SqliteConfig::GetBundleName() const
 {
     return bundleName;
 }
-bool SqliteConfig::IsCreateNecessary() const
-{
-    return isCreateNecessary;
-}
-
-void SqliteConfig::SetCreateNecessary(bool CreateNecessary)
-{
-    this->isCreateNecessary = CreateNecessary;
-}
-
 #endif
 } // namespace NativeRdb
 } // namespace OHOS

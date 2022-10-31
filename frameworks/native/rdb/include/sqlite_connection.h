@@ -48,6 +48,7 @@ public:
     std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string &sql,
         const std::vector<std::string> &selectionArgs) const;
     int EndStepQuery();
+    int ChangeEncryptKey(const std::vector<uint8_t> &newKey);
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
 #endif
@@ -73,6 +74,7 @@ private:
 
     int SetPersistWal();
     int SetBusyTimeout(int timeout);
+    int SetSecurityLabel(const std::string &dbPath, const SqliteConfig &config, const bool &isDbFileExist);
 
     sqlite3 *dbHandle;
     bool isWriteConnection;

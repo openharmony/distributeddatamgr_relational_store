@@ -20,6 +20,7 @@
 
 using OHOS::DistributedRdb::SyncMode;
 using OHOS::DistributedRdb::SubscribeMode;
+using OHOS::NativeRdb::DatabaseFileSecurityLevel;
 #endif
 
 namespace OHOS::RdbJsKit {
@@ -63,10 +64,10 @@ static napi_value ExportSecurityLevel(napi_env env)
     napi_value securityLevel = nullptr;
     napi_create_object(env, &securityLevel);
 
-    (void) SetNamedProperty(env, securityLevel, "S1", (int32_t)NativeRdb::SecurityLevel::S1);
-    (void) SetNamedProperty(env, securityLevel, "S2", (int32_t)NativeRdb::SecurityLevel::S2);
-    (void) SetNamedProperty(env, securityLevel, "S3", (int32_t)NativeRdb::SecurityLevel::S3);
-    (void) SetNamedProperty(env, securityLevel, "S4", (int32_t)NativeRdb::SecurityLevel::S4);
+    for (int32_t i = 1; i < static_cast<int32_t>(DatabaseFileSecurityLevel::LAST); i++) {
+        (void)SetNamedProperty(env, securityLevel, NativeRdb::DatabaseFileSecurityLabel[i],
+            static_cast<int32_t>(static_cast<DatabaseFileSecurityLevel>(i)));
+    }
     napi_object_freeze(env, securityLevel);
     return securityLevel;
 }
