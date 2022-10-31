@@ -1923,15 +1923,12 @@ describe('rdbResultSetTest', function () {
             expect("test0").assertEqual(resultSet.getString(1))
 
             let rows = [1, 2, -1, -2];
-            try{
-                for (const i of rows) {
-                    resultSet.goToRow(i)
-                    expect(true).assertEqual(resultSet.isStarted)
-                    expect("").assertEqual(resultSet.getString(1))
-                }
-            } catch(err) {
-                expect("14800012").assertEqual(err.code)
+            for (const i of rows) {
+                resultSet.goToRow(i)
+                expect(true).assertEqual(resultSet.isStarted)
+                expect("").assertEqual(resultSet.getString(1))
             }
+
             resultSet.close()
             expect(true).assertEqual(resultSet.isClosed)
             resultSet = null;
@@ -1964,14 +1961,10 @@ describe('rdbResultSetTest', function () {
             }
 
             rows = [2, 3, 4, -1, -2];
-            try{
-                for (const i of rows) {
-                    resultSet.goToRow(i);
-                    expect(true).assertEqual(resultSet.isStarted);
-                    expect("").assertEqual(resultSet.getString(1))
-                }
-            } catch(err) {
-                expect("14800012").assertEqual(err.code)
+            for (const i of rows) {
+                resultSet.goToRow(i);
+                expect(true).assertEqual(resultSet.isStarted);
+                expect("").assertEqual(resultSet.getString(1))
             }
 
             resultSet.close()
