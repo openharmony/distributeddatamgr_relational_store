@@ -39,8 +39,7 @@ public:
     std::vector<uint8_t> GetEncryptKey() const;
     void UpdateEncryptKey(const std::vector<uint8_t> &newKey);
     void ClearEncryptKey();
-    bool IsCreateNecessary() const;
-    void SetCreateNecessary(bool CreateNecessary);
+    int32_t GetSecurityLevel() const;
 
 private:
     std::string path;
@@ -52,6 +51,7 @@ private:
     bool initEncrypted;
     std::string databaseFileType;
     std::vector<uint8_t> encryptKey;
+    int32_t securityLevel = 0;
 };
 } // namespace NativeRdb
 } // namespace OHOS

@@ -74,6 +74,7 @@ public:
     int MarkAsCommit() override;
     int EndTransaction() override;
     bool IsInTransaction() override;
+    int ChangeEncryptKey(const std::vector<uint8_t> &newKey) override;
     std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string sql,
         const std::vector<std::string> &bindArgs);
     int EndStepQuery();
@@ -95,6 +96,7 @@ public:
     std::string GetName();
     std::string GetOrgPath();
     std::string GetFileType();
+    std::string GetFileSecurityLevel();
     int ExecuteForSharedBlock(int &rowNum, AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos,
         bool isCountAllRows, std::string sql, std::vector<ValueObject> &bindArgVec);
     std::unique_ptr<ResultSet> QueryByStep(const std::string &sql,
@@ -140,6 +142,7 @@ private:
     bool isReadOnly;
     bool isMemoryRdb;
     std::string name;
+    std::string fileSecurityLevel;
     std::string fileType;
     std::stack<TransactionObserver *> transactionObserverStack;
     bool isShared_ = false;

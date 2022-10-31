@@ -2175,10 +2175,9 @@ describe('rdbPredicatesTest', function () {
     it('testIndexedBy0001', 0, async function (done) {
         console.log(TAG + "************* testIndexedBy0001 start *************");
         let predicates = await new dataRdb.RdbPredicates("AllDataType");
-        predicates.like("stringValue", "ABCDEFGHIJKLMN").indexedBy("characterValue");
+        predicates.like("stringValue", "ABCDEFGHIJKLMN").indexedBy(["characterValue"]);
         let result = await rdbStore.query(predicates);
-        //test table have no indexe column, so return -1
-        expect(-1).assertEqual(result.rowCount);
+        expect(3).assertEqual(result.rowCount);
         result = null
         done();
         console.log(TAG + "************* testIndexedBy0001 end *************");
@@ -2192,14 +2191,10 @@ describe('rdbPredicatesTest', function () {
     it('testIndexedBy0002', 0, async function (done) {
         console.log(TAG + "************* testIndexedBy0002 start *************");
         let predicates = await new dataRdb.RdbPredicates("AllDataType");
-        try {
-            predicates.like("stringValue", "ABCDEFGHIJKLMN").indexedBy(["characterValueX"]);
-            let result = await rdbStore.query(predicates);
-            expect(3).assertEqual(result.rowCount);
-            result = null
-        } catch (err) {
-            console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
-        }
+        predicates.like("stringValue", "ABCDEFGHIJKLMN").indexedBy(["characterValueX"]);
+        let result = await rdbStore.query(predicates);
+        expect(3).assertEqual(result.rowCount);
+        result = null
         done();
         console.log(TAG + "************* testIndexedBy0002 end *************");
     })

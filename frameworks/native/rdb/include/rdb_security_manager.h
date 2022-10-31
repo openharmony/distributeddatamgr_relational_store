@@ -21,7 +21,6 @@
 #include <unistd.h>
 
 #include <chrono>
-#include <climits>
 #include <list>
 #include <map>
 #include <memory>

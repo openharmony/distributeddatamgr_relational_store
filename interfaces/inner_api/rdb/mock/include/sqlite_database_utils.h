@@ -52,6 +52,7 @@ public:
     static bool RenameFile(std::string &oldFileName, std::string &newFileName);
     static std::string GetDefaultDatabasePath(std::string &baseDir, std::string &name, int &errorCode);
     static std::string GetCorruptPath(std::string &path, int &errorCode);
+    static std::string GetDatabasePathNoName(std::string &context, RdbStoreConfig &fileConfig, int &errorCode);
 
 private:
     static std::map<std::string, int> g_statementType;
@@ -60,6 +61,8 @@ private:
 
     SqliteDatabaseUtils();
     ~SqliteDatabaseUtils();
+
+    static std::string GetDatabaseDir(RdbStoreConfig &fileConfig, std::string &securityLevel);
 };
 } // namespace NativeRdb
 } // namespace OHOS
