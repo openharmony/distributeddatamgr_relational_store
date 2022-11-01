@@ -36,6 +36,10 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     isEncrypt = config.IsEncrypt();
 #endif
+    this->autoCheck = config.IsAutoCheck();
+    this->journalSize = config.GetJournalSize();
+    this->pageSize = config.GetPageSize();
+    this->encryptAlgo = config.GetEncryptAlgo();
 }
 
 SqliteConfig::~SqliteConfig()
@@ -72,6 +76,40 @@ std::string SqliteConfig::GetSyncMode() const
 bool SqliteConfig::IsReadOnly() const
 {
     return readOnly;
+}
+
+bool SqliteConfig::IsAutoCheck() const
+{
+    return autoCheck;
+}
+void SqliteConfig::SetAutoCheck(bool autoCheck)
+{
+    this->autoCheck = autoCheck;
+}
+int SqliteConfig::GetJournalSize() const
+{
+    return journalSize;
+}
+void SqliteConfig::SetJournalSize(int journalSize)
+{
+    this->journalSize = journalSize;
+}
+int SqliteConfig::GetPageSize() const
+{
+    return pageSize;
+}
+void SqliteConfig::SetPageSize(int pageSize)
+{
+    this->pageSize = pageSize;
+}
+
+ std::string SqliteConfig::GetEncryptAlgo() const
+{
+    return encryptAlgo;
+}
+void SqliteConfig::SetEncryptAlgo(const std::string &encryptAlgo)
+{
+    this->encryptAlgo = encryptAlgo;
 }
 
 bool SqliteConfig::IsEncrypted() const

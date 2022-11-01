@@ -59,6 +59,10 @@ enum class DatabaseFileSecurityLevel : int32_t {
 };
 
 static const char *DatabaseFileSecurityLabel[] = { "", "S0", "S1", "S2", "S3", "S4" };
+static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
+static constexpr int DB_JOURNAL_SIZE = 1048576; /* default file size : 1M */
+static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "delete";
+static constexpr char DB_DEFAULT_ENCRYPT_ALGO[] = "sha256";
 
 class RdbStoreConfig {
 public:
@@ -112,6 +116,14 @@ public:
     static std::string GetSyncModeValue(SyncMode syncMode);
     static std::string GetDatabaseFileTypeValue(DatabaseFileType databaseFileType);
     static std::string GetDatabaseFileSecurityLevelValue(DatabaseFileSecurityLevel databaseFileSecurityLevel);
+    bool IsAutoCheck() const;
+    void SetAutoCheck(bool autoCheck);
+    int GetJournalSize() const;
+    void SetJournalSize(int journalSize);
+    int GetPageSize() const;
+    void SetPageSize(int pageSize);
+    const std::string GetEncryptAlgo() const;
+    void SetEncryptAlgo(const std::string &encryptAlgo);
 
 private:
     std::string name;
@@ -123,6 +135,10 @@ private:
     bool readOnly;
     std::string databaseFileType;
     std::string databaseFileSecurityLevel;
+    bool autoCheck;
+    int journalSize;
+    int pageSize;
+    std::string encryptAlgo;
 
     int32_t area_ = 0;
     std::string bundleName_;
