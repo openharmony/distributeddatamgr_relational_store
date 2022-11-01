@@ -56,6 +56,11 @@ enum class SecurityLevel : int32_t {
     LAST
 };
 
+static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
+static constexpr int DB_JOURNAL_SIZE = 1048576; /* default file size : 1M */
+static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "delete";
+static constexpr char DB_DEFAULT_ENCRYPT_ALGO[] = "sha256";
+
 class RdbStoreConfig {
 public:
     RdbStoreConfig(const RdbStoreConfig &config);
