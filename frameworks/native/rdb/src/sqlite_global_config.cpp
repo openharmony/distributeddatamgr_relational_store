@@ -23,16 +23,7 @@
 
 namespace OHOS {
 namespace NativeRdb {
-const int SqliteGlobalConfig::SOFT_HEAP_LIMIT = 8 * 1024 * 1024; /* 8MB */
-const bool SqliteGlobalConfig::CALLBACK_LOG_SWITCH = true;       /* Sqlite callback log switch */
-const int SqliteGlobalConfig::CONNECTION_POOL_SIZE = 4;
-const std::string SqliteGlobalConfig::MEMORY_DB_PATH = ":memory:";
-const int SqliteGlobalConfig::DB_PAGE_SIZE = 4096;
-const std::string SqliteGlobalConfig::DEFAULT_JOURNAL_MODE = "WAL";
-const std::string SqliteGlobalConfig::WAL_SYNC_MODE = "FULL";
-const int SqliteGlobalConfig::JOURNAL_FILE_SIZE = 524288; /* 512KB */
-const int SqliteGlobalConfig::WAL_AUTO_CHECKPOINT = 100;  /* 100 pages */
-constexpr int APP_DEFAULT_UMASK = 0002;
+
 
 void SqliteGlobalConfig::InitSqliteGlobalConfig()
 {
@@ -41,13 +32,13 @@ void SqliteGlobalConfig::InitSqliteGlobalConfig()
 
 SqliteGlobalConfig::SqliteGlobalConfig()
 {
-    umask(APP_DEFAULT_UMASK);
+    umask(GlobalExpr::APP_DEFAULT_UMASK);
 
     sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
 
-    sqlite3_config(SQLITE_CONFIG_LOG, &SqliteLogCallback, CALLBACK_LOG_SWITCH ? reinterpret_cast<void *>(1) : NULL);
+    sqlite3_config(SQLITE_CONFIG_LOG, &SqliteLogCallback, GlobalExpr::CALLBACK_LOG_SWITCH ? reinterpret_cast<void *>(1) : NULL);
 
-    sqlite3_soft_heap_limit(SOFT_HEAP_LIMIT);
+    sqlite3_soft_heap_limit(GlobalExpr::SOFT_HEAP_LIMIT);
 
     sqlite3_initialize();
 }
@@ -73,37 +64,37 @@ void SqliteGlobalConfig::SqliteLogCallback(const void *data, int err, const char
 
 int SqliteGlobalConfig::GetReadConnectionCount()
 {
-    return CONNECTION_POOL_SIZE - 1;
+    return GlobalExpr::CONNECTION_POOL_SIZE - 1;
 }
 
 std::string SqliteGlobalConfig::GetMemoryDbPath()
 {
-    return MEMORY_DB_PATH;
+    return GlobalExpr::MEMORY_DB_PATH;
 }
 
 int SqliteGlobalConfig::GetPageSize()
 {
-    return DB_PAGE_SIZE;
+    return GlobalExpr::DB_PAGE_SIZE;
 }
 
 std::string SqliteGlobalConfig::GetWalSyncMode()
 {
-    return WAL_SYNC_MODE;
+    return GlobalExpr::WAL_SYNC_MODE;
 }
 
 int SqliteGlobalConfig::GetJournalFileSize()
 {
-    return JOURNAL_FILE_SIZE;
+    return GlobalExpr::DB_JOURNAL_SIZE;
 }
 
 int SqliteGlobalConfig::GetWalAutoCheckpoint()
 {
-    return WAL_AUTO_CHECKPOINT;
+    return GlobalExpr::WAL_AUTO_CHECKPOINT;
 }
 
 std::string SqliteGlobalConfig::GetDefaultJournalMode()
 {
-    return DEFAULT_JOURNAL_MODE;
+    return GlobalExpr::DEFAULT_JOURNAL_MODE;
 }
 } // namespace NativeRdb
 } // namespace OHOS
