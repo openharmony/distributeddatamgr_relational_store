@@ -108,6 +108,14 @@ public:
     static std::string GetJournalModeValue(JournalMode journalMode);
     static std::string GetSyncModeValue(SyncMode syncMode);
     static std::string GetDatabaseFileTypeValue(DatabaseFileType databaseFileType);
+    bool IsAutoCheck() const;
+    void SetAutoCheck(bool autoCheck);
+    int GetJournalSize() const;
+    void SetJournalSize(int journalSize);
+    int GetPageSize() const;
+    void SetPageSize(int pageSize);
+    const std::string GetEncryptAlgo() const;
+    void SetEncryptAlgo(const std::string &encryptAlgo);
 
 private:
     std::string name;
@@ -118,7 +126,10 @@ private:
     std::vector<uint8_t> encryptKey;
     bool readOnly;
     std::string databaseFileType;
-
+    bool autoCheck;
+    int journalSize;
+    int pageSize;
+    std::string encryptAlgo;
     int32_t area_ = 0;
     std::string bundleName_;
     std::string moduleName_;
