@@ -133,10 +133,7 @@ private:
     std::vector<uint8_t> encryptKey;
     bool readOnly;
     std::string databaseFileType;
-    bool autoCheck;
-    int journalSize;
-    int pageSize;
-    std::string encryptAlgo;
+
     int32_t area_ = 0;
     std::string bundleName_;
     std::string moduleName_;
@@ -147,6 +144,11 @@ private:
     std::string readPermission_;
     std::string writePermission_;
     bool isCreateNecessary_;
+
+    bool autoCheck;
+    int journalSize;
+    int pageSize;
+    std::string encryptAlgo;
 };
 } // namespace OHOS::NativeRdb
 
