@@ -45,10 +45,10 @@ RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode,
       databaseFileType(databaseFileType),
       securityLevel(securityLevel),
       isCreateNecessary_(isCreateNecessary),
-      autoCheck(false),
-      journalSize(DB_JOURNAL_SIZE),
-      pageSize(DB_PAGE_SIZE),
-      encryptAlgo(DB_DEFAULT_ENCRYPT_ALGO)
+      autoCheck(autoCheck),
+      journalSize(journalSize),
+      pageSize(pageSize),
+      encryptAlgo(encryptAlgo)
 {
 }
 
