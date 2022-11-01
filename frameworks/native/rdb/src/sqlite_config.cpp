@@ -78,17 +78,6 @@ std::string SqliteConfig::GetDatabaseFileType() const
     return databaseFileType;
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-bool SqliteConfig::IsEncrypt() const
-{
-    return isEncrypt;
-}
-
-std::string SqliteConfig::GetBundleName() const
-{
-    return bundleName;
-}
-
 bool SqliteConfig::IsAutoCheck() const
 {
     return autoCheck;
@@ -121,6 +110,17 @@ void SqliteConfig::SetPageSize(int pageSize)
 void SqliteConfig::SetEncryptAlgo(const std::string &encryptAlgo)
 {
     this->encryptAlgo = encryptAlgo;
+}
+
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+bool SqliteConfig::IsEncrypt() const
+{
+    return isEncrypt;
+}
+
+std::string SqliteConfig::GetBundleName() const
+{
+    return bundleName;
 }
 
 bool SqliteConfig::IsCreateNecessary() const
