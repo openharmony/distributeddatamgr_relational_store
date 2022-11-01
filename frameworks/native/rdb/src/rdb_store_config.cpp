@@ -35,7 +35,8 @@ RdbStoreConfig::RdbStoreConfig(const RdbStoreConfig &config)
 
 RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode, bool isReadOnly,
     const std::vector<uint8_t> &encryptKey, const std::string &journalMode, const std::string &syncMode,
-    const std::string &databaseFileType, SecurityLevel securityLevel, bool isCreateNecessary)
+    const std::string &databaseFileType, SecurityLevel securityLevel, bool isCreateNecessary, bool autoCheck,
+    int journalSize, int pageSize, const std::string &encryptAlgo)
     : name(name),
       path(name),
       storageMode(storageMode),
