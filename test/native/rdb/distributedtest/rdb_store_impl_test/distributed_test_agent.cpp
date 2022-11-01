@@ -134,14 +134,12 @@ int DistributedTestAgent::OnProcessMsg(const std::string &strMsg, int len, std::
     std::unique_ptr<ResultSet> resultSet =
         store_->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string> { "zhangsan" });
     if (resultSet!= nullptr) {
-        int ret;
         int position;
         int columnIndex;
         std::string strVal;
-        ret = resultSet->GetRowIndex(position);
-        status = position;
+        resultSet->GetRowIndex(position);
         resultSet->GoToFirstRow();
-        ret = resultSet->GetColumnIndex("name", columnIndex);
+        resultSet->GetColumnIndex("name", columnIndex);
         resultSet->GetString(columnIndex, strVal);
         strReturnValue = strVal;
     } else {
