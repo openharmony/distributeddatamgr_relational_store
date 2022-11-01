@@ -139,10 +139,7 @@ private:
     StorageMode storageMode;
     std::string journalMode;
     std::string syncMode;
-    bool autoCheck;
-    int journalSize;
-    int pageSize;
-    std::string encryptAlgo;
+
     std::vector<uint8_t> encryptKey;
     bool readOnly;
     std::string databaseFileType;
@@ -159,6 +156,11 @@ private:
     std::string uri_;
     std::string readPermission_;
     std::string writePermission_;
+
+    bool autoCheck;
+    int journalSize;
+    int pageSize;
+    std::string encryptAlgo;
 };
 } // namespace OHOS::NativeRdb
 
