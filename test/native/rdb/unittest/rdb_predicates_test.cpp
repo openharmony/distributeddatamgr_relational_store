@@ -585,9 +585,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_001, TestSize.Level1)
 
 void RdbStorePredicateTest::CalendarTest(RdbPredicates predicates1)
 {
-    std::vector<std::string> sqlArgs;
     std::vector<std::string> columns;
-    std::string sql;
 
     predicates1.Clear();
     std::vector<int> date = {2019, 7, 17};
@@ -684,9 +682,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotEqualTo_002, TestSize.Level1)
 
 void RdbStorePredicateTest::CalendarTest002(RdbPredicates predicates1)
 {
-    std::vector<std::string> sqlArgs;
     std::vector<std::string> columns;
-    std::string sql;
 
     predicates1.Clear();
     std::vector<int> date = {2019, 7, 17};
