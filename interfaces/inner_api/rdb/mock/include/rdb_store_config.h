@@ -68,7 +68,7 @@ class RdbStoreConfig {
 public:
     RdbStoreConfig(const RdbStoreConfig &config);
     RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
-        const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(), const std::string &journalMode = "",
+        const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(), const std::string &journalMode = DB_DEFAULT_JOURNAL_MODE,
         const std::string &syncMode = "", const std::string &databaseFileType = "",
         const std::string &databaseFileSecurityLevel = "",
         bool autoCheck = false, int journalSize = DB_JOURNAL_SIZE, int pageSize = DB_PAGE_SIZE,
