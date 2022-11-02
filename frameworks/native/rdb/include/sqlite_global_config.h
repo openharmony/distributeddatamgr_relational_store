@@ -21,7 +21,7 @@
 namespace OHOS {
 namespace NativeRdb {
 
-class GlobalExpr{
+class GlobalExpr {
 public:
    static constexpr bool CALLBACK_LOG_SWITCH = true;       /* Sqlite callback log switch */
    static constexpr bool DB_AUTO_CHECK = false;       /* Sqlite callback log switch */

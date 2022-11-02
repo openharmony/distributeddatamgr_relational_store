@@ -36,7 +36,8 @@ SqliteGlobalConfig::SqliteGlobalConfig()
 
     sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
 
-    sqlite3_config(SQLITE_CONFIG_LOG, &SqliteLogCallback, GlobalExpr::CALLBACK_LOG_SWITCH ? reinterpret_cast<void *>(1) : NULL);
+    sqlite3_config(SQLITE_CONFIG_LOG, &SqliteLogCallback,
+        GlobalExpr::CALLBACK_LOG_SWITCH ? reinterpret_cast<void *>(1) : NULL);
 
     sqlite3_soft_heap_limit(GlobalExpr::SOFT_HEAP_LIMIT);
 
