@@ -413,9 +413,67 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_012, TestSize.Level1)
     config.SetUri(uri);
     std::string getUri = config.GetUri();
     EXPECT_EQ(getUri, uri);
+}
 
-    SecurityLevel securityLevel = SecurityLevel::S1;
-    config.SetSecurityLevel(securityLevel);
-    SecurityLevel getSecurityLevel = config.GetSecurityLevel();
-    EXPECT_EQ(getSecurityLevel, securityLevel);
+/**
+ * @tc.name: RdbStoreConfig_013
+ * @tc.desc: test RdbStoreConfig interfaces: SetSecurityLevel/GetSecurityLevel
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_013, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    config.SetSecurityLevel(SecurityLevel::S2);
+    SecurityLevel retSecurityLevel = config.GetSecurityLevel();
+    EXPECT_EQ(SecurityLevel::S2, retSecurityLevel);
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    RdbHelper::DeleteRdbStore(dbPath);
+
+    config.SetSecurityLevel(SecurityLevel::LAST);
+    retSecurityLevel = config.GetSecurityLevel();
+    EXPECT_EQ(SecurityLevel::LAST, retSecurityLevel);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStoreConfig_014
+ * @tc.desc: test RdbStoreConfig interfaces: SetCreateNecessary/IsCreateNecessary
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_014, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    bool createNecessary = true;
+    config.SetCreateNecessary(createNecessary);
+    bool retCreateNecessary = config.IsCreateNecessary();
+    EXPECT_EQ(createNecessary, retCreateNecessary);
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    RdbHelper::DeleteRdbStore(dbPath);
+
+    createNecessary = false;
+    config.SetCreateNecessary(createNecessary);
+    retCreateNecessary = config.IsCreateNecessary();
+    EXPECT_EQ(createNecessary, retCreateNecessary);
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(store, nullptr);
 }
