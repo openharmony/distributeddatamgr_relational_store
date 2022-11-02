@@ -54,12 +54,12 @@ private:
     explicit SqliteConnection(bool isWriteConnection);
     int InnerOpen(const SqliteConfig &config);
     int Config(const SqliteConfig &config);
-    int SetPageSize(const SqliteConfig &config);
-    int SetEncryptAlgo(const SqliteConfig &config);
+    int SetPageSize();
+    int SetEncryptAlgo();
     int SetEncryptKey(const std::vector<uint8_t> &encryptKey);
-    int SetJournalMode(const SqliteConfig &config);
-    int SetJournalSizeLimit(const SqliteConfig &config);
-    int SetAutoCheckpoint(const SqliteConfig &config);
+    int SetJournalMode(const std::string &journalMode, const std::string &synclMode);
+    int SetJournalSizeLimit();
+    int SetAutoCheckpoint();
     int SetWalSyncMode(const std::string &syncMode);
     int PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void LimitPermission(const std::string &dbPath) const;
