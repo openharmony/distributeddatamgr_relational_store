@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#include "napi_rdb_predicates.h"
-
 #include "js_logger.h"
 #include "js_utils.h"
+#include "napi_rdb_error.h"
+#include "napi_rdb_predicates.h"
 
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
@@ -85,17 +85,24 @@ void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
     napi_value cons;
     NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "RdbPredicates", NAPI_AUTO_LENGTH, New, nullptr,
                                    sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons));
-
     NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, cons, 1, &constructor_));
-
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, exports, "RdbPredicates", cons));
 
     SetGlobalNamedProperty(env, "RdbPredicatesConstructor", cons);
+
+    napi_value consV9;
+    NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "RdbPredicatesV9", NAPI_AUTO_LENGTH, New, nullptr,
+                                   sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &consV9));
+    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, consV9, 1, &constructor_));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, exports, "RdbPredicatesV9", consV9));
+
+    SetGlobalNamedProperty(env, "RdbPredicatesConstructorV9", consV9);
     LOG_DEBUG("RdbPredicatesProxy::Init end");
 }
 
 napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::New begin.");
     napi_value new_target;
     NAPI_CALL(env, napi_get_new_target(env, info, &new_target));
     bool is_constructor = (new_target != nullptr);
@@ -108,8 +115,9 @@ napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
     if (is_constructor) {
         napi_valuetype valueType;
         NAPI_CALL(env, napi_typeof(env, args[0], &valueType));
-        NAPI_ASSERT(env, valueType == napi_string, "Table name should be a string.");
+        RDB_NAPI_ASSERT(env, valueType == napi_string, std::make_shared<ParamTypeError>("name", "a non empty string."));
         std::string tableName = JSUtils::Convert2String(env, args[0]);
+        RDB_NAPI_ASSERT(env, !tableName.empty(), std::make_shared<ParamTypeError>("name", "a non empty string."));
         auto *proxy = new RdbPredicatesProxy(tableName);
         proxy->env_ = env;
         NAPI_CALL(env, napi_wrap(env, thiz, proxy, RdbPredicatesProxy::Destructor, nullptr, &proxy->wrapper_));
@@ -131,13 +139,13 @@ napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbPredicates> value)
 {
+    LOG_DEBUG("RdbPredicatesProxy::NewInstance begin.");
     napi_value cons;
     napi_status status = napi_get_reference_value(env, constructor_, &cons);
     if (status != napi_ok) {
         LOG_ERROR("RdbPredicatesProxy::NewInstance get constructor failed! napi_status:%{public}d!", status);
         return nullptr;
     }
-
     size_t argc = 1;
     napi_value args[1] = { JSUtils::Convert2JSValue(env, value->GetTableName()) };
     napi_value instance = nullptr;
@@ -177,537 +185,582 @@ RdbPredicatesProxy::RdbPredicatesProxy(std::string &tableName)
 
 std::shared_ptr<NativeRdb::RdbPredicates> RdbPredicatesProxy::GetNativePredicates(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::GetNativePredicates begin.");
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
-    LOG_DEBUG("RdbPredicatesProxy::GetNativePredicates end");
     return predicatesProxy->predicates_;
+}
+
+RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldArrayByName(napi_env env, napi_callback_info info, napi_value &thiz,
+    std::vector<std::string> &fieldarray, const std::string fieldName, const std::string fieldType)
+{
+    size_t argc = 1;
+    napi_value args[1] = { nullptr };
+    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    RdbPredicatesProxy *predicatesProxy = nullptr;
+    napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
+    RDB_NAPI_ASSERT(env, argc == 1, std::make_shared<ParamNumError>("1"));
+
+    fieldarray = JSUtils::Convert2StrVector(env, args[0]);
+    RDB_NAPI_ASSERT(
+        env, fieldarray.size() >= 0, std::make_shared<ParamTypeError>(fieldName, "a " + fieldType + " array."));
+
+    return predicatesProxy;
+}
+
+RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldByName(
+    napi_env env, napi_callback_info info, napi_value &thiz, std::string &field, const std::string fieldName)
+{
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    RdbPredicatesProxy *predicatesProxy = nullptr;
+    napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
+    RDB_NAPI_ASSERT(env, argc == 1, std::make_shared<ParamNumError>("1"));
+
+    field = JSUtils::Convert2String(env, args[0]);
+    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamTypeError>(fieldName, "a non empty string."));
+
+    return predicatesProxy;
+}
+
+RdbPredicatesProxy *RdbPredicatesProxy::ParseInt32FieldByName(
+    napi_env env, napi_callback_info info, napi_value &thiz, int32_t &field, const std::string fieldName)
+{
+    size_t argc = 1;
+    napi_value args[1] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    RdbPredicatesProxy *predicatesProxy = nullptr;
+    napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
+    RDB_NAPI_ASSERT(env, argc == 1, std::make_shared<ParamNumError>("1"));
+
+    napi_status status = napi_get_value_int32(env, args[0], &field);
+    RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamTypeError>(fieldName, "a number."));
+    return predicatesProxy;
+}
+
+RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValueArray(napi_env env, napi_callback_info info,
+    napi_value &thiz, std::string &field, std::vector<std::string> &value, const std::string valueType)
+{
+    size_t argc = 2;
+    napi_value args[2] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    RdbPredicatesProxy *predicatesProxy = nullptr;
+    napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
+    RDB_NAPI_ASSERT(env, argc == 2, std::make_shared<ParamNumError>("2"));
+
+    field = JSUtils::Convert2String(env, args[0]);
+    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamTypeError>("field", "a non empty string."));
+
+    value = JSUtils::Convert2StrVector(env, args[1]);
+    RDB_NAPI_ASSERT(
+        env, value.size() >= 0, std::make_shared<ParamTypeError>("value", "a " + valueType + " array."));
+
+    return predicatesProxy;
+}
+
+RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValue(napi_env env, napi_callback_info info, napi_value &thiz,
+    std::string &field, std::string &value, const std::string valueType)
+{
+    size_t argc = 2;
+    napi_value args[2] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    RdbPredicatesProxy *predicatesProxy = nullptr;
+    napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
+    RDB_NAPI_ASSERT(env, argc == 2, std::make_shared<ParamNumError>("2"));
+
+    field = JSUtils::Convert2String(env, args[0]);
+    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamTypeError>("field", "a non empty string."));
+
+    value = JSUtils::ConvertAny2String(env, args[1]);
+    return predicatesProxy;
+}
+
+RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldLowAndHigh(
+    napi_env env, napi_callback_info info, napi_value &thiz, std::string &field, std::string &low, std::string &high)
+{
+    size_t argc = 3;
+    napi_value args[3] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    RdbPredicatesProxy *predicatesProxy = nullptr;
+    napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
+    RDB_NAPI_ASSERT(env, argc == 3, std::make_shared<ParamNumError>("3"));
+
+    field = JSUtils::Convert2String(env, args[0]);
+    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamTypeError>("field", "a non empty string."));
+
+    low = JSUtils::ConvertAny2String(env, args[1]);
+    RDB_NAPI_ASSERT(env, !low.empty(), std::make_shared<ParamTypeError>("low", "a non empty ValueType."));
+
+    high = JSUtils::ConvertAny2String(env, args[2]);
+    RDB_NAPI_ASSERT(env, !high.empty(), std::make_shared<ParamTypeError>("high", "a non empty ValueType."));
+
+    LOG_DEBUG("Check field, low and high ok");
+    return predicatesProxy;
 }
 
 napi_value RdbPredicatesProxy::EqualTo(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 2;
-    napi_value args[2] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::EqualTo Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->EqualTo(field, value);
-    LOG_DEBUG("RdbPredicatesProxy::EqualTo end");
+    LOG_DEBUG("RdbPredicatesProxy::EqualTo begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::string value = "";
+    auto predicatesProxy = ParseFieldAndValue(env, info, thiz, field, value, "ValueType");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->EqualTo(field, value);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::NotEqualTo(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 2;
-    napi_value args[2] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::NotEqualTo Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->NotEqualTo(field, value);
-    LOG_DEBUG("RdbPredicatesProxy::NotEqualTo end");
+    LOG_DEBUG("RdbPredicatesProxy::NotEqualTo begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::string value = "";
+    auto predicatesProxy = ParseFieldAndValue(env, info, thiz, field, value, "ValueType");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->NotEqualTo(field, value);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::BeginWrap(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    LOG_DEBUG("RdbPredicatesProxy::BeginWrap begin.");
+    napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->BeginWrap();
-    LOG_DEBUG("RdbPredicatesProxy::BeginWrap end");
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::EndWrap(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    LOG_DEBUG("RdbPredicatesProxy::EndWrap begin.");
+    napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->EndWrap();
-    LOG_DEBUG("RdbPredicatesProxy::EndWrap end");
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::Or(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    LOG_DEBUG("RdbPredicatesProxy::Or begin.");
+    napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->Or();
-    LOG_DEBUG("RdbPredicatesProxy::Or end");
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::And(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    LOG_DEBUG("RdbPredicatesProxy::And begin.");
+    napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->And();
-    LOG_DEBUG("RdbPredicatesProxy::And end");
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::Contains(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 2;
-    napi_value args[2] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::Contains Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->Contains(field, value);
-    LOG_DEBUG("RdbPredicatesProxy::Contains end");
+    LOG_DEBUG("RdbPredicatesProxyV9::Contains begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::string value = "";
+    auto predicatesProxy = ParseFieldAndValue(env, info, thiz, field, value, "string");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->Contains(field, value);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::BeginsWith(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 2;
-    napi_value args[2] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::BeginsWith Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->BeginsWith(field, value);
-    LOG_DEBUG("RdbPredicatesProxy::BeginsWith end");
+    LOG_DEBUG("RdbPredicatesProxy::BeginsWith begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::string value = "";
+    auto predicatesProxy = ParseFieldAndValue(env, info, thiz, field, value, "string");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->BeginsWith(field, value);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::EndsWith(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 2;
-    napi_value args[2] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::EndsWith Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->EndsWith(field, value);
-    LOG_DEBUG("RdbPredicatesProxy::EndsWith end");
+    LOG_DEBUG("RdbPredicatesProxy::EndsWith begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::string value = "";
+    auto predicatesProxy = ParseFieldAndValue(env, info, thiz, field, value, "string");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->EndsWith(field, value);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::IsNull(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::IsNull Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    GetNativePredicates(env, info)->IsNull(field);
-    LOG_DEBUG("RdbPredicatesProxy::IsNull end");
+    LOG_DEBUG("RdbPredicatesProxy::IsNull begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    auto predicatesProxy = ParseFieldByName(env, info, thiz, field, "field");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->IsNull(field);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::IsNotNull(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::IsNotNull Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    GetNativePredicates(env, info)->IsNotNull(field);
-    LOG_DEBUG("RdbPredicatesProxy::IsNotNull end");
+    LOG_DEBUG("RdbPredicatesProxy::IsNotNull begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    auto predicatesProxy = ParseFieldByName(env, info, thiz, field, "field");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->IsNotNull(field);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::Like(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 2;
-    napi_value args[2] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::Like Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->Like(field, value);
-    LOG_DEBUG("RdbPredicatesProxy::Like end");
+    LOG_DEBUG("RdbPredicatesProxy::Like begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::string value = "";
+    auto predicatesProxy = ParseFieldAndValue(env, info, thiz, field, value, "string");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->Like(field, value);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::Glob(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 2;
-    napi_value args[2] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::Glob Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->Glob(field, value);
-    LOG_DEBUG("RdbPredicatesProxy::Glob end");
+    LOG_DEBUG("RdbPredicatesProxy::Glob begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::string value = "";
+    auto predicatesProxy = ParseFieldAndValue(env, info, thiz, field, value, "string");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->Glob(field, value);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::Between(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 3;
-    napi_value args[3] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::Between Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    std::string low = JSUtils::ConvertAny2String(env, args[1]);
-    std::string high = JSUtils::ConvertAny2String(env, args[2]);
-    GetNativePredicates(env, info)->Between(field, low, high);
-    LOG_DEBUG("RdbPredicatesProxy::Between end");
+    LOG_DEBUG("RdbPredicatesProxy::Between begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::string low = "";
+    std::string high = "";
+    auto predicatesProxy = ParseFieldLowAndHigh(env, info, thiz, field, low, high);
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->Between(field, low, high);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::NotBetween(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 3;
-    napi_value args[3] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::NotBetween Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    std::string low = JSUtils::ConvertAny2String(env, args[1]);
-    std::string high = JSUtils::ConvertAny2String(env, args[2]);
-    GetNativePredicates(env, info)->NotBetween(field, low, high);
-    LOG_DEBUG("RdbPredicatesProxy::NotBetween end");
+    LOG_DEBUG("RdbPredicatesProxy::NotBetween begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::string low = "";
+    std::string high = "";
+    auto predicatesProxy = ParseFieldLowAndHigh(env, info, thiz, field, low, high);
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->NotBetween(field, low, high);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::GreaterThan(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 2;
-    napi_value args[2] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::GreaterThan Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->GreaterThan(field, value);
-    LOG_DEBUG("RdbPredicatesProxy::GreaterThan end");
+    LOG_DEBUG("RdbPredicatesProxy::GreaterThan begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::string value = "";
+    auto predicatesProxy = ParseFieldAndValue(env, info, thiz, field, value, "ValueType");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->GreaterThan(field, value);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::LessThan(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 2;
-    napi_value args[2] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::LessThan Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->LessThan(field, value);
-    LOG_DEBUG("RdbPredicatesProxy::LessThan end");
+    LOG_DEBUG("RdbPredicatesProxy::LessThan begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::string value = "";
+    auto predicatesProxy = ParseFieldAndValue(env, info, thiz, field, value, "ValueType");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->LessThan(field, value);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::GreaterThanOrEqualTo(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 2;
-    napi_value args[2] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::GreaterThanOrEqualTo Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->GreaterThanOrEqualTo(field, value);
-    LOG_DEBUG("RdbPredicatesProxy::GreaterThanOrEqualTo end");
+    LOG_DEBUG("RdbPredicatesProxy::GreaterThanOrEqualTo begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::string value = "";
+    RdbPredicatesProxy *predicatesProxy = ParseFieldAndValue(env, info, thiz, field, value, "ValueType");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->GreaterThanOrEqualTo(field, value);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::LessThanOrEqualTo(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 2;
-    napi_value args[2] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::LessThanOrEqualTo Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->LessThanOrEqualTo(field, value);
-    LOG_DEBUG("RdbPredicatesProxy::LessThanOrEqualTo end");
+    LOG_DEBUG("RdbPredicatesProxy::LessThanOrEqualTo begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::string value = "";
+    RdbPredicatesProxy *predicatesProxy = ParseFieldAndValue(env, info, thiz, field, value, "ValueType");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->LessThanOrEqualTo(field, value);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::OrderByAsc(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::OrderByAsc Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    GetNativePredicates(env, info)->OrderByAsc(field);
-    LOG_DEBUG("RdbPredicatesProxy::OrderByAsc end");
+    LOG_DEBUG("RdbPredicatesProxy::OrderByAsc begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    auto predicatesProxy = ParseFieldByName(env, info, thiz, field, "field");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->OrderByAsc(field);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::OrderByDesc(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::OrderByDesc Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    GetNativePredicates(env, info)->OrderByDesc(field);
-    LOG_DEBUG("RdbPredicatesProxy::OrderByDesc end");
+    LOG_DEBUG("RdbPredicatesProxy::OrderByDesc begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    auto predicatesProxy = ParseFieldByName(env, info, thiz, field, "field");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->OrderByDesc(field);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::Distinct(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    LOG_DEBUG("RdbPredicatesProxy::Distinct begin.");
+    napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->Distinct();
-    LOG_DEBUG("RdbPredicatesProxy::Distinct end");
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::Limit(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::Limit Invalid argvs!");
+    LOG_DEBUG("RdbPredicatesProxy::Limit begin.");
+    napi_value thiz = nullptr;
     int32_t limit = 0;
-    napi_get_value_int32(env, args[0], &limit);
-    GetNativePredicates(env, info)->Limit(limit);
-    LOG_DEBUG("RdbPredicatesProxy::Limit end");
+    auto predicatesProxy = ParseInt32FieldByName(env, info, thiz, limit, "value");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->Limit(limit);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::Offset(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::Offset Invalid argvs!");
+    LOG_DEBUG("RdbPredicatesProxy::Offset begin.");
+    napi_value thiz = nullptr;
     int32_t offset = 0;
-    napi_get_value_int32(env, args[0], &offset);
-    GetNativePredicates(env, info)->Offset(offset);
-    LOG_DEBUG("RdbPredicatesProxy::Offset end");
+    auto predicatesProxy = ParseInt32FieldByName(env, info, thiz, offset, "rowOffset");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->Offset(offset);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::GroupBy(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::GroupBy Invalid argvs!");
-    std::vector<std::string> fields = JSUtils::Convert2StrVector(env, args[0]);
-    GetNativePredicates(env, info)->GroupBy(fields);
-    LOG_DEBUG("RdbPredicatesProxy::GroupBy end");
+    LOG_DEBUG("RdbPredicatesProxy::GroupBy begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::vector<std::string> fields;
+    auto predicatesProxy = ParseFieldArrayByName(env, info, thiz, fields, "fields", "string");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->GroupBy(fields);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::IndexedBy(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::IndexedBy Invalid argvs!");
-    std::string indexName = JSUtils::Convert2String(env, args[0]);
-    GetNativePredicates(env, info)->IndexedBy(indexName);
-    LOG_DEBUG("RdbPredicatesProxy::IndexedBy end");
+    LOG_DEBUG("RdbPredicatesProxy::IndexedBy begin.");
+    napi_value thiz = nullptr;
+    std::string indexName = "";
+    auto predicatesProxy = ParseFieldByName(env, info, thiz, indexName, "fields");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->IndexedBy(indexName);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::In(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 2;
-    napi_value args[2] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::In Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    std::vector<std::string> values = JSUtils::Convert2StrVector(env, args[1]);
-    GetNativePredicates(env, info)->In(field, values);
-    LOG_DEBUG("RdbPredicatesProxy::In end");
+    LOG_DEBUG("RdbPredicatesProxy::In begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::vector<std::string> values;
+    auto predicatesProxy = ParseFieldAndValueArray(env, info, thiz, field, values, "ValueType");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->In(field, values);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::NotIn(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
-    size_t argc = 2;
-    napi_value args[2] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc > 0, "RdbPredicatesProxy::NotIn Invalid argvs!");
-    std::string field = JSUtils::Convert2String(env, args[0]);
-    std::vector<std::string> values = JSUtils::Convert2StrVector(env, args[1]);
-    GetNativePredicates(env, info)->NotIn(field, values);
-    LOG_DEBUG("RdbPredicatesProxy::NotIn end");
+    LOG_DEBUG("RdbPredicatesProxy::NotIn begin.");
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::vector<std::string> values;
+    auto predicatesProxy = ParseFieldAndValueArray(env, info, thiz, field, values, "ValueType");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->NotIn(field, values);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::Using(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::Using begin.");
     napi_value thiz = nullptr;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::Using Invalid argvs!");
-    auto fields = JSUtils::Convert2StrVector(env, args[0]);
-    GetNativePredicates(env, info)->Using(fields);
-    LOG_DEBUG("RdbPredicatesProxy::Using end");
+    std::vector<std::string> fields;
+    auto predicatesProxy = ParseFieldArrayByName(env, info, thiz, fields, "fields", "string");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->Using(fields);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::LeftOuterJoin(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::LeftOuterJoin begin.");
     napi_value thiz = nullptr;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::LeftOuterJoin Invalid argvs!");
-    std::string tablename = JSUtils::Convert2String(env, args[0]);
-    GetNativePredicates(env, info)->LeftOuterJoin(tablename);
-    LOG_DEBUG("RdbPredicatesProxy::LeftOuterJoin end");
+    std::string tablename = "";
+    auto predicatesProxy = ParseFieldByName(env, info, thiz, tablename, "tablename");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->LeftOuterJoin(tablename);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::InnerJoin(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::InnerJoin begin.");
     napi_value thiz = nullptr;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::InnerJoin Invalid argvs!");
-    std::string tablename = JSUtils::Convert2String(env, args[0]);
-    GetNativePredicates(env, info)->InnerJoin(tablename);
-    LOG_DEBUG("RdbPredicatesProxy::InnerJoin end");
+    std::string tablename = "";
+    auto predicatesProxy = ParseFieldByName(env, info, thiz, tablename, "tablename");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->InnerJoin(tablename);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::On(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::On begin.");
     napi_value thiz = nullptr;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::On Invalid argvs!");
-    auto clauses = JSUtils::Convert2StrVector(env, args[0]);
-    GetNativePredicates(env, info)->On(clauses);
-    LOG_DEBUG("RdbPredicatesProxy::On end");
+    std::vector<std::string> clauses;
+    auto predicatesProxy = ParseFieldArrayByName(env, info, thiz, clauses, "clauses", "string");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->On(clauses);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::Clear(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::Clear begin.");
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->Clear();
-    LOG_DEBUG("RdbPredicatesProxy::Clear end");
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::CrossJoin(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::CrossJoin begin.");
     napi_value thiz = nullptr;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::CrossJoin Invalid argvs!");
-    std::string tablename = JSUtils::Convert2String(env, args[0]);
-    GetNativePredicates(env, info)->CrossJoin(tablename);
-    LOG_DEBUG("RdbPredicatesProxy::CrossJoin end");
+    std::string tablename = "";
+    auto predicatesProxy = ParseFieldByName(env, info, thiz, tablename, "tablename");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->CrossJoin(tablename);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::GetJoinCount(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::GetJoinCount begin.");
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     int errCode = GetNativePredicates(env, info)->GetJoinCount();
-    LOG_DEBUG("RdbPredicatesProxy::GetJoinCount end");
     return JSUtils::Convert2JSValue(env, errCode);
 }
 
 napi_value RdbPredicatesProxy::SetJoinCount(napi_env env, napi_callback_info info)
 {
-    napi_value thiz = nullptr;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::SetJoinCount Invalid argvs!");
+    LOG_DEBUG("RdbPredicatesProxy::SetJoinCount begin.");
+    napi_value thiz;
     int32_t joinCount = 0;
-    napi_get_value_int32(env, args[0], &joinCount);
-    GetNativePredicates(env, info)->SetJoinCount(joinCount);
-    LOG_DEBUG("RdbPredicatesProxy::SetJoinCount end");
+    RdbPredicatesProxy *predicatesProxy = ParseInt32FieldByName(env, info, thiz, joinCount, "joinCount");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->SetJoinCount(joinCount);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::GetJoinTypes(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::GetJoinTypes begin.");
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     auto joinTypes = GetNativePredicates(env, info)->GetJoinTypes();
-    LOG_DEBUG("RdbPredicatesProxy::GetJoinTypes end");
     return JSUtils::Convert2JSValue(env, joinTypes);
 }
 
 napi_value RdbPredicatesProxy::GetJoinTableNames(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::GetJoinTableNames begin.");
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     auto joinTableNames = GetNativePredicates(env, info)->GetJoinTableNames();
-    LOG_DEBUG("RdbPredicatesProxy::GetJoinTableNames end");
     return JSUtils::Convert2JSValue(env, joinTableNames);
+    ;
 }
 
 napi_value RdbPredicatesProxy::GetJoinConditions(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::GetJoinConditions begin.");
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     auto joinConditions = GetNativePredicates(env, info)->GetJoinConditions();
-    LOG_DEBUG("RdbPredicatesProxy::GetJoinConditions end");
     return JSUtils::Convert2JSValue(env, joinConditions);
+    ;
 }
 
 napi_value RdbPredicatesProxy::SetJoinConditions(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::SetJoinConditions begin.");
     napi_value thiz = nullptr;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::SetJoinConditions Invalid argvs!");
-    auto joinConditions = JSUtils::Convert2StrVector(env, args[0]);
-    GetNativePredicates(env, info)->SetJoinConditions(joinConditions);
-    LOG_DEBUG("RdbPredicatesProxy::SetJoinConditions end");
+    std::vector<std::string> joinConditions;
+    RdbPredicatesProxy *predicatesProxy =
+        ParseFieldArrayByName(env, info, thiz, joinConditions, "joinConditions", "string");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->SetJoinConditions(joinConditions);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::SetJoinTableNames(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::SetJoinTableNames begin.");
     napi_value thiz = nullptr;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::SetJoinTableNames Invalid argvs!");
-    auto joinNames = JSUtils::Convert2StrVector(env, args[0]);
-    GetNativePredicates(env, info)->SetJoinTableNames(joinNames);
-    LOG_DEBUG("RdbPredicatesProxy::SetJoinTableNames end");
+    std::vector<std::string> joinNames;
+    RdbPredicatesProxy *predicatesProxy = ParseFieldArrayByName(env, info, thiz, joinNames, "joinNames", "string");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->SetJoinTableNames(joinNames);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::SetJoinTypes(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::SetJoinTypes begin.");
     napi_value thiz = nullptr;
-    size_t argc = 1;
-    napi_value args[1] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::SetJoinTypes Invalid argvs!");
-    auto joinTypes = JSUtils::Convert2StrVector(env, args[0]);
-    GetNativePredicates(env, info)->SetJoinTypes(joinTypes);
-    LOG_DEBUG("RdbPredicatesProxy::SetJoinTypes end");
+    std::vector<std::string> joinTypes;
+    RdbPredicatesProxy *predicatesProxy = ParseFieldArrayByName(env, info, thiz, joinTypes, "joinTypes", "string");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->SetJoinTypes(joinTypes);
     return thiz;
 }
 
@@ -719,23 +772,21 @@ std::shared_ptr<NativeRdb::RdbPredicates> RdbPredicatesProxy::GetPredicates() co
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 napi_value RdbPredicatesProxy::InDevices(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::InDevices begin.");
     napi_value thiz = nullptr;
-    size_t argc = 1;
-    napi_value args[1] = { nullptr };
-    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc == 1, "RdbPredicatesProxy::InDevices Invalid args!");
-    auto devices = JSUtils::Convert2StrVector(env, args[0]);
-    GetNativePredicates(env, info)->InDevices(devices);
-    LOG_DEBUG("RdbPredicatesProxy::InDevices end");
+    std::vector<std::string> devices;
+    RdbPredicatesProxy *predicatesProxy = ParseFieldArrayByName(env, info, thiz, devices, "devices", "string");
+    RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);
+    predicatesProxy->predicates_->InDevices(devices);
     return thiz;
 }
 
 napi_value RdbPredicatesProxy::InAllDevices(napi_env env, napi_callback_info info)
 {
+    LOG_DEBUG("RdbPredicatesProxy::InAllDevices begin.");
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->InAllDevices();
-    LOG_DEBUG("RdbPredicatesProxy::InAllDevices end");
     return thiz;
 }
 #endif

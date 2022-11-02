@@ -63,7 +63,6 @@ int SqliteConnectionPool::Init()
         SqliteConnection *connection = SqliteConnection::Open(config, false, errCode);
         if (connection == nullptr) {
             CloseAllConnections();
-            config.ClearEncryptKey();
             return errCode;
         }
         readConnections.push_back(connection);
@@ -76,7 +75,6 @@ int SqliteConnectionPool::Init()
 
 SqliteConnectionPool::~SqliteConnectionPool()
 {
-    config.ClearEncryptKey();
     CloseAllConnections();
 }
 
@@ -188,42 +186,6 @@ bool SqliteConnectionPool::IsOverLength(const std::vector<uint8_t> &newKey)
     return ss.str().length() > LIMITATION;
 }
 
-int SqliteConnectionPool::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
-{
-    if (!config.IsInitEncrypted()) {
-        return E_CHANGE_UNENCRYPTED_TO_ENCRYPTED;
-    }
-
-    if (newKey.empty()) {
-        return E_EMPTY_NEW_ENCRYPT_KEY;
-    }
-
-    if (IsOverLength(newKey)) {
-        return E_ERROR;
-    }
-
-    std::unique_lock<std::mutex> writeLock(writeMutex);
-    if (writeConnectionUsed) {
-        return E_CHANGE_ENCRYPT_KEY_IN_BUSY;
-    }
-
-    std::unique_lock<std::mutex> readLock(readMutex);
-    if (idleReadConnectionCount < readConnectionCount) {
-        return E_CHANGE_ENCRYPT_KEY_IN_BUSY;
-    }
-
-    int errCode = writeConnection->ChangeEncryptKey(newKey);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    config.UpdateEncryptKey(newKey);
-
-    errCode = InnerReOpenReadConnections();
-
-    return errCode;
-}
-
 int SqliteConnectionPool::InnerReOpenReadConnections()
 {
     int errCode = E_OK;
@@ -238,7 +200,6 @@ int SqliteConnectionPool::InnerReOpenReadConnections()
     for (int i = 0; i < readConnectionCount; i++) {
         SqliteConnection *connection = SqliteConnection::Open(config, false, errCode);
         if (connection == nullptr) {
-            config.ClearEncryptKey();
             CloseAllConnections();
             return errCode;
         }
@@ -321,7 +282,6 @@ int SqliteConnectionPool::ChangeDbFileForRestore(const std::string newPath, cons
     }
 
     config.SetPath(newPath);
-    config.UpdateEncryptKey(newKey);
     return Init();
 }
 

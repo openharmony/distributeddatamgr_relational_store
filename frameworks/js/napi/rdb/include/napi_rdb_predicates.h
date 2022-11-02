@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,12 +33,25 @@ public:
 
     explicit RdbPredicatesProxy(std::string &tableName);
     std::shared_ptr<NativeRdb::RdbPredicates> GetPredicates() const;
-    
+
 private:
     ~RdbPredicatesProxy();
 
     static napi_value New(napi_env env, napi_callback_info info);
     static std::shared_ptr<NativeRdb::RdbPredicates> GetNativePredicates(napi_env env, napi_callback_info info);
+
+    static RdbPredicatesProxy *ParseFieldArrayByName(napi_env env, napi_callback_info info, napi_value &thiz,
+        std::vector<std::string> &fieldarray, const std::string fieldName, const std::string fieldType);
+    static RdbPredicatesProxy *ParseFieldByName(
+        napi_env env, napi_callback_info info, napi_value &thiz, std::string &field, const std::string fieldName);
+    static RdbPredicatesProxy *ParseInt32FieldByName(
+        napi_env env, napi_callback_info info, napi_value &thiz, int32_t &field, const std::string fieldName);
+    static RdbPredicatesProxy *ParseFieldAndValueArray(napi_env env, napi_callback_info info, napi_value &thiz,
+        std::string &field, std::vector<std::string> &value, const std::string valueType);
+    static RdbPredicatesProxy *ParseFieldAndValue(napi_env env, napi_callback_info info, napi_value &thiz,
+        std::string &field, std::string &value, const std::string valueType);
+    static RdbPredicatesProxy *ParseFieldLowAndHigh(napi_env env, napi_callback_info info, napi_value &thiz,
+        std::string &field, std::string &low, std::string &High);
 
     static napi_value EqualTo(napi_env env, napi_callback_info info);
     static napi_value NotEqualTo(napi_env env, napi_callback_info info);
