@@ -225,7 +225,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_005, TestSize.Level1)
     const std::string dbPath = RDB_TEST_PATH + "config_test.db";
     RdbStoreConfig config(dbPath, StorageMode::MODE_DISK, false);
     std::string journalMode = config.GetJournalMode();
-    EXPECT_EQ(journalMode, "");
+    EXPECT_EQ(journalMode, "delete");
     ConfigTestOpenCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -234,7 +234,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_005, TestSize.Level1)
     std::string currentMode;
     int ret = store->ExecuteAndGetString(currentMode, "PRAGMA journal_mode");
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(currentMode, "wal");
+    EXPECT_EQ(currentMode, "delete");
 }
 
 /**

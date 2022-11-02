@@ -239,8 +239,13 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_003, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(pageSize, 4096);
 
+    int64_t journalSize;
+    ret = store->ExecuteAndGetLong(journalSize, "PRAGMA journal_size_limit");
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(journalSize, 1048576);
+
     std::string journalMode;
     ret = store->ExecuteAndGetString(journalMode, "PRAGMA journal_mode");
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(journalMode, "wal");
+    EXPECT_EQ(journalMode, "delete");
 }

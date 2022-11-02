@@ -56,13 +56,20 @@ enum class SecurityLevel : int32_t {
     LAST
 };
 
+static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
+static constexpr int DB_JOURNAL_SIZE = 1048576; /* default file size : 1M */
+static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "delete";
+static constexpr char DB_DEFAULT_ENCRYPT_ALGO[] = "sha256";
+
 class RdbStoreConfig {
 public:
     RdbStoreConfig(const RdbStoreConfig &config);
     RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
-        const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(), const std::string &journalMode = "",
+        const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(), const std::string &journalMode = "delete",
         const std::string &syncMode = "", const std::string &databaseFileType = "",
-        SecurityLevel securityLevel = SecurityLevel::LAST, bool isCreateNecessary = true);
+        SecurityLevel securityLevel = SecurityLevel::LAST, bool isCreateNecessary = true,
+        bool autoCheck = false, int journalSize = 1048576, int pageSize = 4096,
+        const std::string &encryptAlgo = "sha256");
     ~RdbStoreConfig();
     std::string GetName() const;
     std::string GetPath() const;
@@ -108,6 +115,14 @@ public:
     static std::string GetJournalModeValue(JournalMode journalMode);
     static std::string GetSyncModeValue(SyncMode syncMode);
     static std::string GetDatabaseFileTypeValue(DatabaseFileType databaseFileType);
+    bool IsAutoCheck() const;
+    void SetAutoCheck(bool autoCheck);
+    int GetJournalSize() const;
+    void SetJournalSize(int journalSize);
+    int GetPageSize() const;
+    void SetPageSize(int pageSize);
+    const std::string GetEncryptAlgo() const;
+    void SetEncryptAlgo(const std::string &encryptAlgo);
 
 private:
     std::string name;
@@ -129,6 +144,11 @@ private:
     std::string readPermission_;
     std::string writePermission_;
     bool isCreateNecessary_;
+
+    bool autoCheck;
+    int journalSize;
+    int pageSize;
+    std::string encryptAlgo;
 };
 } // namespace OHOS::NativeRdb
 
