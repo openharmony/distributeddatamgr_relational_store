@@ -93,7 +93,7 @@ int SqliteConnection::InnerOpen(const SqliteConfig &config)
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     // db not exist
     bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
-    if ((!config.IsCreateNecessary()) && !isDbFileExist) {
+    if (!isDbFileExist && (!config.IsCreateNecessary())) {
         LOG_ERROR("SqliteConnection InnerOpen db not exist");
         return E_DB_NOT_EXIST;
     }
