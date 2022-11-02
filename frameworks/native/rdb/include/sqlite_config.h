@@ -35,14 +35,10 @@ public:
     std::string GetSyncMode() const;
     std::string GetDatabaseFileType() const;
     bool IsReadOnly() const;
-    bool IsEncrypted() const;
-    bool IsInitEncrypted() const;
-    std::vector<uint8_t> GetEncryptKey() const;
-    void UpdateEncryptKey(const std::vector<uint8_t> &newKey);
-    void ClearEncryptKey();
     bool IsEncrypt() const;
     std::string GetBundleName() const;
-    int32_t GetSecurityLevel() const;
+    bool IsCreateNecessary() const;
+    void SetCreateNecessary(bool CreateNecessary);
     bool IsAutoCheck() const;
     void SetAutoCheck(bool autoCheck);
     int GetJournalSize() const;
@@ -61,15 +57,12 @@ private:
     int pageSize;
     std::string encryptAlgo;
     bool readOnly;
-    bool encrypted;
-    bool initEncrypted;
     std::string databaseFileType;
-    std::vector<uint8_t> encryptKey;
 
     // Encryption
     bool isEncrypt = false;
     std::string bundleName;
-    int32_t securityLevel = 0;
+    bool isCreateNecessary;
 };
 
 } // namespace NativeRdb

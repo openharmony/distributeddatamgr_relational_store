@@ -48,17 +48,14 @@ enum class DatabaseFileType {
     CORRUPT,
 };
 
-enum class DatabaseFileSecurityLevel : int32_t {
-    NO_LEVEL = 0,
-    S0,
-    S1,
+enum class SecurityLevel : int32_t {
+    S1 = 1,
     S2,
     S3,
     S4,
-    LAST,
+    LAST
 };
 
-static const char *DatabaseFileSecurityLabel[] = { "", "S0", "S1", "S2", "S3", "S4" };
 static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
 static constexpr int DB_JOURNAL_SIZE = 1048576; /* default file size : 1M */
 static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "delete";
@@ -70,7 +67,7 @@ public:
     RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
         const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(), const std::string &journalMode = DB_DEFAULT_JOURNAL_MODE,
         const std::string &syncMode = "", const std::string &databaseFileType = "",
-        const std::string &databaseFileSecurityLevel = "",
+        SecurityLevel securityLevel = SecurityLevel::LAST, bool isCreateNecessary = true,
         bool autoCheck = false, int journalSize = DB_JOURNAL_SIZE, int pageSize = DB_PAGE_SIZE,
         const std::string &encryptAlgo = DB_DEFAULT_ENCRYPT_ALGO);
     ~RdbStoreConfig();
@@ -83,10 +80,10 @@ public:
     bool IsReadOnly() const;
     bool IsMemoryRdb() const;
     std::string GetDatabaseFileType() const;
-    std::string GetDatabaseFileSecurityLevel() const;
-    int32_t GetSecurityLevel() const;
+    SecurityLevel GetSecurityLevel() const;
     void SetEncryptStatus(const bool status);
     bool IsEncrypt() const;
+    bool IsCreateNecessary() const;
 
     // set the journal mode, if not set, the default mode is WAL
     void SetName(std::string name);
@@ -96,7 +93,7 @@ public:
     void SetStorageMode(StorageMode storageMode);
     void SetDatabaseFileType(DatabaseFileType type);
     void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
-    void SetSecurityLevel(const int32_t& secLevel);
+    void SetSecurityLevel(SecurityLevel secLevel);
     void ClearEncryptKey();
 
     // distributed rdb
@@ -113,11 +110,11 @@ public:
     void SetReadPermission(const std::string& permission);
     std::string GetWritePermission() const;
     void SetWritePermission(const std::string& permission);
+    void SetCreateNecessary(bool isCreateNecessary);
 
     static std::string GetJournalModeValue(JournalMode journalMode);
     static std::string GetSyncModeValue(SyncMode syncMode);
     static std::string GetDatabaseFileTypeValue(DatabaseFileType databaseFileType);
-    static std::string GetDatabaseFileSecurityLevelValue(DatabaseFileSecurityLevel databaseFileSecurityLevel);
     bool IsAutoCheck() const;
     void SetAutoCheck(bool autoCheck);
     int GetJournalSize() const;
@@ -136,17 +133,17 @@ private:
     std::vector<uint8_t> encryptKey;
     bool readOnly;
     std::string databaseFileType;
-    std::string databaseFileSecurityLevel;
 
     int32_t area_ = 0;
     std::string bundleName_;
     std::string moduleName_;
 
     bool isEncrypt_ = false;
-    int32_t securityLevel_ = 0;
+    SecurityLevel securityLevel = SecurityLevel::LAST;
     std::string uri_;
     std::string readPermission_;
     std::string writePermission_;
+    bool isCreateNecessary_;
 
     bool autoCheck;
     int journalSize;

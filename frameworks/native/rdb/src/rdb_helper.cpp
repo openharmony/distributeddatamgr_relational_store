@@ -24,6 +24,7 @@
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_security_manager.h"
+#include "security_policy.h"
 #endif
 
 namespace OHOS {
@@ -57,6 +58,14 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
             rdbStore = storeCache_[path];
         }
     }
+
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+    errCode = SecurityPolicy::SetSecurityLabel(config);
+    if (errCode != E_OK) {
+        LOG_ERROR("RdbHelper set security label fail.");
+        return nullptr;
+    }
+#endif
 
     errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
     if (errCode != E_OK) {
