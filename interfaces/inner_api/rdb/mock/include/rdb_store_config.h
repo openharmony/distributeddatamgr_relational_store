@@ -61,7 +61,7 @@ class RdbStoreConfig {
 public:
     RdbStoreConfig(const RdbStoreConfig &config);
     RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
-        const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(), const std::string &journalMode = "delete",
+        const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(), const std::string &journalMode = "",
         const std::string &syncMode = "", const std::string &databaseFileType = "",
         SecurityLevel securityLevel = SecurityLevel::LAST, bool isCreateNecessary = true);
     ~RdbStoreConfig();
