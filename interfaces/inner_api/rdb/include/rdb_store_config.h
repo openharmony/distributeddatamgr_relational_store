@@ -57,10 +57,6 @@ enum class SecurityLevel : int32_t {
     LAST
 };
 
-static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
-static constexpr int DB_JOURNAL_SIZE = 1048576; /* default file size : 1M */
-static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "delete";
-static constexpr char DB_DEFAULT_ENCRYPT_ALGO[] = "sha256";
 
 using DistributedType = OHOS::DistributedRdb::RdbDistributedType;
 
@@ -71,9 +67,7 @@ public:
         const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(),
         const std::string &journalMode = DB_DEFAULT_JOURNAL_MODE,
         const std::string &syncMode = "", const std::string &databaseFileType = "",
-        SecurityLevel securityLevel = SecurityLevel::LAST, bool isCreateNecessary = true,
-        bool autoCheck = false, int journalSize = DB_JOURNAL_SIZE, int pageSize = DB_PAGE_SIZE,
-        const std::string &encryptAlgo = DB_DEFAULT_ENCRYPT_ALGO);
+        SecurityLevel securityLevel = SecurityLevel::LAST, bool isCreateNecessary = true);
     ~RdbStoreConfig();
     std::string GetName() const;
     std::string GetPath() const;
@@ -117,14 +111,6 @@ public:
     static std::string GetJournalModeValue(JournalMode journalMode);
     static std::string GetSyncModeValue(SyncMode syncMode);
     static std::string GetDatabaseFileTypeValue(DatabaseFileType databaseFileType);
-    bool IsAutoCheck() const;
-    void SetAutoCheck(bool autoCheck);
-    int GetJournalSize() const;
-    void SetJournalSize(int journalSize);
-    int GetPageSize() const;
-    void SetPageSize(int pageSize);
-    const std::string GetEncryptAlgo() const;
-    void SetEncryptAlgo(const std::string &encryptAlgo);
 
 private:
     std::string name;
@@ -147,10 +133,6 @@ private:
     std::string readPermission_;
     std::string writePermission_;
     bool isCreateNecessary_;
-    bool autoCheck;
-    int journalSize;
-    int pageSize;
-    std::string encryptAlgo;
 };
 } // namespace OHOS::NativeRdb
 
