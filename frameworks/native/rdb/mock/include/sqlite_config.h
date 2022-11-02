@@ -41,23 +41,11 @@ public:
     void ClearEncryptKey();
     int32_t GetSecurityLevel() const;
 
-    bool IsAutoCheck() const;
-    void SetAutoCheck(bool autoCheck);
-    int GetJournalSize() const;
-    void SetJournalSize(int journalSize);
-    int GetPageSize() const;
-    void SetPageSize(int pageSize);
-    std::string GetEncryptAlgo() const;
-    void SetEncryptAlgo(const std::string &encryptAlgo);
 private:
     std::string path;
     StorageMode storageMode;
     std::string journalMode;
     std::string syncMode;
-    bool autoCheck;
-    int journalSize;
-    int pageSize;
-    std::string encryptAlgo;
     bool readOnly;
     bool encrypted;
     bool initEncrypted;

@@ -59,20 +59,14 @@ enum class DatabaseFileSecurityLevel : int32_t {
 };
 
 static const char *DatabaseFileSecurityLabel[] = { "", "S0", "S1", "S2", "S3", "S4" };
-static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
-static constexpr int DB_JOURNAL_SIZE = 1048576; /* default file size : 1M */
-static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "delete";
-static constexpr char DB_DEFAULT_ENCRYPT_ALGO[] = "sha256";
 
 class RdbStoreConfig {
 public:
     RdbStoreConfig(const RdbStoreConfig &config);
     RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
-        const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(), const std::string &journalMode = DB_DEFAULT_JOURNAL_MODE,
+        const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(), const std::string &journalMode = "",
         const std::string &syncMode = "", const std::string &databaseFileType = "",
-        const std::string &databaseFileSecurityLevel = "",
-        bool autoCheck = false, int journalSize = DB_JOURNAL_SIZE, int pageSize = DB_PAGE_SIZE,
-        const std::string &encryptAlgo = DB_DEFAULT_ENCRYPT_ALGO);
+        const std::string &databaseFileSecurityLevel = "");
     ~RdbStoreConfig();
     std::string GetName() const;
     std::string GetPath() const;
@@ -118,14 +112,6 @@ public:
     static std::string GetSyncModeValue(SyncMode syncMode);
     static std::string GetDatabaseFileTypeValue(DatabaseFileType databaseFileType);
     static std::string GetDatabaseFileSecurityLevelValue(DatabaseFileSecurityLevel databaseFileSecurityLevel);
-    bool IsAutoCheck() const;
-    void SetAutoCheck(bool autoCheck);
-    int GetJournalSize() const;
-    void SetJournalSize(int journalSize);
-    int GetPageSize() const;
-    void SetPageSize(int pageSize);
-    const std::string GetEncryptAlgo() const;
-    void SetEncryptAlgo(const std::string &encryptAlgo);
 
 private:
     std::string name;
@@ -147,11 +133,6 @@ private:
     std::string uri_;
     std::string readPermission_;
     std::string writePermission_;
-
-    bool autoCheck;
-    int journalSize;
-    int pageSize;
-    std::string encryptAlgo;
 };
 } // namespace OHOS::NativeRdb
 
