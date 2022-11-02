@@ -33,6 +33,11 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     isEncrypt = config.IsEncrypt();
     isCreateNecessary = config.IsCreateNecessary();
 #endif
+
+    this->autoCheck = config.IsAutoCheck();
+    this->journalSize = config.GetJournalSize();
+    this->pageSize = config.GetPageSize();
+    this->encryptAlgo = config.GetEncryptAlgo();
 }
 
 SqliteConfig::~SqliteConfig() = default;
@@ -73,6 +78,40 @@ std::string SqliteConfig::GetDatabaseFileType() const
     return databaseFileType;
 }
 
+bool SqliteConfig::IsAutoCheck() const
+{
+    return autoCheck;
+}
+void SqliteConfig::SetAutoCheck(bool autoCheck)
+{
+    this->autoCheck = autoCheck;
+}
+int SqliteConfig::GetJournalSize() const
+{
+    return journalSize;
+}
+void SqliteConfig::SetJournalSize(int journalSize)
+{
+    this->journalSize = journalSize;
+}
+int SqliteConfig::GetPageSize() const
+{
+    return pageSize;
+}
+void SqliteConfig::SetPageSize(int pageSize)
+{
+    this->pageSize = pageSize;
+}
+
+std::string SqliteConfig::GetEncryptAlgo() const
+{
+    return encryptAlgo;
+}
+void SqliteConfig::SetEncryptAlgo(const std::string &encryptAlgo)
+{
+    this->encryptAlgo = encryptAlgo;
+}
+
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 bool SqliteConfig::IsEncrypt() const
 {
@@ -83,6 +122,7 @@ std::string SqliteConfig::GetBundleName() const
 {
     return bundleName;
 }
+
 bool SqliteConfig::IsCreateNecessary() const
 {
     return isCreateNecessary;
