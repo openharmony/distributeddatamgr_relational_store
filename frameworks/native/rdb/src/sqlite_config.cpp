@@ -103,7 +103,7 @@ void SqliteConfig::SetPageSize(int pageSize)
     this->pageSize = pageSize;
 }
 
- std::string SqliteConfig::GetEncryptAlgo() const
+std::string SqliteConfig::GetEncryptAlgo() const
 {
     return encryptAlgo;
 }
