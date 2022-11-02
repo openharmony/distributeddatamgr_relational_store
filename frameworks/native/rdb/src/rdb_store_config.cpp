@@ -36,7 +36,8 @@ RdbStoreConfig::RdbStoreConfig(const RdbStoreConfig &config)
 
 RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode, bool isReadOnly,
     const std::vector<uint8_t> &encryptKey, const std::string &journalMode, const std::string &syncMode,
-    const std::string &databaseFileType, const std::string &databaseFileSecurityLevel)
+    const std::string &databaseFileType, const std::string &databaseFileSecurityLevel, bool autoCheck,
+    int journalSize, int pageSize, const std::string &encryptAlgo)
     : name(name),
       path(name),
       storageMode(storageMode),
@@ -45,7 +46,11 @@ RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode,
       encryptKey(encryptKey),
       readOnly(isReadOnly),
       databaseFileType(databaseFileType),
-      databaseFileSecurityLevel(databaseFileSecurityLevel)
+      databaseFileSecurityLevel(databaseFileSecurityLevel),
+      autoCheck(autoCheck),
+      journalSize(journalSize),
+      pageSize(pageSize),
+      encryptAlgo(encryptAlgo)
 {}
 
 RdbStoreConfig::~RdbStoreConfig()
@@ -170,6 +175,39 @@ void RdbStoreConfig::SetPath(std::string path)
 void RdbStoreConfig::SetStorageMode(StorageMode storageMode)
 {
     this->storageMode = storageMode;
+}
+
+bool RdbStoreConfig::IsAutoCheck() const
+{
+    return autoCheck;
+}
+void RdbStoreConfig::SetAutoCheck(bool autoCheck)
+{
+    this->autoCheck = autoCheck;
+}
+int RdbStoreConfig::GetJournalSize() const
+{
+    return journalSize;
+}
+void RdbStoreConfig::SetJournalSize(int journalSize)
+{
+    this->journalSize = journalSize;
+}
+int RdbStoreConfig::GetPageSize() const
+{
+    return pageSize;
+}
+void RdbStoreConfig::SetPageSize(int pageSize)
+{
+    this->pageSize = pageSize;
+}
+const std::string RdbStoreConfig::GetEncryptAlgo() const
+{
+    return encryptAlgo;
+}
+void RdbStoreConfig::SetEncryptAlgo(const std::string &encryptAlgo)
+{
+    this->encryptAlgo = encryptAlgo;
 }
 
 void RdbStoreConfig::SetReadOnly(bool readOnly)

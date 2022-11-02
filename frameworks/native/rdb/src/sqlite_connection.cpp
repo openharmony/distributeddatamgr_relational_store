@@ -160,7 +160,7 @@ int SqliteConnection::Config(const SqliteConfig &config)
         return E_OK;
     }
 
-    int errCode = SetPageSize();
+    int errCode = SetPageSize(config);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -179,22 +179,22 @@ int SqliteConnection::Config(const SqliteConfig &config)
     }
 #endif
 
-    errCode = SetEncryptAlgo();
+    errCode = SetEncryptAlgo(config);
     if (errCode != E_OK) {
         return errCode;
     }
 
-    errCode = SetJournalMode(config.GetJournalMode(), config.GetSyncMode());
+    errCode = SetJournalMode(config);
     if (errCode != E_OK) {
         return errCode;
     }
 
-    errCode = SetJournalSizeLimit();
+    errCode = SetJournalSizeLimit(config);
     if (errCode != E_OK) {
         return errCode;
     }
 
-    errCode = SetAutoCheckpoint();
+    errCode = SetAutoCheckpoint(config);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -216,13 +216,13 @@ SqliteConnection::~SqliteConnection()
     }
 }
 
-int SqliteConnection::SetPageSize()
+int SqliteConnection::SetPageSize(const SqliteConfig &config)
 {
-    if (isReadOnly) {
+    if (isReadOnly || config.GetPageSize() == GlobalExpr::DB_PAGE_SIZE) {
         return E_OK;
     }
 
-    int targetValue = SqliteGlobalConfig::GetPageSize();
+    int targetValue = config.GetPageSize();
     int64_t value;
     int errCode = ExecuteGetLong(value, "PRAGMA page_size");
     if (errCode != E_OK) {
@@ -241,9 +241,16 @@ int SqliteConnection::SetPageSize()
     return errCode;
 }
 
-int SqliteConnection::SetEncryptAlgo()
+int SqliteConnection::SetEncryptAlgo(const SqliteConfig &config)
 {
-    int errCode = ExecuteSql("PRAGMA codec_hmac_algo=sha256");
+    int errCode = E_OK;
+    if (config.GetEncryptAlgo().compare(GlobalExpr::ENCRYPT_ALGO) == 0) {
+        return errCode;
+    }
+
+    // first to get the value, then to set algo
+    std::string sqlStr = "PRAGMA codec_hmac_algo=" + config.GetEncryptAlgo();
+    errCode = ExecuteSql(sqlStr);
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetEncryptAlgorithm fail, err = %{public}d", errCode);
     }
@@ -288,9 +295,9 @@ int SqliteConnection::SetBusyTimeout(int timeout)
     return E_OK;
 }
 
-int SqliteConnection::SetJournalMode(const std::string &journalMode, const std::string &synclMode)
+int SqliteConnection::SetJournalMode(const SqliteConfig &config)
 {
-    if (isReadOnly) {
+    if (isReadOnly || config.GetJournalMode().compare(GlobalExpr::DB_DEFAULT_JOURNAL_MODE) == 0) {
         return E_OK;
     }
 
@@ -302,30 +309,30 @@ int SqliteConnection::SetJournalMode(const std::string &journalMode, const std::
     }
 
     currentMode = SqliteUtils::StrToUpper(currentMode);
-    if (currentMode != journalMode) {
+    if (currentMode != config.GetJournalMode()) {
         std::string result;
-        int errorCode = ExecuteGetString(result, "PRAGMA journal_mode=" + journalMode);
+        int errorCode = ExecuteGetString(result, "PRAGMA journal_mode=" + config.GetJournalMode());
         if (errorCode != E_OK) {
             LOG_ERROR("SqliteConnection SetJournalMode: fail to set journal mode err=%{public}d", errorCode);
             return errorCode;
         }
 
-        if (SqliteUtils::StrToUpper(result) != journalMode) {
+        if (SqliteUtils::StrToUpper(result) != config.GetJournalMode()) {
             LOG_ERROR("SqliteConnection SetJournalMode: result incorrect");
             return E_EXECUTE_RESULT_INCORRECT;
         }
     }
 
-    if (journalMode == "WAL") {
-        errCode = SetWalSyncMode(synclMode);
+    if (config.GetJournalMode() == "WAL") {
+        errCode = SetWalSyncMode(config.GetSyncMode());
     }
 
     return errCode;
 }
 
-int SqliteConnection::SetJournalSizeLimit()
+int SqliteConnection::SetJournalSizeLimit(const SqliteConfig &config)
 {
-    if (isReadOnly) {
+    if (isReadOnly || config.GetJournalSize() == GlobalExpr::DB_JOURNAL_SIZE) {
         return E_OK;
     }
 
@@ -349,9 +356,9 @@ int SqliteConnection::SetJournalSizeLimit()
     return errCode;
 }
 
-int SqliteConnection::SetAutoCheckpoint()
+int SqliteConnection::SetAutoCheckpoint(const SqliteConfig &config)
 {
-    if (isReadOnly) {
+    if (isReadOnly || config.IsAutoCheck() == GlobalExpr::DB_AUTO_CHECK) {
         return E_OK;
     }
 
