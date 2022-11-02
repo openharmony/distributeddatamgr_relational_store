@@ -71,14 +71,13 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     isReadOnly = config.IsReadOnly();
     isMemoryRdb = config.IsMemoryRdb();
     name = config.GetName();
-    fileSecurityLevel = config.GetDatabaseFileSecurityLevel();
     fileType = config.GetDatabaseFileType();
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     syncerParam_.bundleName_ = config.GetBundleName();
     syncerParam_.hapName_ = config.GetModuleName();
     syncerParam_.storeName_ = config.GetName();
     syncerParam_.area_ = config.GetArea();
-    syncerParam_.level_ = config.GetSecurityLevel();
+    syncerParam_.level_ = static_cast<int32_t>(config.GetSecurityLevel());
     syncerParam_.type_ = config.GetDistributedType();
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
@@ -90,9 +89,6 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
             LOG_ERROR("RdbStoreImpl::InnerOpen get service failed");
             return -1;
         }
-        LOG_ERROR("Uri =%{public}s",config.GetUri().c_str());
-        LOG_ERROR("WritePermission =%{public}s",config.GetWritePermission().c_str());
-        LOG_ERROR("ReadPermission =%{public}s",config.GetReadPermission().c_str());
         if (service->CreateRDBTable(syncerParam_, config.GetWritePermission(), config.GetReadPermission()) != E_OK) {
             LOG_ERROR("RdbStoreImpl::InnerOpen service CreateRDBTable failed");
             return -1;
@@ -660,16 +656,6 @@ bool RdbStoreImpl::IsInTransaction()
     return inTransaction;
 }
 
-int RdbStoreImpl::ChangeEncryptKey(const std::vector<uint8_t> &newKey)
-{
-    if (connectionPool == nullptr) {
-        LOG_ERROR("connectionPool is null");
-        return E_ERROR;
-    }
-    auto ret = connectionPool->ChangeEncryptKey(newKey);
-    return ret;
-}
-
 std::shared_ptr<SqliteStatement> RdbStoreImpl::BeginStepQuery(
     int &errCode, const std::string sql, const std::vector<std::string> &bindArgs)
 {
@@ -793,11 +779,6 @@ std::string RdbStoreImpl::GetName()
 std::string RdbStoreImpl::GetFileType()
 {
     return fileType;
-}
-
-std::string RdbStoreImpl::GetFileSecurityLevel()
-{
-    return fileSecurityLevel;
 }
 
 int RdbStoreImpl::PrepareAndGetInfo(const std::string &sql, bool &outIsReadOnly, int &numParameters,

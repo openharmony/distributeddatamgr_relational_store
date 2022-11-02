@@ -23,16 +23,11 @@
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_store_config.h"
-#include "security_label.h"
 #include <unistd.h>
 #endif
 
 namespace OHOS {
 namespace NativeRdb {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-using SecurityLabel = OHOS::DistributedFS::ModuleSecurityLabel::SecurityLabel;
-const std::string SqliteUtils::DATA_LEVEL[] = { "", "s0", "s1", "s2", "s3", "s4" };
-#endif
 const int SqliteUtils::STATEMENT_SELECT = 1;
 const int SqliteUtils::STATEMENT_UPDATE = 2;
 const int SqliteUtils::STATEMENT_ATTACH = 3;
@@ -118,27 +113,5 @@ int SqliteUtils::RenameFile(const std::string srcFile, const std::string destFil
 {
     return rename(srcFile.c_str(), destFile.c_str());
 }
-
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-int SqliteUtils::SetFileSecurityLevel(const std::string &filePath, const int32_t &securityLevel)
-{
-    if (access(filePath.c_str(), F_OK) != 0) {
-        LOG_ERROR("The database file does not exist.");
-        return E_ERROR;
-    }
-
-    bool result = SecurityLabel::SetSecurityLabel(filePath, DATA_LEVEL[securityLevel]);
-    if (result) {
-        LOG_INFO("Set database securityLabel %{public}s successful.", DATA_LEVEL[securityLevel].c_str());
-        return E_OK;
-    }
-    return E_ERROR;
-}
-
-std::string SqliteUtils::GetFileSecurityLevel(const std::string &filePath)
-{
-    return SecurityLabel::GetSecurityLabel(filePath);
-}
-#endif
 } // namespace NativeRdb
 } // namespace OHOS

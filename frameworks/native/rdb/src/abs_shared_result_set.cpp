@@ -200,7 +200,8 @@ int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
         const char *tempValue = sharedBlock_->GetCellUnitValueString(cellUnit, &sizeIncludingNull);
         if ((sizeIncludingNull <= 1) || (tempValue == nullptr)) {
             value = "";
-            return E_ERROR;
+            LOG_ERROR("AbsSharedResultSet::GetString string is null");
+            return E_OK;
         }
         value = tempValue;
         return E_OK;
@@ -216,10 +217,10 @@ int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL) {
         LOG_ERROR("AbsSharedResultSet::AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL!");
-        return E_ERROR;
+        return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB) {
         LOG_ERROR("AbsSharedResultSet::AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB!");
-        return E_ERROR;
+        return E_OK;
     } else {
         LOG_ERROR("AbsSharedResultSet::GetString is failed!");
         return E_ERROR;
