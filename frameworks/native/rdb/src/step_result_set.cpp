@@ -48,7 +48,6 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
     int columnCount = 0;
     errCode = sqliteStatement->GetColumnCount(columnCount);
     if (errCode) {
-        FinishStep();
         return errCode;
     }
 
@@ -58,12 +57,11 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
         errCode = sqliteStatement->GetColumnName(i, columnName);
         if (errCode) {
             columnNames.clear();
-            FinishStep();
             return errCode;
         }
         columnNames.push_back(columnName);
     }
-    FinishStep();
+
     return E_OK;
 }
 
@@ -164,7 +162,6 @@ int StepResultSet::GoToNextRow()
         // The table is locked, retry
         if (retryCount > STEP_QUERY_RETRY_MAX_TIMES) {
             LOG_ERROR("StepResultSet::GoToNextRow retrycount exceeded");
-            FinishStep();
             return E_STEP_RESULT_QUERY_EXCEEDED;
         } else {
             // Sleep to give the thread holding the lock a chance to finish
@@ -176,7 +173,6 @@ int StepResultSet::GoToNextRow()
 
     if (errCode == SQLITE_ROW) {
         rowPos_++;
-        FinishStep();
         return E_OK;
     } else if (errCode == SQLITE_DONE) {
         isAfterLast = true;
