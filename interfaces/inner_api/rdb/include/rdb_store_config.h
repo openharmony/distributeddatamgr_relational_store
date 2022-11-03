@@ -60,7 +60,7 @@ enum class SecurityLevel : int32_t {
 
 static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
 static constexpr int DB_JOURNAL_SIZE = 1048576; /* default file size : 1M */
-static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "delete";
+static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "WAL";
 static constexpr char DB_DEFAULT_ENCRYPT_ALGO[] = "sha256";
 
 using DistributedType = OHOS::DistributedRdb::RdbDistributedType;

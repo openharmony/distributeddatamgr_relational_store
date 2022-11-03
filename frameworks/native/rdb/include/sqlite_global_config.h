@@ -38,7 +38,7 @@ public:
    static constexpr char PRAGMA_JOUR_MODE_EXP[] = "PRAGMA journal_mode";
    static constexpr char PRAGMA_VERSION[] = "PRAGMA user_version";
    static constexpr char DEFAULT_JOURNAL_MODE[] = "WAL";
-   static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "delete";
+   static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "DELETE";
    static constexpr char WAL_SYNC_MODE[] = "FULL";
    static constexpr char MEMORY_DB_PATH[] = ":memory:";
    static constexpr char ENCRYPT_ALGO[] = "sha256";
