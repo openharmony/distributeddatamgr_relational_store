@@ -123,7 +123,7 @@ HWTEST_F(RdbAttachTest, RdbStore_Attach_001, TestSize.Level1)
     EXPECT_NE(store, nullptr);
 
     int ret = store->ExecuteSql("ATTACH '" + ATTACHED_DATABASE_NAME + "' as attached");
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_NOT_SUPPORTED_ATTACH_IN_WAL_MODE);
 }
 
 /**

@@ -247,5 +247,5 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_003, TestSize.Level1)
     std::string journalMode;
     ret = store->ExecuteAndGetString(journalMode, "PRAGMA journal_mode");
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(journalMode, "delete");
+    EXPECT_EQ(journalMode, "wal");
 }
