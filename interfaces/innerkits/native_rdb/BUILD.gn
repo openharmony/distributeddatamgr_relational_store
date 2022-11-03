@@ -46,6 +46,7 @@ ohos_shared_library("native_rdb") {
     "../../../frameworks/innerkitsimpl/native_rdb/src/abs_rdb_predicates.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/abs_result_set.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/abs_shared_result_set.cpp",
+    "../../../frameworks/innerkitsimpl/native_rdb/src/anonymous.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/base_transaction.cpp",
     "../../../frameworks/innerkitsimpl/native_rdb/src/base_transaction.h",
     "../../../frameworks/innerkitsimpl/native_rdb/src/logger.h",

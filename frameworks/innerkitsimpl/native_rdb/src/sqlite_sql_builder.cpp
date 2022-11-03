@@ -21,6 +21,7 @@
 #include "logger.h"
 #include "rdb_errno.h"
 #include "string_utils.h"
+#include "anonymous.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -283,7 +284,7 @@ std::string SqliteSqlBuilder::BuildQueryString(const AbsRdbPredicates &predicate
     std::string sqlStr;
     BuildQueryString(distinct, tableNameStr, columns, whereClauseStr, groupStr, indexStr, orderStr, limitStr,
         offsetStr, sqlStr);
-    LOG_DEBUG("sqlStr");
+    LOG_DEBUG("sqlStr:%{public}s", Anonymous::Change(sqlStr).c_str());
     return sqlStr;
 }
 
