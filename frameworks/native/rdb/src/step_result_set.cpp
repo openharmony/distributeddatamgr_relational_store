@@ -61,7 +61,8 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
         }
         columnNames.push_back(columnName);
     }
-
+    rdb->EndStepQuery();
+    sqliteStatement = nullptr;
     return E_OK;
 }
 
