@@ -34,8 +34,6 @@ using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS {
 namespace RdbJsKit {
-const int APIVERSION_V9 = 9;
-const int APIVERSION_V8 = 8;
 
 class OpenCallback : public OHOS::NativeRdb::RdbOpenCallback {
 public:
@@ -472,7 +470,7 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
         return (errCode == E_OK) ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
-        result = RdbStoreProxy::NewInstance(env, context->proxy);
+        result = RdbStoreProxy::NewInstance(env, context->proxy, context->apiversion);
         context->openCallback.DelayNotify();
         LOG_DEBUG("RdbJsKit::GetRdbStore end");
         return (result != nullptr) ? OK : ERR;
