@@ -2199,6 +2199,7 @@ describe('rdbPredicatesTest', function () {
             result = null
         } catch (err) {
             console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+            expect("401").assertEqual(err.code)
         }
         done();
         console.log(TAG + "************* testIndexedBy0002 end *************");
