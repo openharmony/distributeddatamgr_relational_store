@@ -18,10 +18,11 @@
 
 #include <list>
 #include <mutex>
+
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-
+#include "napi_rdb_error.h"
 #include "rdb_helper.h"
 
 namespace OHOS {
@@ -29,14 +30,19 @@ namespace RdbJsKit {
 class RdbStoreProxy {
 public:
     static void Init(napi_env env, napi_value exports);
-    static napi_value NewInstance(napi_env env, std::shared_ptr<OHOS::NativeRdb::RdbStore> value);
+    static napi_value NewInstance(
+        napi_env env, std::shared_ptr<OHOS::NativeRdb::RdbStore> value, int version = AppDataMgrJsKit::APIVERSION_V8);
     static RdbStoreProxy *GetNativeInstance(napi_env env, napi_value self);
     void Release(napi_env env);
     RdbStoreProxy();
     ~RdbStoreProxy();
+    int apiversion = AppDataMgrJsKit::APIVERSION_V8;
 
 private:
+    static napi_value InnerInitialize(
+        napi_env env, napi_callback_info info, int version = AppDataMgrJsKit::APIVERSION_V8);
     static napi_value Initialize(napi_env env, napi_callback_info info);
+    static napi_value InitializeV9(napi_env env, napi_callback_info info);
     static napi_value Delete(napi_env env, napi_callback_info info);
     static napi_value Update(napi_env env, napi_callback_info info);
     static napi_value Insert(napi_env env, napi_callback_info info);

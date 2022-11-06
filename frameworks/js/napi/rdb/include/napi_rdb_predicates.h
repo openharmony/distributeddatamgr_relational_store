@@ -21,6 +21,7 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "napi_rdb_error.h"
 #include "rdb_predicates.h"
 
 namespace OHOS {
@@ -28,16 +29,20 @@ namespace RdbJsKit {
 class RdbPredicatesProxy {
 public:
     static void Init(napi_env env, napi_value exports);
-    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbPredicates> value);
+    static napi_value NewInstance(
+        napi_env env, std::shared_ptr<NativeRdb::RdbPredicates> value, int version = AppDataMgrJsKit::APIVERSION_V8);
     static void Destructor(napi_env env, void *nativeObject, void *finalize_hint);
 
     explicit RdbPredicatesProxy(std::string &tableName);
     std::shared_ptr<NativeRdb::RdbPredicates> GetPredicates() const;
+    int apiversion = AppDataMgrJsKit::APIVERSION_V8;
 
 private:
     ~RdbPredicatesProxy();
 
     static napi_value New(napi_env env, napi_callback_info info);
+    static napi_value NewV9(napi_env env, napi_callback_info info);
+    static napi_value InnerNew(napi_env env, napi_callback_info info, int version = AppDataMgrJsKit::APIVERSION_V8);
     static std::shared_ptr<NativeRdb::RdbPredicates> GetNativePredicates(napi_env env, napi_callback_info info);
 
     static RdbPredicatesProxy *ParseFieldArrayByName(napi_env env, napi_callback_info info, napi_value &thiz,

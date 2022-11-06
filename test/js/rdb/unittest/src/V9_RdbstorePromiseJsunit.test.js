@@ -95,8 +95,9 @@ describe('V9_rdbStorePromiseTest', function () {
         } catch(err) {
             console.info("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
             expect(null).assertFail()
+            done()
+            console.log(TAG + "************* testV9RdbStorePromiseTest0001 end *************");
         }
-        done()
     })
     
     /**
