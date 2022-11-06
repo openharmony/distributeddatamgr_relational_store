@@ -1563,12 +1563,8 @@ describe('rdbResultSetTest', function () {
         {
             let predicates = await new dataRdb.RdbPredicates("test")
             let resultSet = await rdbStore.query(predicates)
-            try {
-                resultSet.goToRow(5)
-                expect(false).assertEqual(resultSet.isColumnNull(1));
-            } catch (err) {
-                console.info("catch err: goToRow failed, err: code=" + err.code + " message=" + err.message)
-            }
+            resultSet.goToRow(5)
+            expect(false).assertEqual(resultSet.isColumnNull(1));
             resultSet = null;
             done();
             console.log(TAG + "************* testIsColumnNull0003 end *************");

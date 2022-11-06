@@ -95,14 +95,15 @@ describe('V9_rdbStoreCallBackTest', async function () {
                     }
                     console.log("Delete RdbStore successfully.")
                     done()
+                    console.log(TAG + "************* testV9RdbStoreCallBackTest0001 end *************")
                 });
             })
         } catch(err) {
             console.log("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
             expect(false).assertTrue()
+            done()
+            console.log(TAG + "************* testV9RdbStoreCallBackTest0001 end *************")
         }
-        done()
-        console.log(TAG + "************* testV9RdbStoreCallBackTest0001 end *************")
     })
 
     /**

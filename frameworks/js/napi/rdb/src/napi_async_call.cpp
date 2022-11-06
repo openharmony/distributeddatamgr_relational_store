@@ -37,7 +37,7 @@ AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Cont
     // int -->input_(env, argc, argv, self)
     int status = (*context)(env, argc, argv, self);
     // if input return is not ok, then napi_throw_error context error
-    RDB_NAPI_ASSERT_RETURN_VOID(env, status == OK, context->error);
+    RDB_NAPI_ASSERT_RETURN_VOID_FROMV9(env, status == OK, context->error, context->apiversion);
     context_->ctx = std::move(context);
     napi_create_reference(env, self, 1, &context_->self);
 }
@@ -107,11 +107,16 @@ void AsyncCall::OnExecute(napi_env env, void *data)
 
 void AsyncCall::SetBusinessError(napi_env env, napi_value *businessError, std::shared_ptr<Error> error, int apiversion)
 {
+    napi_value code = nullptr;
+    napi_value msg = nullptr;
     napi_create_object(env, businessError);
+    if (apiversion < APIVERSION_V9) {
+        napi_create_string_utf8(env, "async error.", NAPI_AUTO_LENGTH, &msg);
+        napi_set_named_property(env, *businessError, "message", msg);
+        return;
+    }
     // if error is not inner error
     if (error != nullptr && error->GetCode() != E_INNER_ERROR) {
-        napi_value code = nullptr;
-        napi_value msg = nullptr;
         napi_create_int32(env, error->GetCode(), &code);
         napi_create_string_utf8(env, error->GetMessage().c_str(), NAPI_AUTO_LENGTH, &msg);
         napi_set_named_property(env, *businessError, "code", code);
