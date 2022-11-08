@@ -1,4 +1,4 @@
-# 关系型数据库（Relational Database，RDB）
+# 关系型数据库（Relational Database，RDB）部件
 
 ## 简介
 
@@ -19,10 +19,12 @@ OpenHarmony关系型数据库底层使用SQLite作为持久化存储引擎，支
 
     一款轻量级的数据库，是遵守ACID的关系型数据库组件。它是一个开源的项目。
 
-**图 1**  关系型数据库运作机制
+**图 1**  关系型数据库部件架构图
 
 
 ![](figures/zh-cn_关系型数据库运作机制.png)
+
+用户程序通过JS接口调用关系型数据库部件，关系型数据库部件调用SQLite组件读写对应的数据库。
 
 ## 目录
 
@@ -47,8 +49,14 @@ OpenHarmony关系型数据库底层使用SQLite作为持久化存储引擎，支
 
 ## 相关仓
 
+- [关系型数据库概述](https://gitee.com/openharmony/docs/blob/master/zh-cn/application-dev/database/database-relational-overview.md)
+
+- [关系型数据库开发指导](https://gitee.com/openharmony/docs/blob/master/zh-cn/application-dev/database/database-relational-guidelines.md)
+
+- [关系型数据库API文档](https://gitee.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis/js-apis-data-rdb.md)
+
 - [分布式数据管理子系统](https://gitee.com/openharmony/docs/blob/master/zh-cn/readme/%E5%88%86%E5%B8%83%E5%BC%8F%E6%95%B0%E6%8D%AE%E7%AE%A1%E7%90%86%E5%AD%90%E7%B3%BB%E7%BB%9F.md)
 
-- [**distributeddatamgr\_relational_store**](https://gitee.com/openharmony/distributeddatamgr_relational_store/blob/master/README_zh.md)
+- [distributeddatamgr\_relational_store](https://gitee.com/openharmony/distributeddatamgr_relational_store/blob/master/README_zh.md)
 
 - [third\_party\_sqlite](https://gitee.com/openharmony/third_party_sqlite)
