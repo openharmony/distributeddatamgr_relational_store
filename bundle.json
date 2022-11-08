@@ -48,16 +48,13 @@
         "ram": "",
         "deps": {
             "components": [
-                "ability_base",
                 "ability_runtime",
-                "napi",
-                "hitrace_native",
+                "c_utils",
                 "hilog_native",
+                "hitrace_native",
+                "huks",
                 "ipc",
-                "utils_base",
-                "common",
-                "icu",
-                "samgr"
+                "napi"
             ],
             "third_party": [
                 "sqlite",
