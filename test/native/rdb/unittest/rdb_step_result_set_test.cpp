@@ -78,7 +78,7 @@ void RdbStepResultSetTest::TearDownTestCase(void)
 
 void RdbStepResultSetTest::SetUp(void)
 {
-    store->ExecuteSql("DROP TABLE test");
+    store->ExecuteSql("DELETE FROM test");
 }
 
 void RdbStepResultSetTest::TearDown(void)
@@ -573,7 +573,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_009, TestSize.Level1)
     EXPECT_NE(E_OK, iRet);
 
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
-    EXPECT_EQ(E_OK, resultSet->GoToNextRow());
     iRet = resultSet->GetInt(0, iValue);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(2, iValue);
@@ -633,7 +632,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_010, TestSize.Level1)
     EXPECT_NE(E_OK, iRet);
 
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
-    EXPECT_EQ(E_OK, resultSet->GoToNextRow());
     iRet = resultSet->GetString(0, strValue);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ("2", strValue);
@@ -681,7 +679,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_011, TestSize.Level1)
     iRet = resultSet->GetDouble(columnCount, dValue);
     EXPECT_NE(E_OK, iRet);
 
-    EXPECT_EQ(E_OK, resultSet->GoToNextRow());
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
     iRet = resultSet->GetDouble(0, dValue);
     EXPECT_EQ(E_OK, iRet);
