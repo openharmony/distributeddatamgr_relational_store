@@ -466,7 +466,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_014, TestSize.Level1)
     int errCode = E_ERROR;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
-
+    store = nullptr;
     RdbHelper::DeleteRdbStore(dbPath);
 
     createNecessary = false;
