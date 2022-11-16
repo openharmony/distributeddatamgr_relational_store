@@ -40,13 +40,18 @@ StepResultSet::~StepResultSet()
 
 int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
-    int errCode = PrepareStep();
-    if (errCode) {
-        return errCode;
+    bool needRelease = false;
+    if (sqliteStatement == nullptr) {
+        int errCode = E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        sqliteStatement = rdb->BeginStepQuery(errCode, sql, selectionArgs);
+        if (sqliteStatement == nullptr) {
+            return errCode;
+        }
+        needRelease = true;
     }
 
     int columnCount = 0;
-    errCode = sqliteStatement->GetColumnCount(columnCount);
+    auto errCode = sqliteStatement->GetColumnCount(columnCount);
     if (errCode) {
         return errCode;
     }
@@ -61,8 +66,10 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
         }
         columnNames.push_back(columnName);
     }
-    rdb->EndStepQuery();
-    sqliteStatement = nullptr;
+    if (needRelease) {
+        rdb->EndStepQuery();
+        sqliteStatement = nullptr;
+    }
     return E_OK;
 }
 
