@@ -18,10 +18,10 @@
 #include <string>
 
 #include "logger.h"
+#include "message_parcel.h"
 #include "parcel.h"
 #include "value_object.h"
 #include "values_bucket.h"
-#include "message_parcel.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -209,4 +209,40 @@ HWTEST_F(ValuesBucketTest, Values_Bucket_004, TestSize.Level1)
     valuesBucket->Clear();
     valuesBucket = std::shared_ptr<ValuesBucket>(ValuesBucket::Unmarshalling(parcel));
     EXPECT_EQ(true, valuesBucket->IsEmpty());
+}
+
+/**
+ * @tc.name: Values_Object_001
+ * @tc.desc: test ValuesObject operator
+ * @tc.type: FUNC
+ */
+HWTEST_F(ValuesBucketTest, Values_Object_001, TestSize.Level1)
+{
+    int valueInt = 1;
+    int retInt = ValueObject(valueInt);
+    EXPECT_EQ(valueInt, retInt);
+
+    int64_t valueInt64 = 1;
+    int64_t retInt64 = ValueObject(valueInt64);
+    EXPECT_EQ(valueInt64, retInt64);
+
+    double valueDouble = 1.0;
+    double retDouble = ValueObject(valueDouble);
+    EXPECT_EQ(valueDouble, retDouble);
+
+    bool valueBool = true;
+    bool retBool = ValueObject(valueBool);
+    EXPECT_EQ(valueBool, retBool);
+
+    string valueString = "test";
+    string retString = ValueObject(valueString);
+    EXPECT_EQ(valueString, retString);
+
+    std::vector<uint8_t> valueVectorUint8(2, 1);
+    std::vector<uint8_t> retVectorUint8 = ValueObject(valueVectorUint8);
+    EXPECT_EQ(valueVectorUint8, retVectorUint8);
+
+    ValueObject::Type valueType(1);
+    ValueObject::Type retType = ValueObject(valueType);
+    EXPECT_EQ(valueType, retType);
 }
