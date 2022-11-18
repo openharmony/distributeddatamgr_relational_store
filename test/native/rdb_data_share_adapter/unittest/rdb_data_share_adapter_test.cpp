@@ -160,6 +160,8 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_001, TestSize.Level1)
     resultSet.get()->GetRowCount(rowCount);
     LOG_INFO("result row count:  %{public}d", rowCount);
     EXPECT_NE(rowCount, 0);
+    auto bridge = OHOS::RdbDataShareAdapter::RdbUtils::ToResultSetBridge(resultSet);
+    EXPECT_NE(bridge, nullptr);
 }
 
 /* *

@@ -62,6 +62,7 @@ public:
     int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
     int OnDowngrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
     int OnOpen(RdbStore &rdbStore) override;
+    int onCorruption(std::string databaseFile) override;
 
     static std::string CreateTableSQL(const std::string &tableName);
     static std::string DropTableSQL(const std::string &tableName);
@@ -127,6 +128,15 @@ int OpenCallbackA::OnOpen(RdbStore &store)
         return errCode;
     }
 
+    return E_OK;
+}
+
+int OpenCallbackA::onCorruption(std::string databaseFile)
+{
+    int errCode = RdbHelper::DeleteRdbStore(RdbOpenCallbackTest::DATABASE_NAME);
+    if (errCode != E_OK) {
+        return errCode;
+    }
     return E_OK;
 }
 
