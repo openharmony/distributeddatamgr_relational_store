@@ -241,8 +241,4 @@ HWTEST_F(ValuesBucketTest, Values_Object_001, TestSize.Level1)
     std::vector<uint8_t> valueVectorUint8(2, 1);
     std::vector<uint8_t> retVectorUint8 = ValueObject(valueVectorUint8);
     EXPECT_EQ(valueVectorUint8, retVectorUint8);
-
-    ValueObject::Type valueType(1);
-    ValueObject::Type retType = ValueObject(valueType);
-    EXPECT_EQ(valueType, retType);
 }
