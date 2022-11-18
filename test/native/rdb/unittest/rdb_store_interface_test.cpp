@@ -168,6 +168,23 @@ HWTEST_F(RdbStoreInterfaceTest, ValueObject_TEST_005, TestSize.Level1)
 }
 
 /**
+ * @tc.name: ValueObject_TEST_006
+ * @tc.desc: test ValueObject
+ * @tc.type: FUNC
+ * @tc.require: AR000CU2BO
+ * @tc.author: chenxi
+ */
+HWTEST_F(RdbStoreInterfaceTest, ValueObject_TEST_006, TestSize.Level1)
+{
+    int inputVal = 5;
+    ValueObject obj = ValueObject(inputVal);
+    ValueObject obj1 = ValueObject();
+    obj1 = obj;
+    ValueObjectType type = obj1.GetType();
+    EXPECT_EQ(type, ValueObjectType::TYPE_INT);
+}
+
+/**
  * @tc.name: ValuesBucket_001
  * @tc.desc: test ValuesBucket
  * @tc.type: FUNC
