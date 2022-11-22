@@ -429,7 +429,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_005, TestSize.Le
     EXPECT_EQ(valueStr, "1");
 
     int ret2 = rstSet->GetString(4, valueStr);
-    EXPECT_EQ(ret2, E_ERROR);
+    EXPECT_EQ(ret2, E_OK);
 
     valueStr = "";
     int colCnt = 0;
