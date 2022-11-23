@@ -102,11 +102,12 @@ void AsyncCall::OnExecute(napi_env env, void *data)
 {
     LOG_DEBUG("run the async runnable");
     AsyncContext *context = reinterpret_cast<AsyncContext *>(data);
-    context->ctx->Exec();
+    context->ctx->execStatus = context->ctx->Exec();
 }
 
 void AsyncCall::SetBusinessError(napi_env env, napi_value *businessError, std::shared_ptr<Error> error, int apiversion)
 {
+    LOG_DEBUG("SetBusinessError enter");
     napi_create_object(env, businessError);
     // if error is not inner error
     if (error != nullptr && error->GetCode() != E_INNER_ERROR) {
@@ -126,7 +127,7 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
     napi_value output = nullptr;
     int outStatus = ERR;
     // if async execute status is not napi_ok then un-execute out function
-    if (status == napi_ok) {
+    if (context->ctx->execStatus == OK) {
         outStatus = (*context->ctx)(env, output);
     }
     napi_value result[ARG_BUTT] = { 0 };
