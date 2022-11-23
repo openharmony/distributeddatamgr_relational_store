@@ -103,16 +103,19 @@ describe('rdbStoreTest', function () {
         let storeConfig = {
             name: "/wrong/rdbstore.db",
         }
-        let storePromise = dataRdb.getRdbStore(storeConfig, 4);
-        storePromise.then(async (ret) => {
-            await console.log(TAG + "getRdbStore done" + ret);
-            expect(null).assertFail();
-        }).catch((err) => {
-            console.log(TAG + "getRdbStore with wrong path");
-        })
-        storePromise = null
-        done();
-        console.log(TAG + "************* testRdbStore0003 end   *************");
+        try{
+            dataRdb.getRdbStore(storeConfig, 4).then(async (ret) => {
+                await console.info(TAG + "getRdbStore done" + ret);
+                expect(null).assertFail();
+            }).catch((err) => {
+                console.info(TAG + "getRdbStore with wrong path");
+            })
+        } catch(e) {
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
+            expect("401").assertEqual(e.code)
+            done();
+            console.info(TAG + "************* testRdbStore0003 end   *************");
+        }
     })
 
     /**
