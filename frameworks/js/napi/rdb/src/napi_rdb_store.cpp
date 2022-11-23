@@ -242,6 +242,10 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<OHOS::NativeRdb::RdbStore> value)
 {
+    if (value == nullptr) {
+        LOG_ERROR("RdbStoreProxy::NewInstance get native rdb is null.");
+        return nullptr;
+    }
     napi_value cons;
     napi_status status = napi_get_reference_value(env, constructor_, &cons);
     if (status != napi_ok) {
