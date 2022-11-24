@@ -298,6 +298,11 @@ int ParseDatabaseName(const napi_env &env, const napi_value &object, std::shared
 
     std::string name = JSUtils::Convert2String(env, value);
     RDB_CHECK_RETURN_CALL_RESULT(!name.empty(), context->SetError(paramError));
+    if (name.find("/") != std::string::npos) {
+        paramError = std::make_shared<ParamTypeError>("StoreConfig.name", "a file name without path");
+        RDB_CHECK_RETURN_CALL_RESULT(false, context->SetError(paramError));
+    }
+
     context->config.SetName(std::move(name));
     return OK;
 }
@@ -465,10 +470,7 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
         DefaultOpenCallback callback;
         context->proxy = RdbHelper::GetRdbStore(context->config, context->version, callback, errCode);
         std::shared_ptr<Error> dbInvalidError = std::make_shared<DbInvalidError>();
-        RDB_CHECK_RETURN_CALL_RESULT(
-            errCode != E_EMPTY_FILE_NAME && errCode != E_RELATIVE_PATH, context->SetError(dbInvalidError));
-        std::shared_ptr<Error> dbCorruptedError = std::make_shared<DbCorruptedError>();
-        RDB_CHECK_RETURN_CALL_RESULT(errCode >= 0, context->SetError(dbCorruptedError));
+        RDB_CHECK_RETURN_CALL_RESULT(errCode == E_OK && context->proxy != nullptr, context->SetError(dbInvalidError));
         return (errCode == E_OK) ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
