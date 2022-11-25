@@ -33,7 +33,7 @@ class AsyncCall final {
 public:
     class Context {
     public:
-        int apiversion;
+        int apiversion = APIVERSION_V8;
         std::shared_ptr<Error> error;
         napi_env _env = nullptr;
         void *boundObj = nullptr;

@@ -66,7 +66,7 @@ struct RdbStoreContext : public AsyncCall::Context {
     std::map<std::string, ValueObject> numberMaps;
     std::vector<ValueObject> bindArgs;
     uint64_t rowId;
-    uint64_t insertNum;
+    uint64_t insertNum = 0;
     std::vector<uint8_t> newKey;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     std::unique_ptr<AbsSharedResultSet> resultSet;
@@ -840,7 +840,7 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
         return (context->resultSet_value != nullptr) ? OK : ERR;
 #else
         std::string selectionArgs = ",";
-        for (int i = 0; i < context->selectionArgs.size(); i++) {
+        for (size_t i = 0; i < context->selectionArgs.size(); i++) {
             selectionArgs += context->selectionArgs[i];
         }
         LOG_DEBUG(
