@@ -68,15 +68,15 @@ describe('rdbStorePredicatesComplexFiledTest', function () {
         console.log(TAG + "************* testRdbPredicatesComplexFiled0001 start *************");
 
         let predicates = await new dataRdb.RdbPredicates("test")
-        predicates.groupBy(["DATE(test.adddate,'utc')"]).orderByAsc("COUNT(*)")
-        let resultSet = await rdbStore.query(predicates, ["COUNT(*) AS 'num Count'", "DATE(test.adddate,'utc') as birthday"])
+        predicates.groupBy(["DATE(test.adddate)"]).orderByAsc("COUNT(*)")
+        let resultSet = await rdbStore.query(predicates, ["COUNT(*) AS 'num count'", "DATE(test.adddate) as birthday"])
         expect(true).assertEqual(resultSet.goToFirstRow())
-        let count = await resultSet.getLong(resultSet.getColumnIndex("num Count"))
+        let count = await resultSet.getLong(resultSet.getColumnIndex("num count"))
         let birthday = await resultSet.getString(resultSet.getColumnIndex("birthday"))
         expect(2).assertEqual(count);
         await expect("2022-09-01").assertEqual(birthday)
         expect(true).assertEqual(resultSet.goToNextRow())
-        count = await resultSet.getLong(resultSet.getColumnIndex("num Count"))
+        count = await resultSet.getLong(resultSet.getColumnIndex("num count"))
         birthday = await resultSet.getString(resultSet.getColumnIndex("birthday"))
         expect(3).assertEqual(count);
         await expect("2022-09-02").assertEqual(birthday)
@@ -94,15 +94,15 @@ describe('rdbStorePredicatesComplexFiledTest', function () {
         console.log(TAG + "************* testRdbPredicatesComplexFiled0002 start *************");
 
         let predicates = await new dataRdb.RdbPredicates("test")
-        predicates.groupBy(["DATE(test.adddate,'utc')"]).orderByDesc("COUNT(*)")
-        let resultSet = await rdbStore.query(predicates, ["COUNT(*) AS numCount", "DATE(test.adddate,'utc') as birthday"])
+        predicates.groupBy(["DATE(test.adddate)"]).orderByDesc("COUNT(*)")
+        let resultSet = await rdbStore.query(predicates, ["COUNT(*) AS numcount", "DATE(test.adddate) as birthday"])
         expect(true).assertEqual(resultSet.goToFirstRow())
-        let count = await resultSet.getLong(resultSet.getColumnIndex("numCount"))
+        let count = await resultSet.getLong(resultSet.getColumnIndex("numcount"))
         let birthday = await resultSet.getString(resultSet.getColumnIndex("birthday"))
         expect(3).assertEqual(count);
         await expect("2022-09-02").assertEqual(birthday)
         expect(true).assertEqual(resultSet.goToNextRow())
-        count = await resultSet.getLong(resultSet.getColumnIndex("numCount"))
+        count = await resultSet.getLong(resultSet.getColumnIndex("numcount"))
         birthday = await resultSet.getString(resultSet.getColumnIndex("birthday"))
         expect(2).assertEqual(count);
         await expect("2022-09-01").assertEqual(birthday)
