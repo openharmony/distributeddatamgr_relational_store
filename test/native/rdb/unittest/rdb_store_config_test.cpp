@@ -418,3 +418,281 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_012, TestSize.Level1)
     SecurityLevel getSecurityLevel = config.GetSecurityLevel();
     EXPECT_EQ(getSecurityLevel, securityLevel);
 }
+
+/**
+ * @tc.name: RdbStoreConfig_013
+ * @tc.desc: test RdbStoreConfig interfaces: SetSecurityLevel/GetSecurityLevel
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_013, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    config.SetSecurityLevel(SecurityLevel::S2);
+    SecurityLevel retSecurityLevel = config.GetSecurityLevel();
+    EXPECT_EQ(SecurityLevel::S2, retSecurityLevel);
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
+
+    config.SetSecurityLevel(SecurityLevel::LAST);
+    retSecurityLevel = config.GetSecurityLevel();
+    EXPECT_EQ(SecurityLevel::LAST, retSecurityLevel);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStoreConfig_014
+ * @tc.desc: test RdbStoreConfig interfaces: SetCreateNecessary/IsCreateNecessary
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_014, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    bool createNecessary = true;
+    config.SetCreateNecessary(createNecessary);
+    bool retCreateNecessary = config.IsCreateNecessary();
+    EXPECT_EQ(createNecessary, retCreateNecessary);
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
+
+    createNecessary = false;
+    config.SetCreateNecessary(createNecessary);
+    retCreateNecessary = config.IsCreateNecessary();
+    EXPECT_EQ(createNecessary, retCreateNecessary);
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStoreConfig_015
+ * @tc.desc: test RdbStoreConfig interfaces: SetReadOnly/IsReadOnly
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_015, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    bool readOnly = true;
+    config.SetReadOnly(readOnly);
+    bool retReadOnly = config.IsReadOnly();
+    EXPECT_EQ(readOnly, retReadOnly);
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(store, nullptr);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
+
+    readOnly = false;
+    config.SetReadOnly(readOnly);
+    retReadOnly = config.IsReadOnly();
+    EXPECT_EQ(readOnly, retReadOnly);
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    readOnly = true;
+    config.SetReadOnly(readOnly);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStoreConfig_016
+ * @tc.desc: test RdbStoreConfig interfaces: SetStorageMode/GetStorageMode
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_016, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    StorageMode storageMode = StorageMode::MODE_DISK;
+    config.SetStorageMode(storageMode);
+    StorageMode retStorageMode = config.GetStorageMode();
+    EXPECT_EQ(storageMode, retStorageMode);
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
+
+    storageMode = StorageMode::MODE_MEMORY;
+    config.SetStorageMode(storageMode);
+    retStorageMode = config.GetStorageMode();
+    EXPECT_EQ(storageMode, retStorageMode);
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStoreConfig_017
+ * @tc.desc: test RdbStoreConfig interfaces: SetDatabaseFileType/GetDatabaseFileType
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_017, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    DatabaseFileType databaseFileType = DatabaseFileType::NORMAL;
+    config.SetDatabaseFileType(databaseFileType);
+    std::string retDatabaseFileType = config.GetDatabaseFileType();
+    EXPECT_EQ("db", retDatabaseFileType);
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
+
+    databaseFileType = DatabaseFileType::BACKUP;
+    config.SetDatabaseFileType(databaseFileType);
+    retDatabaseFileType = config.GetDatabaseFileType();
+    EXPECT_EQ("backup", retDatabaseFileType);
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
+
+    databaseFileType = DatabaseFileType::CORRUPT;
+    config.SetDatabaseFileType(databaseFileType);
+    retDatabaseFileType = config.GetDatabaseFileType();
+    EXPECT_EQ("corrupt", retDatabaseFileType);
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStoreConfig_018
+ * @tc.desc: test RdbStoreConfig interfaces: SetDistributedType/GetDistributedType
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_018, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    DistributedType distributedType = DistributedType::RDB_DEVICE_COLLABORATION;
+    config.SetDistributedType(distributedType);
+    DistributedType retDistributedType = config.GetDistributedType();
+    EXPECT_EQ(distributedType, retDistributedType);
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
+
+    distributedType = DistributedType::RDB_DISTRIBUTED_TYPE_MAX;
+    config.SetDistributedType(distributedType);
+    retDistributedType = config.GetDistributedType();
+    EXPECT_NE(distributedType, retDistributedType);
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStoreConfig_019
+ * @tc.desc: test RdbStoreConfig interfaces: SetModuleName/GetModuleName
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_019, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    std::string moduleName = "phone";
+    config.SetModuleName(moduleName);
+    std::string retModuleName = config.GetModuleName();
+    EXPECT_EQ(moduleName, retModuleName);
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStoreConfig_020
+ * @tc.desc: test RdbStoreConfig interfaces: SetModuleName/GetModuleName
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_020, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    std::string serviceName = "com.ohos.config.test";
+    config.SetServiceName(serviceName);
+    std::string retServiceName = config.GetBundleName();
+    EXPECT_EQ(serviceName, retServiceName);
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStoreConfig_021
+ * @tc.desc: test RdbStoreConfig interfaces: GetSyncModeValue
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_021, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    std::string syncMode = config.GetSyncModeValue(SyncMode::MODE_OFF);
+    EXPECT_EQ(syncMode, "MODE_OFF");
+    syncMode = OHOS::NativeRdb::RdbStoreConfig::GetSyncModeValue(SyncMode::MODE_NORMAL);
+    EXPECT_EQ(syncMode, "MODE_NORMAL");
+    syncMode = config.GetSyncModeValue(SyncMode::MODE_FULL);
+    EXPECT_EQ(syncMode, "MODE_FULL");
+    syncMode = config.GetSyncModeValue(SyncMode::MODE_EXTRA);
+    EXPECT_EQ(syncMode, "MODE_EXTRA");
+}
