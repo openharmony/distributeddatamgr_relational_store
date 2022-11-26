@@ -385,46 +385,55 @@ int ParseSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr
     return OK;
 }
 
-int ParsePredicates(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+bool CheckGlobalProperty(const napi_env &env, const napi_value &arg, const std::string propertyName)
 {
+    LOG_DEBUG("CheckGlobalProperty start: %{public}s", propertyName.c_str());
     napi_value global = nullptr;
     napi_status status = napi_get_global(env, &global);
-    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("predicates", "an RdbPredicates.");
-    RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok, context->SetError(paramError));
-
+    if (status != napi_ok) {
+        return false;
+    }
+    napi_value constructor = nullptr;
+    status = napi_get_named_property(env, global, propertyName.c_str(), &constructor);
+    if (status != napi_ok) {
+        return false;
+    }
     bool result = false;
-    napi_value RdbPredicatesConstructor = nullptr;
-    status = napi_get_named_property(env, global, "RdbPredicatesConstructor", &RdbPredicatesConstructor);
-    RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok, context->SetError(paramError));
-    status = napi_instanceof(env, arg, RdbPredicatesConstructor, &result);
+    status = napi_instanceof(env, arg, constructor, &result);
+    return (status == napi_ok ? result : false);
+}
 
-    napi_value RdbPredicatesConstructorV9 = nullptr;
-    napi_status statusv9 =
-        napi_get_named_property(env, global, "RdbPredicatesConstructorV9", &RdbPredicatesConstructorV9);
-    RDB_CHECK_RETURN_CALL_RESULT(statusv9 == napi_ok, context->SetError(paramError));
-    bool resultv9 = false;
-    statusv9 = napi_instanceof(env, arg, RdbPredicatesConstructorV9, &resultv9);
-
-    LOG_DEBUG("Parse RDB Predicates status=%{public}d, result=%{public}d,statusv9=%{public}d, resultv9=%{public}d",
-        status, result, statusv9, resultv9);
-    if ((status == napi_ok && result != false) || (statusv9 == napi_ok && resultv9 != false)) {
+int ParsePredicates(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+{
+    LOG_DEBUG("ParsePredicates start");
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("predicates", "an RdbPredicates.");
+    if (CheckGlobalProperty(env, arg, "RdbPredicatesConstructor")
+        || CheckGlobalProperty(env, arg, "RdbPredicatesConstructorV9")) {
         LOG_DEBUG("Parse RDB Predicates");
         napi_unwrap(env, arg, reinterpret_cast<void **>(&context->predicatesProxy));
+        RDB_CHECK_RETURN_CALL_RESULT(context->predicatesProxy != nullptr, context->SetError(paramError));
         context->tableName = context->predicatesProxy->GetPredicates()->GetTableName();
         context->rdbPredicates = context->predicatesProxy->GetPredicates();
-    } else {
-        LOG_DEBUG("Parse DataShare Predicates");
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-        PredicatesProxy *proxy = nullptr;
-        napi_unwrap(env, arg, reinterpret_cast<void **>(&proxy));
-        std::shared_ptr<DataShareAbsPredicates> dsPredicates = proxy->predicates_;
-        LOG_ERROR("dsPredicates is null ? %{public}d", (dsPredicates == nullptr));
-        paramError = std::make_shared<ParamTypeError>("predicates", "an DataShare Predicates.");
-        RDB_CHECK_RETURN_CALL_RESULT(dsPredicates != nullptr, context->SetError(paramError));
-        context->rdbPredicates = std::make_shared<RdbPredicates>(
-            RdbDataShareAdapter::RdbUtils::ToPredicates(*dsPredicates, context->tableName));
-#endif
+        LOG_DEBUG("ParsePredicates end");
+        return OK;
     }
+
+    LOG_DEBUG("Isn't RdbPredicates, maybe DataShare Predicates.");
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+    paramError = std::make_shared<ParamTypeError>("predicates", "an RdbPredicates or DataShare Predicates.");
+    PredicatesProxy *proxy = nullptr;
+    napi_unwrap(env, arg, reinterpret_cast<void **>(&proxy));
+    // proxy is nullptr, it isn't rdb predicates or datashare predicates
+    RDB_CHECK_RETURN_CALL_RESULT(proxy != nullptr, context->SetError(paramError));
+    // proxy is not nullptr, it's a datashare predicates.
+    LOG_DEBUG("Parse DataShare Predicates");
+    paramError = std::make_shared<ParamTypeError>("predicates", "an DataShare Predicates.");
+    LOG_ERROR("dsPredicates is null ? %{public}d", (proxy->predicates_ == nullptr));
+    RDB_CHECK_RETURN_CALL_RESULT(proxy->predicates_ != nullptr, context->SetError(paramError));
+    std::shared_ptr<DataShareAbsPredicates> dsPredicates = proxy->predicates_;
+    context->rdbPredicates = std::make_shared<RdbPredicates>(
+        RdbDataShareAdapter::RdbUtils::ToPredicates(*dsPredicates, context->tableName));
+#endif
     LOG_DEBUG("ParsePredicates end");
     return OK;
 }
