@@ -186,6 +186,11 @@ int AbsResultSet::IsEnded(bool &result)
 
 int AbsResultSet::GetColumnCount(int &count)
 {
+    if (!columnNames_.empty()){
+        count = static_cast<int>(columnNames_.size());
+        return E_OK;
+    }
+
     std::vector<std::string> columnNames;
     int ret = GetAllColumnNames(columnNames);
     if (ret != E_OK) {
