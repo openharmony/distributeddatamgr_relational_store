@@ -49,9 +49,9 @@ std::string SecurityPolicy::GetFileSecurityLevel(const std::string &filePath)
     return DistributedFS::ModuleSecurityLabel::SecurityLabel::GetSecurityLabel(filePath);
 }
 
-int SecurityPolicy::SetSecurityLabel(const RdbStoreConfig &config) {
+int SecurityPolicy::SetSecurityLabel(const RdbStoreConfig &config)
+{
     if (config.GetStorageMode() != StorageMode::MODE_MEMORY && config.GetSecurityLevel() != SecurityLevel::LAST) {
-
         std::string currentLevel = GetFileSecurityLevel(config.GetPath());
         std::string toSetLevel = GetSecurityLevelValue(config.GetSecurityLevel());
         LOG_INFO("Security level current is %{public}s to %{public}s.", currentLevel.c_str(), toSetLevel.c_str());

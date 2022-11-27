@@ -68,8 +68,6 @@ bool SqliteConfig::IsReadOnly() const
     return readOnly;
 }
 
-
-
 std::string SqliteConfig::GetDatabaseFileType() const
 {
     return databaseFileType;
