@@ -22,6 +22,8 @@ namespace AppDataMgrJsKit {
 constexpr int MAX_INPUT_COUNT = 10;
 constexpr int OK = 0;
 constexpr int ERR = -1;
+constexpr int APIVERSION_V9 = 9;
+constexpr int APIVERSION_V8 = 8;
 
 constexpr int E_PARAM_ERROR = 401;
 

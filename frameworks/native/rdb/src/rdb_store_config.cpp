@@ -31,6 +31,7 @@ RdbStoreConfig::RdbStoreConfig(const RdbStoreConfig &config)
     readOnly = config.IsReadOnly();
     databaseFileType = config.GetDatabaseFileType();
     securityLevel = config.GetSecurityLevel();
+    isCreateNecessary_ = config.IsCreateNecessary();
 }
 
 RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode, bool isReadOnly,
