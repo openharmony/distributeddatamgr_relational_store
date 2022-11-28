@@ -32,30 +32,36 @@ SqliteSharedResultSet::~SqliteSharedResultSet() {}
 
 int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
-    int errCode = PrepareStep();
-    if (errCode) {
-        return errCode;
-    }
-    int columnCount = 0;
-    // Get the total number of columns
-    errCode = sqliteStatement->GetColumnCount(columnCount);
-    if (errCode) {
-        return errCode;
-    }
-    columnNames.clear();
-    for (int i = 0; i < columnCount; i++) {
-        std::string columnName;
-        errCode = sqliteStatement->GetColumnName(i, columnName);
-        if (errCode) {
-            columnNames.clear();
-            return errCode;
+    if (columnNames_.empty()){
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (columnNames_.empty()) {
+            int errCode = PrepareStep();
+            if (errCode) {
+                return errCode;
+            }
+            int columnCount = 0;
+            // Get the total number of columns
+            errCode = sqliteStatement->GetColumnCount(columnCount);
+            if (errCode) {
+                return errCode;
+            }
+            columnNames_.clear();
+            for (int i = 0; i < columnCount; i++) {
+                std::string columnName;
+                errCode = sqliteStatement->GetColumnName(i, columnName);
+                if (errCode) {
+                    columnNames_.clear();
+                    return errCode;
+                }
+                columnNames_.push_back(columnName);
+            }
+
+            rdbStoreImpl->EndStepQuery();
+            sqliteStatement = nullptr;
         }
-        columnNames.push_back(columnName);
     }
 
-    rdbStoreImpl->EndStepQuery();
-    sqliteStatement = nullptr;
-
+    columnNames.assign(columnNames_.begin(), columnNames_.end());
     return E_OK;
 }
 
