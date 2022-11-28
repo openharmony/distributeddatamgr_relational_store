@@ -66,7 +66,7 @@ struct RdbStoreContext : public AsyncCall::Context {
     std::map<std::string, ValueObject> numberMaps;
     std::vector<ValueObject> bindArgs;
     uint64_t rowId;
-    uint64_t insertNum = 0;
+    uint64_t insertNum;
     std::vector<uint8_t> newKey;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     std::unique_ptr<AbsSharedResultSet> resultSet;
@@ -83,11 +83,11 @@ struct RdbStoreContext : public AsyncCall::Context {
 #endif
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
 
-    RdbStoreContext() : Context(nullptr, nullptr), predicatesProxy(nullptr), rowId(0), enumArg(0)
+    RdbStoreContext() : Context(nullptr, nullptr), predicatesProxy(nullptr), rowId(0), insertNum(0), enumArg(0)
     {
     }
     RdbStoreContext(InputAction input, OutputAction output)
-        : Context(std::move(input), std::move(output)), predicatesProxy(nullptr), rowId(0), enumArg(0)
+        : Context(std::move(input), std::move(output)), predicatesProxy(nullptr), rowId(0), insertNum(0), enumArg(0)
     {
     }
     virtual ~RdbStoreContext()
