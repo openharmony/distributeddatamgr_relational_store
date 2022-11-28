@@ -62,7 +62,7 @@ protected:
      * flag position, and [0, n-1] represents the real data index.
      */
     int rowPos_;
-
+    std::vector<std::string> columnNames_;
     // Indicates whether the result set is closed
     bool isClosed;
 };

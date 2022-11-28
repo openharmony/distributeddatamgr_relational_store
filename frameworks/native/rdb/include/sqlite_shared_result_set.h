@@ -69,6 +69,7 @@ private:
     std::thread::id tid;
     // The number of rows in the cursor
     int rowNum;
+    std::mutex mutex_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
