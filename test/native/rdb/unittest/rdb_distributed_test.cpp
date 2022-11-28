@@ -23,10 +23,13 @@
 
 #include "rdb_errno.h"
 #include "rdb_helper.h"
+#include "rdb_manager.h"
 #include "rdb_open_callback.h"
+#include "rdb_predicates.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
+using namespace OHOS::DistributedRdb;
 
 static std::shared_ptr<RdbStore> rdbStore;
 
@@ -160,6 +163,14 @@ void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     EXPECT_EQ("zhangsan", strVal);
 }
 
+class DistributedTestStoreObserver : public RdbStoreObserver
+{
+public:
+    void OnChange(const std::vector<std::string> &devices) override;
+};
+
+void DistributedTestStoreObserver::OnChange(const vector<std::string> &devices) {}
+
 /**
  * @tc.name: RdbStore_Distributed_Test_001
  * @tc.desc: test RdbStore set distributed tables
@@ -172,4 +183,35 @@ HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_001, TestSize.Level1)
     EXPECT_NE(rdbStore, nullptr) << "get rdb store failed";
     InsertValue(rdbStore);
     CheckResultSet(rdbStore);
+}
+
+/**
+ * @tc.name: RdbStore_Distributed_Test_002
+ * @tc.desc: test RdbStore set distributed tables
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_002, TestSize.Level1)
+{
+    EXPECT_NE(rdbStore, nullptr);
+    std::vector<std::string> tables;
+    tables.emplace_back("employee");
+    bool ret = rdbStore->SetDistributedTables(tables);
+    EXPECT_EQ(ret, false);
+    std::string table = rdbStore->ObtainDistributedTableName("7001005458323933328a254f9b263900", "employee");
+    EXPECT_EQ(table, "");
+    SyncOption syncOption;
+    syncOption.mode = PUSH;
+    syncOption.isBlock = true;
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("employee");
+    ret = rdbStore->Sync(syncOption, rdbPredicates, [](const SyncResult &result) {});
+    EXPECT_EQ(ret, false);
+    SubscribeOption subscribeOption;
+    subscribeOption.mode = REMOTE;
+    DistributedTestStoreObserver observer;
+    ret = rdbStore->Subscribe(subscribeOption, &observer);
+    EXPECT_EQ(ret, true);
+    ret = rdbStore->UnSubscribe(subscribeOption, &observer);
+    EXPECT_EQ(ret, true);
 }
