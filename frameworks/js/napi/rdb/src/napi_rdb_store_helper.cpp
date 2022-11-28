@@ -335,11 +335,11 @@ int ParseContextProperty(const napi_env &env, std::shared_ptr<HelperRdbContext> 
 
 int ParseDatabaseDir(const napi_env &env, std::shared_ptr<HelperRdbContext> context)
 {
-    std::string databaseDir = context->abilitycontext->GetDatabaseDir();
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("context", "a Context.");
     RDB_CHECK_RETURN_CALL_RESULT(context->abilitycontext != nullptr, context->SetError(paramError));
     int errorCode = E_OK;
     std::string databaseName = context->config.GetName();
+    std::string databaseDir = context->abilitycontext->GetDatabaseDir();
     std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, databaseName, errorCode);
     paramError = std::make_shared<ParamTypeError>("config", "a StoreConfig.");
     RDB_CHECK_RETURN_CALL_RESULT(errorCode == E_OK, context->SetError(paramError));
