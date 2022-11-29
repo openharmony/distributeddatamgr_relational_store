@@ -18,6 +18,7 @@
 #include "js_logger.h"
 #include "js_utils.h"
 #include "napi_rdb_error.h"
+#include "napi_rdb_trace.h"
 #include "napi_result_set.h"
 #include "rdb_errno.h"
 
@@ -226,6 +227,7 @@ std::shared_ptr<NativeRdb::ResultSet> &ResultSetProxy::GetInnerResultSet(
 ResultSetProxy *ResultSetProxy::ParseInt32FieldByName(
     napi_env env, napi_callback_info info, int32_t &field, const std::string name)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     napi_value self = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -480,6 +482,7 @@ napi_value ResultSetProxy::IsAtLastRow(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetBlob(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int32_t columnIndex;
     std::vector<uint8_t> result;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
@@ -493,6 +496,7 @@ napi_value ResultSetProxy::GetBlob(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetString(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int32_t columnIndex;
     std::string result;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
