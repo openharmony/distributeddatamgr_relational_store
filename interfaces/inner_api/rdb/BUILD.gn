@@ -146,7 +146,6 @@ ohos_shared_library("native_rdb") {
       "c_utils:utils",
       "hilog_native:libhilog",
       "hitrace_native:hitrace_meter",
-      "hitrace_native:libhitracechain",
       "huks:libhukssdk",
       "ipc:ipc_core",
     ]
