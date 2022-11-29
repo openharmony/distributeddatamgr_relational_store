@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 #include "sqlite_shared_result_set.h"
 #include <algorithm>
 #include <memory>
