@@ -92,14 +92,12 @@ void RdbResultSetBridge::GetColumnTypes(int columnCount, std::vector<ColumnType>
 void RdbResultSetBridge::WriteBlock(
     int32_t start, int32_t target, int columnCount, const std::vector<ColumnType> &columnTypes, Writer &writer)
 {
-    bool isFull = false;
     int errCode = 0;
     int row = start;
 
-    while (!isFull && !errCode && row <= target) {
+    while (!errCode && row <= target) {
         int status = writer.AllocRow();
         if (status != 0) {
-            isFull = true;
             LOG_ERROR("SharedBlock is full.");
             break;
         }
