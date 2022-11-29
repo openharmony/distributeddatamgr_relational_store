@@ -159,8 +159,8 @@ describe('rdbStorePredicatesJoinBTest', function () {
         expect(1004).assertEqual(resultSet.getInt(3));
         expect("2000-12-17").assertEqual(resultSet.getString(4));
         expect(8000.00).assertEqual(resultSet.getDouble(5));
-        expect(8000.00).assertEqual(resultSet.getDouble(6));
-        expect(true).assertEqual(resultSet.IsColumnNull(7));
+        expect(true).assertEqual(resultSet.isColumnNull(6));
+        expect(20).assertEqual(resultSet.getInt(7));
         expect(20).assertEqual(resultSet.getInt(8));
         expect("XueGongBu").assertEqual(resultSet.getString(9));
         expect("ShangHai").assertEqual(resultSet.getString(10));
