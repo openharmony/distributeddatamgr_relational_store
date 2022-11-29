@@ -20,6 +20,7 @@
 
 #include "logger.h"
 #include "rdb_errno.h"
+#include "rdb_trace.h"
 #include "string_utils.h"
 
 namespace OHOS {
@@ -299,6 +300,7 @@ std::string SqliteSqlBuilder::BuildCountString(const AbsRdbPredicates &predicate
 
 std::string SqliteSqlBuilder::NormalizeWords(const std::string &source, int &errorCode)
 {
+    DISTRIBUTED_DATA_HITRACE("SqliteSqlBuilder::NormalizeWords");
     errorCode = 0;
     if (StringUtils::IsEmpty(source)) {
         return "";
@@ -320,6 +322,7 @@ std::string SqliteSqlBuilder::NormalizeWords(const std::string &source, int &err
 
 std::string SqliteSqlBuilder::NormalizeTableColumn(const std::string &source, int &errorCode)
 {
+    DISTRIBUTED_DATA_HITRACE("SqliteSqlBuilder::NormalizeTableColumn");
     errorCode = 0;
     if (StringUtils::IsEmpty(source)) {
         return "";
@@ -348,6 +351,7 @@ std::string SqliteSqlBuilder::NormalizeTableColumn(const std::string &source, in
 
 std::string SqliteSqlBuilder::NormalizeMethodPattern(const std::string &source, int &errorCode)
 {
+    DISTRIBUTED_DATA_HITRACE("SqliteSqlBuilder::NormalizeMethodPattern");
     errorCode = 0;
     if (StringUtils::IsEmpty(source)) {
         return "";
@@ -369,6 +373,7 @@ std::string SqliteSqlBuilder::NormalizeMethodPattern(const std::string &source, 
 
 std::string SqliteSqlBuilder::Normalize(const std::string &words, int &errorCode)
 {
+    DISTRIBUTED_DATA_HITRACE("SqliteSqlBuilder::Normalize");
     errorCode = 0;
     std::string aresult = NormalizeWords(words, errorCode);
     if (!StringUtils::IsEmpty(aresult)) {
