@@ -19,6 +19,7 @@
 #include <initializer_list>
 
 #include "logger.h"
+#include "rdb_trace.h"
 #include "string_utils.h"
 #include "sqlite_sql_builder.h"
 
@@ -48,6 +49,7 @@ bool AbsPredicates::IsNeedAnd() const
  */
 AbsPredicates *AbsPredicates::EqualTo(std::string field, std::string value)
 {
+    DISTRIBUTED_DATA_HITRACE("AbsPredicates::EqualTo");
     bool chekParaFlag = CheckParameter("equalTo", field, { value });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: EqualTo() fails because Invalid parameter.");

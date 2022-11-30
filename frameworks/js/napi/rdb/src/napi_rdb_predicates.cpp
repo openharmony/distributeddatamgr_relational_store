@@ -17,6 +17,7 @@
 #include "js_utils.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_predicates.h"
+#include "napi_rdb_trace.h"
 
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
@@ -281,6 +282,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValueArray(napi_env env, na
 RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValue(napi_env env, napi_callback_info info, napi_value &thiz,
     std::string &field, std::string &value, const std::string valueType)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -326,6 +328,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldLowAndHigh(
 
 napi_value RdbPredicatesProxy::EqualTo(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbPredicatesProxy::EqualTo begin.");
     napi_value thiz = nullptr;
     std::string field = "";
