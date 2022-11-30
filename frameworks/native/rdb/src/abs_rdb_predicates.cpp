@@ -17,6 +17,7 @@
 
 #include "abs_rdb_predicates.h"
 #include "logger.h"
+#include "rdb_trace.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_manager.h"
 #include "rdb_service.h"
@@ -170,6 +171,7 @@ const DistributedRdb::RdbPredicates& AbsRdbPredicates::GetDistributedPredicates(
 
 AbsRdbPredicates* AbsRdbPredicates::EqualTo(std::string field, std::string value)
 {
+    DISTRIBUTED_DATA_HITRACE("AbsRdbPredicates::EqualTo");
     predicates_.AddOperation(DistributedRdb::EQUAL_TO, field, value);
     return (AbsRdbPredicates *)AbsPredicates::EqualTo(field, value);
 }
