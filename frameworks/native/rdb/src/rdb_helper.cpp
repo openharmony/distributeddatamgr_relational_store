@@ -79,6 +79,7 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
 int RdbHelper::ProcessOpenCallback(
     RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int currentVersion;
     int errCode = rdbStore.GetVersion(currentVersion);
     if (errCode != E_OK) {

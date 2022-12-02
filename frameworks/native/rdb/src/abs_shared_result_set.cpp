@@ -184,7 +184,7 @@ int AbsSharedResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &value)
 
 int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    DISTRIBUTED_DATA_HITRACE("AbsSharedResultSet::GetString");
     int errorCode = CheckState(columnIndex);
     if (errorCode != E_OK) {
         return errorCode;
