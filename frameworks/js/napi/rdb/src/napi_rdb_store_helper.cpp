@@ -23,6 +23,7 @@
 #include "napi_rdb_error.h"
 #include "napi_rdb_store.h"
 #include "napi_rdb_store_helper.h"
+#include "napi_rdb_trace.h"
 #include "rdb_errno.h"
 #include "rdb_open_callback.h"
 #include "rdb_store_config.h"
@@ -445,6 +446,7 @@ public:
 napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_ptr<HelperRdbContext> context,
     ParseStoreConfigFunction parseStoreConfig)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbJsKit::GetRdbStore start");
     context->iscontext = JSAbility::CheckContext(env, info);
     // context: Context, config: StoreConfig, version: number
@@ -487,6 +489,7 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
 
 napi_value GetRdbStore(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<HelperRdbContext>();
     context->apiversion = APIVERSION_V8;
     return InnerGetRdbStore(env, info, context, ParseStoreConfig);
@@ -494,6 +497,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
 
 napi_value GetRdbStoreV9(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<HelperRdbContext>();
     context->apiversion = APIVERSION_V9;
     return InnerGetRdbStore(env, info, context, ParseStoreConfigV9);
@@ -501,6 +505,7 @@ napi_value GetRdbStoreV9(napi_env env, napi_callback_info info)
 
 napi_value InnerDeleteRdbStore(napi_env env, napi_callback_info info, std::shared_ptr<HelperRdbContext> context)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbJsKit::DeleteRdbStore start");
     context->iscontext = JSAbility::CheckContext(env, info);
     // context: Context, config: StoreConfig, version: number
@@ -537,6 +542,7 @@ napi_value InnerDeleteRdbStore(napi_env env, napi_callback_info info, std::share
 
 napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<HelperRdbContext>();
     context->apiversion = APIVERSION_V8;
     return InnerDeleteRdbStore(env, info, context);
@@ -544,6 +550,7 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
 
 napi_value DeleteRdbStoreV9(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<HelperRdbContext>();
     context->apiversion = APIVERSION_V9;
     return InnerDeleteRdbStore(env, info, context);

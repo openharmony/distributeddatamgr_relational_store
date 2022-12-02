@@ -23,6 +23,7 @@
 #include "napi_rdb_error.h"
 #include "napi_rdb_predicates.h"
 #include "napi_rdb_store.h"
+#include "napi_rdb_trace.h"
 #include "napi_result_set.h"
 #include "rdb_errno.h"
 #include "securec.h"
@@ -580,6 +581,7 @@ bool IsNapiString(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreProxy::Insert start");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
@@ -612,6 +614,7 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreProxy::BatchInsert start.");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
@@ -685,6 +688,7 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreProxy::Update start");
     auto context = std::make_shared<RdbStoreContext>();
     context->isNapiString = IsNapiString(env, info);
@@ -726,6 +730,7 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<RdbStoreContext>();
     context->isNapiString = IsNapiString(env, info);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
@@ -815,7 +820,7 @@ napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::QuerySql start");
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1, 2 or 3");
@@ -936,6 +941,7 @@ napi_value RdbStoreProxy::Count(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreProxy::Replace start");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
@@ -1111,6 +1117,7 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreProxy::QueryByStep start");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
