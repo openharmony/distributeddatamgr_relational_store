@@ -88,7 +88,7 @@ HWTEST_F(ValuesBucketTest, Values_Bucket_001, TestSize.Level1)
     EXPECT_EQ("zhangsan", strVal);
 
     valuesBucket->GetObject("No.", valueObject);
-    EXPECT_EQ(ValueObjectType::TYPE_INT, valueObject.GetType());
+    EXPECT_EQ(ValueObjectType::TYPE_INT64, valueObject.GetType());
     int64_t int64Val;
     valueObject.GetLong(int64Val);
     EXPECT_EQ(9223372036854775807L, int64Val);

@@ -305,7 +305,7 @@ HWTEST_F(RdbStoreInterfaceTest, ValuesBucket_003, TestSize.Level1)
     EXPECT_EQ(contains, true);
     contains = values.GetObject("longType", obj);
     type = obj.GetType();
-    EXPECT_EQ(type, ValueObjectType::TYPE_INT);
+    EXPECT_EQ(type, ValueObjectType::TYPE_INT64);
     int64_t val2 = 0;
     ret = obj.GetLong(val2);
     EXPECT_EQ(ret, E_OK);
