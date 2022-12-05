@@ -44,7 +44,7 @@ int RdbResultSetBridge::GetAllColumnNames(std::vector<std::string> &columnOrKeyN
     return rdbResultSet_->GetAllColumnNames(columnOrKeyNames);
 }
 
-bool RdbResultSetBridge::OnGo(int32_t start, int32_t target, Writer &writer)
+int RdbResultSetBridge::OnGo(int32_t start, int32_t target, Writer &writer)
 {
     int rowCount;
     rdbResultSet_->GetRowCount(rowCount);
