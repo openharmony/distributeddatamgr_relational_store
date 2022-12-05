@@ -120,6 +120,12 @@ int SqliteStatement::InnerBindArguments(const std::vector<ValueObject> &bindArgs
                 errCode = sqlite3_bind_int64(stmtHandle, index, value);
                 break;
             }
+            case ValueObjectType::TYPE_INT64: {
+              int64_t value = 0;
+              arg.GetLong(value);
+              errCode = sqlite3_bind_int64(stmtHandle, index, value);
+              break;
+            }
             case ValueObjectType::TYPE_DOUBLE: {
                 double doubleVal = 0;
                 arg.GetDouble(doubleVal);

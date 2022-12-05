@@ -32,6 +32,8 @@ ValuesBucket RdbUtils::ToValuesBucket(const DataShareValuesBucket &valuesBucket)
             valuesMap.insert(std::pair<std::string, ValueObject>(key, ValueObject(value.operator bool())));
         } else if (value.type == DataShareValueObjectType::TYPE_INT) {
             valuesMap.insert(std::pair<std::string, ValueObject>(key, ValueObject(value.operator int())));
+        } else if (value.type == DataShareValueObjectType::TYPE_INT64) {
+            valuesMap.insert(std::pair<std::string, ValueObject>(key, ValueObject(value.operator int64_t())));
         } else if (value.type == DataShareValueObjectType::TYPE_DOUBLE) {
             valuesMap.insert(std::pair<std::string, ValueObject>(key, ValueObject(value.operator double())));
         } else if (value.type == DataShareValueObjectType::TYPE_STRING) {

@@ -25,6 +25,7 @@ namespace NativeRdb {
 enum class ValueObjectType {
     TYPE_NULL = 0,
     TYPE_INT,
+    TYPE_INT64,
     TYPE_DOUBLE,
     TYPE_STRING,
     TYPE_BLOB,
