@@ -35,7 +35,7 @@ public:
     ~RdbResultSetBridge();
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int GetRowCount(int32_t &count) override;
-    bool OnGo(int32_t start, int32_t length, Writer &writer) override;
+    int OnGo(int32_t start, int32_t length, Writer &writer) override;
 
 private:
     void GetColumnTypes(int columnCount, std::vector<ColumnType> &columnTypes);
