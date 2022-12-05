@@ -476,7 +476,7 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
         return (errCode == E_OK) ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
-        result = RdbStoreProxy::NewInstance(env, context->proxy);
+        result = RdbStoreProxy::NewInstance(env, context->proxy, context->apiversion);
         context->openCallback.DelayNotify();
         LOG_DEBUG("RdbJsKit::GetRdbStore end");
         return (result != nullptr) ? OK : ERR;

@@ -31,7 +31,7 @@ public:
     ~ResultSetProxy();
     ResultSetProxy(std::shared_ptr<NativeRdb::ResultSet> resultSet);
     ResultSetProxy &operator=(std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet, int version = 8);
     static napi_value GetConstructor(napi_env env);
 
 private:
@@ -75,6 +75,7 @@ private:
 
     std::string sharedBlockName_;
     int32_t sharedBlockAshmemFd_ = -1;
+    int apiversion_ = 8;
 };
 } // namespace RdbJsKit
 } // namespace OHOS

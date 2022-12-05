@@ -32,8 +32,10 @@ public:
     ~ResultSetProxy();
     ResultSetProxy(std::shared_ptr<NativeRdb::ResultSet> resultSet);
     ResultSetProxy &operator=(std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet);
-    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet,
+        int apiversion = 8);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet,
+        int apiversion = 8);
     static std::shared_ptr<NativeRdb::AbsSharedResultSet> GetNativeObject(const napi_env &env, const napi_value &arg);
     static napi_value GetConstructor(napi_env env);
     std::shared_ptr<DataShare::ResultSetBridge> Create() override;
@@ -77,6 +79,7 @@ private:
 
     std::shared_ptr<NativeRdb::ResultSet> resultSet_;
     std::shared_ptr<NativeRdb::AbsSharedResultSet> sharedResultSet_;
+    int apiversion_ = 8;
 
     std::string sharedBlockName_;
     int32_t sharedBlockAshmemFd_ = -1;
