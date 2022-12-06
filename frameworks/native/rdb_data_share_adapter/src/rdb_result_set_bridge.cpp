@@ -50,14 +50,14 @@ int RdbResultSetBridge::OnGo(int32_t start, int32_t target, Writer &writer)
     rdbResultSet_->GetRowCount(rowCount);
     if (start < 0 || target < 0 || target >= rowCount) {
         LOG_ERROR("Invalid targetRowIndex: %{public}d.", rowCount);
-        return false;
+        return -1;
     }
 
     int columnCount;
     rdbResultSet_->GetColumnCount(columnCount);
     if (columnCount <= 0) {
         LOG_ERROR("Invalid columnCount: %{public}d.", columnCount);
-        return false;
+        return -1;
     }
     LOG_DEBUG("rowCount: %{public}d, columnCount: %{public}d.", rowCount, columnCount);
 
@@ -70,14 +70,12 @@ int RdbResultSetBridge::OnGo(int32_t start, int32_t target, Writer &writer)
     int errCode = rdbResultSet_->GoToRow(start);
     if (errCode) {
         LOG_ERROR("Go to row %{public}d failed.", start);
-        return false;
+        return -1;
     }
 
     std::vector<ColumnType> columnTypes;
     GetColumnTypes(columnCount, columnTypes);
-    WriteBlock(start, target, columnCount, columnTypes, writer);
-
-    return true;
+    return WriteBlock(start, target, columnCount, columnTypes, writer);
 }
 
 void RdbResultSetBridge::GetColumnTypes(int columnCount, std::vector<ColumnType> &columnTypes)
@@ -89,7 +87,7 @@ void RdbResultSetBridge::GetColumnTypes(int columnCount, std::vector<ColumnType>
     }
 }
 
-void RdbResultSetBridge::WriteBlock(
+int32_t RdbResultSetBridge::WriteBlock(
     int32_t start, int32_t target, int columnCount, const std::vector<ColumnType> &columnTypes, Writer &writer)
 {
     bool isFull = false;
@@ -101,13 +99,14 @@ void RdbResultSetBridge::WriteBlock(
         if (status != 0) {
             isFull = true;
             LOG_ERROR("SharedBlock is full.");
-            break;
+            return row - 1;
         }
 
         WriteColumn(columnCount, columnTypes, writer, row);
         row++;
         errCode = rdbResultSet_->GoToNextRow();
     }
+    return target;
 }
 
 void RdbResultSetBridge::WriteColumn(

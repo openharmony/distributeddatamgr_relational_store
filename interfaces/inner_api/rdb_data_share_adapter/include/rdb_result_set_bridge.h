@@ -39,7 +39,7 @@ public:
 
 private:
     void GetColumnTypes(int columnCount, std::vector<ColumnType> &columnTypes);
-    void WriteBlock(
+    int32_t WriteBlock(
         int32_t start, int32_t target, int columnCount, const std::vector<ColumnType> &columnTypes, Writer &writer);
     bool WriteBlobData(int column, Writer &writer);
     void WriteColumn(int columnCount, const std::vector<ColumnType> &columnTypes, Writer &writer, int row);
