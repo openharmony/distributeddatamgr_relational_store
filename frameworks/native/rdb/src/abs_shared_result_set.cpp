@@ -216,10 +216,8 @@ int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
             value = os.str();
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL) {
-        LOG_ERROR("AbsSharedResultSet::AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL!");
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB) {
-        LOG_ERROR("AbsSharedResultSet::AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB!");
         return E_OK;
     } else {
         LOG_ERROR("AbsSharedResultSet::GetString is failed!");
@@ -268,14 +266,11 @@ int AbsSharedResultSet::GetLong(int columnIndex, int64_t &value)
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT) {
         value = (int64_t)cellUnit->cell.doubleValue;
-        LOG_ERROR("AbsSharedResultSet::GetLong AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT !");
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL) {
-        LOG_ERROR("AbsSharedResultSet::GetLong AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL !");
         value = 0L;
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB) {
-        LOG_ERROR("AbsSharedResultSet::GetLong AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB !");
         value = 0L;
         return E_OK;
     } else {

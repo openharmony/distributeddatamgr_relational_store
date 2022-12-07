@@ -288,7 +288,6 @@ std::string SqliteSqlBuilder::BuildQueryString(
     std::string sqlStr;
     BuildQueryString(
         distinct, tableNameStr, columns, whereClauseStr, groupStr, indexStr, orderStr, limitStr, offsetStr, sqlStr);
-    LOG_DEBUG("sqlStr:%{public}s", sqlStr.c_str());
     return sqlStr;
 }
 
