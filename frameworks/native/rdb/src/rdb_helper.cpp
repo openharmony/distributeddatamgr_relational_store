@@ -116,6 +116,7 @@ int RdbHelper::ProcessOpenCallback(
 
 void RdbHelper::ClearCache()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     storeCache_.clear();
 }
 
