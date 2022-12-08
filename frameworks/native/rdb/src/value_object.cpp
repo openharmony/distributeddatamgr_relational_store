@@ -52,7 +52,7 @@ ValueObject::ValueObject(int val) : type(ValueObjectType::TYPE_INT)
     value = static_cast<int64_t>(val);
 }
 
-ValueObject::ValueObject(int64_t val) : type(ValueObjectType::TYPE_INT)
+ValueObject::ValueObject(int64_t val) : type(ValueObjectType::TYPE_INT64)
 {
     value = val;
 }
@@ -113,7 +113,7 @@ int ValueObject::GetInt(int &val) const
 
 int ValueObject::GetLong(int64_t &val) const
 {
-    if (type != ValueObjectType::TYPE_INT) {
+    if (type != ValueObjectType::TYPE_INT64 && type != ValueObjectType::TYPE_INT) {
         return E_INVALID_OBJECT_TYPE;
     }
 
@@ -174,6 +174,11 @@ bool ValueObject::Marshalling(Parcel &parcel) const
             parcel.WriteInt64(std::get<int64_t>(value));
             break;
         }
+        case ValueObjectType::TYPE_INT64: {
+            parcel.WriteInt16((int16_t) ValueObjectType::TYPE_INT64);
+            parcel.WriteInt64(std::get<int64_t>(value));
+            break;
+        }
         case ValueObjectType::TYPE_DOUBLE: {
             parcel.WriteInt16((int16_t) ValueObjectType::TYPE_DOUBLE);
             parcel.WriteDouble(std::get<double>(value));
@@ -210,6 +215,11 @@ ValueObject *ValueObject::Unmarshalling(Parcel &parcel)
         }
         case (int16_t)ValueObjectType::TYPE_INT: {
             pValueObject->type = ValueObjectType::TYPE_INT;
+            pValueObject->value = parcel.ReadInt64();
+            break;
+        }
+        case (int16_t)ValueObjectType::TYPE_INT64: {
+            pValueObject->type = ValueObjectType::TYPE_INT64;
             pValueObject->value = parcel.ReadInt64();
             break;
         }
