@@ -67,8 +67,6 @@ public:
     int BeginTransaction() override;
     int RollBack() override;
     int Commit() override;
-    int MarkAsCommit() override;
-    int EndTransaction() override;
     bool IsInTransaction() override;
     std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string sql,
         const std::vector<std::string> &bindArgs);

@@ -618,36 +618,6 @@ int RdbStoreImpl::BeginTransactionWithObserver(TransactionObserver *transactionO
     return errCode;
 }
 
-int RdbStoreImpl::MarkAsCommit()
-{
-    std::shared_ptr<StoreSession> session = GetThreadSession();
-    int errCode = session->MarkAsCommit();
-    ReleaseThreadSession();
-    return errCode;
-}
-
-int RdbStoreImpl::EndTransaction()
-{
-    TransactionObserver *transactionObserver = nullptr;
-    if (transactionObserverStack.size() > 0) {
-        transactionObserver = transactionObserverStack.top();
-        transactionObserverStack.pop();
-    }
-
-    std::shared_ptr<StoreSession> session = GetThreadSession();
-    int errCode = session->EndTransactionWithObserver(transactionObserver);
-    // release the session got in EndTransaction()
-    ReleaseThreadSession();
-    // release the session got in BeginTransaction()
-    ReleaseThreadSession();
-
-    if (!transactionObserver) {
-        delete transactionObserver;
-    }
-
-    return errCode;
-}
-
 bool RdbStoreImpl::IsInTransaction()
 {
     std::shared_ptr<StoreSession> session = GetThreadSession();

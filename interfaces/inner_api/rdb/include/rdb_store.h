@@ -99,8 +99,6 @@ public:
     virtual int BeginTransaction() = 0;
     virtual int RollBack() = 0;
     virtual int Commit() = 0;
-    virtual int MarkAsCommit() = 0;
-    virtual int EndTransaction() = 0;
     virtual bool IsInTransaction() = 0;
     virtual std::string GetPath() = 0;
     virtual bool IsHoldingConnection() = 0;
