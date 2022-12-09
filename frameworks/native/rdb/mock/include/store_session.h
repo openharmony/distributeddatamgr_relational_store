@@ -60,11 +60,11 @@ public:
     int GetConnectionUseCount();
 
 private:
-
     void AcquireConnection(bool isReadOnly);
-    void ReleaseConnection();
-    int BeginExecuteSql(const std::string &sql);
+    void ReleaseConnection(bool isReadOnly);
+    int BeginExecuteSql(const std::string &sql, bool &isReadOnly);
     SqliteConnectionPool &connectionPool;
+    SqliteConnection *readConnection;
     SqliteConnection *connection;
     int connectionUseCount;
     bool isInStepQuery;
