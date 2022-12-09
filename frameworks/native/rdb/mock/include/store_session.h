@@ -66,6 +66,7 @@ private:
     SqliteConnectionPool &connectionPool;
     SqliteConnection *readConnection;
     SqliteConnection *connection;
+    int readConnectionUseCount;
     int connectionUseCount;
     bool isInStepQuery;
 
