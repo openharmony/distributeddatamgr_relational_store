@@ -28,7 +28,8 @@
 
 namespace OHOS::NativeRdb {
 StoreSession::StoreSession(SqliteConnectionPool &connectionPool)
-    : connectionPool(connectionPool), connection(nullptr), connectionUseCount(0), isInStepQuery(false)
+    : connectionPool(connectionPool), readConnection(nullptr), connection(nullptr),
+      readConnectionUseCount(0), connectionUseCount(0), isInStepQuery(false)
 {
 }
 
@@ -38,15 +39,33 @@ StoreSession::~StoreSession()
 
 void StoreSession::AcquireConnection(bool isReadOnly)
 {
-    if (connection == nullptr) {
-        connection = connectionPool.AcquireConnection(isReadOnly);
+    if (isReadOnly) {
+        if (readConnection == nullptr) {
+            readConnection = connectionPool.AcquireConnection(true);
+        }
+        readConnectionUseCount += 1;
+        return;
     }
-
+    if (connection == nullptr) {
+        connection = connectionPool.AcquireConnection(false);
+    }
     connectionUseCount += 1;
+    return;
 }
 
-void StoreSession::ReleaseConnection()
+void StoreSession::ReleaseConnection(bool isReadOnly)
 {
+    if (isReadOnly) {
+        if ((readConnection == nullptr) || (readConnectionUseCount <= 0)) {
+            LOG_ERROR("SQLiteSession ReleaseConnection repeated release");
+            return;
+        }
+        if (--readConnectionUseCount == 0) {
+            connectionPool.ReleaseConnection(readConnection);
+            readConnection = nullptr;
+        }
+        return;
+    }
     if ((connection == nullptr) || (connectionUseCount <= 0)) {
         LOG_ERROR("SQLiteSession ReleaseConnection repeated release");
         return;
@@ -67,19 +86,19 @@ int StoreSession::PrepareAndGetInfo(
         return E_TRANSACTION_IN_EXECUTE;
     }
     bool assumeReadOnly = SqliteUtils::IsSqlReadOnly(type);
-
     AcquireConnection(assumeReadOnly);
-    int errCode = connection->PrepareAndGetInfo(sql, outIsReadOnly, numParameters, columnNames);
+    auto con = assumeReadOnly ? readConnection : connection;
+    int errCode = con->PrepareAndGetInfo(sql, outIsReadOnly, numParameters, columnNames);
     if (errCode != 0) {
-        ReleaseConnection();
+        ReleaseConnection(assumeReadOnly);
         return errCode;
     }
 
-    ReleaseConnection();
+    ReleaseConnection(assumeReadOnly);
     return E_OK;
 }
 
-int StoreSession::BeginExecuteSql(const std::string &sql)
+int StoreSession::BeginExecuteSql(const std::string &sql, bool &isReadOnly)
 {
     int type = SqliteUtils::GetSqlStatementType(sql);
     if (SqliteUtils::IsSpecial(type)) {
@@ -87,95 +106,93 @@ int StoreSession::BeginExecuteSql(const std::string &sql)
     }
 
     bool assumeReadOnly = SqliteUtils::IsSqlReadOnly(type);
-    bool isReadOnly = false;
     AcquireConnection(assumeReadOnly);
-    int errCode = connection->Prepare(sql, isReadOnly);
+    SqliteConnection *con = assumeReadOnly ? readConnection : connection;
+    int errCode = con->Prepare(sql, isReadOnly);
     if (errCode != 0) {
-        ReleaseConnection();
+        ReleaseConnection(assumeReadOnly);
         return errCode;
     }
-
-    if (isReadOnly == connection->IsWriteConnection()) {
-        ReleaseConnection();
-        AcquireConnection(isReadOnly);
-        if (!isReadOnly && !connection->IsWriteConnection()) {
-            LOG_ERROR("StoreSession BeginExecutea : read connection can not execute write operation");
-            ReleaseConnection();
-            return E_EXECUTE_WRITE_IN_READ_CONNECTION;
-        }
-    }
-
+    isReadOnly = assumeReadOnly;
     return E_OK;
 }
 int StoreSession::ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
-    int errCode = BeginExecuteSql(sql);
+    bool isReadOnly = false;
+    int errCode = BeginExecuteSql(sql, isReadOnly);
     if (errCode != 0) {
         return errCode;
     }
-
-    errCode = connection->ExecuteSql(sql, bindArgs);
-    ReleaseConnection();
+    SqliteConnection *con = isReadOnly ? readConnection : connection;
+    errCode = con->ExecuteSql(sql, bindArgs);
+    ReleaseConnection(isReadOnly);
     return errCode;
 }
 
 int StoreSession::ExecuteForChangedRowCount(
     int &changedRows, const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
-    int errCode = BeginExecuteSql(sql);
+    bool isReadOnly = false;
+    int errCode = BeginExecuteSql(sql, isReadOnly);
     if (errCode != 0) {
         return errCode;
     }
-
-    errCode = connection->ExecuteForChangedRowCount(changedRows, sql, bindArgs);
-    ReleaseConnection();
+    auto con = isReadOnly ? readConnection : connection;
+    errCode = con->ExecuteForChangedRowCount(changedRows, sql, bindArgs);
+    ReleaseConnection(isReadOnly);
     return errCode;
 }
 
 int StoreSession::ExecuteForLastInsertedRowId(
     int64_t &outRowId, const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
-    int errCode = BeginExecuteSql(sql);
+    bool isReadOnly = false;
+    int errCode = BeginExecuteSql(sql, isReadOnly);
     if (errCode != 0) {
         LOG_ERROR("rdbStore BeginExecuteSql failed");
         return errCode;
     }
-
-    errCode = connection->ExecuteForLastInsertedRowId(outRowId, sql, bindArgs);
+    auto con = isReadOnly ? readConnection : connection;
+    errCode = con->ExecuteForLastInsertedRowId(outRowId, sql, bindArgs);
     if (errCode != E_OK) {
         LOG_ERROR("rdbStore ExecuteForLastInsertedRowId FAILED");
     }
-    ReleaseConnection();
+    ReleaseConnection(isReadOnly);
     return errCode;
 }
 
 int StoreSession::ExecuteGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
-    int errCode = BeginExecuteSql(sql);
+    bool isReadOnly = false;
+    int errCode = BeginExecuteSql(sql, isReadOnly);
     if (errCode != 0) {
         return errCode;
     }
-
-    errCode = connection->ExecuteGetLong(outValue, sql, bindArgs);
-    ReleaseConnection();
+    auto con = isReadOnly ? readConnection : connection;
+    errCode = con->ExecuteGetLong(outValue, sql, bindArgs);
+    ReleaseConnection(isReadOnly);
     return errCode;
 }
 
 int StoreSession::ExecuteGetString(
     std::string &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
-    int errCode = BeginExecuteSql(sql);
+    bool isReadOnly = false;
+    int errCode = BeginExecuteSql(sql, isReadOnly);
     if (errCode != 0) {
         return errCode;
     }
+    auto con = isReadOnly ? readConnection : connection;
     std::string sqlstr = sql;
     int type = SqliteDatabaseUtils::GetSqlStatementType(sqlstr);
     if (type == STATEMENT_PRAGMA) {
-        ReleaseConnection();
+        ReleaseConnection(isReadOnly);
         AcquireConnection(false);
+        con = connection;
     }
-    errCode = connection->ExecuteGetString(outValue, sql, bindArgs);
-    ReleaseConnection();
+
+    errCode = con->ExecuteGetString(outValue, sql, bindArgs);
+    ReleaseConnection(isReadOnly);
     return errCode;
 }
 
@@ -213,7 +230,7 @@ int StoreSession::Backup(const std::string databasePath, const std::vector<uint8
 // Checks whether this thread holds a database connection.
 bool StoreSession::IsHoldingConnection() const
 {
-    if (connection == nullptr) {
+    if (connection == nullptr && readConnection == nullptr) {
         return false;
     } else {
         return true;
@@ -288,15 +305,10 @@ int StoreSession::BeginTransaction(TransactionObserver *transactionObserver)
 {
     if (connectionPool.getTransactionStack().empty()) {
         AcquireConnection(false);
-        if (!connection->IsWriteConnection()) {
-            LOG_ERROR("StoreSession BeginExecutea : read connection can not begin transaction");
-            ReleaseConnection();
-            return E_BEGIN_TRANSACTION_IN_READ_CONNECTION;
-        }
 
         int errCode = connection->ExecuteSql("BEGIN EXCLUSIVE;");
         if (errCode != E_OK) {
-            ReleaseConnection();
+            ReleaseConnection(false);
             return errCode;
         }
     }
@@ -348,13 +360,17 @@ int StoreSession::EndTransactionWithObserver(TransactionObserver *transactionObs
         }
     } else {
         int errCode;
+        if (connection == nullptr) {
+            LOG_ERROR("connection is null");
+            return E_ERROR;
+        }
         if (isSucceed) {
             errCode = connection->ExecuteSql("COMMIT;");
         } else {
             errCode = connection->ExecuteSql("ROLLBACK;");
         }
 
-        ReleaseConnection();
+        ReleaseConnection(false);
         return errCode;
     }
 
@@ -384,8 +400,12 @@ int StoreSession::EndTransaction()
             connectionPool.getTransactionStack().top().SetAllBeforeSuccessful(false);
         }
     } else {
+        if (connection == nullptr) {
+            LOG_ERROR("connection is null");
+            return E_ERROR;
+        }
         int errCode = connection->ExecuteSql(isSucceed ? "COMMIT;" : "ROLLBACK;");
-        ReleaseConnection();
+        ReleaseConnection(false);
         return errCode;
     }
 
@@ -412,9 +432,9 @@ std::shared_ptr<SqliteStatement> StoreSession::BeginStepQuery(
     }
 
     AcquireConnection(true);
-    std::shared_ptr<SqliteStatement> statement = connection->BeginStepQuery(errCode, sql, selectionArgs);
+    std::shared_ptr<SqliteStatement> statement = readConnection->BeginStepQuery(errCode, sql, selectionArgs);
     if (statement == nullptr) {
-        ReleaseConnection();
+        ReleaseConnection(true);
         return nullptr;
     }
     isInStepQuery = true;
@@ -427,9 +447,9 @@ int StoreSession::EndStepQuery()
         return E_OK;
     }
 
-    int errCode = connection->EndStepQuery();
+    int errCode = readConnection->EndStepQuery();
     isInStepQuery = false;
-    ReleaseConnection();
+    ReleaseConnection(true);
     return errCode;
 }
 
@@ -437,13 +457,15 @@ int StoreSession::EndStepQuery()
 int StoreSession::ExecuteForSharedBlock(int &rowNum, std::string sql, const std::vector<ValueObject> &bindArgs,
     AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows)
 {
-    int errCode = BeginExecuteSql(sql);
+    bool isReadOnly = false;
+    int errCode = BeginExecuteSql(sql, isReadOnly);
     if (errCode != E_OK) {
         return errCode;
     }
+    SqliteConnection *con = isReadOnly ? readConnection : connection;
     errCode =
-        connection->ExecuteForSharedBlock(rowNum, sql, bindArgs, sharedBlock, startPos, requiredPos, isCountAllRows);
-    ReleaseConnection();
+        con->ExecuteForSharedBlock(rowNum, sql, bindArgs, sharedBlock, startPos, requiredPos, isCountAllRows);
+    ReleaseConnection(isReadOnly);
     return errCode;
 }
 #endif
@@ -456,11 +478,11 @@ int StoreSession::BeginTransaction()
     int errCode = connection->ExecuteSql(transaction.getTransactionStr());
     if (errCode != E_OK) {
         LOG_DEBUG("storeSession BeginTransaction Failed");
-        ReleaseConnection();
+        ReleaseConnection(false);
         return errCode;
     }
     connectionPool.getTransactionStack().push(transaction);
-    ReleaseConnection();
+    ReleaseConnection(false);
     return E_OK;
 }
 
@@ -478,7 +500,7 @@ int StoreSession::Commit()
 
     AcquireConnection(false);
     int errCode = connection->ExecuteSql(sqlStr);
-    ReleaseConnection();
+    ReleaseConnection(false);
     if (errCode != E_OK) {
         // if error the transaction is leaving for rollback
         return errCode;
@@ -500,7 +522,7 @@ int StoreSession::RollBack()
     }
     AcquireConnection(false);
     int errCode = connection->ExecuteSql(transaction.getRollbackStr());
-    ReleaseConnection();
+    ReleaseConnection(false);
     if (errCode != E_OK) {
         LOG_ERROR("storeSession RollBack Fail");
     }
