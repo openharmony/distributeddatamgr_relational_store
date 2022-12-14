@@ -151,7 +151,7 @@ void SqliteConnectionPool::ReleaseWriteConnection()
  */
 SqliteConnection *SqliteConnectionPool::AcquireReadConnection()
 {
-    LOG_DEBUG("idleReadConnectionCount:%{public}d", idleReadConnectionCount);
+    LOG_INFO("idleReadConnectionCount:%{public}d", idleReadConnectionCount);
     std::unique_lock<std::mutex> lock(readMutex);
     readCondition.wait(lock, [&] { return idleReadConnectionCount > 0; });
     SqliteConnection *connection = readConnections.back();
@@ -166,7 +166,7 @@ SqliteConnection *SqliteConnectionPool::AcquireReadConnection()
  */
 void SqliteConnectionPool::ReleaseReadConnection(SqliteConnection *connection)
 {
-    LOG_DEBUG("idleReadConnectionCount:%{public}d", idleReadConnectionCount);
+    LOG_INFO("idleReadConnectionCount:%{public}d", idleReadConnectionCount);
     {
         std::unique_lock<std::mutex> lock(readMutex);
         readConnections.push_back(connection);
