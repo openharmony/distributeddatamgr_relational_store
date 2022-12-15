@@ -17,14 +17,39 @@
 #define NATIVE_RDB_RDB_HELPER_H
 
 #include <memory>
-#include <string>
 #include <mutex>
+#include <string>
+
 #include "rdb_open_callback.h"
 #include "rdb_store.h"
 #include "rdb_store_config.h"
+#include "timer.h"
 
 namespace OHOS {
 namespace NativeRdb {
+struct RdbStoreNode {
+    RdbStoreNode(const std::shared_ptr<RdbStore> &rdbStore);
+    RdbStoreNode& operator=(const std::shared_ptr<RdbStore> &store);
+
+    std::shared_ptr<RdbStore> rdbStore_;
+    uint32_t timerId_;
+};
+class RdbStoreManager {
+public:
+    static RdbStoreManager &GetInstance();
+    RdbStoreManager();
+    virtual ~RdbStoreManager();
+    std::shared_ptr<RdbStore> GetRdbStore(const RdbStoreConfig &config, int &errCode);
+    void Remove(const std::string &path);
+    void Clear();
+
+private:
+    void RestartTimer(const std::string &path, RdbStoreNode &node);
+    static void AutoClose(const std::string &path, RdbStoreManager *manager);
+    std::mutex mutex_;
+    std::shared_ptr<Utils::Timer> timer_;
+    std::map<std::string, std::shared_ptr<RdbStoreNode>> storeCache_;
+};
 class RdbHelper final {
 public:
     static std::shared_ptr<RdbStore> GetRdbStore(
@@ -35,8 +60,7 @@ public:
 private:
     static int ProcessOpenCallback(
         RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
-    static std::mutex mutex_;
-    static std::map<std::string, std::shared_ptr<RdbStore>> storeCache_;
+
 };
 } // namespace NativeRdb
 } // namespace OHOS
