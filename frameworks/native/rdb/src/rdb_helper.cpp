@@ -29,8 +29,6 @@
 
 namespace OHOS {
 namespace NativeRdb {
-std::mutex RdbHelper::mutex_;
-std::map<std::string, std::shared_ptr<RdbStore>> RdbHelper::storeCache_;
 std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode)
 {
@@ -43,20 +41,10 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     }
 #endif
 
-    std::shared_ptr<RdbStore> rdbStore;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        std::string path = config.GetPath();
-        if (storeCache_.find(path) == storeCache_.end()) {
-            rdbStore = RdbStoreImpl::Open(config, errCode);
-            if (rdbStore == nullptr) {
-                LOG_ERROR("RdbHelper GetRdbStore fail to open RdbStore, err is %{public}d", errCode);
-                return nullptr;
-            }
-            storeCache_.insert(std::pair {path, rdbStore});
-        } else {
-            rdbStore = storeCache_[path];
-        }
+    std::shared_ptr<RdbStore> rdbStore = RdbStoreManager::GetInstance().GetRdbStore(config, errCode);
+    if (rdbStore == nullptr) {
+        LOG_ERROR("RdbHelper GetRdbStore fail to open RdbStore");
+        return nullptr;
     }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
@@ -116,8 +104,7 @@ int RdbHelper::ProcessOpenCallback(
 
 void RdbHelper::ClearCache()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    storeCache_.clear();
+    RdbStoreManager::GetInstance().Clear();
 }
 
 
@@ -135,16 +122,7 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
     if (dbFileName.empty()) {
         return E_EMPTY_FILE_NAME;
     }
-
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (storeCache_.find(dbFileName) != storeCache_.end()) {
-#ifdef WINDOWS_PLATFORM
-            storeCache_[dbFileName]->Clear();
-#endif
-            storeCache_.erase(dbFileName);
-        }
-    }
+    RdbStoreManager::GetInstance().Remove(dbFileName);
     if (access(dbFileName.c_str(), F_OK) != 0) {
         return E_OK; // not not exist
     }
@@ -184,6 +162,96 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
     DeleteRdbKeyFiles(dbFileName);
 
     return errCode;
+}
+
+RdbStoreNode::RdbStoreNode(const std::shared_ptr<RdbStore> &rdbStore) : rdbStore_(rdbStore) {}
+
+RdbStoreNode &RdbStoreNode::operator=(const std::shared_ptr<RdbStore> &store)
+{
+    if (rdbStore_ == store) {
+        return *this;
+    }
+    rdbStore_ = std::move(store);
+    return *this;
+}
+
+RdbStoreManager &RdbStoreManager::GetInstance()
+{
+    static RdbStoreManager manager;
+    return manager;
+}
+
+RdbStoreManager::~RdbStoreManager()
+{
+    LOG_ERROR("Start");
+    Clear();
+    if (timer_ != nullptr) {
+        timer_->Shutdown(true);
+        timer_ = nullptr;
+    }
+}
+
+RdbStoreManager::RdbStoreManager()
+{
+    timer_ = std::make_shared<Utils::Timer>("RdbStoreCloser");
+    timer_->Setup();
+}
+
+std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &config, int &errCode)
+{
+    std::shared_ptr<RdbStore> rdbStore;
+    std::string path = config.GetPath();
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (storeCache_.find(path) == storeCache_.end() || storeCache_[path] == nullptr) {
+        rdbStore = RdbStoreImpl::Open(config, errCode);
+        if (rdbStore == nullptr) {
+            LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore, err is %{public}d", errCode);
+            return nullptr;
+        }
+        storeCache_[path] = std::make_shared<RdbStoreNode>(rdbStore);
+        RestartTimer(path, *storeCache_[path]);
+    } else {
+        RestartTimer(path, *storeCache_[path]);
+        rdbStore = storeCache_[path]->rdbStore_;
+    }
+    return rdbStore;
+}
+
+void RdbStoreManager::RestartTimer(const std::string &path, RdbStoreNode &node)
+{
+    if (timer_ != nullptr) {
+        timer_->Unregister(node.timerId_);
+        node.timerId_ = timer_->Register(std::bind(RdbStoreManager::AutoClose, path, this), 30000, true);
+    }
+}
+
+void RdbStoreManager::AutoClose(const std::string &path, RdbStoreManager *manager)
+{
+    manager->Remove(path);
+}
+
+void RdbStoreManager::Remove(const std::string &path)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (storeCache_.find(path) == storeCache_.end()) {
+        LOG_INFO("has Removed");
+        return;
+    }
+    if (timer_ != nullptr) {
+        timer_->Unregister(storeCache_[path]->timerId_);
+    }
+    storeCache_.erase(path);
+}
+
+void RdbStoreManager::Clear() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto iter = storeCache_.begin();
+    while(iter != storeCache_.end()) {
+        if (timer_ != nullptr && iter->second != nullptr) {
+            timer_->Unregister(iter->second->timerId_);
+        }
+        iter = storeCache_.erase(iter);
+    }
 }
 } // namespace NativeRdb
 } // namespace OHOS
