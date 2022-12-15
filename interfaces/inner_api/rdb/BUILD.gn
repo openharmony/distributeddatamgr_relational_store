@@ -118,10 +118,16 @@ ohos_shared_library("native_rdb") {
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
     ]
+    external_deps = [
+      "c_utils:utils"
+    ]
   } else if (is_mac) {
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
+    ]
+    external_deps = [
+      "c_utils:utils"
     ]
   } else {
     deps += [ "//third_party/sqlite:sqlite" ]
