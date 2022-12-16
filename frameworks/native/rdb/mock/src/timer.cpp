@@ -25,7 +25,9 @@ Timer::Timer(const std::string& name, int timeoutMs) : name_(name), timeoutMs_(t
 
 uint32_t Timer::Setup()
 {
-    return TIMER_ERR_OK;
+    name_ = "";
+    reactor_ = nullptr;
+    return 0;
 }
 
 void Timer::Shutdown(bool useJoin)
