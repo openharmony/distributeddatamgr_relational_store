@@ -221,6 +221,7 @@ void RdbStoreManager::RestartTimer(const std::string &path, RdbStoreNode &node)
 {
     if (timer_ != nullptr) {
         timer_->Unregister(node.timerId_);
+        // after 30000ms, auto close.
         node.timerId_ = timer_->Register(std::bind(RdbStoreManager::AutoClose, path, this), 30000, true);
     }
 }
