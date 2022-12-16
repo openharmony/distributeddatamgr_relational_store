@@ -243,10 +243,11 @@ void RdbStoreManager::Remove(const std::string &path)
     storeCache_.erase(path);
 }
 
-void RdbStoreManager::Clear() {
+void RdbStoreManager::Clear()
+{
     std::lock_guard<std::mutex> lock(mutex_);
     auto iter = storeCache_.begin();
-    while(iter != storeCache_.end()) {
+    while (iter != storeCache_.end()) {
         if (timer_ != nullptr && iter->second != nullptr) {
             timer_->Unregister(iter->second->timerId_);
         }
