@@ -18,7 +18,8 @@
 namespace OHOS {
 namespace Utils {
 
-Timer::Timer(const std::string& name, int timeoutMs)
+Timer::Timer(const std::string& name, int timeoutMs) name_(name), timeoutMs_(timeoutMs),
+    reactor_(nullptr)
 {
 }
 
@@ -38,7 +39,7 @@ uint32_t Timer::Register(const TimerCallback& callback, uint32_t interval /* ms 
 
 void Timer::Unregister(uint32_t timerId)
 {
-    return 0;
+    return;
 }
 
 void Timer::MainLoop()
@@ -47,7 +48,7 @@ void Timer::MainLoop()
 
 uint32_t Timer::DoRegister(const TimerListCallback& callback, uint32_t interval, bool once, int &timerFd)
 {
-    return TIMER_ERR_OK;
+    return 0;
 }
 
 void Timer::DoUnregister(uint32_t interval)
