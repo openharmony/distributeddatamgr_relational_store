@@ -73,7 +73,7 @@ uint32_t Timer::GetValidId(uint32_t timerId) const
 
 int Timer::GetTimerFd(uint32_t interval /* ms */)
 {
-    return 0;
+    return timeoutMs_;
 }
 
 void Timer::EraseUnusedTimerId(uint32_t interval, const std::vector<uint32_t>& unusedIds)
