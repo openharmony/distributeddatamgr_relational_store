@@ -21,7 +21,6 @@ config("native_rdb_config") {
       "mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "//commonlibrary/c_utils/base/include",
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits/include",
       "include",
     ]
   } else {
@@ -115,15 +114,15 @@ ohos_shared_library("native_rdb") {
   ]
 
   if (is_mingw) {
+    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
-      "//commonlibrary/c_utils/base:utilsbase",
       "//third_party/sqlite:sqlite_sdk",
     ]
   } else if (is_mac) {
+    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
-      "//commonlibrary/c_utils/base:utilsbase",
       "//third_party/sqlite:sqlite_sdk",
     ]
   } else {
