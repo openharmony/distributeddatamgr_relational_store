@@ -114,11 +114,13 @@ ohos_shared_library("native_rdb") {
   ]
 
   if (is_mingw) {
+    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
     ]
   } else if (is_mac) {
+    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
