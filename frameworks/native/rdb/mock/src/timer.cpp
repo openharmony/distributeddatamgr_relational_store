@@ -18,7 +18,7 @@
 namespace OHOS {
 namespace Utils {
 
-Timer::Timer(const std::string& name, int timeoutMs) name_(name), timeoutMs_(timeoutMs),
+Timer::Timer(const std::string& name, int timeoutMs) : name_(name), timeoutMs_(timeoutMs),
     reactor_(nullptr)
 {
 }
