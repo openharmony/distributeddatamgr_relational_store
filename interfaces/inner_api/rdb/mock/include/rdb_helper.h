@@ -29,11 +29,12 @@ namespace OHOS {
 namespace NativeRdb {
 struct RdbStoreNode {
     RdbStoreNode(const std::shared_ptr<RdbStore> &rdbStore);
-    RdbStoreNode& operator=(const std::shared_ptr<RdbStore> &store);
+    RdbStoreNode &operator=(const std::shared_ptr<RdbStore> &store);
 
     std::shared_ptr<RdbStore> rdbStore_;
     uint32_t timerId_;
 };
+
 class RdbStoreManager {
 public:
     static RdbStoreManager &GetInstance();
@@ -50,6 +51,7 @@ private:
     std::shared_ptr<Utils::Timer> timer_;
     std::map<std::string, std::shared_ptr<RdbStoreNode>> storeCache_;
 };
+
 class RdbHelper final {
 public:
     static std::shared_ptr<RdbStore> GetRdbStore(
@@ -60,7 +62,6 @@ public:
 private:
     static int ProcessOpenCallback(
         RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
-
 };
 } // namespace NativeRdb
 } // namespace OHOS
