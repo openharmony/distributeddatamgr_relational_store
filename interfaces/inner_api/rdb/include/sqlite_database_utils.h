@@ -52,7 +52,6 @@ public:
     static bool RenameFile(std::string &oldFileName, std::string &newFileName);
     static std::string GetDefaultDatabasePath(std::string &baseDir, std::string &name, int &errorCode);
     static std::string GetCorruptPath(std::string &path, int &errorCode);
-//    static std::string GetDatabasePathNoName(std::string &context, RdbStoreConfig &fileConfig, int &errorCode);
     static std::string StrToUpper(std::string s);
     static bool BeginExecuteSql(const std::string &sql);
     static bool IsReadOnlySql(std::string sql);
@@ -64,9 +63,7 @@ private:
     SqliteDatabaseUtils();
     ~SqliteDatabaseUtils();
 
-//    static std::string GetDatabaseDir(RdbStoreConfig &fileConfig, std::string &securityLevel);
     static bool IsSpecial(int sqlType);
-    static bool IsSqlReadOnly(int type);
 };
 } // namespace NativeRdb
 } // namespace OHOS
