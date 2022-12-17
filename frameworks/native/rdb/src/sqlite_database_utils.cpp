@@ -204,19 +204,6 @@ std::string SqliteDatabaseUtils::GetCorruptPath(std::string &path, int &errorCod
 /**
  * Get and Check no dbname path.
  */
-//std::string SqliteDatabaseUtils::GetDatabasePathNoName(std::string &context, RdbStoreConfig &fileConfig, int &errorCode)
-//{
-//    std::string securityLevel = fileConfig.GetDatabaseFileSecurityLevel();
-//    std::string databaseDir = GetDatabaseDir(fileConfig, securityLevel);
-//    std::string databasePath = context + "/" + databaseDir;
-//    std::unique_lock<std::mutex> lock(g_locker);
-//    if (access(databasePath.c_str(), F_OK) != 0) {
-//        if (MKDIR(databasePath.c_str())) {
-//            errorCode = E_CREATE_FOLDER_FAIL;
-//        }
-//    }
-//    return databasePath;
-//}
 
 bool SqliteDatabaseUtils::BeginExecuteSql(const std::string &sql){
     int type = SqliteDatabaseUtils::GetSqlStatementType(sql);
@@ -240,17 +227,5 @@ bool SqliteDatabaseUtils::IsSpecial(int sqlType)
     }
     return false;
 }
-//std::string SqliteDatabaseUtils::GetDatabaseDir(RdbStoreConfig &fileConfig, std::string &securityLevel)
-//{
-//    std::string databaseTypeDir = fileConfig.GetDatabaseFileType();
-//    std::string suffix = fileConfig.GetEncryptKey().empty() ? "" : "_encrypt";
-//    std::string prefix;
-//    if (!securityLevel.compare("S3") || !securityLevel.compare("S4")) {
-//        prefix = "sece_";
-//    } else {
-//        prefix = "";
-//    }
-//    return prefix + databaseTypeDir + suffix;
-//}
 } // namespace NativeRdb
 } // namespace OHOS
