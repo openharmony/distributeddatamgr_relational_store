@@ -72,18 +72,18 @@ public:
     int RollBack() override;
     int Commit() override;
     bool IsInTransaction() override;
-    std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string sql,
-        const std::vector<std::string> &bindArgs);
-    int EndStepQuery();
+//    std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string sql,
+//        const std::vector<std::string> &bindArgs);
+//    int EndStepQuery();
     bool IsOpen() const override;
     std::string GetPath() override;
     bool IsReadOnly() const override;
     bool IsMemoryRdb() const override;
-    int PrepareAndGetInfo(const std::string &sql, bool &outIsReadOnly, int &numParameters,
-        std::vector<std::string> &columnNames);
+//    int PrepareAndGetInfo(const std::string &sql, bool &outIsReadOnly, int &numParameters,
+//        std::vector<std::string> &columnNames);
     bool IsHoldingConnection() override;
     int GiveConnectionTemporarily(int64_t milliseconds);
-    int BeginTransactionWithObserver(TransactionObserver *transactionObserver);
+//    int BeginTransactionWithObserver(TransactionObserver *transactionObserver);
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
 #endif
@@ -93,8 +93,8 @@ public:
     std::string GetName();
     std::string GetOrgPath();
     std::string GetFileType();
-    int ExecuteForSharedBlock(int &rowNum, AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos,
-        bool isCountAllRows, std::string sql, std::vector<ValueObject> &bindArgVec);
+//    int ExecuteForSharedBlock(int &rowNum, AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos,
+//        bool isCountAllRows, std::string sql, std::vector<ValueObject> &bindArgVec);
     std::unique_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
 
@@ -123,8 +123,8 @@ public:
 
 private:
     int InnerOpen(const RdbStoreConfig &config);
-    std::shared_ptr<StoreSession> GetThreadSession();
-    void ReleaseThreadSession();
+//    std::shared_ptr<StoreSession> GetThreadSession();
+//    void ReleaseThreadSession();
     int CheckAttach(const std::string &sql);
 
     SqliteConnectionPool *connectionPool;
@@ -143,6 +143,13 @@ private:
     bool isShared_ = false;
     DistributedRdb::RdbSyncerParam syncerParam_;
     bool isEncrypt_;
+
+
+    const std::string ATTACH_BACKUP_SQL = "ATTACH ? AS backup KEY ?";
+    const std::string ATTACH_SQL = "ATTACH ? AS ? KEY ?";
+    const std::string EXPORT_SQL = "SELECT export_database('backup')";
+    const std::string DETACH_BACKUP_SQL = "detach backup";
+    int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
 };
 } // namespace OHOS::NativeRdb
 #endif

@@ -576,6 +576,20 @@ std::shared_ptr<SqliteStatement> SqliteConnection::BeginStepQuery(
     return stepStatement;
 }
 
+int SqliteConnection::DesFinalize(){
+    int errCode = 0;
+    errCode = statement.Finalize();
+    if (errCode != SQLITE_OK) {
+        return errCode;
+    }
+
+    errCode = stepStatement->Finalize();
+    if (errCode != SQLITE_OK) {
+        return errCode;
+    }
+    return errCode;
+}
+
 int SqliteConnection::EndStepQuery()
 {
     return stepStatement->ResetStatementAndClearBindings();
@@ -762,6 +776,11 @@ int SqliteConnection::GetKeyFromFile()
     }
     keyTemp.assign(keyTemp.size(), 0);
     return E_OK;
+}
+void SqliteConnection::SetInTransaction(bool transaction) {}
+bool SqliteConnection::IsInTransaction()
+{
+    return inTransaction_;
 }
 #endif
 } // namespace NativeRdb

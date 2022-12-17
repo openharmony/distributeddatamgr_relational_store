@@ -80,17 +80,24 @@ int SqliteDatabaseUtils::GetSqlStatementType(std::string sql)
     if (sql.length() < SQL_FIRST_CHARACTER) {
         return STATEMENT_OTHER;
     }
-    sql = sql.substr(0, SQL_FIRST_CHARACTER);
-    std::string prefixSql = sql;
-    transform(sql.begin(), sql.end(), prefixSql.begin(), ::toupper);
-    prefixSql = prefixSql.c_str();
-    auto iter = g_statementType.find(prefixSql);
+    sql = StrToUpper(sql.substr(0, SQL_FIRST_CHARACTER));
+//    std::string prefixSql;
+//    transform(sql.begin(), sql.end(), prefixSql.begin(), ::toupper);
+//    prefixSql = prefixSql.c_str();
+    auto iter = g_statementType.find(sql);
     if (iter != g_statementType.end()) {
         return iter->second;
     }
     return STATEMENT_OTHER;
 }
 
+
+
+std::string SqliteDatabaseUtils::StrToUpper(std::string s)
+{
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::toupper(c); });
+    return s;
+}
 /**
  * Delete the specified file.
  */
@@ -193,5 +200,57 @@ std::string SqliteDatabaseUtils::GetCorruptPath(std::string &path, int &errorCod
     corruptPath = corruptPath + "/" + name;
     return corruptPath;
 }
+
+/**
+ * Get and Check no dbname path.
+ */
+//std::string SqliteDatabaseUtils::GetDatabasePathNoName(std::string &context, RdbStoreConfig &fileConfig, int &errorCode)
+//{
+//    std::string securityLevel = fileConfig.GetDatabaseFileSecurityLevel();
+//    std::string databaseDir = GetDatabaseDir(fileConfig, securityLevel);
+//    std::string databasePath = context + "/" + databaseDir;
+//    std::unique_lock<std::mutex> lock(g_locker);
+//    if (access(databasePath.c_str(), F_OK) != 0) {
+//        if (MKDIR(databasePath.c_str())) {
+//            errorCode = E_CREATE_FOLDER_FAIL;
+//        }
+//    }
+//    return databasePath;
+//}
+
+bool SqliteDatabaseUtils::BeginExecuteSql(const std::string &sql){
+    int type = SqliteDatabaseUtils::GetSqlStatementType(sql);
+    if (IsSpecial(type)) {
+        return E_TRANSACTION_IN_EXECUTE;
+    }
+
+    return (type == STATEMENT_SELECT) ? true : false;
+}
+
+bool SqliteDatabaseUtils::IsReadOnlySql(std::string sql)
+{
+    int sqlType = GetSqlStatementType(sql);
+    return (sqlType == STATEMENT_SELECT) ? true : false;
+}
+
+bool SqliteDatabaseUtils::IsSpecial(int sqlType)
+{
+    if (sqlType == STATEMENT_BEGIN || sqlType == STATEMENT_COMMIT || sqlType == STATEMENT_ROLLBACK) {
+        return true;
+    }
+    return false;
+}
+//std::string SqliteDatabaseUtils::GetDatabaseDir(RdbStoreConfig &fileConfig, std::string &securityLevel)
+//{
+//    std::string databaseTypeDir = fileConfig.GetDatabaseFileType();
+//    std::string suffix = fileConfig.GetEncryptKey().empty() ? "" : "_encrypt";
+//    std::string prefix;
+//    if (!securityLevel.compare("S3") || !securityLevel.compare("S4")) {
+//        prefix = "sece_";
+//    } else {
+//        prefix = "";
+//    }
+//    return prefix + databaseTypeDir + suffix;
+//}
 } // namespace NativeRdb
 } // namespace OHOS
