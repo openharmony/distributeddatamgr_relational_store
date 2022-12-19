@@ -38,7 +38,7 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     this->journalSize = config.GetJournalSize();
     this->pageSize = config.GetPageSize();
     this->encryptAlgo = config.GetEncryptAlgo();
-    this->readConSize = config.getReadConSize();
+    this->readConSize_ = config.getReadConSize();
 }
 
 SqliteConfig::~SqliteConfig() = default;
