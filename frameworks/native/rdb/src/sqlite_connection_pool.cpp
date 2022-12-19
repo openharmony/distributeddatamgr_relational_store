@@ -59,6 +59,10 @@ int SqliteConnectionPool::Init()
 
     InitReadConnectionCount();
 
+    // max read connect count is 64
+    if (readConnectionCount > 64) {
+        return E_ARGS_READ_CON_OVERLOAD;
+    }
     for (int i = 0; i < readConnectionCount; i++) {
         SqliteConnection *connection = SqliteConnection::Open(config, false, errCode);
         if (connection == nullptr) {
@@ -83,7 +87,7 @@ void SqliteConnectionPool::InitReadConnectionCount()
     if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
         readConnectionCount = 0;
     } else if (config.GetJournalMode() == "WAL") {
-        readConnectionCount = SqliteGlobalConfig::GetReadConnectionCount();
+        readConnectionCount = config.getReadConSize();
     } else {
         readConnectionCount = 0;
     }

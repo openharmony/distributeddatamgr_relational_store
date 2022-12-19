@@ -63,11 +63,6 @@ void SqliteGlobalConfig::SqliteLogCallback(const void *data, int err, const char
     }
 }
 
-int SqliteGlobalConfig::GetReadConnectionCount()
-{
-    return GlobalExpr::CONNECTION_POOL_SIZE - 1;
-}
-
 std::string SqliteGlobalConfig::GetMemoryDbPath()
 {
     return GlobalExpr::MEMORY_DB_PATH;
