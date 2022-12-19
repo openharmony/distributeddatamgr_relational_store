@@ -58,7 +58,7 @@ private:
     bool autoCheck;
     int journalSize;
     int pageSize;
-    int readConSize;
+    int readConSize_;
     std::string encryptAlgo;
     bool readOnly;
     std::string databaseFileType;
