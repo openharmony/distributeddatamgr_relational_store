@@ -362,4 +362,14 @@ void RdbStoreConfig::SetCreateNecessary(bool isCreateNecessary)
 {
     isCreateNecessary_ = isCreateNecessary;
 }
+
+int RdbStoreConfig::getReadConSize() const
+{
+    return readConSize_;
+}
+
+void RdbStoreConfig::setReadConSize(int readConSize)
+{
+    readConSize_= readConSize;
+}
 } // namespace OHOS::NativeRdb
