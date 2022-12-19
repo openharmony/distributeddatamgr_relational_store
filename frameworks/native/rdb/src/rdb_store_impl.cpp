@@ -399,7 +399,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
 
     SqliteConnection *connection;
     errCode = BeginExecuteSql(sql, &connection);
-    if (errCode != E_OK){
+    if (errCode != E_OK) {
         return errCode;
     }
     errCode = connection->ExecuteSql(sql, bindArgs);
@@ -419,7 +419,7 @@ int RdbStoreImpl::ExecuteAndGetLong(int64_t &outValue, const std::string &sql, c
 {
     SqliteConnection *connection;
     int errCode = BeginExecuteSql(sql, &connection);
-    if (errCode != E_OK){
+    if (errCode != E_OK) {
         return errCode;
     }
     errCode = connection->ExecuteGetLong(outValue, sql, bindArgs);
@@ -435,7 +435,7 @@ int RdbStoreImpl::ExecuteAndGetString(
 {
     SqliteConnection *connection;
     int errCode = BeginExecuteSql(sql, &connection);
-    if (errCode != E_OK){
+    if (errCode != E_OK) {
         return errCode;
     }
     connection->ExecuteGetString(outValue, sql, bindArgs);
@@ -533,7 +533,6 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
         return errCode;
     }
     return E_OK;
-
 }
 
 int RdbStoreImpl::BeginExecuteSql(const std::string &sql, SqliteConnection **connection)
@@ -573,16 +572,16 @@ bool RdbStoreImpl::IsHoldingConnection()
 int RdbStoreImpl::GiveConnectionTemporarily(int64_t milliseconds)
 {
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
-    if (connection->IsInTransaction()){
+    if (connection->IsInTransaction()) {
         return E_STORE_SESSION_NOT_GIVE_CONNECTION_TEMPORARILY;
     }
     int errCode = BeginTransaction();
-    if (errCode != E_OK){
+    if (errCode != E_OK) {
         return errCode;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
     errCode = RollBack();
-    if (errCode != E_OK){
+    if (errCode != E_OK) {
         return errCode;
     }
 
@@ -692,7 +691,7 @@ int RdbStoreImpl::RollBack()
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
     int errCode = connection->ExecuteSql(transaction.getRollbackStr());
     connectionPool->ReleaseConnection(connection);
-    if (connectionPool->getTransactionStack().empty()){
+    if (connectionPool->getTransactionStack().empty()) {
         connection->SetInTransaction(false);
     }
     if (errCode != E_OK) {
@@ -752,7 +751,8 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
 
     bool isRead = SqliteDatabaseUtils::BeginExecuteSql(GlobalExpr::PRAGMA_JOUR_MODE_EXP);
     SqliteConnection* connection = connectionPool->AcquireConnection(isRead);
-    int errCode = connection->ExecuteGetString(journalMode, GlobalExpr::PRAGMA_JOUR_MODE_EXP, std::vector<ValueObject>());
+    int errCode = connection->ExecuteGetString(
+        journalMode, GlobalExpr::PRAGMA_JOUR_MODE_EXP, std::vector<ValueObject>());
     connectionPool->ReleaseConnection(connection);
     if (errCode != E_OK) {
         LOG_ERROR("RdbStoreImpl CheckAttach fail to get journal mode : %{public}d", errCode);

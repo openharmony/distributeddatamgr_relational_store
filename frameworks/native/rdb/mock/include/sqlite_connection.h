@@ -45,6 +45,7 @@ public:
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string &sql,
         const std::vector<std::string> &selectionArgs) const;
+    int DesFinalize();
     int EndStepQuery();
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);

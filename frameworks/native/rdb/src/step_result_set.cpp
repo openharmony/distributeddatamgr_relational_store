@@ -53,11 +53,11 @@ StepResultSet::~StepResultSet()
 
 int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
-    if (isClosed){
+    if (isClosed) {
         return E_STEP_RESULT_CLOSED;
     }
 
-    if (!columnNames_.empty()){
+    if (!columnNames_.empty()) {
         columnNames = columnNames_;
         return E_OK;
     }
@@ -89,7 +89,7 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 
 int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 {
-    if (isClosed){
+    if (isClosed) {
         return E_STEP_RESULT_CLOSED;
     }
 

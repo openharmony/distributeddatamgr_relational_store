@@ -23,7 +23,6 @@
 #include <unicode/ucol.h>
 #endif
 
-#include <securec.h>
 #include <unistd.h>
 
 #include "file_ex.h"
@@ -577,7 +576,7 @@ std::shared_ptr<SqliteStatement> SqliteConnection::BeginStepQuery(
     return stepStatement;
 }
 
-int SqliteConnection::DesFinalize(){
+int SqliteConnection::DesFinalize() {
     int errCode = 0;
     errCode = statement.Finalize();
     if (errCode != SQLITE_OK) {

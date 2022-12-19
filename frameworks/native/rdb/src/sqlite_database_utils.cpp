@@ -81,9 +81,6 @@ int SqliteDatabaseUtils::GetSqlStatementType(std::string sql)
         return STATEMENT_OTHER;
     }
     sql = StrToUpper(sql.substr(0, SQL_FIRST_CHARACTER));
-//    std::string prefixSql;
-//    transform(sql.begin(), sql.end(), prefixSql.begin(), ::toupper);
-//    prefixSql = prefixSql.c_str();
     auto iter = g_statementType.find(sql);
     if (iter != g_statementType.end()) {
         return iter->second;
@@ -205,7 +202,7 @@ std::string SqliteDatabaseUtils::GetCorruptPath(std::string &path, int &errorCod
  * Get and Check no dbname path.
  */
 
-bool SqliteDatabaseUtils::BeginExecuteSql(const std::string &sql){
+bool SqliteDatabaseUtils::BeginExecuteSql(const std::string &sql) {
     int type = SqliteDatabaseUtils::GetSqlStatementType(sql);
     if (IsSpecial(type)) {
         return E_TRANSACTION_IN_EXECUTE;
