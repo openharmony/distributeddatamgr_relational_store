@@ -89,16 +89,16 @@ public:
     std::string GetFileType();
     std::unique_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
-
-    std::unique_ptr<AbsSharedResultSet> Query(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> columns) override;
     std::unique_ptr<ResultSet> QueryByStep(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) override;
-    std::shared_ptr<ResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
-        const std::vector<std::string> &columns) override;
+    std::unique_ptr<AbsSharedResultSet> Query(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> columns) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
     int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
+
+    std::shared_ptr<ResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
+        const std::vector<std::string> &columns) override;
 
     bool SetDistributedTables(const std::vector<std::string>& tables) override;
 

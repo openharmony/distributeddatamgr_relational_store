@@ -62,7 +62,6 @@ private:
 
     SqliteDatabaseUtils();
     ~SqliteDatabaseUtils();
-
     static bool IsSpecial(int sqlType);
 };
 } // namespace NativeRdb
