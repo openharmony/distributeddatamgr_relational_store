@@ -518,7 +518,8 @@ int SqliteConnection::ExecuteGetLong(
     errCode = statement.Step();
     if (errCode != SQLITE_ROW) {
         statement.ResetStatementAndClearBindings();
-        return E_NO_ROW_IN_QUERY;
+        LOG_ERROR("Maybe sql is not available here ERROR is %{public}d.", errCode);
+        return errCode;
     }
 
     errCode = statement.GetColumnLong(0, outValue);

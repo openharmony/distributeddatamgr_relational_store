@@ -408,10 +408,10 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
         LOG_ERROR("RDB_STORE Execute SQL ERROR.");
         return errCode;
     }
-//    int sqlType = SqliteUtils::GetSqlStatementType(sql);
-//    if (sqlType == SqliteUtils::STATEMENT_DDL) {
-//        errCode = connectionPool->ReOpenAvailableReadConnections();
-//    }
+    int sqlType = SqliteUtils::GetSqlStatementType(sql);
+    if (sqlType == SqliteUtils::STATEMENT_DDL) {
+        errCode = connectionPool->ReOpenAvailableReadConnections();
+    }
     return errCode;
 }
 
@@ -595,8 +595,6 @@ int RdbStoreImpl::GiveConnectionTemporarily(int64_t milliseconds)
 int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
     const std::vector<uint8_t> destEncryptKey)
 {
-
-    int64_t count;
     SqliteConnection *connection;
     std::string sql = GlobalExpr::PRAGMA_JOUR_MODE_EXP;
     int errCode = BeginExecuteSql(sql, &connection);
