@@ -34,7 +34,7 @@ SqliteSharedResultSet::SqliteSharedResultSet(SqliteConnectionPool* connectionPoo
     : AbsSharedResultSet(path), resultSetBlockCapacity(0), isOnlyFillResultSetBlock(false),
       qrySql(sql), selectionArgVec(bindArgs), rowNum(NO_COUNT)
 {
-     connectionPool_ = connectionPool;
+    connectionPool_ = connectionPool;
 }
 
 SqliteSharedResultSet::~SqliteSharedResultSet() {}
@@ -44,14 +44,11 @@ int SqliteSharedResultSet::PrepareStep(SqliteConnection* connection)
     if (IsClosed()) {
         return E_STEP_RESULT_CLOSED;
     }
-//    if (isInStepQuery_){
-//        return E_MORE_STEP_QUERY_IN_ONE_SESSION;
-//    }
-    if (SqliteDatabaseUtils::GetSqlStatementType(qrySql) != SqliteUtils::STATEMENT_SELECT){
+
+    if (SqliteDatabaseUtils::GetSqlStatementType(qrySql) != SqliteUtils::STATEMENT_SELECT) {
         LOG_ERROR("StoreSession BeginStepQuery fail : not select sql !");
         return E_EXECUTE_IN_STEP_QUERY;
     }
-
 
     int errCode;
     sqliteStatement = connection->BeginStepQuery(errCode, qrySql, selectionArgVec);
@@ -64,7 +61,7 @@ int SqliteSharedResultSet::PrepareStep(SqliteConnection* connection)
 }
 int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
-    if (!columnNames_.empty()){
+    if (!columnNames_.empty()) {
         columnNames = columnNames_;
         return E_OK;
     }
