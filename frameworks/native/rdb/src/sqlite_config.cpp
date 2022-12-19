@@ -38,6 +38,7 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     this->journalSize = config.GetJournalSize();
     this->pageSize = config.GetPageSize();
     this->encryptAlgo = config.GetEncryptAlgo();
+    this->readConSize = config.getReadConSize();
 }
 
 SqliteConfig::~SqliteConfig() = default;
@@ -131,6 +132,16 @@ bool SqliteConfig::IsCreateNecessary() const
 void SqliteConfig::SetCreateNecessary(bool CreateNecessary)
 {
     this->isCreateNecessary = CreateNecessary;
+}
+
+int SqliteConfig::getReadConSize() const
+{
+    return readConSize;
+}
+
+void SqliteConfig::setReadConSize(int readConSize)
+{
+    SqliteConfig::readConSize = readConSize;
 }
 
 #endif

@@ -47,6 +47,8 @@ public:
     void SetPageSize(int pageSize);
     std::string GetEncryptAlgo() const;
     void SetEncryptAlgo(const std::string &encryptAlgo);
+    int getReadConSize() const;
+    void setReadConSize(int readConSize);
 
 private:
     std::string path;
@@ -56,6 +58,7 @@ private:
     bool autoCheck;
     int journalSize;
     int pageSize;
+    int readConSize;
     std::string encryptAlgo;
     bool readOnly;
     std::string databaseFileType;

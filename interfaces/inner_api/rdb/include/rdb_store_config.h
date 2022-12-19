@@ -126,6 +126,8 @@ public:
     void SetPageSize(int pageSize);
     const std::string GetEncryptAlgo() const;
     void SetEncryptAlgo(const std::string &encryptAlgo);
+    int getReadConSize() const;
+    void setReadConSize(int readConSize);
 
 private:
     std::string name;
@@ -154,6 +156,7 @@ private:
     int journalSize;
     int pageSize;
     std::string encryptAlgo;
+    int readConSize = 4;
 };
 } // namespace OHOS::NativeRdb
 
