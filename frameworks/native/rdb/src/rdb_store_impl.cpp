@@ -50,7 +50,7 @@
 namespace OHOS::NativeRdb {
 std::shared_ptr<RdbStore> RdbStoreImpl::Open(const RdbStoreConfig &config, int &errCode)
 {
-    std::shared_ptr<RdbStoreImpl> rdbStore = std::make_shared<RdbStoreImpl>();
+    std::shared_ptr<RdbStore> rdbStore = std::make_shared<RdbStoreImpl>();
     errCode = rdbStore->InnerOpen(config);
     if (errCode != E_OK) {
         return nullptr;
