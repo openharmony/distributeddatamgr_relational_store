@@ -136,12 +136,12 @@ void SqliteConfig::SetCreateNecessary(bool CreateNecessary)
 
 int SqliteConfig::getReadConSize() const
 {
-    return readConSize;
+    return readConSize_;
 }
 
 void SqliteConfig::setReadConSize(int readConSize)
 {
-    SqliteConfig::readConSize = readConSize;
+    readConSize_ = readConSize;
 }
 
 #endif

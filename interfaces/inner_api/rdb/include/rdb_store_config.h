@@ -155,8 +155,8 @@ private:
     bool autoCheck;
     int journalSize;
     int pageSize;
+    int readConSize_ = 4;
     std::string encryptAlgo;
-    int readConSize = 4;
 };
 } // namespace OHOS::NativeRdb
 
