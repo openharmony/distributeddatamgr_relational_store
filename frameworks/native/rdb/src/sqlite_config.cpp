@@ -113,6 +113,16 @@ void SqliteConfig::SetEncryptAlgo(const std::string &encryptAlgo)
     this->encryptAlgo = encryptAlgo;
 }
 
+int SqliteConfig::getReadConSize() const
+{
+    return readConSize_;
+}
+
+void SqliteConfig::setReadConSize(int readConSize)
+{
+    readConSize_ = readConSize;
+}
+
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 bool SqliteConfig::IsEncrypt() const
 {
@@ -133,17 +143,6 @@ void SqliteConfig::SetCreateNecessary(bool CreateNecessary)
 {
     this->isCreateNecessary = CreateNecessary;
 }
-
-int SqliteConfig::getReadConSize() const
-{
-    return readConSize_;
-}
-
-void SqliteConfig::setReadConSize(int readConSize)
-{
-    readConSize_ = readConSize;
-}
-
 #endif
 } // namespace NativeRdb
 } // namespace OHOS
