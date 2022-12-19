@@ -72,7 +72,8 @@
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_share_adapter:rdb_data_share_adapter",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/dataability:dataability",
-                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:rdb"
+                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:rdb",
+                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/relationalstore:relationalstore"
             ],
             "inner_kits": [
                 {
@@ -138,6 +139,7 @@
             "test": [
                 "//foundation/distributeddatamgr/relational_store/test/js/dataability:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/js/rdb:unittest",
+                "//foundation/distributeddatamgr/relational_store/test/js/relationalstore:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/dataability:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:fuzztest",
