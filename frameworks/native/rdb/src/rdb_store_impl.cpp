@@ -28,6 +28,7 @@
 #include "step_result_set.h"
 #include "sqlite_database_utils.h"
 #include "sqlite_global_config.h"
+#include "sqlite_connection.h"
 
 #ifndef WINDOWS_PLATFORM
 #include "directory_ex.h"
