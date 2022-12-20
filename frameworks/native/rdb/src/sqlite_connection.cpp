@@ -26,7 +26,6 @@
 #include <unistd.h>
 
 #include "file_ex.h"
-#include "sqlite_database_utils.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite_errno.h"
@@ -777,6 +776,7 @@ int SqliteConnection::GetKeyFromFile()
     keyTemp.assign(keyTemp.size(), 0);
     return E_OK;
 }
+#endif
 void SqliteConnection::SetInTransaction(bool transaction) {
     inTransaction_ = transaction;
 }
@@ -784,6 +784,5 @@ bool SqliteConnection::IsInTransaction()
 {
     return inTransaction_;
 }
-#endif
 } // namespace NativeRdb
 } // namespace OHOS
