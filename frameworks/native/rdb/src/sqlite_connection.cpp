@@ -777,7 +777,9 @@ int SqliteConnection::GetKeyFromFile()
     keyTemp.assign(keyTemp.size(), 0);
     return E_OK;
 }
-void SqliteConnection::SetInTransaction(bool transaction) {}
+void SqliteConnection::SetInTransaction(bool transaction) {
+    inTransaction_ = transaction;
+}
 bool SqliteConnection::IsInTransaction()
 {
     return inTransaction_;
