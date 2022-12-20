@@ -47,6 +47,8 @@ public:
         const std::vector<std::string> &selectionArgs) const;
     int DesFinalize();
     int EndStepQuery();
+    void SetInTransaction(bool transaction);
+    bool IsInTransaction();
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
 #endif
