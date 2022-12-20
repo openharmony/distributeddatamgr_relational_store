@@ -78,6 +78,7 @@ private:
     std::string filePath;
     int openFlags;
     std::mutex rdbMutex;
+    bool inTransaction_;
 
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
 };
