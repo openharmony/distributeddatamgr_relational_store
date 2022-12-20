@@ -116,8 +116,6 @@ public:
 private:
     int InnerOpen(const RdbStoreConfig &config);
     int CheckAttach(const std::string &sql);
-    bool PathToRealPath(const std::string &path, std::string &realPath);
-    std::string ExtractFilePath(const std::string &fileFullName);
 
     SqliteConnectionPool *connectionPool;
     static const int MAX_IDLE_SESSION_SIZE = 5;
