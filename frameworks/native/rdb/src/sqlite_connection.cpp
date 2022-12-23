@@ -23,11 +23,9 @@
 #include <unicode/ucol.h>
 #endif
 
-#include <securec.h>
 #include <unistd.h>
 
 #include "file_ex.h"
-#include "sqlite_database_utils.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite_errno.h"
@@ -518,7 +516,8 @@ int SqliteConnection::ExecuteGetLong(
     errCode = statement.Step();
     if (errCode != SQLITE_ROW) {
         statement.ResetStatementAndClearBindings();
-        return E_NO_ROW_IN_QUERY;
+        LOG_ERROR("Maybe sql is not available here ERROR is %{public}d.", errCode);
+        return errCode;
     }
 
     errCode = statement.GetColumnLong(0, outValue);
@@ -574,6 +573,20 @@ std::shared_ptr<SqliteStatement> SqliteConnection::BeginStepQuery(
     }
 
     return stepStatement;
+}
+
+int SqliteConnection::DesFinalize() {
+    int errCode = 0;
+    errCode = statement.Finalize();
+    if (errCode != SQLITE_OK) {
+        return errCode;
+    }
+
+    errCode = stepStatement->Finalize();
+    if (errCode != SQLITE_OK) {
+        return errCode;
+    }
+    return errCode;
 }
 
 int SqliteConnection::EndStepQuery()
@@ -764,5 +777,12 @@ int SqliteConnection::GetKeyFromFile()
     return E_OK;
 }
 #endif
+void SqliteConnection::SetInTransaction(bool transaction) {
+    inTransaction_ = transaction;
+}
+bool SqliteConnection::IsInTransaction()
+{
+    return inTransaction_;
+}
 } // namespace NativeRdb
 } // namespace OHOS
