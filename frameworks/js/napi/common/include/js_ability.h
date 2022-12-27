@@ -39,6 +39,7 @@ public:
     std::string GetReadPermission();
     std::string GetWritePermission();
     int32_t GetArea() const;
+    bool IsSystemAppCalled();
 
 private:
     int32_t area_ = 0;
@@ -49,6 +50,7 @@ private:
     std::string uri_;
     std::string readPermission_;
     std::string writePermission_;
+    bool isSystemAppCalled_ = false;
 };
 
 class JSAbility final {
