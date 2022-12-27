@@ -398,6 +398,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
     const std::vector<std::string> &selectionArgs)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    LOG_ERROR("RdbHelper query sql is %{public}s", sql.c_str());
     auto resultSet = std::make_unique<SqliteSharedResultSet>(shared_from_this(), path, sql, selectionArgs);
     return resultSet;
 }
