@@ -87,7 +87,7 @@ void SqliteConnectionPool::InitReadConnectionCount()
     if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
         readConnectionCount = 0;
     } else if (config.GetJournalMode() == "WAL") {
-        readConnectionCount = config.getReadConSize();
+        readConnectionCount = config.GetReadConSize();
     } else {
         readConnectionCount = 0;
     }

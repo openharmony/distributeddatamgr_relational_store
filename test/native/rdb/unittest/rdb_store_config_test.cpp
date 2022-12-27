@@ -808,3 +808,141 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_025, TestSize.Level1)
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(store, nullptr);
 }
+
+/**
+ * @tc.name: RdbStoreConfig_026
+ * @tc.desc: test RdbStoreConfig interfaces: SetReadConSize/GetReadConSize
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_026, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    static constexpr int readConSize = 8;
+    config.SetReadConSize(readConSize);
+    int retReadConSize = config.GetReadConSize();
+    EXPECT_EQ(readConSize, retReadConSize);
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
+
+    config.SetReadConSize(20);
+    retReadConSize = config.GetReadConSize();
+    EXPECT_EQ(20, retReadConSize);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStoreConfig_027
+ * @tc.desc: test RdbStoreConfig interfaces: SetReadConSize/GetReadConSize
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_027, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    static constexpr int readConSize = 4;
+    int retReadConSize = config.GetReadConSize();
+    EXPECT_EQ(readConSize, retReadConSize);
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
+
+    config.SetReadConSize(65);
+    retReadConSize = config.GetReadConSize();
+    EXPECT_EQ(65, retReadConSize);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStoreConfig_028
+ * @tc.desc: test RdbStoreConfig interfaces: SetReadConSize/GetReadConSize
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_028, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    static constexpr int readConSize = 10;
+    config.SetReadConSize(readConSize);
+    int retReadConSize = config.GetReadConSize();
+    EXPECT_EQ(readConSize, retReadConSize);
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    std::unique_ptr<ResultSet> resultSet1 = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet1, nullptr);
+    EXPECT_EQ(E_OK, resultSet1->GoToFirstRow());
+    std::unique_ptr<ResultSet> resultSet2 = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet2, nullptr);
+    EXPECT_EQ(E_OK, resultSet2->GoToFirstRow());
+    std::unique_ptr<ResultSet> resultSet3 = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet3, nullptr);
+    EXPECT_EQ(E_OK, resultSet3->GoToFirstRow());
+    std::unique_ptr<ResultSet> resultSet4 = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet4, nullptr);
+    EXPECT_EQ(E_OK, resultSet4->GoToFirstRow());
+    std::unique_ptr<ResultSet> resultSet5 = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet5, nullptr);
+    EXPECT_EQ(E_OK, resultSet5->GoToFirstRow());
+    std::unique_ptr<ResultSet> resultSet6 = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet6, nullptr);
+    EXPECT_EQ(E_OK, resultSet6->GoToFirstRow());
+    std::unique_ptr<ResultSet> resultSet7 = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet7, nullptr);
+    EXPECT_EQ(E_OK, resultSet7->GoToFirstRow());
+    std::unique_ptr<ResultSet> resultSet8 = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet8, nullptr);
+    EXPECT_EQ(E_OK, resultSet8->GoToFirstRow());
+    std::unique_ptr<ResultSet> resultSet9 = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet9, nullptr);
+    EXPECT_EQ(E_OK, resultSet9->GoToFirstRow());
+    std::unique_ptr<ResultSet> resultSet10 = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet10, nullptr);
+    EXPECT_EQ(E_OK, resultSet10->GoToFirstRow());
+
+    EXPECT_EQ(E_OK, resultSet1->Close());
+    EXPECT_EQ(E_OK, resultSet2->Close());
+    EXPECT_EQ(E_OK, resultSet3->Close());
+    EXPECT_EQ(E_OK, resultSet4->Close());
+    EXPECT_EQ(E_OK, resultSet5->Close());
+    EXPECT_EQ(E_OK, resultSet6->Close());
+    EXPECT_EQ(E_OK, resultSet7->Close());
+    EXPECT_EQ(E_OK, resultSet8->Close());
+    EXPECT_EQ(E_OK, resultSet9->Close());
+    EXPECT_EQ(E_OK, resultSet10->Close());
+}
