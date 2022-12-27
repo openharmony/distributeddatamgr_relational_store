@@ -234,10 +234,7 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<OHOS::NativeRdb::RdbStore> value)
 {
-    if (value == nullptr) {
-        LOG_ERROR("RdbStoreProxy::NewInstance get native rdb is null.");
-        return nullptr;
-    }
+    NAPI_ASSERT_BASE(env, value != nullptr, "RdbStoreProxy::NewInstance get native rdb is null.", nullptr);
     napi_value cons;
     napi_status status = napi_get_reference_value(env, constructor_, &cons);
     if (status != napi_ok) {
@@ -258,6 +255,21 @@ napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<OHOS::Native
         LOG_ERROR("RdbStoreProxy::NewInstance native instance is nullptr! code:%{public}d!", status);
         return instance;
     }
+
+    int rdbStatus = proxy->rdbStore_->GetRdbStatus();
+    napi_value property {};
+    status = napi_create_int32(env, rdbStatus, &property);
+    if (status != napi_ok) {
+        LOG_ERROR("RdbStoreProxy::NewInstance create RdbStatus js number type failed! code:%{public}d!", status);
+        return instance;
+    }
+
+    status = napi_set_named_property(env, instance, "openStatus", property);
+    if (status != napi_ok) {
+        LOG_ERROR("RdbStoreProxy::NewInstance create status property failed! code:%{public}d!", status);
+        return instance;
+    }
+
     proxy->rdbStore_ = std::move(value);
     return instance;
 }

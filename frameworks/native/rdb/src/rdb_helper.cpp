@@ -55,7 +55,17 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     }
 #endif
 
-    errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
+    int currentVersion;
+    errCode = rdbStore->GetVersion(currentVersion);
+    if (errCode != E_OK) {
+        LOG_ERROR("RdbHelper get rdbStore version fail.");
+        return nullptr;
+    }
+
+    int rdbStoreStatus = UpdateRdbStatus(currentVersion);
+    rdbStore->SetRdbStatus(rdbStoreStatus);
+
+    errCode = ProcessOpenCallback(*rdbStore, config, version, currentVersion, openCallback);
     if (errCode != E_OK) {
         LOG_ERROR("RdbHelper GetRdbStore ProcessOpenCallback fail");
         return nullptr;
@@ -64,15 +74,21 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     return rdbStore;
 }
 
+int RdbHelper::UpdateRdbStatus(int currentVersion)
+{
+    int status = 0;
+    if (currentVersion == 0) {
+        status |= static_cast<int>(RdbStatus::ON_CREATE);
+    } else {
+        return status | static_cast<int>(RdbStatus::ON_OPEN);
+    }
+    return status | static_cast<int>(RdbStatus::ON_OPEN);
+}
+
 int RdbHelper::ProcessOpenCallback(
-    RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback)
+    RdbStore &rdbStore, const RdbStoreConfig &config, int version, int currentVersion, RdbOpenCallback &openCallback)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    int currentVersion;
-    int errCode = rdbStore.GetVersion(currentVersion);
-    if (errCode != E_OK) {
-        return errCode;
-    }
     if (version == currentVersion) {
         return openCallback.OnOpen(rdbStore);
     }
@@ -82,6 +98,7 @@ int RdbHelper::ProcessOpenCallback(
         return E_CANNOT_UPDATE_READONLY;
     }
 
+    int errcode;
     if (currentVersion == 0) {
         errCode = openCallback.OnCreate(rdbStore);
     } else if (version > currentVersion) {
