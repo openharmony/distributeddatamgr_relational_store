@@ -363,12 +363,12 @@ void RdbStoreConfig::SetCreateNecessary(bool isCreateNecessary)
     isCreateNecessary_ = isCreateNecessary;
 }
 
-int RdbStoreConfig::getReadConSize() const
+int RdbStoreConfig::GetReadConSize() const
 {
     return readConSize_;
 }
 
-void RdbStoreConfig::setReadConSize(int readConSize)
+void RdbStoreConfig::SetReadConSize(int readConSize)
 {
     readConSize_= readConSize;
 }
