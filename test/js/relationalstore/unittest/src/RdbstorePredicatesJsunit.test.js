@@ -15,6 +15,7 @@
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
+import dataSharePredicates from '@ohos.data.dataSharePredicates';
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
 const CREATE_TABLE_ALL_DATA_TYPE_SQL = "CREATE TABLE IF NOT EXISTS AllDataType "
@@ -2206,6 +2207,25 @@ describe('rdbPredicatesTest', function () {
         }
         done();
         console.log(TAG + "************* testIndexedBy0002 end *************");
+    })
+
+    /**
+     * @tc.name Query Permission Denied test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Permission_Denied_0221
+     * @tc.desc Query Permission Denied test
+     */
+    it('testQueryPermissionDenied0001', 0, async function (done) {
+        console.log(TAG + "************* testQueryPermissionDenied0001 start *************");
+        try {
+            var predicate = new dataSharePredicates.DataSharePredicates();
+            await rdbStore.query("test", predicate);
+            expect(null).assertFail();
+        } catch (err) {
+            console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+            expect("202").assertEqual(err.code)
+            done()
+        }
+        console.log(TAG + "************* testQueryPermissionDenied0001 end *************");
     })
 
     console.log(TAG + "*************Unit Test End*************");
