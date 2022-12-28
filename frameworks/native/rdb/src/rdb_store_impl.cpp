@@ -636,7 +636,7 @@ int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
 /**
  * Sets the database status.
  */
-void RdbStoreImpl::SetRdbStatus(int status)
+void RdbStoreImpl::SetStatus(int status)
 {
     rdbStatus = status;
 }
@@ -644,7 +644,7 @@ void RdbStoreImpl::SetRdbStatus(int status)
 /**
  * Obtains the database status.
  */
-int RdbStoreImpl::GetRdbStatus()
+int RdbStoreImpl::GetStatus()
 {
     return rdbStatus;
 }
