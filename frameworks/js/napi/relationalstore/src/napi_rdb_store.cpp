@@ -75,16 +75,20 @@ struct RdbStoreContext : public AsyncCall::Context {
     std::string destName;
     std::string srcName;
     int32_t enumArg;
+    NativeRdb::ConflictResolution conflictResolution;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     DistributedRdb::SyncResult syncResult;
 #endif
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
 
-    RdbStoreContext() : Context(nullptr, nullptr), predicatesProxy(nullptr), rowId(0), insertNum(0), enumArg(0)
+    RdbStoreContext()
+        : Context(nullptr, nullptr), predicatesProxy(nullptr), rowId(0), insertNum(0), enumArg(0),
+          conflictResolution(NativeRdb::ConflictResolution::ON_CONFLICT_NONE)
     {
     }
     RdbStoreContext(InputAction input, OutputAction output)
-        : Context(std::move(input), std::move(output)), predicatesProxy(nullptr), rowId(0), insertNum(0), enumArg(0)
+        : Context(std::move(input), std::move(output)), predicatesProxy(nullptr), rowId(0), insertNum(0), enumArg(0),
+          conflictResolution(NativeRdb::ConflictResolution::ON_CONFLICT_NONE)
     {
     }
     virtual ~RdbStoreContext()
@@ -183,6 +187,16 @@ bool IsNapiTypeArray(napi_env env, size_t argc, napi_value *argv, size_t arg)
     bool isArray = false;
     NAPI_CALL_BASE(env, napi_is_array(env, argv[arg], &isArray), false);
     return isArray;
+}
+
+bool IsNapiTypeNumber(napi_env env,  size_t argc, napi_value *argv, size_t arg)
+{
+    if (arg >= argc) {
+        return false;
+    }
+    napi_valuetype type;
+    NAPI_CALL_BASE(env, napi_typeof(env, argv[arg], &type), false);
+    return type == napi_number;
 }
 
 void RdbStoreProxy::Init(napi_env env, napi_value exports)
@@ -586,24 +600,41 @@ int ParseValuesBuckets(const napi_env &env, const napi_value &arg, std::shared_p
     return OK;
 }
 
+int ParseConflictResolution(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+{
+    int32_t conflictResolution = 0;
+    napi_get_value_int32(env, arg, &conflictResolution);
+    auto paramError = std::make_shared<ParamTypeError>("conflictResolution", "a ConflictResolution.");
+    int min = static_cast<int32_t>(NativeRdb::ConflictResolution::ON_CONFLICT_NONE);
+    int max = static_cast<int32_t>(NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
+    RDB_CHECK_RETURN_CALL_RESULT(conflictResolution >= min && conflictResolution <= max, context->SetError(paramError));
+    context->conflictResolution = static_cast<NativeRdb::ConflictResolution>(conflictResolution);
+    LOG_DEBUG("ParseConflictResolution end");
+    return OK;
+}
+
 napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreProxy::Insert start");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
-        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
-        RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3 or 4");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3 || argc == 4, context->SetError(paramNumError));
         ParserThis(env, self, context);
         RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseTableName(env, argv[0], context));
         RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseValuesBucket(env, argv[1], context));
+        if (IsNapiTypeNumber(env, argc, argv, 2)) {
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseConflictResolution(env, argv[2], context));
+        }
         return OK;
     };
     auto exec = [context](AsyncCall::Context *ctx) {
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         int64_t rowId = 0;
         LOG_DEBUG("RdbStoreProxy::Insert Async");
-        int errCode = obj->rdbStore_->Insert(rowId, context->tableName, context->valuesBucket);
+        int errCode = obj->rdbStore_->InsertWithConflictResolution(rowId, context->tableName, context->valuesBucket,
+            context->conflictResolution);
         context->rowId = rowId;
         LOG_DEBUG("RdbStoreProxy::Insert errCode is: %{public}d", errCode);
         return (errCode == E_OK) ? OK : ERR;
@@ -706,10 +737,13 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
             RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseValuesBucket(env, argv[1], context));
             RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDataSharePredicates(env, argv[2], context));
         } else {
-            std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
-            RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
+            std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3 or 4");
+            RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3 || argc == 4, context->SetError(paramNumError));
             RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseValuesBucket(env, argv[0], context));
             RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePredicates(env, argv[1], context));
+            if (IsNapiTypeNumber(env, argc, argv, 2)) {
+                RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseConflictResolution(env, argv[2], context));
+            }
         }
         return OK;
     };
@@ -717,7 +751,9 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
         LOG_DEBUG("RdbStoreProxy::Update Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         int changedRows = 0;
-        int errCode = obj->rdbStore_->Update(changedRows, context->valuesBucket, *(context->rdbPredicates));
+        int errCode = obj->rdbStore_->UpdateWithConflictResolution(changedRows, context->tableName,
+            context->valuesBucket, context->rdbPredicates->GetWhereClause(), context->rdbPredicates->GetWhereArgs(),
+            context->conflictResolution);
         context->rowId = changedRows;
         LOG_DEBUG("RdbStoreProxy::Update errCode is: %{public}d", errCode);
         return (errCode == E_OK) ? OK : ERR;
