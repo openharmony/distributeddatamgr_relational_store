@@ -83,6 +83,11 @@ std::string Context::GetWritePermission()
     return writePermission_;
 }
 
+bool Context::IsSystemAppCalled()
+{
+    return isSystemAppCalled_;
+}
+
 bool JSAbility::CheckContext(napi_env env, napi_callback_info info)
 {
     return true;

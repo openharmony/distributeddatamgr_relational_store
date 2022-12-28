@@ -15,6 +15,7 @@
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
+import dataSharePredicates from '@ohos.data.dataSharePredicates';
 var context = ability_featureAbility.getContext()
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
@@ -428,6 +429,31 @@ describe('rdbStoreUpdateTest', function () {
 
         done();
         console.log(TAG + "************* testRdbStoreUpdate0007 end   *************");
+    })
+
+    /**
+     * @tc.name rdb update test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0008
+     * @tc.desc rdb update test
+     */
+    it('testRdbStoreUpdate0008', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreUpdate0008 start *************");
+        try {
+            const valueBucket = {
+                "name": "name",
+                "age": 21,
+                "salary": 200.5,
+                "blobType": new Uint8Array([1, 2, 3]),
+            }
+            var predicate = new dataSharePredicates.DataSharePredicates();
+            await rdbStore.update("test", valueBucket, predicate);
+            expect(null).assertFail();
+        } catch (err) {
+            console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+            expect("202").assertEqual(err.code)
+            done()
+        }
+        console.log(TAG + "************* testRdbStoreUpdate0008 end *************");
     })
     console.log(TAG + "*************Unit Test End*************");
 })
