@@ -24,6 +24,7 @@ constexpr int OK = 0;
 constexpr int ERR = -1;
 
 constexpr int E_PARAM_ERROR = 401;
+constexpr int E_NON_SYSTEM_APP_ERROR = 202;
 constexpr int E_INNER_ERROR = 14800000;
 constexpr int E_DB_INVALID = 14800010;
 constexpr int E_DB_CORRUPTED = 14800011;
@@ -63,6 +64,14 @@ constexpr int E_RESULT_GOTO_ERROR = 14800012;
         if (!(assertion)) {                 \
             return nullptr;                 \
         }                                   \
+    } while (0)
+
+#define RDB_CHECK_RETURN_CALL(assertion, theCall)        \
+    do {                                                 \
+        if (!(assertion)) {                              \
+            (theCall);                                   \
+            return;                                      \
+        }                                                \
     } while (0)
 
 #define RDB_CHECK_RETURN_CALL_RESULT(assertion, theCall) \
@@ -108,6 +117,21 @@ public:
 private:
     std::string name;
     std::string wantType;
+};
+
+class NonSystemError : public Error {
+public:
+    NonSystemError()
+    {
+    }
+    std::string GetMessage() override
+    {
+        return "Permission denied.";
+    }
+    int GetCode() override
+    {
+        return E_NON_SYSTEM_APP_ERROR;
+    }
 };
 
 class ParamNumError : public Error {

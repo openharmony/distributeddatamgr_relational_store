@@ -39,6 +39,8 @@ Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
         LOG_INFO("QueryAbilityInfo, uri: %{private}s, readPermission: %{public}s, writePermission: %{public}s.",
             abilityInfo->uri.c_str(), abilityInfo->readPermission.c_str(), abilityInfo->writePermission.c_str());
     }
+    auto appInfo = stageContext->GetApplicationInfo();
+    isSystemAppCalled_ = appInfo == nullptr ? false : appInfo->isSystemApp;
     LOG_DEBUG("Stage: area:%{public}d, bundleName:%{public}s, moduleName:%{public}s", area_, bundleName_.c_str(),
         moduleName_.c_str());
 }
@@ -92,6 +94,10 @@ std::string Context::GetReadPermission()
 std::string Context::GetWritePermission()
 {
     return writePermission_;
+}
+bool Context::IsSystemAppCalled()
+{
+    return isSystemAppCalled_;
 }
 
 bool JSAbility::CheckContext(napi_env env, napi_callback_info info)
