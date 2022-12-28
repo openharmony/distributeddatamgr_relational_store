@@ -28,11 +28,11 @@
 namespace OHOS {
 namespace NativeRdb {
 enum class RdbStatus {
-    ON_CREATE = 1 << 0,
-    ON_OPEN = 1 << 1,
+    ON_CREATE = 0,
+    ON_OPEN = 1,
 };
 
-    struct RdbStoreNode {
+struct RdbStoreNode {
     RdbStoreNode(const std::shared_ptr<RdbStore> &rdbStore);
     RdbStoreNode &operator=(const std::shared_ptr<RdbStore> &store);
 
@@ -65,9 +65,8 @@ public:
     static void ClearCache();
 
 private:
-    static int UpdateRdbStatus(int currentVersion);
     static int ProcessOpenCallback(
-        RdbStore &rdbStore, const RdbStoreConfig &config, int version, int currentVersion, RdbOpenCallback &openCallback);
+        RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
 };
 } // namespace NativeRdb
 } // namespace OHOS

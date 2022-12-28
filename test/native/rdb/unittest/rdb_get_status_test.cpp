@@ -39,7 +39,7 @@ public:
 const std::string GetRdbStatusTest::DATABASE_NAME = RDB_TEST_PATH + "get_status_test.db";
 std::shared_ptr<RdbStore> GetRdbStatusTest::store = nullptr;
 
-class GetStatusTestOpenCallback : public RdbOpenCallback {
+class StatusTestOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &rdbStore) override;
     int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
@@ -48,22 +48,22 @@ public:
 };
 
 
-const std::string GetStatusTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABLE IF NOT EXISTS test ")
-                                                                 + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                                               "name TEXT NOT NULL, age INTEGER, salary "
-                                                                               "REAL, blobType BLOB)");
+const std::string StatusTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABLE IF NOT EXISTS test ") +
+                                                              std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                                          "name TEXT NOT NULL, age INTEGER, salary "
+                                                                          "REAL, blobType BLOB)");
 
-int GetStatusTestOpenCallback::OnCreate(RdbStore &store)
+int StatusTestOpenCallback::OnCreate(RdbStore &store)
 {
     return store.ExecuteSql(CREATE_TABLE_TEST);
 }
 
-int GetStatusTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
+int StatusTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 {
     return E_OK;
 }
 
-int GetStatusTestOpenCallback::OnOpen(RdbStore &store)
+int StatusTestOpenCallback::OnOpen(RdbStore &store)
 {
     return E_OK;
 }
@@ -88,7 +88,7 @@ void GetRdbStatusTest::TearDown(void)
  * @tc.name: Get_RdbStore_Status_001
  * @tc.desc: Obtains the RdbStore status when get RdbStore.
  * @tc.type: FUNC
- * @tc.require: SR
+ * @tc.require: SR000HR0D7
  * @tc.author: leiyanbo
  */
 HWTEST_F(GetRdbStatusTest, Get_RdbStore_Status_001, TestSize.Level1)
@@ -96,13 +96,12 @@ HWTEST_F(GetRdbStatusTest, Get_RdbStore_Status_001, TestSize.Level1)
     RdbStoreConfig config(GetRdbStatusTest::DATABASE_NAME);
 
     int errCode = E_OK;
-    GetStatusTestOpenCallback helper;
+    StatusTestOpenCallback helper;
     GetRdbStatusTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(GetRdbStatusTest::store, nullptr);
     EXPECT_EQ(errCode, E_OK);
 
-    int status = static_cast<int>(RdbStaus::ON_CREATE) | static_cast<int>(RdbStaus::ON_OPEN);
-    EXPECT_EQ(GetRdbStatusTest::store->GetRdbStatus(), status);
+    EXPECT_EQ(GetRdbStatusTest::store->GetStatus(), static_cast<int>(RdbStatus::ON_CREATE));
     EXPECT_EQ(RdbHelper::DeleteRdbStore(GetRdbStatusTest::DATABASE_NAME), E_OK);
 }
 
@@ -110,7 +109,7 @@ HWTEST_F(GetRdbStatusTest, Get_RdbStore_Status_001, TestSize.Level1)
  * @tc.name: Get_RdbStore_Status_002
  * @tc.desc: Obtains the RdbStore status when get RdbStore.
  * @tc.type: FUNC
- * @tc.require: SR
+ * @tc.require: SR000HR0D7
  * @tc.author: leiyanbo
  */
 HWTEST_F(GetRdbStatusTest, Get_RdbStore_Status_002, TestSize.Level1)
@@ -118,12 +117,12 @@ HWTEST_F(GetRdbStatusTest, Get_RdbStore_Status_002, TestSize.Level1)
     RdbStoreConfig config(GetRdbStatusTest::DATABASE_NAME);
 
     int errCode = E_OK;
-    GetStatusTestOpenCallback helper;
+    StatusTestOpenCallback helper;
     GetRdbStatusTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(GetRdbStatusTest::store, nullptr);
     EXPECT_EQ(errCode, E_OK);
 
     RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(GetRdbStatusTest::store->GetRdbStatus(), static_cast<int>(RdbStaus::ON_OPEN));
+    EXPECT_EQ(GetRdbStatusTest::store->GetStatus(), static_cast<int>(RdbStatus::ON_OPEN));
     EXPECT_EQ(RdbHelper::DeleteRdbStore(GetRdbStatusTest::DATABASE_NAME), E_OK);
 }

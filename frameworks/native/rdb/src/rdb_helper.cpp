@@ -33,6 +33,8 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    bool isDbFileExists = access(config.GetPath().c_str(), F_OK) == 0;
+
     SqliteGlobalConfig::InitSqliteGlobalConfig();
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
@@ -55,17 +57,17 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     }
 #endif
 
-    int currentVersion;
-    errCode = rdbStore->GetVersion(currentVersion);
-    if (errCode != E_OK) {
-        LOG_ERROR("RdbHelper get rdbStore version fail.");
-        return nullptr;
+    if (isDbFileExists) {
+        rdbStore->SetStatus(static_cast<int>(RdbStatus::ON_OPEN));
+    } else {
+        rdbStore->SetStatus(static_cast<int>(RdbStatus::ON_CREATE));
     }
 
-    int rdbStoreStatus = UpdateRdbStatus(currentVersion);
-    rdbStore->SetRdbStatus(rdbStoreStatus);
+    if (version == -1) {
+        return rdbStore;
+    }
 
-    errCode = ProcessOpenCallback(*rdbStore, config, version, currentVersion, openCallback);
+    errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
     if (errCode != E_OK) {
         LOG_ERROR("RdbHelper GetRdbStore ProcessOpenCallback fail");
         return nullptr;
@@ -74,21 +76,16 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     return rdbStore;
 }
 
-int RdbHelper::UpdateRdbStatus(int currentVersion)
-{
-    int status = 0;
-    if (currentVersion == 0) {
-        status |= static_cast<int>(RdbStatus::ON_CREATE);
-    } else {
-        return status | static_cast<int>(RdbStatus::ON_OPEN);
-    }
-    return status | static_cast<int>(RdbStatus::ON_OPEN);
-}
-
 int RdbHelper::ProcessOpenCallback(
-    RdbStore &rdbStore, const RdbStoreConfig &config, int version, int currentVersion, RdbOpenCallback &openCallback)
+    RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    int currentVersion;
+    int errCode = rdbStore.GetVersion(currentVersion);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
     if (version == currentVersion) {
         return openCallback.OnOpen(rdbStore);
     }
@@ -98,7 +95,6 @@ int RdbHelper::ProcessOpenCallback(
         return E_CANNOT_UPDATE_READONLY;
     }
 
-    int errcode;
     if (currentVersion == 0) {
         errCode = openCallback.OnCreate(rdbStore);
     } else if (version > currentVersion) {
