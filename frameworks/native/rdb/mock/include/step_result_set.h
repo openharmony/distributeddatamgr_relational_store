@@ -30,8 +30,6 @@ class StepResultSet : public AbsResultSet {
 public:
     StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, const std::string &sql,
         const std::vector<std::string> &selectionArgs);
-    StepResultSet(SqliteConnectionPool *pool, const std::string &sql,
-        const std::vector<std::string> &selectionArgs);
     ~StepResultSet() override;
 
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
@@ -70,9 +68,6 @@ private:
     static const int STEP_QUERY_RETRY_MAX_TIMES = 50;
     // Interval of retrying step query in millisecond
     static const int STEP_QUERY_RETRY_INTERVAL = 1000;
-    SqliteConnectionPool *connectionPool_;
-    SqliteConnection *connection_;
-    std::vector<std::string> columnNames_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
