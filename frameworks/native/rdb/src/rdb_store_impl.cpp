@@ -26,8 +26,6 @@
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
-#include "sqlite_database_utils.h"
-#include "sqlite_global_config.h"
 
 #ifndef WINDOWS_PLATFORM
 #include "directory_ex.h"
@@ -37,6 +35,7 @@
 #include "iresult_set.h"
 #include "rdb_security_manager.h"
 #include "rdb_manager.h"
+#include "relational_store_manager.h"
 #include "result_set_proxy.h"
 #include "sqlite_shared_result_set.h"
 #endif
@@ -130,6 +129,51 @@ void RdbStoreImpl::Clear()
     connectionPool = nullptr;
 }
 #endif
+std::shared_ptr<StoreSession> RdbStoreImpl::GetThreadSession()
+{
+    std::thread::id tid = std::this_thread::get_id();
+    std::lock_guard<std::mutex> lock(sessionMutex);
+
+    auto iter = threadMap.find(tid);
+    if (iter != threadMap.end()) {
+        iter->second.second++; // useCount++
+        return iter->second.first;
+    }
+
+    // get from idle stack
+    std::shared_ptr<StoreSession> session;
+    if (idleSessions.empty()) {
+        session = std::make_shared<StoreSession>(*connectionPool);
+    } else {
+        session = idleSessions.back();
+        idleSessions.pop_back();
+    }
+
+    threadMap.insert(std::make_pair(tid, std::make_pair(session, 1))); // useCount is 1
+    return session;
+}
+
+void RdbStoreImpl::ReleaseThreadSession()
+{
+    std::thread::id tid = std::this_thread::get_id();
+    std::lock_guard<std::mutex> lock(sessionMutex);
+
+    auto iter = threadMap.find(tid);
+    if (iter == threadMap.end()) {
+        LOG_ERROR("RdbStoreImpl ReleaseThreadSession: no session found for the current thread");
+        return;
+    }
+    int &useCount = iter->second.second;
+    useCount--;
+    if (useCount > 0) {
+        return;
+    }
+
+    if (idleSessions.size() < MAX_IDLE_SESSION_SIZE) {
+        idleSessions.push_back(iter->second.first);
+    }
+    threadMap.erase(iter);
+}
 
 int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)
 {
@@ -199,10 +243,9 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
     }
     sql << ')';
 
-    SqliteConnection *connection = connectionPool->AcquireConnection(false);
-    errCode = connection->ExecuteForLastInsertedRowId(outRowId, sql.str(), bindArgs);
-    connectionPool->ReleaseConnection(connection);
-
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    errCode = session->ExecuteForLastInsertedRowId(outRowId, sql.str(), bindArgs);
+    ReleaseThreadSession();
     return errCode;
 }
 
@@ -257,10 +300,9 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
         bindArgs.push_back(ValueObject(iter));
     }
 
-    SqliteConnection *connection = connectionPool->AcquireConnection(false);
-    errCode = connection->ExecuteForChangedRowCount(changedRows, sql.str(), bindArgs);
-    connectionPool->ReleaseConnection(connection);
-
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    errCode = session->ExecuteForChangedRowCount(changedRows, sql.str(), bindArgs);
+    ReleaseThreadSession();
     return errCode;
 }
 
@@ -288,10 +330,9 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
         bindArgs.push_back(ValueObject(iter));
     }
 
-    SqliteConnection *connection = connectionPool->AcquireConnection(false);
-    int errCode = connection->ExecuteForChangedRowCount(deletedRows, sql.str(), bindArgs);
-    connectionPool->ReleaseConnection(connection);
-
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode = session->ExecuteForChangedRowCount(deletedRows, sql.str(), bindArgs);
+    ReleaseThreadSession();
     return errCode;
 }
 
@@ -357,7 +398,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
     const std::vector<std::string> &selectionArgs)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    auto resultSet = std::make_unique<SqliteSharedResultSet>(connectionPool, path, sql, selectionArgs);
+    auto resultSet = std::make_unique<SqliteSharedResultSet>(shared_from_this(), path, sql, selectionArgs);
     return resultSet;
 }
 #endif
@@ -397,69 +438,59 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
         return errCode;
     }
 
-    SqliteConnection *connection;
-    errCode = BeginExecuteSql(sql, &connection);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    errCode = connection->ExecuteSql(sql, bindArgs);
-    connectionPool->ReleaseConnection(connection);
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    errCode = session->ExecuteSql(sql, bindArgs);
     if (errCode != E_OK) {
         LOG_ERROR("RDB_STORE Execute SQL ERROR.");
+        ReleaseThreadSession();
         return errCode;
     }
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
+        if (connectionPool == nullptr) {
+            LOG_ERROR("connectionPool is null");
+            return E_ERROR;
+        }
         errCode = connectionPool->ReOpenAvailableReadConnections();
     }
+    ReleaseThreadSession();
     return errCode;
 }
 
 int RdbStoreImpl::ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
-    SqliteConnection *connection;
-    int errCode = BeginExecuteSql(sql, &connection);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    errCode = connection->ExecuteGetLong(outValue, sql, bindArgs);
-    if (errCode != E_OK) {
-        LOG_ERROR("RDB_STORE ExecuteAndGetLong ERROR is %{public}d.", errCode);
-    }
-    connectionPool->ReleaseConnection(connection);
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode = session->ExecuteGetLong(outValue, sql, bindArgs);
+    ReleaseThreadSession();
     return errCode;
 }
 
 int RdbStoreImpl::ExecuteAndGetString(
     std::string &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
-    SqliteConnection *connection;
-    int errCode = BeginExecuteSql(sql, &connection);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    connection->ExecuteGetString(outValue, sql, bindArgs);
-    connectionPool->ReleaseConnection(connection);
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode = session->ExecuteGetString(outValue, sql, bindArgs);
+    ReleaseThreadSession();
     return errCode;
 }
 
 int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql,
     const std::vector<ValueObject> &bindArgs)
 {
-    SqliteConnection *connection = connectionPool->AcquireConnection(false);
-    int errCode = connection->ExecuteForLastInsertedRowId(outValue, sql, bindArgs);
-    connectionPool->ReleaseConnection(connection);
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode = session->ExecuteForLastInsertedRowId(outValue, sql, bindArgs);
+    ReleaseThreadSession();
     return errCode;
 }
 
 int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
     const std::vector<ValueObject> &bindArgs)
 {
+    std::shared_ptr<StoreSession> session = GetThreadSession();
     int changeRow = 0;
-    SqliteConnection *connection = connectionPool->AcquireConnection(false);
-    int errCode = connection->ExecuteForChangedRowCount(changeRow, sql, bindArgs);
-    connectionPool->ReleaseConnection(connection);
+    int errCode = session->ExecuteForChangedRowCount(changeRow, sql, bindArgs);
     outValue = changeRow;
+    ReleaseThreadSession();
     return errCode;
 }
 
@@ -482,110 +513,22 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
         }
         backupFilePath = databasePath;
     }
-
-    LOG_ERROR("Backup: databasePath is %{public}s.", backupFilePath.c_str());
-
-    std::vector<ValueObject> bindArgs;
-    bindArgs.push_back(ValueObject(backupFilePath));
-    if (destEncryptKey.size() != 0) {
-        bindArgs.push_back(ValueObject(destEncryptKey));
-    } else {
-        std::string str = "";
-        bindArgs.push_back(ValueObject(str));
-    }
-
-    SqliteConnection *connection;
-
-    std::string sql = GlobalExpr::ATTACH_BACKUP_SQL;
-    int errCode = BeginExecuteSql(sql, &connection);
-    if (errCode != 0) {
-        return errCode;
-    }
-    errCode = connection->ExecuteSql(sql, bindArgs);
-    connectionPool->ReleaseConnection(connection);
-    if (errCode != E_OK) {
-        LOG_ERROR("ExecuteSql ATTACH_BACKUP_SQL error %{public}d", errCode);
-        return errCode;
-    }
-
-    int64_t count;
-    sql = GlobalExpr::EXPORT_SQL;
-    errCode = BeginExecuteSql(sql, &connection);
-    if (errCode != 0) {
-        return errCode;
-    }
-    errCode = connection->ExecuteGetLong(count, sql, std::vector<ValueObject>());
-    connectionPool->ReleaseConnection(connection);
-    if (errCode != E_OK) {
-        LOG_ERROR("ExecuteSql EXPORT_SQL error %{public}d", errCode);
-        return errCode;
-    }
-
-    sql = GlobalExpr::DETACH_BACKUP_SQL;
-    errCode = BeginExecuteSql(sql, &connection);
-    if (errCode != 0) {
-        return errCode;
-    }
-    errCode = connection->ExecuteSql(sql, std::vector<ValueObject>());
-    connectionPool->ReleaseConnection(connection);
-    if (errCode != E_OK) {
-        LOG_ERROR("ExecuteSql DETACH_BACKUP_SQL error %{public}d", errCode);
-        return errCode;
-    }
-    return E_OK;
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode = session->Backup(backupFilePath, destEncryptKey);
+    ReleaseThreadSession();
+    return errCode;
 }
 
-int RdbStoreImpl::BeginExecuteSql(const std::string &sql, SqliteConnection **connection)
-{
-    int type = SqliteUtils::GetSqlStatementType(sql);
-    if (SqliteUtils::IsSpecial(type)) {
-        return E_TRANSACTION_IN_EXECUTE;
-    }
-
-    bool assumeReadOnly = SqliteUtils::IsSqlReadOnly(type);
-    bool isReadOnly = false;
-    *connection = connectionPool->AcquireConnection(assumeReadOnly);
-    int errCode = (*connection)->Prepare(sql, isReadOnly);
-    if (errCode != 0) {
-        connectionPool->ReleaseConnection(*connection);
-        return errCode;
-    }
-
-    if (isReadOnly == (*connection)->IsWriteConnection()) {
-        connectionPool->ReleaseConnection(*connection);
-        *connection = connectionPool->AcquireConnection(isReadOnly);
-        if (!isReadOnly && !(*connection)->IsWriteConnection()) {
-            LOG_ERROR("StoreSession BeginExecutea : read connection can not execute write operation");
-            connectionPool->ReleaseConnection(*connection);
-            return E_EXECUTE_WRITE_IN_READ_CONNECTION;
-        }
-    }
-
-    return E_OK;
-}
 bool RdbStoreImpl::IsHoldingConnection()
-
 {
-    return connectionPool != nullptr;
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    return session->IsHoldingConnection();
 }
 
 int RdbStoreImpl::GiveConnectionTemporarily(int64_t milliseconds)
 {
-    SqliteConnection *connection = connectionPool->AcquireConnection(false);
-    if (connection->IsInTransaction()) {
-        return E_STORE_SESSION_NOT_GIVE_CONNECTION_TEMPORARILY;
-    }
-    int errCode = BeginTransaction();
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
-    errCode = RollBack();
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    return errCode;
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    return session->GiveConnectionTemporarily(milliseconds);
 }
 
 /**
@@ -594,42 +537,9 @@ int RdbStoreImpl::GiveConnectionTemporarily(int64_t milliseconds)
 int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
     const std::vector<uint8_t> destEncryptKey)
 {
-    SqliteConnection *connection;
-    std::string sql = GlobalExpr::PRAGMA_JOUR_MODE_EXP;
-    int errCode = BeginExecuteSql(sql, &connection);
-    if (errCode != 0) {
-        return errCode;
-    }
-    std::string journalMode;
-    errCode = connection->ExecuteGetString(journalMode, sql, std::vector<ValueObject>());
-    if (errCode != E_OK) {
-        connectionPool->ReleaseConnection(connection);
-        LOG_ERROR("RdbStoreImpl CheckAttach fail to get journal mode : %d", errCode);
-        return errCode;
-    }
-    journalMode = SqliteUtils::StrToUpper(journalMode);
-    if (journalMode == GlobalExpr::DEFAULT_JOURNAL_MODE) {
-        connectionPool->ReleaseConnection(connection);
-        LOG_ERROR("RdbStoreImpl attach is not supported in WAL mode");
-        return E_NOT_SUPPORTED_ATTACH_IN_WAL_MODE;
-    }
-
-    std::vector<ValueObject> bindArgs;
-    bindArgs.push_back(ValueObject(pathName));
-    bindArgs.push_back(ValueObject(alias));
-    if (destEncryptKey.size() != 0) {
-        bindArgs.push_back(ValueObject(destEncryptKey));
-    } else {
-        std::string str = "";
-        bindArgs.push_back(ValueObject(str));
-    }
-    sql = GlobalExpr::ATTACH_SQL;
-    errCode = connection->ExecuteSql(sql, bindArgs);
-    connectionPool->ReleaseConnection(connection);
-    if (errCode != E_OK) {
-        LOG_ERROR("ExecuteSql ATTACH_SQL error %d", errCode);
-    }
-
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode = session->Attach(alias, pathName, destEncryptKey);
+    ReleaseThreadSession();
     return errCode;
 }
 
@@ -639,7 +549,7 @@ int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
 int RdbStoreImpl::GetVersion(int &version)
 {
     int64_t value;
-    int errCode = ExecuteAndGetLong(value, GlobalExpr::PRAGMA_VERSION, std::vector<ValueObject>());
+    int errCode = ExecuteAndGetLong(value, "PRAGMA user_version;", std::vector<ValueObject>());
     version = static_cast<int>(value);
     return errCode;
 }
@@ -649,7 +559,7 @@ int RdbStoreImpl::GetVersion(int &version)
  */
 int RdbStoreImpl::SetVersion(int version)
 {
-    std::string sql = std::string(GlobalExpr::PRAGMA_VERSION) + " = " + std::to_string(version);
+    std::string sql = "PRAGMA user_version = " + std::to_string(version);
     return ExecuteSql(sql, std::vector<ValueObject>());
 }
 
@@ -659,18 +569,12 @@ int RdbStoreImpl::SetVersion(int version)
 int RdbStoreImpl::BeginTransaction()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    BaseTransaction transaction(connectionPool->getTransactionStack().size());
-    SqliteConnection *connection = connectionPool->AcquireConnection(false);
-    int errCode = connection->ExecuteSql(transaction.getTransactionStr());
-    connectionPool->ReleaseConnection(connection);
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode = session->BeginTransaction();
     if (errCode != E_OK) {
-        LOG_DEBUG("storeSession BeginTransaction Failed");
-        return errCode;
+        ReleaseThreadSession();
     }
-
-    connection->SetInTransaction(true);
-    connectionPool->getTransactionStack().push(transaction);
-    return E_OK;
+    return errCode;
 }
 
 /**
@@ -679,26 +583,12 @@ int RdbStoreImpl::BeginTransaction()
 int RdbStoreImpl::RollBack()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (connectionPool->getTransactionStack().empty()) {
-        return E_NO_TRANSACTION_IN_SESSION;
-    }
-    BaseTransaction transaction = connectionPool->getTransactionStack().top();
-    connectionPool->getTransactionStack().pop();
-    if (transaction.getType() != TransType::ROLLBACK_SELF
-        && !connectionPool->getTransactionStack().empty()) {
-        connectionPool->getTransactionStack().top().setChildFailure(true);
-    }
-    SqliteConnection *connection = connectionPool->AcquireConnection(false);
-    int errCode = connection->ExecuteSql(transaction.getRollbackStr());
-    connectionPool->ReleaseConnection(connection);
-    if (connectionPool->getTransactionStack().empty()) {
-        connection->SetInTransaction(false);
-    }
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode = session->RollBack();
     if (errCode != E_OK) {
-        LOG_ERROR("RollBack Failed");
+        ReleaseThreadSession();
     }
-
-    return E_OK;
+    return errCode;
 }
 
 /**
@@ -707,31 +597,49 @@ int RdbStoreImpl::RollBack()
 int RdbStoreImpl::Commit()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    LOG_DEBUG("Enter Commit.");
-    if (connectionPool->getTransactionStack().empty()) {
-        return E_OK;
-    }
-    BaseTransaction transaction = connectionPool->getTransactionStack().top();
-    std::string sqlStr = transaction.getCommitStr();
-    if (sqlStr.size() <= 1) {
-        connectionPool->getTransactionStack().pop();
-        return E_OK;
-    }
-
-    SqliteConnection *connection = connectionPool->AcquireConnection(false);
-    int errCode = connection->ExecuteSql(sqlStr);
-    connectionPool->ReleaseConnection(connection);
-    connection->SetInTransaction(false);
-    connectionPool->getTransactionStack().pop();
+    LOG_DEBUG("Enter Commit");
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode = session->Commit();
     if (errCode != E_OK) {
-        LOG_ERROR("Commit Failed.");
+        LOG_ERROR("RdbStoreImpl::Commit with error code %{public}d.", errCode);
+        ReleaseThreadSession();
     }
-    return E_OK;
+    return errCode;
+}
+
+int RdbStoreImpl::BeginTransactionWithObserver(TransactionObserver *transactionObserver)
+{
+    transactionObserverStack.push(transactionObserver);
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode = session->BeginTransaction(transactionObserver);
+    if (errCode != E_OK) {
+        ReleaseThreadSession();
+    }
+    return errCode;
 }
 
 bool RdbStoreImpl::IsInTransaction()
 {
-    return connectionPool->AcquireConnection(false)->IsInTransaction();
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    bool inTransaction = session->IsInTransaction();
+    ReleaseThreadSession();
+    return inTransaction;
+}
+
+std::shared_ptr<SqliteStatement> RdbStoreImpl::BeginStepQuery(
+    int &errCode, const std::string sql, const std::vector<std::string> &bindArgs)
+{
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    return session->BeginStepQuery(errCode, sql, bindArgs);
+}
+
+int RdbStoreImpl::EndStepQuery()
+{
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int err = session->EndStepQuery();
+    ReleaseThreadSession(); // release session got by EndStepQuery
+    ReleaseThreadSession(); // release session got by BeginStepQuery
+    return err;
 }
 
 int RdbStoreImpl::CheckAttach(const std::string &sql)
@@ -747,20 +655,16 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
     if (sqlType != "ATT") {
         return E_OK;
     }
-    std::string journalMode;
 
-    bool isRead = SqliteDatabaseUtils::BeginExecuteSql(GlobalExpr::PRAGMA_JOUR_MODE_EXP);
-    SqliteConnection* connection = connectionPool->AcquireConnection(isRead);
-    int errCode = connection->ExecuteGetString(
-        journalMode, GlobalExpr::PRAGMA_JOUR_MODE_EXP, std::vector<ValueObject>());
-    connectionPool->ReleaseConnection(connection);
+    std::string journalMode;
+    int errCode = ExecuteAndGetString(journalMode, "PRAGMA journal_mode", std::vector<ValueObject>());
     if (errCode != E_OK) {
         LOG_ERROR("RdbStoreImpl CheckAttach fail to get journal mode : %{public}d", errCode);
         return errCode;
     }
 
     journalMode = SqliteUtils::StrToUpper(journalMode);
-    if (journalMode == GlobalExpr::DEFAULT_JOURNAL_MODE) {
+    if (journalMode == "WAL") {
         LOG_ERROR("RdbStoreImpl attach is not supported in WAL mode");
         return E_NOT_SUPPORTED_ATTACH_IN_WAL_MODE;
     }
@@ -846,6 +750,16 @@ std::string RdbStoreImpl::GetFileType()
     return fileType;
 }
 
+int RdbStoreImpl::PrepareAndGetInfo(const std::string &sql, bool &outIsReadOnly, int &numParameters,
+    std::vector<std::string> &columnNames)
+{
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+
+    int errCode = session->PrepareAndGetInfo(sql, outIsReadOnly, numParameters, columnNames);
+    ReleaseThreadSession();
+    return errCode;
+}
+
 #ifdef RDB_SUPPORT_ICU
 /**
  * Sets the database locale.
@@ -926,6 +840,18 @@ int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::s
     return ret;
 }
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+int RdbStoreImpl::ExecuteForSharedBlock(int &rowNum, AppDataFwk::SharedBlock *sharedBlock, int startPos,
+    int requiredPos, bool isCountAllRows, std::string sql, std::vector<ValueObject> &bindArgVec)
+{
+    std::shared_ptr<StoreSession> session = GetThreadSession();
+    int errCode =
+        session->ExecuteForSharedBlock(rowNum, sql, bindArgVec, sharedBlock, startPos, requiredPos, isCountAllRows);
+    ReleaseThreadSession();
+    return errCode;
+}
+#endif
+
 /**
  * Queries data in the database based on specified conditions.
  */
@@ -933,7 +859,7 @@ std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
     const std::vector<std::string> &selectionArgs)
 {
     std::unique_ptr<ResultSet> resultSet =
-        std::make_unique<StepResultSet>(connectionPool, sql, selectionArgs);
+        std::make_unique<StepResultSet>(shared_from_this(), sql, selectionArgs);
     return resultSet;
 }
 

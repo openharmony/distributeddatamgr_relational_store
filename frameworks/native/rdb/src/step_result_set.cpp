@@ -23,9 +23,7 @@
 #include "rdb_errno.h"
 #include "rdb_trace.h"
 #include "sqlite3sym.h"
-#include "sqlite_database_utils.h"
 #include "sqlite_errno.h"
-#include "sqlite_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -35,40 +33,26 @@ StepResultSet::StepResultSet(
       sqliteStatement(nullptr)
 {
 }
-StepResultSet::StepResultSet(SqliteConnectionPool *pool, const std::string &sql,
-                             const std::vector<std::string> &selectionArgs)
-    : sql(sql), selectionArgs(selectionArgs), isAfterLast(false), rowCount(INIT_POS),
-      sqliteStatement(nullptr)
-{
-    connectionPool_ = pool;
-    connection_ = connectionPool_->AcquireConnection(true);
-}
 
 StepResultSet::~StepResultSet()
 {
     Close();
-    connectionPool_->ReleaseConnection(connection_);
-    connection_ = nullptr;
 }
 
 int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
-    if (isClosed) {
-        return E_STEP_RESULT_CLOSED;
-    }
-
-    if (!columnNames_.empty()) {
-        columnNames = columnNames_;
-        return E_OK;
-    }
-
-    int errCode = PrepareStep();
-    if (errCode) {
-        return errCode;
+    bool needRelease = false;
+    if (sqliteStatement == nullptr) {
+        int errCode = E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        sqliteStatement = rdb->BeginStepQuery(errCode, sql, selectionArgs);
+        if (sqliteStatement == nullptr) {
+            return errCode;
+        }
+        needRelease = true;
     }
 
     int columnCount = 0;
-    errCode = sqliteStatement->GetColumnCount(columnCount);
+    auto errCode = sqliteStatement->GetColumnCount(columnCount);
     if (errCode) {
         return errCode;
     }
@@ -83,16 +67,15 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
         }
         columnNames.push_back(columnName);
     }
-
+    if (needRelease) {
+        rdb->EndStepQuery();
+        sqliteStatement = nullptr;
+    }
     return E_OK;
 }
 
 int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 {
-    if (isClosed) {
-        return E_STEP_RESULT_CLOSED;
-    }
-
     if (rowPos_ == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
@@ -146,7 +129,7 @@ int StepResultSet::GetRowCount(int &count)
  */
 int StepResultSet::GoToRow(int position)
 {
-    if (!connection_) {
+    if (!rdb) {
         return E_ERROR;
     }
     // If the moved position is less than zero, reset the result and return an error
@@ -211,88 +194,6 @@ int StepResultSet::GoToNextRow()
         return SQLiteError::ErrNo(errCode);
     }
 }
-
-int StepResultSet::Close()
-{
-    if (isClosed) {
-        return E_OK;
-    }
-    isClosed = true;
-    int errCode = FinishStep();
-    rdb = nullptr;
-    return errCode;
-}
-
-int StepResultSet::CheckSession()
-{
-    return E_OK;
-}
-
-/**
- * Obtain session and prepare precompile statement for step query
- */
-int StepResultSet::PrepareStep()
-{
-    if (isClosed) {
-        return E_STEP_RESULT_CLOSED;
-    }
-
-    if (sqliteStatement != nullptr) {
-        return E_OK;
-    }
-
-    if (!SqliteDatabaseUtils::IsReadOnlySql(sql)) {
-        LOG_ERROR("StoreSession BeginStepQuery fail : not select sql !");
-        return E_EXECUTE_IN_STEP_QUERY;
-    }
-
-    int errCode;
-    sqliteStatement = connection_->BeginStepQuery(errCode, sql, selectionArgs);
-    if (sqliteStatement == nullptr) {
-        connection_->EndStepQuery();
-        return errCode;
-    }
-
-    return E_OK;
-}
-
-/**
- * Release resource of step result set, this method can be called more than once
- */
-int StepResultSet::FinishStep()
-{
-    int errCode = CheckSession();
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    if (sqliteStatement == nullptr) {
-        return E_OK;
-    }
-
-    sqliteStatement = nullptr;
-    rowPos_ = INIT_POS;
-    if (connection_ != nullptr) {
-        errCode = connection_->EndStepQuery();
-    }
-    if (errCode != E_OK) {
-        LOG_ERROR("StepResultSet::FinishStep err = %d", errCode);
-    }
-    return errCode;
-}
-
-/**
- * Reset the statement
- */
-void StepResultSet::Reset()
-{
-    if (sqliteStatement != nullptr) {
-        sqlite3_reset(sqliteStatement->GetSql3Stmt());
-    }
-    rowPos_ = INIT_POS;
-    isAfterLast = false;
-}
-
 
 /**
  * Checks whether the result set is positioned after the last row
@@ -401,6 +302,87 @@ int StepResultSet::IsColumnNull(int columnIndex, bool &isNull)
 bool StepResultSet::IsClosed() const
 {
     return isClosed;
+}
+
+int StepResultSet::Close()
+{
+    if (isClosed) {
+        return E_OK;
+    }
+    isClosed = true;
+    int errCode = FinishStep();
+    rdb = nullptr;
+    return errCode;
+}
+
+int StepResultSet::CheckSession()
+{
+    if (std::this_thread::get_id() != tid) {
+        LOG_ERROR("StepResultSet is passed cross threads!");
+        return E_STEP_RESULT_SET_CROSS_THREADS;
+    }
+    return E_OK;
+}
+
+/**
+ * Obtain session and prepare precompile statement for step query
+ */
+int StepResultSet::PrepareStep()
+{
+    if (isClosed) {
+        return E_STEP_RESULT_CLOSED;
+    }
+
+    if (sqliteStatement != nullptr) {
+        return CheckSession();
+    }
+
+    int errCode;
+    sqliteStatement = rdb->BeginStepQuery(errCode, sql, selectionArgs);
+    if (sqliteStatement == nullptr) {
+        rdb->EndStepQuery();
+        return errCode;
+    }
+
+    tid = std::this_thread::get_id();
+    return E_OK;
+}
+
+/**
+ * Release resource of step result set, this method can be called more than once
+ */
+int StepResultSet::FinishStep()
+{
+    int errCode = CheckSession();
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    if (sqliteStatement == nullptr) {
+        return E_OK;
+    }
+
+    sqliteStatement = nullptr;
+    rowPos_ = INIT_POS;
+    if (rdb != nullptr) {
+        errCode = rdb->EndStepQuery();
+    }
+    if (errCode != E_OK) {
+        LOG_ERROR("StepResultSet::FinishStep err = %{public}d", errCode);
+    }
+    return errCode;
+}
+
+/**
+ * Reset the statement
+ */
+void StepResultSet::Reset()
+{
+    if (sqliteStatement != nullptr) {
+        sqlite3_reset(sqliteStatement->GetSql3Stmt());
+    }
+    rowPos_ = INIT_POS;
+    isAfterLast = false;
 }
 } // namespace NativeRdb
 } // namespace OHOS
