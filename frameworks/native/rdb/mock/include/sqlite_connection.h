@@ -45,10 +45,7 @@ public:
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string &sql,
         const std::vector<std::string> &selectionArgs) const;
-    int DesFinalize();
     int EndStepQuery();
-    void SetInTransaction(bool transaction);
-    bool IsInTransaction();
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
 #endif
@@ -78,7 +75,6 @@ private:
     std::string filePath;
     int openFlags;
     std::mutex rdbMutex;
-    bool inTransaction_;
 
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
 };
