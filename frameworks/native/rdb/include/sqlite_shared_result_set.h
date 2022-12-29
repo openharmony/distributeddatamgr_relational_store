@@ -34,10 +34,7 @@ class SqliteSharedResultSet : public AbsSharedResultSet {
 public:
     SqliteSharedResultSet(std::shared_ptr<RdbStoreImpl> rdbSreImpl, std::string path, std::string sql,
         const std::vector<std::string> &selectionArgVec);
-    SqliteSharedResultSet(SqliteConnectionPool* connectionPool, std::string path, std::string sql,
-        const std::vector<std::string> &bindArgs);
     ~SqliteSharedResultSet() override;
-    int PrepareStep(SqliteConnection* connection);
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int Close() override;
     int GetRowCount(int &count) override;
@@ -72,8 +69,6 @@ private:
     std::thread::id tid;
     // The number of rows in the cursor
     int rowNum;
-    std::vector<std::string> columnNames_;
-    SqliteConnectionPool *connectionPool_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
