@@ -56,6 +56,17 @@ public:
     static int GetJournalFileSize();
     static int GetWalAutoCheckpoint();
     static std::string GetDefaultJournalMode();
+
+private:
+    static const int SOFT_HEAP_LIMIT;
+    static const bool CALLBACK_LOG_SWITCH;
+    static const int CONNECTION_POOL_SIZE;
+    static const std::string MEMORY_DB_PATH;
+    static const int DB_PAGE_SIZE;
+    static const std::string DEFAULT_JOURNAL_MODE;
+    static const std::string WAL_SYNC_MODE;
+    static const int JOURNAL_FILE_SIZE;
+    static const int WAL_AUTO_CHECKPOINT;
 };
 
 } // namespace NativeRdb
