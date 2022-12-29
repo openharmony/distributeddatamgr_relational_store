@@ -47,8 +47,8 @@ public:
     void SetPageSize(int pageSize);
     std::string GetEncryptAlgo() const;
     void SetEncryptAlgo(const std::string &encryptAlgo);
-    int getReadConSize() const;
-    void setReadConSize(int readConSize);
+    int GetReadConSize() const;
+    void SetReadConSize(int readConSize);
 
 private:
     std::string path;

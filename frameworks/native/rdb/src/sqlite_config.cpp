@@ -38,7 +38,7 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     this->journalSize = config.GetJournalSize();
     this->pageSize = config.GetPageSize();
     this->encryptAlgo = config.GetEncryptAlgo();
-    this->readConSize_ = config.getReadConSize();
+    this->readConSize_ = config.GetReadConSize();
 }
 
 SqliteConfig::~SqliteConfig() = default;
@@ -113,12 +113,12 @@ void SqliteConfig::SetEncryptAlgo(const std::string &encryptAlgo)
     this->encryptAlgo = encryptAlgo;
 }
 
-int SqliteConfig::getReadConSize() const
+int SqliteConfig::GetReadConSize() const
 {
     return readConSize_;
 }
 
-void SqliteConfig::setReadConSize(int readConSize)
+void SqliteConfig::SetReadConSize(int readConSize)
 {
     readConSize_ = readConSize;
 }
