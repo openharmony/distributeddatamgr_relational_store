@@ -228,11 +228,10 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
     LOG_DEBUG("RelationalStoreJsKit::GetRdbStore start");
     auto context = std::make_shared<HelperRdbContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
-        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("3 or 4");
-        RDB_CHECK_RETURN_CALL_RESULT(argc == 3 || argc == 4, context->SetError(paramNumError));
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
         RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseContext(env, argv[0], context));
         RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseStoreConfig(env, argv[1], context));
-        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseVersion(env, argv[2], context));
         ParserThis(env, self, context);
         return OK;
     };
@@ -240,7 +239,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         LOG_DEBUG("RelationalStoreJsKit::GetRdbStore Async");
         int errCode = OK;
         DefaultOpenCallback callback;
-        context->proxy = RdbHelper::GetRdbStore(context->config, context->version, callback, errCode);
+        context->proxy = RdbHelper::GetRdbStore(context->config, -1, callback, errCode);
         std::shared_ptr<Error> dbInvalidError = std::make_shared<DbInvalidError>();
         RDB_CHECK_RETURN_CALL_RESULT(errCode == E_OK && context->proxy != nullptr, context->SetError(dbInvalidError));
         return (errCode == E_OK) ? OK : ERR;
