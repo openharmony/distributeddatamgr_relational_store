@@ -212,6 +212,7 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER("isInTransaction", IsInTransaction),
         DECLARE_NAPI_GETTER("isOpen", IsOpen),
         DECLARE_NAPI_GETTER("path", GetPath),
+        DECLARE_NAPI_GETTER("openStatus", GetStatus),
         DECLARE_NAPI_GETTER("isHoldingConnection", IsHoldingConnection),
         DECLARE_NAPI_GETTER("isReadOnly", IsReadOnly),
         DECLARE_NAPI_GETTER("isMemoryRdb", IsMemoryRdb),
@@ -258,10 +259,7 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, bool isSystemAppCalled)
 {
-    if (value == nullptr) {
-        LOG_ERROR("RdbStoreProxy::NewInstance get native rdb is null.");
-        return nullptr;
-    }
+    NAPI_ASSERT_BASE(env, value != nullptr, "RdbStoreProxy::NewInstance get native rdb is null.", nullptr);
     napi_value cons;
     napi_status status = napi_get_reference_value(env, constructor_, &cons);
     if (status != napi_ok) {
@@ -1062,6 +1060,17 @@ napi_value RdbStoreProxy::GetPath(napi_env env, napi_callback_info info)
     std::string path = rdbStoreProxy->rdbStore_->GetPath();
     LOG_DEBUG("RdbStoreProxy::GetPath path is empty ? %{public}d", path.empty());
     return JSUtils::Convert2JSValue(env, path);
+}
+
+napi_value RdbStoreProxy::GetStatus(napi_env env, napi_callback_info info)
+{
+    napi_value thisObj = nullptr;
+    napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
+    RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
+    NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
+    int status = rdbStoreProxy->rdbStore_->GetStatus();
+    LOG_DEBUG("RdbStoreProxy::GetStatus status is : %{public}d", status);
+    return JSUtils::Convert2JSValue(env, status);
 }
 
 napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info)
