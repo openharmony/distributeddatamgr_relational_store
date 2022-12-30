@@ -55,7 +55,7 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
             }
             storeCache_.insert(std::pair {path, rdbStore});
         } else {
-            rdbStore = storeCache_[path];
+            return storeCache_[path];
         }
     }
 
