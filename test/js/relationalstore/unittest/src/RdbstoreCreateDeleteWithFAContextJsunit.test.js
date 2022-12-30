@@ -50,7 +50,7 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
      */
     it('testRdbStoreCreateDeleteWithFAContextTest0001', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCreateDeleteWithFAContextTest0001 start *************");
-        var rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG, 1);
+        var rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
         rdbStore = null
         await data_relationalStore.deleteRdbStore(context, "CreateDeleteWithFAContextTest.db");
         done()
@@ -64,7 +64,7 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
      */
     it('testRdbStoreCreateDeleteWithFAContextTest0002', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCreateDeleteWithFAContextTest0002 start *************");
-        var rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG, 1);
+        var rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
         await rdbStore.executeSql(CREATE_TABLE_TEST, null);
         await rdbStore.executeSql("DELETE FROM test");
         var u8 = new Uint8Array([1, 2, 3])
@@ -121,7 +121,7 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
      */
     it('testRdbStoreCreateDeleteWithFAContextTest0003', 0, function (done) {
         console.log(TAG + "************* testRdbStoreCreateDeleteWithFAContextTest0003 start *************");
-        data_relationalStore.getRdbStore(context, STORE_CONFIG, 1, (err, rdbStore) => {
+        data_relationalStore.getRdbStore(context, STORE_CONFIG, (err, rdbStore) => {
             if (err) {
                 console.info("Get RdbStore failed, err: " + err)
                 return
@@ -176,7 +176,7 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
      */
     it('testRdbStoreCreateDeleteWithFAContextTest0004', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCreateDeleteWithFAContextTest0004 start *************");
-        data_relationalStore.getRdbStore(context, STORE_CONFIG, 1).then((rdbStore) => {
+        data_relationalStore.getRdbStore(context, STORE_CONFIG).then((rdbStore) => {
             console.log("Get RdbStore successfully.")
             rdbStore.executeSql(CREATE_TABLE_TEST, null).then(() => {
                 console.log("executeSql CREATE_TABLE_TEST successfully.")

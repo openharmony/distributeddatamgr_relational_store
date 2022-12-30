@@ -54,7 +54,7 @@ describe('rdbStoreDistributedTest', function () {
             securityLevel: data_relationalStore.SecurityLevel.S1,
         }
         try {
-            rdbStore = await data_relationalStore.getRdbStore(context, config, 1);
+            rdbStore = await data_relationalStore.getRdbStore(context, config);
             console.log(TAG + "create rdb store success")
             expect(rdbStore).assertEqual(rdbStore)
             let sqlStatement = "CREATE TABLE IF NOT EXISTS employee (" +

@@ -29,7 +29,7 @@ var rdbStore = undefined;
 describe('rdbResultSetTest', function () {
     beforeAll(async function () {
         console.info(TAG + 'beforeAll')
-        rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG, 1);
+        rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
         await rdbStore.executeSql(CREATE_TABLE_TEST, null);
         await createTest();
     })
@@ -1567,7 +1567,11 @@ describe('rdbResultSetTest', function () {
             let predicates = await new data_relationalStore.RdbPredicates("test")
             let resultSet = await rdbStore.query(predicates)
             resultSet.goToRow(5)
-            expect(false).assertEqual(resultSet.isColumnNull(1));
+            try{
+                expect(false).assertEqual(resultSet.isColumnNull(1));
+            }catch(e){
+                expect(e.code).assertEqual("14800013");
+            }
             resultSet = null;
             done();
             console.log(TAG + "************* testIsColumnNull0003 end *************");
@@ -1920,14 +1924,16 @@ describe('rdbResultSetTest', function () {
             resultSet.goToFirstRow();
             expect(true).assertEqual(resultSet.isStarted);
             expect("test0").assertEqual(resultSet.getString(1))
-
-            let rows = [1, 2, -1, -2];
-            for (const i of rows) {
-                resultSet.goToRow(i)
-                expect(true).assertEqual(resultSet.isStarted)
-                expect("").assertEqual(resultSet.getString(1))
+            try{
+                let rows = [1, 2, -1, -2];
+                for (const i of rows) {
+                    resultSet.goToRow(i)
+                    expect(true).assertEqual(resultSet.isStarted)
+                    expect("").assertEqual(resultSet.getString(1))
+                }
+            }catch(e){
+                expect(e.code).assertEqual("14800013");
             }
-
             resultSet.close()
             expect(true).assertEqual(resultSet.isClosed)
             resultSet = null;
@@ -1959,11 +1965,15 @@ describe('rdbResultSetTest', function () {
                 expect("test" + i).assertEqual(resultSet.getString(1))
             }
 
-            rows = [2, 3, 4, -1, -2];
-            for (const i of rows) {
-                resultSet.goToRow(i);
-                expect(true).assertEqual(resultSet.isStarted);
-                expect("").assertEqual(resultSet.getString(1))
+            try{
+                rows = [2, 3, 4, -1, -2];
+                for (const i of rows) {
+                    resultSet.goToRow(i);
+                    expect(true).assertEqual(resultSet.isStarted);
+                    expect("").assertEqual(resultSet.getString(1))
+                }
+            }catch(e){
+                expect(e.code).assertEqual("14800013");
             }
 
             resultSet.close()
