@@ -126,7 +126,7 @@ public:
     }
     std::string GetMessage() override
     {
-        return "Permission denied.";
+        return "Permission verification failed, application which is not a system application uses system API.";
     }
     int GetCode() override
     {
