@@ -32,7 +32,7 @@ var context = ability_featureAbility.getContext()
 describe('rdbStoreDataSharePredicatesTest', function () {
     beforeAll(async function () {
         console.info(TAG + 'beforeAll')
-        rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG, 1)
+        rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG)
     })
 
     beforeEach(async function () {
@@ -131,37 +131,41 @@ describe('rdbStoreDataSharePredicatesTest', function () {
 
         let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
-        let promiseUpdate = rdbStore.update("test", valueBucket, predicates)
-        promiseUpdate.then(async (ret) => {
-            expect(1).assertEqual(ret)
-            console.log(TAG + "Update done: " + ret)
-        }).catch((err) => {
-            console.log(TAG + "Update err: " + err)
-            expect(false).assertTrue()
-        })
-        await promiseUpdate
+        try{
+            let promiseUpdate = rdbStore.update("test", valueBucket, predicates)
+            promiseUpdate.then(async (ret) => {
+                expect(1).assertEqual(ret)
+                console.log(TAG + "Update done: " + ret)
+            }).catch((err) => {
+                console.log(TAG + "Update err: " + err)
+                expect(false).assertTrue()
+            })
+            await promiseUpdate
 
-        let rdbPredicates = await new data_relationalStore.RdbPredicates("test")
-        rdbPredicates.equalTo("name", "lisi")
-        let resultSet = await rdbStore.query(rdbPredicates)
-        expect(true).assertEqual(resultSet.goToFirstRow())
-        const id = resultSet.getLong(resultSet.getColumnIndex("id"))
-        const name = resultSet.getString(resultSet.getColumnIndex("name"))
-        const age = resultSet.getLong(resultSet.getColumnIndex("age"))
-        const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
-        const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+            let rdbPredicates = await new data_relationalStore.RdbPredicates("test")
+            rdbPredicates.equalTo("name", "lisi")
+            let resultSet = await rdbStore.query(rdbPredicates)
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const id = resultSet.getLong(resultSet.getColumnIndex("id"))
+            const name = resultSet.getString(resultSet.getColumnIndex("name"))
+            const age = resultSet.getLong(resultSet.getColumnIndex("age"))
+            const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
+            const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
 
-        expect("lisi").assertEqual(name)
-        expect(28).assertEqual(age)
-        expect(200.5).assertEqual(salary)
-        expect(4).assertEqual(blobType[0])
-        expect(5).assertEqual(blobType[1])
-        expect(6).assertEqual(blobType[2])
+            expect("lisi").assertEqual(name)
+            expect(28).assertEqual(age)
+            expect(200.5).assertEqual(salary)
+            expect(4).assertEqual(blobType[0])
+            expect(5).assertEqual(blobType[1])
+            expect(6).assertEqual(blobType[2])
 
-        console.log(TAG + "dataShare update: {id=" + id + ", name=" + name + ", " +
-            "age=" + age + ", salary=" + salary + ", blobType=" + blobType)
-        resultSet = null
-
+            console.log(TAG + "dataShare update: {id=" + id + ", name=" + name + ", " +
+                "age=" + age + ", salary=" + salary + ", blobType=" + blobType)
+            resultSet = null
+        }catch(e){
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
+            expect("202").assertEqual(e.code)
+        }
         done()
         console.log(TAG + "************* testRdbStoreDelete0002 end *************")
     })
@@ -192,35 +196,39 @@ describe('rdbStoreDataSharePredicatesTest', function () {
 
         let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
+        try{
+            await rdbStore.update("test", valueBucket, predicates, async function (err, ret) {
+                if (err) {
+                    console.info("Update err: " + err)
+                    expect(false).assertTrue()
+                }
+                expect(1).assertEqual(ret)
+                console.log("Update done: " + ret)
+                let rdbPredicates = await new data_relationalStore.RdbPredicates("test")
+                rdbPredicates.equalTo("name", "lisi")
+                let resultSet = await rdbStore.query(rdbPredicates)
+                expect(1).assertEqual(resultSet.rowCount)
+                expect(true).assertEqual(resultSet.goToFirstRow())
+                const id = resultSet.getLong(resultSet.getColumnIndex("id"))
+                const name = resultSet.getString(resultSet.getColumnIndex("name"))
+                const age = resultSet.getLong(resultSet.getColumnIndex("age"))
+                const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
 
-        await rdbStore.update("test", valueBucket, predicates, async function (err, ret) {
-            if (err) {
-                console.info("Update err: " + err)
-                expect(false).assertTrue()
-            }
-            expect(1).assertEqual(ret)
-            console.log("Update done: " + ret)
-            let rdbPredicates = await new data_relationalStore.RdbPredicates("test")
-            rdbPredicates.equalTo("name", "lisi")
-            let resultSet = await rdbStore.query(rdbPredicates)
-            expect(1).assertEqual(resultSet.rowCount)
-            expect(true).assertEqual(resultSet.goToFirstRow())
-            const id = resultSet.getLong(resultSet.getColumnIndex("id"))
-            const name = resultSet.getString(resultSet.getColumnIndex("name"))
-            const age = resultSet.getLong(resultSet.getColumnIndex("age"))
-            const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
-            const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
-
-            expect("lisi").assertEqual(name)
-            expect(28).assertEqual(age)
-            expect(200.5).assertEqual(salary)
-            expect(4).assertEqual(blobType[0])
-            expect(5).assertEqual(blobType[1])
-            expect(6).assertEqual(blobType[2])
-            console.log(TAG + "dataShare update: {id=" + id + ", name=" + name + ", " +
-                "age=" + age + ", salary=" + salary + ", blobType=" + blobType)
-            resultSet = null
-        })
+                expect("lisi").assertEqual(name)
+                expect(28).assertEqual(age)
+                expect(200.5).assertEqual(salary)
+                expect(4).assertEqual(blobType[0])
+                expect(5).assertEqual(blobType[1])
+                expect(6).assertEqual(blobType[2])
+                console.log(TAG + "dataShare update: {id=" + id + ", name=" + name + ", " +
+                    "age=" + age + ", salary=" + salary + ", blobType=" + blobType)
+                resultSet = null
+            })
+        }catch(e){
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
+            expect("202").assertEqual(e.code)
+        }
 
         done()
         console.log(TAG + "************* testRdbStoreDelete0003 end *************")
@@ -244,28 +252,32 @@ describe('rdbStoreDataSharePredicatesTest', function () {
 
         let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
-        let queryPromise = rdbStore.query("test", predicates)
-        queryPromise.then((resultSet) => {
-            console.log(TAG + "DataShare Query done: ")
-            expect(true).assertEqual(resultSet.goToFirstRow())
-            const name = resultSet.getString(resultSet.getColumnIndex("name"))
-            const age = resultSet.getLong(resultSet.getColumnIndex("age"))
-            const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
-            const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+        try{
+            let queryPromise = rdbStore.query("test", predicates)
+            queryPromise.then((resultSet) => {
+                console.log(TAG + "DataShare Query done: ")
+                expect(true).assertEqual(resultSet.goToFirstRow())
+                const name = resultSet.getString(resultSet.getColumnIndex("name"))
+                const age = resultSet.getLong(resultSet.getColumnIndex("age"))
+                const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
 
-            expect("zhangsan").assertEqual(name)
-            expect(18).assertEqual(age)
-            expect(100.5).assertEqual(salary)
-            expect(4).assertEqual(blobType[0])
-            expect(5).assertEqual(blobType[1])
-            expect(6).assertEqual(blobType[2])
+                expect("zhangsan").assertEqual(name)
+                expect(18).assertEqual(age)
+                expect(100.5).assertEqual(salary)
+                expect(4).assertEqual(blobType[0])
+                expect(5).assertEqual(blobType[1])
+                expect(6).assertEqual(blobType[2])
 
-        }).catch((err) => {
-            console.log(TAG + "Query err: " + err)
-            expect(false).assertTrue()
-        })
-        await queryPromise
-
+            }).catch((err) => {
+                console.log(TAG + "Query err: " + err)
+                expect(false).assertTrue()
+            })
+            await queryPromise
+        }catch(e){
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
+            expect("202").assertEqual(e.code)
+        }
         done()
         console.log(TAG + "************* testRdbStoreDataShareFunc0004 end *************")
     })
@@ -288,27 +300,30 @@ describe('rdbStoreDataSharePredicatesTest', function () {
 
         let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
+        try{
+            await rdbStore.query("test", predicates, ["ID", "NAME", "AGE", "SALARY", "blobType"],
+                function (err, resultSet) {
+                    if (err) {
+                        console.info("Query err: " + err)
+                        expect(false).assertTrue()
+                    }
+                    expect(true).assertEqual(resultSet.goToFirstRow())
+                    const name = resultSet.getString(resultSet.getColumnIndex("name"))
+                    const age = resultSet.getLong(resultSet.getColumnIndex("age"))
+                    const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                    const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
 
-        await rdbStore.query("test", predicates, ["ID", "NAME", "AGE", "SALARY", "blobType"],
-            function (err, resultSet) {
-                if (err) {
-                    console.info("Query err: " + err)
-                    expect(false).assertTrue()
-                }
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                const name = resultSet.getString(resultSet.getColumnIndex("name"))
-                const age = resultSet.getLong(resultSet.getColumnIndex("age"))
-                const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
-                const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
-
-                expect("zhangsan").assertEqual(name)
-                expect(18).assertEqual(age)
-                expect(100.5).assertEqual(salary)
-                expect(4).assertEqual(blobType[0])
-                expect(5).assertEqual(blobType[1])
-                expect(6).assertEqual(blobType[2])
-            })
-
+                    expect("zhangsan").assertEqual(name)
+                    expect(18).assertEqual(age)
+                    expect(100.5).assertEqual(salary)
+                    expect(4).assertEqual(blobType[0])
+                    expect(5).assertEqual(blobType[1])
+                    expect(6).assertEqual(blobType[2])
+                })
+        }catch(e){
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
+            expect("202").assertEqual(e.code)
+        }
         done()
         console.log(TAG + "************* testRdbStoreDataShareFunc0005 end *************")
     })
@@ -331,22 +346,26 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         await rdbStore.insert("test", valueBucket)
         let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
-        let deletePromise = rdbStore.delete("test", predicates)
-        deletePromise.then(async (ret) => {
-            expect(1).assertEqual(ret)
-            console.log(TAG + "Delete done: " + ret)
-        }).catch((err) => {
-            console.log(TAG + "Delete err: " + err)
-            expect(false).assertTrue()
-        })
-        await deletePromise
+        try{
+            let deletePromise = rdbStore.delete("test", predicates)
+            deletePromise.then(async (ret) => {
+                expect(1).assertEqual(ret)
+                console.log(TAG + "Delete done: " + ret)
+            }).catch((err) => {
+                console.log(TAG + "Delete err: " + err)
+                expect(false).assertTrue()
+            })
+            await deletePromise
 
-        let rdbPredicates = await new data_relationalStore.RdbPredicates("test")
-        rdbPredicates.equalTo("name", "zhangsan")
-        let resultSet = await rdbStore.query(rdbPredicates)
-        expect(false).assertEqual(resultSet.goToFirstRow())
-        resultSet = null
-
+            let rdbPredicates = await new data_relationalStore.RdbPredicates("test")
+            rdbPredicates.equalTo("name", "zhangsan")
+            let resultSet = await rdbStore.query(rdbPredicates)
+            expect(false).assertEqual(resultSet.goToFirstRow())
+            resultSet = null
+        }catch(e){
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
+            expect("202").assertEqual(e.code)
+        }
         done()
         console.log(TAG + "************* testRdbStoreDataShareFunc0006 end *************")
     })
@@ -369,21 +388,24 @@ describe('rdbStoreDataSharePredicatesTest', function () {
 
         let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
-
-        await rdbStore.delete("test", predicates, async function (err, ret) {
-            if (err) {
-                console.info("Delete err: " + err)
-                expect(false).assertTrue()
-            }
-            expect(1).assertEqual(ret)
-            console.log("Delete done: " + ret)
-            let rdbPredicates = await new data_relationalStore.RdbPredicates("test")
-            rdbPredicates.equalTo("name", "zhangsan")
-            let resultSet = await rdbStore.query(rdbPredicates)
-            expect(false).assertEqual(resultSet.goToFirstRow())
-            resultSet = null
-        })
-
+        try{
+            await rdbStore.delete("test", predicates, async function (err, ret) {
+                if (err) {
+                    console.info("Delete err: " + err)
+                    expect(false).assertTrue()
+                }
+                expect(1).assertEqual(ret)
+                console.log("Delete done: " + ret)
+                let rdbPredicates = await new data_relationalStore.RdbPredicates("test")
+                rdbPredicates.equalTo("name", "zhangsan")
+                let resultSet = await rdbStore.query(rdbPredicates)
+                expect(false).assertEqual(resultSet.goToFirstRow())
+                resultSet = null
+            })
+        }catch(e){
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
+            expect("202").assertEqual(e.code)
+        }
         done()
         console.log(TAG + "************* testRdbStoreDataShareFunc0007 end *************")
     })

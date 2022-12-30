@@ -37,8 +37,6 @@ const STORE_CONFIG = {
     securityLevel: data_relationalStore.SecurityLevel.S1,
 }
 
-const CURRENT_STORE_VERSION = 1
-
 const TAG = 'RDB_TEST'
 
 var rdbStore = undefined
@@ -52,7 +50,7 @@ describe('rdbStorePredicatesJoinBTest', function () {
 
     beforeEach(async function () {
         console.info(TAG + 'beforeEach');
-        rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG, CURRENT_STORE_VERSION);
+        rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
         await generateJobTable();
         await generateSalarygradeTable();
         await generateDeptTable();

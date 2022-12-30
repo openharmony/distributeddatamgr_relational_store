@@ -51,7 +51,7 @@ describe('rdbStorePromiseTest', function () {
     it('testRdbStorePromiseTest0001', 0, async function (done) {
         console.log(TAG + "************* testRdbStorePromiseTest0001 start *************");
         try{
-            data_relationalStore.getRdbStore(context, STORE_CONFIG, 1).then(async (rdbStore) => {
+            data_relationalStore.getRdbStore(context, STORE_CONFIG).then(async (rdbStore) => {
                 console.log("Get RdbStore successfully.")
                 await rdbStore.executeSql(CREATE_TABLE_TEST, null)
                 const valueBucket = {
@@ -108,7 +108,7 @@ describe('rdbStorePromiseTest', function () {
     it('testRdbStorePromiseTest0002', 0, async function (done) {
         console.log(TAG + "************* testRdbStorePromiseTest0002 start *************")
         try{
-            data_relationalStore.getRdbStore(context, {dbname: "RDBCallbackTest.db"}, 1).then((rdbStore) => {
+            data_relationalStore.getRdbStore(context, {dbname: "RDBCallbackTest.db"}).then((rdbStore) => {
                 console.log("Get RdbStore successfully.")
                 expect(false).assertTrue()
             }).catch((err) => {
@@ -132,7 +132,7 @@ describe('rdbStorePromiseTest', function () {
     it('testRdbStorePromiseTest0003', 0, async function (done) {
         console.log(TAG + "************* testRdbStorePromiseTest0003 start *************");
         try{
-            data_relationalStore.getRdbStore(context, STORE_CONFIG, 1).then((rdbStore) => {
+            data_relationalStore.getRdbStore(context, STORE_CONFIG).then((rdbStore) => {
                 console.log("Get RdbStore successfully.")
                 done()
             }).catch((err) => {
@@ -154,7 +154,7 @@ describe('rdbStorePromiseTest', function () {
      */
     it('testRdbStorePromiseTest0004', 0, async function (done) {
         console.log(TAG + "************* testRdbStorePromiseTest0004 start *************")
-        let rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG, 1)
+        let rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG)
         try{
             data_relationalStore.deleteRdbStore(context, 123454345).then((rdbStore) => {
                 console.log("Delete RdbStore successfully.")
@@ -179,7 +179,7 @@ describe('rdbStorePromiseTest', function () {
      */
     it('testRdbStorePromiseTest0005', 0, async function (done) {
         console.log(TAG + "************* testRdbStorePromiseTest0005 start *************");
-        let rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG, 1)
+        let rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG)
         try{
             data_relationalStore.deleteRdbStore(context, "RDBCallbackTest.db").then((err) => {
                 console.log("Delete RdbStore successfully.")
