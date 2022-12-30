@@ -1008,5 +1008,30 @@ describe('rdbStoreUpdateTest', function () {
         }
     })
 
+    /**
+     * @tc.name resultSet Update test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateWithConflictResolution_0007
+     * @tc.desc resultSet Update test
+     */
+    it('testRdbStoreUpdateWithConflictResolution0007', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0007 start *************");
+        try {
+            const valueBucket = {
+                "name": "zhangsan",
+                "age": 20,
+                "salary": 300.5,
+            }
+            let predicates = await new data_relationalStore.RdbPredicates("test")
+            await predicates.equalTo("age", "19")
+            rdbStore.update(valueBucket, predicates, 6);
+            expect(null).assertFail();
+        } catch (err) {
+            console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+            expect("401").assertEqual(err.code)
+            console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0007 end   *************");
+            done()
+        }
+    })
+
     console.log(TAG + "*************Unit Test End*************");
 })
