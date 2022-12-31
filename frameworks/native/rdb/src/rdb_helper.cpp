@@ -42,7 +42,7 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
         RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
     }
 #endif
-
+    std::string path = config.GetPath();
     std::shared_ptr<RdbStore> rdbStore;
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -63,6 +63,7 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     errCode = SecurityPolicy::SetSecurityLabel(config);
     if (errCode != E_OK) {
         LOG_ERROR("RdbHelper set security label fail.");
+        storeCache_.erase(path);
         return nullptr;
     }
 #endif
@@ -70,6 +71,7 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
     if (errCode != E_OK) {
         LOG_ERROR("RdbHelper GetRdbStore ProcessOpenCallback fail");
+        storeCache_.erase(path);
         return nullptr;
     }
 
