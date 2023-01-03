@@ -489,6 +489,35 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
+     * @tc.name rdb inserttWithConflictResolution test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0005
+     * @tc.desc rdb insertWithConflictResolution test
+     */
+    it('InsertWithConflictResolution0005', 0, async function (done) {
+        console.log(TAG + "************* InsertWithConflictResolution0005 start *************");
+        {
+            var u8 = new Uint8Array([4, 5, 6])
+            const valueBucket = {
+                "id": 1,
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 200.5,
+                "blobType": u8,
+            }
+            try {
+                rdbStore.insert("test", valueBucket, 6);
+                expect(null).assertFail()
+            } catch(err) {
+                console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+                expect("401").assertEqual(err.code)
+                done()
+            }
+        }
+
+        console.log(TAG + "************* InsertWithConflictResolution_0005 end   *************");
+    })
+
+    /**
      * @tc.name: rdb batchInsert test
      * @tc.number: SUB_DDM_AppDataFWK_JSRDB_batchInsert_0001
      * @tc.desc: rdb batchInsert test
