@@ -140,7 +140,7 @@ describe('rdbStoreCallBackTest', async function () {
      it('testRdbStoreCallBackTest0003', 0, function (done) {
         console.log(TAG + "************* testRdbStoreCallBackTest0003 start *************")
         try{
-            data_relationalStore.getRdbStore(null, {name: "RDBCallbackTest.db",securityLevel: data_relationalStore.SecurityLevel.S1,}, (err, rdbStore) => {
+            data_relationalStore.getRdbStore(null, {name: "RDBCallbackTest.db"}, (err, rdbStore) => {
                 if (err) {
                     console.log("Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
                     expect(false).assertTrue()

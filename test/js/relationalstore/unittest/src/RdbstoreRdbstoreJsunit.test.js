@@ -34,8 +34,9 @@ describe('rdbStoreTest', function () {
         console.info(TAG + 'beforeEach')
     })
 
-    afterEach(function () {
+    afterEach(async function () {
         console.info(TAG + 'afterEach')
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
     })
 
     afterAll(async function () {
@@ -245,13 +246,13 @@ describe('rdbStoreTest', function () {
      */
     it('testRdbStore0008', 0, async function (done) {
         console.info(TAG + "************* testRdbStore0008 start *************")
-        await data_relationalStore.getRdbStore(context, STORE_CONFIG)
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG)
         console.info(TAG + "getRdbStore done: " + store)
         console.info(TAG + "RdbStore status: " + store.openStatus)
         //data_relationalStore.OpenStatus.ON_CREATE
         expect(store.openStatus == 0).assertTrue()
 
-        await data_relationalStore.getRdbStore(context, STORE_CONFIG)
+        store = await data_relationalStore.getRdbStore(context, STORE_CONFIG)
         console.info(TAG + "getRdbStore done: " + store)
         console.info(TAG + "RdbStore status: " + store.openStatus)
         //data_relationalStore.OpenStatus.ON_OPEN
