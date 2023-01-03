@@ -30,7 +30,7 @@ const STORE_CONFIG = {
 const DATABASE_BACKUP_NAME = "Backup.db"
 
 async function CreatRdbStore(STORE_CONFIG) {
-    let rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG, 1)
+    let rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG)
     await rdbStore.executeSql(CREATE_TABLE_TEST, null)
     let u8 = new Uint8Array([1, 2, 3])
     {
@@ -102,7 +102,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
 
         beforeEach(async function () {
             console.info(TAG + 'beforeEach')
-            rdbStore = await CreatRdbStore(context, STORE_CONFIG)
+            rdbStore = await CreatRdbStore(STORE_CONFIG)
         })
 
         afterEach(async function () {

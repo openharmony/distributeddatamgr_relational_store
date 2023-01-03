@@ -34,7 +34,7 @@ describe('rdbStoreDeleteTest', function () {
 
     beforeEach(async function () {
         console.info(TAG + 'beforeEach')
-        rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG, 1);
+        rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
         await rdbStore.executeSql(CREATE_TABLE_TEST, null);
     })
 

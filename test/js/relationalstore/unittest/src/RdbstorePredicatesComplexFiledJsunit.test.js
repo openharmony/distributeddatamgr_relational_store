@@ -28,7 +28,7 @@ var context = ability_featureAbility.getContext()
 describe('rdbStorePredicatesComplexFiledTest', function () {
     beforeAll(async function () {
         console.info(TAG + 'beforeAll')
-        rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG, 1);
+        rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
         await generateTable();
     })
 
