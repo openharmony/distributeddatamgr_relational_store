@@ -37,8 +37,6 @@ const STORE_CONFIG = {
     securityLevel: data_relationalStore.SecurityLevel.S1,
 }
 
-const CURRENT_STORE_VERSION = 1;
-
 const TAG = 'RDB_TEST';
 
 var rdbStore = undefined
@@ -48,7 +46,7 @@ var context = ability_featureAbility.getContext()
 describe('rdbStorePredicatesJoinTest', function () {
     beforeAll(async function () {
         console.info(TAG + 'beforeAll')
-        rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG, CURRENT_STORE_VERSION);
+        rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
         await generateUserTable();
         await generateBookTable();
         console.info(TAG + 'beforeAll end')

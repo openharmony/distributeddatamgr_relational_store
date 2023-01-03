@@ -52,7 +52,7 @@ describe('rdbStoreCallBackTest', async function () {
     it('testRdbStoreCallBackTest0001', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCallBackTest0001 start *************");
         try{
-            await data_relationalStore.getRdbStore(context, STORE_CONFIG, 1, async (err, rdbStore) => {
+            await data_relationalStore.getRdbStore(context, STORE_CONFIG, async (err, rdbStore) => {
                 if (err) {
                     console.log("Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
                     expect(false).assertTrue()
@@ -98,8 +98,8 @@ describe('rdbStoreCallBackTest', async function () {
                     console.log(TAG + "************* testRdbStoreCallBackTest0001 end *************")
                 });
             })
-        } catch(err) {
-            console.log("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
+        } catch(e) {
+            console.log("catch err: Get RdbStore failed, err: code=" + e.code + " message=" + e.message)
             expect(false).assertTrue()
             done()
             console.log(TAG + "************* testRdbStoreCallBackTest0001 end *************")
@@ -114,21 +114,22 @@ describe('rdbStoreCallBackTest', async function () {
     it('testRdbStoreCallBackTest0002', 0, function (done) {
         console.log(TAG + "************* testRdbStoreCallBackTest0002 start *************")
         try{
-            data_relationalStore.getRdbStore(context, {dbname: "RDBCallbackTest.db", securityLevel: data_relationalStore.SecurityLevel.S1,}, 1, (err, rdbStore) => {
+            data_relationalStore.getRdbStore(context, {dbname: "RDBCallbackTest.db", securityLevel: data_relationalStore.SecurityLevel.S1,}, (err, rdbStore) => {
                 if (err) {
                     console.log("Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
                     expect(false).assertTrue()
                 }
                 console.log("Get RdbStore successfully.")
                 expect(false).assertTrue()
+                done()
+                console.log(TAG + "************* testRdbStoreCallBackTest0002 end *************")
             })
-        } catch(err) {
-            console.log("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
-            expect("401").assertEqual(err.code)
+        } catch(e) {
+            console.log("catch err: Get RdbStore failed, err: code=" + e.code + " message=" + e.message)
+            expect("401").assertEqual(e.code)
+            done()
+            console.log(TAG + "************* testRdbStoreCallBackTest0002 end *************")
         }
-        
-        done()
-        console.log(TAG + "************* testRdbStoreCallBackTest0002 end *************")
     })
 
     /**
@@ -139,21 +140,22 @@ describe('rdbStoreCallBackTest', async function () {
      it('testRdbStoreCallBackTest0003', 0, function (done) {
         console.log(TAG + "************* testRdbStoreCallBackTest0003 start *************")
         try{
-            data_relationalStore.getRdbStore(null, {name: "RDBCallbackTest.db",securityLevel: data_relationalStore.SecurityLevel.S1,}, 1, (err, rdbStore) => {
+            data_relationalStore.getRdbStore(null, {name: "RDBCallbackTest.db",securityLevel: data_relationalStore.SecurityLevel.S1,}, (err, rdbStore) => {
                 if (err) {
                     console.log("Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
                     expect(false).assertTrue()
                 }
                 console.log("Get RdbStore successfully.")
                 expect(false).assertTrue()
+                done()
+                console.log(TAG + "************* testRdbStoreCallBackTest0003 end *************")
             })
-        } catch(err) {
-            console.log("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
-            expect("401").assertEqual(err.code)
+        } catch(e) {
+            console.log("catch err: Get RdbStore failed, err: code=" + e.code + " message=" + e.message)
+            expect("401").assertEqual(e.code)
+            done()
+            console.log(TAG + "************* testRdbStoreCallBackTest0003 end *************")
         }
-        
-        done()
-        console.log(TAG + "************* testRdbStoreCallBackTest0003 end *************")
     })
     
     /**
@@ -164,20 +166,21 @@ describe('rdbStoreCallBackTest', async function () {
     it('testRdbStoreCallBackTest0004', 0, function (done) {
         console.log(TAG + "************* testRdbStoreCallBackTest0004 start *************")
         try{
-            data_relationalStore.getRdbStore(context, STORE_CONFIG, 1, (err, rdbStore) => {
+            data_relationalStore.getRdbStore(context, STORE_CONFIG, (err, rdbStore) => {
                 if (err) {
                     console.log("Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
                     expect(false).assertTrue()
                 }
                 console.log("Get RdbStore successfully.")
                 done()
+                console.log(TAG + "************* testRdbStoreCallBackTest0004 end *************")
             })
-        } catch(err) {
-            console.log("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
+        } catch(e) {
+            console.log("catch err: Get RdbStore failed, err: code=" + e.code + " message=" + e.message)
             expect(false).assertTrue()
+            done()
+            console.log(TAG + "************* testRdbStoreCallBackTest0004 end *************")
         }
-        done()
-        console.log(TAG + "************* testRdbStoreCallBackTest0004 end *************")
     })
 
     /**
@@ -187,29 +190,32 @@ describe('rdbStoreCallBackTest', async function () {
      */
     it('testRdbStoreCallBackTest0005', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCallBackTest0005 start *************");
-        let rdbStore;
-        try{
-            rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG, 1)
-        } catch(err) {
-            console.log("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
-            expect(false).assertTrue()
-        }
-        try{
-            data_relationalStore.deleteRdbStore(context, 12345, (err) => {
-                if (err) {
-                    console.log("Delete RdbStore is failed, err: code=" + err.code + " message=" + err.message)
+        data_relationalStore.getRdbStore(context, STORE_CONFIG).then((rdbStore)=>{
+            try{
+                data_relationalStore.deleteRdbStore(context, 12345, (err) => {
+                    if (err) {
+                        console.log("Delete RdbStore is failed, err: code=" + err.code + " message=" + err.message)
+                        expect(false).assertTrue()
+                        done()
+                        console.log(TAG + "************* testRdbStoreCallBackTest0005 end *************");
+                    }
+                    console.log("Delete RdbStore successfully.")
                     expect(false).assertTrue()
-                }
-                console.log("Delete RdbStore successfully.")
-                expect(false).assertTrue()
-            });
-        } catch(err) {
-            console.log("catch err: Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
-            expect("401").assertEqual(err.code)
+                    done()
+                    console.log(TAG + "************* testRdbStoreCallBackTest0005 end *************");
+                });
+            } catch(e) {
+                console.log("catch err: Delete RdbStore failed, err: code=" + e.code + " message=" + e.message)
+                expect("401").assertEqual(e.code)
+                done()
+                console.log(TAG + "************* testRdbStoreCallBackTest0005 end *************");
+            }
+        }).catch((err2) => {
+            console.info("Get RdbStore failed, err: code=" + err2.code + " message=" + err2.message)
+            expect(false).assertTrue()
             done()
-        }
-        done()
-        console.log(TAG + "************* testRdbStoreCallBackTest0005 end *************");
+            console.log(TAG + "************* testRdbStoreCallBackTest0005 end *************");
+        })
     })
     
     /**
@@ -219,12 +225,14 @@ describe('rdbStoreCallBackTest', async function () {
      */
     it('testRdbStoreCallBackTest0006', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCallBackTest0006 start *************")
-        data_relationalStore.getRdbStore(context, STORE_CONFIG, 1).then((rdbStore)=>{
+        data_relationalStore.getRdbStore(context, STORE_CONFIG).then((rdbStore)=>{
             try{
                 data_relationalStore.deleteRdbStore(context, "RDBCallbackTest.db", (err) => {
                     if (err) {
                         console.log("Delete RdbStore is failed, err: code=" + err.code + " message=" + err.message)
                         expect(false).assertTrue()
+                        done()
+                        console.log(TAG + "************* testRdbStoreCallBackTest0006 end *************");
                     }
                     console.log("Delete RdbStore successfully.")
                     done()
@@ -233,10 +241,14 @@ describe('rdbStoreCallBackTest', async function () {
             } catch(err) {
                 console.log("222catch err: Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
                 expect(false).assertTrue()
+                done()
+                console.log(TAG + "************* testRdbStoreCallBackTest0006 end *************");
             }
         }).catch((err) => {
             console.info("Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
             expect(false).assertTrue()
+            done()
+            console.log(TAG + "************* testRdbStoreCallBackTest0006 end *************");
         })
     })
 
