@@ -177,8 +177,7 @@ void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
         }
     } else {
         int blockRowNum = rowNum;
-        int startPos = (int)GetBlock()->GetStartPos();
-        startPos =
+        int startPos =
             isOnlyFillResultSetBlock ? requiredPos : PickFillBlockStartPosition(requiredPos, resultSetBlockCapacity);
         connection->ExecuteForSharedBlock(blockRowNum, qrySql, bindArgs, GetBlock(), startPos, requiredPos, false);
         int currentBlockCapacity = static_cast<int>(GetBlock()->GetRowNum());

@@ -148,9 +148,8 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
     int64_t outRowId = 0;
     for (auto const &value : initialBatchValues) {
         ++outInsertNum;
-        if (RdbStoreImpl::Insert(outRowId, table, value) != E_OK) {
+        if (RdbStoreImpl::Insert(outRowId, table, value) != E_OK || outRowId <= 0) {
             LOG_WARN("Roll back in batch insert.");
-            outRowId = -1;
             outInsertNum = -1;
             return RollBack();
         }
