@@ -592,7 +592,7 @@ describe('rdbStoreUpdateTest', function () {
             }
             let predicates = await new data_relationalStore.RdbPredicates("test")
             await predicates.equalTo("age", "19")
-            let updatePromise = rdbStore.update(valueBucket, predicates, 0);  //  data_relationalStore.ConflictResolution.ON_CONFLICT_NONE
+            let updatePromise = rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
             updatePromise.then(async (ret) => {
                 await console.log(TAG + "update done: " + ret);
                 expect(null).assertFail();
@@ -688,7 +688,7 @@ describe('rdbStoreUpdateTest', function () {
             }
             let predicates = await new data_relationalStore.RdbPredicates("test")
             await predicates.equalTo("age", "19")
-            let updatePromise = rdbStore.update(valueBucket, predicates, 1); // data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK
+            let updatePromise = rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
             updatePromise.then(async (ret) => {
                 await expect(1).assertEqual(ret);
                 await console.log(TAG + "update done: " + ret);
@@ -784,7 +784,7 @@ describe('rdbStoreUpdateTest', function () {
             }
             let predicates = await new data_relationalStore.RdbPredicates("test")
             await predicates.equalTo("age", "19")
-            let updatePromise = rdbStore.update(valueBucket, predicates, 1); // data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK
+            let updatePromise = rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
             updatePromise.then(async (ret) => {
                 aexpect(null).assertFail();
                 await console.log(TAG + "update done: " + ret);
@@ -880,7 +880,7 @@ describe('rdbStoreUpdateTest', function () {
             }
             let predicates = await new data_relationalStore.RdbPredicates("test")
             await predicates.equalTo("age", "19")
-            let updatePromise = rdbStore.update(valueBucket, predicates, 5);  // data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE
+            let updatePromise = rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
             updatePromise.then(async (ret) => {
                 await expect(1).assertEqual(ret);
                 await console.log(TAG + "update done: " + ret);
@@ -969,7 +969,7 @@ describe('rdbStoreUpdateTest', function () {
             }
             let predicates = await new data_relationalStore.RdbPredicates("test")
             await predicates.equalTo("age", "19")
-            let updatePromise = rdbStore.update(valueBucket, predicates, 5);  // data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE
+            let updatePromise = rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
             updatePromise.then(async (ret) => {
                 await expect(1).assertEqual(ret);
                 await console.log(TAG + "update done: " + ret);
