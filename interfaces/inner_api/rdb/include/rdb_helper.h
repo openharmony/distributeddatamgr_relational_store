@@ -27,11 +27,6 @@
 
 namespace OHOS {
 namespace NativeRdb {
-enum class RdbStatus {
-    ON_CREATE = 0,
-    ON_OPEN = 1,
-};
-
 struct RdbStoreNode {
     RdbStoreNode(const std::shared_ptr<RdbStore> &rdbStore);
     RdbStoreNode &operator=(const std::shared_ptr<RdbStore> &store);

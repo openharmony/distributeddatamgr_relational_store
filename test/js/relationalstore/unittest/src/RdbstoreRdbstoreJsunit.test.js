@@ -245,19 +245,20 @@ describe('rdbStoreTest', function () {
      */
     it('testRdbStore0008', 0, async function (done) {
         console.info(TAG + "************* testRdbStore0008 start *************")
-        await data_relationalStore.getRdbStore(context, STORE_CONFIG)
-        console.info(TAG + "getRdbStore done: " + store)
-        console.info(TAG + "RdbStore status: " + store.openStatus)
-        //data_relationalStore.OpenStatus.ON_CREATE
-        expect(store.openStatus == 0).assertTrue()
-
-        await data_relationalStore.getRdbStore(context, STORE_CONFIG)
-        console.info(TAG + "getRdbStore done: " + store)
-        console.info(TAG + "RdbStore status: " + store.openStatus)
-        //data_relationalStore.OpenStatus.ON_OPEN
-        expect(store.openStatus == 1).assertTrue()
-        await data_relationalStore.deleteRdbStore(context, STORE_CONFIG.name)
-        done()
+        data_relationalStore.getRdbStore(context, STORE_CONFIG, async (err, store) => {
+            if (err) {
+                expect(null).assertFail()
+            }
+            expect(store.openStatus == data_relationalStore.OpenStatus.ON_CREATE).assertTrue()
+            data_relationalStore.getRdbStore(context, STORE_CONFIG, async (err, store) => {
+                if (err) {
+                    expect(null).assertFail()
+                }
+                expect(store.openStatus == data_relationalStore.OpenStatus.ON_OPEN).assertTrue()
+                await data_relationalStore.deleteRdbStore(context, STORE_CONFIG.name)
+                done()
+            })
+        })
         console.info(TAG + "************* testRdbStore0008 end   *************")
     })
 
@@ -271,17 +272,11 @@ describe('rdbStoreTest', function () {
         console.info(TAG + "************* testRdbStore0009 start *************")
         try{
             let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG)
-            console.info(TAG + "getRdbStore done: " + store)
-            console.info(TAG + "RdbStore status: " + store.openStatus)
-            //data_relationalStore.OpenStatus.ON_CREATE
-            expect(store.openStatus == 0).assertTrue()
+            expect(store.openStatus == data_relationalStore.OpenStatus.ON_CREATE).assertTrue()
             await store.executeSql(CREATE_TABLE_TEST)
 
             store = await data_relationalStore.getRdbStore(context, STORE_CONFIG)
-            console.info(TAG + "getRdbStore done: " + store)
-            console.info(TAG + "RdbStore status: " + store.openStatus)
-            //data_relationalStore.OpenStatus.ON_OPEN
-            expect(store.openStatus == 1).assertTrue()
+            expect(store.openStatus == data_relationalStore.OpenStatus.ON_OPEN).assertTrue()
             await data_relationalStore.deleteRdbStore(context, STORE_CONFIG.name)
             done()
             console.info(TAG + "************* testRdbStore0009 end   *************")
