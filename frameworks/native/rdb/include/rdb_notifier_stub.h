@@ -37,7 +37,7 @@ public:
 
 private:
     int32_t OnCompleteInner(MessageParcel& data, MessageParcel& reply);
-    int32_t OnChangeInner(MessageParcel&data, MessageParcel& reply);
+    int32_t OnChangeInner(MessageParcel& data, MessageParcel& reply);
     bool CheckInterfaceToken(MessageParcel& data);
 
     using RequestHandle = int32_t (RdbNotifierStub::*)(MessageParcel&, MessageParcel&);

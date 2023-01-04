@@ -64,6 +64,7 @@ ohos_shared_library("rdb") {
       "//foundation/arkui/napi:ace_napi",
       "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
     ]
+    external_deps = [ "ipc:ipc_core" ]
   } else {
     include_dirs = [
       "include",
