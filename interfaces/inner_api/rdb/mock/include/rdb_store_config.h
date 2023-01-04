@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include <rdb_types.h>
 
 namespace OHOS::NativeRdb {
 // indicates the type of the storage

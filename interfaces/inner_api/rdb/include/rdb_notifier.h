@@ -13,26 +13,21 @@
  * limitations under the License.
  */
 
-#include "rdb_store_impl.h"
-#include "rdbimpl_fuzzer.h"
-using namespace OHOS;
-using namespace OHOS::NativeRdb;
-namespace OHOS {
-void RdbStoreImplFuzz(const uint8_t *data, size_t size)
-{
-    RdbStoreImpl rdbStoreImpl(nullptr);
-    std::string rawString(reinterpret_cast<const char *>(data), size);
-    std::vector<std::string> tables;
-    tables.push_back(rawString);
-    rdbStoreImpl.SetDistributedTables(tables);
-}
-}
+#ifndef DISTRIBUTED_RDB_NOTIFIER_H
+#define DISTRIBUTED_RDB_NOTIFIER_H
+#include "rdb_types.h"
+namespace OHOS::DistributedRdb {
+class IRdbNotifier {
+public:
+    enum {
+        RDB_NOTIFIER_CMD_SYNC_COMPLETE,
+        RDB_NOTIFIER_CMD_DATA_CHANGE,
+        RDB_NOTIFIER_CMD_MAX
+    };
 
-/* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
-{
-    /* Run your code on data */
-    OHOS::RdbStoreImplFuzz(data, size);
-    return 0;
-}
+    virtual int32_t OnComplete(uint32_t seqNum, const SyncResult& result) = 0;
 
+    virtual int32_t OnChange(const std::string& storeName, const std::vector<std::string>& devices) = 0;
+};
+} // namespace OHOS::DistributedRdb
+#endif

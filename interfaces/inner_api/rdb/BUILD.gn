@@ -21,12 +21,14 @@ config("native_rdb_config") {
       "mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "//commonlibrary/c_utils/base/include",
+      "//utils/system/safwk/native/include",
       "include",
     ]
   } else {
     include_dirs = [
       "include",
       "${relational_store_native_path}/rdb/include",
+      "//utils/system/safwk/native/include",
     ]
   }
 
@@ -67,10 +69,14 @@ config("native_rdb_public_config") {
     include_dirs = [
       "mock/include",
       "include",
+      "//foundation/distributeddatamgr/kv_store/frameworks/common",
+      "${relational_store_native_path}/rdb/include",
     ]
   } else {
     include_dirs = [
       "include",
+      "//foundation/distributeddatamgr/kv_store/frameworks/common",
+      "${relational_store_native_path}/rdb/include",
       "//foundation/distributeddatamgr/distributedfile/interfaces/kits/js/src/mod_securitylabel",
     ]
   }
@@ -88,9 +94,14 @@ ohos_shared_library("native_rdb") {
     "${relational_store_native_path}/rdb/src/base_transaction.h",
     "${relational_store_native_path}/rdb/src/logger.h",
     "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
     "${relational_store_native_path}/rdb/src/rdb_predicates.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_service_proxy.cpp",
     "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
     "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_types_util.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_config.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_connection.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_connection_pool.cpp",
@@ -138,6 +149,7 @@ ohos_shared_library("native_rdb") {
       "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
       "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
     ]
+
     public_deps = [
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb:distributeddb",
@@ -150,6 +162,7 @@ ohos_shared_library("native_rdb") {
       "hitrace_native:hitrace_meter",
       "huks:libhukssdk",
       "ipc:ipc_core",
+      "samgr:samgr_proxy",
     ]
   }
 
