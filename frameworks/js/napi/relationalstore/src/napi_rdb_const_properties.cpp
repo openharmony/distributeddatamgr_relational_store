@@ -16,6 +16,7 @@
 #include "napi_rdb_const_properties.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_store_config.h"
+#include "rdb_store.h"
 #include "rdb_types.h"
 
 using OHOS::DistributedRdb::SyncMode;
@@ -82,10 +83,26 @@ static napi_value ExportOpenStatus(napi_env env)
 }
 #endif
 
+static napi_value ExportConflictResolution(napi_env env)
+{
+    napi_value conflictResolution = nullptr;
+    napi_create_object(env, &conflictResolution);
+
+    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_NONE", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_NONE);
+    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_ROLLBACK", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_ROLLBACK);
+    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_ABORT", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_ABORT);
+    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_FAIL", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_FAIL);
+    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_IGNORE", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_IGNORE);
+    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_REPLACE", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
+    napi_object_freeze(env, conflictResolution);
+    return conflictResolution;
+}
+
 napi_status InitConstProperties(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
         DECLARE_NAPI_PROPERTY("OpenStatus", ExportOpenStatus(env)),
+        DECLARE_NAPI_PROPERTY("ConflictResolution", ExportConflictResolution(env)),
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
         DECLARE_NAPI_PROPERTY("SyncMode", ExportSyncMode(env)),
         DECLARE_NAPI_PROPERTY("SubscribeType", ExportSubscribeType(env)),
