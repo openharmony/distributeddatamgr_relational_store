@@ -69,8 +69,6 @@ config("native_rdb_public_config") {
     include_dirs = [
       "mock/include",
       "include",
-      "//foundation/distributeddatamgr/kv_store/frameworks/common",
-      "${relational_store_native_path}/rdb/include",
     ]
   } else {
     include_dirs = [
