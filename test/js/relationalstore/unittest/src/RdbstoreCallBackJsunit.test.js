@@ -51,7 +51,7 @@ describe('rdbStoreCallBackTest', async function () {
      */
     it('testRdbStoreCallBackTest0001', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCallBackTest0001 start *************");
-        try{
+        try {
             await data_relationalStore.getRdbStore(context, STORE_CONFIG, async (err, rdbStore) => {
                 if (err) {
                     console.log("Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
@@ -113,7 +113,7 @@ describe('rdbStoreCallBackTest', async function () {
      */
     it('testRdbStoreCallBackTest0002', 0, function (done) {
         console.log(TAG + "************* testRdbStoreCallBackTest0002 start *************")
-        try{
+        try {
             data_relationalStore.getRdbStore(context, {dbname: "RDBCallbackTest.db", securityLevel: data_relationalStore.SecurityLevel.S1,}, (err, rdbStore) => {
                 if (err) {
                     console.log("Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
@@ -139,8 +139,8 @@ describe('rdbStoreCallBackTest', async function () {
      */
      it('testRdbStoreCallBackTest0003', 0, function (done) {
         console.log(TAG + "************* testRdbStoreCallBackTest0003 start *************")
-        try{
-            data_relationalStore.getRdbStore(null, {name: "RDBCallbackTest.db",securityLevel: data_relationalStore.SecurityLevel.S1,}, (err, rdbStore) => {
+        try {
+            data_relationalStore.getRdbStore(null, {name: "RDBCallbackTest.db",securityLevel: data_relationalStore.SecurityLevel.S1}, (err, rdbStore) => {
                 if (err) {
                     console.log("Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
                     expect(false).assertTrue()
@@ -165,7 +165,7 @@ describe('rdbStoreCallBackTest', async function () {
      */
     it('testRdbStoreCallBackTest0004', 0, function (done) {
         console.log(TAG + "************* testRdbStoreCallBackTest0004 start *************")
-        try{
+        try {
             data_relationalStore.getRdbStore(context, STORE_CONFIG, (err, rdbStore) => {
                 if (err) {
                     console.log("Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
@@ -191,7 +191,7 @@ describe('rdbStoreCallBackTest', async function () {
     it('testRdbStoreCallBackTest0005', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCallBackTest0005 start *************");
         data_relationalStore.getRdbStore(context, STORE_CONFIG).then((rdbStore)=>{
-            try{
+            try {
                 data_relationalStore.deleteRdbStore(context, 12345, (err) => {
                     if (err) {
                         console.log("Delete RdbStore is failed, err: code=" + err.code + " message=" + err.message)
@@ -226,7 +226,7 @@ describe('rdbStoreCallBackTest', async function () {
     it('testRdbStoreCallBackTest0006', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCallBackTest0006 start *************")
         data_relationalStore.getRdbStore(context, STORE_CONFIG).then((rdbStore)=>{
-            try{
+            try {
                 data_relationalStore.deleteRdbStore(context, "RDBCallbackTest.db", (err) => {
                     if (err) {
                         console.log("Delete RdbStore is failed, err: code=" + err.code + " message=" + err.message)
