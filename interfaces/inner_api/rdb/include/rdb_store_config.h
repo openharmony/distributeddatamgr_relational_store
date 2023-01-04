@@ -57,6 +57,10 @@ enum class SecurityLevel : int32_t {
     LAST
 };
 
+enum class OpenStatus {
+    ON_CREATE,
+    ON_OPEN,
+};
 
 static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
 static constexpr int DB_JOURNAL_SIZE = 1048576; /* default file size : 1M */
