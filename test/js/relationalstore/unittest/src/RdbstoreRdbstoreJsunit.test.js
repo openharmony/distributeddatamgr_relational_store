@@ -34,8 +34,9 @@ describe('rdbStoreTest', function () {
         console.info(TAG + 'beforeEach')
     })
 
-    afterEach(function () {
+    afterEach(async function () {
         console.info(TAG + 'afterEach')
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
     })
 
     afterAll(async function () {
@@ -246,27 +247,20 @@ describe('rdbStoreTest', function () {
      */
     it('testRdbStore0008', 0, async function (done) {
         console.info(TAG + "************* testRdbStore0008 start *************")
-        await data_relationalStore.getRdbStore(context, STORE_CONFIG, 1, async (err, store) => {
+        data_relationalStore.getRdbStore(context, STORE_CONFIG, async (err, store) => {
             if (err) {
                 expect(null).assertFail()
-            } else {
-                console.info(TAG + "getRdbStore done: " + store)
-                console.info(TAG + "RdbStore status: " + store.openStatus)
-                expect(store.openStatus == data_relationalStore.OpenStatus.ON_CREATE).assertTrue()
             }
-        })
-
-        await data_relationalStore.getRdbStore(context, STORE_CONFIG, 1, async (err, store) => {
-            if (err) {
-                expect(null).assertFail()
-            } else {
-                console.info(TAG + "getRdbStore done: " + store)
-                console.info(TAG + "RdbStore status: " + store.openStatus)
+            expect(store.openStatus == data_relationalStore.OpenStatus.ON_CREATE).assertTrue()
+            data_relationalStore.getRdbStore(context, STORE_CONFIG, async (err, store) => {
+                if (err) {
+                    expect(null).assertFail()
+                }
                 expect(store.openStatus == data_relationalStore.OpenStatus.ON_OPEN).assertTrue()
-            }
+                await data_relationalStore.deleteRdbStore(context, STORE_CONFIG.name)
+                done()
+            })
         })
-        await data_relationalStore.deleteRdbStore(context, STORE_CONFIG.name)
-        done()
         console.info(TAG + "************* testRdbStore0008 end   *************")
     })
 
@@ -278,40 +272,24 @@ describe('rdbStoreTest', function () {
      */
     it('testRdbStore0009', 0, async function (done) {
         console.info(TAG + "************* testRdbStore0009 start *************")
-        let storePromise1 = data_relationalStore.getRdbStore(context, STORE_CONFIG, 1)
-        storePromise1.then(async (store) => {
-            try {
-                console.info(TAG + "getRdbStore done: " + store)
-                console.info(TAG + "RdbStore status: " + store.openStatus)
-                expect(store.openStatus == data_relationalStore.OpenStatus.ON_CREATE).assertTrue()
-                await store.executeSql(CREATE_TABLE_TEST)
-            } catch (e) {
-                expect(null).assertFail()
-            }
-        }).catch((err) => {
+        try {
+            let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG)
+            expect(store.openStatus == data_relationalStore.OpenStatus.ON_CREATE).assertTrue()
+            await store.executeSql(CREATE_TABLE_TEST)
+
+            store = await data_relationalStore.getRdbStore(context, STORE_CONFIG)
+            expect(store.openStatus == data_relationalStore.OpenStatus.ON_OPEN).assertTrue()
+            await data_relationalStore.deleteRdbStore(context, STORE_CONFIG.name)
+            done()
+            console.info(TAG + "************* testRdbStore0009 end   *************")
+
+        } catch(e) {
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
             expect(null).assertFail()
-        })
-        await storePromise1
-        storePromise1 = null
-
-        let storePromise2 = data_relationalStore.getRdbStore(context, STORE_CONFIG, 1)
-        storePromise2.then(async (store) => {
-            try {
-                console.info(TAG + "getRdbStore done: " + store)
-                console.info(TAG + "RdbStore status: " + store.openStatus)
-                expect(store.openStatus == data_relationalStore.OpenStatus.ON_OPEN).assertTrue()
-            } catch (e) {
-                expect(null).assertFail();
-            }
-        }).catch((err) => {
-            expect(null).assertFail();
-        })
-        await storePromise2
-        storePromise2 = null
-
-        await data_relationalStore.deleteRdbStore(context, STORE_CONFIG.name)
-        done()
-        console.info(TAG + "************* testRdbStore0009 end   *************")
+            done()
+            console.info(TAG + "************* testRdbStore0009 end   *************")
+        }
+        
     })
     console.log(TAG + "*************Unit Test End*************");
 })
