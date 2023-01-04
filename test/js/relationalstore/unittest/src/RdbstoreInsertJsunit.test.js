@@ -341,7 +341,7 @@ describe('rdbStoreInsertTest', function () {
                 "salary": 100.5,
                 "blobType": u8,
             }
-            await rdbStore.insert("test", valueBucket, 1);  // data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK
+            await rdbStore.insert("test", valueBucket, data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
         }
 
         {
@@ -353,7 +353,7 @@ describe('rdbStoreInsertTest', function () {
                 "blobType": u8,
             }
             try {
-                let insertPromise = rdbStore.insert("test", valueBucket, 1);  // data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK
+                let insertPromise = rdbStore.insert("test", valueBucket, data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
                 insertPromise.then(async (ret) => {
                     expect(1).assertEqual(ret)
                     console.log(TAG + "insert first done: " + ret)
@@ -388,7 +388,7 @@ describe('rdbStoreInsertTest', function () {
                 "salary": 100.5,
                 "blobType": u8,
             }
-            await rdbStore.insert("test", valueBucket, 4); // data_relationalStore.ConflictResolution.ON_CONFLICT_IGNORE
+            await rdbStore.insert("test", valueBucket, data_relationalStore.ConflictResolution.ON_CONFLICT_IGNORE);
         }
 
         {
@@ -399,7 +399,7 @@ describe('rdbStoreInsertTest', function () {
                 "salary": 200.5,
                 "blobType": u8,
             }
-            await rdbStore.insert("test", valueBucket, 4); // data_relationalStore.ConflictResolution.ON_CONFLICT_IGNORE
+            await rdbStore.insert("test", valueBucket, data_relationalStore.ConflictResolution.ON_CONFLICT_IGNORE);
         }
         let predicates = new data_relationalStore.RdbPredicates("test");
         predicates.equalTo("name", "zhangsan")
@@ -435,7 +435,7 @@ describe('rdbStoreInsertTest', function () {
                 "salary": 100.5,
                 "blobType": u8,
             }
-            await rdbStore.insert("test", valueBucket, 5);  // data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE
+            await rdbStore.insert("test", valueBucket, data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
         }
         let predicates = new data_relationalStore.RdbPredicates("test");
         predicates.equalTo("name", "zhangsan")
@@ -459,7 +459,7 @@ describe('rdbStoreInsertTest', function () {
                 "salary": 200.5,
                 "blobType": u8,
             }
-            await rdbStore.insert("test", valueBucket, 5);  // data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE
+            await rdbStore.insert("test", valueBucket, data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
         }
         resultSet = await rdbStore.query(predicates)
         try {
