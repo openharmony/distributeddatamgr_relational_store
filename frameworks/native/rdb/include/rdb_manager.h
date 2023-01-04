@@ -13,26 +13,20 @@
  * limitations under the License.
  */
 
-#include "rdb_store_impl.h"
-#include "rdbimpl_fuzzer.h"
-using namespace OHOS;
-using namespace OHOS::NativeRdb;
-namespace OHOS {
-void RdbStoreImplFuzz(const uint8_t *data, size_t size)
-{
-    RdbStoreImpl rdbStoreImpl(nullptr);
-    std::string rawString(reinterpret_cast<const char *>(data), size);
-    std::vector<std::string> tables;
-    tables.push_back(rawString);
-    rdbStoreImpl.SetDistributedTables(tables);
-}
-}
+#ifndef DISTRIBUTED_RDB_MANAGER_H
+#define DISTRIBUTED_RDB_MANAGER_H
 
-/* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
-{
-    /* Run your code on data */
-    OHOS::RdbStoreImplFuzz(data, size);
-    return 0;
-}
+#include <functional>
+#include <string>
+#include <memory>
 
+#include "rdb_service.h"
+#include "rdb_types.h"
+
+namespace OHOS::DistributedRdb {
+class RdbManager {
+public:
+    static std::shared_ptr<RdbService> GetRdbService(const RdbSyncerParam& param);
+};
+} // namespace OHOS::DistributedRdb
+#endif
