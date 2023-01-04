@@ -78,12 +78,18 @@ static napi_value ExportConflictResolution(napi_env env)
     napi_value conflictResolution = nullptr;
     napi_create_object(env, &conflictResolution);
 
-    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_NONE", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_NONE);
-    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_ROLLBACK", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_ROLLBACK);
-    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_ABORT", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_ABORT);
-    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_FAIL", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_FAIL);
-    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_IGNORE", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_IGNORE);
-    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_REPLACE", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
+    (void)SetNamedProperty(
+        env, conflictResolution, "ON_CONFLICT_NONE", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_NONE);
+    (void)SetNamedProperty(env, conflictResolution, "ON_CONFLICT_ROLLBACK",
+        (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_ROLLBACK);
+    (void)SetNamedProperty(
+        env, conflictResolution, "ON_CONFLICT_ABORT", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_ABORT);
+    (void)SetNamedProperty(
+        env, conflictResolution, "ON_CONFLICT_FAIL", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_FAIL);
+    (void)SetNamedProperty(
+        env, conflictResolution, "ON_CONFLICT_IGNORE", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_IGNORE);
+    (void)SetNamedProperty(
+        env, conflictResolution, "ON_CONFLICT_REPLACE", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
     napi_object_freeze(env, conflictResolution);
     return conflictResolution;
 }
