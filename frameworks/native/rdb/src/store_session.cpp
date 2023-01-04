@@ -259,8 +259,6 @@ int StoreSession::GiveConnectionTemporarily(int64_t milliseconds)
         return errorCode;
     }
 
-    MarkAsCommit();
-    EndTransaction();
     if (milliseconds > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
     }
@@ -323,94 +321,6 @@ int StoreSession::BeginTransaction(TransactionObserver *transactionObserver)
     return E_OK;
 }
 
-int StoreSession::MarkAsCommitWithObserver(TransactionObserver *transactionObserver)
-{
-    if (connectionPool.getTransactionStack().empty()) {
-        return E_NO_TRANSACTION_IN_SESSION;
-    }
-    connectionPool.getTransactionStack().top().SetMarkedSuccessful(true);
-    return E_OK;
-}
-
-int StoreSession::EndTransactionWithObserver(TransactionObserver *transactionObserver)
-{
-    if (connectionPool.getTransactionStack().empty()) {
-        return E_NO_TRANSACTION_IN_SESSION;
-    }
-
-    BaseTransaction transaction = connectionPool.getTransactionStack().top();
-    bool isSucceed = transaction.IsAllBeforeSuccessful() && transaction.IsMarkedSuccessful();
-    connectionPool.getTransactionStack().pop();
-
-    if (transactionObserver != nullptr) {
-        if (isSucceed) {
-            transactionObserver->OnCommit();
-        } else {
-            transactionObserver->OnRollback();
-        }
-    }
-
-    if (!connectionPool.getTransactionStack().empty()) {
-        if (transactionObserver != nullptr) {
-            transactionObserver->OnRollback();
-        }
-
-        if (!isSucceed) {
-            connectionPool.getTransactionStack().top().SetAllBeforeSuccessful(false);
-        }
-    } else {
-        int errCode;
-        if (connection == nullptr) {
-            LOG_ERROR("connection is null");
-            return E_ERROR;
-        }
-        if (isSucceed) {
-            errCode = connection->ExecuteSql("COMMIT;");
-        } else {
-            errCode = connection->ExecuteSql("ROLLBACK;");
-        }
-
-        ReleaseConnection(false);
-        return errCode;
-    }
-
-    return E_OK;
-}
-
-int StoreSession::MarkAsCommit()
-{
-    if (connectionPool.getTransactionStack().empty()) {
-        return E_NO_TRANSACTION_IN_SESSION;
-    }
-    connectionPool.getTransactionStack().top().SetMarkedSuccessful(true);
-    return E_OK;
-}
-
-int StoreSession::EndTransaction()
-{
-    if (connectionPool.getTransactionStack().empty()) {
-        return E_NO_TRANSACTION_IN_SESSION;
-    }
-
-    BaseTransaction transaction = connectionPool.getTransactionStack().top();
-    bool isSucceed = transaction.IsAllBeforeSuccessful() && transaction.IsMarkedSuccessful();
-    connectionPool.getTransactionStack().pop();
-    if (!connectionPool.getTransactionStack().empty()) {
-        if (!isSucceed) {
-            connectionPool.getTransactionStack().top().SetAllBeforeSuccessful(false);
-        }
-    } else {
-        if (connection == nullptr) {
-            LOG_ERROR("connection is null");
-            return E_ERROR;
-        }
-        int errCode = connection->ExecuteSql(isSucceed ? "COMMIT;" : "ROLLBACK;");
-        ReleaseConnection(false);
-        return errCode;
-    }
-
-    return E_OK;
-}
 bool StoreSession::IsInTransaction() const
 {
     return !connectionPool.getTransactionStack().empty();

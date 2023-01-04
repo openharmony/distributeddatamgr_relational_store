@@ -42,11 +42,7 @@ public:
     int GiveConnectionTemporarily(int64_t milliseconds);
     int CheckNoTransaction() const;
     int BeginTransaction(TransactionObserver *transactionObserver);
-    int MarkAsCommitWithObserver(TransactionObserver *transactionObserver);
-    int EndTransactionWithObserver(TransactionObserver *transactionObserver);
     int Attach(const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey);
-    int MarkAsCommit();
-    int EndTransaction();
     bool IsInTransaction() const;
     std::shared_ptr<SqliteStatement> BeginStepQuery(
         int &errCode, const std::string &sql, const std::vector<std::string> &selectionArgs);

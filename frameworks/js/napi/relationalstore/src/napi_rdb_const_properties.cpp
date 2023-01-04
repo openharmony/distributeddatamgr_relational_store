@@ -71,6 +71,16 @@ static napi_value ExportSecurityLevel(napi_env env)
     napi_object_freeze(env, securityLevel);
     return securityLevel;
 }
+
+static napi_value ExportOpenStatus(napi_env env)
+{
+    napi_value openStatus = nullptr;
+    napi_create_object(env, &openStatus);
+    (void) SetNamedProperty(env, openStatus, "ON_CREATE", (int32_t)NativeRdb::OpenStatus::ON_CREATE);
+    (void) SetNamedProperty(env, openStatus, "ON_OPEN", (int32_t)NativeRdb::OpenStatus::ON_OPEN);
+    napi_object_freeze(env, openStatus);
+    return openStatus;
+}
 #endif
 
 static napi_value ExportConflictResolution(napi_env env)
@@ -91,6 +101,7 @@ static napi_value ExportConflictResolution(napi_env env)
 napi_status InitConstProperties(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
+        DECLARE_NAPI_PROPERTY("OpenStatus", ExportOpenStatus(env)),
         DECLARE_NAPI_PROPERTY("ConflictResolution", ExportConflictResolution(env)),
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
         DECLARE_NAPI_PROPERTY("SyncMode", ExportSyncMode(env)),
