@@ -71,9 +71,9 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
 #endif
 
     if (isDbFileExists) {
-        rdbStore->SetStatus(static_cast<int>(RdbStatus::ON_OPEN));
+        rdbStore->SetStatus(static_cast<int>(OpenStatus::ON_OPEN));
     } else {
-        rdbStore->SetStatus(static_cast<int>(RdbStatus::ON_CREATE));
+        rdbStore->SetStatus(static_cast<int>(OpenStatus::ON_CREATE));
     }
 
     if (version == -1) {

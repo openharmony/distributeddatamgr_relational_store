@@ -131,7 +131,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
 
         let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
-        try{
+        try {
             let promiseUpdate = rdbStore.update("test", valueBucket, predicates)
             promiseUpdate.then(async (ret) => {
                 expect(1).assertEqual(ret)
@@ -162,7 +162,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             console.log(TAG + "dataShare update: {id=" + id + ", name=" + name + ", " +
                 "age=" + age + ", salary=" + salary + ", blobType=" + blobType)
             resultSet = null
-        }catch(e){
+        } catch(e) {
             console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
             expect("202").assertEqual(e.code)
         }
@@ -196,7 +196,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
 
         let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
-        try{
+        try {
             await rdbStore.update("test", valueBucket, predicates, async function (err, ret) {
                 if (err) {
                     console.info("Update err: " + err)
@@ -225,7 +225,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
                     "age=" + age + ", salary=" + salary + ", blobType=" + blobType)
                 resultSet = null
             })
-        }catch(e){
+        } catch(e) {
             console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
             expect("202").assertEqual(e.code)
         }
@@ -252,7 +252,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
 
         let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
-        try{
+        try {
             let queryPromise = rdbStore.query("test", predicates)
             queryPromise.then((resultSet) => {
                 console.log(TAG + "DataShare Query done: ")
@@ -274,7 +274,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
                 expect(false).assertTrue()
             })
             await queryPromise
-        }catch(e){
+        } catch(e) {
             console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
             expect("202").assertEqual(e.code)
         }
@@ -300,7 +300,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
 
         let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
-        try{
+        try {
             await rdbStore.query("test", predicates, ["ID", "NAME", "AGE", "SALARY", "blobType"],
                 function (err, resultSet) {
                     if (err) {
@@ -320,7 +320,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
                     expect(5).assertEqual(blobType[1])
                     expect(6).assertEqual(blobType[2])
                 })
-        }catch(e){
+        } catch(e) {
             console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
             expect("202").assertEqual(e.code)
         }
@@ -346,7 +346,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         await rdbStore.insert("test", valueBucket)
         let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
-        try{
+        try {
             let deletePromise = rdbStore.delete("test", predicates)
             deletePromise.then(async (ret) => {
                 expect(1).assertEqual(ret)
@@ -362,7 +362,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             let resultSet = await rdbStore.query(rdbPredicates)
             expect(false).assertEqual(resultSet.goToFirstRow())
             resultSet = null
-        }catch(e){
+        } catch(e) {
             console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
             expect("202").assertEqual(e.code)
         }
@@ -388,7 +388,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
 
         let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
-        try{
+        try {
             await rdbStore.delete("test", predicates, async function (err, ret) {
                 if (err) {
                     console.info("Delete err: " + err)
@@ -402,7 +402,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
                 expect(false).assertEqual(resultSet.goToFirstRow())
                 resultSet = null
             })
-        }catch(e){
+        } catch(e) {
             console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
             expect("202").assertEqual(e.code)
         }
