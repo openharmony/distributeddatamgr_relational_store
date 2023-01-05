@@ -83,7 +83,6 @@ ohos_shared_library("relationalstore") {
       "c_utils:utils",
       "hilog_native:libhilog",
       "hitrace_native:hitrace_meter",
-      "ipc:ipc_core",
       "napi:ace_napi",
       "relational_store:native_appdatafwk",
       "relational_store:native_rdb",
