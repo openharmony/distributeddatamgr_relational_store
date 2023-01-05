@@ -38,6 +38,9 @@ public:
     RdbStoreImpl();
     RdbStoreImpl(std::shared_ptr<RdbService> service);
     ~RdbStoreImpl() override;
+#ifdef WINDOWS_PLATFORM
+    void Clear() override;
+#endif
     int UpdateRdb(std::shared_ptr<RdbService> service);
     int InnerOpen(const RdbStoreConfig &config);
     int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
@@ -53,12 +56,6 @@ public:
         ConflictResolution conflictResolution) override;
     int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
         const std::vector<std::string> &whereArgs) override;
-    std::unique_ptr<AbsSharedResultSet> Query(int &errCode, bool distinct,
-        const std::string &table, const std::vector<std::string> &columns,
-        const std::string &selection, const std::vector<std::string> &selectionArgs, const std::string &groupBy,
-        const std::string &having, const std::string &orderBy, const std::string &limit) override;
-    std::unique_ptr<AbsSharedResultSet> QuerySql(const std::string &sql,
-        const std::vector<std::string> &selectionArgs) override;
     int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql,
@@ -78,12 +75,18 @@ public:
     int RollBack() override;
     int Commit() override;
     bool IsInTransaction() override;
+    std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string sql,
+        const std::vector<std::string> &bindArgs);
+    int EndStepQuery();
     bool IsOpen() const override;
     std::string GetPath() override;
     bool IsReadOnly() const override;
     bool IsMemoryRdb() const override;
+    int PrepareAndGetInfo(const std::string &sql, bool &outIsReadOnly, int &numParameters,
+        std::vector<std::string> &columnNames);
     bool IsHoldingConnection() override;
     int GiveConnectionTemporarily(int64_t milliseconds);
+    int BeginTransactionWithObserver(TransactionObserver *transactionObserver);
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
 #endif
@@ -95,34 +98,18 @@ public:
     std::string GetFileType();
     std::unique_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
-    std::unique_ptr<ResultSet> QueryByStep(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> columns) override;
-    std::unique_ptr<AbsSharedResultSet> Query(
+    std::unique_ptr<ResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
     int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
 
-    std::shared_ptr<ResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
-        const std::vector<std::string> &columns) override;
-
-    bool SetDistributedTables(const std::vector<std::string>& tables) override;
-
-    std::string ObtainDistributedTableName(const std::string& device, const std::string& table) override;
-
-    bool Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) override;
-
-    bool Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;
-
-    bool UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;
-
-    // user must use UDID
-    bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) override;
-
 private:
     std::shared_ptr<StoreSession> GetThreadSession();
     void ReleaseThreadSession();
     int CheckAttach(const std::string &sql);
+    std::string ExtractFilePath(const std::string& fileFullName);
+    bool PathToRealPath(const std::string& path, std::string& realPath);
 
     SqliteConnectionPool *connectionPool;
     static const int MAX_IDLE_SESSION_SIZE = 5;
@@ -138,9 +125,6 @@ private:
     std::string name;
     std::string fileType;
     std::stack<TransactionObserver *> transactionObserverStack;
-    DistributedRdb::RdbSyncerParam syncerParam_;
-    bool isEncrypt_;
-
     std::shared_mutex mutex_;
     std::shared_ptr<RdbService> service_;
     int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);

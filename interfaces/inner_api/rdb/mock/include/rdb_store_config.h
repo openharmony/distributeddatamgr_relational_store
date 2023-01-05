@@ -61,7 +61,7 @@ enum class OpenStatus {
     ON_CREATE,
     ON_OPEN,
 };
-
+ 
 static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
 static constexpr int DB_JOURNAL_SIZE = 1048576; /* default file size : 1M */
 static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "delete";
@@ -101,7 +101,7 @@ public:
     void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
     void SetSecurityLevel(SecurityLevel secLevel);
     void ClearEncryptKey();
-
+ 
     // distributed rdb
     int SetBundleName(const std::string &bundleName);
     std::string GetBundleName() const;
@@ -141,7 +141,7 @@ private:
     std::vector<uint8_t> encryptKey;
     bool readOnly;
     std::string databaseFileType;
-
+ 
     int32_t area_ = 0;
     std::string bundleName_;
     std::string moduleName_;
