@@ -37,18 +37,15 @@ namespace OHOS {
 namespace RelationalStoreJsKit {
 struct HelperRdbContext : public AsyncCall::Context {
     RdbStoreConfig config;
-    int32_t version;
     std::shared_ptr<RdbStore> proxy;
     std::shared_ptr<OHOS::AppDataMgrJsKit::Context> abilitycontext;
     bool isSystemAppCalled;
 
-    HelperRdbContext()
-        : Context(nullptr, nullptr), config(""), version(0), proxy(nullptr), isSystemAppCalled(false)
+    HelperRdbContext() : Context(nullptr, nullptr), config(""), proxy(nullptr), isSystemAppCalled(false)
     {
     }
     HelperRdbContext(InputAction input, OutputAction output)
-        : Context(std::move(input), std::move(output)), config(""), version(0),
-          proxy(nullptr), isSystemAppCalled(false)
+        : Context(std::move(input), std::move(output)), config(""), proxy(nullptr), isSystemAppCalled(false)
     {
     }
     virtual ~HelperRdbContext(){};
@@ -202,14 +199,6 @@ int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<Helper
     return OK;
 }
 
-int ParseVersion(const napi_env &env, const napi_value &arg, std::shared_ptr<HelperRdbContext> context)
-{
-    napi_get_value_int32(env, arg, &context->version);
-    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("version", "an integer greater than 0.");
-    RDB_CHECK_RETURN_CALL_RESULT(context->version > 0, context->SetError(paramError));
-    return OK;
-}
-
 class DefaultOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &rdbStore) override
@@ -227,7 +216,10 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RelationalStoreJsKit::GetRdbStore start");
     auto context = std::make_shared<HelperRdbContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+    auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
+        std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("context", "a Context.");
+        RDB_CHECK_RETURN_CALL_RESULT(JSAbility::CheckContext(env, info), context->SetError(paramError));
+
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
         RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
         RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseContext(env, argv[0], context));
