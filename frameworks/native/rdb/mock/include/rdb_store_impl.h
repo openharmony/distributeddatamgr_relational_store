@@ -68,18 +68,12 @@ public:
     int RollBack() override;
     int Commit() override;
     bool IsInTransaction() override;
-    std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string sql,
-        const std::vector<std::string> &bindArgs);
-    int EndStepQuery();
     bool IsOpen() const override;
     std::string GetPath() override;
     bool IsReadOnly() const override;
     bool IsMemoryRdb() const override;
-    int PrepareAndGetInfo(const std::string &sql, bool &outIsReadOnly, int &numParameters,
-        std::vector<std::string> &columnNames);
     bool IsHoldingConnection() override;
     int GiveConnectionTemporarily(int64_t milliseconds);
-    int BeginTransactionWithObserver(TransactionObserver *transactionObserver);
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
 #endif
@@ -99,11 +93,9 @@ public:
 
 private:
     int InnerOpen(const RdbStoreConfig &config);
-    std::shared_ptr<StoreSession> GetThreadSession();
-    void ReleaseThreadSession();
     int CheckAttach(const std::string &sql);
-    std::string ExtractFilePath(const std::string& fileFullName);
-    bool PathToRealPath(const std::string& path, std::string& realPath);
+    bool PathToRealPath(const std::string &path, std::string &realPath);
+    std::string ExtractFilePath(const std::string &fileFullName);
 
     SqliteConnectionPool *connectionPool;
     static const int MAX_IDLE_SESSION_SIZE = 5;
@@ -118,6 +110,8 @@ private:
     std::string name;
     std::string fileType;
     std::stack<TransactionObserver *> transactionObserverStack;
+
+    int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
 };
 } // namespace OHOS::NativeRdb
 #endif
