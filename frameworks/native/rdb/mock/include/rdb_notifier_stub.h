@@ -16,8 +16,6 @@
 #ifndef OHOS_DISTRIBUTED_DATA_KV_STORE_FRAMEWORKS_INNERKITSIMPL_RDB_RDB_NOTIFIER_STUB_H
 #define OHOS_DISTRIBUTED_DATA_KV_STORE_FRAMEWORKS_INNERKITSIMPL_RDB_RDB_NOTIFIER_STUB_H
 #include "rdb_notifier.h"
-#include <iremote_broker.h>
-#include <iremote_stub.h>
 namespace OHOS::DistributedRdb {
 class RdbNotifierStubBroker : public IRdbNotifier, public IRemoteBroker {
 public:
@@ -31,20 +29,10 @@ public:
     RdbNotifierStub(const SyncCompleteHandler&, const DataChangeHandler&);
     virtual ~RdbNotifierStub() noexcept;
 
-    int OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option) override;
     int32_t OnComplete(uint32_t seqNum, const SyncResult& result) override;
     int32_t OnChange(const std::string& storeName, const std::vector<std::string>& devices) override;
 
 private:
-    int32_t OnCompleteInner(MessageParcel& data, MessageParcel& reply);
-    int32_t OnChangeInner(MessageParcel& data, MessageParcel& reply);
-    bool CheckInterfaceToken(MessageParcel& data);
-
-    using RequestHandle = int32_t (RdbNotifierStub::*)(MessageParcel&, MessageParcel&);
-    static constexpr RequestHandle HANDLES[RDB_NOTIFIER_CMD_MAX] = {
-        [RDB_NOTIFIER_CMD_SYNC_COMPLETE] = &RdbNotifierStub::OnCompleteInner,
-        [RDB_NOTIFIER_CMD_DATA_CHANGE] = &RdbNotifierStub::OnChangeInner,
-    };
 
     SyncCompleteHandler completeNotifier_;
     DataChangeHandler changeNotifier_;

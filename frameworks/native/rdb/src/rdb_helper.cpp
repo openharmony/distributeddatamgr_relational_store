@@ -17,11 +17,11 @@
 
 #include "logger.h"
 #include "rdb_errno.h"
-#include "rdb_store_impl.h"
 #include "rdb_trace.h"
 #include "sqlite_global_config.h"
 #include "unistd.h"
 #include "rdb_manager.h"
+#include "rdb_store_impl.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_security_manager.h"
 #include "security_policy.h"
@@ -202,6 +202,7 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
 
 std::shared_ptr<DistributedRdb::RdbService> RdbHelper::GetRdbService(const RdbStoreConfig &config)
 {
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     DistributedRdb::RdbSyncerParam param;
     param.bundleName_ = config.GetBundleName();
     param.hapName_ = config.GetModuleName();
@@ -212,6 +213,9 @@ std::shared_ptr<DistributedRdb::RdbService> RdbHelper::GetRdbService(const RdbSt
     param.isEncrypt_ = config.IsEncrypt();
     param.password_ = {};
     return DistributedRdb::RdbManager::GetRdbService(param);
+#else
+	return nullptr;
+#endif
 }
 } // namespace NativeRdb
 } // namespace OHOS
