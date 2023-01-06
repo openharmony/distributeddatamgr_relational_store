@@ -89,7 +89,12 @@ int SqliteConnection::InnerOpen(const SqliteConfig &config)
         return E_STEP_STATEMENT_NOT_INIT;
     }
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    // db not exist
+    if (auto const pos = path.find_last_of("\\/"); pos != std::string::npos) {
+        if (std::string filepath = path.substr(0, pos); access(filepath.c_str(), F_OK | W_OK) != 0) {
+            LOG_ERROR("The path to the database file to be created is not valid, err = %{public}d", errno);
+            return E_INVALID_FILE_PATH;
+        }
+    }
     bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
     if (!isDbFileExist && (!config.IsCreateNecessary())) {
         LOG_ERROR("SqliteConnection InnerOpen db not exist");
