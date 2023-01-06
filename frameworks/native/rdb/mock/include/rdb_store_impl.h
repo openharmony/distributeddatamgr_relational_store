@@ -35,6 +35,7 @@ namespace OHOS::NativeRdb {
 class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
 public:
     using RdbService = DistributedRdb::RdbService;
+	static std::shared_ptr<RdbStore> Open(const RdbStoreConfig &config, int &errCode);
     RdbStoreImpl();
     RdbStoreImpl(std::shared_ptr<RdbService> service);
     ~RdbStoreImpl() override;
@@ -42,7 +43,6 @@ public:
     void Clear() override;
 #endif
     int UpdateRdb(std::shared_ptr<RdbService> service);
-    int InnerOpen(const RdbStoreConfig &config);
     int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
     int BatchInsert(int64_t &outInsertNum, const std::string &table,
         const std::vector<ValuesBucket> &initialBatchValues) override;
@@ -108,6 +108,7 @@ private:
     std::shared_ptr<StoreSession> GetThreadSession();
     void ReleaseThreadSession();
     int CheckAttach(const std::string &sql);
+    int InnerOpen(const RdbStoreConfig &config);
     std::string ExtractFilePath(const std::string& fileFullName);
     bool PathToRealPath(const std::string& path, std::string& realPath);
 
