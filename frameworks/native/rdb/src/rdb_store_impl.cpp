@@ -63,8 +63,19 @@ RdbStoreImpl::~RdbStoreImpl()
     delete connectionPool;
     threadMap.clear();
     idleSessions.clear();
-    std::unique_lock<decltype(mutex_)> lock(mutex_);
-    service_ = nullptr;
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+    if (isShared_) {
+        std::unique_lock<decltype(mutex_)> lock(mutex_);
+        if (service_ == nullptr) {
+            LOG_ERROR("RdbStoreImpl::~RdbStoreImpl service_ is nullptr");
+            return;
+        }
+        if (service_->DestroyRDBTable(syncerParam_) != E_OK) {
+            LOG_ERROR("RdbStoreImpl::~RdbStoreImpl service DestroyRDBTable failed");
+        }    
+		service_ = nullptr;
+    }
+#endif
 }
 
 int RdbStoreImpl::UpdateRdb(std::shared_ptr<RdbService> service)
@@ -75,6 +86,17 @@ int RdbStoreImpl::UpdateRdb(std::shared_ptr<RdbService> service)
     std::unique_lock<decltype(mutex_)> lock(mutex_);
     service_ = std::move(service);
     return 0;
+}
+
+std::shared_ptr<RdbStore> RdbStoreImpl::Open(const RdbStoreConfig &config, int &errCode)
+{
+    std::shared_ptr<RdbStoreImpl> rdbStore = std::make_shared<RdbStoreImpl>();
+    errCode = rdbStore->InnerOpen(config);
+    if (errCode != E_OK) {
+        return nullptr;
+    }
+
+    return rdbStore;
 }
 
 int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
@@ -101,12 +123,20 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
     isEncrypt_ = config.IsEncrypt();
-    std::shared_lock<decltype(mutex_)> lock(mutex_);
-    if (service_ == nullptr) {
-        LOG_ERROR("service is nullptr");
-        return E_OK;
-    }
-    service_->CreateRDBTable(syncerParam_, {}, {});
+	// open uri share
+    if (!config.GetUri().empty()) {
+        std::shared_lock<decltype(mutex_)> lock(mutex_);
+    	if (service_ == nullptr) {
+            LOG_ERROR("RdbStoreImpl::InnerOpen get service failed");
+            return -1;
+        }
+        if (service_->CreateRDBTable(syncerParam_, config.GetWritePermission(), config.GetReadPermission()) != E_OK) {
+            LOG_ERROR("RdbStoreImpl::InnerOpen service CreateRDBTable failed");
+            return -1;
+        }
+        isShared_ = true;
+	}
+    
 #endif
     return E_OK;
 }

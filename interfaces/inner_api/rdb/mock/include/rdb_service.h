@@ -37,8 +37,7 @@ public:
         RDB_SERVICE_CREATE_RDB_TABLE,
         RDB_SERVICE_DESTROY_RDB_TABLE,
         RDB_SERVICE_CMD_MAX
-    };    
-
+    };
 };
 }
 } // namespace OHOS::DistributedRdb
