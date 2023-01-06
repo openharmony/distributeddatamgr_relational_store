@@ -72,8 +72,8 @@ RdbStoreImpl::~RdbStoreImpl()
         }
         if (service_->DestroyRDBTable(syncerParam_) != E_OK) {
             LOG_ERROR("RdbStoreImpl::~RdbStoreImpl service DestroyRDBTable failed");
-        }    
-		service_ = nullptr;
+        }
+        service_ = nullptr;
     }
 #endif
 }
@@ -126,7 +126,8 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
 	// open uri share
     if (!config.GetUri().empty()) {
         std::shared_lock<decltype(mutex_)> lock(mutex_);
-    	if (service_ == nullptr) {
+        service_ = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
+        if (service_ == nullptr) {
             LOG_ERROR("RdbStoreImpl::InnerOpen get service failed");
             return -1;
         }
@@ -135,7 +136,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
             return -1;
         }
         isShared_ = true;
-	}
+    }
     
 #endif
     return E_OK;
