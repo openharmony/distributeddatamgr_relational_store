@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DISTRIBUTED_RDB_SERVICE_H
-#define DISTRIBUTED_RDB_SERVICE_H
+#ifndef DISTRIBUTED_RDB_RDB_SERVICE_H
+#define DISTRIBUTED_RDB_RDB_SERVICE_H
 
 #include <memory>
 #include <string>

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DISTRIBUTED_RDB_MANAGER_IMPL_H
-#define DISTRIBUTED_RDB_MANAGER_IMPL_H
+#ifndef DISTRIBUTED_RDB_RDB_MANAGER_IMPL_H
+#define DISTRIBUTED_RDB_RDB_MANAGER_IMPL_H
 
 #include <map>
 #include <memory>
@@ -22,16 +22,15 @@
 
 #include "refbase.h"
 #include "iremote_object.h"
+#include "iremote_proxy.h"
 #include "concurrent_map.h"
 #include "rdb_types.h"
-
-namespace OHOS::DistributedKv {
-class KvStoreDataServiceProxy;
-}
+#include "irdb_service.h"
 
 namespace OHOS::DistributedRdb {
 class RdbService;
 class RdbServiceProxy;
+class RdbStoreDataServiceProxy;
 class RdbManagerImpl {
 public:
     static constexpr int GET_SA_RETRY_TIMES = 3;
@@ -67,9 +66,19 @@ private:
     void ResetServiceHandle();
 
     std::mutex mutex_;
-    sptr<OHOS::DistributedKv::KvStoreDataServiceProxy> distributedDataMgr_;
+    std::shared_ptr<RdbStoreDataServiceProxy> distributedDataMgr_;
     std::shared_ptr<RdbService> rdbService_;
     std::string bundleName_;
+};
+
+class RdbStoreDataServiceProxy : public IRemoteProxy<IRdbStoreDataService> {
+public:
+    explicit RdbStoreDataServiceProxy(const sptr<IRemoteObject> &impl);
+    ~RdbStoreDataServiceProxy() = default;
+    sptr<IRemoteObject> GetFeatureInterface(const std::string &name) override;
+
+private:
+    static inline BrokerDelegator<RdbStoreDataServiceProxy> delegator_;
 };
 } // namespace OHOS::DistributedRdb
 #endif

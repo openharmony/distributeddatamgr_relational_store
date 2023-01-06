@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_RDB_IRDB_SERVICE_H
-#define NATIVE_RDB_IRDB_SERVICE_H
+#ifndef DISTRIBUTED_RDB_IRDB_SERVICE_H
+#define DISTRIBUTED_RDB_IRDB_SERVICE_H
 
 #include <string>
 
@@ -26,5 +26,20 @@ class IRdbService : public RdbService, public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedRdb.IRdbService");
 };
+
+class IRdbStoreDataService : public IRemoteBroker {
+public:
+    enum { GET_FEATURE_INTERFACE = 0 };
+
+    enum {
+        RELATION_STORE_ERROR = -1,
+        RELATION_STORE_OK = 0,
+    };
+
+    virtual sptr<IRemoteObject> GetFeatureInterface(const std::string &name) = 0;
+
+    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedRdb.IRdbStoreDataService");
+};
 } // namespace OHOS::DistributedRdb
-#endif // NATIVE_RDB_IRDB_SERVICE_H
+#endif
+

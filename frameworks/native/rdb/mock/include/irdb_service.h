@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_RDB_IRDB_SERVICE_H
-#define NATIVE_RDB_IRDB_SERVICE_H
+#ifndef DISTRIBUTED_RDB_IRDB_SERVICE_H
+#define DISTRIBUTED_RDB_IRDB_SERVICE_H
 
 #include <string>
 
@@ -27,4 +27,4 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedRdb.IRdbService");
 };
 } // namespace OHOS::DistributedRdb
-#endif // NATIVE_RDB_IRDB_SERVICE_H
+#endif // DISTRIBUTED_RDB_IRDB_SERVICE_H
