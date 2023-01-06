@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DISTRIBUTED_RDB_NOTIFIER_H
-#define DISTRIBUTED_RDB_NOTIFIER_H
+#ifndef DISTRIBUTED_RDB_RDB_NOTIFIER_H
+#define DISTRIBUTED_RDB_RDB_NOTIFIER_H
 #include "rdb_types.h"
 namespace OHOS::DistributedRdb {
 class IRdbNotifier {

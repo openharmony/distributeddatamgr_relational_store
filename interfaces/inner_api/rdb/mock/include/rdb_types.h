@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DISTRIBUTEDDATAFWK_RDB_TYPES_H
-#define DISTRIBUTEDDATAFWK_RDB_TYPES_H
+#ifndef DISTRIBUTED_RDB_RDB_TYPES_H
+#define DISTRIBUTED_RDB_RDB_TYPES_H
 
 #include <functional>
 #include <map>

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_DISTRIBUTED_DATA_KV_STORE_FRAMEWORKS_INNERKITSIMPL_RDB_RDB_NOTIFIER_STUB_H
-#define OHOS_DISTRIBUTED_DATA_KV_STORE_FRAMEWORKS_INNERKITSIMPL_RDB_RDB_NOTIFIER_STUB_H
+#ifndef DISTRIBUTED_RDB_RDB_NOTIFIER_STUB_H
+#define DISTRIBUTED_RDB_RDB_NOTIFIER_STUB_H
 #include "rdb_notifier.h"
 #include <iremote_broker.h>
 #include <iremote_stub.h>
@@ -50,4 +50,4 @@ private:
     DataChangeHandler changeNotifier_;
 };
 } // namespace OHOS::DistributedRdb
-#endif // OHOS_DISTRIBUTED_DATA_KV_STORE_FRAMEWORKS_INNERKITSIMPL_RDB_RDB_NOTIFIER_STUB_H
+#endif // DISTRIBUTED_RDB_RDB_NOTIFIER_STUB_H

@@ -23,12 +23,12 @@
 #include "system_ability_definition.h"
 
 #include "log_print.h"
-#include "ikvstore_data_service.h"
 #include "irdb_service.h"
+#include "itypes_util.h"
 #include "rdb_service_proxy.h"
 
 namespace OHOS::DistributedRdb {
-static sptr<DistributedKv::KvStoreDataServiceProxy> GetDistributedDataManager()
+static std::shared_ptr<RdbStoreDataServiceProxy> GetDistributedDataManager()
 {
     int retry = 0;
     while (++retry <= RdbManagerImpl::GET_SA_RETRY_TIMES) {
@@ -44,7 +44,7 @@ static sptr<DistributedKv::KvStoreDataServiceProxy> GetDistributedDataManager()
             continue;
         }
         ZLOGI("get distributed data manager success");
-        return iface_cast<DistributedKv::KvStoreDataServiceProxy>(remoteObject);
+        return std::make_shared<RdbStoreDataServiceProxy>(remoteObject);
     }
 
     ZLOGE("get distributed data manager failed");
@@ -145,5 +145,41 @@ void RdbManagerImpl::ResetServiceHandle()
     std::lock_guard<std::mutex> lock(mutex_);
     distributedDataMgr_ = nullptr;
     rdbService_ = nullptr;
+}
+
+RdbStoreDataServiceProxy::RdbStoreDataServiceProxy(const sptr<IRemoteObject> &impl)
+    : IRemoteProxy<IRdbStoreDataService>(impl)
+{
+    ZLOGI("init data service proxy.");
+}
+
+sptr<IRemoteObject> RdbStoreDataServiceProxy::GetFeatureInterface(const std::string &name)
+{
+    ZLOGI("%s", name.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(RdbStoreDataServiceProxy::GetDescriptor())) {
+        ZLOGE("write descriptor failed");
+        return nullptr;
+    }
+
+    if (!ITypesUtil::Marshal(data, name)) {
+        ZLOGE("write descriptor failed");
+        return nullptr;
+    }
+
+    MessageParcel reply;
+    MessageOption mo { MessageOption::TF_SYNC };
+    int32_t error = Remote()->SendRequest(GET_FEATURE_INTERFACE, data, reply, mo);
+    if (error != 0) {
+        ZLOGE("SendRequest returned %{public}d", error);
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> remoteObject;
+    if (!ITypesUtil::Unmarshal(reply, remoteObject)) {
+        ZLOGE("remote object is nullptr");
+        return nullptr;
+    }
+    return remoteObject;
 }
 } // namespace OHOS::DistributedRdb

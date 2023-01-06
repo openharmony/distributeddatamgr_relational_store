@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DISTRIBUTED_RDB_MANAGER_H
-#define DISTRIBUTED_RDB_MANAGER_H
+#ifndef DISTRIBUTED_RDB_RDB_MANAGER_H
+#define DISTRIBUTED_RDB_RDB_MANAGER_H
 
 #include <functional>
 #include <string>

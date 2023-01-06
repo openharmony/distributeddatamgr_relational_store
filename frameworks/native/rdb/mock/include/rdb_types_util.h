@@ -39,4 +39,4 @@ bool Marshalling(const RdbOperation &input, MessageParcel &data);
 template<>
 bool Unmarshalling(RdbOperation &output, MessageParcel &data);
 }
-#endif // DISTRIBUTED_RDB_RDB_TYPES_UTIL_H
+#endif // DISTRIBUTED_RDB_TYPES_UTIL_H
