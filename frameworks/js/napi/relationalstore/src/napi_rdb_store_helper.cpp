@@ -426,8 +426,8 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("context", "a Context.");
         RDB_CHECK_RETURN_CALL_RESULT(JSAbility::CheckContext(env, info), context->SetError(paramError));
 
-        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("3 or 4");
-        RDB_CHECK_RETURN_CALL_RESULT(argc == 3 || argc == 4, context->SetError(paramNumError));
+        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
+        RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
         RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseContext(env, argv[0], context));
         RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseStoreConfig(env, argv[1], context));
         ParserThis(env, self, context);
