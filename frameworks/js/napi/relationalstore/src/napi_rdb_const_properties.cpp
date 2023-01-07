@@ -14,14 +14,21 @@
  */
 
 #include "napi_rdb_const_properties.h"
+#include "rdb_store.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_store_config.h"
-#include "rdb_store.h"
 #include "rdb_types.h"
 
 using OHOS::DistributedRdb::SyncMode;
 using OHOS::DistributedRdb::SubscribeMode;
 #endif
+using OHOS::NativeRdb::SecurityLevel;
+using OHOS::NativeRdb::ConflictResolution;
+
+#define SET_NAPI_PROPERTY(object, propName, value)                        \
+{                                                                         \
+    (void) SetNamedProperty(env, (object), (propName), (int32_t)(value)); \
+}
 
 namespace OHOS::RelationalStoreJsKit {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
@@ -43,8 +50,9 @@ static napi_value ExportSyncMode(napi_env env)
 {
     napi_value syncMode = nullptr;
     napi_create_object(env, &syncMode);
-    (void)SetNamedProperty(env, syncMode, "SYNC_MODE_PUSH", (int32_t)SyncMode::PUSH);
-    (void)SetNamedProperty(env, syncMode, "SYNC_MODE_PULL", (int32_t)SyncMode::PULL);
+
+    SET_NAPI_PROPERTY(syncMode, "SYNC_MODE_PUSH", SyncMode::PUSH);
+    SET_NAPI_PROPERTY(syncMode, "SYNC_MODE_PULL", SyncMode::PULL);
     napi_object_freeze(env, syncMode);
     return syncMode;
 }
@@ -54,7 +62,7 @@ static napi_value ExportSubscribeType(napi_env env)
     napi_value subscribeType = nullptr;
     napi_create_object(env, &subscribeType);
 
-    (void)SetNamedProperty(env, subscribeType, "SUBSCRIBE_TYPE_REMOTE", (int32_t)SubscribeMode::REMOTE);
+    SET_NAPI_PROPERTY(subscribeType, "SUBSCRIBE_TYPE_REMOTE", SubscribeMode::REMOTE);
     napi_object_freeze(env, subscribeType);
     return subscribeType;
 }
@@ -64,10 +72,10 @@ static napi_value ExportSecurityLevel(napi_env env)
     napi_value securityLevel = nullptr;
     napi_create_object(env, &securityLevel);
 
-    (void) SetNamedProperty(env, securityLevel, "S1", (int32_t)NativeRdb::SecurityLevel::S1);
-    (void) SetNamedProperty(env, securityLevel, "S2", (int32_t)NativeRdb::SecurityLevel::S2);
-    (void) SetNamedProperty(env, securityLevel, "S3", (int32_t)NativeRdb::SecurityLevel::S3);
-    (void) SetNamedProperty(env, securityLevel, "S4", (int32_t)NativeRdb::SecurityLevel::S4);
+    SET_NAPI_PROPERTY(securityLevel, "S1", SecurityLevel::S1);
+    SET_NAPI_PROPERTY(securityLevel, "S2", SecurityLevel::S2);
+    SET_NAPI_PROPERTY(securityLevel, "S3", SecurityLevel::S3);
+    SET_NAPI_PROPERTY(securityLevel, "S4", SecurityLevel::S4);
     napi_object_freeze(env, securityLevel);
     return securityLevel;
 }
@@ -88,12 +96,13 @@ static napi_value ExportConflictResolution(napi_env env)
     napi_value conflictResolution = nullptr;
     napi_create_object(env, &conflictResolution);
 
-    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_NONE", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_NONE);
-    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_ROLLBACK", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_ROLLBACK);
-    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_ABORT", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_ABORT);
-    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_FAIL", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_FAIL);
-    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_IGNORE", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_IGNORE);
-    (void) SetNamedProperty(env, conflictResolution, "ON_CONFLICT_REPLACE", (int32_t)NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
+    SET_NAPI_PROPERTY(conflictResolution, "ON_CONFLICT_NONE", ConflictResolution::ON_CONFLICT_NONE);
+    SET_NAPI_PROPERTY(conflictResolution, "ON_CONFLICT_ROLLBACK", ConflictResolution::ON_CONFLICT_ROLLBACK);
+    SET_NAPI_PROPERTY(conflictResolution, "ON_CONFLICT_ABORT", ConflictResolution::ON_CONFLICT_ABORT);
+    SET_NAPI_PROPERTY(conflictResolution, "ON_CONFLICT_FAIL", ConflictResolution::ON_CONFLICT_FAIL);
+    SET_NAPI_PROPERTY(conflictResolution, "ON_CONFLICT_IGNORE", ConflictResolution::ON_CONFLICT_IGNORE);
+    SET_NAPI_PROPERTY(conflictResolution, "ON_CONFLICT_REPLACE", ConflictResolution::ON_CONFLICT_REPLACE);
+
     napi_object_freeze(env, conflictResolution);
     return conflictResolution;
 }

@@ -368,9 +368,8 @@ int ParseDevice(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbS
 int ParseTablesName(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
     uint32_t arrLen = 0;
-    napi_get_array_length(env, arg, &arrLen);
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("tables", "a string array.");
-    RDB_CHECK_RETURN_CALL_RESULT(arrLen >= 0, context->SetError(paramError));
+    RDB_CHECK_RETURN_CALL_RESULT(napi_get_array_length(env, arg, &arrLen) == napi_ok, context->SetError(paramError));
 
     for (uint32_t i = 0; i < arrLen; ++i) {
         napi_value element;
@@ -396,7 +395,7 @@ int ParseSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr
     return OK;
 }
 
-bool CheckGlobalProperty(const napi_env &env, const napi_value &arg, const std::string propertyName)
+bool CheckGlobalProperty(const napi_env &env, const napi_value &arg, const std::string &propertyName)
 {
     LOG_DEBUG("CheckGlobalProperty start: %{public}s", propertyName.c_str());
     napi_value global = nullptr;
@@ -584,12 +583,12 @@ int ParseValuesBuckets(const napi_env &env, const napi_value &arg, std::shared_p
     }
     uint32_t arrLen = 0;
     napi_status status = napi_get_array_length(env, arg, &arrLen);
-    RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok || arrLen >= 0, context->SetError(paramError));
+    RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok, context->SetError(paramError));
 
     for (uint32_t i = 0; i < arrLen; ++i) {
         napi_value obj = nullptr;
         status = napi_get_element(env, arg, i, &obj);
-        RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok || arrLen >= 0, context->SetError(paramError));
+        RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok, context->SetError(paramError));
 
         ParseValuesBucket(env, obj, context);
         context->valuesBuckets.push_back(context->valuesBucket);
@@ -1380,11 +1379,12 @@ void RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *arg
     }
 
     std::lock_guard<std::mutex> lockGuard(mutex_);
-    for (const auto &observer : observers_[mode]) {
-        if (*observer == argv[1]) {
-            LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: duplicate subscribe");
-            return;
-        }
+    bool result = std::any_of(observers_[mode].begin(), observers_[mode].end(), [argv](const auto &observer) {
+        return *observer == argv[1];
+    });
+    if (result) {
+        LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: duplicate subscribe");
+        return;
     }
     SubscribeOption option;
     option.mode = static_cast<SubscribeMode>(mode);
