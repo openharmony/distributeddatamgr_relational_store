@@ -13,18 +13,19 @@
  * limitations under the License.
  */
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
-import dataRdb from '@ohos.data.rdb';
-import featureAbility from '@ohos.ability.featureAbility';
+import data_relationalStore from '@ohos.data.relationalStore';
+import ability_featureAbility from '@ohos.ability.featureAbility';
 
-const TAG = "[RDB_JSKITS_TEST]"
+const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
 const STORE_CONFIG = {
-    name: "V9_RDBPromiseTest.db",
-    securityLevel: dataRdb.SecurityLevel.S1,
+    name: "RDBPromiseTest.db",
+    securityLevel: data_relationalStore.SecurityLevel.S1,
 }
+var context = ability_featureAbility.getContext()
 
-describe('V9_rdbStorePromiseTest', function () {
+describe('rdbStorePromiseTest', function () {
     beforeAll(function () {
         console.info(TAG + 'beforeAll')
     })
@@ -43,35 +44,34 @@ describe('V9_rdbStorePromiseTest', function () {
 
     console.log(TAG + "*************Unit Test Begin*************");
     /**
-     * @tc.name rdb V9 base use
-     * @tc.number testV9RdbStorePromiseTest0001
-     * @tc.desc rdb V9 base use
+     * @tc.name rdb  base use
+     * @tc.number testRdbStorePromiseTest0001
+     * @tc.desc rdb  base use
      */
-    it('testV9RdbStorePromiseTest0001', 0, async function (done) {
-        console.log(TAG + "************* testV9RdbStorePromiseTest0001 start *************");
-        let context = featureAbility.getContext()
-        try{
-            dataRdb.getRdbStoreV9(context, STORE_CONFIG, 1).then(async (rdbStoreV9) => {
+    it('testRdbStorePromiseTest0001', 0, async function (done) {
+        console.log(TAG + "************* testRdbStorePromiseTest0001 start *************");
+        try {
+            data_relationalStore.getRdbStore(context, STORE_CONFIG).then(async (rdbStore) => {
                 console.log("Get RdbStore successfully.")
-                await rdbStoreV9.executeSql(CREATE_TABLE_TEST, null)
+                await rdbStore.executeSql(CREATE_TABLE_TEST, null)
                 const valueBucket = {
                     "name": "zhangsan",
                     "age": 18,
                     "salary": 100.5,
                     "blobType": new Uint8Array([1, 2, 3]),
                 }             
-                await rdbStoreV9.insert("test", valueBucket)
-                let predicates = new dataRdb.RdbPredicatesV9("test")
+                await rdbStore.insert("test", valueBucket)
+                let predicates = new data_relationalStore.RdbPredicates("test")
                 console.log("Create RdbPredicates OK")
                 predicates.equalTo("name", "zhangsan")
-                rdbStoreV9.query(predicates, []).then((resultSetV9) => {
-                    expect(1).assertEqual(resultSetV9.rowCount)
-                    expect(true).assertEqual(resultSetV9.goToFirstRow())
-                    const id = resultSetV9.getLong(resultSetV9.getColumnIndex("id"))
-                    const name = resultSetV9.getString(resultSetV9.getColumnIndex("name"))
-                    const age = resultSetV9.getLong(resultSetV9.getColumnIndex("age"))
-                    const salary = resultSetV9.getDouble(resultSetV9.getColumnIndex("salary"))
-                    const blobType = resultSetV9.getBlob(resultSetV9.getColumnIndex("blobType"))
+                rdbStore.query(predicates, []).then((resultSet) => {
+                    expect(1).assertEqual(resultSet.rowCount)
+                    expect(true).assertEqual(resultSet.goToFirstRow())
+                    const id = resultSet.getLong(resultSet.getColumnIndex("id"))
+                    const name = resultSet.getString(resultSet.getColumnIndex("name"))
+                    const age = resultSet.getLong(resultSet.getColumnIndex("age"))
+                    const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                    const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
                     console.log(TAG + "id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
                     expect(1).assertEqual(id);
                     expect("zhangsan").assertEqual(name);
@@ -80,14 +80,14 @@ describe('V9_rdbStorePromiseTest', function () {
                     expect(1).assertEqual(blobType[0]);
                     expect(2).assertEqual(blobType[1]);
                     expect(3).assertEqual(blobType[2]);
-                    expect(false).assertEqual(resultSetV9.goToNextRow())
-                    rdbStoreV9.delete(predicates).then((rows) => {
+                    expect(false).assertEqual(resultSet.goToNextRow())
+                    rdbStore.delete(predicates).then((rows) => {
                         console.log("Delete rows: " + rows)
                         expect(1).assertEqual(rows)
-                        dataRdb.deleteRdbStoreV9(context, "V9_RDBPromiseTest.db").then(() => {
+                        data_relationalStore.deleteRdbStore(context, "RDBPromiseTest.db").then(() => {
                             console.log("Delete RdbStore successfully.")
                             done()
-                            console.log(TAG + "************* testV9RdbStorePromiseTest0001 end *************");
+                            console.log(TAG + "************* testRdbStorePromiseTest0001 end *************");
                         })
                     })
                 })
@@ -95,20 +95,20 @@ describe('V9_rdbStorePromiseTest', function () {
         } catch(err) {
             console.info("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
             expect(null).assertFail()
+            done()
+            console.log(TAG + "************* testRdbStorePromiseTest0001 end *************");
         }
-        done()
     })
     
     /**
-     * @tc.name rdb getRdbStoreV9 err params
-     * @tc.number testV9RdbStorePromiseTest0002
-     * @tc.desc rdb getRdbStoreV9 err params
+     * @tc.name rdb getRdbStore err params
+     * @tc.number testRdbStorePromiseTest0002
+     * @tc.desc rdb getRdbStore err params
      */
-    it('testV9RdbStorePromiseTest0002', 0, async function (done) {
-        console.log(TAG + "************* testV9RdbStorePromiseTest0002 start *************")
-        let context = featureAbility.getContext()
-        try{
-            dataRdb.getRdbStoreV9(context, {dbname: "V9_RDBCallbackTest.db"}, 1).then((rdbStoreV9) => {
+    it('testRdbStorePromiseTest0002', 0, async function (done) {
+        console.log(TAG + "************* testRdbStorePromiseTest0002 start *************")
+        try {
+            data_relationalStore.getRdbStore(context, {dbname: "RDBCallbackTest.db"}).then((rdbStore) => {
                 console.log("Get RdbStore successfully.")
                 expect(false).assertTrue()
             }).catch((err) => {
@@ -121,19 +121,18 @@ describe('V9_rdbStorePromiseTest', function () {
             done()
         }
         done()
-        console.log(TAG + "************* testV9RdbStorePromiseTest0002 end *************")
+        console.log(TAG + "************* testRdbStorePromiseTest0002 end *************")
     })
     
     /**
-     * @tc.name rdb getRdbStoreV9 ok params
-     * @tc.number testV9RdbStorePromiseTest0003
-     * @tc.desc rdb getRdbStoreV9 ok params
+     * @tc.name rdb getRdbStore ok params
+     * @tc.number testRdbStorePromiseTest0003
+     * @tc.desc rdb getRdbStore ok params
      */
-    it('testV9RdbStorePromiseTest0003', 0, async function (done) {
-        console.log(TAG + "************* testV9RdbStorePromiseTest0003 start *************");
-        let context = featureAbility.getContext()
-        try{
-            dataRdb.getRdbStoreV9(context, STORE_CONFIG, 1).then((rdbStoreV9) => {
+    it('testRdbStorePromiseTest0003', 0, async function (done) {
+        console.log(TAG + "************* testRdbStorePromiseTest0003 start *************");
+        try {
+            data_relationalStore.getRdbStore(context, STORE_CONFIG).then((rdbStore) => {
                 console.log("Get RdbStore successfully.")
                 done()
             }).catch((err) => {
@@ -145,20 +144,19 @@ describe('V9_rdbStorePromiseTest', function () {
             expect(false).assertTrue()
         }
         done()
-        console.log(TAG + "************* testV9RdbStorePromiseTest0003 end *************")
+        console.log(TAG + "************* testRdbStorePromiseTest0003 end *************")
     })
 
     /**
-     * @tc.name rdb deleteRdbStoreV9 err params
-     * @tc.number testV9RdbStorePromiseTest0004
-     * @tc.desc rdb deleteRdbStoreV9 err params
+     * @tc.name rdb deleteRdbStore err params
+     * @tc.number testRdbStorePromiseTest0004
+     * @tc.desc rdb deleteRdbStore err params
      */
-    it('testV9RdbStorePromiseTest0004', 0, async function (done) {
-        console.log(TAG + "************* testV9RdbStorePromiseTest0004 start *************")
-        let context = featureAbility.getContext()        
-        let rdbStoreV9 = await dataRdb.getRdbStoreV9(context, STORE_CONFIG, 1)
-        try{
-            dataRdb.deleteRdbStoreV9(context, 123454345).then((rdbStoreV9) => {
+    it('testRdbStorePromiseTest0004', 0, async function (done) {
+        console.log(TAG + "************* testRdbStorePromiseTest0004 start *************")
+        let rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG)
+        try {
+            data_relationalStore.deleteRdbStore(context, 123454345).then((rdbStore) => {
                 console.log("Delete RdbStore successfully.")
                 expect(false).assertTrue()
             }).catch((err) => {
@@ -171,20 +169,19 @@ describe('V9_rdbStorePromiseTest', function () {
             done()
         }
         done()
-        console.log(TAG + "************* testV9RdbStorePromiseTest0004 end *************")
+        console.log(TAG + "************* testRdbStorePromiseTest0004 end *************")
     })
     
     /**
-     * @tc.name rdb deleteRdbStoreV9 OK params
-     * @tc.number testV9RdbStorePromiseTest0004
-     * @tc.desc rdb deleteRdbStoreV9 OK params
+     * @tc.name rdb deleteRdbStore OK params
+     * @tc.number testRdbStorePromiseTest0004
+     * @tc.desc rdb deleteRdbStore OK params
      */
-    it('testV9RdbStorePromiseTest0005', 0, async function (done) {
-        console.log(TAG + "************* testV9RdbStorePromiseTest0005 start *************");
-        let context = featureAbility.getContext()
-        let rdbStoreV9 = await dataRdb.getRdbStoreV9(context, STORE_CONFIG, 1)
-        try{
-            dataRdb.deleteRdbStoreV9(context, "V9_RDBCallbackTest.db").then((err) => {
+    it('testRdbStorePromiseTest0005', 0, async function (done) {
+        console.log(TAG + "************* testRdbStorePromiseTest0005 start *************");
+        let rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG)
+        try {
+            data_relationalStore.deleteRdbStore(context, "RDBCallbackTest.db").then((err) => {
                 console.log("Delete RdbStore successfully.")
                 done()
             }).catch((err) => {
@@ -196,7 +193,7 @@ describe('V9_rdbStorePromiseTest', function () {
             expect(false).assertTrue()
         }
         done()
-        console.log(TAG + "************* testV9RdbStorePromiseTest0005 end *************")
+        console.log(TAG + "************* testRdbStorePromiseTest0005 end *************")
     })
 
     console.log(TAG + "*************Unit Test End*************");

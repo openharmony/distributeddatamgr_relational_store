@@ -67,6 +67,9 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
         return nullptr;
     }
 #endif
+    if (version == -1) {
+        return rdbStore;
+    }
 
     errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
     if (errCode != E_OK) {
