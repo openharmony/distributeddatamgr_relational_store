@@ -16,6 +16,7 @@
 #ifndef NATIVE_RDB_ABS_RESULT_SET_H
 #define NATIVE_RDB_ABS_RESULT_SET_H
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -55,6 +56,7 @@ public:
     int Close() override;
 
 protected:
+    std::map<std::string , int> columnMap_;
     // The default position of the result set
     static const int INIT_POS = -1;
     /*

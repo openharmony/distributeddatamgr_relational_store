@@ -62,7 +62,7 @@ AbsPredicates *AbsPredicates::EqualTo(std::string field, std::string value)
     }
     int errorCode = 0;
     std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
-    whereClause = whereClause + normalizedField + " = ? ";
+    whereClause += normalizedField + " = ? ";
     whereArgs.push_back(value);
     return this;
 }
@@ -397,8 +397,8 @@ AbsPredicates *AbsPredicates::OrderByDesc(std::string field)
         order += ',';
     }
     int errorCode = 0;
-    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
-    order = order + normalizedField + " DESC ";
+    std::string normalizedField = SqliteSqlBuilder::PredicatesNormalize(field, errorCode);
+    order += normalizedField + " DESC ";
     isSorted = true;
     return this;
 }
