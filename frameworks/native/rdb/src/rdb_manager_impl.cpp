@@ -148,7 +148,7 @@ void RdbManagerImpl::ResetServiceHandle()
 }
 
 RdbStoreDataServiceProxy::RdbStoreDataServiceProxy(const sptr<IRemoteObject> &impl)
-    : IRemoteProxy<IRdbStoreDataService>(impl)
+    : IRemoteProxy<IKvStoreDataService>(impl)
 {
     ZLOGI("init data service proxy.");
 }

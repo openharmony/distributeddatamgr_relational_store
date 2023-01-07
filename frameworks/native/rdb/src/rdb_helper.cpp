@@ -33,6 +33,8 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    bool isDbFileExists = access(config.GetPath().c_str(), F_OK) == 0;
+
     SqliteGlobalConfig::InitSqliteGlobalConfig();
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
@@ -54,6 +56,16 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
         return nullptr;
     }
 #endif
+
+    if (isDbFileExists) {
+        rdbStore->SetStatus(static_cast<int>(OpenStatus::ON_OPEN));
+    } else {
+        rdbStore->SetStatus(static_cast<int>(OpenStatus::ON_CREATE));
+    }
+
+    if (version == -1) {
+        return rdbStore;
+    }
 
     errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
     if (errCode != E_OK) {

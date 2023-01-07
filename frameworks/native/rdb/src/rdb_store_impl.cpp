@@ -123,7 +123,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
     isEncrypt_ = config.IsEncrypt();
-	// open uri share
+    // open uri share
     if (!config.GetUri().empty()) {
         std::shared_lock<decltype(mutex_)> lock(mutex_);
         service_ = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
