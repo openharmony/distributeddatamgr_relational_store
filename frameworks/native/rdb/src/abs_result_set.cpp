@@ -204,7 +204,7 @@ int AbsResultSet::GetColumnCount(int &count)
 int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex)
 {
     std::vector<std::string> columnNames;
-    if (columnMap_.empty()){
+    if (columnMap_.empty()) {
         int ret = GetAllColumnNames(columnNames);
         if (ret != E_OK) {
             LOG_ERROR("AbsResultSet::GetColumnIndex  return GetAllColumnNames::ret is wrong!");
@@ -213,7 +213,7 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
     }
 
     auto iter = columnMap_.find(columnName);
-    if (iter != columnMap_.end()){
+    if (iter != columnMap_.end()) {
         columnIndex = iter->second;
         return E_OK;
     }
@@ -226,7 +226,7 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
     transform(columnNameLower.begin(), columnNameLower.end(), columnNameLower.begin(), ::tolower);
 
     iter = columnMap_.find(columnNameLower);
-    if (iter != columnMap_.end()){
+    if (iter != columnMap_.end()) {
         columnIndex = iter->second;
         return E_OK;
     }
