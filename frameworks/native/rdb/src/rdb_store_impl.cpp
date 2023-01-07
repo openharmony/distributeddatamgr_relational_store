@@ -48,46 +48,6 @@
 #endif
 
 namespace OHOS::NativeRdb {
-RdbStoreImpl::RdbStoreImpl()
-    : connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false), isMemoryRdb(false)
-{
-}
-RdbStoreImpl::RdbStoreImpl(std::shared_ptr<RdbService> service)
-    : connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false), isMemoryRdb(false),
-      service_(std::move(service))
-{
-}
-
-RdbStoreImpl::~RdbStoreImpl()
-{
-    delete connectionPool;
-    threadMap.clear();
-    idleSessions.clear();
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    if (isShared_) {
-        std::unique_lock<decltype(mutex_)> lock(mutex_);
-        if (service_ == nullptr) {
-            LOG_ERROR("RdbStoreImpl::~RdbStoreImpl service_ is nullptr");
-            return;
-        }
-        if (service_->DestroyRDBTable(syncerParam_) != E_OK) {
-            LOG_ERROR("RdbStoreImpl::~RdbStoreImpl service DestroyRDBTable failed");
-        }
-        service_ = nullptr;
-    }
-#endif
-}
-
-int RdbStoreImpl::UpdateRdb(std::shared_ptr<RdbService> service)
-{
-    if (service == nullptr) {
-        return E_ERROR;
-    }
-    std::unique_lock<decltype(mutex_)> lock(mutex_);
-    service_ = std::move(service);
-    return 0;
-}
-
 std::shared_ptr<RdbStore> RdbStoreImpl::Open(const RdbStoreConfig &config, int &errCode)
 {
     std::shared_ptr<RdbStoreImpl> rdbStore = std::make_shared<RdbStoreImpl>();
@@ -125,23 +85,44 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     isEncrypt_ = config.IsEncrypt();
     // open uri share
     if (!config.GetUri().empty()) {
-        std::shared_lock<decltype(mutex_)> lock(mutex_);
-        service_ = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
-        if (service_ == nullptr) {
+        auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
+        if (service == nullptr) {
             LOG_ERROR("RdbStoreImpl::InnerOpen get service failed");
             return -1;
         }
-        if (service_->CreateRDBTable(syncerParam_, config.GetWritePermission(), config.GetReadPermission()) != E_OK) {
+        if (service->CreateRDBTable(syncerParam_, config.GetWritePermission(), config.GetReadPermission()) != E_OK) {
             LOG_ERROR("RdbStoreImpl::InnerOpen service CreateRDBTable failed");
             return -1;
         }
         isShared_ = true;
     }
-    
 #endif
     return E_OK;
 }
 
+RdbStoreImpl::RdbStoreImpl()
+    : connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false), isMemoryRdb(false), rdbStatus(0)
+{
+}
+
+RdbStoreImpl::~RdbStoreImpl()
+{
+    delete connectionPool;
+    threadMap.clear();
+    idleSessions.clear();
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+    if (isShared_) {
+        auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
+        if (service == nullptr) {
+            LOG_ERROR("RdbStoreImpl::~RdbStoreImpl get service failed");
+            return;
+        }
+        if (service->DestroyRDBTable(syncerParam_) != E_OK) {
+            LOG_ERROR("RdbStoreImpl::~RdbStoreImpl service DestroyRDBTable failed");
+        }
+    }
+#endif
+}
 #ifdef WINDOWS_PLATFORM
 void RdbStoreImpl::Clear()
 {
@@ -341,10 +322,13 @@ std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
     LOG_DEBUG("RdbStoreImpl::RemoteQuery on called.");
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
+    auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
+    if (service == nullptr) {
+        LOG_ERROR("RdbStoreImpl::RemoteQuery get service failed");
+        return nullptr;
+    }
     sptr<IRemoteObject> remoteResultSet;
-    std::shared_lock<decltype(mutex_)> lock(mutex_);
-    if (service_ == nullptr ||
-        service_->RemoteQuery(syncerParam_, device, sql, selectionArgs, remoteResultSet) != E_OK) {
+    if (service->RemoteQuery(syncerParam_, device, sql, selectionArgs, remoteResultSet) != E_OK) {
         LOG_ERROR("RdbStoreImpl::RemoteQuery service RemoteQuery failed");
         return nullptr;
     }
@@ -984,8 +968,11 @@ bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
         }
     }
 
-    std::shared_lock<decltype(mutex_)> lock(mutex_);
-    if (service_ == nullptr || service_->SetDistributedTables(syncerParam_, tables) != 0) {
+    auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
+    if (service == nullptr) {
+        return false;
+    }
+    if (service->SetDistributedTables(syncerParam_, tables) != 0) {
         LOG_ERROR("failed");
         syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
         syncerParam_.password_.clear();
@@ -1006,19 +993,22 @@ bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
 std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, const std::string &table)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    std::shared_lock<decltype(mutex_)> lock(mutex_);
-    if (service_ == nullptr) {
+    auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
+    if (service == nullptr) {
         return "";
     }
-    return service_->ObtainDistributedTableName(device, table);
+    auto distTable = service->ObtainDistributedTableName(device, table);
+    return distTable;
 }
 
 bool RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const SyncCallback &callback)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    std::shared_lock<decltype(mutex_)> lock(mutex_);
-    if (service_ == nullptr ||
-        service_->Sync(syncerParam_, option, predicate.GetDistributedPredicates(), callback) != 0) {
+    auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
+    if (service == nullptr) {
+        return false;
+    }
+    if (service->Sync(syncerParam_, option, predicate.GetDistributedPredicates(), callback) != 0) {
         LOG_ERROR("failed");
         return false;
     }
@@ -1029,15 +1019,21 @@ bool RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predic
 bool RdbStoreImpl::Subscribe(const SubscribeOption &option, RdbStoreObserver *observer)
 {
     LOG_INFO("enter");
-    std::shared_lock<decltype(mutex_)> lock(mutex_);
-    return (service_ != nullptr) && service_->Subscribe(syncerParam_, option, observer) == 0;
+    auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
+    if (service == nullptr) {
+        return false;
+    }
+    return service->Subscribe(syncerParam_, option, observer) == 0;
 }
 
 bool RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *observer)
 {
     LOG_INFO("enter");
-    std::shared_lock<decltype(mutex_)> lock(mutex_);
-    return (service_ != nullptr) && service_->UnSubscribe(syncerParam_, option, observer) == 0;
+    auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
+    if (service == nullptr) {
+        return false;
+    }
+    return service->UnSubscribe(syncerParam_, option, observer) == 0;
 }
 
 bool RdbStoreImpl::DropDeviceData(const std::vector<std::string> &devices, const DropOption &option)

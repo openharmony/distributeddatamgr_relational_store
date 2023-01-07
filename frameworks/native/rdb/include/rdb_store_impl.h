@@ -21,9 +21,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
-#include <shared_mutex>
 
-#include "rdb_service.h"
 #include "rdb_store.h"
 #include "rdb_store_config.h"
 #include "sqlite_connection_pool.h"
@@ -34,12 +32,10 @@
 namespace OHOS::NativeRdb {
 class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
 public:
-    using RdbService = DistributedRdb::RdbService;
     static std::shared_ptr<RdbStore> Open(const RdbStoreConfig &config, int &errCode);
     RdbStoreImpl();
-    RdbStoreImpl(std::shared_ptr<RdbService> service);
     ~RdbStoreImpl() override;
-    int UpdateRdb(std::shared_ptr<RdbService> service);
+
     int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
     int BatchInsert(int64_t &outInsertNum, const std::string &table,
         const std::vector<ValuesBucket> &initialBatchValues) override;
@@ -121,8 +117,6 @@ public:
 
 private:
     int InnerOpen(const RdbStoreConfig &config);
-    std::shared_ptr<StoreSession> GetThreadSession();
-    void ReleaseThreadSession();
     int CheckAttach(const std::string &sql);
 
     SqliteConnectionPool *connectionPool;
@@ -143,8 +137,6 @@ private:
     DistributedRdb::RdbSyncerParam syncerParam_;
     bool isEncrypt_;
 
-    std::shared_mutex mutex_;
-    std::shared_ptr<RdbService> service_;
     int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
 };
 } // namespace OHOS::NativeRdb
