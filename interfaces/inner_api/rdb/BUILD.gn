@@ -151,7 +151,6 @@ ohos_shared_library("native_rdb") {
     public_deps = [
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb:distributeddb",
-      "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner",
     ]
 
     external_deps = [
