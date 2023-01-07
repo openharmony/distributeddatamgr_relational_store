@@ -35,7 +35,7 @@ namespace OHOS::NativeRdb {
 class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
 public:
     using RdbService = DistributedRdb::RdbService;
-	static std::shared_ptr<RdbStore> Open(const RdbStoreConfig &config, int &errCode);
+    static std::shared_ptr<RdbStore> Open(const RdbStoreConfig &config, int &errCode);
     RdbStoreImpl();
     RdbStoreImpl(std::shared_ptr<RdbService> service);
     ~RdbStoreImpl() override;

@@ -71,7 +71,7 @@ private:
     std::string bundleName_;
 };
 
-class RdbStoreDataServiceProxy : public IRemoteProxy<IRdbStoreDataService> {
+class RdbStoreDataServiceProxy : public IRemoteProxy<IKvStoreDataService> {
 public:
     explicit RdbStoreDataServiceProxy(const sptr<IRemoteObject> &impl);
     ~RdbStoreDataServiceProxy() = default;

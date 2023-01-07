@@ -20,14 +20,13 @@
 
 #include "iremote_broker.h"
 #include "rdb_service.h"
-#include "rdb_types.h"
 namespace OHOS::DistributedRdb {
 class IRdbService : public RdbService, public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedRdb.IRdbService");
 };
 
-class IRdbStoreDataService : public IRemoteBroker {
+class IKvStoreDataService : public IRemoteBroker {
 public:
     enum { GET_FEATURE_INTERFACE = 0 };
 
@@ -38,7 +37,7 @@ public:
 
     virtual sptr<IRemoteObject> GetFeatureInterface(const std::string &name) = 0;
 
-    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedRdb.IRdbStoreDataService");
+    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedRdb.IKvStoreDataService");
 };
 } // namespace OHOS::DistributedRdb
 #endif
