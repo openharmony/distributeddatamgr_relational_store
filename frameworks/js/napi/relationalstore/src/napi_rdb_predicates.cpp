@@ -23,7 +23,7 @@ using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS {
-namespace RdbJsKit {
+namespace RelationalStoreJsKit {
 static __thread napi_ref constructor_ = nullptr;
 
 void SetGlobalNamedProperty(napi_env env, const char *name, napi_value constructor)
@@ -199,7 +199,6 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldArrayByName(napi_env env, napi
     fieldarray = JSUtils::Convert2StrVector(env, args[0]);
     RDB_NAPI_ASSERT(
         env, fieldarray.size() >= 0, std::make_shared<ParamTypeError>(fieldName, "a " + fieldType + " array."));
-
     return predicatesProxy;
 }
 
@@ -215,7 +214,6 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldByName(
 
     field = JSUtils::Convert2String(env, args[0]);
     RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamTypeError>(fieldName, "a non empty string."));
-
     return predicatesProxy;
 }
 
@@ -248,9 +246,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValueArray(napi_env env, na
     RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamTypeError>("field", "a non empty string."));
 
     value = JSUtils::Convert2StrVector(env, args[1]);
-    RDB_NAPI_ASSERT(
-        env, value.size() >= 0, std::make_shared<ParamTypeError>("value", "a " + valueType + " array."));
-
+    RDB_NAPI_ASSERT(env, value.size() >= 0, std::make_shared<ParamTypeError>("value", "a " + valueType + " array."));
     return predicatesProxy;
 }
 
@@ -358,7 +354,7 @@ napi_value RdbPredicatesProxy::And(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::Contains(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxyV9::Contains begin.");
+    LOG_DEBUG("RdbPredicatesProxy::Contains begin.");
     napi_value thiz = nullptr;
     std::string field = "";
     std::string value = "";
@@ -785,5 +781,5 @@ napi_value RdbPredicatesProxy::InAllDevices(napi_env env, napi_callback_info inf
     return thiz;
 }
 #endif
-} // namespace RdbJsKit
+} // namespace RelationalStoreJsKit
 } // namespace OHOS

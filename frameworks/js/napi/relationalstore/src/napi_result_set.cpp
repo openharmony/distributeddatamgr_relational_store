@@ -23,7 +23,6 @@
 #include "rdb_errno.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-#include "abs_shared_result_set.h"
 #include "rdb_result_set_bridge.h"
 #include "string_ex.h"
 #endif
@@ -32,62 +31,11 @@ using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS {
-namespace RdbJsKit {
+namespace RelationalStoreJsKit {
 static napi_ref __thread ctorRef_ = nullptr;
 static const int E_OK = 0;
-static const int E_VERSION9 = 9;
-static const int E_VERSION8 = 8;
 
-void SetGlobalNamedPropertyResultSet(napi_env env, const char *name, napi_value constructor)
-{
-    napi_value global = nullptr;
-    napi_status status = napi_get_global(env, &global);
-    NAPI_ASSERT_RETURN_VOID(env, status == napi_ok, "ResultSetProxy get napi global failed");
-    status = napi_set_named_property(env, global, name, constructor);
-    NAPI_ASSERT_RETURN_VOID(env, status == napi_ok, "ResultSetProxy set ResultSet Constructor failed");
-}
-
-int GetVersion(const napi_env &env)
-{
-    napi_value self = nullptr;
-    napi_get_cb_info(env, nullptr, nullptr, nullptr, &self, nullptr);
-    napi_value global = nullptr;
-    napi_get_global(env, &global);
-
-    bool result = false;
-    napi_value resultSetConstructor = nullptr;
-    napi_get_named_property(env, global, "ResultSetConstructorV9", &resultSetConstructor);
-    napi_status status = napi_instanceof(env, self, resultSetConstructor, &result);
-    if (status != napi_ok || result == false) {
-        LOG_INFO("ResultSetConstructor is v8!");
-        return E_VERSION8;
-    }
-    LOG_INFO("ResultSetConstructor is v9!");
-    return E_VERSION9;
-}
-
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<AbsSharedResultSet> resultSet, int apiversion)
-{
-    auto instance = NewInstance(env, std::static_pointer_cast<NativeRdb::ResultSet>(resultSet), apiversion);
-    ResultSetProxy *proxy = nullptr;
-    auto status = napi_unwrap(env, instance, reinterpret_cast<void **>(&proxy));
-    if (proxy == nullptr) {
-        LOG_ERROR("NewInstance native instance is nullptr! code:%{public}d!", status);
-        return instance;
-    }
-
-    if (resultSet->GetBlock() != nullptr) {
-        proxy->sharedBlockName_ = resultSet->GetBlock()->Name();
-        proxy->sharedBlockAshmemFd_ = resultSet->GetBlock()->GetFd();
-    }
-    proxy->sharedResultSet_ = resultSet;
-    proxy->apiversion_ = apiversion;
-    return instance;
-}
-#endif
-
-napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet, int apiversion)
+napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet)
 {
     napi_value cons = GetConstructor(env);
     if (cons == nullptr) {
@@ -108,27 +56,10 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::
         return instance;
     }
     *proxy = std::move(resultSet);
-    proxy->apiversion_ = apiversion;
     return instance;
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-std::shared_ptr<NativeRdb::AbsSharedResultSet> ResultSetProxy::GetNativeObject(
-    napi_env const &env, napi_value const &arg)
-{
-    if (arg == nullptr) {
-        LOG_ERROR("ResultSetProxy GetNativeObject arg is null.");
-        return nullptr;
-    }
-    ResultSetProxy *proxy = nullptr;
-    napi_unwrap(env, arg, reinterpret_cast<void **>(&proxy));
-    if (proxy == nullptr) {
-        LOG_ERROR("ResultSetProxy GetNativeObject proxy is null.");
-        return nullptr;
-    }
-    return proxy->sharedResultSet_;
-}
-
 std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 {
     return std::make_shared<RdbDataShareAdapter::RdbResultSetBridge>(resultSet_);
@@ -173,12 +104,9 @@ napi_value ResultSetProxy::GetConstructor(napi_env env)
         DECLARE_NAPI_GETTER("isAtLastRow", IsAtLastRow),
     };
 
-    SetGlobalNamedPropertyResultSet(env, "ResultSetConstructorV9", cons);
-
     NAPI_CALL(env, napi_define_class(env, "ResultSet", NAPI_AUTO_LENGTH, Initialize, nullptr,
                        sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
     NAPI_CALL(env, napi_create_reference(env, cons, 1, &ctorRef_));
-
     return cons;
 }
 
@@ -303,7 +231,8 @@ napi_value ResultSetProxy::GetLong(napi_env env, napi_callback_info info)
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->GetLong(columnIndex, result);
-    RDB_NAPI_ASSERT(env, resultSetProxy->apiversion_ == E_VERSION8 || errCode == E_OK, std::make_shared<ResultGetError>());
+    LOG_INFO("GetLong code:%{public}d", errCode);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<ResultGetError>());
     return JSUtils::Convert2JSValue(env, result);
 }
 
@@ -314,7 +243,8 @@ napi_value ResultSetProxy::GetColumnType(napi_env env, napi_callback_info info)
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->GetColumnType(columnIndex, columnType);
-    RDB_NAPI_ASSERT(env, resultSetProxy->apiversion_ == E_VERSION8 || errCode == E_OK, std::make_shared<ResultGetError>());
+    LOG_INFO("GetColumnType code:%{public}d", errCode);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<ResultGetError>());
     return JSUtils::Convert2JSValue(env, int32_t(columnType));
 }
 
@@ -347,7 +277,8 @@ napi_value ResultSetProxy::GetInt(napi_env env, napi_callback_info info)
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->GetInt(columnIndex, result);
-    RDB_NAPI_ASSERT(env, resultSetProxy->apiversion_ == E_VERSION8 || errCode == E_OK, std::make_shared<ResultGetError>());
+    LOG_INFO("GetInt code:%{public}d", errCode);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<ResultGetError>());
     return JSUtils::Convert2JSValue(env, result);
 }
 
@@ -475,7 +406,8 @@ napi_value ResultSetProxy::GetBlob(napi_env env, napi_callback_info info)
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->GetBlob(columnIndex, result);
-    RDB_NAPI_ASSERT(env, resultSetProxy->apiversion_ == E_VERSION8 || errCode == E_OK, std::make_shared<ResultGetError>());
+    LOG_INFO("GetBlob code:%{public}d", errCode);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<ResultGetError>());
     return JSUtils::Convert2JSValue(env, result);
 }
 
@@ -487,7 +419,8 @@ napi_value ResultSetProxy::GetString(napi_env env, napi_callback_info info)
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->GetString(columnIndex, result);
-    RDB_NAPI_ASSERT(env, resultSetProxy->apiversion_ == E_VERSION8 || errCode == E_OK, std::make_shared<ResultGetError>());
+    LOG_INFO("GetString code:%{public}d", errCode);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<ResultGetError>());
     return JSUtils::Convert2JSValue(env, result);
 }
 
@@ -498,7 +431,8 @@ napi_value ResultSetProxy::GetDouble(napi_env env, napi_callback_info info)
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->GetDouble(columnIndex, result);
-    RDB_NAPI_ASSERT(env, resultSetProxy->apiversion_ == E_VERSION8 || errCode == E_OK, std::make_shared<ResultGetError>());
+    LOG_INFO("GetDouble code:%{public}d", errCode);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<ResultGetError>());
     return JSUtils::Convert2JSValue(env, result);
 }
 
@@ -509,7 +443,8 @@ napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->IsColumnNull(columnIndex, result);
-    RDB_NAPI_ASSERT(env, resultSetProxy->apiversion_ == E_VERSION8 || errCode == E_OK, std::make_shared<ResultGetError>());
+    LOG_INFO("IsColumnNull code:%{public}d", errCode);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<ResultGetError>());
     napi_value output;
     napi_get_boolean(env, result, &output);
     return output;
@@ -544,24 +479,5 @@ napi_value ResultSetProxy::GetSharedBlockAshmemFd(napi_env env, napi_callback_in
 
     return JSUtils::Convert2JSValue(env, proxy->sharedBlockAshmemFd_);
 }
-} // namespace RdbJsKit
+} // namespace RelationalStoreJsKit
 } // namespace OHOS
-
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-EXTERN_C_START
-__attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_NewInstance(
-    napi_env env, OHOS::NativeRdb::AbsSharedResultSet *resultSet)
-{
-    return OHOS::RdbJsKit::ResultSetProxy::NewInstance(
-        env, std::shared_ptr<OHOS::NativeRdb::AbsSharedResultSet>(resultSet), 8);
-}
-
-__attribute__((visibility("default"))) OHOS::NativeRdb::AbsSharedResultSet *
-NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_GetNativeObject(const napi_env &env, const napi_value &arg)
-{
-    // the resultSet maybe release.
-    auto resultSet = OHOS::RdbJsKit::ResultSetProxy::GetNativeObject(env, arg);
-    return resultSet.get();
-}
-EXTERN_C_END
-#endif
