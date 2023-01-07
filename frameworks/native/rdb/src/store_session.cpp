@@ -113,6 +113,17 @@ int StoreSession::BeginExecuteSql(const std::string &sql, bool &isReadOnly)
         ReleaseConnection(assumeReadOnly);
         return errCode;
     }
+
+    if (isReadOnly == con->IsWriteConnection()) {
+        ReleaseConnection(assumeReadOnly);
+        AcquireConnection(isReadOnly);
+        if (!isReadOnly && !con->IsWriteConnection()) {
+            LOG_ERROR("StoreSession BeginExecute: read connection can not execute write operation");
+            ReleaseConnection(isReadOnly);
+            return E_EXECUTE_WRITE_IN_READ_CONNECTION;
+        }
+        return E_OK;
+    }
     isReadOnly = assumeReadOnly;
     return E_OK;
 }
