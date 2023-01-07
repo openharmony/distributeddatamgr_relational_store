@@ -196,7 +196,7 @@ std::vector<uint8_t> JSUtils::Convert2U8Vector(napi_env env, napi_value input_ar
 std::string JSUtils::ConvertAny2String(napi_env env, napi_value jsValue)
 {
     napi_valuetype valueType = napi_undefined;
-    NAPI_CALL_BASE(env, napi_typeof(env, jsValue, &valueType), "napi_typeof failed");
+    napi_typeof(env, jsValue, &valueType);
     if (valueType == napi_string) {
         return JSUtils::Convert2String(env, jsValue, false);
     } else if (valueType == napi_number) {

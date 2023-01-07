@@ -422,7 +422,7 @@ napi_value ResultSetProxy::IsBegin(napi_env env, napi_callback_info info)
 napi_value ResultSetProxy::GoToFirstRow(napi_env env, napi_callback_info info)
 {
     auto resultSet = GetInnerResultSet(env, info);
-    RDB_NAPI_ASSERT(env, resultSet != nullptr, std::make_shared<ResultGotoError>());
+    RDB_CHECK_RETURN_NULLPTR(resultSet != nullptr);
     int errCode = resultSet->GoToFirstRow();
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
@@ -438,7 +438,7 @@ napi_value ResultSetProxy::GoToLastRow(napi_env env, napi_callback_info info)
 napi_value ResultSetProxy::GoToNextRow(napi_env env, napi_callback_info info)
 {
     auto resultSet = GetInnerResultSet(env, info);
-    RDB_NAPI_ASSERT(env, resultSet != nullptr, std::make_shared<ResultGotoError>());
+    RDB_CHECK_RETURN_NULLPTR(resultSet != nullptr);
     int errCode = resultSet->GoToNextRow();
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }

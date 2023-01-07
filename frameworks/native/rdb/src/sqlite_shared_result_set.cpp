@@ -54,6 +54,7 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
                     return errCode;
                 }
                 columnNames_.push_back(columnName);
+                columnMap_[columnName] = i;
             }
 
             rdbStoreImpl->EndStepQuery();
