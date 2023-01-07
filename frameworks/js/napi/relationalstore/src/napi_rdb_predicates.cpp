@@ -565,7 +565,6 @@ napi_value RdbPredicatesProxy::GroupBy(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbPredicatesProxy::GroupBy begin.");
     napi_value thiz = nullptr;
-    std::string field = "";
     std::vector<std::string> fields;
     auto predicatesProxy = ParseFieldArrayByName(env, info, thiz, fields, "fields", "string");
     RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr);

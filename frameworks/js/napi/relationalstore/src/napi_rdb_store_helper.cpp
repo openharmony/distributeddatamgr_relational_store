@@ -186,10 +186,6 @@ int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<Helper
     size_t pos = path.find_first_of('/');
     RDB_CHECK_RETURN_CALL_RESULT(pos == std::string::npos, context->SetError(paramError));
 
-    if (context->abilitycontext == nullptr) {
-        // when no context as arg got from application.
-        ParseContext(env, nullptr, context);
-    }
     std::string databaseDir = context->abilitycontext->GetDatabaseDir();
     int errorCode = E_OK;
     std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, path, errorCode);
