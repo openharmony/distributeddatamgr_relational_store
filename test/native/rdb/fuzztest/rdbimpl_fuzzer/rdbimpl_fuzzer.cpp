@@ -20,7 +20,7 @@ using namespace OHOS::NativeRdb;
 namespace OHOS {
 void RdbStoreImplFuzz(const uint8_t *data, size_t size)
 {
-    RdbStoreImpl rdbStoreImpl(nullptr);
+    RdbStoreImpl rdbStoreImpl;
     std::string rawString(reinterpret_cast<const char *>(data), size);
     std::vector<std::string> tables;
     tables.push_back(rawString);
