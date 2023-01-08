@@ -66,6 +66,7 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
             return errCode;
         }
         columnNames.push_back(columnName);
+        columnMap_[columnName] = i;
     }
     if (needRelease) {
         rdb->EndStepQuery();

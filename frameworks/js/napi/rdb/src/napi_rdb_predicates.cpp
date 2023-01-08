@@ -219,11 +219,9 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldByName(
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
-    RDB_NAPI_ASSERT(env, argc == 1, std::make_shared<ParamNumError>("1"));
-
+    RDB_CHECK_RETURN_NULLPTR(argc == 1);
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamTypeError>(fieldName, "a non empty string."));
-
+    RDB_CHECK_RETURN_NULLPTR(!field.empty());
     return predicatesProxy;
 }
 
@@ -271,11 +269,9 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValue(napi_env env, napi_ca
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
-    RDB_NAPI_ASSERT(env, argc == 2, std::make_shared<ParamNumError>("2"));
-
+    RDB_CHECK_RETURN_NULLPTR(argc == 2);
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamTypeError>("field", "a non empty string."));
-
+    RDB_CHECK_RETURN_NULLPTR(!field.empty());
     value = JSUtils::ConvertAny2String(env, args[1]);
     return predicatesProxy;
 }
@@ -306,7 +302,6 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldLowAndHigh(
 napi_value RdbPredicatesProxy::EqualTo(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    LOG_DEBUG("RdbPredicatesProxy::EqualTo begin.");
     napi_value thiz = nullptr;
     std::string field = "";
     std::string value = "";
@@ -533,7 +528,6 @@ napi_value RdbPredicatesProxy::OrderByAsc(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::OrderByDesc(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbPredicatesProxy::OrderByDesc begin.");
     napi_value thiz = nullptr;
     std::string field = "";
     auto predicatesProxy = ParseFieldByName(env, info, thiz, field, "field");
