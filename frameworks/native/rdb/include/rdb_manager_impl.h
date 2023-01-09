@@ -65,13 +65,15 @@ private:
 
     void ResetServiceHandle();
 
+    static std::shared_ptr<RdbStoreDataServiceProxy> GetDistributedDataManager();
+
     std::mutex mutex_;
     std::shared_ptr<RdbStoreDataServiceProxy> distributedDataMgr_;
     std::shared_ptr<RdbService> rdbService_;
     std::string bundleName_;
 };
 
-class RdbStoreDataServiceProxy : public IRemoteProxy<IKvStoreDataService> {
+class RdbStoreDataServiceProxy : public IRemoteProxy<DistributedRdb::IKvStoreDataService> {
 public:
     explicit RdbStoreDataServiceProxy(const sptr<IRemoteObject> &impl);
     ~RdbStoreDataServiceProxy() = default;

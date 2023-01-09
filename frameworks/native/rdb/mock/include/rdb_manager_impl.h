@@ -66,6 +66,8 @@ private:
 
     void ResetServiceHandle();
 
+    static std::shared_ptr<RdbStoreDataServiceProxy> GetDistributedDataManager();
+
     std::mutex mutex_;
     sptr<OHOS::DistributedKv::KvStoreDataServiceProxy> distributedDataMgr_;
     std::shared_ptr<RdbService> rdbService_;
