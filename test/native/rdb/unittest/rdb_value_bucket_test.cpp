@@ -55,8 +55,6 @@ void ValuesBucketTest::TearDown(void)
  * @tc.name: Values_Bucket_001
  * @tc.desc: test Values Bucket parcel
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: zengmin
  */
 HWTEST_F(ValuesBucketTest, Values_Bucket_001, TestSize.Level1)
 {
