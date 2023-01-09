@@ -76,8 +76,6 @@ void RdbStoreInterfaceTest::TearDown(void)
  * @tc.name: ValueObject_TEST_001
  * @tc.desc: test ValueObject
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInterfaceTest, ValueObject_TEST_001, TestSize.Level1)
 {
@@ -90,8 +88,6 @@ HWTEST_F(RdbStoreInterfaceTest, ValueObject_TEST_001, TestSize.Level1)
  * @tc.name: ValueObject_TEST_002
  * @tc.desc: test ValueObject
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInterfaceTest, ValueObject_TEST_002, TestSize.Level1)
 {
@@ -109,8 +105,6 @@ HWTEST_F(RdbStoreInterfaceTest, ValueObject_TEST_002, TestSize.Level1)
  * @tc.name: ValueObject_TEST_003
  * @tc.desc: test ValueObject
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInterfaceTest, ValueObject_TEST_003, TestSize.Level1)
 {
@@ -128,8 +122,6 @@ HWTEST_F(RdbStoreInterfaceTest, ValueObject_TEST_003, TestSize.Level1)
  * @tc.name: ValueObject_TEST_004
  * @tc.desc: test ValueObject
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInterfaceTest, ValueObject_TEST_004, TestSize.Level1)
 {
@@ -147,8 +139,6 @@ HWTEST_F(RdbStoreInterfaceTest, ValueObject_TEST_004, TestSize.Level1)
  * @tc.name: ValueObject_TEST_005
  * @tc.desc: test ValueObject
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInterfaceTest, ValueObject_TEST_005, TestSize.Level1)
 {
@@ -171,8 +161,6 @@ HWTEST_F(RdbStoreInterfaceTest, ValueObject_TEST_005, TestSize.Level1)
  * @tc.name: ValueObject_TEST_006
  * @tc.desc: test ValueObject
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInterfaceTest, ValueObject_TEST_006, TestSize.Level1)
 {
@@ -188,8 +176,6 @@ HWTEST_F(RdbStoreInterfaceTest, ValueObject_TEST_006, TestSize.Level1)
  * @tc.name: ValuesBucket_001
  * @tc.desc: test ValuesBucket
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInterfaceTest, ValuesBucket_001, TestSize.Level1)
 {
@@ -230,8 +216,6 @@ HWTEST_F(RdbStoreInterfaceTest, ValuesBucket_001, TestSize.Level1)
  * @tc.name: ValuesBucket_002
  * @tc.desc: test ValuesBucket
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInterfaceTest, ValuesBucket_002, TestSize.Level1)
 {
@@ -279,8 +263,6 @@ HWTEST_F(RdbStoreInterfaceTest, ValuesBucket_002, TestSize.Level1)
  * @tc.name: ValuesBucket_003
  * @tc.desc: test ValuesBucket
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInterfaceTest, ValuesBucket_003, TestSize.Level1)
 {

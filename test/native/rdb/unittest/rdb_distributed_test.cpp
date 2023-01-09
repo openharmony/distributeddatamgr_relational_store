@@ -165,8 +165,6 @@ void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
  * @tc.name: RdbStore_Distributed_Test_001
  * @tc.desc: test RdbStore set distributed tables
  * @tc.type: FUNC
- * @tc.require: AR000GK58F
- * @tc.author: wuchunbo
  */
 HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_001, TestSize.Level1)
 {
