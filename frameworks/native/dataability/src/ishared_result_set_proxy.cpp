@@ -62,6 +62,10 @@ int ISharedResultSetProxy::GetAllColumnNames(std::vector<std::string> &columnNam
         return E_INVALID_PARCEL;
     }
     columnNames_ = columnNames;
+    for (int i = 0; i < columnNames_.size(); i++)
+    {
+        columnMap_[columnNames_[i]] = i;
+    }
     return E_OK;
 }
 
