@@ -28,10 +28,10 @@
 #include "rdb_service_proxy.h"
 
 namespace OHOS::DistributedRdb {
-static std::shared_ptr<RdbStoreDataServiceProxy> GetDistributedDataManager()
+std::shared_ptr<RdbStoreDataServiceProxy> RdbManagerImpl::GetDistributedDataManager()
 {
     int retry = 0;
-    while (++retry <= RdbManagerImpl::GET_SA_RETRY_TIMES) {
+    while (++retry <= GET_SA_RETRY_TIMES) {
         auto manager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (manager == nullptr) {
             ZLOGE("get system ability manager failed");
@@ -40,7 +40,7 @@ static std::shared_ptr<RdbStoreDataServiceProxy> GetDistributedDataManager()
         ZLOGI("get distributed data manager %{public}d", retry);
         auto remoteObject = manager->CheckSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
         if (remoteObject == nullptr) {
-            std::this_thread::sleep_for(std::chrono::seconds(RdbManagerImpl::RETRY_INTERVAL));
+            std::this_thread::sleep_for(std::chrono::seconds(RETRY_INTERVAL));
             continue;
         }
         ZLOGI("get distributed data manager success");
@@ -148,7 +148,7 @@ void RdbManagerImpl::ResetServiceHandle()
 }
 
 RdbStoreDataServiceProxy::RdbStoreDataServiceProxy(const sptr<IRemoteObject> &impl)
-    : IRemoteProxy<IKvStoreDataService>(impl)
+    : IRemoteProxy<DistributedRdb::IKvStoreDataService>(impl)
 {
     ZLOGI("init data service proxy.");
 }
