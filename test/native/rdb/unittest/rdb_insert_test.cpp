@@ -97,8 +97,6 @@ void RdbStoreInsertTest::TearDown(void)
  * @tc.name: RdbStore_Insert_001
  * @tc.desc: test RdbStore insert
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInsertTest, RdbStore_Insert_001, TestSize.Level1)
 {
@@ -245,8 +243,6 @@ void RdbStoreInsertTest::CheckBlob(std::unique_ptr<ResultSet> &resultSet)
  * @tc.name: RdbStore_Insert_002
  * @tc.desc: test RdbStore insert
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInsertTest, RdbStore_Insert_002, TestSize.Level1)
 {
@@ -270,8 +266,6 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Insert_002, TestSize.Level1)
  * @tc.name: RdbStore_Insert_003
  * @tc.desc: test RdbStore insert
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInsertTest, RdbStore_Insert_003, TestSize.Level1)
 {
@@ -296,8 +290,6 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Insert_003, TestSize.Level1)
  * @tc.name: RdbStore_Replace_001
  * @tc.desc: test RdbStore replace
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_001, TestSize.Level1)
 {
@@ -371,8 +363,6 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_001, TestSize.Level1)
  * @tc.name: RdbStore_Replace_002
  * @tc.desc: test RdbStore replace
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_002, TestSize.Level1)
 {
@@ -456,8 +446,6 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_002, TestSize.Level1)
  * @tc.name: RdbStore_Replace_003
  * @tc.desc: test RdbStore Replace
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_003, TestSize.Level1)
 {
@@ -481,8 +469,6 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_003, TestSize.Level1)
  * @tc.name: RdbStore_Replace_004
  * @tc.desc: test RdbStore Replace
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_004, TestSize.Level1)
 {
@@ -507,8 +493,6 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_004, TestSize.Level1)
  * @tc.name: RdbStore_InsertWithConflictResolution_001_002
  * @tc.desc: test RdbStore InsertWithConflictResolution
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_001_002, TestSize.Level1)
 {
@@ -542,8 +526,6 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_001_002, Test
  * @tc.name: RdbStore_InsertWithConflictResolution_003_004
  * @tc.desc: test RdbStore InsertWithConflictResolution
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_003_004, TestSize.Level1)
 {
@@ -575,8 +557,6 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_003_004, Test
  * @tc.name: RdbStore_InsertWithConflictResolution_005
  * @tc.desc: test RdbStore InsertWithConflictResolution
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_005, TestSize.Level1)
 {
@@ -609,8 +589,6 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_005, TestSize
  * @tc.name: RdbStore_InsertWithConflictResolution_006_007
  * @tc.desc: test RdbStore InsertWithConflictResolution
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_006_007, TestSize.Level1)
 {
