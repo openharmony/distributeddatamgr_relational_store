@@ -110,8 +110,6 @@ void RdbAttachTest::TearDown(void)
  * @tc.name: RdbStore_Attach_001
  * @tc.desc: test attach, attach is not supported in wal mode
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbAttachTest, RdbStore_Attach_001, TestSize.Level1)
 {
@@ -129,8 +127,6 @@ HWTEST_F(RdbAttachTest, RdbStore_Attach_001, TestSize.Level1)
  * @tc.name: RdbStore_Attach_002
  * @tc.desc: test RdbStore attach
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbAttachTest, RdbStore_Attach_002, TestSize.Level1)
 {
