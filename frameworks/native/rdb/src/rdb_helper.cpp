@@ -29,90 +29,24 @@
 
 namespace OHOS {
 namespace NativeRdb {
-std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
-    const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode)
+void RdbHelper::InitSecurityManager(const RdbStoreConfig &config)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    bool isDbFileExists = access(config.GetPath().c_str(), F_OK) == 0;
-
-    SqliteGlobalConfig::InitSqliteGlobalConfig();
-
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     if (config.IsEncrypt()) {
         RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
     }
 #endif
-
-    std::shared_ptr<RdbStore> rdbStore = RdbStoreManager::GetInstance().GetRdbStore(config, errCode);
-    if (rdbStore == nullptr) {
-        LOG_ERROR("RdbHelper GetRdbStore fail to open RdbStore");
-        return nullptr;
-    }
-
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    errCode = SecurityPolicy::SetSecurityLabel(config);
-    if (errCode != E_OK) {
-        LOG_ERROR("RdbHelper set security label fail.");
-        return nullptr;
-    }
-#endif
-
-    if (isDbFileExists) {
-        rdbStore->SetStatus(static_cast<int>(OpenStatus::ON_OPEN));
-    } else {
-        rdbStore->SetStatus(static_cast<int>(OpenStatus::ON_CREATE));
-    }
-
-    if (version == -1) {
-        return rdbStore;
-    }
-
-    errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
-    if (errCode != E_OK) {
-        LOG_ERROR("RdbHelper GetRdbStore ProcessOpenCallback fail");
-        return nullptr;
-    }
-
-    return rdbStore;
 }
 
-int RdbHelper::ProcessOpenCallback(
-    RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback)
+std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
+    const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    int currentVersion;
-    int errCode = rdbStore.GetVersion(currentVersion);
-    if (errCode != E_OK) {
-        return errCode;
-    }
+    SqliteGlobalConfig::InitSqliteGlobalConfig();
+    InitSecurityManager(config);
+    std::shared_ptr<RdbStore> rdbStore = RdbStoreManager::GetInstance().GetRdbStore(config, errCode, version, openCallback);
 
-    if (version == currentVersion) {
-        return openCallback.OnOpen(rdbStore);
-    }
-
-    if (config.IsReadOnly()) {
-        LOG_ERROR("RdbHelper ProcessOpenCallback Can't upgrade read-only store");
-        return E_CANNOT_UPDATE_READONLY;
-    }
-
-    if (currentVersion == 0) {
-        errCode = openCallback.OnCreate(rdbStore);
-    } else if (version > currentVersion) {
-        errCode = openCallback.OnUpgrade(rdbStore, currentVersion, version);
-    } else {
-        errCode = openCallback.OnDowngrade(rdbStore, currentVersion, version);
-    }
-
-    if (errCode == E_OK) {
-        errCode = rdbStore.SetVersion(version);
-    }
-
-    if (errCode != E_OK) {
-        LOG_ERROR("RdbHelper ProcessOpenCallback set new version failed.");
-        return errCode;
-    }
-
-    return openCallback.OnOpen(rdbStore);
+    return rdbStore;
 }
 
 void RdbHelper::ClearCache()
@@ -177,6 +111,7 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
     return errCode;
 }
 
+
 RdbStoreNode::RdbStoreNode(const std::shared_ptr<RdbStore> &rdbStore) : rdbStore_(rdbStore) {}
 
 RdbStoreNode &RdbStoreNode::operator=(const std::shared_ptr<RdbStore> &store)
@@ -208,10 +143,15 @@ RdbStoreManager::RdbStoreManager()
 {
     timer_ = std::make_shared<Utils::Timer>("RdbStoreCloser");
     timer_->Setup();
+    // 30000 ms
+    ms_ = 30000;
 }
 
-std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &config, int &errCode)
+std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &config,
+    int &errCode, int version, RdbOpenCallback &openCallback)
 {
+    bool isDbFileExists = access(config.GetPath().c_str(), F_OK) == 0;
+
     std::shared_ptr<RdbStore> rdbStore;
     std::string path = config.GetPath();
     std::lock_guard<std::mutex> lock(mutex_);
@@ -226,7 +166,28 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
     } else {
         RestartTimer(path, *storeCache_[path]);
         rdbStore = storeCache_[path]->rdbStore_;
+        return rdbStore;
     }
+
+    if (SetSecurityLabel(config) != E_OK) {
+        storeCache_.erase(path);
+        LOG_ERROR("RdbHelper set security label fail.");
+        return nullptr;
+    }
+
+    if (isDbFileExists) {
+        rdbStore->SetStatus(static_cast<int>(OpenStatus::ON_OPEN));
+    } else {
+        rdbStore->SetStatus(static_cast<int>(OpenStatus::ON_CREATE));
+    }
+
+    errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
+    if (errCode != E_OK) {
+        storeCache_.erase(path);
+        LOG_ERROR("RdbHelper GetRdbStore ProcessOpenCallback fail");
+        return nullptr;
+    }
+
     return rdbStore;
 }
 
@@ -235,7 +196,7 @@ void RdbStoreManager::RestartTimer(const std::string &path, RdbStoreNode &node)
     if (timer_ != nullptr) {
         timer_->Unregister(node.timerId_);
         // after 30000ms, auto close.
-        node.timerId_ = timer_->Register(std::bind(RdbStoreManager::AutoClose, path, this), 30000, true);
+        node.timerId_ = timer_->Register(std::bind(RdbStoreManager::AutoClose, path, this), ms_, true);
     }
 }
 
@@ -267,6 +228,63 @@ void RdbStoreManager::Clear()
         }
         iter = storeCache_.erase(iter);
     }
+}
+
+
+int RdbStoreManager::ProcessOpenCallback(
+    RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    int errCode = E_OK;
+    if (version == -1) {
+        return errCode;
+    }
+
+    int currentVersion;
+    errCode = rdbStore.GetVersion(currentVersion);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    if (version == currentVersion) {
+        return openCallback.OnOpen(rdbStore);
+    }
+
+    if (config.IsReadOnly()) {
+        LOG_ERROR("RdbHelper ProcessOpenCallback Can't upgrade read-only store");
+        return E_CANNOT_UPDATE_READONLY;
+    }
+
+    if (currentVersion == 0) {
+        errCode = openCallback.OnCreate(rdbStore);
+    } else if (version > currentVersion) {
+        errCode = openCallback.OnUpgrade(rdbStore, currentVersion, version);
+    } else {
+        errCode = openCallback.OnDowngrade(rdbStore, currentVersion, version);
+    }
+
+    if (errCode == E_OK) {
+        errCode = rdbStore.SetVersion(version);
+    }
+
+    if (errCode != E_OK) {
+        LOG_ERROR("RdbHelper ProcessOpenCallback set new version failed.");
+        return errCode;
+    }
+
+    return openCallback.OnOpen(rdbStore);
+}
+int RdbStoreManager::SetSecurityLabel(const RdbStoreConfig &config)
+{
+    int errCode = E_OK;
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+    errCode = SecurityPolicy::SetSecurityLabel(config);
+#endif
+    return errCode;
+}
+void RdbStoreManager::SetReleaseTime(int ms)
+{
+    ms_ = ms;
 }
 } // namespace NativeRdb
 } // namespace OHOS

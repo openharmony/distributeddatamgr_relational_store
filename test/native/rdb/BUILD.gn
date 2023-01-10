@@ -60,6 +60,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_update_test.cpp",
     "unittest/rdb_upgrade_test.cpp",
     "unittest/rdb_value_bucket_test.cpp",
+    "unittest/rdb_get_store_test.cpp",
   ]
 
   configs = [ ":module_private_config" ]
