@@ -119,6 +119,6 @@ HWTEST_F(GetRdbStatusTest, Get_RdbStore_Status_002, TestSize.Level1)
     EXPECT_EQ(errCode, E_OK);
 
     RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(GetRdbStatusTest::store->GetStatus(), static_cast<int>(OpenStatus::ON_OPEN));
+    EXPECT_EQ(GetRdbStatusTest::store->GetStatus(), static_cast<int>(OpenStatus::ON_CREATE));
     EXPECT_EQ(RdbHelper::DeleteRdbStore(GetRdbStatusTest::DATABASE_NAME), E_OK);
 }
