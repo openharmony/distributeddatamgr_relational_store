@@ -37,7 +37,7 @@ public:
 
     virtual sptr<IRemoteObject> GetFeatureInterface(const std::string &name) = 0;
 
-    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedRdb.IKvStoreDataService");
+    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedKv.IKvStoreDataService");
 };
 } // namespace OHOS::DistributedRdb
 #endif
