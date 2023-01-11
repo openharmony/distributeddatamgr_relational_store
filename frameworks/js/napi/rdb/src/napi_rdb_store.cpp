@@ -652,7 +652,7 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
     auto exec = [context](AsyncCall::Context *ctx) {
         LOG_INFO("RdbStoreProxy::BatchInsert Async.");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        if (context->insertNum == -1) {
+        if (context->insertNum == -1UL) {
             return E_OK;
         }
         int64_t outInsertNum = 0;
