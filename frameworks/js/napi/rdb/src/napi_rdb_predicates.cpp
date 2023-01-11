@@ -121,8 +121,7 @@ napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
         RDB_NAPI_ASSERT(env, !tableName.empty(), std::make_shared<ParamTypeError>("name", "a non empty string."));
         auto *proxy = new RdbPredicatesProxy(tableName);
         proxy->env_ = env;
-        NAPI_CALL(env, napi_wrap(env, thiz, proxy, RdbPredicatesProxy::Destructor, nullptr, &proxy->wrapper_));
-        LOG_INFO("RdbPredicatesProxy::New constructor ref:%{public}p", proxy->wrapper_);
+        NAPI_CALL(env, napi_wrap(env, thiz, proxy, RdbPredicatesProxy::Destructor, nullptr, nullptr));
         return thiz;
     }
 
