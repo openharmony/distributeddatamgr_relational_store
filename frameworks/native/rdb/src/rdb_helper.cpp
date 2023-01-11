@@ -16,6 +16,7 @@
 #include "rdb_helper.h"
 
 #include "logger.h"
+#include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_store_impl.h"
 #include "rdb_trace.h"
