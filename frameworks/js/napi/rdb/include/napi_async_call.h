@@ -97,7 +97,7 @@ public:
 
     // The default AsyncCallback in the parameters is at the end position.
     static constexpr size_t ASYNC_DEFAULT_POS = -1;
-    AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context);
+    AsyncCall(napi_env env, napi_callback_info info, Context *context);
     ~AsyncCall();
     napi_value Call(napi_env env, Context::ExecAction exec = nullptr);
     napi_value SyncCall(napi_env env, Context::ExecAction exec = nullptr);
@@ -107,13 +107,25 @@ private:
     static void OnExecute(napi_env env, void *data);
     static void OnComplete(napi_env env, napi_status status, void *data);
     struct AsyncContext {
-        std::shared_ptr<Context> ctx = nullptr;
+        Context *ctx = nullptr;
+        napi_env env = nullptr;
         napi_ref callback = nullptr;
         napi_ref self = nullptr;
         napi_deferred defer = nullptr;
         napi_async_work work = nullptr;
+        AsyncContext(napi_env nenv) : env(nenv)
+        {
+        }
+        ~AsyncContext()
+        {
+            if (env != nullptr) {
+                napi_delete_reference(env, callback);
+                napi_delete_reference(env, self);
+                napi_delete_async_work(env, work);
+            }
+            delete ctx;
+        }
     };
-    static void DeleteContext(napi_env env, AsyncContext *context);
     static void SetBusinessError(napi_env env, napi_value *businessError, std::shared_ptr<Error> error, int apiversion);
 
     AsyncContext *context_ = nullptr;

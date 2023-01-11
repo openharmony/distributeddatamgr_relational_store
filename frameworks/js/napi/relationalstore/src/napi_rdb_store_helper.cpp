@@ -211,7 +211,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RelationalStoreJsKit::GetRdbStore start");
-    auto context = std::make_shared<HelperRdbContext>();
+    auto context = new HelperRdbContext();
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("context", "a Context.");
         RDB_CHECK_RETURN_CALL_RESULT(JSAbility::CheckContext(env, info), context->SetError(paramError));
@@ -238,7 +238,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         return (result != nullptr) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -247,7 +247,7 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RelationalStoreJsKit::DeleteRdbStore start");
-    auto context = std::make_shared<HelperRdbContext>();
+    auto context = new HelperRdbContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
         RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
@@ -268,7 +268,7 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }

@@ -21,7 +21,7 @@ using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
-AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context) : env_(env)
+AsyncCall::AsyncCall(napi_env env, napi_callback_info info, Context *context) : env_(env)
 {
     context->_env = env;
     size_t argc = MAX_INPUT_COUNT;
@@ -29,7 +29,7 @@ AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Cont
     napi_value argv[MAX_INPUT_COUNT] = { nullptr };
     NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
 
-    context_ = new AsyncContext();
+    context_ = new AsyncContext(env);
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, argv[argc - 1], &valueType);
     if (valueType == napi_function) {
@@ -165,17 +165,16 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         napi_value returnValue;
         napi_call_function(env, nullptr, callback, ARG_BUTT, result, &returnValue);
     }
-    DeleteContext(env, context);
 }
 
-void AsyncCall::DeleteContext(napi_env env, AsyncContext *context)
+AsyncCall::AsyncContext::~AsyncContext()
 {
     if (env != nullptr) {
-        napi_delete_reference(env, context->callback);
-        napi_delete_reference(env, context->self);
-        napi_delete_async_work(env, context->work);
+        napi_delete_reference(env, callback);
+        napi_delete_reference(env, self);
+        napi_delete_async_work(env, work);
     }
-    delete context;
+    delete ctx;
 }
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

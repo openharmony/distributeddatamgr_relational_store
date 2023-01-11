@@ -614,7 +614,7 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreProxy::Insert start");
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3 or 4");
         RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3 || argc == 4, context->SetError(paramNumError));
@@ -642,7 +642,7 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -651,7 +651,7 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreProxy::BatchInsert start.");
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
         RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
@@ -677,7 +677,7 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -685,7 +685,7 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Delete start");
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         ParserThis(env, self, context);
         if (IsNapiTypeString(env, argc, argv, 0)) {
@@ -715,7 +715,7 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -724,7 +724,7 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreProxy::Update start");
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         ParserThis(env, self, context);
         if (IsNapiTypeString(env, argc, argv, 0)) {
@@ -761,7 +761,7 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -769,7 +769,7 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         ParserThis(env, self, context);
         if (IsNapiTypeString(env, argc, argv, 0)) {
@@ -801,7 +801,7 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
         return (result != nullptr) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -810,7 +810,7 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::RemoteQuery start");
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("4 or 5");
         RDB_CHECK_RETURN_CALL_RESULT(argc == 4 || argc == 5, context->SetError(paramNumError));
@@ -839,7 +839,7 @@ napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
         return (result != nullptr) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -848,7 +848,7 @@ napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1, 2 or 3");
         RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2 || argc == 3, context->SetError(paramNumError));
@@ -886,7 +886,7 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
         return (result != nullptr) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -900,7 +900,7 @@ int ParseBindArgs(const napi_env &env, const napi_value &arg, std::shared_ptr<Rd
 napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::ExecuteSql start");
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1, 2 or 3");
         RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2 || argc == 3, context->SetError(paramNumError));
@@ -924,7 +924,7 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -932,7 +932,7 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::Count(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Count start");
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1 or 2");
         RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2, context->SetError(paramNumError));
@@ -955,7 +955,7 @@ napi_value RdbStoreProxy::Count(napi_env env, napi_callback_info info)
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -964,7 +964,7 @@ napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreProxy::Replace start");
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
         RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
@@ -988,7 +988,7 @@ napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -996,7 +996,7 @@ napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::Backup(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Backup start");
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1 or 2");
         RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2, context->SetError(paramNumError));
@@ -1017,7 +1017,7 @@ napi_value RdbStoreProxy::Backup(napi_env env, napi_callback_info info)
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -1025,7 +1025,7 @@ napi_value RdbStoreProxy::Backup(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::Attach(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Attach start");
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("3 or 4");
         RDB_CHECK_RETURN_CALL_RESULT(argc == 3 || argc == 4, context->SetError(paramNumError));
@@ -1048,7 +1048,7 @@ napi_value RdbStoreProxy::Attach(napi_env env, napi_callback_info info)
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -1151,7 +1151,7 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreProxy::QueryByStep start");
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
         RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
@@ -1175,7 +1175,7 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
         return (result != nullptr) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -1233,7 +1233,7 @@ napi_value RdbStoreProxy::SetVersion(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::Restore(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Restore start");
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1 or 2");
         RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2, context->SetError(paramNumError));
@@ -1255,7 +1255,7 @@ napi_value RdbStoreProxy::Restore(napi_env env, napi_callback_info info)
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -1264,7 +1264,7 @@ napi_value RdbStoreProxy::Restore(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::SetDistributedTables start");
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1 or 2");
         RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2, context->SetError(paramNumError));
@@ -1285,7 +1285,7 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -1293,7 +1293,7 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
 napi_value RdbStoreProxy::ObtainDistributedTableName(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::ObtainDistributedTableName start");
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
         RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
@@ -1317,7 +1317,7 @@ napi_value RdbStoreProxy::ObtainDistributedTableName(napi_env env, napi_callback
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
@@ -1325,7 +1325,7 @@ napi_value RdbStoreProxy::ObtainDistributedTableName(napi_env env, napi_callback
 napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Sync start");
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = new RdbStoreContext();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
         std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
         RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
@@ -1351,7 +1351,7 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
         return (result != nullptr) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    AsyncCall asyncCall(env, info, context);
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
     return asyncCall.Call(env, exec);
 }
