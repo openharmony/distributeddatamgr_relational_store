@@ -49,7 +49,7 @@ AsyncCall::~AsyncCall()
         return;
     }
 
-    DeleteContext(env_, context_);
+    delete context_;
 }
 
 napi_value AsyncCall::Call(napi_env env, Context::ExecAction exec)
