@@ -14,6 +14,7 @@
  */
 
 #include "napi_rdb_const_properties.h"
+#include "rdb_common.h"
 #include "rdb_store.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_store_config.h"
@@ -79,6 +80,7 @@ static napi_value ExportSecurityLevel(napi_env env)
     napi_object_freeze(env, securityLevel);
     return securityLevel;
 }
+#endif
 
 static napi_value ExportOpenStatus(napi_env env)
 {
@@ -89,7 +91,6 @@ static napi_value ExportOpenStatus(napi_env env)
     napi_object_freeze(env, openStatus);
     return openStatus;
 }
-#endif
 
 static napi_value ExportConflictResolution(napi_env env)
 {
