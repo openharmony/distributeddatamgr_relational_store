@@ -62,7 +62,9 @@ public:
             if (input_ == nullptr) {
                 return OK;
             }
-            return input_(env, argc, argv, self);
+            int ret = input_(env, argc, argv, self);
+            input_ = nullptr;
+            return ret;
         }
 
         // output function
@@ -72,7 +74,9 @@ public:
                 result = nullptr;
                 return OK;
             }
-            return output_(env, result);
+            int ret = output_(env, result);
+            output_ = nullptr;
+            return ret;
         }
 
         // execute function
@@ -81,7 +85,9 @@ public:
             if (exec_ == nullptr) {
                 return ERR;
             }
-            return exec_(this);
+            int ret = exec_(this);
+            exec_ = nullptr;
+            return ret;
         };
 
     protected:
