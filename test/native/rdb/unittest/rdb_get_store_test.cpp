@@ -191,7 +191,7 @@ void RdbGetStoreTest::QueryCheck2(std::shared_ptr<RdbStore> &store) const
 HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_001, TestSize.Level1)
 {
     CreateRDB(1);
-    sleep(2);
+    sleep(1);
 }
 
 /**
@@ -214,7 +214,7 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_00101, TestSize.Level1)
     EXPECT_EQ(currentVersion, 1);
 
     EXPECT_EQ(store->GetStatus(), static_cast<int>(OpenStatus::ON_CREATE));
-    sleep(2);
+    sleep(1);
 }
 
 /**
@@ -237,7 +237,7 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_00102, TestSize.Level1)
     EXPECT_EQ(currentVersion, 0);
 
     EXPECT_EQ(store->GetStatus(), static_cast<int>(OpenStatus::ON_CREATE));
-    sleep(2);
+    sleep(1);
 }
 
 std::shared_ptr<RdbStore> RdbGetStoreTest::CreateGetRDB(int version)
@@ -379,7 +379,7 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_003, TestSize.Level1)
  */
 HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_004, TestSize.Level1)
 {
-    sleep(2);
+    sleep(1);
     CreateRDB(2);
 }
 
@@ -403,7 +403,7 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_00103, TestSize.Level1)
     EXPECT_EQ(currentVersion, 2);
 
     EXPECT_EQ(store->GetStatus(), static_cast<int>(OpenStatus::ON_OPEN));
-    sleep(2);
+    sleep(1);
 }
 
 /**
@@ -426,7 +426,7 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_00104, TestSize.Level1)
     EXPECT_EQ(currentVersion, 0);
 
     EXPECT_EQ(store->GetStatus(), static_cast<int>(OpenStatus::ON_OPEN));
-    sleep(2);
+    sleep(1);
 }
 
 /**
