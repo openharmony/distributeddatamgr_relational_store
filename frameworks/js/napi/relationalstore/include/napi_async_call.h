@@ -110,16 +110,26 @@ private:
     static void OnComplete(napi_env env, napi_status status, void *data);
     struct AsyncContext {
         std::shared_ptr<Context> ctx = nullptr;
+        napi_env env = nullptr;
         napi_ref callback = nullptr;
         napi_ref self = nullptr;
         napi_deferred defer = nullptr;
         napi_async_work work = nullptr;
+        AsyncContext(napi_env nenv) : env(nenv)
+        {
+        }
+        ~AsyncContext()
+        {
+            if (env != nullptr) {
+                napi_delete_reference(env, callback);
+                napi_delete_reference(env, self);
+                napi_delete_async_work(env, work);
+            }
+        }
     };
-    static void DeleteContext(napi_env env, AsyncContext *context);
     static void SetBusinessError(napi_env env, napi_value *businessError, std::shared_ptr<Error> error);
 
     AsyncContext *context_ = nullptr;
-    napi_env env_ = nullptr;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
