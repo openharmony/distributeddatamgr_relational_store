@@ -53,6 +53,11 @@ void NapiUvQueue::CallFunction(NapiArgsGenerator genArgs)
 
     uv_queue_work(loop_, work, [](uv_work_t* work) {}, [](uv_work_t* work, int st) {
             auto queue = static_cast<NapiUvQueue*>(work->data);
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(queue->env_, &scope);
+            if (scope == nullptr) {
+                return;
+            }
             int argc = 0;
             napi_value argv[MAX_CALLBACK_ARG_NUM] = { nullptr };
             if (queue->args) {
@@ -68,6 +73,7 @@ void NapiUvQueue::CallFunction(NapiArgsGenerator genArgs)
             if (status != napi_ok) {
                 LOG_ERROR("napi_call_function failed, status=%{public}d", status);
             }
+            napi_close_handle_scope(queue->env_, scope);
             delete work;
         });
 }
