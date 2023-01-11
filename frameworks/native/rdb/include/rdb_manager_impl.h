@@ -79,8 +79,6 @@ public:
     ~RdbStoreDataServiceProxy() = default;
     sptr<IRemoteObject> GetFeatureInterface(const std::string &name) override;
 
-private:
-    static inline BrokerDelegator<RdbStoreDataServiceProxy> delegator_;
 };
 } // namespace OHOS::DistributedRdb
 #endif

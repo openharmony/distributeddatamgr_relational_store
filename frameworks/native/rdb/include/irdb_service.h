@@ -30,11 +30,6 @@ class IKvStoreDataService : public IRemoteBroker {
 public:
     enum { GET_FEATURE_INTERFACE = 0 };
 
-    enum {
-        RELATION_STORE_ERROR = -1,
-        RELATION_STORE_OK = 0,
-    };
-
     virtual sptr<IRemoteObject> GetFeatureInterface(const std::string &name) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedKv.IKvStoreDataService");
