@@ -78,7 +78,6 @@ public:
     explicit RdbStoreDataServiceProxy(const sptr<IRemoteObject> &impl);
     ~RdbStoreDataServiceProxy() = default;
     sptr<IRemoteObject> GetFeatureInterface(const std::string &name) override;
-
 };
 } // namespace OHOS::DistributedRdb
 #endif
