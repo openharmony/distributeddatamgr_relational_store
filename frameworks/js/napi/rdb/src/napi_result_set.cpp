@@ -146,6 +146,13 @@ napi_value ResultSetProxy::GetConstructor(napi_env env, int version)
         DECLARE_NAPI_GETTER("isAtLastRow", IsAtLastRow),
     };
 
+    if (version > APIVERSION_V8) {
+        NAPI_CALL(env, napi_define_class(env, "ResultSetV9", NAPI_AUTO_LENGTH, InitializeV9, nullptr,
+                           sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
+        NAPI_CALL(env, napi_create_reference(env, cons, 1, &ctorRefV9_));
+        return cons;
+    }
+
     NAPI_CALL(env, napi_define_class(env, "ResultSet", NAPI_AUTO_LENGTH, Initialize, nullptr,
                        sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
     NAPI_CALL(env, napi_create_reference(env, cons, 1, &ctorRef_));
