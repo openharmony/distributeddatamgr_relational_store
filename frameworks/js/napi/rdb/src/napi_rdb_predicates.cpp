@@ -92,7 +92,7 @@ void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
     SetGlobalNamedProperty(env, "RdbPredicatesConstructor", cons);
 
     napi_value consV9;
-    NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "RdbPredicatesV9", NAPI_AUTO_LENGTH, NewV9, nullptr,
+    NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "RdbPredicatesV9", NAPI_AUTO_LENGTH, New, nullptr,
                                    sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &consV9));
     NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, consV9, 1, &constructor_));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, exports, "RdbPredicatesV9", consV9));
