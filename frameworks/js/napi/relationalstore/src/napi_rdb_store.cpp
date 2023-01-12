@@ -534,9 +534,6 @@ int ParseValuesBucket(const napi_env &env, const napi_value &arg, std::shared_pt
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value key;
         status = napi_get_element(env, keys, i, &key);
-        if (status != napi_ok) {
-            LOG_DEBUG("ValuesBucket get_element errr");
-        }
         RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok, context->SetError(paramError));
 
         std::string keyStr = JSUtils::Convert2String(env, key);
@@ -547,25 +544,20 @@ int ParseValuesBucket(const napi_env &env, const napi_value &arg, std::shared_pt
         if (valueType == napi_string) {
             std::string valueString = JSUtils::Convert2String(env, value, false);
             context->valuesBucket.PutString(keyStr, valueString);
-            LOG_DEBUG("ValueObject type napi_string");
         } else if (valueType == napi_number) {
             double valueNumber;
             napi_get_value_double(env, value, &valueNumber);
             context->valuesBucket.PutDouble(keyStr, valueNumber);
-            LOG_DEBUG("ValueObject type napi_number");
         } else if (valueType == napi_boolean) {
             bool valueBool = false;
             napi_get_value_bool(env, value, &valueBool);
             context->valuesBucket.PutBool(keyStr, valueBool);
-            LOG_DEBUG("ValueObject type napi_boolean");
         } else if (valueType == napi_null) {
             context->valuesBucket.PutNull(keyStr);
-            LOG_DEBUG("ValueObject type napi_null");
         } else if (valueType == napi_object) {
             context->valuesBucket.PutBlob(keyStr, JSUtils::Convert2U8Vector(env, value));
-            LOG_DEBUG("ValueObject type napi_object");
         } else {
-            LOG_WARN("valuesBucket error");
+            LOG_WARN("bad value type of key %{public}s", keyStr.c_str());
         }
     }
     LOG_DEBUG("ParseValuesBucket end");
@@ -874,10 +866,7 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
         for (size_t i = 0; i < context->selectionArgs.size(); i++) {
             selectionArgs += context->selectionArgs[i];
         }
-        LOG_DEBUG(
-            "RdbStoreProxy::QuerySql sql=%{public}s, args=%{public}s", context->sql.c_str(), selectionArgs.c_str());
         context->resultSet_value = obj->rdbStore_->QuerySql(context->sql, context->selectionArgs);
-        LOG_DEBUG("RdbStoreProxy::QuerySql is nullptr ? %{public}d", (context->resultSet_value == nullptr));
         return (context->resultSet_value != nullptr) ? OK : ERR;
 #endif
     };

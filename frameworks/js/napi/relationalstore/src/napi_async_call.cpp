@@ -21,7 +21,7 @@ using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
-AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context) : env_(env)
+AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context)
 {
     context->_env = env;
     size_t argc = MAX_INPUT_COUNT;
