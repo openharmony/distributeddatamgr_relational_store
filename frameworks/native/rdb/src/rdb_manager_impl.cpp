@@ -44,7 +44,9 @@ std::shared_ptr<RdbStoreDataServiceProxy> RdbManagerImpl::GetDistributedDataMana
             continue;
         }
         ZLOGI("get distributed data manager success");
-        return std::make_shared<RdbStoreDataServiceProxy>(remoteObject);
+        sptr<RdbStoreDataServiceProxy> rdbStoreDataServiceProxy = new RdbStoreDataServiceProxy(remoteObject);
+        return std::shared_ptr<RdbStoreDataServiceProxy>(rdbStoreDataServiceProxy.GetRefPtr(),
+            [holder = rdbStoreDataServiceProxy](const auto *) {});
     }
 
     ZLOGE("get distributed data manager failed");
