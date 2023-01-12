@@ -111,8 +111,6 @@ void RdbUpgradeTest::TearDown(void)
  * @tc.name: RdbStore_Upgrade_001
  * @tc.desc: test RdbStore upgrade
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: liumengyue
  */
 HWTEST_F(RdbUpgradeTest, RdbStore_Upgrade_001, TestSize.Level1)
 {
