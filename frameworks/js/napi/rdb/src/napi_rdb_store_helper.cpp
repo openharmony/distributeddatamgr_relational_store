@@ -447,7 +447,6 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
     ParseStoreConfigFunction parseStoreConfig)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    LOG_DEBUG("RdbJsKit::GetRdbStore start");
     context->iscontext = JSAbility::CheckContext(env, info);
     // context: Context, config: StoreConfig, version: number
     auto input = [context, parseStoreConfig](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
@@ -467,7 +466,6 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
         return OK;
     };
     auto exec = [context](AsyncCall::Context *ctx) -> int {
-        LOG_DEBUG("RdbJsKit::GetRdbStore Async");
         int errCode = OK;
         DefaultOpenCallback callback;
         context->proxy = RdbHelper::GetRdbStore(context->config, context->version, callback, errCode);
@@ -478,7 +476,6 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
     auto output = [context](napi_env env, napi_value &result) -> int {
         result = RdbStoreProxy::NewInstance(env, context->proxy, context->apiversion);
         context->openCallback.DelayNotify();
-        LOG_DEBUG("RdbJsKit::GetRdbStore end");
         return (result != nullptr) ? OK : ERR;
     };
     context->SetAction(std::move(input), std::move(output));

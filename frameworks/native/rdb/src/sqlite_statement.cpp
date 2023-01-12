@@ -226,7 +226,6 @@ int SqliteStatement::GetColumnName(int index, std::string &columnName) const
         return E_ERROR;
     }
     columnName = std::string(name);
-    transform(columnName.begin(), columnName.end(), columnName.begin(), ::tolower);
     return E_OK;
 }
 
