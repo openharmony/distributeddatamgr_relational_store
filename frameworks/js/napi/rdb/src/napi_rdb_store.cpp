@@ -873,10 +873,7 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
         for (size_t i = 0; i < context->selectionArgs.size(); i++) {
             selectionArgs += context->selectionArgs[i];
         }
-        LOG_DEBUG(
-            "RdbStoreProxy::QuerySql sql=%{public}s, args=%{public}s", context->sql.c_str(), selectionArgs.c_str());
         context->resultSet = obj->rdbStore_->QuerySql(context->sql, context->selectionArgs);
-        LOG_DEBUG("RdbStoreProxy::QuerySql is nullptr ? %{public}d", (context->resultSet == nullptr));
         return (context->resultSet != nullptr) ? OK : ERR;
 #endif
     };

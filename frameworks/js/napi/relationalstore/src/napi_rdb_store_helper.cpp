@@ -95,8 +95,8 @@ int ParseDatabaseName(const napi_env &env, const napi_value &object, std::shared
 int ParseIsEncrypt(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
     napi_value value = nullptr;
-    napi_get_named_property(env, object, "encrypt", &value);
-    if (value != nullptr) {
+    napi_status status = napi_get_named_property(env, object, "encrypt", &value);
+    if (status != napi_ok && value != nullptr) {
         bool isEncrypt = false;
         JSUtils::Convert2Bool(env, value, isEncrypt);
         context->config.SetEncryptStatus(isEncrypt);

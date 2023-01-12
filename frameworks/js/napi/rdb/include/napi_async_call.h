@@ -134,7 +134,6 @@ private:
     static void SetBusinessError(napi_env env, napi_value *businessError, std::shared_ptr<Error> error, int apiversion);
 
     AsyncContext *context_ = nullptr;
-    napi_env env_ = nullptr;
 };
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
