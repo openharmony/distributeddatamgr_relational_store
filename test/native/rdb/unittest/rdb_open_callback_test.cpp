@@ -144,8 +144,6 @@ int OpenCallbackA::onCorruption(std::string databaseFile)
  * @tc.name: RdbOpenCallback_01
  * @tc.desc: test RdbOpenCallback
  * @tc.type: FUNC
- * @tc.require: SR000CU2BL
- * @tc.author: chenxi
  */
 HWTEST_F(RdbOpenCallbackTest, RdbOpenCallback_01, TestSize.Level1)
 {
@@ -188,8 +186,6 @@ HWTEST_F(RdbOpenCallbackTest, RdbOpenCallback_01, TestSize.Level1)
  * @tc.name: RdbOpenCallback_02
  * @tc.desc: test RdbOpenCallback
  * @tc.type: FUNC
- * @tc.require: SR000CU2BL
- * @tc.author: chenxi
  */
 HWTEST_F(RdbOpenCallbackTest, RdbOpenCallback_02, TestSize.Level1)
 {
@@ -246,8 +242,6 @@ HWTEST_F(RdbOpenCallbackTest, RdbOpenCallback_02, TestSize.Level1)
  * @tc.name: RdbOpenCallback_03
  * @tc.desc: test RdbOpenCallback
  * @tc.type: FUNC
- * @tc.require: SR000CU2BL
- * @tc.author: chenxi
  */
 HWTEST_F(RdbOpenCallbackTest, RdbOpenCallback_03, TestSize.Level1)
 {
@@ -311,8 +305,6 @@ int OpenCallbackB::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
  * @tc.name: RdbOpenCallback_04
  * @tc.desc: test RdbOpenCallback
  * @tc.type: FUNC
- * @tc.require: SR000CU2BL AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbOpenCallbackTest, RdbOpenCallback_04, TestSize.Level1)
 {
@@ -369,8 +361,6 @@ HWTEST_F(RdbOpenCallbackTest, RdbOpenCallback_04, TestSize.Level1)
  * @tc.name: RdbOpenCallback_05
  * @tc.desc: test RdbOpenCallback
  * @tc.type: FUNC
- * @tc.require: SR000CU2BL AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbOpenCallbackTest, RdbOpenCallback_05, TestSize.Level1)
 {

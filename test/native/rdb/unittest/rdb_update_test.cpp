@@ -96,8 +96,6 @@ void RdbStoreUpdateTest::TearDown(void)
  * @tc.name: RdbStore_Update_001
  * @tc.desc: test RdbStore update, select id and update one row
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
 {
@@ -182,8 +180,6 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
  * @tc.name: RdbStore_Update_002
  * @tc.desc: test RdbStore update, no select and update all rows
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
 {
@@ -304,8 +300,6 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
  * @tc.name: RdbStore_Update_003
  * @tc.desc: test RdbStore update
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_003, TestSize.Level1)
 {
@@ -329,8 +323,6 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_003, TestSize.Level1)
  * @tc.name: RdbStore_Update_004
  * @tc.desc: test RdbStore insert
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_004, TestSize.Level1)
 {
@@ -355,8 +347,6 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_004, TestSize.Level1)
  * @tc.name: RdbStore_UpdateWithConflictResolution_001
  * @tc.desc: test RdbStore UpdateWithConflictResolution
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize.Level1)
 {
@@ -478,8 +468,6 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
  * @tc.name: RdbStore_UpdateWithConflictResolution_002
  * @tc.desc: test RdbStore UpdateWithConflictResolution
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize.Level1)
 {
@@ -601,8 +589,6 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
  * @tc.name: RdbStore_UpdateWithConflictResolution_003
  * @tc.desc: test RdbStore UpdateWithConflictResolution
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize.Level1)
 {
@@ -725,8 +711,6 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
  * @tc.name: RdbStore_UpdateWithConflictResolution_004
  * @tc.desc: test RdbStore UpdateWithConflictResolution
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize.Level1)
 {
@@ -848,8 +832,6 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
  * @tc.name: RdbStore_UpdateWithConflictResolution_005
  * @tc.desc: test RdbStore UpdateWithConflictResolution
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize.Level1)
 {
@@ -972,8 +954,6 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
  * @tc.name: RdbStore_UpdateWithConflictResolution_006
  * @tc.desc: test RdbStore UpdateWithConflictResolution
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize.Level1)
 {

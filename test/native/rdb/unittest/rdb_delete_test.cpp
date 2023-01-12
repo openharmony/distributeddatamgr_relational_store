@@ -91,8 +91,6 @@ void RdbDeleteTest::TearDown(void)
  * @tc.name: RdbStore_Delete_001
  * @tc.desc: test RdbStore update, select id and update one row
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbDeleteTest, RdbStore_Delete_001, TestSize.Level1)
 {
@@ -166,8 +164,6 @@ HWTEST_F(RdbDeleteTest, RdbStore_Delete_001, TestSize.Level1)
  * @tc.name: RdbStore_Delete_002
  * @tc.desc: test RdbStore update, select id and update one row
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbDeleteTest, RdbStore_Delete_002, TestSize.Level1)
 {
@@ -222,8 +218,6 @@ HWTEST_F(RdbDeleteTest, RdbStore_Delete_002, TestSize.Level1)
  * @tc.name: RdbStore_Delete_003
  * @tc.desc: test RdbStore update, select id and update one row
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbDeleteTest, RdbStore_Delete_003, TestSize.Level1)
 {

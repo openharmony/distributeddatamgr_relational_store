@@ -25,6 +25,18 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
+class OpenCallback : public RdbOpenCallback {
+public:
+    int OnCreate(RdbStore &rdbStore) override
+    {
+        return E_OK;
+    }
+    int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override
+    {
+        return E_OK;
+    }
+};
+
 class RdbHelperTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -53,11 +65,24 @@ void RdbHelperTest::TearDown(void)
  * @tc.name: DeleteDatabase_001
  * @tc.desc: delete db file
  * @tc.type: FUNC
- * @tc.require: SR000CU2BL
- * @tc.author: chenxi
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_001, TestSize.Level1)
 {
     int ret = RdbHelper::DeleteRdbStore("test");
     EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: getrdbstore_001
+ * @tc.desc: get db file with a invalid path
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, GetDatabase_001, TestSize.Level0)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config("/invalid/invalid/test.db");
+    OpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(store, nullptr);
+    EXPECT_EQ(errCode, E_INVALID_FILE_PATH);
 }

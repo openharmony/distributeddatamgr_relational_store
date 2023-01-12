@@ -79,7 +79,6 @@ void DataAbilityPredicatesProxy::Init(napi_env env, napi_value exports)
     NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, cons, 1, &constructor_));
 
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, exports, "DataAbilityPredicates", cons));
-    LOG_DEBUG("Init DataAbilityPredicatesProxy end");
 }
 
 napi_value DataAbilityPredicatesProxy::New(napi_env env, napi_callback_info info)
@@ -138,7 +137,6 @@ napi_value DataAbilityPredicatesProxy::NewInstance(
 std::shared_ptr<NativeRdb::DataAbilityPredicates> DataAbilityPredicatesProxy::GetNativePredicates(
     const napi_env &env, const napi_value &arg)
 {
-    LOG_DEBUG("GetNativePredicates on called.");
     if (arg == nullptr) {
         LOG_ERROR("DataAbilityPredicatesProxy arg is null.");
         return nullptr;
@@ -176,7 +174,6 @@ std::shared_ptr<NativeRdb::DataAbilityPredicates> DataAbilityPredicatesProxy::Ge
 
 napi_value DataAbilityPredicatesProxy::EqualTo(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::EqualTo on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -190,7 +187,6 @@ napi_value DataAbilityPredicatesProxy::EqualTo(napi_env env, napi_callback_info 
 
 napi_value DataAbilityPredicatesProxy::NotEqualTo(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::NotEqualTo on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -204,7 +200,6 @@ napi_value DataAbilityPredicatesProxy::NotEqualTo(napi_env env, napi_callback_in
 
 napi_value DataAbilityPredicatesProxy::BeginWrap(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::BeginWrap on called.");
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->BeginWrap();
@@ -213,7 +208,6 @@ napi_value DataAbilityPredicatesProxy::BeginWrap(napi_env env, napi_callback_inf
 
 napi_value DataAbilityPredicatesProxy::EndWrap(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::EndWrap on called.");
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->EndWrap();
@@ -222,7 +216,6 @@ napi_value DataAbilityPredicatesProxy::EndWrap(napi_env env, napi_callback_info 
 
 napi_value DataAbilityPredicatesProxy::Or(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::Or on called.");
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->Or();
@@ -231,7 +224,6 @@ napi_value DataAbilityPredicatesProxy::Or(napi_env env, napi_callback_info info)
 
 napi_value DataAbilityPredicatesProxy::And(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::And on called.");
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->And();
@@ -240,7 +232,6 @@ napi_value DataAbilityPredicatesProxy::And(napi_env env, napi_callback_info info
 
 napi_value DataAbilityPredicatesProxy::Contains(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::Contains on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -255,7 +246,6 @@ napi_value DataAbilityPredicatesProxy::Contains(napi_env env, napi_callback_info
 
 napi_value DataAbilityPredicatesProxy::BeginsWith(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::BeginsWith on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -269,7 +259,6 @@ napi_value DataAbilityPredicatesProxy::BeginsWith(napi_env env, napi_callback_in
 
 napi_value DataAbilityPredicatesProxy::EndsWith(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::EndsWith on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -283,7 +272,6 @@ napi_value DataAbilityPredicatesProxy::EndsWith(napi_env env, napi_callback_info
 
 napi_value DataAbilityPredicatesProxy::IsNull(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::IsNull on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -296,7 +284,6 @@ napi_value DataAbilityPredicatesProxy::IsNull(napi_env env, napi_callback_info i
 
 napi_value DataAbilityPredicatesProxy::IsNotNull(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::IsNotNull on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -309,7 +296,6 @@ napi_value DataAbilityPredicatesProxy::IsNotNull(napi_env env, napi_callback_inf
 
 napi_value DataAbilityPredicatesProxy::Like(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::Like on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -323,7 +309,6 @@ napi_value DataAbilityPredicatesProxy::Like(napi_env env, napi_callback_info inf
 
 napi_value DataAbilityPredicatesProxy::Glob(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::Glob on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -337,7 +322,6 @@ napi_value DataAbilityPredicatesProxy::Glob(napi_env env, napi_callback_info inf
 
 napi_value DataAbilityPredicatesProxy::Between(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::Between on called.");
     napi_value thiz;
     size_t argc = 3;
     napi_value args[3] = { 0 };
@@ -352,7 +336,6 @@ napi_value DataAbilityPredicatesProxy::Between(napi_env env, napi_callback_info 
 
 napi_value DataAbilityPredicatesProxy::NotBetween(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::NotBetween on called.");
     napi_value thiz;
     size_t argc = 3;
     napi_value args[3] = { 0 };
@@ -367,7 +350,6 @@ napi_value DataAbilityPredicatesProxy::NotBetween(napi_env env, napi_callback_in
 
 napi_value DataAbilityPredicatesProxy::GreaterThan(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::GreaterThan on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -381,7 +363,6 @@ napi_value DataAbilityPredicatesProxy::GreaterThan(napi_env env, napi_callback_i
 
 napi_value DataAbilityPredicatesProxy::LessThan(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::LessThan on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -395,7 +376,6 @@ napi_value DataAbilityPredicatesProxy::LessThan(napi_env env, napi_callback_info
 
 napi_value DataAbilityPredicatesProxy::GreaterThanOrEqualTo(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::GreaterThanOrEqualTo on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -409,7 +389,6 @@ napi_value DataAbilityPredicatesProxy::GreaterThanOrEqualTo(napi_env env, napi_c
 
 napi_value DataAbilityPredicatesProxy::LessThanOrEqualTo(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::LessThanOrEqualTo on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -423,7 +402,6 @@ napi_value DataAbilityPredicatesProxy::LessThanOrEqualTo(napi_env env, napi_call
 
 napi_value DataAbilityPredicatesProxy::OrderByAsc(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::OrderByAsc on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -436,7 +414,6 @@ napi_value DataAbilityPredicatesProxy::OrderByAsc(napi_env env, napi_callback_in
 
 napi_value DataAbilityPredicatesProxy::OrderByDesc(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::OrderByDesc on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -449,7 +426,6 @@ napi_value DataAbilityPredicatesProxy::OrderByDesc(napi_env env, napi_callback_i
 
 napi_value DataAbilityPredicatesProxy::Distinct(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::Distinct on called.");
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->Distinct();
@@ -458,7 +434,6 @@ napi_value DataAbilityPredicatesProxy::Distinct(napi_env env, napi_callback_info
 
 napi_value DataAbilityPredicatesProxy::Limit(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::Limit on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -472,7 +447,6 @@ napi_value DataAbilityPredicatesProxy::Limit(napi_env env, napi_callback_info in
 
 napi_value DataAbilityPredicatesProxy::Offset(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::Offset on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -486,7 +460,6 @@ napi_value DataAbilityPredicatesProxy::Offset(napi_env env, napi_callback_info i
 
 napi_value DataAbilityPredicatesProxy::GroupBy(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::GroupBy on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -499,7 +472,6 @@ napi_value DataAbilityPredicatesProxy::GroupBy(napi_env env, napi_callback_info 
 
 napi_value DataAbilityPredicatesProxy::IndexedBy(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::IndexedBy on called.");
     napi_value thiz;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -512,7 +484,6 @@ napi_value DataAbilityPredicatesProxy::IndexedBy(napi_env env, napi_callback_inf
 
 napi_value DataAbilityPredicatesProxy::In(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::In on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -526,7 +497,6 @@ napi_value DataAbilityPredicatesProxy::In(napi_env env, napi_callback_info info)
 
 napi_value DataAbilityPredicatesProxy::NotIn(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::NotIn on called.");
     napi_value thiz;
     size_t argc = 2;
     napi_value args[2] = { 0 };
@@ -540,7 +510,6 @@ napi_value DataAbilityPredicatesProxy::NotIn(napi_env env, napi_callback_info in
 
 napi_value DataAbilityPredicatesProxy::Clear(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::Clear on called.");
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     GetNativePredicates(env, info)->Clear();
@@ -549,7 +518,6 @@ napi_value DataAbilityPredicatesProxy::Clear(napi_env env, napi_callback_info in
 
 napi_value DataAbilityPredicatesProxy::IsRawSelection(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("DataAbilityPredicatesProxy::IsRawSelection on called.");
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     bool out = GetNativePredicates(env, info)->IsRawSelection();

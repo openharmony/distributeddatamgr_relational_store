@@ -94,8 +94,6 @@ void RdbExecuteTest::TearDown(void)
  * @tc.name: RdbStore_Execute_001
  * @tc.desc: test RdbStore Execute
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbExecuteTest, RdbStore_Execute_001, TestSize.Level1)
 {
@@ -158,8 +156,6 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_001, TestSize.Level1)
  * @tc.name: RdbStore_Execute_002
  * @tc.desc: test RdbStore Execute
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbExecuteTest, RdbStore_Execute_002, TestSize.Level1)
 {
@@ -227,8 +223,6 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_002, TestSize.Level1)
  * @tc.name: RdbStore_Execute_003
  * @tc.desc: test RdbStore Execute
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbExecuteTest, RdbStore_Execute_003, TestSize.Level1)
 {
