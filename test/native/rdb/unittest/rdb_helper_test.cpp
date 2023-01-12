@@ -59,10 +59,12 @@ public:
     static const std::string CREATE_TABLE_TEST;
 };
 
-const std::string RdbHelperTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABL IF NOT EXISTS test ")
-                                                              + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                                            "name TEXT NOT NULL, age INTEGER, salary "
-                                                                            "REAL, blobType BLOB)");
+const std::string RdbHelperTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABL IF NOT EXISTS test ") +
+                                                                 std::string("(id INTEGER PRIMARY KEY "
+                                                                             "AUTOINCREMENT, "
+                                                                             "name TEXT NOT NULL, age INTEGER, "
+                                                                             "salary "
+                                                                             "REAL, blobType BLOB)");
 
 int RdbHelperTestOpenCallback::OnCreate(RdbStore &store)
 {
@@ -72,7 +74,7 @@ int RdbHelperTestOpenCallback::OnCreate(RdbStore &store)
 int RdbHelperTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 {
     return E_OK;
-}                                                           
+}
 /**
  * @tc.name: DeleteDatabase_001
  * @tc.desc: delete db file
@@ -90,8 +92,6 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_001, TestSize.Level1)
  * @tc.name: DeleteDatabaseCache_001
  * @tc.desc: delete db cache
  * @tc.type: FUNC
- * @tc.require: 
- * @tc.author: 
  */
 HWTEST_F(RdbHelperTest, DeleteDatabaseCache_001, TestSize.Level1)
 {
