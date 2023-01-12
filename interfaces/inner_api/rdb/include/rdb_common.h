@@ -21,6 +21,15 @@ enum class OpenStatus {
     ON_CREATE,
     ON_OPEN,
 };
+
+enum class ConflictResolution {
+    ON_CONFLICT_NONE = 0,
+    ON_CONFLICT_ROLLBACK,
+    ON_CONFLICT_ABORT,
+    ON_CONFLICT_FAIL,
+    ON_CONFLICT_IGNORE,
+    ON_CONFLICT_REPLACE,
+};
 }
 
 #endif // NATIVE_RDB_RDB_COMMON_ENUM_H
