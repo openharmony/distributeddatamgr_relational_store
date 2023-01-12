@@ -90,6 +90,8 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
             return errCode;
         }
         columnNames_.push_back(columnName);
+        transform(columnName.begin(), columnName.end(), columnName.begin(), ::tolower);
+        columnMap_[columnName] = i;
     }
 
     columnNames = columnNames_;
