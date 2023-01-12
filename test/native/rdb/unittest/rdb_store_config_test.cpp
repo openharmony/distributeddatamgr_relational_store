@@ -80,8 +80,6 @@ void RdbStoreConfigTest::TearDown(void)
  * @tc.name: RdbStoreConfig_001
  * @tc.desc: test RdbStoreConfig
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_001, TestSize.Level1)
 {
@@ -125,8 +123,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_001, TestSize.Level1)
  * @tc.name: RdbStoreConfig_002
  * @tc.desc: test RdbStoreConfig
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_002, TestSize.Level1)
 {
@@ -182,8 +178,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_002, TestSize.Level1)
  * @tc.name: RdbStoreConfig_003
  * @tc.desc: test RdbStoreConfig
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_003, TestSize.Level1)
 {
@@ -199,8 +193,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_003, TestSize.Level1)
  * @tc.name: RdbStoreConfig_004
  * @tc.desc: test RdbStoreConfig
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_004, TestSize.Level1)
 {
@@ -217,8 +209,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_004, TestSize.Level1)
  * @tc.name: RdbStoreConfig_005
  * @tc.desc: test RdbStoreConfig journalMode
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_005, TestSize.Level1)
 {
@@ -241,8 +231,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_005, TestSize.Level1)
  * @tc.name: RdbStoreConfig_006
  * @tc.desc: test RdbStoreConfig journalMode
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_006, TestSize.Level1)
 {
@@ -266,8 +254,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_006, TestSize.Level1)
  * @tc.name: RdbStoreConfig_007
  * @tc.desc: test RdbStoreConfig journalMode
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_007, TestSize.Level1)
 {
@@ -291,8 +277,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_007, TestSize.Level1)
  * @tc.name: RdbStoreConfig_008
  * @tc.desc: test RdbStoreConfig journalMode
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_008, TestSize.Level1)
 {
@@ -316,8 +300,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_008, TestSize.Level1)
  * @tc.name: RdbStoreConfig_009
  * @tc.desc: test RdbStoreConfig journalMode
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_009, TestSize.Level1)
 {
@@ -341,8 +323,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_009, TestSize.Level1)
  * @tc.name: RdbStoreConfig_010
  * @tc.desc: test RdbStoreConfig journalMode
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_010, TestSize.Level1)
 {
@@ -366,8 +346,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_010, TestSize.Level1)
  * @tc.name: RdbStoreConfig_011
  * @tc.desc: test RdbStoreConfig journalMode
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_011, TestSize.Level1)
 {
@@ -391,8 +369,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_011, TestSize.Level1)
  * @tc.name: RdbStoreConfig_012
  * @tc.desc: test RdbStoreConfig SetReadPermission/GetReadPermission/SetWritePermission/GetWritePermission
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_012, TestSize.Level1)
 {
@@ -419,8 +395,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_012, TestSize.Level1)
  * @tc.name: RdbStoreConfig_013
  * @tc.desc: test RdbStoreConfig interfaces: SetSecurityLevel/GetSecurityLevel
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_013, TestSize.Level1)
 {
@@ -449,8 +423,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_013, TestSize.Level1)
  * @tc.name: RdbStoreConfig_014
  * @tc.desc: test RdbStoreConfig interfaces: SetCreateNecessary/IsCreateNecessary
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_014, TestSize.Level1)
 {
@@ -482,8 +454,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_014, TestSize.Level1)
  * @tc.name: RdbStoreConfig_015
  * @tc.desc: test RdbStoreConfig interfaces: SetReadOnly/IsReadOnly
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_015, TestSize.Level1)
 {
@@ -520,8 +490,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_015, TestSize.Level1)
  * @tc.name: RdbStoreConfig_016
  * @tc.desc: test RdbStoreConfig interfaces: SetStorageMode/GetStorageMode
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_016, TestSize.Level1)
 {
@@ -553,8 +521,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_016, TestSize.Level1)
  * @tc.name: RdbStoreConfig_017
  * @tc.desc: test RdbStoreConfig interfaces: SetDatabaseFileType/GetDatabaseFileType
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_017, TestSize.Level1)
 {
@@ -596,8 +562,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_017, TestSize.Level1)
  * @tc.name: RdbStoreConfig_018
  * @tc.desc: test RdbStoreConfig interfaces: SetDistributedType/GetDistributedType
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_018, TestSize.Level1)
 {
@@ -629,8 +593,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_018, TestSize.Level1)
  * @tc.name: RdbStoreConfig_019
  * @tc.desc: test RdbStoreConfig interfaces: SetModuleName/GetModuleName
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_019, TestSize.Level1)
 {
@@ -652,8 +614,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_019, TestSize.Level1)
  * @tc.name: RdbStoreConfig_020
  * @tc.desc: test RdbStoreConfig interfaces: SetModuleName/GetModuleName
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_020, TestSize.Level1)
 {
@@ -675,8 +635,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_020, TestSize.Level1)
  * @tc.name: RdbStoreConfig_021
  * @tc.desc: test RdbStoreConfig interfaces: GetSyncModeValue
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_021, TestSize.Level1)
 {
@@ -697,8 +655,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_021, TestSize.Level1)
  * @tc.name: RdbStoreConfig_022
  * @tc.desc: test RdbStoreConfig interfaces: SetAutoCheck/IsAutoCheck
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_022, TestSize.Level1)
 {
@@ -720,8 +676,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_022, TestSize.Level1)
  * @tc.name: RdbStoreConfig_023
  * @tc.desc: test RdbStoreConfig interfaces: SetJournalSize/GetJournalSize
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_023, TestSize.Level1)
 {
@@ -751,8 +705,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_023, TestSize.Level1)
  * @tc.name: RdbStoreConfig_024
  * @tc.desc: test RdbStoreConfig interfaces: SetJournalSize/GetJournalSize
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_024, TestSize.Level1)
 {
@@ -782,8 +734,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_024, TestSize.Level1)
  * @tc.name: RdbStoreConfig_025
  * @tc.desc: test RdbStoreConfig interfaces: SetEncryptAlgo/GetEncryptAlgo
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_025, TestSize.Level1)
 {
@@ -813,8 +763,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_025, TestSize.Level1)
  * @tc.name: RdbStoreConfig_026
  * @tc.desc: test RdbStoreConfig interfaces: SetReadConSize/GetReadConSize
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_026, TestSize.Level1)
 {
@@ -844,8 +792,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_026, TestSize.Level1)
  * @tc.name: RdbStoreConfig_027
  * @tc.desc: test RdbStoreConfig interfaces: SetReadConSize/GetReadConSize
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_027, TestSize.Level1)
 {
@@ -874,8 +820,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_027, TestSize.Level1)
  * @tc.name: RdbStoreConfig_028
  * @tc.desc: test RdbStoreConfig interfaces: SetReadConSize/GetReadConSize
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_028, TestSize.Level1)
 {

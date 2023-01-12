@@ -306,8 +306,6 @@ int RdbConcurrentTest::CheckBlob(ResultSet &resultSet)
  * @tc.name: RdbStore_Concurrent_001
  * @tc.desc: test RdbStore Execute
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
- * @tc.author: chenxi
  */
 HWTEST_F(RdbConcurrentTest, RdbStore_Concurrent_001, TestSize.Level1)
 {

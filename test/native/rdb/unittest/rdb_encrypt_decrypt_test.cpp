@@ -98,8 +98,6 @@ void RdbEncryptTest::TearDown(void)
  * @tc.name: RdbStore_Encrypt_Decrypt_Test_001
  * @tc.desc: test RdbStore Get Encrypt Store
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_01, TestSize.Level1)
 {
@@ -116,8 +114,6 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_01, TestSize.Level1)
  * @tc.name: RdbStore_Encrypt_Decrypt_Test_002
  * @tc.desc: test RdbStore Get Unencrypted Store
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_02, TestSize.Level1)
 {
@@ -134,8 +130,6 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_02, TestSize.Level1)
  * @tc.name: RdbStore_Encrypt_Decrypt_Test_003
  * @tc.desc: test create encrypted Rdb and insert data ,then query
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_03, TestSize.Level1)
 {
@@ -213,8 +207,6 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_03, TestSize.Level1)
  * @tc.name: RdbStore_Encrypt_Decrypt_Test_004
  * @tc.desc: test RdbStore key file.
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_04, TestSize.Level1)
 {
@@ -239,8 +231,6 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_04, TestSize.Level1)
  * @tc.name: RdbStore_Encrypt_Decrypt_Test_005
  * @tc.desc: test RdbStore Get Encrypted Store with empty boundlename
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_05, TestSize.Level1)
 {
@@ -257,8 +247,6 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_05, TestSize.Level1)
  * @tc.name: RdbStore_Encrypt_Decrypt_Test_006
  * @tc.desc: test SaveSecretKeyToFile when KeyFileType isNot PUB_KEY_FILE
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_06, TestSize.Level1)
 {
@@ -282,8 +270,6 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_06, TestSize.Level1)
  * @tc.name: RdbStore_Encrypt_Decrypt_Test_007
  * @tc.desc: test GetRdbPassword when KeyFileType isNot PUB_KEY_FILE
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_07, TestSize.Level1)
 {
@@ -305,8 +291,6 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_07, TestSize.Level1)
  * @tc.name: RdbStore_Encrypt_Decrypt_Test_008
  * @tc.desc: test RemoveSuffix when pos == std::string::npos
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_08, TestSize.Level1)
 {
@@ -325,8 +309,6 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_08, TestSize.Level1)
  * @tc.name: RdbStore_Encrypt_Decrypt_Test_009
  * @tc.desc: test GetKeyDistributedStatus and SetKeyDistributedStatus
  * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
  */
 HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_09, TestSize.Level1)
 {

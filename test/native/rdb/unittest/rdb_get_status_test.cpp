@@ -18,6 +18,7 @@
 
 #include "common.h"
 #include "logger.h"
+#include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -88,8 +89,6 @@ void GetRdbStatusTest::TearDown(void)
  * @tc.name: Get_RdbStore_Status_001
  * @tc.desc: Obtains the RdbStore status when get RdbStore.
  * @tc.type: FUNC
- * @tc.require: SR000HR0D7
- * @tc.author: leiyanbo
  */
 HWTEST_F(GetRdbStatusTest, Get_RdbStore_Status_001, TestSize.Level1)
 {
@@ -109,8 +108,6 @@ HWTEST_F(GetRdbStatusTest, Get_RdbStore_Status_001, TestSize.Level1)
  * @tc.name: Get_RdbStore_Status_002
  * @tc.desc: Obtains the RdbStore status when get RdbStore.
  * @tc.type: FUNC
- * @tc.require: SR000HR0D7
- * @tc.author: leiyanbo
  */
 HWTEST_F(GetRdbStatusTest, Get_RdbStore_Status_002, TestSize.Level1)
 {
