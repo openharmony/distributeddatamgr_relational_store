@@ -43,7 +43,7 @@ struct RdbSyncerParam {
     bool isEncrypt_ = false;
     std::vector<uint8_t> password_;
     ~RdbSyncerParam()
-	{
+    {
         password_.assign(password_.size(), 0);
     };
 };
