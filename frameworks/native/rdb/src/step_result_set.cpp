@@ -357,13 +357,13 @@ int StepResultSet::PrepareStep()
  */
 int StepResultSet::FinishStep()
 {
+    if (sqliteStatement == nullptr) {
+        return E_OK;
+    }
+
     int errCode = CheckSession();
     if (errCode != E_OK) {
         return errCode;
-    }
-
-    if (sqliteStatement == nullptr) {
-        return E_OK;
     }
 
     sqliteStatement = nullptr;
