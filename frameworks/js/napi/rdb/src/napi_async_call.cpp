@@ -59,7 +59,6 @@ napi_value AsyncCall::Call(napi_env env, Context::ExecAction exec)
         LOG_DEBUG("context_ or context_->ctx is null");
         return nullptr;
     }
-    LOG_DEBUG("async call exec begin");
     context_->ctx->exec_ = std::move(exec);
     napi_value promise = nullptr;
     if (context_->callback == nullptr) {
@@ -76,7 +75,6 @@ napi_value AsyncCall::Call(napi_env env, Context::ExecAction exec)
     context_ = nullptr;
     // add async work to execute queue
     napi_queue_async_work(env, work);
-    LOG_DEBUG("async call exec end");
     return promise;
 }
 
@@ -102,7 +100,6 @@ napi_value AsyncCall::SyncCall(napi_env env, AsyncCall::Context::ExecAction exec
 void AsyncCall::OnExecute(napi_env env, void *data)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    LOG_DEBUG("run the async runnable");
     AsyncContext *context = reinterpret_cast<AsyncContext *>(data);
     context->ctx->execStatus = context->ctx->Exec();
 }
@@ -125,7 +122,6 @@ void AsyncCall::SetBusinessError(napi_env env, napi_value *businessError, std::s
 void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    LOG_DEBUG("run the js callback function");
     AsyncContext *context = reinterpret_cast<AsyncContext *>(data);
     napi_value output = nullptr;
     int outStatus = ERR;
