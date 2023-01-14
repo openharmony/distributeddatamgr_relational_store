@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_RDB_RDB_COMMON_ENUM_H
-#define NATIVE_RDB_RDB_COMMON_ENUM_H
+#ifndef NATIVE_RDB_RDB_COMMON_H
+#define NATIVE_RDB_RDB_COMMON_H
 
 namespace OHOS::NativeRdb {
 enum class OpenStatus {
-    ON_CREATE,
+    ON_CREATE = 0,
     ON_OPEN,
 };
 
@@ -32,4 +32,4 @@ enum class ConflictResolution {
 };
 }
 
-#endif // NATIVE_RDB_RDB_COMMON_ENUM_H
+#endif // NATIVE_RDB_RDB_COMMON_H
