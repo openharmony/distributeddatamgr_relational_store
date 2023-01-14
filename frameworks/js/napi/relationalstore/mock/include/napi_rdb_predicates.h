@@ -98,8 +98,6 @@ private:
     static napi_value On(napi_env env, napi_callback_info info);
 
     std::shared_ptr<NativeRdb::RdbPredicates> predicates_;
-    napi_env env_;
-    napi_ref wrapper_;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

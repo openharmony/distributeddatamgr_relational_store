@@ -25,115 +25,43 @@
 #include "napi/native_node_api.h"
 #include "napi_rdb_error.h"
 
-
 namespace OHOS {
 namespace AppDataMgrJsKit {
+using InputAction = std::function<int(napi_env, size_t, napi_value *, napi_value)>;
+using OutputAction = std::function<int(napi_env, napi_value &)>;
+using ExecuteAction = std::function<int()>;
+
+class BaseContext {
+public:
+    void SetAction(napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output);
+    void SetError(std::shared_ptr<Error> error);
+    virtual ~BaseContext();
+
+    int apiversion = APIVERSION_V8;
+    napi_env env_ = nullptr;
+    void *boundObj = nullptr;
+    int execStatus = ERR;
+    std::shared_ptr<Error> error;
+
+    napi_ref self_ = nullptr;
+    napi_ref callback_ = nullptr;
+    napi_deferred defer_ = nullptr;
+    napi_async_work work_ = nullptr;
+
+    OutputAction output_ = nullptr;
+    ExecuteAction exec_ = nullptr;
+    std::shared_ptr<BaseContext> keep_;
+};
 
 class AsyncCall final {
 public:
-    class Context {
-    public:
-        int apiversion;
-        std::shared_ptr<Error> error;
-        napi_env _env = nullptr;
-        void *boundObj = nullptr;
-        int execStatus = ERR;
-        using InputAction = std::function<int(napi_env, size_t, napi_value *, napi_value)>;
-        using OutputAction = std::function<int(napi_env, napi_value &)>;
-        using ExecAction = std::function<int(Context *)>;
-        Context(InputAction input, OutputAction output)
-            : apiversion(APIVERSION_V8), input_(std::move(input)), output_(std::move(output)){};
-        virtual ~Context(){};
-        void SetAction(InputAction input, OutputAction output = nullptr)
-        {
-            input_ = input;
-            output_ = output;
-        }
-
-        void SetAction(OutputAction output)
-        {
-            SetAction(nullptr, std::move(output));
-        }
-
-        void SetError(std::shared_ptr<Error> err)
-        {
-            error = err;
-        }
-
-        // input function
-        virtual int operator()(napi_env env, size_t argc, napi_value *argv, napi_value self)
-        {
-            if (input_ == nullptr) {
-                return OK;
-            }
-            int ret = input_(env, argc, argv, self);
-            input_ = nullptr;
-            return ret;
-        }
-
-        // output function
-        virtual int operator()(napi_env env, napi_value &result)
-        {
-            if (output_ == nullptr) {
-                result = nullptr;
-                return OK;
-            }
-            int ret = output_(env, result);
-            output_ = nullptr;
-            return ret;
-        }
-
-        // execute function
-        virtual int Exec()
-        {
-            if (exec_ == nullptr) {
-                return ERR;
-            }
-            int ret = exec_(this);
-            exec_ = nullptr;
-            return ret;
-        };
-
-    protected:
-        friend class AsyncCall;
-        InputAction input_ = nullptr;
-        OutputAction output_ = nullptr;
-        ExecAction exec_ = nullptr;
-    };
-
-    // The default AsyncCallback in the parameters is at the end position.
-    static constexpr size_t ASYNC_DEFAULT_POS = -1;
-    AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context);
-    ~AsyncCall();
-    napi_value Call(napi_env env, Context::ExecAction exec = nullptr);
-    napi_value SyncCall(napi_env env, Context::ExecAction exec = nullptr);
+    static napi_value Call(napi_env env, std::shared_ptr<BaseContext> context);
 
 private:
     enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
     static void OnExecute(napi_env env, void *data);
     static void OnComplete(napi_env env, napi_status status, void *data);
-    struct AsyncContext {
-        std::shared_ptr<Context> ctx = nullptr;
-        napi_env env = nullptr;
-        napi_ref callback = nullptr;
-        napi_ref self = nullptr;
-        napi_deferred defer = nullptr;
-        napi_async_work work = nullptr;
-        AsyncContext(napi_env nenv) : env(nenv)
-        {
-        }
-        ~AsyncContext()
-        {
-            if (env != nullptr) {
-                napi_delete_reference(env, callback);
-                napi_delete_reference(env, self);
-                napi_delete_async_work(env, work);
-            }
-        }
-    };
     static void SetBusinessError(napi_env env, napi_value *businessError, std::shared_ptr<Error> error, int apiversion);
-
-    AsyncContext *context_ = nullptr;
 };
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
