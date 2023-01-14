@@ -84,8 +84,6 @@ private:
     static napi_value IsNeedAnd(napi_env env, napi_callback_info info);
     static napi_value IsSorted(napi_env env, napi_callback_info info);
     std::shared_ptr<NativeRdb::DataAbilityPredicates> predicates_;
-    napi_env env_;
-    napi_ref wrapper_;
 };
 } // namespace DataAbilityJsKit
 } // namespace OHOS

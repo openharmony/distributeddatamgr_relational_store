@@ -242,7 +242,7 @@ private:
     std::vector<std::function<int(void)>> callbacks_;
 };
 
-struct HelperRdbContext : public AsyncCall::Context {
+struct HelperRdbContext : public BaseContext {
     RdbStoreConfig config;
     int32_t version;
     bool iscontext;
@@ -250,25 +250,10 @@ struct HelperRdbContext : public AsyncCall::Context {
     std::shared_ptr<RdbStore> proxy;
     std::shared_ptr<OHOS::AppDataMgrJsKit::Context> abilitycontext;
 
-    HelperRdbContext()
-        : Context(nullptr, nullptr), config(""), version(0), iscontext(false), openCallback(), proxy(nullptr)
-    {
-    }
-    HelperRdbContext(InputAction input, OutputAction output)
-        : Context(std::move(input), std::move(output)), config(""), version(0), iscontext(false), openCallback(),
-          proxy(nullptr)
+    HelperRdbContext() : config(""), version(0), iscontext(false), openCallback(), proxy(nullptr)
     {
     }
     virtual ~HelperRdbContext(){};
-
-    int operator()(napi_env env, size_t argc, napi_value *argv, napi_value self) override
-    {
-        return Context::operator()(env, argc, argv, self);
-    }
-    int operator()(napi_env env, napi_value &result) override
-    {
-        return Context::operator()(env, result);
-    }
 };
 
 using ParseStoreConfigFunction = int (*)(
@@ -464,7 +449,7 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
         ParserThis(env, self, context);
         return OK;
     };
-    auto exec = [context](AsyncCall::Context *ctx) -> int {
+    auto exec = [context]() -> int {
         LOG_DEBUG("RdbJsKit::GetRdbStore Async");
         int errCode = OK;
         DefaultOpenCallback callback;
@@ -479,10 +464,10 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
         LOG_DEBUG("RdbJsKit::GetRdbStore end");
         return (result != nullptr) ? OK : ERR;
     };
-    context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    context->SetAction(env, info, input, exec, output);
+
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
-    return asyncCall.Call(env, exec);
+    return AsyncCall::Call(env, context);
 }
 
 napi_value GetRdbStore(napi_env env, napi_callback_info info)
@@ -520,7 +505,7 @@ napi_value InnerDeleteRdbStore(napi_env env, napi_callback_info info, std::share
         }
         return OK;
     };
-    auto exec = [context](AsyncCall::Context *ctx) -> int {
+    auto exec = [context]() -> int {
         int errCode = RdbHelper::DeleteRdbStore(context->config.GetPath());
         LOG_DEBUG("RdbJsKit::DeleteRdbStore failed %{public}d", errCode);
         std::shared_ptr<Error> dbInvalidError = std::make_shared<DbInvalidError>();
@@ -532,10 +517,10 @@ napi_value InnerDeleteRdbStore(napi_env env, napi_callback_info info, std::share
         LOG_DEBUG("RdbJsKit::DeleteRdbStore end");
         return (status == napi_ok) ? OK : ERR;
     };
-    context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
+    context->SetAction(env, info, input, exec, output);
+
     RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
-    return asyncCall.Call(env, exec);
+    return AsyncCall::Call(env, context);
 }
 
 napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
