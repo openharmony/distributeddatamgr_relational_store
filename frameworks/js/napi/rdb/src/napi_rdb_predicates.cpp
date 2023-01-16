@@ -207,10 +207,12 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldArrayByName(napi_env env, napi
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
-    RDB_CHECK_RETURN_NULLPTR(argc == 1);
+    int version = predicatesProxy->apiversion;
+    RDB_NAPI_ASSERT_FROMV9(env, argc == 1, std::make_shared<ParamNumError>("1"), version);
 
     fieldarray = JSUtils::Convert2StrVector(env, args[0]);
-    RDB_CHECK_RETURN_NULLPTR(!fieldarray.empty());
+    RDB_NAPI_ASSERT_FROMV9(env,  fieldarray.size() >= 0,
+        std::make_shared<ParamTypeError>(fieldName, "a " + fieldType + " array."), version);
     return predicatesProxy;
 }
 
@@ -256,29 +258,34 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValueArray(napi_env env, na
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
-    RDB_CHECK_RETURN_NULLPTR(argc == 2);
+    int version = predicatesProxy->apiversion;
+    RDB_NAPI_ASSERT_FROMV9(env, argc == 2, std::make_shared<ParamNumError>("2"), version);
 
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_CHECK_RETURN_NULLPTR(!field.empty());
+    RDB_NAPI_ASSERT_FROMV9(env,  !field.empty(),
+        std::make_shared<ParamTypeError>("field", "a non empty string."), version);
 
     value = JSUtils::Convert2StrVector(env, args[1]);
-    RDB_CHECK_RETURN_NULLPTR(value.size() >= 0);
-
+    RDB_NAPI_ASSERT_FROMV9(env,  value.size() >= 0,
+        std::make_shared<ParamTypeError>("value", "a " + valueType + " array."), version);
     return predicatesProxy;
 }
 
 RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValue(napi_env env, napi_callback_info info, napi_value &thiz,
     std::string &field, std::string &value, const std::string valueType)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
-    RDB_CHECK_RETURN_NULLPTR(argc == 2);
+    int version = predicatesProxy->apiversion;
+    RDB_NAPI_ASSERT_FROMV9(env, argc == 2, std::make_shared<ParamNumError>("2"), version);
 
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_CHECK_RETURN_NULLPTR(!field.empty());
+    RDB_NAPI_ASSERT_FROMV9(env,  !field.empty(),
+        std::make_shared<ParamTypeError>("field", "a non empty string."), version);
 
     value = JSUtils::ConvertAny2String(env, args[1]);
     return predicatesProxy;
