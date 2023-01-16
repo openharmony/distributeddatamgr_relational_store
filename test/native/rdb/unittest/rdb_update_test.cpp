@@ -22,6 +22,7 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "rdb_common.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
