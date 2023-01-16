@@ -40,16 +40,23 @@ public:
     static RdbStoreManager &GetInstance();
     RdbStoreManager();
     virtual ~RdbStoreManager();
-    std::shared_ptr<RdbStore> GetRdbStore(const RdbStoreConfig &config, int &errCode);
+    std::shared_ptr<RdbStore> GetRdbStore(const RdbStoreConfig &config,
+        int &errCode, int version, RdbOpenCallback &openCallback);
     void Remove(const std::string &path);
     void Clear();
+    int SetSecurityLabel(const RdbStoreConfig &config);
+    void SetReleaseTime(int ms);
 
 private:
+    int ProcessOpenCallback(RdbStore &rdbStore,
+        const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
     void RestartTimer(const std::string &path, RdbStoreNode &node);
     static void AutoClose(const std::string &path, RdbStoreManager *manager);
     std::mutex mutex_;
     std::shared_ptr<Utils::Timer> timer_;
     std::map<std::string, std::shared_ptr<RdbStoreNode>> storeCache_;
+    // ms_ : [10*1000 ~ 10*60*1000]
+    int ms_;
 };
 
 class RdbHelper final {
@@ -60,8 +67,7 @@ public:
     static void ClearCache();
 
 private:
-    static int ProcessOpenCallback(
-        RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
+    static void InitSecurityManager(const RdbStoreConfig &config);
 };
 } // namespace NativeRdb
 } // namespace OHOS

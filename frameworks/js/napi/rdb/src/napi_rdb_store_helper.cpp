@@ -295,7 +295,7 @@ int ParseIsEncrypt(const napi_env &env, const napi_value &object, std::shared_pt
 {
     napi_value value = nullptr;
     napi_status status = napi_get_named_property(env, object, "encrypt", &value);
-    if (status != napi_ok && value != nullptr) {
+    if (status == napi_ok && value != nullptr) {
         bool isEncrypt = false;
         JSUtils::Convert2Bool(env, value, isEncrypt);
         context->config.SetEncryptStatus(isEncrypt);
@@ -545,6 +545,8 @@ napi_value InitRdbHelper(napi_env env, napi_value exports)
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("getRdbStore", GetRdbStore),
         DECLARE_NAPI_FUNCTION("deleteRdbStore", DeleteRdbStore),
+        DECLARE_NAPI_FUNCTION("getRdbStoreV9", GetRdbStoreV9),
+        DECLARE_NAPI_FUNCTION("deleteRdbStoreV9", DeleteRdbStoreV9),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
     LOG_INFO("RdbJsKit::InitRdbHelper end");

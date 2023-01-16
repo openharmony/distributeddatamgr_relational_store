@@ -237,6 +237,9 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
         delete proxy;
     };
     auto *proxy = new (std::nothrow) RdbStoreProxy();
+    if (proxy == nullptr) {
+        return nullptr;
+    }
     napi_status status = napi_wrap(env, self, proxy, finalize, nullptr, nullptr);
     if (status != napi_ok) {
         LOG_ERROR("RdbStoreProxy::Initialize napi_wrap failed! code:%{public}d!", status);

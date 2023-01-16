@@ -130,6 +130,7 @@ HWTEST_F(RdbUpgradeTest, RdbStore_Upgrade_001, TestSize.Level1)
     EXPECT_EQ(ret, E_ERROR);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
+    RdbHelper::ClearCache();
 
     int errCode = E_OK;
     RdbStoreConfig config(RdbUpgradeTest::DATABASE_NAME);

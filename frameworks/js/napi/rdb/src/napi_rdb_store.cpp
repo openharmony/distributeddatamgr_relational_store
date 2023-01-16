@@ -191,6 +191,10 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
                                    sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons));
     NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, cons, 1, &constructor_));
 
+    NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "RdbStoreV9", NAPI_AUTO_LENGTH, InitializeV9, nullptr,
+                                   sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons));
+    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, cons, 1, &constructorV9_));
+
     LOG_DEBUG("Init RdbStoreProxy end");
 }
 
@@ -203,6 +207,9 @@ napi_value RdbStoreProxy::InnerInitialize(napi_env env, napi_callback_info info,
         delete proxy;
     };
     auto *proxy = new (std::nothrow) RdbStoreProxy();
+    if (proxy == nullptr) {
+        return nullptr;
+    }
     proxy->apiversion = version;
     napi_status status = napi_wrap(env, self, proxy, finalize, nullptr, nullptr);
     if (status != napi_ok) {

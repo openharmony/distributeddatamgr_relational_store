@@ -400,7 +400,6 @@ std::string SqliteSqlBuilder::NormalizeAlias(const std::string &source, int &err
     std::smatch result;
     bool columnMatcher = std::regex_match(strTrimed, result, pattern);
     if (!columnMatcher) {
-        LOG_DEBUG("NormalizeAlias no match %{public}s", strTrimed.c_str());
         return Normalize(strTrimed, errorCode);
     }
     std::string words = StringUtils::Trim(result[1]);
