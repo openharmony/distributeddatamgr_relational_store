@@ -333,6 +333,7 @@ int StepResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
 
 int StepResultSet::GetString(int columnIndex, std::string &value)
 {
+    DISTRIBUTED_DATA_HITRACE("StepResultSet::GetString");
     if (rowPos_ == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
