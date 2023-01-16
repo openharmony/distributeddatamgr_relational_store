@@ -24,17 +24,9 @@
 #include "result_set.h"
 #include "value_object.h"
 #include "values_bucket.h"
+#include "rdb_common.h"
 
 namespace OHOS::NativeRdb {
-enum class ConflictResolution {
-    ON_CONFLICT_NONE = 0,
-    ON_CONFLICT_ROLLBACK,
-    ON_CONFLICT_ABORT,
-    ON_CONFLICT_FAIL,
-    ON_CONFLICT_IGNORE,
-    ON_CONFLICT_REPLACE,
-};
-
 class RdbStore {
 public:
     virtual ~RdbStore() {}
