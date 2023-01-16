@@ -226,7 +226,6 @@ int SqliteStatement::GetColumnName(int index, std::string &columnName) const
         return E_ERROR;
     }
     columnName = std::string(name);
-    transform(columnName.begin(), columnName.end(), columnName.begin(), ::tolower);
     return E_OK;
 }
 
@@ -292,26 +291,34 @@ int SqliteStatement::GetColumnString(int index, std::string &value) const
     }
 
     int type = sqlite3_column_type(stmtHandle, index);
-    if (type == SQLITE_TEXT) {
-        auto val = reinterpret_cast<const char *>(sqlite3_column_text(stmtHandle, index));
-        value = (val == nullptr) ? "" : std::string(val, sqlite3_column_bytes(stmtHandle, index));
-    } else if (type == SQLITE_INTEGER) {
-        int64_t val = sqlite3_column_int64(stmtHandle, index);
-        value = std::to_string(val);
-    } else if (type == SQLITE_FLOAT) {
-        double val = sqlite3_column_double(stmtHandle, index);
-        std::ostringstream os;
-        if (os << std::setprecision(SET_DATA_PRECISION) << val)
-            value = os.str();
-    } else if (type == SQLITE_NULL) {
-        value = "";
-        return E_OK;
-    } else if (type == SQLITE_BLOB) {
-        return E_INVALID_COLUMN_TYPE;
-    } else {
-        return E_ERROR;
+    switch (type) {
+        case SQLITE_TEXT: {
+            auto val = reinterpret_cast<const char *>(sqlite3_column_text(stmtHandle, index));
+            value = (val == nullptr) ? "" : std::string(val, sqlite3_column_bytes(stmtHandle, index));
+            break;
+        }
+        case SQLITE_INTEGER: {
+            int64_t val = sqlite3_column_int64(stmtHandle, index);
+            value = std::to_string(val);
+            break;
+        }
+        case SQLITE_FLOAT: {
+            double val = sqlite3_column_double(stmtHandle, index);
+            std::ostringstream os;
+            if (os << std::setprecision(SET_DATA_PRECISION) << val)
+                value = os.str();
+            break;
+        }
+        case SQLITE_NULL: {
+            value = "";
+            return E_OK;
+        }
+        case SQLITE_BLOB: {
+            return E_INVALID_COLUMN_TYPE;
+        }
+        default:
+            return E_ERROR;
     }
-
     return E_OK;
 }
 
