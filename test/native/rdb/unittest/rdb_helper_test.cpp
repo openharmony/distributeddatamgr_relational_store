@@ -19,6 +19,7 @@
 
 #include <string>
 
+#include "common.h"
 #include "rdb_errno.h"
 #include "rdb_open_callback.h"
 
@@ -43,7 +44,9 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static const std::string rdbStorePath;
 };
+const std::string RdbHelperTest::rdbStorePath = RDB_TEST_PATH + std::string("rdbhelper.db");
 
 void RdbHelperTest::SetUpTestCase(void)
 {
@@ -59,6 +62,44 @@ void RdbHelperTest::SetUp(void)
 
 void RdbHelperTest::TearDown(void)
 {
+}
+
+class RdbHelperTestOpenCallback : public RdbOpenCallback {
+public:
+    int OnCreate(RdbStore &rdbStore) override;
+    int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
+    static const std::string CREATE_TABLE_TEST;
+};
+
+const std::string RdbHelperTestOpenCallback::CREATE_TABLE_TEST = 
+    std::string("CREATE TABL IF NOT EXISTS test ")+ 
+    std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, ") +
+    std::string("name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)");
+
+int RdbHelperTestOpenCallback::OnCreate(RdbStore &store)
+{
+    return store.ExecuteSql(CREATE_TABLE_TEST);
+}
+
+int RdbHelperTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
+{
+    return E_OK;
+}
+
+/**
+ * @tc.name: DeleteDatabaseCache_001
+ * @tc.desc: delete db cache
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabaseCache_001, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbHelperTest::rdbStorePath);
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(rdbStore, nullptr);
 }
 
 /**
