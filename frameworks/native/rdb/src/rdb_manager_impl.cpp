@@ -123,6 +123,10 @@ std::shared_ptr<RdbService> RdbManagerImpl::GetRdbService(const RdbSyncerParam& 
 void RdbManagerImpl::OnRemoteDied()
 {
     ZLOGI("rdb service has dead!!");
+    if (rdbService_ == nullptr) {
+        ResetServiceHandle();
+        return;
+    }
     auto proxy = std::static_pointer_cast<RdbServiceProxy>(rdbService_);
     auto observers = proxy->ExportObservers();
     ResetServiceHandle();
@@ -138,13 +142,11 @@ void RdbManagerImpl::OnRemoteDied()
     if (proxy == nullptr) {
         return;
     }
-    ZLOGI("restore observer");
     proxy->ImportObservers(observers);
 }
 
 void RdbManagerImpl::ResetServiceHandle()
 {
-    ZLOGI("enter");
     std::lock_guard<std::mutex> lock(mutex_);
     distributedDataMgr_ = nullptr;
     rdbService_ = nullptr;
