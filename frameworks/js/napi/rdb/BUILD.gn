@@ -23,8 +23,8 @@ ohos_copy("relational_store_declaration") {
 }
 
 ohos_shared_library("rdb") {
+  deps = [ "${relational_store_napi_path}/rdb:entrypoint_rdb" ]
   sources = [
-    "src/entry_point.cpp",
     "src/napi_async_call.cpp",
     "src/napi_rdb_const_properties.cpp",
     "src/napi_rdb_predicates.cpp",
@@ -33,6 +33,71 @@ ohos_shared_library("rdb") {
     "src/napi_result_set.cpp",
     "src/napi_uv_queue.cpp",
     "src/napi_values_bucket.cpp",
+  ]
+
+  if (is_mingw || is_mac) {
+    include_dirs = [
+      "mock/include",
+      "${relational_store_js_common_path}/mock/include",
+      "${relational_store_napi_path}/rdb/mock/include",
+      "//commonlibrary/c_utils/base/include",
+      "include",
+      "${relational_store_js_common_path}/include",
+    ]
+    cflags_cc = [
+      "-std=c++17",
+      "-stdlib=libc++",
+    ]
+    if (is_mac) {
+      buildos = "mac"
+      defines = [ "MAC_PLATFORM" ]
+    } else {
+      buildos = "windows"
+      defines = [ "WINDOWS_PLATFORM" ]
+    }
+    sources += [
+      "${relational_store_js_common_path}/mock/src/js_ability.cpp",
+      "${relational_store_js_common_path}/mock/src/js_utils.cpp",
+    ]
+    deps += [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${buildos}",
+      "//foundation/arkui/napi:ace_napi",
+      "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
+    ]
+  } else {
+    include_dirs = [
+      "include",
+      "${relational_store_js_common_path}/include",
+      "${relational_store_napi_path}/rdb/include",
+      "${datashare_base_path}/interfaces/inner_api/common/include/",
+    ]
+    defines = [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
+    sources += [
+      "${relational_store_js_common_path}/src/js_ability.cpp",
+      "${relational_store_js_common_path}/src/js_utils.cpp",
+      "src/napi_rdb_store_observer.cpp",
+    ]
+
+    external_deps = [
+      "ability_runtime:abilitykit_native",
+      "ability_runtime:napi_base_context",
+      "c_utils:utils",
+      "hilog_native:libhilog",
+      "hitrace_native:hitrace_meter",
+      "napi:ace_napi",
+      "relational_store:native_appdatafwk",
+      "relational_store:native_rdb",
+      "relational_store:rdb_data_share_adapter",
+    ]
+  }
+
+  subsystem_name = "distributeddatamgr"
+  part_name = "relational_store"
+}
+
+ohos_shared_library("entrypoint_rdb") {
+  sources = [
+    "src/entry_point.cpp",
   ]
 
   if (is_mingw || is_mac) {
