@@ -22,7 +22,8 @@ std::string StringUtils::SurroundWithQuote(std::string value, std::string quote)
     if (value.empty()) {
         return value;
     }
-    return quote + value + quote;
+    std::string str = quote + value + quote;
+    return str;
 }
 
 // Join array members as parameters of a function call.

@@ -17,11 +17,16 @@
 
 #define DO_NOTHING
 
-#ifdef RDB_TRACE_ON
+#ifdef WINDOWS_PLATFORM
+#define DISTRIBUTED_DATA_HITRACE(trace) DO_NOTHING
+
+#elif MAC_PLATFORM
+#define DISTRIBUTED_DATA_HITRACE(trace) DO_NOTHING
+
+#else
 #include "hitrace.h"
 #define DISTRIBUTED_DATA_HITRACE(trace) HiTrace hitrace(trace)
-#else
-#define DISTRIBUTED_DATA_HITRACE(trace) DO_NOTHING
+
 #endif
 
 #endif
