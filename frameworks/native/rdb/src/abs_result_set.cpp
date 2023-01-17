@@ -198,35 +198,28 @@ int AbsResultSet::GetColumnCount(int &count)
 
 int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex)
 {
-    std::vector<std::string> columnNames;
-    if (columnMap_.empty()) {
-        int ret = GetAllColumnNames(columnNames);
-        if (ret != E_OK) {
-            LOG_ERROR("AbsResultSet::GetColumnIndex  return GetAllColumnNames::ret is wrong!");
-            return ret;
-        }
-    }
-
-    auto iter = columnMap_.find(columnName);
-    if (iter != columnMap_.end()) {
-        columnIndex = iter->second;
-        return E_OK;
-    }
-
     auto periodIndex = columnName.rfind('.');
     std::string columnNameLower = columnName;
     if (periodIndex != std::string::npos) {
         columnNameLower = columnNameLower.substr(periodIndex + 1);
     }
     transform(columnNameLower.begin(), columnNameLower.end(), columnNameLower.begin(), ::tolower);
-
-    iter = columnMap_.find(columnNameLower);
-    if (iter != columnMap_.end()) {
-        columnIndex = iter->second;
-        return E_OK;
+    std::vector<std::string> columnNames;
+    int ret = GetAllColumnNames(columnNames);
+    if (ret != E_OK) {
+        LOG_ERROR("AbsResultSet::GetColumnIndex  return GetAllColumnNames::ret is wrong!");
+        return ret;
     }
 
-    LOG_ERROR("AbsResultSet::GetColumnIndex columnname is wrong!");
+    columnIndex = 0;
+    for (const auto& name : columnNames) {
+        std::string lowerName = name;
+        transform(name.begin(), name.end(), lowerName.begin(), ::tolower);
+        if (lowerName == columnNameLower) {
+            return E_OK;
+        }
+        columnIndex++;
+    }
     columnIndex = -1;
     return E_ERROR;
 }
