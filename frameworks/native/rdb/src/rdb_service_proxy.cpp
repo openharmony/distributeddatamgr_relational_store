@@ -23,7 +23,6 @@ namespace OHOS::DistributedRdb {
 RdbServiceProxy::RdbServiceProxy(const sptr<IRemoteObject> &object)
     : IRemoteProxy<IRdbService>(object)
 {
-    ZLOGI("construct");
 }
 
 void RdbServiceProxy::OnSyncComplete(uint32_t seqNum, const SyncResult &result)
@@ -37,7 +36,6 @@ void RdbServiceProxy::OnSyncComplete(uint32_t seqNum, const SyncResult &result)
 
 void RdbServiceProxy::OnDataChange(const std::string& storeName, const std::vector<std::string> &devices)
 {
-    ZLOGI("%{public}s", storeName.c_str());
     auto name = RemoveSuffix(storeName);
     observers_.ComputeIfPresent(
         name, [&devices] (const auto& key, const ObserverMapValue& value) {

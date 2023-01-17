@@ -30,27 +30,23 @@
 namespace OHOS::DistributedRdb {
 std::shared_ptr<RdbStoreDataServiceProxy> RdbManagerImpl::GetDistributedDataManager()
 {
-    int retry = 0;
-    while (++retry <= GET_SA_RETRY_TIMES) {
-        auto manager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (manager == nullptr) {
-            ZLOGE("get system ability manager failed");
-            return nullptr;
-        }
-        ZLOGI("get distributed data manager %{public}d", retry);
-        auto remoteObject = manager->CheckSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
-        if (remoteObject == nullptr) {
-            std::this_thread::sleep_for(std::chrono::seconds(RETRY_INTERVAL));
-            continue;
-        }
-        ZLOGI("get distributed data manager success");
-        sptr<RdbStoreDataServiceProxy> rdbStoreDataServiceProxy = new RdbStoreDataServiceProxy(remoteObject);
-        return std::shared_ptr<RdbStoreDataServiceProxy>(rdbStoreDataServiceProxy.GetRefPtr(),
-            [holder = rdbStoreDataServiceProxy](const auto *) {});
+    auto manager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (manager == nullptr) {
+        ZLOGE("get system ability manager failed");
+        return nullptr;
     }
-
-    ZLOGE("get distributed data manager failed");
-    return nullptr;
+    auto remoteObject = manager->CheckSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
+    if (remoteObject == nullptr) {
+        ZLOGE("get distributed data manager failed");
+        return nullptr;
+    }
+    sptr<RdbStoreDataServiceProxy> rdbStoreDataServiceProxy = new(std::nothrow) RdbStoreDataServiceProxy(remoteObject);
+    if (rdbStoreDataServiceProxy == nullptr) {
+        ZLOGE("new RdbStoreDataServiceProxy failed");
+        return nullptr;
+    }
+    return std::shared_ptr<RdbStoreDataServiceProxy>(rdbStoreDataServiceProxy.GetRefPtr(),
+        [holder = rdbStoreDataServiceProxy](const auto *) {});
 }
 
 static void LinkToDeath(const sptr<IRemoteObject>& remote)
@@ -58,10 +54,12 @@ static void LinkToDeath(const sptr<IRemoteObject>& remote)
     auto& manager = RdbManagerImpl::GetInstance();
     sptr<RdbManagerImpl::ServiceDeathRecipient> deathRecipient =
         new(std::nothrow) RdbManagerImpl::ServiceDeathRecipient(&manager);
+    if (deathRecipient == nullptr) {
+        ZLOGE("new ServiceDeathRecipient failed");
+    }
     if (!remote->AddDeathRecipient(deathRecipient)) {
         ZLOGE("add death recipient failed");
     }
-    ZLOGE("success");
 }
 
 RdbManagerImpl::RdbManagerImpl()
@@ -115,6 +113,9 @@ std::shared_ptr<RdbService> RdbManagerImpl::GetRdbService(const RdbSyncerParam& 
     sptr<IRdbService> serviceBase = service;
     LinkToDeath(serviceBase->AsObject().GetRefPtr());
     rdbService_ = std::shared_ptr<RdbService>(service.GetRefPtr(), [holder = service] (const auto*) {});
+    if (rdbService_ == nullptr) {
+        return nullptr;
+    }
     bundleName_ = param.bundleName_;
     return rdbService_;
 }
