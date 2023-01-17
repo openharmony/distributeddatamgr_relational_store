@@ -691,7 +691,7 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     SqliteConnectionS connection(this->dbHandle, this->openFlags, this->filePath);
     int errCode = PrepareAndBind(sql, bindArgs);
     if (errCode != E_OK) {
-        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null. SqliteConnectionS connection");
+        LOG_ERROR("PrepareAndBind sql and bindArgs error = %{public}d ", errCode);
         return errCode;
     }
 
