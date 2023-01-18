@@ -33,7 +33,6 @@ public:
     static napi_value NewInstance(
         napi_env env, std::shared_ptr<OHOS::NativeRdb::RdbStore> value, int version = AppDataMgrJsKit::APIVERSION_V8);
     static RdbStoreProxy *GetNativeInstance(napi_env env, napi_value self);
-    void Release(napi_env env);
     RdbStoreProxy();
     ~RdbStoreProxy();
     int apiversion = AppDataMgrJsKit::APIVERSION_V8;
@@ -69,7 +68,6 @@ private:
     static napi_value Restore(napi_env env, napi_callback_info info);
     std::mutex mutex_;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
-    napi_ref ref_ = nullptr;
 };
 } // namespace RdbJsKit
 } // namespace OHOS
