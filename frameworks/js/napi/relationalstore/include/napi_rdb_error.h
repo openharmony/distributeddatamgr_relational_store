@@ -102,6 +102,25 @@ public:
     };
 };
 
+class CustomError : public Error {
+public:
+    CustomError(int errCode, const std::string &msg) : msg(msg), errCode(errCode)
+    {
+    }
+    std::string GetMessage() override
+    {
+        return msg;
+    }
+    int GetCode() override
+    {
+        return errCode;
+    }
+
+private:
+    std::string msg;
+    int errCode;
+};
+
 class ParamTypeError : public Error {
 public:
     ParamTypeError(const std::string &name, const std::string &wantType) : name(name), wantType(wantType){};

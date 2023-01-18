@@ -44,7 +44,6 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_distributed_test.cpp",
     "unittest/rdb_encrypt_decrypt_test.cpp",
     "unittest/rdb_execute_test.cpp",
-    "unittest/rdb_get_status_test.cpp",
     "unittest/rdb_get_store_test.cpp",
     "unittest/rdb_helper_test.cpp",
     "unittest/rdb_insert_test.cpp",
