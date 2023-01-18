@@ -151,8 +151,6 @@ RdbStoreManager::RdbStoreManager()
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &config,
     int &errCode, int version, RdbOpenCallback &openCallback)
 {
-    bool isDbFileExists = access(config.GetPath().c_str(), F_OK) == 0;
-
     std::shared_ptr<RdbStore> rdbStore;
     std::string path = config.GetPath();
     std::lock_guard<std::mutex> lock(mutex_);
@@ -174,12 +172,6 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
         storeCache_.erase(path);
         LOG_ERROR("RdbHelper set security label fail.");
         return nullptr;
-    }
-
-    if (isDbFileExists) {
-        rdbStore->SetStatus(static_cast<int>(OpenStatus::ON_OPEN));
-    } else {
-        rdbStore->SetStatus(static_cast<int>(OpenStatus::ON_CREATE));
     }
 
     errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
@@ -230,7 +222,6 @@ void RdbStoreManager::Clear()
         iter = storeCache_.erase(iter);
     }
 }
-
 
 int RdbStoreManager::ProcessOpenCallback(
     RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback)
