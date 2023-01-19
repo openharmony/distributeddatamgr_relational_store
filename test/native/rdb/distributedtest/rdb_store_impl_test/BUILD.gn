@@ -46,6 +46,7 @@ ohos_distributedtest("DistributedTest") {
     "c_utils:utils",
     "hilog_native:libhilog",
     "ipc:ipc_core",
+    "kv_store:distributeddata_inner",
     "relational_store:native_rdb",
   ]
 
@@ -66,6 +67,7 @@ ohos_distributedtest("DistributedTestAgent") {
     "c_utils:utils",
     "hilog_native:libhilog",
     "ipc:ipc_core",
+    "kv_store:distributeddata_inner",
     "relational_store:native_rdb",
   ]
 

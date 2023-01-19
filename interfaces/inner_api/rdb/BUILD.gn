@@ -27,6 +27,7 @@ config("native_rdb_config") {
     include_dirs = [
       "include",
       "${relational_store_native_path}/rdb/include",
+      "//utils/system/safwk/native/include",
     ]
   }
 
@@ -71,6 +72,8 @@ config("native_rdb_public_config") {
   } else {
     include_dirs = [
       "include",
+      "//foundation/distributeddatamgr/kv_store/frameworks/common",
+      "${relational_store_native_path}/rdb/include",
       "//foundation/distributeddatamgr/distributedfile/interfaces/kits/js/src/mod_securitylabel",
     ]
   }
@@ -131,17 +134,22 @@ ohos_shared_library("native_rdb") {
 
     sources += [
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
+      "${relational_store_native_path}/rdb/src/rdb_manager.cpp",
+      "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
+      "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
       "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
+      "${relational_store_native_path}/rdb/src/rdb_service_proxy.cpp",
+      "${relational_store_native_path}/rdb/src/rdb_types_util.cpp",
       "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
       "${relational_store_native_path}/rdb/src/security_policy.cpp",
       "${relational_store_native_path}/rdb/src/share_block.cpp",
       "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
       "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
     ]
+
     public_deps = [
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb:distributeddb",
-      "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner",
     ]
 
     external_deps = [
@@ -150,6 +158,7 @@ ohos_shared_library("native_rdb") {
       "hitrace_native:hitrace_meter",
       "huks:libhukssdk",
       "ipc:ipc_core",
+      "samgr:samgr_proxy",
     ]
   }
 
