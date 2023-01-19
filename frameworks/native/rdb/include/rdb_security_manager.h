@@ -95,7 +95,7 @@ private:
     static constexpr char const *SUFFIX_PUB_KEY = ".pub_key";
     static constexpr char const *SUFFIX_PUB_KEY_BAK = ".pub_key_bak";
     static constexpr const char *RDB_ROOT_KEY_ALIAS_PREFIX = "DistributedDataRdb";
-    static constexpr const char *RDB_HKS_BLOB_TYPE_NONCE = "Z5s0Bo571KoqwIi6";
+    static constexpr const char *RDB_HKS_BLOB_TYPE_NONCE = "Z5s0Bo571Koq";
     static constexpr const char *RDB_HKS_BLOB_TYPE_AAD = "RdbClientAAD";
 
     std::string bundleName_;

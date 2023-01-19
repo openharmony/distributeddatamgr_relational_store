@@ -24,8 +24,12 @@
 #include "file_ex.h"
 #include "hks_api.h"
 #include "hks_param.h"
+#include "hks_mem.h"
 #include "logger.h"
 #include "sqlite_database_utils.h"
+static const uint32_t TIMES = 4;
+static const uint32_t MAX_UPDATE_SIZE = 64;
+static const uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
 
 namespace OHOS {
 namespace NativeRdb {
@@ -84,6 +88,101 @@ int RdbPassword::SetValue(const uint8_t *inputData, size_t inputSize)
 int RdbPassword::Clear()
 {
     return SetValue(nullptr, 0);
+}
+
+static int32_t MallocAndCheckBlobData(struct HksBlob *blob, const uint32_t blobSize)
+{
+    blob->data = (uint8_t *)malloc(blobSize);
+    if (blob->data == NULL) {
+        return HKS_FAILURE;
+    }
+    return HKS_SUCCESS;
+}
+
+static int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet,
+    const struct HksBlob *inData, struct HksBlob *outData)
+{
+    struct HksBlob inDataSeg = *inData;
+    uint8_t *lastPtr = inData->data + inData->size - 1;
+    struct HksBlob outDataSeg = { MAX_OUTDATA_SIZE, NULL };
+    uint8_t *cur = outData->data;
+    outData->size = 0;
+
+    inDataSeg.size = MAX_UPDATE_SIZE;
+
+    bool isFinished = false;
+
+    while (inDataSeg.data <= lastPtr) {
+        if (inDataSeg.data + MAX_UPDATE_SIZE <= lastPtr) {
+            outDataSeg.size = MAX_OUTDATA_SIZE;
+        } else {
+            isFinished = true;
+            inDataSeg.size = lastPtr - inDataSeg.data + 1;
+            break;
+        }
+        if (MallocAndCheckBlobData(&outDataSeg, outDataSeg.size) != HKS_SUCCESS) {
+            return HKS_FAILURE;
+        }
+        if (HksUpdate(handle, paramSet, &inDataSeg, &outDataSeg) != HKS_SUCCESS) {
+            LOG_ERROR("HksUpdate Failed.");
+            HksFree(outDataSeg.data);
+            return HKS_FAILURE;
+        }
+        (void)memcpy_s(cur, outDataSeg.size, outDataSeg.data, outDataSeg.size);
+        cur += outDataSeg.size;
+        outData->size += outDataSeg.size;
+        HksFree(outDataSeg.data);
+        if ((isFinished == false) && (inDataSeg.data + MAX_UPDATE_SIZE > lastPtr)) {
+            return HKS_FAILURE;
+        }
+        inDataSeg.data += MAX_UPDATE_SIZE;
+    }
+
+    struct HksBlob outDataFinish = { inDataSeg.size * TIMES, NULL };
+    if (MallocAndCheckBlobData(&outDataFinish, outDataFinish.size) != HKS_SUCCESS) {
+        return HKS_FAILURE;
+    }
+    if (HksFinish(handle, paramSet, &inDataSeg, &outDataFinish) != HKS_SUCCESS) {
+        LOG_ERROR("HksFinish Failed.");
+        HksFree(outDataFinish.data);
+        return HKS_FAILURE;
+    }
+    (void)memcpy_s(cur, outDataFinish.size, outDataFinish.data, outDataFinish.size);
+    outData->size += outDataFinish.size;
+    HksFree(outDataFinish.data);
+
+    return HKS_SUCCESS;
+}
+
+static int32_t HksEncryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
+    const struct HksBlob *plainText, struct HksBlob *cipherText)
+{
+    
+    uint8_t handle[sizeof(uint64_t)] = {0};
+    struct HksBlob handleBlob = { sizeof(uint64_t), handle };
+    int32_t result = HksInit(keyAlias, paramSet, &handleBlob, nullptr);
+    if (result != HKS_SUCCESS) {
+        return result;
+    }
+
+    result = HksLoopUpdate(&handleBlob, paramSet, plainText, cipherText);
+    return result;
+}
+
+
+static int32_t HksDecryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
+    const struct HksBlob *cipherText, struct HksBlob *plainText)
+{
+    
+    uint8_t handle[sizeof(uint64_t)] = {0};
+    struct HksBlob handleBlob = { sizeof(uint64_t), handle };
+    int32_t result = HksInit(keyAlias, paramSet, &handleBlob, nullptr);
+    if (result != HKS_SUCCESS) {
+        return result;
+    }
+
+    result = HksLoopUpdate(&handleBlob, paramSet, cipherText, plainText);
+    return result;
 }
 
 RdbSecurityManager::RdbSecurityManager() = default;
@@ -231,7 +330,7 @@ std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(const std::vector<uint8_
 
     uint8_t cipherBuf[256] = { 0 };
     struct HksBlob cipherText = { sizeof(cipherBuf), cipherBuf };
-    ret = HksEncrypt(&rootKeyName, params, &plainKey, &cipherText);
+    ret = HksEncryptThreeStage(&rootKeyName, params, &plainKey, &cipherText);
     (void)HksFreeParamSet(&params);
     if (ret != HKS_SUCCESS) {
         LOG_ERROR("HksEncrypt failed with error %{public}d", ret);
@@ -246,10 +345,13 @@ std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(const std::vector<uint8_
 
 bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vector<uint8_t> &key)
 {
+    static constexpr int const aeadLen = 16;
+    uint8_t aead_[aeadLen] = { 0 };
     struct HksBlob blobAad = { uint32_t(aad_.size()), &(aad_[0]) };
     struct HksBlob blobNonce = { uint32_t(nonce_.size()), &(nonce_[0]) };
     struct HksBlob rootKeyName = { uint32_t(rootKeyAlias_.size()), &(rootKeyAlias_[0]) };
     struct HksBlob encryptedKeyBlob = { uint32_t(source.size()), source.data() };
+    struct HksBlob blobAead = { aeadLen, aead_ };
 
     struct HksParamSet *params = nullptr;
     int32_t ret = HksInitParamSet(&params);
@@ -265,6 +367,7 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
         { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
         { .tag = HKS_TAG_NONCE, .blob = blobNonce },
         { .tag = HKS_TAG_ASSOCIATED_DATA, .blob = blobAad },
+        { .tag = HKS_TAG_AE_TAG, .blob = blobAead },
     };
     ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
     if (ret != HKS_SUCCESS) {
@@ -280,9 +383,20 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
         return false;
     }
 
+    encryptedKeyBlob.size -= aeadLen;
+    uint32_t i = 0;
+    for (i = 0; i < params->paramsCnt; i++){
+        if (params->params[i].tag == HKS_TAG_AE_TAG) {
+            uint8_t *tempPtr = encryptedKeyBlob.data;
+            (void)memcpy_s(params->params[i].blob.data, aeadLen,
+                tempPtr + encryptedKeyBlob.size, aeadLen);
+            break;
+        }
+    }
+
     uint8_t plainBuf[256] = { 0 };
     struct HksBlob plainKeyBlob = { sizeof(plainBuf), plainBuf };
-    ret = HksDecrypt(&rootKeyName, params, &encryptedKeyBlob, &plainKeyBlob);
+    ret = HksDecryptThreeStage(&rootKeyName, params, &encryptedKeyBlob, &plainKeyBlob);
     (void)HksFreeParamSet(&params);
     if (ret != HKS_SUCCESS) {
         LOG_ERROR("HksDecrypt failed with error %{public}d", ret);
