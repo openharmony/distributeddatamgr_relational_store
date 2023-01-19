@@ -29,10 +29,11 @@
 #include <random>
 #include <vector>
 
-#include "rdb_errno.h"
 #include "hks_api.h"
-#include "hks_param.h"
 #include "hks_mem.h"
+#include "hks_param.h"
+#include "rdb_errno.h"
+
 
 namespace OHOS::NativeRdb {
 struct RdbSecretKeyData {
