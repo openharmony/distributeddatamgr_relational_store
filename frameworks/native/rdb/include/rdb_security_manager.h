@@ -30,6 +30,9 @@
 #include <vector>
 
 #include "rdb_errno.h"
+#include "hks_api.h"
+#include "hks_param.h"
+#include "hks_mem.h"
 
 namespace OHOS::NativeRdb {
 struct RdbSecretKeyData {

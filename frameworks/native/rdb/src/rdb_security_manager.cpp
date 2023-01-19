@@ -124,7 +124,7 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
             break;
         }
         if (MallocAndCheckBlobData(&outDataSeg, outDataSeg.size) != HKS_SUCCESS) {
-            LOG_ERROR("MallocAndCheckBlobData outDataSeg Failed.")
+            LOG_ERROR("MallocAndCheckBlobData outDataSeg Failed.");
             return HKS_FAILURE;
         }
         if (HksUpdate(handle, paramSet, &inDataSeg, &outDataSeg) != HKS_SUCCESS) {
@@ -137,7 +137,7 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
         outData->size += outDataSeg.size;
         HksFree(outDataSeg.data);
         if ((!isFinished) && (inDataSeg.data + MAX_UPDATE_SIZE > lastPtr)) {
-            LOG_ERROR("isFinished and inDataSeg data Error")
+            LOG_ERROR("isFinished and inDataSeg data Error");
             return HKS_FAILURE;
         }
         inDataSeg.data += MAX_UPDATE_SIZE;
