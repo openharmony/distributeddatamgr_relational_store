@@ -297,6 +297,38 @@ std::string SqliteSqlBuilder::BuildCountString(const AbsRdbPredicates &predicate
     return "SELECT COUNT(*) FROM " + tableName + BuildSqlStringFromPredicates(predicates);
 }
 
+
+std::string SqliteSqlBuilder::PredicatesNormalize(const std::string &source, int &errorCode)
+{
+    errorCode = 0;
+    if (StringUtils::IsEmpty(source)) {
+        return "";
+    }
+
+    auto index = source.rfind("(*");
+    if (index != -1) {
+        return source;
+    }
+
+    index = source.rfind(".");
+    if (index == -1) {
+        return StringUtils::SurroundWithQuote(source, "`");
+    }
+
+    auto fIndex = source.find(".");
+    if (index != fIndex) {
+        LOG_ERROR("More than one '.' exists in source");
+        errorCode = -1;
+        return "";
+    }
+
+    std::string retStr1 =  StringUtils::SurroundWithQuote(source.substr(0, index), "`");
+    std::string source2 =  StringUtils::Trim(source.substr(index + 1));
+    std::string retStr2 = source2 == "*" ? source2 : StringUtils::SurroundWithQuote(source2, "`");
+
+    return retStr1 + "." + retStr2;
+}
+
 std::string SqliteSqlBuilder::NormalizeWords(const std::string &source, int &errorCode)
 {
     DISTRIBUTED_DATA_HITRACE("SqliteSqlBuilder::NormalizeWords");
