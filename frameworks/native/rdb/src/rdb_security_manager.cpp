@@ -96,7 +96,7 @@ int32_t RdbSecurityManager::MallocAndCheckBlobData(struct HksBlob *blob, const u
 {
     blob->data = (uint8_t *)malloc(blobSize);
     if (blob->data == NULL) {
-        LOG_ERROR("blob data is NULL.");
+        LOG_ERROR("Blob data is NULL.");
         return HKS_FAILURE;
     }
     return HKS_SUCCESS;
@@ -167,11 +167,10 @@ int32_t RdbSecurityManager::HksEncryptThreeStage(const struct HksBlob *keyAlias,
     struct HksBlob handleBlob = { sizeof(uint64_t), handle };
     int32_t result = HksInit(keyAlias, paramSet, &handleBlob, nullptr);
     if (result != HKS_SUCCESS) {
+        LOG_ERROR("HksEncrypt failed with error %{public}d", result);
         return result;
     }
-
-    result = HksLoopUpdate(&handleBlob, paramSet, plainText, cipherText);
-    return result;
+    return HksLoopUpdate(&handleBlob, paramSet, plainText, cipherText);
 }
 
 int32_t RdbSecurityManager::HksDecryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
