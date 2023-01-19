@@ -73,6 +73,7 @@
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/dataability:dataability",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:rdb",
+                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:napi_rdb",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/relationalstore:relationalstore"
             ],
             "inner_kits": [
