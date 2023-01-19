@@ -33,11 +33,13 @@ Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
     auto extensionContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::ExtensionContext>(stageContext);
     if (extensionContext != nullptr) {
         auto abilityInfo = extensionContext->GetAbilityInfo();
-        uri_ = abilityInfo->uri;
-        writePermission_ = abilityInfo->writePermission;
-        readPermission_ = abilityInfo->readPermission;
-        LOG_INFO("QueryAbilityInfo, uri: %{private}s, readPermission: %{public}s, writePermission: %{public}s.",
-            abilityInfo->uri.c_str(), abilityInfo->readPermission.c_str(), abilityInfo->writePermission.c_str());
+        if (abilityInfo != nullptr) {
+            uri_ = abilityInfo->uri;
+            writePermission_ = abilityInfo->writePermission;
+            readPermission_ = abilityInfo->readPermission;
+            LOG_INFO("QueryAbilityInfo, uri: %{private}s, readPermission: %{public}s, writePermission: %{public}s.",
+                abilityInfo->uri.c_str(), abilityInfo->readPermission.c_str(), abilityInfo->writePermission.c_str());
+        }
     }
     auto appInfo = stageContext->GetApplicationInfo();
     isSystemAppCalled_ = appInfo == nullptr ? false : appInfo->isSystemApp;
