@@ -96,7 +96,7 @@ int32_t RdbSecurityManager::MallocAndCheckBlobData(struct HksBlob *blob, const u
 {
     blob->data = (uint8_t *)malloc(blobSize);
     if (blob->data == NULL) {
-        LOG_ERROR("blob->data is NULL.");
+        LOG_ERROR("blob data is NULL.");
         return HKS_FAILURE;
     }
     return HKS_SUCCESS;
@@ -137,7 +137,7 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
         outData->size += outDataSeg.size;
         HksFree(outDataSeg.data);
         if ((!isFinished) && (inDataSeg.data + MAX_UPDATE_SIZE > lastPtr)) {
-            LOG_ERROR("isFinished is true and inDataSeg.data + MAX_UPDATE_SIZE > lastPtr")
+            LOG_ERROR("isFinished and inDataSeg data Error")
             return HKS_FAILURE;
         }
         inDataSeg.data += MAX_UPDATE_SIZE;
