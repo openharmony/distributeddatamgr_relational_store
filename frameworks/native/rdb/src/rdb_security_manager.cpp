@@ -27,12 +27,14 @@
 #include "hks_mem.h"
 #include "logger.h"
 #include "sqlite_database_utils.h"
+
+namespace OHOS {
+namespace NativeRdb {
+
 static const uint32_t TIMES = 4;
 static const uint32_t MAX_UPDATE_SIZE = 64;
 static const uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
 
-namespace OHOS {
-namespace NativeRdb {
 RdbPassword::RdbPassword() = default;
 
 RdbPassword::~RdbPassword()
@@ -90,16 +92,17 @@ int RdbPassword::Clear()
     return SetValue(nullptr, 0);
 }
 
-static int32_t MallocAndCheckBlobData(struct HksBlob *blob, const uint32_t blobSize)
+int32_t RdbSecurityManager::MallocAndCheckBlobData(struct HksBlob *blob, const uint32_t blobSize)
 {
     blob->data = (uint8_t *)malloc(blobSize);
     if (blob->data == NULL) {
+        LOG_ERROR("blob->data is NULL.");
         return HKS_FAILURE;
     }
     return HKS_SUCCESS;
 }
 
-static int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet,
+int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet,
     const struct HksBlob *inData, struct HksBlob *outData)
 {
     struct HksBlob inDataSeg = *inData;
@@ -121,6 +124,7 @@ static int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParam
             break;
         }
         if (MallocAndCheckBlobData(&outDataSeg, outDataSeg.size) != HKS_SUCCESS) {
+            LOG_ERROR("MallocAndCheckBlobData outDataSeg Failed.")
             return HKS_FAILURE;
         }
         if (HksUpdate(handle, paramSet, &inDataSeg, &outDataSeg) != HKS_SUCCESS) {
@@ -132,7 +136,8 @@ static int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParam
         cur += outDataSeg.size;
         outData->size += outDataSeg.size;
         HksFree(outDataSeg.data);
-        if ((isFinished == false) && (inDataSeg.data + MAX_UPDATE_SIZE > lastPtr)) {
+        if ((!isFinished) && (inDataSeg.data + MAX_UPDATE_SIZE > lastPtr)) {
+            LOG_ERROR("isFinished is true and inDataSeg.data + MAX_UPDATE_SIZE > lastPtr")
             return HKS_FAILURE;
         }
         inDataSeg.data += MAX_UPDATE_SIZE;
@@ -140,6 +145,7 @@ static int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParam
 
     struct HksBlob outDataFinish = { inDataSeg.size * TIMES, NULL };
     if (MallocAndCheckBlobData(&outDataFinish, outDataFinish.size) != HKS_SUCCESS) {
+        LOG_ERROR("MallocAndCheckBlobData outDataFinish Failed.");
         return HKS_FAILURE;
     }
     if (HksFinish(handle, paramSet, &inDataSeg, &outDataFinish) != HKS_SUCCESS) {
@@ -154,11 +160,10 @@ static int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParam
     return HKS_SUCCESS;
 }
 
-static int32_t HksEncryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
+int32_t RdbSecurityManager::HksEncryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
     const struct HksBlob *plainText, struct HksBlob *cipherText)
 {
-    
-    uint8_t handle[sizeof(uint64_t)] = {0};
+    uint8_t handle[sizeof(uint64_t)] = { 0 };
     struct HksBlob handleBlob = { sizeof(uint64_t), handle };
     int32_t result = HksInit(keyAlias, paramSet, &handleBlob, nullptr);
     if (result != HKS_SUCCESS) {
@@ -169,20 +174,17 @@ static int32_t HksEncryptThreeStage(const struct HksBlob *keyAlias, const struct
     return result;
 }
 
-
-static int32_t HksDecryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
+int32_t RdbSecurityManager::HksDecryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
     const struct HksBlob *cipherText, struct HksBlob *plainText)
 {
-    
-    uint8_t handle[sizeof(uint64_t)] = {0};
+    uint8_t handle[sizeof(uint64_t)] = { 0 };
     struct HksBlob handleBlob = { sizeof(uint64_t), handle };
     int32_t result = HksInit(keyAlias, paramSet, &handleBlob, nullptr);
     if (result != HKS_SUCCESS) {
+        LOG_ERROR("HksEncrypt failed with error %{public}d", result);
         return result;
     }
-
-    result = HksLoopUpdate(&handleBlob, paramSet, cipherText, plainText);
-    return result;
+    return HksLoopUpdate(&handleBlob, paramSet, cipherText, plainText);
 }
 
 RdbSecurityManager::RdbSecurityManager() = default;
@@ -384,12 +386,10 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
     }
 
     encryptedKeyBlob.size -= aeadLen;
-    uint32_t i = 0;
-    for (i = 0; i < params->paramsCnt; i++){
+    for (uint32_t i = 0; i < params->paramsCnt; i++) {
         if (params->params[i].tag == HKS_TAG_AE_TAG) {
             uint8_t *tempPtr = encryptedKeyBlob.data;
-            (void)memcpy_s(params->params[i].blob.data, aeadLen,
-                tempPtr + encryptedKeyBlob.size, aeadLen);
+            (void)memcpy_s(params->params[i].blob.data, aeadLen, tempPtr + encryptedKeyBlob.size, aeadLen);
             break;
         }
     }
