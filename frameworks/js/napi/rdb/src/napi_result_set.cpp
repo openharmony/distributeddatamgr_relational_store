@@ -327,6 +327,7 @@ napi_value ResultSetProxy::GoTo(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
 {
+    int result = -1;
     napi_value self = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
@@ -341,7 +342,7 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
         std::vector<std::string> columNames;
         int errCode = resultSetProxy->resultSet_->GetAllColumnNames(columNames);
         if (errCode != E_OK) {
-            return JSUtils::Convert2JSValue(env, -1);
+            return JSUtils::Convert2JSValue(env, result);
         }
         resultSetProxy->arrSize = columNames.size();
         napi_create_array_with_length(env, resultSetProxy->arrSize, &(resultSetProxy->jsArray_));
@@ -361,7 +362,14 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
         }
     }
 
-    return JSUtils::Convert2JSValue(env, -1);
+    std::string input;
+    input = JSUtils::Convert2String(env, args[0]);
+    int errCode = resultSetProxy->resultSet_->GetColumnIndex(input, result);
+    if (errCode != E_OK) {
+        LOG_ERROR("GetColumnIndex failed code:%{public}d, version:%{public}d", errCode, resultSetProxy->apiversion);
+    }
+
+    return JSUtils::Convert2JSValue(env, result);
 }
 
 napi_value ResultSetProxy::GetInt(napi_env env, napi_callback_info info)
