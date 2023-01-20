@@ -302,6 +302,7 @@ std::string SqliteSqlBuilder::PredicatesNormalize(const std::string &source, int
 {
     errorCode = 0;
     if (StringUtils::IsEmpty(source)) {
+        LOG_ERROR("Input param is empty.");
         return "";
     }
 
