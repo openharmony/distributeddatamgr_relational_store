@@ -78,6 +78,8 @@ private:
 
     std::string sharedBlockName_;
     int32_t sharedBlockAshmemFd_ = -1;
+    napi_value jsArray_;
+    int arrSize;
 };
 } // namespace RdbJsKit
 } // namespace OHOS
