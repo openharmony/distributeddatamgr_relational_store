@@ -101,14 +101,14 @@ private:
     int32_t HksDecryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
         const struct HksBlob *cipherText, struct HksBlob *plainText);
 
-    constexpr char const *SUFFIX_PUB_KEY = ".pub_key";
-    constexpr char const *SUFFIX_PUB_KEY_BAK = ".pub_key_bak";
-    constexpr const char *RDB_ROOT_KEY_ALIAS_PREFIX = "DistributedDataRdb";
-    constexpr const char *RDB_HKS_BLOB_TYPE_NONCE = "Z5s0Bo571Koq";
-    constexpr const char *RDB_HKS_BLOB_TYPE_AAD = "RdbClientAAD";
-    const uint32_t TIMES = 4;
-    const uint32_t MAX_UPDATE_SIZE = 64;
-    const uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
+    static constexpr char const *SUFFIX_PUB_KEY = ".pub_key";
+    static constexpr char const *SUFFIX_PUB_KEY_BAK = ".pub_key_bak";
+    static constexpr const char *RDB_ROOT_KEY_ALIAS_PREFIX = "DistributedDataRdb";
+    static constexpr const char *RDB_HKS_BLOB_TYPE_NONCE = "Z5s0Bo571Koq";
+    static constexpr const char *RDB_HKS_BLOB_TYPE_AAD = "RdbClientAAD";
+    static const uint32_t TIMES = 4;
+    static const uint32_t MAX_UPDATE_SIZE = 64;
+    static const uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
 
     std::string bundleName_;
     std::string dbDir_;
