@@ -91,24 +91,27 @@ int AbsSharedResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 int AbsSharedResultSet::GoToRow(int position)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    if (position == rowPos_) {
+        return E_OK;
+    }
+
+    if (position < 0) {
+        LOG_ERROR("Invalid position %{public}d!", position);
+        return E_ERROR;
+    }
+
     int rowCnt = 0;
     GetRowCount(rowCnt);
     if (rowCnt == 0) {
         LOG_WARN("No data!");
         return E_ERROR;
     }
-    if (position < 0) {
-        LOG_ERROR("Invalid position %{public}d!", position);
-        return E_ERROR;
-    }
+
     if (position >= rowCnt) {
         rowPos_ = rowCnt;
         return E_ERROR;
     }
 
-    if (position == rowPos_) {
-        return E_OK;
-    }
     if (rowPos_ <= INIT_POS) {
         rowPos_ = 0;
     }
@@ -132,12 +135,11 @@ int AbsSharedResultSet::GoToRow(int position)
         sharedBlock_->SetBlockPos(blockPos);
     }
 
-    if (!result) {
-        return E_ERROR;
-    } else {
+    if (result) {
         rowPos_ = position;
         return E_OK;
     }
+    return E_ERROR;
 }
 
 int AbsSharedResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &value)
