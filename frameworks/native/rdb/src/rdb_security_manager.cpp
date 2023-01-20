@@ -22,7 +22,6 @@
 
 #include "directory_ex.h"
 #include "file_ex.h"
-#include "hks_api.h"
 #include "hks_param.h"
 #include "hks_mem.h"
 #include "logger.h"
@@ -346,7 +345,7 @@ std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(const std::vector<uint8_
 
 bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vector<uint8_t> &key)
 {
-    static constexpr int const aeadLen = 16;
+    constexpr int const aeadLen = 16;
     uint8_t aead_[aeadLen] = { 0 };
     struct HksBlob blobAad = { uint32_t(aad_.size()), &(aad_[0]) };
     struct HksBlob blobNonce = { uint32_t(nonce_.size()), &(nonce_[0]) };
