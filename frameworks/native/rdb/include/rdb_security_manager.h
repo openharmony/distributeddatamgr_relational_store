@@ -30,8 +30,6 @@
 #include <vector>
 
 #include "hks_api.h"
-#include "hks_mem.h"
-#include "hks_param.h"
 #include "rdb_errno.h"
 
 
@@ -95,12 +93,12 @@ private:
     bool SaveSecretKeyToDisk(const std::string &path, RdbSecretKeyData &keyData);
     bool LoadSecretKeyFromDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
     bool IsKeyOutOfdate(const time_t &createTime) const;
-    static int32_t MallocAndCheckBlobData(struct HksBlob *blob, const uint32_t blobSize);
-    static int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet,
+    int32_t MallocAndCheckBlobData(struct HksBlob *blob, const uint32_t blobSize);
+    int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet,
         const struct HksBlob *inData, struct HksBlob *outData);
-    static int32_t HksEncryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
+    int32_t HksEncryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
         const struct HksBlob *plainText, struct HksBlob *cipherText);
-    static int32_t HksDecryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
+    int32_t HksDecryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
         const struct HksBlob *cipherText, struct HksBlob *plainText);
 
     static constexpr char const *SUFFIX_PUB_KEY = ".pub_key";
