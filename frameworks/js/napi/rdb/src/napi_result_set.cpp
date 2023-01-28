@@ -251,7 +251,6 @@ ResultSetProxy *ResultSetProxy::ParseFieldByName(napi_env env, napi_callback_inf
     ResultSetProxy *resultSetProxy = nullptr;
     RDB_CHECK_RETURN_NULLPTR(napi_unwrap(env, self, reinterpret_cast<void **>(&resultSetProxy)) == napi_ok);
     field = JSUtils::Convert2String(env, args[0]);
-
     return resultSetProxy;
 }
 
