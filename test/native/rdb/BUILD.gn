@@ -66,6 +66,7 @@ ohos_unittest("NativeRdbTest") {
   external_deps = [
     "c_utils:utils",
     "hilog_native:libhilog",
+    "huks:libhukssdk",
     "ipc:ipc_core",
     "relational_store:native_rdb",
   ]
