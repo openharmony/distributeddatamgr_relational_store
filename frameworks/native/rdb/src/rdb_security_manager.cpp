@@ -377,6 +377,15 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
         return false;
     }
 
+    encryptedKeyBlob.size -= 16;
+    for (uint32_t i = 0; i < params->paramsCnt; i++) {
+        if (params->params[i].tag == HKS_TAG_AE_TAG) {
+            uint8_t *tempPtr = encryptedKeyBlob.data;
+            (void)memcpy_s(params->params[i].blob.data, 16, tempPtr + encryptedKeyBlob.size, 16);
+            break;
+        }
+    }
+
     uint8_t plainBuf[256] = { 0 };
     struct HksBlob plainKeyBlob = { sizeof(plainBuf), plainBuf };
     ret = HksDecryptThreeStage(&rootKeyName, params, &encryptedKeyBlob, &plainKeyBlob);
