@@ -166,6 +166,7 @@ napi_value ResultSetProxy::InnerInitialize(napi_env env, napi_callback_info info
     auto *proxy = new ResultSetProxy();
     proxy->apiversion = version;
     auto finalize = [](napi_env env, void *data, void *hint) {
+
         ResultSetProxy *proxy = reinterpret_cast<ResultSetProxy *>(data);
         delete proxy;
     };
@@ -338,27 +339,13 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
     napi_get_cb_info(env, info, &argc, args, &self, nullptr);
     napi_unwrap(env, self, reinterpret_cast<void **>(&resultSetProxy)) ;
 
-    if (resultSetProxy->jsArray_ == nullptr) {
-        std::vector<std::string> columNames;
-        int errCode = resultSetProxy->resultSet_->GetAllColumnNames(columNames);
-        if (errCode != E_OK) {
-            return JSUtils::Convert2JSValue(env, result);
-        }
-        resultSetProxy->arrSize = columNames.size();
-        napi_create_array_with_length(env, resultSetProxy->arrSize, &(resultSetProxy->jsArray_));
-        int i=0;
-        for (std::string it : columNames) {
-            transform(it.begin(), it.end(), it.begin(), ::tolower);
-            napi_set_element(env, resultSetProxy->jsArray_, i, JSUtils::Convert2JSValue(env, it));
-            i++;
-        }
-    }
-
-    for (int i=0; i<resultSetProxy->arrSize; i++) {
-        napi_get_element(env, resultSetProxy->jsArray_, i, &tempStr);
-        napi_strict_equals(env, tempStr, args[0], &valueResult);
-        if (valueResult) {
-            return JSUtils::Convert2JSValue(env, i);
+    if (resultSetProxy->jsArray_ != nullptr) {
+        for (int i = 0; i < resultSetProxy->arrSize; i++) {
+            napi_get_element(env, resultSetProxy->jsArray_, i, &tempStr);
+            napi_strict_equals(env, tempStr, args[0], &valueResult);
+            if (valueResult) {
+                return JSUtils::Convert2JSValue(env, i);
+            }
         }
     }
 
@@ -367,7 +354,20 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
     int errCode = resultSetProxy->resultSet_->GetColumnIndex(input, result);
     if (errCode != E_OK) {
         LOG_ERROR("GetColumnIndex failed code:%{public}d, version:%{public}d", errCode, resultSetProxy->apiversion);
+        return JSUtils::Convert2JSValue(env, result);
     }
+
+    if (resultSetProxy->jsArray_ == nullptr) {
+        std::vector<std::string> columNames;
+        int errCode = resultSetProxy->resultSet_->GetAllColumnNames(columNames);
+        if (errCode != E_OK) {
+            return JSUtils::Convert2JSValue(env, result);
+        }
+        resultSetProxy->arrSize = columNames.size();
+        napi_create_array_with_length(env, resultSetProxy->arrSize, &(resultSetProxy->jsArray_));
+    }
+
+    napi_set_element(env, resultSetProxy->jsArray_, result, args[0]);
 
     return JSUtils::Convert2JSValue(env, result);
 }
