@@ -26,6 +26,7 @@ config("native_rdb_config") {
   } else {
     include_dirs = [
       "include",
+      "//base/security/huks/frameworks/huks_standard/main/common/include",
       "${relational_store_native_path}/rdb/include",
       "//utils/system/safwk/native/include",
     ]
@@ -149,6 +150,7 @@ ohos_shared_library("native_rdb") {
 
     public_deps = [
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
+      "//base/security/huks/frameworks/huks_standard/main/os_dependency:libhuks_os_dependency_standard_static",
       "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb:distributeddb",
     ]
 
