@@ -32,7 +32,7 @@ public:
     static constexpr int OK = 0;
     static constexpr int ERR = -1;
     static constexpr int32_t DEFAULT_BUF_SIZE = 1024;
-	// 1 is the margin
+    // 1 is the margin
     static constexpr int32_t BUF_CACHE_MARGIN = 4 + 1;
     static constexpr int32_t ASYNC_RST_SIZE = 2;
     static constexpr int32_t MAX_VALUE_LENGTH = 8 * 1024;
