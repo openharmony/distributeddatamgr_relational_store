@@ -166,7 +166,6 @@ napi_value ResultSetProxy::InnerInitialize(napi_env env, napi_callback_info info
     auto *proxy = new ResultSetProxy();
     proxy->apiversion = version;
     auto finalize = [](napi_env env, void *data, void *hint) {
-
         ResultSetProxy *proxy = reinterpret_cast<ResultSetProxy *>(data);
         delete proxy;
     };
