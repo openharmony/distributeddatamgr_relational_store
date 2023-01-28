@@ -459,8 +459,8 @@ AbsPredicates *AbsPredicates::GroupBy(std::vector<std::string> fields)
             return this;
         }
         int errorCode = 0;
-        std::string normalizedField = SqliteSqlBuilder::PredicatesNormalize(field, errorCode);
-        group += normalizedField + ",";
+        std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
+        group = group + normalizedField + ",";
     }
     size_t pos = group.find_last_of(",");
     if (pos != group.npos) {
