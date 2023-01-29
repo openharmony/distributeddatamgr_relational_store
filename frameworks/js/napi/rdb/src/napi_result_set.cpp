@@ -329,7 +329,6 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
     int errCode = resultSetProxy->resultSet_->GetColumnIndex(input, result);
     if (errCode != E_OK) {
         LOG_ERROR("GetColumnIndex failed code:%{public}d, version:%{public}d", errCode, resultSetProxy->apiversion);
-        return JSUtils::Convert2JSValue(env, result);
     }
     return JSUtils::Convert2JSValue(env, result);
 }
