@@ -37,7 +37,7 @@ public:
     void SetError(std::shared_ptr<Error> error);
     virtual ~BaseContext();
 
-    int apiversion = APIVERSION_V8;
+    int apiversion = APIVERSION_8;
     napi_env env_ = nullptr;
     void *boundObj = nullptr;
     int execStatus = ERR;

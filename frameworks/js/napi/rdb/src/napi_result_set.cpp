@@ -107,11 +107,11 @@ std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 napi_value ResultSetProxy::GetConstructor(napi_env env, int version)
 {
     napi_value cons;
-    if (version > APIVERSION_V8 && ctorRefV9_ != nullptr) {
+    if (version > APIVERSION_8 && ctorRefV9_ != nullptr) {
         NAPI_CALL(env, napi_get_reference_value(env, ctorRefV9_, &cons));
         return cons;
     }
-    if (version == APIVERSION_V8 && ctorRef_ != nullptr) {
+    if (version == APIVERSION_8 && ctorRef_ != nullptr) {
         NAPI_CALL(env, napi_get_reference_value(env, ctorRef_, &cons));
         return cons;
     }
@@ -146,7 +146,7 @@ napi_value ResultSetProxy::GetConstructor(napi_env env, int version)
         DECLARE_NAPI_GETTER("isAtLastRow", IsAtLastRow),
     };
 
-    if (version > APIVERSION_V8) {
+    if (version > APIVERSION_8) {
         NAPI_CALL(env, napi_define_class(env, "ResultSetV9", NAPI_AUTO_LENGTH, InitializeV9, nullptr,
                            sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
         NAPI_CALL(env, napi_create_reference(env, cons, 1, &ctorRefV9_));
@@ -180,7 +180,7 @@ napi_value ResultSetProxy::InnerInitialize(napi_env env, napi_callback_info info
 
 napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
 {
-    return InnerInitialize(env, info, APIVERSION_V8);
+    return InnerInitialize(env, info, APIVERSION_8);
 }
 
 napi_value ResultSetProxy::InitializeV9(napi_env env, napi_callback_info info)
