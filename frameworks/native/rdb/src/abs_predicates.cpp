@@ -49,7 +49,6 @@ bool AbsPredicates::IsNeedAnd() const
  */
 AbsPredicates *AbsPredicates::EqualTo(std::string field, std::string value)
 {
-    DISTRIBUTED_DATA_HITRACE("AbsPredicates::EqualTo");
     bool chekParaFlag = CheckParameter("equalTo", field, { value });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: EqualTo() fails because Invalid parameter.");
@@ -61,7 +60,7 @@ AbsPredicates *AbsPredicates::EqualTo(std::string field, std::string value)
         isNeedAnd = true;
     }
     int errorCode = 0;
-    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
+    std::string normalizedField = SqliteSqlBuilder::PredicatesNormalize(field, errorCode);
     whereClause += normalizedField + " = ? ";
     whereArgs.push_back(value);
     return this;

@@ -169,7 +169,6 @@ void RdbPredicatesProxy::Destructor(napi_env env, void *nativeObject, void *)
 RdbPredicatesProxy::~RdbPredicatesProxy()
 {
     napi_delete_reference(env_, wrapper_);
-    LOG_DEBUG("RdbPredicatesProxy destructor");
 }
 
 RdbPredicatesProxy::RdbPredicatesProxy(std::string &tableName)
@@ -255,7 +254,6 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValueArray(napi_env env, na
 RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValue(napi_env env, napi_callback_info info, napi_value &thiz,
     std::string &field, std::string &value, const std::string valueType)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -263,7 +261,6 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValue(napi_env env, napi_ca
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
     RDB_CHECK_RETURN_NULLPTR(argc == 2);
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_CHECK_RETURN_NULLPTR(!field.empty());
     value = JSUtils::ConvertAny2String(env, args[1]);
     return predicatesProxy;
 }
@@ -293,7 +290,6 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldLowAndHigh(
 
 napi_value RdbPredicatesProxy::EqualTo(napi_env env, napi_callback_info info)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     napi_value thiz = nullptr;
     std::string field = "";
     std::string value = "";

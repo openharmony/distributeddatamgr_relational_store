@@ -99,14 +99,12 @@ napi_value AsyncCall::SyncCall(napi_env env, AsyncCall::Context::ExecAction exec
 
 void AsyncCall::OnExecute(napi_env env, void *data)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     AsyncContext *context = reinterpret_cast<AsyncContext *>(data);
     context->ctx->execStatus = context->ctx->Exec();
 }
 
 void AsyncCall::SetBusinessError(napi_env env, napi_value *businessError, std::shared_ptr<Error> error, int apiversion)
 {
-    LOG_DEBUG("SetBusinessError enter");
     napi_create_object(env, businessError);
     // if error is not inner error
     if (error != nullptr && error->GetCode() != E_INNER_ERROR) {
@@ -121,7 +119,6 @@ void AsyncCall::SetBusinessError(napi_env env, napi_value *businessError, std::s
 
 void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     AsyncContext *context = reinterpret_cast<AsyncContext *>(data);
     napi_value output = nullptr;
     int outStatus = ERR;

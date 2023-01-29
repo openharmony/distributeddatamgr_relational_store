@@ -255,8 +255,7 @@ ResultSetProxy *ResultSetProxy::ParseInt32FieldByName(
     return resultSetProxy;
 }
 
-ResultSetProxy *ResultSetProxy::ParseFieldByName(
-    napi_env env, napi_callback_info info, std::string &field, const std::string name)
+ResultSetProxy *ResultSetProxy::ParseFieldByName(napi_env env, napi_callback_info info, std::string &field)
 {
     napi_value self = nullptr;
     size_t argc = 1;
@@ -264,10 +263,7 @@ ResultSetProxy *ResultSetProxy::ParseFieldByName(
     napi_get_cb_info(env, info, &argc, args, &self, nullptr);
     ResultSetProxy *resultSetProxy = nullptr;
     napi_unwrap(env, self, reinterpret_cast<void **>(&resultSetProxy));
-    RDB_NAPI_ASSERT(env, argc == 1, std::make_shared<ParamNumError>("1"));
-
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamTypeError>(name, "a non empty string."));
     return resultSetProxy;
 }
 
@@ -335,7 +331,7 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
 {
     std::string input;
     int32_t result = -1;
-    auto resultSetProxy = ParseFieldByName(env, info, input, "columnName");
+    auto resultSetProxy = ParseFieldByName(env, info, input);
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->GetColumnIndex(input, result);
     if (errCode != E_OK) {
