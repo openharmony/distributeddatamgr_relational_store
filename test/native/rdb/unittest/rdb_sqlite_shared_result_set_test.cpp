@@ -918,30 +918,29 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_017, TestSize.Le
 HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_018, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
-        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
-    EXPECT_NE(rstSet, nullptr);
+    std::unique_ptr<ResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
 
-    int colIndex = 0;
+    int columnIndex = 0;
     for (int i = 0; i < 100; i++) {
-        rstSet->GetColumnIndex("data1", colIndex);
-        EXPECT_EQ(colIndex, 1);
+        resultSet->GetColumnIndex("datax", columnIndex);
+        EXPECT_EQ(columnIndex, -1);
 
-        rstSet->GetColumnIndex("data2", colIndex);
-        EXPECT_EQ(colIndex, 2);
+        resultSet->GetColumnIndex("data4", columnIndex);
+        EXPECT_EQ(columnIndex, 4);
 
-        rstSet->GetColumnIndex("data3", colIndex);
-        EXPECT_EQ(colIndex, 3);
+        resultSet->GetColumnIndex("data3", columnIndex);
+        EXPECT_EQ(columnIndex, 3);
 
-        rstSet->GetColumnIndex("data4", colIndex);
-        EXPECT_EQ(colIndex, 4);
+        resultSet->GetColumnIndex("data2", columnIndex);
+        EXPECT_EQ(columnIndex, 2);
 
-        rstSet->GetColumnIndex("datax", colIndex);
-        EXPECT_EQ(colIndex, -1);
+        resultSet->GetColumnIndex("data1", columnIndex);
+        EXPECT_EQ(columnIndex, 1);
     }
 
-    rstSet->Close();
-    bool isClosedFlag = rstSet->IsClosed();
-    EXPECT_EQ(isClosedFlag, true);
+    resultSet->Close();
+    bool closeFlag = resultSet->IsClosed();
+    EXPECT_EQ(closeFlag, true);
 }
