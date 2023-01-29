@@ -101,7 +101,7 @@ void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
 
 napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
 {
-    return InnerNew(env, info, APIVERSION_V8);
+    return InnerNew(env, info, APIVERSION_8);
 }
 
 napi_value RdbPredicatesProxy::NewV9(napi_env env, napi_callback_info info)
@@ -173,7 +173,7 @@ napi_value RdbPredicatesProxy::NewInstance(napi_env env, std::shared_ptr<NativeR
         return instance;
     }
     proxy->predicates_ = std::move(value);
-    proxy->apiversion = APIVERSION_V8;
+    proxy->apiversion = APIVERSION_8;
     return instance;
 }
 
