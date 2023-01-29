@@ -88,7 +88,6 @@ int AbsResultSet::GetRowIndex(int &position) const
 
 int AbsResultSet::GoTo(int offset)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int ret = GoToRow(rowPos_ + offset);
     if (ret != E_OK) {
         LOG_WARN("AbsResultSet::GoTo return ret is wrong!");
@@ -99,7 +98,6 @@ int AbsResultSet::GoTo(int offset)
 
 int AbsResultSet::GoToFirstRow()
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int ret = GoToRow(0);
     if (ret != E_OK) {
         LOG_WARN("AbsResultSet::GoToFirstRow return ret is wrong!");
@@ -128,7 +126,6 @@ int AbsResultSet::GoToLastRow()
 
 int AbsResultSet::GoToNextRow()
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int ret = GoToRow(rowPos_ + 1);
     if (ret != E_OK) {
         LOG_WARN("AbsResultSet::GoToNextRow  return GoToRow::ret is wrong!");
@@ -203,19 +200,9 @@ int AbsResultSet::GetColumnCount(int &count)
 
 int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex)
 {
-    std::vector<std::string> columnNames;
-    if (columnMap_.empty()) {
-        int ret = GetAllColumnNames(columnNames);
-        if (ret != E_OK) {
-            LOG_ERROR("AbsResultSet::GetColumnIndex  return GetAllColumnNames::ret is wrong!");
-            return ret;
-        }
-    }
-
-    auto iter = columnMap_.find(columnName);
-    if (iter != columnMap_.end()) {
-        columnIndex = iter->second;
-        return E_OK;
+    auto it = columnMap_.find(columnName);
+    if (it != columnMap_.end()) {
+        return it->second;
     }
 
     auto periodIndex = columnName.rfind('.');
@@ -224,14 +211,23 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
         columnNameLower = columnNameLower.substr(periodIndex + 1);
     }
     transform(columnNameLower.begin(), columnNameLower.end(), columnNameLower.begin(), ::tolower);
-
-    iter = columnMap_.find(columnNameLower);
-    if (iter != columnMap_.end()) {
-        columnIndex = iter->second;
-        return E_OK;
+    std::vector<std::string> columnNames;
+    int ret = GetAllColumnNames(columnNames);
+    if (ret != E_OK) {
+        LOG_ERROR("AbsResultSet::GetColumnIndex  return GetAllColumnNames::ret is wrong!");
+        return ret;
     }
 
-    LOG_ERROR("AbsResultSet::GetColumnIndex columnname is wrong!");
+    columnIndex = 0;
+    for (const auto& name : columnNames) {
+        std::string lowerName = name;
+        transform(name.begin(), name.end(), lowerName.begin(), ::tolower);
+        if (lowerName == columnNameLower) {
+            columnMap_.insert(std::make_pair(columnName, columnIndex));
+            return E_OK;
+        }
+        columnIndex++;
+    }
     columnIndex = -1;
     return E_ERROR;
 }
