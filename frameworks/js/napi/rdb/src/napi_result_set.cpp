@@ -107,11 +107,11 @@ std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 napi_value ResultSetProxy::GetConstructor(napi_env env, int version)
 {
     napi_value cons;
-    if (version > APIVERSION_V8 && ctorRefV9_ != nullptr) {
+    if (version > APIVERSION_8 && ctorRefV9_ != nullptr) {
         NAPI_CALL(env, napi_get_reference_value(env, ctorRefV9_, &cons));
         return cons;
     }
-    if (version == APIVERSION_V8 && ctorRef_ != nullptr) {
+    if (version == APIVERSION_8 && ctorRef_ != nullptr) {
         NAPI_CALL(env, napi_get_reference_value(env, ctorRef_, &cons));
         return cons;
     }
@@ -146,7 +146,7 @@ napi_value ResultSetProxy::GetConstructor(napi_env env, int version)
         DECLARE_NAPI_GETTER("isAtLastRow", IsAtLastRow),
     };
 
-    if (version > APIVERSION_V8) {
+    if (version > APIVERSION_8) {
         NAPI_CALL(env, napi_define_class(env, "ResultSetV9", NAPI_AUTO_LENGTH, InitializeV9, nullptr,
                            sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
         NAPI_CALL(env, napi_create_reference(env, cons, 1, &ctorRefV9_));
@@ -180,7 +180,7 @@ napi_value ResultSetProxy::InnerInitialize(napi_env env, napi_callback_info info
 
 napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
 {
-    return InnerInitialize(env, info, APIVERSION_V8);
+    return InnerInitialize(env, info, APIVERSION_8);
 }
 
 napi_value ResultSetProxy::InitializeV9(napi_env env, napi_callback_info info)
@@ -242,20 +242,15 @@ ResultSetProxy *ResultSetProxy::ParseInt32FieldByName(
     return resultSetProxy;
 }
 
-ResultSetProxy *ResultSetProxy::ParseFieldByName(
-    napi_env env, napi_callback_info info, std::string &field, const std::string name)
+ResultSetProxy *ResultSetProxy::ParseFieldByName(napi_env env, napi_callback_info info, std::string &field)
 {
     napi_value self = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &self, nullptr);
     ResultSetProxy *resultSetProxy = nullptr;
-    napi_unwrap(env, self, reinterpret_cast<void **>(&resultSetProxy));
-    int version = resultSetProxy->apiversion;
-    RDB_NAPI_ASSERT_FROMV9(env, argc == 1, std::make_shared<ParamNumError>("1"), version);
-
+    RDB_CHECK_RETURN_NULLPTR(napi_unwrap(env, self, reinterpret_cast<void **>(&resultSetProxy)) == napi_ok);
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_NAPI_ASSERT_FROMV9(env, !field.empty(), std::make_shared<ParamTypeError>(name, "a non empty string."), version);
     return resultSetProxy;
 }
 
@@ -299,7 +294,6 @@ napi_value ResultSetProxy::GetLong(napi_env env, napi_callback_info info)
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->GetLong(columnIndex, result);
     int version = resultSetProxy->apiversion;
-    LOG_INFO("GetLong code:%{public}d, version:%{public}d", errCode, version);
     RDB_NAPI_ASSERT_FROMV9(env, errCode == E_OK, std::make_shared<ResultGetError>(), version);
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -312,7 +306,6 @@ napi_value ResultSetProxy::GetColumnType(napi_env env, napi_callback_info info)
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->GetColumnType(columnIndex, columnType);
     int version = resultSetProxy->apiversion;
-    LOG_INFO("GetColumnType code:%{public}d, version:%{public}d", errCode, version);
     RDB_NAPI_ASSERT_FROMV9(env, errCode == E_OK, std::make_shared<ResultGetError>(), version);
     return JSUtils::Convert2JSValue(env, int32_t(columnType));
 }
@@ -331,7 +324,7 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
 {
     std::string input;
     int32_t result = -1;
-    auto resultSetProxy = ParseFieldByName(env, info, input, "columnName");
+    auto resultSetProxy = ParseFieldByName(env, info, input);
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->GetColumnIndex(input, result);
     if (errCode != E_OK) {
@@ -348,7 +341,6 @@ napi_value ResultSetProxy::GetInt(napi_env env, napi_callback_info info)
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->GetInt(columnIndex, result);
     int version = resultSetProxy->apiversion;
-    LOG_INFO("GetInt code:%{public}d, version:%{public}d", errCode, version);
     RDB_NAPI_ASSERT_FROMV9(env, errCode == E_OK, std::make_shared<ResultGetError>(), version);
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -489,7 +481,6 @@ napi_value ResultSetProxy::GetBlob(napi_env env, napi_callback_info info)
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->GetBlob(columnIndex, result);
     int version = resultSetProxy->apiversion;
-    LOG_INFO("GetBlob code:%{public}d, version:%{public}d", errCode, version);
     RDB_NAPI_ASSERT_FROMV9(env, errCode == E_OK, std::make_shared<ResultGetError>(), version);
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -503,7 +494,6 @@ napi_value ResultSetProxy::GetString(napi_env env, napi_callback_info info)
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->GetString(columnIndex, result);
     int version = resultSetProxy->apiversion;
-    LOG_INFO("GetString code:%{public}d, version:%{public}d", errCode, version);
     RDB_NAPI_ASSERT_FROMV9(env, errCode == E_OK, std::make_shared<ResultGetError>(), version);
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -516,7 +506,6 @@ napi_value ResultSetProxy::GetDouble(napi_env env, napi_callback_info info)
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->GetDouble(columnIndex, result);
     int version = resultSetProxy->apiversion;
-    LOG_INFO("GetDouble code:%{public}d, version:%{public}d", errCode, version);
     RDB_NAPI_ASSERT_FROMV9(env, errCode == E_OK, std::make_shared<ResultGetError>(), version);
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -529,7 +518,6 @@ napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
     int errCode = resultSetProxy->resultSet_->IsColumnNull(columnIndex, result);
     int version = resultSetProxy->apiversion;
-    LOG_INFO("IsColumnNull code:%{public}d, version:%{public}d", errCode, version);
     RDB_NAPI_ASSERT_FROMV9(env, errCode == E_OK, std::make_shared<ResultGetError>(), version);
     napi_value output;
     napi_get_boolean(env, result, &output);

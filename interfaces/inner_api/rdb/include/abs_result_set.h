@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "result_set.h"
 
@@ -55,6 +56,7 @@ public:
     int Close() override;
 
 protected:
+    std::map<std::string , int> columnMap_;
     // The default position of the result set
     static const int INIT_POS = -1;
     /*

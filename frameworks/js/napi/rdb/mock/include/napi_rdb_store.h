@@ -31,15 +31,15 @@ class RdbStoreProxy {
 public:
     static void Init(napi_env env, napi_value exports);
     static napi_value NewInstance(
-        napi_env env, std::shared_ptr<OHOS::NativeRdb::RdbStore> value, int version = AppDataMgrJsKit::APIVERSION_V8);
+        napi_env env, std::shared_ptr<OHOS::NativeRdb::RdbStore> value, int version = AppDataMgrJsKit::APIVERSION_8);
     static RdbStoreProxy *GetNativeInstance(napi_env env, napi_value self);
     RdbStoreProxy();
     ~RdbStoreProxy();
-    int apiversion = AppDataMgrJsKit::APIVERSION_V8;
+    int apiversion = AppDataMgrJsKit::APIVERSION_8;
 
 private:
     static napi_value InnerInitialize(
-        napi_env env, napi_callback_info info, int version = AppDataMgrJsKit::APIVERSION_V8);
+        napi_env env, napi_callback_info info, int version = AppDataMgrJsKit::APIVERSION_8);
     static napi_value Initialize(napi_env env, napi_callback_info info);
     static napi_value InitializeV9(napi_env env, napi_callback_info info);
     static napi_value Delete(napi_env env, napi_callback_info info);

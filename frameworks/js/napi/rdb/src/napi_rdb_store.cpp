@@ -222,7 +222,7 @@ napi_value RdbStoreProxy::InnerInitialize(napi_env env, napi_callback_info info,
 
 napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
 {
-    return InnerInitialize(env, info, APIVERSION_V8);
+    return InnerInitialize(env, info, APIVERSION_8);
 }
 
 napi_value RdbStoreProxy::InitializeV9(napi_env env, napi_callback_info info)
@@ -238,7 +238,7 @@ napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<OHOS::Native
     }
     napi_value cons;
     napi_status status;
-    if (version > APIVERSION_V8) {
+    if (version > APIVERSION_8) {
         status = napi_get_reference_value(env, constructorV9_, &cons);
     } else {
         status = napi_get_reference_value(env, constructor_, &cons);
