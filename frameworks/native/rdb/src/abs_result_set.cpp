@@ -200,7 +200,8 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
 {
     auto it = columnMap_.find(columnName);
     if (it != columnMap_.end()) {
-        return it->second;
+        columnIndex = it->second;
+        return E_OK;
     }
 
     auto periodIndex = columnName.rfind('.');
