@@ -220,11 +220,10 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
     }
 
     columnIndex = 0;
-    for (const auto& name : columnNames) {
-        std::string lowerName = name;
-        transform(name.begin(), name.end(), lowerName.begin(), ::tolower);
-        if (lowerName == columnNameLower) {
-            columnMap_.insert(std::make_pair(columnName, columnIndex));
+    for (auto name : columnNames) {
+        transform(name.begin(), name.end(), name.begin(), ::tolower);
+        if (name == columnNameLower) {
+            columnMap_.insert(std::make_pair(name, columnIndex));
             return E_OK;
         }
         columnIndex++;
