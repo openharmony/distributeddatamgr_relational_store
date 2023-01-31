@@ -16,12 +16,8 @@
 #ifndef NATIVE_RDB_RDB_COMMON_H
 #define NATIVE_RDB_RDB_COMMON_H
 
-namespace OHOS::NativeRdb {
-enum class OpenStatus {
-    ON_CREATE = 0,
-    ON_OPEN,
-};
-
+namespace OHOS {
+namespace NativeRdb {
 enum class ConflictResolution {
     ON_CONFLICT_NONE = 0,
     ON_CONFLICT_ROLLBACK,
@@ -30,6 +26,7 @@ enum class ConflictResolution {
     ON_CONFLICT_IGNORE,
     ON_CONFLICT_REPLACE,
 };
+}
 }
 
 #endif // NATIVE_RDB_RDB_COMMON_H

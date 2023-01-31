@@ -213,8 +213,6 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_00101, TestSize.Level1)
     int ret = store->GetVersion(currentVersion);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(currentVersion, 1);
-
-    EXPECT_EQ(store->GetStatus(), 0);
     sleep(1);
 }
 
@@ -236,8 +234,6 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_00102, TestSize.Level1)
     int ret = store->GetVersion(currentVersion);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(currentVersion, 0);
-
-    EXPECT_EQ(store->GetStatus(), 0);
     sleep(1);
 }
 
@@ -402,8 +398,6 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_00103, TestSize.Level1)
     int ret = store->GetVersion(currentVersion);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(currentVersion, 2);
-
-    EXPECT_EQ(store->GetStatus(), 1);
     sleep(1);
 }
 
@@ -425,8 +419,6 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_00104, TestSize.Level1)
     int ret = store->GetVersion(currentVersion);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(currentVersion, 0);
-
-    EXPECT_EQ(store->GetStatus(), 1);
     sleep(1);
 }
 

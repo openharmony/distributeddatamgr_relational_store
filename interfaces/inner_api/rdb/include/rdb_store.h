@@ -86,8 +86,6 @@ public:
     virtual int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) = 0;
     virtual int Delete(int &deletedRows, const AbsRdbPredicates &predicates) = 0;
 
-    virtual int GetStatus() = 0;
-    virtual void SetStatus(int status) = 0;
     virtual int GetVersion(int &version) = 0;
     virtual int SetVersion(int version) = 0;
     virtual int BeginTransaction() = 0;
