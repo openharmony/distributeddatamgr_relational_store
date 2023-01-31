@@ -90,7 +90,6 @@ int AbsSharedResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 
 int AbsSharedResultSet::GoToRow(int position)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (position == rowPos_) {
         return E_OK;
     }
@@ -136,12 +135,12 @@ int AbsSharedResultSet::GoToRow(int position)
         sharedBlock_->SetBlockPos(blockPos);
     }
 
-    if (!result) {
-        return E_ERROR;
-    } else {
+    if (result) {
         rowPos_ = position;
         return E_OK;
     }
+
+    return E_ERROR;
 }
 
 int AbsSharedResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &value)
