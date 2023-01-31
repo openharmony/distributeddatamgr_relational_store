@@ -180,6 +180,7 @@ void RdbUtils::OrderByDesc(const DataShare::OperationItem &item, RdbPredicates &
 void RdbUtils::Limit(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
     predicates.Limit(item.singleParams[0].operator int());
+    predicates.Offset(item.singleParams[1].operator int());
 }
 
 void RdbUtils::Offset(const DataShare::OperationItem &item, RdbPredicates &predicates)
