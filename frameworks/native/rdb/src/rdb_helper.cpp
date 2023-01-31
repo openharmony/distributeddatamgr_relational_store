@@ -34,7 +34,6 @@ std::map<std::string, std::shared_ptr<RdbStore>> RdbHelper::storeCache_;
 std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     SqliteGlobalConfig::InitSqliteGlobalConfig();
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
@@ -81,7 +80,6 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
 int RdbHelper::ProcessOpenCallback(
     RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int currentVersion;
     int errCode = rdbStore.GetVersion(currentVersion);
     if (errCode != E_OK) {

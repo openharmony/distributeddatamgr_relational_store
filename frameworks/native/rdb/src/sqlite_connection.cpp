@@ -232,7 +232,6 @@ int SqliteConnection::SetPersistWal()
         LOG_ERROR("failed");
         return E_SET_PERSIST_WAL;
     }
-    LOG_INFO("success");
     return E_OK;
 }
 
@@ -243,7 +242,6 @@ int SqliteConnection::SetBusyTimeout(int timeout)
         LOG_ERROR("set buys timeout failed, errCode=%{public}d", errCode);
         return errCode;
     }
-    LOG_INFO("success");
     return E_OK;
 }
 

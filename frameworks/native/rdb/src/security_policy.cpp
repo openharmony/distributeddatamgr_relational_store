@@ -24,7 +24,6 @@ namespace NativeRdb {
 int SecurityPolicy::SetFileSecurityLevel(const std::string &filePath, const std::string &securityLevel)
 {
     bool result = DistributedFS::ModuleSecurityLabel::SecurityLabel::SetSecurityLabel(filePath, securityLevel);
-    LOG_INFO("Set database securityLabel:%{public}s, result:%{public}d.", securityLevel.c_str(), result);
     return result ? E_OK : E_ERROR;
 }
 
@@ -54,7 +53,6 @@ int SecurityPolicy::SetSecurityLabel(const RdbStoreConfig &config)
     if (config.GetStorageMode() != StorageMode::MODE_MEMORY && config.GetSecurityLevel() != SecurityLevel::LAST) {
         std::string currentLevel = GetFileSecurityLevel(config.GetPath());
         std::string toSetLevel = GetSecurityLevelValue(config.GetSecurityLevel());
-        LOG_INFO("Security level current is %{public}s to %{public}s.", currentLevel.c_str(), toSetLevel.c_str());
         if (currentLevel.empty()) {
             return SetFileSecurityLevel(config.GetPath(), toSetLevel);
         }
