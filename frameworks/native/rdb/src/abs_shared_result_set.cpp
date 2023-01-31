@@ -202,7 +202,6 @@ int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
         const char *tempValue = sharedBlock_->GetCellUnitValueString(cellUnit, &sizeIncludingNull);
         if ((sizeIncludingNull <= 1) || (tempValue == nullptr)) {
             value = "";
-            LOG_ERROR("AbsSharedResultSet::GetString string is null");
             return E_OK;
         }
         value = tempValue;
