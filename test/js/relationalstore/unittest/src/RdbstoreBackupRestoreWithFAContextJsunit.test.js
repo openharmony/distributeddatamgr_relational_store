@@ -107,6 +107,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
 
         afterEach(async function () {
             console.info(TAG + 'afterEach')
+            rdbStore = null
             await data_relationalStore.deleteRdbStore(context, STORE_CONFIG.name)
             await data_relationalStore.deleteRdbStore(context, DATABASE_BACKUP_NAME)
         })

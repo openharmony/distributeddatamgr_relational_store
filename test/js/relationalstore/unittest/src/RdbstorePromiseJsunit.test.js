@@ -81,6 +81,7 @@ describe('rdbStorePromiseTest', function () {
                     expect(2).assertEqual(blobType[1]);
                     expect(3).assertEqual(blobType[2]);
                     expect(false).assertEqual(resultSet.goToNextRow())
+                    resultSet.close();
                     rdbStore.delete(predicates).then((rows) => {
                         console.log("Delete rows: " + rows)
                         expect(1).assertEqual(rows)
@@ -134,6 +135,7 @@ describe('rdbStorePromiseTest', function () {
         try {
             data_relationalStore.getRdbStore(context, STORE_CONFIG).then((rdbStore) => {
                 console.log("Get RdbStore successfully.")
+                rdbStore = null
                 done()
             }).catch((err) => {
                 console.info("Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
@@ -158,6 +160,7 @@ describe('rdbStorePromiseTest', function () {
         try {
             data_relationalStore.deleteRdbStore(context, 123454345).then((rdbStore) => {
                 console.log("Delete RdbStore successfully.")
+                rdbStore = null
                 expect(false).assertTrue()
             }).catch((err) => {
                 console.info("Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
