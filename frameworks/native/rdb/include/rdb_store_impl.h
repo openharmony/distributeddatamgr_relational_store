@@ -140,7 +140,6 @@ private:
     int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
     int FreeTransaction(SqliteConnection *connection, const std::string &sql);
     std::string GetBatchInsertSql(std::map<std::string, ValueObject> &valuesMap, const std::string &table);
-
 };
 } // namespace OHOS::NativeRdb
 #endif
