@@ -114,6 +114,7 @@ describe('rdbStoreInsertTest', function () {
             let querySqlPromise = rdbStore.querySql("SELECT * FROM test")
             querySqlPromise.then(async (resultSet) => {
                 await expect(0).assertEqual(resultSet.rowCount)
+                resultSet.close();
             }).catch((err) => {
                 expect(null).assertFail();
             })
@@ -192,6 +193,7 @@ describe('rdbStoreInsertTest', function () {
             let querySqlPromise = rdbStore.querySql("SELECT * FROM test")
             querySqlPromise.then(async (resultSet) => {
                 await expect(1).assertEqual(resultSet.rowCount)
+                resultSet.close();
             }).catch((err) => {
                 expect(null).assertFail();
             })
@@ -264,6 +266,7 @@ describe('rdbStoreInsertTest', function () {
             let querySqlPromise = rdbStore.query(predicates)
             querySqlPromise.then(async (resultSet) => {
                 await expect(2).assertEqual(resultSet.rowCount)
+                resultSet.close()
             }).catch((err) => {
                 expect(null).assertFail();
             })
@@ -292,6 +295,7 @@ describe('rdbStoreInsertTest', function () {
                 expect(28).assertEqual(age)
                 expect(100.5).assertEqual(salary)
                 expect(3).assertEqual(blobType[0])
+                resultSet.close();
             }).catch((err) => {
                 expect(null).assertFail();
             })

@@ -111,6 +111,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (e) {
             console.log("insert1 error " + e);
         }
+        resultSet.close()
         resultSet = null
         done()
         console.log(TAG + "************* testRdbStoreInsert0001 end *************");
@@ -207,6 +208,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (e) {
             console.log("insert error " + e);
         }
+        resultSet.close()
         resultSet = null
         done()
         console.log(TAG + "************* testRdbStoreInsert0004 end   *************");
@@ -240,6 +242,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (e) {
             console.log("insert error " + e);
         }
+        resultSet.close()
         resultSet = null
         done()
         console.log(TAG + "************* testRdbStoreInsert0005 end   *************");
@@ -273,6 +276,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (e) {
             console.log("insert error " + e);
         }
+        resultSet.close()
         resultSet = null
         done()
         console.log(TAG + "************* testRdbStoreInsert0006 end   *************");
@@ -414,6 +418,7 @@ describe('rdbStoreInsertTest', function () {
             console.log("insert error" + err);
         }
 
+        resultSet.close()
         resultSet = null
         done()
         console.log(TAG + "************* InsertWithConflictResolution_0003 end  *************");
@@ -449,6 +454,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (err) {
             console.log("insert error" + err);
         }
+        resultSet.close()
 
         {
             var u8 = new Uint8Array([4, 5, 6])
@@ -483,6 +489,7 @@ describe('rdbStoreInsertTest', function () {
             console.log("resultSet query error " + err);
         }
 
+        resultSet.close()
         resultSet = null
         done()
         console.log(TAG + "************* InsertWithConflictResolution_0004 end   *************");

@@ -97,6 +97,7 @@ describe('rdbStoreCallBackTest', async function () {
                     done()
                     console.log(TAG + "************* testRdbStoreCallBackTest0001 end *************")
                 });
+                resultSet.close()
             })
         } catch(e) {
             console.log("catch err: Get RdbStore failed, err: code=" + e.code + " message=" + e.message)

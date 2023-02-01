@@ -108,6 +108,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (e) {
             console.log("insert1 error " + e);
         }
+        resultSet.close();
         resultSet = null
         done()
         console.log(TAG + "************* testRdbStoreInsert0001 end *************");
@@ -204,6 +205,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (e) {
             console.log("insert error " + e);
         }
+        resultSet.close();
         resultSet = null
         done()
         console.log(TAG + "************* testRdbStoreInsert0004 end   *************");
@@ -237,6 +239,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (e) {
             console.log("insert error " + e);
         }
+        resultSet.close();
         resultSet = null
         done()
         console.log(TAG + "************* testRdbStoreInsert0005 end   *************");
@@ -270,6 +273,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (e) {
             console.log("insert error " + e);
         }
+        resultSet.close();
         resultSet = null
         done()
         console.log(TAG + "************* testRdbStoreInsert0006 end   *************");
@@ -298,6 +302,7 @@ describe('rdbStoreInsertTest', function () {
         await rdbStore.batchInsert("test", valueBucketArray);
         let resultSet = await rdbStore.querySql("SELECT * FROM test");
         let count = resultSet.rowCount;
+        resultSet.close();
         expect(100).assertEqual(count);
         console.log(TAG + "************* testRdbStorebatchInsert001 end *************");
     })

@@ -178,6 +178,7 @@ describe('rdbStoreDeleteTest', function () {
             predicates.equalTo("age", 28)
             let resultSet = await rdbStore.query(predicates)
             expect(1).assertEqual(resultSet.rowCount)
+            resultSet.close()
         }
         {
             let predicates = await new dataRdb.RdbPredicates("test")
@@ -196,6 +197,7 @@ describe('rdbStoreDeleteTest', function () {
             predicates.equalTo("age", 28)
             let resultSet = await rdbStore.query(predicates)
             expect(0).assertEqual(resultSet.rowCount)
+            resultSet.close()
         }
         done()
         console.log(TAG + "************* testRdbStoreDelete0003 end *************");

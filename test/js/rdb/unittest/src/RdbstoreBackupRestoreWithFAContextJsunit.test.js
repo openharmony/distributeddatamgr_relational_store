@@ -176,6 +176,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
             } catch (err) {
                 expect(false).assertTrue()
             }
+            resultSet.close();
             resultSet = null
             rdbStore = null
             done()
