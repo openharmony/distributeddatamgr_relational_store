@@ -31,7 +31,6 @@
 
 namespace OHOS {
 namespace NativeRdb {
-
 class SqliteConnectionPool {
 public:
     static SqliteConnectionPool *Create(const RdbStoreConfig &storeConfig, int &errCode);
@@ -78,7 +77,6 @@ private:
     std::condition_variable transCondition;
     std::mutex transMutex;
     bool transactionUsed;
-
 };
 
 } // namespace NativeRdb

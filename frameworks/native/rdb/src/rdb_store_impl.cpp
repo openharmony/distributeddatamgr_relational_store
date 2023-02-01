@@ -140,7 +140,6 @@ int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const Valu
 int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
     const std::vector<ValuesBucket> &initialBatchValues)
 {
-    LOG_ERROR("Begin BatchInsert");
     std::string sql;
     std::map<std::string, ValueObject> valuesMap;
     std::vector<std::vector<ValueObject>> vecVectorObj;
@@ -177,7 +176,6 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
     for (std::vector<ValueObject> &tempVector : vecVectorObj) {
         outInsertNum++;
         errCode = connection->ExecuteSql(sql,tempVector);
-        LOG_ERROR("BatchInsert with error code %{public}d.", errCode);
         if (errCode != E_OK) {
             LOG_ERROR("BatchInsert with error code %{public}d.", errCode);
             outInsertNum = -1;
@@ -714,7 +712,6 @@ int RdbStoreImpl::SetVersion(int version)
     std::string sql = std::string(GlobalExpr::PRAGMA_VERSION) + " = " + std::to_string(version);
     return ExecuteSql(sql, std::vector<ValueObject>());
 }
-
 /**
  * Begins a transaction in EXCLUSIVE mode.
  */
