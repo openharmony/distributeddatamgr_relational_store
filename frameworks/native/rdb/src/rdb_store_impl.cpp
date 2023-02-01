@@ -140,22 +140,69 @@ int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const Valu
 int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
     const std::vector<ValuesBucket> &initialBatchValues)
 {
-    int errCode = BeginTransaction();
+    LOG_ERROR("Begin BatchInsert");
+    std::string sql;
+    std::map<std::string, ValueObject> valuesMap;
+    std::vector<std::vector<ValueObject>> vecVectorObj;
+
+    for (auto iter = initialBatchValues.begin(); iter != initialBatchValues.end(); iter++) {
+        std::vector<ValueObject> bindArgs;
+        (*iter).GetAll(valuesMap);
+        // prepare batch values : vec<value>
+        for (auto valueIter = valuesMap.begin(); valueIter != valuesMap.end(); valueIter++) {
+            bindArgs.push_back(valueIter->second);
+        }
+        // prepare batch sql
+        if (iter == initialBatchValues.begin()) {
+            sql = GetBatchInsertSql(valuesMap, table);
+        }
+        // put vec<value> into vec<vect>
+        vecVectorObj.push_back(move(bindArgs));
+        valuesMap.clear();
+    }
+    // prepare BeginTransaction
+    connectionPool->AcquireTransaction();
+    SqliteConnection *connection = connectionPool->AcquireConnection(false);
+    BaseTransaction transaction(0);
+    connection->SetInTransaction(true);
+    int errCode = connection->ExecuteSql(transaction.GetTransactionStr());
     if (errCode != E_OK) {
-        LOG_ERROR("Begin transaction with error code %{public}d.", errCode);
+        LOG_ERROR("BeginTransaction with error code %{public}d.", errCode);
+        connection->SetInTransaction(false);
+        connectionPool->ReleaseConnection(connection);
+        connectionPool->ReleaseTransaction();
         return errCode;
     }
-    int64_t outRowId = 0;
-    for (auto const &value : initialBatchValues) {
-        ++outInsertNum;
-        if (RdbStoreImpl::Insert(outRowId, table, value) != E_OK || outRowId <= 0) {
-            LOG_WARN("Roll back in batch insert.");
+    // batch insert the values
+    for (std::vector<ValueObject> &tempVector : vecVectorObj) {
+        outInsertNum++;
+        errCode = connection->ExecuteSql(sql,tempVector);
+        LOG_ERROR("BatchInsert with error code %{public}d.", errCode);
+        if (errCode != E_OK) {
+            LOG_ERROR("BatchInsert with error code %{public}d.", errCode);
             outInsertNum = -1;
-            return RollBack();
+            return FreeTransaction(connection, transaction.GetRollbackStr());
         }
+
     }
 
-    return Commit();
+    return FreeTransaction(connection, transaction.GetCommitStr());
+}
+
+std::string RdbStoreImpl::GetBatchInsertSql(std::map<std::string, ValueObject> &valuesMap, const std::string &table)
+{
+    std::stringstream sql;
+    sql << "INSERT" << " INTO " << table << '(';
+    for (auto valueIter = valuesMap.begin(); valueIter != valuesMap.end(); valueIter++) {
+        sql << ((valueIter == valuesMap.begin()) ? "" : ",");
+        sql << valueIter->first;               // columnName
+    }
+    sql << ") VALUES (";
+    for (size_t i = 0; i < valuesMap.size(); i++) {
+        sql << ((i == 0) ? "?" : ",?");
+    }
+    sql << ')';
+    return sql.str();
 }
 
 int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)
@@ -674,9 +721,10 @@ int RdbStoreImpl::SetVersion(int version)
 int RdbStoreImpl::BeginTransaction()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    BaseTransaction transaction(connectionPool->getTransactionStack().size());
+    connectionPool->AcquireTransaction();
+    BaseTransaction transaction(0);
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
-    int errCode = connection->ExecuteSql(transaction.getTransactionStr());
+    int errCode = connection->ExecuteSql(transaction.GetTransactionStr());
     connectionPool->ReleaseConnection(connection);
     if (errCode != E_OK) {
         LOG_DEBUG("storeSession BeginTransaction Failed");
@@ -684,7 +732,6 @@ int RdbStoreImpl::BeginTransaction()
     }
 
     connection->SetInTransaction(true);
-    connectionPool->getTransactionStack().push(transaction);
     return E_OK;
 }
 
@@ -694,26 +741,12 @@ int RdbStoreImpl::BeginTransaction()
 int RdbStoreImpl::RollBack()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (connectionPool->getTransactionStack().empty()) {
-        return E_NO_TRANSACTION_IN_SESSION;
-    }
-    BaseTransaction transaction = connectionPool->getTransactionStack().top();
-    connectionPool->getTransactionStack().pop();
-    if (transaction.getType() != TransType::ROLLBACK_SELF
-        && !connectionPool->getTransactionStack().empty()) {
-        connectionPool->getTransactionStack().top().setChildFailure(true);
-    }
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
-    int errCode = connection->ExecuteSql(transaction.getRollbackStr());
-    connectionPool->ReleaseConnection(connection);
-    if (connectionPool->getTransactionStack().empty()) {
-        connection->SetInTransaction(false);
+    if (!connection->IsInTransaction()) {
+        return E_OK;
     }
-    if (errCode != E_OK) {
-        LOG_ERROR("RollBack Failed");
-    }
-
-    return E_OK;
+    BaseTransaction transaction(0);
+    return FreeTransaction(connection, transaction.GetRollbackStr());
 }
 
 /**
@@ -723,25 +756,25 @@ int RdbStoreImpl::Commit()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("Enter Commit.");
-    if (connectionPool->getTransactionStack().empty()) {
-        return E_OK;
-    }
-    BaseTransaction transaction = connectionPool->getTransactionStack().top();
-    std::string sqlStr = transaction.getCommitStr();
-    if (sqlStr.size() <= 1) {
-        connectionPool->getTransactionStack().pop();
-        return E_OK;
-    }
-
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
-    int errCode = connection->ExecuteSql(sqlStr);
-    connectionPool->ReleaseConnection(connection);
-    connection->SetInTransaction(false);
-    connectionPool->getTransactionStack().pop();
-    if (errCode != E_OK) {
-        LOG_ERROR("Commit Failed.");
+    if (!connection->IsInTransaction()) {
+        return E_OK;
     }
-    return E_OK;
+    BaseTransaction transaction(0);
+    return FreeTransaction(connection, transaction.GetCommitStr());
+}
+
+int RdbStoreImpl::FreeTransaction(SqliteConnection *connection, const std::string& sql)
+{
+    int errCode = connection->ExecuteSql(sql);
+    if (errCode == E_OK) {
+        connection->SetInTransaction(false);
+        connectionPool->ReleaseTransaction();
+    } else {
+        LOG_ERROR("%{public}s with error code %{public}d.", sql.c_str(), errCode);
+    }
+    connectionPool->ReleaseConnection(connection);
+    return errCode;
 }
 
 bool RdbStoreImpl::IsInTransaction()
