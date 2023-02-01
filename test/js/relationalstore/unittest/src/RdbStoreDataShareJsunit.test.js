@@ -98,6 +98,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         } catch (err) {
             expect(false).assertTrue()
         }
+        resultSet.close()
         resultSet = null
 
         done()
@@ -161,6 +162,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
 
             console.log(TAG + "dataShare update: {id=" + id + ", name=" + name + ", " +
                 "age=" + age + ", salary=" + salary + ", blobType=" + blobType)
+            resultSet.close()
             resultSet = null
         } catch(e) {
             console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
@@ -223,6 +225,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
                 expect(6).assertEqual(blobType[2])
                 console.log(TAG + "dataShare update: {id=" + id + ", name=" + name + ", " +
                     "age=" + age + ", salary=" + salary + ", blobType=" + blobType)
+                resultSet.close()
                 resultSet = null
             })
         } catch(e) {
@@ -261,7 +264,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
                 const age = resultSet.getLong(resultSet.getColumnIndex("age"))
                 const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
                 const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
-
+                resultSet.close()
                 expect("zhangsan").assertEqual(name)
                 expect(18).assertEqual(age)
                 expect(100.5).assertEqual(salary)
@@ -312,7 +315,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
                     const age = resultSet.getLong(resultSet.getColumnIndex("age"))
                     const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
                     const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
-
+                    resultSet.close()
                     expect("zhangsan").assertEqual(name)
                     expect(18).assertEqual(age)
                     expect(100.5).assertEqual(salary)
@@ -361,6 +364,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             rdbPredicates.equalTo("name", "zhangsan")
             let resultSet = await rdbStore.query(rdbPredicates)
             expect(false).assertEqual(resultSet.goToFirstRow())
+            resultSet.close()
             resultSet = null
         } catch(e) {
             console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
@@ -400,6 +404,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
                 rdbPredicates.equalTo("name", "zhangsan")
                 let resultSet = await rdbStore.query(rdbPredicates)
                 expect(false).assertEqual(resultSet.goToFirstRow())
+                resultSet.close()
                 resultSet = null
             })
         } catch(e) {

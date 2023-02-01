@@ -164,6 +164,7 @@ describe('rdbStorePredicatesJoinBTest', function () {
         expect(20).assertEqual(resultSet.getInt(8));
         expect("XueGongBu").assertEqual(resultSet.getString(9));
         expect("ShangHai").assertEqual(resultSet.getString(10));
+        resultSet.close();
         done();
     })
 
@@ -185,6 +186,7 @@ describe('rdbStorePredicatesJoinBTest', function () {
         expect(8000.00).assertEqual(resultSet.getDouble(2));
         expect("Clerk").assertEqual(resultSet.getString(3));
         expect("UseOfficeSoftware").assertEqual(resultSet.getString(4));
+        resultSet.close();
         done();
     })
 
@@ -207,6 +209,7 @@ describe('rdbStorePredicatesJoinBTest', function () {
         expect(1).assertEqual(resultSet.getInt(2));
         expect(7000).assertEqual(resultSet.getInt(3));
         expect(12000).assertEqual(resultSet.getInt(4));
+        resultSet.close();
         done();
     })
 
@@ -231,6 +234,7 @@ describe('rdbStorePredicatesJoinBTest', function () {
         expect("XueGongBu").assertEqual(resultSet.getString(4));
         expect("ShangHai").assertEqual(resultSet.getString(5));
         expect(1).assertEqual(resultSet.getInt(6));
+        resultSet.close();
         done();
     })
 
@@ -251,6 +255,7 @@ describe('rdbStorePredicatesJoinBTest', function () {
         expect(1004).assertEqual(resultSet.getInt(1));
         expect(1004).assertEqual(resultSet.getInt(2));
         expect("TangCeng").assertEqual(resultSet.getString(3));
+        resultSet.close();
         done();
     })
 

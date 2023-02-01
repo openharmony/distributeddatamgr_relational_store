@@ -221,6 +221,7 @@ describe('rdbResultSetTest', function () {
         } catch (e) {
             expect(null).assertFail();
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testIsStarted0001 end *************");
@@ -241,6 +242,7 @@ describe('rdbResultSetTest', function () {
         } catch (e) {
             expect(null).assertFail();
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testIsStarted0002 end *************");
@@ -263,6 +265,7 @@ describe('rdbResultSetTest', function () {
         } catch (e) {
             expect(null).assertFail();
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testIsStarted0003 end *************");
@@ -284,6 +287,7 @@ describe('rdbResultSetTest', function () {
         } catch (e) {
             expect(null).assertFail();
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testIsStarted0004 end *************");
@@ -305,6 +309,7 @@ describe('rdbResultSetTest', function () {
         } catch (e) {
             expect(null).assertFail();
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testIsEnded0001 end *************");
@@ -325,6 +330,7 @@ describe('rdbResultSetTest', function () {
         } catch (e) {
             expect(null).assertFail();
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testIsEnded0002 end *************");
@@ -345,6 +351,7 @@ describe('rdbResultSetTest', function () {
         } catch (e) {
             expect(null).assertFail();
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testIsEnded0003 end *************");
@@ -366,6 +373,7 @@ describe('rdbResultSetTest', function () {
         } catch (e) {
             expect(null).assertFail();
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testIsEnded0004 end *************");
@@ -385,6 +393,7 @@ describe('rdbResultSetTest', function () {
         } catch (e) {
             expect(null).assertFail();
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testRowCount0001 end *************");
@@ -405,6 +414,7 @@ describe('rdbResultSetTest', function () {
         } catch (e) {
             expect(null).assertFail();
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testRowCount0002 end *************");
@@ -425,6 +435,7 @@ describe('rdbResultSetTest', function () {
         } catch (e) {
             expect(null).assertFail();
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testRowCount0003 end *************");
@@ -446,6 +457,7 @@ describe('rdbResultSetTest', function () {
         } catch (e) {
             expect(null).assertFail();
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testRowCount0003 end *************");
@@ -544,6 +556,7 @@ describe('rdbResultSetTest', function () {
             const data1 = resultSet.getString(resultSet.getColumnIndex("data1"))
             expect("hello").assertEqual(data1);
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testGetString0001 end *************");
@@ -563,6 +576,7 @@ describe('rdbResultSetTest', function () {
             const data2 = resultSet.getString(resultSet.getColumnIndex("data2"))
             expect("10").assertEqual(data2);
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testGetString0002 end *************");
@@ -583,6 +597,7 @@ describe('rdbResultSetTest', function () {
             const data3 = resultSet.getString(resultSet.getColumnIndex("data3"))
             expect("2.5").assertEqual(data3);
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testGetString0003 end *************");
@@ -608,6 +623,7 @@ describe('rdbResultSetTest', function () {
             expect("3").assertEqual(data2);
             expect("1.8").assertEqual(data3);
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testGetString0004 end *************");
@@ -643,6 +659,7 @@ describe('rdbResultSetTest', function () {
         let resultSet = await rdbStore.query(predicates)
         expect(false).assertEqual(resultSet.isClosed)
 
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testIsClosed0002 end *************");
@@ -660,6 +677,7 @@ describe('rdbResultSetTest', function () {
         let resultSet = await rdbStore.query(predicates)
         expect(false).assertEqual(resultSet.isClosed)
 
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testIsClosed0003 end *************");

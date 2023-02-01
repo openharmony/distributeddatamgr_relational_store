@@ -84,6 +84,7 @@ describe('rdbStorePredicatesComplexFiledTest', function () {
         expect(3).assertEqual(count);
         await expect("2022-09-02").assertEqual(birthday)
         expect(false).assertEqual(resultSet.goToNextRow())
+        resultSet.close()
         done();
         console.log(TAG + "************* testRdbPredicatesComplexFiled0001 end   *************");
     })
@@ -110,6 +111,7 @@ describe('rdbStorePredicatesComplexFiledTest', function () {
         expect(2).assertEqual(count);
         await expect("2022-09-01").assertEqual(birthday)
         expect(false).assertEqual(resultSet.goToNextRow())
+        resultSet.close()
         done();
         console.log(TAG + "************* testRdbPredicatesComplexFiled0002 end   *************");
     })
