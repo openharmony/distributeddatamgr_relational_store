@@ -19,7 +19,8 @@ import ability_featureAbility from '@ohos.ability.featureAbility'
 var context = ability_featureAbility.getContext()
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
 const STORE_CONFIG = {
     name: "rdbstore.db",
@@ -59,12 +60,12 @@ describe('rdbStoreTest', function () {
             } catch (e) {
                 expect(null).assertFail();
             }
+            store = null
         }).catch((err) => {
             expect(null).assertFail();
         })
         await storePromise
         storePromise = null
-        await data_relationalStore.deleteRdbStore(context,"rdbstore.db");
         done();
         console.log(TAG + "************* testRdbStore0001 end   *************");
     })
@@ -84,12 +85,12 @@ describe('rdbStoreTest', function () {
             } catch (e) {
                 expect(null).assertFail();
             }
+            store = null
         }).catch((err) => {
             expect(null).assertFail();
         })
         await storePromise
         storePromise = null
-        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
         done();
         console.log(TAG + "************* testRdbStore0002 end   *************");
     })
@@ -136,12 +137,12 @@ describe('rdbStoreTest', function () {
                 console.log(TAG + "create table error");
                 expect(null).assertFail();
             }
+            store = null
         }).catch((err) => {
             expect(null).assertFail();
         })
         await storePromise
         storePromise = null
-        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
         done();
         console.log(TAG + "************* testRdbStore0004 end   *************");
     })
@@ -160,6 +161,7 @@ describe('rdbStoreTest', function () {
             expect(5).assertEqual(store.version)
             store.version = 2147483647
             expect(2147483647).assertEqual(store.version)
+            store = null
         } catch (e) {
             expect(null).assertFail();
         }
@@ -217,6 +219,7 @@ describe('rdbStoreTest', function () {
         storePromise.then(async (store) => {
             try {
                 await store.executeSql(CREATE_TABLE_TEST);
+                store = null
             } catch (e) {
                 expect(null).assertFail();
             }
