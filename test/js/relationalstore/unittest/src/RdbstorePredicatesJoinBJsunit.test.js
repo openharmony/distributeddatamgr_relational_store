@@ -37,7 +37,7 @@ const STORE_CONFIG = {
     securityLevel: data_relationalStore.SecurityLevel.S1,
 }
 
-const TAG = 'RDB_TEST'
+const TAG = 'RDB_TEST '
 
 var rdbStore = undefined
 var context = ability_featureAbility.getContext()
@@ -81,7 +81,7 @@ describe('rdbStorePredicatesJoinBTest', function () {
             {id:40, dName:"CaiWuBu", loc:"ShenZhen"},
         ];
 
-        rdbStore.batchInsert("dept", depts);
+        await rdbStore.batchInsert("dept", depts);
         console.info(TAG + 'generateDeptTable end');
     }
 
@@ -96,7 +96,7 @@ describe('rdbStorePredicatesJoinBTest', function () {
             {id:4, jName:"Clerk", description:"UseOfficeSoftware"},
         ]
 
-        rdbStore.batchInsert("job", jobs);
+        await rdbStore.batchInsert("job", jobs);
         console.info(TAG + 'generateJobTable end')
     }
 
@@ -121,7 +121,7 @@ describe('rdbStorePredicatesJoinBTest', function () {
             {id:1014, eName:"GuanYu", jobId:4, mgr:1007, joinDate:"2002-01-23", salary:13000.00, bonus:null, deptId:10},
         ];
 
-        rdbStore.batchInsert("emp", emps);
+        await rdbStore.batchInsert("emp", emps);
         console.info(TAG + 'generateEmpTable end');
     }
 
@@ -138,7 +138,7 @@ describe('rdbStorePredicatesJoinBTest', function () {
             {grade:5, loSalary:30010, hiSalary:99990},
         ];
 
-        rdbStore.batchInsert("salarygrade", salarygrades);
+        await rdbStore.batchInsert("salarygrade", salarygrades);
         console.info(TAG + 'generateSalarygradeTable end')
     }
 
@@ -179,8 +179,8 @@ describe('rdbStorePredicatesJoinBTest', function () {
      */
     it('testRdbJoinB002', 0, async function (done) {
         console.log(TAG + "testRdbJoinB002 begin.");
-        let resultSet = await rdbStore.querySql(
-            "SELECT  t1.id, t1.eName, t1.salary, t2.jName, t2.description FROM emp t1 INNER JOIN  job t2 ON t1.`jobId` = t2.`id` WHERE t1.eName = 'SunWuKong'")
+        let resultSet = await rdbStore.querySql("SELECT  t1.id, t1.eName, t1.salary, t2.jName, t2.description" +
+            " FROM emp t1 INNER JOIN  job t2 ON t1.`jobId` = t2.`id` WHERE t1.eName = 'SunWuKong'")
 
         expect(1).assertEqual(resultSet.rowCount);
         expect(true).assertEqual(resultSet.goToFirstRow());
@@ -202,8 +202,8 @@ describe('rdbStorePredicatesJoinBTest', function () {
      */
     it('testRdbJoinB003', 0, async function (done) {
         console.log(TAG + "testRdbJoinB003 begin.");
-        let resultSet = await rdbStore.querySql(
-            "SELECT  t1.eName, t1.salary, t2.* FROM emp t1 INNER JOIN salarygrade t2 WHERE t1.salary BETWEEN t2.losalary AND t2.hisalary")
+        let resultSet = await rdbStore.querySql("SELECT  t1.eName, t1.salary, t2.* " +
+            "FROM emp t1 INNER JOIN salarygrade t2 WHERE t1.salary BETWEEN t2.losalary AND t2.hisalary")
 
         expect(14).assertEqual(resultSet.rowCount);
         expect(true).assertEqual(resultSet.goToFirstRow());
@@ -224,9 +224,9 @@ describe('rdbStorePredicatesJoinBTest', function () {
      */
     it('testRdbJoinB004', 0, async function (done) {
         console.log(TAG + "testRdbJoinB004 begin.");
-        let resultSet = await rdbStore.querySql(
-            "SELECT t1.eName, t1.salary, t2.jName, t2.description, t3.dName, t3.loc, t4.grade FROM emp t1 INNER JOIN job t2 INNER JOIN dept t3 "
-            + "INNER JOIN salarygrade t4 ON t1.jobId = t2.id AND t1.deptId = t3.id AND t1.salary BETWEEN t4.loSalary AND t4.hiSalary");
+        let resultSet = await rdbStore.querySql("SELECT t1.eName, t1.salary, t2.jName, t2.description, t3.dName, " +
+            "t3.loc, t4.grade FROM emp t1 INNER JOIN job t2 INNER JOIN dept t3 INNER JOIN salarygrade t4 " +
+            "ON t1.jobId = t2.id AND t1.deptId = t3.id AND t1.salary BETWEEN t4.loSalary AND t4.hiSalary");
 
         expect(14).assertEqual(resultSet.rowCount);
         expect(true).assertEqual(resultSet.goToFirstRow());

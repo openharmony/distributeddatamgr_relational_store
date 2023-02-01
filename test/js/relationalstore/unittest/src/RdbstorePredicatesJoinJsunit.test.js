@@ -37,7 +37,7 @@ const STORE_CONFIG = {
     securityLevel: data_relationalStore.SecurityLevel.S1,
 }
 
-const TAG = 'RDB_TEST';
+const TAG = 'RDB_TEST ';
 
 var rdbStore = undefined
 var context = ability_featureAbility.getContext()

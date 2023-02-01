@@ -35,7 +35,7 @@ const STORE_CONFIG = { name: "RdbJoinTest.db" }
 
 const CURRENT_STORE_VERSION = 1;
 
-const TAG = 'RDB_TEST';
+const TAG = 'RDB_TEST ';
 
 var rdbStore = undefined;
 
