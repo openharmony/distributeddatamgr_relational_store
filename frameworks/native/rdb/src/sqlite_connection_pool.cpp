@@ -45,7 +45,7 @@ SqliteConnectionPool *SqliteConnectionPool::Create(const RdbStoreConfig &storeCo
 
 SqliteConnectionPool::SqliteConnectionPool(const RdbStoreConfig &storeConfig)
     : config(storeConfig), writeConnection(nullptr), writeConnectionUsed(true), readConnections(),
-      readConnectionCount(0), idleReadConnectionCount(0), transactionStack()
+      readConnectionCount(0), idleReadConnectionCount(0), transactionStack(), transactionUsed(false)
 {
 }
 
@@ -139,6 +139,24 @@ SqliteConnection *SqliteConnectionPool::AcquireWriteConnection()
     writeConnectionUsed = true;
     LOG_DEBUG("end");
     return writeConnection;
+}
+
+void SqliteConnectionPool::AcquireTransaction()
+{
+    LOG_DEBUG("AcquireTransaction begin");
+    std::unique_lock<std::mutex> lock(transMutex);
+    transCondition.wait(lock, [&] { return !transactionUsed; });
+    transactionUsed = true;
+    LOG_DEBUG("AcquireTransaction end");
+}
+
+void SqliteConnectionPool::ReleaseTransaction()
+{
+    {
+        std::unique_lock<std::mutex> lock(transMutex);
+        transactionUsed = false;
+    }
+    transCondition.notify_one();
 }
 
 void SqliteConnectionPool::ReleaseWriteConnection()

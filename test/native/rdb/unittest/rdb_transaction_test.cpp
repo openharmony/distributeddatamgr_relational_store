@@ -214,12 +214,13 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_002, TestSize.Level1)
     EXPECT_EQ(deletedRows, 3);
 }
 
+
 /**
- * @tc.name: RdbStore_NestedTransaction_001
+ * @tc.name: RdbStore_Transaction_003
  * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)
+HWTEST_F(RdbTransactionTest, RdbStore_Transaction_003, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
 
@@ -238,8 +239,6 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->BeginTransaction();
-    EXPECT_EQ(ret, E_OK);
     values.Clear();
     values.PutInt("id", 2);
     values.PutString("name", std::string("lisi"));
@@ -249,8 +248,6 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)
     ret = store->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
-    ret = store->Commit(); // not commit
-    EXPECT_EQ(ret, E_OK);
 
     values.Clear();
     values.PutInt("id", 3);
@@ -262,235 +259,156 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
-    ret = store->Commit();
+    ret = store->RollBack();
     EXPECT_EQ(ret, E_OK);
 
     int64_t count;
     ret = store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(count, 3);
+    EXPECT_EQ(count, 0);
 
     std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_OK);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 
     int deletedRows;
     ret = store->Delete(deletedRows, "test");
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(deletedRows, 3);
+    EXPECT_EQ(deletedRows, 0);
 }
 
 /**
- * @tc.name: RdbStore_NestedTransaction_002
- * @tc.desc: test RdbStore BaseTransaction
+ * @tc.name: RdbStore_BatchInsert_001
+ * @tc.desc: test RdbStore BatchInsert
  * @tc.type: FUNC
+ * @tc.require: issueI5GZGX
  */
-HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)
+HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_001, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
 
-    int64_t id;
     ValuesBucket values;
 
-    int ret = store->BeginTransaction();
-    EXPECT_EQ(ret, E_OK);
-
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
+    values.PutString("name", "zhangsan");
     values.PutInt("age", 18);
     values.PutDouble("salary", 100.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
 
-    ret = store->BeginTransaction();
-    EXPECT_EQ(ret, E_OK);
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, id);
-    ret = store->Commit();
-    EXPECT_EQ(ret, E_OK);
-    ret = store->Commit(); // commit
-    EXPECT_EQ(ret, E_OK);
-
-    values.Clear();
-    values.PutInt("id", 3);
-    values.PutString("name", std::string("wangyjing"));
-    values.PutInt("age", 20);
-    values.PutDouble("salary", 300.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, id);
-
-    int64_t count;
-    ret = store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(count, 3);
-
+    std::vector<ValuesBucket> valuesBuckets;
+    for (int i = 0; i < 100; i++) {
+        valuesBuckets.push_back(values);
+    }
+    int64_t insertNum = 0;
+    int ret = store->BatchInsert(insertNum, "test", valuesBuckets);
+    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(100, insertNum);
     std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
-    EXPECT_NE(resultSet, nullptr);
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->Close();
-    EXPECT_EQ(ret, E_OK);
-
-    int deletedRows;
-    ret = store->Delete(deletedRows, "test");
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(deletedRows, 3);
+    int rowCount = 0;
+    resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(100, rowCount);
 }
 
+
 /**
- * @tc.name: RdbStore_NestedTransaction_003
- * @tc.desc: test RdbStore BaseTransaction
+ * @tc.name: RdbStore_BatchInsert_002
+ * @tc.desc: test RdbStore BatchInsert
  * @tc.type: FUNC
+ * @tc.require: issue-I6BAX0
  */
-HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_003, TestSize.Level1)
+HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_002, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
+    store->ExecuteSql("delete from test");
+    std::string name = "zhangsan";
+    int age = 18;
+    double salary = 100.5;
+    std::vector<uint8_t> blob = { 1, 2, 3 };
+    std::vector<ValuesBucket> valuesBuckets;
+    for (int i = 0; i < 100; i++) {
+        ValuesBucket values;
+        values.PutString("name", name);
+        values.PutInt("age", age + i);
+        values.PutDouble("salary", salary + i);
+        values.PutBlob("blobType", blob);
+        valuesBuckets.push_back(std::move(values));
+    }
 
-    int64_t id;
-    ValuesBucket values;
-
-    int ret = store->BeginTransaction();
-    EXPECT_EQ(ret, E_OK);
-
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
-
-    ret = store->BeginTransaction();
-    EXPECT_EQ(ret, E_OK);
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, id);
-    ret = store->Commit(); // not commit
-    EXPECT_EQ(ret, E_OK);
-
-    values.Clear();
-    values.PutInt("id", 3);
-    values.PutString("name", std::string("wangyjing"));
-    values.PutInt("age", 20);
-    values.PutDouble("salary", 300.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, id);
-
-    ret = store->Commit(); // not commit
-    EXPECT_EQ(ret, E_OK);
-
-    int64_t count;
-    ret = store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(count, 3);
-
+    int64_t number = 0;
+    int error = store->BatchInsert(number, "test", valuesBuckets);
+    EXPECT_EQ(E_OK, error);
+    EXPECT_EQ(100, number);
+    int rowCount = 0;
     std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
-    EXPECT_NE(resultSet, nullptr);
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->Close();
-    EXPECT_EQ(ret, E_OK);
-
-    int deletedRows;
-    ret = store->Delete(deletedRows, "test");
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(deletedRows, 3);
+    resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(100, rowCount);
 }
 
+
 /**
- * @tc.name: RdbStore_NestedTransaction_004
- * @tc.desc: test RdbStore BaseTransaction
+ * @tc.name: RdbStore_BatchInsert_003
+ * @tc.desc: test RdbStore BatchInsert
  * @tc.type: FUNC
+ * @tc.require: issue-I6BAX0
  */
-HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_004, TestSize.Level1)
+HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
+    store->ExecuteSql("delete from test");
 
-    int64_t id;
-    ValuesBucket values;
+    int id = 0;
+    std::string name = "zhangsan";
+    int age = 18;
+    double salary = 100.5;
+    std::vector<uint8_t> blob = { 1, 2, 3 };
+    std::vector<ValuesBucket> valuesBuckets;
+    for (int i = 0; i < 100; i++) {
+        ValuesBucket values;
+        values.PutInt("id", id + i);
+        values.PutString("name", name);
+        values.PutInt("age", age + i);
+        values.PutDouble("salary", salary + i);
+        values.PutBlob("blobType", blob);
+        valuesBuckets.push_back(std::move(values));
+    }
 
-    int ret = store->BeginTransaction();
-    EXPECT_EQ(ret, E_OK);
+    int64_t number = 0;
+    int error = store->BatchInsert(number, "test", valuesBuckets);
+    EXPECT_EQ(E_OK, error);
+    EXPECT_EQ(100, number);
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
-
-    ret = store->BeginTransaction();
-    EXPECT_EQ(ret, E_OK);
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, id);
-    ret = store->Commit(); // commit
-    EXPECT_EQ(ret, E_OK);
-
-    values.Clear();
-    values.PutInt("id", 3);
-    values.PutString("name", std::string("wangyjing"));
-    values.PutInt("age", 20);
-    values.PutDouble("salary", 300.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, id);
-
-    ret = store->Commit(); // commit
-    EXPECT_EQ(ret, E_OK);
-
-    int64_t count;
-    ret = store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(count, 3);
-
+    int rowCount = 0;
     std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
-    EXPECT_NE(resultSet, nullptr);
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
-    ret = resultSet->Close();
-    EXPECT_EQ(ret, E_OK);
+    resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(100, rowCount);
 
-    int deletedRows;
-    ret = store->Delete(deletedRows, "test");
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(deletedRows, 3);
+    valuesBuckets.clear();
+    for (int i = 50; i < 100; i++) {
+        ValuesBucket values;
+        values.PutInt("id", id + i);
+        values.PutString("name", name);
+        values.PutInt("age", age + i);
+        values.PutDouble("salary", salary + i);
+        values.PutBlob("blobType", blob);
+        valuesBuckets.push_back(std::move(values));
+    }
+
+    number = -1;
+    error = store->BatchInsert(number, "test", valuesBuckets);
+    EXPECT_EQ(E_OK, error);
+    EXPECT_EQ(-1, number);
+
+    resultSet = store->QuerySql("SELECT * FROM test");
+    resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(100, rowCount);
+    number = 0l;
+    while (true) {
+        error = resultSet->GoToNextRow();
+        if (error != E_OK) {
+            break;
+        }
+        number ++;
+    }
+    EXPECT_EQ(100, number);
+
 }
