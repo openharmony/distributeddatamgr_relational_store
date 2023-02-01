@@ -53,7 +53,6 @@ private:
     static napi_value Replace(napi_env env, napi_callback_info info);
     static napi_value Attach(napi_env env, napi_callback_info info);
     static napi_value GetPath(napi_env env, napi_callback_info info);
-    static napi_value GetStatus(napi_env env, napi_callback_info info);
     static napi_value IsMemoryRdb(napi_env env, napi_callback_info info);
     static napi_value IsHoldingConnection(napi_env env, napi_callback_info info);
     static napi_value IsReadOnly(napi_env env, napi_callback_info info);

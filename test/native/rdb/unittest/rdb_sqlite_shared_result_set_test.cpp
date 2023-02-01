@@ -907,3 +907,40 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_017, TestSize.Le
     int ret = rstSet->GoToLastRow();
     EXPECT_EQ(ret, E_OK);
 }
+
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_018
+ * @tc.desc:  frequency testcase of SqliteSharedResultSet for getColumnIndexForName
+ * @tc.type: FUNC
+ * @tc.require: issue
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_018, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::unique_ptr<ResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
+
+    int columnIndex = 0;
+    for (int i = 0; i < 100; i++) {
+        resultSet->GetColumnIndex("datax", columnIndex);
+        EXPECT_EQ(columnIndex, -1);
+
+        resultSet->GetColumnIndex("data4", columnIndex);
+        EXPECT_EQ(columnIndex, 4);
+
+        resultSet->GetColumnIndex("data3", columnIndex);
+        EXPECT_EQ(columnIndex, 3);
+
+        resultSet->GetColumnIndex("data2", columnIndex);
+        EXPECT_EQ(columnIndex, 2);
+
+        resultSet->GetColumnIndex("data1", columnIndex);
+        EXPECT_EQ(columnIndex, 1);
+    }
+
+    resultSet->Close();
+    bool closeFlag = resultSet->IsClosed();
+    EXPECT_EQ(closeFlag, true);
+}
