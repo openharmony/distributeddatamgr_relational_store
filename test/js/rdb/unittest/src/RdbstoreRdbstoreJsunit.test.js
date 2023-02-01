@@ -57,6 +57,7 @@ describe('rdbStoreTest', function () {
             } catch (e) {
                 expect(null).assertFail();
             }
+            store = null
         }).catch((err) => {
             expect(null).assertFail();
         })
@@ -82,6 +83,7 @@ describe('rdbStoreTest', function () {
             } catch (e) {
                 expect(null).assertFail();
             }
+            store = null
         }).catch((err) => {
             expect(null).assertFail();
         })
@@ -135,6 +137,7 @@ describe('rdbStoreTest', function () {
                 console.log(TAG + "create table error");
                 expect(null).assertFail();
             }
+            store = null
         }).catch((err) => {
             expect(null).assertFail();
         })
@@ -172,6 +175,7 @@ describe('rdbStoreTest', function () {
             } catch (e) {
                 expect(null).assertFail();
             }
+            store = null
         }).catch((err) => {
             expect(null).assertFail();
         })

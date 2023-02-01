@@ -21,7 +21,6 @@ const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
     + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)"
 
-var rdbStore
 var context = ability_featureAbility.getContext()
 const STORE_CONFIG_ENCRYPT = {
     name: "Encrypt.db",
@@ -89,7 +88,6 @@ describe('rdbEncryptTest', function () {
             await data_relationalStore.deleteRdbStore(context, STORE_CONFIG_ENCRYPT.name)
             await data_relationalStore.deleteRdbStore(context, STORE_CONFIG_UNENCRYPT.name)
             await data_relationalStore.deleteRdbStore(context, STORE_CONFIG_WRONG.name)
-            rdbStore = null
         })
 
         afterAll(async function () {
@@ -112,6 +110,7 @@ describe('rdbEncryptTest', function () {
                 } catch (err) {
                     expect(null).assertFail();
                 }
+                store = null
             }).catch((err) => {
                 expect(null).assertFail();
             })
@@ -136,6 +135,7 @@ describe('rdbEncryptTest', function () {
                 } catch (err) {
                     expect(null).assertFail();
                 }
+                store = null
             }).catch((err) => {
                 expect(null).assertFail();
             })
@@ -154,7 +154,7 @@ describe('rdbEncryptTest', function () {
          */
         it('RdbEncryptTest_0030', 0, async function (done) {
             await console.log(TAG + "************* RdbEncryptTest_0030 start *************")
-            rdbStore = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT)
+            let rdbStore = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT)
             let predicates = new data_relationalStore.RdbPredicates("test")
             predicates.equalTo("name", "zhangsan")
             let resultSet = await rdbStore.query(predicates)
@@ -184,7 +184,7 @@ describe('rdbEncryptTest', function () {
          */
         it('RdbEncryptTest_0040', 0, async function (done) {
             await console.log(TAG + "************* RdbEncryptTest_0040 start *************")
-            rdbStore = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT)
+            let rdbStore = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT)
             rdbStore = null
             rdbStore = await CreatRdbStore(context, STORE_CONFIG_WRONG)
             expect(rdbStore).assertNull

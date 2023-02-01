@@ -37,6 +37,7 @@ describe('rdbStoreDistributedTest', function () {
 
     afterAll(async function () {
         console.info(TAG + 'afterAll')
+        rdbStore = null
         await data_relationalStore.deleteRdbStore(context, STORE_NAME);
     })
 

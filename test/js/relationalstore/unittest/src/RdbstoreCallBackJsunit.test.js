@@ -98,6 +98,7 @@ describe('rdbStoreCallBackTest', async function () {
                     console.log(TAG + "************* testRdbStoreCallBackTest0001 end *************")
                 });
                 resultSet.close()
+                rdbStore = null
             })
         } catch(e) {
             console.log("catch err: Get RdbStore failed, err: code=" + e.code + " message=" + e.message)
@@ -173,6 +174,7 @@ describe('rdbStoreCallBackTest', async function () {
                     expect(false).assertTrue()
                 }
                 console.log("Get RdbStore successfully.")
+                rdbStore = null
                 done()
                 console.log(TAG + "************* testRdbStoreCallBackTest0004 end *************")
             })
@@ -193,6 +195,7 @@ describe('rdbStoreCallBackTest', async function () {
         console.log(TAG + "************* testRdbStoreCallBackTest0005 start *************");
         data_relationalStore.getRdbStore(context, STORE_CONFIG).then((rdbStore)=>{
             try {
+                rdbStore = null
                 data_relationalStore.deleteRdbStore(context, 12345, (err) => {
                     if (err) {
                         console.log("Delete RdbStore is failed, err: code=" + err.code + " message=" + err.message)
@@ -228,6 +231,7 @@ describe('rdbStoreCallBackTest', async function () {
         console.log(TAG + "************* testRdbStoreCallBackTest0006 start *************")
         data_relationalStore.getRdbStore(context, STORE_CONFIG).then((rdbStore)=>{
             try {
+                rdbStore = null
                 data_relationalStore.deleteRdbStore(context, "RDBCallbackTest.db", (err) => {
                     if (err) {
                         console.log("Delete RdbStore is failed, err: code=" + err.code + " message=" + err.message)

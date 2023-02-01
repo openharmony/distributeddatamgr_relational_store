@@ -56,6 +56,7 @@ describe('rdbStoreTest', function () {
         storePromise.then(async (store) => {
             try {
                 await console.log(TAG + "getRdbStore done: " + store);
+                store = null
             } catch (e) {
                 expect(null).assertFail();
             }
@@ -64,7 +65,6 @@ describe('rdbStoreTest', function () {
         })
         await storePromise
         storePromise = null
-        await data_relationalStore.deleteRdbStore(context,"rdbstore.db");
         done();
         console.log(TAG + "************* testRdbStore0001 end   *************");
     })
@@ -81,6 +81,7 @@ describe('rdbStoreTest', function () {
             try {
                 await console.log(TAG + "getRdbStore done: " + store);
                 await store.executeSql(CREATE_TABLE_TEST);
+                store = null
             } catch (e) {
                 expect(null).assertFail();
             }
@@ -89,7 +90,6 @@ describe('rdbStoreTest', function () {
         })
         await storePromise
         storePromise = null
-        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
         done();
         console.log(TAG + "************* testRdbStore0002 end   *************");
     })
@@ -132,6 +132,7 @@ describe('rdbStoreTest', function () {
             console.log(TAG + "getRdbStore done:" + store);
             try {
                 await store.executeSql(CREATE_TABLE_TEST);
+                store = null
             } catch (e) {
                 console.log(TAG + "create table error");
                 expect(null).assertFail();
@@ -141,7 +142,6 @@ describe('rdbStoreTest', function () {
         })
         await storePromise
         storePromise = null
-        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
         done();
         console.log(TAG + "************* testRdbStore0004 end   *************");
     })
@@ -168,6 +168,7 @@ describe('rdbStoreTest', function () {
                 expect(-1000).assertEqual(store.getVersion())
                 store.setVersion(-2147483648100)
                 expect(-100).assertEqual(store.getVersion())
+                store = null
             } catch (e) {
                 expect(null).assertFail();
             }
@@ -176,7 +177,6 @@ describe('rdbStoreTest', function () {
         })
         await storePromise
         storePromise = null
-        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
         done();
         console.log(TAG + "************* testRdbStore0005 end   *************");
     })
@@ -197,6 +197,7 @@ describe('rdbStoreTest', function () {
         storePromise.then(async (store) => {
             try {
                 await store.executeSql(CREATE_TABLE_TEST);
+                store = null
             } catch (e) {
                 expect(null).assertFail();
             }

@@ -86,7 +86,6 @@ describe('rdbEncryptTest', function () {
             await data_rdb.deleteRdbStore(context, STORE_CONFIG_ENCRYPT.name)
             await data_rdb.deleteRdbStore(context, STORE_CONFIG_UNENCRYPT.name)
             await data_rdb.deleteRdbStore(context, STORE_CONFIG_WRONG.name)
-            rdbStore = null
         })
 
         afterAll(async function () {
@@ -110,6 +109,7 @@ describe('rdbEncryptTest', function () {
                 } catch (err) {
                     expect(null).assertFail();
                 }
+                store = null
             }).catch((err) => {
                 expect(null).assertFail();
             })
@@ -135,6 +135,7 @@ describe('rdbEncryptTest', function () {
                 } catch (err) {
                     expect(null).assertFail();
                 }
+                store = null
             }).catch((err) => {
                 expect(null).assertFail();
             })

@@ -154,6 +154,7 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
                         }
                         console.log("Delete rows: " + rows)
                         expect(1).assertEqual(rows)
+                        rdbStore = null
                         data_relationalStore.deleteRdbStore(context, "CreateDeleteWithFAContextTest.db", (err) => {
                             if (err) {
                                 console.info("Delete RdbStore failed, err: " + err)
@@ -193,6 +194,7 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
                     rdbStore.delete(predicates).then((rows) => {
                         console.log("Delete rows: " + rows)
                         expect(1).assertEqual(rows)
+                        rdbStore = null
                         data_relationalStore.deleteRdbStore(context, "CreateDeleteWithFAContextTest.db").then(() => {
                             console.log("Delete RdbStore successfully.")
                             done()
