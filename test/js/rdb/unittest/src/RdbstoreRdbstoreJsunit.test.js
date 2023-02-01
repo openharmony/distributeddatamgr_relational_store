@@ -15,8 +15,6 @@
 
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
 import dataRdb from '@ohos.data.rdb';
-import ability_featureAbility from '@ohos.ability.featureAbility'
-var context
 
 const TAG = "[RDB_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -36,7 +34,7 @@ describe('rdbStoreTest', function () {
 
     afterEach(async function () {
         console.info(TAG + 'afterEach')
-        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+        await dataRdb.deleteRdbStore("rdbstore.db");
     })
 
     afterAll(async function () {

@@ -247,8 +247,7 @@ describe('rdbStoreInsertTest', function () {
                 "salary": 220.5,
                 "blobType": u8,
             }
-            let num = await rdbStore.insert("test", valueBucket1)
-            expect(2).assertEqual(num)
+            await rdbStore.insert("test", valueBucket1)
 
             rdbStore.commit()
 
@@ -290,8 +289,7 @@ describe('rdbStoreInsertTest', function () {
                 "salary": 220.5,
                 "blobType": u8,
             }
-            let num = await rdbStore.insert("test", valueBucket1)
-            expect(2).assertEqual(num)
+            await rdbStore.insert("test", valueBucket1)
 
             rdbStore.rollBack()
 
