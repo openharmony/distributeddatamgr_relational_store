@@ -16,7 +16,8 @@ import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from
 import dataRdb from '@ohos.data.rdb';
 
 const TAG = "[RDB_JSKITS_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name TEXT, " + "age INTEGER, " + "salary REAL, " + "adddate DATE)";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "name TEXT, " + "age INTEGER, " + "salary REAL, " + "adddate DATE)";
 const STORE_CONFIG = {
     name: "PredicatesComplexFiledJsunit.db",
 }

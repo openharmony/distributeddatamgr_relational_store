@@ -19,7 +19,8 @@ import ability_featureAbility from '@ohos.ability.featureAbility'
 var context = ability_featureAbility.getContext()
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY, " + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY, " + 
+    "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
 const STORE_CONFIG = {
     name: "TransactionInsertTest.db",
@@ -246,20 +247,15 @@ describe('rdbStoreInsertTest', function () {
                 "salary": 220.5,
                 "blobType": u8,
             }
-            let num = rdbStore.insert("test", valueBucket1)
-            num.then(async (ret) => {
-                console.log(TAG + "testRdbTransactionMulti0001 * insert result " + ret);
-                expect(2).assertEqual(ret)
-            })
+            let num = await rdbStore.insert("test", valueBucket1)
+            expect(2).assertEqual(num)
 
             rdbStore.commit()
 
             let predicates = new data_relationalStore.RdbPredicates("test");
-            num =  rdbStore.query(predicates)
-            num.then(async (ret) => {
-                expect(2).assertEqual(ret.rowCount)
-                ret.close()
-            })
+            let ret = await rdbStore.query(predicates)
+            expect(2).assertEqual(ret.rowCount)
+            ret.close()
         } catch (e) {
             console.log(TAG + "testRdbTransactionMulti0001 fail ***** ");
         }
@@ -285,9 +281,7 @@ describe('rdbStoreInsertTest', function () {
                 "salary": 100.5,
                 "blobType": u8,
             }
-            await rdbStore.insert("test", valueBucket, function (err, ret){
-
-            });
+            await rdbStore.insert("test", valueBucket);
 
             rdbStore.beginTransaction()
             const valueBucket1 = {
@@ -296,24 +290,17 @@ describe('rdbStoreInsertTest', function () {
                 "salary": 220.5,
                 "blobType": u8,
             }
-            let num = rdbStore.insert("test", valueBucket1)
-            num.then(async (ret) => {
-                console.log(TAG + "testRdbTransactionMulti0002 * insert result " + ret);
-                expect(2).assertEqual(ret)
-                ret.close()
-            })
+            let num = await rdbStore.insert("test", valueBucket1)
+            expect(2).assertEqual(num)
 
             rdbStore.rollBack()
 
             rdbStore.commit()
 
             let predicates = new data_relationalStore.RdbPredicates("test");
-            num =  rdbStore.query(predicates)
-            num.then(async (ret) => {
-                console.log(TAG + "testRdbTransactionMulti0002 * final query " + ret.rowCount);
-                expect(1).assertEqual(ret.rowCount)
-                ret.close()
-            })
+            let ret = await rdbStore.query(predicates)
+            expect(1).assertEqual(ret.rowCount)
+            ret.close()
         } catch (e) {
             console.log(TAG + "testRdbTransactionMulti0002 fail ***** ");
         }
@@ -339,9 +326,7 @@ describe('rdbStoreInsertTest', function () {
                 "salary": 100.5,
                 "blobType": u8,
             }
-            await rdbStore.insert("test", valueBucket, function (err, ret){
-
-            });
+            await rdbStore.insert("test", valueBucket);
 
             rdbStore.beginTransaction()
             const valueBucket1 = {
@@ -350,7 +335,7 @@ describe('rdbStoreInsertTest', function () {
                 "salary": 220.5,
                 "blobType": u8,
             }
-            let num = await rdbStore.insert("test", valueBucket1)
+            await rdbStore.insert("test", valueBucket1)
 
             rdbStore.rollBack()
 
@@ -358,12 +343,9 @@ describe('rdbStoreInsertTest', function () {
             rdbStore.commit()
 
             let predicates = new data_relationalStore.RdbPredicates("test");
-            num =  rdbStore.query(predicates)
-            num.then(async (ret) => {
-                console.log(TAG + "testRdbTransactionMulti0003 * final query " + ret.rowCount);
-                expect(1).assertEqual(ret.rowCount)
-                ret.close()
-            })
+            let ret = await rdbStore.query(predicates)
+            expect(1).assertEqual(ret.rowCount)
+            ret.close()
         } catch (e) {
             rdbStore.rollBack()
             console.log(TAG + "testRdbTransactionMulti0003 rollback ***** ");

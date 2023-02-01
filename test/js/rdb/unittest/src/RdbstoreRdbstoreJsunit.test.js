@@ -19,7 +19,8 @@ import ability_featureAbility from '@ohos.ability.featureAbility'
 var context
 
 const TAG = "[RDB_JSKITS_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
 const STORE_CONFIG = {
     name: "rdbstore.db",
@@ -33,8 +34,9 @@ describe('rdbStoreTest', function () {
         console.info(TAG + 'beforeEach')
     })
 
-    afterEach(function () {
+    afterEach(async function () {
         console.info(TAG + 'afterEach')
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
     })
 
     afterAll(async function () {
@@ -63,7 +65,6 @@ describe('rdbStoreTest', function () {
         })
         await storePromise
         storePromise = null
-        await dataRdb.deleteRdbStore("rdbstore.db");
         done();
         console.log(TAG + "************* testRdbStore0001 end   *************");
     })
@@ -89,7 +90,6 @@ describe('rdbStoreTest', function () {
         })
         await storePromise
         storePromise = null
-        await dataRdb.deleteRdbStore("rdbstore.db");
         done();
         console.log(TAG + "************* testRdbStore0002 end   *************");
     })
@@ -143,7 +143,6 @@ describe('rdbStoreTest', function () {
         })
         await storePromise
         storePromise = null
-        await dataRdb.deleteRdbStore("rdbstore.db");
         done();
         console.log(TAG + "************* testRdbStore0004 end   *************");
     })
@@ -172,10 +171,10 @@ describe('rdbStoreTest', function () {
                 expect(-1000).assertEqual(store.getVersion())
                 store.setVersion(-2147483648100)
                 expect(-100).assertEqual(store.getVersion())
+                store = null
             } catch (e) {
                 expect(null).assertFail();
             }
-            store = null
         }).catch((err) => {
             expect(null).assertFail();
         })

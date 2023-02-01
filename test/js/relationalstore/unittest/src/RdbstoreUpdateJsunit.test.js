@@ -19,7 +19,8 @@ import dataSharePredicates from '@ohos.data.dataSharePredicates';
 var context = ability_featureAbility.getContext()
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name TEXT UNIQUE, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "name TEXT UNIQUE, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 const STORE_CONFIG = {
     name: "UpdataTest.db",
     securityLevel: data_relationalStore.SecurityLevel.S1,
@@ -63,14 +64,8 @@ describe('rdbStoreUpdateTest', function () {
                 "salary": 100.5,
                 "blobType": u8,
             }
-            let insertPromise = rdbStore.insert("test", valueBucket)
-            insertPromise.then(async (ret) => {
-                expect(1).assertEqual(ret);
-                await console.log(TAG + "update done: " + ret);
-            }).catch((err) => {
-                expect(null).assertFail();
-            })
-            await insertPromise
+            let ret = await rdbStore.insert("test", valueBucket)
+            expect(1).assertEqual(ret);
         }
         {
             var u8 = new Uint8Array([4, 5, 6])
@@ -104,8 +99,8 @@ describe('rdbStoreUpdateTest', function () {
                     await expect(4).assertEqual(blobType[0]);
                     await expect(5).assertEqual(blobType[1]);
                     await expect(6).assertEqual(blobType[2]);
-                    console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
                     await expect(false).assertEqual(resultSet.goToNextRow())
+                    resultSet.close()
                     resultSet = null
                 }
 
@@ -311,7 +306,7 @@ describe('rdbStoreUpdateTest', function () {
                     expect(true).assertEqual(resultSet.goToFirstRow())
                     const name = await resultSet.getString(resultSet.getColumnIndex("name"))
                     await expect(nameStr).assertEqual(name);
-                    console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
+                    resultSet.close()
                     resultSet = null
                 }
 
@@ -364,7 +359,7 @@ describe('rdbStoreUpdateTest', function () {
                     expect(true).assertEqual(resultSet.goToFirstRow())
                     const name = await resultSet.getString(resultSet.getColumnIndex("name"))
                     await expect(nameStr).assertEqual(name);
-                    console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
+                    resultSet.close()
                     resultSet = null
                 }
 
@@ -417,7 +412,7 @@ describe('rdbStoreUpdateTest', function () {
                     expect(true).assertEqual(resultSet.goToFirstRow())
                     const name = await resultSet.getString(resultSet.getColumnIndex("name"))
                     await expect(nameStr).assertEqual(name);
-                    console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
+                    resultSet.close()
                     resultSet = null
                 }
 
@@ -539,7 +534,7 @@ describe('rdbStoreUpdateTest', function () {
                     console.log(TAG + "{id=" + id_1 + ", name=" + name_1 + ", age=" + age_1 + ", salary="
                         + salary_1 + ", blobType=" + blobType_1);
                     await expect(false).assertEqual(resultSet.goToNextRow())
-
+                    resultSet.close()
                     resultSet = null
                     done();
                     console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0001 end   *************");
@@ -641,7 +636,7 @@ describe('rdbStoreUpdateTest', function () {
             console.log(TAG + "{id=" + id_1 + ", name=" + name_1 + ", age=" + age_1 + ", salary="
                 + salary_1 + ", blobType=" + blobType_1);
             await expect(false).assertEqual(resultSet.goToNextRow())
-
+            resultSet.close()
             resultSet = null
             done()
             console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0002 end   *************");
@@ -731,6 +726,7 @@ describe('rdbStoreUpdateTest', function () {
                         + salary_1 + ", blobType=" + blobType_1);
                     await expect(false).assertEqual(resultSet.goToNextRow())
 
+                    resultSet.close()
                     resultSet = null
                     done();
                     console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0003 end   *************");
@@ -834,6 +830,7 @@ describe('rdbStoreUpdateTest', function () {
                 + salary_1 + ", blobType=" + blobType_1);
             await expect(false).assertEqual(resultSet.goToNextRow())
 
+            resultSet.close()
             resultSet = null
             done()
             console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0004 end   *************");
@@ -923,6 +920,7 @@ describe('rdbStoreUpdateTest', function () {
                         + salary_1 + ", blobType=" + blobType_1);
                     await expect(false).assertEqual(resultSet.goToNextRow())
 
+                    resultSet.close()
                     resultSet = null
                     done()
                     console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0005 end   *************");
@@ -995,6 +993,7 @@ describe('rdbStoreUpdateTest', function () {
                         + salary + ", blobType=" + blobType);
 
                     await expect(false).assertEqual(resultSet.goToNextRow())
+                    resultSet.close()
                     resultSet = null
                     done()
                     console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0006 end   *************");
