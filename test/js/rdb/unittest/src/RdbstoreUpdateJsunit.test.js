@@ -16,7 +16,8 @@ import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from '
 import dataRdb from '@ohos.data.rdb';
 
 const TAG = "[RDB_JSKITS_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name TEXT UNIQUE, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "name TEXT UNIQUE, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 const STORE_CONFIG = {
     name: "UpdataTest.db",
 }
@@ -59,14 +60,8 @@ describe('rdbStoreUpdateTest', function () {
                 "salary": 100.5,
                 "blobType": u8,
             }
-            let insertPromise = rdbStore.insert("test", valueBucket)
-            insertPromise.then(async (ret) => {
-                expect(1).assertEqual(ret);
-                await console.log(TAG + "update done: " + ret);
-            }).catch((err) => {
-                expect(null).assertFail();
-            })
-            await insertPromise
+            let ret = await rdbStore.insert("test", valueBucket)
+            expect(1).assertEqual(ret);
         }
         {
             var u8 = new Uint8Array([4, 5, 6])
@@ -100,8 +95,8 @@ describe('rdbStoreUpdateTest', function () {
                     await expect(4).assertEqual(blobType[0]);
                     await expect(5).assertEqual(blobType[1]);
                     await expect(6).assertEqual(blobType[2]);
-                    console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
                     await expect(false).assertEqual(resultSet.goToNextRow())
+                    resultSet.close()
                     resultSet = null
                 }
 
@@ -307,7 +302,7 @@ describe('rdbStoreUpdateTest', function () {
                     expect(true).assertEqual(resultSet.goToFirstRow())
                     const name = await resultSet.getString(resultSet.getColumnIndex("name"))
                     await expect(nameStr).assertEqual(name);
-                    console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
+                    resultSet.close()
                     resultSet = null
                 }
 
@@ -360,7 +355,7 @@ describe('rdbStoreUpdateTest', function () {
                     expect(true).assertEqual(resultSet.goToFirstRow())
                     const name = await resultSet.getString(resultSet.getColumnIndex("name"))
                     await expect(nameStr).assertEqual(name);
-                    console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
+                    resultSet.close()
                     resultSet = null
                 }
 
@@ -413,7 +408,7 @@ describe('rdbStoreUpdateTest', function () {
                     expect(true).assertEqual(resultSet.goToFirstRow())
                     const name = await resultSet.getString(resultSet.getColumnIndex("name"))
                     await expect(nameStr).assertEqual(name);
-                    console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary=" + salary + ", blobType=" + blobType);
+                    resultSet.close()
                     resultSet = null
                 }
 
