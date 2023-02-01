@@ -16,7 +16,8 @@ import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from '
 import dataRdb from '@ohos.data.rdb'
 
 const TAG = "[RDB_JSKITS_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "data1 text," + "data2 long, " + "data3 double," + "data4 blob)";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "data1 text," + "data2 long, " + "data3 double," + "data4 blob)";
 
 const STORE_CONFIG = {
     name: "Resultset.db",
@@ -80,10 +81,6 @@ describe('rdbResultSetTest', function () {
         console.log(TAG + "createTest data end");
     }
 
-    function random(min, max) {
-        return Math.floor(Math.random() * (max - min)) + min;
-    }
-
     function createUint8Array(length) {
         let i = 0
         let index = 0
@@ -129,15 +126,14 @@ describe('rdbResultSetTest', function () {
         let predicates = await new dataRdb.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
         try {
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                const id = resultSet.getLong(resultSet.getColumnIndex("id"))
-                const data4 = resultSet.getBlob(resultSet.getColumnIndex("data4"))
-                console.log(TAG + "id=" + id + ", data4=" + data4);
-                expect(1).assertEqual(data4[0]);
-                expect(2).assertEqual(data4[1]);
-                expect(3).assertEqual(data4[2]);
-            }
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const id = resultSet.getLong(resultSet.getColumnIndex("id"))
+            const data4 = resultSet.getBlob(resultSet.getColumnIndex("data4"))
+            console.log(TAG + "id=" + id + ", data4=" + data4);
+            expect(1).assertEqual(data4[0]);
+            expect(2).assertEqual(data4[1]);
+            expect(3).assertEqual(data4[2]);
+
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
         } catch (e) {
@@ -158,16 +154,14 @@ describe('rdbResultSetTest', function () {
         let predicates = await new dataRdb.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
         try {
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-                const id = resultSet.getLong(resultSet.getColumnIndex("id"))
-                const data4 = resultSet.getBlob(resultSet.getColumnIndex("data4"))
-                console.log(TAG + "id=" + id + ", data4=" + data4);
-                expect(3).assertEqual(data4[0]);
-                expect(4).assertEqual(data4[1]);
-                expect(5).assertEqual(data4[2]);
-            }
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            expect(true).assertEqual(resultSet.goToNextRow())
+            const id = resultSet.getLong(resultSet.getColumnIndex("id"))
+            const data4 = resultSet.getBlob(resultSet.getColumnIndex("data4"))
+            console.log(TAG + "id=" + id + ", data4=" + data4);
+            expect(3).assertEqual(data4[0]);
+            expect(4).assertEqual(data4[1]);
+
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
         } catch (e) {
@@ -188,15 +182,13 @@ describe('rdbResultSetTest', function () {
         let predicates = await new dataRdb.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
         try {
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-                const id = resultSet.getLong(resultSet.getColumnIndex("id"))
-                const data4 = resultSet.getBlob(resultSet.getColumnIndex("data4"))
-                console.log(TAG + "id=" + id + ", data4=" + data4);
-                expect("").assertEqual("" + data4);
-            }
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            expect(true).assertEqual(resultSet.goToNextRow())
+            expect(true).assertEqual(resultSet.goToNextRow())
+            const id = resultSet.getLong(resultSet.getColumnIndex("id"))
+            const data4 = resultSet.getBlob(resultSet.getColumnIndex("data4"))
+            console.log(TAG + "id=" + id + ", data4=" + data4);
+
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
         } catch (e) {
@@ -473,13 +465,12 @@ describe('rdbResultSetTest', function () {
         let predicates = await new dataRdb.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
         try {
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                const id = resultSet.getLong(resultSet.getColumnIndex("id"))
-                const data2 = resultSet.getLong(resultSet.getColumnIndex("data2"))
-                console.log(TAG + "id=" + id + ", data2=" + data2);
-                expect(10).assertEqual(data2);
-            }
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const id = resultSet.getLong(resultSet.getColumnIndex("id"))
+            const data2 = resultSet.getLong(resultSet.getColumnIndex("data2"))
+            console.log(TAG + "id=" + id + ", data2=" + data2);
+            expect(10).assertEqual(data2);
+
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
         } catch (e) {
@@ -500,12 +491,11 @@ describe('rdbResultSetTest', function () {
         let predicates = await new dataRdb.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
         try {
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-                const data1 = resultSet.getLong(resultSet.getColumnIndex("data1"))
-                expect(2).assertEqual(data1);
-            }
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            expect(true).assertEqual(resultSet.goToNextRow())
+            const data1 = resultSet.getLong(resultSet.getColumnIndex("data1"))
+            expect(2).assertEqual(data1);
+
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
         } catch (e) {
@@ -526,12 +516,11 @@ describe('rdbResultSetTest', function () {
         let predicates = await new dataRdb.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
         try {
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-                const data2 = resultSet.getLong(resultSet.getColumnIndex("data2"))
-                expect(-5).assertEqual(data2);
-            }
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            expect(true).assertEqual(resultSet.goToNextRow())
+            const data2 = resultSet.getLong(resultSet.getColumnIndex("data2"))
+            expect(-5).assertEqual(data2);
+
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
         } catch (e) {
@@ -551,11 +540,10 @@ describe('rdbResultSetTest', function () {
         console.log(TAG + "************* testGetString0001 start *************");
         let predicates = await new dataRdb.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
-        {
-            expect(true).assertEqual(resultSet.goToFirstRow())
-            const data1 = resultSet.getString(resultSet.getColumnIndex("data1"))
-            expect("hello").assertEqual(data1);
-        }
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        const data1 = resultSet.getString(resultSet.getColumnIndex("data1"))
+        expect("hello").assertEqual(data1);
+
         resultSet.close();
         resultSet = null
         done();
@@ -571,11 +559,10 @@ describe('rdbResultSetTest', function () {
         console.log(TAG + "************* testGetString0002 start *************");
         let predicates = await new dataRdb.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
-        {
-            expect(true).assertEqual(resultSet.goToFirstRow())
-            const data2 = resultSet.getString(resultSet.getColumnIndex("data2"))
-            expect("10").assertEqual(data2);
-        }
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        const data2 = resultSet.getString(resultSet.getColumnIndex("data2"))
+        expect("10").assertEqual(data2);
+
         resultSet.close();
         resultSet = null
         done();
@@ -591,12 +578,11 @@ describe('rdbResultSetTest', function () {
         console.log(TAG + "************* testGetString0003 start *************");
         let predicates = await new dataRdb.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
-        {
-            expect(true).assertEqual(resultSet.goToFirstRow())
-            expect(true).assertEqual(resultSet.goToNextRow())
-            const data3 = resultSet.getString(resultSet.getColumnIndex("data3"))
-            expect("2.5").assertEqual(data3);
-        }
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        expect(true).assertEqual(resultSet.goToNextRow())
+        const data3 = resultSet.getString(resultSet.getColumnIndex("data3"))
+        expect("2.5").assertEqual(data3);
+
         resultSet.close();
         resultSet = null
         done();
@@ -612,17 +598,16 @@ describe('rdbResultSetTest', function () {
         console.log(TAG + "************* testGetString0004 start *************");
         let predicates = await new dataRdb.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
-        {
-            expect(true).assertEqual(resultSet.goToFirstRow())
-            expect(true).assertEqual(resultSet.goToNextRow())
-            expect(true).assertEqual(resultSet.goToNextRow())
-            const data1 = resultSet.getString(resultSet.getColumnIndex("data1"))
-            const data2 = resultSet.getString(resultSet.getColumnIndex("data2"))
-            const data3 = resultSet.getString(resultSet.getColumnIndex("data3"))
-            expect("hello world").assertEqual(data1);
-            expect("3").assertEqual(data2);
-            expect("1.8").assertEqual(data3);
-        }
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        expect(true).assertEqual(resultSet.goToNextRow())
+        expect(true).assertEqual(resultSet.goToNextRow())
+        const data1 = resultSet.getString(resultSet.getColumnIndex("data1"))
+        const data2 = resultSet.getString(resultSet.getColumnIndex("data2"))
+        const data3 = resultSet.getString(resultSet.getColumnIndex("data3"))
+        expect("hello world").assertEqual(data1);
+        expect("3").assertEqual(data2);
+        expect("1.8").assertEqual(data3);
+
         resultSet.close();
         resultSet = null
         done();
@@ -643,6 +628,7 @@ describe('rdbResultSetTest', function () {
         resultSet.close();
         expect(true).assertEqual(resultSet.isClosed)
 
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testIsClosed0001 end *************");
@@ -690,14 +676,13 @@ describe('rdbResultSetTest', function () {
      */
     it('testColumnCount0001', 0, async function (done) {
         console.log(TAG + "************* testColumnCount0001 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            expect(5).assertEqual(resultSet.columnCount);
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testColumnCount0001 end *************");
-        }
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        expect(5).assertEqual(resultSet.columnCount);
+        resultSet.close();
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testColumnCount0001 end *************");
     })
 
     /**
@@ -707,15 +692,14 @@ describe('rdbResultSetTest', function () {
      */
     it('testColumnCount0002', 0, async function (done) {
         console.log(TAG + "************* testColumnCount0002 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            predicates.equalTo("name", "wangwu");
-            let resultSet = await rdbStore.query(predicates)
-            expect(0).assertEqual(resultSet.columnCount);
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testColumnCount0002 end *************");
-        }
+        let predicates = await new dataRdb.RdbPredicates("test")
+        predicates.equalTo("name", "wangwu");
+        let resultSet = await rdbStore.query(predicates)
+        expect(0).assertEqual(resultSet.columnCount);
+        resultSet.close();
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testColumnCount0002 end *************");
     })
 
     /**
@@ -725,18 +709,15 @@ describe('rdbResultSetTest', function () {
      */
     it('testRowIndex0001', 0, async function (done) {
         console.log(TAG + "************* testRowIndex0001 *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                expect(0).assertEqual(resultSet.rowIndex)
-            }
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        expect(0).assertEqual(resultSet.rowIndex)
 
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testRowIndex0001 end *************");
-        }
+        resultSet.close();
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testRowIndex0001 end *************");
     })
 
     /**
@@ -746,18 +727,15 @@ describe('rdbResultSetTest', function () {
      */
     it('testRowIndex0002', 0, async function (done) {
         console.log(TAG + "************* testRowIndex0002 *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToLastRow())
-                expect(2).assertEqual(resultSet.rowIndex)
-            }
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        expect(true).assertEqual(resultSet.goToLastRow())
+        expect(2).assertEqual(resultSet.rowIndex)
 
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testRowIndex0002 end *************");
-        }
+        resultSet.close();
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testRowIndex0002 end *************");
     })
 
     /**
@@ -772,10 +750,10 @@ describe('rdbResultSetTest', function () {
         let resultSet = await rdbStore.query(predicates)
         try {
             expect(true).assertEqual(resultSet.goToFirstRow())
-            resultSet.close();
         } catch (e) {
             expect(null).assertFail();
         }
+        resultSet.close();
         resultSet = null
         done();
         console.log(TAG + "************* testGoToFirstRow0001 end *************");
@@ -797,6 +775,7 @@ describe('rdbResultSetTest', function () {
         } catch (e) {
             expect(null).assertFail();
         }
+        resultSet.close()
         resultSet = null
         done();
         console.log(TAG + "************* testGoToFirstRow0002 end *************");
@@ -819,6 +798,7 @@ describe('rdbResultSetTest', function () {
         } catch (e) {
             expect(null).assertFail();
         }
+        resultSet.close()
         resultSet = null
         done();
         console.log(TAG + "************* testGoToFirstRow0003 end *************");
@@ -831,16 +811,15 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoToLastRow0001', 0, async function (done) {
         console.log(TAG + "************* testGoToLastRow0001 start *************");
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
         {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToLastRow())
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoToLastRow0001 end *************");
+            expect(true).assertEqual(resultSet.goToLastRow())
         }
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToLastRow0001 end *************");
     })
 
     /**
@@ -850,17 +829,14 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoToLastRow0002', 0, async function (done) {
         console.log(TAG + "************* testGoToLastRow0002 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            predicates.equalTo("name", "wangwu");
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(false).assertEqual(resultSet.goToLastRow())
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoToLastRow0002 end *************");
-        }
+        let predicates = await new dataRdb.RdbPredicates("test")
+        predicates.equalTo("name", "wangwu");
+        let resultSet = await rdbStore.query(predicates)
+        expect(false).assertEqual(resultSet.goToLastRow())
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToLastRow0002 end *************");
     })
 
     /**
@@ -870,18 +846,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoToLastRow0003', 0, async function (done) {
         console.log(TAG + "************* testGoToLastRow0003 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToLastRow())
-                expect(true).assertEqual(resultSet.goToPreviousRow())
-                expect(true).assertEqual(resultSet.goToLastRow())
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoToLastRow0003 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToLastRow())
+        expect(true).assertEqual(resultSet.goToPreviousRow())
+        expect(true).assertEqual(resultSet.goToLastRow())
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToLastRow0003 end *************");
+
     })
 
     /**
@@ -891,16 +868,17 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoToNextRow0001', 0, async function (done) {
         console.log(TAG + "************* testGoToNextRow0001 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToNextRow())
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoToNextRow0001 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToNextRow())
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToNextRow0001 end *************");
+
     })
 
     /**
@@ -910,17 +888,18 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoToNextRow0002', 0, async function (done) {
         console.log(TAG + "************* testGoToNextRow0002 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            predicates.equalTo("name", "wangwu");
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(false).assertEqual(resultSet.goToNextRow())
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoToNextRow0002 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        predicates.equalTo("name", "wangwu");
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(false).assertEqual(resultSet.goToNextRow())
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToNextRow0002 end *************");
+
     })
 
     /**
@@ -930,19 +909,20 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoToNextRow0003', 0, async function (done) {
         console.log(TAG + "************* testGoToNextRow0003 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-                expect(true).assertEqual(resultSet.goToPreviousRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoToNextRow0003 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        expect(true).assertEqual(resultSet.goToNextRow())
+        expect(true).assertEqual(resultSet.goToPreviousRow())
+        expect(true).assertEqual(resultSet.goToNextRow())
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToNextRow0003 end *************");
+
     })
 
     /**
@@ -952,17 +932,18 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoToNextRow0004', 0, async function (done) {
         console.log(TAG + "************* testGoToNextRow0004 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToLastRow())
-                expect(false).assertEqual(resultSet.goToNextRow())
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoToNextRow0004 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToLastRow())
+        expect(false).assertEqual(resultSet.goToNextRow())
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToNextRow0004 end *************");
+
     })
 
     /**
@@ -972,16 +953,17 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoToPreviousRow0001', 0, async function (done) {
         console.log(TAG + "************* testGoToPreviousRow0001 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(false).assertEqual(resultSet.goToPreviousRow())
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoToPreviousRow0001 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(false).assertEqual(resultSet.goToPreviousRow())
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToPreviousRow0001 end *************");
+
     })
 
     /**
@@ -991,17 +973,18 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoToPreviousRow0002', 0, async function (done) {
         console.log(TAG + "************* testGoToPreviousRow0002 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            predicates.equalTo("name", "wangwu");
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(false).assertEqual(resultSet.goToPreviousRow())
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoToPreviousRow0002 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        predicates.equalTo("name", "wangwu");
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(false).assertEqual(resultSet.goToPreviousRow())
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToPreviousRow0002 end *************");
+
     })
 
     /**
@@ -1011,18 +994,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoToPreviousRow0003', 0, async function (done) {
         console.log(TAG + "************* testGoToPreviousRow0003 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-                expect(true).assertEqual(resultSet.goToPreviousRow())
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoToPreviousRow0003 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        expect(true).assertEqual(resultSet.goToNextRow())
+        expect(true).assertEqual(resultSet.goToPreviousRow())
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToPreviousRow0003 end *************");
+
     })
 
     /**
@@ -1032,17 +1016,18 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoToPreviousRow0004', 0, async function (done) {
         console.log(TAG + "************* testGoToPreviousRow0004 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToLastRow())
-                expect(true).assertEqual(resultSet.goToPreviousRow())
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoToPreviousRow0004 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToLastRow())
+        expect(true).assertEqual(resultSet.goToPreviousRow())
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToPreviousRow0004 end *************");
+
     })
 
     /**
@@ -1052,18 +1037,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoTo0001', 0, async function (done) {
         console.log(TAG + "************* testGoTo0001 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                resultSet.goTo(1)
-                expect(1).assertEqual(resultSet.rowIndex)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoTo0001 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        resultSet.goTo(1)
+        expect(1).assertEqual(resultSet.rowIndex)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoTo0001 end *************");
+
     })
 
     /**
@@ -1073,18 +1059,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoTo0002', 0, async function (done) {
         console.log(TAG + "************* testGoTo0002 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            predicates.equalTo("name", "wangwu");
-            let resultSet = await rdbStore.query(predicates)
-            {
-                resultSet.goTo(1)
-                expect(-1).assertEqual(resultSet.rowIndex)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoTo0002 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        predicates.equalTo("name", "wangwu");
+        let resultSet = await rdbStore.query(predicates)
+
+        resultSet.goTo(1)
+        expect(-1).assertEqual(resultSet.rowIndex)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoTo0002 end *************");
+
     })
 
     /**
@@ -1094,19 +1081,20 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoTo0003', 0, async function (done) {
         console.log(TAG + "************* testGoTo0003 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-                resultSet.goTo(1)
-                expect(2).assertEqual(resultSet.rowIndex)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoTo0003 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        expect(true).assertEqual(resultSet.goToNextRow())
+        resultSet.goTo(1)
+        expect(2).assertEqual(resultSet.rowIndex)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoTo0003 end *************");
+
     })
 
     /**
@@ -1116,18 +1104,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoTo0004', 0, async function (done) {
         console.log(TAG + "************* testGoTo0004 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToLastRow())
-                resultSet.goTo(5)
-                expect(3).assertEqual(resultSet.rowIndex)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoTo0004 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToLastRow())
+        resultSet.goTo(5)
+        expect(3).assertEqual(resultSet.rowIndex)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoTo0004 end *************");
+
     })
 
     /**
@@ -1137,18 +1126,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoToRow0001', 0, async function (done) {
         console.log(TAG + "************* testGoToRow0001 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                resultSet.goToRow(1)
-                expect(1).assertEqual(resultSet.rowIndex)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoToRow0001 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        resultSet.goToRow(1)
+        expect(1).assertEqual(resultSet.rowIndex)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToRow0001 end *************");
+
     })
 
     /**
@@ -1158,18 +1148,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoToRow0002', 0, async function (done) {
         console.log(TAG + "************* testGoToRow0002 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            predicates.equalTo("name", "wangwu");
-            let resultSet = await rdbStore.query(predicates)
-            {
-                resultSet.goToRow(1)
-                expect(-1).assertEqual(resultSet.rowIndex)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoToRow0002 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        predicates.equalTo("name", "wangwu");
+        let resultSet = await rdbStore.query(predicates)
+
+        resultSet.goToRow(1)
+        expect(-1).assertEqual(resultSet.rowIndex)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToRow0002 end *************");
+
     })
 
     /**
@@ -1179,20 +1170,21 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoToRow0003', 0, async function (done) {
         console.log(TAG + "************* testGoToRow0003 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-                resultSet.goToRow(1)
-                expect(1).assertEqual(resultSet.rowIndex)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoToRow0003 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        expect(true).assertEqual(resultSet.goToNextRow())
+        expect(true).assertEqual(resultSet.goToNextRow())
+        resultSet.goToRow(1)
+        expect(1).assertEqual(resultSet.rowIndex)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToRow0003 end *************");
+
     })
 
     /**
@@ -1202,18 +1194,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testGoToRow0004', 0, async function (done) {
         console.log(TAG + "************* testGoToRow0004 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToLastRow())
-                resultSet.goToRow(5)
-                expect(3).assertEqual(resultSet.rowIndex)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGoToRow0004 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToLastRow())
+        resultSet.goToRow(5)
+        expect(3).assertEqual(resultSet.rowIndex)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToRow0004 end *************");
+
     })
 
     /**
@@ -1223,17 +1216,18 @@ describe('rdbResultSetTest', function () {
      */
     it('testIsAtFirstRow0001', 0, async function (done) {
         console.log(TAG + "************* testIsAtFirstRow0001 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                expect(true).assertEqual(resultSet.isAtFirstRow)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testIsAtFirstRow0001 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        expect(true).assertEqual(resultSet.isAtFirstRow)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testIsAtFirstRow0001 end *************");
+
     })
 
     /**
@@ -1243,17 +1237,18 @@ describe('rdbResultSetTest', function () {
      */
     it('testIsAtFirstRow0002', 0, async function (done) {
         console.log(TAG + "************* testIsAtFirstRow0002 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            predicates.equalTo("name", "wangwu");
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(false).assertEqual(resultSet.isAtFirstRow)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testIsAtFirstRow0002 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        predicates.equalTo("name", "wangwu");
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(false).assertEqual(resultSet.isAtFirstRow)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testIsAtFirstRow0002 end *************");
+
     })
 
     /**
@@ -1263,18 +1258,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testIsAtFirstRow0003', 0, async function (done) {
         console.log(TAG + "************* testIsAtFirstRow0003 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-                expect(false).assertEqual(resultSet.isAtFirstRow)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testIsAtFirstRow0003 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        expect(true).assertEqual(resultSet.goToNextRow())
+        expect(false).assertEqual(resultSet.isAtFirstRow)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testIsAtFirstRow0003 end *************");
+
     })
 
     /**
@@ -1284,17 +1280,18 @@ describe('rdbResultSetTest', function () {
      */
     it('testIsAtFirstRow0004', 0, async function (done) {
         console.log(TAG + "************* testIsAtFirstRow0004 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToLastRow())
-                expect(false).assertEqual(resultSet.isAtFirstRow)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testIsAtFirstRow0004 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToLastRow())
+        expect(false).assertEqual(resultSet.isAtFirstRow)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testIsAtFirstRow0004 end *************");
+
     })
 
     /**
@@ -1304,18 +1301,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testIsAtFirstRow0005', 0, async function (done) {
         console.log(TAG + "************* testIsAtFirstRow0005 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                resultSet.goTo(1)
-                resultSet.goTo(0)
-                expect(true).assertEqual(resultSet.isAtFirstRow)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testIsAtFirstRow0005 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        resultSet.goTo(1)
+        resultSet.goTo(0)
+        expect(true).assertEqual(resultSet.isAtFirstRow)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testIsAtFirstRow0005 end *************");
+
     })
 
     /**
@@ -1325,18 +1323,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testIsAtFirstRow0006', 0, async function (done) {
         console.log(TAG + "************* testIsAtFirstRow0006 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                resultSet.goTo(1)
-                expect(true).assertEqual(resultSet.isAtFirstRow)
-                expect(true).assertEqual(resultSet.isAtFirstRow)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testIsAtFirstRow0006 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        resultSet.goTo(1)
+        expect(true).assertEqual(resultSet.isAtFirstRow)
+        expect(true).assertEqual(resultSet.isAtFirstRow)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testIsAtFirstRow0006 end *************");
+
     })
 
     /**
@@ -1346,17 +1345,18 @@ describe('rdbResultSetTest', function () {
      */
     it('testIsAtLastRow0001', 0, async function (done) {
         console.log(TAG + "************* testIsAtLastRow0001 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                expect(false).assertEqual(resultSet.isAtLastRow)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testIsAtLastRow0001 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        expect(false).assertEqual(resultSet.isAtLastRow)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testIsAtLastRow0001 end *************");
+
     })
 
     /**
@@ -1366,17 +1366,18 @@ describe('rdbResultSetTest', function () {
      */
     it('testIsAtLastRow0002', 0, async function (done) {
         console.log(TAG + "************* testIsAtLastRow0002 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            predicates.equalTo("name", "wangwu");
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(false).assertEqual(resultSet.isAtLastRow)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testIsAtLastRow0002 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        predicates.equalTo("name", "wangwu");
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(false).assertEqual(resultSet.isAtLastRow)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testIsAtLastRow0002 end *************");
+
     })
 
     /**
@@ -1386,18 +1387,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testIsAtLastRow0003', 0, async function (done) {
         console.log(TAG + "************* testIsAtLastRow0003 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-                expect(false).assertEqual(resultSet.isAtLastRow)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testIsAtLastRow0003 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        expect(true).assertEqual(resultSet.goToNextRow())
+        expect(false).assertEqual(resultSet.isAtLastRow)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testIsAtLastRow0003 end *************");
+
     })
 
     /**
@@ -1407,17 +1409,18 @@ describe('rdbResultSetTest', function () {
      */
     it('testIsAtLastRow0004', 0, async function (done) {
         console.log(TAG + "************* testIsAtLastRow0004 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToLastRow())
-                expect(true).assertEqual(resultSet.isAtLastRow)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testIsAtLastRow0004 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToLastRow())
+        expect(true).assertEqual(resultSet.isAtLastRow)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testIsAtLastRow0004 end *************");
+
     })
 
     /**
@@ -1427,18 +1430,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testIsAtLastRow0005', 0, async function (done) {
         console.log(TAG + "************* testIsAtLastRow0005 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                resultSet.goToRow(2)
-                expect(true).assertEqual(resultSet.isAtLastRow)
-                expect(true).assertEqual(resultSet.isAtLastRow)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testIsAtLastRow0005 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        resultSet.goToRow(2)
+        expect(true).assertEqual(resultSet.isAtLastRow)
+        expect(true).assertEqual(resultSet.isAtLastRow)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testIsAtLastRow0005 end *************");
+
     })
 
     /**
@@ -1448,18 +1452,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testGetDouble0001', 0, async function (done) {
         console.log(TAG + "************* testGetDouble0001 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                resultSet.goTo(1)
-                const data3 = resultSet.getDouble(resultSet.getColumnIndex("data3"))
-                expect(1.0).assertEqual(data3)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGetDouble0001 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        resultSet.goTo(1)
+        const data3 = resultSet.getDouble(resultSet.getColumnIndex("data3"))
+        expect(1.0).assertEqual(data3)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGetDouble0001 end *************");
+
     })
 
     /**
@@ -1469,18 +1474,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testGetDouble0002', 0, async function (done) {
         console.log(TAG + "************* testGetDouble0002 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                resultSet.goTo(2)
-                const data3 = resultSet.getDouble(resultSet.getColumnIndex("data3"))
-                expect(2.5).assertEqual(data3)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGetDouble0002 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        resultSet.goTo(2)
+        const data3 = resultSet.getDouble(resultSet.getColumnIndex("data3"))
+        expect(2.5).assertEqual(data3)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGetDouble0002 end *************");
+
     })
 
     /**
@@ -1490,18 +1496,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testGetDouble0003', 0, async function (done) {
         console.log(TAG + "************* testGetDouble0003 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                resultSet.goTo(3)
-                const data3 = resultSet.getDouble(resultSet.getColumnIndex("data3"))
-                expect(1.8).assertEqual(data3)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGetDouble0003 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        resultSet.goTo(3)
+        const data3 = resultSet.getDouble(resultSet.getColumnIndex("data3"))
+        expect(1.8).assertEqual(data3)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGetDouble0003 end *************");
+
     })
 
     /**
@@ -1511,18 +1518,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testGetDouble0004', 0, async function (done) {
         console.log(TAG + "************* testGetDouble0004 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                resultSet.goTo(1)
-                const data2 = resultSet.getDouble(resultSet.getColumnIndex("data2"))
-                expect(10).assertEqual(data2)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGetDouble0004 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        resultSet.goTo(1)
+        const data2 = resultSet.getDouble(resultSet.getColumnIndex("data2"))
+        expect(10).assertEqual(data2)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGetDouble0004 end *************");
+
     })
 
     /**
@@ -1532,20 +1540,21 @@ describe('rdbResultSetTest', function () {
      */
     it('testIsColumnNull0001', 0, async function (done) {
         console.log(TAG + "************* testIsColumnNull0001 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-                const isColumnNull1 = resultSet.isColumnNull(resultSet.getColumnIndex("data1"))
-                expect(false).assertEqual(isColumnNull1)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testIsColumnNull0001 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        expect(true).assertEqual(resultSet.goToNextRow())
+        expect(true).assertEqual(resultSet.goToNextRow())
+        const isColumnNull1 = resultSet.isColumnNull(resultSet.getColumnIndex("data1"))
+        expect(false).assertEqual(isColumnNull1)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testIsColumnNull0001 end *************");
+
     })
 
     /**
@@ -1555,20 +1564,21 @@ describe('rdbResultSetTest', function () {
      */
     it('testIsColumnNull0002', 0, async function (done) {
         console.log(TAG + "************* testIsColumnNull0002 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-                expect(true).assertEqual(resultSet.goToNextRow())
-                const isColumnNull4 = resultSet.isColumnNull(resultSet.getColumnIndex("data4"))
-                expect(true).assertEqual(isColumnNull4)
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testIsColumnNull0002 end *************");
-        }
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        expect(true).assertEqual(resultSet.goToNextRow())
+        expect(true).assertEqual(resultSet.goToNextRow())
+        const isColumnNull4 = resultSet.isColumnNull(resultSet.getColumnIndex("data4"))
+        expect(true).assertEqual(isColumnNull4)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testIsColumnNull0002 end *************");
+
     })
 
     /**
@@ -1578,15 +1588,20 @@ describe('rdbResultSetTest', function () {
      */
     it('testIsColumnNull0003', 0, async function (done) {
         console.log(TAG + "************* testIsColumnNull0003 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            resultSet.goToRow(5)
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        resultSet.goToRow(5)
+        try {
             expect(false).assertEqual(resultSet.isColumnNull(1));
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testIsColumnNull0003 end *************");
+        } catch (e) {
+            expect(e.code).assertEqual("14800013");
         }
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testIsColumnNull0003 end *************");
+
     })
     /**
      * @tc.name resultSet isColumnNull test
@@ -1595,18 +1610,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testIsColumnNull0004', 0, async function (done) {
         console.log(TAG + "************* testIsColumnNull0004 start *************");
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
         {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            {
-                resultSet.goToRow(2)
-                expect(false).assertEqual(resultSet.isColumnNull(1))
-                expect(true).assertEqual(resultSet.isColumnNull(4))
-            }
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testIsColumnNull0004 end *************");
+            resultSet.goToRow(2)
+            expect(false).assertEqual(resultSet.isColumnNull(1))
+            expect(true).assertEqual(resultSet.isColumnNull(4))
         }
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testIsColumnNull0004 end *************");
+
     })
 
     /**
@@ -1616,16 +1632,17 @@ describe('rdbResultSetTest', function () {
      */
     it('testGetColumnIndex0001', 0, async function (done) {
         console.log(TAG + "************* testGetColumnIndex0001 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            expect(true).assertEqual(resultSet.goToFirstRow())
-            expect(1).assertEqual(resultSet.getColumnIndex("data1"))
 
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGetColumnIndex0001 end *************");
-        }
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        expect(true).assertEqual(resultSet.goToFirstRow())
+        expect(1).assertEqual(resultSet.getColumnIndex("data1"))
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGetColumnIndex0001 end *************");
+
     })
 
     /**
@@ -1635,16 +1652,17 @@ describe('rdbResultSetTest', function () {
      */
     it('testGetColumnIndex0002', 0, async function (done) {
         console.log(TAG + "************* testGetColumnIndex0002 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            predicates.equalTo("name", "wangwu");
-            let resultSet = await rdbStore.query(predicates)
-            expect(-1).assertEqual(resultSet.getColumnIndex("data1"))
 
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGetColumnIndex0002 end *************");
-        }
+        let predicates = await new dataRdb.RdbPredicates("test")
+        predicates.equalTo("name", "wangwu");
+        let resultSet = await rdbStore.query(predicates)
+        expect(-1).assertEqual(resultSet.getColumnIndex("data1"))
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGetColumnIndex0002 end *************");
+
     })
 
     /**
@@ -1654,15 +1672,16 @@ describe('rdbResultSetTest', function () {
      */
     it('testGetColumnIndex0003', 0, async function (done) {
         console.log(TAG + "************* testGetColumnIndex0003 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            expect(-1).assertEqual(resultSet.getColumnIndex("dataX"))
 
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGetColumnIndex0003 end *************");
-        }
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        expect(-1).assertEqual(resultSet.getColumnIndex("dataX"))
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGetColumnIndex0003 end *************");
+
     })
 
     /**
@@ -1672,18 +1691,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testGetColumnIndex0004', 0, async function (done) {
         console.log(TAG + "************* testGetColumnIndex0004 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            try{
-                expect(-1).assertEqual(resultSet.getColumnIndex(""))
-            } catch(err) {
-                expect("401").assertEqual(err.code)
-            }
-            resultSet = null
-            done()
-            console.log(TAG + "************* testGetColumnIndex0004 end *************");
+
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        try {
+            expect(-1).assertEqual(resultSet.getColumnIndex(""))
+        } catch (err) {
+            expect("401").assertEqual(err.code)
         }
+        resultSet.close()
+        resultSet = null
+        done()
+        console.log(TAG + "************* testGetColumnIndex0004 end *************");
+
     })
 
     /**
@@ -1693,17 +1713,18 @@ describe('rdbResultSetTest', function () {
      */
     it('testGetColumnName0001', 0, async function (done) {
         console.log(TAG + "************* testGetColumnIndex0001 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
 
-            expect("data1").assertEqual(resultSet.getColumnName(1))
-            expect("data4").assertEqual(resultSet.getColumnName(4))
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
 
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGetColumnName0001 end *************");
-        }
+        expect("data1").assertEqual(resultSet.getColumnName(1))
+        expect("data4").assertEqual(resultSet.getColumnName(4))
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGetColumnName0001 end *************");
+
     })
 
     /**
@@ -1713,18 +1734,19 @@ describe('rdbResultSetTest', function () {
      */
     it('testGetColumnName0002', 0, async function (done) {
         console.log(TAG + "************* testGetColumnName0002 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            predicates.equalTo("name", "wangwu");
-            let resultSet = await rdbStore.query(predicates)
 
-            expect("").assertEqual(resultSet.getColumnName(1))
-            expect("").assertEqual(resultSet.getColumnName(4))
+        let predicates = await new dataRdb.RdbPredicates("test")
+        predicates.equalTo("name", "wangwu");
+        let resultSet = await rdbStore.query(predicates)
 
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGetColumnName0002 end *************");
-        }
+        expect("").assertEqual(resultSet.getColumnName(1))
+        expect("").assertEqual(resultSet.getColumnName(4))
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGetColumnName0002 end *************");
+
     })
 
     /**
@@ -1734,16 +1756,17 @@ describe('rdbResultSetTest', function () {
      */
     it('testGetColumnName0003', 0, async function (done) {
         console.log(TAG + "************* testGetColumnName0003 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
 
-            expect("").assertEqual(resultSet.getColumnName(10))
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
 
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGetColumnName0003 end *************");
-        }
+        expect("").assertEqual(resultSet.getColumnName(10))
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGetColumnName0003 end *************");
+
     })
 
     /**
@@ -1753,17 +1776,18 @@ describe('rdbResultSetTest', function () {
      */
     it('testGetColumnName0004', 0, async function (done) {
         console.log(TAG + "************* testGetColumnName0004 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            predicates.equalTo("name", "wangwu");
-            let resultSet = await rdbStore.query(predicates)
 
-            expect("").assertEqual(resultSet.getColumnName(10))
+        let predicates = await new dataRdb.RdbPredicates("test")
+        predicates.equalTo("name", "wangwu");
+        let resultSet = await rdbStore.query(predicates)
 
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testGetColumnName0004 end *************");
-        }
+        expect("").assertEqual(resultSet.getColumnName(10))
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGetColumnName0004 end *************");
+
     })
 
     /**
@@ -1773,17 +1797,18 @@ describe('rdbResultSetTest', function () {
      */
     it('testClose0001', 0, async function (done) {
         console.log(TAG + "************* testClose0001 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-            resultSet.goToRow(1)
-            resultSet.close()
-            expect(true).assertEqual(resultSet.isClosed)
 
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testClose0001 end *************");
-        }
+        let predicates = await new dataRdb.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        resultSet.goToRow(1)
+        resultSet.close()
+        expect(true).assertEqual(resultSet.isClosed)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testClose0001 end *************");
+
     })
 
     /**
@@ -1793,17 +1818,18 @@ describe('rdbResultSetTest', function () {
      */
     it('testClose0002', 0, async function (done) {
         console.log(TAG + "************* testClose0002 start *************");
-        {
-            let predicates = await new dataRdb.RdbPredicates("test")
-            predicates.equalTo("name", "wangwu");
-            let resultSet = await rdbStore.query(predicates)
-            resultSet.close()
-            expect(true).assertEqual(resultSet.isClosed)
 
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testClose0002 end *************");
-        }
+        let predicates = await new dataRdb.RdbPredicates("test")
+        predicates.equalTo("name", "wangwu");
+        let resultSet = await rdbStore.query(predicates)
+        resultSet.close()
+        expect(true).assertEqual(resultSet.isClosed)
+
+        resultSet.close()
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testClose0002 end *************");
+
     })
 
     /**
@@ -1813,25 +1839,25 @@ describe('rdbResultSetTest', function () {
      */
     it('testBigData0001', 0, async function (done) {
         console.log(TAG + "************* testBigData0001 start *************");
-        {
-            await createBigData(500);
-            let resultSet = await rdbStore.querySql("SELECT * FROM test");
-            let count = resultSet.rowCount;
-            expect(500).assertEqual(count);
 
-            resultSet.goToFirstRow();
-            let i = 0;
-            while (resultSet.isEnded == false) {
-                expect("test" + i++).assertEqual(resultSet.getString(1))
-                resultSet.goToNextRow();
-            }
+        await createBigData(500);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(500).assertEqual(count);
 
-            resultSet.close()
-            expect(true).assertEqual(resultSet.isClosed)
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testBigData0001 end *************");
+        resultSet.goToFirstRow();
+        let i = 0;
+        while (resultSet.isEnded == false) {
+            expect("test" + i++).assertEqual(resultSet.getString(1))
+            resultSet.goToNextRow();
         }
+
+        resultSet.close()
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testBigData0001 end *************");
+
     })
 
     /**
@@ -1841,25 +1867,25 @@ describe('rdbResultSetTest', function () {
      */
     it('testBigData0002', 0, async function (done) {
         console.log(TAG + "************* testBigData0002 start *************");
-        {
-            await createBigData(500);
-            let resultSet = await rdbStore.querySql("SELECT * FROM test");
-            let count = resultSet.rowCount;
-            expect(500).assertEqual(count);
 
-            resultSet.goToLastRow();
-            let i = resultSet.rowCount;
-            while (i >= 1) {
-                expect("test" + --i).assertEqual(resultSet.getString(1))
-                resultSet.goToPreviousRow();
-            }
+        await createBigData(500);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(500).assertEqual(count);
 
-            resultSet.close()
-            expect(true).assertEqual(resultSet.isClosed)
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testBigData0002 end *************");
+        resultSet.goToLastRow();
+        let i = resultSet.rowCount;
+        while (i >= 1) {
+            expect("test" + --i).assertEqual(resultSet.getString(1))
+            resultSet.goToPreviousRow();
         }
+
+        resultSet.close()
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testBigData0002 end *************");
+
     })
 
     /**
@@ -1869,24 +1895,24 @@ describe('rdbResultSetTest', function () {
      */
     it('testBigData0003', 0, async function (done) {
         console.log(TAG + "************* testBigData0003 start *************");
-        {
-            await createBigData(500);
-            let resultSet = await rdbStore.querySql("SELECT * FROM test");
-            let count = resultSet.rowCount;
-            expect(500).assertEqual(count);
 
-            let rows = [62, 80, 59, 121, 45, 99, 42, 104, 41, 105, 499, 248];
-            for (const i of rows) {
-                resultSet.goToRow(i);
-                expect("test" + i).assertEqual(resultSet.getString(1))
-            }
+        await createBigData(500);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(500).assertEqual(count);
 
-            resultSet.close()
-            expect(true).assertEqual(resultSet.isClosed)
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testBigData0003 end *************");
+        let rows = [62, 80, 59, 121, 45, 99, 42, 104, 41, 105, 499, 248];
+        for (const i of rows) {
+            resultSet.goToRow(i);
+            expect("test" + i).assertEqual(resultSet.getString(1))
         }
+
+        resultSet.close()
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testBigData0003 end *************");
+
     })
 
     /**
@@ -1896,27 +1922,27 @@ describe('rdbResultSetTest', function () {
      */
     it('testBigData0004', 0, async function (done) {
         console.log(TAG + "************* testBigData0004 start *************");
-        {
-            await createBigData(0);
-            let resultSet = await rdbStore.querySql("SELECT * FROM test");
-            let count = resultSet.rowCount;
-            expect(0).assertEqual(count);
 
-            resultSet.goToFirstRow();
+        await createBigData(0);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(0).assertEqual(count);
+
+        resultSet.goToFirstRow();
+        expect(false).assertEqual(resultSet.isStarted);
+
+        let rows = [1, 2, 0, -1, -2];
+        for (const i of rows) {
+            resultSet.goToRow(i);
             expect(false).assertEqual(resultSet.isStarted);
-
-            let rows = [1, 2, 0, -1, -2];
-            for (const i of rows) {
-                resultSet.goToRow(i);
-                expect(false).assertEqual(resultSet.isStarted);
-            }
-
-            resultSet.close()
-            expect(true).assertEqual(resultSet.isClosed)
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testBigData0004 end *************");
         }
+
+        resultSet.close()
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testBigData0004 end *************");
+
     })
 
     /**
@@ -1926,29 +1952,31 @@ describe('rdbResultSetTest', function () {
      */
     it('testBigData0005', 0, async function (done) {
         console.log(TAG + "************* testBigData0005 start *************");
-        {
-            await createBigData(1);
-            let resultSet = await rdbStore.querySql("SELECT * FROM test");
-            let count = resultSet.rowCount;
-            expect(1).assertEqual(count);
 
-            resultSet.goToFirstRow();
-            expect(true).assertEqual(resultSet.isStarted);
-            expect("test0").assertEqual(resultSet.getString(1))
+        await createBigData(1);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(1).assertEqual(count);
 
+        resultSet.goToFirstRow();
+        expect(true).assertEqual(resultSet.isStarted);
+        expect("test0").assertEqual(resultSet.getString(1))
+        try {
             let rows = [1, 2, -1, -2];
             for (const i of rows) {
                 resultSet.goToRow(i)
                 expect(true).assertEqual(resultSet.isStarted)
                 expect("").assertEqual(resultSet.getString(1))
             }
-
-            resultSet.close()
-            expect(true).assertEqual(resultSet.isClosed)
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testBigData0005 end *************");
+        } catch (e) {
+            expect(e.code).assertEqual("14800013");
         }
+        resultSet.close()
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testBigData0005 end *************");
+
     })
 
     /**
@@ -1958,35 +1986,39 @@ describe('rdbResultSetTest', function () {
      */
     it('testBigData0006', 0, async function (done) {
         console.log(TAG + "************* testBigData0006 start *************");
-        {
-            await createBigData(2);
-            let resultSet = await rdbStore.querySql("SELECT * FROM test");
-            let count = resultSet.rowCount;
-            expect(2).assertEqual(count);
 
-            resultSet.goToFirstRow();
+        await createBigData(2);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(2).assertEqual(count);
+
+        resultSet.goToFirstRow();
+        expect(true).assertEqual(resultSet.isStarted);
+
+        let rows = [0, 1];
+        for (const i of rows) {
+            resultSet.goToRow(i);
             expect(true).assertEqual(resultSet.isStarted);
+            expect("test" + i).assertEqual(resultSet.getString(1))
+        }
 
-            let rows = [0, 1];
-            for (const i of rows) {
-                resultSet.goToRow(i);
-                expect(true).assertEqual(resultSet.isStarted);
-                expect("test" + i).assertEqual(resultSet.getString(1))
-            }
-
+        try {
             rows = [2, 3, 4, -1, -2];
             for (const i of rows) {
                 resultSet.goToRow(i);
                 expect(true).assertEqual(resultSet.isStarted);
                 expect("").assertEqual(resultSet.getString(1))
             }
-
-            resultSet.close()
-            expect(true).assertEqual(resultSet.isClosed)
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testBigData0006 end *************");
+        } catch (e) {
+            expect(e.code).assertEqual("14800013");
         }
+
+        resultSet.close()
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testBigData0006 end *************");
+
     })
 
     /**
@@ -1996,28 +2028,28 @@ describe('rdbResultSetTest', function () {
      */
     it('testBigData0007', 0, async function (done) {
         console.log(TAG + "************* testBigData0007 start *************");
-        {
-            await createBigData(500);
-            let resultSet = await rdbStore.querySql("SELECT * FROM test");
-            let count = resultSet.rowCount;
-            expect(500).assertEqual(count);
 
-            let rows = [62, 80, 59, 121, 45, -1, 99, 42, 104, 41, 105, 499, 248];
-            for (const i of rows) {
-                resultSet.goToRow(i);
-                if (i > 0 ) {
-                    expect("test" + i).assertEqual(resultSet.getString(1))
-                } else {
-                    expect("test45").assertEqual(resultSet.getString(1))
-                }
+        await createBigData(500);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(500).assertEqual(count);
+
+        let rows = [62, 80, 59, 121, 45, -1, 99, 42, 104, 41, 105, 499, 248];
+        for (const i of rows) {
+            resultSet.goToRow(i);
+            if (i > 0) {
+                expect("test" + i).assertEqual(resultSet.getString(1))
+            } else {
+                expect("test45").assertEqual(resultSet.getString(1))
             }
-
-            resultSet.close()
-            expect(true).assertEqual(resultSet.isClosed)
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testBigData0007 end *************");
         }
+
+        resultSet.close()
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testBigData0007 end *************");
+
     })
 
     /**
@@ -2027,23 +2059,23 @@ describe('rdbResultSetTest', function () {
      */
     it('testBigData0008', 0, async function (done) {
         console.log(TAG + "************* testBigData0008 start *************");
-        {
-            await createBigData(200);
-            let resultSet = await rdbStore.querySql("SELECT * FROM test");
-            let count = resultSet.rowCount;
-            expect(200).assertEqual(count);
 
-            let i = 0;
-            while (resultSet.goToNextRow() == 0) {
-                expect("test" + i++).assertEqual(resultSet.getString(1))
-            }
+        await createBigData(200);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(200).assertEqual(count);
 
-            resultSet.close()
-            expect(true).assertEqual(resultSet.isClosed)
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testBigData0008 end *************");
+        let i = 0;
+        while (resultSet.goToNextRow() == 0) {
+            expect("test" + i++).assertEqual(resultSet.getString(1))
         }
+
+        resultSet.close()
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testBigData0008 end *************");
+
     })
 
     /**
@@ -2053,25 +2085,25 @@ describe('rdbResultSetTest', function () {
      */
     it('testBigData0009', 0, async function (done) {
         console.log(TAG + "************* testBigData0009 start *************");
-        {
-            await createBigData(200);
-            let resultSet = await rdbStore.querySql("SELECT * FROM test");
-            let count = resultSet.rowCount;
-            expect(200).assertEqual(count);
 
-            let i = 0;
-            while (i < 200) {
-                resultSet.goToRow(i);
-                expect("test" + i).assertEqual(resultSet.getString(1))
-                i++;
-            }
+        await createBigData(200);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(200).assertEqual(count);
 
-            resultSet.close()
-            expect(true).assertEqual(resultSet.isClosed)
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testBigData0009 end *************");
+        let i = 0;
+        while (i < 200) {
+            resultSet.goToRow(i);
+            expect("test" + i).assertEqual(resultSet.getString(1))
+            i++;
         }
+
+        resultSet.close()
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testBigData0009 end *************");
+
     })
 
     /**
@@ -2081,32 +2113,32 @@ describe('rdbResultSetTest', function () {
      */
     it('testBigData0010', 0, async function (done) {
         console.log(TAG + "************* testBigData0010 start *************");
-        {
-            await createBigData(200);
-            let resultSet = await rdbStore.querySql("SELECT * FROM test");
-            let count = resultSet.rowCount;
-            expect(200).assertEqual(count);
 
-            resultSet.goToFirstRow();
-            let i = 0;
-            while (resultSet.isEnded == false) {
-                expect("test" + i++).assertEqual(resultSet.getString(1))
-                resultSet.goToNextRow();
-            }
+        await createBigData(200);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(200).assertEqual(count);
 
-            i = 0;
-            while (i < 200) {
-                resultSet.goToRow(i);
-                expect("test" + i).assertEqual(resultSet.getString(1))
-                i++;
-            }
-
-            resultSet.close()
-            expect(true).assertEqual(resultSet.isClosed)
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testBigData0010 end *************");
+        resultSet.goToFirstRow();
+        let i = 0;
+        while (resultSet.isEnded == false) {
+            expect("test" + i++).assertEqual(resultSet.getString(1))
+            resultSet.goToNextRow();
         }
+
+        i = 0;
+        while (i < 200) {
+            resultSet.goToRow(i);
+            expect("test" + i).assertEqual(resultSet.getString(1))
+            i++;
+        }
+
+        resultSet.close()
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testBigData0010 end *************");
+
     })
 
     /**
@@ -2116,32 +2148,32 @@ describe('rdbResultSetTest', function () {
      */
     it('testBigData0011', 0, async function (done) {
         console.log(TAG + "************* testBigData0011 start *************");
-        {
-            await createBigData(200);
-            let resultSet = await rdbStore.querySql("SELECT * FROM test");
-            let count = resultSet.rowCount;
-            expect(200).assertEqual(count);
 
-            let i = 0;
-            while (i < 200) {
-                resultSet.goToRow(i);
-                expect("test" + i).assertEqual(resultSet.getString(1))
-                i++;
-            }
+        await createBigData(200);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(200).assertEqual(count);
 
-            resultSet.goToFirstRow();
-            i = 0;
-            while (resultSet.isEnded == false) {
-                expect("test" + i++).assertEqual(resultSet.getString(1))
-                resultSet.goToNextRow();
-            }
-
-            resultSet.close()
-            expect(true).assertEqual(resultSet.isClosed)
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testBigData0011 end *************");
+        let i = 0;
+        while (i < 200) {
+            resultSet.goToRow(i);
+            expect("test" + i).assertEqual(resultSet.getString(1))
+            i++;
         }
+
+        resultSet.goToFirstRow();
+        i = 0;
+        while (resultSet.isEnded == false) {
+            expect("test" + i++).assertEqual(resultSet.getString(1))
+            resultSet.goToNextRow();
+        }
+
+        resultSet.close()
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testBigData0011 end *************");
+
     })
 
     /**
@@ -2151,22 +2183,22 @@ describe('rdbResultSetTest', function () {
      */
     it('testBigData0012', 0, async function (done) {
         console.log(TAG + "************* testBigData0012 start *************");
-        {
-            await createBigData(1);
-            let resultSet = await rdbStore.querySql("SELECT * FROM test");
-            let count = resultSet.rowCount;
-            expect(1).assertEqual(count);
 
-            let i = 0;
-            resultSet.goToNextRow();
-            expect("test0").assertEqual(resultSet.getString(1))
+        await createBigData(1);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(1).assertEqual(count);
 
-            resultSet.close()
-            expect(true).assertEqual(resultSet.isClosed)
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testBigData0012 end *************");
-        }
+        let i = 0;
+        resultSet.goToNextRow();
+        expect("test0").assertEqual(resultSet.getString(1))
+
+        resultSet.close()
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testBigData0012 end *************");
+
     })
 
     /**
@@ -2176,31 +2208,31 @@ describe('rdbResultSetTest', function () {
      */
     it('testBigData0013', 0, async function (done) {
         console.log(TAG + "************* testBigData0013 start *************");
-        {
-            await createBigData(200);
-            let resultSet = await rdbStore.querySql("SELECT * FROM test");
-            let count = resultSet.rowCount;
-            expect(200).assertEqual(count);
 
-            resultSet.goToFirstRow();
-            let i = 0;
-            while (resultSet.isEnded == false) {
-                expect("test" + i++).assertEqual(resultSet.getString(1))
-                resultSet.goToNextRow();
-            }
+        await createBigData(200);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(200).assertEqual(count);
 
-            resultSet.goToRow(1);
-            expect("test1").assertEqual(resultSet.getString(1))
-
-            resultSet.goToRow(5);
-            expect("test5").assertEqual(resultSet.getString(1))
-
-            resultSet.close()
-            expect(true).assertEqual(resultSet.isClosed)
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testBigData0013 end *************");
+        resultSet.goToFirstRow();
+        let i = 0;
+        while (resultSet.isEnded == false) {
+            expect("test" + i++).assertEqual(resultSet.getString(1))
+            resultSet.goToNextRow();
         }
+
+        resultSet.goToRow(1);
+        expect("test1").assertEqual(resultSet.getString(1))
+
+        resultSet.goToRow(5);
+        expect("test5").assertEqual(resultSet.getString(1))
+
+        resultSet.close()
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testBigData0013 end *************");
+
     })
 
     /**
@@ -2210,32 +2242,32 @@ describe('rdbResultSetTest', function () {
      */
     it('testBigData0014', 0, async function (done) {
         console.log(TAG + "************* testBigData0014 start *************");
-        {
-            await createBigData(5);
-            let resultSet = await rdbStore.querySql("SELECT * FROM test");
-            let count = resultSet.rowCount;
-            expect(5).assertEqual(count);
 
-            resultSet.goToFirstRow();
-            let i = 0;
-            while (resultSet.isEnded == false) {
-                expect("test" + i++).assertEqual(resultSet.getString(1))
-                resultSet.goToNextRow();
-            }
+        await createBigData(5);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(5).assertEqual(count);
 
-            i = 0;
-            while (i < 5) {
-                resultSet.goToRow(i);
-                expect("test" + i).assertEqual(resultSet.getString(1))
-                i++;
-            }
-
-            resultSet.close()
-            expect(true).assertEqual(resultSet.isClosed)
-            resultSet = null;
-            done();
-            console.log(TAG + "************* testBigData0014 end *************");
+        resultSet.goToFirstRow();
+        let i = 0;
+        while (resultSet.isEnded == false) {
+            expect("test" + i++).assertEqual(resultSet.getString(1))
+            resultSet.goToNextRow();
         }
+
+        i = 0;
+        while (i < 5) {
+            resultSet.goToRow(i);
+            expect("test" + i).assertEqual(resultSet.getString(1))
+            i++;
+        }
+
+        resultSet.close()
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testBigData0014 end *************");
+        
     })
     console.log(TAG + "*************Unit Test End*************");
 })

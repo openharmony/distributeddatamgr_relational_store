@@ -177,7 +177,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
             } catch (err) {
                 expect(false).assertTrue()
             }
-            resultSet.close();
+            resultSet.close()
             resultSet = null
             done()
             await console.log(TAG + "************* RdbBackupRestoreTest_0010 end *************")

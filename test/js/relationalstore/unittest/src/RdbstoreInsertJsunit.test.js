@@ -18,7 +18,8 @@ import data_relationalStore from '@ohos.data.relationalStore';
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
 const STORE_CONFIG = {
     name: "InsertTest.db",
@@ -548,6 +549,7 @@ describe('rdbStoreInsertTest', function () {
         let resultSet = await rdbStore.querySql("SELECT * FROM test");
         let count = resultSet.rowCount;
         expect(100).assertEqual(count);
+        resultSet.close()
         console.log(TAG + "************* testRdbStorebatchInsert001 end *************");
     })
 
