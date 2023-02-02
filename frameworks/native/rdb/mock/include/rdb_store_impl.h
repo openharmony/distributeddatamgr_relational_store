@@ -110,6 +110,7 @@ private:
     std::string name;
     std::string fileType;
     std::stack<TransactionObserver *> transactionObserverStack;
+    bool isEncrypt_;
 
     int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
 };
