@@ -16,7 +16,8 @@ import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from
 import dataRdb from '@ohos.data.rdb';
 
 const TAG = "[RDB_JSKITS_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name TEXT, " + "age INTEGER, " + "salary REAL, " + "adddate DATE)";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "name TEXT, " + "age INTEGER, " + "salary REAL, " + "adddate DATE)";
 const STORE_CONFIG = {
     name: "PredicatesComplexFiledJsunit.db",
 }
@@ -81,6 +82,7 @@ describe('rdbStorePredicatesComplexFiledTest', function () {
         expect(3).assertEqual(count);
         await expect("2022-09-02").assertEqual(birthday)
         expect(false).assertEqual(resultSet.goToNextRow())
+        resultSet.close();
         done();
         console.log(TAG + "************* testRdbPredicatesComplexFiled0001 end   *************");
     })
@@ -107,6 +109,7 @@ describe('rdbStorePredicatesComplexFiledTest', function () {
         expect(2).assertEqual(count);
         await expect("2022-09-01").assertEqual(birthday)
         expect(false).assertEqual(resultSet.goToNextRow())
+        resultSet.close();
         done();
         console.log(TAG + "************* testRdbPredicatesComplexFiled0002 end   *************");
     })

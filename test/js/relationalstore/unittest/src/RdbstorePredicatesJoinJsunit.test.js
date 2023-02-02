@@ -37,7 +37,7 @@ const STORE_CONFIG = {
     securityLevel: data_relationalStore.SecurityLevel.S1,
 }
 
-const TAG = 'RDB_TEST';
+const TAG = 'RDB_TEST ';
 
 var rdbStore = undefined
 var context = ability_featureAbility.getContext()
@@ -136,6 +136,7 @@ describe('rdbStorePredicatesJoinTest', function () {
         expect(1).assertEqual(resultSet.getInt(5));
         expect("SanGuo").assertEqual(resultSet.getString(6));
         expect(1).assertEqual(resultSet.getInt(7));
+        resultSet.close();
         done();
     })
 
@@ -160,6 +161,7 @@ describe('rdbStorePredicatesJoinTest', function () {
         expect(1).assertEqual(resultSet.getInt(5));
         expect("SanGuo").assertEqual(resultSet.getString(6));
         expect(1).assertEqual(resultSet.getInt(7));
+        resultSet.close();
         done();
     })
 
@@ -175,6 +177,7 @@ describe('rdbStorePredicatesJoinTest', function () {
             "SELECT * FROM user LEFT OUTER JOIN book ON user.userId = book.userId");
 
         expect(5).assertEqual(resultSet.rowCount);
+        resultSet.close();
         done();
     })
 
@@ -199,6 +202,7 @@ describe('rdbStorePredicatesJoinTest', function () {
         expect(100.51).assertEqual(resultSet.getDouble(4));
         expect(1).assertEqual(resultSet.getInt(5));
         expect("SanGuo").assertEqual(resultSet.getString(6));
+        resultSet.close();
         done();
     })
 

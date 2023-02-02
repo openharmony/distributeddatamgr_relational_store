@@ -16,7 +16,8 @@ import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from '
 import dataRdb from '@ohos.data.rdb';
 
 const TAG = "[RDB_JSKITS_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
 const STORE_CONFIG = {
     name: "Delete.db",
@@ -36,7 +37,6 @@ describe('rdbStoreDeleteTest', function () {
 
     afterEach(async function () {
         console.info(TAG + 'afterEach')
-        await rdbStore.executeSql("DELETE FROM test");
         rdbStore = null
         await dataRdb.deleteRdbStore("Delete.db");
     })
@@ -178,6 +178,7 @@ describe('rdbStoreDeleteTest', function () {
             predicates.equalTo("age", 28)
             let resultSet = await rdbStore.query(predicates)
             expect(1).assertEqual(resultSet.rowCount)
+            resultSet.close()
         }
         {
             let predicates = await new dataRdb.RdbPredicates("test")
@@ -196,6 +197,7 @@ describe('rdbStoreDeleteTest', function () {
             predicates.equalTo("age", 28)
             let resultSet = await rdbStore.query(predicates)
             expect(0).assertEqual(resultSet.rowCount)
+            resultSet.close()
         }
         done()
         console.log(TAG + "************* testRdbStoreDelete0003 end *************");
