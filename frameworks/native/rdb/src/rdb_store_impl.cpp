@@ -101,7 +101,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
 }
 
 RdbStoreImpl::RdbStoreImpl()
-    : connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false), isMemoryRdb(false), rdbStatus(0)
+    : connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false), isMemoryRdb(false)
 {
 }
 
@@ -675,22 +675,6 @@ int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
     }
 
     return errCode;
-}
-
-/**
- * Sets the database status.
- */
-void RdbStoreImpl::SetStatus(int status)
-{
-    rdbStatus = status;
-}
-
-/**
- * Obtains the database status.
- */
-int RdbStoreImpl::GetStatus()
-{
-    return rdbStatus;
 }
 
 /**

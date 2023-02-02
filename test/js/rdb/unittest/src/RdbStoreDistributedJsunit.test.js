@@ -21,32 +21,8 @@ const STORE_NAME = "distributed_rdb.db"
 var rdbStore = undefined;
 
 describe('rdbStoreDistributedTest', function () {
-    beforeAll(async function () {
+    beforeAll(async function (done) {
         console.info(TAG + 'beforeAll')
-    })
-
-    beforeEach(async function () {
-        console.info(TAG + 'beforeEach')
-    })
-
-    afterEach(async function () {
-        console.info(TAG + 'afterEach')
-    })
-
-    afterAll(async function () {
-        console.info(TAG + 'afterAll')
-        await dataRdb.deleteRdbStore(STORE_NAME);
-    })
-
-    console.log(TAG + "*************Unit Test Begin*************");
-
-    /**
-     * @tc.name rdb open test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_001
-     * @tc.desc rdb open test
-     */
-    it('testRdbStoreDistributed0001', 0, async function (done) {
-        console.log(TAG + "************* testRdbStoreDistributed001 start *************");
         const config = {
             "name": STORE_NAME,
         }
@@ -85,8 +61,23 @@ describe('rdbStoreDistributedTest', function () {
             expect(null).assertFail()
         }
         done()
-        console.log(TAG + "************* testRdbStoreDistributed001 end *************");
     })
+
+    beforeEach(async function () {
+        console.info(TAG + 'beforeEach')
+    })
+
+    afterEach(async function () {
+        console.info(TAG + 'afterEach')
+    })
+
+    afterAll(async function () {
+        console.info(TAG + 'afterAll')
+        rdbStore = null
+        await dataRdb.deleteRdbStore(STORE_NAME);
+    })
+
+    console.log(TAG + "*************Unit Test Begin*************");
 
     /**
      * @tc.name set_distributed_table_none_table

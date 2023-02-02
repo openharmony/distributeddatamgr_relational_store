@@ -202,13 +202,11 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("rollBack", RollBack),
         DECLARE_NAPI_FUNCTION("commit", Commit),
         DECLARE_NAPI_FUNCTION("queryByStep", QueryByStep),
-        DECLARE_NAPI_FUNCTION("getVersion", GetVersion),
-        DECLARE_NAPI_FUNCTION("setVersion", SetVersion),
         DECLARE_NAPI_FUNCTION("restore", Restore),
+        DECLARE_NAPI_GETTER_SETTER("version", GetVersion, SetVersion),
         DECLARE_NAPI_GETTER("isInTransaction", IsInTransaction),
         DECLARE_NAPI_GETTER("isOpen", IsOpen),
         DECLARE_NAPI_GETTER("path", GetPath),
-        DECLARE_NAPI_GETTER("openStatus", GetStatus),
         DECLARE_NAPI_GETTER("isHoldingConnection", IsHoldingConnection),
         DECLARE_NAPI_GETTER("isReadOnly", IsReadOnly),
         DECLARE_NAPI_GETTER("isMemoryRdb", IsMemoryRdb),
@@ -1038,17 +1036,6 @@ napi_value RdbStoreProxy::GetPath(napi_env env, napi_callback_info info)
     return JSUtils::Convert2JSValue(env, path);
 }
 
-napi_value RdbStoreProxy::GetStatus(napi_env env, napi_callback_info info)
-{
-    napi_value thisObj = nullptr;
-    napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
-    RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
-    int status = rdbStoreProxy->rdbStore_->GetStatus();
-    LOG_DEBUG("RdbStoreProxy::GetStatus status is : %{public}d", status);
-    return JSUtils::Convert2JSValue(env, status);
-}
-
 napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info)
 {
     napi_value thisObj = nullptr;
@@ -1145,7 +1132,8 @@ napi_value RdbStoreProxy::GetVersion(napi_env env, napi_callback_info info)
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
+    std::shared_ptr<Error> InnerError = std::make_shared<CustomError>(E_INNER_ERROR, "RdbStore is invalid");
+    RDB_NAPI_ASSERT(env, rdbStoreProxy != nullptr, InnerError);
     int32_t version = 0;
     int out = rdbStoreProxy->rdbStore_->GetVersion(version);
     LOG_DEBUG("RdbStoreProxy::GetVersion out is : %{public}d", out);
@@ -1158,11 +1146,14 @@ napi_value RdbStoreProxy::SetVersion(napi_env env, napi_callback_info info)
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
-    NAPI_ASSERT(env, argc == 1, "RdbStoreProxy::SetVersion Invalid argvs!");
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thiz);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
+    std::shared_ptr<Error> InnerError = std::make_shared<CustomError>(E_INNER_ERROR, "RdbStore is invalid");
+    RDB_NAPI_ASSERT(env, rdbStoreProxy != nullptr, InnerError);
     int32_t version = 0;
     napi_get_value_int32(env, args[0], &version);
+    std::shared_ptr<Error> paramValueError = std::make_shared<CustomError>(
+        E_PARAM_ERROR, "The version number must be an integer greater than 0");
+    RDB_NAPI_ASSERT(env, version > 0, paramValueError);
     int out = rdbStoreProxy->rdbStore_->SetVersion(version);
     LOG_DEBUG("RdbStoreProxy::SetVersion out is : %{public}d", out);
     return nullptr;
