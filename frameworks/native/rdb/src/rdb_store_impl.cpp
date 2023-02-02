@@ -101,7 +101,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
 }
 
 RdbStoreImpl::RdbStoreImpl()
-    : connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false), isMemoryRdb(false)
+    : connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false), isMemoryRdb(false), isEncrypt_(false)
 {
 }
 
