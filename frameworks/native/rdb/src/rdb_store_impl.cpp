@@ -73,6 +73,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     isMemoryRdb = config.IsMemoryRdb();
     name = config.GetName();
     fileType = config.GetDatabaseFileType();
+    isEncrypt_ = config.IsEncrypt();
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     syncerParam_.bundleName_ = config.GetBundleName();
     syncerParam_.hapName_ = config.GetModuleName();
@@ -82,7 +83,6 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.type_ = config.GetDistributedType();
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
-    isEncrypt_ = config.IsEncrypt();
     // open uri share
     if (!config.GetUri().empty()) {
         auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
