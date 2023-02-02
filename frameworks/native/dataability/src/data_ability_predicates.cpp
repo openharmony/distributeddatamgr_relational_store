@@ -22,15 +22,13 @@ int g_invalidObjectFlag = 0;
 int g_validObjectFlag = 1;
 int g_defaultSelectArgNumber = 8;
 bool DataAbilityPredicates::result = false;
-DataAbilityPredicates::DataAbilityPredicates()
+DataAbilityPredicates::DataAbilityPredicates() : isRawSelection(false), judgeSource(false)
 {
-    this->isRawSelection = false;
 }
 
-DataAbilityPredicates::DataAbilityPredicates(std::string rawSelection)
+DataAbilityPredicates::DataAbilityPredicates(std::string rawSelection) : isRawSelection(true), judgeSource(false)
 {
     AbsPredicates::SetWhereClause(rawSelection);
-    this->isRawSelection = true;
 }
 
 DataAbilityPredicates::DataAbilityPredicates(OHOS::Parcel *source)
