@@ -109,6 +109,7 @@ private:
     static const uint32_t TIMES = 4;
     static const uint32_t MAX_UPDATE_SIZE = 64;
     static const uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
+    static const uint8_t AEAD_LEN = 16;
 
     std::string bundleName_;
     std::string dbDir_;
