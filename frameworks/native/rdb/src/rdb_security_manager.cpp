@@ -126,7 +126,10 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
             HksFree(outDataSeg.data);
             return HKS_FAILURE;
         }
-        (void)memcpy_s(cur, outDataSeg.size, outDataSeg.data, outDataSeg.size);
+        if (memcpy_s(cur, outDataSeg.size, outDataSeg.data, outDataSeg.size) != E_OK) {
+            LOG_ERROR("Method memcpy_s failed");
+            return false;
+        }
         cur += outDataSeg.size;
         outData->size += outDataSeg.size;
         HksFree(outDataSeg.data);
@@ -147,7 +150,10 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
         HksFree(outDataFinish.data);
         return HKS_FAILURE;
     }
-    (void)memcpy_s(cur, outDataFinish.size, outDataFinish.data, outDataFinish.size);
+    if (memcpy_s(cur, outDataFinish.size, outDataFinish.data, outDataFinish.size) != E_OK) {
+        LOG_ERROR("Method memcpy_s failed");
+        return false;
+    }
     outData->size += outDataFinish.size;
     HksFree(outDataFinish.data);
 
@@ -340,12 +346,12 @@ std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(const std::vector<uint8_
 
 bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vector<uint8_t> &key)
 {
-    uint8_t aead_[16] = { 0 };
+    uint8_t aead_[AEAD_LEN] = { 0 };
     struct HksBlob blobAad = { uint32_t(aad_.size()), &(aad_[0]) };
     struct HksBlob blobNonce = { uint32_t(nonce_.size()), &(nonce_[0]) };
     struct HksBlob rootKeyName = { uint32_t(rootKeyAlias_.size()), &(rootKeyAlias_[0]) };
     struct HksBlob encryptedKeyBlob = { uint32_t(source.size()), source.data() };
-    struct HksBlob blobAead = { 16, aead_ };
+    struct HksBlob blobAead = { AEAD_LEN, aead_ };
 
     struct HksParamSet *params = nullptr;
     int32_t ret = HksInitParamSet(&params);
@@ -377,11 +383,14 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
         return false;
     }
 
-    encryptedKeyBlob.size -= 16;
+    encryptedKeyBlob.size -= AEAD_LEN;
     for (uint32_t i = 0; i < params->paramsCnt; i++) {
         if (params->params[i].tag == HKS_TAG_AE_TAG) {
             uint8_t *tempPtr = encryptedKeyBlob.data;
-            (void)memcpy_s(params->params[i].blob.data, 16, tempPtr + encryptedKeyBlob.size, 16);
+            if (memcpy_s(params->params[i].blob.data, AEAD_LEN, tempPtr + encryptedKeyBlob.size, AEAD_LEN) != E_OK) {
+                LOG_ERROR("Method memcpy_s failed");
+                return false;
+            }
             break;
         }
     }
