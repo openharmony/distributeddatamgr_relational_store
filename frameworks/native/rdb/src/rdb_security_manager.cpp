@@ -126,9 +126,10 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
             HksFree(outDataSeg.data);
             return HKS_FAILURE;
         }
-        if (memcpy_s(cur, outDataSeg.size, outDataSeg.data, outDataSeg.size) != E_OK) {
+        if (memcpy_s(cur, outDataSeg.size, outDataSeg.data, outDataSeg.size) != 0) {
             LOG_ERROR("Method memcpy_s failed");
-            return false;
+            HksFree(outDataSeg.data);
+            return HKS_FAILURE;
         }
         cur += outDataSeg.size;
         outData->size += outDataSeg.size;
@@ -150,9 +151,10 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
         HksFree(outDataFinish.data);
         return HKS_FAILURE;
     }
-    if (memcpy_s(cur, outDataFinish.size, outDataFinish.data, outDataFinish.size) != E_OK) {
+    if (memcpy_s(cur, outDataFinish.size, outDataFinish.data, outDataFinish.size) != 0) {
         LOG_ERROR("Method memcpy_s failed");
-        return false;
+        HksFree(outDataFinish.data);
+        return HKS_FAILURE;
     }
     outData->size += outDataFinish.size;
     HksFree(outDataFinish.data);
@@ -387,8 +389,9 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
     for (uint32_t i = 0; i < params->paramsCnt; i++) {
         if (params->params[i].tag == HKS_TAG_AE_TAG) {
             uint8_t *tempPtr = encryptedKeyBlob.data;
-            if (memcpy_s(params->params[i].blob.data, AEAD_LEN, tempPtr + encryptedKeyBlob.size, AEAD_LEN) != E_OK) {
+            if (memcpy_s(params->params[i].blob.data, AEAD_LEN, tempPtr + encryptedKeyBlob.size, AEAD_LEN) != 0) {
                 LOG_ERROR("Method memcpy_s failed");
+                HksFreeParamSet(&params);
                 return false;
             }
             break;
@@ -551,7 +554,7 @@ std::vector<uint8_t> RdbSecurityManager::GenerateRootKeyAlias(const std::string 
         LOG_ERROR("BundleName is empty!");
         return {};
     }
-    std::vector<uint8_t> rootKeyAlias =
+    std::vector<uint8_t> rootKeyAlias = 
         std::vector<uint8_t>(RDB_ROOT_KEY_ALIAS_PREFIX, RDB_ROOT_KEY_ALIAS_PREFIX + strlen(RDB_ROOT_KEY_ALIAS_PREFIX));
     rootKeyAlias.insert(rootKeyAlias.end(), bundleName.begin(), bundleName.end());
     return rootKeyAlias;
