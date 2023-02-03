@@ -554,8 +554,8 @@ std::vector<uint8_t> RdbSecurityManager::GenerateRootKeyAlias(const std::string 
         LOG_ERROR("BundleName is empty!");
         return {};
     }
-    std::vector<uint8_t> rootKeyAlias = std::vector<uint8_t>(
-        RDB_ROOT_KEY_ALIAS_PREFIX, RDB_ROOT_KEY_ALIAS_PREFIX + strlen(RDB_ROOT_KEY_ALIAS_PREFIX));
+    std::vector<uint8_t> rootKeyAlias = 
+        std::vector<uint8_t>(RDB_ROOT_KEY_ALIAS_PREFIX, RDB_ROOT_KEY_ALIAS_PREFIX + strlen(RDB_ROOT_KEY_ALIAS_PREFIX));
     rootKeyAlias.insert(rootKeyAlias.end(), bundleName.begin(), bundleName.end());
     return rootKeyAlias;
 }
