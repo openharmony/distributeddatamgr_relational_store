@@ -392,7 +392,7 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
             if (memcpy_s(params->params[i].blob.data, AEAD_LEN, tempPtr + encryptedKeyBlob.size, AEAD_LEN) != 0) {
                 LOG_ERROR("Method memcpy_s failed");
                 HksFreeParamSet(&params);
-                return HKS_FAILURE;
+                return false;
             }
             break;
         }
