@@ -357,41 +357,22 @@ int ParseSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr
     return OK;
 }
 
-bool CheckGlobalProperty(const napi_env &env, const napi_value &arg, const std::string propertyName)
-{
-    LOG_DEBUG("CheckGlobalProperty start: %{public}s", propertyName.c_str());
-    napi_value global = nullptr;
-    napi_status status = napi_get_global(env, &global);
-    if (status != napi_ok) {
-        return false;
-    }
-    napi_value constructor = nullptr;
-    status = napi_get_named_property(env, global, propertyName.c_str(), &constructor);
-    if (status != napi_ok) {
-        return false;
-    }
-    bool result = false;
-    status = napi_instanceof(env, arg, constructor, &result);
-    return (status == napi_ok ? result : false);
-}
-
 int ParsePredicates(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
     LOG_DEBUG("ParsePredicates start");
-    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("predicates", "an RdbPredicates.");
-    if (CheckGlobalProperty(env, arg, "RdbPredicatesConstructor")) {
-        LOG_DEBUG("Parse RDB Predicates");
-        napi_unwrap(env, arg, reinterpret_cast<void **>(&context->predicatesProxy));
-        RDB_CHECK_RETURN_CALL_RESULT(context->predicatesProxy != nullptr, context->SetError(paramError));
-        context->tableName = context->predicatesProxy->GetPredicates()->GetTableName();
-        context->rdbPredicates = context->predicatesProxy->GetPredicates();
-        LOG_DEBUG("ParsePredicates end");
-        return OK;
-    }
+    napi_unwrap(env, arg, reinterpret_cast<void **>(&context->predicatesProxy));
+    auto paramError = std::make_shared<ParamTypeError>("predicates", "an RdbPredicates.");
+    RDB_CHECK_RETURN_CALL_RESULT(context->predicatesProxy != nullptr, context->SetError(paramError));
+    context->tableName = context->predicatesProxy->GetPredicates()->GetTableName();
+    context->rdbPredicates = context->predicatesProxy->GetPredicates();
+    LOG_DEBUG("ParseRDBPredicates end");
+    return OK;
+}
 
-    LOG_DEBUG("Isn't RdbPredicates, maybe DataShare Predicates.");
+int ParseDataSharePredicates(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+{
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    paramError = std::make_shared<ParamTypeError>("predicates", "an RdbPredicates or DataShare Predicates.");
+    auto paramError = std::make_shared<ParamTypeError>("predicates", "an RdbPredicates or DataShare Predicates.");
     PredicatesProxy *proxy = nullptr;
     napi_unwrap(env, arg, reinterpret_cast<void **>(&proxy));
     // proxy is nullptr, it isn't rdb predicates or datashare predicates
@@ -404,8 +385,8 @@ int ParsePredicates(const napi_env &env, const napi_value &arg, std::shared_ptr<
     std::shared_ptr<DataShareAbsPredicates> dsPredicates = proxy->predicates_;
     context->rdbPredicates = std::make_shared<RdbPredicates>(
         RdbDataShareAdapter::RdbUtils::ToPredicates(*dsPredicates, context->tableName));
-#endif
     LOG_DEBUG("ParsePredicates end");
+#endif
     return OK;
 }
 
@@ -657,7 +638,7 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
             std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
             RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
             RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseTableName(env, argv[0], context));
-            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePredicates(env, argv[1], context));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDataSharePredicates(env, argv[1], context));
         } else {
             std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1 or 2");
             RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2, context->SetError(paramNumError));
@@ -698,7 +679,7 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
             RDB_CHECK_RETURN_CALL_RESULT(argc == 3 || argc == 4, context->SetError(paramNumError));
             RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseTableName(env, argv[0], context));
             RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseValuesBucket(env, argv[1], context));
-            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePredicates(env, argv[2], context));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDataSharePredicates(env, argv[2], context));
         } else {
             std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("2 or 3");
             RDB_CHECK_RETURN_CALL_RESULT(argc == 2 || argc == 3, context->SetError(paramNumError));
@@ -738,7 +719,7 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
             std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("1, 2 or 3");
             RDB_CHECK_RETURN_CALL_RESULT(argc == 1 || argc == 2 || argc == 3, context->SetError(paramNumError));
             RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseTableName(env, argv[0], context));
-            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePredicates(env, argv[1], context));
+            RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDataSharePredicates(env, argv[1], context));
             if (argc > 2) {
                 RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseColumns(env, argv[2], context));
             }
