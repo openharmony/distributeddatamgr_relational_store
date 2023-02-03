@@ -127,6 +127,10 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
             return HKS_FAILURE;
         }
         (void)memcpy_s(cur, outDataSeg.size, outDataSeg.data, outDataSeg.size);
+        if (ret != E_OK) {
+            LOG_ERROR("Method memcpy_s failed with error %{public}d", ret);
+            return false;
+        }
         cur += outDataSeg.size;
         outData->size += outDataSeg.size;
         HksFree(outDataSeg.data);
@@ -148,6 +152,10 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
         return HKS_FAILURE;
     }
     (void)memcpy_s(cur, outDataFinish.size, outDataFinish.data, outDataFinish.size);
+    if (ret != E_OK) {
+        LOG_ERROR("Method memcpy_s failed with error %{public}d", ret);
+        return false;
+    }
     outData->size += outDataFinish.size;
     HksFree(outDataFinish.data);
 
@@ -381,7 +389,12 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
     for (uint32_t i = 0; i < params->paramsCnt; i++) {
         if (params->params[i].tag == HKS_TAG_AE_TAG) {
             uint8_t *tempPtr = encryptedKeyBlob.data;
-            (void)memcpy_s(params->params[i].blob.data, AEAD_LEN, tempPtr + encryptedKeyBlob.size, AEAD_LEN);
+            uint8_t dexSize = sizeof(params->params[i].blob.data);
+            (void)memcpy_s(params->params[i].blob.data, 16, tempPtr + encryptedKeyBlob.size, 16);
+            if (ret != E_OK) {
+                LOG_ERROR("Method memcpy_s failed with error %{public}d", ret);
+                return false;
+            }
             break;
         }
     }
