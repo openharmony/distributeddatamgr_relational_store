@@ -390,7 +390,7 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
         if (params->params[i].tag == HKS_TAG_AE_TAG) {
             uint8_t *tempPtr = encryptedKeyBlob.data;
             uint8_t dexSize = sizeof(params->params[i].blob.data);
-            ret = memcpy_s(params->params[i].blob.data, 16, tempPtr + encryptedKeyBlob.size, 16);
+            ret = memcpy_s(params->params[i].blob.data, dexSize, tempPtr + encryptedKeyBlob.size, dexSize);
             if (ret != E_OK) {
                 LOG_ERROR("Method memcpy_s failed with error %{public}d", ret);
                 return false;
