@@ -21,31 +21,35 @@
 namespace OHOS {
 namespace NativeRdb {
 
+/**
+ * The RdbOpenCallback class of RDB.
+ */
 class RdbOpenCallback {
 public:
     /**
-     * Called when the database associate whit this RdbStore is created with the first time.
+     * @brief Called when the database associate whit this RdbStore is created with the first time.
+     *
      * This is where the creation of tables and insert the initial data of tables should happen.
      *
-     * param store The RdbStore object.
+     * @param rdbStore Indicates the RdbStore object.
      */
     virtual int OnCreate(RdbStore &rdbStore) = 0;
 
     /**
-     * Called when the database associate whit this RdbStore needs to be upgrade.
+     * @brief Called when the database associate whit this RdbStore needs to be upgrade.
      *
-     * param store The RdbStore object.
-     * param oldVersion The old database version.
-     * param newVersion The new database version.
+     * @param rdbStore Indicates the RdbStore object.
+     * @param currentVersion Indicates the old database version.
+     * @param targetVersion Indicates the new database version.
      */
     virtual int OnUpgrade(RdbStore &rdbStore, int currentVersion, int targetVersion) = 0;
 
     /**
-     * Called when the database associate whit this RdbStore needs to be downgrade.
+     * @brief Called when the database associate whit this RdbStore needs to be downgrade.
      *
-     * param store The RdbStore object.
-     * param oldVersion The old database version.
-     * param newVersion The new database version.
+     * @param rdbStore Indicates the RdbStore object.
+     * @param currentVersion Indicates the old database version.
+     * @param targetVersion Indicates the new database version.
      */
     virtual int OnDowngrade(RdbStore &rdbStore, int currentVersion, int targetVersion)
     {
@@ -53,15 +57,20 @@ public:
     }
 
     /**
-     * Called when the RdbStore has been opened.
+     * @brief Called when the RdbStore has been opened.
      *
-     * param store The RdbStore object.
+     * @param rdbStore Indicates the RdbStore object.
      */
     virtual int OnOpen(RdbStore &rdbStore)
     {
         return 0;
     }
 
+    /**
+     * @brief Called when the RdbStore has been corrupted
+     *
+     * @param databaseFile Indicates the RdbStore file name.
+     */
     virtual int onCorruption(std::string databaseFile)
     {
         return 0;

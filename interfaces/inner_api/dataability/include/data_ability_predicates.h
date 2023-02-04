@@ -23,16 +23,46 @@
 
 namespace OHOS {
 namespace NativeRdb {
+/**
+ * The Predicates class of DataAbility.
+ */
 class DataAbilityPredicates : public AbsPredicates, public virtual OHOS::Parcelable {
 public:
+    /**
+     * @brief Constructor.
+     */
     DataAbilityPredicates();
+    /**
+     * @brief Constructor.
+     */
     explicit DataAbilityPredicates(std::string rawSelection);
+    /**
+     * @brief Constructor.
+     */
     explicit DataAbilityPredicates(OHOS::Parcel *source);
+    /**
+     * @brief Destructor.
+     */
     ~DataAbilityPredicates() override;
+    /**
+     * @brief Obtain value of variable isRawSelection.
+     */
     bool IsRawSelection() const;
+    /**
+     * @brief Obtain value of variable judgeSource.
+     */
     bool GetJudgeSource() const;
+    /**
+     * @brief Write DataAbilityPredicates object to Parcel.
+     */
     bool Marshalling(OHOS::Parcel &parcel) const override;
+    /**
+     * @brief Read from Parcel object.
+     */
     static DataAbilityPredicates *Unmarshalling(OHOS::Parcel &parcel);
+    /**
+     * @brief The initial value of the static variable is false.
+     */
     static bool result;
 
 private:

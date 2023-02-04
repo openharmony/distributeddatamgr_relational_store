@@ -35,19 +35,49 @@ namespace NativeRdb {
 class AbsSharedResultSet;
 }
 namespace RdbDataAbilityAdapter {
+/**
+ * The RdbDataAbilityUtils class of RDB.
+ */
 class RdbDataAbilityUtils {
 public:
+    /**
+     * @brief Use ValuesBucket replace NativeRdb::ValuesBucket namespace.
+     */
     using ValuesBucket = NativeRdb::ValuesBucket;
+    /**
+     * @brief Use DataShareValuesBucket replace DataShare::DataShareValuesBucket namespace.
+     */
     using DataShareValuesBucket = DataShare::DataShareValuesBucket;
+    /**
+     * @brief Use DSResultSet replace DataShare::ResultSet namespace.
+     */
     using DSResultSet = DataShare::ResultSet;
+    /**
+     * @brief Use DataSharePredicates replace DataShare::DataSharePredicates namespace.
+     */
     using DataSharePredicates = DataShare::DataSharePredicates;
+    /**
+     * @brief Use DataAbilityPredicates replace NativeRdb::DataAbilityPredicates namespace.
+     */
     using DataAbilityPredicates = NativeRdb::DataAbilityPredicates;
+    /**
+     * @brief Use AbsSharedResultSet replace NativeRdb::AbsSharedResultSet namespace.
+     */
     using AbsSharedResultSet = NativeRdb::AbsSharedResultSet;
 
+    /**
+     * @brief Convert NativeRdb::ValuesBucket to DataShare::DataShareValuesBucket.
+     */
     static DataShareValuesBucket ToDataShareValuesBucket(const ValuesBucket &valuesBucket);
 
+    /**
+     * @brief Convert NativeRdb::DataAbilityPredicates to DataShare::DataSharePredicates.
+     */
     static DataSharePredicates ToDataSharePredicates(const DataAbilityPredicates &predicates);
 
+    /**
+     * @brief Convert NDataShare::ResultSet to NativeRdb::AbsSharedResultSet.
+     */
     static std::shared_ptr<AbsSharedResultSet> ToAbsSharedResultSet(std::shared_ptr<DSResultSet> resultSet);
 
 private:
