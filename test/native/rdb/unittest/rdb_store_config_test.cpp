@@ -769,8 +769,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_026, TestSize.Level1)
     const std::string dbPath = RDB_TEST_PATH + "config_test.db";
     RdbStoreConfig config(dbPath);
 
-    static constexpr int readConSize = 8;
-    config.SetReadConSize(readConSize);
+    static constexpr int readConSize = 4;
     int retReadConSize = config.GetReadConSize();
     EXPECT_EQ(readConSize, retReadConSize);
 
@@ -786,25 +785,29 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_026, TestSize.Level1)
     EXPECT_EQ(20, retReadConSize);
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
-}
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
 
-/**
- * @tc.name: RdbStoreConfig_027
- * @tc.desc: test RdbStoreConfig interfaces: SetReadConSize/GetReadConSize
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_027, TestSize.Level1)
-{
-    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
-    RdbStoreConfig config(dbPath);
+    config.SetReadConSize(0);
+    retReadConSize = config.GetReadConSize();
+    EXPECT_EQ(0, retReadConSize);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
 
-    static constexpr int readConSize = 4;
-    int retReadConSize = config.GetReadConSize();
-    EXPECT_EQ(readConSize, retReadConSize);
+    config.SetReadConSize(1);
+    retReadConSize = config.GetReadConSize();
+    EXPECT_EQ(1, retReadConSize);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
 
-    ConfigTestOpenCallback helper;
-    int errCode = E_ERROR;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    config.SetReadConSize(64);
+    retReadConSize = config.GetReadConSize();
+    EXPECT_EQ(64, retReadConSize);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
     store = nullptr;
     RdbHelper::DeleteRdbStore(dbPath);
@@ -817,11 +820,11 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_027, TestSize.Level1)
 }
 
 /**
- * @tc.name: RdbStoreConfig_028
+ * @tc.name: RdbStoreConfig_027
  * @tc.desc: test RdbStoreConfig interfaces: SetReadConSize/GetReadConSize
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_028, TestSize.Level1)
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_027, TestSize.Level1)
 {
     const std::string dbPath = RDB_TEST_PATH + "config_test.db";
     RdbStoreConfig config(dbPath);
