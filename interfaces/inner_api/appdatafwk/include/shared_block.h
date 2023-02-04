@@ -26,6 +26,9 @@
 
 namespace OHOS {
 namespace AppDataFwk {
+/**
+ * @brief The constant Indicates the invaild row record.
+ */
 static const uint32_t INVALID_ROW_RECORD = 0xFFFFFFFF;
 /**
  * This class stores a set of rows from a database in a buffer,
@@ -33,26 +36,43 @@ static const uint32_t INVALID_ROW_RECORD = 0xFFFFFFFF;
  */
 class SharedBlock {
 public:
-    /* Cell Unit types. */
+    /**
+     * @brief Cell Unit types.
+     */
     enum {
+        /** Indicates the Cell Unit type is NULL.*/
         CELL_UNIT_TYPE_NULL = 0,
+        /** Indicates the Cell Unit type is INT.*/
         CELL_UNIT_TYPE_INTEGER = 1,
+        /** Indicates the Cell Unit type is FLOAT.*/
         CELL_UNIT_TYPE_FLOAT = 2,
+        /** Indicates the Cell Unit type is STRING.*/
         CELL_UNIT_TYPE_STRING = 3,
+        /** Indicates the Cell Unit type is BLOB.*/
         CELL_UNIT_TYPE_BLOB = 4,
     };
 
-    /* SharedBlock error types. */
+    /**
+     * @brief SharedBlock error types.
+     */
     enum {
+        /** Indicates that the operation on SHARED BLOCK was successful.*/
         SHARED_BLOCK_OK = 0,
+        /** Indicates that the operation on SHARED BLOCK was failed.*/
         SHARED_BLOCK_BAD_VALUE = 1,
+        /** Indicates that the operation on SHARED BLOCK was failed.*/
         SHARED_BLOCK_NO_MEMORY = 2,
+        /** Indicates that the operation on SHARED BLOCK was failed.*/
         SHARED_BLOCK_INVALID_OPERATION = 3,
+        /** Indicates that the operation on SHARED BLOCK was failed.*/
         SHARED_BLOCK_ASHMEM_ERROR = 4,
+        /** Indicates that the operation on SHARED BLOCK was failed.*/
         SHARED_BLOCK_SET_PORT_ERROR = 5,
     };
 
-    /* Cell Unit */
+    /**
+     * Cell Unit
+     * */
     struct CellUnit {
         int32_t type;
         union {
@@ -66,77 +86,77 @@ public:
     } __attribute((packed));
 
     /**
-     * SharedBlock constructor.
+     * @brief SharedBlock constructor.
      */
     SharedBlock(const std::string &name, sptr<Ashmem> ashmem, size_t size, bool readOnly);
 
     /**
-     * SharedBlock constructor.
+     * @brief SharedBlock destructor.
      */
     ~SharedBlock();
 
     /**
-     * Init current shared block.
+     * @brief Init current shared block.
      */
     bool Init();
 
     /**
-     * Create a shared block.
+     * @brief Create a shared block.
      */
     static int Create(const std::string &name, size_t size, SharedBlock *&outSharedBlock);
 
     /**
-     * Clear current shared block.
+     * @brief Clear current shared block.
      */
     int Clear();
 
     /**
-     * Set a shared block column.
+     * @brief Set a shared block column.
      */
     int SetColumnNum(uint32_t numColumns);
 
     /**
-     * Allocate a row unit and its directory.
+     * @brief Allocate a row unit and its directory.
      */
     int AllocRow();
 
     /**
-     * Release the value of the last row.
+     * @brief Release the value of the last row.
      */
     int FreeLastRow();
 
     /**
-     * Put blob data to the shared block.
+     * @brief Put blob data to the shared block.
      */
     int PutBlob(uint32_t row, uint32_t column, const void *value, size_t Size);
 
     /**
-     * Put string data to the shared block.
+     * @brief Put string data to the shared block.
      */
     int PutString(uint32_t row, uint32_t column, const char *value, size_t sizeIncludingNull);
 
     /**
-     * Put long data to the shared block.
+     * @brief Put long data to the shared block.
      */
     int PutLong(uint32_t row, uint32_t column, int64_t value);
 
     /**
-     * Put Double data to the shared block.
+     * @brief Put Double data to the shared block.
      */
     int PutDouble(uint32_t row, uint32_t column, double value);
 
     /**
-     * Put Null data to the shared block.
+     * @brief Put Null data to the shared block.
      */
     int PutNull(uint32_t row, uint32_t column);
 
     /**
-     * Gets the cell unit at the specified row and column.
+     * @brief Gets the cell unit at the specified row and column.
      */
     CellUnit *GetCellUnit(uint32_t row, uint32_t column);
 
     /**
-     * Get string type data from cell unit.
+     * @brief Get string type data from cell unit.
      */
     const char *GetCellUnitValueString(CellUnit *cellUnit, size_t *outSizeIncludingNull)
     {
@@ -146,7 +166,7 @@ public:
     }
 
     /**
-     * Get blob type data from cell unit.
+     * @brief Get blob type data from cell unit.
      */
     const void *GetCellUnitValueBlob(CellUnit *cellUnit, size_t *outSize)
     {
@@ -155,7 +175,7 @@ public:
     }
 
     /**
-     * The mHeader of the current result set.
+     * @brief The mHeader of the current result set.
      */
     const void *GetHeader()
     {
@@ -163,7 +183,7 @@ public:
     }
 
     /**
-     * Size of the used byte in the block.
+     * @brief Size of the used byte in the block.
      */
     size_t GetUsedBytes()
     {
@@ -171,7 +191,7 @@ public:
     }
 
     /**
-     * The name of the current result set.
+     * @brief The name of the current result set.
      */
     std::string Name()
     {
@@ -179,7 +199,7 @@ public:
     }
 
     /**
-     * The size of the current result set.
+     * @brief The size of the current result set.
      */
     size_t Size()
     {
@@ -187,7 +207,7 @@ public:
     }
 
     /**
-     * The row number of the current result set.
+     * @brief The row number of the current result set.
      */
     uint32_t GetRowNum()
     {
@@ -195,15 +215,21 @@ public:
     }
 
     /**
-     * The column number of the current result set.
+     * @brief The column number of the current result set.
      */
     uint32_t GetColumnNum()
     {
         return mHeader->columnNums;
     }
 
+    /**
+     * @brief Write message to parcel.
+     */
     int WriteMessageParcel(MessageParcel &parcel);
 
+    /**
+     * @brief Read message to parcel.
+     */
     static int ReadMessageParcel(MessageParcel &parcel, SharedBlock *&block);
     /**
      * Write raw data in block.
@@ -220,31 +246,49 @@ public:
         return ashmem_->GetAshmemFd();
     }
 
+    /**
+     * @brief The start position of the current result set.
+     */
     uint32_t GetStartPos()
     {
         return mHeader->startPos_;
     }
 
+    /**
+     * @brief The last position of the current result set.
+     */
     uint32_t GetLastPos()
     {
         return mHeader->lastPos_;
     }
 
+    /**
+     * @brief The block position of the current result set.
+     */
     uint32_t GetBlockPos()
     {
         return mHeader->blockPos_;
     }
 
+    /**
+     * @brief Set the start position of the current result set.
+     */
     void SetStartPos(uint32_t startPos)
     {
         mHeader->startPos_ = startPos;
     }
 
+    /**
+     * @brief Set the last position of the current result set.
+     */
     void SetLastPos(uint32_t lastPos)
     {
         mHeader->lastPos_ = lastPos;
     }
 
+    /**
+     * @brief Set the block position of the current result set.
+     */
     void SetBlockPos(uint32_t blockPos)
     {
         mHeader->blockPos_ = blockPos;

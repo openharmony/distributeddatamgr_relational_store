@@ -17,17 +17,31 @@
 #define NATIVE_RDB_RDB_COMMON_H
 
 namespace OHOS::NativeRdb {
+/**
+ * @brief Returns RdbStore status when GetRdbStore is called.
+ */
 enum class OpenStatus {
+    /** Indicates that the RDB database is in the creation state.*/
     ON_CREATE = 0,
+    /** Indicates that the RDB database is in the open state.*/
     ON_OPEN,
 };
 
+/**
+ * @brief Describes the conflict resolutions to insert or update data into the table.
+ */
 enum class ConflictResolution {
+    /** Implements no action when conflict occurs.*/
     ON_CONFLICT_NONE = 0,
+    /** Implements rollback operation when conflict occurs.*/
     ON_CONFLICT_ROLLBACK,
+    /** Implements abort operation when conflict occurs.*/
     ON_CONFLICT_ABORT,
+    /** Implements fail operation when conflict occurs.*/
     ON_CONFLICT_FAIL,
+    /** Implements ignore operation when conflict occurs.*/
     ON_CONFLICT_IGNORE,
+    /** Implements replace operation operator when conflict occurs.*/
     ON_CONFLICT_REPLACE,
 };
 }

@@ -59,11 +59,35 @@ private:
     int ms_;
 };
 
+/**
+ * The RdbHelper class of RDB.
+ */
 class RdbHelper final {
 public:
+    /**
+     * @brief Obtains an RDB store.
+     *
+     * You can set parameters of the RDB store as required. In general, this method is recommended
+     * to obtain a rdb store.
+     *
+     * @param config Indicates the {@link RdbStoreConfig} configuration of the database related to this RDB store.
+     * @param version Indicates the database version for upgrade or downgrade.
+     * @param openCallback version the database version for upgrade or downgrade.
+     * @param errCode Indicates the {@link RdbOpenCallback} callback of the store.
+     *
+     * @return Returns the RDB store {@link RdbStore}.
+     */
     static std::shared_ptr<RdbStore> GetRdbStore(
         const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode);
+    /**
+     * @brief Deletes the database with a specified name.
+     *
+     * @param path Indicates the database path.
+     */
     static int DeleteRdbStore(const std::string &path);
+    /**
+     * @brief Clear Cache.
+     */
     static void ClearCache();
 
 private:
