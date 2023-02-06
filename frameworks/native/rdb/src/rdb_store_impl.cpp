@@ -162,6 +162,12 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
     // prepare BeginTransaction
     connectionPool->AcquireTransaction();
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
+    if (connection->IsInTransaction()) {
+        connectionPool->ReleaseTransaction();
+        connectionPool->ReleaseConnection(connection);
+        LOG_ERROR("Transaction is in excuting.");
+        return -1;
+    }
     BaseTransaction transaction(0);
     connection->SetInTransaction(true);
     int errCode = connection->ExecuteSql(transaction.GetTransactionStr());
