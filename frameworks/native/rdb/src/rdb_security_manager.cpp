@@ -22,8 +22,8 @@
 
 #include "directory_ex.h"
 #include "file_ex.h"
-#include "hks_param.h"
 #include "hks_mem.h"
+#include "hks_param.h"
 #include "logger.h"
 #include "sqlite_database_utils.h"
 
@@ -126,7 +126,11 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
             HksFree(outDataSeg.data);
             return HKS_FAILURE;
         }
-        (void)memcpy_s(cur, outDataSeg.size, outDataSeg.data, outDataSeg.size);
+        if (memcpy_s(cur, outDataSeg.size, outDataSeg.data, outDataSeg.size) != 0) {
+            LOG_ERROR("Method memcpy_s failed");
+            HksFree(outDataSeg.data);
+            return HKS_FAILURE;
+        }
         cur += outDataSeg.size;
         outData->size += outDataSeg.size;
         HksFree(outDataSeg.data);
@@ -147,7 +151,11 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
         HksFree(outDataFinish.data);
         return HKS_FAILURE;
     }
-    (void)memcpy_s(cur, outDataFinish.size, outDataFinish.data, outDataFinish.size);
+    if (memcpy_s(cur, outDataFinish.size, outDataFinish.data, outDataFinish.size) != 0) {
+        LOG_ERROR("Method memcpy_s failed");
+        HksFree(outDataFinish.data);
+        return HKS_FAILURE;
+    }
     outData->size += outDataFinish.size;
     HksFree(outDataFinish.data);
 
@@ -381,7 +389,11 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
     for (uint32_t i = 0; i < params->paramsCnt; i++) {
         if (params->params[i].tag == HKS_TAG_AE_TAG) {
             uint8_t *tempPtr = encryptedKeyBlob.data;
-            (void)memcpy_s(params->params[i].blob.data, AEAD_LEN, tempPtr + encryptedKeyBlob.size, AEAD_LEN);
+            if (memcpy_s(params->params[i].blob.data, AEAD_LEN, tempPtr + encryptedKeyBlob.size, AEAD_LEN) != 0) {
+                LOG_ERROR("Method memcpy_s failed");
+                HksFreeParamSet(&params);
+                return false;
+            }
             break;
         }
     }
@@ -403,8 +415,7 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
 void RdbSecurityManager::Init(const std::string &bundleName, const std::string &path)
 {
     rootKeyAlias_ = GenerateRootKeyAlias(bundleName);
-    nonce_ =
-        std::vector<uint8_t>(RDB_HKS_BLOB_TYPE_NONCE, RDB_HKS_BLOB_TYPE_NONCE + strlen(RDB_HKS_BLOB_TYPE_NONCE));
+    nonce_ = std::vector<uint8_t>(RDB_HKS_BLOB_TYPE_NONCE, RDB_HKS_BLOB_TYPE_NONCE + strlen(RDB_HKS_BLOB_TYPE_NONCE));
     aad_ = std::vector<uint8_t>(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD));
 
     ParsePath(path);
@@ -543,8 +554,8 @@ std::vector<uint8_t> RdbSecurityManager::GenerateRootKeyAlias(const std::string 
         LOG_ERROR("BundleName is empty!");
         return {};
     }
-    std::vector<uint8_t> rootKeyAlias = std::vector<uint8_t>(
-        RDB_ROOT_KEY_ALIAS_PREFIX, RDB_ROOT_KEY_ALIAS_PREFIX + strlen(RDB_ROOT_KEY_ALIAS_PREFIX));
+    std::vector<uint8_t> rootKeyAlias = 
+        std::vector<uint8_t>(RDB_ROOT_KEY_ALIAS_PREFIX, RDB_ROOT_KEY_ALIAS_PREFIX + strlen(RDB_ROOT_KEY_ALIAS_PREFIX));
     rootKeyAlias.insert(rootKeyAlias.end(), bundleName.begin(), bundleName.end());
     return rootKeyAlias;
 }
