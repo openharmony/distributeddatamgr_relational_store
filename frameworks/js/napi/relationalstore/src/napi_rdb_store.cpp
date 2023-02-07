@@ -576,6 +576,12 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
             context->conflictResolution);
         context->rowId = rowId;
         LOG_DEBUG("RdbStoreProxy::Insert errCode is: %{public}d", errCode);
+
+        if (errCode == E_WAL_SIZE_OVER_LIMIT) {
+            std::shared_ptr<Error> walSizeOverLimitError =
+                std::make_shared<CustomError>(E_WAL_SIZE_OVER_LIMIT_ERROR, "log size over limit");
+            context->SetError(walSizeOverLimitError);
+        }
         return (errCode == E_OK) ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
@@ -611,6 +617,12 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
         int64_t outInsertNum = 0;
         int errCode = obj->rdbStore_->BatchInsert(outInsertNum, context->tableName, context->valuesBuckets);
         context->insertNum = outInsertNum;
+
+        if (errCode == E_WAL_SIZE_OVER_LIMIT) {
+            std::shared_ptr<Error> walSizeOverLimitError =
+                std::make_shared<CustomError>(E_WAL_SIZE_OVER_LIMIT_ERROR, "log size over limit");
+            context->SetError(walSizeOverLimitError);
+        }
         return (errCode == E_OK) ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
@@ -649,6 +661,12 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
         int errCode = obj->rdbStore_->Delete(deletedRows, *(context->rdbPredicates));
         context->rowId = deletedRows;
         LOG_DEBUG("RdbStoreProxy::Delete errCode is: %{public}d", errCode);
+
+        if (errCode == E_WAL_SIZE_OVER_LIMIT) {
+            std::shared_ptr<Error> walSizeOverLimitError =
+                std::make_shared<CustomError>(E_WAL_SIZE_OVER_LIMIT_ERROR, "log size over limit");
+            context->SetError(walSizeOverLimitError);
+        }
         return (errCode == E_OK) ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
@@ -695,6 +713,12 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
             context->conflictResolution);
         context->rowId = changedRows;
         LOG_DEBUG("RdbStoreProxy::Update errCode is: %{public}d", errCode);
+
+        if (errCode == E_WAL_SIZE_OVER_LIMIT) {
+            std::shared_ptr<Error> walSizeOverLimitError =
+                std::make_shared<CustomError>(E_WAL_SIZE_OVER_LIMIT_ERROR, "log size over limit");
+            context->SetError(walSizeOverLimitError);
+        }
         return (errCode == E_OK) ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
@@ -855,6 +879,12 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         int errCode = obj->rdbStore_->ExecuteSql(context->sql, context->bindArgs);
         LOG_DEBUG("RdbStoreProxy::ExecuteSql errCode is: %{public}d", errCode);
+
+        if (errCode == E_WAL_SIZE_OVER_LIMIT) {
+            std::shared_ptr<Error> walSizeOverLimitError =
+                std::make_shared<CustomError>(E_WAL_SIZE_OVER_LIMIT_ERROR, "log size over limit");
+            context->SetError(walSizeOverLimitError);
+        }
         return (errCode == E_OK) ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
@@ -919,6 +949,12 @@ napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
         int errCode = obj->rdbStore_->Replace(rowId, context->tableName, context->valuesBucket);
         context->rowId = rowId;
         LOG_DEBUG("RdbStoreProxy::Replace errCode is:%{public}d", errCode);
+
+        if (errCode == E_WAL_SIZE_OVER_LIMIT) {
+            std::shared_ptr<Error> walSizeOverLimitError =
+                std::make_shared<CustomError>(E_WAL_SIZE_OVER_LIMIT_ERROR, "log size over limit");
+            context->SetError(walSizeOverLimitError);
+        }
         return (errCode == E_OK) ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
@@ -1043,7 +1079,8 @@ napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
     NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
     int errCode = rdbStoreProxy->rdbStore_->BeginTransaction();
-    NAPI_ASSERT(env, errCode == E_OK, "call BeginTransaction failed");
+    std::shared_ptr<Error> walSizeOverLimitError = std::make_shared<InnerError>(E_WAL_SIZE_OVER_LIMIT);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, walSizeOverLimitError);
     LOG_DEBUG("RdbStoreProxy::BeginTransaction end, errCode is:%{public}d", errCode);
     return nullptr;
 }

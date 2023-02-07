@@ -43,6 +43,7 @@ public:
     static std::string StrToUpper(std::string s);
     static bool DeleteFile(const std::string path);
     static int RenameFile(const std::string srcFile, const std::string destFile);
+    static int GetFileSize(const std::string fileName);
 
 private:
     static const std::map<std::string, int> SQL_TYPE_MAP;

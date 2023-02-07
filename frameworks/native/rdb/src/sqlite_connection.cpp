@@ -122,6 +122,11 @@ int SqliteConnection::InnerOpen(const SqliteConfig &config)
         return errCode;
     }
 
+    errCode = sqlite3_wal_checkpoint_v2(dbHandle, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
+    if (errCode != SQLITE_OK) {
+        LOG_WARN("sqlite checkpoint errCode is %{public}d", errCode);
+    }
+
     filePath = dbPath;
     openFlags = openFileFlags;
 
@@ -429,7 +434,13 @@ int SqliteConnection::PrepareAndBind(const std::string &sql, const std::vector<V
         LOG_ERROR("SqliteConnection dbHandle is nullptr");
         return E_INVALID_STATEMENT;
     }
-    int errCode = statement.Prepare(dbHandle, sql);
+
+    int errCode = LimitWalSize();
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    errCode = statement.Prepare(dbHandle, sql);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -786,12 +797,38 @@ int SqliteConnection::GetKeyFromFile()
     return E_OK;
 }
 #endif
+
 void SqliteConnection::SetInTransaction(bool transaction) {
     inTransaction_ = transaction;
 }
+
 bool SqliteConnection::IsInTransaction()
 {
     return inTransaction_;
+}
+
+int SqliteConnection::LimitWalSize()
+{
+    if (!isWriteConnection) {
+        return E_OK;
+    }
+
+    if (SqliteUtils::GetFileSize(filePath + "-wal") < GlobalExpr::DB_WAL_SIZE_LIMIT) {
+        return E_OK;
+    }
+
+    int errCode = sqlite3_wal_checkpoint_v2(dbHandle, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
+    if (errCode != SQLITE_OK) {
+        return E_WAL_SIZE_OVER_LIMIT;
+    }
+
+    int fileSize = SqliteUtils::GetFileSize(filePath + "-wal");
+    if (fileSize >= GlobalExpr::DB_WAL_SIZE_LIMIT) {
+        LOG_ERROR("the WAL file size over default limit, size: %{public}d", fileSize);
+        return E_WAL_SIZE_OVER_LIMIT;
+    }
+
+    return E_OK;
 }
 } // namespace NativeRdb
 } // namespace OHOS
