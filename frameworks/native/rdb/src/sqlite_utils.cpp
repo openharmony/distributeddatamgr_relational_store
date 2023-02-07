@@ -17,6 +17,10 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <climits>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 
 #include "logger.h"
 #include "rdb_errno.h"
@@ -112,6 +116,21 @@ bool SqliteUtils::DeleteFile(const std::string filePath)
 int SqliteUtils::RenameFile(const std::string srcFile, const std::string destFile)
 {
     return rename(srcFile.c_str(), destFile.c_str());
+}
+
+int SqliteUtils::GetFileSize(const std::string fileName)
+{
+    if (fileName.empty() || access(fileName.c_str(), F_OK) != 0) {
+        return 0;
+    }
+
+    struct stat fileStat;
+    if (stat(fileName.c_str(), &fileStat) < 0) {
+        LOG_ERROR("Failed to get file information, errno: %{public}d", errno);
+        return INT_MAX;
+    }
+
+    return static_cast<int>(fileStat.st_size);
 }
 } // namespace NativeRdb
 } // namespace OHOS
