@@ -278,6 +278,288 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_003, TestSize.Level1)
     EXPECT_EQ(deletedRows, 0);
 }
 
+
+/**
+ * @tc.name: RdbStore_NestedTransaction_001
+ * @tc.desc: test RdbStore BaseTransaction
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
+
+    int64_t id;
+    ValuesBucket values;
+
+    int ret = store->BeginTransaction();
+    EXPECT_EQ(ret, E_OK);
+
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->BeginTransaction();
+    EXPECT_EQ(ret, E_OK);
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    values.PutDouble("salary", 200.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+    ret = store->Commit(); // not commit
+    EXPECT_EQ(ret, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 3);
+    values.PutString("name", std::string("wangyjing"));
+    values.PutInt("age", 20);
+    values.PutDouble("salary", 300.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(3, id);
+
+    ret = store->Commit();
+    EXPECT_EQ(ret, E_OK);
+
+    int64_t count;
+    ret = store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(count, 3);
+
+    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+
+    int deletedRows;
+    ret = store->Delete(deletedRows, "test");
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(deletedRows, 3);
+}
+
+/**
+ * @tc.name: RdbStore_NestedTransaction_002
+ * @tc.desc: test RdbStore BaseTransaction
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
+
+    int64_t id;
+    ValuesBucket values;
+
+    int ret = store->BeginTransaction();
+    EXPECT_EQ(ret, E_OK);
+
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->BeginTransaction();
+    EXPECT_EQ(ret, E_OK);
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    values.PutDouble("salary", 200.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+    ret = store->Commit();
+    EXPECT_EQ(ret, E_OK);
+    ret = store->Commit(); // commit
+    EXPECT_EQ(ret, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 3);
+    values.PutString("name", std::string("wangyjing"));
+    values.PutInt("age", 20);
+    values.PutDouble("salary", 300.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(3, id);
+
+    int64_t count;
+    ret = store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(count, 3);
+
+    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+
+    int deletedRows;
+    ret = store->Delete(deletedRows, "test");
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(deletedRows, 3);
+}
+
+/**
+ * @tc.name: RdbStore_NestedTransaction_003
+ * @tc.desc: test RdbStore BaseTransaction
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_003, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
+
+    int64_t id;
+    ValuesBucket values;
+
+    int ret = store->BeginTransaction();
+    EXPECT_EQ(ret, E_OK);
+
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->BeginTransaction();
+    EXPECT_EQ(ret, E_OK);
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    values.PutDouble("salary", 200.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+    ret = store->Commit(); // not commit
+    EXPECT_EQ(ret, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 3);
+    values.PutString("name", std::string("wangyjing"));
+    values.PutInt("age", 20);
+    values.PutDouble("salary", 300.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(3, id);
+
+    ret = store->Commit(); // not commit
+    EXPECT_EQ(ret, E_OK);
+
+    int64_t count;
+    ret = store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(count, 3);
+
+    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+
+    int deletedRows;
+    ret = store->Delete(deletedRows, "test");
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(deletedRows, 3);
+}
+
+/**
+ * @tc.name: RdbStore_NestedTransaction_004
+ * @tc.desc: test RdbStore BaseTransaction
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_004, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
+
+    int64_t id;
+    ValuesBucket values;
+
+    int ret = store->BeginTransaction();
+    EXPECT_EQ(ret, E_OK);
+
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->BeginTransaction();
+    EXPECT_EQ(ret, E_OK);
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    values.PutDouble("salary", 200.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+    ret = store->Commit(); // commit
+    EXPECT_EQ(ret, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 3);
+    values.PutString("name", std::string("wangyjing"));
+    values.PutInt("age", 20);
+    values.PutDouble("salary", 300.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(3, id);
+
+    ret = store->Commit(); // commit
+    EXPECT_EQ(ret, E_OK);
+
+    int64_t count;
+    ret = store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(count, 3);
+
+    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_ERROR);
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+
+    int deletedRows;
+    ret = store->Delete(deletedRows, "test");
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(deletedRows, 3);
+}
+
 /**
  * @tc.name: RdbStore_BatchInsert_001
  * @tc.desc: test RdbStore BatchInsert
@@ -409,6 +691,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
         }
         number ++;
     }
+    resultSet->Close();
     EXPECT_EQ(100, number);
 
 }
