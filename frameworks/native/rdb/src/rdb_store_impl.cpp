@@ -102,7 +102,8 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
 }
 
 RdbStoreImpl::RdbStoreImpl()
-    : connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false), isMemoryRdb(false), isEncrypt_(false)
+    : connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false), isMemoryRdb(false),
+      isEncrypt_(false)
 {
 }
 
@@ -167,7 +168,7 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
         connectionPool->ReleaseTransaction();
         connectionPool->ReleaseConnection(connection);
         LOG_ERROR("Transaction is in excuting.");
-        return -1;
+        return E_TRANSACTION_IN_EXECUTE;
     }
     BaseTransaction transaction(0);
     connection->SetInTransaction(true);
@@ -196,8 +197,7 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
 std::string RdbStoreImpl::GetBatchInsertSql(std::map<std::string, ValueObject> &valuesMap, const std::string &table)
 {
     std::stringstream sql;
-    sql << "INSERT"
-        << " INTO " << table << '(';
+    sql << "INSERT INTO " << table << '(';
     for (auto valueIter = valuesMap.begin(); valueIter != valuesMap.end(); valueIter++) {
         sql << ((valueIter == valuesMap.begin()) ? "" : ",");
         sql << valueIter->first; // columnName
@@ -734,8 +734,7 @@ int RdbStoreImpl::RollBack()
     }
     BaseTransaction transaction = connectionPool->getTransactionStack().top();
     connectionPool->getTransactionStack().pop();
-    if (transaction.GetType() != TransType::ROLLBACK_SELF
-        && !connectionPool->getTransactionStack().empty()) {
+    if (transaction.GetType() != TransType::ROLLBACK_SELF && !connectionPool->getTransactionStack().empty()) {
         connectionPool->getTransactionStack().top().SetChildFailure(true);
     }
     SqliteConnection *connection = connectionPool->AcquireConnection(false);

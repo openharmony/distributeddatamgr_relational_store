@@ -217,6 +217,52 @@ describe('rdbStoreInsertTest', function () {
         console.log(TAG + "************* testRdbTransactionRollBack0001 end *************");
     })
 
+    /**
+     * @tc.name rdb insert test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
+     * @tc.desc the classical transaction scenario, when we insert or commit the value,
+     *     db returns an exception, we need to catch exception and rollback.
+     */
+    it('testRdbTransactionMulti0003', 0, async function (done) {
+        console.log(TAG + "************* testRdbTransactionMulti0003 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        try {
+            rdbStore.beginTransaction()
+            const valueBucket = {
+                "id": 1,
+                "name": "lisi",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            await rdbStore.insert("test", valueBucket);
+
+            rdbStore.beginTransaction()
+            const valueBucket1 = {
+                "name": "zhangsan",
+                "age": 20,
+                "salary": 220.5,
+                "blobType": u8,
+            }
+            await rdbStore.insert("test", valueBucket1)
+
+            rdbStore.rollBack()
+
+            await rdbStore.insert("test", valueBucket)
+            rdbStore.commit()
+
+            let predicates = new dataRdb.RdbPredicates("test");
+            let ret = await rdbStore.query(predicates)
+            expect(1).assertEqual(ret.rowCount)
+            ret.close()
+        } catch (e) {
+            rdbStore.rollBack()
+            console.log(TAG + "testRdbTransactionMulti0003 rollback ***** ");
+        }
+        done()
+        console.log(TAG + "************* testRdbTransactionMulti0003 end *************");
+    })
+
     console.log(TAG + "*************Unit Test End*************");
 
 })
