@@ -43,10 +43,6 @@ public:
 
     virtual ~RdbStoreContext()
     {
-        auto *obj = reinterpret_cast<RdbStoreProxy *>(boundObj);
-        if (obj != nullptr) {
-            obj->Release(env);
-        }
         delete valuesBucket;
     }
 
@@ -210,21 +206,17 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, NULL, NULL, &self, nullptr));
     auto finalize = [](napi_env env, void *data, void *hint) {
         RdbStoreProxy *proxy = reinterpret_cast<RdbStoreProxy *>(data);
-        if (proxy->ref_ != nullptr) {
-            napi_delete_reference(env, proxy->ref_);
-            proxy->ref_ = nullptr;
-        }
         delete proxy;
     };
-    auto *proxy = new RdbStoreProxy();
-    napi_status status = napi_wrap(env, self, proxy, finalize, nullptr, &proxy->ref_);
+    auto *proxy = new (std::nothrow) RdbStoreProxy();
+    if (proxy == nullptr) {
+        return nullptr;
+    }
+    napi_status status = napi_wrap(env, self, proxy, finalize, nullptr, nullptr);
     if (status != napi_ok) {
         LOG_ERROR("RdbStoreProxy::Initialize napi_wrap failed! code:%{public}d!", status);
         finalize(env, proxy, nullptr);
         return nullptr;
-    }
-    if (proxy->ref_ == nullptr) {
-        napi_create_reference(env, self, 0, &proxy->ref_);
     }
     return self;
 }
@@ -263,33 +255,7 @@ RdbStoreProxy *RdbStoreProxy::GetNativeInstance(napi_env env, napi_value self)
         LOG_ERROR("RdbStoreProxy::GetNativePredicates native instance is nullptr! code:%{public}d!", status);
         return nullptr;
     }
-    uint32_t count = 0;
-    {
-        std::lock_guard<std::mutex> lock(proxy->mutex_);
-        status = napi_reference_ref(env, proxy->ref_, &count);
-    }
-    if (status != napi_ok) {
-        LOG_ERROR("RdbStoreProxy::GetNativePredicates napi_reference_ref(%{public}p) failed! code:%{public}d!, "
-                  "count:%{public}u",
-            proxy->ref_, status, count);
-        return proxy;
-    }
     return proxy;
-}
-
-void RdbStoreProxy::Release(napi_env env)
-{
-    uint32_t count = 0;
-    napi_status status = napi_ok;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        status = napi_reference_unref(env, ref_, &count);
-    }
-
-    if (status != napi_ok) {
-        LOG_ERROR("RdbStoreProxy::Release napi_reference_unref failed! code:%{public}d!, count:%{public}u",
-            status, count);
-    }
 }
 
 void ParseThis(const napi_env &env, const napi_value &arg, RdbStoreContext *asyncContext)
@@ -766,7 +732,6 @@ napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info
     NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
     int errCode = rdbStoreProxy->rdbStore_->BeginTransaction();
     NAPI_ASSERT(env, errCode == E_OK, "call BeginTransaction failed");
-    rdbStoreProxy->Release(env);
     LOG_DEBUG("RdbStoreProxy::BeginTransaction end, errCode is:%{public}d", errCode);
     return nullptr;
 }
@@ -779,7 +744,6 @@ napi_value RdbStoreProxy::RollBack(napi_env env, napi_callback_info info)
     NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
     int errCode = rdbStoreProxy->rdbStore_->RollBack();
     NAPI_ASSERT(env, errCode == E_OK, "call RollBack failed");
-    rdbStoreProxy->Release(env);
     LOG_DEBUG("RdbStoreProxy::RollBack end, errCode is:%{public}d", errCode);
     return nullptr;
 }
@@ -792,7 +756,6 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
     NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
     int errCode = rdbStoreProxy->rdbStore_->Commit();
     NAPI_ASSERT(env, errCode == E_OK, "call Commit failed");
-    rdbStoreProxy->Release(env);
     LOG_DEBUG("RdbStoreProxy::Commit end, errCode is:%{public}d", errCode);
     return nullptr;
 }
@@ -1146,7 +1109,6 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
         proxy->OnDataChangeEvent(env, argc - 1, argv + 1);
     }
 
-    proxy->Release(env);
     LOG_ERROR("RdbStoreProxy::OnEvent end");
     return nullptr;
 }
@@ -1171,7 +1133,6 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
         proxy->OffDataChangeEvent(env, argc - 1, argv + 1);
     }
 
-    proxy->Release(env);
     LOG_ERROR("RdbStoreProxy::OffEvent end");
     return nullptr;
 }
