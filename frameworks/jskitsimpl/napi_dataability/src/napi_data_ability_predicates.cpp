@@ -93,9 +93,12 @@ napi_value DataAbilityPredicatesProxy::New(napi_env env, napi_callback_info info
 
     if (is_constructor) {
         auto *proxy = new DataAbilityPredicatesProxy();
-        proxy->env_ = env;
-        NAPI_CALL(env, napi_wrap(env, thiz, proxy, DataAbilityPredicatesProxy::Destructor, nullptr, &proxy->wrapper_));
-        LOG_INFO("DataAbilityPredicatesProxy::New constructor ref:%{public}p", proxy->wrapper_);
+        napi_status status = napi_wrap(env, thiz, proxy, DataAbilityPredicatesProxy::Destructor, nullptr, nullptr);
+        if (status != napi_ok) {
+            LOG_ERROR("DataAbilityPredicatesProxy::New napi_wrap failed! napi_status:%{public}d!", status);
+            delete proxy;
+            return nullptr;
+        }
         return thiz;
     }
 
@@ -156,11 +159,9 @@ void DataAbilityPredicatesProxy::Destructor(napi_env env, void *nativeObject, vo
 
 DataAbilityPredicatesProxy::~DataAbilityPredicatesProxy()
 {
-    napi_delete_reference(env_, wrapper_);
 }
 
-DataAbilityPredicatesProxy::DataAbilityPredicatesProxy()
-    : predicates_(new DataAbilityPredicates()), env_(nullptr), wrapper_(nullptr)
+DataAbilityPredicatesProxy::DataAbilityPredicatesProxy() : predicates_(new DataAbilityPredicates())
 {
 }
 
