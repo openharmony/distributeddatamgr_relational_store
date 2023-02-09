@@ -70,6 +70,15 @@ public:
         asyncContext->info = info;
     }
 
+    ~NapiAsyncProxy()
+    {
+        if (asyncContext == nullptr) {
+            return;
+        }
+
+        delete asyncContext;
+    }
+
     static void DefParserThis(const napi_env &env, const napi_value &self, T *context)
     {
         napi_unwrap(env, self, &context->boundObj);
