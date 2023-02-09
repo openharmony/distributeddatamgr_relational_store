@@ -33,7 +33,6 @@ public:
     static void Init(napi_env env, napi_value exports);
     static napi_value NewInstance(napi_env env, std::shared_ptr<OHOS::NativeRdb::RdbStore> value, int apiversion);
     static RdbStoreProxy *GetNativeInstance(napi_env env, napi_value self);
-    void Release(napi_env env);
     RdbStoreProxy();
     ~RdbStoreProxy();
 
@@ -80,7 +79,6 @@ private:
 
     std::mutex mutex_;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
-    napi_ref ref_ = nullptr;
     int apiversion_ = 8;
     std::list<std::shared_ptr<NapiRdbStoreObserver>> observers_[DistributedRdb::SUBSCRIBE_MODE_MAX];
 };

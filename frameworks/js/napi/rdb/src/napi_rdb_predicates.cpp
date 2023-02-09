@@ -117,8 +117,12 @@ napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
         std::string tableName = JSUtils::Convert2String(env, args[0]);
         RDB_NAPI_ASSERT(env, !tableName.empty(), std::make_shared<ParamTypeError>("name", "a non empty string."));
         auto *proxy = new RdbPredicatesProxy(tableName);
-        proxy->env_ = env;
-        NAPI_CALL(env, napi_wrap(env, thiz, proxy, RdbPredicatesProxy::Destructor, nullptr, nullptr));
+        napi_status status = napi_wrap(env, thiz, proxy, RdbPredicatesProxy::Destructor, nullptr, nullptr);
+        if (status != napi_ok) {
+            LOG_ERROR("RdbPredicatesProxy::InnerNew napi_wrap failed! napi_status:%{public}d!", status);
+            delete proxy;
+            return nullptr;
+        }
         return thiz;
     }
 
@@ -166,13 +170,10 @@ void RdbPredicatesProxy::Destructor(napi_env env, void *nativeObject, void *)
     delete proxy;
 }
 
-RdbPredicatesProxy::~RdbPredicatesProxy()
-{
-    napi_delete_reference(env_, wrapper_);
-}
+RdbPredicatesProxy::~RdbPredicatesProxy() {}
 
 RdbPredicatesProxy::RdbPredicatesProxy(std::string &tableName)
-    : predicates_(std::make_shared<NativeRdb::RdbPredicates>(tableName)), env_(nullptr), wrapper_(nullptr)
+    : predicates_(std::make_shared<NativeRdb::RdbPredicates>(tableName))
 {
 }
 
