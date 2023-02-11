@@ -59,6 +59,10 @@ config("native_rdb_config") {
     cflags_cc = [ "-std=c++17" ]
   } else {
     defines += [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
+    include_dirs = [
+      "//foundation/distributeddatamgr/kv_store/frameworks/common",
+      "//foundation/distributeddatamgr/distributedfile/interfaces/kits/js/src/mod_securitylabel",
+    ]
   }
 }
 
@@ -73,9 +77,7 @@ config("native_rdb_public_config") {
   } else {
     include_dirs = [
       "include",
-      "//foundation/distributeddatamgr/kv_store/frameworks/common",
       "${relational_store_native_path}/rdb/include",
-      "//foundation/distributeddatamgr/distributedfile/interfaces/kits/js/src/mod_securitylabel",
     ]
   }
 
@@ -130,7 +132,11 @@ ohos_shared_library("native_rdb") {
       "//third_party/sqlite:sqlite_sdk",
     ]
   } else {
-    deps += [ "//third_party/sqlite:sqlite" ]
+    deps += [
+      "//third_party/sqlite:sqlite",
+      "//base/security/huks/frameworks/huks_standard/main/os_dependency:libhuks_os_dependency_standard_static",
+      "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb:distributeddb",
+    ]
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
 
     sources += [
@@ -150,8 +156,6 @@ ohos_shared_library("native_rdb") {
 
     public_deps = [
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
-      "//base/security/huks/frameworks/huks_standard/main/os_dependency:libhuks_os_dependency_standard_static",
-      "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb:distributeddb",
     ]
 
     external_deps = [
@@ -166,5 +170,6 @@ ohos_shared_library("native_rdb") {
 
   public_configs = [ ":native_rdb_public_config" ]
 
+  innerapi_tags = [ "platformsdk" ]
   subsystem_name = "distributeddatamgr"
 }

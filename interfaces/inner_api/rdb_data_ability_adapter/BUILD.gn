@@ -30,7 +30,6 @@ config("rdb_data_ability_adapter_public_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
-    "${datashare_base_path}/interfaces/inner_api/provider/include",
   ]
 }
 
