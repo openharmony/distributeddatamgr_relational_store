@@ -363,7 +363,7 @@ public:
     /**
      * @brief Drop the specified devices Data.
      *
-     * user must use UDID
+     * User must use UDID
      *
      * @param devices Indicates the specified devices.
      * @param option Indicates the drop option.

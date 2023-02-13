@@ -77,25 +77,25 @@ enum class DatabaseFileType {
  */
 enum class SecurityLevel : int32_t {
     /**
-     * @brief S1: mains the db is low level security.
+     * @brief S1: means the db is low level security.
      *
      * There are some low impact, when the data is leaked.
      */
     S1 = 1,
     /**
-     * @brief S2: mains the db is middle level security.
+     * @brief S2: means the db is middle level security.
      *
      * There are some major impact, when the data is leaked.
      */
     S2,
     /**
-     * @brief S3: mains the db is high level security
+     * @brief S3: means the db is high level security
      *
      * There are some severity impact, when the data is leaked.
      */
     S3,
     /**
-     * @brief S3: mains the db is critical level security
+     * @brief S3: means the db is critical level security
      *
      * There are some critical impact, when the data is leaked.
      */

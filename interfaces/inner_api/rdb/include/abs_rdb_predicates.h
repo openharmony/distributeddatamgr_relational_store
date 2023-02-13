@@ -126,40 +126,40 @@ public:
      */
     virtual void InitialParam();
     /**
-     * Obtains the join types in the predicates.
+     * @brief Obtains the join types in the predicates.
      */
     virtual std::vector<std::string> GetJoinTypes();
     /**
-     * Sets the join types in the predicates. The value can be {@code INNER JOIN}, {@code LEFT OUTER JOIN},
+     * @brief Sets the join types in the predicates. The value can be {@code INNER JOIN}, {@code LEFT OUTER JOIN},
      * and {@code CROSS JOIN}.
      */
     virtual void SetJoinTypes(const std::vector<std::string> joinTypes);
     /**
-     * Obtains the database table names of the joins in the predicates.
+     * @brief Obtains the database table names of the joins in the predicates.
      */
     virtual std::vector<std::string> GetJoinTableNames();
     /**
-     * Sets the database table names of the joins in the predicates.
+     * @brief Sets the database table names of the joins in the predicates.
      */
     virtual void SetJoinTableNames(const std::vector<std::string> joinTableNames);
     /**
-     * Obtains the join conditions in the predicates.
+     * @brief Obtains the join conditions in the predicates.
      */
     virtual std::vector<std::string> GetJoinConditions();
     /**
-     * Sets the join conditions required in the predicates.
+     * @brief Sets the join conditions required in the predicates.
      */
     virtual void SetJoinConditions(const std::vector<std::string> joinConditions);
     /**
-     * Obtains the join clause in the predicates.
+     * @brief Obtains the join clause in the predicates.
      */
     virtual std::string GetJoinClause() const;
     /**
-     * Sets the number of joins in the predicates.
+     * @brief Sets the number of joins in the predicates.
      */
     virtual int GetJoinCount() const;
     /**
-     * Sets the number of joins in the predicates.
+     * @brief Sets the number of joins in the predicates.
      */
     virtual void SetJoinCount(int joinCount);
 
