@@ -495,18 +495,9 @@ int ParseValuesBucket(const napi_env &env, const napi_value &arg, std::shared_pt
             std::string valueString = JSUtils::Convert2String(env, value, false);
             context->valuesBucket.PutString(keyStr, valueString);
         } else if (valueType == napi_number) {
-            napi_value toString;
-            napi_coerce_to_string(env, value, &toString);
-            std::string valueString = JSUtils::Convert2String(env, toString, false);
-            if (valueString.find(".") == std::string::npos) {
-                int64_t valueNumber;
-                napi_get_value_int64(env, value, &valueNumber);
-                context->valuesBucket.PutLong(keyStr, valueNumber);
-            } else {
-                double valueNumber;
-                napi_get_value_double(env, value, &valueNumber);
-                context->valuesBucket.PutDouble(keyStr, valueNumber);
-            }
+            double valueNumber;
+            napi_get_value_double(env, value, &valueNumber);
+            context->valuesBucket.PutDouble(keyStr, valueNumber);
         } else if (valueType == napi_boolean) {
             bool valueBool = false;
             napi_get_value_bool(env, value, &valueBool);

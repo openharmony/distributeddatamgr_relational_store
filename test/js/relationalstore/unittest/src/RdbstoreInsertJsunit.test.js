@@ -335,6 +335,57 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
+     * @tc.name rdb insert test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0008
+     * @tc.desc rdb insert test
+     */
+    it('testRdbStoreInsert0008', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreInsert0008 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        {
+            const valueBucket = {
+                "name": "zhangsan",
+                "age": 1,
+                "salary": 9223372036854775807,
+                "blobType": u8,
+            }
+            await rdbStore.insert("test", valueBucket)
+        }
+
+        {
+            const valueBucket = {
+                "name": "lisi",
+                "age": 2,
+                "salary": -9223372036854775808,
+                "blobType": u8,
+            }
+            await rdbStore.insert("test", valueBucket)
+        }
+
+        let predicates = new data_relationalStore.RdbPredicates("test");
+        let resultSet = await rdbStore.query(predicates)
+        try {
+            console.log(TAG + "resultSet query done");
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const age = resultSet.getLong(resultSet.getColumnIndex("age"))
+            const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
+            expect(1).assertEqual(age)
+            expect(9223372036854775807).assertEqual(salary)
+
+            expect(true).assertEqual(resultSet.goToNextRow())
+            const age_1 = resultSet.getLong(resultSet.getColumnIndex("age"))
+            const salary_1 = resultSet.getDouble(resultSet.getColumnIndex("salary"))
+            expect(2).assertEqual(age_1)
+            expect(-9223372036854775808).assertEqual(salary_1)
+            done()
+        } catch (e) {
+            console.log("insert error " + e);
+        }
+        resultSet = null
+        console.log(TAG + "************* testRdbStoreInsert0008 end *************");
+    })
+
+    /**
      * @tc.name rdb inserttWithConflictResolution test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0001
      * @tc.desc rdb insertWithConflictResolution test
