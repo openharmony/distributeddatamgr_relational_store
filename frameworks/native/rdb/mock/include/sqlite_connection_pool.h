@@ -44,6 +44,8 @@ public:
     int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
         const std::vector<uint8_t> &newKey);
     std::stack<BaseTransaction> &getTransactionStack();
+    void AcquireTransaction();
+    void ReleaseTransaction();
 
 private:
     explicit SqliteConnectionPool(const RdbStoreConfig &storeConfig);
@@ -72,6 +74,9 @@ private:
     const static int LIMITATION = 1024;
 
     std::stack<BaseTransaction> transactionStack;
+    std::condition_variable transCondition;
+    std::mutex transMutex;
+    bool transactionUsed;
 };
 } // namespace NativeRdb
 } // namespace OHOS

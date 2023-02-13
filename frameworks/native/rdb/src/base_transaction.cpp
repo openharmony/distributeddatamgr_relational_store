@@ -45,7 +45,7 @@ void BaseTransaction::SetMarkedSuccessful(bool markedSuccessful)
     this->markedSuccessful = markedSuccessful;
 }
 
-int BaseTransaction::getType() const
+int BaseTransaction::GetType() const
 {
     return type;
 }
@@ -55,24 +55,24 @@ bool BaseTransaction::IsChildFailure() const
     return childFailure;
 }
 
-void BaseTransaction::setChildFailure(bool failureFlag)
+void BaseTransaction::SetChildFailure(bool failureFlag)
 {
     this->childFailure = failureFlag;
 }
 
-std::string BaseTransaction::getTransactionStr()
+std::string BaseTransaction::GetTransactionStr()
 {
     std::string retStr = this->id == 0 ? BEGIN_IMMEDIATE : SAVE_POINT + " " + TRANS_STR + std::to_string(this->id);
     return retStr + ";";
 }
 
-std::string BaseTransaction::getCommitStr()
+std::string BaseTransaction::GetCommitStr()
 {
     std::string retStr = this->id == 0 ? COMMIT : "";
     return retStr + ";";
 }
 
-std::string BaseTransaction::getRollbackStr()
+std::string BaseTransaction::GetRollbackStr()
 {
     std::string retStr = this->id == 0 ? ROLLBACK : ROLLBACK_TO + " " + TRANS_STR + std::to_string(this->id);
     return retStr + ";";
