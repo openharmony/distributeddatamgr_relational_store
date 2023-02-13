@@ -27,7 +27,7 @@
 namespace OHOS {
 namespace AppDataFwk {
 /**
- * @brief The constant Indicates the invaild row record.
+ * @brief The constant indicates the error is due to an invalid row record.
  */
 static const uint32_t INVALID_ROW_RECORD = 0xFFFFFFFF;
 /**
@@ -40,15 +40,15 @@ public:
      * @brief Cell Unit types.
      */
     enum {
-        /** Indicates the Cell Unit type is NULL.*/
+        /** Indicates the Cell Unit data type is NULL at the specified row and column.*/
         CELL_UNIT_TYPE_NULL = 0,
-        /** Indicates the Cell Unit type is INT.*/
+        /** Indicates the current Cell Unit data type is INT at the specified row and column.*/
         CELL_UNIT_TYPE_INTEGER = 1,
-        /** Indicates the Cell Unit type is FLOAT.*/
+        /** Indicates the current Cell Unit data type is FLOAT at the specified row and column.*/
         CELL_UNIT_TYPE_FLOAT = 2,
-        /** Indicates the Cell Unit type is STRING.*/
+        /** Indicates the current Cell Unit data type is STRING at the specified row and column.*/
         CELL_UNIT_TYPE_STRING = 3,
-        /** Indicates the Cell Unit type is BLOB.*/
+        /** Indicates the current Cell Unit data type is BLOB at the specified row and column.*/
         CELL_UNIT_TYPE_BLOB = 4,
     };
 
@@ -58,15 +58,15 @@ public:
     enum {
         /** Indicates that the operation on SHARED BLOCK was successful.*/
         SHARED_BLOCK_OK = 0,
-        /** Indicates that the operation on SHARED BLOCK was failed.*/
+        /** Indicates that the result returned by the shared block operation is a bad value.*/
         SHARED_BLOCK_BAD_VALUE = 1,
-        /** Indicates that the operation on SHARED BLOCK was failed.*/
+        /** Indicates the current shared block space is not enough.*/
         SHARED_BLOCK_NO_MEMORY = 2,
-        /** Indicates that the operation on SHARED BLOCK was failed.*/
+        /** Indicates that the current operation on SHARED BLOCK is invalid.*/
         SHARED_BLOCK_INVALID_OPERATION = 3,
-        /** Indicates that the operation on SHARED BLOCK was failed.*/
+        /** Indicates that an ashmem error occurred in the operation of shared memory.*/
         SHARED_BLOCK_ASHMEM_ERROR = 4,
-        /** Indicates that the operation on SHARED BLOCK was failed.*/
+        /** Indicates that the set port error occurred in the operation of shared memory.*/
         SHARED_BLOCK_SET_PORT_ERROR = 5,
     };
 
@@ -86,12 +86,12 @@ public:
     } __attribute((packed));
 
     /**
-     * @brief SharedBlock constructor.
+     * @brief Constructor.
      */
     SharedBlock(const std::string &name, sptr<Ashmem> ashmem, size_t size, bool readOnly);
 
     /**
-     * @brief SharedBlock destructor.
+     * @brief Destructor.
      */
     ~SharedBlock();
 
@@ -151,12 +151,12 @@ public:
     int PutNull(uint32_t row, uint32_t column);
 
     /**
-     * @brief Gets the cell unit at the specified row and column.
+     * @brief Obtains the cell unit at the specified row and column.
      */
     CellUnit *GetCellUnit(uint32_t row, uint32_t column);
 
     /**
-     * @brief Get string type data from cell unit.
+     * @brief Obtains string type data from cell unit.
      */
     const char *GetCellUnitValueString(CellUnit *cellUnit, size_t *outSizeIncludingNull)
     {
@@ -166,7 +166,7 @@ public:
     }
 
     /**
-     * @brief Get blob type data from cell unit.
+     * @brief Obtains blob type data from cell unit.
      */
     const void *GetCellUnitValueBlob(CellUnit *cellUnit, size_t *outSize)
     {
@@ -175,7 +175,7 @@ public:
     }
 
     /**
-     * @brief The mHeader of the current result set.
+     * @brief Obtains the mHeader of the current result set.
      */
     const void *GetHeader()
     {
@@ -183,7 +183,7 @@ public:
     }
 
     /**
-     * @brief Size of the used byte in the block.
+     * @brief Obtains size of the used byte in the block.
      */
     size_t GetUsedBytes()
     {
@@ -191,7 +191,7 @@ public:
     }
 
     /**
-     * @brief The name of the current result set.
+     * @brief Obtains the name of the current result set.
      */
     std::string Name()
     {
@@ -199,7 +199,7 @@ public:
     }
 
     /**
-     * @brief The size of the current result set.
+     * @brief Obtains the size of the current result set.
      */
     size_t Size()
     {
@@ -207,7 +207,7 @@ public:
     }
 
     /**
-     * @brief The row number of the current result set.
+     * @brief Obtains the row number of the current result set.
      */
     uint32_t GetRowNum()
     {
@@ -215,7 +215,7 @@ public:
     }
 
     /**
-     * @brief The column number of the current result set.
+     * @brief Obtains the column number of the current result set.
      */
     uint32_t GetColumnNum()
     {
@@ -232,11 +232,11 @@ public:
      */
     static int ReadMessageParcel(MessageParcel &parcel, SharedBlock *&block);
     /**
-     * Write raw data in block.
+     * @brief Write raw data in block.
      */
     size_t SetRawData(const void *rawData, size_t size);
     /**
-     * The fd of shared memory
+     * @brief Obtains the fd of shared memory
      */
     int GetFd()
     {
@@ -247,7 +247,7 @@ public:
     }
 
     /**
-     * @brief The start position of the current result set.
+     * @brief Obtains the start position of the current result set.
      */
     uint32_t GetStartPos()
     {
@@ -255,7 +255,7 @@ public:
     }
 
     /**
-     * @brief The last position of the current result set.
+     * @brief Obtains the last position of the current result set.
      */
     uint32_t GetLastPos()
     {
@@ -263,7 +263,7 @@ public:
     }
 
     /**
-     * @brief The block position of the current result set.
+     * @brief Obtains the block position of the current result set.
      */
     uint32_t GetBlockPos()
     {

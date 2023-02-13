@@ -40,27 +40,27 @@ public:
     ~RdbPredicates() override {}
 
     /**
-     * Obtains the join clause in the predicates.
+     * @brief Obtains the join clause in the predicates.
      */
     std::string GetJoinClause() const override;
     /**
-     * Adds a {@code cross join} condition to a SQL statement.
+     * @brief Adds a {@code cross join} condition to a SQL statement.
      */
     RdbPredicates *CrossJoin(std::string tableName);
     /**
-     * Adds an {@code inner join} condition to a SQL statement.
+     * @brief Adds an {@code inner join} condition to a SQL statement.
      */
     RdbPredicates *InnerJoin(std::string tableName);
     /**
-      * Adds a {@code left outer join} condition to a SQL statement.
+      * @brief Adds a {@code left outer join} condition to a SQL statement.
       */
     RdbPredicates *LeftOuterJoin(std::string tableName);
     /**
-     * Adds a {@code using} condition to the predicate. This method is similar to {@code using} of the SQL statement.
+     * @brief Adds a {@code using} condition to the predicate. This method is similar to {@code using} of the SQL statement.
      */
     RdbPredicates *Using(std::vector<std::string> fields);
     /**
-     * Adds an {@code on} condition to the predicate.
+     * @brief Adds an {@code on} condition to the predicate.
      */
     RdbPredicates *On(std::vector<std::string> clauses);
 

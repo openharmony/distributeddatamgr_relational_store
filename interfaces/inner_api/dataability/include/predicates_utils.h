@@ -37,12 +37,12 @@ public:
      */
     ~PredicatesUtils() {}
     /**
-     * @brief Set the param of whereClause and whereArgs of the specified Predicates.
+     * @brief Set the parameter of whereClause and whereArgs of the specified Predicates.
      */
     static void SetWhereClauseAndArgs(AbsPredicates *predicates, std::string whereClause,
         std::vector<std::string> whereArgs);
     /**
-     * Sets params of the specified Predicates including distinct, index, group, order, limit and offset.
+     * @brief Sets parameters of the specified Predicates including distinct, index, group, order, limit and offset.
      */
     static void SetAttributes(AbsPredicates *predicates, bool isDistinct, std::string index, std::string group,
         std::string order, int limit, int offset);

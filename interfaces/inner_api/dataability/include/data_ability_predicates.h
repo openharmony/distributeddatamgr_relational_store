@@ -45,11 +45,11 @@ public:
      */
     ~DataAbilityPredicates() override;
     /**
-     * @brief Obtain value of variable isRawSelection.
+     * @brief Obtains value of variable isRawSelection.
      */
     bool IsRawSelection() const;
     /**
-     * @brief Obtain value of variable judgeSource.
+     * @brief Obtains value of variable judgeSource.
      */
     bool GetJudgeSource() const;
     /**
