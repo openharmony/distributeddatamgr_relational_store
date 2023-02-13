@@ -384,7 +384,7 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_007, TestSize.Level1)
     int64_t id;
     values.Put("name", std::string("zhangsan"));
     values.Put("age", 9223372036854775807);
-    values.Put("salary", 1.79769e+308);
+    values.Put("salary", 1.79769313486231570E+308);
     int ret1 = store->Insert(id, "test", RdbUtils::ToValuesBucket(values));
     EXPECT_EQ(ret1, OHOS::NativeRdb::E_OK);
     EXPECT_EQ(1, id);
@@ -392,7 +392,7 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_007, TestSize.Level1)
     values.Clear();
     values.Put("name", std::string("lisi"));
     values.Put("age", -9223372036854775807i - 1i);
-    values.Put("salary", 2.22507e-308);
+    values.Put("salary", -1.79769313486231570E+308);
     int ret2 = store->Insert(id, "test", RdbUtils::ToValuesBucket(values));
     EXPECT_EQ(ret2, OHOS::NativeRdb::E_OK);
     EXPECT_EQ(2, id);
@@ -410,7 +410,7 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_007, TestSize.Level1)
 
     double doubleVal;
     allDataTypes->GetDouble(3, doubleVal);
-    EXPECT_EQ(1.79769e+308, doubleVal);
+    EXPECT_EQ(1.79769313486231570E+308, doubleVal);
 
     allDataTypes->GoToNextRow();
 
@@ -418,5 +418,5 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_007, TestSize.Level1)
     EXPECT_EQ(int64Value, -9223372036854775807i - 1i);
 
     allDataTypes->GetDouble(3, doubleVal);
-    EXPECT_EQ(2.22507e-308, doubleVal);
+    EXPECT_EQ(-1.79769313486231570E+308, doubleVal);
 }
