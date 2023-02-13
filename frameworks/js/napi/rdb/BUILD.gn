@@ -42,6 +42,7 @@ ohos_shared_library("napi_rdb") {
       "//commonlibrary/c_utils/base/include",
       "include",
       "${relational_store_js_common_path}/include",
+      "${datashare_base_path}/interfaces/inner_api/provider/include",
     ]
     cflags_cc = [
       "-std=c++17",
@@ -69,6 +70,7 @@ ohos_shared_library("napi_rdb") {
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/rdb/include",
       "${datashare_base_path}/interfaces/inner_api/common/include/",
+      "${datashare_base_path}/interfaces/inner_api/provider/include",
     ]
     defines = [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
     sources += [
@@ -106,6 +108,7 @@ ohos_shared_library("rdb") {
       "//commonlibrary/c_utils/base/include",
       "include",
       "${relational_store_js_common_path}/include",
+      "${datashare_base_path}/interfaces/inner_api/provider/include",
     ]
     cflags_cc = [
       "-std=c++17",
@@ -131,6 +134,7 @@ ohos_shared_library("rdb") {
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/rdb/include",
       "${datashare_base_path}/interfaces/inner_api/common/include/",
+      "${datashare_base_path}/interfaces/inner_api/provider/include",
     ]
     defines = [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
     deps = [ ":napi_rdb" ]

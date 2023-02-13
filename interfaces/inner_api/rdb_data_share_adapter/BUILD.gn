@@ -28,10 +28,7 @@ config("rdb_data_share_adapter_config") {
 
 config("rdb_data_share_adapter_public_config") {
   visibility = [ ":*" ]
-  include_dirs = [
-    "include",
-    "${datashare_base_path}/interfaces/inner_api/provider/include",
-  ]
+  include_dirs = [ "include" ]
 }
 
 ohos_shared_library("rdb_data_share_adapter") {
@@ -52,4 +49,6 @@ ohos_shared_library("rdb_data_share_adapter") {
   ]
 
   public_configs = [ ":rdb_data_share_adapter_public_config" ]
+
+  innerapi_tags = [ "platformsdk" ]
 }

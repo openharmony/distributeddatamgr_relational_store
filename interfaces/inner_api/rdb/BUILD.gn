@@ -133,9 +133,9 @@ ohos_shared_library("native_rdb") {
     ]
   } else {
     deps += [
-      "//third_party/sqlite:sqlite",
       "//base/security/huks/frameworks/huks_standard/main/os_dependency:libhuks_os_dependency_standard_static",
       "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb:distributeddb",
+      "//third_party/sqlite:sqlite",
     ]
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
 
@@ -154,9 +154,8 @@ ohos_shared_library("native_rdb") {
       "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
     ]
 
-    public_deps = [
-      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
-    ]
+    public_deps =
+        [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
 
     external_deps = [
       "c_utils:utils",
