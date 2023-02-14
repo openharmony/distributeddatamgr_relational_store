@@ -21,20 +21,33 @@
 
 namespace OHOS {
 namespace NativeRdb {
+/**
+ * The SharedResultSet class of RDB.
+ */
 class SharedResultSet {
 public:
-    SharedResultSet() {}
-    ~SharedResultSet() {}
     /**
-     * Obtains a block from the {@link SharedResultSet}
+     * @brief Constructor.
+     */
+    SharedResultSet() {}
+
+    /**
+     * @brief Destructor.
+     */
+    ~SharedResultSet() {}
+
+    /**
+     * @brief Obtains a block from the {@link SharedResultSet}.
      */
     virtual AppDataFwk::SharedBlock *GetBlock() const = 0;
+
     /**
-     * Adds the data of a {@code SharedResultSet} to a {@link SharedBlock}
+     * @brief Adds the data of a {@code SharedResultSet} to a {@link SharedBlock}.
      */
     virtual void FillBlock(int startRowIndex, AppDataFwk::SharedBlock *block) = 0;
+
     /**
-     * Called when the position of the result set changes
+     * @brief Called when the position of the result set changes.
      */
     virtual bool OnGo(int oldRowIndex, int newRowIndex) = 0;
 };
