@@ -16,7 +16,7 @@
 #ifndef RDB_RESULT_SET_BRIDGE_H
 #define RDB_RESULT_SET_BRIDGE_H
 
-#include "../../rdb/include/result_set.h"
+#include "result_set.h"
 #include "rdb_errno.h"
 #include "result_set_bridge.h"
 #include "string.h"
