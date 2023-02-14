@@ -32,7 +32,6 @@ void BaseContext::SetAction(
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, argv[argc - 1], &valueType);
     if (valueType == napi_function) {
-        LOG_DEBUG("asyncCall set callback");
         NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, argv[argc - 1], 1, &callback_));
         argc = argc - 1;
     }
@@ -68,7 +67,6 @@ BaseContext::~BaseContext()
 
 void AsyncCall::SetBusinessError(napi_env env, napi_value *businessError, std::shared_ptr<Error> error, int apiversion)
 {
-    LOG_DEBUG("SetBusinessError enter");
     napi_value code = nullptr;
     napi_value msg = nullptr;
     napi_create_object(env, businessError);
@@ -107,7 +105,6 @@ napi_value AsyncCall::Call(napi_env env, std::shared_ptr<BaseContext> context)
 
 void AsyncCall::OnExecute(napi_env env, void *data)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     BaseContext *context = reinterpret_cast<BaseContext *>(data);
     if (context->exec_) {
         context->execStatus = context->exec_();
@@ -117,7 +114,6 @@ void AsyncCall::OnExecute(napi_env env, void *data)
 
 void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     BaseContext *context = reinterpret_cast<BaseContext *>(data);
     napi_value output = nullptr;
     int outStatus = ERR;
