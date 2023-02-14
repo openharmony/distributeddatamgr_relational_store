@@ -32,12 +32,12 @@ public:
     void SetAllBeforeSuccessful(bool allBeforeSuccessful);
     bool IsMarkedSuccessful() const;
     void SetMarkedSuccessful(bool markedSuccessful);
-    int getType() const;
+    int GetType() const;
     bool IsChildFailure() const;
-    void setChildFailure(bool failureFlag);
-    std::string getTransactionStr();
-    std::string getCommitStr();
-    std::string getRollbackStr();
+    void SetChildFailure(bool failureFlag);
+    std::string GetTransactionStr();
+    std::string GetCommitStr();
+    std::string GetRollbackStr();
 
 private:
     bool allBeforeSuccessful;

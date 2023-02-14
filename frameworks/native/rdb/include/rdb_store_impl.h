@@ -66,8 +66,6 @@ public:
     int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey) override;
     int Attach(const std::string &alias, const std::string &pathName,
         const std::vector<uint8_t> destEncryptKey) override;
-    int GetStatus() override;
-    void SetStatus(int status) override;
     int GetVersion(int &version) override;
     int SetVersion(int version) override;
     int BeginTransaction() override;
@@ -118,6 +116,9 @@ public:
 private:
     int InnerOpen(const RdbStoreConfig &config);
     int CheckAttach(const std::string &sql);
+    int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
+    int FreeTransaction(SqliteConnection *connection, const std::string &sql);
+    std::string GetBatchInsertSql(std::map<std::string, ValueObject> &valuesMap, const std::string &table);
 
     SqliteConnectionPool *connectionPool;
     static const int MAX_IDLE_SESSION_SIZE = 5;
@@ -129,15 +130,12 @@ private:
     std::string orgPath;
     bool isReadOnly;
     bool isMemoryRdb;
-    int rdbStatus;
     std::string name;
     std::string fileType;
     std::stack<TransactionObserver *> transactionObserverStack;
     bool isShared_ = false;
     DistributedRdb::RdbSyncerParam syncerParam_;
     bool isEncrypt_;
-
-    int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
 };
 } // namespace OHOS::NativeRdb
 #endif

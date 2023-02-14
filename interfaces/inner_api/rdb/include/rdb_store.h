@@ -289,19 +289,6 @@ public:
      */
     virtual int Delete(int &deletedRows, const AbsRdbPredicates &predicates) = 0;
 
-    /**
-     * @brief Obtains the database status.
-     */
-    virtual int GetStatus() = 0;
-
-    /**
-     * @brief Sets the database status.
-     */
-    virtual void SetStatus(int status) = 0;
-
-    /**
-     * @brief Obtains the database version.
-     */
     virtual int GetVersion(int &version) = 0;
 
     /**

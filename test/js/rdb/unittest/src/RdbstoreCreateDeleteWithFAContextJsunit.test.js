@@ -17,7 +17,8 @@ import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
 
 const TAG = "[RDB_JSKITS_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
 const STORE_CONFIG = {
     name: "CreateDeleteWithFAContextTest.db",
@@ -34,6 +35,7 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
 
     afterEach(async function () {
         console.info(TAG + 'afterEach')
+        await dataRdb.deleteRdbStore(context, "CreateDeleteWithFAContextTest.db");
     })
 
     afterAll(async function () {
@@ -161,6 +163,7 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
                                 return
                             }
                             console.log("Delete RdbStore successfully.")
+                            rdbStore = null
                             done()
                             console.log(TAG + "************* testRdbStoreCreateDeleteWithFAContextTest0003 end *************");
                         });
@@ -195,6 +198,7 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
                     rdbStore.delete(predicates).then((rows) => {
                         console.log("Delete rows: " + rows)
                         expect(1).assertEqual(rows)
+                        rdbStore = null
                         dataRdb.deleteRdbStore(context, "CreateDeleteWithFAContextTest.db").then(() => {
                             console.log("Delete RdbStore successfully.")
                             done()

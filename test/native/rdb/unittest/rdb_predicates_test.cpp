@@ -1582,3 +1582,22 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ToString_025, TestSize.Level1)
                          "DESC , group:, index:, limit:2, offset:-1, distinct:0, isNeedAnd:1, isSorted:1}";
     EXPECT_EQ(result, toString);
 }
+
+/* *
+ * @tc.name: RdbStore_InDevices_InAllDevices_026
+ * @tc.desc: Normal testCase of RdbPredicates for InDevices and InAllDevices method
+ * @tc.type: FUNC
+ * @tc.require: AR
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_InDevices_InAllDevices_026, TestSize.Level1)
+{
+    RdbPredicates predicates("AllDataType");
+    std::vector<std::string> devices;
+    devices.push_back("7001005458323933328a071dab423800");
+    devices.push_back("7001005458323933328a268fa2fa3900");
+    AbsRdbPredicates* absRdbPredicates = predicates.InDevices(devices);
+    EXPECT_NE(absRdbPredicates, nullptr);
+    AbsRdbPredicates* absRdbPredicates1 = predicates.InAllDevices();
+    EXPECT_NE(absRdbPredicates1, nullptr);
+    EXPECT_EQ(absRdbPredicates, absRdbPredicates1);
+}

@@ -17,7 +17,8 @@ import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from '
 import dataRdb from '@ohos.data.rdb';
 
 const TAG = "[RDB_JSKITS_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
 const STORE_CONFIG = {
     name: "InsertTest.db",
@@ -108,6 +109,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (e) {
             console.log("insert1 error " + e);
         }
+        resultSet.close()
         resultSet = null
         done()
         console.log(TAG + "************* testRdbStoreInsert0001 end *************");
@@ -204,6 +206,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (e) {
             console.log("insert error " + e);
         }
+        resultSet.close()
         resultSet = null
         done()
         console.log(TAG + "************* testRdbStoreInsert0004 end   *************");
@@ -237,6 +240,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (e) {
             console.log("insert error " + e);
         }
+        resultSet.close()
         resultSet = null
         done()
         console.log(TAG + "************* testRdbStoreInsert0005 end   *************");
@@ -270,6 +274,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (e) {
             console.log("insert error " + e);
         }
+        resultSet.close()
         resultSet = null
         done()
         console.log(TAG + "************* testRdbStoreInsert0006 end   *************");
@@ -299,6 +304,7 @@ describe('rdbStoreInsertTest', function () {
         let resultSet = await rdbStore.querySql("SELECT * FROM test");
         let count = resultSet.rowCount;
         expect(100).assertEqual(count);
+        resultSet.close()
         console.log(TAG + "************* testRdbStorebatchInsert001 end *************");
     })
 
