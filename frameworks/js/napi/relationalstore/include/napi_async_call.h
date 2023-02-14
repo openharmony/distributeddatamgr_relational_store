@@ -27,8 +27,8 @@
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
-using InputAction = std::function<int(napi_env, size_t, napi_value *, napi_value)>;
-using OutputAction = std::function<int(napi_env, napi_value &)>;
+using InputAction = std::function<void(napi_env, size_t, napi_value *, napi_value)>;
+using OutputAction = std::function<void(napi_env, napi_value &)>;
 using ExecuteAction = std::function<int()>;
 
 class Context {
@@ -39,7 +39,6 @@ public:
 
     napi_env env_ = nullptr;
     void *boundObj = nullptr;
-    int execStatus = ERR;
     std::shared_ptr<Error> error;
 
     napi_ref self_ = nullptr;
@@ -47,6 +46,7 @@ public:
     napi_deferred defer_ = nullptr;
     napi_async_work work_ = nullptr;
 
+    int execCode_ = OK;
     OutputAction output_ = nullptr;
     ExecuteAction exec_ = nullptr;
     std::shared_ptr<Context> keep_;
@@ -60,7 +60,7 @@ private:
     enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
     static void OnExecute(napi_env env, void *data);
     static void OnComplete(napi_env env, napi_status status, void *data);
-    static void SetBusinessError(napi_env env, napi_value *businessError, std::shared_ptr<Error> error);
+    static void SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError);
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

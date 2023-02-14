@@ -38,7 +38,7 @@ public:
     std::shared_ptr<DataShare::ResultSetBridge> Create() override;
 
 private:
-    static std::shared_ptr<NativeRdb::ResultSet> &GetInnerResultSet(napi_env env, napi_callback_info info);
+    static ResultSetProxy *GetInnerResultSet(napi_env env, napi_callback_info info);
     static ResultSetProxy *ParseInt32FieldByName(
         napi_env env, napi_callback_info info, int32_t &field, const std::string fieldName);
     static ResultSetProxy *ParseFieldByName(
