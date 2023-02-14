@@ -44,22 +44,27 @@ public:
      * @brief Use ValuesBucket replace NativeRdb::ValuesBucket namespace.
      */
     using ValuesBucket = NativeRdb::ValuesBucket;
+
     /**
      * @brief Use DataShareValuesBucket replace DataShare::DataShareValuesBucket namespace.
      */
     using DataShareValuesBucket = DataShare::DataShareValuesBucket;
+
     /**
      * @brief Use DSResultSet replace DataShare::ResultSet namespace.
      */
     using DSResultSet = DataShare::ResultSet;
+
     /**
      * @brief Use DataSharePredicates replace DataShare::DataSharePredicates namespace.
      */
     using DataSharePredicates = DataShare::DataSharePredicates;
+
     /**
      * @brief Use DataAbilityPredicates replace NativeRdb::DataAbilityPredicates namespace.
      */
     using DataAbilityPredicates = NativeRdb::DataAbilityPredicates;
+
     /**
      * @brief Use AbsSharedResultSet replace NativeRdb::AbsSharedResultSet namespace.
      */

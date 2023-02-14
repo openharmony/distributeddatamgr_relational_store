@@ -32,15 +32,18 @@ public:
      * @brief Constructor.
      */
     PredicatesUtils();
+
     /**
      * @brief Destructor.
      */
     ~PredicatesUtils() {}
+
     /**
      * @brief Set the parameter of whereClause and whereArgs of the specified Predicates.
      */
     static void SetWhereClauseAndArgs(AbsPredicates *predicates, std::string whereClause,
         std::vector<std::string> whereArgs);
+
     /**
      * @brief Sets parameters of the specified Predicates including distinct, index, group, order, limit and offset.
      */

@@ -35,22 +35,27 @@ public:
      * @brief Use SyncOption replace DistributedRdb::SyncOption namespace.
      */
     using SyncOption = DistributedRdb::SyncOption;
+
     /**
      * @brief Use SyncCallback replace DistributedRdb::SyncCallback namespace.
      */
     using SyncCallback = DistributedRdb::SyncCallback;
+
     /**
      * @brief Use SubscribeMode replace DistributedRdb::SubscribeMode namespace.
      */
     using SubscribeMode = DistributedRdb::SubscribeMode;
+
     /**
      * @brief Use SubscribeOption replace DistributedRdb::SubscribeOption namespace.
      */
     using SubscribeOption = DistributedRdb::SubscribeOption;
+
     /**
      * @brief Use DropOption replace DistributedRdb::DropOption namespace.
      */
     using DropOption = DistributedRdb::DropOption;
+
     /**
      * @brief Use RdbStoreObserver replace DistributedRdb::RdbStoreObserver namespace.
      */
@@ -60,6 +65,7 @@ public:
      * @brief Destructor.
      */
     virtual ~RdbStore() {}
+
     /**
      * @brief Inserts a row of data into the target table.
      *
@@ -67,6 +73,7 @@ public:
      * @param initialValues Indicates the row of data {@link ValuesBucket} to be inserted into the table.
      */
     virtual int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) = 0;
+
     /**
      * @brief Inserts a batch of data into the target table.
      *
@@ -75,6 +82,7 @@ public:
      */
     virtual int BatchInsert(int64_t &outInsertNum, const std::string &table,
         const std::vector<ValuesBucket> &initialBatchValues) = 0;
+
     /**
      * @brief Replaces a row of data into the target table.
      *
@@ -82,6 +90,7 @@ public:
      * @param initialBatchValue Indicates the row of data {@link ValuesBucket} to be replaced into the table.
      */
     virtual int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) = 0;
+
     /**
      * @brief Inserts a row of data into the target table.
      *
@@ -92,6 +101,7 @@ public:
     virtual int InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
         const ValuesBucket &initialValues,
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
+
     /**
      * @brief Updates data in the database based on specified conditions.
      *
@@ -104,6 +114,7 @@ public:
     virtual int Update(int &changedRows, const std::string &table, const ValuesBucket &values,
         const std::string &whereClause = "",
         const std::vector<std::string> &whereArgs = std::vector<std::string>()) = 0;
+
     /**
      * @brief Updates data in the database based on a a specified instance object of RdbPredicates.
      *
@@ -117,6 +128,7 @@ public:
     virtual int UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
         const std::string &whereClause = "", const std::vector<std::string> &whereArgs = std::vector<std::string>(),
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
+
     /**
      * @brief Deletes data from the database based on specified conditions.
      *
@@ -126,6 +138,7 @@ public:
      */
     virtual int Delete(int &deletedRows, const std::string &table, const std::string &whereClause = "",
         const std::vector<std::string> &whereArgs = std::vector<std::string>()) = 0;
+
     /**
      * @brief Queries data in the database based on specified conditions.
      *
@@ -143,6 +156,7 @@ public:
         const std::vector<std::string> &columns, const std::string &selection = "",
         const std::vector<std::string> &selectionArgs = std::vector<std::string>(), const std::string &groupBy = "",
         const std::string &having = "", const std::string &orderBy = "", const std::string &limit = "") = 0;
+
     /**
      * @brief Queries data in the database based on SQL statement.
      *
@@ -151,6 +165,7 @@ public:
      */
     virtual std::unique_ptr<AbsSharedResultSet> QuerySql(
         const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
+
     /**
      * @brief Queries data in the database based on SQL statement.
      *
@@ -159,6 +174,7 @@ public:
      */
     virtual std::unique_ptr<ResultSet> QueryByStep(
         const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
+
     /**
      * @brief Executes an SQL statement that contains specified parameters.
      *
@@ -167,6 +183,7 @@ public:
      */
     virtual int ExecuteSql(
         const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+
     /**
      * @brief Executes an SQL statement that contains specified parameters and get a long integer value.
      *
@@ -175,6 +192,7 @@ public:
      */
     virtual int ExecuteAndGetLong(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+
     /**
      * @brief Executes an SQL statement that contains specified parameters.
      *
@@ -183,6 +201,7 @@ public:
      */
     virtual int ExecuteAndGetString(std::string &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+
     /**
      * @brief Executes for last insert row id that contains specified parameters.
      *
@@ -191,6 +210,7 @@ public:
      */
     virtual int ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+
     /**
      * @brief Executes for change row count that contains specified parameters.
      *
@@ -199,6 +219,7 @@ public:
      */
     virtual int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+
     /**
      * @brief Restores a database from a specified encrypted or unencrypted database file.
      *
@@ -206,6 +227,7 @@ public:
      * @param destEncryptKey Indicates the database encrypt key.
      */
     virtual int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey) = 0;
+
     /**
      * @brief Attaches a database.
      *
@@ -215,12 +237,14 @@ public:
      */
     virtual int Attach(
         const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey) = 0;
+
     /**
      * @brief Get the value of the column based on specified conditions.
      *
      * @param predicates Indicates the {@link AbsRdbPredicates} AbsRdbPredicates object.
      */
     virtual int Count(int64_t &outValue, const AbsRdbPredicates &predicates) = 0;
+
     /**
      * @brief Queries data in the database based on specified conditions.
      *
@@ -229,6 +253,7 @@ public:
      */
     virtual std::unique_ptr<AbsSharedResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) = 0;
+
     /**
      * @brief Queries data in the database based on specified conditions.
      *
@@ -237,6 +262,7 @@ public:
      */
     virtual std::unique_ptr<ResultSet> QueryByStep(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) = 0;
+
     /**
      * @brief Queries remote data in the database based on specified conditions before Synchronizing Data.
      *
@@ -246,6 +272,7 @@ public:
      */
     virtual std::shared_ptr<ResultSet> RemoteQuery(const std::string &device,
         const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) = 0;
+
     /**
      * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.
      *
@@ -254,6 +281,7 @@ public:
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
      */
     virtual int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) = 0;
+
     /**
      * @brief Deletes data from the database based on a specified instance object of AbsRdbPredicates.
      *
@@ -265,54 +293,67 @@ public:
      * @brief Obtains the database status.
      */
     virtual int GetStatus() = 0;
+
     /**
      * @brief Sets the database status.
      */
     virtual void SetStatus(int status) = 0;
+
     /**
      * @brief Obtains the database version.
      */
     virtual int GetVersion(int &version) = 0;
+
     /**
      * @brief Sets the version of a new database.
      */
     virtual int SetVersion(int version) = 0;
+
     /**
      * @brief Begins a transaction in EXCLUSIVE mode.
      */
     virtual int BeginTransaction() = 0;
+
     /**
      * @brief Rollback a transaction in EXCLUSIVE mode.
      */
     virtual int RollBack() = 0;
+
     /**
      * @brief Commit a transaction in EXCLUSIVE mode.
      */
     virtual int Commit() = 0;
+
     /**
      * @brief Check the current connection is in transaction.
      */
     virtual bool IsInTransaction() = 0;
+
     /**
      * @brief Get database path.
      */
     virtual std::string GetPath() = 0;
+
     /**
      * @brief Check the current connection pool is holding connection.
      */
     virtual bool IsHoldingConnection() = 0;
+
     /**
      * @brief Check the current database is open.
      */
     virtual bool IsOpen() const = 0;
+
     /**
      * @brief Check the current database is read only.
      */
     virtual bool IsReadOnly() const = 0;
+
     /**
      * @brief Check the current database is memory database.
      */
     virtual bool IsMemoryRdb() const = 0;
+
     /**
      * @brief Restores a database from a specified database file.
      *
@@ -320,6 +361,7 @@ public:
      * @param newKey Indicates the database new key.
      */
     virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey) = 0;
+
     /**
      * @brief Restores a database from a specified encrypted or unencrypted database file.
      *
@@ -336,6 +378,7 @@ public:
      * @param tables Indicates the tables name you want to set.
      */
     virtual bool SetDistributedTables(const std::vector<std::string>& tables) = 0;
+
     /**
      * @brief Obtain distributed table name of specified remote device according to local table name.
      * When query remote device database, distributed table name is needed.
@@ -345,6 +388,7 @@ public:
      * @return Returns the distributed table name.
      */
     virtual std::string ObtainDistributedTableName(const std::string& device, const std::string& table) = 0;
+
     /**
      * @brief Sync data between devices.
      *
@@ -352,14 +396,17 @@ public:
      * @param predicate Indicates the AbsRdbPredicates {@link AbsRdbPredicates} object.
      */
     virtual bool Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) = 0;
+
     /**
      * @brief Subscribe to event changes.
      */
     virtual bool Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
+
     /**
      * @brief UnSubscribe to event changes.
      */
     virtual bool UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
+
     /**
      * @brief Drop the specified devices Data.
      *

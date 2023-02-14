@@ -30,6 +30,7 @@ enum class StorageMode {
     /** Indicates the database storage is disk.*/
     MODE_DISK,
 };
+
 /**
  * @brief Indicates the type of the journal.
  */
@@ -61,6 +62,7 @@ enum class SyncMode {
     /** Indicates the sync mode is extra.*/
     MODE_EXTRA,
 };
+
 /**
  * @brief Indicates the database file type.
  */
@@ -72,6 +74,7 @@ enum class DatabaseFileType {
     /** Indicates the database file type is corrupt.*/
     CORRUPT,
 };
+
 /**
  * @brief Describes the {@link RdbStore} type.
  */
@@ -110,18 +113,22 @@ enum class SecurityLevel : int32_t {
  * @brief The constant indicates the database default page size.
  */
 static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
+
 /**
  * @brief The constant indicates the database default journal size.
  */
 static constexpr int DB_JOURNAL_SIZE = 1048576; /* default file size : 1M */
+
 /**
  * @brief The constant indicates the database default journal mode.
  */
 static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "WAL";
+
 /**
  * @brief The constant indicates the database default encrypt algorithm.
  */
 static constexpr char DB_DEFAULT_ENCRYPT_ALGO[] = "sha256";
+
 /**
  * @brief Use DistributedType replace OHOS::DistributedRdb::RdbDistributedType.
  */
@@ -136,6 +143,7 @@ public:
      * @brief Copy constructor.
      */
     RdbStoreConfig(const RdbStoreConfig &config);
+
     /**
      * @brief Constructor.
      *
@@ -162,86 +170,107 @@ public:
         SecurityLevel securityLevel = SecurityLevel::LAST, bool isCreateNecessary = true,
         bool autoCheck = false, int journalSize = DB_JOURNAL_SIZE, int pageSize = DB_PAGE_SIZE,
         const std::string &encryptAlgo = DB_DEFAULT_ENCRYPT_ALGO);
+
     /**
      * @brief Destructor.
      */
     ~RdbStoreConfig();
+
     /**
      * @brief Obtains the database name.
      */
     std::string GetName() const;
+
     /**
      * @brief Obtains the database path.
      */
     std::string GetPath() const;
+
     /**
      * @brief Obtains the storage mode.
      */
     StorageMode GetStorageMode() const;
+
     /**
      * @brief Obtains the journal mode in this {@code StoreConfig} object.
      */
     std::string GetJournalMode() const;
+
     /**
      * @brief Obtains the synchronization mode in this {@code StoreConfig} object.
      */
     std::string GetSyncMode() const;
+
     /**
      * @brief Checks whether the database is read-only.
      */
     bool IsReadOnly() const;
+
     /**
      * @brief Checks whether the database is memory.
      */
     bool IsMemoryRdb() const;
+
     /**
      * @brief Obtains the database file type in this {@code StoreConfig} object.
      */
     std::string GetDatabaseFileType() const;
+
     /**
      * @brief Obtains the database security level in this {@code StoreConfig} object.
      */
     SecurityLevel GetSecurityLevel() const;
+
     /**
      * @brief Set encrypt status for the current database.
      */
     void SetEncryptStatus(const bool status);
+
     /**
      * @brief Checks whether the database is encrypt.
      */
     bool IsEncrypt() const;
+
     /**
      * @brief Checks whether the database is create necessary.
      */
     bool IsCreateNecessary() const;
+
     /**
      * @brief Sets the name for the object.
      */
     void SetName(std::string name);
+
     /**
      * @brief Sets the journal mode, if not set, the default mode is WAL
      */
     void SetJournalMode(JournalMode journalMode);
+
     /**
      * @brief Sets the path for the object.
      */
     void SetPath(std::string path);
+
     /**
      * @brief Sets whether the database is read-only.
      */
     void SetReadOnly(bool readOnly);
+
     /**
      * @brief Sets the storage mode for the object.
      */
     void SetStorageMode(StorageMode storageMode);
+
     /**
      * @brief Sets database file type.
      */
     void SetDatabaseFileType(DatabaseFileType type);
+
     /**
      * @brief Sets database security level.
      */
     void SetSecurityLevel(SecurityLevel secLevel);
+
     /**
      * @brief Sets whether the database is create necessary.
      */
@@ -251,58 +280,72 @@ public:
      * @brief Sets the bundle name for the object.
      */
     int SetBundleName(const std::string &bundleName);
+
     /**
      * @brief Obtains the bundle name in this {@code StoreConfig} object.
      */
     std::string GetBundleName() const;
+
     /**
      * @brief Sets the distributed type for the object.
      */
     int SetDistributedType(DistributedType type);
+
     /**
      * @brief Obtains the distributed type in this {@code StoreConfig} object.
      */
     DistributedType GetDistributedType() const;
+
     /**
      * @brief Sets the module name for the object.
      */
     void SetModuleName(const std::string& moduleName);
+
     /**
      * @brief Obtains the module name in this {@code StoreConfig} object.
      */
     std::string GetModuleName() const;
+
     /**
      * @brief Sets the service name for the object.
      */
     void SetServiceName(const std::string& serviceName);
+
     /**
      * @brief Sets the area for the object.
      */
     void SetArea(int32_t area);
+
     /**
      * @brief Obtains the area in this {@code StoreConfig} object.
      */
     int32_t GetArea() const;
+
     /**
      * @brief Obtains the uri in this {@code StoreConfig} object.
      */
     std::string GetUri() const;
+
     /**
      * @brief Sets the uri for the object.
      */
     void SetUri(const std::string& uri);
+
     /**
      * @brief Obtains the read permission in this {@code StoreConfig} object.
      */
     std::string GetReadPermission() const;
+
     /**
      * @brief Sets the read permission for the object.
      */
     void SetReadPermission(const std::string& permission);
+
     /**
      * @brief Obtains the write permission in this {@code StoreConfig} object.
      */
     std::string GetWritePermission() const;
+
     /**
      * @brief Sets the write permission for the object.
      */
@@ -312,50 +355,62 @@ public:
      * @brief Obtains the journal mode value in this {@code StoreConfig} object.
      */
     static std::string GetJournalModeValue(JournalMode journalMode);
+
     /**
      * @brief Obtains the sync mode value in this {@code StoreConfig} object.
      */
     static std::string GetSyncModeValue(SyncMode syncMode);
+
     /**
      * @brief Obtains the database file type in this {@code StoreConfig} object.
      */
     static std::string GetDatabaseFileTypeValue(DatabaseFileType databaseFileType);
+
     /**
      * @brief Checks whether the database is auto check.
      */
     bool IsAutoCheck() const;
+
     /**
      * @brief Sets whether the database is auto check.
      */
     void SetAutoCheck(bool autoCheck);
+
     /**
      * @brief Obtains the journal size in this {@code StoreConfig} object.
      */
     int GetJournalSize() const;
+
     /**
      * @brief Sets the journal size for the object.
      */
     void SetJournalSize(int journalSize);
+
     /**
      * @brief Obtains the page size in this {@code StoreConfig} object.
      */
     int GetPageSize() const;
+
     /**
      * @brief Sets the page size for the object.
      */
     void SetPageSize(int pageSize);
+
     /**
      * @brief Obtains the encrypt algorithm in this {@code StoreConfig} object.
      */
     const std::string GetEncryptAlgo() const;
+
     /**
      * @brief Sets the encrypt algorithm for the object.
      */
     void SetEncryptAlgo(const std::string &encryptAlgo);
+
     /**
      * @brief Obtains the read connection size in this {@code StoreConfig} object.
      */
     int GetReadConSize() const;
+
     /**
      * @brief Sets the read connection size for the object.
      */

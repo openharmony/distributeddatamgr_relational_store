@@ -79,12 +79,14 @@ public:
      */
     static std::shared_ptr<RdbStore> GetRdbStore(
         const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode);
+
     /**
      * @brief Deletes the database with a specified name.
      *
      * @param path Indicates the database path.
      */
     static int DeleteRdbStore(const std::string &path);
+
     /**
      * @brief Clear Cache.
      */
