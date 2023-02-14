@@ -325,3 +325,46 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_005, TestSize.Level1)
     EXPECT_EQ(ret, OHOS::NativeRdb::E_OK);
     EXPECT_EQ(1, deletedRows);
 }
+
+/* *
+ * @tc.name: Rdb_DataShare_Adapter_006
+ * @tc.desc: normal testcase of RdbDataShareAdapter
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_006, TestSize.Level1)
+{
+    GenerateDefaultTable();
+
+    std::string table = "test";
+    OHOS::DataShare::DataSharePredicates predicates;
+    predicates.Limit(1, 2);
+    std::vector<std::string> columns;
+    std::shared_ptr<AbsSharedResultSet> allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
+    int rdbRowCount;
+    allDataTypes.get()->GetRowCount(rdbRowCount);
+    EXPECT_EQ(rdbRowCount, 1);
+
+    allDataTypes->GoToFirstRow();
+
+    std::string strValue;
+    allDataTypes->GetString(1, strValue);
+    EXPECT_EQ("hello world", strValue);
+
+    int intValue;
+    allDataTypes->GetInt(2, intValue);
+    EXPECT_EQ(intValue, 3);
+
+    double doubleValue;
+    allDataTypes->GetDouble(3, doubleValue);
+    EXPECT_EQ(doubleValue, 1.8);
+
+    std::vector<uint8_t> blobValue;
+    uint8_t blobData1 = 4;
+    uint8_t blobData2 = 5;
+    uint8_t blobData3 = 6;
+    allDataTypes->GetBlob(4, blobValue);
+    EXPECT_EQ(3, static_cast<int>(blobValue.size()));
+    EXPECT_EQ(blobData1, blobValue[0]);
+    EXPECT_EQ(blobData2, blobValue[1]);
+    EXPECT_EQ(blobData3, blobValue[2]);
+}

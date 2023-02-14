@@ -385,7 +385,7 @@ int StoreSession::BeginTransaction()
     AcquireConnection(false);
 
     BaseTransaction transaction(connectionPool.getTransactionStack().size());
-    int errCode = connection->ExecuteSql(transaction.getTransactionStr());
+    int errCode = connection->ExecuteSql(transaction.GetTransactionStr());
     if (errCode != E_OK) {
         LOG_DEBUG("storeSession BeginTransaction Failed");
         ReleaseConnection(false);
@@ -402,7 +402,7 @@ int StoreSession::Commit()
         return E_OK;
     }
     BaseTransaction transaction = connectionPool.getTransactionStack().top();
-    std::string sqlStr = transaction.getCommitStr();
+    std::string sqlStr = transaction.GetCommitStr();
     if (sqlStr.size() <= 1) {
         connectionPool.getTransactionStack().pop();
         return E_OK;
@@ -427,11 +427,11 @@ int StoreSession::RollBack()
     }
     BaseTransaction transaction = transactionStack.top();
     transactionStack.pop();
-    if (transaction.getType() != TransType::ROLLBACK_SELF && !transactionStack.empty()) {
-        transactionStack.top().setChildFailure(true);
+    if (transaction.GetType() != TransType::ROLLBACK_SELF && !transactionStack.empty()) {
+        transactionStack.top().SetChildFailure(true);
     }
     AcquireConnection(false);
-    int errCode = connection->ExecuteSql(transaction.getRollbackStr());
+    int errCode = connection->ExecuteSql(transaction.GetRollbackStr());
     ReleaseConnection(false);
     if (errCode != E_OK) {
         LOG_ERROR("storeSession RollBack Fail");

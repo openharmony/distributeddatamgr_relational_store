@@ -73,22 +73,10 @@ int RdbResultSetBridge::OnGo(int32_t start, int32_t target, Writer &writer)
         return -1;
     }
 
-    std::vector<ColumnType> columnTypes;
-    GetColumnTypes(columnCount, columnTypes);
-    return WriteBlock(start, target, columnCount, columnTypes, writer);
+    return WriteBlock(start, target, columnCount, writer);
 }
 
-void RdbResultSetBridge::GetColumnTypes(int columnCount, std::vector<ColumnType> &columnTypes)
-{
-    for (int i = 0; i < columnCount; ++i) {
-        ColumnType type;
-        rdbResultSet_->GetColumnType(i, type);
-        columnTypes.push_back(type);
-    }
-}
-
-int32_t RdbResultSetBridge::WriteBlock(
-    int32_t start, int32_t target, int columnCount, const std::vector<ColumnType> &columnTypes, Writer &writer)
+int32_t RdbResultSetBridge::WriteBlock(int32_t start, int32_t target, int columnCount, Writer &writer)
 {
     int errCode = 0;
     int row = start;
@@ -100,18 +88,19 @@ int32_t RdbResultSetBridge::WriteBlock(
             return row - 1;
         }
 
-        WriteColumn(columnCount, columnTypes, writer, row);
+        WriteColumn(columnCount, writer, row);
         row++;
         errCode = rdbResultSet_->GoToNextRow();
     }
     return target;
 }
 
-void RdbResultSetBridge::WriteColumn(
-    int columnCount, const std::vector<ColumnType> &columnTypes, Writer &writer, int row)
+void RdbResultSetBridge::WriteColumn(int columnCount, Writer &writer, int row)
 {
     for (int i = 0; i < columnCount; i++) {
-        switch (columnTypes[i]) {
+        ColumnType type;
+        rdbResultSet_->GetColumnType(i, type);
+        switch (type) {
             case ColumnType::TYPE_INTEGER:
                 int64_t value;
                 rdbResultSet_->GetLong(i, value);
@@ -139,7 +128,7 @@ void RdbResultSetBridge::WriteColumn(
             default:
                 std::string stringValue;
                 rdbResultSet_->GetString(i, stringValue);
-                if (writer.Write(i, (char *)stringValue.c_str(), strlen(stringValue.c_str()) + 1)) {
+                if (writer.Write(i, stringValue.c_str(), stringValue.size() + 1)) {
                     LOG_DEBUG("WriteString failed of row: %{public}d, column: %{public}d", row, i);
                 }
         }
@@ -150,23 +139,11 @@ bool RdbResultSetBridge::WriteBlobData(int column, Writer &writer)
 {
     std::vector<uint8_t> blobValue;
     rdbResultSet_->GetBlob(column, blobValue);
-
     if (blobValue.empty()) {
         return false;
     }
-    size_t size = blobValue.size() * sizeof(uint8_t);
-    uint8_t *value = (uint8_t *)malloc(size);
-    if (!value) {
-        LOG_ERROR("%s: malloc failed.", __func__);
-        return false;
-    }
-    if (memcpy_s(value, size, &blobValue[0], size) != EOK) {
-        free(value);
-        return false;
-    }
-    int ret = writer.Write(column, value, size);
-    free(value);
-    return ret;
+
+    return writer.Write(column, &blobValue[0], blobValue.size() * sizeof(uint8_t));
 }
 } // namespace RdbDataShareAdapter
 } // namespace OHOS

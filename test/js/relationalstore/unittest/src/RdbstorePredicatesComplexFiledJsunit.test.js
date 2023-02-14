@@ -17,7 +17,8 @@ import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name TEXT, " + "age INTEGER, " + "salary REAL, " + "adddate DATE)";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "name TEXT, " + "age INTEGER, " + "salary REAL, " + "adddate DATE)";
 const STORE_CONFIG = {
     name: "PredicatesComplexFiledJsunit.db",
     securityLevel: data_relationalStore.SecurityLevel.S1,
@@ -84,6 +85,7 @@ describe('rdbStorePredicatesComplexFiledTest', function () {
         expect(3).assertEqual(count);
         await expect("2022-09-02").assertEqual(birthday)
         expect(false).assertEqual(resultSet.goToNextRow())
+        resultSet.close()
         done();
         console.log(TAG + "************* testRdbPredicatesComplexFiled0001 end   *************");
     })
@@ -110,6 +112,7 @@ describe('rdbStorePredicatesComplexFiledTest', function () {
         expect(2).assertEqual(count);
         await expect("2022-09-01").assertEqual(birthday)
         expect(false).assertEqual(resultSet.goToNextRow())
+        resultSet.close()
         done();
         console.log(TAG + "************* testRdbPredicatesComplexFiled0002 end   *************");
     })

@@ -18,7 +18,8 @@ import data_relationalStore from '@ohos.data.relationalStore';
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
 const STORE_CONFIG = {
     name: "InsertTest.db",
@@ -111,6 +112,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (e) {
             console.log("insert1 error " + e);
         }
+        resultSet.close()
         resultSet = null
         done()
         console.log(TAG + "************* testRdbStoreInsert0001 end *************");
@@ -207,6 +209,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (e) {
             console.log("insert error " + e);
         }
+        resultSet.close()
         resultSet = null
         done()
         console.log(TAG + "************* testRdbStoreInsert0004 end   *************");
@@ -240,6 +243,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (e) {
             console.log("insert error " + e);
         }
+        resultSet.close()
         resultSet = null
         done()
         console.log(TAG + "************* testRdbStoreInsert0005 end   *************");
@@ -273,6 +277,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (e) {
             console.log("insert error " + e);
         }
+        resultSet.close()
         resultSet = null
         done()
         console.log(TAG + "************* testRdbStoreInsert0006 end   *************");
@@ -414,6 +419,7 @@ describe('rdbStoreInsertTest', function () {
             console.log("insert error" + err);
         }
 
+        resultSet.close()
         resultSet = null
         done()
         console.log(TAG + "************* InsertWithConflictResolution_0003 end  *************");
@@ -449,6 +455,7 @@ describe('rdbStoreInsertTest', function () {
         } catch (err) {
             console.log("insert error" + err);
         }
+        resultSet.close()
 
         {
             var u8 = new Uint8Array([4, 5, 6])
@@ -483,6 +490,7 @@ describe('rdbStoreInsertTest', function () {
             console.log("resultSet query error " + err);
         }
 
+        resultSet.close()
         resultSet = null
         done()
         console.log(TAG + "************* InsertWithConflictResolution_0004 end   *************");
@@ -541,6 +549,7 @@ describe('rdbStoreInsertTest', function () {
         let resultSet = await rdbStore.querySql("SELECT * FROM test");
         let count = resultSet.rowCount;
         expect(100).assertEqual(count);
+        resultSet.close()
         console.log(TAG + "************* testRdbStorebatchInsert001 end *************");
     })
 
