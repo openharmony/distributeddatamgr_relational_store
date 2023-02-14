@@ -460,7 +460,6 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
 
 napi_value GetRdbStore(napi_env env, napi_callback_info info)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<HelperRdbContext>();
     context->apiversion = APIVERSION_V8;
     return InnerGetRdbStore(env, info, context, ParseStoreConfig);
@@ -468,7 +467,6 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
 
 napi_value GetRdbStoreV9(napi_env env, napi_callback_info info)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<HelperRdbContext>();
     context->apiversion = APIVERSION_V9;
     return InnerGetRdbStore(env, info, context, ParseStoreConfigV9);
@@ -531,7 +529,6 @@ napi_value InitRdbHelper(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("deleteRdbStoreV9", DeleteRdbStoreV9),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
-    LOG_INFO("RdbJsKit::InitRdbHelper end");
     return exports;
 }
 } // namespace RdbJsKit
