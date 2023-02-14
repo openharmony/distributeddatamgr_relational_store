@@ -27,14 +27,17 @@ public:
      * @brief Destructor.
      */
     virtual ~TransactionObserver() {}
+
     /**
      * @brief Begin transaction.
      */
     virtual void OnBegin() const;
+
     /**
      * @brief Commit transaction.
      */
     virtual void OnCommit() const;
+
     /**
      * @brief Rollback transaction.
      */

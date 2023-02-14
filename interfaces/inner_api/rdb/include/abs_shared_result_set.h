@@ -39,6 +39,7 @@ public:
      * @brief Constructor.
      */
     AbsSharedResultSet();
+
     /**
      * @brief Constructor.
      *
@@ -47,10 +48,12 @@ public:
      * @param tableName Indicates the table name of the database.
      */
     explicit AbsSharedResultSet(std::string name);
+
     /**
      * @brief Destructor.
      */
     virtual ~AbsSharedResultSet();
+
     /**
      * @brief Obtains the value of the specified column in the current row as a byte array.
      *
@@ -62,6 +65,7 @@ public:
      * @return Returns the value of the specified column as a byte array.
      */
     int GetBlob(int columnIndex, std::vector<uint8_t> &blob) override;
+
     /**
      * @brief Obtains the value of the specified column in the current row as string.
      *
@@ -73,6 +77,7 @@ public:
      * @return Returns the value of the specified column as a string.
      */
     int GetString(int columnIndex, std::string &value) override;
+
     /**
      * @brief Obtains the value of the specified column in the current row as int.
      *
@@ -84,6 +89,7 @@ public:
      * @return Returns the value of the specified column as a int.
      */
     int GetInt(int columnIndex, int &value) override;
+
     /**
      * @brief Obtains the value of the specified column in the current row as long.
      *
@@ -95,6 +101,7 @@ public:
      * @return Returns the value of the specified column as a long.
      */
     int GetLong(int columnIndex, int64_t &value) override;
+
     /**
      * @brief Obtains the value of the specified column in the current row as double.
      *
@@ -106,6 +113,7 @@ public:
      * @return Returns the value of the specified column as a double.
      */
     int GetDouble(int columnIndex, double &value) override;
+
     /**
      * @brief Checks whether the value of the specified column in the current row is null.
      *
@@ -115,6 +123,7 @@ public:
      * returns false otherwise.
      */
     int IsColumnNull(int columnIndex, bool &isNull) override;
+
     /**
      * @brief Obtains data type of the given column's value.
      *
@@ -123,6 +132,7 @@ public:
      * @return Returns column value type.
      */
     int GetColumnType(int columnIndex, ColumnType &columnType) override;
+
     /**
      * @brief Move the cursor to an absolute position.
      *
@@ -131,36 +141,44 @@ public:
      * @return Returns whether the requested move succeeded.
      */
     int GoToRow(int position) override;
+
     /**
      * @brief Obtains the names of all columns in a result set.
      */
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
+
     /**
      * @brief Obtains the number of rows in the result set.
      */
     int GetRowCount(int &count) override;
+
     /**
      * @brief Obtains a block from the {@link SharedResultSet}.
      */
     AppDataFwk::SharedBlock *GetBlock() const override;
+
     /**
      * @brief Called when the position of the result set changes.
      */
     bool OnGo(int oldRowIndex, int newRowIndex) override;
+
     /**
      * @brief Adds the data of a {@code SharedResultSet} to a {@link SharedBlock}.
      */
     void FillBlock(int startRowIndex, AppDataFwk::SharedBlock *block) override;
+
     /**
      * @brief Allocates a new shared block to an {@link AbsSharedResultSet}
      */
     virtual void SetBlock(AppDataFwk::SharedBlock *block);
+
     /**
      * @brief Closes the result set.
      *
      * Calling this method on the result set will release all of its resources and makes it ineffective.
      */
     int Close() override;
+
     /**
      * @brief Checks whether an {@code AbsSharedResultSet} object contains shared blocks.
      */

@@ -231,10 +231,12 @@ public:
      * @brief Read message to parcel.
      */
     static int ReadMessageParcel(MessageParcel &parcel, SharedBlock *&block);
+
     /**
      * @brief Write raw data in block.
      */
     size_t SetRawData(const void *rawData, size_t size);
+
     /**
      * @brief Obtains the fd of shared memory
      */

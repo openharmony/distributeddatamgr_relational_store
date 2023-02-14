@@ -34,22 +34,27 @@ public:
      * @param tableName Indicates the table name of the database.
      */
     explicit AbsRdbPredicates(std::string tableName);
+
     /**
      * @brief Destructor.
      */
     ~AbsRdbPredicates() override {}
+
     /**
      * @brief Initalzie AbsRdbPredicates object.
      */
     void Clear() override;
+
     /**
      * @brief Obtains the parameters of the current AbsRdbPredicates object.
      */
     std::string ToString() const;
+
     /**
      * @brief Obtains the table name.
      */
     std::string GetTableName() const;
+
     /**
      * @brief Sync data between devices.
      *
@@ -60,6 +65,7 @@ public:
      * @return Returns the self.
      */
     AbsRdbPredicates *InDevices(std::vector<std::string>& devices);
+
     /**
      * @brief Specify all remote devices which connect to local device when syncing distributed database.
      *
@@ -68,6 +74,7 @@ public:
      * @return Returns the self.
      */
     AbsRdbPredicates *InAllDevices();
+
     /**
      * @brief Restricts the value of the field to be equal to the specified value to the remote AbsRdbPredicates.
      *
@@ -79,6 +86,7 @@ public:
      * @return Returns the self.
      */
     AbsRdbPredicates* EqualTo(std::string field, std::string value) override;
+
     /**
      * @brief Restricts the value of the field to be not equal to the specified value to the remote AbsRdbPredicates.
      *
@@ -90,18 +98,21 @@ public:
      * @return Returns the self.
      */
     AbsRdbPredicates* NotEqualTo(std::string field, std::string value) override;
+
     /**
      * @brief Adds an and condition to the remote AbsRdbPredicates.
      *
      * This method is similar to or of the SQL statement.
      */
     AbsRdbPredicates* And() override;
+
     /**
      * @brief Adds an or condition to the remote AbsRdbPredicates.
      *
      * This method is similar to or of the SQL statement.
      */
     AbsRdbPredicates* Or() override;
+
     /**
      * @brief Restricts the ascending order of the return list. When there are several orders,
      * the one close to the head has the highest priority.
@@ -109,6 +120,7 @@ public:
      * @param field Indicates the column name for sorting the return list.
      */
     AbsRdbPredicates* OrderByAsc(std::string field) override;
+
     /**
      * @brief Restricts the descending order of the return list. When there are several orders,
      * the one close to the head has the highest priority.
@@ -116,6 +128,7 @@ public:
      * @param field Indicates the column name for sorting the return list.
      */
     AbsRdbPredicates* OrderByDesc(std::string field) override;
+
     /**
      * @brief Get predicates of remote device.
      */
@@ -125,39 +138,48 @@ public:
      * @brief Initialize relevant parameters of the union table.
      */
     virtual void InitialParam();
+
     /**
      * @brief Obtains the join types in the predicates.
      */
     virtual std::vector<std::string> GetJoinTypes();
+
     /**
      * @brief Sets the join types in the predicates. The value can be {@code INNER JOIN}, {@code LEFT OUTER JOIN},
      * and {@code CROSS JOIN}.
      */
     virtual void SetJoinTypes(const std::vector<std::string> joinTypes);
+
     /**
      * @brief Obtains the database table names of the joins in the predicates.
      */
     virtual std::vector<std::string> GetJoinTableNames();
+
     /**
      * @brief Sets the database table names of the joins in the predicates.
      */
     virtual void SetJoinTableNames(const std::vector<std::string> joinTableNames);
+
     /**
      * @brief Obtains the join conditions in the predicates.
      */
     virtual std::vector<std::string> GetJoinConditions();
+
     /**
      * @brief Sets the join conditions required in the predicates.
      */
     virtual void SetJoinConditions(const std::vector<std::string> joinConditions);
+
     /**
      * @brief Obtains the join clause in the predicates.
      */
     virtual std::string GetJoinClause() const;
+
     /**
      * @brief Sets the number of joins in the predicates.
      */
     virtual int GetJoinCount() const;
+
     /**
      * @brief Sets the number of joins in the predicates.
      */

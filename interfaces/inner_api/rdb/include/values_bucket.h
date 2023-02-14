@@ -33,16 +33,19 @@ public:
      * @brief Constructor.
      */
     ValuesBucket();
+
     /**
      * @brief Constructor.
      *
      * A parameterized constructor used to create a ValuesBucket instance.
      */
     explicit ValuesBucket(std::map<std::string, ValueObject> &valuesMap);
+
     /**
      * @brief Destructor.
      */
     ~ValuesBucket();
+
     /**
      * @brief Put the string value to this {@code ValuesBucket} object for the given column name.
      *
@@ -50,6 +53,7 @@ public:
      * @param value Indicates the string value.
      */
     void PutString(const std::string &columnName, const std::string &value);
+
     /**
      * @brief Put the int value to this {@code ValuesBucket} object for the given column name.
      *
@@ -57,6 +61,7 @@ public:
      * @param value Indicates the int value.
      */
     void PutInt(const std::string &columnName, int value);
+
     /**
      * @brief Put the long value to this {@code ValuesBucket} object for the given column name.
      *
@@ -64,6 +69,7 @@ public:
      * @param value Indicates the long value.
      */
     void PutLong(const std::string &columnName, int64_t value);
+
     /**
      * @brief Put the double value to this {@code ValuesBucket} object for the given column name.
      *
@@ -71,6 +77,7 @@ public:
      * @param value Indicates the double value.
      */
     void PutDouble(const std::string &columnName, double value);
+
     /**
      * @brief Put the bool value to this {@code ValuesBucket} object for the given column name.
      *
@@ -78,6 +85,7 @@ public:
      * @param value Indicates the bool value.
      */
     void PutBool(const std::string &columnName, bool value);
+
     /**
      * @brief Put the vector<uint8_t> value to this {@code ValuesBucket} object for the given column name.
      *
@@ -85,42 +93,50 @@ public:
      * @param value Indicates the vector<uint8_t> value.
      */
     void PutBlob(const std::string &columnName, const std::vector<uint8_t> &value);
+
     /**
      * @brief Put NULL to this {@code ValuesBucket} object for the given column name.
      *
      * @param columnName Indicates the name of the column.
      */
     void PutNull(const std::string &columnName);
+
     /**
      * @brief Delete the ValueObject object for the given column name.
      *
      * @param columnName Indicates the name of the column.
      */
     void Delete(const std::string &columnName);
+
     /**
      * @brief Clear the ValuesBucket object's valuesmap.
      */
     void Clear();
+
     /**
      * @brief Obtains the ValuesBucket object's valuesmap size.
      */
     int Size() const;
+
     /**
      * @brief Checks whether the ValuesBucket object's valuesmap is empty.
      */
     bool IsEmpty() const;
+
     /**
      * @brief Checks whether the ValuesBucket object's valuesmap contain the specified columnName.
      *
      * @param columnName Indicates the name of the column.
      */
     bool HasColumn(const std::string &columnName) const;
+
     /**
      * @brief Obtains the specified value for the given column name.
      *
      * @param columnName Indicates the name of the column.
      */
     bool GetObject(const std::string &columnName, ValueObject &value) const;
+
     /**
      * @brief Obtains the ValuesBucket object's valuesmap.
      */
@@ -130,6 +146,7 @@ public:
      * @brief Write to message parcel.
      */
     bool Marshalling(Parcel &parcel) const override;
+
     /**
      * @brief Obtains a ValuesBucket object from parcel.
      */

@@ -40,6 +40,7 @@ enum class ValueObjectType {
     /** Indicates the ValueObject type is blob.*/
     TYPE_BLOB,
 };
+
 /**
  * The ValueObject class of RDB.
  */
@@ -49,28 +50,34 @@ public:
      * @brief Use Type replace std::variant.
      */
     using Type = std::variant<std::monostate, int64_t, double, std::string, bool, std::vector<uint8_t>>;
+
     /**
      * @brief Constructor.
      */
     ValueObject();
+
     /**
      * @brief Destructor.
      */
     ~ValueObject();
+
     /**
      * @brief Constructor.
      *
      * A parameterized constructor used to create a ValueObject instance.
      */
     ValueObject(Type valueObject) noexcept;
+
     /**
      * @brief Move constructor.
      */
     ValueObject(ValueObject &&valueObject) noexcept;
+
     /**
      * @brief Copy constructor.
      */
     ValueObject(const ValueObject &valueObject);
+
     /**
      * @brief Constructor.
      *
@@ -79,6 +86,7 @@ public:
      * @param val Indicates an int input parameter.
      */
     explicit ValueObject(int val);
+
     /**
      * @brief Constructor.
      *
@@ -87,6 +95,7 @@ public:
      * @param val Indicates an int64_t input parameter.
      */
     explicit ValueObject(int64_t val);
+
     /**
      * @brief Constructor.
      *
@@ -95,6 +104,7 @@ public:
      * @param val Indicates an double input parameter.
      */
     explicit ValueObject(double val);
+
     /**
      * @brief Constructor.
      *
@@ -103,6 +113,7 @@ public:
      * @param val Indicates an bool input parameter.
      */
     explicit ValueObject(bool val);
+
     /**
      * @brief Constructor.
      *
@@ -111,6 +122,7 @@ public:
      * @param val Indicates an string input parameter.
      */
     explicit ValueObject(const std::string &val);
+
     /**
      * @brief Constructor.
      *
@@ -119,10 +131,12 @@ public:
      * @param val Indicates an vector<uint8_t> input parameter.
      */
     explicit ValueObject(const std::vector<uint8_t> &blob);
+
     /**
      * @brief Move assignment operator overloaded function.
      */
     ValueObject &operator=(ValueObject &&valueObject) noexcept;
+
     /**
      * @brief Copy assignment operator overloaded function.
      */
@@ -132,26 +146,32 @@ public:
      * @brief Obtains the type in this {@code ValueObject} object.
      */
     ValueObjectType GetType() const;
+
     /**
      * @brief Obtains the int value in this {@code ValueObject} object.
      */
     int GetInt(int &val) const;
+
     /**
      * @brief Obtains the long value in this {@code ValueObject} object.
      */
     int GetLong(int64_t &val) const;
+
     /**
      * @brief Obtains the double value in this {@code ValueObject} object.
      */
     int GetDouble(double &val) const;
+
     /**
      * @brief Obtains the bool value in this {@code ValueObject} object.
      */
     int GetBool(bool &val) const;
+
     /**
      * @brief Obtains the string value in this {@code ValueObject} object.
      */
     int GetString(std::string &val) const;
+
     /**
      * @brief Obtains the vector<uint8_t> value in this {@code ValueObject} object.
      */
@@ -161,6 +181,7 @@ public:
      * @brief Write to message parcel.
      */
     bool Marshalling(Parcel &parcel) const override;
+
     /**
      * @brief Obtains a ValueObject object from parcel.
      */
@@ -175,6 +196,7 @@ public:
     {
         return static_cast<int>(std::get<int64_t>(value));
     }
+
     /**
      * @brief Type conversion function.
      *
@@ -184,6 +206,7 @@ public:
     {
         return std::get<int64_t>(value);
     }
+
     /**
      * @brief Type conversion function.
      *
@@ -193,6 +216,7 @@ public:
     {
         return std::get<double>(value);
     }
+
     /**
      * @brief Type conversion function.
      *
@@ -202,6 +226,7 @@ public:
     {
         return std::get<bool>(value);
     }
+
     /**
      * @brief Type conversion function.
      *
@@ -211,6 +236,7 @@ public:
     {
         return std::get<std::string>(value);
     }
+
     /**
      * @brief Type conversion function.
      *
@@ -220,6 +246,7 @@ public:
     {
         return std::get<std::vector<uint8_t>>(value);
     }
+
     /**
      * @brief Type conversion function.
      *

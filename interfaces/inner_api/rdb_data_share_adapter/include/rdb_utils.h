@@ -42,30 +42,37 @@ public:
      * @brief Use RdbPredicates replace NativeRdb::RdbPredicates namespace.
      */
     using RdbPredicates = NativeRdb::RdbPredicates;
+
     /**
      * @brief Use ResultSet replace NativeRdb::ResultSet namespace.
      */
     using ResultSet = NativeRdb::ResultSet;
+
     /**
      * @brief Use ValuesBucket replace NativeRdb::ValuesBucket namespace.
      */
     using ValuesBucket = NativeRdb::ValuesBucket;
+
     /**
      * @brief Use DataShareValuesBucket replace DataShare::DataShareValuesBucket namespace.
      */
     using DataShareValuesBucket = DataShare::DataShareValuesBucket;
+
     /**
      * @brief Use DataShareAbsPredicates replace DataShare::DataShareAbsPredicates namespace.
      */
     using DataShareAbsPredicates = DataShare::DataShareAbsPredicates;
+
     /**
      * @brief Use ResultSetBridge replace DataShare::ResultSetBridge namespace.
      */
     using ResultSetBridge = DataShare::ResultSetBridge;
+
     /**
      * @brief Use OperationItem replace DataShare::OperationItem namespace.
      */
     using OperationItem = DataShare::OperationItem;
+
     /**
      * @brief Use DataSharePredicatesObject replace DataShare::SingleValue namespace.
      */
