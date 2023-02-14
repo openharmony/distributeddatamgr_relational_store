@@ -20,8 +20,8 @@ namespace OHOS {
 namespace NativeRdb {
 
 constexpr int E_OK = 0;
-constexpr int E_BASE = 1000;
-constexpr int E_ERROR = (E_BASE + 1);
+constexpr int E_BASE = 14800000;
+constexpr int E_ERROR = E_BASE;
 constexpr int E_CANNOT_UPDATE_READONLY = (E_BASE + 2);
 constexpr int E_REMOVE_FILE = (E_BASE + 3);
 constexpr int E_EMPTY_FILE_NAME = (E_BASE + 4);

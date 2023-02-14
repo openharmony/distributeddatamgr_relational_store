@@ -15,7 +15,10 @@
 #ifndef RDB_JS_NAPI_ERROR_H
 #define RDB_JS_NAPI_ERROR_H
 
+#include <map>
+
 #include "js_logger.h"
+#include "rdb_errno.h"
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
@@ -26,10 +29,15 @@ constexpr int ERR = -1;
 constexpr int E_PARAM_ERROR = 401;
 constexpr int E_NON_SYSTEM_APP_ERROR = 202;
 constexpr int E_INNER_ERROR = 14800000;
-constexpr int E_DB_INVALID = 14800010;
-constexpr int E_DB_CORRUPTED = 14800011;
-constexpr int E_RESULT_GET_ERROR = 14800013;
 constexpr int E_RESULT_GOTO_ERROR = 14800012;
+constexpr int E_RESULT_GET_ERROR = 14800013;
+
+const static std::map<int, std::string> ERROR_MAPS = {
+    { E_RESULT_GOTO_ERROR, "The result set is empty or the specified location is invalid." },
+    { E_RESULT_GET_ERROR, "The column value is null or the column type is incompatible." },
+};
+
+#define RDB_REVT_NOTHING
 
 #define RDB_NAPI_ASSERT_BASE(env, assertion, error, retVal)                                                 \
     do {                                                                                                    \
@@ -46,41 +54,28 @@ constexpr int E_RESULT_GOTO_ERROR = 14800012;
         }                                                                                                   \
     } while (0)
 
-#define RDB_NAPI_ASSERT(env, assertion, error) RDB_NAPI_ASSERT_BASE(env, assertion, error, nullptr)
+#define RDB_NAPI_ASSERT(env, assertion, error) \
+    RDB_NAPI_ASSERT_BASE(env, assertion, error, nullptr)
 
-#define RDB_NAPI_ASSERT_RETURN_VOID(env, assertion, error) \
-    RDB_NAPI_ASSERT_BASE(env, assertion, error, NAPI_RETVAL_NOTHING)
-
-#define RDB_ASYNC_PARAM_CHECK_FUNCTION(theCall) \
-    do {                                        \
-        int err = (theCall);                    \
-        if (err != OK) {                        \
-            return err;                         \
-        }                                       \
-    } while (0)
-
-#define RDB_CHECK_RETURN_NULLPTR(assertion) \
-    do {                                    \
-        if (!(assertion)) {                 \
-            return nullptr;                 \
-        }                                   \
-    } while (0)
-
-#define RDB_CHECK_RETURN_CALL(assertion, theCall)        \
+#define CHECK_RETURN_CORE(assertion, theCall, revt)      \
     do {                                                 \
         if (!(assertion)) {                              \
-            (theCall);                                   \
-            return;                                      \
+            theCall;                                     \
+            return revt;                                 \
         }                                                \
     } while (0)
 
-#define RDB_CHECK_RETURN_CALL_RESULT(assertion, theCall) \
-    do {                                                 \
-        if (!(assertion)) {                              \
-            (theCall);                                   \
-            return ERR;                                  \
-        }                                                \
-    } while (0)
+#define CHECK_RETURN_SET_E(assertion, paramError) \
+    CHECK_RETURN_CORE(assertion, context->SetError(paramError), RDB_REVT_NOTHING)
+
+#define CHECK_RETURN_SET(assertion, paramError) \
+    CHECK_RETURN_CORE(assertion, context->SetError(paramError), ERR)
+
+#define CHECK_RETURN_NULL(assertion) \
+    CHECK_RETURN_CORE(assertion, RDB_REVT_NOTHING, nullptr)
+
+#define CHECK_RETURN(assertion) \
+    CHECK_RETURN_CORE(assertion, RDB_REVT_NOTHING, RDB_REVT_NOTHING)
 
 class Error {
 public:
@@ -91,15 +86,30 @@ public:
 
 class InnerError : public Error {
 public:
-    InnerError() = default;
+    InnerError(int code)
+    {
+        auto iter = ERROR_MAPS.find(code);
+        if (iter != ERROR_MAPS.end()) {
+            code_ = code;
+            msg_ = iter->second + " Error code " + std::to_string(code_);
+        } else {
+            code_ = E_INNER_ERROR;
+            msg_ = "Inner error. Error code " + std::to_string(code_);
+        }
+    }
+
     std::string GetMessage() override
     {
-        return "System error.";
-    };
+        return msg_;
+    }
+
     int GetCode() override
     {
-        return E_INNER_ERROR;
-    };
+        return code_;
+    }
+private:
+    int code_;
+    std::string msg_;
 };
 
 class CustomError : public Error {
@@ -167,58 +177,6 @@ public:
 
 private:
     std::string wantNum;
-};
-
-class DbInvalidError : public Error {
-public:
-    DbInvalidError() = default;
-    std::string GetMessage() override
-    {
-        return "Failed open database, invalid database name.";
-    };
-    int GetCode() override
-    {
-        return E_DB_INVALID;
-    };
-};
-
-class DbCorruptedError : public Error {
-public:
-    DbCorruptedError() = default;
-    std::string GetMessage() override
-    {
-        return "Failed open database, database corrupted.";
-    };
-    int GetCode() override
-    {
-        return E_DB_CORRUPTED;
-    };
-};
-
-class ResultGetError : public Error {
-public:
-    ResultGetError() = default;
-    std::string GetMessage() override
-    {
-        return "The column value is null or the column type is incompatible.";
-    };
-    int GetCode() override
-    {
-        return E_RESULT_GET_ERROR;
-    };
-};
-
-class ResultGotoError : public Error {
-public:
-    ResultGotoError() = default;
-    std::string GetMessage() override
-    {
-        return "The result set is empty or the specified location is invalid.";
-    };
-    int GetCode() override
-    {
-        return E_RESULT_GOTO_ERROR;
-    };
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

@@ -39,12 +39,12 @@ void Context::SetAction(
         argc = argc - 1;
     }
     // int -->input_(env, argc, argv, self)
-    int status = input(env, argc, argv, self);
+    input(env, argc, argv, self);
     output_ = std::move(output);
     exec_ = std::move(exec);
 
     // if input return is not ok, then napi_throw_error context error
-    RDB_NAPI_ASSERT_RETURN_VOID(env, status == OK, error);
+    RDB_NAPI_ASSERT_BASE(env, error == nullptr, error, NAPI_RETVAL_NOTHING);
     napi_create_reference(env, self, 1, &self_);
 }
 
@@ -68,7 +68,7 @@ Context::~Context()
     env_ = nullptr;
 }
 
-void AsyncCall::SetBusinessError(napi_env env, napi_value *businessError, std::shared_ptr<Error> error)
+void AsyncCall::SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError)
 {
     LOG_DEBUG("SetBusinessError enter");
     napi_value code = nullptr;
@@ -106,8 +106,8 @@ void AsyncCall::OnExecute(napi_env env, void *data)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     Context *context = reinterpret_cast<Context *>(data);
-    if (context->exec_) {
-        context->execStatus = context->exec_();
+    if (context->error == nullptr && context->exec_) {
+        context->execCode_ = context->exec_();
         context->exec_ = nullptr;
     }
 }
@@ -116,16 +116,18 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     Context *context = reinterpret_cast<Context *>(data);
+    if (context->execCode_ != NativeRdb::E_OK) {
+        context->SetError(std::make_shared<InnerError>(context->execCode_));
+    }
     napi_value output = nullptr;
-    int outStatus = ERR;
     // if async execute status is not napi_ok then un-execute out function
-    if ((context->execStatus == OK) && context->output_) {
-        outStatus = context->output_(env, output);
+    if ((context->error == nullptr) && context->output_) {
+        context->output_(env, output);
         context->output_ = nullptr;
     }
     napi_value result[ARG_BUTT] = { 0 };
     // if out function status is ok then async renturn output data, else return error.
-    if (outStatus == OK) {
+    if (context->error == nullptr) {
         napi_get_undefined(env, &result[ARG_ERROR]);
         if (output != nullptr) {
             result[ARG_DATA] = output;
@@ -133,14 +135,12 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
             napi_get_undefined(env, &result[ARG_DATA]);
         }
     } else {
-        napi_value businessError = nullptr;
-        SetBusinessError(env, &businessError, context->error);
-        result[ARG_ERROR] = businessError;
+        SetBusinessError(env, context->error, &result[ARG_ERROR]);
         napi_get_undefined(env, &result[ARG_DATA]);
     }
     if (context->defer_ != nullptr) {
         // promise
-        if (status == napi_ok && outStatus == OK) {
+        if (status == napi_ok && (context->error == nullptr)) {
             napi_resolve_deferred(env, context->defer_, result[ARG_DATA]);
         } else {
             napi_reject_deferred(env, context->defer_, result[ARG_ERROR]);
