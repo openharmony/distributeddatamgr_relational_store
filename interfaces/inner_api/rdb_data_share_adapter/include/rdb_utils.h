@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "../../rdb/include/result_set.h"
+#include "result_set.h"
 #include "abs_predicates.h"
 #include "datashare_abs_predicates.h"
 #include "datashare_values_bucket.h"
