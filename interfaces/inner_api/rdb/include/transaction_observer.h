@@ -18,11 +18,29 @@
 #define APPDATAMGR_TRANSACTION_OBSERVER_H
 namespace OHOS {
 namespace NativeRdb {
+/**
+ * The TransactionObserver class of RDB.
+ */
 class TransactionObserver {
 public:
+    /**
+     * @brief Destructor.
+     */
     virtual ~TransactionObserver() {}
+
+    /**
+     * @brief Begin transaction.
+     */
     virtual void OnBegin() const;
+
+    /**
+     * @brief Commit transaction.
+     */
     virtual void OnCommit() const;
+
+    /**
+     * @brief Rollback transaction.
+     */
     virtual void OnRollback() const;
 };
 } // namespace NativeRdb

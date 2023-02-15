@@ -33,21 +33,66 @@
 
 namespace OHOS {
 namespace RdbDataShareAdapter {
+/**
+ * The RdbUtils class of RDB.
+ */
 class RdbUtils {
 public:
+    /**
+     * @brief Use RdbPredicates replace NativeRdb::RdbPredicates namespace.
+     */
     using RdbPredicates = NativeRdb::RdbPredicates;
+
+    /**
+     * @brief Use ResultSet replace NativeRdb::ResultSet namespace.
+     */
     using ResultSet = NativeRdb::ResultSet;
+
+    /**
+     * @brief Use ValuesBucket replace NativeRdb::ValuesBucket namespace.
+     */
     using ValuesBucket = NativeRdb::ValuesBucket;
+
+    /**
+     * @brief Use DataShareValuesBucket replace DataShare::DataShareValuesBucket namespace.
+     */
     using DataShareValuesBucket = DataShare::DataShareValuesBucket;
+
+    /**
+     * @brief Use DataShareAbsPredicates replace DataShare::DataShareAbsPredicates namespace.
+     */
     using DataShareAbsPredicates = DataShare::DataShareAbsPredicates;
+
+    /**
+     * @brief Use ResultSetBridge replace DataShare::ResultSetBridge namespace.
+     */
     using ResultSetBridge = DataShare::ResultSetBridge;
+
+    /**
+     * @brief Use OperationItem replace DataShare::OperationItem namespace.
+     */
     using OperationItem = DataShare::OperationItem;
+
+    /**
+     * @brief Use DataSharePredicatesObject replace DataShare::SingleValue namespace.
+     */
     using DataSharePredicatesObject = DataShare::SingleValue;
 
+    /**
+     * @brief Convert DataShare::DataShareValuesBucket to NativeRdb::ValuesBucket.
+     */
     static ValuesBucket ToValuesBucket(const DataShareValuesBucket &bucket);
 
+    /**
+     * @brief Convert DataShare::DataShareAbsPredicates to NativeRdb::RdbPredicates.
+     *
+     * @param table Indicates the table name.
+     */
     static RdbPredicates ToPredicates(const DataShareAbsPredicates &predicates, const std::string &table);
 
+    /**
+     * @brief Convert NativeRdb::ResultSet to DataShare::ResultSetBridge.
+     */
     static std::shared_ptr<ResultSetBridge> ToResultSetBridge(std::shared_ptr<ResultSet> resultSet);
 
 private:
