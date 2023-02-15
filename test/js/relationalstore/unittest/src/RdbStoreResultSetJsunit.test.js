@@ -1974,7 +1974,7 @@ describe('rdbResultSetTest', function () {
                 expect("").assertEqual(resultSet.getString(1))
             }
         } catch (e) {
-            expect(e.code).assertEqual("14800013");
+            expect(e.code).assertEqual("14800000");
         }
         resultSet.close()
         expect(true).assertEqual(resultSet.isClosed)
@@ -2015,7 +2015,7 @@ describe('rdbResultSetTest', function () {
                 expect("").assertEqual(resultSet.getString(1))
             }
         } catch (e) {
-            expect(e.code).assertEqual("14800013");
+            expect(e.code).assertEqual("14800000");
         }
 
         resultSet.close()
