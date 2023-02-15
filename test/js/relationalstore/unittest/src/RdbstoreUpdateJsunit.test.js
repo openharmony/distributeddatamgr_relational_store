@@ -104,15 +104,14 @@ describe('rdbStoreUpdateTest', function () {
                     resultSet = null
                 }
 
+                done();
+                console.log(TAG + "************* testRdbStoreUpdate0001 end   *************");
             }).catch((err) => {
                 console.log(TAG + "update error");
                 expect(null).assertFail();
             })
             // await updatePromise
         }
-
-        done();
-        console.log(TAG + "************* testRdbStoreUpdate0001 end   *************");
     })
 
     /**
@@ -310,14 +309,13 @@ describe('rdbStoreUpdateTest', function () {
                     resultSet = null
                 }
 
+                done();
+                console.log(TAG + "************* testRdbStoreUpdate0005 end   *************");
             }).catch((err) => {
                 console.log(TAG + "update error");
                 expect(null).assertFail();
             })
         }
-
-        done();
-        console.log(TAG + "************* testRdbStoreUpdate0005 end   *************");
     })
 
     /**
@@ -363,14 +361,13 @@ describe('rdbStoreUpdateTest', function () {
                     resultSet = null
                 }
 
+                done();
+                console.log(TAG + "************* testRdbStoreUpdate0006 end   *************");
             }).catch((err) => {
                 console.log(TAG + "update error");
                 expect(null).assertFail();
             })
         }
-
-        done();
-        console.log(TAG + "************* testRdbStoreUpdate0006 end   *************");
     })
 
     /**
@@ -416,14 +413,13 @@ describe('rdbStoreUpdateTest', function () {
                     resultSet = null
                 }
 
+                done();
+                console.log(TAG + "************* testRdbStoreUpdate0007 end   *************");
             }).catch((err) => {
                 console.log(TAG + "update error");
                 expect(null).assertFail();
             })
         }
-
-        done();
-        console.log(TAG + "************* testRdbStoreUpdate0007 end   *************");
     })
 
     /**
