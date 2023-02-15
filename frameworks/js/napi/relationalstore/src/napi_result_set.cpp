@@ -359,9 +359,7 @@ napi_value ResultSetProxy::GoTo(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
 
     int errCode = resultSetProxy->resultSet_->GoTo(offset);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_RESULT_GOTO_ERROR));
-
-    return JSUtils::Convert2JSValue(env, true);
+    return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
 napi_value ResultSetProxy::GoToFirstRow(napi_env env, napi_callback_info info)
@@ -370,9 +368,7 @@ napi_value ResultSetProxy::GoToFirstRow(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
 
     int errCode = resultSetProxy->resultSet_->GoToFirstRow();
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_RESULT_GOTO_ERROR));
-
-    return JSUtils::Convert2JSValue(env, true);
+    return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
 napi_value ResultSetProxy::GoToLastRow(napi_env env, napi_callback_info info)
@@ -381,9 +377,7 @@ napi_value ResultSetProxy::GoToLastRow(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
 
     int errCode = resultSetProxy->resultSet_->GoToLastRow();
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_RESULT_GOTO_ERROR));
-
-    return JSUtils::Convert2JSValue(env, true);
+    return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
 napi_value ResultSetProxy::GoToNextRow(napi_env env, napi_callback_info info)
@@ -392,9 +386,7 @@ napi_value ResultSetProxy::GoToNextRow(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
 
     int errCode = resultSetProxy->resultSet_->GoToNextRow();
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_RESULT_GOTO_ERROR));
-
-    return JSUtils::Convert2JSValue(env, true);
+    return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
 napi_value ResultSetProxy::GoToPreviousRow(napi_env env, napi_callback_info info)
@@ -403,9 +395,7 @@ napi_value ResultSetProxy::GoToPreviousRow(napi_env env, napi_callback_info info
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
 
     int errCode = resultSetProxy->resultSet_->GoToPreviousRow();
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_RESULT_GOTO_ERROR));
-
-    return JSUtils::Convert2JSValue(env, true);
+    return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
 napi_value ResultSetProxy::GetInt(napi_env env, napi_callback_info info)
@@ -483,7 +473,9 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
 
     int32_t result = -1;
     int errCode = resultSetProxy->resultSet_->GetColumnIndex(input, result);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_RESULT_GET_ERROR));
+    if (errCode != E_OK) {
+        LOG_ERROR("IsAtLastRow failed code:%{public}d", errCode);
+    }
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -496,7 +488,9 @@ napi_value ResultSetProxy::GetColumnName(napi_env env, napi_callback_info info)
 
     std::string result;
     int errCode = resultSetProxy->resultSet_->GetColumnName(columnIndex, result);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_RESULT_GET_ERROR));
+    if (errCode != E_OK) {
+        LOG_ERROR("IsAtLastRow failed code:%{public}d", errCode);
+    }
 
     return JSUtils::Convert2JSValue(env, result);
 }
