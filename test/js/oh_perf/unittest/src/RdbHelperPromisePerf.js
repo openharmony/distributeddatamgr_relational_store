@@ -68,7 +68,21 @@ export default function getRdbStorePromise() {
                 averageTime += (endTime - startTime)
             }
             averageTime = (averageTime * 1000) / base_count
-            console.info(TAG + " the average time is: " + averageTime + " μs")
+            console.info(TAG + " the getRdbStore_Promise average time is: " + averageTime + " μs")
+            expect(averageTime < baseLineCallback).assertTrue()
+            done()
+        })
+
+        it('SUB_DDM_PERF_RDB_deleteRdbStore_Promise_001', 0, async function (done) {
+            let averageTime = 0;
+            for (var i=0; i<base_count; i++) {
+                let startTime = new Date().getTime();
+                await dataRdb.deleteRdbStore(context, STORE_CONFIG, 1);
+                let endTime = new Date().getTime();
+                averageTime += (endTime - startTime)
+            }
+            averageTime = (averageTime * 1000) / base_count
+            console.info(TAG + " the deleteRdbStore_Promise average time is: " + averageTime + " μs")
             expect(averageTime < baseLineCallback).assertTrue()
             done()
             console.info(TAG + "*************Unit Test End*************")

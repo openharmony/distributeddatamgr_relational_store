@@ -14,15 +14,16 @@
  */
 
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect, Assert } from '@ohos/hypium';
-import dataRdb from '@ohos.data.rdb';
+import dataRdb from '@ohos.data.relationalStore';
+//import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';
 
-const TAG = "[RDB_GETRDBSTORE_PROMISE]"
+const TAG = "[RDB_SYNC_PROMISE]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
 + "name TEXT, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
-const dbName = "rdbpromise.db"
+const dbName = "rdbSync.db"
 const STORE_CONFIG = {
     name: dbName,
 }
@@ -34,9 +35,9 @@ const base_line_tablet = 2500 // callback tablet base line
 const base_line_phone = 3000 // callback phone base line
 let baseLineCallback
 
-export default function getRdbStorePromise() {
+export default function rdbStoreSync() {
 
-    describe('GetRdbStorePromise', function () {
+    describe('rdbStoreSync', function () {
         beforeAll(async function () {
             console.info(TAG + 'beforeAll')
             if (deviceInfo.deviceType == "tablet") {
@@ -44,6 +45,8 @@ export default function getRdbStorePromise() {
             } else {
                 baseLineCallback = base_line_phone
             }
+
+            rdbStore = await dataRdb.getRdbStore(context, STORE_CONFIG, 1);
         })
         beforeEach(async function () {
             console.info(TAG + 'beforeEach')
@@ -59,19 +62,50 @@ export default function getRdbStorePromise() {
 
         console.log(TAG + "*************Unit Test Begin*************");
 
-        it('SUB_DDM_PERF_RDB_getRdbStore_Promise_001', 0, async function (done) {
+        it('SUB_DDM_PERF_RDB_version_001', 0, async function (done) {
+            let averageTime = 0;
+            let dbVersion = 1;
+            for (var i=0; i<base_count; i++) {
+                let startTime = new Date().getTime();
+                dbVersion = rdbStore.version
+                let endTime = new Date().getTime();
+                averageTime += (endTime - startTime);
+            }
+            averageTime = (averageTime * 1000) / base_count;
+            console.info(TAG + " the version average time is: " + averageTime + " μs");
+            expect(averageTime < baseLineCallback).assertTrue();
+            done();
+        })
+
+        it('SUB_DDM_PERF_RDB_transaction_commit_001', 0, async function (done) {
             let averageTime = 0;
             for (var i=0; i<base_count; i++) {
                 let startTime = new Date().getTime();
-                await dataRdb.getRdbStore(context, STORE_CONFIG, 1);
+                rdbStore.beginTransaction();
+                rdbStore.commit();
                 let endTime = new Date().getTime();
-                averageTime += (endTime - startTime)
+                averageTime += (endTime - startTime);
             }
-            averageTime = (averageTime * 1000) / base_count
-            console.info(TAG + " the average time is: " + averageTime + " μs")
-            expect(averageTime < baseLineCallback).assertTrue()
-            done()
-            console.info(TAG + "*************Unit Test End*************")
+            averageTime = (averageTime * 1000) / base_count;
+            console.info(TAG + " the transaction_commit average time is: " + averageTime + " μs");
+            expect(averageTime < baseLineCallback).assertTrue();
+            done();
+        })
+
+        it('SUB_DDM_PERF_RDB_transaction_rollback_001', 0, async function (done) {
+            let averageTime = 0;
+            for (var i=0; i<base_count; i++) {
+                let startTime = new Date().getTime();
+                rdbStore.beginTransaction();
+                rdbStore.rollBack();
+                let endTime = new Date().getTime();
+                averageTime += (endTime - startTime);
+            }
+            averageTime = (averageTime * 1000) / base_count;
+            console.info(TAG + " the transaction_rollback average time is: " + averageTime + " μs");
+            expect(averageTime < baseLineCallback).assertTrue();
+            done();
+            console.info(TAG + "*************Unit Test End*************");
         })
     })
 }

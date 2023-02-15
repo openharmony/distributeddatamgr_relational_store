@@ -18,11 +18,11 @@ import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';
 
-const TAG = "[RDB_QUERY_PROMISE]"
+const TAG = "[RDB_GETRDBSTORE_PROMISE]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
 + "name TEXT, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
-const dbName = "rdbquerypromise.db"
+const dbName = "rdbcallback.db"
 const STORE_CONFIG = {
     name: dbName,
 }
@@ -30,13 +30,13 @@ let context = featureAbility.getContext();
 var rdbStore = undefined;
 
 const base_count = 1000 // loop times
-const base_line_tablet = 1800 // callback tablet base line
-const base_line_phone = 2200 // callback phone base line
+const base_line_tablet = 2500 // callback tablet base line
+const base_line_phone = 3000 // callback phone base line
 let baseLineCallback
 
-export default function queryPromise() {
+export default function getRdbStoreCallback() {
 
-    describe('queryPromise', function () {
+    describe('getRdbStoreCallback', function () {
         beforeAll(async function () {
             console.info(TAG + 'beforeAll')
             if (deviceInfo.deviceType == "tablet") {
@@ -44,16 +44,12 @@ export default function queryPromise() {
             } else {
                 baseLineCallback = base_line_phone
             }
-            rdbStore = await dataRdb.getRdbStore(context, STORE_CONFIG, 1);
         })
         beforeEach(async function () {
             console.info(TAG + 'beforeEach')
-            await rdbStore.executeSql(CREATE_TABLE_TEST, null);
-            await prepareTestData();
         })
         afterEach(async function () {
             console.info(TAG + 'afterEach')
-            await rdbStore.executeSql("delete from test");
         })
         afterAll(async function () {
             console.info(TAG + 'afterAll')
@@ -61,36 +57,50 @@ export default function queryPromise() {
             await dataRdb.deleteRdbStore(context, dbName);
         })
 
-        async function prepareTestData() {
-            console.info(TAG + "prepare for query performance test")
-            var u8 = new Uint8Array([1,2,3])
-            var valueBucket = {
-                "name": "zhangsan",
-                "age": 18,
-                "salary": 100.5,
-                "blobType" : u8,
-            }
-            await dataRdb.insert("test", valueBucket);
-        }
-
         console.log(TAG + "*************Unit Test Begin*************");
 
-        it('SUB_DDM_PERF_RDB_query_Promise_001', 0, async function (done) {
+        it('SUB_DDM_PERF_RDB_getRdbStore_Callback_001', 0, async function (done) {
             let averageTime = 0;
-            let predicates = new dataRdb.RdbPredicates("test")
-            predicates.equalTo("age", 10);
+            await GetRdbStoreCallBackPerfTest(0);
 
-            for (var i=0; i<base_count; i++) {
+            async function GetRdbStoreCallBackPerfTest(index) {
                 let startTime = new Date().getTime()
-                await rdbStore.query(predicates, [])
-                let endTime = new Date().getTime()
-                averageTime += (endTime - startTime)
+                dataRdb.getRdbStore(context, STORE_CONFIG, 1, function (err, rdbStore) {
+                    let endTime = new Date().getTime();
+                    averageTime += (endTime - startTime)
+                    if (index < base_count) {
+                        GetRdbStoreCallBackPerfTest(index + 1);
+                    } else {
+                        averageTime = (averageTime * 1000) / base_count
+                        console.info(TAG + " the average time is: " + averageTime + " μs")
+                        expect(averageTime < baseLineCallback).assertTrue()
+                        done()
+                    }
+                })
             }
-            averageTime = (averageTime * 1000) / base_count
-            console.info(TAG + " the average time is: " + averageTime + " μs")
-            expect(averageTime < baseLineCallback).assertTrue()
-            console.info(TAG + "*************Unit Test End*************")
-            done()
         })
     })
+
+
+    it('SUB_DDM_PERF_RDB_deleteRdbStore_Callback_001', 0, async function (done) {
+        let averageTime = 0;
+        await GetRdbStoreCallBackPerfTest(0);
+
+        async function GetRdbStoreCallBackPerfTest(index) {
+            let startTime = new Date().getTime()
+            dataRdb.deleteRdbStore(context, STORE_CONFIG, function (err, data) {
+                let endTime = new Date().getTime();
+                averageTime += (endTime - startTime)
+                if (index < base_count) {
+                    GetRdbStoreCallBackPerfTest(index + 1);
+                } else {
+                    averageTime = (averageTime * 1000) / base_count
+                    console.info(TAG + " the deleteRdbStore_Callback average time is: " + averageTime + " μs")
+                    expect(averageTime < baseLineCallback).assertTrue()
+                    done()
+                }
+            })
+        }
+    })
+
 }
