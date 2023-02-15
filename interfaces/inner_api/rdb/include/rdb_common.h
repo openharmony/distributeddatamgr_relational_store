@@ -19,11 +19,17 @@
 namespace OHOS {
 namespace NativeRdb {
 enum class ConflictResolution {
+    /** Implements no action when conflict occurs.*/
     ON_CONFLICT_NONE = 0,
+    /** Implements rollback operation when conflict occurs.*/
     ON_CONFLICT_ROLLBACK,
+    /** Implements abort operation when conflict occurs.*/
     ON_CONFLICT_ABORT,
+    /** Implements fail operation when conflict occurs.*/
     ON_CONFLICT_FAIL,
+    /** Implements ignore operation when conflict occurs.*/
     ON_CONFLICT_IGNORE,
+    /** Implements replace operation operator when conflict occurs.*/
     ON_CONFLICT_REPLACE,
 };
 }
