@@ -98,9 +98,9 @@ napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
     if (is_constructor) {
         napi_valuetype valueType;
         NAPI_CALL(env, napi_typeof(env, args[0], &valueType));
-        RDB_NAPI_ASSERT(env, valueType == napi_string, std::make_shared<ParamTypeError>("name", "not empty"));
+        RDB_NAPI_ASSERT(env, valueType == napi_string, std::make_shared<ParamError>("name", "not empty"));
         std::string tableName = JSUtils::Convert2String(env, args[0]);
-        RDB_NAPI_ASSERT(env, !tableName.empty(), std::make_shared<ParamTypeError>("name", "not empty"));
+        RDB_NAPI_ASSERT(env, !tableName.empty(), std::make_shared<ParamError>("name", "not empty"));
         auto *proxy = new RdbPredicatesProxy(tableName);
         napi_status status = napi_wrap(env, thiz, proxy, RdbPredicatesProxy::Destructor, nullptr, nullptr);
         if (status != napi_ok) {
@@ -176,7 +176,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::GetNativePredicates(napi_env env, napi_c
 
     RdbPredicatesProxy *proxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, proxy && proxy->predicates_, std::make_shared<ParamTypeError>("predicates", "null"));
+    RDB_NAPI_ASSERT(env, proxy && proxy->predicates_, std::make_shared<ParamError>("predicates", "null"));
     return proxy;
 }
 
@@ -190,11 +190,11 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldArrayByName(napi_env env, napi
 
     fieldarray = JSUtils::Convert2StrVector(env, args[0]);
     RDB_NAPI_ASSERT(
-        env, fieldarray.size() >= 0, std::make_shared<ParamTypeError>(fieldName, "a " + fieldType + " array."));
+        env, fieldarray.size() >= 0, std::make_shared<ParamError>(fieldName, "a " + fieldType + " array."));
 
     RdbPredicatesProxy *proxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, proxy && proxy->predicates_, std::make_shared<ParamTypeError>("predicates", "null"));
+    RDB_NAPI_ASSERT(env, proxy && proxy->predicates_, std::make_shared<ParamError>("predicates", "null"));
     return proxy;
 }
 
@@ -207,11 +207,11 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldByName(
     RDB_NAPI_ASSERT(env, argc == 1, std::make_shared<ParamNumError>("1"));
 
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamTypeError>(fieldName, "not empty"));
+    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamError>(fieldName, "not empty"));
 
     RdbPredicatesProxy *proxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, proxy && proxy->predicates_, std::make_shared<ParamTypeError>("predicates", "null"));
+    RDB_NAPI_ASSERT(env, proxy && proxy->predicates_, std::make_shared<ParamError>("predicates", "null"));
     return proxy;
 }
 
@@ -224,11 +224,11 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseInt32FieldByName(
     RDB_NAPI_ASSERT(env, argc == 1, std::make_shared<ParamNumError>("1"));
 
     napi_status status = napi_get_value_int32(env, args[0], &field);
-    RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamTypeError>(fieldName, "a number."));
+    RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>(fieldName, "a number."));
 
     RdbPredicatesProxy *proxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, proxy && proxy->predicates_, std::make_shared<ParamTypeError>("predicates", "null"));
+    RDB_NAPI_ASSERT(env, proxy && proxy->predicates_, std::make_shared<ParamError>("predicates", "null"));
     return proxy;
 }
 
@@ -241,14 +241,14 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValueArray(napi_env env, na
     RDB_NAPI_ASSERT(env, argc == 2, std::make_shared<ParamNumError>("2"));
 
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamTypeError>("field", "not empty"));
+    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamError>("field", "not empty"));
 
     value = JSUtils::Convert2StrVector(env, args[1]);
-    RDB_NAPI_ASSERT(env, value.size() >= 0, std::make_shared<ParamTypeError>("value", "a " + valueType + " array."));
+    RDB_NAPI_ASSERT(env, value.size() >= 0, std::make_shared<ParamError>("value", "a " + valueType + " array."));
 
     RdbPredicatesProxy *proxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, proxy && proxy->predicates_, std::make_shared<ParamTypeError>("predicates", "null"));
+    RDB_NAPI_ASSERT(env, proxy && proxy->predicates_, std::make_shared<ParamError>("predicates", "null"));
     return proxy;
 }
 
@@ -262,13 +262,13 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValue(napi_env env, napi_ca
     RDB_NAPI_ASSERT(env, argc == 2, std::make_shared<ParamNumError>("2"));
 
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamTypeError>("field", "not empty"));
+    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamError>("field", "not empty"));
 
     value = JSUtils::ConvertAny2String(env, args[1]);
 
     RdbPredicatesProxy *proxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, proxy && proxy->predicates_, std::make_shared<ParamTypeError>("predicates", "null"));
+    RDB_NAPI_ASSERT(env, proxy && proxy->predicates_, std::make_shared<ParamError>("predicates", "null"));
     return proxy;
 }
 
@@ -281,17 +281,17 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldLowAndHigh(
     RDB_NAPI_ASSERT(env, argc == 3, std::make_shared<ParamNumError>("3"));
 
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamTypeError>("field", "not empty"));
+    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamError>("field", "not empty"));
 
     low = JSUtils::ConvertAny2String(env, args[1]);
-    RDB_NAPI_ASSERT(env, !low.empty(), std::make_shared<ParamTypeError>("low", "a non empty ValueType."));
+    RDB_NAPI_ASSERT(env, !low.empty(), std::make_shared<ParamError>("low", "a non empty ValueType."));
 
     high = JSUtils::ConvertAny2String(env, args[2]);
-    RDB_NAPI_ASSERT(env, !high.empty(), std::make_shared<ParamTypeError>("high", "a non empty ValueType."));
+    RDB_NAPI_ASSERT(env, !high.empty(), std::make_shared<ParamError>("high", "a non empty ValueType."));
 
     RdbPredicatesProxy *proxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, proxy && proxy->predicates_, std::make_shared<ParamTypeError>("predicates", "null"));
+    RDB_NAPI_ASSERT(env, proxy && proxy->predicates_, std::make_shared<ParamError>("predicates", "null"));
     return proxy;
 }
 

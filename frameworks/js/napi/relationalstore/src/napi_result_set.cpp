@@ -176,11 +176,11 @@ ResultSetProxy *ResultSetProxy::ParseInt32FieldByName(
     RDB_NAPI_ASSERT(env, argc == 1, std::make_shared<ParamNumError>("1"));
 
     napi_status status = napi_get_value_int32(env, args[0], &field);
-    RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamTypeError>(name, "a number."));
+    RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>(name, "a number."));
 
     ResultSetProxy *proxy = nullptr;
     napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, proxy && proxy->resultSet_, std::make_shared<ParamTypeError>("resultSet", "null"));
+    RDB_NAPI_ASSERT(env, proxy && proxy->resultSet_, std::make_shared<ParamError>("resultSet", "null"));
     return proxy;
 }
 
@@ -194,11 +194,11 @@ ResultSetProxy *ResultSetProxy::ParseFieldByName(
     RDB_NAPI_ASSERT(env, argc == 1, std::make_shared<ParamNumError>("1"));
 
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamTypeError>(name, "a non empty string."));
+    RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamError>(name, "a non empty string."));
 
     ResultSetProxy *proxy = nullptr;
     napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, proxy && proxy->resultSet_, std::make_shared<ParamTypeError>("resultSet", "null"));
+    RDB_NAPI_ASSERT(env, proxy && proxy->resultSet_, std::make_shared<ParamError>("resultSet", "null"));
     return proxy;
 }
 
