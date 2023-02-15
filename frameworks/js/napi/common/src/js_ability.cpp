@@ -103,7 +103,6 @@ bool JSAbility::CheckContext(napi_env env, napi_callback_info info)
     bool mode = false;
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     napi_status status = AbilityRuntime::IsStageContext(env, args[0], mode);
-    LOG_DEBUG("Check context as stage mode, mode is %{public}d, status is %{public}d", mode, status == napi_ok);
     return status == napi_ok;
 }
 
