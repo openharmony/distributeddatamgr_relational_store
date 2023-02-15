@@ -18,6 +18,7 @@
 
 namespace OHOS {
 namespace NativeRdb {
+
 /**
 * @brief The error code in the correct case.
 */
@@ -26,12 +27,12 @@ constexpr int E_OK = 0;
 /**
 * @brief The base code of the exception error code.
 */
-constexpr int E_BASE = 1000;
+constexpr int E_BASE = 14800000;
 
 /**
 * @brief The error code for common exceptions.
 */
-constexpr int E_ERROR = (E_BASE + 1);
+constexpr int E_ERROR = E_BASE;
 
 /**
 * @brief The error code for upgrade the read-only store.
@@ -42,11 +43,6 @@ constexpr int E_CANNOT_UPDATE_READONLY = (E_BASE + 2);
 * @brief The error code when deleting a file fails.
 */
 constexpr int E_REMOVE_FILE = (E_BASE + 3);
-
-/**
-* @brief The error code for a file name is empty.
-*/
-constexpr int E_EMPTY_FILE_NAME = (E_BASE + 4);
 
 /**
 * @brief The error code for a table name is empty.
@@ -74,14 +70,14 @@ constexpr int E_INVALID_COLUMN_INDEX = (E_BASE + 8);
 constexpr int E_INVALID_COLUMN_TYPE = (E_BASE + 9);
 
 /**
-* @brief The error code for the column name is invalid.
+* @brief The error code for a file name is empty.
 */
-constexpr int E_INVALID_COLUMN_NAME = (E_BASE + 10);
+constexpr int E_EMPTY_FILE_NAME = (E_BASE + 10);
 
 /**
-* @brief The error code when using sqlite3_step function failed.
+* @brief The error for the current file path is invalid.
 */
-constexpr int E_QUERY_IN_EXECUTE = (E_BASE + 11);
+constexpr int E_INVALID_FILE_PATH = (E_BASE + 11);
 
 /**
 * @brief The error code when using transactions.
@@ -239,9 +235,9 @@ constexpr int E_NOT_SUPPORT = (E_BASE + 41);
 constexpr int E_INVALID_PARCEL = (E_BASE + 42);
 
 /**
-* @brief The error for the current file path is invalid.
+* @brief The error code when using sqlite3_step function failed.
 */
-constexpr int E_INVALID_FILE_PATH = (E_BASE + 43);
+constexpr int E_QUERY_IN_EXECUTE = (E_BASE + 43);
 
 /**
 * @brief The error for set persist WAL.
