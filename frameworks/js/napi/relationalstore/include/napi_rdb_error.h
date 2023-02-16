@@ -114,31 +114,12 @@ private:
     std::string msg_;
 };
 
-class CustomError : public Error {
+class ParamError : public Error {
 public:
-    CustomError(int errCode, const std::string &msg) : msg(msg), errCode(errCode)
-    {
-    }
+    ParamError(const std::string &needed, const std::string &mustbe) : needed_(needed), mustbe_(mustbe){};
     std::string GetMessage() override
     {
-        return msg;
-    }
-    int GetCode() override
-    {
-        return errCode;
-    }
-
-private:
-    std::string msg;
-    int errCode;
-};
-
-class ParamTypeError : public Error {
-public:
-    ParamTypeError(const std::string &name, const std::string &wantType) : name(name), wantType(wantType){};
-    std::string GetMessage() override
-    {
-        return "Parameter error. The type of '" + name + "' must be " + wantType;
+        return "Parameter error. The " + needed_ + " must be " + mustbe_;
     };
     int GetCode() override
     {
@@ -146,8 +127,8 @@ public:
     };
 
 private:
-    std::string name;
-    std::string wantType;
+    std::string needed_;
+    std::string mustbe_;
 };
 
 class NonSystemError : public Error {
@@ -170,7 +151,7 @@ public:
     ParamNumError(const std::string &wantNum) : wantNum(wantNum){};
     std::string GetMessage() override
     {
-        return "Parameter error. Need " + wantNum + " parameters!";
+        return "Parameter error. Need " + wantNum + " parameter(s)!";
     };
     int GetCode() override
     {
