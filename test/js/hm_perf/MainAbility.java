@@ -19,17 +19,11 @@ public class MainAbility extends Ability {
     private static final HiLogLabel LABEL = new HiLogLabel(HiLog.LOG_APP, 0x00201, "Test-RDB");
     private RdbStore store;
     private int num = 1000;
-    @Override
-    public void onStart(Intent intent) {
-        super.onStart(intent);
-        String path = "android.db";
-        DatabaseHelper helper = new DatabaseHelper(this);
-        StoreConfig config = StoreConfig.newDefaultConfig(path);
-        store = helper.getRdbStore(config, 1, null, null);
-        String createTable = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, name TEXT NOT NULL, "
+    String createTable = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, name TEXT NOT NULL, "
                 + "AGE INTEGER, salary REAL, data blob)";
-
-        super.setMainRoute(MainAbilitySlice.class.getName());
+    String deleteTable = "DELETE FROM test";
+    
+    public void createTable(int num, RdbStore store) {
         store.executeSql(createTable);
         for (int i=0; i<1000; i++){
             ValuesBucket value = new ValuesBucket();
@@ -38,9 +32,22 @@ public class MainAbility extends Ability {
             value.putInteger("age", 18+i);
             value.putFloat("salary", (float) 100.6);
             value.putFloat("data", null);
-
             store.insert("test", value);
         }
+    }
+    public void deleteTable(RdbStore store) {
+        store.executeSql(deleteTable);
+    }
+
+    @Override
+    public void onStart(Intent intent) {
+        super.onStart(intent);
+        String dbName = "perfTest.db";
+        DatabaseHelper helper = new DatabaseHelper(this);
+        StoreConfig config = StoreConfig.newDefaultConfig(dbName);
+        store = helper.getRdbStore(config, 1, null, null);
+        super.setMainRoute(MainAbilitySlice.class.getName());
+        
 
         //
         long stime = System.nanoTime();
@@ -48,6 +55,7 @@ public class MainAbility extends Ability {
         long time = 0;
 
         // getColumnIndexForName
+        createTable(num, store);
         for (int i = 0; i < num; i++){
             RdbPredicates predicates = new RdbPredicates("test");
             ResultSet resultSet = store.query(predicates, null);
@@ -59,10 +67,12 @@ public class MainAbility extends Ability {
             resultSet = null;
             time = time + etime - stime;
         }
+        deleteTable(store);
         HiLog.info(LABEL, "rdbTest getColumnIndexForName averageTime : " + (float)(time) / 1000 / num);
 
         // getColumnNameForIndex
         time = 0;
+        createTable(num, store);
         for (int i = 0; i < num; i++){
             RdbPredicates predicates = new RdbPredicates("test");
             ResultSet resultSet = store.query(predicates, null);
@@ -74,10 +84,12 @@ public class MainAbility extends Ability {
             resultSet = null;
             time = time + etime - stime;
         }
+        deleteTable(store);
         HiLog.info(LABEL, "rdbTest getColumnNameForIndex averageTime : " + (float)(time) / 1000 / num);
 
         // goTo
         time = 0;
+        createTable(num, store);
         for (int i = 0; i < num; i++){
             RdbPredicates predicates = new RdbPredicates("test");
             ResultSet resultSet = store.query(predicates, null);
@@ -89,10 +101,12 @@ public class MainAbility extends Ability {
             resultSet = null;
             time = time + etime - stime;
         }
+        deleteTable(store);
         HiLog.info(LABEL, "rdbTest goTo averageTime : " + (float)(time) / 1000 / num);
 
         // goToRow
         time = 0;
+        createTable(num, store);
         for (int i = 0; i < num; i++){
             RdbPredicates predicates = new RdbPredicates("test");
             ResultSet resultSet = store.query(predicates, null);
@@ -104,10 +118,12 @@ public class MainAbility extends Ability {
             resultSet = null;
             time = time + etime - stime;
         }
+        deleteTable(store);
         HiLog.info(LABEL, "rdbTest goToRow averageTime : " + (float)(time) / 1000 / num);
 
         // goToFirstRow
         time = 0;
+        createTable(num, store);
         for (int i = 0; i < num; i++){
             RdbPredicates predicates = new RdbPredicates("test");
             ResultSet resultSet = store.query(predicates, null);
@@ -119,10 +135,12 @@ public class MainAbility extends Ability {
             resultSet = null;
             time = time + etime - stime;
         }
+        deleteTable(store);
         HiLog.info(LABEL, "rdbTest goToFirstRow averageTime : " + (float)(time) / 1000 / num);
 
         // goToLastRow
         time = 0;
+        createTable(num, store);
         for (int i = 0; i < num; i++){
             RdbPredicates predicates = new RdbPredicates("test");
             ResultSet resultSet = store.query(predicates, null);
@@ -134,10 +152,12 @@ public class MainAbility extends Ability {
             resultSet = null;
             time = time + etime - stime;
         }
+        deleteTable(store);
         HiLog.info(LABEL, "rdbTest goToLastRow averageTime : " + (float)(time) / 1000 / num);
 
         // goToNextRow
         time = 0;
+        createTable(num, store);
         for (int i = 0; i < num; i++){
             RdbPredicates predicates = new RdbPredicates("test");
             ResultSet resultSet = store.query(predicates, null);
@@ -149,10 +169,12 @@ public class MainAbility extends Ability {
             resultSet = null;
             time = time + etime - stime;
         }
+        deleteTable(store);
         HiLog.info(LABEL, "rdbTest goToNextRow averageTime : " + (float)(time) / 1000 / num);
 
         // goToPreviousRow
         time = 0;
+        createTable(num, store);
         for (int i = 0; i < num; i++){
             RdbPredicates predicates = new RdbPredicates("test");
             ResultSet resultSet = store.query(predicates, null);
@@ -164,10 +186,12 @@ public class MainAbility extends Ability {
             resultSet = null;
             time = time + etime - stime;
         }
+        deleteTable(store);
         HiLog.info(LABEL, "rdbTest goToPreviousRow averageTime : " + (float)(time) / 1000 / num);
 
         // getBlob
         time = 0;
+        createTable(num, store);
         for (int i = 0; i < num; i++){
             RdbPredicates predicates = new RdbPredicates("test");
             ResultSet resultSet = store.query(predicates, null);
@@ -181,10 +205,12 @@ public class MainAbility extends Ability {
             resultSet = null;
             time = time + etime - stime;
         }
+        deleteTable(store);
         HiLog.info(LABEL, "rdbTest getBlob averageTime : " + (float)(time) / 1000 / num);
 
         // getString
         time = 0;
+        createTable(num, store);
         for (int i = 0; i < num; i++){
             RdbPredicates predicates = new RdbPredicates("test");
             ResultSet resultSet = store.query(predicates, null);
@@ -198,10 +224,12 @@ public class MainAbility extends Ability {
             resultSet = null;
             time = time + etime - stime;
         }
+        deleteTable(store);
         HiLog.info(LABEL, "rdbTest getString averageTime : " + (float)(time) / 1000 / num);
 
         // getLong
         time = 0;
+        createTable(num, store);
         for (int i = 0; i < num; i++){
             RdbPredicates predicates = new RdbPredicates("test");
             ResultSet resultSet = store.query(predicates, null);
@@ -215,10 +243,12 @@ public class MainAbility extends Ability {
             resultSet = null;
             time = time + etime - stime;
         }
+        deleteTable(store);
         HiLog.info(LABEL, "rdbTest getLong averageTime : " + (float)(time) / 1000 / num);
 
         // getDouble
         time = 0;
+        createTable(num, store);
         for (int i = 0; i < num; i++){
             RdbPredicates predicates = new RdbPredicates("test");
             ResultSet resultSet = store.query(predicates, null);
@@ -232,10 +262,12 @@ public class MainAbility extends Ability {
             resultSet = null;
             time = time + etime - stime;
         }
+        deleteTable(store);
         HiLog.info(LABEL, "rdbTest getDouble averageTime : " + (float)(time) / 1000 / num);
 
         // isColumnNull
         time = 0;
+        createTable(num, store);
         for (int i = 0; i < num; i++){
             RdbPredicates predicates = new RdbPredicates("test");
             ResultSet resultSet = store.query(predicates, null);
@@ -249,10 +281,12 @@ public class MainAbility extends Ability {
             resultSet = null;
             time = time + etime - stime;
         }
+        deleteTable(store);
         HiLog.info(LABEL, "rdbTest isColumnNull averageTime : " + (float)(time) / 1000 / num);
 
         // close
         time = 0;
+        createTable(num, store);
         for (int i = 0; i < num; i++){
             RdbPredicates predicates = new RdbPredicates("test");
             ResultSet resultSet = store.query(predicates, null);
@@ -266,10 +300,12 @@ public class MainAbility extends Ability {
             resultSet = null;
             time = time + etime - stime;
         }
+        deleteTable(store);
         HiLog.info(LABEL, "rdbTest close averageTime : " + (float)(time) / 1000 / num);
 
         // equalTo
         time = 0;
+        createTable(num, store);
         for (int i = 0; i < num; i++){
             RdbPredicates predicates = new RdbPredicates("test");
             stime = System.nanoTime();
@@ -425,6 +461,8 @@ public class MainAbility extends Ability {
             time = time + etime - stime;
         }
         HiLog.info(LABEL, "rdbTest glob averageTime : " + (float)(time) / 1000 / num);
+
+        helper.deleteRdbStore(dbName);
 
     }
 }
