@@ -50,7 +50,7 @@ struct HelperRdbContext : public Context {
 int ParseContext(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
     auto abilityContext = JSAbility::GetContext(env, object);
-    CHECK_RETURN_SET(abilityContext != nullptr, std::make_shared<ParamTypeError>("context", "a Context."));
+    CHECK_RETURN_SET(abilityContext != nullptr, std::make_shared<ParamError>("context", "a Context."));
     context->abilitycontext = abilityContext;
     return OK;
 }
@@ -59,12 +59,12 @@ int ParseDatabaseName(const napi_env &env, const napi_value &object, std::shared
 {
     napi_value value;
     napi_get_named_property(env, object, "name", &value);
-    CHECK_RETURN_SET(value != nullptr, std::make_shared<ParamTypeError>("config", "a StoreConfig."));
+    CHECK_RETURN_SET(value != nullptr, std::make_shared<ParamError>("config", "a StoreConfig."));
 
     std::string name = JSUtils::Convert2String(env, value);
-    CHECK_RETURN_SET(!name.empty(), std::make_shared<ParamTypeError>("config", "a StoreConfig."));
+    CHECK_RETURN_SET(!name.empty(), std::make_shared<ParamError>("config", "a StoreConfig."));
     if (name.find("/") != std::string::npos) {
-        CHECK_RETURN_SET(false, std::make_shared<ParamTypeError>("StoreConfig.name", "a file name without path"));
+        CHECK_RETURN_SET(false, std::make_shared<ParamError>("StoreConfig.name", "a file name without path"));
     }
 
     context->config.SetName(std::move(name));
@@ -87,7 +87,7 @@ int ParseContextProperty(const napi_env &env, std::shared_ptr<HelperRdbContext> 
 {
     if (context->abilitycontext == nullptr) {
         int status = ParseContext(env, nullptr, context); // when no context as arg got from application.
-        CHECK_RETURN_SET(status == OK, std::make_shared<ParamTypeError>("context", "a Context."));
+        CHECK_RETURN_SET(status == OK, std::make_shared<ParamError>("context", "a Context."));
     }
     context->config.SetModuleName(context->abilitycontext->GetModuleName());
     context->config.SetArea(context->abilitycontext->GetArea());
@@ -103,14 +103,14 @@ int ParseDatabaseDir(const napi_env &env, std::shared_ptr<HelperRdbContext> cont
 {
     if (context->abilitycontext == nullptr) {
         int status = ParseContext(env, nullptr, context); // when no context as arg got from application.
-        CHECK_RETURN_SET(status == OK, std::make_shared<ParamTypeError>("context", "a Context."));
+        CHECK_RETURN_SET(status == OK, std::make_shared<ParamError>("context", "a Context."));
     }
-    CHECK_RETURN_SET(context->abilitycontext != nullptr, std::make_shared<ParamTypeError>("context", "a Context."));
+    CHECK_RETURN_SET(context->abilitycontext != nullptr, std::make_shared<ParamError>("context", "a Context."));
     int errorCode = E_OK;
     std::string databaseName = context->config.GetName();
     std::string databaseDir = context->abilitycontext->GetDatabaseDir();
     std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, databaseName, errorCode);
-    CHECK_RETURN_SET(errorCode == E_OK, std::make_shared<ParamTypeError>("config", "a StoreConfig."));
+    CHECK_RETURN_SET(errorCode == E_OK, std::make_shared<ParamError>("config", "a StoreConfig."));
     context->config.SetPath(std::move(realPath));
     return OK;
 }
@@ -120,10 +120,10 @@ int ParseSecurityLevel(const napi_env &env, const napi_value &object, std::share
     napi_value value = nullptr;
     bool hasProp = false;
     napi_status status = napi_has_named_property(env, object, "securityLevel", &hasProp);
-    CHECK_RETURN_SET(status == napi_ok && hasProp, std::make_shared<ParamTypeError>("config", "with securityLevel."));
+    CHECK_RETURN_SET(status == napi_ok && hasProp, std::make_shared<ParamError>("config", "with securityLevel."));
 
     status = napi_get_named_property(env, object, "securityLevel", &value);
-    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamTypeError>("config", "with securityLevel."));
+    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("config", "with securityLevel."));
 
     int32_t securityLevel;
     napi_get_value_int32(env, value, &securityLevel);
@@ -131,7 +131,7 @@ int ParseSecurityLevel(const napi_env &env, const napi_value &object, std::share
     LOG_DEBUG("Get sl:%{public}d", securityLevel);
 
     bool isValidSecurityLevel = sl >= SecurityLevel::S1 && sl < SecurityLevel::LAST;
-    CHECK_RETURN_SET(isValidSecurityLevel, std::make_shared<ParamTypeError>("config", "with correct securityLevel."));
+    CHECK_RETURN_SET(isValidSecurityLevel, std::make_shared<ParamError>("config", "with correct securityLevel."));
 
     context->config.SetSecurityLevel(sl);
 
@@ -152,15 +152,15 @@ int ParseStoreConfig(const napi_env &env, const napi_value &object, std::shared_
 int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<HelperRdbContext> context)
 {
     std::string path = JSUtils::Convert2String(env, arg);
-    CHECK_RETURN_SET(!path.empty(), std::make_shared<ParamTypeError>("name", "a without path non empty string."));
+    CHECK_RETURN_SET(!path.empty(), std::make_shared<ParamError>("name", "a without path non empty string."));
 
     size_t pos = path.find_first_of('/');
-    CHECK_RETURN_SET(pos == std::string::npos, std::make_shared<ParamTypeError>("name", "a without path without /."));
+    CHECK_RETURN_SET(pos == std::string::npos, std::make_shared<ParamError>("name", "a without path without /."));
 
     std::string databaseDir = context->abilitycontext->GetDatabaseDir();
     int errorCode = E_OK;
     std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, path, errorCode);
-    CHECK_RETURN_SET(errorCode == E_OK, std::make_shared<ParamTypeError>("path", "access"));
+    CHECK_RETURN_SET(errorCode == E_OK, std::make_shared<ParamError>("path", "access"));
 
     context->config.SetPath(realPath);
     return OK;
@@ -185,7 +185,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
     auto context = std::make_shared<HelperRdbContext>();
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         bool checked = JSAbility::CheckContext(env, info);
-        CHECK_RETURN_SET_E(checked, std::make_shared<ParamTypeError>("context", "a valid Context."));
+        CHECK_RETURN_SET_E(checked, std::make_shared<ParamError>("context", "a valid Context."));
         CHECK_RETURN_SET_E(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 or 3"));
         CHECK_RETURN(OK == ParseContext(env, argv[0], context));
         CHECK_RETURN(OK == ParseStoreConfig(env, argv[1], context));
