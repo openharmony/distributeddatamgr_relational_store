@@ -326,8 +326,10 @@ describe('rdbStoreInsertTest', function () {
             const salary_1 = resultSet.getDouble(resultSet.getColumnIndex("salary"))
             expect(Number.MAX_SAFE_INTEGER).assertEqual(age_1)
             expect(Number.MAX_VALUE).assertEqual(salary_1)
+            resultSet.close()
             done()
         } catch (e) {
+            expect(null).assertFail()
             console.log("insert error " + e);
         }
         resultSet = null
