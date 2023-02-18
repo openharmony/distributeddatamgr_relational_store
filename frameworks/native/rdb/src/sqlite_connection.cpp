@@ -814,7 +814,8 @@ int SqliteConnection::LimitWalSize()
         return E_OK;
     }
 
-    if (SqliteUtils::GetFileSize(filePath + "-wal") < GlobalExpr::DB_WAL_SIZE_LIMIT) {
+    std::string walName = sqlite3_filename_wal(sqlite3_db_filename(dbHandle, "main"));
+    if (SqliteUtils::GetFileSize(walName) < GlobalExpr::DB_WAL_SIZE_LIMIT) {
         return E_OK;
     }
 
@@ -823,7 +824,7 @@ int SqliteConnection::LimitWalSize()
         return E_WAL_SIZE_OVER_LIMIT;
     }
 
-    int fileSize = SqliteUtils::GetFileSize(filePath + "-wal");
+    int fileSize = SqliteUtils::GetFileSize(walName);
     if (fileSize >= GlobalExpr::DB_WAL_SIZE_LIMIT) {
         LOG_ERROR("the WAL file size over default limit, size: %{public}d", fileSize);
         return E_WAL_SIZE_OVER_LIMIT;
