@@ -16,8 +16,8 @@
 #include "sqlite_utils.h"
 
 #include <algorithm>
-#include <cstdio>
 #include <climits>
+#include <cstdio>
 #include <sys/stat.h>
 #include <sys/types.h>
 
