@@ -33,10 +33,11 @@ class RdbStoreProxy {
 public:
     static void Init(napi_env env, napi_value exports);
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, bool isSystemAppCalled);
-    static RdbStoreProxy *GetNativeInstance(napi_env env, napi_value self);
     RdbStoreProxy();
     ~RdbStoreProxy();
     bool IsSystemAppCalled();
+
+    std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
 
 private:
     static napi_value Initialize(napi_env env, napi_callback_info info);
@@ -78,7 +79,6 @@ private:
     void OffDataChangeEvent(napi_env env, size_t argc, napi_value *argv);
 
     std::mutex mutex_;
-    std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
     bool isSystemAppCalled_ = false;
     std::list<std::shared_ptr<NapiRdbStoreObserver>> observers_[DistributedRdb::SUBSCRIBE_MODE_MAX];
 };

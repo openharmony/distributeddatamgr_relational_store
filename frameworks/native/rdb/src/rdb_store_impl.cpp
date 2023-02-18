@@ -17,17 +17,18 @@
 
 #include "rdb_store_impl.h"
 
-#include <sstream>
 #include <unistd.h>
+
+#include <sstream>
 
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_trace.h"
+#include "sqlite_database_utils.h"
+#include "sqlite_global_config.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
-#include "sqlite_database_utils.h"
-#include "sqlite_global_config.h"
 
 #ifndef WINDOWS_PLATFORM
 #include "directory_ex.h"
@@ -35,8 +36,8 @@
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "iresult_set.h"
-#include "rdb_security_manager.h"
 #include "rdb_manager.h"
+#include "rdb_security_manager.h"
 #include "result_set_proxy.h"
 #include "sqlite_shared_result_set.h"
 #endif
@@ -101,7 +102,8 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
 }
 
 RdbStoreImpl::RdbStoreImpl()
-    : connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false), isMemoryRdb(false), isEncrypt_(false)
+    : connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false), isMemoryRdb(false),
+      isEncrypt_(false)
 {
 }
 
@@ -140,22 +142,72 @@ int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const Valu
 int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
     const std::vector<ValuesBucket> &initialBatchValues)
 {
-    int errCode = BeginTransaction();
+    std::string sql;
+    std::map<std::string, ValueObject> valuesMap;
+    std::vector<std::vector<ValueObject>> vecVectorObj;
+
+    for (auto iter = initialBatchValues.begin(); iter != initialBatchValues.end(); iter++) {
+        std::vector<ValueObject> bindArgs;
+        (*iter).GetAll(valuesMap);
+        // prepare batch values : vec<value>
+        for (auto valueIter = valuesMap.begin(); valueIter != valuesMap.end(); valueIter++) {
+            bindArgs.push_back(valueIter->second);
+        }
+        // prepare batch sql
+        if (iter == initialBatchValues.begin()) {
+            sql = GetBatchInsertSql(valuesMap, table);
+        }
+        // put vec<value> into vec<vect>
+        vecVectorObj.push_back(move(bindArgs));
+        valuesMap.clear();
+    }
+    // prepare BeginTransaction
+    connectionPool->AcquireTransaction();
+    SqliteConnection *connection = connectionPool->AcquireConnection(false);
+    if (connection->IsInTransaction()) {
+        connectionPool->ReleaseTransaction();
+        connectionPool->ReleaseConnection(connection);
+        LOG_ERROR("Transaction is in excuting.");
+        return E_TRANSACTION_IN_EXECUTE;
+    }
+    BaseTransaction transaction(0);
+    connection->SetInTransaction(true);
+    int errCode = connection->ExecuteSql(transaction.GetTransactionStr());
     if (errCode != E_OK) {
-        LOG_ERROR("Begin transaction with error code %{public}d.", errCode);
+        LOG_ERROR("BeginTransaction with error code %{public}d.", errCode);
+        connection->SetInTransaction(false);
+        connectionPool->ReleaseConnection(connection);
+        connectionPool->ReleaseTransaction();
         return errCode;
     }
-    int64_t outRowId = 0;
-    for (auto const &value : initialBatchValues) {
-        ++outInsertNum;
-        if (RdbStoreImpl::Insert(outRowId, table, value) != E_OK || outRowId <= 0) {
-            LOG_WARN("Roll back in batch insert.");
+    // batch insert the values
+    for (std::vector<ValueObject> &tempVector : vecVectorObj) {
+        outInsertNum++;
+        errCode = connection->ExecuteSql(sql, tempVector);
+        if (errCode != E_OK) {
+            LOG_ERROR("BatchInsert with error code %{public}d.", errCode);
             outInsertNum = -1;
-            return RollBack();
+            return FreeTransaction(connection, transaction.GetRollbackStr());
         }
     }
 
-    return Commit();
+    return FreeTransaction(connection, transaction.GetCommitStr());
+}
+
+std::string RdbStoreImpl::GetBatchInsertSql(std::map<std::string, ValueObject> &valuesMap, const std::string &table)
+{
+    std::stringstream sql;
+    sql << "INSERT INTO " << table << '(';
+    for (auto valueIter = valuesMap.begin(); valueIter != valuesMap.end(); valueIter++) {
+        sql << ((valueIter == valuesMap.begin()) ? "" : ",");
+        sql << valueIter->first; // columnName
+    }
+    sql << ") VALUES (";
+    for (size_t i = 0; i < valuesMap.size(); i++) {
+        sql << ((i == 0) ? "?" : ",?");
+    }
+    sql << ')';
+    return sql.str();
 }
 
 int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)
@@ -651,7 +703,6 @@ int RdbStoreImpl::SetVersion(int version)
     std::string sql = std::string(GlobalExpr::PRAGMA_VERSION) + " = " + std::to_string(version);
     return ExecuteSql(sql, std::vector<ValueObject>());
 }
-
 /**
  * Begins a transaction in EXCLUSIVE mode.
  */
@@ -660,7 +711,7 @@ int RdbStoreImpl::BeginTransaction()
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     BaseTransaction transaction(connectionPool->getTransactionStack().size());
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
-    int errCode = connection->ExecuteSql(transaction.getTransactionStr());
+    int errCode = connection->ExecuteSql(transaction.GetTransactionStr());
     connectionPool->ReleaseConnection(connection);
     if (errCode != E_OK) {
         LOG_DEBUG("storeSession BeginTransaction Failed");
@@ -683,12 +734,11 @@ int RdbStoreImpl::RollBack()
     }
     BaseTransaction transaction = connectionPool->getTransactionStack().top();
     connectionPool->getTransactionStack().pop();
-    if (transaction.getType() != TransType::ROLLBACK_SELF
-        && !connectionPool->getTransactionStack().empty()) {
-        connectionPool->getTransactionStack().top().setChildFailure(true);
+    if (transaction.GetType() != TransType::ROLLBACK_SELF && !connectionPool->getTransactionStack().empty()) {
+        connectionPool->getTransactionStack().top().SetChildFailure(true);
     }
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
-    int errCode = connection->ExecuteSql(transaction.getRollbackStr());
+    int errCode = connection->ExecuteSql(transaction.GetRollbackStr());
     connectionPool->ReleaseConnection(connection);
     if (connectionPool->getTransactionStack().empty()) {
         connection->SetInTransaction(false);
@@ -711,7 +761,7 @@ int RdbStoreImpl::Commit()
         return E_OK;
     }
     BaseTransaction transaction = connectionPool->getTransactionStack().top();
-    std::string sqlStr = transaction.getCommitStr();
+    std::string sqlStr = transaction.GetCommitStr();
     if (sqlStr.size() <= 1) {
         connectionPool->getTransactionStack().pop();
         return E_OK;
@@ -726,6 +776,19 @@ int RdbStoreImpl::Commit()
         LOG_ERROR("Commit Failed.");
     }
     return E_OK;
+}
+
+int RdbStoreImpl::FreeTransaction(SqliteConnection *connection, const std::string &sql)
+{
+    int errCode = connection->ExecuteSql(sql);
+    if (errCode == E_OK) {
+        connection->SetInTransaction(false);
+        connectionPool->ReleaseTransaction();
+    } else {
+        LOG_ERROR("%{public}s with error code %{public}d.", sql.c_str(), errCode);
+    }
+    connectionPool->ReleaseConnection(connection);
+    return errCode;
 }
 
 bool RdbStoreImpl::IsInTransaction()
@@ -749,9 +812,9 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
     std::string journalMode;
 
     bool isRead = SqliteDatabaseUtils::BeginExecuteSql(GlobalExpr::PRAGMA_JOUR_MODE_EXP);
-    SqliteConnection* connection = connectionPool->AcquireConnection(isRead);
-    int errCode = connection->ExecuteGetString(
-        journalMode, GlobalExpr::PRAGMA_JOUR_MODE_EXP, std::vector<ValueObject>());
+    SqliteConnection *connection = connectionPool->AcquireConnection(isRead);
+    int errCode =
+        connection->ExecuteGetString(journalMode, GlobalExpr::PRAGMA_JOUR_MODE_EXP, std::vector<ValueObject>());
     connectionPool->ReleaseConnection(connection);
     if (errCode != E_OK) {
         LOG_ERROR("RdbStoreImpl CheckAttach fail to get journal mode : %{public}d", errCode);
@@ -931,8 +994,7 @@ int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::s
 std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
     const std::vector<std::string> &selectionArgs)
 {
-    std::unique_ptr<ResultSet> resultSet =
-        std::make_unique<StepResultSet>(connectionPool, sql, selectionArgs);
+    std::unique_ptr<ResultSet> resultSet = std::make_unique<StepResultSet>(connectionPool, sql, selectionArgs);
     return resultSet;
 }
 
