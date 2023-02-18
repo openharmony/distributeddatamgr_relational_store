@@ -96,6 +96,9 @@ private:
     int CheckAttach(const std::string &sql);
     bool PathToRealPath(const std::string &path, std::string &realPath);
     std::string ExtractFilePath(const std::string &fileFullName);
+    int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
+    int FreeTransaction(SqliteConnection *connection, const std::string &sql);
+    std::string GetBatchInsertSql(std::map<std::string, ValueObject> &valuesMap, const std::string &table);
 
     SqliteConnectionPool *connectionPool;
     static const int MAX_IDLE_SESSION_SIZE = 5;
@@ -111,8 +114,6 @@ private:
     std::string fileType;
     std::stack<TransactionObserver *> transactionObserverStack;
     bool isEncrypt_;
-
-    int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
 };
 } // namespace OHOS::NativeRdb
 #endif

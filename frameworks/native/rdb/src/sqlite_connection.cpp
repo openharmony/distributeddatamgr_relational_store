@@ -65,7 +65,8 @@ SqliteConnection::SqliteConnection(bool isWriteConnection)
       statement(),
       stepStatement(nullptr),
       filePath(""),
-      openFlags(0)
+      openFlags(0),
+      inTransaction_(false)
 {
 }
 

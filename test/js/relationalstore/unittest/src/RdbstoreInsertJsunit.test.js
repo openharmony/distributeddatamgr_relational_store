@@ -284,6 +284,59 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
+     * @tc.name rdb insert test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0007
+     * @tc.desc rdb insert test
+     */
+    it('testRdbStoreInsert0007', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreInsert0007 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        {
+            const valueBucket = {
+                "name": "zhangsan",
+                "age": Number.MIN_SAFE_INTEGER,
+                "salary": Number.MIN_VALUE,
+                "blobType": u8,
+            }
+            await rdbStore.insert("test", valueBucket)
+        }
+
+        {
+            const valueBucket = {
+                "name": "lisi",
+                "age": Number.MAX_SAFE_INTEGER,
+                "salary": Number.MAX_VALUE,
+                "blobType": u8,
+            }
+            await rdbStore.insert("test", valueBucket)
+        }
+
+        let predicates = new data_relationalStore.RdbPredicates("test");
+        let resultSet = await rdbStore.query(predicates)
+        try {
+            console.log(TAG + "resultSet query done");
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const age = resultSet.getLong(resultSet.getColumnIndex("age"))
+            const salary = resultSet.getDouble(resultSet.getColumnIndex("salary"))
+            expect(Number.MIN_SAFE_INTEGER).assertEqual(age)
+            expect(Number.MIN_VALUE).assertEqual(salary)
+
+            expect(true).assertEqual(resultSet.goToNextRow())
+            const age_1 = resultSet.getLong(resultSet.getColumnIndex("age"))
+            const salary_1 = resultSet.getDouble(resultSet.getColumnIndex("salary"))
+            expect(Number.MAX_SAFE_INTEGER).assertEqual(age_1)
+            expect(Number.MAX_VALUE).assertEqual(salary_1)
+            resultSet.close()
+            done()
+        } catch (e) {
+            expect(null).assertFail()
+            console.log("insert error " + e);
+        }
+        resultSet = null
+        console.log(TAG + "************* testRdbStoreInsert0007 end *************");
+    })
+
+    /**
      * @tc.name rdb inserttWithConflictResolution test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0001
      * @tc.desc rdb insertWithConflictResolution test
