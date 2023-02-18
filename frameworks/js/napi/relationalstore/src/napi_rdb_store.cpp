@@ -941,8 +941,7 @@ napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
     RDB_NAPI_ASSERT(env, rdbStoreProxy, std::make_shared<ParamError>("RdbStore", "valid"));
     int errCode = rdbStoreProxy->rdbStore_->BeginTransaction();
-    std::shared_ptr<Error> walSizeOverLimitError = std::make_shared<InnerError>(E_WAL_SIZE_OVER_LIMIT);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, walSizeOverLimitError);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     LOG_DEBUG("RdbStoreProxy::BeginTransaction end, errCode is:%{public}d", errCode);
     return nullptr;
 }

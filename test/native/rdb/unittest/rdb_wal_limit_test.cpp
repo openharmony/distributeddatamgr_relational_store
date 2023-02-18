@@ -14,9 +14,8 @@
  */
 
 #include <gtest/gtest.h>
-
-#include <string>
 #include <random>
+#include <string>
 
 #include "common.h"
 #include "logger.h"
