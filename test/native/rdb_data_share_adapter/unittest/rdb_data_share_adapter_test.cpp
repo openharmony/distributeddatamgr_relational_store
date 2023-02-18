@@ -368,3 +368,55 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_006, TestSize.Level1)
     EXPECT_EQ(blobData2, blobValue[1]);
     EXPECT_EQ(blobData3, blobValue[2]);
 }
+
+/* *
+ * @tc.name: Rdb_DataShare_Adapter_007
+ * @tc.desc: normal testcase of RdbDataShareAdapter
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_007, TestSize.Level1)
+{
+    std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT,") +
+                                 std::string("age INTEGER, salary REAL);");
+    store->ExecuteSql(createTableSql);
+
+    DataShareValuesBucket values;
+    int64_t id;
+    values.Put("name", std::string("zhangsan"));
+    values.Put("age", INT64_MIN);
+    values.Put("salary", DBL_MIN);
+    int ret1 = store->Insert(id, "test", RdbUtils::ToValuesBucket(values));
+    EXPECT_EQ(ret1, OHOS::NativeRdb::E_OK);
+    EXPECT_EQ(1, id);
+
+    values.Clear();
+    values.Put("name", std::string("lisi"));
+    values.Put("age", INT64_MAX);
+    values.Put("salary", DBL_MAX);
+    int ret2 = store->Insert(id, "test", RdbUtils::ToValuesBucket(values));
+    EXPECT_EQ(ret2, OHOS::NativeRdb::E_OK);
+    EXPECT_EQ(2, id);
+
+
+    std::string table = "test";
+    OHOS::DataShare::DataSharePredicates predicates;
+    std::vector<std::string> columns;
+    std::shared_ptr<AbsSharedResultSet> allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
+
+    allDataTypes->GoToFirstRow();
+    int64_t int64Value;
+    allDataTypes->GetLong(2, int64Value);
+    EXPECT_EQ(int64Value, INT64_MIN);
+
+    double doubleVal;
+    allDataTypes->GetDouble(3, doubleVal);
+    EXPECT_EQ(doubleVal, DBL_MIN);
+
+    allDataTypes->GoToNextRow();
+
+    allDataTypes->GetLong(2, int64Value);
+    EXPECT_EQ(int64Value, INT64_MAX);
+
+    allDataTypes->GetDouble(3, doubleVal);
+    EXPECT_EQ(doubleVal, DBL_MAX);
+}
