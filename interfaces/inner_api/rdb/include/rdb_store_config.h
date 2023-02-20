@@ -117,7 +117,7 @@ static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
 /**
  * @brief The constant indicates the database default journal size.
  */
-static constexpr int DB_JOURNAL_SIZE = 1048576; /* default file size : 1M */
+static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
 
 /**
  * @brief The constant indicates the database default journal mode.

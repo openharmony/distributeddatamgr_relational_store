@@ -941,7 +941,7 @@ napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
     RDB_NAPI_ASSERT(env, rdbStoreProxy, std::make_shared<ParamError>("RdbStore", "valid"));
     int errCode = rdbStoreProxy->rdbStore_->BeginTransaction();
-    NAPI_ASSERT(env, errCode == E_OK, "call BeginTransaction failed");
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     LOG_DEBUG("RdbStoreProxy::BeginTransaction end, errCode is:%{public}d", errCode);
     return nullptr;
 }
