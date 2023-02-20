@@ -67,7 +67,7 @@ class RdbSecurityManager {
 public:
     enum class KeyFileType { PUB_KEY_FILE = 1, PUB_KEY_BAK_FILE };
 
-    RdbPassword GetRdbPassword(KeyFileType keyFile, bool &outdated);
+    RdbPassword GetRdbPassword(KeyFileType keyFile);
     void DelRdbSecretDataFile(const std::string &path);
     bool CheckKeyDataFileExists(RdbSecurityManager::KeyFileType keyFile);
     bool SaveSecretKeyToFile(RdbSecurityManager::KeyFileType keyFile, const std::vector<uint8_t> &key);
