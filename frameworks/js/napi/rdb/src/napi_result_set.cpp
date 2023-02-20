@@ -38,15 +38,6 @@ static const int E_OK = 0;
 static const int E_VERSION9 = 9;
 static const int E_VERSION8 = 8;
 
-void SetGlobalNamedPropertyResultSet(napi_env env, const char *name, napi_value constructor)
-{
-    napi_value global = nullptr;
-    napi_status status = napi_get_global(env, &global);
-    NAPI_ASSERT_RETURN_VOID(env, status == napi_ok, "ResultSetProxy get napi global failed");
-    status = napi_set_named_property(env, global, name, constructor);
-    NAPI_ASSERT_RETURN_VOID(env, status == napi_ok, "ResultSetProxy set ResultSet Constructor failed");
-}
-
 int GetVersion(const napi_env &env)
 {
     napi_value self = nullptr;
@@ -172,12 +163,6 @@ napi_value ResultSetProxy::GetConstructor(napi_env env)
         DECLARE_NAPI_GETTER("isAtFirstRow", IsAtFirstRow),
         DECLARE_NAPI_GETTER("isAtLastRow", IsAtLastRow),
     };
-
-    NAPI_CALL(env, napi_define_class(env, "ResultSetV9", NAPI_AUTO_LENGTH, Initialize, nullptr,
-                       sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
-    NAPI_CALL(env, napi_create_reference(env, cons, 1, &ctorRef_));
-
-    SetGlobalNamedPropertyResultSet(env, "ResultSetConstructorV9", cons);
 
     NAPI_CALL(env, napi_define_class(env, "ResultSet", NAPI_AUTO_LENGTH, Initialize, nullptr,
                        sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));

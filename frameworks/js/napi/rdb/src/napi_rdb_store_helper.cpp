@@ -525,8 +525,6 @@ napi_value InitRdbHelper(napi_env env, napi_value exports)
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("getRdbStore", GetRdbStore),
         DECLARE_NAPI_FUNCTION("deleteRdbStore", DeleteRdbStore),
-        DECLARE_NAPI_FUNCTION("getRdbStoreV9", GetRdbStoreV9),
-        DECLARE_NAPI_FUNCTION("deleteRdbStoreV9", DeleteRdbStoreV9),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
     return exports;
