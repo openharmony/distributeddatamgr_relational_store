@@ -49,6 +49,7 @@ public:
     int EndStepQuery();
     void SetInTransaction(bool transaction);
     bool IsInTransaction();
+    int LimitWalSize();
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
 #endif

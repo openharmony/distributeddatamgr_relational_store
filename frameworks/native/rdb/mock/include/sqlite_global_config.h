@@ -28,7 +28,8 @@ public:
    static constexpr int SOFT_HEAP_LIMIT = 8 * 1024 * 1024; /* 8MB */
    static constexpr int CONNECTION_POOL_SIZE = 4;
    static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
-   static constexpr int DB_JOURNAL_SIZE = 1048576; /* default file size : 1M */
+   static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
+   static constexpr int DB_WAL_SIZE_LIMIT = 200 * 1024 * 1024; /* default wal file maximum size : 200M */
    static constexpr int WAL_AUTO_CHECKPOINT = 100;  /* 100 pages */
    static constexpr int APP_DEFAULT_UMASK = 0002;
    static constexpr char ATTACH_BACKUP_SQL[] = "ATTACH ? AS backup KEY ?";
