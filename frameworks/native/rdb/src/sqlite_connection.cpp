@@ -737,23 +737,18 @@ int SqliteConnection::ManageKey(const SqliteConfig &config)
     bool isKeyFileExists =
         RdbSecurityManager::GetInstance().CheckKeyDataFileExists(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
     if (!isKeyFileExists) {
-        LOG_INFO("ManageKey Init");
-        return InitKey();
-    } else {
-        return GetKeyFromFile();
+        if (InitKey() != E_OK) {
+            return E_ERROR;
+        }
     }
 
-    return E_OK;
+    return GetKeyFromFile();
 }
 
 int SqliteConnection::InitKey()
 {
     LOG_INFO("Init pub_key file");
     std::vector<uint8_t> key = RdbSecurityManager::GetInstance().GenerateRandomNum(RdbSecurityManager::RDB_KEY_SIZE);
-    if (SetEncryptKey(key) != E_OK) {
-        LOG_ERROR("Init key SetEncryptKey failed!");
-        return E_ERROR;
-    }
     if (!RdbSecurityManager::GetInstance().SaveSecretKeyToFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, key)) {
         LOG_ERROR("Init key SaveSecretKeyToFile failed!");
         key.assign(key.size(), 0);
@@ -766,23 +761,16 @@ int SqliteConnection::InitKey()
 int SqliteConnection::GetKeyFromFile()
 {
     LOG_INFO("Get key from pub_key file");
-    bool outdated = false;
-    RdbPassword key =
-        RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, outdated);
+    RdbPassword key = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
     if (key.GetSize() == 0) {
         return E_ERROR;
     }
     auto keyTemp = std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize());
     if (SetEncryptKey(keyTemp) != E_OK) {
         keyTemp.assign(keyTemp.size(), 0);
-        LOG_ERROR("Invalid key file!");
         return E_ERROR;
     }
-    if (outdated) {
-        keyTemp.assign(keyTemp.size(), 0);
-        LOG_ERROR("The key has expired");
-        return E_OK;
-    }
+
     keyTemp.assign(keyTemp.size(), 0);
     return E_OK;
 }

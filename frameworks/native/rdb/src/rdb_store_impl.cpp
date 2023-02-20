@@ -1004,12 +1004,11 @@ bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isEncrypt_) {
         bool status = false;
-        RdbSecurityManager::GetInstance().GetKeyDistributedStatus(
-            RdbSecurityManager::KeyFileType::PUB_KEY_FILE, status);
+        RdbSecurityManager::GetInstance().GetKeyDistributedStatus(RdbSecurityManager::KeyFileType::PUB_KEY_FILE,
+            status);
         if (!status) {
-            bool outdated;
-            RdbPassword key = RdbSecurityManager::GetInstance().GetRdbPassword(
-                RdbSecurityManager::KeyFileType::PUB_KEY_FILE, outdated);
+            RdbPassword key =
+                RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
             syncerParam_.password_ = std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize());
         }
     }
