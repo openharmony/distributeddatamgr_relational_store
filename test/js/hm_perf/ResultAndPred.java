@@ -3,17 +3,11 @@ package com.example.myapplication;
 import com.example.myapplication.slice.MainAbilitySlice;
 import ohos.aafwk.ability.Ability;
 import ohos.aafwk.content.Intent;
-import ohos.app.Context;
-import ohos.app.dispatcher.TaskDispatcher;
-import ohos.app.dispatcher.task.TaskPriority;
 import ohos.data.DatabaseHelper;
-import ohos.data.preferences.Preferences;
 import ohos.data.rdb.*;
 import ohos.data.resultset.ResultSet;
 import ohos.hiviewdfx.HiLog;
 import ohos.hiviewdfx.HiLogLabel;
-
-import java.util.function.Predicate;
 
 public class MainAbility extends Ability {
     private static final HiLogLabel LABEL = new HiLogLabel(HiLog.LOG_APP, 0x00201, "Test-RDB");
@@ -52,6 +46,7 @@ public class MainAbility extends Ability {
         long etime = System.nanoTime();
         long time = 0;
 
+        HiLog.info(LABEL, "***************** ResultSet Test Begin *****************" );
         // getColumnIndexForName
         createTable(num, store);
         RdbPredicates predicates = new RdbPredicates("test");
@@ -289,8 +284,14 @@ public class MainAbility extends Ability {
         deleteTable(store);
         HiLog.info(LABEL, "rdbTest close averageTime : " + (float)(time) / 1000 / num);
 
+        store = null;
+        helper.deleteRdbStore(dbName);
+
+        HiLog.info(LABEL, "***************** ResultSet Test end *****************" );
+
+        HiLog.info(LABEL, "***************** ResultSet RdbPredicates Begin *****************" );
+
         // equalTo
-        createTable(num, store);
         stime = System.nanoTime();
         for (int i = 0; i < 200; i++){
             RdbPredicates predicates1 = new RdbPredicates("test");
@@ -446,6 +447,188 @@ public class MainAbility extends Ability {
         time = etime - stime;
         HiLog.info(LABEL, "rdbTest glob averageTime : " + (float)(time) / 1000 / num);
 
-        store = null;
-        helper.deleteRdbStore(dbName);
+        // between
+        stime = System.nanoTime();
+        for (int i = 0; i < 200; i++){
+            RdbPredicates predicates1 = new RdbPredicates("test");
+            for (int j = 0; j < 10; j++) {
+                predicates1.between("age", 1, 100);
+            }
+        }
+        etime = System.nanoTime();
+        time = etime - stime;
+        HiLog.info(LABEL, "rdbTest between averageTime : " + (float)(time) / 1000 / num);
+
+        // notBetween
+        stime = System.nanoTime();
+        for (int i = 0; i < 200; i++){
+            RdbPredicates predicates1 = new RdbPredicates("test");
+            for (int j = 0; j < 10; j++) {
+                predicates1.notBetween("age", 1, 100);
+            }
+        }
+        etime = System.nanoTime();
+        time = etime - stime;
+        HiLog.info(LABEL, "rdbTest notBetween averageTime : " + (float)(time) / 1000 / num);
+
+        // greaterThan
+        stime = System.nanoTime();
+        for (int i = 0; i < 200; i++){
+            RdbPredicates predicates1 = new RdbPredicates("test");
+            for (int j = 0; j < 10; j++) {
+                predicates1.greaterThan("age", 1);
+            }
+        }
+        etime = System.nanoTime();
+        time = etime - stime;
+        HiLog.info(LABEL, "rdbTest greaterThan averageTime : " + (float)(time) / 1000 / num);
+
+        // lessThan
+        stime = System.nanoTime();
+        for (int i = 0; i < 200; i++){
+            RdbPredicates predicates1 = new RdbPredicates("test");
+            for (int j = 0; j < 10; j++) {
+                predicates1.lessThan("age", 1000);
+            }
+        }
+        etime = System.nanoTime();
+        time = etime - stime;
+        HiLog.info(LABEL, "rdbTest lessThan averageTime : " + (float)(time) / 1000 / num);
+
+        // greaterThanOrEqualTo
+        stime = System.nanoTime();
+        for (int i = 0; i < 200; i++){
+            RdbPredicates predicates1 = new RdbPredicates("test");
+            for (int j = 0; j < 10; j++) {
+                predicates1.greaterThanOrEqualTo("age", 1000);
+            }
+        }
+        etime = System.nanoTime();
+        time = etime - stime;
+        HiLog.info(LABEL, "rdbTest greaterThanOrEqualTo averageTime : " + (float)(time) / 1000 / num);
+
+        // lessThanOrEqualTo
+        stime = System.nanoTime();
+        for (int i = 0; i < 200; i++){
+            RdbPredicates predicates1 = new RdbPredicates("test");
+            for (int j = 0; j < 10; j++) {
+                predicates1.lessThanOrEqualTo("age", 1000);
+            }
+        }
+        etime = System.nanoTime();
+        time = etime - stime;
+        HiLog.info(LABEL, "rdbTest lessThanOrEqualTo averageTime : " + (float)(time) / 1000 / num);
+
+        // orderByAsc
+        stime = System.nanoTime();
+        for (int i = 0; i < 200; i++){
+            RdbPredicates predicates1 = new RdbPredicates("test");
+            for (int j = 0; j < 10; j++) {
+                predicates1.orderByAsc("name");
+            }
+        }
+        etime = System.nanoTime();
+        time = etime - stime;
+        HiLog.info(LABEL, "rdbTest orderByAsc averageTime : " + (float)(time) / 1000 / num);
+
+        // orderByDesc
+        stime = System.nanoTime();
+        for (int i = 0; i < 200; i++){
+            RdbPredicates predicates1 = new RdbPredicates("test");
+            for (int j = 0; j < 10; j++) {
+                predicates1.orderByDesc("name");
+            }
+        }
+        etime = System.nanoTime();
+        time = etime - stime;
+        HiLog.info(LABEL, "rdbTest orderByDesc averageTime : " + (float)(time) / 1000 / num);
+
+        // distinct
+        stime = System.nanoTime();
+        for (int i = 0; i < 200; i++){
+            RdbPredicates predicates1 = new RdbPredicates("test");
+            for (int j = 0; j < 10; j++) {
+                predicates1.distinct();
+            }
+        }
+        etime = System.nanoTime();
+        time = etime - stime;
+        HiLog.info(LABEL, "rdbTest distinct averageTime : " + (float)(time) / 1000 / num);
+
+        // limit
+        stime = System.nanoTime();
+        for (int i = 0; i < 200; i++){
+            RdbPredicates predicates1 = new RdbPredicates("test");
+            for (int j = 0; j < 10; j++) {
+                predicates1.limit(6);
+            }
+        }
+        etime = System.nanoTime();
+        time = etime - stime;
+        HiLog.info(LABEL, "rdbTest limit averageTime : " + (float)(time) / 1000 / num);
+
+        // offset
+        stime = System.nanoTime();
+        for (int i = 0; i < 200; i++){
+            RdbPredicates predicates1 = new RdbPredicates("test");
+            for (int j = 0; j < 10; j++) {
+                predicates1.offset(6);
+            }
+        }
+        etime = System.nanoTime();
+        time = etime - stime;
+        HiLog.info(LABEL, "rdbTest offset averageTime : " + (float)(time) / 1000 / num);
+
+        // groupBy
+        stime = System.nanoTime();
+        String[] strs = { "id", "name"};
+        for (int i = 0; i < 200; i++){
+            RdbPredicates predicates1 = new RdbPredicates("test");
+            for (int j = 0; j < 10; j++) {
+                predicates1.groupBy(strs);
+            }
+        }
+        etime = System.nanoTime();
+        time = etime - stime;
+        HiLog.info(LABEL, "rdbTest groupBy averageTime : " + (float)(time) / 1000 / num);
+
+        // indexedBy
+        stime = System.nanoTime();
+        for (int i = 0; i < 200; i++){
+            RdbPredicates predicates1 = new RdbPredicates("test");
+            for (int j = 0; j < 10; j++) {
+                predicates1.indexedBy("name");
+            }
+        }
+        etime = System.nanoTime();
+        time = etime - stime;
+        HiLog.info(LABEL, "rdbTest indexedBy averageTime : " + (float)(time) / 1000 / num);
+
+        // in
+        stime = System.nanoTime();
+        for (int i = 0; i < 200; i++){
+            RdbPredicates predicates1 = new RdbPredicates("test");
+            for (int j = 0; j < 10; j++) {
+                predicates1.in("name", strs);
+            }
+        }
+        etime = System.nanoTime();
+        time = etime - stime;
+        HiLog.info(LABEL, "rdbTest in averageTime : " + (float)(time) / 1000 / num);
+
+        // notIn
+        stime = System.nanoTime();
+        String[] str1 = { "zhangsan", "lisi" };
+        for (int i = 0; i < 200; i++){
+            RdbPredicates predicates1 = new RdbPredicates("test");
+            for (int j = 0; j < 10; j++) {
+                predicates1.notIn("name", str1);
+            }
+        }
+        etime = System.nanoTime();
+        time = etime - stime;
+        HiLog.info(LABEL, "rdbTest notIn averageTime : " + (float)(time) / 1000 / num);
+
+        HiLog.info(LABEL, "***************** ResultSet RdbPredicates End *****************" );
+    }
 }
