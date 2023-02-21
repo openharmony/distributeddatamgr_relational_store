@@ -46,11 +46,12 @@ ohos_shared_library("native_dataability") {
   external_deps = [
     "c_utils:utils",
     "hilog_native:libhilog",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "relational_store:native_rdb",
   ]
 
   public_configs = [ ":native_dataability_public_config" ]
 
+  innerapi_tags = [ "platformsdk" ]
   subsystem_name = "distributeddatamgr"
 }
