@@ -138,6 +138,7 @@ export default function predicatesPerf() {
             for (let i=0; i<200; i++) {
                 let predicates = new dataRdb.RdbPredicates("test");
                 for (let j=0; j<10; j++) {
+                    predicates.equalTo("name", "lisi");
                     predicates.endWrap();
                 }
             }
@@ -153,7 +154,9 @@ export default function predicatesPerf() {
             for (let i=0; i<200; i++) {
                 let predicates = new dataRdb.RdbPredicates("test");
                 for (let j=0; j<10; j++) {
-                    predicates.or();
+                    predicates.equalTo("name", "lisi");
+                        predicates.or();
+                            predicates.equalTo("age", 18);
                 }
             }
             let endTime = new Date().getTime();
@@ -168,7 +171,9 @@ export default function predicatesPerf() {
             for (let i=0; i<200; i++) {
                 let predicates = new dataRdb.RdbPredicates("test");
                 for (let j=0; j<10; j++) {
+                    predicates.equalTo("name", "lisi");
                     predicates.and();
+                    predicates.equalTo("name", "zs");
                 }
             }
             let endTime = new Date().getTime();
@@ -421,11 +426,9 @@ export default function predicatesPerf() {
 
         it('SUB_DDM_PERF_RDB_Predicates_limitAs_001', 0, async function (done) {
             let startTime = new Date().getTime()
-            for (let i=0; i<200; i++) {
+            for (let i=0; i<base_count; i++) {
                 let predicates = new dataRdb.RdbPredicates("test");
-                for (let j=0; j<10; j++) {
-                    predicates.limitAs(6);
-                }
+                predicates.limitAs(6);
             }
             let endTime = new Date().getTime();
             let averageTime = ((endTime - startTime) * 1000) / base_count
@@ -436,11 +439,9 @@ export default function predicatesPerf() {
 
         it('SUB_DDM_PERF_RDB_Predicates_offsetAs_001', 0, async function (done) {
             let startTime = new Date().getTime()
-            for (let i=0; i<200; i++) {
+            for (let i=0; i<base_count; i++) {
                 let predicates = new dataRdb.RdbPredicates("test");
-                for (let j=0; j<10; j++) {
-                    predicates.offsetAs(6);
-                }
+                predicates.offsetAs(6);
             }
             let endTime = new Date().getTime();
             let averageTime = ((endTime - startTime) * 1000) / base_count
