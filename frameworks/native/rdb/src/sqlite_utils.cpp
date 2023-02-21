@@ -20,14 +20,13 @@
 #include <cstdio>
 #include <sys/stat.h>
 #include <sys/types.h>
-
+#include <unistd.h>
 
 #include "logger.h"
 #include "rdb_errno.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_store_config.h"
-#include <unistd.h>
 #endif
 
 namespace OHOS {
