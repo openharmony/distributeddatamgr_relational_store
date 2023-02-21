@@ -520,7 +520,7 @@ bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSe
     return true;
 }
 
-RdbPassword RdbSecurityManager::GetRdbPassword(KeyFileType keyFile, bool &outdated)
+RdbPassword RdbSecurityManager::GetRdbPassword(KeyFileType keyFile)
 {
     LOG_INFO("GetRdbPassword Begin.");
     std::string keyPath;
@@ -533,8 +533,6 @@ RdbPassword RdbSecurityManager::GetRdbPassword(KeyFileType keyFile, bool &outdat
     if (!LoadSecretKeyFromDisk(keyPath, keyData)) {
         return {};
     }
-
-    outdated = IsKeyOutOfdate(keyData.timeValue);
     std::vector<uint8_t> key;
     if (!DecryptWorkKey(keyData.secretKey, key)) {
         LOG_ERROR("GetRdbPassword failed!");
