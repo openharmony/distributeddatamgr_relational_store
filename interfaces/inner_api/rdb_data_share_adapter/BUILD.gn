@@ -53,4 +53,6 @@ ohos_shared_library("rdb_data_share_adapter") {
   ]
 
   public_configs = [ ":rdb_data_share_adapter_public_config" ]
+
+  innerapi_tags = [ "platformsdk" ]
 }
