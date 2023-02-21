@@ -394,16 +394,17 @@ int AbsSharedResultSet::CheckState(int columnIndex)
         LOG_ERROR("AbsSharedResultSet::CheckState sharedBlock is null!");
         return E_ERROR;
     }
-    int cnt = 0;
-    GetColumnCount(cnt);
-    if (columnIndex >= cnt || columnIndex < 0) {
-        return E_INVALID_COLUMN_INDEX;
-    }
-    int rowCnt = 0;
-    GetRowCount(rowCnt);
-    if (rowPos_ < 0 || rowPos_ >= rowCnt) {
+    int count = 0;
+    GetRowCount(count);
+    if (rowPos_ < 0 || rowPos_ >= count) {
         return E_INVALID_STATEMENT;
     }
+    
+    GetColumnCount(count);
+    if (columnIndex >= count || columnIndex < 0) {
+        return E_INVALID_COLUMN_INDEX;
+    }
+
     return E_OK;
 }
 
