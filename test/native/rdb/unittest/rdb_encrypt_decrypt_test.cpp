@@ -290,9 +290,7 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_07, TestSize.Level1)
     int errCode;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
-    bool outdated;
-    auto key = RdbSecurityManager::GetInstance().GetRdbPassword(
-        RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE, outdated);
+    auto key = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE);
     RdbPassword password = {};
     EXPECT_EQ(key, password);
 }
