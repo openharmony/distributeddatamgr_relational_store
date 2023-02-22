@@ -51,6 +51,7 @@ public class MainAbility extends Ability {
         createTable(num, store);
         RdbPredicates predicates = new RdbPredicates("test");
         ResultSet resultSet = store.query(predicates, null);
+        resultSet.goToFirstRow();
         stime = System.nanoTime();
         for (int i = 0; i < num; i++){
             resultSet.getColumnIndexForName("id");
@@ -67,6 +68,7 @@ public class MainAbility extends Ability {
         createTable(num, store);
         predicates = new RdbPredicates("test");
         resultSet = store.query(predicates, null);
+        resultSet.goToFirstRow();
         stime = System.nanoTime();
         for (int i = 0; i < num; i++){
             resultSet.getColumnNameForIndex(0);
@@ -201,7 +203,7 @@ public class MainAbility extends Ability {
         index = resultSet.getColumnIndexForName("name");
         resultSet.goToFirstRow();
         stime = System.nanoTime();
-        for (int i = 0; i < num; i++){
+        for (int i = 0; i < 12000; i++){
             resultSet.getString(index);
         }
         etime = System.nanoTime();
@@ -210,7 +212,7 @@ public class MainAbility extends Ability {
         resultSet = null;
         time = etime - stime;
         deleteTable(store);
-        HiLog.info(LABEL, "rdbTest getString averageTime : " + (float)(time) / 1000 / num);
+        HiLog.info(LABEL, "rdbTest getString averageTime : " + (float)(time) / 1000 / 12000);
 
         // getLong
         createTable(num, store);
@@ -270,7 +272,6 @@ public class MainAbility extends Ability {
         createTable(num, store);
         predicates = new RdbPredicates("test");
         resultSet = store.query(predicates, null);
-        index = resultSet.getColumnIndexForName("salary");
         resultSet.goToFirstRow();
         stime = System.nanoTime();
         for (int i = 0; i < num; i++) {
@@ -332,6 +333,7 @@ public class MainAbility extends Ability {
         for (int i = 0; i < 200; i++) {
             RdbPredicates predicates1 = new RdbPredicates("test");
             for (int j = 0; j < 10; j++) {
+                predicates1.equalTo("name", "lisi");
                 predicates1.endWrap();
             }
         }
@@ -344,7 +346,9 @@ public class MainAbility extends Ability {
         for (int i = 0; i < 200; i++){
             RdbPredicates predicates1 = new RdbPredicates("test");
             for (int j = 0; j < 10; j++) {
+                predicates1.equalTo("name", "lisi");
                 predicates1.or();
+                predicates1.equalTo("age", 18);
             }
         }
         etime = System.nanoTime();
@@ -356,7 +360,9 @@ public class MainAbility extends Ability {
         for (int i = 0; i < 200; i++){
             RdbPredicates predicates1 = new RdbPredicates("test");
             for (int j = 0; j < 10; j++) {
+                predicates1.equalTo("name", "lisi");
                 predicates1.and();
+                predicates1.equalTo("name", "zs");
             }
         }
         etime = System.nanoTime();
@@ -557,11 +563,9 @@ public class MainAbility extends Ability {
 
         // limit
         stime = System.nanoTime();
-        for (int i = 0; i < 200; i++){
+        for (int i = 0; i < num; i++){
             RdbPredicates predicates1 = new RdbPredicates("test");
-            for (int j = 0; j < 10; j++) {
-                predicates1.limit(6);
-            }
+            predicates1.limit(6);
         }
         etime = System.nanoTime();
         time = etime - stime;
@@ -569,11 +573,9 @@ public class MainAbility extends Ability {
 
         // offset
         stime = System.nanoTime();
-        for (int i = 0; i < 200; i++){
+        for (int i = 0; i < num; i++){
             RdbPredicates predicates1 = new RdbPredicates("test");
-            for (int j = 0; j < 10; j++) {
-                predicates1.offset(6);
-            }
+            predicates1.offset(6);
         }
         etime = System.nanoTime();
         time = etime - stime;
