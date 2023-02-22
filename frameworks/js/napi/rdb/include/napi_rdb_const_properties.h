@@ -22,6 +22,6 @@
 #include "rdb_visibility.h"
 
 namespace OHOS::RdbJsKit {
-napi_status API_EXPORT InitConstProperties(napi_env env, napi_value exports);
+API_EXPORT napi_status InitConstProperties(napi_env env, napi_value exports);
 }
 #endif
