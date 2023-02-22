@@ -189,7 +189,7 @@ export default function resultSetPerf() {
             done()
         })
 
-        it('SUB_DDM_PERF_RDB_ResultSet_GoToNextRow_001', 0, async function (done) {
+        it('SUB_DDM_PERF_RDB_ResultSet_GoToPreviousRow_001', 0, async function (done) {
             let predicates = new dataRdb.RdbPredicates("test");
             let resultSet = await rdbStore.query(predicates);
             resultSet.goToLastRow();
@@ -199,7 +199,7 @@ export default function resultSetPerf() {
             }
             let endTime = new Date().getTime();
             let averageTime = ((endTime - startTime) * 1000) / base_count
-            console.info(TAG + " the ResultSet_GoToNextRow average time is: " + averageTime + " μs")
+            console.info(TAG + " the ResultSet_GoToPreviousRow average time is: " + averageTime + " μs")
             resultSet.close();
             expect(averageTime < baseLineCallback).assertTrue()
             done()
@@ -298,7 +298,7 @@ export default function resultSetPerf() {
             resultSet.goToFirstRow();
             let startTime = new Date().getTime()
             for (let index=0; index<base_count; index++) {
-                resultSet.IsColumnNull(columnIndex);
+                resultSet.isColumnNull(columnIndex);
             }
             let endTime = new Date().getTime();
             let averageTime = ((endTime - startTime) * 1000) / base_count
