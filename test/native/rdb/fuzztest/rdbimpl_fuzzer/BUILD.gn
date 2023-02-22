@@ -54,6 +54,7 @@ ohos_fuzztest("RdbImplFuzzTest") {
 
   deps = [
     "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb:distributeddb",
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb_static",
     "//third_party/jsoncpp:jsoncpp",
   ]
 
@@ -61,7 +62,6 @@ ohos_fuzztest("RdbImplFuzzTest") {
     "c_utils:utils",
     "hilog_native:libhilog",
     "ipc:ipc_core",
-    "relational_store:native_rdb",
   ]
 }
 

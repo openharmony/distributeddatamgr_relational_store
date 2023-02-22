@@ -34,6 +34,8 @@ ohos_shared_library("napi_rdb") {
     "src/napi_values_bucket.cpp",
   ]
 
+  cflags_cc = [ "-fvisibility=hidden" ]
+
   if (is_mingw || is_mac) {
     include_dirs = [
       "mock/include",
@@ -43,7 +45,7 @@ ohos_shared_library("napi_rdb") {
       "include",
       "${relational_store_js_common_path}/include",
     ]
-    cflags_cc = [
+    cflags_cc += [
       "-std=c++17",
       "-stdlib=libc++",
     ]

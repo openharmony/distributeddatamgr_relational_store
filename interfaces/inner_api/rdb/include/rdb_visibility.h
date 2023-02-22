@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef NAPI_RDB_CONST_PROPERTIES_H
-#define NAPI_RDB_CONST_PROPERTIES_H
+#ifndef NATIVE_RDB_RDB_VISIBILITY_H
+#define NATIVE_RDB_RDB_VISIBILITY_H
 
-#include "napi/native_common.h"
-#include "napi/native_api.h"
-#include "napi/native_node_api.h"
-#include "rdb_visibility.h"
-
-namespace OHOS::RdbJsKit {
-napi_status API_EXPORT InitConstProperties(napi_env env, napi_value exports);
-}
+#ifndef API_EXPORT
+#define API_EXPORT __attribute__((visibility ("default")))
 #endif
+
+#ifndef API_LOCAL
+#define API_LOCAL __attribute__((visibility ("hidden")))
+#endif
+
+#endif // OHOS_DISTRIBUTED_DATA_FRAMEWORKS_COMMON_VISIBILITY_H

@@ -26,16 +26,16 @@
 
 namespace OHOS {
 namespace RdbJsKit {
-class RdbPredicatesProxy {
+class API_EXPORT RdbPredicatesProxy {
 public:
-    static void Init(napi_env env, napi_value exports);
-    static napi_value NewInstance(
+    API_EXPORT static void Init(napi_env env, napi_value exports);
+    API_EXPORT static napi_value NewInstance(
         napi_env env, std::shared_ptr<NativeRdb::RdbPredicates> value, int version = AppDataMgrJsKit::APIVERSION_8);
-    static void Destructor(napi_env env, void *nativeObject, void *finalize_hint);
+    API_EXPORT static void Destructor(napi_env env, void *nativeObject, void *finalize_hint);
 
-    explicit RdbPredicatesProxy(std::string &tableName);
-    std::shared_ptr<NativeRdb::RdbPredicates> GetPredicates() const;
-    int apiversion = AppDataMgrJsKit::APIVERSION_8;
+    API_EXPORT explicit RdbPredicatesProxy(std::string &tableName);
+    API_EXPORT std::shared_ptr<NativeRdb::RdbPredicates> GetPredicates() const;
+    API_EXPORT int apiversion = AppDataMgrJsKit::APIVERSION_8;
 
 private:
     ~RdbPredicatesProxy();

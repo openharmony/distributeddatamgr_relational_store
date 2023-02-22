@@ -51,11 +51,11 @@ ohos_unittest("RdbDataShareAdapterTest") {
   external_deps = [
     "c_utils:utils",
     "hilog_native:libhilog",
-    "relational_store:native_rdb",
-    "relational_store:rdb_data_share_adapter",
   ]
 
   deps = [
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb_static",
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_share_adapter:rdb_data_share_adapter_static",
     "//third_party/googletest:gtest_main",
     "//third_party/icu/icu4c:shared_icui18n",
     "//third_party/icu/icu4c:shared_icuuc",
