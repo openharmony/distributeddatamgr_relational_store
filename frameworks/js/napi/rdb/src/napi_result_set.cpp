@@ -488,7 +488,9 @@ napi_value ResultSetProxy::GetString(napi_env env, napi_callback_info info)
     std::string result;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
-    RDB_CHECK_RETURN_NULLPTR(resultSetProxy->resultSet_->GetString(columnIndex, result) == E_OK);
+    int errCode = resultSetProxy->resultSet_->GetString(columnIndex, result);
+    int version = resultSetProxy->apiversion;
+    RDB_NAPI_ASSERT_FROMV9(env, errCode == E_OK, std::make_shared<ResultGetError>(), version);
     return JSUtils::Convert2JSValue(env, result);
 }
 
