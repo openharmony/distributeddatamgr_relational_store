@@ -31,11 +31,11 @@ using InputAction = std::function<int(napi_env, size_t, napi_value *, napi_value
 using OutputAction = std::function<int(napi_env, napi_value &)>;
 using ExecuteAction = std::function<int()>;
 
-class BaseContext {
+class API_EXPORT BaseContext {
 public:
-    void SetAction(napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output);
-    void SetError(std::shared_ptr<Error> error);
-    virtual ~BaseContext();
+    API_EXPORT void SetAction(napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output);
+    API_EXPORT void SetError(std::shared_ptr<Error> error);
+    API_EXPORT virtual ~BaseContext();
 
     int apiversion = APIVERSION_8;
     napi_env env_ = nullptr;
@@ -53,9 +53,9 @@ public:
     std::shared_ptr<BaseContext> keep_;
 };
 
-class AsyncCall final {
+class API_EXPORT AsyncCall final {
 public:
-    static napi_value Call(napi_env env, std::shared_ptr<BaseContext> context);
+    API_EXPORT static napi_value Call(napi_env env, std::shared_ptr<BaseContext> context);
 
 private:
     enum { ARG_ERROR, ARG_DATA, ARG_BUTT };

@@ -27,19 +27,19 @@
 
 namespace OHOS {
 namespace RdbJsKit {
-class ResultSetProxy final : public DataShare::ResultSetBridge::Creator {
+class API_EXPORT ResultSetProxy final : public DataShare::ResultSetBridge::Creator {
 public:
-    ResultSetProxy() = default;
-    ~ResultSetProxy();
-    ResultSetProxy(std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    ResultSetProxy &operator=(std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet,
+    API_EXPORT ResultSetProxy() = default;
+    API_EXPORT ~ResultSetProxy();
+    API_EXPORT ResultSetProxy(std::shared_ptr<NativeRdb::ResultSet> resultSet);
+    API_EXPORT ResultSetProxy &operator=(std::shared_ptr<NativeRdb::ResultSet> resultSet);
+    API_EXPORT static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet,
         int version = AppDataMgrJsKit::APIVERSION_8);
-    static napi_value NewInstance(
+    API_EXPORT static napi_value NewInstance(
         napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet, int version = AppDataMgrJsKit::APIVERSION_8);
-    static std::shared_ptr<NativeRdb::AbsSharedResultSet> GetNativeObject(const napi_env &env, const napi_value &arg);
-    static napi_value GetConstructor(napi_env env, int version);
-    std::shared_ptr<DataShare::ResultSetBridge> Create() override;
+    API_EXPORT static std::shared_ptr<NativeRdb::AbsSharedResultSet> GetNativeObject(const napi_env &env, const napi_value &arg);
+    API_EXPORT static napi_value GetConstructor(napi_env env, int version);
+    API_EXPORT std::shared_ptr<DataShare::ResultSetBridge> Create() override;
     int apiversion = AppDataMgrJsKit::APIVERSION_8;
 
 private:

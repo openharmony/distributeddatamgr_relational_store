@@ -34,10 +34,8 @@ ohos_fuzztest("RdbStoreFuzzTest") {
 
   sources = [ "rdbstore_fuzzer.cpp" ]
 
-  external_deps = [
-    "hilog_native:libhilog",
-    "relational_store:native_rdb",
-  ]
+  deps = [ "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb_static" ]
+  external_deps = [ "hilog_native:libhilog" ]
 }
 
 ###############################################################################

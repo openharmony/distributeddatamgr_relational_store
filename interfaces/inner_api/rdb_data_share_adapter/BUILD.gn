@@ -35,24 +35,39 @@ config("rdb_data_share_adapter_public_config") {
   ]
 }
 
+object_source_config = [
+  "${relational_store_native_path}/rdb_data_share_adapter/src/rdb_result_set_bridge.cpp",
+  "${relational_store_native_path}/rdb_data_share_adapter/src/rdb_utils.cpp",
+]
+
+object_external_deps_config = [
+  "c_utils:utils",
+  "hilog_native:libhilog",
+  "relational_store:native_rdb",
+]
+
 ohos_shared_library("rdb_data_share_adapter") {
-  sources = [
-    "${relational_store_native_path}/rdb_data_share_adapter/src/rdb_result_set_bridge.cpp",
-    "${relational_store_native_path}/rdb_data_share_adapter/src/rdb_utils.cpp",
-  ]
+  sources = object_source_config
 
   configs = [ ":rdb_data_share_adapter_config" ]
 
   subsystem_name = "distributeddatamgr"
   part_name = "relational_store"
 
-  external_deps = [
-    "c_utils:utils",
-    "hilog_native:libhilog",
-    "relational_store:native_rdb",
-  ]
+  external_deps = object_external_deps_config
 
   public_configs = [ ":rdb_data_share_adapter_public_config" ]
 
+  cflags_cc = [ "-fvisibility=hidden" ]
   innerapi_tags = [ "platformsdk" ]
+}
+
+ohos_shared_library("rdb_data_share_adapter_static") {
+  sources = object_source_config
+
+  configs = [ ":rdb_data_share_adapter_config" ]
+
+  external_deps = object_external_deps_config
+
+  public_configs = [ ":rdb_data_share_adapter_public_config" ]
 }

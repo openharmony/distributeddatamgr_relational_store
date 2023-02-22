@@ -16,6 +16,7 @@
 #define RDB_JS_NAPI_ERROR_H
 
 #include "js_logger.h"
+#include "rdb_visibility.h"
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
@@ -82,34 +83,34 @@ constexpr int E_RESULT_GOTO_ERROR = 14800012;
         }                                                \
     } while (0)
 
-class Error {
+class API_EXPORT Error {
 public:
-    virtual ~Error(){};
+    API_EXPORT virtual ~Error(){};
     virtual std::string GetMessage() = 0;
     virtual int GetCode() = 0;
 };
 
-class InnerError : public Error {
+class API_EXPORT InnerError : public Error {
 public:
-    InnerError() = default;
-    std::string GetMessage() override
+    API_EXPORT InnerError() = default;
+    API_EXPORT std::string GetMessage() override
     {
         return "System error.";
     };
-    int GetCode() override
+    API_EXPORT int GetCode() override
     {
         return E_INNER_ERROR;
     };
 };
 
-class ParamTypeError : public Error {
+class API_EXPORT ParamTypeError : public Error {
 public:
-    ParamTypeError(const std::string &name, const std::string &wantType) : name(name), wantType(wantType){};
-    std::string GetMessage() override
+    API_EXPORT ParamTypeError(const std::string &name, const std::string &wantType) : name(name), wantType(wantType){};
+    API_EXPORT std::string GetMessage() override
     {
         return "Parameter error. The type of '" + name + "' must be " + wantType;
     };
-    int GetCode() override
+    API_EXPORT int GetCode() override
     {
         return E_PARAM_ERROR;
     };
@@ -119,14 +120,14 @@ private:
     std::string wantType;
 };
 
-class ParamNumError : public Error {
+class API_EXPORT ParamNumError : public Error {
 public:
-    ParamNumError(const std::string &wantNum) : wantNum(wantNum){};
-    std::string GetMessage() override
+    API_EXPORT ParamNumError(const std::string &wantNum) : wantNum(wantNum){};
+    API_EXPORT std::string GetMessage() override
     {
         return "Parameter error. Need " + wantNum + " parameters!";
     };
-    int GetCode() override
+    API_EXPORT int GetCode() override
     {
         return E_PARAM_ERROR;
     };
@@ -135,53 +136,53 @@ private:
     std::string wantNum;
 };
 
-class DbInvalidError : public Error {
+class API_EXPORT DbInvalidError : public Error {
 public:
-    DbInvalidError() = default;
-    std::string GetMessage() override
+    API_EXPORT DbInvalidError() = default;
+    API_EXPORT std::string GetMessage() override
     {
         return "Failed open database, invalid database name.";
     };
-    int GetCode() override
+    API_EXPORT int GetCode() override
     {
         return E_DB_INVALID;
     };
 };
 
-class DbCorruptedError : public Error {
+class API_EXPORT DbCorruptedError : public Error {
 public:
-    DbCorruptedError() = default;
-    std::string GetMessage() override
+    API_EXPORT DbCorruptedError() = default;
+    API_EXPORT std::string GetMessage() override
     {
         return "Failed open database, database corrupted.";
     };
-    int GetCode() override
+    API_EXPORT int GetCode() override
     {
         return E_DB_CORRUPTED;
     };
 };
 
-class ResultGetError : public Error {
+class API_EXPORT ResultGetError : public Error {
 public:
-    ResultGetError() = default;
-    std::string GetMessage() override
+    API_EXPORT ResultGetError() = default;
+    API_EXPORT std::string GetMessage() override
     {
         return "The column value is null or the column type is incompatible.";
     };
-    int GetCode() override
+    API_EXPORT int GetCode() override
     {
         return E_RESULT_GET_ERROR;
     };
 };
 
-class ResultGotoError : public Error {
+class API_EXPORT ResultGotoError : public Error {
 public:
-    ResultGotoError() = default;
-    std::string GetMessage() override
+    API_EXPORT ResultGotoError() = default;
+    API_EXPORT std::string GetMessage() override
     {
         return "The result set is empty or the specified location is invalid.";
     };
-    int GetCode() override
+    API_EXPORT int GetCode() override
     {
         return E_RESULT_GOTO_ERROR;
     };
