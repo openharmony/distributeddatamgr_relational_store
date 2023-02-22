@@ -83,6 +83,7 @@ export default function resultSetPerf() {
         it('SUB_DDM_PERF_RDB_ResultSet_GetColumnIndex_001', 0, async function (done) {
             let predicates = new dataRdb.RdbPredicates("test");
             let resultSet = await rdbStore.query(predicates);
+            resultSet.goToFirstRow();
             let startTime = new Date().getTime()
             for (let index=0; index<base_count; index++) {
                 resultSet.getColumnIndex("id");
@@ -98,6 +99,7 @@ export default function resultSetPerf() {
         it('SUB_DDM_PERF_RDB_ResultSet_GetColumnName_001', 0, async function (done) {
             let predicates = new dataRdb.RdbPredicates("test");
             let resultSet = await rdbStore.query(predicates);
+            resultSet.goToFirstRow();
             let startTime = new Date().getTime()
             for (let index=0; index<base_count; index++) {
                 resultSet.getColumnName(0);
@@ -115,6 +117,7 @@ export default function resultSetPerf() {
             let resultSet = await rdbStore.query(predicates);
             let startTime = new Date().getTime()
             for (let index=0; index<base_count; index++) {
+//                resultSet.goTo(index);
                 resultSet.goTo(1);
             }
             let endTime = new Date().getTime();
@@ -130,6 +133,7 @@ export default function resultSetPerf() {
             let resultSet = await rdbStore.query(predicates);
             let startTime = new Date().getTime()
             for (let index=0; index<base_count; index++) {
+//                resultSet.goToRow(index);
                 resultSet.goToRow(1);
             }
             let endTime = new Date().getTime();
@@ -146,7 +150,6 @@ export default function resultSetPerf() {
             let startTime = new Date().getTime()
             for (let index=0; index<base_count; index++) {
                 resultSet.goToFirstRow();
-                console.info(TAG + " the rowCount average time is: " + resultSet.rowCount)
             }
             let endTime = new Date().getTime();
             let averageTime = ((endTime - startTime) * 1000) / base_count
@@ -223,14 +226,32 @@ export default function resultSetPerf() {
             let predicates = new dataRdb.RdbPredicates("test");
             let resultSet = await rdbStore.query(predicates);
             let columnIndex = resultSet.getColumnIndex("name");
-            resultSet.goToFirstRow();
+            let flag = resultSet.goToFirstRow();
             let startTime = new Date().getTime()
-            for (let index=0; index<base_count; index++) {
+//            while (flag == true){
+//                resultSet.getString(columnIndex);
+//                resultSet.getString(columnIndex);
+//                resultSet.getString(columnIndex);
+//                resultSet.getString(columnIndex);
+//                resultSet.getString(columnIndex);
+//                resultSet.getString(columnIndex);
+//                resultSet.getString(columnIndex);
+//                resultSet.getString(columnIndex);
+//                resultSet.getString(columnIndex);
+//                resultSet.getString(columnIndex);
+//                resultSet.getString(columnIndex);
+//                resultSet.getString(columnIndex);
+//                flag = resultSet.goToNextRow();
+//                i++;
+//            }
+            for (var i=0; i<12000; i++) {
                 resultSet.getString(columnIndex);
             }
             let endTime = new Date().getTime();
-            let averageTime = ((endTime - startTime) * 1000) / base_count
-            console.info(TAG + " the ResultSet_GetString average time is: " + averageTime + " μs")
+            let averageTotal = endTime - startTime;
+            let averageTime = ((endTime - startTime) * 1000) / 12000
+            console.info(TAG + " the ResultSet_GetString total time is: " + averageTotal + " ms" );
+            console.info(TAG + " the ResultSet_GetString average time is: " + averageTime + " μs");
             resultSet.close();
             expect(averageTime < baseLineCallback).assertTrue()
             done()
@@ -290,6 +311,7 @@ export default function resultSetPerf() {
         it('SUB_DDM_PERF_RDB_ResultSet_Close_001', 0, async function (done) {
             let predicates = new dataRdb.RdbPredicates("test");
             let resultSet = await rdbStore.query(predicates);
+            resultSet.goToFirstRow();
             let startTime = new Date().getTime()
             for (let index=0; index<base_count; index++) {
                 resultSet.close();
