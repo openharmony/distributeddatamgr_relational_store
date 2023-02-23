@@ -100,7 +100,7 @@ public:
 
     int OnCreate(OHOS::NativeRdb::RdbStore &rdbStore) override
     {
-        LOG_DEBUG("OnCreate Callback %{public}p", onCreate_);
+        LOG_DEBUG("OnCreate Callback");
         callbacks_.emplace_back([this]() -> int {
             napi_value self;
             napi_status status = napi_get_reference_value(env_, ref_, &self);
@@ -114,7 +114,6 @@ public:
                 LOG_ERROR("OnCreate get method reference failed, code:%{public}d", status);
                 return E_ERROR;
             }
-            LOG_DEBUG("OnCreate self:%{public}p, method:%{public}p", self, method);
             napi_value retValue = nullptr;
             status = napi_call_function(env_, self, method, 0, nullptr, &retValue);
             if (status != napi_ok) {
@@ -128,7 +127,7 @@ public:
 
     int OnUpgrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion) override
     {
-        LOG_DEBUG("OnUpgrade Callback %{public}p", onUpgrade_);
+        LOG_DEBUG("OnUpgrade Callback");
         callbacks_.emplace_back([this, oldVersion, newVersion]() -> int {
             napi_value self;
             napi_status status = napi_get_reference_value(env_, ref_, &self);
@@ -142,7 +141,6 @@ public:
                 LOG_ERROR("OnUpgrade get method reference failed, code:%{public}d", status);
                 return E_ERROR;
             }
-            LOG_DEBUG("OnUpgrade self:%{public}p, method:%{public}p", self, method);
             napi_value result[JSUtils::ASYNC_RST_SIZE] = { 0 };
             napi_get_undefined(env_, &result[0]);
             napi_create_object(env_, &result[1]);
@@ -164,7 +162,7 @@ public:
 
     int OnDowngrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion) override
     {
-        LOG_DEBUG("OnDowngrade Callback %{public}p", onDowngrade_);
+        LOG_DEBUG("OnDowngrade Callback");
         callbacks_.emplace_back([this, oldVersion, newVersion]() -> int {
             napi_value self;
             napi_status status = napi_get_reference_value(env_, ref_, &self);
@@ -199,7 +197,7 @@ public:
 
     int OnOpen(OHOS::NativeRdb::RdbStore &rdbStore) override
     {
-        LOG_DEBUG("OnOpen Callback %{public}p", onOpen_);
+        LOG_DEBUG("OnOpen Callback");
         callbacks_.emplace_back([this]() -> int {
             napi_value self;
             napi_status status = napi_get_reference_value(env_, ref_, &self);
@@ -213,7 +211,6 @@ public:
                 LOG_ERROR("OnOpen get method reference failed, code:%{public}d", status);
                 return E_ERROR;
             }
-            LOG_DEBUG("OnOpen self:%{public}p, method:%{public}p", self, method);
             napi_value retValue = nullptr;
             status = napi_call_function(env_, self, method, 0, nullptr, &retValue);
             if (status != napi_ok) {
