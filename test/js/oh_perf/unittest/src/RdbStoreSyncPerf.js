@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect, Assert } from '@ohos/hypium';
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect, Assert } from 'deccjsunit/index';
 import dataRdb from '@ohos.data.relationalStore';
 //import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
