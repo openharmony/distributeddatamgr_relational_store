@@ -56,7 +56,7 @@ ohos_shared_library("rdb_data_ability_adapter") {
   cflags_cc = [ "-fvisibility=hidden" ]
 }
 
-ohos_shared_library("rdb_data_ability_adapter_static") {
+ohos_static_library("rdb_data_ability_adapter_static") {
   sources = object_source_config
 
   configs = [ ":rdb_data_ability_adapter_config" ]

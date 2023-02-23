@@ -177,7 +177,7 @@ ohos_shared_library("native_rdb") {
   subsystem_name = "distributeddatamgr"
 }
 
-ohos_shared_library("native_rdb_static") {
+ohos_static_library("native_rdb_static") {
   sources = object_source_config
 
   configs = [ ":native_rdb_config" ]
