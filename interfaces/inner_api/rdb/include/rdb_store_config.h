@@ -164,8 +164,8 @@ public:
      * @param pageSize Indicates the page size of the database.
      * @param encryptAlgo Indicates the encrypt algorithm of the database.
      */
-    API_EXPORT RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
-        const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(),
+    API_EXPORT RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK,
+        bool readOnly = false, const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(),
         const std::string &journalMode = DB_DEFAULT_JOURNAL_MODE,
         const std::string &syncMode = "", const std::string &databaseFileType = "",
         SecurityLevel securityLevel = SecurityLevel::LAST, bool isCreateNecessary = true,

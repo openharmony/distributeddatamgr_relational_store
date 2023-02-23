@@ -23,7 +23,8 @@ class API_EXPORT ISharedResultSet : public AbsSharedResultSet, public IRemoteBro
 public:
     API_EXPORT DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.NativeRdb.ISharedResultSet")
     API_EXPORT static std::shared_ptr<AbsSharedResultSet> ReadFromParcel(MessageParcel &parcel);
-    API_EXPORT static sptr<ISharedResultSet> WriteToParcel(std::shared_ptr<AbsSharedResultSet> resultSet, MessageParcel &parcel);
+    API_EXPORT static sptr<ISharedResultSet> WriteToParcel(
+        std::shared_ptr<AbsSharedResultSet> resultSet, MessageParcel &parcel);
 
 protected:
     enum {

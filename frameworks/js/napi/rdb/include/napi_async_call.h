@@ -33,7 +33,8 @@ using ExecuteAction = std::function<int()>;
 
 class API_EXPORT BaseContext {
 public:
-    API_EXPORT void SetAction(napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output);
+    API_EXPORT void SetAction(
+        napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output);
     API_EXPORT void SetError(std::shared_ptr<Error> error);
     API_EXPORT virtual ~BaseContext();
 
