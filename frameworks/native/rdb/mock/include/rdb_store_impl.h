@@ -98,7 +98,8 @@ private:
     std::string ExtractFilePath(const std::string &fileFullName);
     int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
     int FreeTransaction(SqliteConnection *connection, const std::string &sql);
-    std::string GetBatchInsertSql(std::map<std::string, ValueObject> &valuesMap, const std::string &table);
+    std::pair<std::string, std::vector<ValueObject>> GetInsertParams(
+        std::map<std::string, ValueObject> &valuesMap, const std::string &table);
 
     SqliteConnectionPool *connectionPool;
     static const int MAX_IDLE_SESSION_SIZE = 5;

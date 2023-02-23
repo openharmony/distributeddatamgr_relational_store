@@ -142,25 +142,22 @@ int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const Valu
 int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
     const std::vector<ValuesBucket> &initialBatchValues)
 {
-    std::string sql;
-    std::map<std::string, ValueObject> valuesMap;
-    std::vector<std::vector<ValueObject>> vecVectorObj;
+    if (table.empty()) {
+        return E_EMPTY_TABLE_NAME;
+    }
 
+    if (initialBatchValues.empty()) {
+        return E_EMPTY_VALUES_BUCKET;
+    }
+    // prepare batch data & sql
+    std::map<std::string, ValueObject> valuesMap;
+    std::map<std::string, std::vector<ValueObject>> mapVectorObj;
     for (auto iter = initialBatchValues.begin(); iter != initialBatchValues.end(); iter++) {
-        std::vector<ValueObject> bindArgs;
         (*iter).GetAll(valuesMap);
-        // prepare batch values : vec<value>
-        for (auto valueIter = valuesMap.begin(); valueIter != valuesMap.end(); valueIter++) {
-            bindArgs.push_back(valueIter->second);
-        }
-        // prepare batch sql
-        if (iter == initialBatchValues.begin()) {
-            sql = GetBatchInsertSql(valuesMap, table);
-        }
-        // put vec<value> into vec<vect>
-        vecVectorObj.push_back(move(bindArgs));
+        mapVectorObj.insert(GetInsertParams(valuesMap, table));
         valuesMap.clear();
     }
+
     // prepare BeginTransaction
     connectionPool->AcquireTransaction();
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
@@ -180,10 +177,11 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
         connectionPool->ReleaseTransaction();
         return errCode;
     }
+    
     // batch insert the values
-    for (std::vector<ValueObject> &tempVector : vecVectorObj) {
+    for (auto iter = mapVectorObj.begin(); iter != mapVectorObj.end(); iter++) {
         outInsertNum++;
-        errCode = connection->ExecuteSql(sql, tempVector);
+        errCode = connection->ExecuteSql(iter->first, iter->second);
         if (errCode != E_OK) {
             LOG_ERROR("BatchInsert with error code %{public}d.", errCode);
             outInsertNum = -1;
@@ -194,20 +192,27 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
     return FreeTransaction(connection, transaction.GetCommitStr());
 }
 
-std::string RdbStoreImpl::GetBatchInsertSql(std::map<std::string, ValueObject> &valuesMap, const std::string &table)
+std::pair<std::string, std::vector<ValueObject>> RdbStoreImpl::GetInsertParams(
+    std::map<std::string, ValueObject> &valuesMap, const std::string &table)
 {
     std::stringstream sql;
+    std::vector<ValueObject> bindArgs;
     sql << "INSERT INTO " << table << '(';
+    // prepare batch values & sql.columnName
     for (auto valueIter = valuesMap.begin(); valueIter != valuesMap.end(); valueIter++) {
         sql << ((valueIter == valuesMap.begin()) ? "" : ",");
-        sql << valueIter->first; // columnName
+        sql << valueIter->first;
+        bindArgs.push_back(valueIter->second);
     }
+    // prepare sql.value
     sql << ") VALUES (";
     for (size_t i = 0; i < valuesMap.size(); i++) {
         sql << ((i == 0) ? "?" : ",?");
     }
     sql << ')';
-    return sql.str();
+
+    // put sql & vec<value> into map<sql, args>
+    return std::make_pair(sql.str(), bindArgs);
 }
 
 int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)
