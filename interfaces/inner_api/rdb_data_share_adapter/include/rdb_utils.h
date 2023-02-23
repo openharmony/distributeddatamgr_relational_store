@@ -125,6 +125,11 @@ private:
     static void Glob(const OperationItem &item, RdbPredicates &predicates);
     static void Between(const OperationItem &item, RdbPredicates &predicates);
     static void NotBetween(const OperationItem &item, RdbPredicates &predicates);
+    static void CrossJoin(const OperationItem &item, RdbPredicates &predicates);
+    static void InnerJoin(const OperationItem &item, RdbPredicates &predicates);
+    static void LeftOuterJoin(const OperationItem &item, RdbPredicates &predicates);
+    static void Using(const OperationItem &item, RdbPredicates &predicates);
+    static void On(const OperationItem &item, RdbPredicates &predicates);
     RdbUtils();
     ~RdbUtils();
     static std::string ToString(const DataSharePredicatesObject &predicatesObject);
@@ -162,6 +167,11 @@ private:
         [DataShare::BETWEEN] = &RdbUtils::Between,
         [DataShare::NOTBETWEEN] = &RdbUtils::NotBetween,
         [DataShare::KEY_PREFIX] = &RdbUtils::NoSupport,
+        [DataShare::CROSSJOIN] = &RdbUtils::CrossJoin,
+        [DataShare::INNERJOIN] = &RdbUtils:: InnerJoin,
+        [DataShare::LEFTOUTERJOIN] = &RdbUtils::LeftOuterJoin,
+        [DataShare::USING] = &RdbUtils::Using,
+        [DataShare::ON] = &RdbUtils::On,
     };
 };
 } // namespace RdbDataShareAdapter
