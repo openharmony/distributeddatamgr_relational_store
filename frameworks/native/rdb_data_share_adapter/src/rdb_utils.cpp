@@ -226,6 +226,31 @@ void RdbUtils::NotBetween(const DataShare::OperationItem &item, RdbPredicates &p
     predicates.NotBetween(item.GetSingle(0), ToString(item.singleParams[1]), ToString(item.singleParams[2]));
 }
 
+void RdbUtils::CrossJoin(const DataShare::OperationItem &item, RdbPredicates &predicates)
+{
+    predicates.CrossJoin(item.GetSingle(0));
+}
+
+void RdbUtils::InnerJoin(const DataShare::OperationItem &item, RdbPredicates &predicates)
+{
+    predicates.InnerJoin(item.GetSingle(0));
+}
+
+void RdbUtils::LeftOuterJoin(const DataShare::OperationItem &item, RdbPredicates &predicates)
+{
+    predicates.LeftOuterJoin(item.GetSingle(0));
+}
+
+void RdbUtils::Using(const DataShare::OperationItem &item, RdbPredicates &predicates)
+{
+    predicates.Using(MutliValue(item.multiParams[0]));
+}
+
+void RdbUtils::On(const DataShare::OperationItem &item, RdbPredicates &predicates)
+{
+    predicates.On(MutliValue(item.multiParams[0]));
+}
+
 RdbUtils::RdbUtils()
 {
 }
