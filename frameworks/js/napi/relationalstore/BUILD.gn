@@ -79,7 +79,6 @@ ohos_shared_library("relationalstore") {
 
     external_deps = [
       "ability_runtime:abilitykit_native",
-      "ability_runtime:extensionkit_native",
       "ability_runtime:napi_base_context",
       "c_utils:utils",
       "hilog_native:libhilog",
