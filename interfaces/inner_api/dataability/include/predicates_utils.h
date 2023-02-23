@@ -47,8 +47,8 @@ public:
     /**
      * @brief Sets parameters of the specified Predicates including distinct, index, group, order, limit and offset.
      */
-    API_EXPORT static void SetAttributes(AbsPredicates *predicates, bool isDistinct, std::string index, std::string group,
-        std::string order, int limit, int offset);
+    API_EXPORT static void SetAttributes(AbsPredicates *predicates, bool isDistinct, std::string index,
+        std::string group, std::string order, int limit, int offset);
 };
 } // namespace NativeRdb
 } // namespace OHOS
