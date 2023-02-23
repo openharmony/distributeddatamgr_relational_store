@@ -170,7 +170,6 @@ ohos_shared_library("native_rdb") {
       "ipc:ipc_core",
       "samgr:samgr_proxy",
     ]
-
   }
 
   public_configs = [ ":native_rdb_public_config" ]
