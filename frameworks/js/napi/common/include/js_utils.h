@@ -42,6 +42,7 @@ public:
     static int32_t Convert2Bool(napi_env env, napi_value jsBool, bool &output);
     static int32_t Convert2Double(napi_env env, napi_value jsNum, double &output);
     static int32_t Convert2String(napi_env env, napi_value jsStr, std::string &output);
+    static int32_t Convert2U8Vector(napi_env env, napi_value jsValue, std::vector<uint8_t> &output);
     static std::vector<std::string> Convert2StrVector(napi_env env, napi_value value);
     static std::vector<uint8_t> Convert2U8Vector(napi_env env, napi_value jsValue);
     static std::string ConvertAny2String(napi_env env, const napi_value jsValue);

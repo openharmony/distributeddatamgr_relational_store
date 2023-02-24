@@ -82,7 +82,6 @@ napi_value ResultSetProxy::GetConstructor(napi_env env)
         DECLARE_NAPI_FUNCTION("getColumnType", GetColumnType),
         DECLARE_NAPI_FUNCTION("goTo", GoTo),
         DECLARE_NAPI_FUNCTION("getColumnIndex", GetColumnIndex),
-        DECLARE_NAPI_FUNCTION("getInt", GetInt),
         DECLARE_NAPI_FUNCTION("getColumnName", GetColumnName),
         DECLARE_NAPI_FUNCTION("close", Close),
         DECLARE_NAPI_FUNCTION("goToFirstRow", GoToFirstRow),
@@ -177,6 +176,7 @@ ResultSetProxy *ResultSetProxy::ParseInt32FieldByName(
 
     napi_status status = napi_get_value_int32(env, args[0], &field);
     RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>(name, "a number."));
+    RDB_NAPI_ASSERT(env, field >= 0, std::make_shared<ParamError>(name, "a non-negative integer."));
 
     ResultSetProxy *proxy = nullptr;
     napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
@@ -396,19 +396,6 @@ napi_value ResultSetProxy::GoToPreviousRow(napi_env env, napi_callback_info info
 
     int errCode = resultSetProxy->resultSet_->GoToPreviousRow();
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
-}
-
-napi_value ResultSetProxy::GetInt(napi_env env, napi_callback_info info)
-{
-    int32_t columnIndex;
-    auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
-
-    int32_t result;
-    int errCode = resultSetProxy->resultSet_->GetInt(columnIndex, result);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-
-    return JSUtils::Convert2JSValue(env, result);
 }
 
 napi_value ResultSetProxy::GetLong(napi_env env, napi_callback_info info)

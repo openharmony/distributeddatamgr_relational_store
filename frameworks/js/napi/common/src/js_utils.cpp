@@ -16,7 +16,6 @@
 #include "js_utils.h"
 
 #include "js_logger.h"
-#include "securec.h"
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
@@ -48,6 +47,27 @@ int32_t JSUtils::Convert2String(napi_env env, napi_value jsStr, std::string &out
     }
     output = std::string(str);
     delete[] str;
+    return OK;
+}
+
+int32_t JSUtils::Convert2U8Vector(napi_env env, napi_value jsValue, std::vector<uint8_t> &output)
+{
+    bool isTypedArray = false;
+    napi_is_typedarray(env, jsValue, &isTypedArray);
+    if (!isTypedArray) {
+        return ERR;
+    }
+
+    napi_typedarray_type type;
+    napi_value input_buffer = nullptr;
+    size_t byte_offset = 0;
+    size_t length = 0;
+    void *data = nullptr;
+    napi_get_typedarray_info(env, jsValue, &type, &length, &data, &input_buffer, &byte_offset);
+    if (type != napi_uint8_array || data == nullptr) {
+        return ERR;
+    }
+    output = std::vector<uint8_t>((uint8_t *)data, ((uint8_t *)data) + length);
     return OK;
 }
 
@@ -250,9 +270,8 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<uint8_t> &va
     if (status != napi_ok) {
         return nullptr;
     }
-    int result = memcpy_s(native, value.size(), value.data(), value.size());
-    if (result != EOK && value.size() > 0) {
-        return nullptr;
+    for (uint8_t i = 0; i < value.size(); i++) {
+        *(static_cast<uint8_t *>(native) + i) = value[i];
     }
     status = napi_create_typedarray(env, napi_uint8_array, value.size(), buffer, 0, &jsValue);
     if (status != napi_ok) {
