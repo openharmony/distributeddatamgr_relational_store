@@ -81,7 +81,7 @@ config("native_rdb_public_config") {
   defines = [ "SQLITE_HAS_CODEC" ]
 }
 
-object_source_config = [
+base_sources = [
   "${relational_store_native_path}/rdb/src/abs_predicates.cpp",
   "${relational_store_native_path}/rdb/src/abs_rdb_predicates.cpp",
   "${relational_store_native_path}/rdb/src/abs_result_set.cpp",
@@ -108,18 +108,18 @@ object_source_config = [
   "${relational_store_native_path}/rdb/src/values_bucket.cpp",
 ]
 
-object_deps_config = [
+base_deps = [
   "//third_party/icu/icu4c:shared_icui18n",
   "//third_party/icu/icu4c:shared_icuuc",
 ]
 
 ohos_shared_library("native_rdb") {
   part_name = "relational_store"
-  sources = object_source_config
+  sources = base_sources
 
   configs = [ ":native_rdb_config" ]
 
-  deps = object_deps_config
+  deps = base_deps
 
   cflags_cc = [ "-fvisibility=hidden" ]
   if (is_mingw) {
@@ -178,11 +178,11 @@ ohos_shared_library("native_rdb") {
 }
 
 ohos_static_library("native_rdb_static") {
-  sources = object_source_config
+  sources = base_sources
 
   configs = [ ":native_rdb_config" ]
 
-  deps = object_deps_config
+  deps = base_deps
 
   if (is_mingw) {
     sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
