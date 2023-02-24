@@ -38,7 +38,7 @@ public:
 private:
     static std::shared_ptr<NativeRdb::ResultSet> &GetInnerResultSet(napi_env env, napi_callback_info info, int &version);
     static ResultSetProxy *ParseInt32FieldByName(
-        napi_env env, napi_callback_info info, int32_t &field, const std::string fieldName);
+        napi_env env, napi_callback_info info, int32_t &field, const std::string& fieldName);
     static ResultSetProxy *ParseFieldByName(napi_env env, napi_callback_info info, std::string &field);
 
     static napi_value InnerInitialize(napi_env env, napi_callback_info info, int version = AppDataMgrJsKit::APIVERSION_8);
