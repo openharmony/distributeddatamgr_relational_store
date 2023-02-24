@@ -151,10 +151,10 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
     }
     // prepare batch data & sql
     std::map<std::string, ValueObject> valuesMap;
-    std::map<std::string, std::vector<ValueObject>> mapVectorObj;
+    std::vector<std::pair<std::string, std::vector<ValueObject>>> vecVectorObj;
     for (auto iter = initialBatchValues.begin(); iter != initialBatchValues.end(); iter++) {
         (*iter).GetAll(valuesMap);
-        mapVectorObj.insert(GetInsertParams(valuesMap, table));
+        vecVectorObj.push_back(GetInsertParams(valuesMap, table));
         valuesMap.clear();
     }
 
@@ -177,9 +177,9 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
         connectionPool->ReleaseTransaction();
         return errCode;
     }
-    
+
     // batch insert the values
-    for (auto iter = mapVectorObj.begin(); iter != mapVectorObj.end(); iter++) {
+    for (auto iter = vecVectorObj.begin(); iter != vecVectorObj.end(); iter++) {
         outInsertNum++;
         errCode = connection->ExecuteSql(iter->first, iter->second);
         if (errCode != E_OK) {
