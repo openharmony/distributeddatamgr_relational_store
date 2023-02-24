@@ -44,17 +44,17 @@ enum Type {
     SQL_FIRST_CHARACTER = 3
 };
 
-class API_EXPORT SqliteDatabaseUtils {
+class RDB_API_EXPORT SqliteDatabaseUtils {
 public:
-    API_EXPORT static std::map<std::string, int> MapInit();
-    API_EXPORT static int GetSqlStatementType(std::string sql);
-    API_EXPORT static void DeleteFile(std::string &fileName);
-    API_EXPORT static bool RenameFile(std::string &oldFileName, std::string &newFileName);
-    API_EXPORT static std::string GetDefaultDatabasePath(std::string &baseDir, std::string &name, int &errorCode);
-    API_EXPORT static std::string GetCorruptPath(std::string &path, int &errorCode);
-    API_EXPORT static std::string StrToUpper(std::string s);
-    API_EXPORT static bool BeginExecuteSql(const std::string &sql);
-    API_EXPORT static bool IsReadOnlySql(std::string sql);
+    RDB_API_EXPORT static std::map<std::string, int> MapInit();
+    RDB_API_EXPORT static int GetSqlStatementType(std::string sql);
+    RDB_API_EXPORT static void DeleteFile(std::string &fileName);
+    RDB_API_EXPORT static bool RenameFile(std::string &oldFileName, std::string &newFileName);
+    RDB_API_EXPORT static std::string GetDefaultDatabasePath(std::string &baseDir, std::string &name, int &errorCode);
+    RDB_API_EXPORT static std::string GetCorruptPath(std::string &path, int &errorCode);
+    RDB_API_EXPORT static std::string StrToUpper(std::string s);
+    RDB_API_EXPORT static bool BeginExecuteSql(const std::string &sql);
+    RDB_API_EXPORT static bool IsReadOnlySql(std::string sql);
 private:
     static std::map<std::string, int> g_statementType;
     static std::mutex g_locker;

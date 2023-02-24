@@ -36,13 +36,11 @@ ohos_unittest("NativeDataAbilityTest") {
   external_deps = [
     "c_utils:utils",
     "hilog_native:libhilog",
+    "relational_store:native_dataability",
+    "relational_store:native_rdb",
   ]
 
-  deps = [
-    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/dataability:native_dataability_static",
-    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb_static",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "//third_party/googletest:gtest_main" ]
 }
 
 ###############################################################################

@@ -17,7 +17,7 @@ config("native_dataability_config") {
   visibility = [ ":*" ]
 
   cflags = [ "-Wc99-designator" ]
-
+  cflags_cc = [ "-Wc99-designator" ]
   include_dirs = [
     "include",
     "${relational_store_native_path}/dataability/include",
@@ -30,49 +30,28 @@ config("native_dataability_public_config") {
   include_dirs = [ "include" ]
 }
 
-object_source_config = [
-  "${relational_store_native_path}/dataability/src/data_ability_predicates.cpp",
-  "${relational_store_native_path}/dataability/src/ishared_result_set.cpp",
-  "${relational_store_native_path}/dataability/src/ishared_result_set_proxy.cpp",
-  "${relational_store_native_path}/dataability/src/ishared_result_set_stub.cpp",
-  "${relational_store_native_path}/dataability/src/logger.h",
-  "${relational_store_native_path}/dataability/src/predicates_utils.cpp",
-]
-
-object_external_deps_config = [
-  "c_utils:utils",
-  "hilog_native:libhilog",
-  "ipc:ipc_single",
-  "relational_store:native_rdb",
-]
-
 ohos_shared_library("native_dataability") {
   part_name = "relational_store"
-  sources = object_source_config
+  sources = [
+    "${relational_store_native_path}/dataability/src/data_ability_predicates.cpp",
+    "${relational_store_native_path}/dataability/src/ishared_result_set.cpp",
+    "${relational_store_native_path}/dataability/src/ishared_result_set_proxy.cpp",
+    "${relational_store_native_path}/dataability/src/ishared_result_set_stub.cpp",
+    "${relational_store_native_path}/dataability/src/logger.h",
+    "${relational_store_native_path}/dataability/src/predicates_utils.cpp",
+  ]
 
   configs = [ ":native_dataability_config" ]
 
-  cflags_cc = [
-    "-Wc99-designator",
-    "-fvisibility=hidden",
+  external_deps = [
+    "c_utils:utils",
+    "hilog_native:libhilog",
+    "ipc:ipc_single",
+    "relational_store:native_rdb",
   ]
-
-  external_deps = object_external_deps_config
 
   public_configs = [ ":native_dataability_public_config" ]
 
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "distributeddatamgr"
-}
-
-ohos_static_library("native_dataability_static") {
-  sources = object_source_config
-
-  configs = [ ":native_dataability_config" ]
-
-  cflags_cc = [ "-Wc99-designator" ]
-
-  external_deps = object_external_deps_config
-
-  public_configs = [ ":native_dataability_public_config" ]
 }

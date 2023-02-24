@@ -235,4 +235,7 @@ ohos_static_library("native_rdb_static") {
   }
 
   public_configs = [ ":native_rdb_public_config" ]
+
+  subsystem_name = "distributeddatamgr"
+  part_name = "relational_store"
 }

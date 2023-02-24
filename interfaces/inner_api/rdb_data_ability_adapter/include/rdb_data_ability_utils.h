@@ -38,7 +38,7 @@ namespace RdbDataAbilityAdapter {
 /**
  * The RdbDataAbilityUtils class of RDB.
  */
-class API_EXPORT RdbDataAbilityUtils {
+class RDB_API_EXPORT RdbDataAbilityUtils {
 public:
     /**
      * @brief Use ValuesBucket replace NativeRdb::ValuesBucket namespace.
@@ -73,17 +73,17 @@ public:
     /**
      * @brief Convert NativeRdb::ValuesBucket to DataShare::DataShareValuesBucket.
      */
-    API_EXPORT static DataShareValuesBucket ToDataShareValuesBucket(const ValuesBucket &valuesBucket);
+    RDB_API_EXPORT static DataShareValuesBucket ToDataShareValuesBucket(const ValuesBucket &valuesBucket);
 
     /**
      * @brief Convert NativeRdb::DataAbilityPredicates to DataShare::DataSharePredicates.
      */
-    API_EXPORT static DataSharePredicates ToDataSharePredicates(const DataAbilityPredicates &predicates);
+    RDB_API_EXPORT static DataSharePredicates ToDataSharePredicates(const DataAbilityPredicates &predicates);
 
     /**
      * @brief Convert NDataShare::ResultSet to NativeRdb::AbsSharedResultSet.
      */
-    API_EXPORT static std::shared_ptr<AbsSharedResultSet> ToAbsSharedResultSet(std::shared_ptr<DSResultSet> resultSet);
+    RDB_API_EXPORT static std::shared_ptr<AbsSharedResultSet> ToAbsSharedResultSet(std::shared_ptr<DSResultSet> resultSet);
 
 private:
     RdbDataAbilityUtils();

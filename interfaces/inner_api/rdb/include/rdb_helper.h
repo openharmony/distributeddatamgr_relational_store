@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace NativeRdb {
-class API_EXPORT RdbHelper final {
+class RDB_API_EXPORT RdbHelper final {
 public:
     /**
      * @brief Obtains an RDB store.
@@ -41,7 +41,7 @@ public:
      *
      * @return Returns the RDB store {@link RdbStore}.
      */
-    API_EXPORT static std::shared_ptr<RdbStore> GetRdbStore(
+    RDB_API_EXPORT static std::shared_ptr<RdbStore> GetRdbStore(
         const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode);
 
     /**
@@ -49,12 +49,12 @@ public:
      *
      * @param path Indicates the database path.
      */
-    API_EXPORT static int DeleteRdbStore(const std::string &path);
+    RDB_API_EXPORT static int DeleteRdbStore(const std::string &path);
 
     /**
      * @brief Clear Cache.
      */
-    API_EXPORT static void ClearCache();
+    RDB_API_EXPORT static void ClearCache();
 
 private:
     static void InitSecurityManager(const RdbStoreConfig &config);

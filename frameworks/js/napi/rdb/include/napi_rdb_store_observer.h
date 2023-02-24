@@ -20,12 +20,12 @@
 #include "napi_uv_queue.h"
 
 namespace OHOS::RdbJsKit  {
-class API_EXPORT NapiRdbStoreObserver : public DistributedRdb::RdbStoreObserver, public NapiUvQueue {
+class NapiRdbStoreObserver : public DistributedRdb::RdbStoreObserver, public NapiUvQueue {
 public:
-    API_EXPORT explicit NapiRdbStoreObserver(napi_env env, napi_value callback);
-    API_EXPORT virtual ~NapiRdbStoreObserver() noexcept;
+    explicit NapiRdbStoreObserver(napi_env env, napi_value callback);
+    virtual ~NapiRdbStoreObserver() noexcept;
 
-    API_EXPORT void OnChange(const std::vector<std::string>& devices) override;
+    void OnChange(const std::vector<std::string>& devices) override;
 };
 }
 #endif

@@ -21,10 +21,9 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "rdb_visibility.h"
 
 namespace OHOS::RdbJsKit {
-class API_EXPORT NapiUvQueue {
+class NapiUvQueue {
     using NapiArgsGenerator = std::function<void(napi_env env, int &argc, napi_value *argv)>;
 
 public:

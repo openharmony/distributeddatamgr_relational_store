@@ -25,7 +25,7 @@ namespace NativeRdb {
 /**
  * The SharedResultSet class of RDB.
  */
-class API_EXPORT SharedResultSet {
+class RDB_API_EXPORT SharedResultSet {
 public:
     /**
      * @brief Constructor.
