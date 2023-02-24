@@ -93,6 +93,7 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
     }
 
     columnNames = columnNames_;
+    columnCount_ = static_cast<int>(columnNames_.size());
     connection->EndStepQuery();
     connectionPool_->ReleaseConnection(connection);
     sqliteStatement = nullptr;
