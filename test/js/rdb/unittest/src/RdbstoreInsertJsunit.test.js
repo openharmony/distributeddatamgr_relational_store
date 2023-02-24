@@ -329,11 +329,13 @@ describe('rdbStoreInsertTest', function () {
             "blobType": u8,
         }
         const valueBucket1 = {
+            "name": "lisi",
             "age": 15,
             "salary": 100.5,
             "blobType": u8,
         }
         const valueBucket2 = {
+            "name": "zhaoliu",
             "salary": 1.5,
         }
         const valueBucket3 = {
