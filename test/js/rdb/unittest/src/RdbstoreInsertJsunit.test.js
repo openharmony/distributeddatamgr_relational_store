@@ -315,7 +315,7 @@ describe('rdbStoreInsertTest', function () {
          * @tc.require: issueI5GZGX
          */
       it('testRdbStorebatchInsert002', 0, async function () {
-        console.log(TAG + "************* testRdbStorebatchInsert001 start *************");
+        console.log(TAG + "************* testRdbStorebatchInsert002 start *************");
 
         await rdbStore.executeSql("delete from test");
 
@@ -369,7 +369,7 @@ describe('rdbStoreInsertTest', function () {
         expect(2).assertEqual(count);
         resultSet.close();
 
-        console.log(TAG + "************* testRdbStorebatchInsert001 end *************");
+        console.log(TAG + "************* testRdbStorebatchInsert002 end *************");
     })
     console.log(TAG + "*************Unit Test End*************");
 })
