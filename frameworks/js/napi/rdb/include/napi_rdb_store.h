@@ -29,15 +29,15 @@
 
 namespace OHOS {
 namespace RdbJsKit {
-class API_EXPORT RdbStoreProxy {
+class RdbStoreProxy {
 public:
-    API_EXPORT static void Init(napi_env env, napi_value exports);
-    API_EXPORT static napi_value NewInstance(
+    static void Init(napi_env env, napi_value exports);
+    static napi_value NewInstance(
         napi_env env, std::shared_ptr<OHOS::NativeRdb::RdbStore> value, int version = AppDataMgrJsKit::APIVERSION_8);
-    API_EXPORT static RdbStoreProxy *GetNativeInstance(napi_env env, napi_value self);
-    API_EXPORT RdbStoreProxy();
-    API_EXPORT ~RdbStoreProxy();
-    API_EXPORT int apiversion = AppDataMgrJsKit::APIVERSION_8;
+    static RdbStoreProxy *GetNativeInstance(napi_env env, napi_value self);
+    RdbStoreProxy();
+    ~RdbStoreProxy();
+    int apiversion = AppDataMgrJsKit::APIVERSION_8;
 
 private:
     static napi_value InnerInitialize(

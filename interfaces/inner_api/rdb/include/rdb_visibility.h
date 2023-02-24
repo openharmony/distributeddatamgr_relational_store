@@ -16,12 +16,12 @@
 #ifndef NATIVE_RDB_RDB_VISIBILITY_H
 #define NATIVE_RDB_RDB_VISIBILITY_H
 
-#ifndef API_EXPORT
-#define API_EXPORT __attribute__((visibility ("default")))
+#ifndef RDB_API_EXPORT
+#define RDB_API_EXPORT __attribute__((visibility ("default")))
 #endif
 
-#ifndef API_LOCAL
-#define API_LOCAL __attribute__((visibility ("hidden")))
+#ifndef RDB_API_LOCAL
+#define RDB_API_LOCAL __attribute__((visibility ("hidden")))
 #endif
 
-#endif // OHOS_DISTRIBUTED_DATA_FRAMEWORKS_COMMON_VISIBILITY_H
+#endif // NATIVE_RDB_RDB_VISIBILITY_H

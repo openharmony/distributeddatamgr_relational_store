@@ -23,11 +23,10 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "rdb_visibility.h"
 
 namespace OHOS {
 namespace RdbJsKit {
-napi_value API_EXPORT InitRdbHelper(napi_env env, napi_value info);
+napi_value InitRdbHelper(napi_env env, napi_value info);
 } // namespace RdbJsKit
 } // namespace OHOS
 

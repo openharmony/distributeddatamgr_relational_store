@@ -26,52 +26,52 @@ namespace NativeRdb {
 /**
  * The Predicates class of DataAbility.
  */
-class API_EXPORT DataAbilityPredicates : public AbsPredicates, public virtual OHOS::Parcelable {
+class RDB_API_EXPORT DataAbilityPredicates : public AbsPredicates, public virtual OHOS::Parcelable {
 public:
     /**
      * @brief Constructor.
      */
-    API_EXPORT DataAbilityPredicates();
+    RDB_API_EXPORT DataAbilityPredicates();
 
     /**
      * @brief Constructor.
      */
-    API_EXPORT explicit DataAbilityPredicates(std::string rawSelection);
+    RDB_API_EXPORT explicit DataAbilityPredicates(std::string rawSelection);
 
     /**
      * @brief Constructor.
      */
-    API_EXPORT explicit DataAbilityPredicates(OHOS::Parcel *source);
+    RDB_API_EXPORT explicit DataAbilityPredicates(OHOS::Parcel *source);
 
     /**
      * @brief Destructor.
      */
-    API_EXPORT ~DataAbilityPredicates() override;
+    RDB_API_EXPORT ~DataAbilityPredicates() override;
 
     /**
      * @brief Obtains value of variable isRawSelection.
      */
-    API_EXPORT bool IsRawSelection() const;
+    RDB_API_EXPORT bool IsRawSelection() const;
 
     /**
      * @brief Obtains value of variable judgeSource.
      */
-    API_EXPORT bool GetJudgeSource() const;
+    RDB_API_EXPORT bool GetJudgeSource() const;
 
     /**
      * @brief Write DataAbilityPredicates object to Parcel.
      */
-    API_EXPORT bool Marshalling(OHOS::Parcel &parcel) const override;
+    RDB_API_EXPORT bool Marshalling(OHOS::Parcel &parcel) const override;
 
     /**
      * @brief Read from Parcel object.
      */
-    API_EXPORT static DataAbilityPredicates *Unmarshalling(OHOS::Parcel &parcel);
+    RDB_API_EXPORT static DataAbilityPredicates *Unmarshalling(OHOS::Parcel &parcel);
 
     /**
      * @brief The initial value of the static variable is false.
      */
-    API_EXPORT static bool result;
+    RDB_API_EXPORT static bool result;
 
 private:
     void MarshallingString(std::string value, OHOS::Parcel &parcel) const;
