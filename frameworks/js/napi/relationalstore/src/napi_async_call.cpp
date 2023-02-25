@@ -40,11 +40,11 @@ void Context::SetAction(
     }
     // int -->input_(env, argc, argv, self)
     input(env, argc, argv, self);
-    output_ = std::move(output);
-    exec_ = std::move(exec);
 
     // if input return is not ok, then napi_throw_error context error
     RDB_NAPI_ASSERT_BASE(env, error == nullptr, error, NAPI_RETVAL_NOTHING);
+    output_ = std::move(output);
+    exec_ = std::move(exec);
     napi_create_reference(env, self, 1, &self_);
 }
 
@@ -108,8 +108,8 @@ void AsyncCall::OnExecute(napi_env env, void *data)
     Context *context = reinterpret_cast<Context *>(data);
     if (context->error == nullptr && context->exec_) {
         context->execCode_ = context->exec_();
-        context->exec_ = nullptr;
     }
+    context->exec_ = nullptr;
 }
 
 void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
@@ -123,8 +123,8 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
     // if async execute status is not napi_ok then un-execute out function
     if ((context->error == nullptr) && context->output_) {
         context->output_(env, output);
-        context->output_ = nullptr;
     }
+    context->output_ = nullptr;
     napi_value result[ARG_BUTT] = { 0 };
     // if out function status is ok then async renturn output data, else return error.
     if (context->error == nullptr) {
