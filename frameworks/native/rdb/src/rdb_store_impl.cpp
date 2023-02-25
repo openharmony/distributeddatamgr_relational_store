@@ -142,12 +142,9 @@ int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const Valu
 int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
     const std::vector<ValuesBucket> &initialBatchValues)
 {
-    if (table.empty()) {
-        return E_EMPTY_TABLE_NAME;
-    }
-
     if (initialBatchValues.empty()) {
-        return E_EMPTY_VALUES_BUCKET;
+        outInsertNum = 0;
+        return E_OK;
     }
     // prepare batch data & sql
     std::map<std::string, ValueObject> valuesMap;
