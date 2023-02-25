@@ -225,6 +225,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseInt32FieldByName(
 
     napi_status status = napi_get_value_int32(env, args[0], &field);
     RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>(fieldName, "a number."));
+    RDB_NAPI_ASSERT(env, field >= 0, std::make_shared<ParamError>(fieldName, "a non-negative integer."));
 
     RdbPredicatesProxy *proxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy));
