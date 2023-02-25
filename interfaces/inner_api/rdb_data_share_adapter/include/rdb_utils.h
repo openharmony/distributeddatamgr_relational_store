@@ -168,7 +168,7 @@ private:
         [DataShare::NOTBETWEEN] = &RdbUtils::NotBetween,
         [DataShare::KEY_PREFIX] = &RdbUtils::NoSupport,
         [DataShare::CROSSJOIN] = &RdbUtils::CrossJoin,
-        [DataShare::INNERJOIN] = &RdbUtils:: InnerJoin,
+        [DataShare::INNERJOIN] = &RdbUtils::InnerJoin,
         [DataShare::LEFTOUTERJOIN] = &RdbUtils::LeftOuterJoin,
         [DataShare::USING] = &RdbUtils::Using,
         [DataShare::ON] = &RdbUtils::On,
