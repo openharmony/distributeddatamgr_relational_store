@@ -634,13 +634,13 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
             CHECK_RETURN_SET_E(argc == 2 || argc == 3, std::make_shared<ParamNumError>("1 to 4"));
             CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
             CHECK_RETURN(OK == ParseDataSharePredicates(env, argv[1], context));
-            if (argc = 3) {
+            if (argc == 3) {
                 CHECK_RETURN(OK == ParseColumns(env, argv[2], context));
             }
         } else {
             CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 4"));
             CHECK_RETURN(OK == ParsePredicates(env, argv[0], context));
-            if (argc = 2) {
+            if (argc == 2) {
                 CHECK_RETURN(OK == ParseColumns(env, argv[1], context));
             }
         }
