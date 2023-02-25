@@ -1003,8 +1003,8 @@ bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (tables.empty()) {
-        LOG_WARN("The arg tables input is empty.");
-        return false;
+        LOG_WARN("The distributed tables to be set is empty.");
+        return true;
     }
     if (isEncrypt_) {
         bool status = false;
