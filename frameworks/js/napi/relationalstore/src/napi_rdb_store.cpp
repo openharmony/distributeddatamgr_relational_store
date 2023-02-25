@@ -270,21 +270,7 @@ int ParseDevice(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbS
 
 int ParseTablesName(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-    uint32_t arrLen = 0;
-    napi_status status = napi_get_array_length(env, arg, &arrLen);
-    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("tables", "a string array."));
-    CHECK_RETURN_SET(arrLen > 0, std::make_shared<ParamError>("tables", "a empty array."));
-
-    for (uint32_t i = 0; i < arrLen; ++i) {
-        napi_value element;
-        napi_get_element(env, arg, i, &element);
-        napi_valuetype type;
-        napi_typeof(env, element, &type);
-        if (type == napi_string) {
-            std::string table = JSUtils::Convert2String(env, element);
-            context->tablesNames.push_back(table);
-        }
-    }
+    context->tablesNames = JSUtils::Convert2StrVector(env, arg);
     return OK;
 }
 
@@ -345,14 +331,6 @@ int ParseColumns(const napi_env &env, const napi_value &arg, std::shared_ptr<Rdb
     return OK;
 }
 
-int ParseWhereClause(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
-{
-    context->whereClause = JSUtils::Convert2String(env, arg);
-    CHECK_RETURN_SET(!context->whereClause.empty(), std::make_shared<ParamError>("whereClause", "not empty"));
-
-    return OK;
-}
-
 int ParseAlias(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->aliasName = JSUtils::Convert2String(env, arg);
@@ -368,13 +346,6 @@ int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbSto
     CHECK_RETURN_SET(!context->pathName.empty(), std::make_shared<ParamError>("pathName", "not empty"));
 
     LOG_DEBUG("ParsePath end");
-    return OK;
-}
-
-int ParseWhereArgs(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
-{
-    context->whereArgs = JSUtils::Convert2StrVector(env, arg);
-    LOG_DEBUG("ParseWhereArgs end");
     return OK;
 }
 
@@ -710,9 +681,18 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
 int ParseBindArgs(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->bindArgs.clear();
+    napi_valuetype type;
+    napi_typeof(env, arg, &type);
+    if (type == napi_undefined || type == napi_null) {
+        return OK;
+    }
+    bool isArray = false;
+    napi_status status = napi_is_array(env, arg, &isArray);
+    CHECK_RETURN_SET(status == napi_ok && isArray, std::make_shared<ParamError>("values", "a BindArgs array."));
+
     uint32_t arrLen = 0;
-    napi_status status = napi_get_array_length(env, arg, &arrLen);
-    CHECK_RETURN_SET(status == napi_ok && arrLen > 0, std::make_shared<ParamError>("values", "not empty."));
+    status = napi_get_array_length(env, arg, &arrLen);
+    CHECK_RETURN_SET(status == napi_ok && arrLen >= 0, std::make_shared<ParamError>("values", "not empty."));
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value element;
         napi_get_element(env, arg, i, &element);
