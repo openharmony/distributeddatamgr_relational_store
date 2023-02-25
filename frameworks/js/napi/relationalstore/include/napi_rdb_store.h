@@ -75,8 +75,8 @@ private:
     static constexpr int MIN_ON_EVENT_ARG_NUM = 2;
     static constexpr int MAX_ON_EVENT_ARG_NUM = 5;
 
-    void OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv);
-    void OffDataChangeEvent(napi_env env, size_t argc, napi_value *argv);
+    napi_value OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv);
+    napi_value OffDataChangeEvent(napi_env env, size_t argc, napi_value *argv);
 
     std::mutex mutex_;
     bool isSystemAppCalled_ = false;
