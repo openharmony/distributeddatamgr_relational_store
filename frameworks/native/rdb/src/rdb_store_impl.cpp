@@ -1002,6 +1002,10 @@ std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
 bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    if (tables.empty()) {
+        LOG_WARN("The distributed tables to be set is empty.");
+        return true;
+    }
     if (isEncrypt_) {
         bool status = false;
         RdbSecurityManager::GetInstance().GetKeyDistributedStatus(RdbSecurityManager::KeyFileType::PUB_KEY_FILE,
@@ -1017,8 +1021,9 @@ bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
     if (service == nullptr) {
         return false;
     }
-    if (service->SetDistributedTables(syncerParam_, tables) != 0) {
-        LOG_ERROR("failed");
+    int32_t errorCode = service->SetDistributedTables(syncerParam_, tables);
+    if (errorCode != E_OK) {
+        LOG_ERROR("Fail to set distributed tables, error=%{public}d", errorCode);
         syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
         syncerParam_.password_.clear();
         return false;
@@ -1030,8 +1035,6 @@ bool RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
         RdbSecurityManager::GetInstance().SetKeyDistributedStatus(
             RdbSecurityManager::KeyFileType::PUB_KEY_FILE, true);
     }
-
-    LOG_ERROR("success");
     return true;
 }
 
