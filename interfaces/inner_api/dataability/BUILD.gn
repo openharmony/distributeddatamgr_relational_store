@@ -17,7 +17,11 @@ config("native_dataability_config") {
   visibility = [ ":*" ]
 
   cflags = [ "-Wc99-designator" ]
-  cflags_cc = [ "-Wc99-designator" ]
+  cflags_cc = [
+    "-Wc99-designator",
+    "-fvisibility=hidden",
+  ]
+
   include_dirs = [
     "include",
     "${relational_store_native_path}/dataability/include",
