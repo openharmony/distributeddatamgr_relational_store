@@ -15,13 +15,16 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 config("appdatafwk_config") {
   visibility = [ ":*" ]
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb/include",
+  ]
+  cflags_cc = [ "-fvisibility=hidden" ]
 }
 
 config("appdatafwk_public_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
-  cflags_cc = [ "-fvisibility=hidden" ]
 }
 
 ohos_shared_library("native_appdatafwk") {
@@ -33,13 +36,10 @@ ohos_shared_library("native_appdatafwk") {
   subsystem_name = "distributeddatamgr"
   part_name = "relational_store"
 
-  public_deps = [
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
-  ]
-
   external_deps = [
     "c_utils:utils",
     "hilog_native:libhilog",
+    "ipc:ipc_core",
   ]
 
   public_configs = [ ":appdatafwk_public_config" ]
