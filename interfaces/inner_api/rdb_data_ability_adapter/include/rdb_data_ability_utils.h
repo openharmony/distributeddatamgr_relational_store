@@ -83,7 +83,8 @@ public:
     /**
      * @brief Convert NDataShare::ResultSet to NativeRdb::AbsSharedResultSet.
      */
-    RDB_API_EXPORT static std::shared_ptr<AbsSharedResultSet> ToAbsSharedResultSet(std::shared_ptr<DSResultSet> resultSet);
+    RDB_API_EXPORT static std::shared_ptr<AbsSharedResultSet> ToAbsSharedResultSet(
+        std::shared_ptr<DSResultSet> resultSet);
 
 private:
     RdbDataAbilityUtils();
