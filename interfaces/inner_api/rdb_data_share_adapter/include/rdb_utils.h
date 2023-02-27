@@ -88,7 +88,8 @@ public:
      *
      * @param table Indicates the table name.
      */
-    RDB_API_EXPORT static RdbPredicates ToPredicates(const DataShareAbsPredicates &predicates, const std::string &table);
+    RDB_API_EXPORT static RdbPredicates ToPredicates(
+        const DataShareAbsPredicates &predicates, const std::string &table);
 
     /**
      * @brief Convert NativeRdb::ResultSet to DataShare::ResultSetBridge.
