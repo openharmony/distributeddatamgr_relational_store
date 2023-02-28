@@ -35,7 +35,6 @@ const base_line_phone = 1000 // callback phone base line
 let baseLineCallback
 
 
-export default function resultSetPerf() {
     describe('resultSetPerf', function () {
         beforeAll(async function () {
             console.info(TAG + 'beforeAll')
@@ -115,6 +114,7 @@ export default function resultSetPerf() {
         it('SUB_DDM_PERF_RDB_ResultSet_GoTo_001', 0, async function (done) {
             let predicates = new dataRdb.RdbPredicates("test");
             let resultSet = await rdbStore.query(predicates);
+            resultSet.goToFirstRow();
             let startTime = new Date().getTime()
             for (let index=0; index<base_count; index++) {
 //                resultSet.goTo(index);
@@ -131,6 +131,7 @@ export default function resultSetPerf() {
         it('SUB_DDM_PERF_RDB_ResultSet_GoToRow_001', 0, async function (done) {
             let predicates = new dataRdb.RdbPredicates("test");
             let resultSet = await rdbStore.query(predicates);
+            resultSet.goToFirstRow();
             let startTime = new Date().getTime()
             for (let index=0; index<base_count; index++) {
 //                resultSet.goToRow(index);
@@ -177,6 +178,7 @@ export default function resultSetPerf() {
         it('SUB_DDM_PERF_RDB_ResultSet_GoToNextRow_001', 0, async function (done) {
             let predicates = new dataRdb.RdbPredicates("test");
             let resultSet = await rdbStore.query(predicates);
+            resultSet.goToFirstRow();
             let startTime = new Date().getTime()
             for (let index=0; index<base_count; index++) {
                 resultSet.goToNextRow();
@@ -311,7 +313,6 @@ export default function resultSetPerf() {
         it('SUB_DDM_PERF_RDB_ResultSet_Close_001', 0, async function (done) {
             let predicates = new dataRdb.RdbPredicates("test");
             let resultSet = await rdbStore.query(predicates);
-            resultSet.goToFirstRow();
             let startTime = new Date().getTime()
             for (let index=0; index<base_count; index++) {
                 resultSet.close();
@@ -325,4 +326,3 @@ export default function resultSetPerf() {
 
         console.info(TAG + "*************Unit Test End*************")
     })
-}
