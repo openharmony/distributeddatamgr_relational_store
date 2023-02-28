@@ -32,9 +32,6 @@ public:
         const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode);
     static int DeleteRdbStore(const std::string &path);
     static void ClearCache();
-
-private:
-    static void InitSecurityManager(const RdbStoreConfig &config);
 };
 } // namespace NativeRdb
 } // namespace OHOS
