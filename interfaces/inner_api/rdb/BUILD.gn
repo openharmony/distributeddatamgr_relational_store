@@ -22,6 +22,7 @@ config("native_rdb_config") {
       "${relational_store_native_path}/rdb/mock/include",
       "//commonlibrary/c_utils/base/include",
       "include",
+      "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
     ]
   } else {
     include_dirs = [
@@ -29,6 +30,7 @@ config("native_rdb_config") {
       "//base/security/huks/frameworks/huks_standard/main/common/include",
       "${relational_store_native_path}/rdb/include",
       "//utils/system/safwk/native/include",
+      "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
     ]
   }
 
