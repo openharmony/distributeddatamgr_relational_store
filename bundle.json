@@ -140,6 +140,7 @@
             ],
             "test": [
                 "//foundation/distributeddatamgr/relational_store/test/js/dataability:unittest",
+                "//foundation/distributeddatamgr/relational_store/test/js/oh_perf:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/js/rdb:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/js/relationalstore:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/dataability:unittest",
