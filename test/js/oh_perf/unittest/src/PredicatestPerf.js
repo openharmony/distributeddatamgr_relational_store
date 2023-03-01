@@ -34,7 +34,6 @@ const base_line_tablet = 500 // callback tablet base line
 const base_line_phone = 1000 // callback phone base line
 let baseLineCallback
 
-export default function predicatesPerf() {
     describe('predicatesPerf', function () {
         beforeAll(async function () {
             console.info(TAG + 'beforeAll')
@@ -155,8 +154,8 @@ export default function predicatesPerf() {
                 let predicates = new dataRdb.RdbPredicates("test");
                 for (let j=0; j<10; j++) {
                     predicates.equalTo("name", "lisi");
-                        predicates.or();
-                            predicates.equalTo("age", 18);
+                    predicates.or();
+                    predicates.equalTo("age", 18);
                 }
             }
             let endTime = new Date().getTime();
@@ -218,7 +217,7 @@ export default function predicatesPerf() {
             for (let i=0; i<200; i++) {
                 let predicates = new dataRdb.RdbPredicates("test");
                 for (let j=0; j<10; j++) {
-                    predicates.endWith("name", "lisi");
+                    predicates.endsWith("name", "lisi");
                 }
             }
             let endTime = new Date().getTime();
@@ -521,4 +520,3 @@ export default function predicatesPerf() {
 
         console.info(TAG + "*************Unit Test End*************")
     })
-}
