@@ -117,7 +117,6 @@ let baseLineCallback
             resultSet.goToFirstRow();
             let startTime = new Date().getTime()
             for (let index=0; index<base_count; index++) {
-//                resultSet.goTo(index);
                 resultSet.goTo(1);
             }
             let endTime = new Date().getTime();
@@ -134,7 +133,6 @@ let baseLineCallback
             resultSet.goToFirstRow();
             let startTime = new Date().getTime()
             for (let index=0; index<base_count; index++) {
-//                resultSet.goToRow(index);
                 resultSet.goToRow(1);
             }
             let endTime = new Date().getTime();
@@ -230,29 +228,12 @@ let baseLineCallback
             let columnIndex = resultSet.getColumnIndex("name");
             let flag = resultSet.goToFirstRow();
             let startTime = new Date().getTime()
-//            while (flag == true){
-//                resultSet.getString(columnIndex);
-//                resultSet.getString(columnIndex);
-//                resultSet.getString(columnIndex);
-//                resultSet.getString(columnIndex);
-//                resultSet.getString(columnIndex);
-//                resultSet.getString(columnIndex);
-//                resultSet.getString(columnIndex);
-//                resultSet.getString(columnIndex);
-//                resultSet.getString(columnIndex);
-//                resultSet.getString(columnIndex);
-//                resultSet.getString(columnIndex);
-//                resultSet.getString(columnIndex);
-//                flag = resultSet.goToNextRow();
-//                i++;
-//            }
             for (var i=0; i<12000; i++) {
                 resultSet.getString(columnIndex);
             }
             let endTime = new Date().getTime();
             let averageTotal = endTime - startTime;
             let averageTime = ((endTime - startTime) * 1000) / 12000
-            console.info(TAG + " the ResultSet_GetString total time is: " + averageTotal + " ms" );
             console.info(TAG + " the ResultSet_GetString average time is: " + averageTime + " μs");
             resultSet.close();
             expect(averageTime < baseLineCallback).assertTrue()
