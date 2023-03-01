@@ -14,7 +14,7 @@
  */
 
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect, Assert } from 'deccjsunit/index';
-import dataRdb from '@ohos.data.relationalStore';
+import dataRdb from '@ohos.data.rdb';
 //import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';
@@ -35,7 +35,6 @@ const base_line_tablet = 2500 // callback tablet base line
 const base_line_phone = 3000 // callback phone base line
 let baseLineCallback
 
-export default function rdbStoreSync() {
 
     describe('rdbStoreSync', function () {
         beforeAll(async function () {
@@ -108,4 +107,3 @@ export default function rdbStoreSync() {
             console.info(TAG + "*************Unit Test End*************");
         })
     })
-}

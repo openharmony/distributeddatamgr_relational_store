@@ -34,7 +34,6 @@ const base_line_tablet = 2500 // callback tablet base line
 const base_line_phone = 3000 // callback phone base line
 let baseLineCallback
 
-export default function getRdbStorePromise() {
 
     describe('GetRdbStorePromise', function () {
         beforeAll(async function () {
@@ -77,7 +76,7 @@ export default function getRdbStorePromise() {
             let averageTime = 0;
             for (var i=0; i<base_count; i++) {
                 let startTime = new Date().getTime();
-                await dataRdb.deleteRdbStore(context, STORE_CONFIG, 1);
+                await dataRdb.deleteRdbStore(context, dbName, 1);
                 let endTime = new Date().getTime();
                 averageTime += (endTime - startTime)
             }
@@ -88,4 +87,3 @@ export default function getRdbStorePromise() {
             console.info(TAG + "*************Unit Test End*************")
         })
     })
-}

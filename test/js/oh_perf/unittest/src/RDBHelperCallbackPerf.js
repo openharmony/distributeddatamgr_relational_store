@@ -34,7 +34,6 @@ const base_line_tablet = 2500 // callback tablet base line
 const base_line_phone = 3000 // callback phone base line
 let baseLineCallback
 
-export default function getRdbStoreCallback() {
 
     describe('getRdbStoreCallback', function () {
         beforeAll(async function () {
@@ -79,28 +78,25 @@ export default function getRdbStoreCallback() {
                 })
             }
         })
+
+        it('SUB_DDM_PERF_RDB_deleteRdbStore_Callback_001', 0, async function (done) {
+            let averageTime = 0;
+            await GetRdbStoreCallBackPerfTest(0);
+
+            async function GetRdbStoreCallBackPerfTest(index) {
+                let startTime = new Date().getTime()
+                dataRdb.deleteRdbStore(context, dbName, function (err, data) {
+                    let endTime = new Date().getTime();
+                    averageTime += (endTime - startTime)
+                    if (index < base_count) {
+                        GetRdbStoreCallBackPerfTest(index + 1);
+                    } else {
+                        averageTime = (averageTime * 1000) / base_count
+                        console.info(TAG + " the deleteRdbStore_Callback average time is: " + averageTime + " μs")
+                        expect(averageTime < baseLineCallback).assertTrue()
+                        done()
+                    }
+                })
+            }
+        })
     })
-
-
-    it('SUB_DDM_PERF_RDB_deleteRdbStore_Callback_001', 0, async function (done) {
-        let averageTime = 0;
-        await GetRdbStoreCallBackPerfTest(0);
-
-        async function GetRdbStoreCallBackPerfTest(index) {
-            let startTime = new Date().getTime()
-            dataRdb.deleteRdbStore(context, STORE_CONFIG, function (err, data) {
-                let endTime = new Date().getTime();
-                averageTime += (endTime - startTime)
-                if (index < base_count) {
-                    GetRdbStoreCallBackPerfTest(index + 1);
-                } else {
-                    averageTime = (averageTime * 1000) / base_count
-                    console.info(TAG + " the deleteRdbStore_Callback average time is: " + averageTime + " μs")
-                    expect(averageTime < baseLineCallback).assertTrue()
-                    done()
-                }
-            })
-        }
-    })
-
-}

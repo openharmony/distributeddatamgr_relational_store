@@ -34,7 +34,6 @@ const base_line_tablet = 1800 // callback tablet base line
 const base_line_phone = 2200 // callback phone base line
 let baseLineCallback
 
-export default function queryPromise() {
 
     describe('queryPromise', function () {
         beforeAll(async function () {
@@ -93,4 +92,3 @@ export default function queryPromise() {
             done()
         })
     })
-}
