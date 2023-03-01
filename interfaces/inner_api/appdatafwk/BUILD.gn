@@ -37,7 +37,7 @@ ohos_shared_library("native_appdatafwk") {
   part_name = "relational_store"
 
   public_deps = [
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_single",
+    "//foundation/communication/ipc/interfaces/innerkits/ipc_single:ipc_single",
   ]
 
   external_deps = [
