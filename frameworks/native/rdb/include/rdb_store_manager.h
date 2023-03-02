@@ -51,6 +51,7 @@ private:
         const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
     void RestartTimer(const std::string &path, RdbStoreNode &node);
     void AutoClose(const std::string &path);
+    static void InitSecurityManager(const RdbStoreConfig &config);
     std::mutex mutex_;
     std::shared_ptr<Utils::Timer> timer_;
     std::map<std::string, std::shared_ptr<RdbStoreNode>> storeCache_;
