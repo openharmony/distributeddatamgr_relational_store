@@ -26,29 +26,29 @@ namespace NativeRdb {
 /**
  * The Predicates class of Utils.
  */
-class PredicatesUtils {
+class RDB_API_EXPORT PredicatesUtils {
 public:
     /**
      * @brief Constructor.
      */
-    PredicatesUtils();
+    RDB_API_EXPORT PredicatesUtils();
 
     /**
      * @brief Destructor.
      */
-    ~PredicatesUtils() {}
+    RDB_API_EXPORT ~PredicatesUtils() {}
 
     /**
      * @brief Set the parameter of whereClause and whereArgs of the specified Predicates.
      */
-    static void SetWhereClauseAndArgs(AbsPredicates *predicates, std::string whereClause,
+    RDB_API_EXPORT static void SetWhereClauseAndArgs(AbsPredicates *predicates, std::string whereClause,
         std::vector<std::string> whereArgs);
 
     /**
      * @brief Sets parameters of the specified Predicates including distinct, index, group, order, limit and offset.
      */
-    static void SetAttributes(AbsPredicates *predicates, bool isDistinct, std::string index, std::string group,
-        std::string order, int limit, int offset);
+    RDB_API_EXPORT static void SetAttributes(AbsPredicates *predicates, bool isDistinct, std::string index,
+        std::string group, std::string order, int limit, int offset);
 };
 } // namespace NativeRdb
 } // namespace OHOS

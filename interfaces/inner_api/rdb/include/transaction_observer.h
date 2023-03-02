@@ -16,32 +16,35 @@
 
 #ifndef APPDATAMGR_TRANSACTION_OBSERVER_H
 #define APPDATAMGR_TRANSACTION_OBSERVER_H
+
+#include "rdb_visibility.h"
+
 namespace OHOS {
 namespace NativeRdb {
 /**
  * The TransactionObserver class of RDB.
  */
-class TransactionObserver {
+class RDB_API_EXPORT TransactionObserver {
 public:
     /**
      * @brief Destructor.
      */
-    virtual ~TransactionObserver() {}
+    RDB_API_EXPORT virtual ~TransactionObserver() {}
 
     /**
      * @brief Begin transaction.
      */
-    virtual void OnBegin() const;
+    RDB_API_EXPORT virtual void OnBegin() const;
 
     /**
      * @brief Commit transaction.
      */
-    virtual void OnCommit() const;
+    RDB_API_EXPORT virtual void OnCommit() const;
 
     /**
      * @brief Rollback transaction.
      */
-    virtual void OnRollback() const;
+    RDB_API_EXPORT virtual void OnRollback() const;
 };
 } // namespace NativeRdb
 } // namespace OHOS

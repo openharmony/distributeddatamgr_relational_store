@@ -70,10 +70,10 @@ ohos_unittest("NativeRdbTest") {
     "hilog_native:libhilog",
     "huks:libhukssdk",
     "ipc:ipc_core",
-    "relational_store:native_rdb",
   ]
 
   deps = [
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb_static",
     "//third_party/googletest:gtest_main",
     "//third_party/icu/icu4c:shared_icui18n",
     "//third_party/icu/icu4c:shared_icuuc",
