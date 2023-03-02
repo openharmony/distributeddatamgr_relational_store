@@ -20,7 +20,7 @@ ohos_js_unittest("OHRdbPerfJsTest") {
 
   hap_profile = "./config.json"
 
-  certificate_profile = "./openharmony_sx.p7b"
+  certificate_profile = "//foundation/distributeddatamgr/relational_store/test/signature/openharmony_sx.p7b"
 }
 
 group("unittest") {
