@@ -49,7 +49,11 @@ const int ERROR_STATUS = -1;
 
 SqliteConnection *SqliteConnection::Open(const SqliteConfig &config, bool isWriteConnection, int &errCode)
 {
-    auto connection = new SqliteConnection(isWriteConnection);
+    auto connection = new (std::nothrow) SqliteConnection(isWriteConnection);
+    if (connection == nullptr) {
+        LOG_ERROR("SqliteConnection::Open new failed, connection is nullptr");
+        return nullptr;
+    }
     errCode = connection->InnerOpen(config);
     if (errCode != E_OK) {
         delete connection;
