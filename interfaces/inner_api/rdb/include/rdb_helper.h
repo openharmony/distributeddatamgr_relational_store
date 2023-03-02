@@ -56,8 +56,6 @@ public:
      */
     RDB_API_EXPORT static void ClearCache();
 
-private:
-    static void InitSecurityManager(const RdbStoreConfig &config);
 };
 } // namespace NativeRdb
 } // namespace OHOS
