@@ -19,11 +19,12 @@
 #include "iremote_broker.h"
 #include "abs_shared_result_set.h"
 namespace OHOS::NativeRdb {
-class ISharedResultSet : public AbsSharedResultSet, public IRemoteBroker {
+class RDB_API_EXPORT ISharedResultSet : public AbsSharedResultSet, public IRemoteBroker {
 public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.NativeRdb.ISharedResultSet")
-    static std::shared_ptr<AbsSharedResultSet> ReadFromParcel(MessageParcel &parcel);
-    static sptr<ISharedResultSet> WriteToParcel(std::shared_ptr<AbsSharedResultSet> resultSet, MessageParcel &parcel);
+    RDB_API_EXPORT DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.NativeRdb.ISharedResultSet")
+    RDB_API_EXPORT static std::shared_ptr<AbsSharedResultSet> ReadFromParcel(MessageParcel &parcel);
+    RDB_API_EXPORT static sptr<ISharedResultSet> WriteToParcel(
+        std::shared_ptr<AbsSharedResultSet> resultSet, MessageParcel &parcel);
 
 protected:
     enum {

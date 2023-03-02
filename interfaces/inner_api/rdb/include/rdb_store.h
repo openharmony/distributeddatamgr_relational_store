@@ -29,7 +29,7 @@
 #include "rdb_common.h"
 
 namespace OHOS::NativeRdb {
-class RdbStore {
+class RDB_API_EXPORT RdbStore {
 public:
     /**
      * @brief Use SyncOption replace DistributedRdb::SyncOption namespace.

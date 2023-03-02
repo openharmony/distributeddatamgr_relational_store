@@ -16,6 +16,7 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 config("rdb_data_ability_adapter_config") {
   visibility = [ ":*" ]
+  cflags_cc = [ "-fvisibility=hidden" ]
   include_dirs = [
     "include",
     "${datashare_base_path}/interfaces/inner_api/common/include",
@@ -49,4 +50,6 @@ ohos_shared_library("rdb_data_ability_adapter") {
   ]
 
   public_configs = [ ":rdb_data_ability_adapter_public_config" ]
+
+  innerapi_tags = [ "platformsdk" ]
 }

@@ -18,13 +18,14 @@
 
 #include <string>
 #include "shared_block.h"
+#include "rdb_visibility.h"
 
 namespace OHOS {
 namespace NativeRdb {
 /**
  * The SharedResultSet class of RDB.
  */
-class SharedResultSet {
+class RDB_API_EXPORT SharedResultSet {
 public:
     /**
      * @brief Constructor.
