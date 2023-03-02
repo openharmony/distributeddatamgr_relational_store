@@ -91,7 +91,11 @@ napi_value DataAbilityPredicatesProxy::New(napi_env env, napi_callback_info info
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr));
 
     if (is_constructor) {
-        auto *proxy = new DataAbilityPredicatesProxy();
+        auto *proxy = new (std::nothrow) DataAbilityPredicatesProxy();
+        if (proxy == nullptr) {
+            LOG_ERROR("DataAbilityPredicatesProxy::New new failed, proxy is nullptr");
+            return nullptr;
+        }
         napi_status status = napi_wrap(env, thiz, proxy, DataAbilityPredicatesProxy::Destructor, nullptr, nullptr);
         if (status != napi_ok) {
             LOG_ERROR("DataAbilityPredicatesProxy::New napi_wrap failed! napi_status:%{public}d!", status);
