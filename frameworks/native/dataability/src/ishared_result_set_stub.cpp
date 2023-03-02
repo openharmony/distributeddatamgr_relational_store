@@ -27,6 +27,10 @@ sptr<ISharedResultSet> ISharedResultSetStub::CreateStub(std::shared_ptr<AbsShare
     OHOS::MessageParcel &parcel)
 {
     sptr<ISharedResultSet> stub = new (std::nothrow) ISharedResultSetStub(result);
+    if (stub == nullptr) {
+        LOG_ERROR("stub is nullptr");
+        return nullptr;
+    }
     if (result == nullptr) {
         LOG_ERROR("result is nullptr");
         return nullptr;
