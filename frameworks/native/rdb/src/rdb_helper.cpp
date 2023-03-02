@@ -31,22 +31,26 @@ namespace OHOS {
 namespace NativeRdb {
 std::mutex RdbHelper::mutex_;
 std::map<std::string, std::shared_ptr<RdbStore>> RdbHelper::storeCache_;
-std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
-    const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode)
+void RdbHelper::InitSecurityManager(const RdbStoreConfig &config)
 {
-    SqliteGlobalConfig::InitSqliteGlobalConfig();
-
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     if (config.IsEncrypt()) {
         RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
     }
 #endif
+}
+
+std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
+    const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode)
+{
+    SqliteGlobalConfig::InitSqliteGlobalConfig();
     std::string path = config.GetPath();
     std::shared_ptr<RdbStore> rdbStore;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         std::string path = config.GetPath();
         if (storeCache_.find(path) == storeCache_.end()) {
+            InitSecurityManager(config);
             rdbStore = RdbStoreImpl::Open(config, errCode);
             if (rdbStore == nullptr) {
                 LOG_ERROR("RdbHelper GetRdbStore fail to open RdbStore, err is %{public}d", errCode);
