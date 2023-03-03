@@ -26,7 +26,11 @@ constexpr ISharedResultSetStub::Handler ISharedResultSetStub::handlers[ISharedRe
 sptr<ISharedResultSet> ISharedResultSetStub::CreateStub(std::shared_ptr<AbsSharedResultSet> result,
     OHOS::MessageParcel &parcel)
 {
-    sptr<ISharedResultSet> stub = new ISharedResultSetStub(result);
+    sptr<ISharedResultSet> stub = new (std::nothrow) ISharedResultSetStub(result);
+    if (stub == nullptr) {
+        LOG_ERROR("stub is nullptr");
+        return nullptr;
+    }
     if (result == nullptr) {
         LOG_ERROR("result is nullptr");
         return nullptr;
