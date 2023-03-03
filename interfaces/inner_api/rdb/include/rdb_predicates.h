@@ -61,7 +61,8 @@ public:
     RdbPredicates *LeftOuterJoin(std::string tableName);
 
     /**
-     * @brief Adds a {@code using} condition to the predicate. This method is similar to {@code using} of the SQL statement.
+     * @brief Adds a {@code using} condition to the predicate.
+     * This method is similar to {@code using} of the SQL statement.
      */
     RdbPredicates *Using(std::vector<std::string> fields);
 

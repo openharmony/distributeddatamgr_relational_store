@@ -88,13 +88,12 @@ int SqliteDatabaseUtils::GetSqlStatementType(std::string sql)
     return STATEMENT_OTHER;
 }
 
-
-
 std::string SqliteDatabaseUtils::StrToUpper(std::string s)
 {
     std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::toupper(c); });
     return s;
 }
+
 /**
  * Delete the specified file.
  */
@@ -202,7 +201,8 @@ std::string SqliteDatabaseUtils::GetCorruptPath(std::string &path, int &errorCod
  * Get and Check no dbname path.
  */
 
-bool SqliteDatabaseUtils::BeginExecuteSql(const std::string &sql) {
+bool SqliteDatabaseUtils::BeginExecuteSql(const std::string &sql)
+{
     int type = SqliteDatabaseUtils::GetSqlStatementType(sql);
     if (IsSpecial(type)) {
         return E_TRANSACTION_IN_EXECUTE;

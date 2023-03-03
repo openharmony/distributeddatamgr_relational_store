@@ -26,8 +26,9 @@ namespace NativeRdb {
 SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<RdbStoreImpl> rdbSreImpl, std::string path,
     std::string sql, const std::vector<std::string> &bindArgs)
     : AbsSharedResultSet(path), resultSetBlockCapacity(0), isOnlyFillResultSetBlock(false), rdbStoreImpl(rdbSreImpl),
-      qrySql(sql), selectionArgVec(bindArgs), rowNum(NO_COUNT)
-{}
+      qrySql(sql), selectionArgVec(bindArgs), rowNum(NO_COUNT), connectionPool_(nullptr)
+{
+}
 
 SqliteSharedResultSet::SqliteSharedResultSet(SqliteConnectionPool* connectionPool, std::string path,
                                              std::string sql, const std::vector<std::string> &bindArgs)
