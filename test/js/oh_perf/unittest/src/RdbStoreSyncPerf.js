@@ -19,8 +19,8 @@ import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';
 
 const TAG = "[RDB_SYNC_PROMISE]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-+ "name TEXT, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, "
++ "name TEXT, age INTEGER, salary REAL, blobType BLOB)";
 
 const dbName = "rdbSync.db"
 const STORE_CONFIG = {

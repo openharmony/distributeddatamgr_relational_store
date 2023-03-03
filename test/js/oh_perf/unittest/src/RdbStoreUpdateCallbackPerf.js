@@ -18,11 +18,11 @@ import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';
 
-const TAG = "[RDB_QUERY_CALLBACK]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-+ "name TEXT, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+const TAG = "[RDB_UPDATE_CALLBACK]"
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, "
++ "name TEXT, age INTEGER, salary REAL, blobType BLOB)";
 
-const dbName = "rdbquerycallback.db"
+const dbName = "rdbUpdateCallback.db"
 const STORE_CONFIG = {
     name: dbName,
 }
