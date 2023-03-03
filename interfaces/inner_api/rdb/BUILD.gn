@@ -123,21 +123,20 @@ ohos_shared_library("native_rdb") {
 
   deps = base_deps
 
-  cflags_cc = [ "-fvisibility=hidden" ]
   if (is_mingw) {
     sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
     ]
-    cflags_cc += [ "-std=c++17" ]
+    cflags_cc = [ "-std=c++17" ]
   } else if (is_mac) {
     sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
     ]
-    cflags_cc += [ "-std=c++17" ]
+    cflags_cc = [ "-std=c++17" ]
   } else {
     deps += [
       "//base/security/huks/frameworks/huks_standard/main/os_dependency:libhuks_os_dependency_standard_static",
@@ -145,6 +144,7 @@ ohos_shared_library("native_rdb") {
       "//third_party/sqlite:sqlite",
     ]
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
+    cflags_cc = [ "-fvisibility=hidden" ]
 
     sources += [
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
