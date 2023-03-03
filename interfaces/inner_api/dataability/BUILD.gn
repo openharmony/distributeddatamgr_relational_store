@@ -17,10 +17,10 @@ config("native_dataability_config") {
   visibility = [ ":*" ]
 
   cflags = [ "-Wc99-designator" ]
-  cflags_cc = [
-    "-Wc99-designator",
-    "-fvisibility=hidden",
-  ]
+  cflags_cc = [ "-Wc99-designator" ]
+  if (!is_mingw && !is_mac) {
+    cflags_cc += [ "-fvisibility=hidden" ]
+  }
 
   include_dirs = [
     "include",
