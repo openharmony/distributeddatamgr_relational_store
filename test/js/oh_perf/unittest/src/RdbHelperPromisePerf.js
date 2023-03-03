@@ -35,55 +35,55 @@ const base_line_phone = 3000 // callback phone base line
 let baseLineCallback
 
 
-    describe('GetRdbStorePromise', function () {
-        beforeAll(async function () {
-            console.info(TAG + 'beforeAll')
-            if (deviceInfo.deviceType == "tablet") {
-                baseLineCallback = base_line_tablet
-            } else {
-                baseLineCallback = base_line_phone
-            }
-        })
-        beforeEach(async function () {
-            console.info(TAG + 'beforeEach')
-        })
-        afterEach(async function () {
-            console.info(TAG + 'afterEach')
-        })
-        afterAll(async function () {
-            console.info(TAG + 'afterAll')
-            rdbStore = null
-            await dataRdb.deleteRdbStore(context, dbName);
-        })
-
-        console.log(TAG + "*************Unit Test Begin*************");
-
-        it('SUB_DDM_PERF_RDB_getRdbStore_Promise_001', 0, async function (done) {
-            let averageTime = 0;
-            for (var i=0; i<base_count; i++) {
-                let startTime = new Date().getTime();
-                await dataRdb.getRdbStore(context, STORE_CONFIG, 1);
-                let endTime = new Date().getTime();
-                averageTime += (endTime - startTime)
-            }
-            averageTime = (averageTime * 1000) / base_count
-            console.info(TAG + " the getRdbStore_Promise average time is: " + averageTime + " μs")
-            expect(averageTime < baseLineCallback).assertTrue()
-            done()
-        })
-
-        it('SUB_DDM_PERF_RDB_deleteRdbStore_Promise_001', 0, async function (done) {
-            let averageTime = 0;
-            for (var i=0; i<base_count; i++) {
-                let startTime = new Date().getTime();
-                await dataRdb.deleteRdbStore(context, dbName, 1);
-                let endTime = new Date().getTime();
-                averageTime += (endTime - startTime)
-            }
-            averageTime = (averageTime * 1000) / base_count
-            console.info(TAG + " the deleteRdbStore_Promise average time is: " + averageTime + " μs")
-            expect(averageTime < baseLineCallback).assertTrue()
-            done()
-            console.info(TAG + "*************Unit Test End*************")
-        })
+describe('GetRdbStorePromise', function () {
+    beforeAll(async function () {
+        console.info(TAG + 'beforeAll')
+        if (deviceInfo.deviceType == "tablet") {
+            baseLineCallback = base_line_tablet
+        } else {
+            baseLineCallback = base_line_phone
+        }
     })
+    beforeEach(async function () {
+        console.info(TAG + 'beforeEach')
+    })
+    afterEach(async function () {
+        console.info(TAG + 'afterEach')
+    })
+    afterAll(async function () {
+        console.info(TAG + 'afterAll')
+        rdbStore = null
+        await dataRdb.deleteRdbStore(context, dbName);
+    })
+
+    console.log(TAG + "*************Unit Test Begin*************");
+
+    it('SUB_DDM_PERF_RDB_getRdbStore_Promise_001', 0, async function (done) {
+        let averageTime = 0;
+        for (var i = 0; i < base_count; i++) {
+            let startTime = new Date().getTime();
+            await dataRdb.getRdbStore(context, STORE_CONFIG, 1);
+            let endTime = new Date().getTime();
+            averageTime += (endTime - startTime)
+        }
+        averageTime = (averageTime * 1000) / base_count
+        console.info(TAG + " the getRdbStore_Promise average time is: " + averageTime + " μs")
+        expect(averageTime < baseLineCallback).assertTrue()
+        done()
+    })
+
+    it('SUB_DDM_PERF_RDB_deleteRdbStore_Promise_001', 0, async function (done) {
+        let averageTime = 0;
+        for (var i = 0; i < base_count; i++) {
+            let startTime = new Date().getTime();
+            await dataRdb.deleteRdbStore(context, dbName, 1);
+            let endTime = new Date().getTime();
+            averageTime += (endTime - startTime)
+        }
+        averageTime = (averageTime * 1000) / base_count
+        console.info(TAG + " the deleteRdbStore_Promise average time is: " + averageTime + " μs")
+        expect(averageTime < baseLineCallback).assertTrue()
+        done()
+        console.info(TAG + "*************Unit Test End*************")
+    })
+})

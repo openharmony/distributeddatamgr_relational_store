@@ -35,68 +35,68 @@ const base_line_phone = 3000 // callback phone base line
 let baseLineCallback
 
 
-    describe('getRdbStoreCallback', function () {
-        beforeAll(async function () {
-            console.info(TAG + 'beforeAll')
-            if (deviceInfo.deviceType == "tablet") {
-                baseLineCallback = base_line_tablet
-            } else {
-                baseLineCallback = base_line_phone
-            }
-        })
-        beforeEach(async function () {
-            console.info(TAG + 'beforeEach')
-        })
-        afterEach(async function () {
-            console.info(TAG + 'afterEach')
-        })
-        afterAll(async function () {
-            console.info(TAG + 'afterAll')
-            rdbStore = null
-            await dataRdb.deleteRdbStore(context, dbName);
-        })
-
-        console.log(TAG + "*************Unit Test Begin*************");
-
-        it('SUB_DDM_PERF_RDB_getRdbStore_Callback_001', 0, async function (done) {
-            let averageTime = 0;
-            await GetRdbStoreCallBackPerfTest(0);
-
-            async function GetRdbStoreCallBackPerfTest(index) {
-                let startTime = new Date().getTime()
-                dataRdb.getRdbStore(context, STORE_CONFIG, 1, function (err, rdbStore) {
-                    let endTime = new Date().getTime();
-                    averageTime += (endTime - startTime)
-                    if (index < base_count) {
-                        GetRdbStoreCallBackPerfTest(index + 1);
-                    } else {
-                        averageTime = (averageTime * 1000) / base_count
-                        console.info(TAG + " the average time is: " + averageTime + " μs")
-                        expect(averageTime < baseLineCallback).assertTrue()
-                        done()
-                    }
-                })
-            }
-        })
-
-        it('SUB_DDM_PERF_RDB_deleteRdbStore_Callback_001', 0, async function (done) {
-            let averageTime = 0;
-            await GetRdbStoreCallBackPerfTest(0);
-
-            async function GetRdbStoreCallBackPerfTest(index) {
-                let startTime = new Date().getTime()
-                dataRdb.deleteRdbStore(context, dbName, function (err, data) {
-                    let endTime = new Date().getTime();
-                    averageTime += (endTime - startTime)
-                    if (index < base_count) {
-                        GetRdbStoreCallBackPerfTest(index + 1);
-                    } else {
-                        averageTime = (averageTime * 1000) / base_count
-                        console.info(TAG + " the deleteRdbStore_Callback average time is: " + averageTime + " μs")
-                        expect(averageTime < baseLineCallback).assertTrue()
-                        done()
-                    }
-                })
-            }
-        })
+describe('getRdbStoreCallback', function () {
+    beforeAll(async function () {
+        console.info(TAG + 'beforeAll')
+        if (deviceInfo.deviceType == "tablet") {
+            baseLineCallback = base_line_tablet
+        } else {
+            baseLineCallback = base_line_phone
+        }
     })
+    beforeEach(async function () {
+        console.info(TAG + 'beforeEach')
+    })
+    afterEach(async function () {
+        console.info(TAG + 'afterEach')
+    })
+    afterAll(async function () {
+        console.info(TAG + 'afterAll')
+        rdbStore = null
+        await dataRdb.deleteRdbStore(context, dbName);
+    })
+
+    console.log(TAG + "*************Unit Test Begin*************");
+
+    it('SUB_DDM_PERF_RDB_getRdbStore_Callback_001', 0, async function (done) {
+        let averageTime = 0;
+        await GetRdbStoreCallBackPerfTest(0);
+
+        async function GetRdbStoreCallBackPerfTest(index) {
+            let startTime = new Date().getTime()
+            dataRdb.getRdbStore(context, STORE_CONFIG, 1, function (err, rdbStore) {
+                let endTime = new Date().getTime();
+                averageTime += (endTime - startTime)
+                if (index < base_count) {
+                    GetRdbStoreCallBackPerfTest(index + 1);
+                } else {
+                    averageTime = (averageTime * 1000) / base_count
+                    console.info(TAG + " the average time is: " + averageTime + " μs")
+                    expect(averageTime < baseLineCallback).assertTrue()
+                    done()
+                }
+            })
+        }
+    })
+
+    it('SUB_DDM_PERF_RDB_deleteRdbStore_Callback_001', 0, async function (done) {
+        let averageTime = 0;
+        await GetRdbStoreCallBackPerfTest(0);
+
+        async function GetRdbStoreCallBackPerfTest(index) {
+            let startTime = new Date().getTime()
+            dataRdb.deleteRdbStore(context, dbName, function (err, data) {
+                let endTime = new Date().getTime();
+                averageTime += (endTime - startTime)
+                if (index < base_count) {
+                    GetRdbStoreCallBackPerfTest(index + 1);
+                } else {
+                    averageTime = (averageTime * 1000) / base_count
+                    console.info(TAG + " the deleteRdbStore_Callback average time is: " + averageTime + " μs")
+                    expect(averageTime < baseLineCallback).assertTrue()
+                    done()
+                }
+            })
+        }
+    })
+})
