@@ -596,7 +596,8 @@ std::shared_ptr<SqliteStatement> SqliteConnection::BeginStepQuery(
     return stepStatement;
 }
 
-int SqliteConnection::DesFinalize() {
+int SqliteConnection::DesFinalize()
+{
     int errCode = 0;
     errCode = statement.Finalize();
     if (errCode != SQLITE_OK) {
@@ -787,7 +788,8 @@ int SqliteConnection::GetKeyFromFile()
 }
 #endif
 
-void SqliteConnection::SetInTransaction(bool transaction) {
+void SqliteConnection::SetInTransaction(bool transaction)
+{
     inTransaction_ = transaction;
 }
 
