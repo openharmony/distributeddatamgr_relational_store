@@ -19,7 +19,9 @@ config("appdatafwk_config") {
     "include",
     "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb/include",
   ]
-  cflags_cc = [ "-fvisibility=hidden" ]
+  if (!is_mingw && !is_mac) {
+    cflags_cc = [ "-fvisibility=hidden" ]
+  }
 }
 
 config("appdatafwk_public_config") {
