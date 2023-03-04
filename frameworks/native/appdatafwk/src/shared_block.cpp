@@ -136,9 +136,9 @@ int SharedBlock::ReadMessageParcel(MessageParcel &parcel, SharedBlock *&block)
     }
 
     LOG_DEBUG("Created SharedBlock from parcel: unusedOffset=%{private}" PRIu32 ", "
-              "rowNums=%{private}" PRIu32 ", columnNums=%{private}" PRIu32 ", mSize=%{private}d, mData=%{private}p",
+              "rowNums=%{private}" PRIu32 ", columnNums=%{private}" PRIu32 ", mSize=%{private}d",
               block->mHeader->unusedOffset, block->mHeader->rowNums, block->mHeader->columnNums,
-              static_cast<int>(block->mSize), block->mData);
+              static_cast<int>(block->mSize));
 
     return SHARED_BLOCK_OK;
 }
