@@ -689,9 +689,8 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
         if (error != E_OK) {
             break;
         }
-        number ++;
+        number++;
     }
     resultSet->Close();
     EXPECT_EQ(100, number);
-
 }
