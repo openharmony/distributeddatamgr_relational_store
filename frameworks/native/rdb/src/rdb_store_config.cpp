@@ -21,7 +21,7 @@
 #include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
-RdbStoreConfig::RdbStoreConfig(const RdbStoreConfig &config)
+RdbStoreConfig::RdbStoreConfig(const RdbStoreConfig &config) : autoCheck(false), journalSize(1048576), pageSize(4096)
 {
     name = config.GetName();
     path = config.GetPath();

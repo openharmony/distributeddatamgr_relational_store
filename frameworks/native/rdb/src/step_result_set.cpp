@@ -29,10 +29,10 @@
 
 namespace OHOS {
 namespace NativeRdb {
-StepResultSet::StepResultSet(
-    std::shared_ptr<RdbStoreImpl> rdb, const std::string &sql, const std::vector<std::string> &selectionArgs)
+StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, const std::string &sql,
+    const std::vector<std::string> &selectionArgs)
     : rdb(rdb), sql(sql), selectionArgs(selectionArgs), isAfterLast(false), rowCount(INIT_POS),
-      sqliteStatement(nullptr)
+      sqliteStatement(nullptr), connectionPool_(nullptr), connection_(nullptr)
 {
 }
 StepResultSet::StepResultSet(SqliteConnectionPool *pool, const std::string &sql,

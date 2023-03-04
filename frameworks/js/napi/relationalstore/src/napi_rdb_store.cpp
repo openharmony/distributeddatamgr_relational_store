@@ -287,7 +287,8 @@ int ParseSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr
 int ParsePredicates(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
     napi_unwrap(env, arg, reinterpret_cast<void **>(&context->predicatesProxy));
-    CHECK_RETURN_SET(context->predicatesProxy != nullptr, std::make_shared<ParamError>("predicates", "an RdbPredicates."));
+    CHECK_RETURN_SET(context->predicatesProxy != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."));
     context->tableName = context->predicatesProxy->GetPredicates()->GetTableName();
     context->rdbPredicates = context->predicatesProxy->GetPredicates();
     return OK;
