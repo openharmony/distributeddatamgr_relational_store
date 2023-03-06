@@ -18,11 +18,11 @@ import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';
 
-const TAG = "[RDBSTORE_OTHERS_CALLBACK]"
+const TAG = "[RDBSTORE_OTHERS_CALLBACK]";
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, "
 + "name TEXT, age INTEGER, salary REAL, blobType BLOB)";
 
-const DB_NAME = "rdbUpdateCallback.db"
+const DB_NAME = "rdbUpdateCallback.db";
 const STORE_CONFIG = {
     name: DB_NAME,
 }
@@ -55,8 +55,8 @@ describe('rdbStoreOthersCallbackPerf', function () {
     })
 
     async function prepareTestData() {
-        console.info(TAG + "prepare for query performance test")
-        var u8 = new Uint8Array([1, 2, 3])
+        console.info(TAG + "prepare for query performance test");
+        var u8 = new Uint8Array([1, 2, 3]);
         var valueBucket = {
             "name": "zhangsan",
             "age": 18,
@@ -100,13 +100,6 @@ describe('rdbStoreOthersCallbackPerf', function () {
 
     it('SUB_DDM_PERF_RDB_delete_Callback_001', 0, async function (done) {
         let averageTime = 0;
-        var uBlob = new Uint8Array([1, 2, 3])
-        var updateVB = {
-            "name": "zhangsan",
-            "age": 18,
-            "salary": 100.5,
-            "blobType": uBlob,
-        }
         let predicates = new dataRdb.RdbPredicates("test");
         predicates.equalTo("age", 0);
 
@@ -130,15 +123,6 @@ describe('rdbStoreOthersCallbackPerf', function () {
 
     it('SUB_DDM_PERF_RDB_querySql_Callback_001', 0, async function (done) {
         let averageTime = 0;
-        var uBlob = new Uint8Array([1, 2, 3])
-        var updateVB = {
-            "name": "zhangsan",
-            "age": 18,
-            "salary": 100.5,
-            "blobType": uBlob,
-        }
-        let predicates = new dataRdb.RdbPredicates("test");
-        predicates.equalTo("age", 0);
 
         async function querySqlCallback(index) {
             rdbStore.querySql("select * from test", [], function (err, data) {
@@ -169,7 +153,7 @@ describe('rdbStoreOthersCallbackPerf', function () {
                     let endTime = new Date().getTime();
                     averageTime = ((endTime - startTime) * 1000) / SPECIAL_BASE_COUNT;
                     console.info(TAG + " the executeSql_Callback average time is: " + averageTime + " μs");
-                    expect(averageTime < BASE_LINE).assertTrue()
+                    expect(averageTime < BASE_LINE).assertTrue();
                     done();
                 }
             })

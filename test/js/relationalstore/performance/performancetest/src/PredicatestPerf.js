@@ -18,7 +18,7 @@ import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';
 
-const TAG = "[RDB_PREDICATES_PERF]"
+const TAG = "[RDB_PREDICATES_PERF]";
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, "
 + "name TEXT, age INTEGER, salary REAL, blobType BLOB)";
 
@@ -337,8 +337,8 @@ describe('predicatesPerf', function () {
         let endTime = new Date().getTime();
         let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
         console.info(TAG + " the Predicates_lessThan average time is: " + averageTime + " μs");
-        expect(averageTime < BASE_LINE).assertTrue()
-        done()
+        expect(averageTime < BASE_LINE).assertTrue();
+        done();
     })
 
     it('SUB_DDM_PERF_RDB_Predicates_greaterThanOrEqualTo_001', 0, async function (done) {
@@ -372,7 +372,7 @@ describe('predicatesPerf', function () {
     })
 
     it('SUB_DDM_PERF_RDB_Predicates_orderByAsc_001', 0, async function (done) {
-        let startTime = new Date().getTime()
+        let startTime = new Date().getTime();
         for (let i = 0; i < BASE_COUNT_FIRST; i++) {
             let predicates = new dataRdb.RdbPredicates("test");
             for (let j = 0; j < BASE_COUNT_SECOND; j++) {
@@ -381,13 +381,13 @@ describe('predicatesPerf', function () {
         }
         let endTime = new Date().getTime();
         let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-        console.info(TAG + " the Predicates_orderByAsc average time is: " + averageTime + " μs")
+        console.info(TAG + " the Predicates_orderByAsc average time is: " + averageTime + " μs");
         expect(averageTime < BASE_LINE).assertTrue();
         done();
     })
 
     it('SUB_DDM_PERF_RDB_Predicates_orderByDesc_001', 0, async function (done) {
-        let startTime = new Date().getTime()
+        let startTime = new Date().getTime();
         for (let i = 0; i < BASE_COUNT_FIRST; i++) {
             let predicates = new dataRdb.RdbPredicates("test");
             for (let j = 0; j < BASE_COUNT_SECOND; j++) {
@@ -396,13 +396,13 @@ describe('predicatesPerf', function () {
         }
         let endTime = new Date().getTime();
         let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-        console.info(TAG + " the Predicates_orderByDesc average time is: " + averageTime + " μs")
+        console.info(TAG + " the Predicates_orderByDesc average time is: " + averageTime + " μs");
         expect(averageTime < BASE_LINE).assertTrue();
         done();
     })
 
     it('SUB_DDM_PERF_RDB_Predicates_distinct_001', 0, async function (done) {
-        let startTime = new Date().getTime()
+        let startTime = new Date().getTime();
         for (let i = 0; i < BASE_COUNT_FIRST; i++) {
             let predicates = new dataRdb.RdbPredicates("test");
             for (let j = 0; j < BASE_COUNT_SECOND; j++) {
@@ -411,33 +411,33 @@ describe('predicatesPerf', function () {
         }
         let endTime = new Date().getTime();
         let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-        console.info(TAG + " the Predicates_distinct average time is: " + averageTime + " μs")
+        console.info(TAG + " the Predicates_distinct average time is: " + averageTime + " μs");
         expect(averageTime < BASE_LINE).assertTrue();
         done();
     })
 
     it('SUB_DDM_PERF_RDB_Predicates_limitAs_001', 0, async function (done) {
-        let startTime = new Date().getTime()
+        let startTime = new Date().getTime();
         for (let i = 0; i < BASE_COUNT; i++) {
             let predicates = new dataRdb.RdbPredicates("test");
             predicates.limitAs(6);
         }
         let endTime = new Date().getTime();
         let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-        console.info(TAG + " the Predicates_limitAs average time is: " + averageTime + " μs")
+        console.info(TAG + " the Predicates_limitAs average time is: " + averageTime + " μs");
         expect(averageTime < BASE_LINE).assertTrue();
         done();
     })
 
     it('SUB_DDM_PERF_RDB_Predicates_offsetAs_001', 0, async function (done) {
-        let startTime = new Date().getTime()
+        let startTime = new Date().getTime();
         for (let i = 0; i < BASE_COUNT; i++) {
             let predicates = new dataRdb.RdbPredicates("test");
             predicates.offsetAs(6);
         }
         let endTime = new Date().getTime();
         let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-        console.info(TAG + " the Predicates_offsetAs average time is: " + averageTime + " μs")
+        console.info(TAG + " the Predicates_offsetAs average time is: " + averageTime + " μs");
         expect(averageTime < BASE_LINE).assertTrue();
         done();
     })
@@ -446,7 +446,7 @@ describe('predicatesPerf', function () {
         let nameArr = new Array();
         nameArr.push("id");
         nameArr.push("name");
-        let startTime = new Date().getTime()
+        let startTime = new Date().getTime();
         for (let i = 0; i < BASE_COUNT_FIRST; i++) {
             let predicates = new dataRdb.RdbPredicates("test");
             for (let j = 0; j < BASE_COUNT_SECOND; j++) {
@@ -455,13 +455,13 @@ describe('predicatesPerf', function () {
         }
         let endTime = new Date().getTime();
         let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-        console.info(TAG + " the Predicates_groupBy average time is: " + averageTime + " μs")
+        console.info(TAG + " the Predicates_groupBy average time is: " + averageTime + " μs");
         expect(averageTime < BASE_LINE).assertTrue();
         done();
     })
 
     it('SUB_DDM_PERF_RDB_Predicates_indexedBy_001', 0, async function (done) {
-        let startTime = new Date().getTime()
+        let startTime = new Date().getTime();
         for (let i = 0; i < BASE_COUNT_FIRST; i++) {
             let predicates = new dataRdb.RdbPredicates("test");
             for (let j = 0; j < BASE_COUNT_SECOND; j++) {
@@ -470,7 +470,7 @@ describe('predicatesPerf', function () {
         }
         let endTime = new Date().getTime();
         let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-        console.info(TAG + " the Predicates_indexedBy average time is: " + averageTime + " μs")
+        console.info(TAG + " the Predicates_indexedBy average time is: " + averageTime + " μs");
         expect(averageTime < BASE_LINE).assertTrue();
         done();
     })
@@ -479,7 +479,7 @@ describe('predicatesPerf', function () {
         let nameArr = new Array();
         nameArr.push("id");
         nameArr.push("name");
-        let startTime = new Date().getTime()
+        let startTime = new Date().getTime();
         for (let i = 0; i < BASE_COUNT_FIRST; i++) {
             let predicates = new dataRdb.RdbPredicates("test");
             for (let j = 0; j < BASE_COUNT_SECOND; j++) {
@@ -488,7 +488,7 @@ describe('predicatesPerf', function () {
         }
         let endTime = new Date().getTime();
         let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-        console.info(TAG + " the Predicates_in average time is: " + averageTime + " μs")
+        console.info(TAG + " the Predicates_in average time is: " + averageTime + " μs");
         expect(averageTime < BASE_LINE).assertTrue();
         done();
     })
@@ -497,7 +497,7 @@ describe('predicatesPerf', function () {
         let nameArr = new Array();
         nameArr.push("zhangsan");
         nameArr.push("lisi");
-        let startTime = new Date().getTime()
+        let startTime = new Date().getTime();
         for (let i = 0; i < BASE_COUNT_FIRST; i++) {
             let predicates = new dataRdb.RdbPredicates("test");
             for (let j = 0; j < BASE_COUNT_SECOND; j++) {
@@ -506,7 +506,7 @@ describe('predicatesPerf', function () {
         }
         let endTime = new Date().getTime();
         let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-        console.info(TAG + " the Predicates_notIn average time is: " + averageTime + " μs")
+        console.info(TAG + " the Predicates_notIn average time is: " + averageTime + " μs");
         expect(averageTime < BASE_LINE).assertTrue();
         done();
     })

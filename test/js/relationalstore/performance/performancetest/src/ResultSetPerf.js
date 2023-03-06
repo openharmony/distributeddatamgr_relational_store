@@ -18,11 +18,11 @@ import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';
 
-const TAG = "[RDB_RESULTSET_PERF]"
+const TAG = "[RDB_RESULTSET_PERF]";
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, "
 + "name TEXT, age INTEGER, salary REAL, blobType BLOB)";
 
-const dbName = "resultSetPerf.db"
+const dbName = "resultSetPerf.db";
 const STORE_CONFIG = {
     name: dbName,
 }
@@ -55,7 +55,7 @@ describe('resultSetPerf', function () {
     })
 
     async function prepareTestData() {
-        console.info(TAG + "prepare for query performance test")
+        console.info(TAG + "prepare for query performance test");
         var valueBuckets = [];
         var u8 = new Uint8Array([1, 2, 3])
         var valueBucket = {
@@ -64,11 +64,11 @@ describe('resultSetPerf', function () {
             "salary": 100.5,
             "blobType": u8,
         }
-        for (let i = 0; i < base_count; i++) {
+        for (let i = 0; i < BASE_COUNT; i++) {
             valueBucket.age += i;
             valueBuckets.push(valueBucket);
         }
-        rdbStore.batchInsert("EMPLOYEE", valueBuckets, function (err, insertNum) {
+        rdbStore.batchInsert("test", valueBuckets, function (err, insertNum) {
             if (err) {
                 console.error(`batchInsert is failed, err: ${err}`);
                 return;
