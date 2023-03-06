@@ -418,7 +418,7 @@ describe('predicatesPerf', function () {
 
     it('SUB_DDM_PERF_RDB_Predicates_limitAs_001', 0, async function (done) {
         let startTime = new Date().getTime()
-        for (let i = 0; i < base_count; i++) {
+        for (let i = 0; i < BASE_COUNT; i++) {
             let predicates = new dataRdb.RdbPredicates("test");
             predicates.limitAs(6);
         }
@@ -431,7 +431,7 @@ describe('predicatesPerf', function () {
 
     it('SUB_DDM_PERF_RDB_Predicates_offsetAs_001', 0, async function (done) {
         let startTime = new Date().getTime()
-        for (let i = 0; i < base_count; i++) {
+        for (let i = 0; i < BASE_COUNT; i++) {
             let predicates = new dataRdb.RdbPredicates("test");
             predicates.offsetAs(6);
         }
@@ -506,7 +506,7 @@ describe('predicatesPerf', function () {
         }
         let endTime = new Date().getTime();
         let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-        console.info(TAG + " the Predicates_notIn( average time is: " + averageTime + " μs")
+        console.info(TAG + " the Predicates_notIn average time is: " + averageTime + " μs")
         expect(averageTime < BASE_LINE).assertTrue();
         done();
     })
