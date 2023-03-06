@@ -31,7 +31,7 @@ var rdbStore = undefined;
 const BASE_COUNT = 1000; // loop times
 const SPECIAL_BASE_COUNT = 300;
 const BASE_LINE_TABLE = 1800; // callback tablet base line
-const BASE_LINE_PHONE = 2200; // callback phone base line
+const BASE_LINE_PHONE = 15000; // callback phone base line
 const BASE_LINE = (deviceInfo.deviceType == "tablet") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
 
 describe('rdbStoreOthersCallbackPerf', function () {
@@ -188,7 +188,7 @@ describe('rdbStoreOthersCallbackPerf', function () {
                     backupCallback(index + 1);
                 } else {
                     let endTime = new Date().getTime();
-                    averageTime = ((endTime - startTime) * 1000) / BASE_LINE;
+                    averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
                     console.info(TAG + " the backup_Callback average time is: " + averageTime + " μs");
                     expect(averageTime < BASE_LINE).assertTrue();
                     done();

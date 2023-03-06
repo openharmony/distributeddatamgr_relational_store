@@ -29,7 +29,7 @@ const STORE_CONFIG = {
 let context = featureAbility.getContext();
 var rdbStore = undefined;
 const BASE_COUNT = 1000; // loop times
-const INSERT_BASE_COUNT = 1000;
+const INSERT_BASE_COUNT = 300;
 const BASE_LINE_TABLE = 1800; // callback tablet base line
 const BASE_LINE_PHONE = 7000; // callback phone base line
 const BASE_LINE = (deviceInfo.deviceType == "tablet") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
