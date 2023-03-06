@@ -33,7 +33,7 @@ const BASE_LINE_TABLE = 1800; // callback tablet base line
 const BASE_LINE_PHONE = 3000; // callback phone base line
 const BASE_LINE = (deviceInfo.deviceType == "tablet") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
 
-describe('queryPromisePerf', function () {
+describe('rdbStorePromisePerf', function () {
     beforeAll(async function () {
         console.info(TAG + 'beforeAll');
         rdbStore = await dataRdb.getRdbStore(context, STORE_CONFIG, 1);
