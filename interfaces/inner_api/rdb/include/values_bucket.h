@@ -150,7 +150,7 @@ public:
     /**
      * @brief Obtains a ValuesBucket object from parcel.
      */
-    RDB_API_EXPORT static ValuesBucket *Unmarshalling(Parcel &parcel);
+    RDB_API_EXPORT static std::shared_ptr<ValuesBucket> Unmarshalling(Parcel &parcel);
 private:
     std::map<std::string, ValueObject> valuesMap;
 };

@@ -186,7 +186,7 @@ public:
     /**
      * @brief Obtains a ValueObject object from parcel.
      */
-    RDB_API_EXPORT static ValueObject *Unmarshalling(Parcel &parcel);
+    RDB_API_EXPORT static std::shared_ptr<ValueObject> Unmarshalling(Parcel &parcel);
 
     /**
      * @brief Type conversion function.

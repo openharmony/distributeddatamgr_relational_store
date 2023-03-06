@@ -205,7 +205,7 @@ bool ValueObject::Marshalling(Parcel &parcel) const
     return true;
 }
 
-ValueObject *ValueObject::Unmarshalling(Parcel &parcel)
+std::shared_ptr<ValueObject> ValueObject::Unmarshalling(Parcel &parcel)
 {
     auto *pValueObject = new ValueObject();
     switch (parcel.ReadInt16()) {
