@@ -18,11 +18,11 @@ import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';
 
-const TAG = "[RDBSTORE_CALLBACK]"
+const TAG = "[RDBSTORE_CALLBACK]";
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, "
 + "name TEXT, age INTEGER, salary REAL, blobType BLOB)";
 
-const DB_NAME = "rdbStoreCallback.db"
+const DB_NAME = "rdbStoreCallback.db";
 const STORE_CONFIG = {
     name: DB_NAME,
 }
@@ -55,8 +55,8 @@ describe('rdbStoreCallbackPerf', function () {
     })
 
     async function prepareTestData() {
-        console.info(TAG + "prepare for query performance test")
-        var u8 = new Uint8Array([1, 2, 3])
+        console.info(TAG + "prepare for query performance test");
+        var u8 = new Uint8Array([1, 2, 3]);
         var valueBucket = {
             "name": "zhangsan",
             "age": 18,
@@ -110,7 +110,7 @@ describe('rdbStoreCallbackPerf', function () {
                 if (index < INSERT_BASE_COUNT) {
                     InsertCallbackPerf(index + 1);
                 } else {
-                    let endTime = new Date().getTime()
+                    let endTime = new Date().getTime();
                     averageTime = ((endTime - startTime) * 1000) / INSERT_BASE_COUNT;
                     console.info(TAG + " the insert_Callback average time is: " + averageTime + " μs");
                     expect(averageTime < BASE_LINE).assertTrue();
