@@ -79,11 +79,11 @@ describe('rdbStoreOthersCallbackPerf', function () {
         }
         let predicates = new dataRdb.RdbPredicates("test");
 
-        async function updateCallback(index) {
+        async function updateCallbackPerf(index) {
             predicates.equalTo("age", 18);
             rdbStore.update(updateVB, predicates, function (err, data) {
                 if (index < SPECIAL_BASE_COUNT) {
-                    updateCallback(index + 1);
+                    updateCallbackPerf(index + 1);
                 } else {
                     let endTime = new Date().getTime();
                     averageTime = ((endTime - startTime) * 1000) / SPECIAL_BASE_COUNT;
@@ -95,7 +95,7 @@ describe('rdbStoreOthersCallbackPerf', function () {
         }
 
         let startTime = new Date().getTime();
-        updateCallback(0);
+        updateCallbackPerf(0);
     })
 
     it('SUB_DDM_PERF_RDB_delete_Callback_001', 0, async function (done) {
@@ -103,10 +103,10 @@ describe('rdbStoreOthersCallbackPerf', function () {
         let predicates = new dataRdb.RdbPredicates("test");
         predicates.equalTo("age", 0);
 
-        async function deleteCallback(index) {
+        async function deleteCallbackPerf(index) {
             rdbStore.delete(predicates, function (err, data) {
                 if (index < BASE_COUNT) {
-                    deleteCallback(index + 1)
+                    deleteCallbackPerf(index + 1)
                 } else {
                     let endTime = new Date().getTime();
                     averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
@@ -118,16 +118,16 @@ describe('rdbStoreOthersCallbackPerf', function () {
         }
 
         let startTime = new Date().getTime();
-        deleteCallback(0);
+        deleteCallbackPerf(0);
     })
 
     it('SUB_DDM_PERF_RDB_querySql_Callback_001', 0, async function (done) {
         let averageTime = 0;
 
-        async function querySqlCallback(index) {
+        async function querySqlCallbackPerf(index) {
             rdbStore.querySql("select * from test", [], function (err, data) {
                 if (index < BASE_COUNT) {
-                    querySqlCallback(index + 1);
+                    querySqlCallbackPerf(index + 1);
                 } else {
                     let endTime = new Date().getTime();
                     averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
@@ -139,16 +139,16 @@ describe('rdbStoreOthersCallbackPerf', function () {
         }
 
         let startTime = new Date().getTime();
-        querySqlCallback(0);
+        querySqlCallbackPerf(0);
     })
 
     it('SUB_DDM_PERF_RDB_executeSql_Callback_001', 0, async function (done) {
         let averageTime = 0;
 
-        async function executeSqlCallback(index) {
+        async function executeSqlCallbackPerf(index) {
             rdbStore.executeSql("insert into test (name, age) values ('tom', 22)", function (err, data) {
                 if (index < SPECIAL_BASE_COUNT) {
-                    executeSqlCallback(index + 1);
+                    executeSqlCallbackPerf(index + 1);
                 } else {
                     let endTime = new Date().getTime();
                     averageTime = ((endTime - startTime) * 1000) / SPECIAL_BASE_COUNT;
@@ -160,16 +160,16 @@ describe('rdbStoreOthersCallbackPerf', function () {
         }
 
         let startTime = new Date().getTime();
-        executeSqlCallback(0);
+        executeSqlCallbackPerf(0);
     })
 
     it('SUB_DDM_PERF_RDB_backup_Callback_001', 0, async function (done) {
         let averageTime = 0;
 
-        async function backupCallback(index) {
+        async function backupCallbackPerf(index) {
             rdbStore.backup("backup.db", function (err, data) {
                 if (index < BASE_COUNT) {
-                    backupCallback(index + 1);
+                    backupCallbackPerf(index + 1);
                 } else {
                     let endTime = new Date().getTime();
                     averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
@@ -181,16 +181,16 @@ describe('rdbStoreOthersCallbackPerf', function () {
         }
 
         let startTime = new Date().getTime();
-        backupCallback(0);
+        backupCallbackPerf(0);
     })
 
     it('SUB_DDM_PERF_RDB_restore_Callback_001', 0, async function (done) {
         let averageTime = 0;
 
-        async function restoreCallback(index) {
+        async function restoreCallbackPerf(index) {
             rdbStore.restore("backup.db", function (err, data) {
                 if (index < BASE_COUNT) {
-                    restoreCallback(index + 1);
+                    restoreCallbackPerf(index + 1);
                 } else {
                     let endTime = new Date().getTime();
                     averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
@@ -204,6 +204,6 @@ describe('rdbStoreOthersCallbackPerf', function () {
         }
 
         let startTime = new Date().getTime();
-        restoreCallback(0);
+        restoreCallbackPerf(0);
     })
 })
