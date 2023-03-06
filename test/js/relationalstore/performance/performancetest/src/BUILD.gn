@@ -18,12 +18,12 @@ module_output_path = "relational_store/oh_perf"
 ohos_js_unittest("OHRdbPerfJsTest") {
   module_out_path = module_output_path
 
-  hap_profile = "./config.json"
+  hap_profile = "../config.json"
 
-  certificate_profile = "./openharmony_sx.p7b"
+  certificate_profile = "../openharmony_sx.p7b"
 }
 
-group("unittest") {
+group("performancetest") {
   testonly = true
   deps = [ ":OHRdbPerfJsTest" ]
 }

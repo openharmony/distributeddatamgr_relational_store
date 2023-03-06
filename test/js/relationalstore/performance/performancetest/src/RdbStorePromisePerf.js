@@ -18,46 +18,39 @@ import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';
 
-const TAG = "[RDB_QUERY_PROMISE]"
+const TAG = "[RDBSTORE_PROMISE]";
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, "
 + "name TEXT, age INTEGER, salary REAL, blobType BLOB)";
 
-const dbName = "rdbQueryPromise.db"
+const DB_NAME = "rdbStorePromise.db";
 const STORE_CONFIG = {
-    name: dbName,
+    name: DB_NAME,
 }
 let context = featureAbility.getContext();
 var rdbStore = undefined;
+const BASE_COUNT = 1000; // loop times
+const BASE_LINE_TABLE = 1800; // callback tablet base line
+const BASE_LINE_PHONE = 2200; // callback phone base line
+const BASE_LINE = (deviceInfo.deviceType == "tablet") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
 
-const base_count = 1000 // loop times
-const base_line_tablet = 1800 // callback tablet base line
-const base_line_phone = 2200 // callback phone base line
-let baseLineCallback
-
-
-describe('queryPromise', function () {
+describe('queryPromisePerf', function () {
     beforeAll(async function () {
-        console.info(TAG + 'beforeAll')
-        if (deviceInfo.deviceType == "tablet") {
-            baseLineCallback = base_line_tablet
-        } else {
-            baseLineCallback = base_line_phone
-        }
+        console.info(TAG + 'beforeAll');
         rdbStore = await dataRdb.getRdbStore(context, STORE_CONFIG, 1);
     })
     beforeEach(async function () {
-        console.info(TAG + 'beforeEach')
+        console.info(TAG + 'beforeEach');
         await rdbStore.executeSql(CREATE_TABLE_TEST, null);
         await prepareTestData();
     })
     afterEach(async function () {
-        console.info(TAG + 'afterEach')
-        await rdbStore.executeSql("delete from test");
+        console.info(TAG + 'afterEach');
+        await rdbStore.executeSql("drop table test");
     })
     afterAll(async function () {
-        console.info(TAG + 'afterAll')
-        rdbStore = null
-        await dataRdb.deleteRdbStore(context, dbName);
+        console.info(TAG + 'afterAll');
+        rdbStore = null;
+        await dataRdb.deleteRdbStore(context, DB_NAME);
     })
 
     async function prepareTestData() {
@@ -76,19 +69,18 @@ describe('queryPromise', function () {
 
     it('SUB_DDM_PERF_RDB_query_Promise_001', 0, async function (done) {
         let averageTime = 0;
-        let predicates = new dataRdb.RdbPredicates("test")
+        let predicates = new dataRdb.RdbPredicates("test");
         predicates.equalTo("age", 10);
-
-        for (var i = 0; i < base_count; i++) {
-            let startTime = new Date().getTime()
-            await rdbStore.query(predicates, [])
-            let endTime = new Date().getTime()
-            averageTime += (endTime - startTime)
+        let startTime = new Date().getTime();
+        for (var i = 0; i < BASE_COUNT; i++) {
+            let resultSet = await rdbStore.query(predicates, []);
+            resultSet.close();
         }
-        averageTime = (averageTime * 1000) / base_count
-        console.info(TAG + " the average time is: " + averageTime + " μs")
-        expect(averageTime < baseLineCallback).assertTrue()
-        console.info(TAG + "*************Unit Test End*************")
-        done()
+        let endTime = new Date().getTime();
+        averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
+        console.info(TAG + " the query_Promise average time is: " + averageTime + " μs");
+        expect(averageTime < BASE_LINE).assertTrue();
+        console.info(TAG + "*************Unit Test End*************");
+        done();
     })
 })

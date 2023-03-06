@@ -14,10 +14,10 @@
 import("//build/test.gni")
 
 #################################group#########################################
-group("unittest") {
+group("performancetest") {
   testonly = true
   deps = []
 
-  deps += [ "unittest/src:unittest" ]
+  deps += [ "performancetest/src:performancetest" ]
 }
 ###############################################################################
