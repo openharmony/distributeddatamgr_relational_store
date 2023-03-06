@@ -18,9 +18,9 @@ module_output_path = "relational_store/rdb"
 ohos_js_unittest("RdbJsTest") {
   module_out_path = module_output_path
 
-  hap_profile = "./config.json"
+  hap_profile = "../config.json"
 
-  certificate_profile = "./openharmony_sx.p7b"
+  certificate_profile = "../openharmony_sx.p7b"
 }
 
 group("unittest") {

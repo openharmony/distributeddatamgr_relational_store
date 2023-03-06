@@ -18,46 +18,40 @@ import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';
 
-const TAG = "[RDB_UPDATE_CALLBACK]"
+const TAG = "[RDBSTORE_OTHERS_CALLBACK]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, "
 + "name TEXT, age INTEGER, salary REAL, blobType BLOB)";
 
-const dbName = "rdbUpdateCallback.db"
+const DB_NAME = "rdbUpdateCallback.db"
 const STORE_CONFIG = {
-    name: dbName,
+    name: DB_NAME,
 }
 let context = featureAbility.getContext();
 var rdbStore = undefined;
+const BASE_COUNT = 1000; // loop times
+const SPECIAL_BASE_COUNT = 300;
+const BASE_LINE_TABLE = 1800; // callback tablet base line
+const BASE_LINE_PHONE = 2200; // callback phone base line
+const BASE_LINE = (deviceInfo.deviceType == "tablet") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
 
-const base_count = 1000 // loop times
-const base_line_tablet = 1800 // callback tablet base line
-const base_line_phone = 2200 // callback phone base line
-let baseLineCallback
-
-
-describe('updateCallback', function () {
+describe('rdbStoreOthersCallbackPerf', function () {
     beforeAll(async function () {
-        console.info(TAG + 'beforeAll')
-        if (deviceInfo.deviceType == "tablet") {
-            baseLineCallback = base_line_tablet
-        } else {
-            baseLineCallback = base_line_phone
-        }
+        console.info(TAG + 'beforeAll');
         rdbStore = await dataRdb.getRdbStore(context, STORE_CONFIG, 1);
     })
     beforeEach(async function () {
-        console.info(TAG + 'beforeEach')
+        console.info(TAG + 'beforeEach');
         await rdbStore.executeSql(CREATE_TABLE_TEST, null);
         await prepareTestData();
     })
     afterEach(async function () {
-        console.info(TAG + 'afterEach')
+        console.info(TAG + 'afterEach');
         await rdbStore.executeSql("delete from test");
     })
     afterAll(async function () {
-        console.info(TAG + 'afterAll')
-        rdbStore = null
-        await dataRdb.deleteRdbStore(context, dbName);
+        console.info(TAG + 'afterAll');
+        rdbStore = null;
+        await dataRdb.deleteRdbStore(context, DB_NAME);
     })
 
     async function prepareTestData() {
@@ -83,24 +77,25 @@ describe('updateCallback', function () {
             "salary": 100.5,
             "blobType": uBlob,
         }
-        let predicates = new dataRdb.RdbPredicates("test")
-        UpdateCallbackTest(0)
+        let predicates = new dataRdb.RdbPredicates("test");
 
-        async function UpdateCallbackTest(index) {
-            let startTime = new Date().getTime()
+        async function updateCallback(index) {
             predicates.equalTo("age", 18);
             rdbStore.update(updateVB, predicates, function (err, data) {
-                if (index < 300) {
-                    UpdateCallbackTest(index + 1)
+                if (index < SPECIAL_BASE_COUNT) {
+                    updateCallback(index + 1);
                 } else {
-                    let endTime = new Date().getTime()
-                    averageTime = ((endTime - startTime) * 1000) / 300
-                    console.info(TAG + " the update_Callback average time is: " + averageTime + " μs")
-                    expect(averageTime < baseLineCallback).assertTrue()
-                    done()
+                    let endTime = new Date().getTime();
+                    averageTime = ((endTime - startTime) * 1000) / SPECIAL_BASE_COUNT;
+                    console.info(TAG + " the update_Callback average time is: " + averageTime + " μs");
+                    expect(averageTime < BASE_LINE).assertTrue();
+                    done();
                 }
             })
         }
+
+        let startTime = new Date().getTime();
+        updateCallback(0);
     })
 
     it('SUB_DDM_PERF_RDB_delete_Callback_001', 0, async function (done) {
@@ -112,24 +107,25 @@ describe('updateCallback', function () {
             "salary": 100.5,
             "blobType": uBlob,
         }
-        let predicates = new dataRdb.RdbPredicates("test")
+        let predicates = new dataRdb.RdbPredicates("test");
         predicates.equalTo("age", 0);
-        DeleteCallbackTest(0)
 
-        async function DeleteCallbackTest(index) {
-            let startTime = new Date().getTime()
+        async function deleteCallback(index) {
             rdbStore.delete(predicates, function (err, data) {
-                if (index < base_count) {
-                    DeleteCallbackTest(index + 1)
+                if (index < BASE_COUNT) {
+                    deleteCallback(index + 1)
                 } else {
-                    let endTime = new Date().getTime()
-                    averageTime = ((endTime - startTime) * 1000) / base_count
-                    console.info(TAG + " the delete_Callback average time is: " + averageTime + " μs")
-                    expect(averageTime < baseLineCallback).assertTrue()
-                    done()
+                    let endTime = new Date().getTime();
+                    averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
+                    console.info(TAG + " the delete_Callback average time is: " + averageTime + " μs");
+                    expect(averageTime < BASE_LINE).assertTrue();
+                    done();
                 }
             })
         }
+
+        let startTime = new Date().getTime();
+        deleteCallback(0);
     })
 
     it('SUB_DDM_PERF_RDB_querySql_Callback_001', 0, async function (done) {
@@ -141,86 +137,89 @@ describe('updateCallback', function () {
             "salary": 100.5,
             "blobType": uBlob,
         }
-        let predicates = new dataRdb.RdbPredicates("test")
+        let predicates = new dataRdb.RdbPredicates("test");
         predicates.equalTo("age", 0);
-        DeleteCallbackTest(0)
 
-        async function DeleteCallbackTest(index) {
-            let startTime = new Date().getTime()
+        async function querySqlCallback(index) {
             rdbStore.querySql("select * from test", [], function (err, data) {
-                if (index < base_count) {
-                    DeleteCallbackTest(index + 1)
+                if (index < BASE_COUNT) {
+                    querySqlCallback(index + 1);
                 } else {
-                    let endTime = new Date().getTime()
-                    averageTime = ((endTime - startTime) * 1000) / base_count
-                    console.info(TAG + " the querySql_Callback average time is: " + averageTime + " μs")
-                    expect(averageTime < baseLineCallback).assertTrue()
-                    done()
+                    let endTime = new Date().getTime();
+                    averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
+                    console.info(TAG + " the querySql_Callback average time is: " + averageTime + " μs");
+                    expect(averageTime < BASE_LINE).assertTrue();
+                    done();
                 }
             })
         }
+
+        let startTime = new Date().getTime();
+        querySqlCallback(0);
     })
 
     it('SUB_DDM_PERF_RDB_executeSql_Callback_001', 0, async function (done) {
         let averageTime = 0;
-        ExecuteSqlCallbackTest(0)
 
-        async function ExecuteSqlCallbackTest(index) {
-            let startTime = new Date().getTime()
+        async function executeSqlCallback(index) {
             rdbStore.executeSql("insert into test (name, age) values ('tom', 22)", function (err, data) {
-                if (index < 300) {
-                    ExecuteSqlCallbackTest(index + 1)
+                if (index < SPECIAL_BASE_COUNT) {
+                    executeSqlCallback(index + 1);
                 } else {
-                    let endTime = new Date().getTime()
-                    averageTime = ((endTime - startTime) * 1000) / 300
-                    console.info(TAG + " the executeSql_Callback average time is: " + averageTime + " μs")
-                    expect(averageTime < baseLineCallback).assertTrue()
-                    done()
+                    let endTime = new Date().getTime();
+                    averageTime = ((endTime - startTime) * 1000) / SPECIAL_BASE_COUNT;
+                    console.info(TAG + " the executeSql_Callback average time is: " + averageTime + " μs");
+                    expect(averageTime < BASE_LINE).assertTrue()
+                    done();
                 }
             })
         }
+
+        let startTime = new Date().getTime();
+        executeSqlCallback(0);
     })
 
     it('SUB_DDM_PERF_RDB_backup_Callback_001', 0, async function (done) {
         let averageTime = 0;
-        BackupCallbackTest(0)
 
-        async function BackupCallbackTest(index) {
-            let startTime = new Date().getTime()
+        async function backupCallback(index) {
             rdbStore.backup("backup.db", function (err, data) {
-                if (index < base_count) {
-                    BackupCallbackTest(index + 1)
+                if (index < BASE_COUNT) {
+                    backupCallback(index + 1);
                 } else {
-                    let endTime = new Date().getTime()
-                    averageTime = ((endTime - startTime) * 1000) / base_count
-                    console.info(TAG + " the backup_Callback average time is: " + averageTime + " μs")
-                    expect(averageTime < baseLineCallback).assertTrue()
-                    done()
+                    let endTime = new Date().getTime();
+                    averageTime = ((endTime - startTime) * 1000) / BASE_LINE;
+                    console.info(TAG + " the backup_Callback average time is: " + averageTime + " μs");
+                    expect(averageTime < BASE_LINE).assertTrue();
+                    done();
                 }
             })
         }
+
+        let startTime = new Date().getTime();
+        backupCallback(0);
     })
 
     it('SUB_DDM_PERF_RDB_restore_Callback_001', 0, async function (done) {
         let averageTime = 0;
-        await RestoreCallbackTest(0)
 
-        async function RestoreCallbackTest(index) {
-            let startTime = new Date().getTime()
+        async function restoreCallback(index) {
             rdbStore.restore("backup.db", function (err, data) {
-                if (index < base_count) {
-                    RestoreCallbackTest(index + 1)
+                if (index < BASE_COUNT) {
+                    restoreCallback(index + 1);
                 } else {
-                    let endTime = new Date().getTime()
-                    averageTime = ((endTime - startTime) * 1000) / base_count
-                    console.info(TAG + " the restore_Callback average time is: " + averageTime + " μs")
-                    expect(averageTime < baseLineCallback).assertTrue()
+                    let endTime = new Date().getTime();
+                    averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
+                    console.info(TAG + " the restore_Callback average time is: " + averageTime + " μs");
+                    expect(averageTime < BASE_LINE).assertTrue();
                     dataRdb.deleteRdbStore(context, "backup.db", function (err, data) {
-                        done()
+                        done();
                     })
                 }
             })
         }
-    })
 
+        let startTime = new Date().getTime();
+        restoreCallback(0);
+    })
 })

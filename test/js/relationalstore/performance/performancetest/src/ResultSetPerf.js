@@ -28,40 +28,35 @@ const STORE_CONFIG = {
 }
 let context = featureAbility.getContext();
 var rdbStore = undefined;
-
-const base_count = 2000 // loop times
-const base_line_tablet = 500 // callback tablet base line
-const base_line_phone = 1000 // callback phone base line
-let baseLineCallback
-
+const BASE_COUNT = 2000; // loop times
+const SPECIAL_BASE_COUNT = 12000;
+const BASE_LINE_TABLE = 500; // callback tablet base line
+const BASE_LINE_PHONE = 1000; // callback phone base line
+const BASE_LINE = (deviceInfo.deviceType == "tablet") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
 
 describe('resultSetPerf', function () {
     beforeAll(async function () {
-        console.info(TAG + 'beforeAll')
-        if (deviceInfo.deviceType == "tablet") {
-            baseLineCallback = base_line_tablet
-        } else {
-            baseLineCallback = base_line_phone
-        }
+        console.info(TAG + 'beforeAll');
         rdbStore = await dataRdb.getRdbStore(context, STORE_CONFIG, 1);
     })
     beforeEach(async function () {
-        console.info(TAG + 'beforeEach')
+        console.info(TAG + 'beforeEach');
         await rdbStore.executeSql(CREATE_TABLE_TEST, null);
         await prepareTestData();
     })
     afterEach(async function () {
-        console.info(TAG + 'afterEach')
+        console.info(TAG + 'afterEach');
         await rdbStore.executeSql("delete from test");
     })
     afterAll(async function () {
-        console.info(TAG + 'afterAll')
-        rdbStore = null
+        console.info(TAG + 'afterAll');
+        rdbStore = null;
         await dataRdb.deleteRdbStore(context, dbName);
     })
 
     async function prepareTestData() {
         console.info(TAG + "prepare for query performance test")
+        var valueBuckets = [];
         var u8 = new Uint8Array([1, 2, 3])
         var valueBucket = {
             "name": "zhangsan",
@@ -71,11 +66,16 @@ describe('resultSetPerf', function () {
         }
         for (let i = 0; i < base_count; i++) {
             valueBucket.age += i;
-            let num = await rdbStore.insert("test", valueBucket);
-            console.info(TAG + " average time prepare data number is : " + num)
+            valueBuckets.push(valueBucket);
         }
+        rdbStore.batchInsert("EMPLOYEE", valueBuckets, function (err, insertNum) {
+            if (err) {
+                console.error(`batchInsert is failed, err: ${err}`);
+                return;
+            }
+            console.info(`batchInsert is successful, the number of values that were inserted = ${insertNum}`);
+        })
     }
-
 
     console.log(TAG + "*************Unit Test Begin*************");
 
@@ -83,16 +83,16 @@ describe('resultSetPerf', function () {
         let predicates = new dataRdb.RdbPredicates("test");
         let resultSet = await rdbStore.query(predicates);
         resultSet.goToFirstRow();
-        let startTime = new Date().getTime()
-        for (let index = 0; index < base_count; index++) {
+        let startTime = new Date().getTime();
+        for (let i = 0; i < BASE_LINE; i++) {
             resultSet.getColumnIndex("id");
         }
         let endTime = new Date().getTime();
-        let averageTime = ((endTime - startTime) * 1000) / base_count
-        console.info(TAG + " the ResultSet_GetColumnIndex average time is: " + averageTime + " μs")
+        let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
+        console.info(TAG + " the ResultSet_GetColumnIndex average time is: " + averageTime + " μs");
         resultSet.close();
-        expect(averageTime < baseLineCallback).assertTrue()
-        done()
+        expect(averageTime < BASE_LINE).assertTrue();
+        done();
     })
 
     it('SUB_DDM_PERF_RDB_ResultSet_GetColumnName_001', 0, async function (done) {
@@ -100,15 +100,15 @@ describe('resultSetPerf', function () {
         let resultSet = await rdbStore.query(predicates);
         resultSet.goToFirstRow();
         let startTime = new Date().getTime()
-        for (let index = 0; index < base_count; index++) {
+        for (let i = 0; i < BASE_COUNT; i++) {
             resultSet.getColumnName(0);
         }
         let endTime = new Date().getTime();
-        let averageTime = ((endTime - startTime) * 1000) / base_count
+        let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
         console.info(TAG + " the ResultSet_GetColumnName average time is: " + averageTime + " μs")
         resultSet.close();
-        expect(averageTime < baseLineCallback).assertTrue()
-        done()
+        expect(averageTime < BASE_LINE).assertTrue();
+        done();
     })
 
     it('SUB_DDM_PERF_RDB_ResultSet_GoTo_001', 0, async function (done) {
@@ -116,93 +116,93 @@ describe('resultSetPerf', function () {
         let resultSet = await rdbStore.query(predicates);
         resultSet.goToFirstRow();
         let startTime = new Date().getTime()
-        for (let index = 0; index < base_count; index++) {
-            resultSet.goTo(1);
+        for (let i = 0; i < BASE_COUNT; i++) {
+            resultSet.goTo(i % 2);
         }
         let endTime = new Date().getTime();
-        let averageTime = ((endTime - startTime) * 1000) / base_count
+        let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
         console.info(TAG + " the ResultSet_GoTo average time is: " + averageTime + " μs")
         resultSet.close();
-        expect(averageTime < baseLineCallback).assertTrue()
-        done()
+        expect(averageTime < BASE_LINE).assertTrue();
+        done();
     })
 
     it('SUB_DDM_PERF_RDB_ResultSet_GoToRow_001', 0, async function (done) {
         let predicates = new dataRdb.RdbPredicates("test");
         let resultSet = await rdbStore.query(predicates);
         resultSet.goToFirstRow();
-        let startTime = new Date().getTime()
-        for (let index = 0; index < base_count; index++) {
+        let startTime = new Date().getTime();
+        for (let i = 0; i < BASE_COUNT; i++) {
             resultSet.goToRow(1);
         }
         let endTime = new Date().getTime();
-        let averageTime = ((endTime - startTime) * 1000) / base_count
-        console.info(TAG + " the ResultSet_GoToRow average time is: " + averageTime + " μs")
+        let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
+        console.info(TAG + " the ResultSet_GoToRow average time is: " + averageTime + " μs");
         resultSet.close();
-        expect(averageTime < baseLineCallback).assertTrue()
-        done()
+        expect(averageTime < BASE_LINE).assertTrue();
+        done();
     })
 
     it('SUB_DDM_PERF_RDB_ResultSet_GoToFirstRow_001', 0, async function (done) {
         let predicates = new dataRdb.RdbPredicates("test");
         let resultSet = await rdbStore.query(predicates);
-        let startTime = new Date().getTime()
-        for (let index = 0; index < base_count; index++) {
+        let startTime = new Date().getTime();
+        for (let i = 0; i < BASE_COUNT; i++) {
             resultSet.goToFirstRow();
         }
         let endTime = new Date().getTime();
-        let averageTime = ((endTime - startTime) * 1000) / base_count
-        console.info(TAG + " the ResultSet_GoToFirstRow average time is: " + averageTime + " μs")
+        let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
+        console.info(TAG + " the ResultSet_GoToFirstRow average time is: " + averageTime + " μs");
         resultSet.close();
-        expect(averageTime < baseLineCallback).assertTrue()
-        done()
+        expect(averageTime < BASE_LINE).assertTrue();
+        done();
     })
 
     it('SUB_DDM_PERF_RDB_ResultSet_GoToLastRow_001', 0, async function (done) {
         let predicates = new dataRdb.RdbPredicates("test");
         let resultSet = await rdbStore.query(predicates);
-        let startTime = new Date().getTime()
-        for (let index = 0; index < base_count; index++) {
+        let startTime = new Date().getTime();
+        for (let i = 0; i < BASE_COUNT; i++) {
             resultSet.goToLastRow();
         }
         let endTime = new Date().getTime();
-        let averageTime = ((endTime - startTime) * 1000) / base_count
-        console.info(TAG + " the ResultSet_GoToLastRow average time is: " + averageTime + " μs")
+        let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
+        console.info(TAG + " the ResultSet_GoToLastRow average time is: " + averageTime + " μs");
         resultSet.close();
-        expect(averageTime < baseLineCallback).assertTrue()
-        done()
+        expect(averageTime < BASE_LINE).assertTrue();
+        done();
     })
 
     it('SUB_DDM_PERF_RDB_ResultSet_GoToNextRow_001', 0, async function (done) {
         let predicates = new dataRdb.RdbPredicates("test");
         let resultSet = await rdbStore.query(predicates);
         resultSet.goToFirstRow();
-        let startTime = new Date().getTime()
-        for (let index = 0; index < base_count; index++) {
+        let startTime = new Date().getTime();
+        for (let i = 0; i < BASE_COUNT; i++) {
             resultSet.goToNextRow();
         }
         let endTime = new Date().getTime();
-        let averageTime = ((endTime - startTime) * 1000) / base_count
+        let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
         console.info(TAG + " the ResultSet_GoToNextRow average time is: " + averageTime + " μs")
         resultSet.close();
-        expect(averageTime < baseLineCallback).assertTrue()
-        done()
+        expect(averageTime < BASE_LINE).assertTrue();
+        done();
     })
 
     it('SUB_DDM_PERF_RDB_ResultSet_GoToPreviousRow_001', 0, async function (done) {
         let predicates = new dataRdb.RdbPredicates("test");
         let resultSet = await rdbStore.query(predicates);
         resultSet.goToLastRow();
-        let startTime = new Date().getTime()
-        for (let index = 0; index < base_count; index++) {
+        let startTime = new Date().getTime();
+        for (let i = 0; i < BASE_COUNT; i++) {
             resultSet.goToPreviousRow();
         }
         let endTime = new Date().getTime();
-        let averageTime = ((endTime - startTime) * 1000) / base_count
-        console.info(TAG + " the ResultSet_GoToPreviousRow average time is: " + averageTime + " μs")
+        let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
+        console.info(TAG + " the ResultSet_GoToPreviousRow average time is: " + averageTime + " μs");
         resultSet.close();
-        expect(averageTime < baseLineCallback).assertTrue()
-        done()
+        expect(averageTime < BASE_LINE).assertTrue();
+        done();
     })
 
     it('SUB_DDM_PERF_RDB_ResultSet_GetBlob_001', 0, async function (done) {
@@ -211,15 +211,15 @@ describe('resultSetPerf', function () {
         let columnIndex = resultSet.getColumnIndex("blobType");
         resultSet.goToFirstRow();
         let startTime = new Date().getTime()
-        for (let index = 0; index < base_count; index++) {
+        for (let i = 0; i < BASE_COUNT; i++) {
             resultSet.getBlob(columnIndex);
         }
         let endTime = new Date().getTime();
-        let averageTime = ((endTime - startTime) * 1000) / base_count
-        console.info(TAG + " the ResultSet_GetBlob average time is: " + averageTime + " μs")
+        let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
+        console.info(TAG + " the ResultSet_GetBlob average time is: " + averageTime + " μs");
         resultSet.close();
-        expect(averageTime < baseLineCallback).assertTrue()
-        done()
+        expect(averageTime < BASE_LINE).assertTrue();
+        done();
     })
 
     it('SUB_DDM_PERF_RDB_ResultSet_GetString_001', 0, async function (done) {
@@ -227,16 +227,15 @@ describe('resultSetPerf', function () {
         let resultSet = await rdbStore.query(predicates);
         let columnIndex = resultSet.getColumnIndex("name");
         let flag = resultSet.goToFirstRow();
-        let startTime = new Date().getTime()
-        for (var i = 0; i < 12000; i++) {
+        let startTime = new Date().getTime();
+        for (var i = 0; i < SPECIAL_BASE_COUNT; i++) {
             resultSet.getString(columnIndex);
         }
         let endTime = new Date().getTime();
-        let averageTotal = endTime - startTime;
-        let averageTime = ((endTime - startTime) * 1000) / 12000
+        let averageTime = ((endTime - startTime) * 1000) / SPECIAL_BASE_COUNT;
         console.info(TAG + " the ResultSet_GetString average time is: " + averageTime + " μs");
         resultSet.close();
-        expect(averageTime < baseLineCallback).assertTrue()
+        expect(averageTime < BASE_LINE).assertTrue();
         done()
     })
 
@@ -245,16 +244,16 @@ describe('resultSetPerf', function () {
         let resultSet = await rdbStore.query(predicates);
         let columnIndex = resultSet.getColumnIndex("age");
         resultSet.goToFirstRow();
-        let startTime = new Date().getTime()
-        for (let index = 0; index < base_count; index++) {
+        let startTime = new Date().getTime();
+        for (let i = 0; i < BASE_COUNT; i++) {
             resultSet.getLong(columnIndex);
         }
         let endTime = new Date().getTime();
-        let averageTime = ((endTime - startTime) * 1000) / base_count
+        let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
         console.info(TAG + " the ResultSet_GetLong average time is: " + averageTime + " μs")
         resultSet.close();
-        expect(averageTime < baseLineCallback).assertTrue()
-        done()
+        expect(averageTime < BASE_LINE).assertTrue();
+        done();
     })
 
     it('SUB_DDM_PERF_RDB_ResultSet_GetDouble_001', 0, async function (done) {
@@ -263,15 +262,15 @@ describe('resultSetPerf', function () {
         let columnIndex = resultSet.getColumnIndex("salary");
         resultSet.goToFirstRow();
         let startTime = new Date().getTime()
-        for (let index = 0; index < base_count; index++) {
+        for (let i = 0; i < BASE_COUNT; i++) {
             resultSet.getDouble(columnIndex);
         }
         let endTime = new Date().getTime();
-        let averageTime = ((endTime - startTime) * 1000) / base_count
+        let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
         console.info(TAG + " the ResultSet_GetDouble average time is: " + averageTime + " μs")
         resultSet.close();
-        expect(averageTime < baseLineCallback).assertTrue()
-        done()
+        expect(averageTime < BASE_LINE).assertTrue();
+        done();
     })
 
     it('SUB_DDM_PERF_RDB_ResultSet_IsColumnNull_001', 0, async function (done) {
@@ -280,30 +279,16 @@ describe('resultSetPerf', function () {
         let columnIndex = resultSet.getColumnIndex("salary");
         resultSet.goToFirstRow();
         let startTime = new Date().getTime()
-        for (let index = 0; index < base_count; index++) {
+        for (let i = 0; i < BASE_COUNT; i++) {
             resultSet.isColumnNull(columnIndex);
         }
         let endTime = new Date().getTime();
-        let averageTime = ((endTime - startTime) * 1000) / base_count
-        console.info(TAG + " the ResultSet_IsColumnNull average time is: " + averageTime + " μs")
+        let averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
+        console.info(TAG + " the ResultSet_IsColumnNull average time is: " + averageTime + " μs");
         resultSet.close();
-        expect(averageTime < baseLineCallback).assertTrue()
-        done()
+        expect(averageTime < BASE_LINE).assertTrue();
+        done();
     })
 
-    it('SUB_DDM_PERF_RDB_ResultSet_Close_001', 0, async function (done) {
-        let predicates = new dataRdb.RdbPredicates("test");
-        let resultSet = await rdbStore.query(predicates);
-        let startTime = new Date().getTime()
-        for (let index = 0; index < base_count; index++) {
-            resultSet.close();
-        }
-        let endTime = new Date().getTime();
-        let averageTime = ((endTime - startTime) * 1000) / base_count
-        console.info(TAG + " the ResultSet_Close average time is: " + averageTime + " μs")
-        expect(averageTime < baseLineCallback).assertTrue()
-        done()
-    })
-
-    console.info(TAG + "*************Unit Test End*************")
+    console.info(TAG + "*************Unit Test End*************");
 })

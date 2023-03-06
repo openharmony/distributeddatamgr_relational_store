@@ -18,72 +18,63 @@ import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';
 
-const TAG = "[RDB_GETRDBSTORE_PROMISE]"
+const TAG = "[RDBHELPER_PROMISE]";
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, "
 + "name TEXT, age INTEGER, salary REAL, blobType BLOB)";
 
-const dbName = "rdbPromise.db"
+const DB_NAME = "rdbPromise.db";
 const STORE_CONFIG = {
-    name: dbName,
+    name: DB_NAME,
 }
 let context = featureAbility.getContext();
 var rdbStore = undefined;
+const BASE_COUNT = 2000; // loop times
+const BASE_LINE_TABLE = 2500; // callback tablet base line
+const BASE_LINE_PHONE = 3000; // callback phone base line
+const BASE_LINE = (deviceInfo.deviceType == "tablet") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
 
-const base_count = 1000 // loop times
-const base_line_tablet = 2500 // callback tablet base line
-const base_line_phone = 3000 // callback phone base line
-let baseLineCallback
-
-
-describe('GetRdbStorePromise', function () {
+describe('rdbHelperPromisePerf', function () {
     beforeAll(async function () {
-        console.info(TAG + 'beforeAll')
-        if (deviceInfo.deviceType == "tablet") {
-            baseLineCallback = base_line_tablet
-        } else {
-            baseLineCallback = base_line_phone
-        }
+        console.info(TAG + 'beforeAll');
     })
     beforeEach(async function () {
-        console.info(TAG + 'beforeEach')
+        console.info(TAG + 'beforeEach');
     })
     afterEach(async function () {
-        console.info(TAG + 'afterEach')
+        console.info(TAG + 'afterEach');
     })
     afterAll(async function () {
-        console.info(TAG + 'afterAll')
-        rdbStore = null
-        await dataRdb.deleteRdbStore(context, dbName);
+        console.info(TAG + 'afterAll');
+        rdbStore = null;
+        await dataRdb.deleteRdbStore(context, DB_NAME);
     })
 
     console.log(TAG + "*************Unit Test Begin*************");
 
     it('SUB_DDM_PERF_RDB_getRdbStore_Promise_001', 0, async function (done) {
         let averageTime = 0;
-        for (var i = 0; i < base_count; i++) {
-            let startTime = new Date().getTime();
+        let startTime = new Date().getTime();
+        for (var i = 0; i < BASE_COUNT; i++) {
             await dataRdb.getRdbStore(context, STORE_CONFIG, 1);
-            let endTime = new Date().getTime();
-            averageTime += (endTime - startTime)
         }
-        averageTime = (averageTime * 1000) / base_count
-        console.info(TAG + " the getRdbStore_Promise average time is: " + averageTime + " μs")
-        expect(averageTime < baseLineCallback).assertTrue()
-        done()
+        let endTime = new Date().getTime();
+        averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
+        console.info(TAG + " the getRdbStore_Promise average time is: " + averageTime + " μs");
+        expect(averageTime < BASE_LINE).assertTrue();
+        done();
     })
 
     it('SUB_DDM_PERF_RDB_deleteRdbStore_Promise_001', 0, async function (done) {
         let averageTime = 0;
-        for (var i = 0; i < base_count; i++) {
-            let startTime = new Date().getTime();
-            await dataRdb.deleteRdbStore(context, dbName, 1);
-            let endTime = new Date().getTime();
-            averageTime += (endTime - startTime)
+        let startTime = new Date().getTime();
+        for (var i = 0; i < BASE_COUNT; i++) {
+            await dataRdb.deleteRdbStore(context, DB_NAME, 1);
         }
-        averageTime = (averageTime * 1000) / base_count
-        console.info(TAG + " the deleteRdbStore_Promise average time is: " + averageTime + " μs")
-        expect(averageTime < baseLineCallback).assertTrue()
-        done()
+        let endTime = new Date().getTime();
+        averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
+        console.info(TAG + " the deleteRdbStore_Promise average time is: " + averageTime + " μs");
+        expect(averageTime < BASE_LINE).assertTrue();
+        done();
         console.info(TAG + "*************Unit Test End*************")
     })
 })

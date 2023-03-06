@@ -22,40 +22,33 @@ const TAG = "[RDB_SYNC_PROMISE]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, "
 + "name TEXT, age INTEGER, salary REAL, blobType BLOB)";
 
-const dbName = "rdbSync.db"
+const DB_NAME = "rdbSync.db"
 const STORE_CONFIG = {
-    name: dbName,
+    name: DB_NAME,
 }
 let context = featureAbility.getContext();
 var rdbStore = undefined;
+const BASE_COUNT = 1000; // loop times
+const BASE_LINE_TABLE = 2500; // callback tablet base line
+const BASE_LINE_PHONE = 3000; // callback phone base line
+const BASE_LINE = (deviceInfo.deviceType == "tablet") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
 
-const base_count = 1000 // loop times
-const base_line_tablet = 2500 // callback tablet base line
-const base_line_phone = 3000 // callback phone base line
-let baseLineCallback
 
-
-describe('rdbStoreSync', function () {
+describe('rdbStoreSyncPerf', function () {
     beforeAll(async function () {
-        console.info(TAG + 'beforeAll')
-        if (deviceInfo.deviceType == "tablet") {
-            baseLineCallback = base_line_tablet
-        } else {
-            baseLineCallback = base_line_phone
-        }
-
+        console.info(TAG + 'beforeAll');
         rdbStore = await dataRdb.getRdbStore(context, STORE_CONFIG, 1);
     })
     beforeEach(async function () {
-        console.info(TAG + 'beforeEach')
+        console.info(TAG + 'beforeEach');
     })
     afterEach(async function () {
-        console.info(TAG + 'afterEach')
+        console.info(TAG + 'afterEach');
     })
     afterAll(async function () {
-        console.info(TAG + 'afterAll')
+        console.info(TAG + 'afterAll');
         rdbStore = null
-        await dataRdb.deleteRdbStore(context, dbName);
+        await dataRdb.deleteRdbStore(context, DB_NAME);
     })
 
     console.log(TAG + "*************Unit Test Begin*************");
@@ -63,45 +56,42 @@ describe('rdbStoreSync', function () {
     it('SUB_DDM_PERF_RDB_version_001', 0, async function (done) {
         let averageTime = 0;
         let dbVersion = 1;
-        for (var i = 0; i < base_count; i++) {
-            let startTime = new Date().getTime();
-            dbVersion = rdbStore.version
-            let endTime = new Date().getTime();
-            averageTime += (endTime - startTime);
+        let startTime = new Date().getTime();
+        for (var i = 0; i < BASE_COUNT; i++) {
+            dbVersion = rdbStore.version;
         }
-        averageTime = (averageTime * 1000) / base_count;
+        let endTime = new Date().getTime();
+        averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
         console.info(TAG + " the version average time is: " + averageTime + " μs");
-        expect(averageTime < baseLineCallback).assertTrue();
+        expect(averageTime < BASE_LINE).assertTrue();
         done();
     })
 
     it('SUB_DDM_PERF_RDB_transaction_commit_001', 0, async function (done) {
         let averageTime = 0;
-        for (var i = 0; i < base_count; i++) {
-            let startTime = new Date().getTime();
+        let startTime = new Date().getTime();
+        for (var i = 0; i < BASE_COUNT; i++) {
             rdbStore.beginTransaction();
             rdbStore.commit();
-            let endTime = new Date().getTime();
-            averageTime += (endTime - startTime);
         }
-        averageTime = (averageTime * 1000) / base_count;
+        let endTime = new Date().getTime();
+        averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
         console.info(TAG + " the transaction_commit average time is: " + averageTime + " μs");
-        expect(averageTime < baseLineCallback).assertTrue();
+        expect(averageTime < BASE_LINE).assertTrue();
         done();
     })
 
     it('SUB_DDM_PERF_RDB_transaction_rollback_001', 0, async function (done) {
         let averageTime = 0;
-        for (var i = 0; i < base_count; i++) {
-            let startTime = new Date().getTime();
+        let startTime = new Date().getTime();
+        for (var i = 0; i < BASE_COUNT; i++) {
             rdbStore.beginTransaction();
             rdbStore.rollBack();
-            let endTime = new Date().getTime();
-            averageTime += (endTime - startTime);
         }
-        averageTime = (averageTime * 1000) / base_count;
+        let endTime = new Date().getTime();
+        averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
         console.info(TAG + " the transaction_rollback average time is: " + averageTime + " μs");
-        expect(averageTime < baseLineCallback).assertTrue();
+        expect(averageTime < BASE_LINE).assertTrue();
         done();
         console.info(TAG + "*************Unit Test End*************");
     })
