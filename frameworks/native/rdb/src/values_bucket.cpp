@@ -14,6 +14,7 @@
  */
 
 #include "values_bucket.h"
+#include "itypes_util.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -114,22 +115,21 @@ bool ValuesBucket::Marshalling(Parcel &parcel) const
     parcel.WriteInt32(valuesMap.size());
     for (auto &it : valuesMap) {
         parcel.WriteString(it.first);
-        parcel.WriteParcelable(&it.second);
+        ITypesUtil::Marshalling(it.second, parcel);
     }
     return true;
 }
 
-std::shared_ptr<ValuesBucket> ValuesBucket::Unmarshalling(Parcel &parcel)
+ValuesBucket *ValuesBucket::Unmarshalling(Parcel &parcel)
 {
     int mapSize = parcel.ReadInt32();
     std::map<std::string, ValueObject> valuesMap;
-    ValueObject *value = nullptr;
     for (int i = 0; i < mapSize; i++) {
         std::string key = parcel.ReadString();
-        value = parcel.ReadParcelable<ValueObject>();
-        valuesMap.insert(std::make_pair(key, *value));
+        ValueObject valueObject;
+        ITypesUtil::Unmarshalling(valueObject, parcel);
+        valuesMap.insert(std::make_pair(key, valueObject));
     }
-    value = nullptr;
     return new ValuesBucket(valuesMap);
 }
 #endif

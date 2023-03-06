@@ -19,7 +19,6 @@
 #include <string>
 #include <variant>
 #include <vector>
-#include <parcel.h>
 #include "rdb_visibility.h"
 
 namespace OHOS {
@@ -45,7 +44,7 @@ enum class ValueObjectType {
 /**
  * The ValueObject class of RDB.
  */
-class RDB_API_EXPORT ValueObject : public virtual OHOS::Parcelable {
+class RDB_API_EXPORT ValueObject {
 public:
     /**
      * @brief Use Type replace std::variant.
@@ -177,16 +176,6 @@ public:
      * @brief Obtains the vector<uint8_t> value in this {@code ValueObject} object.
      */
     RDB_API_EXPORT int GetBlob(std::vector<uint8_t> &val) const;
-
-    /**
-     * @brief Write to message parcel.
-     */
-    RDB_API_EXPORT bool Marshalling(Parcel &parcel) const override;
-
-    /**
-     * @brief Obtains a ValueObject object from parcel.
-     */
-    RDB_API_EXPORT static std::shared_ptr<ValueObject> Unmarshalling(Parcel &parcel);
 
     /**
      * @brief Type conversion function.
