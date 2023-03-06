@@ -22,9 +22,9 @@ const TAG = "[RDB_RESULTSET_PERF]";
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, "
 + "name TEXT, age INTEGER, salary REAL, blobType BLOB)";
 
-const dbName = "resultSetPerf.db";
+const DB_NAME = "resultSetPerf.db";
 const STORE_CONFIG = {
-    name: dbName,
+    name: DB_NAME,
 }
 let context = featureAbility.getContext();
 var rdbStore = undefined;
@@ -51,7 +51,7 @@ describe('resultSetPerf', function () {
     afterAll(async function () {
         console.info(TAG + 'afterAll');
         rdbStore = null;
-        await dataRdb.deleteRdbStore(context, dbName);
+        await dataRdb.deleteRdbStore(context, DB_NAME);
     })
 
     async function prepareTestData() {
