@@ -46,7 +46,7 @@ describe('rdbStoreOthersCallbackPerf', function () {
     })
     afterEach(async function () {
         console.info(TAG + 'afterEach');
-        await rdbStore.executeSql("delete from test");
+        await rdbStore.executeSql("drop table test");
     })
     afterAll(async function () {
         console.info(TAG + 'afterAll');
