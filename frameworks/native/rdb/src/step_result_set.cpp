@@ -223,11 +223,6 @@ int StepResultSet::Close()
     return errCode;
 }
 
-int StepResultSet::CheckSession()
-{
-    return E_OK;
-}
-
 /**
  * Obtain session and prepare precompile statement for step query
  */
@@ -261,20 +256,17 @@ int StepResultSet::PrepareStep()
  */
 int StepResultSet::FinishStep()
 {
-    int errCode = CheckSession();
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
     if (sqliteStatement == nullptr) {
         return E_OK;
     }
 
     sqliteStatement = nullptr;
     rowPos_ = INIT_POS;
-    if (connection_ != nullptr) {
-        errCode = connection_->EndStepQuery();
+    if (connection_ == nullptr) {
+        return E_OK;
     }
+
+    int errCode = connection_->EndStepQuery();
     if (errCode != E_OK) {
         LOG_ERROR("StepResultSet::FinishStep err = %d", errCode);
     }

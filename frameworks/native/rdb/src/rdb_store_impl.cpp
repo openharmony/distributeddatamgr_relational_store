@@ -110,8 +110,6 @@ RdbStoreImpl::RdbStoreImpl()
 RdbStoreImpl::~RdbStoreImpl()
 {
     delete connectionPool;
-    threadMap.clear();
-    idleSessions.clear();
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     if (isShared_) {
         auto service = DistributedRdb::RdbManager::GetRdbService(syncerParam_);
