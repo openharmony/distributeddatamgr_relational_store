@@ -214,13 +214,5 @@ void SqliteSharedResultSet::Finalize()
         Close();
     }
 }
-
-int SqliteSharedResultSet::CheckSession()
-{
-    if (std::this_thread::get_id() != tid) {
-        return E_STEP_RESULT_SET_CROSS_THREADS;
-    }
-    return E_OK;
-}
 } // namespace NativeRdb
 } // namespace OHOS

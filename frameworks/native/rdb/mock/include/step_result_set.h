@@ -54,7 +54,6 @@ public:
     int PrepareStep();
 
 private:
-    int CheckSession();
     void Reset();
     std::shared_ptr<RdbStoreImpl> rdb;
     std::string sql;
