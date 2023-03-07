@@ -22,8 +22,3 @@ ohos_js_unittest("OHRdbPerfJsTest") {
 
   certificate_profile = "../openharmony_sx.p7b"
 }
-
-group("performancetest") {
-  testonly = true
-  deps = [ ":OHRdbPerfJsTest" ]
-}
