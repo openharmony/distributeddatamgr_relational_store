@@ -49,7 +49,6 @@ private:
     static napi_value Query(napi_env env, napi_callback_info info);
     static napi_value QuerySql(napi_env env, napi_callback_info info);
     static napi_value ExecuteSql(napi_env env, napi_callback_info info);
-    static napi_value Backup(napi_env env, napi_callback_info info);
     static napi_value Count(napi_env env, napi_callback_info info);
     static napi_value Replace(napi_env env, napi_callback_info info);
     static napi_value Attach(napi_env env, napi_callback_info info);
@@ -65,7 +64,6 @@ private:
     static napi_value IsOpen(napi_env env, napi_callback_info info);
     static napi_value GetVersion(napi_env env, napi_callback_info info);
     static napi_value SetVersion(napi_env env, napi_callback_info info);
-    static napi_value Restore(napi_env env, napi_callback_info info);
     std::mutex mutex_;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
 };
