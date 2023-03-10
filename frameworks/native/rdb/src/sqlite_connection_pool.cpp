@@ -113,7 +113,7 @@ void SqliteConnectionPool::CloseAllConnections()
 
 SqliteConnection *SqliteConnectionPool::AcquireConnection(bool isReadOnly)
 {
-    LOG_DEBUG("readConnectionCount: %{public}d, idleReadConnectionCount: %{public}d, writeConnection: %{public}d",
+    LOG_DEBUG("readConnectionCount: %{public}d, idleReadConnectionCount: %{public}s, writeConnection: %{public}d",
               readConnectionCount, idleReadConnectionCount, writeConnection);
     if (isReadOnly && readConnectionCount != 0) {
         return AcquireReadConnection();
@@ -123,7 +123,7 @@ SqliteConnection *SqliteConnectionPool::AcquireConnection(bool isReadOnly)
 }
 void SqliteConnectionPool::ReleaseConnection(SqliteConnection *connection)
 {
-    LOG_DEBUG("readConnectionCount: %{public}d, idleReadConnectionCount: %{public}d, writeConnection: %{public}d",
+    LOG_DEBUG("readConnectionCount: %{public}d, idleReadConnectionCount: %{public}s, writeConnection: %{public}d",
               readConnectionCount, idleReadConnectionCount, writeConnection);
     connection->DesFinalize();
     if (connection == writeConnection) {
