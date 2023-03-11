@@ -364,7 +364,7 @@ public:
      *
      * @param tables Indicates the tables name you want to set.
      */
-    virtual bool SetDistributedTables(const std::vector<std::string>& tables) = 0;
+    virtual int SetDistributedTables(const std::vector<std::string>& tables) = 0;
 
     /**
      * @brief Obtain distributed table name of specified remote device according to local table name.
@@ -382,17 +382,17 @@ public:
      * @param device Indicates the remote device.
      * @param predicate Indicates the AbsRdbPredicates {@link AbsRdbPredicates} object.
      */
-    virtual bool Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) = 0;
+    virtual int Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) = 0;
 
     /**
      * @brief Subscribe to event changes.
      */
-    virtual bool Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
+    virtual int Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
 
     /**
      * @brief UnSubscribe to event changes.
      */
-    virtual bool UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
+    virtual int UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
 
     /**
      * @brief Drop the specified devices Data.
