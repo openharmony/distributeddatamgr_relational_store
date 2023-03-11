@@ -1305,27 +1305,27 @@ int RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv
     napi_typeof(env, argv[0], &type);
     if (type != napi_number) {
         LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: first argument is not number");
-        return E_ERROR;
+        return ERR;
     }
     int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
     napi_get_value_int32(env, argv[0], &mode);
     if (mode < 0 || mode >= SubscribeMode::SUBSCRIBE_MODE_MAX) {
         LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: first argument value is invalid");
-        return E_ERROR;
+        return ERR;
     }
     LOG_INFO("RdbStoreProxy::OnDataChangeEvent: mode=%{public}d", mode);
 
     napi_typeof(env, argv[1], &type);
     if (type != napi_function) {
         LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: second argument is not function");
-        return E_ERROR;
+        return ERR;
     }
 
     std::lock_guard<std::mutex> lockGuard(mutex_);
     for (const auto &observer : observers_[mode]) {
         if (*observer == argv[1]) {
             LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: duplicate subscribe");
-            return E_ERROR;
+            return ERR;
         }
     }
     SubscribeOption option;
@@ -1338,7 +1338,7 @@ int RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv
     }
     observers_[mode].push_back(observer);
     LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: subscribe success");
-    return E_OK;
+    return OK;
 }
 
 int RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *argv)
@@ -1347,20 +1347,20 @@ int RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *arg
     napi_typeof(env, argv[0], &type);
     if (type != napi_number) {
         LOG_ERROR("RdbStoreProxy::OffDataChangeEvent: first argument is not number");
-        return E_ERROR;
+        return ERR;
     }
     int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
     napi_get_value_int32(env, argv[0], &mode);
     if (mode < 0 || mode >= SubscribeMode::SUBSCRIBE_MODE_MAX) {
         LOG_ERROR("RdbStoreProxy::OffDataChangeEvent: first argument value is invalid");
-        return E_ERROR;
+        return ERR;
     }
     LOG_INFO("RdbStoreProxy::OffDataChangeEvent: mode=%{public}d", mode);
 
     napi_typeof(env, argv[1], &type);
     if (type != napi_function) {
         LOG_ERROR("RdbStoreProxy::OffDataChangeEvent: second argument is not function");
-        return E_ERROR;
+        return ERR;
     }
 
     SubscribeOption option;
@@ -1375,7 +1375,7 @@ int RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *arg
         }
     }
     LOG_INFO("RdbStoreProxy::OffDataChangeEvent: not found");
-    return E_ERROR;
+    return ERR;
 }
 
 napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
