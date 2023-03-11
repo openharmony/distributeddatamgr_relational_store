@@ -26,8 +26,10 @@
 #include "irdb_service.h"
 #include "itypes_util.h"
 #include "rdb_service_proxy.h"
+#include "rdb_errno.h"
 
 namespace OHOS::DistributedRdb {
+using namespace OHOS::NativeRdb;
 std::shared_ptr<RdbStoreDataServiceProxy> RdbManagerImpl::GetDistributedDataManager()
 {
     auto manager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -78,46 +80,51 @@ RdbManagerImpl& RdbManagerImpl::GetInstance()
     return manager;
 }
 
-sptr<RdbServiceProxy> RdbManagerImpl::GetRdbService()
+int RdbManagerImpl::GetRdbService(sptr<RdbServiceProxy> &serviceProxy)
 {
     if (distributedDataMgr_ == nullptr) {
         distributedDataMgr_ = GetDistributedDataManager();
     }
     if (distributedDataMgr_ == nullptr) {
         ZLOGE("get distributed data manager failed");
-        return nullptr;
+        return E_ERROR;
     }
 
     auto remote = distributedDataMgr_->GetFeatureInterface("relational_store");
     if (remote == nullptr) {
         ZLOGE("get rdb service failed");
-        return nullptr;
+        return E_NOT_SUP;
     }
-    return iface_cast<DistributedRdb::RdbServiceProxy>(remote);
+    serviceProxy = iface_cast<DistributedRdb::RdbServiceProxy>(remote);
+    return E_OK;
 }
 
-std::shared_ptr<RdbService> RdbManagerImpl::GetRdbService(const RdbSyncerParam& param)
+int RdbManagerImpl::GetRdbService(const RdbSyncerParam& param, std::shared_ptr<RdbService> &service)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (rdbService_ != nullptr) {
-        return rdbService_;
+        service = rdbService_;
+        return E_OK;
     }
-    auto service = GetRdbService();
-    if (service == nullptr) {
-        return nullptr;
+    sptr<RdbServiceProxy> serviceProxy = nullptr;
+    int errCode = GetRdbService(serviceProxy);
+    if (errCode != E_OK) {
+        ZLOGE("get rdb service failed, err is %{public}d", errCode);
+        return errCode;
     }
-    if (service->InitNotifier(param) != RDB_OK) {
+    if (serviceProxy->InitNotifier(param) != RDB_OK) {
         ZLOGE("init notifier failed");
-        return nullptr;
+        return E_ERROR;
     }
-    sptr<IRdbService> serviceBase = service;
+    sptr<IRdbService> serviceBase = serviceProxy;
     LinkToDeath(serviceBase->AsObject().GetRefPtr());
-    rdbService_ = std::shared_ptr<RdbService>(service.GetRefPtr(), [holder = service] (const auto*) {});
+    rdbService_ = std::shared_ptr<RdbService>(serviceProxy.GetRefPtr(), [holder = serviceProxy] (const auto*) {});
     if (rdbService_ == nullptr) {
-        return nullptr;
+        return E_ERROR;
     }
     bundleName_ = param.bundleName_;
-    return rdbService_;
+    service = rdbService_;
+    return E_OK;
 }
 
 void RdbManagerImpl::OnRemoteDied()
@@ -134,8 +141,9 @@ void RdbManagerImpl::OnRemoteDied()
     std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     RdbSyncerParam param;
     param.bundleName_ = bundleName_;
-    auto service = GetRdbService(param);
-    if (service == nullptr) {
+    std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
+    int errCode = GetRdbService(param, service);
+    if (errCode != E_OK) {
         return;
     }
     proxy = std::static_pointer_cast<RdbServiceProxy>(service);

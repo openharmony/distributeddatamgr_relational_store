@@ -27,6 +27,7 @@ constexpr int OK = 0;
 constexpr int ERR = -1;
 
 constexpr int E_PARAM_ERROR = 401;
+constexpr int E_NOT_SUP = 801;
 constexpr int E_NON_SYSTEM_APP_ERROR = 202;
 constexpr int E_INNER_ERROR = 14800000;
 constexpr int E_RESULT_GOTO_ERROR = 14800012;
@@ -38,6 +39,7 @@ const static std::map<int, std::string> ERROR_MAPS = {
     { NativeRdb::E_INVALID_FILE_PATH, "Failed to open database by database corrupted" },
     { E_RESULT_GOTO_ERROR, "The result set is empty or the specified location is invalid." },
     { E_RESULT_GET_ERROR, "The column value is null or the column type is incompatible." },
+    { E_NOT_SUP, "Capability no supported." },
 };
 
 #define RDB_REVT_NOTHING
@@ -66,6 +68,15 @@ const static std::map<int, std::string> ERROR_MAPS = {
             theCall;                                     \
             return revt;                                 \
         }                                                \
+    } while (0)
+
+#define RDB_CHECK_API_VALID(assertion)                                                                       \
+    do {                                                                                                     \
+        if (!(assertion)) {                                                                                  \
+            std::shared_ptr<DeviceNotSupportedError> apiError = std::make_shared<DeviceNotSupportedError>(); \
+            context->SetError(apiError);                                                                     \
+            return ERR;                                                                                      \
+        }                                                                                                    \
     } while (0)
 
 #define CHECK_RETURN_SET_E(assertion, paramError) \
@@ -113,6 +124,20 @@ public:
 private:
     int code_;
     std::string msg_;
+};
+
+class DeviceNotSupportedError : public Error {
+public:
+    DeviceNotSupportedError() = default;
+    std::string GetMessage()
+    {
+        return "Capability no supported";
+    }
+
+    int GetCode()
+    {
+        return E_NOT_SUP;
+    }
 };
 
 class ParamError : public Error {
