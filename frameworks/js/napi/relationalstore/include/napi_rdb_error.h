@@ -72,7 +72,7 @@ const static std::map<int, std::string> ERROR_MAPS = {
 
 #define RDB_CHECK_API_VALID(assertion)                                                                       \
     do {                                                                                                     \
-        if (!(assertion)) {                                                                                  \
+        if (assertion) {                                                                                     \
             std::shared_ptr<DeviceNotSupportedError> apiError = std::make_shared<DeviceNotSupportedError>(); \
             context->SetError(apiError);                                                                     \
             return ERR;                                                                                      \

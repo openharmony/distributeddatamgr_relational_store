@@ -1063,9 +1063,7 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         int res = obj->rdbStore_->SetDistributedTables(context->tablesNames);
         LOG_INFO("RdbStoreProxy::SetDistributedTables res is : %{public}d", res);
-        if (res == E_NOT_SUP){
-            RDB_CHECK_API_VALID(res==E_OK);
-        }
+        RDB_CHECK_API_VALID(res == OHOS::NativeRdb::E_NOT_SUP);
         return res;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -1125,9 +1123,7 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
         option.isBlock = true;
         int res = obj->rdbStore_->Sync(option, *context->predicatesProxy->GetPredicates(),
             [context](const SyncResult &result) { context->syncResult = result; });
-        if (res == E_NOT_SUP){
-            RDB_CHECK_API_VALID(res==E_OK);
-        }
+        RDB_CHECK_API_VALID(res == OHOS::NativeRdb::E_NOT_SUP);
         LOG_INFO("RdbStoreProxy::Sync res is : %{public}d", res);
         return res;
     };
@@ -1219,6 +1215,7 @@ int RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *arg
         }
     }
     LOG_INFO("RdbStoreProxy::OffDataChangeEvent: not found");
+    return E_ERROR;
 }
 
 napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
@@ -1238,9 +1235,9 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
 
     std::string event = JSUtils::Convert2String(env, argv[0]);
     if (event == "dataChange") {
-        int errCode = proxy->OnDataChangeEvent(env, argc - 1, argv + 1);
-        if (errCode == E_NOT_SUP){
-            RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_NOT_SUP));
+        int res = proxy->OnDataChangeEvent(env, argc - 1, argv + 1);
+        if (res == OHOS::NativeRdb::E_NOT_SUP) {
+            RDB_NAPI_ASSERT(env, res == E_OK, std::make_shared<DeviceNotSupportedError>());
         }
     }
 
@@ -1265,9 +1262,9 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
 
     std::string event = JSUtils::Convert2String(env, argv[0]);
     if (event == "dataChange") {
-        int errCode = proxy->OffDataChangeEvent(env, argc - 1, argv + 1);
-        if (errCode == E_NOT_SUP) {
-            RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_NOT_SUP));
+        int res = proxy->OffDataChangeEvent(env, argc - 1, argv + 1);
+        if (res == OHOS::NativeRdb::E_NOT_SUP) {
+            RDB_NAPI_ASSERT(env, res == E_OK, std::make_shared<DeviceNotSupportedError>());
         }
     }
 
