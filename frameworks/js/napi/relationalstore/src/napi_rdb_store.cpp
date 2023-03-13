@@ -1122,7 +1122,6 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
         option.isBlock = true;
         return obj->rdbStore_->Sync(option, *context->predicatesProxy->GetPredicates(),
             [context](const SyncResult &result) { context->syncResult = result; });
-
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = JSUtils::Convert2JSValue(env, context->syncResult);
