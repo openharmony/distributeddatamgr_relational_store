@@ -42,13 +42,7 @@ constexpr int E_RESULT_GOTO_ERROR = 14800012;
                 napi_throw_error((env), nullptr, "error message is empty");                                     \
                 return retVal;                                                                                  \
             }                                                                                                   \
-            if (((version) > (APIVERSION_8)) || ((error->GetCode()) == (401))) {                                \
-                LOG_ERROR("throw error: code = %{public}d , message = %{public}s, version= %{public}d",         \
-                    error->GetCode(), error->GetMessage().c_str(), version);                                    \
-                napi_throw_error((env), std::to_string(error->GetCode()).c_str(), error->GetMessage().c_str()); \
-                return retVal;                                                                                  \
-            }                                                                                                   \
-            if ((error->GetCode()) == (801)) {                                                                  \
+            if (((version) > (APIVERSION_8)) || ((error->GetCode()) == (401)) || (error->GetCode()) == (801)) { \
                 LOG_ERROR("throw error: code = %{public}d , message = %{public}s, version= %{public}d",         \
                     error->GetCode(), error->GetMessage().c_str(), version);                                    \
                 napi_throw_error((env), std::to_string(error->GetCode()).c_str(), error->GetMessage().c_str()); \
