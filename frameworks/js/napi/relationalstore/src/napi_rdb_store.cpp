@@ -622,10 +622,11 @@ napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::RemoteQuery Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        int errCode = E_OK;
         context->newResultSet =
-            obj->rdbStore_->RemoteQuery(context->device, *(context->rdbPredicates), context->columns);
+            obj->rdbStore_->RemoteQuery(context->device, *(context->rdbPredicates), context->columns, errCode);
         LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr ? %{public}d", (context->newResultSet == nullptr));
-        return (context->newResultSet != nullptr) ? E_OK : E_ERROR;
+        return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, context->newResultSet);
@@ -1087,8 +1088,9 @@ napi_value RdbStoreProxy::ObtainDistributedTableName(napi_env env, napi_callback
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::ObtainDistributedTableName Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        context->tableName = obj->rdbStore_->ObtainDistributedTableName(context->device, context->tableName);
-        return context->tableName.empty() ? E_OK : E_ERROR;
+        int errCode = E_OK;
+        context->tableName = obj->rdbStore_->ObtainDistributedTableName(context->device, context->tableName, errCode);
+        return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
         std::string table = context->tableName;

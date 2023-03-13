@@ -17,7 +17,7 @@
 #include "rdb_manager_impl.h"
 
 namespace OHOS::DistributedRdb {
-int RdbManager::GetRdbService(const RdbSyncerParam& param, std::shared_ptr<RdbService> &service)
+int RdbManager::GetRdbService(const RdbSyncerParam& param, std::shared_ptr<RdbService> service)
 {
     return RdbManagerImpl::GetInstance().GetRdbService(param, service);
 }
