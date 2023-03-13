@@ -156,8 +156,16 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
     }
 
     // prepare BeginTransaction
-    connectionPool->AcquireTransaction();
+    int errCode = connectionPool->AcquireTransaction();
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+
     if (connection->IsInTransaction()) {
         connectionPool->ReleaseTransaction();
         connectionPool->ReleaseConnection(connection);
@@ -166,7 +174,7 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
     }
     BaseTransaction transaction(0);
     connection->SetInTransaction(true);
-    int errCode = connection->ExecuteSql(transaction.GetTransactionStr());
+    errCode = connection->ExecuteSql(transaction.GetTransactionStr());
     if (errCode != E_OK) {
         LOG_ERROR("BeginTransaction with error code %{public}d.", errCode);
         connection->SetInTransaction(false);
@@ -253,6 +261,10 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
     sql << ')';
 
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+
     errCode = connection->ExecuteForLastInsertedRowId(outRowId, sql.str(), bindArgs);
     connectionPool->ReleaseConnection(connection);
 
@@ -311,6 +323,10 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
     }
 
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+
     errCode = connection->ExecuteForChangedRowCount(changedRows, sql.str(), bindArgs);
     connectionPool->ReleaseConnection(connection);
 
@@ -342,6 +358,10 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
     }
 
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+
     int errCode = connection->ExecuteForChangedRowCount(deletedRows, sql.str(), bindArgs);
     connectionPool->ReleaseConnection(connection);
 
@@ -500,6 +520,10 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
     const std::vector<ValueObject> &bindArgs)
 {
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+
     int errCode = connection->ExecuteForLastInsertedRowId(outValue, sql, bindArgs);
     connectionPool->ReleaseConnection(connection);
     return errCode;
@@ -510,6 +534,10 @@ int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string
 {
     int changeRow = 0;
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+
     int errCode = connection->ExecuteForChangedRowCount(changeRow, sql, bindArgs);
     connectionPool->ReleaseConnection(connection);
     outValue = changeRow;
@@ -598,6 +626,10 @@ int RdbStoreImpl::BeginExecuteSql(const std::string &sql, SqliteConnection **con
     bool assumeReadOnly = SqliteUtils::IsSqlReadOnly(type);
     bool isReadOnly = false;
     *connection = connectionPool->AcquireConnection(assumeReadOnly);
+    if (*connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+
     int errCode = (*connection)->Prepare(sql, isReadOnly);
     if (errCode != 0) {
         connectionPool->ReleaseConnection(*connection);
@@ -607,6 +639,10 @@ int RdbStoreImpl::BeginExecuteSql(const std::string &sql, SqliteConnection **con
     if (isReadOnly == (*connection)->IsWriteConnection()) {
         connectionPool->ReleaseConnection(*connection);
         *connection = connectionPool->AcquireConnection(isReadOnly);
+        if (*connection == nullptr) {
+            return E_CON_OVER_LIMIT;
+        }
+
         if (!isReadOnly && !(*connection)->IsWriteConnection()) {
             LOG_ERROR("StoreSession BeginExecutea : read connection can not execute write operation");
             connectionPool->ReleaseConnection(*connection);
@@ -625,6 +661,10 @@ bool RdbStoreImpl::IsHoldingConnection()
 int RdbStoreImpl::GiveConnectionTemporarily(int64_t milliseconds)
 {
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+
     if (connection->IsInTransaction()) {
         return E_STORE_SESSION_NOT_GIVE_CONNECTION_TEMPORARILY;
     }
@@ -713,6 +753,10 @@ int RdbStoreImpl::BeginTransaction()
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     BaseTransaction transaction(connectionPool->getTransactionStack().size());
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+
     int errCode = connection->ExecuteSql(transaction.GetTransactionStr());
     connectionPool->ReleaseConnection(connection);
     if (errCode != E_OK) {
@@ -740,6 +784,10 @@ int RdbStoreImpl::RollBack()
         connectionPool->getTransactionStack().top().SetChildFailure(true);
     }
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+
     int errCode = connection->ExecuteSql(transaction.GetRollbackStr());
     connectionPool->ReleaseConnection(connection);
     if (connectionPool->getTransactionStack().empty()) {
@@ -770,6 +818,10 @@ int RdbStoreImpl::Commit()
     }
 
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+
     int errCode = connection->ExecuteSql(sqlStr);
     connectionPool->ReleaseConnection(connection);
     connection->SetInTransaction(false);
@@ -795,7 +847,11 @@ int RdbStoreImpl::FreeTransaction(SqliteConnection *connection, const std::strin
 
 bool RdbStoreImpl::IsInTransaction()
 {
-    return connectionPool->AcquireConnection(false)->IsInTransaction();
+    auto connection = connectionPool->AcquireConnection(false);
+    if (connection != nullptr) {
+        return connection->IsInTransaction();
+    }
+    return true;
 }
 
 int RdbStoreImpl::CheckAttach(const std::string &sql)
@@ -815,6 +871,10 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
 
     bool isRead = SqliteDatabaseUtils::BeginExecuteSql(GlobalExpr::PRAGMA_JOUR_MODE_EXP);
     SqliteConnection *connection = connectionPool->AcquireConnection(isRead);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+    
     int errCode =
         connection->ExecuteGetString(journalMode, GlobalExpr::PRAGMA_JOUR_MODE_EXP, std::vector<ValueObject>());
     connectionPool->ReleaseConnection(connection);
