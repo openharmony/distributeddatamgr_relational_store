@@ -1058,13 +1058,13 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTablesName(env, argv[0], context));
     };
-    auto exec = [context]() -> int {
+    auto exec = [context](napi_env env) -> int {
         LOG_DEBUG("RdbStoreProxy::SetDistributedTables Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         int res = obj->rdbStore_->SetDistributedTables(context->tablesNames);
         LOG_INFO("RdbStoreProxy::SetDistributedTables res is : %{public}d", res);
         if (res == OHOS::NativeRdb::E_NOT_SUP) {
-            RDB_NAPI_ASSERT(env, res == E_OK, std::make_shared<DeviceNotSupportedError>());
+            RDB_NAPI_ASSERT_BASE(env, res == E_OK, std::make_shared<DeviceNotSupportedError>(), E_ERROR);
         }
         return res;
     };
@@ -1117,7 +1117,7 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParseSyncModeArg(env, argv[0], context));
         CHECK_RETURN(OK == ParsePredicates(env, argv[1], context));
     };
-    auto exec = [context]() -> int {
+    auto exec = [context, env]() -> int {
         LOG_DEBUG("RdbStoreProxy::Sync Async");
         auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         SyncOption option;
@@ -1127,7 +1127,7 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
             [context](const SyncResult &result) { context->syncResult = result; });
         LOG_INFO("RdbStoreProxy::Sync res is : %{public}d", res);
         if (res == OHOS::NativeRdb::E_NOT_SUP) {
-            RDB_NAPI_ASSERT(env, res == E_OK, std::make_shared<DeviceNotSupportedError>());
+            RDB_NAPI_ASSERT_BASE(env, res == E_OK, std::make_shared<DeviceNotSupportedError>(), E_ERROR);
         }
         return res;
     };
