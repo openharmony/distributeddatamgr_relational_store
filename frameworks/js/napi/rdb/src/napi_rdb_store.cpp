@@ -757,46 +757,6 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
     return AsyncCall::Call(env, context);
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
-{
-    LOG_DEBUG("RdbStoreProxy::RemoteQuery start");
-    auto context = std::make_shared<RdbStoreContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
-        std::shared_ptr<Error> paramNumError = std::make_shared<ParamNumError>("4 or 5");
-        RDB_CHECK_RETURN_CALL_RESULT(argc == 4 || argc == 5, context->SetError(paramNumError));
-        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseDevice(env, argv[0], context));
-        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseTableName(env, argv[1], context));
-        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParsePredicates(env, argv[2], context));
-        RDB_ASYNC_PARAM_CHECK_FUNCTION(ParseColumns(env, argv[3], context));
-        ParserThis(env, self, context);
-        return OK;
-    };
-    auto exec = [context]() {
-        LOG_DEBUG("RdbStoreProxy::RemoteQuery Async");
-        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        int errCode = E_OK;
-        context->newResultSet =
-            obj->rdbStore_->RemoteQuery(context->device, *(context->rdbPredicates), context->columns, errCode);
-        LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr ? %{public}d", (context->newResultSet == nullptr));
-        return (context->newResultSet != nullptr) ? OK : ERR;
-    };
-    auto output = [context](napi_env env, napi_value &result) -> int {
-        if (context->newResultSet == nullptr) {
-            LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr");
-            return ERR;
-        }
-        result = ResultSetProxy::NewInstance(env, context->newResultSet, context->apiversion);
-        LOG_DEBUG("RdbStoreProxy::RemoteQuery end");
-        return (result != nullptr) ? OK : ERR;
-    };
-    context->SetAction(env, info, input, exec, output);
-
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
-}
-#endif
-
 napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
