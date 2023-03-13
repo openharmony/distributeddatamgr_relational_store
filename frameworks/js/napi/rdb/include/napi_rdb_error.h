@@ -88,15 +88,6 @@ constexpr int E_RESULT_GOTO_ERROR = 14800012;
         }                                                \
     } while (0)
 
-#define RDB_CHECK_API_VALID(assertion)                                                                       \
-    do {                                                                                                     \
-        if (assertion) {                                                                                     \
-            std::shared_ptr<DeviceNotSupportedError> apiError = std::make_shared<DeviceNotSupportedError>(); \
-            context->SetError(apiError);                                                                     \
-            return ERR;                                                                                      \
-        }                                                                                                    \
-    } while (0)
-
 class Error {
 public:
     virtual ~Error(){};

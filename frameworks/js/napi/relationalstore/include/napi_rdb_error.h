@@ -70,15 +70,6 @@ const static std::map<int, std::string> ERROR_MAPS = {
         }                                                \
     } while (0)
 
-#define RDB_CHECK_API_VALID(assertion)                                                                       \
-    do {                                                                                                     \
-        if (assertion) {                                                                                     \
-            std::shared_ptr<DeviceNotSupportedError> apiError = std::make_shared<DeviceNotSupportedError>(); \
-            context->SetError(apiError);                                                                     \
-            return ERR;                                                                                      \
-        }                                                                                                    \
-    } while (0)
-
 #define CHECK_RETURN_SET_E(assertion, paramError) \
     CHECK_RETURN_CORE(assertion, context->SetError(paramError), RDB_REVT_NOTHING)
 
