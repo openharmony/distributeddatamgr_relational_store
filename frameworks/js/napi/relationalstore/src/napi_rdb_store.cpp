@@ -1058,7 +1058,7 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTablesName(env, argv[0], context));
     };
-    auto exec = [context](napi_env env) -> int {
+    auto exec = [context, env]() -> int {
         LOG_DEBUG("RdbStoreProxy::SetDistributedTables Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         int res = obj->rdbStore_->SetDistributedTables(context->tablesNames);
