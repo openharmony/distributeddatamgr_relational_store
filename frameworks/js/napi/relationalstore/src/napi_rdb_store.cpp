@@ -1162,7 +1162,7 @@ int RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv
     });
     if (result) {
         LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: duplicate subscribe");
-        return;
+        return ERR;
     }
     SubscribeOption option;
     option.mode = static_cast<SubscribeMode>(mode);
