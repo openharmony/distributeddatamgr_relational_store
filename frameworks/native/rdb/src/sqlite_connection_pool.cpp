@@ -113,16 +113,18 @@ void SqliteConnectionPool::CloseAllConnections()
 
 SqliteConnection *SqliteConnectionPool::AcquireConnection(bool isReadOnly)
 {
+    LOG_DEBUG("readConnectionCount: %{public}d, idleReadConnectionCount: %{public}d, writeConnection: %{public}d",
+              readConnectionCount, idleReadConnectionCount, writeConnectionUsed);
     if (isReadOnly && readConnectionCount != 0) {
-        LOG_DEBUG("AcquireReadConnection");
         return AcquireReadConnection();
     } else {
-        LOG_DEBUG("AcquireWriteConnection");
         return AcquireWriteConnection();
     }
 }
 void SqliteConnectionPool::ReleaseConnection(SqliteConnection *connection)
 {
+    LOG_DEBUG("readConnectionCount: %{public}d, idleReadConnectionCount: %{public}d, writeConnection: %{public}d",
+              readConnectionCount, idleReadConnectionCount, writeConnectionUsed);
     connection->DesFinalize();
     if (connection == writeConnection) {
         ReleaseWriteConnection();
@@ -133,17 +135,17 @@ void SqliteConnectionPool::ReleaseConnection(SqliteConnection *connection)
 
 SqliteConnection *SqliteConnectionPool::AcquireWriteConnection()
 {
-    LOG_DEBUG("begin");
     std::unique_lock<std::mutex> lock(writeMutex);
     writeCondition.wait(lock, [&] { return !writeConnectionUsed; });
     writeConnectionUsed = true;
-    LOG_DEBUG("end");
     return writeConnection;
 }
 
 void SqliteConnectionPool::AcquireTransaction()
 {
-    LOG_DEBUG("AcquireTransaction begin");
+    if (transactionUsed) {
+        LOG_INFO("Transaction in progress, please wait for the transaction to end and try again");
+    }
     std::unique_lock<std::mutex> lock(transMutex);
     transCondition.wait(lock, [&] { return !transactionUsed; });
     transactionUsed = true;
