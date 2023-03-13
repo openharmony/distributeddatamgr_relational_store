@@ -1218,7 +1218,9 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         int res = obj->rdbStore_->SetDistributedTables(context->tablesName);
         LOG_DEBUG("RdbStoreProxy::SetDistributedTables res is : %{public}d", res);
-        RDB_CHECK_API_VALID(res == OHOS::NativeRdb::E_NOT_SUP);
+        if (res == OHOS::NativeRdb::E_NOT_SUP) {
+            RDB_NAPI_ASSERT_FROMV9(env, res == E_OK, std::make_shared<DeviceNotSupportedError>(), 8);
+        }
         return res;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
@@ -1284,8 +1286,10 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
         option.isBlock = true;
         int res = obj->rdbStore_->Sync(option, *context->predicatesProxy->GetPredicates(),
             [context](const SyncResult &result) { context->syncResult = result; });
-        RDB_CHECK_API_VALID(res == OHOS::NativeRdb::E_NOT_SUP);
         LOG_INFO("RdbStoreProxy::Sync res is : %{public}d", res);
+        if (res == OHOS::NativeRdb::E_NOT_SUP) {
+            RDB_NAPI_ASSERT_FROMV9(env, res == E_OK, std::make_shared<DeviceNotSupportedError>(), 8);
+        }
         return res;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
