@@ -1081,7 +1081,7 @@ int RdbStoreImpl::Subscribe(const SubscribeOption &option, RdbStoreObserver *obs
     if (errCode != E_OK) {
         return errCode;
     }
-    return errCode;
+    return service->Subscribe(syncerParam_, option, observer);
 }
 
 int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *observer)
@@ -1092,7 +1092,7 @@ int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *o
     if (errCode != E_OK) {
         return errCode;
     }
-    return errCode;
+    return service->UnSubscribe(syncerParam_, option, observer);
 }
 
 bool RdbStoreImpl::DropDeviceData(const std::vector<std::string> &devices, const DropOption &option)
