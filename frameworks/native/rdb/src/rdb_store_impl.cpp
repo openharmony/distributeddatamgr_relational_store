@@ -92,9 +92,10 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
             LOG_ERROR("RdbStoreImpl::InnerOpen get service failed");
             return errCode;
         }
-        if (service->CreateRDBTable(syncerParam_, config.GetWritePermission(), config.GetReadPermission()) != E_OK) {
+        errCode = service->CreateRDBTable(syncerParam_, config.GetWritePermission(), config.GetReadPermission());
+        if (errCode != E_OK) {
             LOG_ERROR("RdbStoreImpl::InnerOpen service CreateRDBTable failed");
-            return E_ERROR;
+            return errCode;
         }
         isShared_ = true;
     }
@@ -1032,7 +1033,7 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
         LOG_ERROR("Fail to set distributed tables, error=%{public}d", errorCode);
         syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
         syncerParam_.password_.clear();
-        return E_ERROR;
+        return errCode;
     }
 
     if (isEncrypt_) {
@@ -1062,19 +1063,19 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
     std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
     int errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
     if (errCode != E_OK) {
+        LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
         return errCode;
     }
-    if (service->Sync(syncerParam_, option, predicate.GetDistributedPredicates(), callback) != 0) {
-        LOG_ERROR("failed");
-        return E_ERROR;
+    errCode = service->Sync(syncerParam_, option, predicate.GetDistributedPredicates(), callback);
+    if (errCode != 0) {
+        LOG_ERROR("Sync is failed, err is %{public}d.", errCode);
+        return errCode;
     }
-    LOG_INFO("success");
     return E_OK;
 }
 
 int RdbStoreImpl::Subscribe(const SubscribeOption &option, RdbStoreObserver *observer)
 {
-    LOG_INFO("enter");
     std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
     int errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
     if (errCode != E_OK) {
