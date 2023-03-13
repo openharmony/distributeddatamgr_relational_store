@@ -775,8 +775,9 @@ napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
     auto exec = [context]() {
         LOG_DEBUG("RdbStoreProxy::RemoteQuery Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        int errCode = E_OK;
         context->newResultSet =
-            obj->rdbStore_->RemoteQuery(context->device, *(context->rdbPredicates), context->columns);
+            obj->rdbStore_->RemoteQuery(context->device, *(context->rdbPredicates), context->columns, errCode);
         LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr ? %{public}d", (context->newResultSet == nullptr));
         return (context->newResultSet != nullptr) ? OK : ERR;
     };
@@ -1246,7 +1247,8 @@ napi_value RdbStoreProxy::ObtainDistributedTableName(napi_env env, napi_callback
     auto exec = [context]() {
         LOG_DEBUG("RdbStoreProxy::ObtainDistributedTableName Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        auto name = obj->rdbStore_->ObtainDistributedTableName(context->device, context->tableName);
+        int errCode = E_OK;
+        auto name = obj->rdbStore_->ObtainDistributedTableName(context->device, context->tableName, errCode);
         LOG_INFO("RdbStoreProxy::ObtainDistributedTableName name is empty ? : %{public}d", name.empty());
         context->tableName = name;
         return name.empty() ? ERR : OK;

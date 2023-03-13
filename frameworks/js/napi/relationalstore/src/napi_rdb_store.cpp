@@ -1114,7 +1114,7 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParseSyncModeArg(env, argv[0], context));
         CHECK_RETURN(OK == ParsePredicates(env, argv[1], context));
     };
-    auto exec = [context, env]() -> int {
+    auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::Sync Async");
         auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         SyncOption option;
@@ -1135,51 +1135,43 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
     return AsyncCall::Call(env, context);
 }
 
-bool RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv)
+int RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv)
 {
     napi_valuetype type;
     napi_typeof(env, argv[0], &type);
     if (type != napi_number) {
         LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: first argument is not number");
-        RDB_NAPI_ASSERT(env, false, std::make_shared<ParamError>("On", "valid"));
-        return false;
+        return ERR;
     }
     int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
     napi_get_value_int32(env, argv[0], &mode);
     if (mode < 0 || mode >= SubscribeMode::SUBSCRIBE_MODE_MAX) {
         LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: first argument value is invalid");
-        return false;
+        return ERR;
     }
     LOG_INFO("RdbStoreProxy::OnDataChangeEvent: mode=%{public}d", mode);
 
     napi_typeof(env, argv[1], &type);
     if (type != napi_function) {
         LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: second argument is not function");
-        return false;
+        return ERR;
     }
 
     std::lock_guard<std::mutex> lockGuard(mutex_);
-    bool result = std::any_of(observers_[mode].begin(), observers_[mode].end(), [argv](const auto &observer) {
-        return *observer == argv[1];
-    });
-    if (result) {
-        LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: duplicate subscribe");
-        return false;
+    for (const auto &observer : observers_[mode]) {
+        if (*observer == argv[1]) {
+            LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: duplicate subscribe");
+            return ERR;
+        }
     }
     SubscribeOption option;
     option.mode = static_cast<SubscribeMode>(mode);
     auto observer = std::make_shared<NapiRdbStoreObserver>(env, argv[1]);
     int errCode = rdbStore_->Subscribe(option, observer.get());
-    if (errCode != E_OK) {
-        LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: subscribe failed, err is %{public}d.", errCode);
-        if (errCode == OHOS::NativeRdb::E_NOT_SUPPORTED) {
-            RDB_NAPI_ASSERT(env, false , std::make_shared<InnerError>(OHOS::NativeRdb::E_NOT_SUPPORTED));
-        }
-        return false;
-    }
+    LOG_DEBUG("Subscribe ret is %{public}d.", errCode);
+    RDB_NAPI_ASSERT_BASE(env, errCode == E_OK, std::make_shared<InnerError>(errCode), ERR);
     observers_[mode].push_back(observer);
-    LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: subscribe success");
-    return true;
+    return OK;
 }
 
 int RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *argv)
@@ -1188,21 +1180,20 @@ int RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *arg
     napi_typeof(env, argv[0], &type);
     if (type != napi_number) {
         LOG_ERROR("RdbStoreProxy::OffDataChangeEvent: first argument is not number");
-        RDB_NAPI_ASSERT(env, false, std::make_shared<ParamError>("Off", "valid"));
-        return false;
+        return ERR;
     }
     int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
     napi_get_value_int32(env, argv[0], &mode);
     if (mode < 0 || mode >= SubscribeMode::SUBSCRIBE_MODE_MAX) {
         LOG_ERROR("RdbStoreProxy::OffDataChangeEvent: first argument value is invalid");
-        return false;
+        return ERR;
     }
     LOG_INFO("RdbStoreProxy::OffDataChangeEvent: mode=%{public}d", mode);
 
     napi_typeof(env, argv[1], &type);
     if (type != napi_function) {
         LOG_ERROR("RdbStoreProxy::OffDataChangeEvent: second argument is not function");
-        return false;
+        return ERR;
     }
 
     SubscribeOption option;
@@ -1211,17 +1202,14 @@ int RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *arg
     for (auto it = observers_[mode].begin(); it != observers_[mode].end(); it++) {
         if (**it == argv[1]) {
             int errCode = rdbStore_->UnSubscribe(option, it->get());
-            if (errCode == OHOS::NativeRdb::E_NOT_SUPPORTED) {
-                RDB_NAPI_ASSERT(env, false, std::make_shared<InnerError>(OHOS::NativeRdb::E_NOT_SUPPORTED));
-                return false;
-            }
             observers_[mode].erase(it);
-            LOG_INFO("RdbStoreProxy::OffDataChangeEvent: unsubscribe success");
-            return true;
+            RDB_NAPI_ASSERT_BASE(env, errCode == E_OK, std::make_shared<InnerError>(errCode), ERR);
+            LOG_INFO("unsubscribe err is %{public}d.", errCode);
+            return OK;
         }
     }
     LOG_INFO("RdbStoreProxy::OffDataChangeEvent: not found");
-    return false;
+    return ERR;
 }
 
 napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
@@ -1241,8 +1229,7 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
 
     std::string event = JSUtils::Convert2String(env, argv[0]);
     if (event == "dataChange") {
-        if (proxy->OnDataChangeEvent(env, argc - 1, argv + 1) == false) {
-            LOG_INFO("RdbStoreProxy::OnEvent failed");
+        if (proxy->OnDataChangeEvent(env, argc - 1, argv + 1) != OK) {
             return nullptr;
         }
     }
@@ -1268,8 +1255,7 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
 
     std::string event = JSUtils::Convert2String(env, argv[0]);
     if (event == "dataChange") {
-        if (proxy->OffDataChangeEvent(env, argc - 1, argv + 1) == false) {
-            LOG_INFO("RdbStoreProxy::OffEvent failed.")
+        if (proxy->OffDataChangeEvent(env, argc - 1, argv + 1) != OK) {
             return nullptr;
         }
     }
@@ -1278,5 +1264,5 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
     return nullptr;
 }
 #endif
-} // namespace RelationalStoreJsKit
+} // namespace RdbJsKit
 } // namespace OHOS

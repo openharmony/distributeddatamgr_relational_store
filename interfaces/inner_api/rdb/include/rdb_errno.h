@@ -35,11 +35,6 @@ constexpr int E_BASE = 14800000;
 constexpr int E_NOT_SUPPORTED = 801;
 
 /**
-* @brief The default error.
-*/
-int E_DEFAULT = (E_BASE + 48);
-
-/**
 * @brief The error code for common exceptions.
 */
 constexpr int E_ERROR = E_BASE;

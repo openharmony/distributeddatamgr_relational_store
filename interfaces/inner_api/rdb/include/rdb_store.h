@@ -271,8 +271,8 @@ public:
      * @param predicates Indicates the specified query condition by the instance object of {@link AbsRdbPredicates}.
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
      */
-    virtual std::shared_ptr<ResultSet> RemoteQuery(const std::string &device,
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, int &errCode = E_DEFAULT) = 0;
+    virtual std::shared_ptr<ResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
+        const std::vector<std::string> &columns, int &errCode) = 0;
 
     /**
      * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.
@@ -376,7 +376,7 @@ public:
      * @return Returns the distributed table name.
      */
     virtual std::string ObtainDistributedTableName(
-        const std::string &device, const std::string &table, int &errCode = E_DEFAULT) = 0;
+        const std::string &device, const std::string &table, int &errCode) = 0;
 
     /**
      * @brief Sync data between devices.
