@@ -78,8 +78,8 @@ private:
     static constexpr int MIN_ON_EVENT_ARG_NUM = 2;
     static constexpr int MAX_ON_EVENT_ARG_NUM = 5;
 
-    int OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv);
-    int OffDataChangeEvent(napi_env env, size_t argc, napi_value *argv);
+    void OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv);
+    void OffDataChangeEvent(napi_env env, size_t argc, napi_value *argv);
 
     std::mutex mutex_;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;

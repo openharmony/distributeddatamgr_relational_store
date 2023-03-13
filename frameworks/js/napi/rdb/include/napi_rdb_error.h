@@ -148,20 +148,6 @@ public:
     };
 };
 
-class DeviceNotSupportedError : public Error {
-public:
-    DeviceNotSupportedError() = default;
-    std::string GetMessage()
-    {
-        return "Capability no supported";
-    }
-
-    int GetCode()
-    {
-        return E_NOT_SUP;
-    }
-};
-
 class DbCorruptedError : public Error {
 public:
     DbCorruptedError() = default;
