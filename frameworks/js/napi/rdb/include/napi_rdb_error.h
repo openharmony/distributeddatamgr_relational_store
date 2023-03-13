@@ -26,7 +26,6 @@ constexpr int APIVERSION_V9 = 9;
 constexpr int APIVERSION_8 = 8;
 
 constexpr int E_PARAM_ERROR = 401;
-constexpr int E_NOT_SUP = 801;
 constexpr int E_INNER_ERROR = 14800000;
 
 constexpr int E_DB_INVALID = 14800010;
