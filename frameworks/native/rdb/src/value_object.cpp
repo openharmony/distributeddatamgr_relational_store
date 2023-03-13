@@ -207,43 +207,29 @@ bool ValueObject::Marshalling(Parcel &parcel) const
 
 ValueObject *ValueObject::Unmarshalling(Parcel &parcel)
 {
-    auto *pValueObject = new ValueObject();
     switch (parcel.ReadInt16()) {
         case (int16_t)ValueObjectType::TYPE_NULL: {
-            pValueObject->type = ValueObjectType::TYPE_NULL;
-            break;
+            return new ValueObject();
         }
         case (int16_t)ValueObjectType::TYPE_INT: {
-            pValueObject->type = ValueObjectType::TYPE_INT;
-            pValueObject->value = parcel.ReadInt64();
-            break;
+            return new ValueObject(parcel.ReadInt64());
         }
         case (int16_t)ValueObjectType::TYPE_DOUBLE: {
-            pValueObject->type = ValueObjectType::TYPE_DOUBLE;
-            pValueObject->value = parcel.ReadDouble();
-            break;
+            return new ValueObject(parcel.ReadDouble());
         }
         case (int16_t)ValueObjectType::TYPE_STRING: {
-            pValueObject->type = ValueObjectType::TYPE_STRING;
-            pValueObject->value = parcel.ReadString();
-            break;
+            return new ValueObject(parcel.ReadString());
         }
         case (int16_t)ValueObjectType::TYPE_BLOB: {
-            pValueObject->type = ValueObjectType::TYPE_BLOB;
             std::vector<uint8_t> val;
-            parcel.ReadUInt8Vector(&val);
-            pValueObject->value = val;
-            break;
+            return new ValueObject(parcel.ReadUInt8Vector(&val));
         }
         case (int16_t)ValueObjectType::TYPE_BOOL: {
-            pValueObject->type = ValueObjectType::TYPE_BOOL;
-            pValueObject->value = parcel.ReadBool();
-            break;
+            return new ValueObject(parcel.ReadBool());
         }
         default:
-            break;
+            return new ValueObject();
     }
-    return pValueObject;
 }
 #endif
 } // namespace NativeRdb
