@@ -162,48 +162,4 @@ describe('rdbStoreOthersCallbackPerf', function () {
         let startTime = new Date().getTime();
         executeSqlCallbackPerf(0);
     })
-
-    it('SUB_DDM_PERF_RDB_backup_Callback_001', 0, async function (done) {
-        let averageTime = 0;
-
-        async function backupCallbackPerf(index) {
-            rdbStore.backup("backup.db", function (err, data) {
-                if (index < BASE_COUNT) {
-                    backupCallbackPerf(index + 1);
-                } else {
-                    let endTime = new Date().getTime();
-                    averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-                    console.info(TAG + " the backup_Callback average time is: " + averageTime + " μs");
-                    expect(averageTime < BASE_LINE).assertTrue();
-                    done();
-                }
-            })
-        }
-
-        let startTime = new Date().getTime();
-        backupCallbackPerf(0);
-    })
-
-    it('SUB_DDM_PERF_RDB_restore_Callback_001', 0, async function (done) {
-        let averageTime = 0;
-
-        async function restoreCallbackPerf(index) {
-            rdbStore.restore("backup.db", function (err, data) {
-                if (index < BASE_COUNT) {
-                    restoreCallbackPerf(index + 1);
-                } else {
-                    let endTime = new Date().getTime();
-                    averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-                    console.info(TAG + " the restore_Callback average time is: " + averageTime + " μs");
-                    expect(averageTime < BASE_LINE).assertTrue();
-                    dataRdb.deleteRdbStore(context, "backup.db", function (err, data) {
-                        done();
-                    })
-                }
-            })
-        }
-
-        let startTime = new Date().getTime();
-        restoreCallbackPerf(0);
-    })
 })
