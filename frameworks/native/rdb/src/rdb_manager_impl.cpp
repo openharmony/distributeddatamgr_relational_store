@@ -80,8 +80,13 @@ RdbManagerImpl& RdbManagerImpl::GetInstance()
     return manager;
 }
 
-int RdbManagerImpl::GetRdbService(sptr<RdbServiceProxy> &serviceProxy)
+int RdbManagerImpl::GetRdbService(const RdbSyncerParam& param, std::shared_ptr<RdbService> service)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (rdbService_ != nullptr) {
+        service = rdbService_;
+        return E_OK;
+    }
     if (distributedDataMgr_ == nullptr) {
         distributedDataMgr_ = GetDistributedDataManager();
     }
@@ -93,25 +98,9 @@ int RdbManagerImpl::GetRdbService(sptr<RdbServiceProxy> &serviceProxy)
     auto remote = distributedDataMgr_->GetFeatureInterface("relational_store");
     if (remote == nullptr) {
         ZLOGE("get rdb service failed");
-        return E_NOT_SUP;
+        return E_NOT_SUPPORTED;
     }
-    serviceProxy = iface_cast<DistributedRdb::RdbServiceProxy>(remote);
-    return E_OK;
-}
-
-int RdbManagerImpl::GetRdbService(const RdbSyncerParam& param, std::shared_ptr<RdbService> &service)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (rdbService_ != nullptr) {
-        service = rdbService_;
-        return E_OK;
-    }
-    sptr<RdbServiceProxy> serviceProxy = nullptr;
-    int errCode = GetRdbService(serviceProxy);
-    if (errCode != E_OK) {
-        ZLOGE("get rdb service failed, err is %{public}d", errCode);
-        return errCode;
-    }
+    sptr<RdbServiceProxy> serviceProxy = iface_cast<DistributedRdb::RdbServiceProxy>(remote);
     if (serviceProxy->InitNotifier(param) != RDB_OK) {
         ZLOGE("init notifier failed");
         return E_ERROR;

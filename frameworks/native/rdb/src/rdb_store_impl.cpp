@@ -373,14 +373,14 @@ std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(
 }
 
 std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
-    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, int &errCode)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreImpl::RemoteQuery on called.");
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
     std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-    int errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
+    errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
     if (errCode != E_OK) {
         LOG_ERROR("RdbStoreImpl::RemoteQuery get service failed");
         return nullptr;
@@ -1045,11 +1045,11 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
     return E_OK;
 }
 
-std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, const std::string &table)
+std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, const std::string &table, int &errCode)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-    int errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
+    errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
     if (errCode != E_OK) {
         return "";
     }

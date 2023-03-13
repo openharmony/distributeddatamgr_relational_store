@@ -27,6 +27,7 @@
 #include "values_bucket.h"
 #include "rdb_types.h"
 #include "rdb_common.h"
+#include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
 class RDB_API_EXPORT RdbStore {
@@ -271,7 +272,7 @@ public:
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
      */
     virtual std::shared_ptr<ResultSet> RemoteQuery(const std::string &device,
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) = 0;
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, int &errCode = E_DEFAULT) = 0;
 
     /**
      * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.
@@ -374,7 +375,8 @@ public:
      *
      * @return Returns the distributed table name.
      */
-    virtual std::string ObtainDistributedTableName(const std::string& device, const std::string& table) = 0;
+    virtual std::string ObtainDistributedTableName(
+        const std::string &device, const std::string &table, int &errCode = E_DEFAULT) = 0;
 
     /**
      * @brief Sync data between devices.

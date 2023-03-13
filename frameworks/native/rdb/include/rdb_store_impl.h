@@ -98,11 +98,11 @@ public:
     int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
 
     std::shared_ptr<ResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
-        const std::vector<std::string> &columns) override;
+        const std::vector<std::string> &columns, int &errCode) override;
 
     int SetDistributedTables(const std::vector<std::string>& tables) override;
 
-    std::string ObtainDistributedTableName(const std::string& device, const std::string& table) override;
+    std::string ObtainDistributedTableName(const std::string& device, const std::string& table, int &errCode) override;
 
     int Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) override;
 
