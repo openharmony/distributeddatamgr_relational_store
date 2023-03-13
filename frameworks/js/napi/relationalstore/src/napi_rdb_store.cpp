@@ -622,10 +622,10 @@ napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::RemoteQuery Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        int errCode = E_OK;
+        int errCode = E_ERROR;
         context->newResultSet =
             obj->rdbStore_->RemoteQuery(context->device, *(context->rdbPredicates), context->columns, errCode);
-        LOG_DEBUG("RdbStoreProxy::RemoteQuery result is nullptr ? %{public}d", (context->newResultSet == nullptr));
+        LOG_DEBUG("RemoteQuerry ret is %{public}d.", errCode);
         return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -1088,7 +1088,7 @@ napi_value RdbStoreProxy::ObtainDistributedTableName(napi_env env, napi_callback
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::ObtainDistributedTableName Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        int errCode = E_OK;
+        int errCode = E_ERROR;
         context->tableName = obj->rdbStore_->ObtainDistributedTableName(context->device, context->tableName, errCode);
         return errCode;
     };
@@ -1158,11 +1158,12 @@ int RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv
     }
 
     std::lock_guard<std::mutex> lockGuard(mutex_);
-    for (const auto &observer : observers_[mode]) {
-        if (*observer == argv[1]) {
-            LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: duplicate subscribe");
-            return ERR;
-        }
+    bool result = std::any_of(observers_[mode].begin(), observers_[mode].end(), [argv](const auto &observer) {
+        return *observer == argv[1];
+    });
+    if (result) {
+        LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: duplicate subscribe");
+        return;
     }
     SubscribeOption option;
     option.mode = static_cast<SubscribeMode>(mode);
@@ -1264,5 +1265,5 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
     return nullptr;
 }
 #endif
-} // namespace RdbJsKit
+} // namespace RelationalStoreJsKit
 } // namespace OHOS

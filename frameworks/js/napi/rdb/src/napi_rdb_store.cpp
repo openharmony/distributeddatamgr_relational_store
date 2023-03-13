@@ -1207,9 +1207,10 @@ napi_value RdbStoreProxy::ObtainDistributedTableName(napi_env env, napi_callback
     auto exec = [context]() {
         LOG_DEBUG("RdbStoreProxy::ObtainDistributedTableName Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        int errCode = E_OK;
+        int errCode = E_ERROR;
         auto name = obj->rdbStore_->ObtainDistributedTableName(context->device, context->tableName, errCode);
-        LOG_INFO("RdbStoreProxy::ObtainDistributedTableName name is empty ? : %{public}d", name.empty());
+        LOG_INFO("RdbStoreProxy::ObtainDistributedTableName name is empty ? : %{public}d, errCode is %{public}d",
+            name.empty(), errCode);
         context->tableName = name;
         return name.empty() ? ERR : OK;
     };

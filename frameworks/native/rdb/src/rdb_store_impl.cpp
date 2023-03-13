@@ -89,7 +89,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
         std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
         errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
         if (errCode != E_OK) {
-            LOG_ERROR("RdbStoreImpl::InnerOpen get service failed");
+            LOG_ERROR("RdbStoreImpl::InnerOpen get service failed, err is %{public}d.", errCode);
             return errCode;
         }
         errCode = service->CreateRDBTable(syncerParam_, config.GetWritePermission(), config.GetReadPermission());
@@ -1081,7 +1081,7 @@ int RdbStoreImpl::Subscribe(const SubscribeOption &option, RdbStoreObserver *obs
     if (errCode != E_OK) {
         return errCode;
     }
-    return service->Subscribe(syncerParam_, option, observer) == 0 ? E_OK : E_ERROR;
+    return errCode;
 }
 
 int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *observer)
@@ -1092,7 +1092,7 @@ int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *o
     if (errCode != E_OK) {
         return errCode;
     }
-    return service->UnSubscribe(syncerParam_, option, observer) == 0 ? E_OK : E_ERROR;
+    return errCode;
 }
 
 bool RdbStoreImpl::DropDeviceData(const std::vector<std::string> &devices, const DropOption &option)
