@@ -36,7 +36,7 @@ const static std::map<int, std::string> ERROR_MAPS = {
     { NativeRdb::E_WAL_SIZE_OVER_LIMIT, "The WAL file size over default limit." },
     { NativeRdb::E_EMPTY_FILE_NAME, "Failed to open database by database corrupted." },
     { NativeRdb::E_INVALID_FILE_PATH, "Failed to open database by database corrupted" },
-    { NativeRdb::E_NOT_SUPPORTED, "Capability no supported" },
+    { NativeRdb::E_NOT_SUPPORTED, "Capability not supported" },
     { E_RESULT_GOTO_ERROR, "The result set is empty or the specified location is invalid." },
     { E_RESULT_GET_ERROR, "The column value is null or the column type is incompatible." },
 };
