@@ -94,8 +94,13 @@ describe('rdbStoreDistributedTest', function () {
             console.log(TAG + "set none to be distributed table success");
             expect(rdbStore).assertEqual(rdbStore)
         } catch (err) {
-            console.log(TAG + "set none to be distributed table failed");
-            expect(null).assertFail();
+            if (err.code == 801) {
+                console.log(TAG + "Capability not supported.");
+                expect(true).assertEqual(true);
+            } else {
+                console.log(TAG + "set none to be distributed table failed");
+                expect(null).assertFail();
+            }
         }
         done()
         console.log(TAG + "************* testRdbStoreDistributed002 end *************");
@@ -113,8 +118,13 @@ describe('rdbStoreDistributedTest', function () {
             console.log(TAG + "set employee to be distributed table success");
             expect(rdbStore).assertEqual(rdbStore)
         } catch (err) {
-            console.log(TAG + "set employee to be distributed table failed");
-            expect(null).assertFail();
+            if (err.code == 801) {
+                console.log(TAG + "Capability not supported.");
+                expect(true).assertEqual(true);
+            } else {
+                console.log(TAG + "set employee to be distributed table failed");
+                expect(null).assertFail();
+            }
         }
         done()
         console.log(TAG + "************* testRdbStoreDistributed003 end *************");
@@ -132,8 +142,13 @@ describe('rdbStoreDistributedTest', function () {
             console.log(TAG + "set employee and product to be distributed table success");
             expect(rdbStore).assertEqual(rdbStore)
         } catch (err) {
-            console.log(TAG + "set employee and product to be distributed table failed");
-            expect(null).assertFail();
+            if (err.code == 801) {
+                console.log(TAG + "Capability not supported.");
+                expect(true).assertEqual(true);
+            } else {
+                console.log(TAG + "set employee and product to be distributed table failed");
+                expect(null).assertFail();
+            }
         }
         done()
         console.log(TAG + "************* testRdbStoreDistributed004 end *************");
