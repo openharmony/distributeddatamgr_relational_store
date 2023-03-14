@@ -1067,7 +1067,7 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
         return errCode;
     }
     errCode = service->Sync(syncerParam_, option, predicate.GetDistributedPredicates(), callback);
-    if (errCode != 0) {
+    if (errCode != E_OK) {
         LOG_ERROR("Sync is failed, err is %{public}d.", errCode);
         return errCode;
     }
