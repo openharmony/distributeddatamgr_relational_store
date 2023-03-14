@@ -1203,8 +1203,8 @@ int RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *arg
         if (**it == argv[1]) {
             int errCode = rdbStore_->UnSubscribe(option, it->get());
             observers_[mode].erase(it);
-            RDB_NAPI_ASSERT_BASE(env, errCode == E_OK, std::make_shared<InnerError>(errCode), ERR);
             LOG_INFO("unsubscribe err is %{public}d.", errCode);
+            RDB_NAPI_ASSERT_BASE(env, errCode == E_OK, std::make_shared<InnerError>(errCode), ERR);
             return OK;
         }
     }
