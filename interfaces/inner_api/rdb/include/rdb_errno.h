@@ -30,6 +30,11 @@ constexpr int E_OK = 0;
 constexpr int E_BASE = 14800000;
 
 /**
+* @brief The error when the capability not supported.
+*/
+constexpr int E_NOT_SUPPORTED = 801;
+
+/**
 * @brief The error code for common exceptions.
 */
 constexpr int E_ERROR = E_BASE;
