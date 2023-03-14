@@ -1033,7 +1033,7 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
         LOG_ERROR("Fail to set distributed tables, error=%{public}d", errorCode);
         syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
         syncerParam_.password_.clear();
-        return errCode;
+        return errorCode;
     }
 
     if (isEncrypt_) {
