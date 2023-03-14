@@ -89,8 +89,8 @@ public:
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) = 0;
     virtual std::unique_ptr<ResultSet> QueryByStep(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) = 0;
-    virtual std::shared_ptr<ResultSet> RemoteQuery(const std::string &device,
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) = 0;
+    virtual std::shared_ptr<ResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
+        const std::vector<std::string> &columns, int &errCode) = 0;
     virtual int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) = 0;
     virtual int Delete(int &deletedRows, const AbsRdbPredicates &predicates) = 0;
 
@@ -111,15 +111,16 @@ public:
     virtual int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
         const std::vector<uint8_t> &newKey) = 0;
 
-    virtual bool SetDistributedTables(const std::vector<std::string>& tables) = 0;
+    virtual int SetDistributedTables(const std::vector<std::string>& tables) = 0;
 
-    virtual std::string ObtainDistributedTableName(const std::string& device, const std::string& table) = 0;
+    virtual std::string ObtainDistributedTableName(
+        const std::string &device, const std::string &table, int &errCode) = 0;
 
-    virtual bool Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) = 0;
+    virtual int Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) = 0;
 
-    virtual bool Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
+    virtual int Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
 
-    virtual bool UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
+    virtual int UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
 
     // user must use UDID
     virtual bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) = 0;

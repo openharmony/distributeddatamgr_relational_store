@@ -24,6 +24,7 @@ constexpr int OK = 0;
 constexpr int ERR = -1;
 
 constexpr int E_PARAM_ERROR = 401;
+constexpr int E_NOT_SUPPORTED = 801;
 constexpr int E_INNER_ERROR = 14800000;
 constexpr int E_DB_INVALID = 14800010;
 constexpr int E_DB_CORRUPTED = 14800011;
@@ -103,6 +104,23 @@ public:
     int GetCode() override
     {
         return E_PARAM_ERROR;
+    };
+
+private:
+    std::string name;
+    std::string wantType;
+};
+
+class NotSupportError : public Error {
+public:
+    NotSupportError() = default;
+    std::string GetMessage() override
+    {
+        return "Capability not supported";
+    };
+    int GetCode() override
+    {
+        return E_NOT_SUPPORTED;
     };
 
 private:
