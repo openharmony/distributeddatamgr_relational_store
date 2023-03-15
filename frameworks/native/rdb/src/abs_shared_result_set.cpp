@@ -387,7 +387,8 @@ int AbsSharedResultSet::GetRow(std::map<std::string, VariantData> &data)
                 return E_ERROR;
             }
             value.resize(size);
-            data[columnName] = value.assign(blob, blob + size);
+            value.assign(blob, blob + size);
+            data[columnName] = value;
         } else {
             (void)data;
             return E_ERROR;
