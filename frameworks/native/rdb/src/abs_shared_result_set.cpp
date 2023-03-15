@@ -341,6 +341,7 @@ int AbsSharedResultSet::IsColumnNull(int columnIndex, bool &isNull)
 int AbsSharedResultSet::GetRow(std::map<std::string, VariantData> &data)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    data.clear();
     int columnCount = 0;
     int ret = GetColumnCount(columnCount);
     if (ret != E_OK) {
