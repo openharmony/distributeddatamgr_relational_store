@@ -345,6 +345,46 @@ int SqliteStatement::GetColumnLong(int index, int64_t &value) const
 
     return E_OK;
 }
+int SqliteStatement::GetRow(std::map<std::string, VariantData> &data)
+{
+    if (stmtHandle == nullptr) {
+        return E_INVALID_STATEMENT;
+    }
+
+    char *ptr = nullptr;
+    std::string columnName;
+    for (int index = 0; index < columnCount; ++index) {
+        int type = sqlite3_column_type(stmtHandle, index);
+        GetColumnName(index, columnName);
+        if (type == SQLITE_FLOAT) {
+            data[columnName] = sqlite3_column_double(stmtHandle, index);
+        } else if (type == SQLITE_INTEGER) {
+            data[columnName] = sqlite3_column_int64(stmtHandle, index);
+        } else if (type == SQLITE_TEXT) {
+            auto chars = reinterpret_cast<const char *>(sqlite3_column_text(stmtHandle, index));
+            if (!chars) {
+                (void)data;
+                return E_ERROR;
+            }
+            data[columnName] = std::string(chars, sqlite3_column_bytes(stmtHandle, index));
+        } else if (type == SQLITE_NULL) {
+            data[columnName] = VariantData();
+        } else if (type == SQLITE_BLOB) {
+            int size = sqlite3_column_bytes(stmtHandle, index);
+            auto blob = static_cast<const uint8_t *>(sqlite3_column_blob(stmtHandle, index));
+            if (size == 0 || blob == nullptr) {
+                (void)data;
+                return E_ERROR;
+            }
+            std::vector<uint8_t> value(size);
+            data[columnName] = value.assign(blob, blob + size);
+        } else {
+            (void)data;
+            return E_ERROR;
+        }
+    }
+    return E_OK;
+}
 int SqliteStatement::GetColumnDouble(int index, double &value) const
 {
     if (stmtHandle == nullptr) {

@@ -508,6 +508,17 @@ napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
     return JSUtils::Convert2JSValue(env, result);
 }
 
+napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
+{
+    ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+
+    std::map<std::string, VariantData> data;
+    int errCode = resultSetProxy->resultSet_->GetRow(data);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_RESULT_GET_ERROR));
+    return JSUtils::Convert2JSValue(env, data);
+}
+
 napi_value ResultSetProxy::IsClosed(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);

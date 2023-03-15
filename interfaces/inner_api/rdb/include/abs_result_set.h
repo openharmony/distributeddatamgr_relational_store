@@ -122,6 +122,11 @@ public:
     RDB_API_EXPORT int IsColumnNull(int columnIndex, bool &isNull) override;
 
     /**
+     * @brief Obtains the row record.
+     */
+    RDB_API_EXPORT int GetRow(std::map<std::string, VariantData> &data) override;
+
+    /**
      * @brief Move the cursor to an absolute position.
      *
      * @param position Indicates the specified column index, which starts from 0.

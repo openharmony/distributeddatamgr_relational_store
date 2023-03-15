@@ -70,6 +70,12 @@ int AbsResultSet::IsColumnNull(int columnIndex, bool &isNull)
     return E_OK;
 }
 
+int AbsResultSet::GetRow(std::map<std::string, VariantData> &data)
+{
+    (void)data;
+    return E_OK;
+}
+
 int AbsResultSet::GoToRow(int position)
 {
     return E_OK;

@@ -16,10 +16,9 @@
 #ifndef NATIVE_RDB_SQLITE_STATEMENT_H
 #define NATIVE_RDB_SQLITE_STATEMENT_H
 
-#include <vector>
-
 #include "sqlite3sym.h"
 #include "value_object.h"
+#include <result_set.h>
 
 namespace OHOS {
 namespace NativeRdb {
@@ -40,6 +39,7 @@ public:
     int GetColumnString(int index, std::string &value) const;
     int GetColumnLong(int index, int64_t &value) const;
     int GetColumnDouble(int index, double &value) const;
+    int GetRow(std::map<std::string, VariantData> &data);
     bool IsReadOnly() const;
     int GetNumParameters(int &numParams) const;
     sqlite3_stmt *GetSql3Stmt() const
