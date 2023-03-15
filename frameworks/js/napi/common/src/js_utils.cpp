@@ -350,6 +350,32 @@ napi_value JSUtils::GetJSNull(napi_env env)
     return result;
 }
 
+napi_value JSUtils::Convert2JSValue(napi_env env, VariantData value)
+{
+    napi_value jsValue;
+    switch(value.index()) {
+        case 0:
+            jsValue = GetJSNull(env);
+            break;
+        case 1:
+            jsValue = Convert2JSValue(env, std::get<std::vector<uint8_t>>(value));
+            break;
+        case 2:
+            jsValue = Convert2JSValue(env, std::get<std::string>(value));
+            break;
+        case 3:
+            jsValue = Convert2JSValue(env, std::get<int64_t>(value));
+            break;
+        case 4:
+            jsValue = Convert2JSValue(env, std::get<double>(value));
+            break;
+        default:
+            jsValue = GetJSNull(env);
+            break;
+    }
+    return jsValue;
+}
+
 napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<std::string, VariantData> &value)
 {
     napi_value jsValue;
@@ -366,11 +392,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<std::string, Va
             return nullptr;
         }
         napi_set_element(env, jsElement, 0, Convert2JSValue(env, device));
-        if (result == VariantData()) {
-            napi_set_element(env, jsElement, 1, Convert2JSValue(env));
-        } else {
-            napi_set_element(env, jsElement, 1, Convert2JSValue(env, result));
-        }
+        napi_set_element(env, jsElement, 1, Convert2JSValue(env, result));
         napi_set_element(env, jsValue, index++, jsElement);
     }
 

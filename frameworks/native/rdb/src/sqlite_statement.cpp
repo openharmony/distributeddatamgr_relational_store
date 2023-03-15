@@ -351,7 +351,6 @@ int SqliteStatement::GetRow(std::map<std::string, VariantData> &data)
         return E_INVALID_STATEMENT;
     }
 
-    char *ptr = nullptr;
     std::string columnName;
     for (int index = 0; index < columnCount; ++index) {
         int type = sqlite3_column_type(stmtHandle, index);
@@ -377,7 +376,8 @@ int SqliteStatement::GetRow(std::map<std::string, VariantData> &data)
                 return E_ERROR;
             }
             std::vector<uint8_t> value(size);
-            data[columnName] = value.assign(blob, blob + size);
+            value.assign(blob, blob + size);
+            data[columnName] = value;
         } else {
             (void)data;
             return E_ERROR;

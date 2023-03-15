@@ -93,6 +93,7 @@ napi_value ResultSetProxy::GetConstructor(napi_env env)
         DECLARE_NAPI_FUNCTION("getString", GetString),
         DECLARE_NAPI_FUNCTION("getDouble", GetDouble),
         DECLARE_NAPI_FUNCTION("isColumnNull", IsColumnNull),
+        DECLARE_NAPI_FUNCTION("getRow", GetRow),
 
         DECLARE_NAPI_GETTER("columnNames", GetAllColumnNames),
         DECLARE_NAPI_GETTER("columnCount", GetColumnCount),
