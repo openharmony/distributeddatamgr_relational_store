@@ -20,15 +20,14 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <variant>
 
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "rdb_common.h"
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
-using VariantData = std::variant<std::monostate, std::vector<uint8_t>, std::string, int64_t, double>;
 class JSUtils final {
 public:
     static constexpr int OK = 0;
@@ -62,8 +61,8 @@ public:
     static napi_value Convert2JSValue(napi_env env, bool value);
     static napi_value Convert2JSValue(napi_env env, const std::map<std::string, int> &value);
     static napi_value GetJSNull(napi_env env);
-    static napi_value Convert2JSValue(napi_env env, VariantData value);
-    static napi_value Convert2JSValue(napi_env env, const std::map<std::string, VariantData> &value);
+    static napi_value Convert2JSValue(napi_env env, NativeRdb::VariantData value);
+    static napi_value Convert2JSValue(napi_env env, const std::map<std::string, NativeRdb::VariantData> &value);
 
     static int32_t Convert2JSValue(napi_env env, std::string value, napi_value &output);
     static int32_t Convert2JSValue(napi_env env, bool value, napi_value &output);

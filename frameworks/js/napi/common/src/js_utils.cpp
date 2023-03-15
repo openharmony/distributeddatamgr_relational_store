@@ -350,7 +350,7 @@ napi_value JSUtils::GetJSNull(napi_env env)
     return result;
 }
 
-napi_value JSUtils::Convert2JSValue(napi_env env, VariantData value)
+napi_value JSUtils::Convert2JSValue(napi_env env, NativeRdb::VariantData value)
 {
     napi_value jsValue;
     switch(value.index()) {
@@ -376,7 +376,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, VariantData value)
     return jsValue;
 }
 
-napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<std::string, VariantData> &value)
+napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<std::string, NativeRdb::VariantData> &value)
 {
     napi_value jsValue;
     napi_status status = napi_create_array_with_length(env, value.size(), &jsValue);
