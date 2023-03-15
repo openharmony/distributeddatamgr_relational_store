@@ -199,7 +199,8 @@ HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_002, TestSize.Level1)
     tables.emplace_back("employee");
     bool ret = rdbStore->SetDistributedTables(tables);
     EXPECT_EQ(ret, false);
-    std::string table = rdbStore->ObtainDistributedTableName("7001005458323933328a254f9b263900", "employee");
+    int errCode = E_ERROR;
+    std::string table = rdbStore->ObtainDistributedTableName("7001005458323933328a254f9b263900", "employee", errCode);
     EXPECT_EQ(table, "");
     SyncOption syncOption;
     syncOption.mode = PUSH;
