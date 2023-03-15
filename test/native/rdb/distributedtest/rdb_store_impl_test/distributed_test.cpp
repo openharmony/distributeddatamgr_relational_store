@@ -131,7 +131,7 @@ HWTEST_F(DistributedTest, RemoteQuery001, TestSize.Level1)
     predicate.EqualTo("name", "zhangsan");
     std::vector<std::string> columns;
     errCode = E_ERROR;
-    std::shared_ptr<ResultSet> resultSet = store_->RemoteQuery(deviceInfos_[0].networkId, predicate, columns, errCode);
+    std::shared_ptr<ResultSet> resultSet = store_->RemoteQuery(deviceInfos_[0].deviceId, predicate, columns, errCode);
 
     EXPECT_TRUE(ret > 0);
     EXPECT_EQ(returvalue, "zhangsan");
