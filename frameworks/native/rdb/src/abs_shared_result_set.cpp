@@ -338,6 +338,63 @@ int AbsSharedResultSet::IsColumnNull(int columnIndex, bool &isNull)
     return E_OK;
 }
 
+int AbsSharedResultSet::GetRow(std::map<std::string, VariantData> &data)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    int columnCount = 0;
+    int ret = GetColumnCount(columnCount);
+    if (ret != E_OK) {
+        LOG_ERROR("AbsSharedResultSet::GetRow return GetColumnCount::ret is %{public}d!", ret);
+        return ret;
+    }
+
+    std::string columnName;
+    for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
+        int errorCode = CheckState(columnIndex);
+        if (errorCode != E_OK) {
+            return errorCode;
+        }
+        AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(sharedBlock_->GetBlockPos(), columnIndex);
+        if (!cellUnit) {
+            LOG_ERROR("AbsSharedResultSet::GetRow cellUnit is null!");
+            return E_ERROR;
+        }
+
+        int type = cellUnit->type;
+        GetColumnName(columnIndex, columnName);
+        if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT) {
+            data[columnName] = cellUnit->cell.doubleValue;
+        } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_STRING) {
+            size_t sizeIncludingNull;
+            const char *tempValue = sharedBlock_->GetCellUnitValueString(cellUnit, &sizeIncludingNull);
+            if ((sizeIncludingNull <= 1) || (tempValue == nullptr)) {
+                std::string value = "";
+                data[columnName] = value;
+            }
+            std::string value = tempValue;
+            data[columnName] = value;
+        } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_INTEGER) {
+            data[columnName] = cellUnit->cell.longValue;
+        } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL) {
+            data[columnName] = VariantData();
+        } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB) {
+            size_t size;
+            std::vector<uint8_t> value;
+            const auto *blob = static_cast<const uint8_t *>(sharedBlock_->GetCellUnitValueBlob(cellUnit, &size));
+            if (size == 0 || blob == nullptr) {
+                (void)data;
+                return E_ERROR;
+            }
+            value.resize(size);
+            data[columnName] = value.assign(blob, blob + size);
+        } else {
+            (void)data;
+            return E_ERROR;
+        }
+    }
+    return E_OK;
+}
+
 int AbsSharedResultSet::Close()
 {
     AbsResultSet::Close();

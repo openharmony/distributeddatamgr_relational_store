@@ -239,6 +239,15 @@ public:
     }
 
     /**
+     * @brief Constructor.
+     *
+     * This constructor is used to convert the const chars input parameter to a value of type ValueObject.
+     *
+     * @param val Indicates a const chars input parameter.
+     */
+    explicit ValueObject(const char *val);
+
+    /**
      * @brief Type conversion function.
      *
      * @return Returns the vector<uint8_t> type ValueObject.

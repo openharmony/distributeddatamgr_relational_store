@@ -343,6 +343,40 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<std::string, in
     return jsValue;
 }
 
+napi_value JSUtils::GetJSNull(napi_env env)
+{
+    napi_value result = nullptr;
+    napi_get_null(env, &result);
+    return result;
+}
+
+napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<std::string, VariantData> &value)
+{
+    napi_value jsValue;
+    napi_status status = napi_create_array_with_length(env, value.size(), &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    int index = 0;
+    for (const auto &[device, result] : value) {
+        napi_value jsElement;
+        status = napi_create_array_with_length(env, SYNC_RESULT_ELEMNT_NUM, &jsElement);
+        if (status != napi_ok) {
+            return nullptr;
+        }
+        napi_set_element(env, jsElement, 0, Convert2JSValue(env, device));
+        if (result == VariantData()) {
+            napi_set_element(env, jsElement, 1, Convert2JSValue(env));
+        } else {
+            napi_set_element(env, jsElement, 1, Convert2JSValue(env, result));
+        }
+        napi_set_element(env, jsValue, index++, jsElement);
+    }
+
+    return jsValue;
+}
+
 int32_t JSUtils::Convert2JSValue(napi_env env, std::string value, napi_value &output)
 {
     std::string tempStr = std::string(value);

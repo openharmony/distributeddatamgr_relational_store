@@ -18,9 +18,12 @@
 
 #include <string>
 #include <vector>
+#include <map>
+#include <variant>
 #include "rdb_visibility.h"
 namespace OHOS {
 namespace NativeRdb {
+using VariantData = std::variant<std::monostate, std::vector<uint8_t>, std::string, int64_t, double>;
 
 /**
  * @brief Indicates the column type.
@@ -96,6 +99,8 @@ public:
         CMD_GET_DOUBLE,
         /** Indicates the current error CMD is CMD_IS_COLUMN_NULL.*/
         CMD_IS_COLUMN_NULL,
+        /** Indicates the current error CMD is CMD_GET_DOUBLE.*/
+        CMD_GET_ROW,
         /** Indicates the current error CMD is CMD_IS_CLOSED.*/
         CMD_IS_CLOSED,
         /** Indicates the current error CMD is CMD_CLOSE.*/
@@ -286,7 +291,12 @@ public:
     virtual int IsColumnNull(int columnIndex, bool &isNull) = 0;
 
     /**
-     * @brief Obtains Return true if the result set is closed.
+     * @brief Obtains the row record.
+     */
+    virtual int GetRow(std::map<std::string, VariantData> &data) = 0;
+
+    /**
+     * @brief Obtains the row record.
      *
      * @return Returns true if the result set is closed.
      */

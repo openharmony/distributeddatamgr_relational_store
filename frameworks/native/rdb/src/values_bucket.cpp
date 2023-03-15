@@ -64,6 +64,11 @@ void ValuesBucket::PutNull(const std::string &columnName)
     valuesMap.insert(std::make_pair(columnName, ValueObject()));
 }
 
+void ValuesBucket::Put(const std::string &columnName, const ValueObject &value)
+{
+    valuesMap.insert(std::make_pair(columnName, value));
+}
+
 void ValuesBucket::Delete(const std::string &columnName)
 {
     valuesMap.erase(columnName);

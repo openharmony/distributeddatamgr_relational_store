@@ -394,6 +394,12 @@ int StepResultSet::IsColumnNull(int columnIndex, bool &isNull)
     return E_OK;
 }
 
+int StepResultSet::GetRow(std::map<std::string, VariantData> &data)
+{
+    data.clear();
+    return sqliteStatement->GetRow(data);
+}
+
 /**
  * Check whether the result set is over
  */
