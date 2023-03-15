@@ -713,7 +713,8 @@ napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
         context->newResultSet =
             obj->rdbStore_->RemoteQuery(context->device, *(context->rdbPredicates), context->columns, errCode);
         LOG_DEBUG("RemoteQuery ret is %{public}d.", errCode);
-        RDB_CHECK_RETURN_CALL_RESULT(errCode != OHOS::NativeRdb::E_NOT_SUPPORTED, context->SetError(NotSupportError));
+        std::shared_ptr<Error> notSupportError = std::make_shared<NotSupportError>();
+        RDB_CHECK_RETURN_CALL_RESULT(errCode != OHOS::NativeRdb::E_NOT_SUPPORTED, context->SetError(notSupportError));
         return errCode == E_OK ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
@@ -1147,7 +1148,8 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         int res = obj->rdbStore_->SetDistributedTables(context->tablesName);
         LOG_DEBUG("RdbStoreProxy::SetDistributedTables res is : %{public}d", res);
-        RDB_CHECK_RETURN_CALL_RESULT(res != OHOS::NativeRdb::E_NOT_SUPPORTED, context->SetError(NotSupportError));
+        std::shared_ptr<Error> notSupportError = std::make_shared<NotSupportError>();
+        RDB_CHECK_RETURN_CALL_RESULT(res != OHOS::NativeRdb::E_NOT_SUPPORTED, context->SetError(notSupportError));
         return res == E_OK ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
@@ -1179,7 +1181,8 @@ napi_value RdbStoreProxy::ObtainDistributedTableName(napi_env env, napi_callback
         int errCode = E_ERROR;
         context->tableName = obj->rdbStore_->ObtainDistributedTableName(context->device, context->tableName, errCode);
         LOG_INFO("ObtainDistributedTableName ret is %{public}d.", errCode);
-        RDB_CHECK_RETURN_CALL_RESULT(errCode != OHOS::NativeRdb::E_NOT_SUPPORTED, context->SetError(NotSupportError));
+        std::shared_ptr<Error> notSupportError = std::make_shared<NotSupportError>();
+        RDB_CHECK_RETURN_CALL_RESULT(errCode != OHOS::NativeRdb::E_NOT_SUPPORTED, context->SetError(notSupportError));
         return errCode == E_OK ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
@@ -1215,7 +1218,8 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
         int res = obj->rdbStore_->Sync(option, *context->predicatesProxy->GetPredicates(),
             [context](const SyncResult &result) { context->syncResult = result; });
         LOG_INFO("RdbStoreProxy::Sync res is : %{public}d", res);
-        RDB_CHECK_RETURN_CALL_RESULT(errCode != OHOS::NativeRdb::E_NOT_SUPPORTED, context->SetError(NotSupportError));
+        std::shared_ptr<Error> notSupportError = std::make_shared<NotSupportError>();
+        RDB_CHECK_RETURN_CALL_RESULT(res != OHOS::NativeRdb::E_NOT_SUPPORTED, context->SetError(notSupportError));
         return res == E_OK ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
