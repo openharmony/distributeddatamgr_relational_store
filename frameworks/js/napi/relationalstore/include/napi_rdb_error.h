@@ -16,6 +16,7 @@
 #define RDB_JS_NAPI_ERROR_H
 
 #include "js_logger.h"
+#include "rdb_errno.h"
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
@@ -24,7 +25,6 @@ constexpr int OK = 0;
 constexpr int ERR = -1;
 
 constexpr int E_PARAM_ERROR = 401;
-constexpr int E_NOT_SUPPORTED = 801;
 constexpr int E_INNER_ERROR = 14800000;
 constexpr int E_DB_INVALID = 14800010;
 constexpr int E_DB_CORRUPTED = 14800011;
@@ -120,7 +120,7 @@ public:
     };
     int GetCode() override
     {
-        return E_NOT_SUPPORTED;
+        return OHOS::NativeRdb::E_NOT_SUPPORTED;
     };
 
 private:
