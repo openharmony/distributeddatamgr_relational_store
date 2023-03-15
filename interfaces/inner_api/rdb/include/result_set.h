@@ -18,12 +18,10 @@
 
 #include <string>
 #include <vector>
-#include <map>
-#include <variant>
 #include "rdb_visibility.h"
+#include "rdb_common.h"
 namespace OHOS {
 namespace NativeRdb {
-using VariantData = std::variant<std::monostate, std::vector<uint8_t>, std::string, int64_t, double>;
 
 /**
  * @brief Indicates the column type.

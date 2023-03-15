@@ -242,7 +242,7 @@ int ResultSetProxy::IsColumnNull(int columnIndex, bool &isNull)
 int ResultSetProxy::GetRow(std::map<std::string, VariantData> &data)
 {
     (void)data;
-    return E_NOT_SUPPORT
+    return E_NOT_SUPPORT;
 }
 
 bool ResultSetProxy::IsClosed() const

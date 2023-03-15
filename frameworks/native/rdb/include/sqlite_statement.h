@@ -18,7 +18,7 @@
 
 #include "sqlite3sym.h"
 #include "value_object.h"
-#include <result_set.h>
+#include "rdb_common.h"
 
 namespace OHOS {
 namespace NativeRdb {
