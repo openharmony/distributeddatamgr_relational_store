@@ -90,12 +90,12 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
         errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
         if (errCode != E_OK) {
             LOG_ERROR("RdbStoreImpl::InnerOpen get service failed, err is %{public}d.", errCode);
-            return errCode;
+            return E_OK;
         }
         errCode = service->CreateRDBTable(syncerParam_, config.GetWritePermission(), config.GetReadPermission());
         if (errCode != E_OK) {
             LOG_ERROR("RdbStoreImpl::InnerOpen service CreateRDBTable failed");
-            return errCode;
+            return E_OK;
         }
         isShared_ = true;
     }
