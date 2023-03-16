@@ -73,7 +73,11 @@ __attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_RdbJsKit_Values
 __attribute__((visibility("default"))) ValuesBucket *NAPI_OHOS_Data_RdbJsKit_ValuesBucketProxy_GetNativeObject(
     napi_env env, napi_value &arg)
 {
-    ValuesBucket *valuesBucket = new ValuesBucket;
+    ValuesBucket *valuesBucket = new (std::nothrow) ValuesBucket;
+    if (valuesBucket == nullptr) {
+        LOG_ERROR("ValuesBucket new failed, valuesBucket is nullptr");
+        return nullptr;
+    }
     napi_value keys = 0;
     napi_get_property_names(env, arg, &keys);
     uint32_t arrLen = 0;
