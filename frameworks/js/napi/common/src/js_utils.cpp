@@ -26,7 +26,11 @@ std::string JSUtils::Convert2String(napi_env env, napi_value jsStr, bool useDefa
     str_buffer_size = (useDefaultBufSize && (str_buffer_size > DEFAULT_BUF_SIZE))
                           ? (DEFAULT_BUF_SIZE + BUF_CACHE_MARGIN)
                           : (str_buffer_size + BUF_CACHE_MARGIN);
-    char *buf = new char[str_buffer_size];
+    char *buf = new (std::nothrow) char[str_buffer_size];
+    if (buf == nullptr) {
+        LOG_ERROR("JSUtils::Convert2String new failed, buf is nullptr");
+        return "";
+    }
     size_t len = 0;
     napi_get_value_string_utf8(env, jsStr, buf, str_buffer_size, &len);
     buf[len] = 0;
@@ -37,7 +41,11 @@ std::string JSUtils::Convert2String(napi_env env, napi_value jsStr, bool useDefa
 
 int32_t JSUtils::Convert2String(napi_env env, napi_value jsStr, std::string &output)
 {
-    char *str = new char[MAX_VALUE_LENGTH + 1];
+    char *str = new (std::nothrow) char[MAX_VALUE_LENGTH + 1];
+    if (str == nullptr) {
+        LOG_ERROR("JSUtils::Convert2String new failed, str is nullptr");
+        return ERR;
+    }
     size_t valueSize = 0;
     napi_status status = napi_get_value_string_utf8(env, jsStr, str, MAX_VALUE_LENGTH, &valueSize);
     if (status != napi_ok) {
