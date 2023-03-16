@@ -20,6 +20,7 @@ namespace OHOS {
 namespace NativeRdb {
 
 constexpr int E_OK = 0;
+constexpr int E_NOT_SUPPORTED = 801;
 constexpr int E_BASE = 1000;
 constexpr int E_ERROR = (E_BASE + 1);
 constexpr int E_CANNOT_UPDATE_READONLY = (E_BASE + 2);

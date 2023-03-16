@@ -16,6 +16,7 @@
 #define RDB_JS_NAPI_ERROR_H
 
 #include "js_logger.h"
+#include "rdb_errno.h"
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
@@ -103,6 +104,23 @@ public:
     int GetCode() override
     {
         return E_PARAM_ERROR;
+    };
+
+private:
+    std::string name;
+    std::string wantType;
+};
+
+class NotSupportError : public Error {
+public:
+    NotSupportError() = default;
+    std::string GetMessage() override
+    {
+        return "Capability not supported";
+    };
+    int GetCode() override
+    {
+        return OHOS::NativeRdb::E_NOT_SUPPORTED;
     };
 
 private:
