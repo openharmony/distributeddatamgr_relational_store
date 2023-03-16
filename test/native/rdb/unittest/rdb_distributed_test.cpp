@@ -186,8 +186,7 @@ HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_001, TestSize.Level1)
 }
 
 /**
- * @tc.name:
- *
+ * @tc.name: RdbStore_Distributed_Test_002
  * @tc.desc: test RdbStore set distributed tables
  * @tc.type: FUNC
  * @tc.require:
