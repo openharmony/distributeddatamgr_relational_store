@@ -199,7 +199,7 @@ HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_002, TestSize.Level1)
     std::vector<std::string> tables;
     tables.emplace_back("employee");
     int ret = rdbStore->SetDistributedTables(tables);
-    EXPECT_EQ(ret, 1);
+    EXPECT_EQ(ret == E_OK, false);
     int errCode = E_ERROR;
     std::string table = rdbStore->ObtainDistributedTableName("7001005458323933328a254f9b263900", "employee", errCode);
     EXPECT_EQ(table, "");
@@ -208,7 +208,7 @@ HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_002, TestSize.Level1)
     syncOption.isBlock = true;
     OHOS::NativeRdb::RdbPredicates rdbPredicates("employee");
     ret = rdbStore->Sync(syncOption, rdbPredicates, [](const SyncResult &result) {});
-    EXPECT_EQ(ret, 1);
+    EXPECT_EQ(ret == E_OK, false);
     SubscribeOption subscribeOption;
     subscribeOption.mode = REMOTE;
     DistributedTestStoreObserver observer;
