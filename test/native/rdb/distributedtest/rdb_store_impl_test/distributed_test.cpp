@@ -125,12 +125,14 @@ HWTEST_F(DistributedTest, RemoteQuery001, TestSize.Level1)
     });
     std::vector<std::string> tables = {"test"};
     manager_.GetDeviceList(deviceInfos_, DeviceFilterStrategy::NO_FILTER);
-    std::string test = store_->ObtainDistributedTableName(deviceInfos_[0].deviceId, tables[0]);
+    int errCode = E_ERROR;
+    std::string test = store_->ObtainDistributedTableName(deviceInfos_[0].deviceId, tables[0], errCode);
     AbsRdbPredicates predicate(tables[0]);
     predicate.EqualTo("name", "zhangsan");
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> resultSet = store_-> RemoteQuery(deviceInfos_[0].deviceId, predicate, columns);
-    
+    errCode = E_ERROR;
+    std::shared_ptr<ResultSet> resultSet = store_->RemoteQuery(deviceInfos_[0].deviceId, predicate, columns, errCode);
+
     EXPECT_TRUE(ret > 0);
     EXPECT_EQ(returvalue, "zhangsan");
 }
