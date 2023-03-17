@@ -101,7 +101,11 @@ napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
         RDB_NAPI_ASSERT(env, valueType == napi_string, std::make_shared<ParamTypeError>("name", "a non empty string."));
         std::string tableName = JSUtils::Convert2String(env, args[0]);
         RDB_NAPI_ASSERT(env, !tableName.empty(), std::make_shared<ParamTypeError>("name", "a non empty string."));
-        auto *proxy = new RdbPredicatesProxy(tableName);
+        auto *proxy = new (std::nothrow) RdbPredicatesProxy(tableName);
+        if (proxy == nullptr) {
+            LOG_ERROR("RdbPredicatesProxy::New new failed, proxy is nullptr");
+            return nullptr;
+        }
         napi_status status = napi_wrap(env, thiz, proxy, RdbPredicatesProxy::Destructor, nullptr, nullptr);
         if (status != napi_ok) {
             LOG_ERROR("RdbPredicatesProxy::New napi_wrap failed! napi_status:%{public}d!", status);
