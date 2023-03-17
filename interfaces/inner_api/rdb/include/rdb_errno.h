@@ -263,6 +263,11 @@ constexpr int E_ARGS_READ_CON_OVERLOAD = (E_BASE + 46);
 * @brief The error when the wal file size over default limit.
 */
 static constexpr int E_WAL_SIZE_OVER_LIMIT = (E_BASE + 47);
+
+/**
+* @brief The error when the connection count is used up.
+*/
+static constexpr int E_CON_OVER_LIMIT = (E_BASE + 48);
 } // namespace NativeRdb
 } // namespace OHOS
 

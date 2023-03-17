@@ -32,6 +32,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+constexpr std::chrono::seconds timeout(2);
+
 SqliteConnectionPool *SqliteConnectionPool::Create(const RdbStoreConfig &storeConfig, int &errCode)
 {
     auto pool = new (std::nothrow) SqliteConnectionPool(storeConfig);
@@ -140,20 +142,23 @@ void SqliteConnectionPool::ReleaseConnection(SqliteConnection *connection)
 SqliteConnection *SqliteConnectionPool::AcquireWriteConnection()
 {
     std::unique_lock<std::mutex> lock(writeMutex);
-    writeCondition.wait(lock, [&] { return !writeConnectionUsed; });
-    writeConnectionUsed = true;
-    return writeConnection;
+    if (writeCondition.wait_for(lock, timeout, [this] { return !writeConnectionUsed; })) {
+        writeConnectionUsed = true;
+        return writeConnection;
+    }
+    LOG_DEBUG("Acquire writeConnection timeout.");
+    return nullptr;
 }
 
-void SqliteConnectionPool::AcquireTransaction()
+int SqliteConnectionPool::AcquireTransaction()
 {
-    if (transactionUsed) {
-        LOG_INFO("Transaction in progress, please wait for the transaction to end and try again");
-    }
     std::unique_lock<std::mutex> lock(transMutex);
-    transCondition.wait(lock, [&] { return !transactionUsed; });
-    transactionUsed = true;
-    LOG_DEBUG("AcquireTransaction end");
+    if (transCondition.wait_for(lock, timeout, [this] { return !transactionUsed; })) {
+        transactionUsed = true;
+        return E_OK;
+    }
+    LOG_DEBUG("Transaction timeout.");
+    return E_TRANSACTION_IN_EXECUTE;
 }
 
 void SqliteConnectionPool::ReleaseTransaction()
@@ -181,11 +186,14 @@ void SqliteConnectionPool::ReleaseWriteConnection()
 SqliteConnection *SqliteConnectionPool::AcquireReadConnection()
 {
     std::unique_lock<std::mutex> lock(readMutex);
-    readCondition.wait(lock, [&] { return idleReadConnectionCount > 0; });
-    SqliteConnection *connection = readConnections.back();
-    readConnections.pop_back();
-    idleReadConnectionCount--;
-    return connection;
+    if (readCondition.wait_for(lock, timeout, [this] { return idleReadConnectionCount > 0; })) {
+        SqliteConnection *connection = readConnections.back();
+        readConnections.pop_back();
+        idleReadConnectionCount--;
+        return connection;
+    }
+    LOG_DEBUG("Acquire ReadConnection timeout.");
+    return nullptr;
 }
 
 /**
