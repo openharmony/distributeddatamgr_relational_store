@@ -34,7 +34,11 @@ namespace OHOS {
 namespace NativeRdb {
 SqliteConnectionPool *SqliteConnectionPool::Create(const RdbStoreConfig &storeConfig, int &errCode)
 {
-    auto pool = new SqliteConnectionPool(storeConfig);
+    auto pool = new (std::nothrow) SqliteConnectionPool(storeConfig);
+    if (pool == nullptr) {
+        LOG_ERROR("SqliteConnectionPool::Create new failed, pool is nullptr");
+        return nullptr;
+    }
     errCode = pool->Init();
     if (errCode != E_OK) {
         delete pool;
