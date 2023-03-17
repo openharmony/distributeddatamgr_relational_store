@@ -81,7 +81,7 @@ struct RdbStoreContext : public Context {
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
 
     RdbStoreContext()
-        : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(0),
+        : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(-1),
           conflictResolution(NativeRdb::ConflictResolution::ON_CONFLICT_NONE)
     {
     }
@@ -276,7 +276,11 @@ int ParseTablesName(const napi_env &env, const napi_value &arg, std::shared_ptr<
 
 int ParseSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-    napi_get_value_int32(env, arg, &context->enumArg);
+    napi_valuetype type = napi_undefined;
+    napi_typeof(env, arg, &type);
+    CHECK_RETURN_SET(type == napi_number, std::make_shared<ParamError>("mode", "a SyncMode Type."));
+    napi_status status = napi_get_value_int32(env, arg, &context->enumArg);
+    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("mode", "a SyncMode Type."));
     bool checked = context->enumArg == 0 || context->enumArg == 1;
     CHECK_RETURN_SET(checked, std::make_shared<ParamError>("mode", "a SyncMode."));
 
