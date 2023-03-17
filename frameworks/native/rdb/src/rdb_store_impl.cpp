@@ -112,8 +112,6 @@ RdbStoreImpl::RdbStoreImpl()
 RdbStoreImpl::~RdbStoreImpl()
 {
     delete connectionPool;
-    threadMap.clear();
-    idleSessions.clear();
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     if (isShared_) {
         std::shared_ptr<DistributedRdb::RdbService> service = nullptr;

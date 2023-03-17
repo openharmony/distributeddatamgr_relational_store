@@ -52,7 +52,6 @@ protected:
 
 private:
     int PrepareStep();
-    int CheckSession();
     void FillSharedBlock(int requiredPos);
 
 private:
