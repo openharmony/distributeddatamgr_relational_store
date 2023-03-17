@@ -47,8 +47,6 @@ StepResultSet::StepResultSet(SqliteConnectionPool *pool, const std::string &sql,
 StepResultSet::~StepResultSet()
 {
     Close();
-    connectionPool_->ReleaseConnection(connection_);
-    connection_ = nullptr;
 }
 
 int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
@@ -146,8 +144,8 @@ int StepResultSet::GetRowCount(int &count)
  */
 int StepResultSet::GoToRow(int position)
 {
-    if (!connection_) {
-        return E_ERROR;
+    if (connection_ == nullptr) {
+        return E_CON_OVER_LIMIT;
     }
     // If the moved position is less than zero, reset the result and return an error
     if (position < 0) {
@@ -220,6 +218,10 @@ int StepResultSet::Close()
     isClosed = true;
     int errCode = FinishStep();
     rdb = nullptr;
+
+    connectionPool_->ReleaseConnection(connection_);
+    connection_ = nullptr;
+
     return errCode;
 }
 
@@ -234,6 +236,10 @@ int StepResultSet::PrepareStep()
 
     if (sqliteStatement != nullptr) {
         return E_OK;
+    }
+
+    if (connection_ == nullptr) {
+        return E_CON_OVER_LIMIT;
     }
 
     if (!SqliteDatabaseUtils::IsReadOnlySql(sql)) {
