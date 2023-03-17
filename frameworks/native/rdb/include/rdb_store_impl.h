@@ -26,7 +26,6 @@
 #include "rdb_store_config.h"
 #include "sqlite_connection_pool.h"
 #include "sqlite_statement.h"
-#include "store_session.h"
 #include "transaction_observer.h"
 
 namespace OHOS::NativeRdb {
@@ -124,8 +123,6 @@ private:
     SqliteConnectionPool *connectionPool;
     static const int MAX_IDLE_SESSION_SIZE = 5;
     std::mutex sessionMutex;
-    std::map<std::thread::id, std::pair<std::shared_ptr<StoreSession>, int>> threadMap;
-    std::list<std::shared_ptr<StoreSession>> idleSessions;
     bool isOpen;
     std::string path;
     std::string orgPath;
