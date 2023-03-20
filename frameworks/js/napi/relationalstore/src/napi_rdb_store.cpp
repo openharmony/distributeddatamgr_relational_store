@@ -81,7 +81,7 @@ struct RdbStoreContext : public Context {
 #endif
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
 
-    RdbStoreContext() : predicatesProxy(nullptr), rowId(0), insertNum(0), enumArg(0) {}
+    RdbStoreContext() : predicatesProxy(nullptr), rowId(0), insertNum(0), enumArg(-1) {}
     virtual ~RdbStoreContext() {}
 };
 
@@ -298,8 +298,13 @@ int ParseTablesName(const napi_env &env, const napi_value &arg, std::shared_ptr<
 
 int ParseSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-    napi_get_value_int32(env, arg, &context->enumArg);
-    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("mode", "a SyncMode.");
+    napi_valuetype type = napi_undefined;
+    napi_typeof(env, arg, &type);
+    std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("mode", "a SyncMode Type.");
+    RDB_CHECK_RETURN_CALL_RESULT(type == napi_number, context->SetError(paramError));
+    napi_status status = napi_get_value_int32(env, arg, &context->enumArg);
+    RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok, context->SetError(paramError));
+    paramError = std::make_shared<ParamTypeError>("mode", "a SyncMode.");
     RDB_CHECK_RETURN_CALL_RESULT(context->enumArg == 0 || context->enumArg == 1, context->SetError(paramError));
 
     LOG_DEBUG("ParseSyncModeArg end");
