@@ -23,6 +23,7 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "rdb_common.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -943,4 +944,33 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_018, TestSize.Le
     resultSet->Close();
     bool closeFlag = resultSet->IsClosed();
     EXPECT_EQ(closeFlag, true);
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_019
+ * @tc.desc: normal testcase of SqliteSharedResultSet for GetRow
+ * @tc.type: FUNC
+ * @tc.require: AR000FKD4F
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_019, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::unique_ptr<ResultSet> rstSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+    EXPECT_NE(rstSet, nullptr);
+
+    EXPECT_EQ(E_OK, rstSet->GoToFirstRow());
+
+    int iRet = E_ERROR;
+    std::map<std::string, VariantData> data;
+    iRet = rstSet->GetRow(data);
+    EXPECT_EQ(E_OK, iRet);
+
+    EXPECT_EQ(1, std::get<int64_t>(data["id"]));
+    EXPECT_EQ("hello", std::get<std::string>(data["data1"]));
+    EXPECT_EQ(10, std::get<int64_t>(data["data2"]));
+    EXPECT_EQ(1.0, std::get<double>(data["data3"]));
+    std::vector<uint8_t> bObject = std::get<std::vector<uint8_t>>(data["data4"]);
+    EXPECT_EQ(66, bObject[0]);
 }
