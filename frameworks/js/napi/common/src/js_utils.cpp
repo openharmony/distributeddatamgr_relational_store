@@ -354,19 +354,19 @@ napi_value JSUtils::Convert2JSValue(napi_env env, NativeRdb::VariantData value)
 {
     napi_value jsValue;
     switch(value.index()) {
-        case 0:
+        case 0: // std::monostate
             jsValue = GetJSNull(env);
             break;
-        case 1:
+        case 1: // std::vector<uint8_t>
             jsValue = Convert2JSValue(env, std::get<std::vector<uint8_t>>(value));
             break;
-        case 2:
+        case 2: // std::string
             jsValue = Convert2JSValue(env, std::get<std::string>(value));
             break;
-        case 3:
+        case 3: // int64_t
             jsValue = Convert2JSValue(env, std::get<int64_t>(value));
             break;
-        case 4:
+        case 4: // double
             jsValue = Convert2JSValue(env, std::get<double>(value));
             break;
         default:
