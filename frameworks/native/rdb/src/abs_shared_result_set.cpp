@@ -345,7 +345,7 @@ int AbsSharedResultSet::GetRow(std::map<std::string, VariantData> &data)
     int columnCount = 0;
     int ret = GetColumnCount(columnCount);
     if (ret != E_OK) {
-        LOG_ERROR("AbsSharedResultSet::GetRow return GetColumnCount::ret is %{public}d!", ret);
+        LOG_ERROR("GetColumnCount::ret is %{public}d!", ret);
         return ret;
     }
 
@@ -357,7 +357,7 @@ int AbsSharedResultSet::GetRow(std::map<std::string, VariantData> &data)
         }
         AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(sharedBlock_->GetBlockPos(), columnIndex);
         if (!cellUnit) {
-            LOG_ERROR("AbsSharedResultSet::GetRow cellUnit is null!");
+            LOG_ERROR("cellUnit is null!");
             return E_ERROR;
         }
 
