@@ -18,7 +18,6 @@
 
 namespace OHOS {
 namespace NativeRdb {
-
 enum class ConflictResolution {
     /** Implements no action when conflict occurs.*/
     ON_CONFLICT_NONE = 0,
