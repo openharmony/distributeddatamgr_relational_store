@@ -350,9 +350,13 @@ int AbsSharedResultSet::GetRow(ValuesBucket &valuesBucket)
             LOG_ERROR("cellUnit is null!");
             return E_ERROR;
         }
+        int ret = GetColumnName(columnIndex, columnName);
+        if (ret != E_OK) {
+            LOG_ERROR("GetColumnName::ret is %{public}d!", ret);
+            return ret;
+        }
 
         int type = cellUnit->type;
-        GetColumnName(columnIndex, columnName);
         switch (type) {
             case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT: {
                 double value = cellUnit->cell.doubleValue;

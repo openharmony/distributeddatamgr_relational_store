@@ -59,7 +59,7 @@ describe('rdbStoreResultSetGetRowTest', function () {
     it('rdbStoreResultSetGetRowTest0001', 0, async function (done) {
         console.log(TAG + "************* rdbStoreResultSetGetRowTest0001 start *************");
         let valueBucket = {
-            "id": 1
+            id: 1
         };
         let rowId = await store.insert("test", valueBucket);
         expect(1).assertEqual(rowId);
@@ -67,15 +67,14 @@ describe('rdbStoreResultSetGetRowTest', function () {
         let resultSet = await store.queryByStep("SELECT * FROM test", []);
         expect(true).assertEqual(resultSet.goToFirstRow());
 
-        let data = resultSet.getRow();
-        console.info('ggggg' + JSON.stringify(data));
+        let valueBucket_ret = resultSet.getRow();
 
-        expect(1).assertEqual(data[5][1]);
-        expect(null).assertEqual(data[0][1]);
-        expect(null).assertEqual(data[1][1]);
-        expect(null).assertEqual(data[2][1]);
-        expect(null).assertEqual(data[3][1]);
-        expect(null).assertEqual(data[4][1]);
+        expect(1).assertEqual(valueBucket_ret["id"]);
+        expect(null).assertEqual(valueBucket_ret["data1"]);
+        expect(null).assertEqual(valueBucket_ret["data2"]);
+        expect(null).assertEqual(valueBucket_ret["data3"]);
+        expect(null).assertEqual(valueBucket_ret["data4"]);
+        expect(null).assertEqual(valueBucket_ret["data5"]);
 
         resultSet.close();
         done();
@@ -90,10 +89,10 @@ describe('rdbStoreResultSetGetRowTest', function () {
     it('rdbStoreResultSetGetRowTest0002', 0, async function (done) {
         console.log(TAG + "************* rdbStoreResultSetGetRowTest0002 start *************");
         let valueBucket = {
-            "data1": null,
-            "data2": undefined,
-            "data4": undefined,
-            "data5": null
+            data1: null,
+            data2: undefined,
+            data4: undefined,
+            data5: null
         };
         let rowId = await store.insert("test", valueBucket);
         expect(1).assertEqual(rowId);
@@ -101,14 +100,14 @@ describe('rdbStoreResultSetGetRowTest', function () {
         let resultSet = await store.queryByStep("SELECT * FROM test", []);
         expect(true).assertEqual(resultSet.goToFirstRow());
 
-        let data = resultSet.getRow();
+        let valueBucket_ret = resultSet.getRow();
 
-        expect(1).assertEqual(data[5][1]);
-        expect(null).assertEqual(data[0][1]);
-        expect(null).assertEqual(data[1][1]);
-        expect(null).assertEqual(data[2][1]);
-        expect(null).assertEqual(data[3][1]);
-        expect(null).assertEqual(data[4][1]);
+        expect(1).assertEqual(valueBucket_ret["id"]);
+        expect(null).assertEqual(valueBucket_ret["data1"]);
+        expect(null).assertEqual(valueBucket_ret["data2"]);
+        expect(null).assertEqual(valueBucket_ret["data3"]);
+        expect(null).assertEqual(valueBucket_ret["data4"]);
+        expect(null).assertEqual(valueBucket_ret["data5"]);
 
         resultSet.close();
         done();
@@ -123,11 +122,11 @@ describe('rdbStoreResultSetGetRowTest', function () {
     it('rdbStoreResultSetGetRowTest0003', 0, async function (done) {
         console.log(TAG + "************* rdbStoreResultSetGetRowTest0003 start *************");
         let valueBucket = {
-            "data1": "olleh",
-            "data2": 20,
-            "data3": 2.0,
-            "data4": new Uint8Array([4, 3, 2, 1]),
-            "data5": true
+            data1: "olleh",
+            data2: 20,
+            data3: 2.0,
+            data4: new Uint8Array([4, 3, 2, 1]),
+            data5: true
         };
         let rowId = await store.insert("test", valueBucket);
         expect(1).assertEqual(rowId);
@@ -135,14 +134,14 @@ describe('rdbStoreResultSetGetRowTest', function () {
         let resultSet = await store.queryByStep("SELECT * FROM test", []);
         expect(true).assertEqual(resultSet.goToFirstRow());
 
-        let data = resultSet.getRow();
+        let valueBucket_ret = resultSet.getRow();
 
-        expect(1).assertEqual(data[5][1]);
-        expect("olleh").assertEqual(data[0][1]);
-        expect(20).assertEqual(data[1][1]);
-        expect(2.0).assertEqual(data[2][1]);
-        expect(1).assertEqual(data[3][1][3]);
-        expect(1).assertEqual(data[4][1]);
+        expect(1).assertEqual(valueBucket_ret.id);
+        expect("olleh").assertEqual(valueBucket_ret.data1);
+        expect(20).assertEqual(valueBucket_ret.data2);
+        expect(2.0).assertEqual(valueBucket_ret.data3);
+        expect(1).assertEqual(valueBucket_ret.data4[3]);
+        expect(1).assertEqual(valueBucket_ret.data5);
 
         resultSet.close();
         done();
@@ -157,6 +156,40 @@ describe('rdbStoreResultSetGetRowTest', function () {
     it('rdbStoreResultSetGetRowTest0004', 0, async function (done) {
         console.log(TAG + "************* rdbStoreResultSetGetRowTest0004 start *************");
         let valueBucket = {
+            data1: "hello",
+            data2: 10,
+            data3: 1.0,
+            data4: new Uint8Array([1, 2, 3, 4]),
+            data5: true,
+        };
+        let rowId = await store.insert("test", valueBucket);
+        expect(1).assertEqual(rowId);
+
+        let resultSet = await store.queryByStep("SELECT * FROM test", []);
+        expect(true).assertEqual(resultSet.goToFirstRow());
+
+        let valueBucket_ret = resultSet.getRow();
+
+        expect(1).assertEqual(valueBucket_ret.id);
+        expect("hello").assertEqual(valueBucket_ret.data1);
+        expect(10).assertEqual(valueBucket_ret.data2);
+        expect(1.0).assertEqual(valueBucket_ret.data3);
+        expect(4).assertEqual(valueBucket_ret.data4[3]);
+        expect(1).assertEqual(valueBucket_ret.data5);
+
+        resultSet.close();
+        done();
+        console.log(TAG + "************* rdbStoreResultSetGetRowTest0004 end   *************");
+    })
+
+    /**
+     * @tc.name rdb store resultSet getRow test
+     * @tc.number rdbStoreResultSetGetRowTest0005
+     * @tc.desc resultSet getRow test
+     */
+    it('rdbStoreResultSetGetRowTest0005', 0, async function (done) {
+        console.log(TAG + "************* rdbStoreResultSetGetRowTest0005 start *************");
+        let valueBucket = {
             "data1": "hello",
             "data2": 10,
             "data3": 1.0,
@@ -166,21 +199,18 @@ describe('rdbStoreResultSetGetRowTest', function () {
         let rowId = await store.insert("test", valueBucket);
         expect(1).assertEqual(rowId);
 
-        let resultSet = await store.queryByStep("SELECT * FROM test", []);
+        let resultSet = await store.queryByStep("SELECT data1, data2 FROM test", []);
         expect(true).assertEqual(resultSet.goToFirstRow());
 
-        let data = resultSet.getRow();
+        let valueBucket_ret = resultSet.getRow();
 
-        expect(1).assertEqual(data[5][1]);
-        expect("hello").assertEqual(data[0][1]);
-        expect(10).assertEqual(data[1][1]);
-        expect(1.0).assertEqual(data[2][1]);
-        expect(4).assertEqual(data[3][1][3]);
-        expect(1).assertEqual(data[4][1]);
+        expect("hello").assertEqual(valueBucket_ret.data1);
+        expect(10).assertEqual(valueBucket_ret.data2);
+        expect(undefined).assertEqual(valueBucket_ret.data3);
 
         resultSet.close();
         done();
-        console.log(TAG + "************* rdbStoreResultSetGetRowTest0004 end   *************");
+        console.log(TAG + "************* rdbStoreResultSetGetRowTest0005 end   *************");
     })
     console.log(TAG + "*************Unit Test End*************");
 })

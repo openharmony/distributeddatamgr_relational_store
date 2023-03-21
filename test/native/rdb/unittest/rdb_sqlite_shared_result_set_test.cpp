@@ -23,7 +23,6 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
-#include "rdb_common.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -956,21 +955,59 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_019, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::unique_ptr<ResultSet> resultSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
-    EXPECT_NE(rstSet, nullptr);
+    EXPECT_NE(resultSet, nullptr);
 
-    EXPECT_EQ(E_OK, rstSet->GoToFirstRow());
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
     int iRet = E_ERROR;
-    std::map<std::string, VariantData> data;
-    iRet = rstSet->GetRow(data);
+    ValuesBucket valuesBucket_ret;
+    iRet = resultSet->GetRow(valuesBucket_ret);
+    std::map<std::string, ValueObject> valuesMap;
+    valuesBucket_ret.GetAll(valuesMap);
     EXPECT_EQ(E_OK, iRet);
 
-    EXPECT_EQ(1, std::get<int64_t>(data["id"]));
-    EXPECT_EQ("hello", std::get<std::string>(data["data1"]));
-    EXPECT_EQ(10, std::get<int64_t>(data["data2"]));
-    EXPECT_EQ(1.0, std::get<double>(data["data3"]));
-    std::vector<uint8_t> bObject = std::get<std::vector<uint8_t>>(data["data4"]);
-    EXPECT_EQ(66, bObject[0]);
+    int idValue = valuesMap["id"];
+    std::string data1Value = valuesMap["data1"];
+    int data2Value = valuesMap["data2"];
+    double data3Value = valuesMap["data3"];
+    std::vector<uint8_t> data4Value = valuesMap["data4"];
+
+    EXPECT_EQ(1, idValue);
+    EXPECT_EQ("hello", data1Value);
+    EXPECT_EQ(10, data2Value);
+    EXPECT_EQ(1.0, data3Value);
+    EXPECT_EQ(66, data4Value[0]);
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_020
+ * @tc.desc: normal testcase of SqliteSharedResultSet for GetRow
+ * @tc.type: FUNC
+ * @tc.require: AR000FKD4F
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_020, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::unique_ptr<ResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT data1, data2 FROM test", selectionArgs);
+    EXPECT_NE(resultSet, nullptr);
+
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+
+    int iRet = E_ERROR;
+    ValuesBucket valuesBucket_ret;
+    iRet = resultSet->GetRow(valuesBucket_ret);
+    std::map<std::string, ValueObject> valuesMap;
+    valuesBucket_ret.GetAll(valuesMap);
+    EXPECT_EQ(E_OK, iRet);
+
+    std::string data1Value = valuesMap["data1"];
+    int data2Value = valuesMap["data2"];
+
+    EXPECT_EQ("hello", data1Value);
+    EXPECT_EQ(10, data2Value);
+    EXPECT_EQ(true, valuesMap.count("data3") == 0);
 }
