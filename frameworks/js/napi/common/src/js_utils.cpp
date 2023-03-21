@@ -16,6 +16,7 @@
 #include "js_utils.h"
 
 #include "js_logger.h"
+#include "value_object.h"
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
@@ -350,37 +351,37 @@ napi_value JSUtils::GetJSNull(napi_env env)
     return result;
 }
 
-napi_value JSUtils::Convert2JSValue(napi_env env, ValuesBucket &valuesBucket)
+napi_value JSUtils::Convert2JSValue(napi_env env, NativeRdb::ValuesBucket &valuesBucket)
 {
     napi_value ret;
     NAPI_CALL(env, napi_create_object(env, &ret));
-    std::map<std::string, ValueObject> valuesMap;
+    std::map<std::string, NativeRdb::ValueObject> valuesMap;
     valuesBucket.GetAll(valuesMap);
-    std::map<std::string, ValueObject>::iterator it;
+    std::map<std::string, NativeRdb::ValueObject>::iterator it;
     for (it = valuesMap.begin(); it != valuesMap.end(); ++it) {
         std::string key = it->first;
         auto valueObject = it->second;
         napi_value value = nullptr;
         switch (valueObject.GetType()) {
-            case ValueObjectType::TYPE_NULL: {
-                value = JSUtils::GetJSNull(env)
+            case NativeRdb::ValueObjectType::TYPE_NULL: {
+                value = JSUtils::GetJSNull(env);
             } break;
-            case ValueObjectType::TYPE_INT: {
+            case NativeRdb::ValueObjectType::TYPE_INT: {
                 int64_t intVal = 0;
                 valueObject.GetLong(intVal);
                 value = JSUtils::Convert2JSValue(env, intVal);
             } break;
-            case ValueObjectType::TYPE_DOUBLE: {
+            case NativeRdb::ValueObjectType::TYPE_DOUBLE: {
                 double doubleVal = 0L;
                 valueObject.GetDouble(doubleVal);
                 value = JSUtils::Convert2JSValue(env, doubleVal);
             } break;
-            case ValueObjectType::TYPE_BLOB: {
+            case NativeRdb::ValueObjectType::TYPE_BLOB: {
                 std::vector<uint8_t> blobVal;
                 valueObject.GetBlob(blobVal);
                 value = JSUtils::Convert2JSValue(env, blobVal);
             } break;
-            case ValueObjectType::TYPE_BOOL: {
+            case NativeRdb::ValueObjectType::TYPE_BOOL: {
                 bool boolVal = false;
                 valueObject.GetBool(boolVal);
                 value = JSUtils::Convert2JSValue(env, boolVal);

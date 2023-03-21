@@ -397,7 +397,7 @@ int StepResultSet::IsColumnNull(int columnIndex, bool &isNull)
 
 int StepResultSet::GetRow(ValuesBucket &valuesBucket)
 {
-    return sqliteStatement->GetRow(ValuesBucket &valuesBucket);
+    return sqliteStatement->GetRow(valuesBucket);
 }
 
 /**

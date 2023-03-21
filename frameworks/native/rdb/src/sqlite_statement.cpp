@@ -345,7 +345,7 @@ int SqliteStatement::GetColumnLong(int index, int64_t &value) const
 
     return E_OK;
 }
-int SqliteStatement::GetRow(ValuesBucket &valuesBucket)
+int SqliteStatement::GetRow(ValuesBucket &valuesBucket) const
 {
     std::map<std::string, ValueObject> valuesMap;
     if (stmtHandle == nullptr) {
@@ -354,9 +354,13 @@ int SqliteStatement::GetRow(ValuesBucket &valuesBucket)
 
     std::string columnName;
     for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
-        int type = sqlite3_column_type(stmtHandle, index);
-        GetColumnName(columnIndex, columnName);
+        int ret = GetColumnName(columnIndex, columnName);
+        if (ret != E_OK) {
+            LOG_ERROR("GetColumnName::ret is %{public}d!", ret);
+            return ret;
+        }
 
+        int type = sqlite3_column_type(stmtHandle, columnIndex);
         switch (type) {
             case SQLITE_INTEGER: {
                 int64_t value = sqlite3_column_int64(stmtHandle, columnIndex);
@@ -386,7 +390,7 @@ int SqliteStatement::GetRow(ValuesBucket &valuesBucket)
             } break;
             case SQLITE_NULL: {
                 valuesMap.insert(std::make_pair(columnName, ValueObject()));
-            }
+            } break;
             default: {
                 return E_ERROR;
             }

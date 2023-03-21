@@ -61,7 +61,7 @@ public:
     static napi_value Convert2JSValue(napi_env env, bool value);
     static napi_value Convert2JSValue(napi_env env, const std::map<std::string, int> &value);
     static napi_value GetJSNull(napi_env env);
-    static napi_value Convert2JSValue(napi_env env, ValuesBucket &valuesBucket);
+    static napi_value Convert2JSValue(napi_env env, NativeRdb::ValuesBucket &valuesBucket);
 
     static int32_t Convert2JSValue(napi_env env, std::string value, napi_value &output);
     static int32_t Convert2JSValue(napi_env env, bool value, napi_value &output);
