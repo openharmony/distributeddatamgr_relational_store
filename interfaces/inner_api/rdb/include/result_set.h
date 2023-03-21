@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 #include "rdb_visibility.h"
-#include "rdb_common.h"
+#include "values_bucket.h"
 namespace OHOS {
 namespace NativeRdb {
 
@@ -291,7 +291,7 @@ public:
     /**
      * @brief Obtains the row record.
      */
-    virtual int GetRow(std::map<std::string, VariantData> &data) = 0;
+    virtual int GetRow(ValuesBucket &valuesBucket) = 0;
 
     /**
      * @brief Obtains the row record.

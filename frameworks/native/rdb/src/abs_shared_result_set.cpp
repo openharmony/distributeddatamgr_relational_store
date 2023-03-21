@@ -27,6 +27,7 @@
 #include "rdb_trace.h"
 #include "shared_block.h"
 #include "string_ex.h"
+#include "values_bucket.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -233,7 +234,7 @@ int AbsSharedResultSet::GetInt(int columnIndex, int &value)
     if (errorCode != E_OK) {
         return errorCode;
     }
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(sharedBlock_->GetBlockPos(), columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_-> (sharedBlock_->GetBlockPos(), columnIndex);
     if (!cellUnit) {
         LOG_ERROR("AbsSharedResultSet::GetInt cellUnit is null!");
         return E_ERROR;
@@ -338,23 +339,12 @@ int AbsSharedResultSet::IsColumnNull(int columnIndex, bool &isNull)
     return E_OK;
 }
 
-int AbsSharedResultSet::GetRow(std::map<std::string, VariantData> &data)
+int AbsSharedResultSet::GetRow(ValuesBucket &valuesBucket)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    data.clear();
-    int columnCount = 0;
-    int ret = GetColumnCount(columnCount);
-    if (ret != E_OK) {
-        LOG_ERROR("GetColumnCount::ret is %{public}d!", ret);
-        return ret;
-    }
-
+    std::map<std::string, ValueObject> valuesMap;
     std::string columnName;
-    for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
-        int errorCode = CheckState(columnIndex);
-        if (errorCode != E_OK) {
-            return errorCode;
-        }
+    for (int columnIndex = 0; columnIndex < sharedBlock_->GetColumnNum(); ++columnIndex) {
         AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(sharedBlock_->GetBlockPos(), columnIndex);
         if (!cellUnit) {
             LOG_ERROR("cellUnit is null!");
@@ -363,37 +353,44 @@ int AbsSharedResultSet::GetRow(std::map<std::string, VariantData> &data)
 
         int type = cellUnit->type;
         GetColumnName(columnIndex, columnName);
-        if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT) {
-            data[columnName] = cellUnit->cell.doubleValue;
-        } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_STRING) {
-            size_t sizeIncludingNull;
-            const char *tempValue = sharedBlock_->GetCellUnitValueString(cellUnit, &sizeIncludingNull);
-            if ((sizeIncludingNull <= 1) || (tempValue == nullptr)) {
-                std::string value = "";
-                data[columnName] = value;
-            }
-            std::string value = tempValue;
-            data[columnName] = value;
-        } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_INTEGER) {
-            data[columnName] = cellUnit->cell.longValue;
-        } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL) {
-            data[columnName] = VariantData();
-        } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB) {
-            size_t size;
-            std::vector<uint8_t> value;
-            const auto *blob = static_cast<const uint8_t *>(sharedBlock_->GetCellUnitValueBlob(cellUnit, &size));
-            if (size == 0 || blob == nullptr) {
-                (void)data;
+        switch (type) {
+            case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT: {
+                double value = cellUnit->cell.doubleValue;
+                valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
+            } break;
+            case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_STRING: {
+                size_t sizeIncludingNull;
+                const char *tempValue = sharedBlock_->GetCellUnitValueString(cellUnit, &sizeIncludingNull);
+                if ((sizeIncludingNull <= 1) || (tempValue == nullptr)) {
+                    return E_ERROR;
+                }
+                std::string value = tempValue;
+                valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
+            } break;
+            case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_INTEGER: {
+                int64_t value = cellUnit->cell.longValue;
+                valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
+            } break;
+            case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL: {
+                valuesMap.insert(std::make_pair(columnName, ValueObject()));
+            } break;
+            case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB: {
+                size_t size;
+                std::vector<uint8_t> value;
+                const auto *blob = static_cast<const uint8_t *>(sharedBlock_->GetCellUnitValueBlob(cellUnit, &size));
+                if (size == 0 || blob == nullptr) {
+                    return E_ERROR;
+                }
+                value.resize(size);
+                value.assign(blob, blob + size);
+                valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
+            } break;
+            default: {
                 return E_ERROR;
             }
-            value.resize(size);
-            value.assign(blob, blob + size);
-            data[columnName] = value;
-        } else {
-            (void)data;
-            return E_ERROR;
         }
     }
+    valuesBucket = ValuesBucket(valuesMap);
     return E_OK;
 }
 

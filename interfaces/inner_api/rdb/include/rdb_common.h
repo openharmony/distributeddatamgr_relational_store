@@ -16,12 +16,9 @@
 #ifndef NATIVE_RDB_RDB_COMMON_H
 #define NATIVE_RDB_RDB_COMMON_H
 
-#include <map>
-#include <variant>
-
 namespace OHOS {
 namespace NativeRdb {
-using VariantData = std::variant<std::monostate, std::vector<uint8_t>, std::string, int64_t, double>;
+
 enum class ConflictResolution {
     /** Implements no action when conflict occurs.*/
     ON_CONFLICT_NONE = 0,

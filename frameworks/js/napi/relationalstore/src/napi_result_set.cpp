@@ -22,6 +22,7 @@
 #include "napi_rdb_error.h"
 #include "napi_rdb_trace.h"
 #include "rdb_errno.h"
+#include "values_bucket.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_result_set_bridge.h"
@@ -514,10 +515,10 @@ napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
 
-    std::map<std::string, VariantData> data;
-    int errCode = resultSetProxy->resultSet_->GetRow(data);
+    ValuesBucket valuesBucket;
+    int errCode = resultSetProxy->resultSet_->GetRow(valuesBucket);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_RESULT_GET_ERROR));
-    return JSUtils::Convert2JSValue(env, data);
+    return JSUtils::Convert2JSValue(env, valuesBucket);
 }
 
 napi_value ResultSetProxy::IsClosed(napi_env env, napi_callback_info info)
