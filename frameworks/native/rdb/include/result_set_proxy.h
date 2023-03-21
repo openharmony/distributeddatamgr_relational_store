@@ -18,7 +18,6 @@
 
 #include "iremote_proxy.h"
 #include "iresult_set.h"
-#include <map>
 
 namespace OHOS::NativeRdb {
 class ResultSetProxy : public IRemoteProxy<IResultSet> {

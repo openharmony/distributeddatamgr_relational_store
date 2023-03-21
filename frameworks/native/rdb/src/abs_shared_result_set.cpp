@@ -234,7 +234,7 @@ int AbsSharedResultSet::GetInt(int columnIndex, int &value)
     if (errorCode != E_OK) {
         return errorCode;
     }
-    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_-> (sharedBlock_->GetBlockPos(), columnIndex);
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(sharedBlock_->GetBlockPos(), columnIndex);
     if (!cellUnit) {
         LOG_ERROR("AbsSharedResultSet::GetInt cellUnit is null!");
         return E_ERROR;
