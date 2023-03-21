@@ -26,6 +26,7 @@
 #include "sqlite_database_utils.h"
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
+#include "values_bucket.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -394,10 +395,9 @@ int StepResultSet::IsColumnNull(int columnIndex, bool &isNull)
     return E_OK;
 }
 
-int StepResultSet::GetRow(std::map<std::string, VariantData> &data)
+int StepResultSet::GetRow(ValuesBucket &valuesBucket)
 {
-    data.clear();
-    return sqliteStatement->GetRow(data);
+    return sqliteStatement->GetRow(ValuesBucket &valuesBucket);
 }
 
 /**

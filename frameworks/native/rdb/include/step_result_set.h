@@ -48,7 +48,7 @@ public:
     int GetLong(int columnIndex, int64_t &value) override;
     int GetDouble(int columnIndex, double &value) override;
     int IsColumnNull(int columnIndex, bool &isNull) override;
-    int GetRow(std::map<std::string, VariantData> &data) override;
+    int GetRow(ValuesBucket &valuesBucket) override;
     bool IsClosed() const override;
     int Close() override;
     int FinishStep();

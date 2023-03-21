@@ -350,53 +350,50 @@ napi_value JSUtils::GetJSNull(napi_env env)
     return result;
 }
 
-napi_value JSUtils::Convert2JSValue(napi_env env, NativeRdb::VariantData value)
+napi_value JSUtils::Convert2JSValue(napi_env env, ValuesBucket &valuesBucket)
 {
-    napi_value jsValue;
-    switch(value.index()) {
-        case 0: // std::monostate
-            jsValue = GetJSNull(env);
-            break;
-        case 1: // std::vector<uint8_t>
-            jsValue = Convert2JSValue(env, std::get<std::vector<uint8_t>>(value));
-            break;
-        case 2: // std::string
-            jsValue = Convert2JSValue(env, std::get<std::string>(value));
-            break;
-        case 3: // int64_t
-            jsValue = Convert2JSValue(env, std::get<int64_t>(value));
-            break;
-        case 4: // double
-            jsValue = Convert2JSValue(env, std::get<double>(value));
-            break;
-        default:
-            jsValue = GetJSNull(env);
-            break;
-    }
-    return jsValue;
-}
-
-napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<std::string, NativeRdb::VariantData> &value)
-{
-    napi_value jsValue;
-    napi_status status = napi_create_array_with_length(env, value.size(), &jsValue);
-    if (status != napi_ok) {
-        return nullptr;
-    }
-
-    int index = 0;
-    for (const auto &[device, result] : value) {
-        napi_value jsElement;
-        status = napi_create_array_with_length(env, SYNC_RESULT_ELEMNT_NUM, &jsElement);
-        if (status != napi_ok) {
-            return nullptr;
+    napi_value ret;
+    NAPI_CALL(env, napi_create_object(env, &ret));
+    std::map<std::string, ValueObject> valuesMap;
+    valuesBucket.GetAll(valuesMap);
+    std::map<std::string, ValueObject>::iterator it;
+    for (it = valuesMap.begin(); it != valuesMap.end(); ++it) {
+        std::string key = it->first;
+        auto valueObject = it->second;
+        napi_value value = nullptr;
+        switch (valueObject.GetType()) {
+            case ValueObjectType::TYPE_NULL: {
+                value = JSUtils::GetJSNull(env)
+            } break;
+            case ValueObjectType::TYPE_INT: {
+                int64_t intVal = 0;
+                valueObject.GetLong(intVal);
+                value = JSUtils::Convert2JSValue(env, intVal);
+            } break;
+            case ValueObjectType::TYPE_DOUBLE: {
+                double doubleVal = 0L;
+                valueObject.GetDouble(doubleVal);
+                value = JSUtils::Convert2JSValue(env, doubleVal);
+            } break;
+            case ValueObjectType::TYPE_BLOB: {
+                std::vector<uint8_t> blobVal;
+                valueObject.GetBlob(blobVal);
+                value = JSUtils::Convert2JSValue(env, blobVal);
+            } break;
+            case ValueObjectType::TYPE_BOOL: {
+                bool boolVal = false;
+                valueObject.GetBool(boolVal);
+                value = JSUtils::Convert2JSValue(env, boolVal);
+            } break;
+            default: {
+                std::string strVal = "";
+                valueObject.GetString(strVal);
+                value = JSUtils::Convert2JSValue(env, strVal);
+            } break;
         }
-        napi_set_element(env, jsElement, 0, Convert2JSValue(env, device));
-        napi_set_element(env, jsElement, 1, Convert2JSValue(env, result));
-        napi_set_element(env, jsValue, index++, jsElement);
+        NAPI_CALL(env, napi_set_named_property(env, ret, key.c_str(), value));
     }
-
-    return jsValue;
+    return ret;
 }
 
 int32_t JSUtils::Convert2JSValue(napi_env env, std::string value, napi_value &output)

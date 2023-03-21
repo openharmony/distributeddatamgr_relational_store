@@ -239,9 +239,8 @@ int ResultSetProxy::IsColumnNull(int columnIndex, bool &isNull)
     return E_OK;
 }
 
-int ResultSetProxy::GetRow(std::map<std::string, VariantData> &data)
+int ResultSetProxy::GetRow(ValuesBucket &valuesBucket)
 {
-    (void)data;
     return E_NOT_SUPPORT;
 }
 

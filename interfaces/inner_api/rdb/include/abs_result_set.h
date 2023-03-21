@@ -124,7 +124,7 @@ public:
     /**
      * @brief Obtains the row record.
      */
-    RDB_API_EXPORT int GetRow(std::map<std::string, VariantData> &data) override;
+    RDB_API_EXPORT int GetRow(ValuesBucket &valuesBucket) override;
 
     /**
      * @brief Move the cursor to an absolute position.
