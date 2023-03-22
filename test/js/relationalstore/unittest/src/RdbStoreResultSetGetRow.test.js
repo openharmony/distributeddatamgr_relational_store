@@ -25,23 +25,23 @@ const STORE_CONFIG = {
     name: "stepResultSet_getRow_test.db",
     securityLevel: data_relationalStore.SecurityLevel.S1,
 }
-let store
+let rdbStore
 describe('rdbStoreResultSetGetRowTest', function () {
     beforeAll(async function () {
         console.info(TAG + 'beforeAll')
         await data_relationalStore.deleteRdbStore(context, "stepResultSet_getRow_test.db");
-        store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
     })
 
     beforeEach(async function () {
         console.info(TAG + 'beforeEach')
-        await store.executeSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, " +
+        await rdbStore.executeSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, " +
             "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     })
 
     afterEach(async function () {
         console.info(TAG + 'afterEach')
-        await store.executeSql("DROP TABLE IF EXISTS test");
+        await rdbStore.executeSql("DROP TABLE IF EXISTS test");
     })
 
     afterAll(async function () {
@@ -61,7 +61,7 @@ describe('rdbStoreResultSetGetRowTest', function () {
         let valueBucket = {
             id: 1
         };
-        let rowId = await store.insert("test", valueBucket);
+        let rowId = await rdbStore.insert("test", valueBucket);
         expect(1).assertEqual(rowId);
 
         let predicates = await new data_relationalStore.RdbPredicates("test")
@@ -94,7 +94,7 @@ describe('rdbStoreResultSetGetRowTest', function () {
             data4: undefined,
             data5: null
         };
-        let rowId = await store.insert("test", valueBucket);
+        let rowId = await rdbStore.insert("test", valueBucket);
         expect(1).assertEqual(rowId);
 
         let predicates = await new data_relationalStore.RdbPredicates("test")
@@ -128,7 +128,7 @@ describe('rdbStoreResultSetGetRowTest', function () {
             data4: new Uint8Array([1, 2, 3, 4]),
             data5: true,
         };
-        let rowId = await store.insert("test", valueBucket);
+        let rowId = await rdbStore.insert("test", valueBucket);
         expect(1).assertEqual(rowId);
 
         let predicates = await new data_relationalStore.RdbPredicates("test")
@@ -156,13 +156,13 @@ describe('rdbStoreResultSetGetRowTest', function () {
     it('rdbStoreResultSetGetRowTest0004', 0, async function (done) {
         console.log(TAG + "************* rdbStoreResultSetGetRowTest0004 start *************");
         let valueBucket = {
-            "data1": "hello",
+            "data1": "",
             "data2": 10,
             "data3": 1.0,
             "data4": new Uint8Array([1, 2, 3, 4]),
             "data5": true,
         };
-        let rowId = await store.insert("test", valueBucket);
+        let rowId = await rdbStore.insert("test", valueBucket);
         expect(1).assertEqual(rowId);
 
         let predicates = await new data_relationalStore.RdbPredicates("test")
@@ -171,7 +171,7 @@ describe('rdbStoreResultSetGetRowTest', function () {
 
         let valueBucket_ret = resultSet.getRow();
 
-        expect("hello").assertEqual(valueBucket_ret.data1);
+        expect("").assertEqual(valueBucket_ret.data1);
         expect(10).assertEqual(valueBucket_ret.data2);
         expect(undefined).assertEqual(valueBucket_ret.data3);
 

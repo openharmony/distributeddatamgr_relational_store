@@ -16,7 +16,6 @@
 #include "js_utils.h"
 
 #include "js_logger.h"
-#include "value_object.h"
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
