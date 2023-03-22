@@ -347,10 +347,10 @@ int SqliteStatement::GetColumnLong(int index, int64_t &value) const
 }
 int SqliteStatement::GetRow(ValuesBucket &valuesBucket) const
 {
-    std::map<std::string, ValueObject> valuesMap;
     if (stmtHandle == nullptr) {
         return E_INVALID_STATEMENT;
     }
+    std::map<std::string, ValueObject> valuesMap;
 
     std::string columnName;
     for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
@@ -369,6 +369,7 @@ int SqliteStatement::GetRow(ValuesBucket &valuesBucket) const
             case SQLITE_TEXT: {
                 auto chars = reinterpret_cast<const char *>(sqlite3_column_text(stmtHandle, columnIndex));
                 if (!chars) {
+                    LOG_ERROR("chars is null %{public}d", chars == nullptr);
                     return E_ERROR;
                 }
                 std::string value = std::string(chars, sqlite3_column_bytes(stmtHandle, columnIndex));
@@ -381,7 +382,8 @@ int SqliteStatement::GetRow(ValuesBucket &valuesBucket) const
             case SQLITE_BLOB: {
                 int size = sqlite3_column_bytes(stmtHandle, columnIndex);
                 auto blob = static_cast<const uint8_t *>(sqlite3_column_blob(stmtHandle, columnIndex));
-                if (size == 0 || blob == nullptr) {
+                if (blob == nullptr) {
+                    LOG_ERROR("blob is null %{public}d", blob == nullptr);
                     return E_ERROR;
                 }
                 std::vector<uint8_t> value(size);

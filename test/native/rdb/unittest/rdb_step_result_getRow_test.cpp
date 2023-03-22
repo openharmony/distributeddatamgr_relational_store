@@ -288,7 +288,7 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_005, TestSize
 
     EXPECT_EQ("hello", data1Value);
     EXPECT_EQ(10, data2Value);
-    EXPECT_EQ(true, valuesMap.count("data3") == 0);
+    EXPECT_EQ(0, valuesMap.count("data3"));
 
     resultSet->Close();
 }

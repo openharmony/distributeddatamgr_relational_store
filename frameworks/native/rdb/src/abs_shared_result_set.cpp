@@ -344,7 +344,8 @@ int AbsSharedResultSet::GetRow(ValuesBucket &valuesBucket)
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::map<std::string, ValueObject> valuesMap;
     std::string columnName;
-    for (int columnIndex = 0; columnIndex < sharedBlock_->GetColumnNum(); ++columnIndex) {
+    uint32_t columnNum = sharedBlock_->GetColumnNum();
+    for (int columnIndex = 0; columnIndex < columnNum; ++columnIndex) {
         AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(sharedBlock_->GetBlockPos(), columnIndex);
         if (!cellUnit) {
             LOG_ERROR("cellUnit is null!");
@@ -365,11 +366,11 @@ int AbsSharedResultSet::GetRow(ValuesBucket &valuesBucket)
             case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_STRING: {
                 size_t sizeIncludingNull;
                 const char *tempValue = sharedBlock_->GetCellUnitValueString(cellUnit, &sizeIncludingNull);
-                if ((sizeIncludingNull <= 1) || (tempValue == nullptr)) {
+                if (tempValue == nullptr) {
+                    LOG_ERROR("tempValue is null %{public}d", tempValue == nullptr);
                     return E_ERROR;
                 }
-                std::string value = tempValue;
-                valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
+                valuesMap.insert(std::make_pair(columnName, ValueObject(tempValue)));
             } break;
             case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_INTEGER: {
                 int64_t value = cellUnit->cell.longValue;
@@ -383,6 +384,7 @@ int AbsSharedResultSet::GetRow(ValuesBucket &valuesBucket)
                 std::vector<uint8_t> value;
                 const auto *blob = static_cast<const uint8_t *>(sharedBlock_->GetCellUnitValueBlob(cellUnit, &size));
                 if (size == 0 || blob == nullptr) {
+                    LOG_ERROR("size is %{public}d, blob is null %{public}d", size, blob == nullptr);
                     return E_ERROR;
                 }
                 value.resize(size);

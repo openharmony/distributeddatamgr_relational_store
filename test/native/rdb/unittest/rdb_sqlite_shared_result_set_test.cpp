@@ -1009,5 +1009,5 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_020, TestSize.Le
 
     EXPECT_EQ("hello", data1Value);
     EXPECT_EQ(10, data2Value);
-    EXPECT_EQ(true, valuesMap.count("data3") == 0);
+    EXPECT_EQ(0, valuesMap.count("data3"));
 }
