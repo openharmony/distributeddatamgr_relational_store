@@ -97,8 +97,6 @@ public:
         CMD_GET_DOUBLE,
         /** Indicates the current error CMD is CMD_IS_COLUMN_NULL.*/
         CMD_IS_COLUMN_NULL,
-        /** Indicates the current error CMD is CMD_GET_DOUBLE.*/
-        CMD_GET_ROW,
         /** Indicates the current error CMD is CMD_IS_CLOSED.*/
         CMD_IS_CLOSED,
         /** Indicates the current error CMD is CMD_CLOSE.*/
