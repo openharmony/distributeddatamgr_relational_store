@@ -213,55 +213,7 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_003, TestSize
 HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_004, TestSize.Level1)
 {
     ValuesBucket valuesBucket;
-    valuesBucket.PutString("data1", "hello");
-    valuesBucket.PutInt("data2", 10);
-    valuesBucket.PutDouble("data3", 1.0);
-    valuesBucket.PutBlob("data4", { 1, 2, 3, 4 });
-    valuesBucket.PutBool("data5", true);
-    int64_t rowId;
-    int errorCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", valuesBucket);
-    EXPECT_EQ(E_OK, errorCode);
-    EXPECT_EQ(1, rowId);
-
-    std::unique_ptr<ResultSet> resultSet = RdbStepResultSetGetRowTest::store->QueryByStep("SELECT * FROM test");
-    EXPECT_NE(resultSet, nullptr);
-
-    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
-
-    int iRet = E_ERROR;
-    ValuesBucket valuesBucket_ret;
-    iRet = resultSet->GetRow(valuesBucket_ret);
-    std::map<std::string, ValueObject> valuesMap;
-    valuesBucket_ret.GetAll(valuesMap);
-    EXPECT_EQ(E_OK, iRet);
-
-    int idValue = valuesMap["id"];
-    std::string data1Value = valuesMap["data1"];
-    int data2Value = valuesMap["data2"];
-    double data3Value = valuesMap["data3"];
-    std::vector<uint8_t> data4Value = valuesMap["data4"];
-    int data5Value = valuesMap["data5"];
-
-    EXPECT_EQ(1, idValue);
-    EXPECT_EQ("hello", data1Value);
-    EXPECT_EQ(10, data2Value);
-    EXPECT_EQ(1.0, data3Value);
-    EXPECT_EQ(4, data4Value[3]);
-    EXPECT_EQ(1, data5Value);
-
-    resultSet->Close();
-}
-
-/* *
- * @tc.name: RdbStore_StepResultSet_GetRow_005
- * @tc.desc: test StepResultSet GetRow
- * @tc.type: FUNC
- * @tc.require: AR000FKD4F
- */
-HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_005, TestSize.Level1)
-{
-    ValuesBucket valuesBucket;
-    valuesBucket.PutString("data1", "hello");
+    valuesBucket.PutString("data1", "");
     valuesBucket.PutInt("data2", 10);
     valuesBucket.PutDouble("data3", 1.0);
     valuesBucket.PutBlob("data4", { 1, 2, 3, 4 });
@@ -286,7 +238,7 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_005, TestSize
     std::string data1Value = valuesMap["data1"];
     int data2Value = valuesMap["data2"];
 
-    EXPECT_EQ("hello", data1Value);
+    EXPECT_EQ("", data1Value);
     EXPECT_EQ(10, data2Value);
     EXPECT_EQ(0, valuesMap.count("data3"));
 

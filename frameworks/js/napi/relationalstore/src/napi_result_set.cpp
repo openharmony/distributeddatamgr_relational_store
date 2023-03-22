@@ -238,7 +238,8 @@ napi_value ValuesBucket2JSValue(napi_env env, NativeRdb::ValuesBucket &valuesBuc
                 value = JSUtils::Convert2JSValue(env, strVal);
             } break;
             default: {
-                RDB_NAPI_ASSERT(env, true == false, std::make_shared<ParamError>(valueObject.GetType(), "a ValueObjectType."));
+                RDB_NAPI_ASSERT(
+                    env, true == false, std::make_shared<ParamError>("valueObject.GetType()", "a ValueObjectType."));
             } break;
         }
         NAPI_CALL(env, napi_set_named_property(env, ret, it.first.c_str(), value));

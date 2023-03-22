@@ -383,8 +383,8 @@ int AbsSharedResultSet::GetRow(ValuesBucket &valuesBucket)
                 size_t size;
                 std::vector<uint8_t> value;
                 const auto *blob = static_cast<const uint8_t *>(sharedBlock_->GetCellUnitValueBlob(cellUnit, &size));
-                if (size == 0 || blob == nullptr) {
-                    LOG_ERROR("size is %{public}d, blob is null %{public}d", size, blob == nullptr);
+                if (blob == nullptr) {
+                    LOG_ERROR("blob is null %{public}d", blob == nullptr);
                     return E_ERROR;
                 }
                 value.resize(size);
