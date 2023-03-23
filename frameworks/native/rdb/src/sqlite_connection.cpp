@@ -811,13 +811,22 @@ int SqliteConnection::LimitWalSize()
     }
 
     std::string walName = sqlite3_filename_wal(sqlite3_db_filename(dbHandle, "main"));
+    if (SqliteUtils::GetFileSize(walName) <= GlobalExpr::DB_WAL_SIZE_LIMIT) {
+        return E_OK;
+    }
+
+    int errCode = sqlite3_wal_checkpoint_v2(dbHandle, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
+    if (errCode != SQLITE_OK) {
+        return E_WAL_SIZE_OVER_LIMIT;
+    }
+
     int fileSize = SqliteUtils::GetFileSize(walName);
     if (fileSize > GlobalExpr::DB_WAL_SIZE_LIMIT) {
         LOG_ERROR("the WAL file size over default limit, %{public}s size is %{public}d",
-            walName.substr(walName.find_last_of('/') + 1).c_str(), fileSize);
+                  walName.substr(walName.find_last_of('/') + 1).c_str(), fileSize);
         return E_WAL_SIZE_OVER_LIMIT;
     }
-    
+
     return E_OK;
 }
 } // namespace NativeRdb
