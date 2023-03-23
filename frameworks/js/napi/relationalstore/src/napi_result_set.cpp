@@ -216,31 +216,37 @@ napi_value ValuesBucket2JSValue(napi_env env, NativeRdb::ValuesBucket &valuesBuc
         switch (valueObject.GetType()) {
             case NativeRdb::ValueObjectType::TYPE_NULL: {
                 value = JSUtils::GetJSNull(env);
-            } break;
+                break;
+            }
             case NativeRdb::ValueObjectType::TYPE_INT: {
                 int64_t intVal = 0;
                 valueObject.GetLong(intVal);
                 value = JSUtils::Convert2JSValue(env, intVal);
-            } break;
+                break;
+            }
             case NativeRdb::ValueObjectType::TYPE_DOUBLE: {
                 double doubleVal = 0L;
                 valueObject.GetDouble(doubleVal);
                 value = JSUtils::Convert2JSValue(env, doubleVal);
-            } break;
+                break;
+            }
             case NativeRdb::ValueObjectType::TYPE_BLOB: {
                 std::vector<uint8_t> blobVal;
                 valueObject.GetBlob(blobVal);
                 value = JSUtils::Convert2JSValue(env, blobVal);
-            } break;
+                break;
+            }
             case NativeRdb::ValueObjectType::TYPE_STRING: {
                 std::string strVal = "";
                 valueObject.GetString(strVal);
                 value = JSUtils::Convert2JSValue(env, strVal);
-            } break;
+                break;
+            }
             default: {
                 RDB_NAPI_ASSERT(
                     env, true == false, std::make_shared<ParamError>("valueObject.GetType()", "a ValueObjectType."));
-            } break;
+                break;
+            }
         }
         NAPI_CALL(env, napi_set_named_property(env, ret, it.first.c_str(), value));
     }
