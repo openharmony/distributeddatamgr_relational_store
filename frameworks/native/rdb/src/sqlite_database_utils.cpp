@@ -101,15 +101,15 @@ std::string SqliteDatabaseUtils::StrToUpper(std::string s)
 void SqliteDatabaseUtils::DeleteFile(std::string &fileName)
 {
     if (access(fileName.c_str(), F_OK) != 0) {
-        LOG_ERROR("access %{public}s errno is %{public}d", SqliteUtils::Anonymous(fileName), errno);
+        LOG_ERROR("access %{public}s errno is %{public}d", SqliteUtils::Anonymous(fileName).c_str(), errno);
         return;
     }
 
     if (remove(fileName.c_str()) != 0) {
-        LOG_ERROR("remove %{public}s errno is %{public}d", SqliteUtils::Anonymous(fileName), errno);
+        LOG_ERROR("remove %{public}s errno is %{public}d", SqliteUtils::Anonymous(fileName).c_str(), errno);
         return;
     }
-    LOG_INFO("remove %{public}s", SqliteUtils::Anonymous(fileName));
+    LOG_INFO("remove %{public}s", SqliteUtils::Anonymous(fileName).c_str());
 }
 
 /**
@@ -118,12 +118,12 @@ void SqliteDatabaseUtils::DeleteFile(std::string &fileName)
 bool SqliteDatabaseUtils::RenameFile(std::string &oldFileName, std::string &newFileName)
 {
     if (access(oldFileName.c_str(), F_OK) != 0) {
-        LOG_ERROR("access %{public}s errno is %{public}d", SqliteUtils::Anonymous(oldFileName), errno);
+        LOG_ERROR("access %{public}s errno is %{public}d", SqliteUtils::Anonymous(oldFileName).c_str(), errno);
         return false;
     }
     if (rename(oldFileName.c_str(), newFileName.c_str()) != 0) {
-        LOG_ERROR("Rename %{public}s to %{public}s errno %{public}d", SqliteUtils::Anonymous(oldFileName),
-            SqliteUtils::Anonymous(newFileName), errno);
+        LOG_ERROR("Rename %{public}s to %{public}s errno %{public}d", SqliteUtils::Anonymous(oldFileName).c_str(),
+            SqliteUtils::Anonymous(newFileName).c_str(), errno);
         return false;
     }
     return true;

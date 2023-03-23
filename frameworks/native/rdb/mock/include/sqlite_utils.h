@@ -35,8 +35,6 @@ public:
     static const int STATEMENT_OTHER;
     static const int CONFLICT_CLAUSE_COUNT = 6;
 
-    static const int FILE_NAME_ANONYMOUS_COUNT = 10;
-
     static int GetSqlStatementType(const std::string &sql);
     static bool IsSqlReadOnly(int sqlType);
     static bool IsSpecial(int sqlType);
@@ -44,7 +42,7 @@ public:
     static std::string StrToUpper(std::string s);
     static bool DeleteFile(const std::string path);
     static int RenameFile(const std::string srcFile, const std::string destFile);
-    static const char *Anonymous(std::string srcFile);
+    static std::string Anonymous(const std::string &srcFile);
     static int GetFileSize(const std::string fileName);
 
 private:

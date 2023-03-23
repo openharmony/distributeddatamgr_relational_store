@@ -487,7 +487,7 @@ bool RdbSecurityManager::InitPath(const std::string &path)
     }
     umask(DEFAULT_UMASK);
     if (mkdir(path.c_str(), (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) != 0 && errno != EEXIST) {
-        LOG_ERROR("mkdir error:%{public}d, dbDir:%{public}s", errno, SqliteUtils::Anonymous(path));
+        LOG_ERROR("mkdir error:%{public}d, dbDir:%{public}s", errno, SqliteUtils::Anonymous(path).c_str());
         return false;
     }
     return true;
