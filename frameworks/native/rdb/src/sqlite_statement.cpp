@@ -365,7 +365,8 @@ int SqliteStatement::GetRow(ValuesBucket &valuesBucket) const
             case SQLITE_INTEGER: {
                 int64_t value = sqlite3_column_int64(stmtHandle, columnIndex);
                 valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
-            } break;
+                break;
+            }
             case SQLITE_TEXT: {
                 auto chars = reinterpret_cast<const char *>(sqlite3_column_text(stmtHandle, columnIndex));
                 if (!chars) {
@@ -374,11 +375,13 @@ int SqliteStatement::GetRow(ValuesBucket &valuesBucket) const
                 }
                 std::string value = std::string(chars, sqlite3_column_bytes(stmtHandle, columnIndex));
                 valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
-            } break;
+                break;
+            }
             case SQLITE_FLOAT: {
                 double value = sqlite3_column_double(stmtHandle, columnIndex);
                 valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
-            } break;
+                break;
+            }
             case SQLITE_BLOB: {
                 int size = sqlite3_column_bytes(stmtHandle, columnIndex);
                 auto blob = static_cast<const uint8_t *>(sqlite3_column_blob(stmtHandle, columnIndex));
@@ -389,10 +392,12 @@ int SqliteStatement::GetRow(ValuesBucket &valuesBucket) const
                 std::vector<uint8_t> value(size);
                 value.assign(blob, blob + size);
                 valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
-            } break;
+                break;
+            }
             case SQLITE_NULL: {
                 valuesMap.insert(std::make_pair(columnName, ValueObject()));
-            } break;
+                break;
+            }
             default: {
                 return E_ERROR;
             }

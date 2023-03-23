@@ -346,7 +346,7 @@ int AbsSharedResultSet::GetRow(ValuesBucket &valuesBucket)
     std::string columnName;
     uint32_t columnNum = sharedBlock_->GetColumnNum();
     for (int columnIndex = 0; columnIndex < columnNum; ++columnIndex) {
-        AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(sharedBlock_->GetBlockPos(), columnIndex);
+        auto cellUnit = sharedBlock_->GetCellUnit(sharedBlock_->GetBlockPos(), columnIndex);
         if (!cellUnit) {
             LOG_ERROR("cellUnit is null!");
             return E_ERROR;
@@ -362,7 +362,8 @@ int AbsSharedResultSet::GetRow(ValuesBucket &valuesBucket)
             case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT: {
                 double value = cellUnit->cell.doubleValue;
                 valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
-            } break;
+                break;
+            }
             case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_STRING: {
                 size_t sizeIncludingNull;
                 const char *tempValue = sharedBlock_->GetCellUnitValueString(cellUnit, &sizeIncludingNull);
@@ -371,14 +372,17 @@ int AbsSharedResultSet::GetRow(ValuesBucket &valuesBucket)
                     return E_ERROR;
                 }
                 valuesMap.insert(std::make_pair(columnName, ValueObject(tempValue)));
-            } break;
+                break;
+            }
             case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_INTEGER: {
                 int64_t value = cellUnit->cell.longValue;
                 valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
-            } break;
+                break;
+            }
             case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL: {
                 valuesMap.insert(std::make_pair(columnName, ValueObject()));
-            } break;
+                break;
+            }
             case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB: {
                 size_t size;
                 std::vector<uint8_t> value;
@@ -390,7 +394,8 @@ int AbsSharedResultSet::GetRow(ValuesBucket &valuesBucket)
                 value.resize(size);
                 value.assign(blob, blob + size);
                 valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
-            } break;
+                break;
+            }
             default: {
                 return E_ERROR;
             }
