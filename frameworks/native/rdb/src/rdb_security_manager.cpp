@@ -26,6 +26,7 @@
 #include "hks_param.h"
 #include "logger.h"
 #include "sqlite_database_utils.h"
+#include "sqlite_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -486,7 +487,7 @@ bool RdbSecurityManager::InitPath(const std::string &path)
     }
     umask(DEFAULT_UMASK);
     if (mkdir(path.c_str(), (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) != 0 && errno != EEXIST) {
-        LOG_ERROR("mkdir error:%{public}d, dbDir:%{public}s", errno, path.c_str());
+        LOG_ERROR("mkdir error:%{public}d, dbDir:%{public}s", errno, SqliteUtils::Anonymous(path));
         return false;
     }
     return true;

@@ -117,6 +117,14 @@ int SqliteUtils::RenameFile(const std::string srcFile, const std::string destFil
     return rename(srcFile.c_str(), destFile.c_str());
 }
 
+const char *SqliteUtils::Anonymous(std::string srcFile)
+{
+    for (int i = 0; i < FILE_NAME_ANONYMOUS_COUNT && i < srcFile.length(); i++) {
+        srcFile[i] = '*';
+    }
+    return srcFile.c_str();
+}
+
 int SqliteUtils::GetFileSize(const std::string fileName)
 {
     if (fileName.empty() || access(fileName.c_str(), F_OK) != 0) {
