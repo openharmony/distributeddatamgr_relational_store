@@ -821,7 +821,7 @@ int SqliteConnection::LimitWalSize()
     int fileSize = SqliteUtils::GetFileSize(walName);
     if (fileSize > GlobalExpr::DB_WAL_SIZE_LIMIT) {
         LOG_ERROR("the WAL file size over default limit, %{public}s size is %{public}d",
-                  SqliteUtils::Anonymous(walName), fileSize);
+                  SqliteUtils::Anonymous(walName).c_str(), fileSize);
         return E_WAL_SIZE_OVER_LIMIT;
     }
 

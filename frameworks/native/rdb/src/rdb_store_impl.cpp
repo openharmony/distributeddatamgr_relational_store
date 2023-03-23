@@ -62,7 +62,7 @@ std::shared_ptr<RdbStore> RdbStoreImpl::Open(const RdbStoreConfig &config, int &
 
 int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
 {
-    LOG_INFO("open %{public}s.", SqliteUtils::Anonymous(config.GetPath()));
+    LOG_INFO("open %{public}s.", SqliteUtils::Anonymous(config.GetPath()).c_str());
     int errCode = E_OK;
     connectionPool = SqliteConnectionPool::Create(config, errCode);
     if (connectionPool == nullptr) {
@@ -564,7 +564,7 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
         backupFilePath = databasePath;
     }
 
-    LOG_INFO("databasePath is %{public}s.", SqliteUtils::Anonymous(backupFilePath));
+    LOG_INFO("databasePath is %{public}s.", SqliteUtils::Anonymous(backupFilePath).c_str());
 
     std::vector<ValueObject> bindArgs;
     bindArgs.push_back(ValueObject(backupFilePath));
@@ -923,13 +923,13 @@ bool RdbStoreImpl::PathToRealPath(const std::string &path, std::string &realPath
     }
 #else
     if (realpath(path.c_str(), tmpPath) == NULL) {
-        LOG_ERROR("path (%{public}s) to realpath error", SqliteUtils::Anonymous(path));
+        LOG_ERROR("path (%{public}s) to realpath error", SqliteUtils::Anonymous(path).c_str());
         return false;
     }
 #endif
     realPath = tmpPath;
     if (access(realPath.c_str(), F_OK) != 0) {
-        LOG_ERROR("check realpath (%{public}s) error", SqliteUtils::Anonymous(realPath));
+        LOG_ERROR("check realpath (%{public}s) error", SqliteUtils::Anonymous(realPath).c_str());
         return false;
     }
     return true;

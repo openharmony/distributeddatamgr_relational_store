@@ -42,6 +42,12 @@ const int SqliteUtils::STATEMENT_PRAGMA = 8;
 const int SqliteUtils::STATEMENT_DDL = 9;
 const int SqliteUtils::STATEMENT_OTHER = 99;
 
+constexpr int32_t HEAD_SIZE = 3;
+constexpr int32_t END_SIZE = 3;
+constexpr int32_t MIN_SIZE = HEAD_SIZE + END_SIZE + 3;
+constexpr const char *REPLACE_CHAIN = "***";
+constexpr const char *DEFAULT_ANONYMOUS = "******";
+
 const std::map<std::string, int> SqliteUtils::SQL_TYPE_MAP = {
     { "SEL", SqliteUtils::STATEMENT_SELECT },
     { "INS", SqliteUtils::STATEMENT_UPDATE },
@@ -117,12 +123,17 @@ int SqliteUtils::RenameFile(const std::string srcFile, const std::string destFil
     return rename(srcFile.c_str(), destFile.c_str());
 }
 
-const char *SqliteUtils::Anonymous(std::string srcFile)
+std::string SqliteUtils::Anonymous(const std::string &srcFile)
 {
-    for (int i = 0; i < FILE_NAME_ANONYMOUS_COUNT && i < srcFile.length(); i++) {
-        srcFile[i] = '*';
+    if (srcFile.length() <= HEAD_SIZE) {
+        return DEFAULT_ANONYMOUS;
     }
-    return srcFile.c_str();
+
+    if (srcFile.length() < MIN_SIZE) {
+        return (srcFile.substr(0, HEAD_SIZE) + REPLACE_CHAIN);
+    }
+
+    return (srcFile.substr(0, HEAD_SIZE) + REPLACE_CHAIN + srcFile.substr(srcFile.length() - END_SIZE, END_SIZE));
 }
 
 int SqliteUtils::GetFileSize(const std::string fileName)
