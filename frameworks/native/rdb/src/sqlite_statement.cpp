@@ -369,7 +369,7 @@ int SqliteStatement::GetRow(ValuesBucket &valuesBucket) const
             }
             case SQLITE_TEXT: {
                 auto chars = reinterpret_cast<const char *>(sqlite3_column_text(stmtHandle, columnIndex));
-                if (!chars) {
+                if (chars == nullptr) {
                     LOG_ERROR("chars is null %{public}d", chars == nullptr);
                     return E_ERROR;
                 }
