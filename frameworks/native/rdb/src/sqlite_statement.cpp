@@ -43,7 +43,7 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
     sqlite3_stmt *stmt = nullptr;
     int errCode = sqlite3_prepare_v2(dbHandle, newSql.c_str(), newSql.length(), &stmt, nullptr);
     if (errCode != SQLITE_OK) {
-        LOG_ERROR("SqliteStatement::Prepare failed err = %{public}d", errCode);
+        LOG_ERROR("prepare_v2 ret is %{public}d", errCode);
         if (stmt != nullptr) {
             sqlite3_finalize(stmt);
         }
@@ -71,7 +71,7 @@ int SqliteStatement::Finalize()
     columnCount = 0;
     numParameters = 0;
     if (errCode != SQLITE_OK) {
-        LOG_ERROR("SqliteStatement::Finalize failed err = %{public}d", errCode);
+        LOG_ERROR("finalize ret is %{public}d", errCode);
         return SQLiteError::ErrNo(errCode);
     }
     return E_OK;
@@ -98,6 +98,7 @@ int SqliteStatement::BindArguments(const std::vector<ValueObject> &bindArgs) con
     }
 
     if (count > numParameters) {
+        LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d)", count, numParameters);
         return E_INVALID_BIND_ARGS_COUNT;
     }
 
@@ -148,6 +149,7 @@ int SqliteStatement::InnerBindArguments(const std::vector<ValueObject> &bindArgs
         }
 
         if (errCode != SQLITE_OK) {
+            LOG_ERROR("bind ret is %{public}d", errCode);
             return SQLiteError::ErrNo(errCode);
         }
 
@@ -165,13 +167,13 @@ int SqliteStatement::ResetStatementAndClearBindings() const
 
     int errCode = sqlite3_reset(stmtHandle);
     if (errCode != SQLITE_OK) {
-        LOG_ERROR("Reset statement failed. %{public}d", errCode);
+        LOG_ERROR("reset ret is %{public}d", errCode);
         return SQLiteError::ErrNo(errCode);
     }
 
     errCode = sqlite3_clear_bindings(stmtHandle);
     if (errCode != SQLITE_OK) {
-        LOG_ERROR("Reset clear bindings failed. %{public}d", errCode);
+        LOG_ERROR("clear_bindings ret is %{public}d", errCode);
         return SQLiteError::ErrNo(errCode);
     }
 
@@ -187,6 +189,7 @@ int SqliteStatement::Step() const
 int SqliteStatement::GetColumnCount(int &count) const
 {
     if (stmtHandle == nullptr) {
+        LOG_ERROR("invalid statement.");
         return E_INVALID_STATEMENT;
     }
     count = columnCount;
@@ -199,6 +202,7 @@ int SqliteStatement::GetColumnCount(int &count) const
 int SqliteStatement::GetNumParameters(int &numParams) const
 {
     if (stmtHandle == nullptr) {
+        LOG_ERROR("invalid statement.");
         return E_INVALID_STATEMENT;
     }
     numParams = numParameters;
@@ -208,15 +212,18 @@ int SqliteStatement::GetNumParameters(int &numParams) const
 int SqliteStatement::GetColumnName(int index, std::string &columnName) const
 {
     if (stmtHandle == nullptr) {
+        LOG_ERROR("invalid statement.");
         return E_INVALID_STATEMENT;
     }
 
     if (index >= columnCount) {
+        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount);
         return E_INVALID_COLUMN_INDEX;
     }
 
     const char *name = sqlite3_column_name(stmtHandle, index);
     if (name == nullptr) {
+        LOG_ERROR("column_name is null.");
         return E_ERROR;
     }
     columnName = std::string(name);
@@ -226,10 +233,12 @@ int SqliteStatement::GetColumnName(int index, std::string &columnName) const
 int SqliteStatement::GetColumnType(int index, int &columnType) const
 {
     if (stmtHandle == nullptr) {
+        LOG_ERROR("invalid statement.");
         return E_INVALID_STATEMENT;
     }
 
     if (index >= columnCount) {
+        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount);
         return E_INVALID_COLUMN_INDEX;
     }
 
@@ -243,6 +252,7 @@ int SqliteStatement::GetColumnType(int index, int &columnType) const
             columnType = type;
             return E_OK;
         default:
+            LOG_ERROR("invalid type %{public}d.", type);
             return E_ERROR;
     }
 }
@@ -250,15 +260,18 @@ int SqliteStatement::GetColumnType(int index, int &columnType) const
 int SqliteStatement::GetColumnBlob(int index, std::vector<uint8_t> &value) const
 {
     if (stmtHandle == nullptr) {
+        LOG_ERROR("invalid statement.");
         return E_INVALID_STATEMENT;
     }
 
     if (index >= columnCount) {
+        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount);
         return E_INVALID_COLUMN_INDEX;
     }
 
     int type = sqlite3_column_type(stmtHandle, index);
     if (type != SQLITE_BLOB && type != SQLITE_TEXT && type != SQLITE_NULL) {
+        LOG_ERROR("invalid type %{public}d.", type);
         return E_INVALID_COLUMN_TYPE;
     }
 
@@ -319,10 +332,12 @@ int SqliteStatement::GetColumnString(int index, std::string &value) const
 int SqliteStatement::GetColumnLong(int index, int64_t &value) const
 {
     if (stmtHandle == nullptr) {
+        LOG_ERROR("invalid statement.");
         return E_INVALID_STATEMENT;
     }
 
     if (index >= columnCount) {
+        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount);
         return E_INVALID_COLUMN_INDEX;
     }
     char *errStr = nullptr;
@@ -348,10 +363,12 @@ int SqliteStatement::GetColumnLong(int index, int64_t &value) const
 int SqliteStatement::GetColumnDouble(int index, double &value) const
 {
     if (stmtHandle == nullptr) {
+        LOG_ERROR("invalid statement.");
         return E_INVALID_STATEMENT;
     }
 
     if (index >= columnCount) {
+        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount);
         return E_INVALID_COLUMN_INDEX;
     }
     char *ptr = nullptr;
@@ -369,6 +386,7 @@ int SqliteStatement::GetColumnDouble(int index, double &value) const
     } else if (type == SQLITE_BLOB) {
         return E_INVALID_COLUMN_TYPE;
     } else {
+        LOG_ERROR("invalid type %{public}d.", type);
         return E_ERROR;
     }
 

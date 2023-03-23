@@ -24,11 +24,12 @@
 #ifdef WINDOWS_PLATFORM
 #include <dir.h>
 #endif
-#include <fstream>
 #include <climits>
+#include <fstream>
 
 #include "logger.h"
 #include "rdb_errno.h"
+#include "sqlite_utils.h"
 
 #ifdef WINDOWS_PLATFORM
 #define REALPATH(relPath, absPath, ...) (_fullpath(absPath, relPath, ##__VA_ARGS__))
@@ -100,14 +101,15 @@ std::string SqliteDatabaseUtils::StrToUpper(std::string s)
 void SqliteDatabaseUtils::DeleteFile(std::string &fileName)
 {
     if (access(fileName.c_str(), F_OK) != 0) {
-        LOG_ERROR("File %{private}s does not exist", fileName.c_str());
+        LOG_ERROR("access %{public}s errno is %{public}d", SqliteUtils::Anonymous(fileName), errno);
         return;
     }
-    if (!remove(fileName.c_str())) {
-        LOG_ERROR("FileName= %{private}s has been deleted", fileName.c_str());
+
+    if (remove(fileName.c_str()) != 0) {
+        LOG_ERROR("remove %{public}s errno is %{public}d", SqliteUtils::Anonymous(fileName), errno);
         return;
     }
-    LOG_INFO("Failed to delete File %{private}s", fileName.c_str());
+    LOG_INFO("remove %{public}s", SqliteUtils::Anonymous(fileName));
 }
 
 /**
@@ -116,15 +118,15 @@ void SqliteDatabaseUtils::DeleteFile(std::string &fileName)
 bool SqliteDatabaseUtils::RenameFile(std::string &oldFileName, std::string &newFileName)
 {
     if (access(oldFileName.c_str(), F_OK) != 0) {
-        LOG_ERROR("File %{private}s does not exist", oldFileName.c_str());
+        LOG_ERROR("access %{public}s errno is %{public}d", SqliteUtils::Anonymous(oldFileName), errno);
         return false;
     }
-    if (rename(oldFileName.c_str(), newFileName.c_str())) {
-        LOG_ERROR("Rename oldFileName = %{private}s to newFileName  %{private}s", oldFileName.c_str(),
-            newFileName.c_str());
-        return true;
+    if (rename(oldFileName.c_str(), newFileName.c_str()) != 0) {
+        LOG_ERROR("Rename %{public}s to %{public}s errno %{public}d", SqliteUtils::Anonymous(oldFileName),
+            SqliteUtils::Anonymous(newFileName), errno);
+        return false;
     }
-    return false;
+    return true;
 }
 
 /**
