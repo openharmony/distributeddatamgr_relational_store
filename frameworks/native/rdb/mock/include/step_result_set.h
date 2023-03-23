@@ -23,7 +23,6 @@
 #include "rdb_store_impl.h"
 #include "abs_result_set.h"
 #include "sqlite_statement.h"
-#include "values_bucket.h"
 
 namespace OHOS {
 namespace NativeRdb {
