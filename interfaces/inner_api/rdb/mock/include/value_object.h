@@ -43,6 +43,7 @@ public:
     explicit ValueObject(double val);
     explicit ValueObject(bool val);
     explicit ValueObject(const std::string &val);
+    explicit ValueObject(const char *val);
     explicit ValueObject(const std::vector<uint8_t> &blob);
     ValueObject &operator=(ValueObject &&valueObject) noexcept;
     ValueObject &operator=(const ValueObject &valueObject);
