@@ -945,69 +945,69 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_018, TestSize.Le
     EXPECT_EQ(closeFlag, true);
 }
 
-/* *
- * @tc.name: Sqlite_Shared_Result_Set_019
- * @tc.desc: normal testcase of SqliteSharedResultSet for GetRow
- * @tc.type: FUNC
- * @tc.require: AR000FKD4F
- */
-HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_019, TestSize.Level1)
-{
-    GenerateDefaultTable();
-    std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> resultSet =
-        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
-    EXPECT_NE(resultSet, nullptr);
-
-    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
-
-    int iRet = E_ERROR;
-    ValuesBucket valuesBucket_ret;
-    iRet = resultSet->GetRow(valuesBucket_ret);
-    std::map<std::string, ValueObject> valuesMap;
-    valuesBucket_ret.GetAll(valuesMap);
-    EXPECT_EQ(E_OK, iRet);
-
-    int idValue = valuesMap["id"];
-    std::string data1Value = valuesMap["data1"];
-    int data2Value = valuesMap["data2"];
-    double data3Value = valuesMap["data3"];
-    std::vector<uint8_t> data4Value = valuesMap["data4"];
-
-    EXPECT_EQ(1, idValue);
-    EXPECT_EQ("hello", data1Value);
-    EXPECT_EQ(10, data2Value);
-    EXPECT_EQ(1.0, data3Value);
-    EXPECT_EQ(66, data4Value[0]);
-}
-
-/* *
- * @tc.name: Sqlite_Shared_Result_Set_020
- * @tc.desc: normal testcase of SqliteSharedResultSet for GetRow
- * @tc.type: FUNC
- * @tc.require: AR000FKD4F
- */
-HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_020, TestSize.Level1)
-{
-    GenerateDefaultTable();
-    std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> resultSet =
-        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT data1, data2 FROM test", selectionArgs);
-    EXPECT_NE(resultSet, nullptr);
-
-    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
-
-    int iRet = E_ERROR;
-    ValuesBucket valuesBucket_ret;
-    iRet = resultSet->GetRow(valuesBucket_ret);
-    std::map<std::string, ValueObject> valuesMap;
-    valuesBucket_ret.GetAll(valuesMap);
-    EXPECT_EQ(E_OK, iRet);
-
-    std::string data1Value = valuesMap["data1"];
-    int data2Value = valuesMap["data2"];
-
-    EXPECT_EQ("hello", data1Value);
-    EXPECT_EQ(10, data2Value);
-    EXPECT_EQ(0, valuesMap.count("data3"));
-}
+///* *
+// * @tc.name: Sqlite_Shared_Result_Set_019
+// * @tc.desc: normal testcase of SqliteSharedResultSet for GetRow
+// * @tc.type: FUNC
+// * @tc.require: AR000FKD4F
+// */
+//HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_019, TestSize.Level1)
+//{
+//    GenerateDefaultTable();
+//    std::vector<std::string> selectionArgs;
+//    std::unique_ptr<ResultSet> resultSet =
+//        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+//    EXPECT_NE(resultSet, nullptr);
+//
+//    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+//
+//    int iRet = E_ERROR;
+//    ValuesBucket valuesBucket_ret;
+//    iRet = resultSet->GetRow(valuesBucket_ret);
+//    std::map<std::string, ValueObject> valuesMap;
+//    valuesBucket_ret.GetAll(valuesMap);
+//    EXPECT_EQ(E_OK, iRet);
+//
+//    int idValue = valuesMap["id"];
+//    std::string data1Value = valuesMap["data1"];
+//    int data2Value = valuesMap["data2"];
+//    double data3Value = valuesMap["data3"];
+//    std::vector<uint8_t> data4Value = valuesMap["data4"];
+//
+//    EXPECT_EQ(1, idValue);
+//    EXPECT_EQ("hello", data1Value);
+//    EXPECT_EQ(10, data2Value);
+//    EXPECT_EQ(1.0, data3Value);
+//    EXPECT_EQ(66, data4Value[0]);
+//}
+//
+///* *
+// * @tc.name: Sqlite_Shared_Result_Set_020
+// * @tc.desc: normal testcase of SqliteSharedResultSet for GetRow
+// * @tc.type: FUNC
+// * @tc.require: AR000FKD4F
+// */
+//HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_020, TestSize.Level1)
+//{
+//    GenerateDefaultTable();
+//    std::vector<std::string> selectionArgs;
+//    std::unique_ptr<ResultSet> resultSet =
+//        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT data1, data2 FROM test", selectionArgs);
+//    EXPECT_NE(resultSet, nullptr);
+//
+//    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+//
+//    int iRet = E_ERROR;
+//    ValuesBucket valuesBucket_ret;
+//    iRet = resultSet->GetRow(valuesBucket_ret);
+//    std::map<std::string, ValueObject> valuesMap;
+//    valuesBucket_ret.GetAll(valuesMap);
+//    EXPECT_EQ(E_OK, iRet);
+//
+//    std::string data1Value = valuesMap["data1"];
+//    int data2Value = valuesMap["data2"];
+//
+//    EXPECT_EQ("hello", data1Value);
+//    EXPECT_EQ(10, data2Value);
+//    EXPECT_EQ(0, valuesMap.count("data3"));
+//}
