@@ -176,7 +176,7 @@ public:
     RDB_API_EXPORT virtual std::string GetJoinClause() const;
 
     /**
-     * @brief Sets the number of joins in the predicates.
+     * @brief Obtains the number of joins in the predicates.
      */
     RDB_API_EXPORT virtual int GetJoinCount() const;
 
