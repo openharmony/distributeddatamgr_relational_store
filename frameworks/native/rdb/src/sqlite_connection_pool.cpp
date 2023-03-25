@@ -32,7 +32,7 @@
 
 namespace OHOS {
 namespace NativeRdb {
-constexpr std::chrono::seconds timeout(2);
+constexpr std::chrono::seconds WAIT_CONNECT_TIMEOUT(2);
 
 SqliteConnectionPool *SqliteConnectionPool::Create(const RdbStoreConfig &storeConfig, int &errCode)
 {
@@ -119,8 +119,6 @@ void SqliteConnectionPool::CloseAllConnections()
 
 SqliteConnection *SqliteConnectionPool::AcquireConnection(bool isReadOnly)
 {
-    LOG_DEBUG("readConnectionCount: %{public}d, idleReadConnectionCount: %{public}d, writeConnection: %{public}d",
-              readConnectionCount, idleReadConnectionCount, writeConnectionUsed);
     if (isReadOnly && readConnectionCount != 0) {
         return AcquireReadConnection();
     } else {
@@ -129,8 +127,6 @@ SqliteConnection *SqliteConnectionPool::AcquireConnection(bool isReadOnly)
 }
 void SqliteConnectionPool::ReleaseConnection(SqliteConnection *connection)
 {
-    LOG_DEBUG("readConnectionCount: %{public}d, idleReadConnectionCount: %{public}d, writeConnection: %{public}d",
-              readConnectionCount, idleReadConnectionCount, writeConnectionUsed);
     connection->DesFinalize();
     if (connection == writeConnection) {
         ReleaseWriteConnection();
@@ -142,22 +138,22 @@ void SqliteConnectionPool::ReleaseConnection(SqliteConnection *connection)
 SqliteConnection *SqliteConnectionPool::AcquireWriteConnection()
 {
     std::unique_lock<std::mutex> lock(writeMutex);
-    if (writeCondition.wait_for(lock, timeout, [this] { return !writeConnectionUsed; })) {
+    if (writeCondition.wait_for(lock, WAIT_CONNECT_TIMEOUT, [this] { return !writeConnectionUsed; })) {
         writeConnectionUsed = true;
         return writeConnection;
     }
-    LOG_DEBUG("Acquire writeConnection timeout.");
+    LOG_WARN("writeConnection is %{public}d",  writeConnectionUsed);
     return nullptr;
 }
 
 int SqliteConnectionPool::AcquireTransaction()
 {
     std::unique_lock<std::mutex> lock(transMutex);
-    if (transCondition.wait_for(lock, timeout, [this] { return !transactionUsed; })) {
+    if (transCondition.wait_for(lock, WAIT_CONNECT_TIMEOUT, [this] { return !transactionUsed; })) {
         transactionUsed = true;
         return E_OK;
     }
-    LOG_DEBUG("Transaction timeout.");
+    LOG_WARN("transactionUsed is %{public}d", transactionUsed);
     return E_TRANSACTION_IN_EXECUTE;
 }
 
@@ -186,13 +182,14 @@ void SqliteConnectionPool::ReleaseWriteConnection()
 SqliteConnection *SqliteConnectionPool::AcquireReadConnection()
 {
     std::unique_lock<std::mutex> lock(readMutex);
-    if (readCondition.wait_for(lock, timeout, [this] { return idleReadConnectionCount > 0; })) {
+    if (readCondition.wait_for(lock, WAIT_CONNECT_TIMEOUT, [this] { return idleReadConnectionCount > 0; })) {
         SqliteConnection *connection = readConnections.back();
         readConnections.pop_back();
         idleReadConnectionCount--;
         return connection;
     }
-    LOG_DEBUG("Acquire ReadConnection timeout.");
+    LOG_WARN("readConnectionCount is %{public}d, idleReadConnectionCount is %{public}d", readConnectionCount,
+        idleReadConnectionCount);
     return nullptr;
 }
 
