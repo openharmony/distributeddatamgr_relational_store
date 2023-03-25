@@ -62,6 +62,7 @@ std::shared_ptr<RdbStore> RdbStoreImpl::Open(const RdbStoreConfig &config, int &
 
 int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
 {
+    LOG_INFO("open %{public}s.", SqliteUtils::Anonymous(config.GetPath()).c_str());
     int errCode = E_OK;
     connectionPool = SqliteConnectionPool::Create(config, errCode);
     if (connectionPool == nullptr) {
@@ -374,7 +375,6 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    LOG_DEBUG("RdbStoreImpl::Query on called.");
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
     return QuerySql(sql, selectionArgs);
@@ -384,7 +384,6 @@ std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(
     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    LOG_DEBUG("RdbStoreImpl::QueryByStep on called.");
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
     return QueryByStep(sql, selectionArgs);
@@ -394,7 +393,6 @@ std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
     const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, int &errCode)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    LOG_DEBUG("RdbStoreImpl::RemoteQuery on called.");
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
     std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
@@ -552,7 +550,7 @@ int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string
 int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
 {
     if (databasePath.empty()) {
-        LOG_ERROR("Backup:Empty databasePath.");
+        LOG_ERROR("Empty databasePath.");
         return E_INVALID_FILE_PATH;
     }
     std::string backupFilePath;
@@ -560,13 +558,13 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
         backupFilePath = ExtractFilePath(path) + databasePath;
     } else {
         if (!PathToRealPath(ExtractFilePath(databasePath), backupFilePath)) {
-            LOG_ERROR("Backup:Invalid databasePath.");
+            LOG_ERROR("Invalid databasePath.");
             return E_INVALID_FILE_PATH;
         }
         backupFilePath = databasePath;
     }
 
-    LOG_ERROR("Backup: databasePath is %{public}s.", backupFilePath.c_str());
+    LOG_INFO("databasePath is %{public}s.", SqliteUtils::Anonymous(backupFilePath).c_str());
 
     std::vector<ValueObject> bindArgs;
     bindArgs.push_back(ValueObject(backupFilePath));
@@ -925,13 +923,13 @@ bool RdbStoreImpl::PathToRealPath(const std::string &path, std::string &realPath
     }
 #else
     if (realpath(path.c_str(), tmpPath) == NULL) {
-        LOG_ERROR("path to realpath error");
+        LOG_ERROR("path (%{public}s) to realpath error", SqliteUtils::Anonymous(path).c_str());
         return false;
     }
 #endif
     realPath = tmpPath;
     if (access(realPath.c_str(), F_OK) != 0) {
-        LOG_ERROR("check realpath (%{public}s) error", realPath.c_str());
+        LOG_ERROR("check realpath (%{public}s) error", SqliteUtils::Anonymous(realPath).c_str());
         return false;
     }
     return true;

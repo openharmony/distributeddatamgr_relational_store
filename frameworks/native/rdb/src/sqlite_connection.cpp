@@ -259,7 +259,6 @@ int SqliteConnection::SetPersistWal()
         LOG_ERROR("failed");
         return E_SET_PERSIST_WAL;
     }
-    LOG_INFO("success");
     return E_OK;
 }
 
@@ -270,7 +269,6 @@ int SqliteConnection::SetBusyTimeout(int timeout)
         LOG_ERROR("set buys timeout failed, errCode=%{public}d", errCode);
         return errCode;
     }
-    LOG_INFO("success");
     return E_OK;
 }
 
@@ -823,7 +821,7 @@ int SqliteConnection::LimitWalSize()
     int fileSize = SqliteUtils::GetFileSize(walName);
     if (fileSize > GlobalExpr::DB_WAL_SIZE_LIMIT) {
         LOG_ERROR("the WAL file size over default limit, %{public}s size is %{public}d",
-                  walName.substr(walName.find_last_of('/') + 1).c_str(), fileSize);
+                  SqliteUtils::Anonymous(walName).c_str(), fileSize);
         return E_WAL_SIZE_OVER_LIMIT;
     }
 
