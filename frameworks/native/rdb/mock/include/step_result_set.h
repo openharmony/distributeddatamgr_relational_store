@@ -72,7 +72,6 @@ private:
     SqliteConnectionPool *connectionPool_;
     SqliteConnection *connection_;
     std::vector<std::string> columnNames_;
-    uint64_t label_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

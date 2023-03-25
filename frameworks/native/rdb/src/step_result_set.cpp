@@ -19,9 +19,6 @@
 
 #include <unistd.h>
 
-#include <cinttypes>
-#include <ctime>
-
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_trace.h"
@@ -37,9 +34,6 @@ StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, const std::strin
     : rdb(rdb), sql(sql), selectionArgs(selectionArgs), isAfterLast(false), rowCount(INIT_POS),
       sqliteStatement(nullptr), connectionPool_(nullptr), connection_(nullptr)
 {
-    auto dur = std::chrono::system_clock::now().time_since_epoch();
-    label_ = std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
-    LOG_DEBUG("resultSet created: %{public}" PRIu64 "", label_);
 }
 StepResultSet::StepResultSet(SqliteConnectionPool *pool, const std::string &sql,
                              const std::vector<std::string> &selectionArgs)
@@ -48,9 +42,6 @@ StepResultSet::StepResultSet(SqliteConnectionPool *pool, const std::string &sql,
 {
     connectionPool_ = pool;
     connection_ = connectionPool_->AcquireConnection(true);
-    auto dur = std::chrono::system_clock::now().time_since_epoch();
-    label_ = std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
-    LOG_DEBUG("resultSet created: %{public}" PRIu64 "", label_);
 }
 
 StepResultSet::~StepResultSet()
@@ -241,7 +232,6 @@ int StepResultSet::Close()
 
     connectionPool_->ReleaseConnection(connection_);
     connection_ = nullptr;
-    LOG_DEBUG("resultSet closed: %{public}" PRIu64 "", label_);
     return errCode;
 }
 
