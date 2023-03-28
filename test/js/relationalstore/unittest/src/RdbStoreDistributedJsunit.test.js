@@ -19,6 +19,7 @@ import ability_featureAbility from '@ohos.ability.featureAbility'
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
 const STORE_NAME = "distributed_rdb.db"
+const E_NOT_SUPPORTED = 801;
 var rdbStore = undefined;
 var context = ability_featureAbility.getContext()
 
@@ -94,13 +95,8 @@ describe('rdbStoreDistributedTest', function () {
             console.log(TAG + "set none to be distributed table success");
             expect(rdbStore).assertEqual(rdbStore)
         } catch (err) {
-            if (err.code == 801) {
-                console.log(TAG + "Capability not supported.");
-                expect(true).assertEqual(true);
-            } else {
-                console.log(TAG + "set none to be distributed table failed");
-                expect(null).assertFail();
-            }
+            console.log(TAG + `set none to be distributed table failed, err is ${err.code}.`);
+            expect(E_NOT_SUPPORTED).assertEqual(err.code);
         }
         done()
         console.log(TAG + "************* testRdbStoreDistributed002 end *************");
@@ -118,13 +114,8 @@ describe('rdbStoreDistributedTest', function () {
             console.log(TAG + "set employee to be distributed table success");
             expect(rdbStore).assertEqual(rdbStore)
         } catch (err) {
-            if (err.code == 801) {
-                console.log(TAG + "Capability not supported.");
-                expect(true).assertEqual(true);
-            } else {
-                console.log(TAG + "set employee to be distributed table failed");
-                expect(null).assertFail();
-            }
+            console.log(TAG + `set employee to be distributed table failed, err is ${err.code}.`);
+            expect(E_NOT_SUPPORTED).assertEqual(err.code);
         }
         done()
         console.log(TAG + "************* testRdbStoreDistributed003 end *************");
@@ -142,13 +133,8 @@ describe('rdbStoreDistributedTest', function () {
             console.log(TAG + "set employee and product to be distributed table success");
             expect(rdbStore).assertEqual(rdbStore)
         } catch (err) {
-            if (err.code == 801) {
-                console.log(TAG + "Capability not supported.");
-                expect(true).assertEqual(true);
-            } else {
-                console.log(TAG + "set employee and product to be distributed table failed");
-                expect(null).assertFail();
-            }
+            console.log(TAG + `set employee and product to be distributed table failed, err is ${err.code}.`);
+            expect(E_NOT_SUPPORTED).assertEqual(err.code);
         }
         done()
         console.log(TAG + "************* testRdbStoreDistributed004 end *************");
