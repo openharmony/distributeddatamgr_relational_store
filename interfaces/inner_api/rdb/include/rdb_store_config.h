@@ -417,7 +417,18 @@ public:
      */
     RDB_API_EXPORT void SetReadConSize(int readConSize);
 
+    /**
+     * @brief Sets the encrypt key for the object.
+     */
+    void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
+
+    /**
+     * @brief Obtains the encrypt key in this {@code StoreConfig} object.
+     */
+    std::vector<uint8_t> GetEncryptKey() const;
 private:
+    void ClearEncryptKey();
+
     std::string name;
     std::string path;
     StorageMode storageMode;
@@ -434,6 +445,7 @@ private:
     std::string moduleName_;
 
     bool isEncrypt_ = false;
+    std::vector<uint8_t> encryptKey_{};
     SecurityLevel securityLevel = SecurityLevel::LAST;
     std::string uri_;
     std::string readPermission_;
