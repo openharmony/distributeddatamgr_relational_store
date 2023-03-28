@@ -45,6 +45,7 @@ RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode,
       syncMode(syncMode),
       readOnly(isReadOnly),
       databaseFileType(databaseFileType),
+      encryptKey_(encryptKey),
       securityLevel(securityLevel),
       isCreateNecessary_(isCreateNecessary),
       autoCheck(autoCheck),
@@ -54,7 +55,10 @@ RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode,
 {
 }
 
-RdbStoreConfig::~RdbStoreConfig() = default;
+RdbStoreConfig::~RdbStoreConfig()
+{
+    ClearEncryptKey();
+}
 
 /**
  * Obtains the database name.
@@ -371,5 +375,20 @@ int RdbStoreConfig::GetReadConSize() const
 void RdbStoreConfig::SetReadConSize(int readConSize)
 {
     readConSize_= readConSize;
+}
+
+void RdbStoreConfig::SetEncryptKey(const std::vector<uint8_t> &encryptKey)
+{
+    encryptKey_ = encryptKey;
+}
+
+std::vector<uint8_t> RdbStoreConfig::GetEncryptKey() const
+{
+    return encryptKey_;
+}
+
+void RdbStoreConfig::ClearEncryptKey()
+{
+    encryptKey_.assign(encryptKey_.size(), 0);
 }
 } // namespace OHOS::NativeRdb
