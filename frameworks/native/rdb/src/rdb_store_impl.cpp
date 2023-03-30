@@ -847,11 +847,13 @@ int RdbStoreImpl::FreeTransaction(SqliteConnection *connection, const std::strin
 
 bool RdbStoreImpl::IsInTransaction()
 {
+    bool res = true;
     auto connection = connectionPool->AcquireConnection(false);
     if (connection != nullptr) {
-        return connection->IsInTransaction();
+        res = connection->IsInTransaction();
+        connectionPool->ReleaseConnection(connection);
     }
-    return true;
+    return res;
 }
 
 int RdbStoreImpl::CheckAttach(const std::string &sql)
