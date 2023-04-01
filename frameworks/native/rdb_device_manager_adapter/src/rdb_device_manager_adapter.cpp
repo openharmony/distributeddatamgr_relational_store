@@ -35,7 +35,7 @@ RdbDeviceManagerAdaptor::~RdbDeviceManagerAdaptor()
     UnInit();
 }
 
-RdbDeviceManagerAdaptor RdbDeviceManagerAdaptor::GetInstance(const std::string &packageName)
+RdbDeviceManagerAdaptor& RdbDeviceManagerAdaptor::GetInstance(const std::string &packageName)
 {
     static RdbDeviceManagerAdaptor instance(packageName);
     return instance;

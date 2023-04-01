@@ -1111,7 +1111,9 @@ std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, 
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
 	
     std::string uuid;
-    errCode = OHOS::RdbDeviceManagerAdaptor::GetInstance(syncerParam_.bundleName_).GetEncryptedUuidByNetworkId(device, uuid);
+    DeviceManagerAdaptor::RdbDeviceManagerAdaptor &deviceManager =
+        DeviceManagerAdaptor::RdbDeviceManagerAdaptor::GetInstance(syncerParam_.bundleName_);
+    errCode = deviceManager.GetEncryptedUuidByNetworkId(device, uuid);
     if (errCode != E_OK) {
         LOG_ERROR("GetUuid is failed");
         return "";

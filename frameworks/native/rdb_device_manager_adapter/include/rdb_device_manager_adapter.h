@@ -23,13 +23,13 @@ namespace OHOS {
 namespace DeviceManagerAdaptor {
 class RdbDeviceManagerAdaptor {
 public:
-    RdbDeviceManagerAdaptor(const std::string &packageName);
-    ~RdbDeviceManagerAdaptor();
-
-    static RdbDeviceManagerAdaptor GetInstance(const std::string &packageName);
+    static RdbDeviceManagerAdaptor &GetInstance(const std::string &packageName);
     int GetEncryptedUuidByNetworkId(const std::string &networkId, std::string &uuid);
 
 private:
+    RdbDeviceManagerAdaptor(const std::string &packageName);
+    ~RdbDeviceManagerAdaptor();
+
     void Init();
     void UnInit();
 
