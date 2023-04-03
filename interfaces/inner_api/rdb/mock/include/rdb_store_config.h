@@ -132,7 +132,6 @@ private:
     StorageMode storageMode;
     std::string journalMode;
     std::string syncMode;
-    std::vector<uint8_t> encryptKey;
     bool readOnly;
     std::string databaseFileType;
 
@@ -141,6 +140,7 @@ private:
     std::string moduleName_;
 
     bool isEncrypt_ = false;
+    std::vector<uint8_t> encryptKey_;
     SecurityLevel securityLevel = SecurityLevel::LAST;
     std::string uri_;
     std::string readPermission_;

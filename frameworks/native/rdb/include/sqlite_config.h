@@ -35,7 +35,7 @@ public:
     std::string GetSyncMode() const;
     std::string GetDatabaseFileType() const;
     bool IsReadOnly() const;
-    bool IsEncrypt() const;
+    bool IsAutoEncrypt() const;
     std::string GetBundleName() const;
     bool IsCreateNecessary() const;
     void SetCreateNecessary(bool CreateNecessary);
@@ -49,8 +49,12 @@ public:
     void SetEncryptAlgo(const std::string &encryptAlgo);
     int GetReadConSize() const;
     void SetReadConSize(int readConSize);
+    void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
+    std::vector<uint8_t> GetEncryptKey() const;
 
 private:
+    void ClearEncryptKey();
+
     std::string path;
     StorageMode storageMode;
     std::string journalMode;
@@ -65,6 +69,7 @@ private:
 
     // Encryption
     bool isEncrypt = false;
+    std::vector<uint8_t> encryptKey_{};
     std::string bundleName;
     bool isCreateNecessary;
 };

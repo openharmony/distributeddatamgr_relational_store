@@ -45,6 +45,7 @@ namespace NativeRdb {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 // error status
 const int ERROR_STATUS = -1;
+using RdbKeyFile = RdbSecurityManager::KeyFileType;
 #endif
 
 SqliteConnection *SqliteConnection::Open(const SqliteConfig &config, bool isWriteConnection, int &errCode)
@@ -151,14 +152,12 @@ int SqliteConnection::Config(const SqliteConfig &config)
         return errCode;
     }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    errCode = ManageKey(config);
+    errCode = SetEncryptAlgo(config);
     if (errCode != E_OK) {
         return errCode;
     }
-#endif
 
-    errCode = SetEncryptAlgo(config);
+    errCode = SetEncryptKey(config);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -223,31 +222,68 @@ int SqliteConnection::SetPageSize(const SqliteConfig &config)
 int SqliteConnection::SetEncryptAlgo(const SqliteConfig &config)
 {
     int errCode = E_OK;
-    if (config.GetEncryptAlgo().compare(GlobalExpr::ENCRYPT_ALGO) == 0) {
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+    if (!config.IsAutoEncrypt() && config.GetEncryptKey().empty()) {
         return errCode;
     }
-
-    // first to get the value, then to set algo
+#endif
     std::string sqlStr = "PRAGMA codec_hmac_algo=" + config.GetEncryptAlgo();
     errCode = ExecuteSql(sqlStr);
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetEncryptAlgorithm fail, err = %{public}d", errCode);
+        return errCode;
     }
+
+    sqlStr = "PRAGMA codec_rekey_hmac_algo=" + config.GetEncryptAlgo();
+    errCode = ExecuteSql(sqlStr);
+    if (errCode != E_OK) {
+        LOG_ERROR("SqliteConnection set rekey Algo fail, err = %{public}d", errCode);
+        return errCode;
+    }
+
     return errCode;
 }
 
-int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &encryptKey)
+int SqliteConnection::SetEncryptKey(const SqliteConfig &config)
 {
-    if (encryptKey.empty()) {
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+    std::vector<uint8_t> key;
+    RdbPassword rdbPwd;
+    if (!config.GetEncryptKey().empty() && !config.IsAutoEncrypt()) {
+        key = config.GetEncryptKey();
+    } else if (config.IsAutoEncrypt()) {
+        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbKeyFile::PUB_KEY_FILE);
+        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+    } else {
         return E_OK;
     }
 
-    int errCode = sqlite3_key(dbHandle, static_cast<const void *>(encryptKey.data()), encryptKey.size());
+    int errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
+    key.assign(key.size(), 0);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("SqliteConnection SetEncryptKey fail, err = %{public}d", errCode);
         return SQLiteError::ErrNo(errCode);
     }
 
+    if (rdbPwd.isKeyExpired) {
+        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
+        if (!rdbPwd.IsValid()) {
+            RdbSecurityManager::GetInstance().DelRdbSecretDataFile(RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
+            LOG_ERROR("new key is not valid.");
+            return E_OK;
+        }
+        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+        errCode = sqlite3_rekey(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
+        key.assign(key.size(), 0);
+        if (errCode != SQLITE_OK) {
+            LOG_ERROR("ReKey failed, err = %{public}d", errCode);
+            RdbSecurityManager::GetInstance().DelRdbSecretDataFile(RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
+            return E_OK;
+        }
+
+        RdbSecurityManager::GetInstance().UpdateKeyFile();
+    }
+#endif
     return E_OK;
 }
 
@@ -743,52 +779,6 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     rowNum = static_cast<int>(GetCombinedData(sharedBlockInfo.startPos, sharedBlockInfo.totalRows));
     errCode = statement.ResetStatementAndClearBindings();
     return errCode;
-}
-
-int SqliteConnection::ManageKey(const SqliteConfig &config)
-{
-    if (!config.IsEncrypt()) {
-        return E_OK;
-    }
-    bool isKeyFileExists =
-        RdbSecurityManager::GetInstance().CheckKeyDataFileExists(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-    if (!isKeyFileExists) {
-        if (InitKey() != E_OK) {
-            return E_ERROR;
-        }
-    }
-
-    return GetKeyFromFile();
-}
-
-int SqliteConnection::InitKey()
-{
-    LOG_INFO("Init pub_key file");
-    std::vector<uint8_t> key = RdbSecurityManager::GetInstance().GenerateRandomNum(RdbSecurityManager::RDB_KEY_SIZE);
-    if (!RdbSecurityManager::GetInstance().SaveSecretKeyToFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, key)) {
-        LOG_ERROR("Init key SaveSecretKeyToFile failed!");
-        key.assign(key.size(), 0);
-        return E_ERROR;
-    }
-    key.assign(key.size(), 0);
-    return E_OK;
-}
-
-int SqliteConnection::GetKeyFromFile()
-{
-    LOG_INFO("Get key from pub_key file");
-    RdbPassword key = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-    if (key.GetSize() == 0) {
-        return E_ERROR;
-    }
-    auto keyTemp = std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize());
-    if (SetEncryptKey(keyTemp) != E_OK) {
-        keyTemp.assign(keyTemp.size(), 0);
-        return E_ERROR;
-    }
-
-    keyTemp.assign(keyTemp.size(), 0);
-    return E_OK;
 }
 #endif
 
