@@ -125,9 +125,9 @@ public:
     RDB_API_EXPORT int IsColumnNull(int columnIndex, bool &isNull) override;
 
     /**
-     * @brief Obtains the row record.
+     * @brief Gets the entire row of data for the current row from the result set.
      */
-    RDB_API_EXPORT int GetRow(ValuesBucket &valuesBucket) override;
+    RDB_API_EXPORT int GetRow(std::vector<std::string> &columns, ValuesBucket &valuesBucket) override;
 
     /**
      * @brief Obtains data type of the given column's value.

@@ -287,9 +287,9 @@ public:
     virtual int IsColumnNull(int columnIndex, bool &isNull) = 0;
 
     /**
-     * @brief Obtains the row record.
+     * @brief Gets the entire row of data for the current row from the result set.
      */
-    virtual int GetRow(ValuesBucket &valuesBucket) = 0;
+    virtual int GetRow(std::vector<std::string> &columns, ValuesBucket &valuesBucket) = 0;
 
     /**
      * @brief Obtains the row record.

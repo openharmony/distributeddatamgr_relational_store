@@ -131,7 +131,7 @@ public:
      *
      * @param val Indicates a const chars input parameter.
      */
-    explicit ValueObject(const char *val);
+    RDB_API_EXPORT explicit ValueObject(const char *val);
 
     /**
      * @brief Constructor.

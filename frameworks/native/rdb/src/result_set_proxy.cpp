@@ -239,7 +239,7 @@ int ResultSetProxy::IsColumnNull(int columnIndex, bool &isNull)
     return E_OK;
 }
 
-int ResultSetProxy::GetRow(ValuesBucket &valuesBucket)
+int ResultSetProxy::GetRow(std::vector<std::string> &columns, ValuesBucket &valuesBucket)
 {
     return E_NOT_SUPPORT;
 }

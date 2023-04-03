@@ -106,7 +106,8 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_001, TestSize
 
     int iRet = E_ERROR;
     ValuesBucket valuesBucket_ret;
-    iRet = resultSet->GetRow(valuesBucket_ret);
+    std::vector<std::string> columnNames;
+    iRet = resultSet->GetRow(columnNames, valuesBucket_ret);
     std::map<std::string, ValueObject> valuesMap;
     valuesBucket_ret.GetAll(valuesMap);
     EXPECT_EQ(E_OK, iRet);
@@ -144,7 +145,8 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_002, TestSize
 
     int iRet = E_ERROR;
     ValuesBucket valuesBucket_ret;
-    iRet = resultSet->GetRow(valuesBucket_ret);
+    std::vector<std::string> columnNames;
+    iRet = resultSet->GetRow(columnNames, valuesBucket_ret);
     std::map<std::string, ValueObject> valuesMap;
     valuesBucket_ret.GetAll(valuesMap);
     EXPECT_EQ(E_OK, iRet);
@@ -182,7 +184,8 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_003, TestSize
 
     int iRet = E_ERROR;
     ValuesBucket valuesBucket_ret;
-    iRet = resultSet->GetRow(valuesBucket_ret);
+    std::vector<std::string> columnNames;
+    iRet = resultSet->GetRow(columnNames, valuesBucket_ret);
     std::map<std::string, ValueObject> valuesMap;
     valuesBucket_ret.GetAll(valuesMap);
     EXPECT_EQ(E_OK, iRet);
@@ -223,25 +226,25 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_004, TestSize
     EXPECT_EQ(E_OK, errorCode);
     EXPECT_EQ(1, rowId);
 
-    std::unique_ptr<ResultSet> resultSet = RdbStepResultSetGetRowTest::store->QueryByStep("SELECT data1, data2 FROM "
-                                                                                          "test");
+    std::unique_ptr<ResultSet> resultSet =
+        RdbStepResultSetGetRowTest::store->QueryByStep("SELECT data1, data2 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
     int iRet = E_ERROR;
     ValuesBucket valuesBucket_ret;
-    iRet = resultSet->GetRow(valuesBucket_ret);
+    std::vector<std::string> columnNames;
+    columnNames.push_back("data1");
+    iRet = resultSet->GetRow(columnNames, valuesBucket_ret);
     std::map<std::string, ValueObject> valuesMap;
     valuesBucket_ret.GetAll(valuesMap);
     EXPECT_EQ(E_OK, iRet);
 
     std::string data1Value = valuesMap["data1"];
-    int data2Value = valuesMap["data2"];
 
     EXPECT_EQ("", data1Value);
-    EXPECT_EQ(10, data2Value);
-    EXPECT_EQ(0, valuesMap.count("data3"));
+    EXPECT_EQ(0, valuesMap.count("data2"));
 
     resultSet->Close();
 }

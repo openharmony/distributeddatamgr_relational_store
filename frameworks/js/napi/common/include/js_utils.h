@@ -20,6 +20,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <variant>
 
 #include "napi/native_api.h"
 #include "napi/native_common.h"
@@ -59,7 +60,7 @@ public:
     static napi_value Convert2JSValue(napi_env env, double value);
     static napi_value Convert2JSValue(napi_env env, bool value);
     static napi_value Convert2JSValue(napi_env env, const std::map<std::string, int> &value);
-    static napi_value GetJSNull(napi_env env);
+    static napi_value Convert2JSValue(napi_env env, const std::monostate &value);
 
     static int32_t Convert2JSValue(napi_env env, std::string value, napi_value &output);
     static int32_t Convert2JSValue(napi_env env, bool value, napi_value &output);

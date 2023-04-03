@@ -963,7 +963,8 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_019, TestSize.Le
 
     int iRet = E_ERROR;
     ValuesBucket valuesBucket_ret;
-    iRet = resultSet->GetRow(valuesBucket_ret);
+    std::vector<std::string> columnNames;
+    iRet = resultSet->GetRow(columnNames, valuesBucket_ret);
     std::map<std::string, ValueObject> valuesMap;
     valuesBucket_ret.GetAll(valuesMap);
     EXPECT_EQ(E_OK, iRet);
@@ -999,15 +1000,15 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_020, TestSize.Le
 
     int iRet = E_ERROR;
     ValuesBucket valuesBucket_ret;
-    iRet = resultSet->GetRow(valuesBucket_ret);
+    std::vector<std::string> columnNames;
+    columnNames.push_back("data1");
+    iRet = resultSet->GetRow(columnNames, valuesBucket_ret);
     std::map<std::string, ValueObject> valuesMap;
     valuesBucket_ret.GetAll(valuesMap);
     EXPECT_EQ(E_OK, iRet);
 
     std::string data1Value = valuesMap["data1"];
-    int data2Value = valuesMap["data2"];
 
     EXPECT_EQ("hello", data1Value);
-    EXPECT_EQ(10, data2Value);
-    EXPECT_EQ(0, valuesMap.count("data3"));
+    EXPECT_EQ(0, valuesMap.count("data2"));
 }

@@ -110,7 +110,7 @@ public:
 
     virtual int IsColumnNull(int columnIndex, bool &isNull) = 0;
 
-    virtual int GetRow(ValuesBucket &valuesBucket) = 0;
+    virtual int GetRow(std::vector<std::string> &columns, ValuesBucket &valuesBucket) = 0;
 
     virtual bool IsClosed() const = 0;
 

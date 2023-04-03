@@ -70,7 +70,7 @@ int AbsResultSet::IsColumnNull(int columnIndex, bool &isNull)
     return E_OK;
 }
 
-int AbsResultSet::GetRow(ValuesBucket &valuesBucket)
+int AbsResultSet::GetRow(std::vector<std::string> &columns, ValuesBucket &valuesBucket)
 {
     return E_OK;
 }
