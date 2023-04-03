@@ -343,7 +343,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<std::string, in
     return jsValue;
 }
 
-napi_value JSUtils::GetJSNull(napi_env env)
+napi_value JSUtils::Convert2JSValue(napi_env env, const std::monostate &value)
 {
     napi_value result = nullptr;
     napi_get_null(env, &result);

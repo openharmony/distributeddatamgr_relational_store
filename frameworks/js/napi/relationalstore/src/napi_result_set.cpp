@@ -16,6 +16,7 @@
 #include "napi_result_set.h"
 
 #include <functional>
+#include <variant>
 
 #include "js_logger.h"
 #include "js_utils.h"
@@ -215,7 +216,8 @@ napi_value ValuesBucket2JSValue(napi_env env, NativeRdb::ValuesBucket &valuesBuc
         napi_value value = nullptr;
         switch (valueObject.GetType()) {
             case NativeRdb::ValueObjectType::TYPE_NULL: {
-                value = JSUtils::GetJSNull(env);
+                std::monostate moValue;
+                value = JSUtils::Convert2JSValue(env, moValue);
                 break;
             }
             case NativeRdb::ValueObjectType::TYPE_INT: {
@@ -237,14 +239,13 @@ napi_value ValuesBucket2JSValue(napi_env env, NativeRdb::ValuesBucket &valuesBuc
                 break;
             }
             case NativeRdb::ValueObjectType::TYPE_STRING: {
-                std::string strVal = "";
+                std::string strVal;
                 valueObject.GetString(strVal);
                 value = JSUtils::Convert2JSValue(env, strVal);
                 break;
             }
             default: {
-                RDB_NAPI_ASSERT(
-                    env, true == false, std::make_shared<ParamError>("valueObject.GetType()", "a ValueObjectType."));
+                RDB_NAPI_ASSERT(env, false, std::make_shared<InnerError>(E_INNER_ERROR));
                 break;
             }
         }
@@ -561,11 +562,23 @@ napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
 {
-    ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    napi_value self = nullptr;
+    size_t argc = 2;
+    napi_value args[2] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &self, nullptr);
+    RDB_NAPI_ASSERT(env, argc == 0 || argc == 1, std::make_shared<ParamNumError>("0 or 1"));
+
+    std::vector<std::string> columns;
+    if (argc == 1) {
+        columns = JSUtils::Convert2StrVector(env, args[0]);
+    }
+
+    ResultSetProxy *proxy = nullptr;
+    napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
+    RDB_NAPI_ASSERT(env, proxy && proxy->resultSet_, std::make_shared<ParamError>("resultSet", "null"));
 
     ValuesBucket valuesBucket;
-    int errCode = resultSetProxy->resultSet_->GetRow(valuesBucket);
+    int errCode = proxy->resultSet_->GetRow(columns, valuesBucket);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     return ValuesBucket2JSValue(env, valuesBucket);
 }

@@ -27,6 +27,7 @@
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
 #include "values_bucket.h"
+#include <algorithm>
 
 namespace OHOS {
 namespace NativeRdb {
@@ -395,9 +396,34 @@ int StepResultSet::IsColumnNull(int columnIndex, bool &isNull)
     return E_OK;
 }
 
-int StepResultSet::GetRow(ValuesBucket &valuesBucket)
+int StepResultSet::GetRow(std::vector<std::string> &columns, ValuesBucket &valuesBucket)
 {
-    return sqliteStatement->GetRow(valuesBucket);
+    std::vector<std::string> allColumnNames;
+    int ret = GetAllColumnNames(allColumnNames);
+    if (ret != E_OK) {
+        LOG_ERROR("GetAllColumnNames::ret is wrong!");
+        return ret;
+    }
+
+    if (columns.size() == 0) {
+        columns = allColumnNames;
+    }
+
+    std::vector<int> columnsIndex;
+    int columnIndex = 0;
+    for (int i = 0; i < columns.size(); ++i) {
+        if (std::find(allColumnNames.begin(), allColumnNames.end(), columns[i]) != allColumnNames.end()) {
+            int ret = GetColumnIndex(columns[i], columnIndex);
+            if (ret != E_OK) {
+                LOG_ERROR("GetColumnIndex::ret is wrong!");
+                return ret;
+            }
+            columnsIndex.push_back(columnIndex);
+        } else {
+            continue;
+        }
+    }
+    return sqliteStatement->GetRow(columnsIndex, valuesBucket);
 }
 
 /**

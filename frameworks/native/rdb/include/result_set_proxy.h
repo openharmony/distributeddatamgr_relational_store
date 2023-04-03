@@ -47,7 +47,7 @@ public:
     int GetLong(int columnIndex, int64_t &value) override;
     int GetDouble(int columnIndex, double &value) override;
     int IsColumnNull(int columnIndex, bool &isNull) override;
-    int GetRow(ValuesBucket &valuesBucket) override;
+    int GetRow(std::vector<std::string> &columns, ValuesBucket &valuesBucket) override;
     bool IsClosed() const override;
     int Close() override;
 
