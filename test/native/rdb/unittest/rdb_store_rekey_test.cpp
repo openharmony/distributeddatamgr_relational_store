@@ -287,3 +287,41 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_03, TestSize.Level1)
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_EQ(store, nullptr);
 }
+
+/**
+* @tc.name: Rdb_Rekey_Test_004
+* @tc.desc: try to open store and modify create date to a future time.
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_04, TestSize.Level1)
+{
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key.new";
+
+    bool isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+
+    auto keyFileDate = GetKeyFileDate(encryptedDatabaseName);
+
+    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, -RdbRekeyTest::HOURS_EXPIRED);
+    ASSERT_TRUE(isFileDateChanged);
+
+    auto changedDate = GetKeyFileDate(encryptedDatabaseName);
+    ASSERT_GT(changedDate, keyFileDate);
+
+    RdbStoreConfig config = GetRdbConfig(RdbRekeyTest::encryptedDatabasePath);
+    RekeyTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+
+    isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+    isFileExists = OHOS::FileExists(newKeyPath);
+    ASSERT_FALSE(isFileExists);
+
+    keyFileDate = GetKeyFileDate(encryptedDatabaseName);
+    ASSERT_EQ(changedDate, keyFileDate);
+
+    CheckQueryData(store);
+}
