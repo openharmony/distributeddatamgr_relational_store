@@ -507,7 +507,7 @@ napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
 
     bool result = false;
     int errCode = resultSetProxy->resultSet_->IsColumnNull(columnIndex, result);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_RESULT_GET_ERROR));
 
     return JSUtils::Convert2JSValue(env, result);
 }
