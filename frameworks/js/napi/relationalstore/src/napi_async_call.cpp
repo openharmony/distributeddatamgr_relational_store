@@ -75,7 +75,7 @@ void AsyncCall::SetBusinessError(napi_env env, std::shared_ptr<Error> error, nap
     napi_value msg = nullptr;
     napi_create_object(env, businessError);
     // if error is not inner error
-    if (error != nullptr && error->GetCode() != E_INNER_ERROR) {
+    if (error != nullptr) {
         napi_create_int32(env, error->GetCode(), &code);
         napi_create_string_utf8(env, error->GetMessage().c_str(), NAPI_AUTO_LENGTH, &msg);
         napi_set_named_property(env, *businessError, "code", code);
