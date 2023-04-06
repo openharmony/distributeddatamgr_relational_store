@@ -124,7 +124,7 @@ public:
     /**
      * @brief Gets the entire row of data for the current row from the result set.
      */
-    RDB_API_EXPORT int GetRow(std::vector<std::string> &columns, ValuesBucket &valuesBucket) override;
+    RDB_API_EXPORT int GetRow(std::vector<std::string> &columnNames, ValuesBucket &valuesBucket) override;
 
     /**
      * @brief Move the cursor to an absolute position.

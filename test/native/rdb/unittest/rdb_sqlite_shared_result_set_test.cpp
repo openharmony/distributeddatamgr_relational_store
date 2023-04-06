@@ -962,11 +962,11 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_019, TestSize.Le
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
     int iRet = E_ERROR;
-    ValuesBucket valuesBucket_ret;
+    ValuesBucket valuesBucketGet;
     std::vector<std::string> columnNames;
-    iRet = resultSet->GetRow(columnNames, valuesBucket_ret);
+    iRet = resultSet->GetRow(columnNames, valuesBucketGet);
     std::map<std::string, ValueObject> valuesMap;
-    valuesBucket_ret.GetAll(valuesMap);
+    valuesBucketGet.GetAll(valuesMap);
     EXPECT_EQ(E_OK, iRet);
 
     int idValue = valuesMap["id"];
@@ -974,6 +974,18 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_019, TestSize.Le
     int data2Value = valuesMap["data2"];
     double data3Value = valuesMap["data3"];
     std::vector<uint8_t> data4Value = valuesMap["data4"];
+
+    EXPECT_EQ(1, idValue);
+    EXPECT_EQ("hello", data1Value);
+    EXPECT_EQ(10, data2Value);
+    EXPECT_EQ(1.0, data3Value);
+    EXPECT_EQ(66, data4Value[0]);
+
+    idValue = valuesMap[columnNames[0]];
+    data1Value = valuesMap[columnNames[1]];
+    data2Value = valuesMap[columnNames[2]];
+    data3Value = valuesMap[columnNames[3]];
+    data4Value = valuesMap[columnNames[4]];
 
     EXPECT_EQ(1, idValue);
     EXPECT_EQ("hello", data1Value);
@@ -999,16 +1011,18 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_020, TestSize.Le
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
     int iRet = E_ERROR;
-    ValuesBucket valuesBucket_ret;
+    ValuesBucket valuesBucketGet;
     std::vector<std::string> columnNames;
-    columnNames.push_back("data1");
-    iRet = resultSet->GetRow(columnNames, valuesBucket_ret);
+    iRet = resultSet->GetRow(columnNames, valuesBucketGet);
     std::map<std::string, ValueObject> valuesMap;
-    valuesBucket_ret.GetAll(valuesMap);
+    valuesBucketGet.GetAll(valuesMap);
     EXPECT_EQ(E_OK, iRet);
 
     std::string data1Value = valuesMap["data1"];
-
     EXPECT_EQ("hello", data1Value);
     EXPECT_EQ(0, valuesMap.count("data2"));
+
+    data1Value = valuesMap[columnNames[1]];
+    EXPECT_EQ("hello", data1Value);
+    EXPECT_EQ(0, valuesMap.count(columnNames[2]));
 }

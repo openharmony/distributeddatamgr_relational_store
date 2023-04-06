@@ -289,7 +289,7 @@ public:
     /**
      * @brief Gets the entire row of data for the current row from the result set.
      */
-    virtual int GetRow(std::vector<std::string> &columns, ValuesBucket &valuesBucket) = 0;
+    virtual int GetRow(std::vector<std::string> &columnNames, ValuesBucket &valuesBucket) = 0;
 
     /**
      * @brief Obtains the row record.
