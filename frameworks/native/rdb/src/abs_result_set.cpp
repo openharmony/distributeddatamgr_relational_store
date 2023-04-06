@@ -84,7 +84,11 @@ int AbsResultSet::GetRow(std::vector<std::string> &columnNames, ValuesBucket &va
 
     for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
         ColumnType columnType;
-        GetColumnType(columnIndex, columnType);
+        ret = GetColumnType(columnIndex, columnType);
+        if (ret != E_OK) {
+            LOG_ERROR("GetColumnType::ret is wrong!");
+            return ret;
+        }
         switch (columnType) {
             case ColumnType::TYPE_NULL: {
                 values.insert(std::make_pair(columnNames[columnIndex], ValueObject()));
