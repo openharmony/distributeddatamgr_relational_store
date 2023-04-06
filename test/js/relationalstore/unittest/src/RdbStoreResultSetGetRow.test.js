@@ -169,7 +169,7 @@ describe('rdbStoreResultSetGetRowTest', function () {
         let resultSet = await rdbStore.query(predicates, ["data1", "data2"])
         expect(true).assertEqual(resultSet.goToFirstRow());
 
-        let valueBucket_ret = resultSet.getRow(["data1"]);
+        let valueBucket_ret = resultSet.getRow();
 
         expect("").assertEqual(valueBucket_ret.data1);
         expect(undefined).assertEqual(valueBucket_ret.data2);

@@ -216,32 +216,23 @@ napi_value ValuesBucket2JSValue(napi_env env, NativeRdb::ValuesBucket &valuesBuc
         napi_value value = nullptr;
         switch (valueObject.GetType()) {
             case NativeRdb::ValueObjectType::TYPE_NULL: {
-                std::monostate moValue;
-                value = JSUtils::Convert2JSValue(env, moValue);
+                value = JSUtils::Convert2JSValue(env, static_cast<std::monostate>(valueObject));
                 break;
             }
             case NativeRdb::ValueObjectType::TYPE_INT: {
-                int64_t intVal = 0;
-                valueObject.GetLong(intVal);
-                value = JSUtils::Convert2JSValue(env, intVal);
+                value = JSUtils::Convert2JSValue(env, static_cast<int64_t>(valueObject));
                 break;
             }
             case NativeRdb::ValueObjectType::TYPE_DOUBLE: {
-                double doubleVal = 0L;
-                valueObject.GetDouble(doubleVal);
-                value = JSUtils::Convert2JSValue(env, doubleVal);
+                value = JSUtils::Convert2JSValue(env, static_cast<double>(valueObject));
                 break;
             }
             case NativeRdb::ValueObjectType::TYPE_BLOB: {
-                std::vector<uint8_t> blobVal;
-                valueObject.GetBlob(blobVal);
-                value = JSUtils::Convert2JSValue(env, blobVal);
+                value = JSUtils::Convert2JSValue(env, static_cast<std::vector<uint8_t>>(valueObject));
                 break;
             }
             case NativeRdb::ValueObjectType::TYPE_STRING: {
-                std::string strVal;
-                valueObject.GetString(strVal);
-                value = JSUtils::Convert2JSValue(env, strVal);
+                value = JSUtils::Convert2JSValue(env, static_cast<std::string>(valueObject));
                 break;
             }
             default: {
@@ -562,23 +553,12 @@ napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
 {
-    napi_value self = nullptr;
-    size_t argc = 2;
-    napi_value args[2] = { 0 };
-    napi_get_cb_info(env, info, &argc, args, &self, nullptr);
-    RDB_NAPI_ASSERT(env, argc == 0 || argc == 1, std::make_shared<ParamNumError>("0 or 1"));
+    ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
 
-    std::vector<std::string> columns;
-    if (argc == 1) {
-        columns = JSUtils::Convert2StrVector(env, args[0]);
-    }
-
-    ResultSetProxy *proxy = nullptr;
-    napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, proxy && proxy->resultSet_, std::make_shared<ParamError>("resultSet", "null"));
-
+    std::vector<std::string> columnNames;
     ValuesBucket valuesBucket;
-    int errCode = proxy->resultSet_->GetRow(columns, valuesBucket);
+    int errCode = resultSetProxy->resultSet_->GetRow(columnNames, valuesBucket);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     return ValuesBucket2JSValue(env, valuesBucket);
 }

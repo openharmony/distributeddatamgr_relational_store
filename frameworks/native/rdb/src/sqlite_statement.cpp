@@ -345,67 +345,7 @@ int SqliteStatement::GetColumnLong(int index, int64_t &value) const
 
     return E_OK;
 }
-int SqliteStatement::GetRow(const std::vector<int> columnsIndex, ValuesBucket &valuesBucket) const
-{
-    if (stmtHandle == nullptr) {
-        return E_INVALID_STATEMENT;
-    }
-    std::map<std::string, ValueObject> valuesMap;
 
-    std::string columnName;
-    for (int i = 0; i < columnsIndex.size(); ++i) {
-        int ret = GetColumnName(columnsIndex[i], columnName);
-        if (ret != E_OK) {
-            LOG_ERROR("GetColumnName::ret is %{public}d!", ret);
-            return ret;
-        }
-
-        int type = sqlite3_column_type(stmtHandle, columnsIndex[i]);
-        switch (type) {
-            case SQLITE_INTEGER: {
-                int64_t value = sqlite3_column_int64(stmtHandle, columnsIndex[i]);
-                valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
-                break;
-            }
-            case SQLITE_TEXT: {
-                auto chars = reinterpret_cast<const char *>(sqlite3_column_text(stmtHandle, columnsIndex[i]));
-                if (chars == nullptr) {
-                    LOG_ERROR("chars is null %{public}d", chars == nullptr);
-                    return E_ERROR;
-                }
-                std::string value = std::string(chars, sqlite3_column_bytes(stmtHandle, columnsIndex[i]));
-                valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
-                break;
-            }
-            case SQLITE_FLOAT: {
-                double value = sqlite3_column_double(stmtHandle, columnsIndex[i]);
-                valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
-                break;
-            }
-            case SQLITE_BLOB: {
-                int size = sqlite3_column_bytes(stmtHandle, columnsIndex[i]);
-                auto blob = static_cast<const uint8_t *>(sqlite3_column_blob(stmtHandle, columnsIndex[i]));
-                if (blob == nullptr) {
-                    LOG_ERROR("blob is null %{public}d", blob == nullptr);
-                    return E_ERROR;
-                }
-                std::vector<uint8_t> value(size);
-                value.assign(blob, blob + size);
-                valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
-                break;
-            }
-            case SQLITE_NULL: {
-                valuesMap.insert(std::make_pair(columnName, ValueObject()));
-                break;
-            }
-            default: {
-                return E_ERROR;
-            }
-        }
-    }
-    valuesBucket = ValuesBucket(valuesMap);
-    return E_OK;
-}
 int SqliteStatement::GetColumnDouble(int index, double &value) const
 {
     if (stmtHandle == nullptr) {
