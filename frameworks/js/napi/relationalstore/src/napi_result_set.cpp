@@ -216,7 +216,7 @@ napi_value ValuesBucket2JSValue(napi_env env, NativeRdb::ValuesBucket &valuesBuc
         napi_value value = nullptr;
         switch (valueObject.GetType()) {
             case NativeRdb::ValueObjectType::TYPE_NULL: {
-                value = JSUtils::Convert2JSValue(env, static_cast<std::monostate>(valueObject));
+                value = JSUtils::Convert2JSValue(env);
                 break;
             }
             case NativeRdb::ValueObjectType::TYPE_INT: {
