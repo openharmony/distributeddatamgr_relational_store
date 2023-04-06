@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "sqlite3sym.h"
-#include "values_bucket.h"
+#include "value_object.h"
 
 namespace OHOS {
 namespace NativeRdb {

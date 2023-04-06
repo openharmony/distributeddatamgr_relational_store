@@ -27,7 +27,6 @@
 #include "rdb_trace.h"
 #include "shared_block.h"
 #include "string_ex.h"
-#include "values_bucket.h"
 
 namespace OHOS {
 namespace NativeRdb {
