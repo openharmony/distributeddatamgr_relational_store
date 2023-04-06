@@ -16,7 +16,7 @@
 #ifndef NATIVE_RDB_IRESULT_SET_H
 #define NATIVE_RDB_IRESULT_SET_H
 
-#include "abs_result_set.h
+#include "abs_result_set.h"
 #include "iremote_broker.h"
 
 namespace OHOS::NativeRdb {
