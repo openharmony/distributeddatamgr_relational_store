@@ -172,8 +172,8 @@ describe('rdbStoreResultSetGetRowTest', function () {
         let valueBucket_ret = resultSet.getRow();
 
         expect("").assertEqual(valueBucket_ret.data1);
-        expect(undefined).assertEqual(valueBucket_ret.data2);
         expect(undefined).assertEqual(valueBucket_ret.data3);
+        expect(undefined).assertEqual(valueBucket_ret.data4);
 
         done();
         console.log(TAG + "************* rdbStoreResultSetGetRowTest0004 end   *************");

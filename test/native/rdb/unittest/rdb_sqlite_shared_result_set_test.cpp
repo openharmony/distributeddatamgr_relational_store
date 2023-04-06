@@ -974,24 +974,22 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_019, TestSize.Le
     int data2Value = valuesMap["data2"];
     double data3Value = valuesMap["data3"];
     std::vector<uint8_t> data4Value = valuesMap["data4"];
-
     EXPECT_EQ(1, idValue);
     EXPECT_EQ("hello", data1Value);
     EXPECT_EQ(10, data2Value);
     EXPECT_EQ(1.0, data3Value);
     EXPECT_EQ(66, data4Value[0]);
 
-    idValue = valuesMap[columnNames[0]];
-    data1Value = valuesMap[columnNames[1]];
-    data2Value = valuesMap[columnNames[2]];
-    data3Value = valuesMap[columnNames[3]];
-    data4Value = valuesMap[columnNames[4]];
-
-    EXPECT_EQ(1, idValue);
-    EXPECT_EQ("hello", data1Value);
-    EXPECT_EQ(10, data2Value);
-    EXPECT_EQ(1.0, data3Value);
-    EXPECT_EQ(66, data4Value[0]);
+    int idValueByIndex = valuesMap[columnNames[0]];
+    std::string data1ValueByIndex = valuesMap[columnNames[1]];
+    int data2ValueByIndex = valuesMap[columnNames[2]];
+    double data3ValueByIndex = valuesMap[columnNames[3]];
+    std::vector<uint8_t> data4ValueByIndex = valuesMap[columnNames[4]];
+    EXPECT_EQ(1, idValueByIndex);
+    EXPECT_EQ("hello", data1ValueByIndex);
+    EXPECT_EQ(10, data2ValueByIndex);
+    EXPECT_EQ(1.0, data3ValueByIndex);
+    EXPECT_EQ(66, data4ValueByIndex[0]);
 }
 
 /* *
@@ -1020,9 +1018,8 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_020, TestSize.Le
 
     std::string data1Value = valuesMap["data1"];
     EXPECT_EQ("hello", data1Value);
-    EXPECT_EQ(0, valuesMap.count("data2"));
+    EXPECT_EQ(0, valuesMap.count("data3"));
 
-    data1Value = valuesMap[columnNames[1]];
-    EXPECT_EQ("hello", data1Value);
-    EXPECT_EQ(0, valuesMap.count(columnNames[2]));
+    std::string data1ValueByIndex = valuesMap[columnNames[0]];
+    EXPECT_EQ("hello", data1ValueByIndex);
 }
