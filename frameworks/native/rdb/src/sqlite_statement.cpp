@@ -345,7 +345,6 @@ int SqliteStatement::GetColumnLong(int index, int64_t &value) const
 
     return E_OK;
 }
-
 int SqliteStatement::GetColumnDouble(int index, double &value) const
 {
     if (stmtHandle == nullptr) {
