@@ -115,8 +115,8 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_001, TestSize
     int idValue = valuesMap["id"];
     EXPECT_EQ(1, idValue);
 
-    idValue = valuesMap[columnNames[0]];
-    EXPECT_EQ(1, idValue);
+    int idValueByIndex = valuesMap[columnNames[0]];
+    EXPECT_EQ(1, idValueByIndex);
 
     resultSet->Close();
 }
@@ -156,8 +156,8 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_002, TestSize
     int idValue = valuesMap["id"];
     EXPECT_EQ(1, idValue);
 
-    idValue = valuesMap[columnNames[0]];
-    EXPECT_EQ(1, idValue);
+    int idValueByIndex = valuesMap[columnNames[0]];
+    EXPECT_EQ(1, idValueByIndex);
 
     resultSet->Close();
 }
@@ -207,12 +207,18 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_003, TestSize
     EXPECT_EQ(1, data4Value[3]);
     EXPECT_EQ(1, data5Value);
 
-    idValue = valuesMap[columnNames[0]];
-    data1Value = valuesMap[columnNames[1]];
-    data2Value = valuesMap[columnNames[2]];
-    data3Value = valuesMap[columnNames[3]];
-    data4Value = valuesMap[columnNames[4]];
-    data5Value = valuesMap[columnNames[5]];
+    int idValueByIndex = valuesMap[columnNames[0]];
+    std::string data1ValueByIndex = valuesMap[columnNames[1]];
+    int data2ValueByIndex = valuesMap[columnNames[2]];
+    double data3ValueByIndex  = valuesMap[columnNames[3]];
+    std::vector<uint8_t> data4ValueByIndex = valuesMap[columnNames[4]];
+    int data5ValueByIndex = valuesMap[columnNames[5]];
+    EXPECT_EQ(1, idValueByIndex);
+    EXPECT_EQ("olleh", data1ValueByIndex);
+    EXPECT_EQ(20, data2ValueByIndex);
+    EXPECT_EQ(2.0, data3ValueByIndex);
+    EXPECT_EQ(1, data4ValueByIndex[3]);
+    EXPECT_EQ(1, data5ValueByIndex);
 
     resultSet->Close();
 }
@@ -252,11 +258,10 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_004, TestSize
 
     std::string data1Value = valuesMap["data1"];
     EXPECT_EQ("", data1Value);
-    EXPECT_EQ(0, valuesMap.count("data2"));
+    EXPECT_EQ(0, valuesMap.count("data3"));
 
-    data1Value = valuesMap[columnNames[1]];
-    EXPECT_EQ("", data1Value);
-    EXPECT_EQ(0, valuesMap.count(columnNames[2]));
+    std::string data1ValueByIndex = valuesMap[columnNames[0]];
+    EXPECT_EQ("", data1ValueByIndex);
 
     resultSet->Close();
 }
