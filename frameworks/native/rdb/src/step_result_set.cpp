@@ -26,8 +26,6 @@
 #include "sqlite_database_utils.h"
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
-#include "values_bucket.h"
-#include <algorithm>
 
 namespace OHOS {
 namespace NativeRdb {
