@@ -35,11 +35,11 @@ public:
     void TearDown() override;
 
     static std::string RemoveSuffix(const std::string &name);
-    std::chrono::system_clock::time_point GetKeyFileDate(const std::string &dbName);
-    bool ChangeKeyFileDate(const std::string &dbName, int rep);
-    RdbStoreConfig GetRdbConfig(const std::string &name);
-    void InsertData(std::shared_ptr<RdbStore> &store);
-    void CheckQueryData(std::shared_ptr<RdbStore> &store);
+    static std::chrono::system_clock::time_point GetKeyFileDate(const std::string &dbName);
+    static bool ChangeKeyFileDate(const std::string &dbName, int rep);
+    static RdbStoreConfig GetRdbConfig(const std::string &name);
+    static void InsertData(std::shared_ptr<RdbStore> &store);
+    static void CheckQueryData(std::shared_ptr<RdbStore> &store);
 
     static const std::string encryptedDatabaseName;
     static const std::string encryptedDatabasePath;
