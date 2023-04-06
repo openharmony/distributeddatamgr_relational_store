@@ -17,7 +17,7 @@
 #define NATIVE_RDB_SQLITE_STATEMENT_H
 
 #include "sqlite3sym.h"
-#include "values_bucket.h"
+#include "value_object.h"
 
 namespace OHOS {
 namespace NativeRdb {
