@@ -239,66 +239,6 @@ int ResultSetProxy::IsColumnNull(int columnIndex, bool &isNull)
     return E_OK;
 }
 
-int ResultSetProxy::GetRow(std::vector<std::string> &columnNames, ValuesBucket &valuesBucket)
-{
-    std::map<std::string, ValueObject> values;
-    int columnCount = 0;
-    int status = GetColumnCount(columnCount);
-    if (status != E_OK) {
-        return status;
-    }
-
-    std::string columnName;
-    ColumnType columnType;
-    for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
-        status = GetColumnName(columnIndex, columnName);
-        if (status != E_OK) {
-            return status;
-        }
-        columnNames.push_back(columnName);
-        status = GetColumnType(columnIndex, columnType);
-        if (status != E_OK) {
-            return status;
-        }
-
-        switch (columnType) {
-            case ColumnType::TYPE_NULL: {
-                values.insert(std::make_pair(columnName, ValueObject()));
-                break;
-            }
-            case ColumnType::TYPE_INTEGER: {
-                int64_t value;
-                GetLong(columnIndex, value);
-                values.insert(std::make_pair(columnName, ValueObject(value)));
-                break;
-            }
-            case ColumnType::TYPE_FLOAT: {
-                double value;
-                GetDouble(columnIndex, value);
-                values.insert(std::make_pair(columnName, ValueObject(value)));
-                break;
-            }
-            case ColumnType::TYPE_STRING: {
-                std::string value;
-                GetString(columnIndex, value);
-                values.insert(std::make_pair(columnName, ValueObject(value)));
-                break;
-            }
-            case ColumnType::TYPE_BLOB: {
-                std::vector<uint8_t> value;
-                GetBlob(columnIndex, value);
-                values.insert(std::make_pair(columnName, ValueObject(value)));
-                break;
-            }
-            default: {
-                return E_ERROR;
-            }
-        }
-    }
-    valuesBucket = ValuesBucket(values);
-    return E_OK;
-}
-
 bool ResultSetProxy::IsClosed() const
 {
     MessageParcel data, reply;
