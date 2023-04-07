@@ -23,7 +23,7 @@
 #include "napi_rdb_error.h"
 #include "napi_rdb_trace.h"
 #include "rdb_errno.h"
-#include "values_bucket.h"
+#include "abs_result_set.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_result_set_bridge.h"
@@ -205,7 +205,7 @@ ResultSetProxy *ResultSetProxy::ParseFieldByName(
     return proxy;
 }
 
-napi_value ValuesRowInstance2Value(napi_env env, NativeRdb::RowInstance &rowInstance)
+napi_value RowInstance2JSValue(napi_env env, NativeRdb::RowInstance &rowInstance)
 {
     napi_value ret;
     NAPI_CALL(env, napi_create_object(env, &ret));
@@ -557,10 +557,10 @@ napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
 
     std::vector<std::string> columnNames;
-    ValuesBucket valuesBucket;
-    int errCode = resultSetProxy->resultSet_->GetRow(columnNames, valuesBucket);
+    RowInstance rowInstance;
+    int errCode = resultSetProxy->resultSet_->GetRow(rowInstance);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-    return ValuesBucket2JSValue(env, valuesBucket);
+    return RowInstance2JSValue(env, rowInstance);
 }
 
 napi_value ResultSetProxy::IsClosed(napi_env env, napi_callback_info info)

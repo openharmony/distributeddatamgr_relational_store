@@ -286,7 +286,7 @@ public:
     virtual int IsColumnNull(int columnIndex, bool &isNull) = 0;
 
     /**
-     * @brief Obtains the row record.
+     * @brief Obtains Return true if the result set is closed.
      *
      * @return Returns true if the result set is closed.
      */
