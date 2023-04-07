@@ -205,18 +205,18 @@ ResultSetProxy *ResultSetProxy::ParseFieldByName(
     return proxy;
 }
 
-napi_value ValuesBucket2JSValue(napi_env env, NativeRdb::ValuesBucket &valuesBucket)
+napi_value ValuesRowInstance2Value(napi_env env, NativeRdb::RowInstance &rowInstance)
 {
     napi_value ret;
     NAPI_CALL(env, napi_create_object(env, &ret));
-    std::map<std::string, NativeRdb::ValueObject> valuesMap;
-    valuesBucket.GetAll(valuesMap);
-    for (auto const &it : valuesMap) {
+    std::map<std::string, NativeRdb::ValueObject> values;
+    rowInstance.Get(values);
+    for (auto const &it : values) {
         auto valueObject = it.second;
         napi_value value = nullptr;
         switch (valueObject.GetType()) {
             case NativeRdb::ValueObjectType::TYPE_NULL: {
-                value = JSUtils::Convert2JSValue(env);
+                value = JSUtils::Convert2Value(env, static_cast<std::monostate>(valueObject));
                 break;
             }
             case NativeRdb::ValueObjectType::TYPE_INT: {

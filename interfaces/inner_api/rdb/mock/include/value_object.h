@@ -38,13 +38,13 @@ public:
     ValueObject(Type valueObject) noexcept;
     ValueObject(ValueObject &&valueObject) noexcept;
     ValueObject(const ValueObject &valueObject);
-    explicit ValueObject(int val);
-    explicit ValueObject(int64_t val);
-    explicit ValueObject(double val);
-    explicit ValueObject(bool val);
-    explicit ValueObject(const std::string &val);
-    explicit ValueObject(const char *val);
-    explicit ValueObject(const std::vector<uint8_t> &blob);
+    ValueObject(int val);
+    ValueObject(int64_t val);
+    ValueObject(double val);
+    ValueObject(bool val);
+    ValueObject(const std::string &val);
+    ValueObject(const char *val);
+    ValueObject(const std::vector<uint8_t> &blob);
     ValueObject &operator=(ValueObject &&valueObject) noexcept;
     ValueObject &operator=(const ValueObject &valueObject);
 

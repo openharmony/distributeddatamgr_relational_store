@@ -24,6 +24,40 @@
 
 namespace OHOS {
 namespace NativeRdb {
+int RowInstance::put(const std::string &name, const ValueObject &value)
+{
+    auto it = values_.emplace(name, std::move(value));
+    indexs_.push_back(it.first);
+}
+
+ValueObject RowInstance::Get(const std::string &name)
+{
+    auto it = values_.find(name);
+    if (it == values_.end()) {
+        return ValueObject();
+    }
+    return it->second;
+}
+
+ValueObject RowInstance::Get(int index)
+{
+    if (index < 0 || index >= indexs_.size()){
+        return ValueObject();
+    }
+    return indexs_[index]->second;
+}
+
+void RowInstance::Get(std::map<std::string, ValueObject> &outValues)
+{
+    outValues = values_;
+}
+
+void RowInstance::Clear()
+{
+    values_.clear();
+    indexs_.clear();
+}
+
 AbsResultSet::AbsResultSet() : rowPos_(INIT_POS), isClosed(false)
 {
 }
@@ -70,11 +104,10 @@ int AbsResultSet::IsColumnNull(int columnIndex, bool &isNull)
     return E_OK;
 }
 
-int AbsResultSet::GetRow(std::vector<std::string> &columnNames, ValuesBucket &valuesBucket)
+int AbsResultSet::GetRow(RowInstance &rowInstance)
 {
-    columnNames.clear();
-    std::map<std::string, ValueObject> values;
-
+    rowInstance.Clear();
+    std::vector<std::string> columnNames;
     int ret = GetAllColumnNames(columnNames);
     if (ret != E_OK) {
         LOG_ERROR("GetAllColumnNames::ret is wrong!");
@@ -82,8 +115,8 @@ int AbsResultSet::GetRow(std::vector<std::string> &columnNames, ValuesBucket &va
     }
     int columnCount = static_cast<int>(columnNames.size());
 
+    ColumnType columnType;
     for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
-        ColumnType columnType;
         ret = GetColumnType(columnIndex, columnType);
         if (ret != E_OK) {
             LOG_ERROR("GetColumnType::ret is wrong!");
@@ -91,31 +124,31 @@ int AbsResultSet::GetRow(std::vector<std::string> &columnNames, ValuesBucket &va
         }
         switch (columnType) {
             case ColumnType::TYPE_NULL: {
-                values.insert(std::make_pair(columnNames[columnIndex], ValueObject()));
+                rowInstance.put(columnNames[columnIndex], ValueObject());
                 break;
             }
             case ColumnType::TYPE_INTEGER: {
                 int64_t value;
                 GetLong(columnIndex, value);
-                values.insert(std::make_pair(columnNames[columnIndex], ValueObject(value)));
+                rowInstance.put(columnNames[columnIndex], ValueObject(value));
                 break;
             }
             case ColumnType::TYPE_FLOAT: {
                 double value;
                 GetDouble(columnIndex, value);
-                values.insert(std::make_pair(columnNames[columnIndex], ValueObject(value)));
+                rowInstance.put(columnNames[columnIndex], ValueObject(value));
                 break;
             }
             case ColumnType::TYPE_STRING: {
                 std::string value;
                 GetString(columnIndex, value);
-                values.insert(std::make_pair(columnNames[columnIndex], ValueObject(value)));
+                rowInstance.put(columnNames[columnIndex], ValueObject(value));
                 break;
             }
             case ColumnType::TYPE_BLOB: {
                 std::vector<uint8_t> value;
                 GetBlob(columnIndex, value);
-                values.insert(std::make_pair(columnNames[columnIndex], ValueObject(value)));
+                rowInstance.put(columnNames[columnIndex], ValueObject(value));
                 break;
             }
             default: {
@@ -123,7 +156,6 @@ int AbsResultSet::GetRow(std::vector<std::string> &columnNames, ValuesBucket &va
             }
         }
     }
-    valuesBucket = ValuesBucket(values);
     return E_OK;
 }
 
