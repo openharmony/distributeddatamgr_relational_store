@@ -19,7 +19,6 @@
 #include <string>
 #include <vector>
 #include "rdb_visibility.h"
-#include "values_bucket.h"
 namespace OHOS {
 namespace NativeRdb {
 
@@ -285,11 +284,6 @@ public:
      * @return Returns whether the column value is null.
      */
     virtual int IsColumnNull(int columnIndex, bool &isNull) = 0;
-
-    /**
-     * @brief Gets the entire row of data for the current row from the result set.
-     */
-    virtual int GetRow(std::vector<std::string> &columnNames, ValuesBucket &valuesBucket) = 0;
 
     /**
      * @brief Obtains the row record.
