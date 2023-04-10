@@ -532,7 +532,7 @@ napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
 
     std::vector<std::string> columnNames;
     RowInstance rowInstance;
-    int errCode = resultSetProxy->resultSet_->GetRow(rowInstance);
+    int errCode = resultSetProxy->absResultSet_->GetRow(rowInstance);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     return RowInstance2JSValue(env, rowInstance);
 }
