@@ -278,7 +278,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<uint8_t> &va
     if (status != napi_ok) {
         return nullptr;
     }
-    for (uint8_t i = 0; i < value.size(); i++) {
+    for (size_t i = 0; i < value.size(); i++) {
         *(static_cast<uint8_t *>(native) + i) = value[i];
     }
     status = napi_create_typedarray(env, napi_uint8_array, value.size(), buffer, 0, &jsValue);
