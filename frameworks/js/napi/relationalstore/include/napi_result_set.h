@@ -23,6 +23,7 @@
 #include "napi/native_node_api.h"
 #include "napi_rdb_error.h"
 #include "result_set.h"
+#include "abs_result_set.h"
 #include "result_set_bridge.h"
 
 namespace OHOS {
@@ -76,6 +77,7 @@ private:
     static napi_value GetSharedBlockAshmemFd(napi_env env, napi_callback_info info);
 
     std::shared_ptr<NativeRdb::ResultSet> resultSet_;
+    std::shared_ptr<NativeRdb::AbsResultSet> absResultSet_;  // 只改动这里
 
     std::string sharedBlockName_;
     int32_t sharedBlockAshmemFd_ = -1;
