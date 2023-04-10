@@ -26,13 +26,13 @@
 
 namespace OHOS {
 namespace NativeRdb {
-struct RowInstance {
+struct RDB_API_EXPORT RowInstance {
 public:
-    int put(const std::string &name, const ValueObject &value);
-    ValueObject Get(const std::string &name);
-    ValueObject Get(int index);
-    void Get(std::map<std::string, ValueObject> &outValues);
-    void Clear();
+    RDB_API_EXPORT void put(const std::string &name, const ValueObject &value);
+    RDB_API_EXPORT ValueObject Get(const std::string &name);
+    RDB_API_EXPORT ValueObject Get(int index);
+    RDB_API_EXPORT void Get(std::map<std::string, ValueObject> &outValues);
+    RDB_API_EXPORT void Clear();
 private:
     std::map<std::string, ValueObject> values_;
     std::vector<decltype(values_)::iterator> indexs_;

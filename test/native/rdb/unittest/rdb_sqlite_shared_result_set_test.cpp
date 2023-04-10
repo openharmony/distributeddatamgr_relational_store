@@ -955,36 +955,33 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_019, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> resultSet =
+    std::unique_ptr<AbsResultSet> resultSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(resultSet, nullptr);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
     int iRet = E_ERROR;
-    ValuesBucket valuesBucketGet;
-    std::vector<std::string> columnNames;
-    iRet = resultSet->GetRow(columnNames, valuesBucketGet);
-    std::map<std::string, ValueObject> valuesMap;
-    valuesBucketGet.GetAll(valuesMap);
+    RowInstance rowInstance;
+    iRet = resultSet->GetRow(rowInstance);
     EXPECT_EQ(E_OK, iRet);
 
-    int idValue = valuesMap["id"];
-    std::string data1Value = valuesMap["data1"];
-    int data2Value = valuesMap["data2"];
-    double data3Value = valuesMap["data3"];
-    std::vector<uint8_t> data4Value = valuesMap["data4"];
+    int idValue = rowInstance.Get("id");
+    std::string data1Value = rowInstance.Get("data1");
+    int data2Value = rowInstance.Get("data2");
+    double data3Value = rowInstance.Get("data3");
+    std::vector<uint8_t> data4Value = rowInstance.Get("data4");
     EXPECT_EQ(1, idValue);
     EXPECT_EQ("hello", data1Value);
     EXPECT_EQ(10, data2Value);
     EXPECT_EQ(1.0, data3Value);
     EXPECT_EQ(66, data4Value[0]);
 
-    int idValueByIndex = valuesMap[columnNames[0]];
-    std::string data1ValueByIndex = valuesMap[columnNames[1]];
-    int data2ValueByIndex = valuesMap[columnNames[2]];
-    double data3ValueByIndex = valuesMap[columnNames[3]];
-    std::vector<uint8_t> data4ValueByIndex = valuesMap[columnNames[4]];
+    int idValueByIndex = rowInstance.Get(0);
+    std::string data1ValueByIndex = rowInstance.Get(1);
+    int data2ValueByIndex = rowInstance.Get(2);
+    double data3ValueByIndex = rowInstance.Get(3);
+    std::vector<uint8_t> data4ValueByIndex = rowInstance.Get(4);
     EXPECT_EQ(1, idValueByIndex);
     EXPECT_EQ("hello", data1ValueByIndex);
     EXPECT_EQ(10, data2ValueByIndex);
@@ -1002,24 +999,20 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_020, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> resultSet =
+    std::unique_ptr<AbsResultSet> resultSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT data1, data2 FROM test", selectionArgs);
     EXPECT_NE(resultSet, nullptr);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
     int iRet = E_ERROR;
-    ValuesBucket valuesBucketGet;
-    std::vector<std::string> columnNames;
-    iRet = resultSet->GetRow(columnNames, valuesBucketGet);
-    std::map<std::string, ValueObject> valuesMap;
-    valuesBucketGet.GetAll(valuesMap);
+    RowInstance rowInstance;
+    iRet = resultSet->GetRow(rowInstance);
     EXPECT_EQ(E_OK, iRet);
 
-    std::string data1Value = valuesMap["data1"];
+    std::string data1Value = rowInstance.Get("data1");
     EXPECT_EQ("hello", data1Value);
-    EXPECT_EQ(0, valuesMap.count("data3"));
 
-    std::string data1ValueByIndex = valuesMap[columnNames[0]];
+    std::string data1ValueByIndex = rowInstance.Get(0);
     EXPECT_EQ("hello", data1ValueByIndex);
 }

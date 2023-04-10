@@ -23,7 +23,7 @@
 #include "napi_rdb_error.h"
 #include "napi_rdb_trace.h"
 #include "rdb_errno.h"
-#include "abs_result_set.h"
+#include "value_object.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_result_set_bridge.h"
@@ -211,37 +211,11 @@ napi_value RowInstance2JSValue(napi_env env, NativeRdb::RowInstance &rowInstance
     NAPI_CALL(env, napi_create_object(env, &ret));
     std::map<std::string, NativeRdb::ValueObject> values;
     rowInstance.Get(values);
+    napi_value value = nullptr;
     for (auto const &it : values) {
-        auto valueObject = it.second;
-        napi_value value = nullptr;
-        switch (valueObject.GetType()) {
-            case NativeRdb::ValueObjectType::TYPE_NULL: {
-                value = JSUtils::Convert2Value(env, static_cast<std::monostate>(valueObject));
-                break;
-            }
-            case NativeRdb::ValueObjectType::TYPE_INT: {
-                value = JSUtils::Convert2JSValue(env, static_cast<int64_t>(valueObject));
-                break;
-            }
-            case NativeRdb::ValueObjectType::TYPE_DOUBLE: {
-                value = JSUtils::Convert2JSValue(env, static_cast<double>(valueObject));
-                break;
-            }
-            case NativeRdb::ValueObjectType::TYPE_BLOB: {
-                value = JSUtils::Convert2JSValue(env, static_cast<std::vector<uint8_t>>(valueObject));
-                break;
-            }
-            case NativeRdb::ValueObjectType::TYPE_STRING: {
-                value = JSUtils::Convert2JSValue(env, static_cast<std::string>(valueObject));
-                break;
-            }
-            default: {
-                RDB_NAPI_ASSERT(env, false, std::make_shared<InnerError>(E_INNER_ERROR));
-                break;
-            }
-        }
+        value = JSUtils::Convert2JSValue(env, static_cast<ValueObject::Type>(it.second));
         NAPI_CALL(env, napi_set_named_property(env, ret, it.first.c_str(), value));
-    }
+        }
     return ret;
 }
 
@@ -554,7 +528,7 @@ napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
 napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_ && resultSetProxy->absResultSet_);
 
     std::vector<std::string> columnNames;
     RowInstance rowInstance;
