@@ -60,9 +60,9 @@ constexpr int E_EMPTY_TABLE_NAME = (E_BASE + 5);
 constexpr int E_EMPTY_VALUES_BUCKET = (E_BASE + 6);
 
 /**
-* @brief The error code for the current status is invalid.
+* @brief The error code when the sql is not select.
 */
-constexpr int E_INVALID_STATEMENT = (E_BASE + 7);
+constexpr int E_EXECUTE_IN_STEP_QUERY = (E_BASE + 7);
 
 /**
 * @brief The error code for the column index is invalid.
@@ -90,9 +90,9 @@ constexpr int E_INVALID_FILE_PATH = (E_BASE + 11);
 constexpr int E_TRANSACTION_IN_EXECUTE = (E_BASE + 12);
 
 /**
-* @brief The error code when the sql is not select.
+* @brief The error code for the current status is invalid.
 */
-constexpr int E_EXECUTE_IN_STEP_QUERY = (E_BASE + 13);
+constexpr int E_INVALID_STATEMENT = (E_BASE + 13);
 
 /**
 * @brief The error code when execute write operation in read connection.
