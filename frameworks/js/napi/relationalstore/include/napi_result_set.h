@@ -77,7 +77,7 @@ private:
     static napi_value GetSharedBlockAshmemFd(napi_env env, napi_callback_info info);
 
     std::shared_ptr<NativeRdb::ResultSet> resultSet_;
-    std::shared_ptr<NativeRdb::AbsResultSet> absResultSet_;  // 只改动这里
+    std::shared_ptr<NativeRdb::AbsResultSet> absResultSet_;
 
     std::string sharedBlockName_;
     int32_t sharedBlockAshmemFd_ = -1;
