@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 
+#include <climits>
 #include <string>
 
 #include "common.h"
@@ -35,12 +36,10 @@ public:
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
-    static const int E_SQLITE_ERROR; // errno SQLITE_ERROR
 };
 
 const std::string RdbTransactionTest::DATABASE_NAME = RDB_TEST_PATH + "transaction_test.db";
 std::shared_ptr<RdbStore> RdbTransactionTest::store = nullptr;
-const int RdbTransactionTest::E_SQLITE_ERROR = -1; // errno SQLITE_ERROR
 
 class TransactionTestOpenCallback : public RdbOpenCallback {
 public:
@@ -675,7 +674,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
         valuesBuckets.push_back(std::move(values));
     }
 
-    number = -1;
+    number = INT_MIN;
     error = store->BatchInsert(number, "test", valuesBuckets);
     EXPECT_EQ(E_OK, error);
     EXPECT_EQ(-1, number);
