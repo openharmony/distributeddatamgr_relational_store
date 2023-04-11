@@ -44,17 +44,11 @@ public:
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
-    static const int E_SQLITE_ERROR;
-    static const int E_INVALID_COLUMN_TYPE;
-    static const size_t DEFAULT_BLOCK_SIZE;
     static const std::string RDB_ADAPTER_TEST_PATH;
 };
 
 const std::string RdbDataShareAdapterTest::RDB_ADAPTER_TEST_PATH = "/data/test/";
 const std::string RdbDataShareAdapterTest::DATABASE_NAME = RDB_ADAPTER_TEST_PATH + "rdbDataShareAdapter_test.db";
-const int RdbDataShareAdapterTest::E_SQLITE_ERROR = -1;          // errno SQLITE_ERROR
-const int RdbDataShareAdapterTest::E_INVALID_COLUMN_TYPE = 1009; // errno SQLITE_NULL
-const size_t RdbDataShareAdapterTest::DEFAULT_BLOCK_SIZE = 2 * 1024 * 1024;
 std::shared_ptr<RdbStore> RdbDataShareAdapterTest::store = nullptr;
 
 class RdbStepSharedResultSetOpenCallback : public RdbOpenCallback {
