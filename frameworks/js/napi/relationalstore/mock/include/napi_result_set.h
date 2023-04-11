@@ -21,7 +21,7 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "result_set.h"
+#include "abs_result_set.h"
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
@@ -29,9 +29,9 @@ class ResultSetProxy final {
 public:
     ResultSetProxy() = default;
     ~ResultSetProxy();
-    ResultSetProxy(std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    ResultSetProxy &operator=(std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet);
+    ResultSetProxy(std::shared_ptr<NativeRdb::AbsResultSet> resultSet);
+    ResultSetProxy &operator=(std::shared_ptr<NativeRdb::AbsResultSet> resultSet);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::AbsResultSet> resultSet);
     static napi_value GetConstructor(napi_env env);
 
 private:
@@ -72,7 +72,7 @@ private:
     static napi_value GetSharedBlockName(napi_env env, napi_callback_info info);
     static napi_value GetSharedBlockAshmemFd(napi_env env, napi_callback_info info);
 
-    std::shared_ptr<NativeRdb::ResultSet> resultSet_;
+    std::shared_ptr<NativeRdb::AbsResultSet> resultSet_;
 
     std::string sharedBlockName_;
     int32_t sharedBlockAshmemFd_ = -1;

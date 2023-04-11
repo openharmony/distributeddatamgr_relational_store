@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "abs_rdb_predicates.h"
-#include "result_set.h"
+#include "abs_result_set.h"
 #include "value_object.h"
 #include "values_bucket.h"
 #include "rdb_common.h"
@@ -48,7 +48,7 @@ public:
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
     virtual int Delete(int &deletedRows, const std::string &table, const std::string &whereClause = "",
         const std::vector<std::string> &whereArgs = std::vector<std::string>()) = 0;
-    virtual std::unique_ptr<ResultSet> QueryByStep(
+    virtual std::unique_ptr<AbsResultSet> QueryByStep(
         const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
     virtual int ExecuteSql(
         const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
@@ -65,7 +65,7 @@ public:
         const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey) = 0;
 
     virtual int Count(int64_t &outValue, const AbsRdbPredicates &predicates) = 0;
-    virtual std::unique_ptr<ResultSet> Query(
+    virtual std::unique_ptr<AbsResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) = 0;
     virtual int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) = 0;
     virtual int Delete(int &deletedRows, const AbsRdbPredicates &predicates) = 0;

@@ -38,7 +38,7 @@ namespace RelationalStoreJsKit {
 static napi_ref __thread ctorRef_ = nullptr;
 static const int E_OK = 0;
 
-napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet)
+napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::AbsResultSet> resultSet)
 {
     napi_value cons = GetConstructor(env);
     if (cons == nullptr) {
@@ -140,7 +140,7 @@ ResultSetProxy::~ResultSetProxy()
     }
 }
 
-ResultSetProxy::ResultSetProxy(std::shared_ptr<ResultSet> resultSet)
+ResultSetProxy::ResultSetProxy(std::shared_ptr<AbsResultSet> resultSet)
 {
     if (resultSet_ == resultSet) {
         return;
@@ -148,7 +148,7 @@ ResultSetProxy::ResultSetProxy(std::shared_ptr<ResultSet> resultSet)
     resultSet_ = std::move(resultSet);
 }
 
-ResultSetProxy &ResultSetProxy::operator=(std::shared_ptr<ResultSet> resultSet)
+ResultSetProxy &ResultSetProxy::operator=(std::shared_ptr<AbsResultSet> resultSet)
 {
     if (resultSet_ == resultSet) {
         return *this;
@@ -528,11 +528,11 @@ napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
 napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_ && resultSetProxy->absResultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
 
     std::vector<std::string> columnNames;
     RowInstance rowInstance;
-    int errCode = resultSetProxy->absResultSet_->GetRow(rowInstance);
+    int errCode = resultSetProxy->resultSet_->GetRow(rowInstance);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     return RowInstance2JSValue(env, rowInstance);
 }
