@@ -370,7 +370,7 @@ std::unique_ptr<AbsResultSet> RdbStoreImpl::QueryByStep(
 }
 
 std::shared_ptr<AbsResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
-    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, int &errCode)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreImpl::RemoteQuery on called.");
