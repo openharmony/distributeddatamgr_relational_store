@@ -121,8 +121,8 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
     // if async execute status is not napi_ok then un-execute out function
     if ((context->execStatus == OK) && context->output_) {
         outStatus = context->output_(env, output);
-        context->output_ = nullptr;
     }
+    context->output_ = nullptr;
     napi_value result[ARG_BUTT] = { 0 };
     // if out function status is ok then async renturn output data, else return error.
     if (outStatus == OK) {
