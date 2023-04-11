@@ -269,8 +269,8 @@ public:
      * @param predicates Indicates the specified query condition by the instance object of {@link AbsRdbPredicates}.
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
      */
-    virtual std::shared_ptr<AbsResultSet> RemoteQuery(const std::string &device,
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) = 0;
+    virtual std::shared_ptr<AbsResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
+        const std::vector<std::string> &columns, int &errCode) = 0;
 
     /**
      * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.

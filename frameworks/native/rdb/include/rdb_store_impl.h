@@ -98,7 +98,7 @@ public:
     int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
 
     std::shared_ptr<AbsResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
-        const std::vector<std::string> &columns) override;
+        const std::vector<std::string> &columns, int &errCode) override;
 
     bool SetDistributedTables(const std::vector<std::string>& tables) override;
 
