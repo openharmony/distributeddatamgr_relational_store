@@ -31,9 +31,9 @@ class ResultSetProxy final : public DataShare::ResultSetBridge::Creator {
 public:
     ResultSetProxy() = default;
     ~ResultSetProxy();
-    ResultSetProxy(std::shared_ptr<NativeRdb::AbsResultSet> resultSet);   ////////
-    ResultSetProxy &operator=(std::shared_ptr<NativeRdb::AbsResultSet> AbsResultSet);  /////////
-    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::AbsResultSet> AbsResultSet);  /////////
+    ResultSetProxy(std::shared_ptr<NativeRdb::AbsResultSet> resultSet);
+    ResultSetProxy &operator=(std::shared_ptr<NativeRdb::AbsResultSet> AbsResultSet);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::AbsResultSet> AbsResultSet);
     static napi_value GetConstructor(napi_env env);
     std::shared_ptr<DataShare::ResultSetBridge> Create() override;
 

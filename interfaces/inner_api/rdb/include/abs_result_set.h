@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace NativeRdb {
-struct RDB_API_EXPORT RowInstance {
+struct RDB_API_EXPORT RowEntity {
 public:
     RDB_API_EXPORT void put(const std::string &name, const ValueObject &value);
     RDB_API_EXPORT ValueObject Get(const std::string &name);
@@ -137,7 +137,7 @@ public:
     /**
      * @brief Gets the entire row of data for the current row from the result set.
      */
-    RDB_API_EXPORT virtual int GetRow(RowInstance &rowInstance);
+    RDB_API_EXPORT virtual int GetRow(RowEntity &rowEntity);
 
     /**
      * @brief Move the cursor to an absolute position.

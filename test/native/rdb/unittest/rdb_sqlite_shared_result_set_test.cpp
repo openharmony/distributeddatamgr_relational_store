@@ -962,26 +962,26 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_019, TestSize.Le
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
     int iRet = E_ERROR;
-    RowInstance rowInstance;
-    iRet = resultSet->GetRow(rowInstance);
+    RowEntity rowEntity;
+    iRet = resultSet->GetRow(rowEntity);
     EXPECT_EQ(E_OK, iRet);
 
-    int idValue = rowInstance.Get("id");
-    std::string data1Value = rowInstance.Get("data1");
-    int data2Value = rowInstance.Get("data2");
-    double data3Value = rowInstance.Get("data3");
-    std::vector<uint8_t> data4Value = rowInstance.Get("data4");
+    int idValue = rowEntity.Get("id");
+    std::string data1Value = rowEntity.Get("data1");
+    int data2Value = rowEntity.Get("data2");
+    double data3Value = rowEntity.Get("data3");
+    std::vector<uint8_t> data4Value = rowEntity.Get("data4");
     EXPECT_EQ(1, idValue);
     EXPECT_EQ("hello", data1Value);
     EXPECT_EQ(10, data2Value);
     EXPECT_EQ(1.0, data3Value);
     EXPECT_EQ(66, data4Value[0]);
 
-    int idValueByIndex = rowInstance.Get(0);
-    std::string data1ValueByIndex = rowInstance.Get(1);
-    int data2ValueByIndex = rowInstance.Get(2);
-    double data3ValueByIndex = rowInstance.Get(3);
-    std::vector<uint8_t> data4ValueByIndex = rowInstance.Get(4);
+    int idValueByIndex = rowEntity.Get(0);
+    std::string data1ValueByIndex = rowEntity.Get(1);
+    int data2ValueByIndex = rowEntity.Get(2);
+    double data3ValueByIndex = rowEntity.Get(3);
+    std::vector<uint8_t> data4ValueByIndex = rowEntity.Get(4);
     EXPECT_EQ(1, idValueByIndex);
     EXPECT_EQ("hello", data1ValueByIndex);
     EXPECT_EQ(10, data2ValueByIndex);
@@ -1006,13 +1006,13 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_020, TestSize.Le
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
     int iRet = E_ERROR;
-    RowInstance rowInstance;
-    iRet = resultSet->GetRow(rowInstance);
+    RowEntity rowEntity;
+    iRet = resultSet->GetRow(rowEntity);
     EXPECT_EQ(E_OK, iRet);
 
-    std::string data1Value = rowInstance.Get("data1");
+    std::string data1Value = rowEntity.Get("data1");
     EXPECT_EQ("hello", data1Value);
 
-    std::string data1ValueByIndex = rowInstance.Get(0);
+    std::string data1ValueByIndex = rowEntity.Get(0);
     EXPECT_EQ("hello", data1ValueByIndex);
 }

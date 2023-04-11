@@ -205,12 +205,12 @@ ResultSetProxy *ResultSetProxy::ParseFieldByName(
     return proxy;
 }
 
-napi_value RowInstance2JSValue(napi_env env, NativeRdb::RowInstance &rowInstance)
+napi_value RowEntity2JSValue(napi_env env, NativeRdb::RowEntity &rowEntity)
 {
     napi_value ret;
     NAPI_CALL(env, napi_create_object(env, &ret));
     std::map<std::string, NativeRdb::ValueObject> values;
-    rowInstance.Get(values);
+    rowEntity.Get(values);
     napi_value value = nullptr;
     for (auto const &it : values) {
         value = JSUtils::Convert2JSValue(env, static_cast<ValueObject::Type>(it.second));
@@ -531,10 +531,10 @@ napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
 
     std::vector<std::string> columnNames;
-    RowInstance rowInstance;
-    int errCode = resultSetProxy->resultSet_->GetRow(rowInstance);
+    RowEntity rowEntity;
+    int errCode = resultSetProxy->resultSet_->GetRow(rowEntity);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-    return RowInstance2JSValue(env, rowInstance);
+    return RowEntity2JSValue(env, rowEntity);
 }
 
 napi_value ResultSetProxy::IsClosed(napi_env env, napi_callback_info info)
