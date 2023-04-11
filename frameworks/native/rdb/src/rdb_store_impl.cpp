@@ -359,7 +359,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     return QuerySql(sql, selectionArgs);
 }
 
-std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(
+std::unique_ptr<AbsResultSet> RdbStoreImpl::QueryByStep(
     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -369,7 +369,7 @@ std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(
     return QueryByStep(sql, selectionArgs);
 }
 
-std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
+std::shared_ptr<AbsResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
     const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -416,7 +416,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
 #endif
 
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
-std::unique_ptr<ResultSet> RdbStoreImpl::Query(
+std::unique_ptr<AbsResultSet> RdbStoreImpl::Query(
     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -993,10 +993,10 @@ int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::s
 /**
  * Queries data in the database based on specified conditions.
  */
-std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
+std::unique_ptr<AbsResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
     const std::vector<std::string> &selectionArgs)
 {
-    std::unique_ptr<ResultSet> resultSet = std::make_unique<StepResultSet>(connectionPool, sql, selectionArgs);
+    std::unique_ptr<AbsResultSet> resultSet = std::make_unique<StepResultSet>(connectionPool, sql, selectionArgs);
     return resultSet;
 }
 
