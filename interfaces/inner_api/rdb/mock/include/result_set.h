@@ -36,7 +36,7 @@ private:
     std::vector<decltype(values_)::iterator> indexs_;
 };
 
-class ResultSet : public RemoteResultSet{
+class ResultSet : public RemoteResultSet {
 public:
     virtual ~ResultSet() {}
     virtual int GetRow(RowEntity &rowEntity) = 0;
