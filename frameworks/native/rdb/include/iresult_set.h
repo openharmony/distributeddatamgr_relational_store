@@ -16,11 +16,11 @@
 #ifndef NATIVE_RDB_IRESULT_SET_H
 #define NATIVE_RDB_IRESULT_SET_H
 
-#include "abs_result_set.h"
+#include "result_set.h"
 #include "iremote_broker.h"
 
 namespace OHOS::NativeRdb {
-class IResultSet : public AbsResultSet, public IRemoteBroker {
+class IResultSet : public ResultSet, public IRemoteBroker {
 public:
     virtual ~IResultSet() = default;
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS::NativeRdb.IResultSet");

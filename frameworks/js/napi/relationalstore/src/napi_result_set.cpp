@@ -34,11 +34,30 @@ using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS {
+namespace AppDataMgrJsKit {
+namespace JSUtils {
+template<typename T>
+napi_value Convert2JSValue(napi_env env, const T &rowEntity)
+{
+    napi_value ret;
+    NAPI_CALL(env, napi_create_object(env, &ret));
+    std::map<std::string, NativeRdb::ValueObject> values;
+    rowEntity.Get(values);
+    napi_value value = nullptr;
+    for (auto const &it : values) {
+        value = JSUtils::Convert2JSValue(env, static_cast<ValueObject::Type>(it.second));
+        NAPI_CALL(env, napi_set_named_property(env, ret, it.first.c_str(), value));
+    }
+    return ret;
+}
+}  // AppDataMgrJsKit
+}  // JSUtils
+
 namespace RelationalStoreJsKit {
 static napi_ref __thread ctorRef_ = nullptr;
 static const int E_OK = 0;
 
-napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::AbsResultSet> resultSet)
+napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet)
 {
     napi_value cons = GetConstructor(env);
     if (cons == nullptr) {
@@ -140,7 +159,7 @@ ResultSetProxy::~ResultSetProxy()
     }
 }
 
-ResultSetProxy::ResultSetProxy(std::shared_ptr<AbsResultSet> resultSet)
+ResultSetProxy::ResultSetProxy(std::shared_ptr<ResultSet> resultSet)
 {
     if (resultSet_ == resultSet) {
         return;
@@ -148,7 +167,7 @@ ResultSetProxy::ResultSetProxy(std::shared_ptr<AbsResultSet> resultSet)
     resultSet_ = std::move(resultSet);
 }
 
-ResultSetProxy &ResultSetProxy::operator=(std::shared_ptr<AbsResultSet> resultSet)
+ResultSetProxy &ResultSetProxy::operator=(std::shared_ptr<ResultSet> resultSet)
 {
     if (resultSet_ == resultSet) {
         return *this;
@@ -205,7 +224,7 @@ ResultSetProxy *ResultSetProxy::ParseFieldByName(
     return proxy;
 }
 
-napi_value RowEntity2JSValue(napi_env env, NativeRdb::RowEntity &rowEntity)
+napi_value Convert2JSValue(napi_env env, NativeRdb::RowEntity &rowEntity)
 {
     napi_value ret;
     NAPI_CALL(env, napi_create_object(env, &ret));
@@ -530,11 +549,10 @@ napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
 
-    std::vector<std::string> columnNames;
     RowEntity rowEntity;
     int errCode = resultSetProxy->resultSet_->GetRow(rowEntity);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-    return RowEntity2JSValue(env, rowEntity);
+    return JSUtils::Convert2JSValue(env, rowEntity);
 }
 
 napi_value ResultSetProxy::IsClosed(napi_env env, napi_callback_info info)

@@ -68,14 +68,6 @@ namespace JSUtils {
     int32_t Convert2JSBoolArr(napi_env env, std::vector<bool> value, napi_value &output);
     int32_t Convert2JSDoubleArr(napi_env env, std::vector<double> value, napi_value &output);
 
-    template<typename T>
-    napi_value Convert2JSValue(napi_env env, const T &value);
-    template<typename T>
-    napi_value Convert2JSValue(napi_env env, const std::vector<T> &value);
-
-    template<typename... _Types>
-    napi_value Convert2JSValue(napi_env env, const std::variant<_Types...> &value);
-
     template<typename _T>
     napi_value GetJSValue(napi_env env, const _T &value)
     {
@@ -86,33 +78,18 @@ namespace JSUtils {
     napi_value GetJSValue(napi_env env, const _T &value)
     {
         auto *val = std::get_if<_First>(&value);
-        if (val == nullptr) {
+        if (val != nullptr) {
             return Convert2JSValue(env, *val);
         }
         return GetJSValue<_T, _Types...>(env, value);
     }
-};  // namespace JSUtils
 
-template<typename... _Types>
-napi_value JSUtils::Convert2JSValue(napi_env env, const std::variant<_Types...> &value)
-{
-    return GetJSValue<decltype(value), _Types...>(env, value);
-}
-
-template<typename T>
-napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<T> &value)
-{
-    napi_value jsValue;
-    napi_status status = napi_create_array_with_length(env, value.size(), &jsValue);
-    if (status != napi_ok) {
-        return nullptr;
+    template<typename... _Types>
+    napi_value Convert2JSValue(napi_env env, const std::variant<_Types...> &value)
+    {
+        return GetJSValue<decltype(value), _Types...>(env, value);
     }
-
-    for (size_t i = 0; i < value.size(); ++i) {
-        napi_set_element(env, jsValue, i, Convert2JSValue(env, value[i]));
-    }
-    return jsValue;
-}
+} // namespace JSUtils
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
 

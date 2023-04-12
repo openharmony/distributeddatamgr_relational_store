@@ -83,9 +83,9 @@ public:
     std::string GetName();
     std::string GetOrgPath();
     std::string GetFileType();
-    std::unique_ptr<AbsResultSet> QueryByStep(const std::string &sql,
+    std::unique_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
-    std::unique_ptr<AbsResultSet> Query(
+    std::unique_ptr<ResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;

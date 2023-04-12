@@ -239,6 +239,11 @@ int ResultSetProxy::IsColumnNull(int columnIndex, bool &isNull)
     return E_OK;
 }
 
+int ResultSetProxy::GetRow(RowInstance &rowInstance)
+{
+    return E_OK;
+}
+
 bool ResultSetProxy::IsClosed() const
 {
     MessageParcel data, reply;

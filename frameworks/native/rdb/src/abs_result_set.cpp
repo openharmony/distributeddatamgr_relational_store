@@ -24,13 +24,13 @@
 
 namespace OHOS {
 namespace NativeRdb {
-void RowEntity::put(const std::string &name, const ValueObject &value)
+void RowEntity::Put(const std::string &name, const ValueObject &value)
 {
     auto it = values_.emplace(name, std::move(value));
     indexs_.push_back(it.first);
 }
 
-ValueObject RowEntity::Get(const std::string &name)
+ValueObject RowEntity::Get(const std::string &name) const
 {
     auto it = values_.find(name);
     if (it == values_.end()) {
@@ -39,7 +39,7 @@ ValueObject RowEntity::Get(const std::string &name)
     return it->second;
 }
 
-ValueObject RowEntity::Get(int index)
+ValueObject RowEntity::Get(int index) const
 {
     if (index < 0 || index >= indexs_.size()){
         return ValueObject();
@@ -47,7 +47,7 @@ ValueObject RowEntity::Get(int index)
     return indexs_[index]->second;
 }
 
-void RowEntity::Get(std::map<std::string, ValueObject> &outValues)
+void RowEntity::Get(std::map<std::string, ValueObject> &outValues) const
 {
     outValues = values_;
 }
@@ -124,31 +124,31 @@ int AbsResultSet::GetRow(RowEntity &rowEntity)
         }
         switch (columnType) {
             case ColumnType::TYPE_NULL: {
-                rowEntity.put(columnNames[columnIndex], ValueObject());
+                rowEntity.Put(columnNames[columnIndex], ValueObject());
                 break;
             }
             case ColumnType::TYPE_INTEGER: {
                 int64_t value;
                 GetLong(columnIndex, value);
-                rowEntity.put(columnNames[columnIndex], ValueObject(value));
+                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
                 break;
             }
             case ColumnType::TYPE_FLOAT: {
                 double value;
                 GetDouble(columnIndex, value);
-                rowEntity.put(columnNames[columnIndex], ValueObject(value));
+                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
                 break;
             }
             case ColumnType::TYPE_STRING: {
                 std::string value;
                 GetString(columnIndex, value);
-                rowEntity.put(columnNames[columnIndex], ValueObject(value));
+                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
                 break;
             }
             case ColumnType::TYPE_BLOB: {
                 std::vector<uint8_t> value;
                 GetBlob(columnIndex, value);
-                rowEntity.put(columnNames[columnIndex], ValueObject(value));
+                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
                 break;
             }
             default: {
