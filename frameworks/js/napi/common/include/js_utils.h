@@ -68,6 +68,9 @@ namespace JSUtils {
     int32_t Convert2JSBoolArr(napi_env env, std::vector<bool> value, napi_value &output);
     int32_t Convert2JSDoubleArr(napi_env env, std::vector<double> value, napi_value &output);
 
+    template<typename T>
+    napi_value Convert2JSValue(napi_env env, const T &value);
+
     template<typename _T>
     napi_value GetJSValue(napi_env env, const _T &value)
     {
