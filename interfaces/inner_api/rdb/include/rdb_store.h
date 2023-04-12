@@ -22,6 +22,7 @@
 
 #include "abs_rdb_predicates.h"
 #include "abs_shared_result_set.h"
+#include "result_set.h"
 #include "value_object.h"
 #include "values_bucket.h"
 #include "rdb_types.h"
@@ -171,7 +172,7 @@ public:
      * @param sql Indicates the SQL statement to execute.
      * @param selectionArgs Indicates the selection arguments.
      */
-    virtual std::unique_ptr<AbsResultSet> QueryByStep(
+    virtual std::unique_ptr<ResultSet> QueryByStep(
         const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
 
     /**
@@ -259,7 +260,7 @@ public:
      * @param predicates Indicates the specified query condition by the instance object of {@link AbsRdbPredicates}.
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
      */
-    virtual std::unique_ptr<AbsResultSet> QueryByStep(
+    virtual std::unique_ptr<ResultSet> QueryByStep(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) = 0;
 
     /**
@@ -269,8 +270,8 @@ public:
      * @param predicates Indicates the specified query condition by the instance object of {@link AbsRdbPredicates}.
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
      */
-    virtual std::shared_ptr<AbsResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
-        const std::vector<std::string> &columns, int &errCode) = 0;
+    virtual std::shared_ptr<ResultSet> RemoteQuery(const std::string &device,
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) = 0;
 
     /**
      * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.

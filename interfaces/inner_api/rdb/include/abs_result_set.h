@@ -137,7 +137,7 @@ public:
     /**
      * @brief Gets the entire row of data for the current row from the result set.
      */
-    RDB_API_EXPORT virtual int GetRow(RowEntity &rowEntity);
+    RDB_API_EXPORT int GetRow(RowEntity &rowEntity) override;
 
     /**
      * @brief Move the cursor to an absolute position.

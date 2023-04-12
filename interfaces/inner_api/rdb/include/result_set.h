@@ -48,21 +48,6 @@ public:
     virtual ~ResultSet() {}
 
     /**
-     * @brief Obtains the value of the requested column as a ValueObject.
-     *
-     * @param columnIndex Indicates the zero-based index of the target column.
-     * @return Returns the value of the requested column as a ValueObject.
-     */
-    virtual ValueObject Get(int columnIndex, int &errorCode) = 0;
-
-    /**
-     * @brief Obtains Whether the value of the requested column is null.
-     *
-     * @param columnIndex Indicates the zero-based index of the target column.
-     * @return Returns whether the column value is null.
-     */
-
-    /**
      * @brief Gets the entire row of data for the current row from the result set.
      */
     RDB_API_EXPORT virtual int GetRow(RowEntity &rowEntity) = 0;
