@@ -33,11 +33,11 @@ enum class ColumnType {
     TYPE_NULL = 0,
     /** Indicates the column type is INTEGER.*/
     TYPE_INTEGER,
-    /** Indicates the column type is NULL.*/
-    TYPE_FLOAT,
     /** Indicates the column type is FLOAT.*/
-    TYPE_STRING,
+    TYPE_FLOAT,
     /** Indicates the column type is STRING.*/
+    TYPE_STRING,
+    /** Indicates the column type is BLOB.*/
     TYPE_BLOB,
 };
 
