@@ -36,8 +36,8 @@ using namespace OHOS::AppDataMgrJsKit;
 namespace OHOS {
 namespace AppDataMgrJsKit {
 namespace JSUtils {
-template<typename T>
-napi_value Convert2JSValue(napi_env env, const T &rowEntity)
+template<>
+napi_value Convert2JSValue(napi_env env, const RowEntity &rowEntity)
 {
     napi_value ret;
     NAPI_CALL(env, napi_create_object(env, &ret));
