@@ -239,7 +239,7 @@ int ResultSetProxy::IsColumnNull(int columnIndex, bool &isNull)
     return E_OK;
 }
 
-int ResultSetProxy::GetRow(RowInstance &rowInstance)
+int ResultSetProxy::GetRow(RowEntity &rowEntity)
 {
     return E_NOT_SUPPORT;
 }
