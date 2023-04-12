@@ -70,7 +70,7 @@ config("native_rdb_config") {
 }
 
 config("native_rdb_public_config") {
-  visibility = [ "//foundation/distributeddatamgr/relational_store:*" ]
+  visibility = [ ":*" ]
 
   if (is_mingw || is_mac) {
     include_dirs = [
