@@ -31,9 +31,9 @@ class ResultSetProxy final : public DataShare::ResultSetBridge::Creator {
 public:
     ResultSetProxy() = default;
     ~ResultSetProxy();
-    ResultSetProxy(std::shared_ptr<NativeRdb::AbsResultSet> resultSet);
-    ResultSetProxy &operator=(std::shared_ptr<NativeRdb::AbsResultSet> AbsResultSet);
-    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::AbsResultSet> AbsResultSet);
+    ResultSetProxy(std::shared_ptr<NativeRdb::ResultSet> resultSet);
+    ResultSetProxy &operator=(std::shared_ptr<NativeRdb::ResultSet> AbsResultSet);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> AbsResultSet);
     static napi_value GetConstructor(napi_env env);
     std::shared_ptr<DataShare::ResultSetBridge> Create() override;
 
@@ -75,7 +75,7 @@ private:
     static napi_value GetSharedBlockName(napi_env env, napi_callback_info info);
     static napi_value GetSharedBlockAshmemFd(napi_env env, napi_callback_info info);
 
-    std::shared_ptr<NativeRdb::AbsResultSet> resultSet_;
+    std::shared_ptr<NativeRdb::ResultSet> resultSet_;
 
     std::string sharedBlockName_;
     int32_t sharedBlockAshmemFd_ = -1;
