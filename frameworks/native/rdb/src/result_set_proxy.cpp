@@ -241,7 +241,7 @@ int ResultSetProxy::IsColumnNull(int columnIndex, bool &isNull)
 
 int ResultSetProxy::GetRow(RowInstance &rowInstance)
 {
-    return E_OK;
+    return E_NOT_SUPPORT;
 }
 
 bool ResultSetProxy::IsClosed() const

@@ -224,20 +224,6 @@ ResultSetProxy *ResultSetProxy::ParseFieldByName(
     return proxy;
 }
 
-napi_value Convert2JSValue(napi_env env, NativeRdb::RowEntity &rowEntity)
-{
-    napi_value ret;
-    NAPI_CALL(env, napi_create_object(env, &ret));
-    std::map<std::string, NativeRdb::ValueObject> values;
-    rowEntity.Get(values);
-    napi_value value = nullptr;
-    for (auto const &it : values) {
-        value = JSUtils::Convert2JSValue(env, static_cast<ValueObject::Type>(it.second));
-        NAPI_CALL(env, napi_set_named_property(env, ret, it.first.c_str(), value));
-        }
-    return ret;
-}
-
 napi_value ResultSetProxy::GetAllColumnNames(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);

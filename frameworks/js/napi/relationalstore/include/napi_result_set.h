@@ -22,7 +22,7 @@
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
 #include "napi_rdb_error.h"
-#include "abs_result_set.h"
+#include "result_set.h"
 #include "result_set_bridge.h"
 
 namespace OHOS {
@@ -32,8 +32,8 @@ public:
     ResultSetProxy() = default;
     ~ResultSetProxy();
     ResultSetProxy(std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    ResultSetProxy &operator=(std::shared_ptr<NativeRdb::ResultSet> AbsResultSet);
-    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> AbsResultSet);
+    ResultSetProxy &operator=(std::shared_ptr<NativeRdb::ResultSet> resultSet);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet);
     static napi_value GetConstructor(napi_env env);
     std::shared_ptr<DataShare::ResultSetBridge> Create() override;
 
