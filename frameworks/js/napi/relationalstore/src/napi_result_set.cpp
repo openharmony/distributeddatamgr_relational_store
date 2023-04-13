@@ -50,8 +50,8 @@ napi_value Convert2JSValue(napi_env env, const RowEntity &rowEntity)
     }
     return ret;
 }
-}  // AppDataMgrJsKit
-}  // JSUtils
+}
+}
 
 namespace RelationalStoreJsKit {
 static napi_ref __thread ctorRef_ = nullptr;
