@@ -110,7 +110,7 @@ int AbsResultSet::GetRow(RowEntity &rowEntity)
     std::vector<std::string> columnNames;
     int ret = GetAllColumnNames(columnNames);
     if (ret != E_OK) {
-        LOG_ERROR("GetAllColumnNames::ret is wrong!");
+        LOG_ERROR("GetAllColumnNames::ret is %{public}d", ret);
         return ret;
     }
     int columnCount = static_cast<int>(columnNames.size());
@@ -119,7 +119,7 @@ int AbsResultSet::GetRow(RowEntity &rowEntity)
     for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
         ret = GetColumnType(columnIndex, columnType);
         if (ret != E_OK) {
-            LOG_ERROR("GetColumnType::ret is wrong!");
+            LOG_ERROR("GetColumnType::ret is %{public}d", ret);
             return ret;
         }
         switch (columnType) {
