@@ -68,6 +68,10 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
     }
 
     SqliteConnection *connection = connectionPool_->AcquireConnection(true);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+
     int errCode = PrepareStep(connection);
     if (errCode) {
         connectionPool_->ReleaseConnection(connection);
@@ -168,6 +172,9 @@ void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
 
     bool isRead = SqliteDatabaseUtils::BeginExecuteSql(qrySql);
     SqliteConnection* connection = connectionPool_->AcquireConnection(isRead);
+    if (connection == nullptr) {
+        return;
+    }
 
     if (rowNum == NO_COUNT) {
         connection->ExecuteForSharedBlock(rowNum, qrySql, bindArgs, GetBlock(), requiredPos, requiredPos, true);
@@ -213,14 +220,6 @@ void SqliteSharedResultSet::Finalize()
     if (!AbsSharedResultSet::IsClosed()) {
         Close();
     }
-}
-
-int SqliteSharedResultSet::CheckSession()
-{
-    if (std::this_thread::get_id() != tid) {
-        return E_STEP_RESULT_SET_CROSS_THREADS;
-    }
-    return E_OK;
 }
 } // namespace NativeRdb
 } // namespace OHOS

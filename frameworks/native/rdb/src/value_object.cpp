@@ -226,7 +226,8 @@ ValueObject *ValueObject::Unmarshalling(Parcel &parcel)
         }
         case (int16_t)ValueObjectType::TYPE_BLOB: {
             std::vector<uint8_t> val;
-            return new ValueObject(parcel.ReadUInt8Vector(&val));
+            parcel.ReadUInt8Vector(&val);
+            return new ValueObject(val);
         }
         case (int16_t)ValueObjectType::TYPE_BOOL: {
             return new ValueObject(parcel.ReadBool());

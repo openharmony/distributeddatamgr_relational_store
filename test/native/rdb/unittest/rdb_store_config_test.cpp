@@ -73,6 +73,7 @@ void RdbStoreConfigTest::SetUp(void)
 
 void RdbStoreConfigTest::TearDown(void)
 {
+    RdbHelper::DeleteRdbStore(RDB_TEST_PATH + "config_test.db");
     RdbHelper::ClearCache();
 }
 
@@ -247,7 +248,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_006, TestSize.Level1)
     std::string currentMode;
     int ret = store->ExecuteAndGetString(currentMode, "PRAGMA journal_mode");
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(currentMode, "wal");
+    EXPECT_EQ(currentMode, "delete");
 }
 
 /**
@@ -756,7 +757,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_025, TestSize.Level1)
     retEncryptAlgo = config.GetEncryptAlgo();
     EXPECT_EQ("", retEncryptAlgo);
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(store, nullptr);
+    EXPECT_NE(store, nullptr);
 }
 
 /**

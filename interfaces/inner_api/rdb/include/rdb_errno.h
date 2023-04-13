@@ -30,6 +30,11 @@ constexpr int E_OK = 0;
 constexpr int E_BASE = 14800000;
 
 /**
+* @brief The error when the capability not supported.
+*/
+constexpr int E_NOT_SUPPORTED = 801;
+
+/**
 * @brief The error code for common exceptions.
 */
 constexpr int E_ERROR = E_BASE;
@@ -55,9 +60,9 @@ constexpr int E_EMPTY_TABLE_NAME = (E_BASE + 5);
 constexpr int E_EMPTY_VALUES_BUCKET = (E_BASE + 6);
 
 /**
-* @brief The error code for the current status is invalid.
+* @brief The error code when the sql is not select.
 */
-constexpr int E_INVALID_STATEMENT = (E_BASE + 7);
+constexpr int E_EXECUTE_IN_STEP_QUERY = (E_BASE + 7);
 
 /**
 * @brief The error code for the column index is invalid.
@@ -85,9 +90,9 @@ constexpr int E_INVALID_FILE_PATH = (E_BASE + 11);
 constexpr int E_TRANSACTION_IN_EXECUTE = (E_BASE + 12);
 
 /**
-* @brief The error code when the sql is not select.
+* @brief The error code for the current status is invalid.
 */
-constexpr int E_EXECUTE_IN_STEP_QUERY = (E_BASE + 13);
+constexpr int E_INVALID_STATEMENT = (E_BASE + 13);
 
 /**
 * @brief The error code when execute write operation in read connection.
@@ -258,6 +263,11 @@ constexpr int E_ARGS_READ_CON_OVERLOAD = (E_BASE + 46);
 * @brief The error when the wal file size over default limit.
 */
 static constexpr int E_WAL_SIZE_OVER_LIMIT = (E_BASE + 47);
+
+/**
+* @brief The error when the connection count is used up.
+*/
+static constexpr int E_CON_OVER_LIMIT = (E_BASE + 48);
 } // namespace NativeRdb
 } // namespace OHOS
 

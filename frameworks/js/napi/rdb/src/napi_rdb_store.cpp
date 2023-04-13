@@ -1113,9 +1113,9 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
     auto exec = [context]() {
         LOG_DEBUG("RdbStoreProxy::SetDistributedTables Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        bool res = obj->rdbStore_->SetDistributedTables(context->tablesName);
+        int res = obj->rdbStore_->SetDistributedTables(context->tablesName);
         LOG_DEBUG("RdbStoreProxy::SetDistributedTables res is : %{public}d", res);
-        return res ? OK : ERR;
+        return (res == E_OK || res == E_NOT_SUPPORTED) ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
         napi_status status = napi_get_undefined(env, &result);
@@ -1143,8 +1143,10 @@ napi_value RdbStoreProxy::ObtainDistributedTableName(napi_env env, napi_callback
     auto exec = [context]() {
         LOG_DEBUG("RdbStoreProxy::ObtainDistributedTableName Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        auto name = obj->rdbStore_->ObtainDistributedTableName(context->device, context->tableName);
-        LOG_INFO("RdbStoreProxy::ObtainDistributedTableName name is empty ? : %{public}d", name.empty());
+        int errCode = E_ERROR;
+        auto name = obj->rdbStore_->ObtainDistributedTableName(context->device, context->tableName, errCode);
+        LOG_INFO("RdbStoreProxy::ObtainDistributedTableName name is empty ? : %{public}d, errCode is %{public}d",
+            name.empty(), errCode);
         context->tableName = name;
         return name.empty() ? ERR : OK;
     };
@@ -1178,10 +1180,10 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
         SyncOption option;
         option.mode = static_cast<DistributedRdb::SyncMode>(context->enumArg);
         option.isBlock = true;
-        bool res = obj->rdbStore_->Sync(option, *context->predicatesProxy->GetPredicates(),
+        int res = obj->rdbStore_->Sync(option, *context->predicatesProxy->GetPredicates(),
             [context](const SyncResult &result) { context->syncResult = result; });
         LOG_INFO("RdbStoreProxy::Sync res is : %{public}d", res);
-        return res ? OK : ERR;
+        return res == E_OK ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
         result = JSUtils::Convert2JSValue(env, context->syncResult);
@@ -1226,7 +1228,8 @@ void RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *arg
     SubscribeOption option;
     option.mode = static_cast<SubscribeMode>(mode);
     auto observer = std::make_shared<NapiRdbStoreObserver>(env, argv[1]);
-    if (!rdbStore_->Subscribe(option, observer.get())) {
+    int errCode = rdbStore_->Subscribe(option, observer.get());
+    if (errCode != E_OK) {
         LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: subscribe failed");
         return;
     }

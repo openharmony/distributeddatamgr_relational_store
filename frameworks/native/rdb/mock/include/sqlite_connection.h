@@ -60,7 +60,7 @@ private:
     int Config(const SqliteConfig &config);
     int SetPageSize(const SqliteConfig &config);
     int SetEncryptAlgo(const SqliteConfig &config);
-    int SetEncryptKey(const std::vector<uint8_t> &encryptKey);
+    int SetEncryptKey(const SqliteConfig &config);
     int SetJournalMode(const SqliteConfig &config);
     int SetJournalSizeLimit(const SqliteConfig &config);
     int SetAutoCheckpoint(const SqliteConfig &config);

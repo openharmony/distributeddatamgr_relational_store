@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
+#include <climits>
 #include <gtest/gtest.h>
 #include <string>
+
 #include "common.h"
 #include "logger.h"
 #include "rdb_errno.h"
@@ -35,14 +37,10 @@ public:
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
-    static const int E_SQLITE_ERROR;
-    static const int E_INVALID_COLUMN_TYPE;
 };
 
 const std::string RdbStepResultSetTest::DATABASE_NAME = RDB_TEST_PATH + "stepResultSet_test.db";
 std::shared_ptr<RdbStore> RdbStepResultSetTest::store = nullptr;
-const int RdbStepResultSetTest::E_SQLITE_ERROR = -1;          // errno SQLITE_ERROR
-const int RdbStepResultSetTest::E_INVALID_COLUMN_TYPE = 1009; // errno SQLITE_NULL
 
 class RdbStepResultSetOpenCallback : public RdbOpenCallback {
 public:
@@ -137,12 +135,13 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_001, TestSize.Level1)
 
     std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
-    bool bResultSet = false;
+    bool bResultSet = true;
     int iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
     EXPECT_EQ(resultSet->GoTo(1), E_OK);
 
+    bResultSet = false;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
@@ -216,17 +215,18 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_002, TestSize.Level1)
     resultSet->GetRowCount(count);
     EXPECT_EQ(3, count);
 
-    int position = -1;
+    int position = INT_MIN;
     int iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(-1, position);
 
-    bool bResultSet = false;
+    bool bResultSet = true;
     resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(bResultSet, false);
 
     EXPECT_EQ(E_OK, resultSet->GoToRow(2));
 
+    bResultSet = false;
     iRet = resultSet->IsAtLastRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(true, bResultSet);
@@ -239,14 +239,17 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_002, TestSize.Level1)
 
     EXPECT_EQ(E_OK, resultSet->GoToLastRow());
 
+    bResultSet = false;
     iRet = resultSet->IsAtLastRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(true, bResultSet);
 
+    bResultSet = false;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
 
+    bResultSet = true;
     iRet = resultSet->IsEnded(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
@@ -264,8 +267,8 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_003, TestSize.Level1)
     std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
-    int position = -1;
-    bool bResultSet = false;
+    int position = INT_MIN;
+    bool bResultSet = true;
     int iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(-1, position);
@@ -274,10 +277,12 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_003, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
 
+    bResultSet = true;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
 
+    bResultSet = true;
     iRet = resultSet->IsEnded(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
@@ -290,14 +295,17 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_003, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(0, position);
 
+    bResultSet = false;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
 
+    bResultSet = false;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
 
+    bResultSet = true;
     iRet = resultSet->IsEnded(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
@@ -314,14 +322,17 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_003, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(-1, position);
 
+    bResultSet = true;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
 
+    bResultSet = true;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
 
+    bResultSet = false;
     iRet = resultSet->IsEnded(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
@@ -339,8 +350,8 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_004, TestSize.Level1)
     std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
-    int position = -1;
-    bool bResultSet = false;
+    int position = INT_MIN;
+    bool bResultSet = true;
     int iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(-1, position);
@@ -349,6 +360,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_004, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
 
+    bResultSet = true;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
@@ -359,10 +371,12 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_004, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(-1, position);
 
+    bResultSet = true;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
 
+    bResultSet = true;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
@@ -382,7 +396,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_005, TestSize.Level1)
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
-    int position = -1;
+    int position = INT_MIN;
     bool bResultSet = false;
     int iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
@@ -392,6 +406,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_005, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
 
+    bResultSet = false;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
@@ -401,10 +416,12 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_005, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(0, position);
 
+    bResultSet = false;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
 
+    bResultSet = false;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
@@ -412,10 +429,12 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_005, TestSize.Level1)
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
+    bResultSet = false;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
 
+    bResultSet = false;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
@@ -435,8 +454,8 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_006, TestSize.Level1)
 
     EXPECT_NE(E_OK, resultSet->GoToFirstRow());
 
-    int position = -1;
-    bool bResultSet = false;
+    int position = INT_MIN;
+    bool bResultSet = true;
     int iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(-1, position);
@@ -445,6 +464,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_006, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
 
+    bResultSet = true;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
@@ -452,10 +472,12 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_006, TestSize.Level1)
     EXPECT_NE(E_OK, resultSet->GoToNextRow());
     EXPECT_NE(E_OK, resultSet->GoToFirstRow());
 
+    bResultSet = true;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
 
+    bResultSet = true;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
@@ -476,8 +498,8 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_007, TestSize.Level1)
     int moveTimes = 0;
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
     moveTimes++;
-    int position = -1;
-    bool bResultSet = false;
+    int position = INT_MIN;
+    bool bResultSet = true;
     int iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(0, position);
@@ -493,6 +515,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_007, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(-1, position);
 
+    bResultSet = false;
     iRet = resultSet->IsEnded(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
@@ -513,7 +536,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_008, TestSize.Level1)
 
     EXPECT_NE(E_OK, resultSet->GoToFirstRow());
     moveTimes++;
-    int position = -1;
+    int position = INT_MIN;
     bool bResultSet = false;
     int iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
@@ -530,6 +553,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_008, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(-1, position);
 
+    bResultSet = false;
     iRet = resultSet->IsEnded(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
@@ -888,6 +912,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_016, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
 
+    bResultSet = false;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
@@ -915,7 +940,7 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount003, TestSize.Level1)
     std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
-    bool bResultSet = false;
+    bool bResultSet = true;
     int iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
@@ -926,6 +951,7 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount003, TestSize.Level1)
     EXPECT_EQ(3, count);
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
 
+    bResultSet = false;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
@@ -963,7 +989,7 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount003, TestSize.Level1)
     EXPECT_EQ(3, count);
 
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
-    int position = -1;
+    int position = INT_MIN;
     iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(1, position);
@@ -1005,12 +1031,13 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount004, TestSize.Level1)
     std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
-    bool bResultSet = false;
+    bool bResultSet = true;
     int iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
 
+    bResultSet = false;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
@@ -1050,7 +1077,7 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount004, TestSize.Level1)
 
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
 
-    int position = -1;
+    int position = INT_MIN;
     iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(1, position);
@@ -1093,17 +1120,18 @@ HWTEST_F(RdbStepResultSetTest, testGoToRow005, TestSize.Level1)
     std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
-    bool bResultSet = false;
+    bool bResultSet = true;
     int iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
 
+    bResultSet = false;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
 
-    int position = -1;
+    int position = INT_MIN;
     iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(0, position);
@@ -1167,7 +1195,7 @@ HWTEST_F(RdbStepResultSetTest, testGo006, TestSize.Level1)
     GenerateDefaultTable();
     std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
-    int position = -1;
+    int position = INT_MIN;
     int iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(-1, position);
@@ -1252,13 +1280,14 @@ HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(3, count);
 
-    bool bResultSet = false;
+    bool bResultSet = true;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
+    bResultSet = false;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
@@ -1295,11 +1324,12 @@ HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
     int ret = resultSet->GoToPreviousRow();
     EXPECT_NE(E_OK, ret);
 
-    int position = -1;
+    int position = INT_MIN;
     iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(-1, position);
 
+    bResultSet = true;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
@@ -1323,6 +1353,7 @@ HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
 
     EXPECT_EQ(E_OK, resultSet->GoToLastRow());
 
+    bResultSet = false;
     iRet = resultSet->IsAtLastRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(true, bResultSet);
@@ -1339,6 +1370,7 @@ HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(-1, position);
 
+    bResultSet = false;
     iRet = resultSet->IsEnded(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
@@ -1356,13 +1388,14 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep008, TestSize.Level1)
     std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
-    bool bResultSet = false;
+    bool bResultSet = true;
     int iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
 
     EXPECT_EQ(E_OK, resultSet->GoTo(1));
 
+    bResultSet = false;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
@@ -1387,7 +1420,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep008, TestSize.Level1)
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
 
-    int position = -1;
+    int position = INT_MIN;
     iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(1, position);
@@ -1435,18 +1468,19 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep009, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(3, count);
 
-    int position = -1;
+    int position = INT_MIN;
     iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(-1, position);
 
-    bool bResultSet = false;
+    bool bResultSet = true;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
 
     EXPECT_EQ(E_OK, resultSet->GoToRow(2));
 
+    bResultSet = false;
     iRet = resultSet->IsAtLastRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(true, bResultSet);
@@ -1459,18 +1493,22 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep009, TestSize.Level1)
 
     EXPECT_EQ(E_OK, resultSet->GoToLastRow());
 
+    bResultSet = false;
     iRet = resultSet->IsAtLastRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(true, bResultSet);
 
+    bResultSet = false;
     iRet = resultSet->IsAtLastRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(true, bResultSet);
 
+    bResultSet = false;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
 
+    bResultSet = true;
     iRet = resultSet->IsEnded(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
@@ -1488,19 +1526,21 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep010, TestSize.Level1)
     std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
-    int position = -1;
+    int position = INT_MIN;
     int iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(-1, position);
-    bool bResultSet = false;
+    bool bResultSet = true;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
 
+    bResultSet = true;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
 
+    bResultSet = true;
     iRet = resultSet->IsEnded(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
@@ -1513,14 +1553,17 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep010, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(0, position);
 
+    bResultSet = false;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
 
+    bResultSet = false;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
 
+    bResultSet = true;
     iRet = resultSet->IsEnded(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
@@ -1533,14 +1576,17 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep010, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(-1, position);
 
+    bResultSet = true;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
 
+    bResultSet = true;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, false);
 
+    bResultSet = false;
     iRet = resultSet->IsEnded(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
