@@ -14,6 +14,8 @@
  */
 
 #include "values_bucket.h"
+#include "sqlite_global_config.h"
+#include "logger.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -124,6 +126,10 @@ ValuesBucket *ValuesBucket::Unmarshalling(Parcel &parcel)
     int mapSize = parcel.ReadInt32();
     std::map<std::string, ValueObject> valuesMap;
     ValueObject *value = nullptr;
+    if (mapSize > GlobalExpr::SQLITE_MAX_COLUMN) {
+        LOG_ERROR("The mapSize is %{public}d ", mapSize);
+        return new ValuesBucket(valuesMap);
+    }
     for (int i = 0; i < mapSize; i++) {
         std::string key = parcel.ReadString();
         value = parcel.ReadParcelable<ValueObject>();
