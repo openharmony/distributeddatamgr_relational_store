@@ -58,7 +58,7 @@ public:
     int Close() override;
 
 protected:
-    std::map<std::string , int> columnMap_;
+    std::map<std::string, int> columnMap_;
     int columnCount_ = -1;
     // The default position of the result set
     static const int INIT_POS = -1;
