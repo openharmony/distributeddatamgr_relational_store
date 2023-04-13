@@ -137,7 +137,11 @@ napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
 {
     napi_value self = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &self, nullptr));
-    auto *proxy = new ResultSetProxy();
+    auto *proxy = new (std::nothrow) ResultSetProxy();
+    if (proxy == nullptr) {
+        LOG_ERROR("ResultSetProxy::Initialize new failed, proxy is nullptr");
+        return nullptr;
+    }
     auto finalize = [](napi_env env, void *data, void *hint) {
         ResultSetProxy *proxy = reinterpret_cast<ResultSetProxy *>(data);
         delete proxy;
@@ -525,7 +529,7 @@ napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
 
     bool result = false;
     int errCode = resultSetProxy->resultSet_->IsColumnNull(columnIndex, result);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_RESULT_GET_ERROR));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);
 }

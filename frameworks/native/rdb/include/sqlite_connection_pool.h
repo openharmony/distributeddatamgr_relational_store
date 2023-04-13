@@ -44,7 +44,7 @@ public:
     int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
         const std::vector<uint8_t> &newKey);
     std::stack<BaseTransaction> &getTransactionStack();
-    void AcquireTransaction();
+    int AcquireTransaction();
     void ReleaseTransaction();
 
 private:

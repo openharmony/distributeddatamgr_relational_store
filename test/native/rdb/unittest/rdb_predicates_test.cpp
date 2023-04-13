@@ -1601,3 +1601,21 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_InDevices_InAllDevices_026, TestSize.Le
     EXPECT_NE(absRdbPredicates1, nullptr);
     EXPECT_EQ(absRdbPredicates, absRdbPredicates1);
 }
+
+/* *
+ * @tc.name: RdbStore_GetDistributedPredicates_027
+ * @tc.desc: Normal testCase of RdbPredicates for GetDistributedPredicates method
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_GetDistributedPredicates_027, TestSize.Level1)
+{
+    RdbPredicates predicates("AllDataType");
+    predicates.EqualTo("stringValue", "ABCDEFGHIJKLMN")->OrderByDesc("integerValue")->Limit(2);
+    auto distributedRdbPredicates = predicates.GetDistributedPredicates();
+    EXPECT_EQ(distributedRdbPredicates.table_, "AllDataType");
+    EXPECT_EQ(distributedRdbPredicates.operations_.size(), 3UL);
+    EXPECT_EQ(distributedRdbPredicates.operations_[0].operator_, OHOS::DistributedRdb::EQUAL_TO);
+    EXPECT_EQ(distributedRdbPredicates.operations_[0].field_, "stringValue");
+    EXPECT_EQ(distributedRdbPredicates.operations_[0].values_[0], "ABCDEFGHIJKLMN");
+}

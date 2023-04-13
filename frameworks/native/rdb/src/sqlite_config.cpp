@@ -31,6 +31,7 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     }
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     isEncrypt = config.IsEncrypt();
+    encryptKey_ = config.GetEncryptKey();
     isCreateNecessary = config.IsCreateNecessary();
 #endif
 
@@ -41,7 +42,12 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
     this->readConSize_ = config.GetReadConSize();
 }
 
-SqliteConfig::~SqliteConfig() = default;
+SqliteConfig::~SqliteConfig()
+{
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+    ClearEncryptKey();
+#endif
+}
 
 std::string SqliteConfig::GetPath() const
 {
@@ -124,7 +130,7 @@ void SqliteConfig::SetReadConSize(int readConSize)
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-bool SqliteConfig::IsEncrypt() const
+bool SqliteConfig::IsAutoEncrypt() const
 {
     return isEncrypt;
 }
@@ -142,6 +148,21 @@ bool SqliteConfig::IsCreateNecessary() const
 void SqliteConfig::SetCreateNecessary(bool CreateNecessary)
 {
     this->isCreateNecessary = CreateNecessary;
+}
+
+void SqliteConfig::SetEncryptKey(const std::vector<uint8_t> &encryptKey)
+{
+    encryptKey_ = encryptKey;
+}
+
+std::vector<uint8_t> SqliteConfig::GetEncryptKey() const
+{
+    return encryptKey_;
+}
+
+void SqliteConfig::ClearEncryptKey()
+{
+    encryptKey_.assign(encryptKey_.size(), 0);
 }
 #endif
 } // namespace NativeRdb

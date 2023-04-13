@@ -64,16 +64,13 @@ private:
     int Config(const SqliteConfig &config);
     int SetPageSize(const SqliteConfig &config);
     int SetEncryptAlgo(const SqliteConfig &config);
-    int SetEncryptKey(const std::vector<uint8_t> &encryptKey);
+    int SetEncryptKey(const SqliteConfig &config);
     int SetJournalMode(const SqliteConfig &config);
     int SetJournalSizeLimit(const SqliteConfig &config);
     int SetAutoCheckpoint(const SqliteConfig &config);
     int SetWalSyncMode(const std::string &syncMode);
     int PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void LimitPermission(const std::string &dbPath) const;
-    int ManageKey(const SqliteConfig &config);
-    int InitKey();
-    int GetKeyFromFile();
 
     int SetPersistWal();
     int SetBusyTimeout(int timeout);

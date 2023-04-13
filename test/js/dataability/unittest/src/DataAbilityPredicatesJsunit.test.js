@@ -1917,25 +1917,6 @@ describe('dataAbilityPredicatesTest', function () {
     })
 
     /**
-     * @tc.name predicates and normal test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_DataAbilityPredicates_0153
-     * @tc.desc predicates and normal test
-     */
-    it('testDataAbilityAnd0004', 0, async function (done) {
-        console.log(TAG + "************* testDataAbilityAnd0004 start *************");
-        {
-            let dataAbilityPredicates = await new dataAbility.DataAbilityPredicates();
-            dataAbilityPredicates.equalTo("stringValue", "ABCDEFGHIJKLMN").or().or().equalTo("integerValue", 1);
-            let predicates = dataAbility.createRdbPredicates("AllDataType", dataAbilityPredicates);
-
-            console.log(TAG + "you are starting a sql request with predicate or or,"
-            + "using function or() immediately after another or(). that is ridiculous.");
-        }
-        done();
-        console.log(TAG + "************* testDataAbilityAnd0004 end *************");
-    })
-
-    /**
      * @tc.name predicates order normal test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_DataAbilityPredicates_0160
      * @tc.desc predicates order normal test

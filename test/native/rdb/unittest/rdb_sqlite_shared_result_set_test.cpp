@@ -36,12 +36,10 @@ public:
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
-    static const int E_SQLITE_ERROR;
 };
 
 const std::string RdbSqliteSharedResultSetTest::DATABASE_NAME = RDB_TEST_PATH + "shared_test.db";
 std::shared_ptr<RdbStore> RdbSqliteSharedResultSetTest::store = nullptr;
-const int RdbSqliteSharedResultSetTest::E_SQLITE_ERROR = -1;
 
 class SqliteSharedOpenCallback : public RdbOpenCallback {
 public:

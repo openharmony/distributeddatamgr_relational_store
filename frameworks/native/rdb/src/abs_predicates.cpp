@@ -98,8 +98,7 @@ AbsPredicates *AbsPredicates::BeginWrap()
 AbsPredicates *AbsPredicates::EndWrap()
 {
     if (!isNeedAnd) {
-        LOG_WARN("AbsPredicates.endGroup(): you cannot use function or() before end parenthesis,\
-            start a AbsPredicates with endGroup(), or use endGroup() right after beginGroup().");
+        LOG_WARN("fail to add EndWrap.");
         return this;
     }
     whereClause += " ) ";
@@ -109,8 +108,7 @@ AbsPredicates *AbsPredicates::EndWrap()
 AbsPredicates *AbsPredicates::Or()
 {
     if (!isNeedAnd) {
-        LOG_WARN("QueryImpl.or(): you are starting a sql request with predicate \"or\" or \
-            using function or() immediately after another or(). that is ridiculous.");
+        LOG_WARN("fail to add Or.");
         return this;
     }
     whereClause += " OR ";
@@ -121,7 +119,7 @@ AbsPredicates *AbsPredicates::Or()
 AbsPredicates *AbsPredicates::And()
 {
     if (!isNeedAnd) {
-        LOG_WARN("QueryImpl.and(): you should not start a request with \"and\" or use or() before this function.");
+        LOG_WARN("fail to add And.");
         return this;
     }
     return this;
