@@ -24,6 +24,40 @@
 
 namespace OHOS {
 namespace NativeRdb {
+void RowEntity::Put(const std::string &name, const ValueObject &value)
+{
+    auto it = values_.emplace(name, std::move(value));
+    indexs_.push_back(it.first);
+}
+
+ValueObject RowEntity::Get(const std::string &name) const
+{
+    auto it = values_.find(name);
+    if (it == values_.end()) {
+        return ValueObject();
+    }
+    return it->second;
+}
+
+ValueObject RowEntity::Get(int index) const
+{
+    if (index < 0 || index >= indexs_.size()) {
+        return ValueObject();
+    }
+    return indexs_[index]->second;
+}
+
+void RowEntity::Get(std::map<std::string, ValueObject> &outValues) const
+{
+    outValues = values_;
+}
+
+void RowEntity::Clear()
+{
+    values_.clear();
+    indexs_.clear();
+}
+
 AbsResultSet::AbsResultSet() : rowPos_(INIT_POS), isClosed(false)
 {
 }
@@ -67,6 +101,61 @@ int AbsResultSet::GetDouble(int columnIndex, double &value)
 
 int AbsResultSet::IsColumnNull(int columnIndex, bool &isNull)
 {
+    return E_OK;
+}
+
+int AbsResultSet::GetRow(RowEntity &rowEntity)
+{
+    rowEntity.Clear();
+    std::vector<std::string> columnNames;
+    int ret = GetAllColumnNames(columnNames);
+    if (ret != E_OK) {
+        LOG_ERROR("GetAllColumnNames::ret is %{public}d", ret);
+        return ret;
+    }
+    int columnCount = static_cast<int>(columnNames.size());
+
+    ColumnType columnType;
+    for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
+        ret = GetColumnType(columnIndex, columnType);
+        if (ret != E_OK) {
+            LOG_ERROR("GetColumnType::ret is %{public}d", ret);
+            return ret;
+        }
+        switch (columnType) {
+            case ColumnType::TYPE_NULL: {
+                rowEntity.Put(columnNames[columnIndex], ValueObject());
+                break;
+            }
+            case ColumnType::TYPE_INTEGER: {
+                int64_t value;
+                GetLong(columnIndex, value);
+                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
+                break;
+            }
+            case ColumnType::TYPE_FLOAT: {
+                double value;
+                GetDouble(columnIndex, value);
+                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
+                break;
+            }
+            case ColumnType::TYPE_STRING: {
+                std::string value;
+                GetString(columnIndex, value);
+                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
+                break;
+            }
+            case ColumnType::TYPE_BLOB: {
+                std::vector<uint8_t> value;
+                GetBlob(columnIndex, value);
+                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
+                break;
+            }
+            default: {
+                return E_ERROR;
+            }
+        }
+    }
     return E_OK;
 }
 

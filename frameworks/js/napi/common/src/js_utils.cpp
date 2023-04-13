@@ -351,6 +351,13 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<std::string, in
     return jsValue;
 }
 
+napi_value JSUtils::Convert2JSValue(napi_env env, const std::monostate &value)
+{
+    napi_value result = nullptr;
+    napi_get_null(env, &result);
+    return result;
+}
+
 int32_t JSUtils::Convert2JSValue(napi_env env, std::string value, napi_value &output)
 {
     std::string tempStr = std::string(value);
