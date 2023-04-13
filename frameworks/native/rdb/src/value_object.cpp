@@ -73,6 +73,10 @@ ValueObject::ValueObject(const std::string &val) : type(ValueObjectType::TYPE_ST
 {
     value = val;
 }
+ValueObject::ValueObject(const char *val) : type(ValueObjectType::TYPE_STRING)
+{
+    value = std::string(val);
+}
 ValueObject::ValueObject(const std::vector<uint8_t> &val) : type(ValueObjectType::TYPE_BLOB)
 {
     std::vector<uint8_t> blob = val;

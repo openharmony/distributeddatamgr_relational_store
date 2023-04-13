@@ -22,6 +22,7 @@
 #include <map>
 
 #include "result_set.h"
+#include "value_object.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -120,6 +121,11 @@ public:
      * returns false otherwise.
      */
     RDB_API_EXPORT int IsColumnNull(int columnIndex, bool &isNull) override;
+
+    /**
+     * @brief Gets the entire row of data for the current row from the result set.
+     */
+    RDB_API_EXPORT int GetRow(RowEntity &rowEntity) override;
 
     /**
      * @brief Move the cursor to an absolute position.

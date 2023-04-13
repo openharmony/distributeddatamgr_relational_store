@@ -86,7 +86,7 @@ public:
      *
      * @param val Indicates an int input parameter.
      */
-    RDB_API_EXPORT explicit ValueObject(int val);
+    RDB_API_EXPORT ValueObject(int val);
 
     /**
      * @brief Constructor.
@@ -95,7 +95,7 @@ public:
      *
      * @param val Indicates an int64_t input parameter.
      */
-    RDB_API_EXPORT explicit ValueObject(int64_t val);
+    RDB_API_EXPORT ValueObject(int64_t val);
 
     /**
      * @brief Constructor.
@@ -104,7 +104,7 @@ public:
      *
      * @param val Indicates an double input parameter.
      */
-    RDB_API_EXPORT explicit ValueObject(double val);
+    RDB_API_EXPORT ValueObject(double val);
 
     /**
      * @brief Constructor.
@@ -113,7 +113,7 @@ public:
      *
      * @param val Indicates an bool input parameter.
      */
-    RDB_API_EXPORT explicit ValueObject(bool val);
+    RDB_API_EXPORT ValueObject(bool val);
 
     /**
      * @brief Constructor.
@@ -122,7 +122,16 @@ public:
      *
      * @param val Indicates an string input parameter.
      */
-    RDB_API_EXPORT explicit ValueObject(const std::string &val);
+    RDB_API_EXPORT ValueObject(const std::string &val);
+
+    /**
+     * @brief Constructor.
+     *
+     * This constructor is used to convert the const chars input parameter to a value of type ValueObject.
+     *
+     * @param val Indicates a const chars input parameter.
+     */
+    RDB_API_EXPORT ValueObject(const char *val);
 
     /**
      * @brief Constructor.
@@ -131,7 +140,7 @@ public:
      *
      * @param val Indicates an vector<uint8_t> input parameter.
      */
-    RDB_API_EXPORT explicit ValueObject(const std::vector<uint8_t> &blob);
+    RDB_API_EXPORT ValueObject(const std::vector<uint8_t> &blob);
 
     /**
      * @brief Move assignment operator overloaded function.
