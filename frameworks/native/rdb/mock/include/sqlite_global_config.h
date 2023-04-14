@@ -32,6 +32,7 @@ public:
    static constexpr int DB_WAL_SIZE_LIMIT = 200 * 1024 * 1024; /* default wal file maximum size : 200M */
    static constexpr int WAL_AUTO_CHECKPOINT = 100;  /* 100 pages */
    static constexpr int APP_DEFAULT_UMASK = 0002;
+   static constexpr int SQLITE_MAX_COLUMN = 2000;
    static constexpr char ATTACH_BACKUP_SQL[] = "ATTACH ? AS backup KEY ?";
    static constexpr char ATTACH_SQL[] = "ATTACH ? AS ? KEY ?";
    static constexpr char EXPORT_SQL[] = "SELECT export_database('backup')";
