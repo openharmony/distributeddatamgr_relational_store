@@ -22,6 +22,7 @@
 #include "parcel.h"
 #include "value_object.h"
 #include "values_bucket.h"
+#include "sqlite_global_config.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -206,6 +207,24 @@ HWTEST_F(ValuesBucketTest, Values_Bucket_004, TestSize.Level1)
     EXPECT_EQ(7, valuesBucket->Size());
     valuesBucket->Clear();
     valuesBucket = std::shared_ptr<ValuesBucket>(ValuesBucket::Unmarshalling(parcel));
+    EXPECT_EQ(true, valuesBucket->IsEmpty());
+}
+
+/**
+ * @tc.name: Values_Bucket_005
+ * @tc.desc: test Values Bucket Unmarshalling
+ * @tc.type: FUNC
+ */
+HWTEST_F(ValuesBucketTest, Values_Bucket_005, TestSize.Level1)
+{
+    Parcel parcel;
+    ValuesBucket values;
+    for (int i = 0; i < GlobalExpr::SQLITE_MAX_COLUMN + 1; i++) {
+        values.PutInt("id" + std::to_string(i), i);
+    }
+
+    EXPECT_EQ(true, values.Marshalling(parcel));
+    auto valuesBucket = std::shared_ptr<ValuesBucket>(ValuesBucket::Unmarshalling(parcel));
     EXPECT_EQ(true, valuesBucket->IsEmpty());
 }
 
