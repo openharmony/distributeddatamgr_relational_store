@@ -14,28 +14,26 @@
  */
 
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect, Assert} from 'deccjsunit/index';
-import dataRdb from '@ohos.data.relationalStore';
+import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';
 
-const TAG = "[RDB_SYNC_PROMISE]";
-const DB_NAME = "rdbSync.db";
+const TAG = "[RDBHELPER_PROMISE]";
+
+const DB_NAME = "rdbPromise.db";
 const STORE_CONFIG = {
   name: DB_NAME,
-  securityLevel: dataRdb.SecurityLevel.S1
 }
 let context = featureAbility.getContext();
 var rdbStore = undefined;
-const BASE_COUNT = 1000; // loop times
+const BASE_COUNT = 2000; // loop times
 const BASE_LINE_TABLE = 2500; // callback tablet base line
 const BASE_LINE_PHONE = 3000; // callback phone base line
 const BASE_LINE = (deviceInfo.deviceType == "tablet") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
 
-
-describe('rdbStoreSyncPerf', function () {
+describe('rdbHelperPromisePerf', function () {
   beforeAll(async function () {
     console.info(TAG + 'beforeAll');
-    rdbStore = await dataRdb.getRdbStore(context, STORE_CONFIG);
   })
   beforeEach(async function () {
     console.info(TAG + 'beforeEach');
@@ -45,52 +43,36 @@ describe('rdbStoreSyncPerf', function () {
   })
   afterAll(async function () {
     console.info(TAG + 'afterAll');
-    rdbStore = null
+    rdbStore = null;
     await dataRdb.deleteRdbStore(context, DB_NAME);
   })
 
   console.log(TAG + "*************Unit Test Begin*************");
 
-  it('SUB_DDM_PERF_RDB_version_001', 0, async function (done) {
+  it('SUB_DDM_PERF_RDB_getRdbStore_Promise_001', 0, async function (done) {
     let averageTime = 0;
-    let dbVersion = 1;
     let startTime = new Date().getTime();
     for (var i = 0; i < BASE_COUNT; i++) {
-      dbVersion = rdbStore.version;
+      await dataRdb.getRdbStore(context, STORE_CONFIG, 1);
     }
     let endTime = new Date().getTime();
     averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-    console.info(TAG + " the version average time is: " + averageTime + " μs");
+    console.info(TAG + " the getRdbStore_Promise average time is: " + averageTime + " μs");
     expect(averageTime < BASE_LINE).assertTrue();
     done();
   })
 
-  it('SUB_DDM_PERF_RDB_transaction_commit_001', 0, async function (done) {
+  it('SUB_DDM_PERF_RDB_deleteRdbStore_Promise_001', 0, async function (done) {
     let averageTime = 0;
     let startTime = new Date().getTime();
     for (var i = 0; i < BASE_COUNT; i++) {
-      rdbStore.beginTransaction();
-      rdbStore.commit();
+      await dataRdb.deleteRdbStore(context, DB_NAME, 1);
     }
     let endTime = new Date().getTime();
     averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-    console.info(TAG + " the transaction_commit average time is: " + averageTime + " μs");
+    console.info(TAG + " the deleteRdbStore_Promise average time is: " + averageTime + " μs");
     expect(averageTime < BASE_LINE).assertTrue();
     done();
-  })
-
-  it('SUB_DDM_PERF_RDB_transaction_rollback_001', 0, async function (done) {
-    let averageTime = 0;
-    let startTime = new Date().getTime();
-    for (var i = 0; i < BASE_COUNT; i++) {
-      rdbStore.beginTransaction();
-      rdbStore.rollBack();
-    }
-    let endTime = new Date().getTime();
-    averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-    console.info(TAG + " the transaction_rollback average time is: " + averageTime + " μs");
-    expect(averageTime < BASE_LINE).assertTrue();
-    done();
-    console.info(TAG + "*************Unit Test End*************");
+    console.info(TAG + "*************Unit Test End*************")
   })
 })
