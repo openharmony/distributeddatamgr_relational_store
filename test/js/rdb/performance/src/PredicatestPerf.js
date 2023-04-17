@@ -14,7 +14,7 @@
  */
 
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect, Assert} from 'deccjsunit/index';
-import dataRdb from '@ohos.data.relationalStore';
+import dataRdb from '@ohos.data.rdb';
 import deviceInfo from '@ohos.deviceInfo';
 
 const TAG = "[RDB_PREDICATES_PERF]";

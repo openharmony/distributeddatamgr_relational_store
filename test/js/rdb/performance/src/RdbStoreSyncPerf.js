@@ -14,15 +14,17 @@
  */
 
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect, Assert} from 'deccjsunit/index';
-import dataRdb from '@ohos.data.relationalStore';
+import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';
 
 const TAG = "[RDB_SYNC_PROMISE]";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+  + "name TEXT, age INTEGER, salary REAL, blobType BLOB)";
+
 const DB_NAME = "rdbSync.db";
 const STORE_CONFIG = {
   name: DB_NAME,
-  securityLevel: dataRdb.SecurityLevel.S1
 }
 let context = featureAbility.getContext();
 var rdbStore = undefined;
@@ -35,7 +37,7 @@ const BASE_LINE = (deviceInfo.deviceType == "tablet") ? BASE_LINE_TABLE : BASE_L
 describe('rdbStoreSyncPerf', function () {
   beforeAll(async function () {
     console.info(TAG + 'beforeAll');
-    rdbStore = await dataRdb.getRdbStore(context, STORE_CONFIG);
+    rdbStore = await dataRdb.getRdbStore(context, STORE_CONFIG, 1);
   })
   beforeEach(async function () {
     console.info(TAG + 'beforeEach');
