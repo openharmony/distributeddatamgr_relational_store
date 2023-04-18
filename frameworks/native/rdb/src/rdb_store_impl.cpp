@@ -35,6 +35,7 @@
 #include "iresult_set.h"
 #include "rdb_device_manager_adapter.h"
 #include "rdb_manager.h"
+#include "rdb_security_manager.h"
 #include "relational_store_manager.h"
 #include "result_set_proxy.h"
 #include "runtime_config.h"
