@@ -20,4 +20,11 @@ group("unittest") {
 
   deps += [ "unittest/src:unittest" ]
 }
+
+group("performancetest") {
+  testonly = true
+  deps = []
+
+  deps += [ "performance/src:RelationalStorePerfJsTest" ]
+}
 ###############################################################################

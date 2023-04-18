@@ -14,83 +14,73 @@
  */
 
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect, Assert} from 'deccjsunit/index';
-import dataRdb from '@ohos.data.relationalStore';
+import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';
 
-const TAG = "[RDB_SYNC_PROMISE]";
-const DB_NAME = "rdbSync.db";
+const TAG = "[RDBSTORE_PROMISE]";
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+  + "name TEXT, age INTEGER, salary REAL, blobType BLOB)";
+
+const DB_NAME = "rdbStorePromise.db";
 const STORE_CONFIG = {
   name: DB_NAME,
-  securityLevel: dataRdb.SecurityLevel.S1
 }
 let context = featureAbility.getContext();
 var rdbStore = undefined;
 const BASE_COUNT = 1000; // loop times
-const BASE_LINE_TABLE = 2500; // callback tablet base line
+const BASE_LINE_TABLE = 1800; // callback tablet base line
 const BASE_LINE_PHONE = 3000; // callback phone base line
 const BASE_LINE = (deviceInfo.deviceType == "tablet") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
 
-
-describe('rdbStoreSyncPerf', function () {
+describe('rdbStorePromisePerf', function () {
   beforeAll(async function () {
     console.info(TAG + 'beforeAll');
-    rdbStore = await dataRdb.getRdbStore(context, STORE_CONFIG);
+    rdbStore = await dataRdb.getRdbStore(context, STORE_CONFIG, 1);
   })
   beforeEach(async function () {
     console.info(TAG + 'beforeEach');
+    await rdbStore.executeSql(CREATE_TABLE_TEST, null);
+    await prepareTestData();
   })
   afterEach(async function () {
     console.info(TAG + 'afterEach');
+    await rdbStore.executeSql("drop table test");
   })
   afterAll(async function () {
     console.info(TAG + 'afterAll');
-    rdbStore = null
+    rdbStore = null;
     await dataRdb.deleteRdbStore(context, DB_NAME);
   })
 
+  async function prepareTestData() {
+    console.info(TAG + "prepare for query performance test")
+    var u8 = new Uint8Array([1, 2, 3])
+    var valueBucket = {
+      "name": "zhangsan",
+      "age": 18,
+      "salary": 100.5,
+      "blobType": u8,
+    }
+    await dataRdb.insert("test", valueBucket);
+  }
+
   console.log(TAG + "*************Unit Test Begin*************");
 
-  it('SUB_DDM_PERF_RDB_version_001', 0, async function (done) {
+  it('SUB_DDM_PERF_RDB_query_Promise_001', 0, async function (done) {
     let averageTime = 0;
-    let dbVersion = 1;
+    let predicates = new dataRdb.RdbPredicates("test");
+    predicates.equalTo("age", 10);
     let startTime = new Date().getTime();
     for (var i = 0; i < BASE_COUNT; i++) {
-      dbVersion = rdbStore.version;
+      let resultSet = await rdbStore.query(predicates, []);
+      resultSet.close();
     }
     let endTime = new Date().getTime();
     averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-    console.info(TAG + " the version average time is: " + averageTime + " μs");
+    console.info(TAG + " the query_Promise average time is: " + averageTime + " μs");
     expect(averageTime < BASE_LINE).assertTrue();
-    done();
-  })
-
-  it('SUB_DDM_PERF_RDB_transaction_commit_001', 0, async function (done) {
-    let averageTime = 0;
-    let startTime = new Date().getTime();
-    for (var i = 0; i < BASE_COUNT; i++) {
-      rdbStore.beginTransaction();
-      rdbStore.commit();
-    }
-    let endTime = new Date().getTime();
-    averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-    console.info(TAG + " the transaction_commit average time is: " + averageTime + " μs");
-    expect(averageTime < BASE_LINE).assertTrue();
-    done();
-  })
-
-  it('SUB_DDM_PERF_RDB_transaction_rollback_001', 0, async function (done) {
-    let averageTime = 0;
-    let startTime = new Date().getTime();
-    for (var i = 0; i < BASE_COUNT; i++) {
-      rdbStore.beginTransaction();
-      rdbStore.rollBack();
-    }
-    let endTime = new Date().getTime();
-    averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;
-    console.info(TAG + " the transaction_rollback average time is: " + averageTime + " μs");
-    expect(averageTime < BASE_LINE).assertTrue();
-    done();
     console.info(TAG + "*************Unit Test End*************");
+    done();
   })
 })

@@ -14,7 +14,7 @@
  */
 
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect, Assert} from 'deccjsunit/index';
-import dataRdb from '@ohos.data.relationalStore';
+import dataRdb from '@ohos.data.rdb';
 import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';
 
@@ -25,7 +25,6 @@ const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY K
 const DB_NAME = "resultSetPerf.db";
 const STORE_CONFIG = {
   name: DB_NAME,
-  securityLevel: dataRdb.SecurityLevel.S1
 }
 let context = featureAbility.getContext();
 var rdbStore = undefined;
@@ -38,7 +37,7 @@ const BASE_LINE = (deviceInfo.deviceType == "tablet") ? BASE_LINE_TABLE : BASE_L
 describe('resultSetPerf', function () {
   beforeAll(async function () {
     console.info(TAG + 'beforeAll');
-    rdbStore = await dataRdb.getRdbStore(context, STORE_CONFIG);
+    rdbStore = await dataRdb.getRdbStore(context, STORE_CONFIG, 1);
   })
   beforeEach(async function () {
     console.info(TAG + 'beforeEach');
@@ -69,7 +68,7 @@ describe('resultSetPerf', function () {
       valueBucket.age += i;
       valueBuckets.push(valueBucket);
     }
-    await rdbStore.batchInsert("test", valueBuckets);
+    await rdbStore.batchInsert("test", valueBuckets)
   }
 
   console.log(TAG + "*************Unit Test Begin*************");
