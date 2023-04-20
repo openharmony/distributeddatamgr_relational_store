@@ -30,7 +30,7 @@ config("native_dataability_config") {
 }
 
 config("native_dataability_public_config") {
-  visibility = [ "//foundation/distributeddatamgr/relational_store:*" ]
+  visibility = [ ":*" ]
   include_dirs = [ "include" ]
 }
 
