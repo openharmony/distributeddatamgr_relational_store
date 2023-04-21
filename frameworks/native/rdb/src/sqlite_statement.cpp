@@ -392,6 +392,22 @@ int SqliteStatement::GetColumnDouble(int index, double &value) const
 
     return E_OK;
 }
+
+int SqliteStatement::GetSize(int index, size_t &size) const
+{
+    size = 0;
+    if (stmtHandle == nullptr) {
+        return E_INVALID_STATEMENT;
+    }
+
+    if (index >= columnCount) {
+        return E_INVALID_COLUMN_INDEX;
+    }
+
+    size = sqlite3_column_bytes(stmtHandle, index);
+    return E_OK;
+}
+
 bool SqliteStatement::IsReadOnly() const
 {
     return readOnly;

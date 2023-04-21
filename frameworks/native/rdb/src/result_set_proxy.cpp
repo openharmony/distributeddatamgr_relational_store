@@ -228,6 +228,17 @@ int ResultSetProxy::GetDouble(int columnIndex, double &value)
     return E_OK;
 }
 
+int ResultSetProxy::GetSize(int columnIndex, size_t &size)
+{
+    MessageParcel reply;
+    int status = SendRequestRetReply(CMD_GET_SIZE, columnIndex, reply);
+    if (status != E_OK) {
+        return status;
+    }
+    size = reply.ReadInt64();
+    return E_OK;
+}
+
 int ResultSetProxy::IsColumnNull(int columnIndex, bool &isNull)
 {
     MessageParcel reply;

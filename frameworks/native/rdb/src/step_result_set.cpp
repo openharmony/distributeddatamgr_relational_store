@@ -402,6 +402,16 @@ int StepResultSet::GetDouble(int columnIndex, double &value)
     return E_OK;
 }
 
+int StepResultSet::GetSize(int columnIndex, size_t &size)
+{
+    if (rowPos_ == INIT_POS) {
+        size = 0;
+        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+    }
+
+    return sqliteStatement->GetSize(columnIndex, size);
+}
+
 int StepResultSet::IsColumnNull(int columnIndex, bool &isNull)
 {
     ColumnType columnType;

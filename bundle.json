@@ -71,12 +71,25 @@
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/dataability:native_dataability",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_share_adapter:rdb_data_share_adapter",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
+                "//foundation/distributeddatamgr/relational_store/interfaces/ndk:native_rdb_ndk",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/dataability:dataability",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:rdb",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:napi_rdb",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/relationalstore:relationalstore"
             ],
             "inner_kits": [
+                {
+                    "name": "//foundation/distributeddatamgr/relational_store/interfaces/ndk:native_rdb_ndk",
+                    "header": {
+                        "header_files": [
+                            "relational_predicates.h",
+                            "relational_store.h",
+                            "relational_cursor.h",
+                            "relational_values_bucket.h"
+                        ],
+                        "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/ndk/include"
+                    }
+                },
                 {
                     "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
                     "header": {
@@ -144,6 +157,7 @@
                 "//foundation/distributeddatamgr/relational_store/test/js/rdb:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/js/relationalstore:performancetest",
                 "//foundation/distributeddatamgr/relational_store/test/js/relationalstore:unittest",
+                "//foundation/distributeddatamgr/relational_store/test/ndk:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/dataability:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:fuzztest",

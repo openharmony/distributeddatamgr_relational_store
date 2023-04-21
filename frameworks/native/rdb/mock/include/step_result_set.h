@@ -47,6 +47,7 @@ public:
     int GetInt(int columnIndex, int &value) override;
     int GetLong(int columnIndex, int64_t &value) override;
     int GetDouble(int columnIndex, double &value) override;
+    int GetSize(int columnIndex, size_t &size) override;
     int IsColumnNull(int columnIndex, bool &isNull) override;
     bool IsClosed() const override;
     int Close() override;
