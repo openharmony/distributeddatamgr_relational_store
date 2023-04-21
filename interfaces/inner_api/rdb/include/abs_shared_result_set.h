@@ -115,6 +115,13 @@ public:
     RDB_API_EXPORT int GetDouble(int columnIndex, double &value) override;
 
     /**
+     * @brief Get the size of blob or the text.
+     *
+     * @param columnIndex Indicates the zero-based index of the target column.
+     */
+    RDB_API_EXPORT int GetSize(int columnIndex, size_t &size) override;
+
+    /**
      * @brief Checks whether the value of the specified column in the current row is null.
      *
      * @param columnIndex Indicates the specified column index, which starts from 0.
