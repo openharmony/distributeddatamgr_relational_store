@@ -93,7 +93,7 @@ napi_value AsyncCall::Call(napi_env env, std::shared_ptr<Context> context)
     }
     context->keep_ = context;
     napi_value resource = nullptr;
-    napi_create_string_utf8(env, "AsyncCall", NAPI_AUTO_LENGTH, &resource);
+    napi_create_string_utf8(env, "RelationalStoreAsyncCall", NAPI_AUTO_LENGTH, &resource);
     // create async work, execute function is OnExecute, complete function is OnComplete
     napi_create_async_work(env, nullptr, resource, AsyncCall::OnExecute, AsyncCall::OnComplete,
         reinterpret_cast<void *>(context.get()), &context->work_);
