@@ -33,10 +33,12 @@
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "iresult_set.h"
-#include "rdb_security_manager.h"
+#include "rdb_device_manager_adapter.h"
 #include "rdb_manager.h"
+#include "rdb_security_manager.h"
 #include "relational_store_manager.h"
 #include "result_set_proxy.h"
+#include "runtime_config.h"
 #include "sqlite_shared_result_set.h"
 #endif
 
@@ -942,14 +944,22 @@ std::string RdbStoreImpl::ObtainDistributedTableName(
     const std::string &device, const std::string &table, int &errCode)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-    errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
+
+    std::string uuid;
+    DeviceManagerAdaptor::RdbDeviceManagerAdaptor &deviceManager =
+        DeviceManagerAdaptor::RdbDeviceManagerAdaptor::GetInstance(syncerParam_.bundleName_);
+    errCode = deviceManager.GetEncryptedUuidByNetworkId(device, uuid);
     if (errCode != E_OK) {
-        LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
+        LOG_ERROR("GetUuid is failed");
         return "";
     }
-    auto distTable = service->ObtainDistributedTableName(device, table);
-    return distTable;
+
+    auto translateCall = [uuid](const std::string &oriDevId, const DistributedDB::StoreInfo &info) {
+        return uuid;
+    };
+    DistributedDB::RuntimeConfig::SetTranslateToDeviceIdCallback(translateCall);
+
+    return DistributedDB::RelationalStoreManager::GetDistributedTableName(uuid, table);
 }
 
 int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const SyncCallback &callback)

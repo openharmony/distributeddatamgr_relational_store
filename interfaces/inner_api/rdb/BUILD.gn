@@ -28,6 +28,10 @@ config("native_rdb_config") {
       "include",
       "//base/security/huks/frameworks/huks_standard/main/common/include",
       "${relational_store_native_path}/rdb/include",
+      "${relational_store_native_path}/rdb_device_manager_adapter/include",
+      "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb/include/",
+      "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb/interfaces/include/",
+      "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb/interfaces/include/relational",
     ]
   }
 
@@ -136,6 +140,7 @@ ohos_shared_library("native_rdb") {
       "${relational_store_native_path}/rdb/src/share_block.cpp",
       "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
       "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
+      "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
     public_deps = [
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
@@ -146,6 +151,7 @@ ohos_shared_library("native_rdb") {
 
     external_deps = [
       "c_utils:utils",
+      "device_manager:devicemanagersdk",
       "hilog_native:libhilog",
       "hitrace_native:hitrace_meter",
       "hitrace_native:libhitracechain",
