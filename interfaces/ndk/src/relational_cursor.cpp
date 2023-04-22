@@ -14,13 +14,10 @@
  */
 
 #include "relational_cursor.h"
-
-#include <cstring>
-#include <string.h>
-#include <securec.h>
 #include "relational_cursor_impl.h"
 #include "relational_error_code.h"
 #include "rdb_errno.h"
+#include "securec.h"
 
 OHOS::NativeRdb::CursorImpl::CursorImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
 {
@@ -173,8 +170,7 @@ int CURSOR_GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned char *value,
     if (vec.size() > length) {
         return E_LENGTH_ERROR;
     }
-    std::copy(vec.begin(), vec.end(), value);
-//    memcpy_s(value, length, vec.begin(), vec.size());
+    memcpy_s(value, length, vec.data(), vec.size());
     return errCode;
 }
 

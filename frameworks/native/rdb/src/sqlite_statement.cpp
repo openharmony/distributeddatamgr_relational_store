@@ -404,8 +404,14 @@ int SqliteStatement::GetSize(int index, size_t &size) const
         return E_INVALID_COLUMN_INDEX;
     }
 
-    size = sqlite3_column_bytes(stmtHandle, index);
-    return E_OK;
+    int type = sqlite3_column_type(stmtHandle, index);
+    if (type == SQLITE_BLOB || type == SQLITE_TEXT || type == SQLITE_NULL) {
+        size = sqlite3_column_bytes(stmtHandle, index);
+        return E_OK;
+    }
+
+    size = 0;
+    return E_INVALID_COLUMN_TYPE;
 }
 
 bool SqliteStatement::IsReadOnly() const
