@@ -22,11 +22,33 @@
 namespace OHOS {
 namespace NativeRdb {
 constexpr int RDB_PREDICATES_CID = 1234561;
-class PredicateImpl : public RDB_Predicates {
+class PredicateImpl : public OH_Predicates {
 public:
     PredicateImpl(const char *table) : predicates_(table)
     {
         id = RDB_PREDICATES_CID;
+        equalTo = PREDICATES_EqualTo;
+        notEqualTo = PREDICATES_NotEqualTo;
+        beginWrap = PREDICATES_BeginWrap;
+        endWrap = PREDICATES_EndWrap;
+        OR = PREDICATES_Or;
+        AND = PREDICATES_And;
+        isNull = PREDICATES_IsNull;
+        isNotNull = PREDICATES_IsNotNull;
+        like = PREDICATES_Like;
+        between = PREDICATES_Between;
+        notBetween = PREDICATES_NotBetween;
+        greaterThan = PREDICATES_GreaterThan;
+        lessThan = PREDICATES_LessThan;
+        greaterThanOrEqualTo = PREDICATES_GreaterThanOrEqualTo;
+        lessThanOrEqualTo = PREDICATES_LessThanOrEqualTo;
+        orderBy = PREDICATES_OrderBy;
+        distinct = PREDICATES_Distinct;
+        limit = PREDICATES_Limit;
+        offset = PREDICATES_Offset;
+        groupBy = PREDICATES_GroupBy;
+        in = PREDICATES_In;
+        notIn = PREDICATES_NotIn;
     }
     RdbPredicates GetPredicates();
 

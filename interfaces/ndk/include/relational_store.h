@@ -86,23 +86,23 @@ struct RDB_Store {
     int id;
 };
 
-RDB_Store *RDB_GetOrOpen(RDB_Config const *config, int version, int *errCode);
-int RDB_CloseStore(RDB_Store *store);
-int RDB_DeleteStore(const char *path);
+RDB_Store *OH_Rdb_GetOrOpen(RDB_Config const *config, int version, int *errCode);
+int OH_Rdb_CloseStore(RDB_Store *store);
+int OH_Rdb_DeleteStore(const char *path);
 
-int RDB_Insert(RDB_Store *store, char const *table, RDB_ValuesBucket *valuesBucket);
-int RDB_Update(RDB_Store *store, RDB_ValuesBucket *valuesBucket, RDB_Predicates *predicates);
-int RDB_Delete(RDB_Store *store, RDB_Predicates *predicate);
-RDB_Cursor *RDB_Query(RDB_Store *store, RDB_Predicates *predicate, char const *const *columnNames, int length);
-int RDB_Execute(RDB_Store *store, char const *sql);
-RDB_Cursor *RDB_ExecuteQuery(RDB_Store *store, char const *sql);
-int RDB_Transaction(RDB_Store *store);
-int RDB_RollBack(RDB_Store *store);
-int RDB_Commit(RDB_Store *store);
-int RDB_Backup(RDB_Store *store, const char *databasePath, const unsigned char *destEncryptKey);
-int RDB_Restore(RDB_Store *store, const char *databasePath, const unsigned char *destEncryptKey);
-int RDB_GetVersion(RDB_Store *store, int *version);
-int RDB_SetVersion(RDB_Store *store, const int version);
+int OH_Rdb_Insert(RDB_Store *store, char const *table, RDB_ValuesBucket *valuesBucket);
+int OH_Rdb_Update(RDB_Store *store, RDB_ValuesBucket *valuesBucket, OH_Predicates *predicates);
+int OH_Rdb_Delete(RDB_Store *store, OH_Predicates *predicate);
+OH_Cursor *OH_Rdb_Query(RDB_Store *store, OH_Predicates *predicate, char const *const *columnNames, int length);
+int OH_Rdb_Execute(RDB_Store *store, char const *sql);
+OH_Cursor *OH_Rdb_ExecuteQuery(RDB_Store *store, char const *sql);
+int OH_Rdb_Transaction(RDB_Store *store);
+int OH_Rdb_RollBack(RDB_Store *store);
+int OH_Rdb_Commit(RDB_Store *store);
+int OH_Rdb_Backup(RDB_Store *store, const char *databasePath, const unsigned char *destEncryptKey);
+int OH_Rdb_Restore(RDB_Store *store, const char *databasePath, const unsigned char *destEncryptKey);
+int OH_Rdb_GetVersion(RDB_Store *store, int *version);
+int OH_Rdb_SetVersion(RDB_Store *store, const int version);
 
 #ifdef __cplusplus
 };

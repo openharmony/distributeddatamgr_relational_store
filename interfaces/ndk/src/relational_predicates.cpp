@@ -22,12 +22,12 @@ OHOS::NativeRdb::RdbPredicates OHOS::NativeRdb::PredicateImpl::GetPredicates()
     return predicates_;
 }
 
-RDB_Predicates *RDB_CreatePredicates(char const *table)
+OH_Predicates *OH_Rdb_CreatePredicates(char const *table)
 {
     return new OHOS::NativeRdb::PredicateImpl(table);
 }
 
-int RDB_DestroyPredicates(RDB_Predicates *predicate)
+int OH_Rdb_DestroyPredicates(OH_Predicates *predicate)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -37,7 +37,7 @@ int RDB_DestroyPredicates(RDB_Predicates *predicate)
     return E_OK;
 }
 
-int PREDICATES_EqualTo(RDB_Predicates *predicate, char const *field, char const *value)
+int PREDICATES_EqualTo(OH_Predicates *predicate, char const *field, char const *value)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -47,7 +47,7 @@ int PREDICATES_EqualTo(RDB_Predicates *predicate, char const *field, char const 
     return E_OK;
 }
 
-int PREDICATES_NotEqualTo(RDB_Predicates *predicate, char const *field, char const *value)
+int PREDICATES_NotEqualTo(OH_Predicates *predicate, char const *field, char const *value)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -57,7 +57,7 @@ int PREDICATES_NotEqualTo(RDB_Predicates *predicate, char const *field, char con
     return E_OK;
 }
 
-int PREDICATES_BeginWrap(RDB_Predicates *predicate)
+int PREDICATES_BeginWrap(OH_Predicates *predicate)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -67,7 +67,7 @@ int PREDICATES_BeginWrap(RDB_Predicates *predicate)
     return E_OK;
 }
 
-int PREDICATES_EndWrap(RDB_Predicates *predicate)
+int PREDICATES_EndWrap(OH_Predicates *predicate)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -77,7 +77,7 @@ int PREDICATES_EndWrap(RDB_Predicates *predicate)
     return E_OK;
 }
 
-int PREDICATES_Or(RDB_Predicates *predicate)
+int PREDICATES_Or(OH_Predicates *predicate)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -87,7 +87,7 @@ int PREDICATES_Or(RDB_Predicates *predicate)
     return E_OK;
 }
 
-int PREDICATES_And(RDB_Predicates *predicate)
+int PREDICATES_And(OH_Predicates *predicate)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -97,7 +97,7 @@ int PREDICATES_And(RDB_Predicates *predicate)
     return E_OK;
 }
 
-int PREDICATES_IsNull(RDB_Predicates *predicate, const char *field)
+int PREDICATES_IsNull(OH_Predicates *predicate, const char *field)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -107,7 +107,7 @@ int PREDICATES_IsNull(RDB_Predicates *predicate, const char *field)
     return E_OK;
 }
 
-int PREDICATES_IsNotNull(RDB_Predicates *predicate, const char *field)
+int PREDICATES_IsNotNull(OH_Predicates *predicate, const char *field)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -117,7 +117,7 @@ int PREDICATES_IsNotNull(RDB_Predicates *predicate, const char *field)
     return E_OK;
 }
 
-int PREDICATES_Like(RDB_Predicates *predicate, const char *field, const char *value)
+int PREDICATES_Like(OH_Predicates *predicate, const char *field, const char *value)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -127,7 +127,7 @@ int PREDICATES_Like(RDB_Predicates *predicate, const char *field, const char *va
     return E_OK;
 }
 
-int PREDICATES_Between(RDB_Predicates *predicate, const char *field, const char *betweenValue, const char *andValue)
+int PREDICATES_Between(OH_Predicates *predicate, const char *field, const char *betweenValue, const char *andValue)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -137,7 +137,7 @@ int PREDICATES_Between(RDB_Predicates *predicate, const char *field, const char 
     return E_OK;
 }
 
-int PREDICATES_NotBetween(RDB_Predicates *predicate, const char *field, const char *betweenValue, const char *andValue)
+int PREDICATES_NotBetween(OH_Predicates *predicate, const char *field, const char *betweenValue, const char *andValue)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -147,7 +147,7 @@ int PREDICATES_NotBetween(RDB_Predicates *predicate, const char *field, const ch
     return E_OK;
 }
 
-int PREDICATES_GreaterThan(RDB_Predicates *predicate, const char *field, const char *value)
+int PREDICATES_GreaterThan(OH_Predicates *predicate, const char *field, const char *value)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -157,7 +157,7 @@ int PREDICATES_GreaterThan(RDB_Predicates *predicate, const char *field, const c
     return E_OK;
 }
 
-int PREDICATES_LessThan(RDB_Predicates *predicate, const char *field, const char *value)
+int PREDICATES_LessThan(OH_Predicates *predicate, const char *field, const char *value)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -167,7 +167,7 @@ int PREDICATES_LessThan(RDB_Predicates *predicate, const char *field, const char
     return E_OK;
 }
 
-int PREDICATES_GreaterThanOrEqualTo(RDB_Predicates *predicate, const char *field, const char *value)
+int PREDICATES_GreaterThanOrEqualTo(OH_Predicates *predicate, const char *field, const char *value)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -176,7 +176,7 @@ int PREDICATES_GreaterThanOrEqualTo(RDB_Predicates *predicate, const char *field
     tempPredicates->GetPredicates().GreaterThanOrEqualTo(field, value);
     return E_OK;
 }
-int PREDICATES_LessThanOrEqualTo(RDB_Predicates *predicate, const char *field, const char *value)
+int PREDICATES_LessThanOrEqualTo(OH_Predicates *predicate, const char *field, const char *value)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -186,7 +186,7 @@ int PREDICATES_LessThanOrEqualTo(RDB_Predicates *predicate, const char *field, c
     return E_OK;
 }
 
-int PREDICATES_OrderBy(RDB_Predicates *predicate, const char *field, OrderByType type)
+int PREDICATES_OrderBy(OH_Predicates *predicate, const char *field, OrderByType type)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -200,7 +200,7 @@ int PREDICATES_OrderBy(RDB_Predicates *predicate, const char *field, OrderByType
     return E_OK;
 }
 
-int PREDICATES_Distinct(RDB_Predicates *predicate)
+int PREDICATES_Distinct(OH_Predicates *predicate)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -210,7 +210,7 @@ int PREDICATES_Distinct(RDB_Predicates *predicate)
     return E_OK;
 }
 
-int PREDICATES_Limit(RDB_Predicates *predicate, unsigned int value)
+int PREDICATES_Limit(OH_Predicates *predicate, unsigned int value)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -220,7 +220,7 @@ int PREDICATES_Limit(RDB_Predicates *predicate, unsigned int value)
     return E_OK;
 }
 
-int PREDICATES_Offset(RDB_Predicates *predicate, unsigned int rowOffset)
+int PREDICATES_Offset(OH_Predicates *predicate, unsigned int rowOffset)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -230,7 +230,7 @@ int PREDICATES_Offset(RDB_Predicates *predicate, unsigned int rowOffset)
     return E_OK;
 }
 
-int PREDICATES_GroupBy(RDB_Predicates *predicate, char const *const *field, const int length)
+int PREDICATES_GroupBy(OH_Predicates *predicate, char const *const *field, const int length)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -249,7 +249,7 @@ int PREDICATES_GroupBy(RDB_Predicates *predicate, char const *const *field, cons
     return E_OK;
 }
 
-int PREDICATES_In(RDB_Predicates *predicate, char const *filed, char const *const *values, const int length)
+int PREDICATES_In(OH_Predicates *predicate, char const *filed, char const *const *values, const int length)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;
@@ -268,7 +268,7 @@ int PREDICATES_In(RDB_Predicates *predicate, char const *filed, char const *cons
     return E_OK;
 }
 
-int PREDICATES_NotIn(RDB_Predicates *predicate, char const *filed, char const *const *values, const int length)
+int PREDICATES_NotIn(OH_Predicates *predicate, char const *filed, char const *const *values, const int length)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return E_INVALID_ARG;

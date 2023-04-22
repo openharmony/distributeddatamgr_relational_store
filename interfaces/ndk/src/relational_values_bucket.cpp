@@ -13,20 +13,19 @@
  * limitations under the License.
  */
 
-#include "relational_values_bucket.h"
-
 #include <map>
-
+#include "relational_values_bucket.h"
 #include "relational_values_bucket_impl.h"
 #include "relational_error_code.h"
 #include "value_object.h"
+#include "securec.h"
 
-RDB_ValuesBucket *RDB_CreateValuesBucket()
+RDB_ValuesBucket *OH_Rdb_CreateValuesBucket()
 {
     return new OHOS::NativeRdb::ValuesBucketImpl();
 }
 
-int RDB_DestroyValuesBucket(RDB_ValuesBucket *bucket)
+int OH_Rdb_DestroyValuesBucket(RDB_ValuesBucket *bucket)
 {
     if (bucket == nullptr || bucket->id != OHOS::NativeRdb::RDB_VALUESBUCKET_CID) {
         return E_INVALID_ARG;
@@ -35,7 +34,7 @@ int RDB_DestroyValuesBucket(RDB_ValuesBucket *bucket)
     return E_OK;
 }
 
-int VBUCKET_PutText(RDB_ValuesBucket *bucket, const char *name, const char *value)
+int OH_VBucket_PutText(RDB_ValuesBucket *bucket, const char *name, const char *value)
 {
     if (bucket == nullptr || bucket->id != OHOS::NativeRdb::RDB_VALUESBUCKET_CID) {
         return E_INVALID_ARG;
@@ -45,7 +44,7 @@ int VBUCKET_PutText(RDB_ValuesBucket *bucket, const char *name, const char *valu
     return E_OK;
 }
 
-int VBUCKET_PutInt64(RDB_ValuesBucket *bucket, const char *name, int64_t value)
+int OH_VBucket_PutInt64(RDB_ValuesBucket *bucket, const char *name, int64_t value)
 {
     if (bucket == nullptr || bucket->id != OHOS::NativeRdb::RDB_VALUESBUCKET_CID) {
         return E_INVALID_ARG;
@@ -55,7 +54,7 @@ int VBUCKET_PutInt64(RDB_ValuesBucket *bucket, const char *name, int64_t value)
     return E_OK;
 }
 
-int VBUCKET_PutReal(RDB_ValuesBucket *bucket, const char *name, double value)
+int OH_VBucket_PutReal(RDB_ValuesBucket *bucket, const char *name, double value)
 {
     if (bucket == nullptr || bucket->id != OHOS::NativeRdb::RDB_VALUESBUCKET_CID) {
         return E_INVALID_ARG;
@@ -65,21 +64,19 @@ int VBUCKET_PutReal(RDB_ValuesBucket *bucket, const char *name, double value)
     return E_OK;
 }
 
-int VBUCKET_PutBlob(RDB_ValuesBucket *bucket, const char *name, const uint8_t *value, uint32_t size)
+int OH_VBucket_PutBlob(RDB_ValuesBucket *bucket, const char *name, const uint8_t *value, uint32_t size)
 {
     if (bucket == nullptr || bucket->id != OHOS::NativeRdb::RDB_VALUESBUCKET_CID) {
         return E_INVALID_ARG;
     }
     std::vector<uint8_t> vector(size);
-
-//    memcpy_s(vector.begin(), size, value, size);
-    std::copy(value, value + size, vector.begin());
+    memcpy_s(vector.data(), size, value, size);
     static_cast<OHOS::NativeRdb::ValuesBucketImpl *>(bucket)->valuesBucket_.Put(name, OHOS::NativeRdb::ValueObject(vector));
     bucket->capability += 1;
     return E_OK;
 }
 
-int VBUCKET_PutNull(RDB_ValuesBucket *bucket, const char *name)
+int OH_VBucket_PutNull(RDB_ValuesBucket *bucket, const char *name)
 {
     if (bucket == nullptr || bucket->id != OHOS::NativeRdb::RDB_VALUESBUCKET_CID) {
         return E_INVALID_ARG;

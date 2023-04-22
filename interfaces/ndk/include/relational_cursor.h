@@ -16,34 +16,25 @@
 #ifndef RELATIONAL_CURSOR_H
 #define RELATIONAL_CURSOR_H
 
-#define COMM_CALL(__self, __function, ...)                    \
-({                                                            \
-    int ret = INVALID_ARGS;                                   \
-    if ((__self) != NULL && (__self)->##__function != NULL) { \
-        ret = (__self)->##__function##((__self), ##VA_ARGS);  \
-        }                                                     \
-    ret;                                                      \
-})
-
-#define OH_Cursor_GetColumnCount(cursor, count) COMM_CALL(cursor, getColumnCount, count)
-#define OH_CURSOR_GetColumnType(cursor, columnIndex, columnType) COMM_CALL(cursor, getColumnType, columnIndex, columnType)
-#define OH_CURSOR_GetColumnIndex(cursor, names, columnIndex) COMM_CALL(cursor, getColumnIndex, names, columnIndex)
-#define OH_CURSOR_GetColumnName(cursor, columnIndex, name, length) COMM_CALL(cursor, getColumnName, columnIndex, name, length)
-#define OH_CURSOR_GetRowCount(cursor, count) COMM_CALL(cursor, getRowCount, count)
-#define OH_CURSOR_GoToNextRow(cursor) COMM_CALL(cursor, goToNextRow)
-#define OH_CURSOR_GetSize(cursor, columnIndex, size) COMM_CALL(cursor, getSize, columnIndex, size)
-#define OH_CURSOR_GetText(cursor, columnIndex, value, length) COMM_CALL(cursor, getText, columnIndex, value, length)
-#define OH_CURSOR_GetInt64(cursor, columnIndex, value) COMM_CALL(cursor, getInt64, columnIndex, value)
-#define OH_CURSOR_GetReal(cursor, columnIndex, value) COMM_CALL(cursor, getReal, columnIndex, value)
-#define OH_CURSOR_GetBlob(cursor, columnIndex, value, length) COMM_CALL(cursor, getBlob, columnIndex, value, length)
-#define OH_CURSOR_IsNull(cursor, columnIndex, isNull) COMM_CALL(cursor, isNull, columnIndex, isNull)
-#define OH_CURSOR_Close(cursor) COMM_CALL(cursor, close)
-
 #include <cstdint>
 #include <stddef.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define OH_Cursor_GetColumnCount(cursor, count) cursor->getColumnCount(cursor, count)
+#define OH_Cursor_GetColumnType(cursor, columnIndex, columnType) cursor->getColumnType(cursor, columnIndex, columnType)
+#define OH_Cursor_GetColumnIndex(cursor, names, columnIndex) cursor->getColumnIndex(cursor, names, columnIndex)
+#define OH_Cursor_GetColumnName(cursor, columnIndex, name, length) cursor->getColumnName(cursor, columnIndex, name, length)
+#define OH_Cursor_GetRowCount(cursor, count) cursor->getRowCount(cursor, count);
+#define OH_Cursor_GoToNextRow(cursor) cursor->goToNextRow(cursor)
+#define OH_Cursor_GetSize(cursor, columnIndex, size) cursor->getSize(cursor, columnIndex, size)
+#define OH_Cursor_GetText(cursor, columnIndex, value, length) cursor->getText(cursor, columnIndex, value, length)
+#define OH_Cursor_GetInt64(cursor, columnIndex, value) cursor->getInt64(cursor, columnIndex, value)
+#define OH_Cursor_GetReal(cursor, columnIndex, value) cursor->getReal(cursor, columnIndex, value)
+#define OH_Cursor_GetBlob(cursor, columnIndex, value, length) cursor->getBlob(cursor, columnIndex, value, length)
+#define OH_Cursor_IsNull(cursor, columnIndex, isNull) cursor->isNull(cursor, columnIndex, isNull)
+#define OH_Cursor_Close(cursor) cursor->close(cursor)
 
 enum ColumnType {
     TYPE_NULL = 0,

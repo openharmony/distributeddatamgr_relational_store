@@ -26,14 +26,14 @@ struct RDB_ValuesBucket {
     uint16_t capability;
 };
 
-RDB_ValuesBucket *RDB_CreateValuesBucket();
-int RDB_DestroyValuesBucket(RDB_ValuesBucket *bucket);
+RDB_ValuesBucket *OH_Rdb_CreateValuesBucket();
+int OH_Rdb_DestroyValuesBucket(RDB_ValuesBucket *bucket);
 
-int VBUCKET_PutText(RDB_ValuesBucket *bucket, const char *name, const char *value);
-int VBUCKET_PutInt64(RDB_ValuesBucket *bucket, const char *name, int64_t value);
-int VBUCKET_PutReal(RDB_ValuesBucket *bucket, const char *name, double value);
-int VBUCKET_PutBlob(RDB_ValuesBucket *bucket, const char *name, const uint8_t *value, uint32_t size);
-int VBUCKET_PutNull(RDB_ValuesBucket *bucket, const char *name);
+int OH_VBucket_PutText(RDB_ValuesBucket *bucket, const char *name, const char *value);
+int OH_VBucket_PutInt64(RDB_ValuesBucket *bucket, const char *name, int64_t value);
+int OH_VBucket_PutReal(RDB_ValuesBucket *bucket, const char *name, double value);
+int OH_VBucket_PutBlob(RDB_ValuesBucket *bucket, const char *name, const uint8_t *value, uint32_t size);
+int OH_VBucket_PutNull(RDB_ValuesBucket *bucket, const char *name);
 
 #ifdef __cplusplus
 };
