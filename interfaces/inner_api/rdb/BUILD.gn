@@ -99,7 +99,6 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store_manager.cpp",
-  "${relational_store_native_path}/rdb/src/sqlite_config.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_connection.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_connection_pool.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_database_utils.cpp",
