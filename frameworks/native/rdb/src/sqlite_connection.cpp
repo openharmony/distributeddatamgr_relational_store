@@ -48,7 +48,7 @@ const int ERROR_STATUS = -1;
 using RdbKeyFile = RdbSecurityManager::KeyFileType;
 #endif
 
-SqliteConnection *SqliteConnection::Open(const SqliteConfig &config, bool isWriteConnection, int &errCode)
+SqliteConnection *SqliteConnection::Open(const RdbStoreConfig &config, bool isWriteConnection, int &errCode)
 {
     auto connection = new (std::nothrow) SqliteConnection(isWriteConnection);
     if (connection == nullptr) {
@@ -75,7 +75,7 @@ SqliteConnection::SqliteConnection(bool isWriteConnection)
 {
 }
 
-int SqliteConnection::InnerOpen(const SqliteConfig &config)
+int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 {
     std::string dbPath;
     if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
@@ -141,7 +141,7 @@ int SqliteConnection::InnerOpen(const SqliteConfig &config)
     return E_OK;
 }
 
-int SqliteConnection::Config(const SqliteConfig &config)
+int SqliteConnection::Config(const RdbStoreConfig &config)
 {
     if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
         return E_OK;
@@ -194,7 +194,7 @@ SqliteConnection::~SqliteConnection()
     }
 }
 
-int SqliteConnection::SetPageSize(const SqliteConfig &config)
+int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
 {
     if (isReadOnly || config.GetPageSize() == GlobalExpr::DB_PAGE_SIZE) {
         return E_OK;
@@ -219,11 +219,11 @@ int SqliteConnection::SetPageSize(const SqliteConfig &config)
     return errCode;
 }
 
-int SqliteConnection::SetEncryptAlgo(const SqliteConfig &config)
+int SqliteConnection::SetEncryptAlgo(const RdbStoreConfig &config)
 {
     int errCode = E_OK;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    if (!config.IsAutoEncrypt() && config.GetEncryptKey().empty()) {
+    if (!config.IsEncrypt() && config.GetEncryptKey().empty()) {
         return errCode;
     }
 #endif
@@ -244,14 +244,14 @@ int SqliteConnection::SetEncryptAlgo(const SqliteConfig &config)
     return errCode;
 }
 
-int SqliteConnection::SetEncryptKey(const SqliteConfig &config)
+int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     std::vector<uint8_t> key;
     RdbPassword rdbPwd;
-    if (!config.GetEncryptKey().empty() && !config.IsAutoEncrypt()) {
+    if (!config.GetEncryptKey().empty() && !config.IsEncrypt()) {
         key = config.GetEncryptKey();
-    } else if (config.IsAutoEncrypt()) {
+    } else if (config.IsEncrypt()) {
         rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbKeyFile::PUB_KEY_FILE);
         key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
     } else {
@@ -308,7 +308,7 @@ int SqliteConnection::SetBusyTimeout(int timeout)
     return E_OK;
 }
 
-int SqliteConnection::SetJournalMode(const SqliteConfig &config)
+int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
 {
     if (isReadOnly || config.GetJournalMode().compare(GlobalExpr::DB_DEFAULT_JOURNAL_MODE) == 0) {
         return E_OK;
@@ -343,7 +343,7 @@ int SqliteConnection::SetJournalMode(const SqliteConfig &config)
     return errCode;
 }
 
-int SqliteConnection::SetJournalSizeLimit(const SqliteConfig &config)
+int SqliteConnection::SetJournalSizeLimit(const RdbStoreConfig &config)
 {
     if (isReadOnly || config.GetJournalSize() == GlobalExpr::DB_JOURNAL_SIZE) {
         return E_OK;
@@ -369,7 +369,7 @@ int SqliteConnection::SetJournalSizeLimit(const SqliteConfig &config)
     return errCode;
 }
 
-int SqliteConnection::SetAutoCheckpoint(const SqliteConfig &config)
+int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
 {
     if (isReadOnly || config.IsAutoCheck() == GlobalExpr::DB_AUTO_CHECK) {
         return E_OK;
