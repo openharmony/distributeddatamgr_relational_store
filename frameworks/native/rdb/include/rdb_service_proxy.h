@@ -88,6 +88,7 @@ private:
     ObserverMap observers_;
     sptr<RdbNotifierStub> notifier_;
 
+    sptr<IRemoteObject> remote_;
     static inline BrokerDelegator<RdbServiceProxy> delegator_;
 };
 } // namespace OHOS::DistributedRdb
