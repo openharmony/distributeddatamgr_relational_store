@@ -26,16 +26,16 @@ namespace NativeRdb {
 class ResultSet;
 }
 namespace RdbDataShareAdapter {
-class RDB_API_EXPORT RdbResultSetBridge : public DataShare::ResultSetBridge {
+class API_EXPORT RdbResultSetBridge : public DataShare::ResultSetBridge {
 public:
     using ResultSet = NativeRdb::ResultSet;
     using ColumnType = NativeRdb::ColumnType;
 
-    RDB_API_EXPORT RdbResultSetBridge(std::shared_ptr<ResultSet> resultSet);
-    RDB_API_EXPORT ~RdbResultSetBridge();
-    RDB_API_EXPORT int GetAllColumnNames(std::vector<std::string> &columnNames) override;
-    RDB_API_EXPORT int GetRowCount(int32_t &count) override;
-    RDB_API_EXPORT int OnGo(int32_t start, int32_t length, Writer &writer) override;
+    API_EXPORT RdbResultSetBridge(std::shared_ptr<ResultSet> resultSet);
+    API_EXPORT ~RdbResultSetBridge();
+    API_EXPORT int GetAllColumnNames(std::vector<std::string> &columnNames) override;
+    API_EXPORT int GetRowCount(int32_t &count) override;
+    API_EXPORT int OnGo(int32_t start, int32_t length, Writer &writer) override;
 
 private:
     int32_t WriteBlock(int32_t start, int32_t target, int columnCount, Writer &writer);
