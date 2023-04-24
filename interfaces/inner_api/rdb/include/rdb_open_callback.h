@@ -24,7 +24,7 @@ namespace NativeRdb {
 /**
  * The RdbOpenCallback class of RDB.
  */
-class RDB_API_EXPORT RdbOpenCallback {
+class API_EXPORT RdbOpenCallback {
 public:
     /**
      * @brief Called when the database associate whit this RdbStore is created with the first time.

@@ -30,7 +30,7 @@
 #include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
-class RDB_API_EXPORT RdbStore {
+class API_EXPORT RdbStore {
 public:
     /**
      * @brief Use SyncOption replace DistributedRdb::SyncOption namespace.
