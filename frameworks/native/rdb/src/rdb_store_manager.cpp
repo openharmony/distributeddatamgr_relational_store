@@ -81,9 +81,9 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
     if (storeCache_.find(path) == storeCache_.end() || storeCache_[path] == nullptr) {
         InitSecurityManager(config);
         rdbStore = RdbStoreImpl::Open(config, errCode);
-            if (rdbStore == nullptr) {
-                LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore, err is %{public}d", errCode);
-                return nullptr;
+        if (rdbStore == nullptr) {
+            LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore, err is %{public}d", errCode);
+            return nullptr;
         }
         storeCache_[path] = std::make_shared<RdbStoreNode>(rdbStore);
         RestartTimer(path, *storeCache_[path]);
