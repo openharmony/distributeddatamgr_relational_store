@@ -52,9 +52,9 @@
 #endif
 
 namespace OHOS::NativeRdb {
-std::shared_ptr<RdbStore> RdbStoreImpl::Open(const RdbStoreConfig &config, int &errCode)
+std::shared_ptr<RdbStoreImpl> RdbStoreImpl::Open(const RdbStoreConfig &config, int &errCode)
 {
-    std::shared_ptr<RdbStoreImpl> rdbStore = std::make_shared<RdbStoreImpl>();
+    std::shared_ptr<RdbStoreImpl> rdbStore = std::make_shared<RdbStoreImpl>(config);
     errCode = rdbStore->InnerOpen(config);
     if (errCode != E_OK) {
         return nullptr;
@@ -107,9 +107,9 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     return E_OK;
 }
 
-RdbStoreImpl::RdbStoreImpl()
-    : connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false), isMemoryRdb(false),
-      isEncrypt_(false)
+RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
+    : rdbStoreConfig(config), connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false),
+      isMemoryRdb(false), isEncrypt_(false)
 {
 }
 
@@ -138,6 +138,10 @@ void RdbStoreImpl::Clear()
 }
 #endif
 
+const RdbStoreConfig &RdbStoreImpl::GetConfig()
+{
+    return rdbStoreConfig;
+}
 int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
