@@ -36,7 +36,7 @@ namespace RdbDataShareAdapter {
 /**
  * The RdbUtils class of RDB.
  */
-class RDB_API_EXPORT RdbUtils {
+class API_EXPORT RdbUtils {
 public:
     /**
      * @brief Use RdbPredicates replace NativeRdb::RdbPredicates namespace.
@@ -81,20 +81,20 @@ public:
     /**
      * @brief Convert DataShare::DataShareValuesBucket to NativeRdb::ValuesBucket.
      */
-    RDB_API_EXPORT static ValuesBucket ToValuesBucket(const DataShareValuesBucket &bucket);
+    API_EXPORT static ValuesBucket ToValuesBucket(const DataShareValuesBucket &bucket);
 
     /**
      * @brief Convert DataShare::DataShareAbsPredicates to NativeRdb::RdbPredicates.
      *
      * @param table Indicates the table name.
      */
-    RDB_API_EXPORT static RdbPredicates ToPredicates(
+    API_EXPORT static RdbPredicates ToPredicates(
         const DataShareAbsPredicates &predicates, const std::string &table);
 
     /**
      * @brief Convert NativeRdb::ResultSet to DataShare::ResultSetBridge.
      */
-    RDB_API_EXPORT static std::shared_ptr<ResultSetBridge> ToResultSetBridge(std::shared_ptr<ResultSet> resultSet);
+    API_EXPORT static std::shared_ptr<ResultSetBridge> ToResultSetBridge(std::shared_ptr<ResultSet> resultSet);
 
 private:
     static void NoSupport(const OperationItem &item, RdbPredicates &query);
