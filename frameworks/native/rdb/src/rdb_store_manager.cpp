@@ -28,9 +28,9 @@
 
 namespace OHOS {
 namespace NativeRdb {
-RdbStoreNode::RdbStoreNode(const std::shared_ptr<RdbStore> &rdbStore) : rdbStore_(rdbStore), timerId_(0) {}
+RdbStoreNode::RdbStoreNode(const std::shared_ptr<RdbStoreImpl> &rdbStore) : rdbStore_(rdbStore), timerId_(0) {}
 
-RdbStoreNode &RdbStoreNode::operator=(const std::shared_ptr<RdbStore> &store)
+RdbStoreNode &RdbStoreNode::operator=(const std::shared_ptr<RdbStoreImpl> &store)
 {
     if (rdbStore_ == store) {
         return *this;
@@ -75,23 +75,25 @@ void RdbStoreManager::InitSecurityManager(const RdbStoreConfig &config)
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &config,
     int &errCode, int version, RdbOpenCallback &openCallback)
 {
-    std::shared_ptr<RdbStore> rdbStore;
+    std::shared_ptr<RdbStoreImpl> rdbStore;
     std::string path = config.GetPath();
     std::lock_guard<std::mutex> lock(mutex_);
-    if (storeCache_.find(path) == storeCache_.end() || storeCache_[path] == nullptr) {
-        InitSecurityManager(config);
-        rdbStore = RdbStoreImpl::Open(config, errCode);
-        if (rdbStore == nullptr) {
-            LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore, err is %{public}d", errCode);
-            return nullptr;
-        }
-        storeCache_[path] = std::make_shared<RdbStoreNode>(rdbStore);
-        RestartTimer(path, *storeCache_[path]);
-    } else {
-        RestartTimer(path, *storeCache_[path]);
+    if (storeCache_.find(path) != storeCache_.end() && storeCache_[path] != nullptr) {
         rdbStore = storeCache_[path]->rdbStore_;
-        return rdbStore;
+        if (rdbStore->GetConfig() == config) {
+            RestartTimer(path, *storeCache_[path]);
+            return rdbStore;
+        }
+        storeCache_.erase(path);
     }
+    InitSecurityManager(config);
+    rdbStore = RdbStoreImpl::Open(config, errCode);
+    if (rdbStore == nullptr) {
+        LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore, err is %{public}d", errCode);
+        return nullptr;
+    }
+    storeCache_[path] = std::make_shared<RdbStoreNode>(rdbStore);
+    RestartTimer(path, *storeCache_[path]);
 
     if (SetSecurityLabel(config) != E_OK) {
         storeCache_.erase(path);
