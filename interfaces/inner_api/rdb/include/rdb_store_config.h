@@ -141,11 +141,6 @@ using DistributedType = OHOS::DistributedRdb::RdbDistributedType;
 class API_EXPORT RdbStoreConfig {
 public:
     /**
-     * @brief Copy constructor.
-     */
-    API_EXPORT RdbStoreConfig(const RdbStoreConfig &config);
-
-    /**
      * @brief Constructor.
      *
      * A parameterized constructor used to create an RdbStoreConfig instance.

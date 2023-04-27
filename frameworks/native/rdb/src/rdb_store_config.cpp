@@ -21,19 +21,6 @@
 #include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
-RdbStoreConfig::RdbStoreConfig(const RdbStoreConfig &config) : autoCheck(false), journalSize(1048576), pageSize(4096)
-{
-    name = config.GetName();
-    path = config.GetPath();
-    storageMode = config.GetStorageMode();
-    journalMode = config.GetJournalMode();
-    syncMode = config.GetSyncMode();
-    readOnly = config.IsReadOnly();
-    databaseFileType = config.GetDatabaseFileType();
-    securityLevel = config.GetSecurityLevel();
-    isCreateNecessary_ = config.IsCreateNecessary();
-}
-
 RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode, bool isReadOnly,
     const std::vector<uint8_t> &encryptKey, const std::string &journalMode, const std::string &syncMode,
     const std::string &databaseFileType, SecurityLevel securityLevel, bool isCreateNecessary, bool autoCheck,
