@@ -50,7 +50,8 @@ public:
         ConflictResolution conflictResolution) override;
     int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
         const std::vector<std::string> &whereArgs) override;
-    int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
+    int ExecuteSql(
+        const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
