@@ -152,12 +152,12 @@ int SqliteConnection::Config(const RdbStoreConfig &config)
         return errCode;
     }
 
-    errCode = SetEncryptAlgo(config);
+    errCode = SetEncryptKey(config);
     if (errCode != E_OK) {
         return errCode;
     }
 
-    errCode = SetEncryptKey(config);
+    errCode = SetEncryptAlgo(config);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -227,15 +227,13 @@ int SqliteConnection::SetEncryptAlgo(const RdbStoreConfig &config)
         return errCode;
     }
 #endif
-    std::string sqlStr = "PRAGMA codec_hmac_algo=" + config.GetEncryptAlgo();
-    errCode = ExecuteSql(sqlStr);
+    errCode = ExecuteSql(GlobalExpr::CODEC_HMAC_ALGO);
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetEncryptAlgorithm fail, err = %{public}d", errCode);
         return errCode;
     }
 
-    sqlStr = "PRAGMA codec_rekey_hmac_algo=" + config.GetEncryptAlgo();
-    errCode = ExecuteSql(sqlStr);
+    errCode = ExecuteSql(GlobalExpr::CODEC_REKEY_HMAC_ALGO);
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection set rekey Algo fail, err = %{public}d", errCode);
         return errCode;
