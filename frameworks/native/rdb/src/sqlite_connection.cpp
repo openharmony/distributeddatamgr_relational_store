@@ -157,11 +157,6 @@ int SqliteConnection::Config(const RdbStoreConfig &config)
         return errCode;
     }
 
-    errCode = SetEncryptAlgo(config);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
     errCode = SetJournalMode(config);
     if (errCode != E_OK) {
         return errCode;
@@ -219,34 +214,12 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
     return errCode;
 }
 
-int SqliteConnection::SetEncryptAlgo(const RdbStoreConfig &config)
-{
-    int errCode = E_OK;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    if (!config.IsEncrypt() && config.GetEncryptKey().empty()) {
-        return errCode;
-    }
-#endif
-    errCode = ExecuteSql(GlobalExpr::CODEC_HMAC_ALGO);
-    if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection SetEncryptAlgorithm fail, err = %{public}d", errCode);
-        return errCode;
-    }
-
-    errCode = ExecuteSql(GlobalExpr::CODEC_REKEY_HMAC_ALGO);
-    if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection set rekey Algo fail, err = %{public}d", errCode);
-        return errCode;
-    }
-
-    return errCode;
-}
-
 int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     std::vector<uint8_t> key;
     RdbPassword rdbPwd;
+    int errCode = E_OK;
     if (!config.GetEncryptKey().empty() && !config.IsEncrypt()) {
         key = config.GetEncryptKey();
     } else if (config.IsEncrypt()) {
@@ -256,11 +229,22 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config)
         return E_OK;
     }
 
-    int errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
+    errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
     key.assign(key.size(), 0);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("SqliteConnection SetEncryptKey fail, err = %{public}d", errCode);
         return SQLiteError::ErrNo(errCode);
+    }
+
+    errCode = ExecuteSql(GlobalExpr::CODEC_HMAC_ALGO);
+    if (errCode != E_OK) {
+        LOG_ERROR("SqliteConnection set sha algo failed, err = %{public}d", errCode);
+        return errCode;
+    }
+    errCode = ExecuteSql(GlobalExpr::CODEC_REKEY_HMAC_ALGO);
+    if (errCode != E_OK) {
+        LOG_ERROR("SqliteConnection set rekey sha algo failed, err = %{public}d", errCode);
+        return errCode;
     }
 
     if (rdbPwd.isKeyExpired) {

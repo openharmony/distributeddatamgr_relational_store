@@ -59,7 +59,6 @@ private:
     int InnerOpen(const RdbStoreConfig &config);
     int Config(const RdbStoreConfig &config);
     int SetPageSize(const RdbStoreConfig &config);
-    int SetEncryptAlgo(const RdbStoreConfig &config);
     int SetEncryptKey(const RdbStoreConfig &config);
     int SetJournalMode(const RdbStoreConfig &config);
     int SetJournalSizeLimit(const RdbStoreConfig &config);
