@@ -18,7 +18,9 @@
 #include <cstdlib>
 
 #include "js_logger.h"
+#if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
 #include "napi_base_context.h"
+#endif
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
@@ -44,10 +46,12 @@ Context::Context()
     bundleName_ = "com.example.myapplication";
 }
 
+#if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
 Context::Context(std::shared_ptr<AbilityRuntime::Platform::Context> stageContext)
 {
     databaseDir_ = stageContext->GetDatabaseDir();
 }
+#endif
 
 std::string Context::GetDatabaseDir()
 {
