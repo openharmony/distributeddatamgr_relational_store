@@ -34,7 +34,7 @@
 #include "directory_ex.h"
 #endif
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "iresult_set.h"
 #include "rdb_device_manager_adapter.h"
 #include "rdb_manager.h"
@@ -79,7 +79,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     name = config.GetName();
     fileType = config.GetDatabaseFileType();
     isEncrypt_ = config.IsEncrypt();
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     syncerParam_.bundleName_ = config.GetBundleName();
     syncerParam_.hapName_ = config.GetModuleName();
     syncerParam_.storeName_ = config.GetName();
@@ -116,7 +116,7 @@ RdbStoreImpl::RdbStoreImpl()
 RdbStoreImpl::~RdbStoreImpl()
 {
     delete connectionPool;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     if (isShared_) {
         std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
         int errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
@@ -373,7 +373,7 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
     return errCode;
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
@@ -438,7 +438,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
 }
 #endif
 
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
+#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
 std::unique_ptr<ResultSet> RdbStoreImpl::Query(
     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
@@ -574,7 +574,7 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
     if (destEncryptKey.size() != 0 && !isEncrypt_) {
         bindArgs.push_back(ValueObject(destEncryptKey));
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     } else if (isEncrypt_) {
         std::vector<uint8_t> key;
         RdbPassword rdbPwd;
@@ -726,7 +726,7 @@ int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
     if (destEncryptKey.size() != 0 && !isEncrypt_) {
         bindArgs.push_back(ValueObject(destEncryptKey));
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     } else if (isEncrypt_) {
         std::vector<uint8_t> key;
         RdbPassword rdbPwd;
@@ -917,7 +917,7 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
     return E_OK;
 }
 
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
+#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
 
 std::string RdbStoreImpl::ExtractFilePath(const std::string &fileFullName)
 {
@@ -1085,7 +1085,7 @@ std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
     return resultSet;
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));

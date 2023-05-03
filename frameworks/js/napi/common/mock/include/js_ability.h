@@ -18,6 +18,7 @@
 #include <iostream>
 #include <string>
 
+#include "context.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -27,6 +28,7 @@ namespace AppDataMgrJsKit {
 class Context {
 public:
     explicit Context();
+    explicit Context(std::shared_ptr<AbilityRuntime::Platform::Context> stageContext);
 
     std::string GetDatabaseDir();
     std::string GetPreferencesDir();

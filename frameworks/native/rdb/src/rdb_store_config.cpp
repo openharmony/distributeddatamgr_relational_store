@@ -180,7 +180,7 @@ void RdbStoreConfig::SetReadOnly(bool readOnly)
     this->readOnly = readOnly;
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 int RdbStoreConfig::SetDistributedType(DistributedType type)
 {
     if (type < DistributedType::RDB_DEVICE_COLLABORATION || type >= DistributedType::RDB_DISTRIBUTED_TYPE_MAX) {

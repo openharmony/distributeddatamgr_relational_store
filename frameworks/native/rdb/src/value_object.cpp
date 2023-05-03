@@ -170,7 +170,7 @@ int ValueObject::GetBlob(std::vector<uint8_t> &val) const
     return E_OK;
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 bool ValueObject::Marshalling(Parcel &parcel) const
 {
     switch (this->type) {
