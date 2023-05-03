@@ -25,7 +25,7 @@
 #include "rdb_errno.h"
 #include "value_object.h"
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_result_set_bridge.h"
 #include "string_ex.h"
 #endif
@@ -81,7 +81,7 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::
     return instance;
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 {
     return std::make_shared<RdbDataShareAdapter::RdbResultSetBridge>(resultSet_);

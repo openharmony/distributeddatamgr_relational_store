@@ -32,7 +32,7 @@
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "directory_ex.h"
 #include "rdb_security_manager.h"
 #include "relational/relational_store_sqlite_ext.h"
@@ -45,7 +45,9 @@ namespace NativeRdb {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 // error status
 const int ERROR_STATUS = -1;
+#if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using RdbKeyFile = RdbSecurityManager::KeyFileType;
+#endif
 #endif
 
 SqliteConnection *SqliteConnection::Open(const RdbStoreConfig &config, bool isWriteConnection, int &errCode)
@@ -244,7 +246,7 @@ int SqliteConnection::SetEncryptAlgo(const RdbStoreConfig &config)
 
 int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config)
 {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     std::vector<uint8_t> key;
     RdbPassword rdbPwd;
     if (!config.GetEncryptKey().empty() && !config.IsEncrypt()) {
@@ -727,7 +729,7 @@ int SqliteConnection::ConfigLocale(const std::string localeStr)
 }
 #endif
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 /**
  * Executes a statement and populates the specified with a range of results.
  */

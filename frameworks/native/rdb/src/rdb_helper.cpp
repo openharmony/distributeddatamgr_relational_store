@@ -24,7 +24,7 @@
 #include "unistd.h"
 #include "rdb_store_manager.h"
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_security_manager.h"
 #include "security_policy.h"
 #endif
@@ -49,7 +49,7 @@ void RdbHelper::ClearCache()
 
 static void DeleteRdbKeyFiles(const std::string &dbFileName)
 {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     RdbSecurityManager::GetInstance().DelRdbSecretDataFile(dbFileName);
 #endif
 }

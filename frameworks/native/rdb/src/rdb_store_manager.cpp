@@ -21,7 +21,7 @@
 #include "unistd.h"
 #include "rdb_store_manager.h"
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_security_manager.h"
 #include "security_policy.h"
 #endif
@@ -65,7 +65,7 @@ RdbStoreManager::RdbStoreManager()
 
 void RdbStoreManager::InitSecurityManager(const RdbStoreConfig &config)
 {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     if (config.IsEncrypt()) {
         RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
     }
@@ -194,7 +194,7 @@ int RdbStoreManager::ProcessOpenCallback(
 int RdbStoreManager::SetSecurityLabel(const RdbStoreConfig &config)
 {
     int errCode = E_OK;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     errCode = SecurityPolicy::SetSecurityLabel(config);
 #endif
     return errCode;
