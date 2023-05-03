@@ -18,7 +18,7 @@
 #include <iostream>
 #include <string>
 
-#if defined(ANDROID_PLATFORM) && defined(IOS_PLATFORM)
+#if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
 #include "context.h"
 #endif
 #include "napi/native_api.h"
