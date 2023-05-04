@@ -36,12 +36,10 @@ public:
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
-    static const int E_SQLITE_ERROR;
 };
 
 const std::string RdbSqliteSharedResultSetTest::DATABASE_NAME = RDB_TEST_PATH + "shared_test.db";
 std::shared_ptr<RdbStore> RdbSqliteSharedResultSetTest::store = nullptr;
-const int RdbSqliteSharedResultSetTest::E_SQLITE_ERROR = -1;
 
 class SqliteSharedOpenCallback : public RdbOpenCallback {
 public:
@@ -943,4 +941,76 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_018, TestSize.Le
     resultSet->Close();
     bool closeFlag = resultSet->IsClosed();
     EXPECT_EQ(closeFlag, true);
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_019
+ * @tc.desc: normal testcase of SqliteSharedResultSet for GetRow
+ * @tc.type: FUNC
+ * @tc.require: AR000FKD4F
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_019, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::unique_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+    EXPECT_NE(resultSet, nullptr);
+
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+
+    int iRet = E_ERROR;
+    RowEntity rowEntity;
+    iRet = resultSet->GetRow(rowEntity);
+    EXPECT_EQ(E_OK, iRet);
+
+    int idValue = rowEntity.Get("id");
+    std::string data1Value = rowEntity.Get("data1");
+    int data2Value = rowEntity.Get("data2");
+    double data3Value = rowEntity.Get("data3");
+    std::vector<uint8_t> data4Value = rowEntity.Get("data4");
+    EXPECT_EQ(1, idValue);
+    EXPECT_EQ("hello", data1Value);
+    EXPECT_EQ(10, data2Value);
+    EXPECT_EQ(1.0, data3Value);
+    EXPECT_EQ(66, data4Value[0]);
+
+    int idValueByIndex = rowEntity.Get(0);
+    std::string data1ValueByIndex = rowEntity.Get(1);
+    int data2ValueByIndex = rowEntity.Get(2);
+    double data3ValueByIndex = rowEntity.Get(3);
+    std::vector<uint8_t> data4ValueByIndex = rowEntity.Get(4);
+    EXPECT_EQ(1, idValueByIndex);
+    EXPECT_EQ("hello", data1ValueByIndex);
+    EXPECT_EQ(10, data2ValueByIndex);
+    EXPECT_EQ(1.0, data3ValueByIndex);
+    EXPECT_EQ(66, data4ValueByIndex[0]);
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_020
+ * @tc.desc: normal testcase of SqliteSharedResultSet for GetRow
+ * @tc.type: FUNC
+ * @tc.require: AR000FKD4F
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_020, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::unique_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT data1, data2 FROM test", selectionArgs);
+    EXPECT_NE(resultSet, nullptr);
+
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+
+    int iRet = E_ERROR;
+    RowEntity rowEntity;
+    iRet = resultSet->GetRow(rowEntity);
+    EXPECT_EQ(E_OK, iRet);
+
+    std::string data1Value = rowEntity.Get("data1");
+    EXPECT_EQ("hello", data1Value);
+
+    std::string data1ValueByIndex = rowEntity.Get(0);
+    EXPECT_EQ("hello", data1ValueByIndex);
 }

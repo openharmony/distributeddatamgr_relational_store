@@ -27,9 +27,10 @@
 #include "values_bucket.h"
 #include "rdb_types.h"
 #include "rdb_common.h"
+#include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
-class RdbStore {
+class API_EXPORT RdbStore {
 public:
     /**
      * @brief Use SyncOption replace DistributedRdb::SyncOption namespace.
@@ -270,8 +271,8 @@ public:
      * @param predicates Indicates the specified query condition by the instance object of {@link AbsRdbPredicates}.
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
      */
-    virtual std::shared_ptr<ResultSet> RemoteQuery(const std::string &device,
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) = 0;
+    virtual std::shared_ptr<ResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
+        const std::vector<std::string> &columns, int &errCode) = 0;
 
     /**
      * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.
@@ -364,7 +365,7 @@ public:
      *
      * @param tables Indicates the tables name you want to set.
      */
-    virtual bool SetDistributedTables(const std::vector<std::string>& tables) = 0;
+    virtual int SetDistributedTables(const std::vector<std::string>& tables) = 0;
 
     /**
      * @brief Obtain distributed table name of specified remote device according to local table name.
@@ -374,7 +375,8 @@ public:
      *
      * @return Returns the distributed table name.
      */
-    virtual std::string ObtainDistributedTableName(const std::string& device, const std::string& table) = 0;
+    virtual std::string ObtainDistributedTableName(
+        const std::string &device, const std::string &table, int &errCode) = 0;
 
     /**
      * @brief Sync data between devices.
@@ -382,17 +384,17 @@ public:
      * @param device Indicates the remote device.
      * @param predicate Indicates the AbsRdbPredicates {@link AbsRdbPredicates} object.
      */
-    virtual bool Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) = 0;
+    virtual int Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) = 0;
 
     /**
      * @brief Subscribe to event changes.
      */
-    virtual bool Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
+    virtual int Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
 
     /**
      * @brief UnSubscribe to event changes.
      */
-    virtual bool UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
+    virtual int UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
 
     /**
      * @brief Drop the specified devices Data.

@@ -26,7 +26,6 @@
 #include "rdb_store_config.h"
 #include "sqlite_connection_pool.h"
 #include "sqlite_statement.h"
-#include "store_session.h"
 #include "transaction_observer.h"
 
 namespace OHOS::NativeRdb {
@@ -51,7 +50,8 @@ public:
         ConflictResolution conflictResolution) override;
     int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
         const std::vector<std::string> &whereArgs) override;
-    int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
+    int ExecuteSql(
+        const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
@@ -98,13 +98,12 @@ private:
     std::string ExtractFilePath(const std::string &fileFullName);
     int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
     int FreeTransaction(SqliteConnection *connection, const std::string &sql);
-    std::string GetBatchInsertSql(std::map<std::string, ValueObject> &valuesMap, const std::string &table);
+    std::pair<std::string, std::vector<ValueObject>> GetInsertParams(
+        std::map<std::string, ValueObject> &valuesMap, const std::string &table);
 
     SqliteConnectionPool *connectionPool;
     static const int MAX_IDLE_SESSION_SIZE = 5;
     std::mutex sessionMutex;
-    std::map<std::thread::id, std::pair<std::shared_ptr<StoreSession>, int>> threadMap;
-    std::list<std::shared_ptr<StoreSession>> idleSessions;
     bool isOpen;
     std::string path;
     std::string orgPath;

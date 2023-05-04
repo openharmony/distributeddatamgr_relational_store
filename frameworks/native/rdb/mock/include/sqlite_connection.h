@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "sqlite3sym.h"
-#include "sqlite_config.h"
+#include "rdb_store_config.h"
 #include "sqlite_statement.h"
 #include "value_object.h"
 
@@ -29,7 +29,7 @@ namespace OHOS {
 namespace NativeRdb {
 class SqliteConnection {
 public:
-    static SqliteConnection *Open(const SqliteConfig &config, bool isWriteConnection, int &errCode);
+    static SqliteConnection *Open(const RdbStoreConfig &config, bool isWriteConnection, int &errCode);
     ~SqliteConnection();
     bool IsWriteConnection() const;
     int Prepare(const std::string &sql, bool &outIsReadOnly);
@@ -56,14 +56,14 @@ public:
 
 private:
     explicit SqliteConnection(bool isWriteConnection);
-    int InnerOpen(const SqliteConfig &config);
-    int Config(const SqliteConfig &config);
-    int SetPageSize(const SqliteConfig &config);
-    int SetEncryptAlgo(const SqliteConfig &config);
-    int SetEncryptKey(const std::vector<uint8_t> &encryptKey);
-    int SetJournalMode(const SqliteConfig &config);
-    int SetJournalSizeLimit(const SqliteConfig &config);
-    int SetAutoCheckpoint(const SqliteConfig &config);
+    int InnerOpen(const RdbStoreConfig &config);
+    int Config(const RdbStoreConfig &config);
+    int SetPageSize(const RdbStoreConfig &config);
+    int SetEncryptAlgo(const RdbStoreConfig &config);
+    int SetEncryptKey(const RdbStoreConfig &config);
+    int SetJournalMode(const RdbStoreConfig &config);
+    int SetJournalSizeLimit(const RdbStoreConfig &config);
+    int SetAutoCheckpoint(const RdbStoreConfig &config);
     int SetWalSyncMode(const std::string &syncMode);
     int PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void LimitPermission(const std::string &dbPath) const;

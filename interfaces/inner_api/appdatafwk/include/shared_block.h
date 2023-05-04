@@ -23,6 +23,7 @@
 #include "message_parcel.h"
 #include "parcel.h"
 #include "securec.h"
+#include "rdb_visibility.h"
 
 namespace OHOS {
 namespace AppDataFwk {
@@ -34,7 +35,7 @@ static const uint32_t INVALID_ROW_RECORD = 0xFFFFFFFF;
  * This class stores a set of rows from a database in a buffer,
  * which is used as the set of query result.
  */
-class SharedBlock {
+class API_EXPORT SharedBlock {
 public:
     /**
      * @brief Cell Unit types.
@@ -88,77 +89,77 @@ public:
     /**
      * @brief Constructor.
      */
-    SharedBlock(const std::string &name, sptr<Ashmem> ashmem, size_t size, bool readOnly);
+    API_EXPORT SharedBlock(const std::string &name, sptr<Ashmem> ashmem, size_t size, bool readOnly);
 
     /**
      * @brief Destructor.
      */
-    ~SharedBlock();
+    API_EXPORT ~SharedBlock();
 
     /**
      * @brief Init current shared block.
      */
-    bool Init();
+    API_EXPORT bool Init();
 
     /**
      * @brief Create a shared block.
      */
-    static int Create(const std::string &name, size_t size, SharedBlock *&outSharedBlock);
+    API_EXPORT static int Create(const std::string &name, size_t size, SharedBlock *&outSharedBlock);
 
     /**
      * @brief Clear current shared block.
      */
-    int Clear();
+    API_EXPORT int Clear();
 
     /**
      * @brief Set a shared block column.
      */
-    int SetColumnNum(uint32_t numColumns);
+    API_EXPORT int SetColumnNum(uint32_t numColumns);
 
     /**
      * @brief Allocate a row unit and its directory.
      */
-    int AllocRow();
+    API_EXPORT int AllocRow();
 
     /**
      * @brief Release the value of the last row.
      */
-    int FreeLastRow();
+    API_EXPORT int FreeLastRow();
 
     /**
      * @brief Put blob data to the shared block.
      */
-    int PutBlob(uint32_t row, uint32_t column, const void *value, size_t Size);
+    API_EXPORT int PutBlob(uint32_t row, uint32_t column, const void *value, size_t Size);
 
     /**
      * @brief Put string data to the shared block.
      */
-    int PutString(uint32_t row, uint32_t column, const char *value, size_t sizeIncludingNull);
+    API_EXPORT int PutString(uint32_t row, uint32_t column, const char *value, size_t sizeIncludingNull);
 
     /**
      * @brief Put long data to the shared block.
      */
-    int PutLong(uint32_t row, uint32_t column, int64_t value);
+    API_EXPORT int PutLong(uint32_t row, uint32_t column, int64_t value);
 
     /**
      * @brief Put Double data to the shared block.
      */
-    int PutDouble(uint32_t row, uint32_t column, double value);
+    API_EXPORT int PutDouble(uint32_t row, uint32_t column, double value);
 
     /**
      * @brief Put Null data to the shared block.
      */
-    int PutNull(uint32_t row, uint32_t column);
+    API_EXPORT int PutNull(uint32_t row, uint32_t column);
 
     /**
      * @brief Obtains the cell unit at the specified row and column.
      */
-    CellUnit *GetCellUnit(uint32_t row, uint32_t column);
+    API_EXPORT CellUnit *GetCellUnit(uint32_t row, uint32_t column);
 
     /**
      * @brief Obtains string type data from cell unit.
      */
-    const char *GetCellUnitValueString(CellUnit *cellUnit, size_t *outSizeIncludingNull)
+    API_EXPORT const char *GetCellUnitValueString(CellUnit *cellUnit, size_t *outSizeIncludingNull)
     {
         *outSizeIncludingNull = cellUnit->cell.stringOrBlobValue.size;
         return static_cast<char *>(
@@ -168,7 +169,7 @@ public:
     /**
      * @brief Obtains blob type data from cell unit.
      */
-    const void *GetCellUnitValueBlob(CellUnit *cellUnit, size_t *outSize)
+    API_EXPORT const void *GetCellUnitValueBlob(CellUnit *cellUnit, size_t *outSize)
     {
         *outSize = cellUnit->cell.stringOrBlobValue.size;
         return OffsetToPtr(cellUnit->cell.stringOrBlobValue.offset, cellUnit->cell.stringOrBlobValue.size);
@@ -177,7 +178,7 @@ public:
     /**
      * @brief Obtains the mHeader of the current result set.
      */
-    const void *GetHeader()
+    API_EXPORT const void *GetHeader()
     {
         return mHeader;
     }
@@ -185,7 +186,7 @@ public:
     /**
      * @brief Obtains size of the used byte in the block.
      */
-    size_t GetUsedBytes()
+    API_EXPORT size_t GetUsedBytes()
     {
         return mHeader->unusedOffset;
     }
@@ -193,7 +194,7 @@ public:
     /**
      * @brief Obtains the name of the current result set.
      */
-    std::string Name()
+    API_EXPORT std::string Name()
     {
         return mName;
     }
@@ -201,7 +202,7 @@ public:
     /**
      * @brief Obtains the size of the current result set.
      */
-    size_t Size()
+    API_EXPORT size_t Size()
     {
         return mSize;
     }
@@ -209,7 +210,7 @@ public:
     /**
      * @brief Obtains the row number of the current result set.
      */
-    uint32_t GetRowNum()
+    API_EXPORT uint32_t GetRowNum()
     {
         return mHeader->rowNums;
     }
@@ -217,7 +218,7 @@ public:
     /**
      * @brief Obtains the column number of the current result set.
      */
-    uint32_t GetColumnNum()
+    API_EXPORT uint32_t GetColumnNum()
     {
         return mHeader->columnNums;
     }
@@ -225,22 +226,22 @@ public:
     /**
      * @brief Write message to parcel.
      */
-    int WriteMessageParcel(MessageParcel &parcel);
+    API_EXPORT int WriteMessageParcel(MessageParcel &parcel);
 
     /**
      * @brief Read message to parcel.
      */
-    static int ReadMessageParcel(MessageParcel &parcel, SharedBlock *&block);
+    API_EXPORT static int ReadMessageParcel(MessageParcel &parcel, SharedBlock *&block);
 
     /**
      * @brief Write raw data in block.
      */
-    size_t SetRawData(const void *rawData, size_t size);
+    API_EXPORT size_t SetRawData(const void *rawData, size_t size);
 
     /**
      * @brief Obtains the fd of shared memory
      */
-    int GetFd()
+    API_EXPORT int GetFd()
     {
         if (ashmem_ == nullptr) {
             return -1;
@@ -251,7 +252,7 @@ public:
     /**
      * @brief Obtains the start position of the current result set.
      */
-    uint32_t GetStartPos()
+    API_EXPORT uint32_t GetStartPos()
     {
         return mHeader->startPos_;
     }
@@ -259,7 +260,7 @@ public:
     /**
      * @brief Obtains the last position of the current result set.
      */
-    uint32_t GetLastPos()
+    API_EXPORT uint32_t GetLastPos()
     {
         return mHeader->lastPos_;
     }
@@ -267,7 +268,7 @@ public:
     /**
      * @brief Obtains the block position of the current result set.
      */
-    uint32_t GetBlockPos()
+    API_EXPORT uint32_t GetBlockPos()
     {
         return mHeader->blockPos_;
     }
@@ -275,7 +276,7 @@ public:
     /**
      * @brief Set the start position of the current result set.
      */
-    void SetStartPos(uint32_t startPos)
+    API_EXPORT void SetStartPos(uint32_t startPos)
     {
         mHeader->startPos_ = startPos;
     }
@@ -283,7 +284,7 @@ public:
     /**
      * @brief Set the last position of the current result set.
      */
-    void SetLastPos(uint32_t lastPos)
+    API_EXPORT void SetLastPos(uint32_t lastPos)
     {
         mHeader->lastPos_ = lastPos;
     }
@@ -291,7 +292,7 @@ public:
     /**
      * @brief Set the block position of the current result set.
      */
-    void SetBlockPos(uint32_t blockPos)
+    API_EXPORT void SetBlockPos(uint32_t blockPos)
     {
         mHeader->blockPos_ = blockPos;
     }

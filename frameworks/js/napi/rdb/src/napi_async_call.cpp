@@ -38,11 +38,11 @@ void BaseContext::SetAction(
     }
     // int -->input_(env, argc, argv, self)
     int status = input(env, argc, argv, self);
-    output_ = std::move(output);
-    exec_ = std::move(exec);
 
     // if input return is not ok, then napi_throw_error context error
     RDB_NAPI_ASSERT_RETURN_VOID_FROMV9(env, status == OK, error, apiversion);
+    output_ = std::move(output);
+    exec_ = std::move(exec);
     napi_create_reference(env, self, 1, &self_);
 }
 
@@ -96,7 +96,7 @@ napi_value AsyncCall::Call(napi_env env, std::shared_ptr<BaseContext> context)
     }
     context->keep_ = context;
     napi_value resource = nullptr;
-    napi_create_string_utf8(env, "AsyncCall", NAPI_AUTO_LENGTH, &resource);
+    napi_create_string_utf8(env, "RdbAsyncCall", NAPI_AUTO_LENGTH, &resource);
     // create async work, execute function is OnExecute, complete function is OnComplete
     napi_create_async_work(env, nullptr, resource, AsyncCall::OnExecute, AsyncCall::OnComplete,
         reinterpret_cast<void *>(context.get()), &context->work_);
@@ -124,8 +124,8 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
     // if async execute status is not napi_ok then un-execute out function
     if ((context->execStatus == OK) && context->output_) {
         outStatus = context->output_(env, output);
-        context->output_ = nullptr;
     }
+    context->output_ = nullptr;
     napi_value result[ARG_BUTT] = { 0 };
     // if out function status is ok then async renturn output data, else return error.
     if (outStatus == OK) {

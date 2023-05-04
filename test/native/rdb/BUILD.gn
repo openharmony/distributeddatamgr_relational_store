@@ -52,10 +52,12 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_predicates_join_test.cpp",
     "unittest/rdb_predicates_test.cpp",
     "unittest/rdb_sqlite_shared_result_set_test.cpp",
+    "unittest/rdb_step_result_get_row_test.cpp",
     "unittest/rdb_step_result_set_test.cpp",
     "unittest/rdb_store_concurrent_test.cpp",
     "unittest/rdb_store_config_test.cpp",
     "unittest/rdb_store_interface_test.cpp",
+    "unittest/rdb_store_rekey_test.cpp",
     "unittest/rdb_transaction_test.cpp",
     "unittest/rdb_update_test.cpp",
     "unittest/rdb_upgrade_test.cpp",
@@ -70,10 +72,10 @@ ohos_unittest("NativeRdbTest") {
     "hilog_native:libhilog",
     "huks:libhukssdk",
     "ipc:ipc_core",
-    "relational_store:native_rdb",
   ]
 
   deps = [
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb_static",
     "//third_party/googletest:gtest_main",
     "//third_party/icu/icu4c:shared_icui18n",
     "//third_party/icu/icu4c:shared_icuuc",

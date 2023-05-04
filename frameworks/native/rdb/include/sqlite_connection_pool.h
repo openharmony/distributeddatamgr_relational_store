@@ -25,7 +25,6 @@
 #include <stack>
 
 #include "rdb_store_config.h"
-#include "sqlite_config.h"
 #include "sqlite_connection.h"
 #include "base_transaction.h"
 
@@ -44,7 +43,7 @@ public:
     int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
         const std::vector<uint8_t> &newKey);
     std::stack<BaseTransaction> &getTransactionStack();
-    void AcquireTransaction();
+    int AcquireTransaction();
     void ReleaseTransaction();
 
 private:
@@ -59,7 +58,7 @@ private:
     bool IsOverLength(const std::vector<uint8_t> &newKey);
     int InnerReOpenReadConnections();
 
-    SqliteConfig config;
+    RdbStoreConfig config;
     SqliteConnection *writeConnection;
     std::mutex writeMutex;
     std::condition_variable writeCondition;

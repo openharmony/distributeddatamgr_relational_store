@@ -20,6 +20,7 @@
 #include <variant>
 #include <vector>
 #include <parcel.h>
+#include "rdb_visibility.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -44,7 +45,7 @@ enum class ValueObjectType {
 /**
  * The ValueObject class of RDB.
  */
-class ValueObject : public virtual OHOS::Parcelable {
+class API_EXPORT ValueObject : public virtual OHOS::Parcelable {
 public:
     /**
      * @brief Use Type replace std::variant.
@@ -54,29 +55,29 @@ public:
     /**
      * @brief Constructor.
      */
-    ValueObject();
+    API_EXPORT ValueObject();
 
     /**
      * @brief Destructor.
      */
-    ~ValueObject();
+    API_EXPORT ~ValueObject();
 
     /**
      * @brief Constructor.
      *
      * A parameterized constructor used to create a ValueObject instance.
      */
-    ValueObject(Type valueObject) noexcept;
+    API_EXPORT ValueObject(Type valueObject) noexcept;
 
     /**
      * @brief Move constructor.
      */
-    ValueObject(ValueObject &&valueObject) noexcept;
+    API_EXPORT ValueObject(ValueObject &&valueObject) noexcept;
 
     /**
      * @brief Copy constructor.
      */
-    ValueObject(const ValueObject &valueObject);
+    API_EXPORT ValueObject(const ValueObject &valueObject);
 
     /**
      * @brief Constructor.
@@ -85,7 +86,7 @@ public:
      *
      * @param val Indicates an int input parameter.
      */
-    explicit ValueObject(int val);
+    API_EXPORT ValueObject(int val);
 
     /**
      * @brief Constructor.
@@ -94,7 +95,7 @@ public:
      *
      * @param val Indicates an int64_t input parameter.
      */
-    explicit ValueObject(int64_t val);
+    API_EXPORT ValueObject(int64_t val);
 
     /**
      * @brief Constructor.
@@ -103,7 +104,7 @@ public:
      *
      * @param val Indicates an double input parameter.
      */
-    explicit ValueObject(double val);
+    API_EXPORT ValueObject(double val);
 
     /**
      * @brief Constructor.
@@ -112,7 +113,7 @@ public:
      *
      * @param val Indicates an bool input parameter.
      */
-    explicit ValueObject(bool val);
+    API_EXPORT ValueObject(bool val);
 
     /**
      * @brief Constructor.
@@ -121,7 +122,16 @@ public:
      *
      * @param val Indicates an string input parameter.
      */
-    explicit ValueObject(const std::string &val);
+    API_EXPORT ValueObject(const std::string &val);
+
+    /**
+     * @brief Constructor.
+     *
+     * This constructor is used to convert the const chars input parameter to a value of type ValueObject.
+     *
+     * @param val Indicates a const chars input parameter.
+     */
+    API_EXPORT ValueObject(const char *val);
 
     /**
      * @brief Constructor.
@@ -130,62 +140,62 @@ public:
      *
      * @param val Indicates an vector<uint8_t> input parameter.
      */
-    explicit ValueObject(const std::vector<uint8_t> &blob);
+    API_EXPORT ValueObject(const std::vector<uint8_t> &blob);
 
     /**
      * @brief Move assignment operator overloaded function.
      */
-    ValueObject &operator=(ValueObject &&valueObject) noexcept;
+    API_EXPORT ValueObject &operator=(ValueObject &&valueObject) noexcept;
 
     /**
      * @brief Copy assignment operator overloaded function.
      */
-    ValueObject &operator=(const ValueObject &valueObject);
+    API_EXPORT ValueObject &operator=(const ValueObject &valueObject);
 
     /**
      * @brief Obtains the type in this {@code ValueObject} object.
      */
-    ValueObjectType GetType() const;
+    API_EXPORT ValueObjectType GetType() const;
 
     /**
      * @brief Obtains the int value in this {@code ValueObject} object.
      */
-    int GetInt(int &val) const;
+    API_EXPORT int GetInt(int &val) const;
 
     /**
      * @brief Obtains the long value in this {@code ValueObject} object.
      */
-    int GetLong(int64_t &val) const;
+    API_EXPORT int GetLong(int64_t &val) const;
 
     /**
      * @brief Obtains the double value in this {@code ValueObject} object.
      */
-    int GetDouble(double &val) const;
+    API_EXPORT int GetDouble(double &val) const;
 
     /**
      * @brief Obtains the bool value in this {@code ValueObject} object.
      */
-    int GetBool(bool &val) const;
+    API_EXPORT int GetBool(bool &val) const;
 
     /**
      * @brief Obtains the string value in this {@code ValueObject} object.
      */
-    int GetString(std::string &val) const;
+    API_EXPORT int GetString(std::string &val) const;
 
     /**
      * @brief Obtains the vector<uint8_t> value in this {@code ValueObject} object.
      */
-    int GetBlob(std::vector<uint8_t> &val) const;
+    API_EXPORT int GetBlob(std::vector<uint8_t> &val) const;
 
     /**
      * @brief Write to message parcel.
      */
-    bool Marshalling(Parcel &parcel) const override;
+    API_EXPORT bool Marshalling(Parcel &parcel) const override;
 
     /**
      * @brief Obtains a ValueObject object from parcel.
      */
-    static ValueObject *Unmarshalling(Parcel &parcel);
+    API_EXPORT static ValueObject *Unmarshalling(Parcel &parcel);
 
     /**
      * @brief Type conversion function.

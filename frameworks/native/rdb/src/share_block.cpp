@@ -116,7 +116,6 @@ void FillSharedBlockOpt(SharedBlockInfo *info)
     while (!gotException) {
         int err = sqlite3_step(info->statement);
         if (err == SQLITE_DONE) {
-            LOG_WARN("Processed all rows after optimization.");
             break;
         } else if (err == SQLITE_LOCKED || err == SQLITE_BUSY) {
             LOG_WARN("Database locked, retrying");

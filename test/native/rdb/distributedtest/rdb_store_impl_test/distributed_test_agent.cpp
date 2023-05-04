@@ -24,7 +24,6 @@
 #include "rdb_open_callback.h"
 #include "rdb_store_impl.h"
 #include "rdb_types.h"
-#include "distributed_kv_data_manager.h"
 
 #include "distributed_agent.h"
 
@@ -33,9 +32,7 @@ using namespace OHOS;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::DistributeSystemTest;
 using namespace OHOS::DistributedRdb;
-using namespace DistributedKv;
 using namespace OHOS::HiviewDFX;
-using namespace OHOS::DistributedKv;
 
 namespace {
 constexpr HiLogLabel LABEL = {LOG_CORE, 0, "DistributedTestAgent"};
@@ -50,8 +47,6 @@ public:
     virtual bool TearDown();
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store_;
-    static DistributedKvDataManager manager_;
-    static std::vector <DeviceInfo> deviceInfos_;
 
     virtual int OnProcessMsg(const std::string &strMsg, int len, std::string &strReturnValue, int returnBufL);
     using SyncOption = DistributedRdb::SyncOption;
@@ -60,8 +55,6 @@ public:
 
 const std::string DistributedTestAgent::DATABASE_NAME = RDB_TEST_PATH + "distributed_rdb.db";
 std::shared_ptr<RdbStore> DistributedTestAgent::store_ = nullptr;
-DistributedKvDataManager DistributedTestAgent::manager_;
-std::vector<DeviceInfo> DistributedTestAgent::deviceInfos_;
 
 
 class DistributedTestOpenCallback : public RdbOpenCallback {
