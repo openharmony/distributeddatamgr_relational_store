@@ -520,7 +520,7 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
         backupFilePath = databasePath;
     }
     std::shared_ptr<StoreSession> session = GetThreadSession();
-    int errCode = session->Backup(backupFilePath, destEncryptKey);
+    int errCode = session->Backup(backupFilePath, destEncryptKey, isEncrypt_);
     ReleaseThreadSession();
     return errCode;
 }
@@ -544,7 +544,7 @@ int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
     const std::vector<uint8_t> destEncryptKey)
 {
     std::shared_ptr<StoreSession> session = GetThreadSession();
-    int errCode = session->Attach(alias, pathName, destEncryptKey);
+    int errCode = session->Attach(alias, pathName, destEncryptKey, isEncrypt_);
     ReleaseThreadSession();
     return errCode;
 }

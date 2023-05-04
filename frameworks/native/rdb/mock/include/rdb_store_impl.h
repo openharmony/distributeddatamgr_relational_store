@@ -120,6 +120,7 @@ private:
     std::string name;
     std::string fileType;
     std::stack<TransactionObserver *> transactionObserverStack;
+    bool isEncrypt_;
 };
 } // namespace OHOS::NativeRdb
 #endif

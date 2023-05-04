@@ -20,7 +20,11 @@
 
 namespace OHOS {
 namespace NativeRdb {
-    
+
+class GlobalExpr {
+public:
+    static constexpr int SQLITE_MAX_COLUMN = 2000;
+};
 
 class SqliteGlobalConfig {
 public:
