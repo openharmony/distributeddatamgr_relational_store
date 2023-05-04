@@ -421,6 +421,30 @@ public:
      * @brief Obtains the encrypt key in this {@code StoreConfig} object.
      */
     std::vector<uint8_t> GetEncryptKey() const;
+
+    /**
+     * @brief Overload the line number operator.
+     */
+    bool operator==(const RdbStoreConfig &config) const
+    {
+        if (this->encryptKey_.size() != config.encryptKey_.size()) {
+            return false;
+        }
+
+        for (size_t i = 0; i < encryptKey_.size(); i++) {
+            if (this->encryptKey_[i] != config.encryptKey_[i]) {
+                return false;
+            }
+        }
+
+        return this->path == config.path && this->storageMode == config.storageMode
+               && this->storageMode == config.storageMode && this->journalMode == config.journalMode
+               && this->syncMode == config.syncMode && this->databaseFileType == config.databaseFileType
+               && this->isEncrypt_ == config.isEncrypt_ && this->securityLevel == config.securityLevel
+               && this->journalSize == config.journalSize && this->pageSize == config.pageSize
+               && this->readConSize_ == config.readConSize_;
+    }
+
 private:
     void ClearEncryptKey();
 
