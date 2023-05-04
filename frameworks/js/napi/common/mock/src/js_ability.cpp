@@ -97,5 +97,10 @@ std::shared_ptr<Context> JSAbility::GetContext(napi_env env, napi_value value)
 {
     return std::make_shared<Context>();
 }
+
+bool Context::IsHasProxyDataConfig() const
+{
+    return hasProxyDataConfig;
+}
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
