@@ -198,7 +198,7 @@ if (is_ohos) {
 
     defines = [
       "IOS_PLATFORM",
-      "MOD_NAME=\"data_relationalStore\""
+      "MOD_NAME=\"data.relationalStore\""
     ]
 
     sources += [
