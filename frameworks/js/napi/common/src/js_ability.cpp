@@ -30,15 +30,22 @@ Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
     if (hapInfo != nullptr) {
         moduleName_ = hapInfo->moduleName;
     }
-    auto extensionContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::ExtensionContext>(stageContext);
-    if (extensionContext != nullptr) {
-        auto abilityInfo = extensionContext->GetAbilityInfo();
-        if (abilityInfo != nullptr) {
-            uri_ = abilityInfo->uri;
-            writePermission_ = abilityInfo->writePermission;
-            readPermission_ = abilityInfo->readPermission;
-            LOG_INFO("QueryAbilityInfo, uri: %{private}s, readPermission: %{public}s, writePermission: %{public}s.",
-                abilityInfo->uri.c_str(), abilityInfo->readPermission.c_str(), abilityInfo->writePermission.c_str());
+
+    if (hapInfo == nullptr || hapInfo->proxyDatas.size() != 0) {
+        hasProxyDataConfig = true;
+    } else {
+        auto extensionContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::ExtensionContext>(stageContext);
+        if (extensionContext != nullptr) {
+            auto abilityInfo = extensionContext->GetAbilityInfo();
+            if (abilityInfo != nullptr) {
+                uri_ = abilityInfo->uri;
+                writePermission_ = abilityInfo->writePermission;
+                readPermission_ = abilityInfo->readPermission;
+                LOG_INFO("QueryAbilityInfo, uri: %{private}s, readPermission: %{public}s, writePermission: "
+                         "%{public}s.",
+                    abilityInfo->uri.c_str(), abilityInfo->readPermission.c_str(),
+                    abilityInfo->writePermission.c_str());
+            }
         }
     }
     auto appInfo = stageContext->GetApplicationInfo();
@@ -58,7 +65,7 @@ Context::Context(std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext)
         moduleName_ = abilityInfo->moduleName;
     }
     LOG_DEBUG("FA: area:%{public}d database:%{private}s preferences:%{private}s bundle:%{public}s hap:%{public}s",
-              area_, databaseDir_.c_str(), preferencesDir_.c_str(), bundleName_.c_str(), moduleName_.c_str());
+        area_, databaseDir_.c_str(), preferencesDir_.c_str(), bundleName_.c_str(), moduleName_.c_str());
 }
 
 std::string Context::GetDatabaseDir()
@@ -102,6 +109,11 @@ bool Context::IsSystemAppCalled()
     return isSystemAppCalled_;
 }
 
+bool Context::IsHasProxyDataConfig() const
+{
+    return hasProxyDataConfig;
+}
+
 bool JSAbility::CheckContext(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
@@ -139,6 +151,12 @@ std::shared_ptr<Context> JSAbility::GetContext(napi_env env, napi_value value)
         return nullptr;
     }
     return std::make_shared<Context>(abilityContext);
+}
+ProxyData::ProxyData(const std::string &storeName, const std::string &tableName, const std::string &readPermission,
+    const std::string &writePermission, const std::string &scope)
+    : storeName(storeName), tableName(tableName), readPermission(readPermission), writePermission(writePermission),
+      scope(scope)
+{
 }
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
