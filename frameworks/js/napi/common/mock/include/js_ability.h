@@ -48,6 +48,7 @@ private:
     std::string uri_;
     std::string readPermission_;
     std::string writePermission_;
+    bool hasProxyDataConfig = false;
     bool isSystemAppCalled_ = false;
 };
 
