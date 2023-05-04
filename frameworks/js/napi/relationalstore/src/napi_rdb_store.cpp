@@ -1217,9 +1217,7 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
 
     std::string event = JSUtils::Convert2String(env, argv[0]);
     if (event == "dataChange") {
-        if (proxy->OffDataChangeEvent(env, argc - 1, argv + 1) != OK) {
-            return nullptr;
-        }
+        return proxy->OffDataChangeEvent(env, argc - 1, argv + 1);
     }
     return nullptr;
 }
