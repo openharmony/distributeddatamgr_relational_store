@@ -22,6 +22,7 @@ const std::string DataProperties::MODULE_SCOPE = "module";
 const std::string DataProperties::APPLICATION_SCOPE = "application";
 const std::string DataProperties::RDB_TYPE = "rdb";
 const std::string DataProperties::PUBLISHED_DATA_TYPE = "publishedData";
+static constexpr int PATH_SIZE = 2;
 bool DataProperties::Marshal(json &node) const
 {
     SetValue(node[GET_NAME(path)], storeName + SEPARATOR + tableName);
@@ -39,7 +40,7 @@ bool DataProperties::Unmarshal(const json &node)
     }
     std::vector<std::string> splitPath;
     SplitStr(path, SEPARATOR, splitPath);
-    if (splitPath.size() < 2) {
+    if (splitPath.size() < PATH_SIZE) {
         return false;
     }
 
