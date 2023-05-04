@@ -49,9 +49,7 @@ OpenHarmony关系型数据库底层使用SQLite作为持久化存储引擎，支
 
 ## 相关仓
 
-- [关系型数据库概述](https://gitee.com/openharmony/docs/blob/master/zh-cn/application-dev/database/database-relational-overview.md)
-
-- [关系型数据库开发指导](https://gitee.com/openharmony/docs/blob/master/zh-cn/application-dev/database/database-relational-guidelines.md)
+- [关系型数据库开发指导](https://gitee.com/openharmony/docs/blob/master/zh-cn/application-dev/database/data-sync-of-rdb-store.md)
 
 - [关系型数据库API文档](https://gitee.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis/js-apis-data-rdb.md)
 

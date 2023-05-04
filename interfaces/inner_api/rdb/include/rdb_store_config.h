@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 #include <rdb_types.h>
+#include "rdb_visibility.h"
 
 namespace OHOS::NativeRdb {
 /**
@@ -137,13 +138,8 @@ using DistributedType = OHOS::DistributedRdb::RdbDistributedType;
 /**
  * Manages relational database configurations.
  */
-class RdbStoreConfig {
+class API_EXPORT RdbStoreConfig {
 public:
-    /**
-     * @brief Copy constructor.
-     */
-    RdbStoreConfig(const RdbStoreConfig &config);
-
     /**
      * @brief Constructor.
      *
@@ -163,8 +159,8 @@ public:
      * @param pageSize Indicates the page size of the database.
      * @param encryptAlgo Indicates the encrypt algorithm of the database.
      */
-    RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
-        const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(),
+    API_EXPORT RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK,
+        bool readOnly = false, const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(),
         const std::string &journalMode = DB_DEFAULT_JOURNAL_MODE,
         const std::string &syncMode = "", const std::string &databaseFileType = "",
         SecurityLevel securityLevel = SecurityLevel::LAST, bool isCreateNecessary = true,
@@ -174,249 +170,260 @@ public:
     /**
      * @brief Destructor.
      */
-    ~RdbStoreConfig();
+    API_EXPORT ~RdbStoreConfig();
 
     /**
      * @brief Obtains the database name.
      */
-    std::string GetName() const;
+    API_EXPORT std::string GetName() const;
 
     /**
      * @brief Obtains the database path.
      */
-    std::string GetPath() const;
+    API_EXPORT std::string GetPath() const;
 
     /**
      * @brief Obtains the storage mode.
      */
-    StorageMode GetStorageMode() const;
+    API_EXPORT StorageMode GetStorageMode() const;
 
     /**
      * @brief Obtains the journal mode in this {@code StoreConfig} object.
      */
-    std::string GetJournalMode() const;
+    API_EXPORT std::string GetJournalMode() const;
 
     /**
      * @brief Obtains the synchronization mode in this {@code StoreConfig} object.
      */
-    std::string GetSyncMode() const;
+    API_EXPORT std::string GetSyncMode() const;
 
     /**
      * @brief Checks whether the database is read-only.
      */
-    bool IsReadOnly() const;
+    API_EXPORT bool IsReadOnly() const;
 
     /**
      * @brief Checks whether the database is memory.
      */
-    bool IsMemoryRdb() const;
+    API_EXPORT bool IsMemoryRdb() const;
 
     /**
      * @brief Obtains the database file type in this {@code StoreConfig} object.
      */
-    std::string GetDatabaseFileType() const;
+    API_EXPORT std::string GetDatabaseFileType() const;
 
     /**
      * @brief Obtains the database security level in this {@code StoreConfig} object.
      */
-    SecurityLevel GetSecurityLevel() const;
+    API_EXPORT SecurityLevel GetSecurityLevel() const;
 
     /**
      * @brief Set encrypt status for the current database.
      */
-    void SetEncryptStatus(const bool status);
+    API_EXPORT void SetEncryptStatus(const bool status);
 
     /**
      * @brief Checks whether the database is encrypt.
      */
-    bool IsEncrypt() const;
+    API_EXPORT bool IsEncrypt() const;
 
     /**
      * @brief Checks whether the database is create necessary.
      */
-    bool IsCreateNecessary() const;
+    API_EXPORT bool IsCreateNecessary() const;
 
     /**
      * @brief Sets the name for the object.
      */
-    void SetName(std::string name);
+    API_EXPORT void SetName(std::string name);
 
     /**
      * @brief Sets the journal mode, if not set, the default mode is WAL
      */
-    void SetJournalMode(JournalMode journalMode);
+    API_EXPORT void SetJournalMode(JournalMode journalMode);
 
     /**
      * @brief Sets the path for the object.
      */
-    void SetPath(std::string path);
+    API_EXPORT void SetPath(std::string path);
 
     /**
      * @brief Sets whether the database is read-only.
      */
-    void SetReadOnly(bool readOnly);
+    API_EXPORT void SetReadOnly(bool readOnly);
 
     /**
      * @brief Sets the storage mode for the object.
      */
-    void SetStorageMode(StorageMode storageMode);
+    API_EXPORT void SetStorageMode(StorageMode storageMode);
 
     /**
      * @brief Sets database file type.
      */
-    void SetDatabaseFileType(DatabaseFileType type);
+    API_EXPORT void SetDatabaseFileType(DatabaseFileType type);
 
     /**
      * @brief Sets database security level.
      */
-    void SetSecurityLevel(SecurityLevel secLevel);
+    API_EXPORT void SetSecurityLevel(SecurityLevel secLevel);
 
     /**
      * @brief Sets whether the database is create necessary.
      */
-    void SetCreateNecessary(bool isCreateNecessary);
+    API_EXPORT void SetCreateNecessary(bool isCreateNecessary);
 
     /**
      * @brief Sets the bundle name for the object.
      */
-    int SetBundleName(const std::string &bundleName);
+    API_EXPORT int SetBundleName(const std::string &bundleName);
 
     /**
      * @brief Obtains the bundle name in this {@code StoreConfig} object.
      */
-    std::string GetBundleName() const;
+    API_EXPORT std::string GetBundleName() const;
 
     /**
      * @brief Sets the distributed type for the object.
      */
-    int SetDistributedType(DistributedType type);
+    API_EXPORT int SetDistributedType(DistributedType type);
 
     /**
      * @brief Obtains the distributed type in this {@code StoreConfig} object.
      */
-    DistributedType GetDistributedType() const;
+    API_EXPORT DistributedType GetDistributedType() const;
 
     /**
      * @brief Sets the module name for the object.
      */
-    void SetModuleName(const std::string& moduleName);
+    API_EXPORT void SetModuleName(const std::string& moduleName);
 
     /**
      * @brief Obtains the module name in this {@code StoreConfig} object.
      */
-    std::string GetModuleName() const;
+    API_EXPORT std::string GetModuleName() const;
 
     /**
      * @brief Sets the service name for the object.
      */
-    void SetServiceName(const std::string& serviceName);
+    API_EXPORT void SetServiceName(const std::string& serviceName);
 
     /**
      * @brief Sets the area for the object.
      */
-    void SetArea(int32_t area);
+    API_EXPORT void SetArea(int32_t area);
 
     /**
      * @brief Obtains the area in this {@code StoreConfig} object.
      */
-    int32_t GetArea() const;
+    API_EXPORT int32_t GetArea() const;
 
     /**
      * @brief Obtains the uri in this {@code StoreConfig} object.
      */
-    std::string GetUri() const;
+    API_EXPORT std::string GetUri() const;
 
     /**
      * @brief Sets the uri for the object.
      */
-    void SetUri(const std::string& uri);
+    API_EXPORT void SetUri(const std::string& uri);
 
     /**
      * @brief Obtains the read permission in this {@code StoreConfig} object.
      */
-    std::string GetReadPermission() const;
+    API_EXPORT std::string GetReadPermission() const;
 
     /**
      * @brief Sets the read permission for the object.
      */
-    void SetReadPermission(const std::string& permission);
+    API_EXPORT void SetReadPermission(const std::string& permission);
 
     /**
      * @brief Obtains the write permission in this {@code StoreConfig} object.
      */
-    std::string GetWritePermission() const;
+    API_EXPORT std::string GetWritePermission() const;
 
     /**
      * @brief Sets the write permission for the object.
      */
-    void SetWritePermission(const std::string& permission);
+    API_EXPORT void SetWritePermission(const std::string& permission);
 
     /**
      * @brief Obtains the journal mode value in this {@code StoreConfig} object.
      */
-    static std::string GetJournalModeValue(JournalMode journalMode);
+    API_EXPORT static std::string GetJournalModeValue(JournalMode journalMode);
 
     /**
      * @brief Obtains the sync mode value in this {@code StoreConfig} object.
      */
-    static std::string GetSyncModeValue(SyncMode syncMode);
+    API_EXPORT static std::string GetSyncModeValue(SyncMode syncMode);
 
     /**
      * @brief Obtains the database file type in this {@code StoreConfig} object.
      */
-    static std::string GetDatabaseFileTypeValue(DatabaseFileType databaseFileType);
+    API_EXPORT static std::string GetDatabaseFileTypeValue(DatabaseFileType databaseFileType);
 
     /**
      * @brief Checks whether the database is auto check.
      */
-    bool IsAutoCheck() const;
+    API_EXPORT bool IsAutoCheck() const;
 
     /**
      * @brief Sets whether the database is auto check.
      */
-    void SetAutoCheck(bool autoCheck);
+    API_EXPORT void SetAutoCheck(bool autoCheck);
 
     /**
      * @brief Obtains the journal size in this {@code StoreConfig} object.
      */
-    int GetJournalSize() const;
+    API_EXPORT int GetJournalSize() const;
 
     /**
      * @brief Sets the journal size for the object.
      */
-    void SetJournalSize(int journalSize);
+    API_EXPORT void SetJournalSize(int journalSize);
 
     /**
      * @brief Obtains the page size in this {@code StoreConfig} object.
      */
-    int GetPageSize() const;
+    API_EXPORT int GetPageSize() const;
 
     /**
      * @brief Sets the page size for the object.
      */
-    void SetPageSize(int pageSize);
+    API_EXPORT void SetPageSize(int pageSize);
 
     /**
      * @brief Obtains the encrypt algorithm in this {@code StoreConfig} object.
      */
-    const std::string GetEncryptAlgo() const;
+    API_EXPORT const std::string GetEncryptAlgo() const;
 
     /**
      * @brief Sets the encrypt algorithm for the object.
      */
-    void SetEncryptAlgo(const std::string &encryptAlgo);
+    API_EXPORT void SetEncryptAlgo(const std::string &encryptAlgo);
 
     /**
      * @brief Obtains the read connection size in this {@code StoreConfig} object.
      */
-    int GetReadConSize() const;
+    API_EXPORT int GetReadConSize() const;
 
     /**
      * @brief Sets the read connection size for the object.
      */
-    void SetReadConSize(int readConSize);
+    API_EXPORT void SetReadConSize(int readConSize);
 
+    /**
+     * @brief Sets the encrypt key for the object.
+     */
+    void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
+
+    /**
+     * @brief Obtains the encrypt key in this {@code StoreConfig} object.
+     */
+    std::vector<uint8_t> GetEncryptKey() const;
 private:
+    void ClearEncryptKey();
+
     std::string name;
     std::string path;
     StorageMode storageMode;
@@ -433,6 +440,7 @@ private:
     std::string moduleName_;
 
     bool isEncrypt_ = false;
+    std::vector<uint8_t> encryptKey_{};
     SecurityLevel securityLevel = SecurityLevel::LAST;
     std::string uri_;
     std::string readPermission_;

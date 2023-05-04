@@ -32,9 +32,15 @@
 
 namespace OHOS {
 namespace NativeRdb {
+constexpr std::chrono::seconds WAIT_CONNECT_TIMEOUT(2);
+
 SqliteConnectionPool *SqliteConnectionPool::Create(const RdbStoreConfig &storeConfig, int &errCode)
 {
-    auto pool = new SqliteConnectionPool(storeConfig);
+    auto pool = new (std::nothrow) SqliteConnectionPool(storeConfig);
+    if (pool == nullptr) {
+        LOG_ERROR("SqliteConnectionPool::Create new failed, pool is nullptr");
+        return nullptr;
+    }
     errCode = pool->Init();
     if (errCode != E_OK) {
         delete pool;
@@ -114,10 +120,8 @@ void SqliteConnectionPool::CloseAllConnections()
 SqliteConnection *SqliteConnectionPool::AcquireConnection(bool isReadOnly)
 {
     if (isReadOnly && readConnectionCount != 0) {
-        LOG_DEBUG("AcquireReadConnection");
         return AcquireReadConnection();
     } else {
-        LOG_DEBUG("AcquireWriteConnection");
         return AcquireWriteConnection();
     }
 }
@@ -133,21 +137,24 @@ void SqliteConnectionPool::ReleaseConnection(SqliteConnection *connection)
 
 SqliteConnection *SqliteConnectionPool::AcquireWriteConnection()
 {
-    LOG_DEBUG("begin");
     std::unique_lock<std::mutex> lock(writeMutex);
-    writeCondition.wait(lock, [&] { return !writeConnectionUsed; });
-    writeConnectionUsed = true;
-    LOG_DEBUG("end");
-    return writeConnection;
+    if (writeCondition.wait_for(lock, WAIT_CONNECT_TIMEOUT, [this] { return !writeConnectionUsed; })) {
+        writeConnectionUsed = true;
+        return writeConnection;
+    }
+    LOG_WARN("writeConnection is %{public}d",  writeConnectionUsed);
+    return nullptr;
 }
 
-void SqliteConnectionPool::AcquireTransaction()
+int SqliteConnectionPool::AcquireTransaction()
 {
-    LOG_DEBUG("AcquireTransaction begin");
     std::unique_lock<std::mutex> lock(transMutex);
-    transCondition.wait(lock, [&] { return !transactionUsed; });
-    transactionUsed = true;
-    LOG_DEBUG("AcquireTransaction end");
+    if (transCondition.wait_for(lock, WAIT_CONNECT_TIMEOUT, [this] { return !transactionUsed; })) {
+        transactionUsed = true;
+        return E_OK;
+    }
+    LOG_WARN("transactionUsed is %{public}d", transactionUsed);
+    return E_TRANSACTION_IN_EXECUTE;
 }
 
 void SqliteConnectionPool::ReleaseTransaction()
@@ -175,11 +182,15 @@ void SqliteConnectionPool::ReleaseWriteConnection()
 SqliteConnection *SqliteConnectionPool::AcquireReadConnection()
 {
     std::unique_lock<std::mutex> lock(readMutex);
-    readCondition.wait(lock, [&] { return idleReadConnectionCount > 0; });
-    SqliteConnection *connection = readConnections.back();
-    readConnections.pop_back();
-    idleReadConnectionCount--;
-    return connection;
+    if (readCondition.wait_for(lock, WAIT_CONNECT_TIMEOUT, [this] { return idleReadConnectionCount > 0; })) {
+        SqliteConnection *connection = readConnections.back();
+        readConnections.pop_back();
+        idleReadConnectionCount--;
+        return connection;
+    }
+    LOG_WARN("readConnectionCount is %{public}d, idleReadConnectionCount is %{public}d", readConnectionCount,
+        idleReadConnectionCount);
+    return nullptr;
 }
 
 /**

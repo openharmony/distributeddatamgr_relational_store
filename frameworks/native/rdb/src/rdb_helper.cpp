@@ -31,22 +31,12 @@
 
 namespace OHOS {
 namespace NativeRdb {
-void RdbHelper::InitSecurityManager(const RdbStoreConfig &config)
-{
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    if (config.IsEncrypt()) {
-        RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
-    }
-#endif
-}
-
 std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     SqliteGlobalConfig::InitSqliteGlobalConfig();
-    InitSecurityManager(config);
-    std::shared_ptr<RdbStore> rdbStore = 
+    std::shared_ptr<RdbStore> rdbStore =
         RdbStoreManager::GetInstance().GetRdbStore(config, errCode, version, openCallback);
 
     return rdbStore;

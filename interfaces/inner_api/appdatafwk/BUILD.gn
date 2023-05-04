@@ -15,7 +15,13 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 config("appdatafwk_config") {
   visibility = [ ":*" ]
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb/include",
+  ]
+  if (!is_mingw && !is_mac) {
+    cflags_cc = [ "-fvisibility=hidden" ]
+  }
 }
 
 config("appdatafwk_public_config") {
@@ -33,7 +39,7 @@ ohos_shared_library("native_appdatafwk") {
   part_name = "relational_store"
 
   public_deps = [
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
+    "//foundation/communication/ipc/interfaces/innerkits/ipc_single:ipc_single",
   ]
 
   external_deps = [

@@ -308,5 +308,70 @@ describe('rdbStoreInsertTest', function () {
         console.log(TAG + "************* testRdbStorebatchInsert001 end *************");
     })
 
+     /**
+         * @tc.name: rdb batchInsert test
+         * @tc.number: SUB_DDM_AppDataFWK_JSRDB_batchInsert_0001
+         * @tc.desc: rdb batchInsert test
+         * @tc.require: issueI5GZGX
+         */
+      it('testRdbStorebatchInsert002', 0, async function () {
+        console.log(TAG + "************* testRdbStorebatchInsert002 start *************");
+
+        await rdbStore.executeSql("delete from test");
+
+        let valueBucketArray = new Array();
+
+        var u8 = new Uint8Array([1, 2, 3])
+        const valueBucket = {
+            "name": "zhangsan",
+            "age": 18,
+            "salary": 11.5,
+            "blobType": u8,
+        }
+        const valueBucket1 = {
+            "name": "lisi",
+            "age": 15,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        const valueBucket2 = {
+            "name": "zhaoliu",
+            "salary": 1.5,
+        }
+        const valueBucket3 = {
+            "name": "lisi",
+            "age": 18,
+            "salary": 111.5,
+            "blobType": u8,
+        }
+
+        valueBucketArray.push(valueBucket);
+        valueBucketArray.push(valueBucket1);
+        valueBucketArray.push(valueBucket2);
+        valueBucketArray.push(valueBucket3);
+
+        let errCode = await rdbStore.batchInsert("test", valueBucketArray);
+        expect(4).assertEqual(errCode);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(4).assertEqual(count);
+        resultSet.close()
+
+        let predicates = new dataRdb.RdbPredicates("test");
+        predicates.equalTo("salary", 1.5);
+        resultSet = await rdbStore.query(predicates, []);
+        count = resultSet.rowCount;
+        expect(1).assertEqual(count);
+        resultSet.close();
+
+        let secPredicates = new dataRdb.RdbPredicates("test");
+        secPredicates.equalTo("age", 18);
+        resultSet = await rdbStore.query(secPredicates, []);
+        count = resultSet.rowCount;
+        expect(2).assertEqual(count);
+        resultSet.close();
+
+        console.log(TAG + "************* testRdbStorebatchInsert002 end *************");
+    })
     console.log(TAG + "*************Unit Test End*************");
 })

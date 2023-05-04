@@ -26,7 +26,11 @@ constexpr ISharedResultSetStub::Handler ISharedResultSetStub::handlers[ISharedRe
 sptr<ISharedResultSet> ISharedResultSetStub::CreateStub(std::shared_ptr<AbsSharedResultSet> result,
     OHOS::MessageParcel &parcel)
 {
-    sptr<ISharedResultSet> stub = new ISharedResultSetStub(result);
+    sptr<ISharedResultSet> stub = new (std::nothrow) ISharedResultSetStub(result);
+    if (stub == nullptr) {
+        LOG_ERROR("stub is nullptr");
+        return nullptr;
+    }
     if (result == nullptr) {
         LOG_ERROR("result is nullptr");
         return nullptr;
@@ -121,6 +125,11 @@ int ISharedResultSetStub::HandleCloseRequest(MessageParcel &data, MessageParcel 
 
 void ISharedResultSetStub::Run()
 {
+#if defined(MAC_PLATFORM)
+    pthread_setname_np("RDB_DataAbility");
+#else
+    pthread_setname_np(pthread_self(), "RDB_DataAbility");
+#endif
     auto handle = thread_.native_handle();
     bool isRunning = true;
     while (isRunning) {

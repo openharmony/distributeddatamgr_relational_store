@@ -36,7 +36,7 @@ namespace RdbDataShareAdapter {
 /**
  * The RdbUtils class of RDB.
  */
-class RdbUtils {
+class API_EXPORT RdbUtils {
 public:
     /**
      * @brief Use RdbPredicates replace NativeRdb::RdbPredicates namespace.
@@ -81,19 +81,20 @@ public:
     /**
      * @brief Convert DataShare::DataShareValuesBucket to NativeRdb::ValuesBucket.
      */
-    static ValuesBucket ToValuesBucket(const DataShareValuesBucket &bucket);
+    API_EXPORT static ValuesBucket ToValuesBucket(const DataShareValuesBucket &bucket);
 
     /**
      * @brief Convert DataShare::DataShareAbsPredicates to NativeRdb::RdbPredicates.
      *
      * @param table Indicates the table name.
      */
-    static RdbPredicates ToPredicates(const DataShareAbsPredicates &predicates, const std::string &table);
+    API_EXPORT static RdbPredicates ToPredicates(
+        const DataShareAbsPredicates &predicates, const std::string &table);
 
     /**
      * @brief Convert NativeRdb::ResultSet to DataShare::ResultSetBridge.
      */
-    static std::shared_ptr<ResultSetBridge> ToResultSetBridge(std::shared_ptr<ResultSet> resultSet);
+    API_EXPORT static std::shared_ptr<ResultSetBridge> ToResultSetBridge(std::shared_ptr<ResultSet> resultSet);
 
 private:
     static void NoSupport(const OperationItem &item, RdbPredicates &query);
@@ -125,6 +126,11 @@ private:
     static void Glob(const OperationItem &item, RdbPredicates &predicates);
     static void Between(const OperationItem &item, RdbPredicates &predicates);
     static void NotBetween(const OperationItem &item, RdbPredicates &predicates);
+    static void CrossJoin(const OperationItem &item, RdbPredicates &predicates);
+    static void InnerJoin(const OperationItem &item, RdbPredicates &predicates);
+    static void LeftOuterJoin(const OperationItem &item, RdbPredicates &predicates);
+    static void Using(const OperationItem &item, RdbPredicates &predicates);
+    static void On(const OperationItem &item, RdbPredicates &predicates);
     RdbUtils();
     ~RdbUtils();
     static std::string ToString(const DataSharePredicatesObject &predicatesObject);
@@ -162,6 +168,11 @@ private:
         [DataShare::BETWEEN] = &RdbUtils::Between,
         [DataShare::NOTBETWEEN] = &RdbUtils::NotBetween,
         [DataShare::KEY_PREFIX] = &RdbUtils::NoSupport,
+        [DataShare::CROSSJOIN] = &RdbUtils::CrossJoin,
+        [DataShare::INNERJOIN] = &RdbUtils::InnerJoin,
+        [DataShare::LEFTOUTERJOIN] = &RdbUtils::LeftOuterJoin,
+        [DataShare::USING] = &RdbUtils::Using,
+        [DataShare::ON] = &RdbUtils::On,
     };
 };
 } // namespace RdbDataShareAdapter

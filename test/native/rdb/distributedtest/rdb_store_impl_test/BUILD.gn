@@ -44,9 +44,9 @@ ohos_distributedtest("DistributedTest") {
 
   external_deps = [
     "c_utils:utils",
+    "device_manager:devicemanagersdk",
     "hilog_native:libhilog",
     "ipc:ipc_core",
-    "kv_store:distributeddata_inner",
     "relational_store:native_rdb",
   ]
 
@@ -65,9 +65,9 @@ ohos_distributedtest("DistributedTestAgent") {
 
   external_deps = [
     "c_utils:utils",
+    "device_manager:devicemanagersdk",
     "hilog_native:libhilog",
     "ipc:ipc_core",
-    "kv_store:distributeddata_inner",
     "relational_store:native_rdb",
   ]
 

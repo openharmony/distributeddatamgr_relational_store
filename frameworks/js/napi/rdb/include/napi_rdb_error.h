@@ -26,7 +26,6 @@ constexpr int APIVERSION_V9 = 9;
 constexpr int APIVERSION_8 = 8;
 
 constexpr int E_PARAM_ERROR = 401;
-
 constexpr int E_INNER_ERROR = 14800000;
 
 constexpr int E_DB_INVALID = 14800010;
@@ -42,7 +41,7 @@ constexpr int E_RESULT_GOTO_ERROR = 14800012;
                 napi_throw_error((env), nullptr, "error message is empty");                                     \
                 return retVal;                                                                                  \
             }                                                                                                   \
-            if (((version) > (APIVERSION_8)) || ((error->GetCode()) == (401))) {                               \
+            if (((version) > (APIVERSION_8)) || ((error->GetCode()) == (401))) {                                \
                 LOG_ERROR("throw error: code = %{public}d , message = %{public}s, version= %{public}d",         \
                     error->GetCode(), error->GetMessage().c_str(), version);                                    \
                 napi_throw_error((env), std::to_string(error->GetCode()).c_str(), error->GetMessage().c_str()); \

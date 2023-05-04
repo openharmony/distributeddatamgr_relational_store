@@ -307,12 +307,12 @@ std::string SqliteSqlBuilder::PredicatesNormalize(const std::string &source, int
     }
 
     auto index = source.rfind("(*");
-    if (index != -1) {
+    if (index != std::string::npos) {
         return source;
     }
 
     index = source.rfind(".");
-    if (index == -1) {
+    if (index == std::string::npos) {
         return StringUtils::SurroundWithQuote(source, "`");
     }
 

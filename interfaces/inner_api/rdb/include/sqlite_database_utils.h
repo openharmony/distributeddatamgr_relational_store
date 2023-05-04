@@ -44,17 +44,17 @@ enum Type {
     SQL_FIRST_CHARACTER = 3
 };
 
-class SqliteDatabaseUtils {
+class API_EXPORT SqliteDatabaseUtils {
 public:
-    static std::map<std::string, int> MapInit();
-    static int GetSqlStatementType(std::string sql);
-    static void DeleteFile(std::string &fileName);
-    static bool RenameFile(std::string &oldFileName, std::string &newFileName);
-    static std::string GetDefaultDatabasePath(std::string &baseDir, std::string &name, int &errorCode);
-    static std::string GetCorruptPath(std::string &path, int &errorCode);
-    static std::string StrToUpper(std::string s);
-    static bool BeginExecuteSql(const std::string &sql);
-    static bool IsReadOnlySql(std::string sql);
+    API_EXPORT static std::map<std::string, int> MapInit();
+    API_EXPORT static int GetSqlStatementType(std::string sql);
+    API_EXPORT static void DeleteFile(std::string &fileName);
+    API_EXPORT static bool RenameFile(std::string &oldFileName, std::string &newFileName);
+    API_EXPORT static std::string GetDefaultDatabasePath(std::string &baseDir, std::string &name, int &errorCode);
+    API_EXPORT static std::string GetCorruptPath(std::string &path, int &errorCode);
+    API_EXPORT static std::string StrToUpper(std::string s);
+    API_EXPORT static bool BeginExecuteSql(const std::string &sql);
+    API_EXPORT static bool IsReadOnlySql(std::string sql);
 private:
     static std::map<std::string, int> g_statementType;
     static std::mutex g_locker;

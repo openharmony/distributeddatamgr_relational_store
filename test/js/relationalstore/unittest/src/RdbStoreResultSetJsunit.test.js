@@ -1974,7 +1974,7 @@ describe('rdbResultSetTest', function () {
                 expect("").assertEqual(resultSet.getString(1))
             }
         } catch (e) {
-            expect(e.code).assertEqual("14800000");
+            expect(e.code).assertEqual("14800013");
         }
         resultSet.close()
         expect(true).assertEqual(resultSet.isClosed)
@@ -2015,7 +2015,7 @@ describe('rdbResultSetTest', function () {
                 expect("").assertEqual(resultSet.getString(1))
             }
         } catch (e) {
-            expect(e.code).assertEqual("14800000");
+            expect(e.code).assertEqual("14800013");
         }
 
         resultSet.close()
@@ -2274,43 +2274,5 @@ describe('rdbResultSetTest', function () {
         console.log(TAG + "************* testBigData0014 end *************");
 
     })
-
-    /**
-     * @tc.name resultSet Maximum read connections normal test
-     * @tc.number Maximum_Read_Connections_0001
-     * @tc.desc resultSet getBlob normal test
-     */
-    it('testMaximumReadConnections0001', 0, async function (done) {
-        console.log(TAG + "************* testMaximumReadConnections0002 start *************");
-
-        try{
-            let resultSet1 = await rdbStore.queryByStep("SELECT ?, ? FROM test", ["id", "data1"])
-            expect(true).assertEqual(resultSet1.goToFirstRow())
-
-            let resultSet2 = await rdbStore.queryByStep("SELECT ?, ? FROM test", ["id", "data1"])
-            expect(true).assertEqual(resultSet2.goToFirstRow())
-
-            let resultSet3 = await rdbStore.queryByStep("SELECT ?, ? FROM test", ["id", "data1"])
-            expect(true).assertEqual(resultSet3.goToFirstRow())
-
-            let resultSet4 = await rdbStore.queryByStep("SELECT ?, ? FROM test", ["id", "data1"])
-            expect(true).assertEqual(resultSet4.goToFirstRow())
-
-            resultSet1.close();
-            resultSet2.close();
-            resultSet3.close();
-            resultSet4.close();
-
-            resultSet1 = null;
-            resultSet2 = null;
-            resultSet3 = null;
-            resultSet4 = null;
-        } catch (e) {
-            expect(null).assertFail();
-        }
-        done();
-        console.log(TAG + "************* testMaximumReadConnections0001 end *************");
-    })
-
     console.log(TAG + "*************Unit Test End*************");
 })

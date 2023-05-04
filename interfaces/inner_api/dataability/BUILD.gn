@@ -18,6 +18,10 @@ config("native_dataability_config") {
 
   cflags = [ "-Wc99-designator" ]
   cflags_cc = [ "-Wc99-designator" ]
+  if (!is_mingw && !is_mac) {
+    cflags_cc += [ "-fvisibility=hidden" ]
+  }
+
   include_dirs = [
     "include",
     "${relational_store_native_path}/dataability/include",
@@ -26,7 +30,7 @@ config("native_dataability_config") {
 }
 
 config("native_dataability_public_config") {
-  visibility = [ "//foundation/distributeddatamgr/relational_store:*" ]
+  visibility = [ ":*" ]
   include_dirs = [ "include" ]
 }
 

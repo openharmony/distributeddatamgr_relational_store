@@ -39,7 +39,7 @@ public:
 
     static RdbManagerImpl &GetInstance();
 
-    std::shared_ptr<RdbService> GetRdbService(const RdbSyncerParam& param);
+    int GetRdbService(const RdbSyncerParam& param, std::shared_ptr<RdbService> &service);
 
     void OnRemoteDied();
 
@@ -60,8 +60,6 @@ private:
     RdbManagerImpl();
 
     ~RdbManagerImpl();
-
-    sptr<RdbServiceProxy> GetRdbService();
 
     void ResetServiceHandle();
 

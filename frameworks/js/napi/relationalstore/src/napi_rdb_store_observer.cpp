@@ -18,7 +18,7 @@
 #include "js_logger.h"
 #include "js_utils.h"
 
-using OHOS::AppDataMgrJsKit::JSUtils;
+using namespace OHOS::AppDataMgrJsKit;
 using OHOS::AppDataMgrJsKit::PREFIX_LABEL;
 
 namespace OHOS::RelationalStoreJsKit {

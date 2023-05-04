@@ -17,30 +17,32 @@
 
 #include <string>
 #include <vector>
+#include "device_manager.h"
+#include "device_manager_callback.h"
+#include "dm_device_info.h"
 #include "hilog/log.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_store_impl.h"
 #include "rdb_types.h"
-#include "distributed_kv_data_manager.h"
 
 #include <regex>
 
 #include "distributed_major.h"
 
 using namespace testing::ext;
-using namespace OHOS;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::DistributedRdb;
 using namespace testing::ext;
-using namespace OHOS::DistributedKv;
 using namespace OHOS::DistributeSystemTest;
+using namespace OHOS::DistributedHardware;
 using namespace OHOS::HiviewDFX;
 namespace  {
 const int MSG_LENGTH = 100;
 constexpr HiLogLabel LABEL = {LOG_CORE, 0, "DistributedTest"};
 static const std::string RDB_TEST_PATH = "/data/test/";
+constexpr const char *PKG_NAME = "rdb_store_distributed_test";
 class DistributedTest : public DistributeTest {
 public:
     static void SetUpTestCase(void);
@@ -50,14 +52,38 @@ public:
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store_;
-    static DistributedKvDataManager manager_;
-    static std::vector <DeviceInfo> deviceInfos_;
+    static std::vector <DmDeviceInfo> deviceInfos_;
+    static void InitDevManager();
 };
 
 const std::string DistributedTest::DATABASE_NAME = RDB_TEST_PATH + "distributed_rdb.db";
 std::shared_ptr<RdbStore> DistributedTest::store_ = nullptr;
-DistributedKvDataManager DistributedTest::manager_;
-std::vector<DeviceInfo> DistributedTest::deviceInfos_;
+std::vector<DmDeviceInfo> DistributedTest::deviceInfos_;
+
+class DMStateCallback : public DeviceStateCallback {
+public:
+    explicit DMStateCallback() {}
+    void OnDeviceOnline(const DmDeviceInfo &deviceInfo) override {}
+    void OnDeviceOffline(const DmDeviceInfo &deviceInfo) override {}
+    void OnDeviceChanged(const DmDeviceInfo &deviceInfo) override {}
+    void OnDeviceReady(const DmDeviceInfo &deviceInfo) override {}
+};
+
+class DmDeathCallback : public DmInitCallback {
+public:
+    explicit DmDeathCallback() {}
+    void OnRemoteDied() override {}
+
+};
+
+void DistributedTest::InitDevManager()
+{
+    auto &deviceManager = DeviceManager::GetInstance();
+    auto deviceInitCallback = std::make_shared<DmDeathCallback>();
+    auto deviceCallback = std::make_shared<DMStateCallback>();
+    deviceManager.InitDeviceManager(PKG_NAME, deviceInitCallback);
+    deviceManager.RegisterDevStateCallback(PKG_NAME, "", deviceCallback);
+}
 
 class DistributedTestOpenCallback : public RdbOpenCallback {
 public:
@@ -90,7 +116,8 @@ void DistributedTest::SetUpTestCase(void)
     DistributedTestOpenCallback helper;
     DistributedTest::store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(DistributedTest::store_, nullptr);
-    manager_.GetDeviceList(deviceInfos_, DeviceFilterStrategy::NO_FILTER);
+    InitDevManager();
+    DeviceManager::GetInstance().GetTrustedDeviceList(PKG_NAME, "", deviceInfos_);
 }
 
 void DistributedTest::TearDownTestCase(void)
@@ -124,13 +151,15 @@ HWTEST_F(DistributedTest, RemoteQuery001, TestSize.Level1)
         return true;
     });
     std::vector<std::string> tables = {"test"};
-    manager_.GetDeviceList(deviceInfos_, DeviceFilterStrategy::NO_FILTER);
-    std::string test = store_->ObtainDistributedTableName(deviceInfos_[0].deviceId, tables[0]);
+    DeviceManager::GetInstance().GetTrustedDeviceList(PKG_NAME, "", deviceInfos_);
+    int errCode = E_ERROR;
+    std::string test = store_->ObtainDistributedTableName(deviceInfos_[0].networkId, tables[0], errCode);
     AbsRdbPredicates predicate(tables[0]);
     predicate.EqualTo("name", "zhangsan");
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> resultSet = store_-> RemoteQuery(deviceInfos_[0].deviceId, predicate, columns);
-    
+    errCode = E_ERROR;
+    std::shared_ptr<ResultSet> resultSet = store_->RemoteQuery(deviceInfos_[0].networkId, predicate, columns, errCode);
+
     EXPECT_TRUE(ret > 0);
     EXPECT_EQ(returvalue, "zhangsan");
 }

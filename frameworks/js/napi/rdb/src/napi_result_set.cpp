@@ -163,7 +163,11 @@ napi_value ResultSetProxy::InnerInitialize(napi_env env, napi_callback_info info
 {
     napi_value self = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &self, nullptr));
-    auto *proxy = new ResultSetProxy();
+    auto *proxy = new (std::nothrow) ResultSetProxy();
+    if (proxy == nullptr) {
+        LOG_ERROR("ResultSetProxy::InnerInitialize new failed, proxy is nullptr");
+        return nullptr;
+    }
     proxy->apiversion = version;
     auto finalize = [](napi_env env, void *data, void *hint) {
         ResultSetProxy *proxy = reinterpret_cast<ResultSetProxy *>(data);
