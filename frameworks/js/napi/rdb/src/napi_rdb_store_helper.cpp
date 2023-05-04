@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "napi_rdb_store_helper.h"
+
 #include <functional>
 #include <string>
 #include <vector>
@@ -22,7 +24,6 @@
 #include "napi_async_call.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_store.h"
-#include "napi_rdb_store_helper.h"
 #include "napi_rdb_trace.h"
 #include "rdb_errno.h"
 #include "rdb_open_callback.h"
@@ -310,9 +311,14 @@ int ParseContextProperty(const napi_env &env, std::shared_ptr<HelperRdbContext> 
     context->config.SetModuleName(context->abilitycontext->GetModuleName());
     context->config.SetArea(context->abilitycontext->GetArea());
     context->config.SetBundleName(context->abilitycontext->GetBundleName());
-    context->config.SetUri(context->abilitycontext->GetUri());
-    context->config.SetReadPermission(context->abilitycontext->GetReadPermission());
-    context->config.SetWritePermission(context->abilitycontext->GetWritePermission());
+
+    if (!context->abilitycontext->IsHasProxyDataConfig()) {
+        context->config.SetUri(context->abilitycontext->GetUri());
+        context->config.SetReadPermission(context->abilitycontext->GetReadPermission());
+        context->config.SetWritePermission(context->abilitycontext->GetWritePermission());
+    } else {
+        context->config.SetUri("dataProxy");
+    }
     return OK;
 }
 

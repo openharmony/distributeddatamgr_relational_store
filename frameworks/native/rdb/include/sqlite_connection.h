@@ -75,6 +75,9 @@ private:
     int SetPersistWal();
     int SetBusyTimeout(int timeout);
 
+    int SetCustomFunctions(const RdbStoreConfig &config);
+    int SetCustomScalarFunction(const std::string &functionName, int argc, ScalarFunction *function);
+
     sqlite3 *dbHandle;
     bool isWriteConnection;
     bool isReadOnly;

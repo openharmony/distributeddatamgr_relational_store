@@ -26,6 +26,15 @@
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
+struct ProxyData {
+    ProxyData(const std::string &storeName, const std::string &tableName, const std::string &readPermission,
+        const std::string &writePermission, const std::string &scope);
+    std::string storeName;
+    std::string tableName;
+    std::string readPermission;
+    std::string writePermission;
+    std::string scope;
+};
 class Context {
 public:
     explicit Context(std::shared_ptr<AbilityRuntime::Context> stageContext);
@@ -40,6 +49,7 @@ public:
     std::string GetWritePermission();
     int32_t GetArea() const;
     bool IsSystemAppCalled();
+    bool IsHasProxyDataConfig() const;
 
 private:
     int32_t area_ = 0;
@@ -50,6 +60,7 @@ private:
     std::string uri_;
     std::string readPermission_;
     std::string writePermission_;
+    bool hasProxyDataConfig = false;
     bool isSystemAppCalled_ = false;
 };
 

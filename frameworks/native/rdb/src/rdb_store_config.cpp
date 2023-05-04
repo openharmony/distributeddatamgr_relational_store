@@ -378,4 +378,14 @@ void RdbStoreConfig::ClearEncryptKey()
 {
     encryptKey_.assign(encryptKey_.size(), 0);
 }
+
+void RdbStoreConfig::SetScalarFunction(const std::string &functionName, int argc, ScalarFunction function)
+{
+    customScalarFunctions.try_emplace(functionName, ScalarFunctionInfo(function, argc));
+}
+
+std::map<std::string, ScalarFunctionInfo> RdbStoreConfig::GetScalarFunctions() const
+{
+    return customScalarFunctions;
+}
 } // namespace OHOS::NativeRdb
