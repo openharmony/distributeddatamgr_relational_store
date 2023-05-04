@@ -127,6 +127,9 @@ SqliteConnection *SqliteConnectionPool::AcquireConnection(bool isReadOnly)
 }
 void SqliteConnectionPool::ReleaseConnection(SqliteConnection *connection)
 {
+    if (connection == nullptr) {
+        return;
+    }
     connection->DesFinalize();
     if (connection == writeConnection) {
         ReleaseWriteConnection();
