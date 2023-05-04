@@ -662,14 +662,18 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
+#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
         context->resultSet_value = obj->rdbStore_->QueryByStep(context->sql, context->columns);
         LOG_ERROR("RdbStoreProxy::QuerySql is nullptr ? %{public}d ", context->resultSet_value == nullptr);
-#else
+#endif
         std::string selectionArgs = ",";
         for (size_t i = 0; i < context->selectionArgs.size(); i++) {
             selectionArgs += context->selectionArgs[i];
         }
+#if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
+        context->resultSet_value = obj->rdbStore_->QueryByStep(context->sql, context->selectionArgs);
+        LOG_ERROR("RdbStoreProxy::QuerySql is nullptr ? %{public}d ", context->resultSet_value == nullptr);
+#else
         context->resultSet_value = obj->rdbStore_->QuerySql(context->sql, context->selectionArgs);
 #endif
         return (context->resultSet_value != nullptr) ? E_OK : E_ERROR;
