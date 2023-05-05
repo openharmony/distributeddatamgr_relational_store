@@ -121,7 +121,8 @@ if (is_ohos) {
       "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
-    public_deps = [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
+    public_deps =
+        [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
 
     external_deps = [
       "c_utils:utils",
@@ -168,7 +169,8 @@ if (is_ohos) {
       "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
-    public_deps = [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
+    public_deps =
+        [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
 
     external_deps = [
       "c_utils:utils",
