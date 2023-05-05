@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DATA_SHARE_PROFILE_INFO_H
-#define DATA_SHARE_PROFILE_INFO_H
+#ifndef RDB_BMS_ADAPTER_PROFILE_INFO_H
+#define RDB_BMS_ADAPTER_PROFILE_INFO_H
 
 #include "bundle_info.h"
 #include "data_properties.h"
@@ -58,5 +58,5 @@ private:
     static std::string ReadProfile(const std::string &resPath);
     static bool IsFileExisted(const std::string &filePath);
 };
-} // namespace OHOS::DataShare
-#endif // DATA_SHARE_PROFILE_INFO_H
+} // namespace OHOS::RdbBMSAdapter
+#endif // RDB_BMS_ADAPTER_PROFILE_INFO_H
