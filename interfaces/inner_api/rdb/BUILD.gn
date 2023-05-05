@@ -13,80 +13,6 @@
 import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
-config("native_rdb_config") {
-  visibility = [ ":*" ]
-
-  if (is_mingw || is_mac) {
-    include_dirs = [
-      "mock/include",
-      "${relational_store_native_path}/rdb/mock/include",
-      "//commonlibrary/c_utils/base/include",
-      "include",
-      "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
-    ]
-  } else {
-    include_dirs = [
-      "include",
-      "//base/security/huks/frameworks/huks_standard/main/common/include",
-      "${relational_store_native_path}/rdb/include",
-      "${relational_store_native_path}/rdb_device_manager_adapter/include",
-      "//utils/system/safwk/native/include",
-      "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
-      "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb/include/",
-      "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb/interfaces/include/",
-      "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb/interfaces/include/relational",
-    ]
-  }
-
-  defines = [
-    "RELATIONAL_STORE",
-    "SQLITE_HAS_CODEC",
-  ]
-
-  if (relational_store_rdb_support_icu) {
-    include_dirs += [
-      "//third_party/icu/icu4c/source",
-      "//third_party/icu/icu4c/source/i18n",
-      "//third_party/icu/icu4c/source/common",
-    ]
-    defines += [ "RDB_SUPPORT_ICU" ]
-  }
-
-  if (is_mingw) {
-    defines += [ "WINDOWS_PLATFORM" ]
-    include_dirs += [ "//third_party/sqlite/include" ]
-
-    libs = [ "//prebuilts/mingw-w64/ohos/linux-x86_64/clang-mingw/x86_64-w64-mingw32/lib/libws2_32.a" ]
-  } else if (is_mac) {
-    defines += [ "MAC_PLATFORM" ]
-    include_dirs += [ "//third_party/sqlite/include" ]
-  } else {
-    defines += [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
-    include_dirs += [
-      "//foundation/distributeddatamgr/kv_store/frameworks/common",
-      "//foundation/distributeddatamgr/distributedfile/interfaces/kits/js/src/mod_securitylabel",
-    ]
-  }
-}
-
-config("native_rdb_public_config") {
-  visibility = [ ":*" ]
-
-  if (is_mingw || is_mac) {
-    include_dirs = [
-      "mock/include",
-      "include",
-    ]
-  } else {
-    include_dirs = [
-      "include",
-      "${relational_store_native_path}/rdb/include",
-    ]
-  }
-
-  defines = [ "SQLITE_HAS_CODEC" ]
-}
-
 base_sources = [
   "${relational_store_native_path}/rdb/src/abs_predicates.cpp",
   "${relational_store_native_path}/rdb/src/abs_rdb_predicates.cpp",
@@ -112,34 +38,65 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/values_bucket.cpp",
 ]
 
-base_deps = [
-  "//third_party/icu/icu4c:shared_icui18n",
-  "//third_party/icu/icu4c:shared_icuuc",
-]
+if (is_ohos) {
+  config("native_rdb_config") {
+    visibility = [ ":*" ]
 
-ohos_shared_library("native_rdb") {
-  part_name = "relational_store"
-  sources = base_sources
-
-  configs = [ ":native_rdb_config" ]
-
-  deps = base_deps
-
-  if (is_mingw) {
-    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
-    deps += [
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
-      "//third_party/sqlite:sqlite_sdk",
+    include_dirs = [
+      "include",
+      "//base/security/huks/frameworks/huks_standard/main/common/include",
+      "${relational_store_native_path}/rdb/include",
+      "${relational_store_native_path}/rdb_device_manager_adapter/include",
+      "//utils/system/safwk/native/include",
+      "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
+      "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb/include/",
+      "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb/interfaces/include/",
+      "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb/interfaces/include/relational",
     ]
-    cflags_cc = [ "-std=c++17" ]
-  } else if (is_mac) {
-    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
-    deps += [
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
-      "//third_party/sqlite:sqlite_sdk",
+
+    defines = [
+      "RELATIONAL_STORE",
+      "SQLITE_HAS_CODEC",
     ]
-    cflags_cc = [ "-std=c++17" ]
-  } else {
+
+    if (relational_store_rdb_support_icu) {
+      include_dirs += [
+        "//third_party/icu/icu4c/source",
+        "//third_party/icu/icu4c/source/i18n",
+        "//third_party/icu/icu4c/source/common",
+      ]
+      defines += [ "RDB_SUPPORT_ICU" ]
+    }
+
+    defines += [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
+    include_dirs += [
+      "//foundation/distributeddatamgr/kv_store/frameworks/common",
+      "//foundation/distributeddatamgr/distributedfile/interfaces/kits/js/src/mod_securitylabel",
+    ]
+  }
+
+  config("native_rdb_public_config") {
+    visibility = [ ":*" ]
+
+    include_dirs = [
+      "include",
+      "${relational_store_native_path}/rdb/include",
+    ]
+  }
+
+  base_deps = [
+    "//third_party/icu/icu4c:shared_icui18n",
+    "//third_party/icu/icu4c:shared_icuuc",
+  ]
+
+  ohos_shared_library("native_rdb") {
+    part_name = "relational_store"
+    sources = base_sources
+
+    configs = [ ":native_rdb_config" ]
+
+    deps = base_deps
+
     deps += [
       "//base/security/huks/frameworks/huks_standard/main/os_dependency:libhuks_os_dependency_standard_static",
       "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb:distributeddb",
@@ -176,35 +133,19 @@ ohos_shared_library("native_rdb") {
       "ipc:ipc_core",
       "samgr:samgr_proxy",
     ]
+
+    public_configs = [ ":native_rdb_public_config" ]
+    innerapi_tags = [ "platformsdk" ]
+    subsystem_name = "distributeddatamgr"
   }
 
-  public_configs = [ ":native_rdb_public_config" ]
-  innerapi_tags = [ "platformsdk" ]
-  subsystem_name = "distributeddatamgr"
-}
+  ohos_static_library("native_rdb_static") {
+    sources = base_sources
 
-ohos_static_library("native_rdb_static") {
-  sources = base_sources
+    configs = [ ":native_rdb_config" ]
 
-  configs = [ ":native_rdb_config" ]
+    deps = base_deps
 
-  deps = base_deps
-
-  if (is_mingw) {
-    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
-    deps += [
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
-      "//third_party/sqlite:sqlite_sdk",
-    ]
-    cflags_cc = [ "-std=c++17" ]
-  } else if (is_mac) {
-    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
-    deps += [
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
-      "//third_party/sqlite:sqlite_sdk",
-    ]
-    cflags_cc = [ "-std=c++17" ]
-  } else {
     deps += [
       "//base/security/huks/frameworks/huks_standard/main/os_dependency:libhuks_os_dependency_standard_static",
       "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb:distributeddb",
@@ -240,10 +181,303 @@ ohos_static_library("native_rdb_static") {
       "ipc:ipc_core",
       "samgr:samgr_proxy",
     ]
+
+    public_configs = [ ":native_rdb_public_config" ]
+
+    subsystem_name = "distributeddatamgr"
+    part_name = "relational_store"
+  }
+} else if (is_mingw) {
+  config("native_rdb_config") {
+    visibility = [ ":*" ]
+
+    include_dirs = [
+      "mock/include",
+      "${relational_store_native_path}/rdb/mock/include",
+      "//commonlibrary/c_utils/base/include",
+      "include",
+      "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
+    ]
+
+    defines = [
+      "RELATIONAL_STORE",
+      "SQLITE_HAS_CODEC",
+    ]
+
+    if (relational_store_rdb_support_icu) {
+      include_dirs += [
+        "//third_party/icu/icu4c/source",
+        "//third_party/icu/icu4c/source/i18n",
+        "//third_party/icu/icu4c/source/common",
+      ]
+      defines += [ "RDB_SUPPORT_ICU" ]
+    }
+
+    defines += [ "WINDOWS_PLATFORM" ]
+    include_dirs += [ "//third_party/sqlite/include" ]
+
+    libs = [ "//prebuilts/mingw-w64/ohos/linux-x86_64/clang-mingw/x86_64-w64-mingw32/lib/libws2_32.a" ]
   }
 
-  public_configs = [ ":native_rdb_public_config" ]
+  config("native_rdb_public_config") {
+    visibility = [ ":*" ]
 
-  subsystem_name = "distributeddatamgr"
-  part_name = "relational_store"
+    include_dirs = [
+      "mock/include",
+      "include",
+    ]
+  }
+
+  base_deps = [
+    "//third_party/icu/icu4c:shared_icui18n",
+    "//third_party/icu/icu4c:shared_icuuc",
+  ]
+
+  ohos_shared_library("native_rdb") {
+    part_name = "relational_store"
+    sources = base_sources
+
+    configs = [ ":native_rdb_config" ]
+
+    deps = base_deps
+
+    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+
+    deps += [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
+      "//third_party/sqlite:sqlite_sdk",
+    ]
+    cflags_cc = [ "-std=c++17" ]
+
+    public_configs = [ ":native_rdb_public_config" ]
+    innerapi_tags = [ "platformsdk" ]
+    subsystem_name = "distributeddatamgr"
+  }
+
+  ohos_static_library("native_rdb_static") {
+    sources = base_sources
+
+    configs = [ ":native_rdb_config" ]
+
+    deps = base_deps
+
+    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+
+    deps += [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
+      "//third_party/sqlite:sqlite_sdk",
+    ]
+    cflags_cc = [ "-std=c++17" ]
+
+    public_configs = [ ":native_rdb_public_config" ]
+
+    subsystem_name = "distributeddatamgr"
+    part_name = "relational_store"
+  }
+} else if (is_mac) {
+  config("native_rdb_config") {
+    visibility = [ ":*" ]
+
+    include_dirs = [
+      "mock/include",
+      "${relational_store_native_path}/rdb/mock/include",
+      "//commonlibrary/c_utils/base/include",
+      "include",
+      "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
+    ]
+
+    defines = [
+      "RELATIONAL_STORE",
+      "SQLITE_HAS_CODEC",
+    ]
+
+    if (relational_store_rdb_support_icu) {
+      include_dirs += [
+        "//third_party/icu/icu4c/source",
+        "//third_party/icu/icu4c/source/i18n",
+        "//third_party/icu/icu4c/source/common",
+      ]
+      defines += [ "RDB_SUPPORT_ICU" ]
+    }
+
+    defines += [ "MAC_PLATFORM" ]
+    include_dirs += [ "//third_party/sqlite/include" ]
+  }
+
+  config("native_rdb_public_config") {
+    visibility = [ ":*" ]
+
+    include_dirs = [
+      "mock/include",
+      "include",
+    ]
+  }
+
+  base_deps = [
+    "//third_party/icu/icu4c:shared_icui18n",
+    "//third_party/icu/icu4c:shared_icuuc",
+  ]
+
+  ohos_shared_library("native_rdb") {
+    part_name = "relational_store"
+    sources = base_sources
+
+    configs = [ ":native_rdb_config" ]
+
+    deps = base_deps
+
+    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+    deps += [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
+      "//third_party/sqlite:sqlite_sdk",
+    ]
+    cflags_cc = [ "-std=c++17" ]
+
+    public_configs = [ ":native_rdb_public_config" ]
+    innerapi_tags = [ "platformsdk" ]
+    subsystem_name = "distributeddatamgr"
+  }
+
+  ohos_static_library("native_rdb_static") {
+    sources = base_sources
+
+    configs = [ ":native_rdb_config" ]
+
+    deps = base_deps
+
+    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+    deps += [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
+      "//third_party/sqlite:sqlite_sdk",
+    ]
+    cflags_cc = [ "-std=c++17" ]
+
+    public_configs = [ ":native_rdb_public_config" ]
+
+    subsystem_name = "distributeddatamgr"
+    part_name = "relational_store"
+  }
+} else if (is_android) {
+  config("native_rdb_config") {
+    visibility = [ ":*" ]
+
+    include_dirs = [
+      "${relational_store_innerapi_path}/rdb/mock/include",
+      "${relational_store_native_path}/rdb/mock/include",
+      "${relational_store_innerapi_path}/rdb/include",
+    ]
+
+    defines = [
+      "RELATIONAL_STORE",
+      "SQLITE_HAS_CODEC",
+    ]
+
+    if (relational_store_rdb_support_icu) {
+      include_dirs += [
+        "//third_party/icu/icu4c/source",
+        "//third_party/icu/icu4c/source/i18n",
+        "//third_party/icu/icu4c/source/common",
+      ]
+      defines += [ "RDB_SUPPORT_ICU" ]
+    }
+  }
+
+  config("native_rdb_public_config") {
+    visibility = [ ":*" ]
+
+    include_dirs = [
+      "mock/include",
+      "include",
+      "${relational_store_native_path}/mock/rdb/include",
+      "${relational_store_native_path}/rdb/include",
+    ]
+  }
+
+  base_deps = [
+    "//third_party/icu/icu4c:shared_icui18n",
+    "//third_party/icu/icu4c:shared_icuuc",
+  ]
+
+  ohos_source_set("native_rdb") {
+    defines = [ "ANDROID_PLATFORM" ]
+
+    part_name = "relational_store"
+    sources = base_sources
+
+    configs = [ ":native_rdb_config" ]
+
+    deps = base_deps
+
+    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+    deps += [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+      "//commonlibrary/c_utils/base:utils",
+      "//third_party/sqlite:sqlite",
+    ]
+    cflags_cc = [ "-std=c++17" ]
+
+    public_configs = [ ":native_rdb_public_config" ]
+    subsystem_name = "distributeddatamgr"
+  }
+} else if (is_ios) {
+  config("native_rdb_config") {
+    visibility = [ ":*" ]
+
+    include_dirs = [
+      "${relational_store_innerapi_path}/rdb/mock/include",
+      "${relational_store_native_path}/rdb/mock/include",
+      "${relational_store_innerapi_path}/rdb/include",
+    ]
+
+    defines = [
+      "RELATIONAL_STORE",
+      "SQLITE_HAS_CODEC",
+    ]
+
+    if (relational_store_rdb_support_icu) {
+      include_dirs += [
+        "//third_party/icu/icu4c/source",
+        "//third_party/icu/icu4c/source/i18n",
+        "//third_party/icu/icu4c/source/common",
+      ]
+      defines += [ "RDB_SUPPORT_ICU" ]
+    }
+  }
+
+  config("native_rdb_public_config") {
+    visibility = [ ":*" ]
+
+    include_dirs = [
+      "mock/include",
+      "include",
+      "${relational_store_native_path}/rdb/include",
+    ]
+  }
+
+  base_deps = [
+    "//third_party/icu/icu4c:static_icui18n",
+    "//third_party/icu/icu4c:static_icuuc",
+  ]
+
+  ohos_source_set("native_rdb") {
+    defines = [ "IOS_PLATFORM" ]
+
+    part_name = "relational_store"
+    sources = base_sources
+
+    configs = [ ":native_rdb_config" ]
+
+    deps = base_deps
+
+    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+    deps += [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
+      "//commonlibrary/c_utils/base:utilsbase",
+      "//third_party/sqlite:sqlite_static",
+    ]
+    cflags_cc = [ "-std=c++17" ]
+
+    public_configs = [ ":native_rdb_public_config" ]
+    subsystem_name = "distributeddatamgr"
+  }
 }
