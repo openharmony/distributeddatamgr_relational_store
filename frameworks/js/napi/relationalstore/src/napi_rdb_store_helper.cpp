@@ -186,7 +186,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         bool checked = JSAbility::CheckContext(env, info);
         CHECK_RETURN_SET_E(checked, std::make_shared<ParamError>("context", "a valid Context."));
-        CHECK_RETURN_SET_E(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 or 3"));
+        CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         CHECK_RETURN(OK == ParseContext(env, argv[0], context));
         CHECK_RETURN(OK == ParseStoreConfig(env, argv[1], context));
     };
@@ -214,7 +214,7 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
     LOG_DEBUG("RelationalStoreJsKit::DeleteRdbStore start");
     auto context = std::make_shared<HelperRdbContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 or 3"));
+        CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         CHECK_RETURN(OK == ParseContext(env, argv[0], context));
         CHECK_RETURN(OK == ParsePath(env, argv[1], context));
     };
