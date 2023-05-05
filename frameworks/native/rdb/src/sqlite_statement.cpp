@@ -15,8 +15,8 @@
 
 #include "sqlite_statement.h"
 
-#include <sstream>
 #include <iomanip>
+#include <sstream>
 
 #include "logger.h"
 #include "rdb_errno.h"

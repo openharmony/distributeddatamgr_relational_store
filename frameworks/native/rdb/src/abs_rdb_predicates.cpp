@@ -18,10 +18,6 @@
 #include "abs_rdb_predicates.h"
 #include "logger.h"
 #include "rdb_trace.h"
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-#include "rdb_manager.h"
-#include "rdb_service.h"
-#endif
 
 namespace OHOS::NativeRdb {
 AbsRdbPredicates::AbsRdbPredicates(std::string tableName)

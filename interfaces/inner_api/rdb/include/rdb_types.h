@@ -42,6 +42,7 @@ struct RdbSyncerParam {
     bool isAutoSync_ = false;
     bool isEncrypt_ = false;
     std::vector<uint8_t> password_;
+    int32_t schemaVersion = -1;
     ~RdbSyncerParam()
     {
         password_.assign(password_.size(), 0);
@@ -51,6 +52,9 @@ struct RdbSyncerParam {
 enum SyncMode {
     PUSH,
     PULL,
+    TIME_FIRST,
+    NATIVE_FIRST,
+    CLOUD_FIRST,
 };
 
 struct SyncOption {
@@ -96,6 +100,7 @@ struct RdbPredicates {
 
 enum SubscribeMode {
     REMOTE,
+    CLOUD,
     SUBSCRIBE_MODE_MAX
 };
 

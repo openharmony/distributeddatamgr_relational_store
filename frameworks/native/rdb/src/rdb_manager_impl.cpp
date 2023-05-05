@@ -80,7 +80,7 @@ RdbManagerImpl& RdbManagerImpl::GetInstance()
     return manager;
 }
 
-int RdbManagerImpl::GetRdbService(const RdbSyncerParam& param, std::shared_ptr<RdbService> &service)
+int RdbManagerImpl::GetRdbService(const RdbSyncerParam &param, std::shared_ptr<RdbService> &service)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (rdbService_ != nullptr) {
