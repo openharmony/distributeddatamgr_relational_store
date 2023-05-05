@@ -82,8 +82,6 @@ if (is_ohos) {
       "include",
       "${relational_store_native_path}/rdb/include",
     ]
-
-    defines = [ "SQLITE_HAS_CODEC" ]
   }
 
   base_deps = [
@@ -191,15 +189,13 @@ if (is_ohos) {
   config("native_rdb_config") {
     visibility = [ ":*" ]
 
-    if (is_mingw) {
-      include_dirs = [
-        "mock/include",
-        "${relational_store_native_path}/rdb/mock/include",
-        "//commonlibrary/c_utils/base/include",
-        "include",
-        "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
-      ]
-    }
+    include_dirs = [
+      "mock/include",
+      "${relational_store_native_path}/rdb/mock/include",
+      "//commonlibrary/c_utils/base/include",
+      "include",
+      "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
+    ]
 
     defines = [
       "RELATIONAL_STORE",
@@ -228,8 +224,6 @@ if (is_ohos) {
       "mock/include",
       "include",
     ]
-
-    defines = [ "SQLITE_HAS_CODEC" ]
   }
 
   base_deps = [
@@ -315,8 +309,6 @@ if (is_ohos) {
       "mock/include",
       "include",
     ]
-
-    defines = [ "SQLITE_HAS_CODEC" ]
   }
 
   base_deps = [
@@ -397,8 +389,6 @@ if (is_ohos) {
       "${relational_store_native_path}/mock/rdb/include",
       "${relational_store_native_path}/rdb/include",
     ]
-
-    defines = [ "SQLITE_HAS_CODEC" ]
   }
 
   base_deps = [
@@ -460,8 +450,6 @@ if (is_ohos) {
       "include",
       "${relational_store_native_path}/rdb/include",
     ]
-
-    defines = [ "SQLITE_HAS_CODEC" ]
   }
 
   base_deps = [
