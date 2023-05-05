@@ -30,9 +30,10 @@ namespace RelationalStoreJsKit {
 class RdbStoreProxy {
 public:
     static void Init(napi_env env, napi_value exports);
-    static napi_value NewInstance(napi_env env, std::shared_ptr<OHOS::NativeRdb::RdbStore> value);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, bool isSystemAppCalled);
     RdbStoreProxy();
     ~RdbStoreProxy();
+    bool IsSystemAppCalled();
 
     std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
 
@@ -62,7 +63,9 @@ private:
     static napi_value GetVersion(napi_env env, napi_callback_info info);
     static napi_value SetVersion(napi_env env, napi_callback_info info);
     static napi_value Restore(napi_env env, napi_callback_info info);
+
     std::mutex mutex_;
+    bool isSystemAppCalled_ = false;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

@@ -18,6 +18,9 @@
 #include <cstdlib>
 
 #include "js_logger.h"
+#if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
+#include "napi_base_context.h"
+#endif
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
@@ -42,6 +45,13 @@ Context::Context()
 #endif
     bundleName_ = "com.example.myapplication";
 }
+
+#if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
+Context::Context(std::shared_ptr<AbilityRuntime::Platform::Context> stageContext)
+{
+    databaseDir_ = stageContext->GetDatabaseDir();
+}
+#endif
 
 std::string Context::GetDatabaseDir()
 {
@@ -95,7 +105,17 @@ bool JSAbility::CheckContext(napi_env env, napi_callback_info info)
 
 std::shared_ptr<Context> JSAbility::GetContext(napi_env env, napi_value value)
 {
+#if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
+    LOG_DEBUG("Get context as stage mode.");
+    auto stageContext = AbilityRuntime::Platform::GetStageModeContext(env, value);
+    if (stageContext == nullptr) {
+        LOG_ERROR("GetStageModeContext failed.");
+        return nullptr;
+    }
+    return std::make_shared<Context>(stageContext);
+#else
     return std::make_shared<Context>();
+#endif
 }
 } // namespace AppDataMgrJsKit
 } // namespace OHOS

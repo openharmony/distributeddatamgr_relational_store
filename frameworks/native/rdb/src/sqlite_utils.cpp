@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <climits>
 #include <cstdio>
+#include <cerrno>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>

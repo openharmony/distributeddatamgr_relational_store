@@ -28,7 +28,7 @@
 #include "rdb_errno.h"
 #include "securec.h"
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_utils.h"
 using namespace OHOS::DataShare;
 #endif
@@ -36,7 +36,7 @@ using namespace OHOS::DataShare;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using OHOS::DistributedRdb::SubscribeMode;
 using OHOS::DistributedRdb::SubscribeOption;
 using OHOS::DistributedRdb::SyncOption;
@@ -45,7 +45,7 @@ using OHOS::DistributedRdb::SyncResult;
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 struct PredicatesProxy {
     std::shared_ptr<DataShareAbsPredicates> predicates_;
 };
@@ -75,7 +75,7 @@ struct RdbStoreContext : public Context {
     std::string srcName;
     int32_t enumArg;
     NativeRdb::ConflictResolution conflictResolution;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     DistributedRdb::SyncResult syncResult;
 #endif
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
@@ -125,7 +125,7 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("batchInsert", BatchInsert),
         DECLARE_NAPI_FUNCTION("querySql", QuerySql),
         DECLARE_NAPI_FUNCTION("query", Query),
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
         DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery),
 #endif
         DECLARE_NAPI_FUNCTION("executeSql", ExecuteSql),
@@ -145,7 +145,7 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER("isHoldingConnection", IsHoldingConnection),
         DECLARE_NAPI_GETTER("isReadOnly", IsReadOnly),
         DECLARE_NAPI_GETTER("isMemoryRdb", IsMemoryRdb),
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
         DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables),
         DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName),
         DECLARE_NAPI_FUNCTION("sync", Sync),
@@ -280,7 +280,7 @@ int ParsePredicates(const napi_env &env, const napi_value &arg, std::shared_ptr<
 
 int ParseDataSharePredicates(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
     CHECK_RETURN_SET(obj->IsSystemAppCalled(), std::make_shared<NonSystemError>());
     PredicatesProxy *proxy = nullptr;
@@ -592,7 +592,7 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
     return AsyncCall::Call(env, context);
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::RemoteQuery start");
@@ -649,11 +649,15 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
         context->resultSet_value = obj->rdbStore_->QueryByStep(context->sql, context->columns);
         LOG_ERROR("RdbStoreProxy::QuerySql is nullptr ? %{public}d ", context->resultSet_value == nullptr);
-#else
+#endif
         std::string selectionArgs = ",";
         for (size_t i = 0; i < context->selectionArgs.size(); i++) {
             selectionArgs += context->selectionArgs[i];
         }
+#if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
+        context->resultSet_value = obj->rdbStore_->QueryByStep(context->sql, context->selectionArgs);
+        LOG_ERROR("RdbStoreProxy::QuerySql is nullptr ? %{public}d ", context->resultSet_value == nullptr);
+#else
         context->resultSet_value = obj->rdbStore_->QuerySql(context->sql, context->selectionArgs);
 #endif
         return (context->resultSet_value != nullptr) ? E_OK : E_ERROR;
@@ -1039,7 +1043,7 @@ napi_value RdbStoreProxy::Restore(napi_env env, napi_callback_info info)
     return AsyncCall::Call(env, context);
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::SetDistributedTables start");

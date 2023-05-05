@@ -110,7 +110,7 @@ void ValuesBucket::GetAll(std::map<std::string, ValueObject> &outValuesMap) cons
     outValuesMap = valuesMap;
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 bool ValuesBucket::Marshalling(Parcel &parcel) const
 {
     parcel.WriteInt32(valuesMap.size());

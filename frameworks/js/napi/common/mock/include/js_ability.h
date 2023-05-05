@@ -18,6 +18,9 @@
 #include <iostream>
 #include <string>
 
+#if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
+#include "context.h"
+#endif
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -27,6 +30,9 @@ namespace AppDataMgrJsKit {
 class Context {
 public:
     explicit Context();
+#if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
+    explicit Context(std::shared_ptr<AbilityRuntime::Platform::Context> stageContext);
+#endif
 
     std::string GetDatabaseDir();
     std::string GetPreferencesDir();
