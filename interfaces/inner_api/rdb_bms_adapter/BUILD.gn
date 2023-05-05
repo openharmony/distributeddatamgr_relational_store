@@ -48,7 +48,6 @@ ohos_shared_library("rdb_bms_adapter") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hilog_native:libhilog",
-    "hitrace_native:hitrace_meter",
     "resource_management:global_resmgr",
   ]
 
