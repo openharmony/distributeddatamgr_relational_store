@@ -80,8 +80,8 @@ if (is_ohos) {
       "${relational_store_js_common_path}/include",
     ]
     cflags_cc = [
-    "-std=c++17",
-    "-stdlib=libc++",
+      "-std=c++17",
+      "-stdlib=libc++",
     ]
 
     buildos = "windows"
@@ -93,9 +93,9 @@ if (is_ohos) {
     sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
 
     deps = [
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${buildos}",
-    "//foundation/arkui/napi:ace_napi",
-    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${buildos}",
+      "//foundation/arkui/napi:ace_napi",
+      "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
     ]
 
     subsystem_name = "distributeddatamgr"
@@ -127,9 +127,9 @@ if (is_ohos) {
     sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
 
     deps = [
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${buildos}",
-    "//foundation/arkui/napi:ace_napi",
-    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${buildos}",
+      "//foundation/arkui/napi:ace_napi",
+      "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
     ]
 
     subsystem_name = "distributeddatamgr"
@@ -157,7 +157,7 @@ if (is_ohos) {
 
     defines = [
       "ANDROID_PLATFORM",
-      "MOD_NAME=\"data_relationalStore\""
+      "MOD_NAME=\"data_relationalStore\"",
     ]
 
     sources += [
@@ -166,9 +166,9 @@ if (is_ohos) {
     ]
 
     deps = [
+      "${relational_store_innerapi_path}/rdb:native_rdb",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
       "//foundation/arkui/ace_engine/adapter/android/build:libarkui_android",
-      "${relational_store_innerapi_path}/rdb:native_rdb",
     ]
 
     subsystem_name = "distributeddatamgr"
@@ -195,17 +195,15 @@ if (is_ohos) {
 
     defines = [
       "IOS_PLATFORM",
-      "MOD_NAME=\"data.relationalStore\""
+      "MOD_NAME=\"data.relationalStore\"",
     ]
 
-    sources += [
-      "${relational_store_js_common_path}/mock/src/js_ability.cpp",
-    ]
+    sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
 
     deps = [
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
       "${relational_store_innerapi_path}/rdb:native_rdb",
-      "//foundation/arkui/napi:ace_napi"
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
+      "//foundation/arkui/napi:ace_napi",
     ]
 
     subsystem_name = "distributeddatamgr"
