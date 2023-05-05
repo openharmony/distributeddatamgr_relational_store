@@ -88,6 +88,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.type_ = config.GetDistributedType();
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
+
     // open uri share
     if (!config.GetUri().empty()) {
         std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
