@@ -35,7 +35,7 @@ ohos_shared_library("rdb_bms_adapter") {
   sources = [
     "${relational_store_native_path}/rdb_bms_adaptor/src/data_properties.cpp",
     "${relational_store_native_path}/rdb_bms_adaptor/src/data_share_profile_info.cpp",
-    "${relational_store_native_path}/rdb_bms_adaptor/src/serializable.cpp"
+    "${relational_store_native_path}/rdb_bms_adaptor/src/serializable.cpp",
   ]
 
   configs = [ ":rdb_bms_adapter_config" ]
@@ -44,12 +44,12 @@ ohos_shared_library("rdb_bms_adapter") {
   part_name = "relational_store"
 
   external_deps = [
-    "c_utils:utils",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
     "hilog_native:libhilog",
     "hitrace_native:hitrace_meter",
-    "resource_management:global_resmgr"
+    "resource_management:global_resmgr",
   ]
 
   public_configs = [ ":rdb_bms_adapter_public_config" ]
