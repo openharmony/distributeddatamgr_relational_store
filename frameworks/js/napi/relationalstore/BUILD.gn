@@ -76,6 +76,7 @@ if (is_ohos) {
       "mock/include",
       "${relational_store_js_common_path}/mock/include",
       "${relational_store_napi_path}/relationalstore/mock/include",
+      "//commonlibrary/c_utils/base/include",
       "include",
       "${relational_store_js_common_path}/include",
     ]
@@ -92,11 +93,10 @@ if (is_ohos) {
 
     sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
 
-    external_deps = [
-      "c_utils:utils",
-      "hilog_native:libhilog_${buildos}",
-      "napi:ace_napi",
-      "relational_store:native_rdb",
+    deps = [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${buildos}",
+      "//foundation/arkui/napi:ace_napi",
+      "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
     ]
 
     subsystem_name = "distributeddatamgr"
@@ -109,6 +109,7 @@ if (is_ohos) {
       "mock/include",
       "${relational_store_js_common_path}/mock/include",
       "${relational_store_napi_path}/relationalstore/mock/include",
+      "//commonlibrary/c_utils/base/include",
       "include",
       "${relational_store_js_common_path}/include",
     ]
@@ -126,11 +127,10 @@ if (is_ohos) {
 
     sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
 
-    external_deps = [
-      "c_utils:utils",
-      "hilog_native:libhilog_${buildos}",
-      "napi:ace_napi",
-      "relational_store:native_rdb",
+    deps = [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${buildos}",
+      "//foundation/arkui/napi:ace_napi",
+      "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
     ]
 
     subsystem_name = "distributeddatamgr"
