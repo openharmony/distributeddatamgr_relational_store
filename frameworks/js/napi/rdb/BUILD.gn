@@ -12,7 +12,6 @@
 # limitations under the License.
 import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
-import("//foundation/distributeddatamgr/data_share/datashare.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 ohos_copy("relational_store_declaration") {
@@ -40,7 +39,6 @@ ohos_shared_library("napi_rdb") {
       "mock/include",
       "${relational_store_js_common_path}/mock/include",
       "${relational_store_napi_path}/rdb/mock/include",
-      "//commonlibrary/c_utils/base/include",
       "include",
       "${relational_store_js_common_path}/include",
     ]
@@ -56,17 +54,18 @@ ohos_shared_library("napi_rdb") {
       defines = [ "WINDOWS_PLATFORM" ]
     }
     sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
-    deps = [
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${buildos}",
-      "//foundation/arkui/napi:ace_napi",
-      "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
+
+    external_deps = [
+      "c_utils:utils",
+      "hilog_native:libhilog_${buildos}",
+      "napi:ace_napi",
+      "relational_store:native_rdb",
     ]
   } else {
     include_dirs = [
       "include",
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/rdb/include",
-      "${datashare_base_path}/interfaces/inner_api/common/include/",
     ]
     defines = [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
     sources += [
@@ -79,6 +78,7 @@ ohos_shared_library("napi_rdb") {
       "ability_runtime:napi_base_context",
       "c_utils:utils",
       "common_event_service:cesfwk_innerkits",
+      "data_share:datashare_common",
       "hilog_native:libhilog",
       "hitrace_native:hitrace_meter",
       "napi:ace_napi",
@@ -100,7 +100,6 @@ ohos_shared_library("rdb") {
       "mock/include",
       "${relational_store_js_common_path}/mock/include",
       "${relational_store_napi_path}/rdb/mock/include",
-      "//commonlibrary/c_utils/base/include",
       "include",
       "${relational_store_js_common_path}/include",
     ]
@@ -118,16 +117,18 @@ ohos_shared_library("rdb") {
 
     deps = [
       ":napi_rdb",
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${buildos}",
-      "//foundation/arkui/napi:ace_napi",
       "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
+    ]
+
+    external_deps = [
+      "hilog_native:libhilog",
+      "napi:ace_napi",
     ]
   } else {
     include_dirs = [
       "include",
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/rdb/include",
-      "${datashare_base_path}/interfaces/inner_api/common/include/",
     ]
     defines = [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
     deps = [ ":napi_rdb" ]
@@ -135,6 +136,8 @@ ohos_shared_library("rdb") {
       "ability_runtime:abilitykit_native",
       "ability_runtime:napi_base_context",
       "c_utils:utils",
+      "data_share:datashare_common",
+      "data_share:datashare_provider",
       "hilog_native:libhilog",
       "hitrace_native:hitrace_meter",
       "napi:ace_napi",

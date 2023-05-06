@@ -26,3 +26,11 @@ relational_store_native_path = "${relational_store_base_path}/frameworks/native"
 
 relational_store_innerapi_path =
     "${relational_store_base_path}/interfaces/inner_api"
+
+datashare_path = "//foundation/distributeddatamgr/data_share/interfaces/inner_api"
+
+huks_path = "//base/security/huks/frameworks/huks_standard/main/common"
+
+kvstore_path = "//foundation/distributeddatamgr/kv_store/frameworks"
+
+distributedfile_path = "//foundation/distributeddatamgr/distributedfile/interfaces/kits/js/src"

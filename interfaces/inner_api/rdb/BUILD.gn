@@ -44,14 +44,9 @@ if (is_ohos) {
 
     include_dirs = [
       "include",
-      "//base/security/huks/frameworks/huks_standard/main/common/include",
+      "${huks_path}/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/rdb_device_manager_adapter/include",
-      "//utils/system/safwk/native/include",
-      "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
-      "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb/include/",
-      "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb/interfaces/include/",
-      "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb/interfaces/include/relational",
     ]
 
     defines = [
@@ -70,8 +65,8 @@ if (is_ohos) {
 
     defines += [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
     include_dirs += [
-      "//foundation/distributeddatamgr/kv_store/frameworks/common",
-      "//foundation/distributeddatamgr/distributedfile/interfaces/kits/js/src/mod_securitylabel",
+      "${kvstore_path}/common",
+      "${distributedfile_path}/mod_securitylabel",
     ]
   }
 
@@ -98,7 +93,6 @@ if (is_ohos) {
     deps = base_deps
 
     deps += [
-      "//base/security/huks/frameworks/huks_standard/main/os_dependency:libhuks_os_dependency_standard_static",
       "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb:distributeddb",
       "//third_party/sqlite:sqlite",
     ]
@@ -147,7 +141,6 @@ if (is_ohos) {
     deps = base_deps
 
     deps += [
-      "//base/security/huks/frameworks/huks_standard/main/os_dependency:libhuks_os_dependency_standard_static",
       "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb:distributeddb",
       "//third_party/sqlite:sqlite",
     ]
