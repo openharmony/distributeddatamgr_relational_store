@@ -117,12 +117,13 @@ ohos_shared_library("rdb") {
 
     deps = [
       ":napi_rdb",
-      "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
     ]
 
     external_deps = [
-      "hilog_native:libhilog",
+      "c_utils:utils",
+      "hilog_native:libhilog_${buildos}",
       "napi:ace_napi",
+      "relational_store:native_rdb",
     ]
   } else {
     include_dirs = [
