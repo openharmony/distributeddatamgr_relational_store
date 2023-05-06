@@ -39,6 +39,7 @@ ohos_shared_library("napi_rdb") {
       "mock/include",
       "${relational_store_js_common_path}/mock/include",
       "${relational_store_napi_path}/rdb/mock/include",
+      "//commonlibrary/c_utils/base/include",
       "include",
       "${relational_store_js_common_path}/include",
     ]
@@ -54,12 +55,10 @@ ohos_shared_library("napi_rdb") {
       defines = [ "WINDOWS_PLATFORM" ]
     }
     sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
-
-    external_deps = [
-      "c_utils:utils",
-      "hilog_native:libhilog_${buildos}",
-      "napi:ace_napi",
-      "relational_store:native_rdb",
+    deps = [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${buildos}",
+      "//foundation/arkui/napi:ace_napi",
+      "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
     ]
   } else {
     include_dirs = [
@@ -100,6 +99,7 @@ ohos_shared_library("rdb") {
       "mock/include",
       "${relational_store_js_common_path}/mock/include",
       "${relational_store_napi_path}/rdb/mock/include",
+      "//commonlibrary/c_utils/base/include",
       "include",
       "${relational_store_js_common_path}/include",
     ]
@@ -117,13 +117,9 @@ ohos_shared_library("rdb") {
 
     deps = [
       ":napi_rdb",
-    ]
-
-    external_deps = [
-      "c_utils:utils",
-      "hilog_native:libhilog_${buildos}",
-      "napi:ace_napi",
-      "relational_store:native_rdb",
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${buildos}",
+      "//foundation/arkui/napi:ace_napi",
+      "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
     ]
   } else {
     include_dirs = [
