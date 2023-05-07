@@ -66,7 +66,7 @@ describe('rdbHelperPromisePerf', function () {
     let averageTime = 0;
     let startTime = new Date().getTime();
     for (var i = 0; i < BASE_COUNT; i++) {
-      await dataRdb.deleteRdbStore(context, DB_NAME, 1);
+      await dataRdb.deleteRdbStore(context, DB_NAME);
     }
     let endTime = new Date().getTime();
     averageTime = ((endTime - startTime) * 1000) / BASE_COUNT;

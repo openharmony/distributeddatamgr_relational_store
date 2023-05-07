@@ -143,6 +143,67 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     return E_OK;
 }
 
+int SqliteConnection::SetCustomFunctions(const RdbStoreConfig &config)
+{
+    int errCode;
+    auto scalarFunctionsMap = config.GetScalarFunctions();
+    for (auto &it : scalarFunctionsMap) {
+        errCode = SetCustomScalarFunction(it.first, it.second.argc_, &it.second.function_);
+        if (errCode != E_OK) {
+            return errCode;
+        }
+    }
+    return E_OK;
+}
+
+static void CustomScalarFunctionCallback(sqlite3_context *ctx, int argc, sqlite3_value **argv)
+{
+    if (ctx == nullptr || argv == nullptr) {
+        LOG_ERROR("ctx or argv is nullptr");
+        return;
+    }
+    auto function = static_cast<ScalarFunction *>(sqlite3_user_data(ctx));
+    if (function == nullptr) {
+        LOG_ERROR("function is nullptr");
+        return;
+    }
+
+    std::vector<std::string> argsVector;
+    for (int i = 0; i < argc; ++i) {
+        auto arg = reinterpret_cast<const char*>(sqlite3_value_text(argv[i]));
+        if (arg == nullptr) {
+            LOG_ERROR("arg is nullptr, index is %{public}d", i);
+            sqlite3_result_null(ctx);
+            return;
+        }
+        argsVector.emplace_back(std::string(arg));
+    }
+
+    std::string result = (*function)(argsVector);
+    if (result.empty()) {
+        sqlite3_result_null(ctx);
+        return;
+    }
+    sqlite3_result_text(ctx, result.c_str(), -1, SQLITE_TRANSIENT);
+}
+
+int SqliteConnection::SetCustomScalarFunction(const std::string &functionName, int argc, ScalarFunction *function)
+{
+    int err = sqlite3_create_function_v2(dbHandle,
+                                         functionName.c_str(),
+                                         argc,
+                                         SQLITE_UTF8,
+                                         function,
+                                         &CustomScalarFunctionCallback,
+                                         nullptr,
+                                         nullptr,
+                                         nullptr);
+    if (err != SQLITE_OK) {
+        LOG_ERROR("SetCustomScalarFunction errCode is %{public}d", err);
+    }
+    return err;
+}
+
 int SqliteConnection::Config(const RdbStoreConfig &config)
 {
     if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
@@ -170,6 +231,11 @@ int SqliteConnection::Config(const RdbStoreConfig &config)
     }
 
     errCode = SetAutoCheckpoint(config);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    errCode = SetCustomFunctions(config);
     if (errCode != E_OK) {
         return errCode;
     }

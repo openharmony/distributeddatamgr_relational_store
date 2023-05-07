@@ -40,6 +40,7 @@ public:
     std::string GetWritePermission();
     int32_t GetArea() const;
     bool IsSystemAppCalled();
+    bool IsHasProxyDataConfig() const;
 
 private:
     int32_t area_ = 0;
@@ -50,6 +51,7 @@ private:
     std::string uri_;
     std::string readPermission_;
     std::string writePermission_;
+    bool hasProxyDataConfig_ = false;
     bool isSystemAppCalled_ = false;
 };
 
