@@ -32,7 +32,7 @@ Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
     }
 
     if (hapInfo == nullptr || hapInfo->proxyDatas.size() != 0) {
-        hasProxyDataConfig = true;
+        hasProxyDataConfig_ = true;
     } else {
         auto extensionContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::ExtensionContext>(stageContext);
         if (extensionContext != nullptr) {
@@ -111,7 +111,7 @@ bool Context::IsSystemAppCalled()
 
 bool Context::IsHasProxyDataConfig() const
 {
-    return hasProxyDataConfig;
+    return hasProxyDataConfig_;
 }
 
 bool JSAbility::CheckContext(napi_env env, napi_callback_info info)
@@ -151,12 +151,6 @@ std::shared_ptr<Context> JSAbility::GetContext(napi_env env, napi_value value)
         return nullptr;
     }
     return std::make_shared<Context>(abilityContext);
-}
-ProxyData::ProxyData(const std::string &storeName, const std::string &tableName, const std::string &readPermission,
-    const std::string &writePermission, const std::string &scope)
-    : storeName(storeName), tableName(tableName), readPermission(readPermission), writePermission(writePermission),
-      scope(scope)
-{
 }
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
