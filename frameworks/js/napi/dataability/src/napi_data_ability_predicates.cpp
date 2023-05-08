@@ -150,6 +150,10 @@ std::shared_ptr<NativeRdb::DataAbilityPredicates> DataAbilityPredicatesProxy::Ge
     }
     DataAbilityPredicatesProxy *proxy = nullptr;
     napi_unwrap(env, arg, reinterpret_cast<void **>(&proxy));
+    if(proxy == nullptr) {
+        LOG_ERROR("DataAbilityPredicatesProxy proxy is null.");
+        return nullptr;
+    }
     return proxy->predicates_;
 }
 
