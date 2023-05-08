@@ -20,6 +20,7 @@ config("rdb_data_ability_adapter_config") {
   }
   include_dirs = [
     "include",
+    "${datashare_path}/common/include/",
     "${relational_store_innerapi_path}/rdb/include",
   ]
 }
@@ -42,7 +43,6 @@ ohos_shared_library("rdb_data_ability_adapter") {
 
   external_deps = [
     "c_utils:utils",
-    "data_share:datashare_common",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
   ]

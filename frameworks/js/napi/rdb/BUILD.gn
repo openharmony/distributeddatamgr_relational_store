@@ -63,6 +63,7 @@ ohos_shared_library("napi_rdb") {
   } else {
     include_dirs = [
       "include",
+      "${datashare_path}/common/include/",
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/rdb/include",
     ]
@@ -77,7 +78,6 @@ ohos_shared_library("napi_rdb") {
       "ability_runtime:napi_base_context",
       "c_utils:utils",
       "common_event_service:cesfwk_innerkits",
-      "data_share:datashare_common",
       "hilog_native:libhilog",
       "hitrace_native:hitrace_meter",
       "napi:ace_napi",
@@ -124,6 +124,7 @@ ohos_shared_library("rdb") {
   } else {
     include_dirs = [
       "include",
+      "${datashare_path}/common/include/",
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/rdb/include",
     ]
@@ -133,8 +134,6 @@ ohos_shared_library("rdb") {
       "ability_runtime:abilitykit_native",
       "ability_runtime:napi_base_context",
       "c_utils:utils",
-      "data_share:datashare_common",
-      "data_share:datashare_provider",
       "hilog_native:libhilog",
       "hitrace_native:hitrace_meter",
       "napi:ace_napi",

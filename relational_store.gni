@@ -30,7 +30,7 @@ relational_store_innerapi_path =
 datashare_path =
     "//foundation/distributeddatamgr/data_share/interfaces/inner_api"
 
-huks_path = "//base/security/huks/frameworks/huks_standard/main"
+ipc_path = "//foundation/communication/ipc/interfaces/innerkits"
 
 kvstore_path = "//foundation/distributeddatamgr/kv_store/frameworks"
 
