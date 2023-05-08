@@ -44,7 +44,7 @@ if (is_ohos) {
 
     include_dirs = [
       "include",
-      "${huks_path}/include",
+      "${huks_path}/common/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/rdb_device_manager_adapter/include",
     ]
@@ -93,7 +93,8 @@ if (is_ohos) {
     deps = base_deps
 
     deps += [
-      "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb:distributeddb",
+      "${huks_path}/os_dependency:libhuks_os_dependency_standard_static",
+      "${kvstore_path}/libs/distributeddb:distributeddb",
       "//third_party/sqlite:sqlite",
     ]
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
