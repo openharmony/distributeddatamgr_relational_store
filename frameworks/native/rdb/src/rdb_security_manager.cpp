@@ -22,11 +22,20 @@
 
 #include "directory_ex.h"
 #include "file_ex.h"
-#include "hks_mem.h"
 #include "hks_param.h"
 #include "logger.h"
 #include "sqlite_database_utils.h"
 #include "sqlite_utils.h"
+
+#define SELF_FREE_PTR(PTR, FREE_FUNC) \
+{ \
+    if ((PTR) != nullptr) { \
+        FREE_FUNC(PTR); \
+        (PTR) = nullptr; \
+    } \
+}
+
+#define HksFree(p) SELF_FREE_PTR(p, free)
 
 namespace OHOS {
 namespace NativeRdb {
