@@ -72,8 +72,6 @@ bool DataShareProfileInfo::GetResConfigFile(
     if (profileInfos.empty()) {
         return false;
     }
-    int32_t infoSize = profileInfos.size();
-    LOG_DEBUG("The size of the profile info is : %{public}d", infoSize);
     return true;
 }
 
@@ -85,7 +83,6 @@ bool DataShareProfileInfo::GetDataPropertiesFromProxyDatas(const OHOS::AppExecFw
     if (infos.empty()) {
         return false;
     }
-    LOG_DEBUG("The size of infos is : %{public}d", infos.size());
     return dataProperties.Unmarshall(infos[0]);
 }
 
