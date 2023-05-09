@@ -27,15 +27,13 @@
 #include "sqlite_database_utils.h"
 #include "sqlite_utils.h"
 
-#define SELF_FREE_PTR(PTR, FREE_FUNC) \
+#define HKS_FREE(PTR) \
 { \
     if ((PTR) != nullptr) { \
-        FREE_FUNC(PTR); \
+        free(PTR); \
         (PTR) = nullptr; \
     } \
 }
-
-#define HksFree(p) SELF_FREE_PTR(p, free)
 
 namespace OHOS {
 namespace NativeRdb {
@@ -138,17 +136,17 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
         }
         if (HksUpdate(handle, paramSet, &inDataSeg, &outDataSeg) != HKS_SUCCESS) {
             LOG_ERROR("HksUpdate Failed.");
-            HksFree(outDataSeg.data);
+            HKS_FREE(outDataSeg.data);
             return HKS_FAILURE;
         }
         if (memcpy_s(cur, outDataSeg.size, outDataSeg.data, outDataSeg.size) != 0) {
             LOG_ERROR("Method memcpy_s failed");
-            HksFree(outDataSeg.data);
+            HKS_FREE(outDataSeg.data);
             return HKS_FAILURE;
         }
         cur += outDataSeg.size;
         outData->size += outDataSeg.size;
-        HksFree(outDataSeg.data);
+        HKS_FREE(outDataSeg.data);
         if ((!isFinished) && (inDataSeg.data + MAX_UPDATE_SIZE > lastPtr)) {
             LOG_ERROR("isFinished and inDataSeg data Error");
             return HKS_FAILURE;
@@ -163,16 +161,16 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
     }
     if (HksFinish(handle, paramSet, &inDataSeg, &outDataFinish) != HKS_SUCCESS) {
         LOG_ERROR("HksFinish Failed.");
-        HksFree(outDataFinish.data);
+        HKS_FREE(outDataFinish.data);
         return HKS_FAILURE;
     }
     if (memcpy_s(cur, outDataFinish.size, outDataFinish.data, outDataFinish.size) != 0) {
         LOG_ERROR("Method memcpy_s failed");
-        HksFree(outDataFinish.data);
+        HKS_FREE(outDataFinish.data);
         return HKS_FAILURE;
     }
     outData->size += outDataFinish.size;
-    HksFree(outDataFinish.data);
+    HKS_FREE(outDataFinish.data);
 
     return HKS_SUCCESS;
 }
