@@ -186,10 +186,15 @@ describe('rdbEncryptTest', function () {
             await console.log(TAG + "************* RdbEncryptTest_0040 start *************")
             let rdbStore = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT)
             rdbStore = null
-            rdbStore = await CreatRdbStore(context, STORE_CONFIG_WRONG)
-            expect(rdbStore).assertNull
 
-            done()
+            try {
+                rdbStore = await CreatRdbStore(context, STORE_CONFIG_WRONG)
+                expect(false).assertTrue()
+            } catch (err) {
+                expect(true).assertTrue()
+                done()
+            }
+
             await console.log(TAG + "************* RdbEncryptTest_0040 end *************")
         })
         console.log(TAG + "*************Unit Test End*************")
