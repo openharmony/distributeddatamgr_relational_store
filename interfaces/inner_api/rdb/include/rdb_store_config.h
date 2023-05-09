@@ -136,6 +136,16 @@ static constexpr char DB_DEFAULT_ENCRYPT_ALGO[] = "sha256";
 using DistributedType = OHOS::DistributedRdb::RdbDistributedType;
 
 /**
+ * @brief Use ScalarFunction replace std::function<std::string(const std::vector<std::string>&)>.
+ */
+using ScalarFunction = std::function<std::string(const std::vector<std::string>&)>;
+
+struct ScalarFunctionInfo {
+    ScalarFunctionInfo(ScalarFunction function, int argc) : function_(function), argc_(argc) {}
+    ScalarFunction function_;
+    int argc_;
+};
+/**
  * Manages relational database configurations.
  */
 class API_EXPORT RdbStoreConfig {
@@ -423,10 +433,32 @@ public:
     std::vector<uint8_t> GetEncryptKey() const;
 
     /**
+     * @brief Sets the scalar function for the object.
+     */
+    API_EXPORT void SetScalarFunction(const std::string &functionName, int argc, ScalarFunction function);
+
+    /**
+     * @brief Obtains the registered scalar functions in this {@code StoreConfig} object.
+     */
+    API_EXPORT std::map<std::string, ScalarFunctionInfo> GetScalarFunctions() const;
+
+    /**
      * @brief Overload the line number operator.
      */
     bool operator==(const RdbStoreConfig &config) const
     {
+        if (this->customScalarFunctions.size() != config.customScalarFunctions.size()) {
+            return false;
+        }
+
+        auto iter1 = this->customScalarFunctions.begin();
+        auto iter2 = config.customScalarFunctions.begin();
+        for (; iter1 != this->customScalarFunctions.end(); ++iter1, ++iter2) {
+            if (iter1->first != iter2->first) {
+                return false;
+            }
+        }
+
         if (this->encryptKey_.size() != config.encryptKey_.size()) {
             return false;
         }
@@ -476,6 +508,8 @@ private:
     int pageSize;
     int readConSize_ = 4;
     std::string encryptAlgo;
+
+    std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
 };
 } // namespace OHOS::NativeRdb
 

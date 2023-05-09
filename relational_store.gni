@@ -29,3 +29,12 @@ relational_store_innerapi_path =
 
 cloud_data_native_path =
     "${relational_store_base_path}/frameworks/native/cloud_data"
+datashare_path =
+    "//foundation/distributeddatamgr/data_share/interfaces/inner_api"
+
+ipc_path = "//foundation/communication/ipc/interfaces/innerkits"
+
+kvstore_path = "//foundation/distributeddatamgr/kv_store/frameworks"
+
+distributedfile_path =
+    "//foundation/distributeddatamgr/distributedfile/interfaces/kits/js/src"
