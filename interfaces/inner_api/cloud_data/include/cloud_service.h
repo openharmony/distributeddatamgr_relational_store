@@ -57,7 +57,7 @@ public:
     virtual int32_t Clean(const std::string &id, const std::map<std::string, int32_t> &actions) = 0;
     virtual int32_t NotifyDataChange(const std::string &id, const std::string &bundleName) = 0;
 
-    static constexpr const char *SERVICE_NAME = "cloud";
+    inline static constexpr const char *SERVICE_NAME = "cloud";
 };
 } // namespace OHOS::CloudData
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_SERVICE_H
