@@ -72,6 +72,7 @@
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_share_adapter:rdb_data_share_adapter",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/cloud_data:cloud_data",
+                "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_bms_adapter:rdb_bms_adapter",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/dataability:dataability",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:rdb",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:napi_rdb",
@@ -127,6 +128,17 @@
                             "rdb_utils.h"
                         ],
                         "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_share_adapter/include"
+                    }
+                },
+                {
+                    "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_bms_adapter:rdb_bms_adapter",
+                    "header": {
+                        "header_files": [
+                            "serializable.h",
+                            "data_share_profile_info.h",
+                            "data_properties.h"
+                        ],
+                        "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_bms_adapter/include"
                     }
                 },
                 {
