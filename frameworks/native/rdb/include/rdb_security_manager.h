@@ -89,7 +89,7 @@ private:
     bool CheckRootKeyExists();
     std::vector<uint8_t> EncryptWorkKey(const std::vector<uint8_t> &key);
     bool DecryptWorkKey(std::vector<uint8_t> &source, std::vector<uint8_t> &key);
-    std::vector<uint8_t> GenerateRootKeyAlias(const std::string &bundleName);
+    std::vector<uint8_t> GenerateRootKeyAlias(const std::string &bundleName, const std::string &path);
     bool InitPath(const std::string &path);
     void ParsePath(const std::string &path);
     bool CheckKeyDataFileExists(RdbSecurityManager::KeyFileType keyFile);
