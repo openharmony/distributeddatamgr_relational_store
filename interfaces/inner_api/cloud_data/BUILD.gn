@@ -12,51 +12,19 @@
 # limitations under the License.
 import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
-
-config("cloud_data_config") {
-  visibility = [ ":*" ]
+config("cloud_public_config") {
+  visibility = [
+    "//foundation/distributeddatamgr/datamgr_service:*",
+    "//foundation/distributeddatamgr/relational_store:*"
+  ]
 
   include_dirs = [
     "include",
-    "${cloud_data_native_path}/include",
-    "${relational_store_innerapi_path}/rdb/include",
-    "../../../../kv_store/frameworks/common",
-  ]
-
-  defines = [
-    "RELATIONAL_STORE",
-    "SQLITE_HAS_CODEC",
   ]
 }
 
-base_sources = [
-  "${cloud_data_native_path}/src/cloud_manager.cpp",
-  "${cloud_data_native_path}/src/cloud_service_proxy.cpp",
-]
-
-ohos_shared_library("cloud_data") {
+ohos_static_library("cloud_data_inner") {
   part_name = "relational_store"
-  sources = base_sources
-
-  configs = [ ":cloud_data_config" ]
-
-  deps = []
-  ldflags = [ "-Wl,--exclude-libs,ALL" ]
-  cflags_cc = [ "-fvisibility=hidden" ]
-
-  sources += []
-
-  public_deps =
-      [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
-
-  external_deps = [
-    "c_utils:utils",
-    "hilog_native:libhilog",
-    "hitrace_native:hitrace_meter",
-    "ipc:ipc_core",
-    "samgr:samgr_proxy",
-  ]
-
-  innerapi_tags = [ "platformsdk" ]
+  public_configs = [ ":cloud_public_config" ]
   subsystem_name = "distributeddatamgr"
 }
