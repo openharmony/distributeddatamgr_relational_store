@@ -54,7 +54,6 @@ void RdbOpenCallbackTest::SetUp(void)
 
 void RdbOpenCallbackTest::TearDown(void)
 {
-    RdbHelper::ClearCache();
 }
 
 class OpenCallbackA : public RdbOpenCallback {
