@@ -84,6 +84,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
             RestartTimer(path, *storeCache_[path]);
             return rdbStore;
         }
+        timer_->Unregister(storeCache_[path]->timerId_);
         storeCache_.erase(path);
     }
     InitSecurityManager(config);
