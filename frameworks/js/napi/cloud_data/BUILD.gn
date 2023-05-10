@@ -18,10 +18,10 @@ config("cloud_data_config") {
 
   include_dirs = [
     "include",
+    "../../../../../kv_store/frameworks/common",
     "${cloud_data_native_path}/include",
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_innerapi_path}/cloud_data/include",
-    "../../../../../kv_store/frameworks/common",
   ]
 
   defines = [
