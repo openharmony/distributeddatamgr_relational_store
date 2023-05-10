@@ -24,19 +24,19 @@ OHOS::NativeRdb::CursorImpl::CursorImpl(std::shared_ptr<OHOS::NativeRdb::ResultS
     id = RDB_CURSOR_CID;
     resultSet_ = resultSet;
 
-    getColumnCount = CURSOR_GetColumnCount;
-    getColumnType = CURSOR_GetColumnType;
-    getColumnIndex = CURSOR_GetColumnIndex;
-    getColumnName = CURSOR_GetColumnName;
-    getRowCount = CURSOR_GetRowCount;
-    goToNextRow = CURSOR_GoToNextRow;
-    getSize = CURSOR_GetSize;
-    getText = CURSOR_GetText;
-    getInt64 = CURSOR_GetInt64;
-    getReal = CURSOR_GetReal;
-    getBlob = CURSOR_GetBlob;
-    isNull = CURSOR_IsNull;
-    close = CURSOR_Close;
+    OH_Cursor_GetColumnCount = CURSOR_GetColumnCount;
+    OH_Cursor_GetColumnType = CURSOR_GetColumnType;
+    OH_Cursor_GetColumnIndex = CURSOR_GetColumnIndex;
+    OH_Cursor_GetColumnName = CURSOR_GetColumnName;
+    OH_Cursor_GetRowCount = CURSOR_GetRowCount;
+    OH_Cursor_GoToNextRow = CURSOR_GoToNextRow;
+    OH_Cursor_GetSize = CURSOR_GetSize;
+    OH_Cursor_GetText = CURSOR_GetText;
+    OH_Cursor_GetInt64 = CURSOR_GetInt64;
+    OH_Cursor_GetReal = CURSOR_GetReal;
+    OH_Cursor_GetBlob = CURSOR_GetBlob;
+    OH_Cursor_IsNull = CURSOR_IsNull;
+    OH_Cursor_Close = CURSOR_Close;
 }
 
 std::shared_ptr<OHOS::NativeRdb::ResultSet> OHOS::NativeRdb::CursorImpl::GetResultSet()
@@ -85,10 +85,10 @@ int CURSOR_GetColumnName(OH_Cursor *cursor, int32_t columnIndex, char *name, int
     if (errCode != OHOS::NativeRdb::E_OK) {
         return errCode;
     }
-    if (str.length() > length) {
-        return E_LENGTH_ERROR;
+    errno_t result = memcpy_s(name, length, str.c_str(), str.length());
+    if (result != EOK) {
+        return E_ERROR;
     }
-    memcpy_s(name, length, str.c_str(), str.length());
     return errCode;
 }
 
@@ -130,10 +130,10 @@ int CURSOR_GetText(OH_Cursor *cursor, int32_t columnIndex, char *value, int leng
     if (errCode != OHOS::NativeRdb::E_OK) {
         return errCode;
     }
-    if (str.size() > length) {
-        return E_LENGTH_ERROR;
+    errno_t result = memcpy_s(value, length, str.c_str(), str.length());
+    if (result != EOK) {
+        return E_ERROR;
     }
-    memcpy_s(value, length, str.c_str(), str.length());
     return errCode;
 }
 
@@ -167,10 +167,10 @@ int CURSOR_GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned char *value,
     if (errCode != OHOS::NativeRdb::E_OK) {
         return errCode;
     }
-    if (vec.size() > length) {
-        return E_LENGTH_ERROR;
+    errno_t result = memcpy_s(value, length, vec.data(), vec.size());
+    if (result != EOK) {
+        return E_ERROR;
     }
-    memcpy_s(value, length, vec.data(), vec.size());
     return errCode;
 }
 

@@ -22,20 +22,6 @@
 extern "C" {
 #endif
 
-#define OH_Cursor_GetColumnCount(cursor, count) cursor->getColumnCount(cursor, count)
-#define OH_Cursor_GetColumnType(cursor, columnIndex, columnType) cursor->getColumnType(cursor, columnIndex, columnType)
-#define OH_Cursor_GetColumnIndex(cursor, names, columnIndex) cursor->getColumnIndex(cursor, names, columnIndex)
-#define OH_Cursor_GetColumnName(cursor, columnIndex, name, length) cursor->getColumnName(cursor, columnIndex, name, length)
-#define OH_Cursor_GetRowCount(cursor, count) cursor->getRowCount(cursor, count);
-#define OH_Cursor_GoToNextRow(cursor) cursor->goToNextRow(cursor)
-#define OH_Cursor_GetSize(cursor, columnIndex, size) cursor->getSize(cursor, columnIndex, size)
-#define OH_Cursor_GetText(cursor, columnIndex, value, length) cursor->getText(cursor, columnIndex, value, length)
-#define OH_Cursor_GetInt64(cursor, columnIndex, value) cursor->getInt64(cursor, columnIndex, value)
-#define OH_Cursor_GetReal(cursor, columnIndex, value) cursor->getReal(cursor, columnIndex, value)
-#define OH_Cursor_GetBlob(cursor, columnIndex, value, length) cursor->getBlob(cursor, columnIndex, value, length)
-#define OH_Cursor_IsNull(cursor, columnIndex, isNull) cursor->isNull(cursor, columnIndex, isNull)
-#define OH_Cursor_Close(cursor) cursor->close(cursor)
-
 enum ColumnType {
     TYPE_NULL = 0,
     TYPE_INT64,
@@ -46,19 +32,19 @@ enum ColumnType {
 
 struct OH_Cursor{
     int id;
-    int (*getColumnCount)(OH_Cursor *, int *);
-    int (*getColumnType)(OH_Cursor *, int32_t, ColumnType *);
-    int (*getColumnIndex)(OH_Cursor *, const char *, int *);
-    int (*getColumnName)(OH_Cursor *, int32_t, char *, int);
-    int (*getRowCount)(OH_Cursor *, int *);
-    int (*goToNextRow)(OH_Cursor *);
-    int (*getSize)(OH_Cursor *, int32_t, size_t *);
-    int (*getText)(OH_Cursor *, int32_t, char *, int);
-    int (*getInt64)(OH_Cursor *, int32_t, int64_t *);
-    int (*getReal)(OH_Cursor *, int32_t, double *);
-    int (*getBlob)(OH_Cursor *, int32_t, unsigned char *, int);
-    int (*isNull)(OH_Cursor *, int32_t, bool *);
-    int (*close)(OH_Cursor *);
+    int (*OH_Cursor_GetColumnCount)(OH_Cursor *, int *);
+    int (*OH_Cursor_GetColumnType)(OH_Cursor *, int32_t, ColumnType *);
+    int (*OH_Cursor_GetColumnIndex)(OH_Cursor *, const char *, int *);
+    int (*OH_Cursor_GetColumnName)(OH_Cursor *, int32_t, char *, int);
+    int (*OH_Cursor_GetRowCount)(OH_Cursor *, int *);
+    int (*OH_Cursor_GoToNextRow)(OH_Cursor *);
+    int (*OH_Cursor_GetSize)(OH_Cursor *, int32_t, size_t *);
+    int (*OH_Cursor_GetText)(OH_Cursor *, int32_t, char *, int);
+    int (*OH_Cursor_GetInt64)(OH_Cursor *, int32_t, int64_t *);
+    int (*OH_Cursor_GetReal)(OH_Cursor *, int32_t, double *);
+    int (*OH_Cursor_GetBlob)(OH_Cursor *, int32_t, unsigned char *, int);
+    int (*OH_Cursor_IsNull)(OH_Cursor *, int32_t, bool *);
+    int (*OH_Cursor_Close)(OH_Cursor *);
 };
 
 int CURSOR_GetColumnCount(OH_Cursor *cursor, int *count);
