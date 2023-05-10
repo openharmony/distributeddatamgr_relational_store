@@ -63,15 +63,6 @@ RdbStoreManager::RdbStoreManager()
     ms_ = 30000;
 }
 
-void RdbStoreManager::InitSecurityManager(const RdbStoreConfig &config)
-{
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    if (config.IsEncrypt()) {
-        RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
-    }
-#endif
-}
-
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &config,
     int &errCode, int version, RdbOpenCallback &openCallback)
 {
@@ -80,15 +71,15 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
     std::lock_guard<std::mutex> lock(mutex_);
     if (storeCache_.find(path) != storeCache_.end() && storeCache_[path] != nullptr) {
         rdbStore = storeCache_[path]->rdbStore_;
-        int currentVersion = 0;
-        rdbStore->GetVersion(currentVersion);
-        if (rdbStore->GetConfig() == config && currentVersion == version) {
+        if (rdbStore->GetConfig() == config && rdbStore->version == version) {
             RestartTimer(path, *storeCache_[path]);
+            return rdbStore;
+        } else if (rdbStore->GetConfig() == config && rdbStore->version != version) {
+            errCode = E_STORE_VERSION_CHANGE;
             return rdbStore;
         }
         storeCache_.erase(path);
     }
-    InitSecurityManager(config);
     rdbStore = RdbStoreImpl::Open(config, errCode);
     if (rdbStore == nullptr) {
         LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore, err is %{public}d", errCode);

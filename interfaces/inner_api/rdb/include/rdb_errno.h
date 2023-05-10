@@ -268,6 +268,11 @@ static constexpr int E_WAL_SIZE_OVER_LIMIT = (E_BASE + 47);
 * @brief The error when the connection count is used up.
 */
 static constexpr int E_CON_OVER_LIMIT = (E_BASE + 48);
+
+/**
+* @brief The error when the database in cache but its version changed.
+*/
+static constexpr int E_STORE_VERSION_CHANGE = (E_BASE + 49);
 } // namespace NativeRdb
 } // namespace OHOS
 

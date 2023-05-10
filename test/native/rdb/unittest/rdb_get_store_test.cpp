@@ -269,7 +269,7 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_002, TestSize.Level1)
 
     ret = store->GetVersion(currentVersion);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(currentVersion, 2);
+    EXPECT_EQ(currentVersion, 1);
 
     ret = store1->GetVersion(currentVersion);
     EXPECT_EQ(ret, E_OK);
@@ -343,7 +343,7 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_003, TestSize.Level1)
 
     ret = store3->GetVersion(currentVersion);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(currentVersion, 3);
+    EXPECT_EQ(currentVersion, 2);
 
     ret = store2->ExecuteSql("delete from test1");
     EXPECT_EQ(ret, E_OK);
@@ -446,7 +446,7 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_005, TestSize.Level1)
 
     ret = store3->GetVersion(currentVersion);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(currentVersion, 3);
+    EXPECT_EQ(currentVersion, 2);
 
     ret = store2->ExecuteSql("delete from test1");
     EXPECT_EQ(ret, E_OK);
