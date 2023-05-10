@@ -19,10 +19,10 @@ ohos_ndk_headers("native_rdb_ndk_header") {
   dest_dir = "$ndk_headers_out_dir/native_rdb"
   sources = [
     "./include/relational_cursor.h",
+    "./include/relational_error_code.h",
     "./include/relational_predicates.h",
     "./include/relational_store.h",
     "./include/relational_values_bucket.h",
-    "./include/relational_error_code.h",
   ]
 }
 
@@ -63,7 +63,6 @@ ohos_shared_library("native_rdb_ndk") {
     "ipc:ipc_single",
     "relational_store:native_rdb",
   ]
-
 
   innerapi_tags = [ "platformsdk" ]
   part_name = "relational_store"

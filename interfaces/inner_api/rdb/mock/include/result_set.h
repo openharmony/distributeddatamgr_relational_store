@@ -40,6 +40,7 @@ class ResultSet : public RemoteResultSet {
 public:
     virtual ~ResultSet() {}
     virtual int GetRow(RowEntity &rowEntity) = 0;
+    virtual int GetSize(int columnIndex, size_t &size) = 0;
 };
 
 } // namespace NativeRdb
