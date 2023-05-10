@@ -769,6 +769,7 @@ int RdbStoreImpl::GetVersion(int &version)
  */
 int RdbStoreImpl::SetVersion(int version)
 {
+    this->version = version;
     std::string sql = std::string(GlobalExpr::PRAGMA_VERSION) + " = " + std::to_string(version);
     return ExecuteSql(sql, std::vector<ValueObject>());
 }
