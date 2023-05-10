@@ -39,4 +39,3 @@ ohos_shared_library("clouddata") {
   part_name = "relational_store"
   relative_install_dir = "module/data"
 }
- 
