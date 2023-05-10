@@ -71,6 +71,7 @@
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/dataability:native_dataability",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_share_adapter:rdb_data_share_adapter",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
+                "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_bms_adapter:rdb_bms_adapter",
                 "//foundation/distributeddatamgr/relational_store/interfaces/ndk:native_rdb_ndk",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/dataability:dataability",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:rdb",
