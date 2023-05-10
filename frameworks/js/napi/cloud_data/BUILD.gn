@@ -14,15 +14,11 @@ import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
-ohos_copy("relational_store_declaration") {
-  sources = [ "./api" ]
-  outputs = [ target_out_dir + "/$target_name/" ]
-  module_source_dir = target_out_dir + "/$target_name"
-  module_install_name = ""
-}
-
-config("cloud_data_config") {
-  visibility = [ ":*" ]
+ohos_shared_library("clouddata") {
+  sources = [
+    "${cloud_data_native_path}/src/cloud_manager.cpp",
+    "${cloud_data_native_path}/src/cloud_service_proxy.cpp",
+  ]
 
   include_dirs = [
     "${cloud_data_native_path}/include",
@@ -31,29 +27,6 @@ config("cloud_data_config") {
     "${relational_store_innerapi_path}/cloud_data/include",
     "include",
   ]
-
-  defines = [
-    "RELATIONAL_STORE",
-    "SQLITE_HAS_CODEC",
-  ]
-}
-
-ohos_shared_library("cloud_data") {
-  part_name = "relational_store"
-
-  configs = [ ":cloud_data_config" ]
-
-  deps = []
-  ldflags = [ "-Wl,--exclude-libs,ALL" ]
-  cflags_cc = [ "-fvisibility=hidden" ]
-
-  sources = [
-    "${cloud_data_native_path}/src/cloud_manager.cpp",
-    "${cloud_data_native_path}/src/cloud_service_proxy.cpp",
-  ]
-
-  public_deps =
-      [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
 
   external_deps = [
     "c_utils:utils",
