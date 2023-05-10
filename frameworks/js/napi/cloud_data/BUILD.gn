@@ -13,6 +13,13 @@
 import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
+ohos_copy("relational_store_declaration") {
+  sources = [ "./api" ]
+  outputs = [ target_out_dir + "/$target_name/" ]
+  module_source_dir = target_out_dir + "/$target_name"
+  module_install_name = ""
+}
+
 config("cloud_data_config") {
   visibility = [ ":*" ]
 
@@ -55,6 +62,7 @@ ohos_shared_library("cloud_data") {
     "samgr:samgr_proxy",
   ]
 
-  innerapi_tags = [ "platformsdk" ]
   subsystem_name = "distributeddatamgr"
+  part_name = "relational_store"
+  relative_install_dir = "module/data"
 }
