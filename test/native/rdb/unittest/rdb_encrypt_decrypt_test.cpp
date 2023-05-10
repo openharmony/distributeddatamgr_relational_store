@@ -349,3 +349,18 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_09, TestSize.Level1)
         RdbSecurityManager::KeyFileType::PUB_KEY_FILE_NEW_KEY, distributedStatus);
     EXPECT_EQ(ret, E_ERROR);
 }
+
+/**
+ * @tc.name: RdbStore_Encrypt_Decrypt_Test_010
+ * @tc.desc: test RdbStore Get Encrypt Store without SetBundleName
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_010, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    EncryptTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+}
