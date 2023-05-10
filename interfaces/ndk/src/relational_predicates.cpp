@@ -17,13 +17,16 @@
 #include "relational_predicates_impl.h"
 #include "relational_error_code.h"
 
-OHOS::NativeRdb::RdbPredicates OHOS::NativeRdb::PredicateImpl::GetPredicates()
+OHOS::NativeRdb::RdbPredicates &OHOS::NativeRdb::PredicateImpl::GetPredicates()
 {
     return predicates_;
 }
 
 OH_Predicates *OH_Rdb_CreatePredicates(char const *table)
 {
+    if (table == nullptr) {
+        return nullptr;
+    }
     return new OHOS::NativeRdb::PredicateImpl(table);
 }
 
@@ -239,9 +242,7 @@ int PREDICATES_GroupBy(OH_Predicates *predicate, char const *const *field, const
     std::vector<std::string> vec;
     if (field != nullptr) {
         for (int i = 0; i < length; i++) {
-            std::string str;
-            str.assign(*(field + i), length);
-            vec.push_back(std::move(str));
+            vec.push_back(std::string(field[i]));
         }
     }
 
@@ -258,9 +259,7 @@ int PREDICATES_In(OH_Predicates *predicate, char const *filed, char const *const
     std::vector<std::string> vec;
     if (values != nullptr) {
         for (int i = 0; i < length; i++) {
-            std::string str;
-            str.assign(*(values + i), length);
-            vec.push_back(std::move(str));
+            vec.push_back(std::string(values[i]));
         }
     }
 
@@ -277,12 +276,20 @@ int PREDICATES_NotIn(OH_Predicates *predicate, char const *filed, char const *co
     std::vector<std::string> vec;
     if (values != nullptr) {
         for (int i = 0; i < length; i++) {
-            std::string str;
-            str.assign(*(values + i), length);
-            vec.push_back(std::move(str));
+            vec.push_back(std::string(values[i]));
         }
     }
 
     tempPredicates->GetPredicates().NotIn(filed, vec);
+    return E_OK;
+}
+
+int PREDICATES_Clear(OH_Predicates *predicate)
+{
+    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
+        return E_INVALID_ARG;
+    }
+    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
+    tempPredicates->GetPredicates().Clear();
     return E_OK;
 }

@@ -21,9 +21,9 @@ extern "C" {
 #endif
 
 enum RDB_ErrCode {
+    E_INVALID_ARG = -2,
+    E_ERROR = -1,
     E_OK = 0,
-    E_INVALID_ARG = 1,
-    E_LENGTH_ERROR = 2,
 };
 
 #ifdef __cplusplus

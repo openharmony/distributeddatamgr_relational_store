@@ -34,6 +34,7 @@ int OH_VBucket_PutInt64(RDB_ValuesBucket *bucket, const char *name, int64_t valu
 int OH_VBucket_PutReal(RDB_ValuesBucket *bucket, const char *name, double value);
 int OH_VBucket_PutBlob(RDB_ValuesBucket *bucket, const char *name, const uint8_t *value, uint32_t size);
 int OH_VBucket_PutNull(RDB_ValuesBucket *bucket, const char *name);
+int OH_VBucket_Clear(RDB_ValuesBucket *bucket);
 
 #ifdef __cplusplus
 };
