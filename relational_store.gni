@@ -29,7 +29,7 @@ relational_store_innerapi_path =
 
 cloud_data_native_path =
     "${relational_store_base_path}/frameworks/native/cloud_data"
-    
+
 datashare_path =
     "//foundation/distributeddatamgr/data_share/interfaces/inner_api"
 
