@@ -21,6 +21,7 @@
 #include "rdb_errno.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "shared_block.h"
+#include "rdb_security_manager.h"
 #endif
 #include "sqlite_database_utils.h"
 #include "sqlite_utils.h"
@@ -207,12 +208,22 @@ int StoreSession::ExecuteGetString(
     return errCode;
 }
 
-int StoreSession::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
+int StoreSession::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey, bool isEncrypt)
 {
     std::vector<ValueObject> bindArgs;
     bindArgs.push_back(ValueObject(databasePath));
-    if (destEncryptKey.size() != 0) {
+    if (destEncryptKey.size() != 0 && !isEncrypt) {
         bindArgs.push_back(ValueObject(destEncryptKey));
+        ExecuteSql(CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+    } else if (isEncrypt) {
+        std::vector<uint8_t> key;
+        RdbPassword rdbPwd;
+        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+        bindArgs.push_back(ValueObject(key));
+        ExecuteSql(CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+#endif
     } else {
         std::string str = "";
         bindArgs.push_back(ValueObject(str));
@@ -280,7 +291,7 @@ int StoreSession::GiveConnectionTemporarily(int64_t milliseconds)
 }
 
 int StoreSession::Attach(
-    const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey)
+    const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey, bool isEncrypt)
 {
     std::string journalMode;
     int errCode = ExecuteGetString(journalMode, "PRAGMA journal_mode", std::vector<ValueObject>());
@@ -297,8 +308,18 @@ int StoreSession::Attach(
     std::vector<ValueObject> bindArgs;
     bindArgs.push_back(ValueObject(pathName));
     bindArgs.push_back(ValueObject(alias));
-    if (destEncryptKey.size() != 0) {
+    if (destEncryptKey.size() != 0 && !isEncrypt) {
         bindArgs.push_back(ValueObject(destEncryptKey));
+        ExecuteSql(CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+    } else if (isEncrypt) {
+        std::vector<uint8_t> key;
+        RdbPassword rdbPwd;
+        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+        bindArgs.push_back(ValueObject(key));
+        ExecuteSql(CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+#endif
     } else {
         std::string str = "";
         bindArgs.push_back(ValueObject(str));

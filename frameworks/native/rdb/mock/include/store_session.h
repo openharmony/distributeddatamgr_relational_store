@@ -31,20 +31,22 @@ class StoreSession {
 public:
     explicit StoreSession(SqliteConnectionPool &connectionPool);
     ~StoreSession();
-    int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs);
+    int ExecuteSql(
+        const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteForChangedRowCount(int &changedRows, const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteForLastInsertedRowId(
         int64_t &outRowId, const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetString(std::string &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs);
-    int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey);
+    int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey, bool isEncrypt);
     bool IsHoldingConnection() const;
     int GiveConnectionTemporarily(int64_t milliseconds);
     int CheckNoTransaction() const;
     int BeginTransaction(TransactionObserver *transactionObserver);
     int MarkAsCommitWithObserver(TransactionObserver *transactionObserver);
     int EndTransactionWithObserver(TransactionObserver *transactionObserver);
-    int Attach(const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey);
+    int Attach(const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey,
+        bool isEncrypt);
     int MarkAsCommit();
     int EndTransaction();
     bool IsInTransaction() const;
@@ -74,6 +76,7 @@ private:
     const std::string ATTACH_SQL = "ATTACH ? AS ? KEY ?";
     const std::string EXPORT_SQL = "SELECT export_database('backup')";
     const std::string DETACH_BACKUP_SQL = "detach backup";
+    const std::string CIPHER_DEFAULT_ATTACH_HMAC_ALGO = "PRAGMA cipher_default_attach_hmac_algo=sha256";
 };
 } // namespace NativeRdb
 } // namespace OHOS
