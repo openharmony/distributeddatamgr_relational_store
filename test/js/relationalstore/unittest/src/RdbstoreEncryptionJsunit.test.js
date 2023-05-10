@@ -182,7 +182,7 @@ describe('rdbEncryptTest', function () {
          * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0040
          * @tc.desc RDB Encrypt function test
          */
-        it('RdbEncryptTest_0040', 0, async function (done) {
+        it('RdbEncryptTest_0040', 0, async function () {
             await console.log(TAG + "************* RdbEncryptTest_0040 start *************")
             let rdbStore = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT)
             rdbStore = null
@@ -191,8 +191,7 @@ describe('rdbEncryptTest', function () {
                 rdbStore = await CreatRdbStore(context, STORE_CONFIG_WRONG)
                 expect(false).assertTrue()
             } catch (err) {
-                expect(true).assertTrue()
-                done()
+                expect(err.code).assertEqual(14800000);
             }
 
             await console.log(TAG + "************* RdbEncryptTest_0040 end *************")
