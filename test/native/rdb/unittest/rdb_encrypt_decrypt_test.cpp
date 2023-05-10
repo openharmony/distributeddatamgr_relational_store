@@ -240,7 +240,7 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_05, TestSize.Level1)
     EncryptTestOpenCallback helper;
     int errCode;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(store, nullptr);
+    EXPECT_NE(store, nullptr);
 }
 
 /**
