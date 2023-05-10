@@ -50,14 +50,14 @@ public:
     /**
      * @brief Gets the entire row of data for the current row from the result set.
      */
-    RDB_API_EXPORT virtual int GetRow(RowEntity &rowEntity) = 0;
+    API_EXPORT virtual int GetRow(RowEntity &rowEntity) = 0;
 
     /**
      * @brief Get the size of blob or the text.
      *
      * @param columnIndex Indicates the zero-based index of the target column.
      */
-    virtual int GetSize(int columnIndex, size_t &size) = 0;
+    API_EXPORT virtual int GetSize(int columnIndex, size_t &size) = 0;
 
 };
 

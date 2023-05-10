@@ -119,7 +119,7 @@ public:
      *
      * @param columnIndex Indicates the zero-based index of the target column.
      */
-    RDB_API_EXPORT int GetSize(int columnIndex, size_t &size) override;
+    API_EXPORT int GetSize(int columnIndex, size_t &size) override;
 
     /**
      * @brief Checks whether the value of the specified column in the current row is null.
