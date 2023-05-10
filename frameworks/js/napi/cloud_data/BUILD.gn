@@ -17,8 +17,8 @@ config("cloud_data_config") {
   visibility = [ ":*" ]
 
   include_dirs = [
-    "../../../../../kv_store/frameworks/common",
     "${cloud_data_native_path}/include",
+    "${kvstore_path}/common",
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_innerapi_path}/cloud_data/include",
     "include",
@@ -30,14 +30,8 @@ config("cloud_data_config") {
   ]
 }
 
-base_sources = [
-  "${cloud_data_native_path}/src/cloud_manager.cpp",
-  "${cloud_data_native_path}/src/cloud_service_proxy.cpp",
-]
-
 ohos_shared_library("cloud_data") {
   part_name = "relational_store"
-  sources = base_sources
 
   configs = [ ":cloud_data_config" ]
 
@@ -45,7 +39,10 @@ ohos_shared_library("cloud_data") {
   ldflags = [ "-Wl,--exclude-libs,ALL" ]
   cflags_cc = [ "-fvisibility=hidden" ]
 
-  sources += []
+  sources = [
+    "${cloud_data_native_path}/src/cloud_manager.cpp",
+    "${cloud_data_native_path}/src/cloud_service_proxy.cpp",
+  ]
 
   public_deps =
       [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
