@@ -145,7 +145,7 @@ HWTEST_F(RdbNdkStoreOpenCallbackTest, RDB_NDK_store_open_callback_test_001, Test
 
     int errCode = 0;
     RDB_Store *store = OH_Rdb_GetOrOpen(&config, 1, &callback, &errCode);
-    EXPECT_NE(store, nullptr);
+    EXPECT_NE(store, NULL);
 
     int version = 0;
     errCode = OH_Rdb_GetVersion(store, &version);
@@ -164,7 +164,7 @@ HWTEST_F(RdbNdkStoreOpenCallbackTest, RDB_NDK_store_open_callback_test_001, Test
     const char *columnNames[] = {"data1", "data2", "data3", "data4"};
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
     OH_Cursor *cursor = OH_Rdb_Query(store, predicates, columnNames, len);
-    EXPECT_NE(cursor, nullptr);
+    EXPECT_NE(cursor, NULL);
 
     int rowCount = 0;
     cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
@@ -190,7 +190,7 @@ HWTEST_F(RdbNdkStoreOpenCallbackTest, RDB_NDK_store_open_callback_test_002, Test
 
     int errCode = 0;
     RDB_Store *store = OH_Rdb_GetOrOpen(&config, 2, &callback, &errCode);
-    EXPECT_NE(store, nullptr);
+    EXPECT_NE(store, NULL);
 
     int version = 0;
     errCode = OH_Rdb_GetVersion(store, &version);
@@ -234,7 +234,7 @@ HWTEST_F(RdbNdkStoreOpenCallbackTest, RDB_NDK_store_open_callback_test_003, Test
 
     int errCode = 0;
     RDB_Store *store = OH_Rdb_GetOrOpen(&config, 1, &callback, &errCode);
-    EXPECT_NE(store, nullptr);
+    EXPECT_NE(store, NULL);
 
     int version = 0;
     errCode = OH_Rdb_GetVersion(store, &version);
