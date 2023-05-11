@@ -81,6 +81,7 @@ private:
     int openFlags;
     std::mutex rdbMutex;
     bool inTransaction_;
+    std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
 
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
 };
