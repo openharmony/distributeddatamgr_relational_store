@@ -78,7 +78,6 @@ public:
     bool IsMemoryRdb() const override;
     bool IsHoldingConnection() override;
     int GiveConnectionTemporarily(int64_t milliseconds);
-    int version = 0;
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
 #endif
