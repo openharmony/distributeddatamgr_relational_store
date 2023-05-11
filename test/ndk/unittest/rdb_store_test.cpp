@@ -43,8 +43,8 @@ void RdbNdkStoreTest::SetUpTestCase(void)
 
     int version = 1;
     int errCode = 0;
-    storeTestRdbStore_ = OH_Rdb_GetOrOpen(&config, version, nullptr, &errCode);
-    EXPECT_NE(storeTestRdbStore_, nullptr);
+    storeTestRdbStore_ = OH_Rdb_GetOrOpen(&config, version, NULL, &errCode);
+    EXPECT_NE(storeTestRdbStore_, NULL);
 }
 
 void RdbNdkStoreTest::TearDownTestCase(void)
@@ -101,8 +101,8 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_001, TestSize.Level1)
     EXPECT_EQ(errCode, 1);
 
     predicates->OH_Predicates_Clear(predicates);
-    OH_Cursor *cursor = OH_Rdb_Query(storeTestRdbStore_, predicates, nullptr, 0);
-    EXPECT_NE(cursor, nullptr);
+    OH_Cursor *cursor = OH_Rdb_Query(storeTestRdbStore_, predicates, NULL, 0);
+    EXPECT_NE(cursor, NULL);
 
     int rowCount = 0;
     cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
@@ -382,7 +382,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_006, TestSize.Level1)
 
 /**
  * @tc.name: RDB_NDK_store_test_007
- * @tc.desc: Normal testCase of NDK store for Insert with wrong table name or table is nullptr.
+ * @tc.desc: Normal testCase of NDK store for Insert with wrong table name or table is NULL.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_007, TestSize.Level1)
@@ -415,7 +415,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_007, TestSize.Level1)
     OH_VBucket_PutInt64(valueBucket, "data2", 14800);
     OH_VBucket_PutReal(valueBucket, "data3", 300.1);
     OH_VBucket_PutText(valueBucket, "data5", "ABCDEFGHI");
-    char *table = nullptr;
+    char *table = NULL;
     errCode = OH_Rdb_Insert(storeTestRdbStore_, table, valueBucket);
     EXPECT_EQ(errCode, RDB_ErrCode::E_INVALID_ARG);
 
@@ -430,7 +430,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_007, TestSize.Level1)
 
 /**
  * @tc.name: RDB_NDK_store_test_008
- * @tc.desc: Normal testCase of NDK store for Update with wrong table or table is nullptr.
+ * @tc.desc: Normal testCase of NDK store for Update with wrong table or table is NULL.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_008, TestSize.Level1)
@@ -459,15 +459,15 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_008, TestSize.Level1)
     errCode = OH_Rdb_Update(storeTestRdbStore_, valueBucket, predicates);
     EXPECT_EQ(errCode, -1);
 
-    char *table = nullptr;
+    char *table = NULL;
     OH_Predicates *predicates1 = OH_Rdb_CreatePredicates(table);
-    EXPECT_EQ(predicates1, nullptr);
+    EXPECT_EQ(predicates1, NULL);
     errCode = OH_Rdb_Update(storeTestRdbStore_, valueBucket, predicates1);
     EXPECT_EQ(errCode, RDB_ErrCode::E_INVALID_ARG);
 
     OH_Predicates *predicates2 = OH_Rdb_CreatePredicates("test");
-    OH_Cursor *cursor = OH_Rdb_Query(storeTestRdbStore_, predicates2, nullptr, 0);
-    EXPECT_NE(cursor, nullptr);
+    OH_Cursor *cursor = OH_Rdb_Query(storeTestRdbStore_, predicates2, NULL, 0);
+    EXPECT_NE(cursor, NULL);
 
     int rowCount = 0;
     cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
@@ -505,7 +505,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_008, TestSize.Level1)
 
 /**
  * @tc.name: RDB_NDK_store_test_009
- * @tc.desc: Normal testCase of NDK store for querysql is nullptr.
+ * @tc.desc: Normal testCase of NDK store for querysql is NULL.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_009, TestSize.Level1)
@@ -523,7 +523,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_009, TestSize.Level1)
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
     EXPECT_EQ(errCode, 1);
 
-    char *querySql = nullptr;
+    char *querySql = NULL;
     OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
-    EXPECT_EQ(cursor, nullptr);
+    EXPECT_EQ(cursor, NULL);
 }

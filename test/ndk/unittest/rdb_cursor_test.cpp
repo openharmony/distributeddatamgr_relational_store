@@ -43,8 +43,8 @@ void RdbNdkCursorTest::SetUpTestCase(void)
     int version = 1;
     int errCode = 0;
     char table[] = "test";
-    cursorTestRdbStore_ = OH_Rdb_GetOrOpen(&config, version, nullptr, &errCode);
-    EXPECT_NE(cursorTestRdbStore_, nullptr);
+    cursorTestRdbStore_ = OH_Rdb_GetOrOpen(&config, version, NULL, &errCode);
+    EXPECT_NE(cursorTestRdbStore_, NULL);
 
     char createTableSql[] = "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
                             "data3 FLOAT, data4 BLOB, data5 TEXT);";
@@ -104,8 +104,8 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_001, TestSize.Level1)
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
 
-    OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, nullptr, 0);
-    EXPECT_NE(cursor, nullptr);
+    OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, NULL, 0);
+    EXPECT_NE(cursor, NULL);
     cursor->OH_Cursor_GoToNextRow(cursor);
 
     ColumnType type;
@@ -139,8 +139,8 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_002, TestSize.Level1)
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
 
-    OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, nullptr, 0);
-    EXPECT_NE(cursor, nullptr);
+    OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, NULL, 0);
+    EXPECT_NE(cursor, NULL);
 
     int columnIndex;
     errCode = cursor->OH_Cursor_GetColumnIndex(cursor, "data1", &columnIndex);
@@ -170,11 +170,11 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_003, TestSize.Level1)
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
 
-    OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, nullptr, 0);
-    EXPECT_NE(cursor, nullptr);
+    OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, NULL, 0);
+    EXPECT_NE(cursor, NULL);
 
-    char name[6];
-    errCode = cursor->OH_Cursor_GetColumnName(cursor, 1, name, 6);
+    char name[10];
+    errCode = cursor->OH_Cursor_GetColumnName(cursor, 1, name, 10);
     EXPECT_EQ(strcmp(name, "data1"), 0);
 
     errCode = cursor->OH_Cursor_GetColumnName(cursor, 2, name, 6);
@@ -203,7 +203,7 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_004, TestSize.Level1)
     const char *columnNames[] = {"data1", "data2", "data3", "data4"};
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, columnNames, len);
-    EXPECT_NE(cursor, nullptr);
+    EXPECT_NE(cursor, NULL);
 
     int rowCount = 0;
     cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
