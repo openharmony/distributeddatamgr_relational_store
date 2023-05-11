@@ -71,11 +71,8 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
     std::lock_guard<std::mutex> lock(mutex_);
     if (storeCache_.find(path) != storeCache_.end() && storeCache_[path] != nullptr) {
         rdbStore = storeCache_[path]->rdbStore_;
-        if (rdbStore->GetConfig() == config && rdbStore->version == version) {
+        if (rdbStore->GetConfig() == config) {
             RestartTimer(path, *storeCache_[path]);
-            return rdbStore;
-        } else if (rdbStore->GetConfig() == config && rdbStore->version != version) {
-            errCode = E_STORE_VERSION_CHANGE;
             return rdbStore;
         }
         storeCache_.erase(path);
