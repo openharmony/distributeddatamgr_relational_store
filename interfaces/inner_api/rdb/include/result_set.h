@@ -53,7 +53,7 @@ public:
     API_EXPORT virtual int GetRow(RowEntity &rowEntity) = 0;
 
     /**
-     * @brief Get the size of blob or the text.
+     * @brief Get the size of blob or text.
      *
      * @param columnIndex Indicates the zero-based index of the target column.
      */

@@ -53,14 +53,14 @@ void RdbNdkStoreOpenCallbackTest::TearDown(void)
     EXPECT_EQ(errCode, 0);
 }
 
-int OnCreate(RDB_Store *store)
+int OnCreate(OH_Rdb_Store *store)
 {
     char createTableSql[] = "CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
                             "data3 FLOAT, data4 BLOB, data5 TEXT);";
     return OH_Rdb_Execute(store, createTableSql);
 }
 
-int OnUpgrade(RDB_Store *store, int oldVersion, int newVersion)
+int OnUpgrade(OH_Rdb_Store *store, int oldVersion, int newVersion)
 {
     if (oldVersion < newVersion) {
         if (oldVersion <= 1) {
@@ -69,10 +69,10 @@ int OnUpgrade(RDB_Store *store, int oldVersion, int newVersion)
             return OH_Rdb_Execute(store, createTableSql);
         }
     }
-    return E_OK;
+    return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int OnDowngrade(RDB_Store *store, int oldVersion, int newVersion)
+int OnDowngrade(OH_Rdb_Store *store, int oldVersion, int newVersion)
 {
     if (oldVersion > newVersion) {
         if (oldVersion >= 2) {
@@ -80,12 +80,12 @@ int OnDowngrade(RDB_Store *store, int oldVersion, int newVersion)
             OH_Rdb_Execute(store, dropTableSql);
         }
     }
-    return E_OK;
+    return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int OnOpen(RDB_Store *store)
+int OnOpen(OH_Rdb_Store *store)
 {
-    RDB_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_Rdb_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     OH_VBucket_PutText(valueBucket, "data1", "zhangSan");
     OH_VBucket_PutInt64(valueBucket, "data2", 12800);
     OH_VBucket_PutReal(valueBucket, "data3", 100.1);
@@ -107,19 +107,19 @@ int OnOpen(RDB_Store *store)
     if (errCode == -1) {
         return errCode;
     }
-    return E_OK;
+    return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
 int OnCorruption(const char *databaseFile)
 {
     int errCode = OH_Rdb_DeleteStore(databaseFile);
-    if (errCode != E_OK) {
+    if (errCode != OH_Rdb_ErrCode::RDB_ERR_OK) {
         return errCode;
     }
-    return E_OK;
+    return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-void InitRdbOpenCallback(RDB_OpenCallback *rdbOpenCallback)
+void InitRdbOpenCallback(OH_Rdb_OpenCallback *rdbOpenCallback)
 {
     rdbOpenCallback->OH_Callback_OnCreate = OnCreate;
     rdbOpenCallback->OH_Callback_OnUpgrade = OnUpgrade;
@@ -135,16 +135,16 @@ void InitRdbOpenCallback(RDB_OpenCallback *rdbOpenCallback)
  */
 HWTEST_F(RdbNdkStoreOpenCallbackTest, RDB_NDK_store_open_callback_test_001, TestSize.Level1)
 {
-    RDB_OpenCallback callback;
+    OH_Rdb_OpenCallback callback;
     InitRdbOpenCallback(&callback);
 
-    RDB_Config config;
+    OH_Rdb_Config config;
     config.path = storeOpenCallbackTestPath_.c_str();
-    config.securityLevel = SecurityLevel::S1;
-    config.isEncrypt = Bool::FALSE;
+    config.securityLevel = OH_Rdb_SecurityLevel::RDB_S1;
+    config.isEncrypt = OH_Rdb_Bool::RDB_FALSE;
 
     int errCode = 0;
-    RDB_Store *store = OH_Rdb_GetOrOpen(&config, 1, &callback, &errCode);
+    OH_Rdb_Store *store = OH_Rdb_GetOrOpen(&config, 1, &callback, &errCode);
     EXPECT_NE(store, NULL);
 
     int version = 0;
@@ -152,7 +152,7 @@ HWTEST_F(RdbNdkStoreOpenCallbackTest, RDB_NDK_store_open_callback_test_001, Test
     EXPECT_EQ(errCode, 0);
     EXPECT_EQ(version, 1);
 
-    RDB_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_Rdb_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     OH_VBucket_PutText(valueBucket, "data1", "wangWu");
     OH_VBucket_PutInt64(valueBucket, "data2", 14800);
     OH_VBucket_PutReal(valueBucket, "data3", 300.1);
@@ -180,16 +180,16 @@ HWTEST_F(RdbNdkStoreOpenCallbackTest, RDB_NDK_store_open_callback_test_001, Test
  */
 HWTEST_F(RdbNdkStoreOpenCallbackTest, RDB_NDK_store_open_callback_test_002, TestSize.Level1)
 {
-    RDB_OpenCallback callback;
+    OH_Rdb_OpenCallback callback;
     InitRdbOpenCallback(&callback);
 
-    RDB_Config config;
+    OH_Rdb_Config config;
     config.path = storeOpenCallbackTestPath_.c_str();
-    config.securityLevel = SecurityLevel::S1;
-    config.isEncrypt = Bool::FALSE;
+    config.securityLevel = OH_Rdb_SecurityLevel::RDB_S1;
+    config.isEncrypt = OH_Rdb_Bool::RDB_FALSE;
 
     int errCode = 0;
-    RDB_Store *store = OH_Rdb_GetOrOpen(&config, 2, &callback, &errCode);
+    OH_Rdb_Store *store = OH_Rdb_GetOrOpen(&config, 2, &callback, &errCode);
     EXPECT_NE(store, NULL);
 
     int version = 0;
@@ -197,7 +197,7 @@ HWTEST_F(RdbNdkStoreOpenCallbackTest, RDB_NDK_store_open_callback_test_002, Test
     EXPECT_EQ(errCode, 0);
     EXPECT_EQ(version, 2);
 
-    RDB_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_Rdb_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     OH_VBucket_PutText(valueBucket, "data1", "zhangSan");
     OH_VBucket_PutInt64(valueBucket, "data2", 12800);
     OH_VBucket_PutReal(valueBucket, "data3", 100.1);
@@ -224,16 +224,16 @@ HWTEST_F(RdbNdkStoreOpenCallbackTest, RDB_NDK_store_open_callback_test_002, Test
  */
 HWTEST_F(RdbNdkStoreOpenCallbackTest, RDB_NDK_store_open_callback_test_003, TestSize.Level1)
 {
-    RDB_OpenCallback callback;
+    OH_Rdb_OpenCallback callback;
     InitRdbOpenCallback(&callback);
 
-    RDB_Config config;
+    OH_Rdb_Config config;
     config.path = storeOpenCallbackTestPath_.c_str();
-    config.securityLevel = SecurityLevel::S1;
-    config.isEncrypt = Bool::FALSE;
+    config.securityLevel = OH_Rdb_SecurityLevel::RDB_S1;
+    config.isEncrypt = OH_Rdb_Bool::RDB_FALSE;
 
     int errCode = 0;
-    RDB_Store *store = OH_Rdb_GetOrOpen(&config, 1, &callback, &errCode);
+    OH_Rdb_Store *store = OH_Rdb_GetOrOpen(&config, 1, &callback, &errCode);
     EXPECT_NE(store, NULL);
 
     int version = 0;
@@ -241,7 +241,7 @@ HWTEST_F(RdbNdkStoreOpenCallbackTest, RDB_NDK_store_open_callback_test_003, Test
     EXPECT_EQ(errCode, 0);
     EXPECT_EQ(version, 1);
 
-    RDB_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_Rdb_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     OH_VBucket_PutText(valueBucket, "data1", "zhangSan");
     OH_VBucket_PutInt64(valueBucket, "data2", 12800);
     OH_VBucket_PutReal(valueBucket, "data3", 100.1);

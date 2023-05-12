@@ -31,4 +31,4 @@ private:
 };
 } // namespace NativeRdb
 } // namespace OHOS
-#endif //RELATIONAL_CURSOR_IMPL_H
+#endif // RELATIONAL_CURSOR_IMPL_H

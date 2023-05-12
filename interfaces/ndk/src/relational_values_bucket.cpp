@@ -20,81 +20,81 @@
 #include "value_object.h"
 #include "securec.h"
 
-RDB_ValuesBucket *OH_Rdb_CreateValuesBucket()
+OH_Rdb_ValuesBucket *OH_Rdb_CreateValuesBucket()
 {
     return new OHOS::NativeRdb::ValuesBucketImpl();
 }
 
-int OH_Rdb_DestroyValuesBucket(RDB_ValuesBucket *bucket)
+int OH_Rdb_DestroyValuesBucket(OH_Rdb_ValuesBucket *bucket)
 {
     if (bucket == nullptr || bucket->id != OHOS::NativeRdb::RDB_VALUESBUCKET_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     delete static_cast<OHOS::NativeRdb::ValuesBucketImpl *>(bucket);
-    return E_OK;
+    return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int OH_VBucket_PutText(RDB_ValuesBucket *bucket, const char *name, const char *value)
+int OH_VBucket_PutText(OH_Rdb_ValuesBucket *bucket, const char *name, const char *value)
 {
     if (bucket == nullptr || name == nullptr || bucket->id != OHOS::NativeRdb::RDB_VALUESBUCKET_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     static_cast<OHOS::NativeRdb::ValuesBucketImpl *>(bucket)->valuesBucket_.Put(name, OHOS::NativeRdb::ValueObject(value));
     bucket->capability += 1;
-    return E_OK;
+    return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int OH_VBucket_PutInt64(RDB_ValuesBucket *bucket, const char *name, int64_t value)
+int OH_VBucket_PutInt64(OH_Rdb_ValuesBucket *bucket, const char *name, int64_t value)
 {
     if (bucket == nullptr || name == nullptr || bucket->id != OHOS::NativeRdb::RDB_VALUESBUCKET_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     static_cast<OHOS::NativeRdb::ValuesBucketImpl *>(bucket)->valuesBucket_.Put(name, OHOS::NativeRdb::ValueObject(value));
     bucket->capability += 1;
-    return E_OK;
+    return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int OH_VBucket_PutReal(RDB_ValuesBucket *bucket, const char *name, double value)
+int OH_VBucket_PutReal(OH_Rdb_ValuesBucket *bucket, const char *name, double value)
 {
     if (bucket == nullptr || bucket->id != OHOS::NativeRdb::RDB_VALUESBUCKET_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     static_cast<OHOS::NativeRdb::ValuesBucketImpl *>(bucket)->valuesBucket_.Put(name, OHOS::NativeRdb::ValueObject(value));
     bucket->capability += 1;
-    return E_OK;
+    return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int OH_VBucket_PutBlob(RDB_ValuesBucket *bucket, const char *name, const uint8_t *value, uint32_t size)
+int OH_VBucket_PutBlob(OH_Rdb_ValuesBucket *bucket, const char *name, const uint8_t *value, uint32_t size)
 {
     if (bucket == nullptr || name == nullptr || bucket->id != OHOS::NativeRdb::RDB_VALUESBUCKET_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     std::vector<uint8_t> vector(size);
     errno_t result = memcpy_s(vector.data(), size, value, size);
     if (result != EOK) {
-        return E_ERROR;
+        return OH_Rdb_ErrCode::RDB_ERR;
     }
     static_cast<OHOS::NativeRdb::ValuesBucketImpl *>(bucket)->valuesBucket_.Put(name, OHOS::NativeRdb::ValueObject(vector));
     bucket->capability += 1;
-    return E_OK;
+    return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int OH_VBucket_PutNull(RDB_ValuesBucket *bucket, const char *name)
+int OH_VBucket_PutNull(OH_Rdb_ValuesBucket *bucket, const char *name)
 {
     if (bucket == nullptr || name == nullptr || bucket->id != OHOS::NativeRdb::RDB_VALUESBUCKET_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     static_cast<OHOS::NativeRdb::ValuesBucketImpl *>(bucket)->valuesBucket_.Put(name, OHOS::NativeRdb::ValueObject());
     bucket->capability += 1;
-    return E_OK;
+    return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int OH_VBucket_Clear(RDB_ValuesBucket *bucket)
+int OH_VBucket_Clear(OH_Rdb_ValuesBucket *bucket)
 {
     if (bucket == nullptr || bucket->id != OHOS::NativeRdb::RDB_VALUESBUCKET_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     static_cast<OHOS::NativeRdb::ValuesBucketImpl *>(bucket)->valuesBucket_.Clear();
     bucket->capability = 0;
-    return E_OK;
+    return OH_Rdb_ErrCode::RDB_ERR_OK;
 }

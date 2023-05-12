@@ -25,7 +25,7 @@
 namespace OHOS {
 namespace NativeRdb {
 constexpr int RDB_STORE_CID = 1234560;
-class StoreImpl : public RDB_Store {
+class StoreImpl : public OH_Rdb_Store {
 public:
     StoreImpl(std::shared_ptr<RdbStore> store);
     std::shared_ptr<RdbStore> GetStore();
@@ -35,4 +35,4 @@ private:
 };
 } // namespace NativeRdb
 } // namespace OHOS
-#endif //RELATIONAL_STORE_IMPL_H
+#endif // RELATIONAL_STORE_IMPL_H

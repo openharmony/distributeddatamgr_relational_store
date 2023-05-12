@@ -31,14 +31,14 @@ public:
 };
 
 std::string cursorTestPath_ = RDB_TEST_PATH + "rdb_cursor_test.db";
-RDB_Store *cursorTestRdbStore_;
+OH_Rdb_Store *cursorTestRdbStore_;
 
 void RdbNdkCursorTest::SetUpTestCase(void)
 {
-    RDB_Config config = {0};
+    OH_Rdb_Config config = {0};
     config.path = cursorTestPath_.c_str();
-    config.securityLevel = SecurityLevel::S1;
-    config.isEncrypt = Bool::FALSE;
+    config.securityLevel = OH_Rdb_SecurityLevel::RDB_S1;
+    config.isEncrypt = OH_Rdb_Bool::RDB_FALSE;
 
     int version = 1;
     int errCode = 0;
@@ -50,7 +50,7 @@ void RdbNdkCursorTest::SetUpTestCase(void)
                             "data3 FLOAT, data4 BLOB, data5 TEXT);";
     errCode = OH_Rdb_Execute(cursorTestRdbStore_, createTableSql);
 
-    RDB_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_Rdb_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     OH_VBucket_PutInt64(valueBucket, "id", 1);
     OH_VBucket_PutText(valueBucket, "data1", "zhangSan");
     OH_VBucket_PutInt64(valueBucket, "data2", 12800);
@@ -108,24 +108,24 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_001, TestSize.Level1)
     EXPECT_NE(cursor, NULL);
     cursor->OH_Cursor_GoToNextRow(cursor);
 
-    ColumnType type;
+    OH_Rdb_ColumnType type;
     errCode = cursor->OH_Cursor_GetColumnType(cursor, 0, &type);
-    EXPECT_EQ(type, ColumnType::TYPE_INT64);
+    EXPECT_EQ(type, OH_Rdb_ColumnType::RDB_TYPE_INT64);
 
     errCode = cursor->OH_Cursor_GetColumnType(cursor, 1, &type);;
-    EXPECT_EQ(type, ColumnType::TYPE_TEXT);
+    EXPECT_EQ(type, OH_Rdb_ColumnType::RDB_TYPE_TEXT);
 
     errCode = cursor->OH_Cursor_GetColumnType(cursor, 2, &type);
-    EXPECT_EQ(type, ColumnType::TYPE_INT64);
+    EXPECT_EQ(type, OH_Rdb_ColumnType::RDB_TYPE_INT64);
 
     errCode = cursor->OH_Cursor_GetColumnType(cursor, 3, &type);
-    EXPECT_EQ(type, ColumnType::TYPE_REAL);
+    EXPECT_EQ(type, OH_Rdb_ColumnType::RDB_TYPE_REAL);
 
     errCode = cursor->OH_Cursor_GetColumnType(cursor, 4, &type);
-    EXPECT_EQ(type, ColumnType::TYPE_BLOB);
+    EXPECT_EQ(type, OH_Rdb_ColumnType::RDB_TYPE_BLOB);
 
     errCode = cursor->OH_Cursor_GetColumnType(cursor, 5, &type);
-    EXPECT_EQ(type, ColumnType::TYPE_TEXT);
+    EXPECT_EQ(type, OH_Rdb_ColumnType::RDB_TYPE_TEXT);
     cursor->OH_Cursor_Close(cursor);
 }
 

@@ -44,7 +44,7 @@ public:
     int OnOpen(OHOS::NativeRdb::RdbStore  &rdbStore) override;
     int onCorruption(std::string databaseFile) override;
 
-    RDB_OpenCallback rdbStoreOpenCallback;
+    OH_Rdb_OpenCallback rdbStoreOpenCallback;
 };
 
 
@@ -54,7 +54,7 @@ int MainOpenCallback::OnCreate(OHOS::NativeRdb::RdbStore &store)
         return OHOS::NativeRdb::E_OK;
     }
     std::shared_ptr<OHOS::NativeRdb::RdbStore> storeTemp(&store);
-    RDB_Store *rdbStore  = new OHOS::NativeRdb::StoreImpl(storeTemp);
+    OH_Rdb_Store *rdbStore  = new OHOS::NativeRdb::StoreImpl(storeTemp);
     int ret = rdbStoreOpenCallback.OH_Callback_OnCreate(rdbStore);
     delete rdbStore;
     rdbStore = nullptr;
@@ -67,7 +67,7 @@ int MainOpenCallback::OnUpgrade(OHOS::NativeRdb::RdbStore &store, int oldVersion
         return OHOS::NativeRdb::E_OK;
     }
     std::shared_ptr<OHOS::NativeRdb::RdbStore> storeTemp(&store);
-    RDB_Store *rdbStore  = new OHOS::NativeRdb::StoreImpl(storeTemp);
+    OH_Rdb_Store *rdbStore  = new OHOS::NativeRdb::StoreImpl(storeTemp);
     int ret = rdbStoreOpenCallback.OH_Callback_OnUpgrade(rdbStore, oldVersion, newVersion);
     delete rdbStore;
     rdbStore = nullptr;
@@ -80,7 +80,7 @@ int MainOpenCallback::OnDowngrade(OHOS::NativeRdb::RdbStore &store, int oldVersi
         return OHOS::NativeRdb::E_OK;
     }
     std::shared_ptr<OHOS::NativeRdb::RdbStore> storeTemp(&store);
-    RDB_Store *rdbStore  = new OHOS::NativeRdb::StoreImpl(storeTemp);
+    OH_Rdb_Store *rdbStore  = new OHOS::NativeRdb::StoreImpl(storeTemp);
     int ret = rdbStoreOpenCallback.OH_Callback_OnDowngrade(rdbStore, oldVersion, newVersion);
     delete rdbStore;
     rdbStore = nullptr;
@@ -93,7 +93,7 @@ int MainOpenCallback::OnOpen(OHOS::NativeRdb::RdbStore &store)
         return OHOS::NativeRdb::E_OK;
     }
     std::shared_ptr<OHOS::NativeRdb::RdbStore> storeTemp(&store);
-    RDB_Store *rdbStore  = new OHOS::NativeRdb::StoreImpl(storeTemp);
+    OH_Rdb_Store *rdbStore  = new OHOS::NativeRdb::StoreImpl(storeTemp);
     int ret = rdbStoreOpenCallback.OH_Callback_OnOpen(rdbStore);
     delete rdbStore;
     rdbStore = nullptr;
@@ -108,7 +108,7 @@ int MainOpenCallback::onCorruption(std::string databaseFile)
     return rdbStoreOpenCallback.OH_Callback_OnCorruption(databaseFile.c_str());
 }
 
-RDB_Store *OH_Rdb_GetOrOpen(RDB_Config const *config, int version, RDB_OpenCallback *openCallback, int *errCode)
+OH_Rdb_Store *OH_Rdb_GetOrOpen(OH_Rdb_Config const *config, int version, OH_Rdb_OpenCallback *openCallback, int *errCode)
 {
     OHOS::NativeRdb::RdbStoreConfig rdbStoreConfig(config->path);
     rdbStoreConfig.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel(config->securityLevel));
@@ -129,39 +129,39 @@ RDB_Store *OH_Rdb_GetOrOpen(RDB_Config const *config, int version, RDB_OpenCallb
     return new OHOS::NativeRdb::StoreImpl(store);
 }
 
-int OH_Rdb_CloseStore(RDB_Store *store)
+int OH_Rdb_CloseStore(OH_Rdb_Store *store)
 {
     if (store == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::StoreImpl *tempStore = static_cast<OHOS::NativeRdb::StoreImpl *>(store);
     delete tempStore;
     tempStore = nullptr;
-    return E_OK;
+    return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
 int OH_Rdb_ClearCache()
 {
     OHOS::NativeRdb::RdbHelper::ClearCache();
-    return E_OK;
+    return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
 int OH_Rdb_DeleteStore(const char *path)
 {
     if (path == nullptr) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     int err = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(path);
     if (err != OHOS::NativeRdb::E_OK) {
         return err;
     }
-    return err;
+    return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int OH_Rdb_Insert(RDB_Store *store, char const *table, RDB_ValuesBucket *valuesBucket)
+int OH_Rdb_Insert(OH_Rdb_Store *store, char const *table, OH_Rdb_ValuesBucket *valuesBucket)
 {
     if (store == nullptr || table == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     int64_t rowId = -1;
     OHOS::NativeRdb::StoreImpl *tempStore = static_cast<OHOS::NativeRdb::StoreImpl *>(store);
@@ -174,10 +174,10 @@ int OH_Rdb_Insert(RDB_Store *store, char const *table, RDB_ValuesBucket *valuesB
     }
 }
 
-int OH_Rdb_Update(RDB_Store *store, RDB_ValuesBucket *valueBucket, OH_Predicates *predicate)
+int OH_Rdb_Update(OH_Rdb_Store *store, OH_Rdb_ValuesBucket *valueBucket, OH_Predicates *predicate)
 {
     if (store == nullptr || predicate == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     int updatedRows = -1;
     OHOS::NativeRdb::StoreImpl *tempStore = static_cast<OHOS::NativeRdb::StoreImpl *>(store);
@@ -192,10 +192,10 @@ int OH_Rdb_Update(RDB_Store *store, RDB_ValuesBucket *valueBucket, OH_Predicates
     }
 }
 
-int OH_Rdb_Delete(RDB_Store *store, OH_Predicates *predicate)
+int OH_Rdb_Delete(OH_Rdb_Store *store, OH_Predicates *predicate)
 {
     if (store == nullptr || predicate == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     int deletedRows = -1;
     OHOS::NativeRdb::StoreImpl *tempStore = static_cast<OHOS::NativeRdb::StoreImpl *>(store);
@@ -208,7 +208,7 @@ int OH_Rdb_Delete(RDB_Store *store, OH_Predicates *predicate)
     }
 }
 
-OH_Cursor *OH_Rdb_Query(RDB_Store *store, OH_Predicates *predicate, const char **columnNames, int length)
+OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicate, char const *const *columnNames, int length)
 {
     if (store == nullptr || predicate == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
         return nullptr;
@@ -231,7 +231,7 @@ OH_Cursor *OH_Rdb_Query(RDB_Store *store, OH_Predicates *predicate, const char *
     return new OHOS::NativeRdb::CursorImpl(retParam);
 }
 
-OH_Cursor *OH_Rdb_ExecuteQuery(RDB_Store *store, char const *sql)
+OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, char const *sql)
 {
     if (store == nullptr || sql == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
         return nullptr;
@@ -246,46 +246,46 @@ OH_Cursor *OH_Rdb_ExecuteQuery(RDB_Store *store, char const *sql)
     return new OHOS::NativeRdb::CursorImpl(retParam);
 }
 
-int OH_Rdb_Execute(RDB_Store *store, char const *sql)
+int OH_Rdb_Execute(OH_Rdb_Store *store, char const *sql)
 {
     if (store == nullptr || sql == nullptr ||store->id != OHOS::NativeRdb::RDB_STORE_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::StoreImpl *tempStore = static_cast<OHOS::NativeRdb::StoreImpl *>(store);
     return tempStore->GetStore()->ExecuteSql(sql, std::vector<OHOS::NativeRdb::ValueObject>{});
 }
 
-int OH_Rdb_Transaction(RDB_Store *store)
+int OH_Rdb_Transaction(OH_Rdb_Store *store)
 {
     if (store == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::StoreImpl *tempStore = static_cast<OHOS::NativeRdb::StoreImpl *>(store);
     return tempStore->GetStore()->BeginTransaction();
 }
 
-int OH_Rdb_RollBack(RDB_Store *store)
+int OH_Rdb_RollBack(OH_Rdb_Store *store)
 {
     if (store == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::StoreImpl *tempStore = static_cast<OHOS::NativeRdb::StoreImpl *>(store);
     return tempStore->GetStore()->RollBack();
 }
 
-int OH_Rdb_Commit(RDB_Store *store)
+int OH_Rdb_Commit(OH_Rdb_Store *store)
 {
     if (store == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::StoreImpl *tempStore = static_cast<OHOS::NativeRdb::StoreImpl *>(store);
     return tempStore->GetStore()->Commit();
 }
 
-int OH_Rdb_Backup(RDB_Store *store, const char *databasePath)
+int OH_Rdb_Backup(OH_Rdb_Store *store, const char *databasePath)
 {
     if (store == nullptr || databasePath == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::StoreImpl *tempStore = static_cast<OHOS::NativeRdb::StoreImpl *>(store);
     std::vector<uint8_t> vec;
@@ -293,10 +293,10 @@ int OH_Rdb_Backup(RDB_Store *store, const char *databasePath)
     return tempStore->GetStore()->Backup(databasePath, vec);
 }
 
-int OH_Rdb_Restore(RDB_Store *store, const char *databasePath)
+int OH_Rdb_Restore(OH_Rdb_Store *store, const char *databasePath)
 {
     if (store == nullptr || databasePath == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::StoreImpl *tempStore = static_cast<OHOS::NativeRdb::StoreImpl *>(store);
     std::vector<uint8_t> vec;
@@ -304,19 +304,19 @@ int OH_Rdb_Restore(RDB_Store *store, const char *databasePath)
     return tempStore->GetStore()->Restore(databasePath, vec);
 }
 
-int OH_Rdb_GetVersion(RDB_Store *store, int *version)
+int OH_Rdb_GetVersion(OH_Rdb_Store *store, int *version)
 {
     if (store == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::StoreImpl *tempStore = static_cast<OHOS::NativeRdb::StoreImpl *>(store);
     return tempStore->GetStore()->GetVersion(*version);
 }
 
-int OH_Rdb_SetVersion(RDB_Store *store, int version)
+int OH_Rdb_SetVersion(OH_Rdb_Store *store, int version)
 {
     if (store == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
-        return E_INVALID_ARG;
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::StoreImpl *tempStore = static_cast<OHOS::NativeRdb::StoreImpl *>(store);
     return tempStore->GetStore()->SetVersion(version);

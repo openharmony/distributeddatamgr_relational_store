@@ -22,18 +22,18 @@
 extern "C" {
 #endif
 
-enum ColumnType {
-    TYPE_NULL = 0,
-    TYPE_INT64,
-    TYPE_REAL,
-    TYPE_TEXT,
-    TYPE_BLOB,
+enum OH_Rdb_ColumnType {
+    RDB_TYPE_NULL = 0,
+    RDB_TYPE_INT64,
+    RDB_TYPE_REAL,
+    RDB_TYPE_TEXT,
+    RDB_TYPE_BLOB,
 };
 
-struct OH_Cursor{
+typedef struct OH_Cursor{
     int id;
     int (*OH_Cursor_GetColumnCount)(OH_Cursor *, int *);
-    int (*OH_Cursor_GetColumnType)(OH_Cursor *, int32_t, ColumnType *);
+    int (*OH_Cursor_GetColumnType)(OH_Cursor *, int32_t, OH_Rdb_ColumnType *);
     int (*OH_Cursor_GetColumnIndex)(OH_Cursor *, const char *, int *);
     int (*OH_Cursor_GetColumnName)(OH_Cursor *, int32_t, char *, int);
     int (*OH_Cursor_GetRowCount)(OH_Cursor *, int *);
@@ -45,11 +45,11 @@ struct OH_Cursor{
     int (*OH_Cursor_GetBlob)(OH_Cursor *, int32_t, unsigned char *, int);
     int (*OH_Cursor_IsNull)(OH_Cursor *, int32_t, bool *);
     int (*OH_Cursor_Close)(OH_Cursor *);
-};
+} OH_Cursor;
 
 int CURSOR_GetColumnCount(OH_Cursor *cursor, int *count);
-int CURSOR_GetColumnType(OH_Cursor *cursor, int32_t columnIndex, ColumnType *columnType);
-int CURSOR_GetColumnIndex(OH_Cursor *cursor, const char *names, int *columnIndex);
+int CURSOR_GetColumnType(OH_Cursor *cursor, int32_t columnIndex, OH_Rdb_ColumnType *columnType);
+int CURSOR_GetColumnIndex(OH_Cursor *cursor, const char *name, int *columnIndex);
 int CURSOR_GetColumnName(OH_Cursor *cursor, int32_t columnIndex, char *name, int length);
 int CURSOR_GetRowCount(OH_Cursor *cursor, int *count);
 int CURSOR_GoToNextRow(OH_Cursor *cursor);
@@ -65,4 +65,4 @@ int CURSOR_Close(OH_Cursor *cursor);
 };
 #endif
 
-#endif //RELATIONAL_CURSOR_H
+#endif // RELATIONAL_CURSOR_H

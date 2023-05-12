@@ -115,7 +115,7 @@ public:
     RDB_API_EXPORT int GetDouble(int columnIndex, double &value) override;
 
     /**
-     * @brief Get the size of blob or the text.
+     * @brief Get the size of blob or text.
      *
      * @param columnIndex Indicates the zero-based index of the target column.
      */
