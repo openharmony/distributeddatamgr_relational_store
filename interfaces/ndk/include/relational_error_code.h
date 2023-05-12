@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,14 +20,14 @@
 extern "C" {
 #endif
 
-enum RDB_ErrCode {
-    E_INVALID_ARG = -2,
-    E_ERROR = -1,
-    E_OK = 0,
+enum OH_Rdb_ErrCode {
+    RDB_ERR_INVALID_ARGS = -2,
+    RDB_ERR = -1,
+    RDB_ERR_OK = 0
 };
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif //RELATIONAL_ERRNO_CODE_H
+#endif // RELATIONAL_ERRNO_CODE_H

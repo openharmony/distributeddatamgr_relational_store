@@ -328,14 +328,14 @@ int AbsSharedResultSet::GetSize(int columnIndex, size_t &size)
     }
 
     AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(sharedBlock_->GetBlockPos(), columnIndex);
-    if (!cellUnit) {
+    if (cellUnit == nullptr) {
         LOG_ERROR("cellUnit is null!");
         return E_ERROR;
     }
 
     int type = cellUnit->type;
-    if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB
-        || type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_STRING
+    if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_STRING
+        || type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB
         || type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL) {
         sharedBlock_->GetCellUnitValueBlob(cellUnit, &size);
         return E_OK;

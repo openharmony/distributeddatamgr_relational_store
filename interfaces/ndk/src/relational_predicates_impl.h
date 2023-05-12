@@ -53,9 +53,9 @@ public:
     }
     RdbPredicates &GetPredicates();
 
-//private:
+private:
     RdbPredicates predicates_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
-#endif //RELATIONAL_PREDICATES_IMPL_H
+#endif // RELATIONAL_PREDICATES_IMPL_H

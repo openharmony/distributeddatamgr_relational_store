@@ -31,14 +31,14 @@ public:
 };
 
 std::string predicatesTestPath_ = RDB_TEST_PATH + "rdb_predicates_test.db";
-RDB_Store *predicatesTestRdbStore_;
+OH_Rdb_Store *predicatesTestRdbStore_;
 
 void RdbNdkPredicatesTest::SetUpTestCase(void)
 {
-    RDB_Config config;
+    OH_Rdb_Config config;
     config.path = predicatesTestPath_.c_str();
-    config.securityLevel = SecurityLevel::S1;
-    config.isEncrypt = Bool::FALSE;
+    config.securityLevel = OH_Rdb_SecurityLevel::RDB_S1;
+    config.isEncrypt = OH_Rdb_Bool::RDB_FALSE;
 
     int version = 1;
     int errCode = 0;
@@ -50,7 +50,7 @@ void RdbNdkPredicatesTest::SetUpTestCase(void)
                             "data3 FLOAT, data4 BLOB, data5 TEXT);";
     errCode = OH_Rdb_Execute(predicatesTestRdbStore_, createTableSql);
 
-    RDB_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_Rdb_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     OH_VBucket_PutInt64(valueBucket, "id", 1);
     OH_VBucket_PutText(valueBucket, "data1", "zhangSan");
     OH_VBucket_PutInt64(valueBucket, "data2", 12800);
@@ -356,7 +356,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_011, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    predicates->OH_Predicates_OrderBy(predicates, "data2", OrderByType::ASC);
+    predicates->OH_Predicates_OrderBy(predicates, "data2", OH_Rdb_OrderByType::RDB_PRE_ASC);
     predicates->OH_Predicates_Limit(predicates, 1);
     predicates->OH_Predicates_Offset(predicates, 1);
     predicates->OH_Predicates_Distinct(predicates);
@@ -452,7 +452,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_015, TestSize.Level1)
     predicates->OH_Predicates_GroupBy(predicates, columnNames, len);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, nullptr);
+    EXPECT_NE(cursor, NULL);
     int rowCount = 0;
     errCode = cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 3);

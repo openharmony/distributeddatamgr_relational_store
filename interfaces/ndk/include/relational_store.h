@@ -24,55 +24,55 @@
 extern "C" {
 #endif
 
-enum SecurityLevel {
-    S1 = 1,
-    S2,
-    S3,
-    S4,
-    LAST
+enum OH_Rdb_SecurityLevel {
+    RDB_S1 = 1,
+    RDB_S2,
+    RDB_S3,
+    RDB_S4,
+    RDB_LAST
 };
 
-enum Bool {
-    FALSE,
-    TRUE
-};
-
-struct RDB_Config {
-    const char *path;
-    enum Bool isEncrypt;
-    enum SecurityLevel securityLevel;
-};
-
-struct RDB_Store {
-    int id;
+enum OH_Rdb_Bool {
+    RDB_FALSE,
+    RDB_TRUE
 };
 
 typedef struct {
-    int (*OH_Callback_OnCreate)(RDB_Store *);
-    int (*OH_Callback_OnUpgrade)(RDB_Store *, int, int);
-    int (*OH_Callback_OnDowngrade)(RDB_Store *, int, int);
-    int (*OH_Callback_OnOpen)(RDB_Store *);
-    int (*OH_Callback_OnCorruption)(const char *);
-} RDB_OpenCallback;
+    const char *path;
+    enum OH_Rdb_Bool isEncrypt;
+    enum OH_Rdb_SecurityLevel securityLevel;
+} OH_Rdb_Config;
 
-RDB_Store *OH_Rdb_GetOrOpen(RDB_Config const *config, int version, RDB_OpenCallback *openCallback, int *errCode);
-int OH_Rdb_CloseStore(RDB_Store *store);
+typedef struct {
+    int id;
+} OH_Rdb_Store;
+
+typedef struct {
+    int (*OH_Callback_OnCreate)(OH_Rdb_Store *);
+    int (*OH_Callback_OnUpgrade)(OH_Rdb_Store *, int, int);
+    int (*OH_Callback_OnDowngrade)(OH_Rdb_Store *, int, int);
+    int (*OH_Callback_OnOpen)(OH_Rdb_Store *);
+    int (*OH_Callback_OnCorruption)(const char *);
+} OH_Rdb_OpenCallback;
+
+OH_Rdb_Store *OH_Rdb_GetOrOpen(OH_Rdb_Config const *config, int version, OH_Rdb_OpenCallback *openCallback, int *errCode);
+int OH_Rdb_CloseStore(OH_Rdb_Store *store);
 int OH_Rdb_ClearCache();
 int OH_Rdb_DeleteStore(const char *path);
 
-int OH_Rdb_Insert(RDB_Store *store, char const *table, RDB_ValuesBucket *valuesBucket);
-int OH_Rdb_Update(RDB_Store *store, RDB_ValuesBucket *valuesBucket, OH_Predicates *predicates);
-int OH_Rdb_Delete(RDB_Store *store, OH_Predicates *predicate);
-OH_Cursor *OH_Rdb_Query(RDB_Store *store, OH_Predicates *predicate, const char **columnNames, int length);
-int OH_Rdb_Execute(RDB_Store *store, char const *sql);
-OH_Cursor *OH_Rdb_ExecuteQuery(RDB_Store *store, char const *sql);
-int OH_Rdb_Transaction(RDB_Store *store);
-int OH_Rdb_RollBack(RDB_Store *store);
-int OH_Rdb_Commit(RDB_Store *store);
-int OH_Rdb_Backup(RDB_Store *store, const char *databasePath);
-int OH_Rdb_Restore(RDB_Store *store, const char *databasePath);
-int OH_Rdb_GetVersion(RDB_Store *store, int *version);
-int OH_Rdb_SetVersion(RDB_Store *store, const int version);
+int OH_Rdb_Insert(OH_Rdb_Store *store, char const *table, OH_Rdb_ValuesBucket *valuesBucket);
+int OH_Rdb_Update(OH_Rdb_Store *store, OH_Rdb_ValuesBucket *valuesBucket, OH_Predicates *predicates);
+int OH_Rdb_Delete(OH_Rdb_Store *store, OH_Predicates *predicate);
+OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicate, char const *const *columnNames, int length);
+int OH_Rdb_Execute(OH_Rdb_Store *store, char const *sql);
+OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, char const *sql);
+int OH_Rdb_Transaction(OH_Rdb_Store *store);
+int OH_Rdb_RollBack(OH_Rdb_Store *store);
+int OH_Rdb_Commit(OH_Rdb_Store *store);
+int OH_Rdb_Backup(OH_Rdb_Store *store, const char *databasePath);
+int OH_Rdb_Restore(OH_Rdb_Store *store, const char *databasePath);
+int OH_Rdb_GetVersion(OH_Rdb_Store *store, int *version);
+int OH_Rdb_SetVersion(OH_Rdb_Store *store, const int version);
 
 #ifdef __cplusplus
 };

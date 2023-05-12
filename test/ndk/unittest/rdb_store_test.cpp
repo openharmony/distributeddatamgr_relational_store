@@ -32,14 +32,14 @@ public:
 };
 
 std::string storeTestPath_ = RDB_TEST_PATH + "rdb_store_test.db";
-RDB_Store *storeTestRdbStore_;
+OH_Rdb_Store *storeTestRdbStore_;
 
 void RdbNdkStoreTest::SetUpTestCase(void)
 {
-    RDB_Config config;
+    OH_Rdb_Config config;
     config.path = storeTestPath_.c_str();
-    config.securityLevel = SecurityLevel::S1;
-    config.isEncrypt = Bool::FALSE;
+    config.securityLevel = OH_Rdb_SecurityLevel::RDB_S1;
+    config.isEncrypt = OH_Rdb_Bool::RDB_FALSE;
 
     int version = 1;
     int errCode = 0;
@@ -77,7 +77,7 @@ void RdbNdkStoreTest::TearDown(void)
 HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_001, TestSize.Level1)
 {
     int errCode = 0;
-    RDB_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_Rdb_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     OH_VBucket_PutInt64(valueBucket, "id", 1);
     OH_VBucket_PutText(valueBucket, "data1", "zhangSan");
     OH_VBucket_PutInt64(valueBucket, "data2", 12800);
@@ -145,7 +145,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_001, TestSize.Level1)
 HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_002, TestSize.Level1)
 {
     int errCode = 0;
-    RDB_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_Rdb_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     OH_VBucket_PutInt64(valueBucket, "id", 1);
     OH_VBucket_PutText(valueBucket, "data1", "zhangSan");
     OH_VBucket_PutInt64(valueBucket, "data2", 12800);
@@ -217,7 +217,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_003, TestSize.Level1)
     OH_Rdb_Transaction(storeTestRdbStore_);
 
     int errCode = 0;
-    RDB_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_Rdb_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     OH_VBucket_PutInt64(valueBucket, "id", 1);
     OH_VBucket_PutText(valueBucket, "data1", "zhangSan");
     OH_VBucket_PutInt64(valueBucket, "data2", 12800);
@@ -259,7 +259,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_004, TestSize.Level1)
     OH_Rdb_Transaction(storeTestRdbStore_);
 
     int errCode = 0;
-    RDB_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_Rdb_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     OH_VBucket_PutInt64(valueBucket, "id", 1);
     OH_VBucket_PutText(valueBucket, "data1", "zhangSan");
     OH_VBucket_PutInt64(valueBucket, "data2", 12800);
@@ -299,7 +299,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_004, TestSize.Level1)
 HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_005, TestSize.Level1)
 {
     int errCode = 0;
-    RDB_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_Rdb_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     OH_VBucket_PutInt64(valueBucket, "id", 1);
     OH_VBucket_PutText(valueBucket, "data1", "zhangSan");
     OH_VBucket_PutInt64(valueBucket, "data2", 12800);
@@ -388,7 +388,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_006, TestSize.Level1)
 HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_007, TestSize.Level1)
 {
     int errCode = 0;
-    RDB_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_Rdb_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     OH_VBucket_PutInt64(valueBucket, "id", 1);
     OH_VBucket_PutText(valueBucket, "data1", "zhangSan");
     OH_VBucket_PutInt64(valueBucket, "data2", 12800);
@@ -417,7 +417,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_007, TestSize.Level1)
     OH_VBucket_PutText(valueBucket, "data5", "ABCDEFGHI");
     char *table = NULL;
     errCode = OH_Rdb_Insert(storeTestRdbStore_, table, valueBucket);
-    EXPECT_EQ(errCode, RDB_ErrCode::E_INVALID_ARG);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS);
 
     char querySql[] = "SELECT * FROM test";
     OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
@@ -436,7 +436,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_007, TestSize.Level1)
 HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_008, TestSize.Level1)
 {
     int errCode = 0;
-    RDB_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_Rdb_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     OH_VBucket_PutInt64(valueBucket, "id", 1);
     OH_VBucket_PutText(valueBucket, "data1", "zhangSan");
     OH_VBucket_PutInt64(valueBucket, "data2", 12800);
@@ -463,7 +463,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_008, TestSize.Level1)
     OH_Predicates *predicates1 = OH_Rdb_CreatePredicates(table);
     EXPECT_EQ(predicates1, NULL);
     errCode = OH_Rdb_Update(storeTestRdbStore_, valueBucket, predicates1);
-    EXPECT_EQ(errCode, RDB_ErrCode::E_INVALID_ARG);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS);
 
     OH_Predicates *predicates2 = OH_Rdb_CreatePredicates("test");
     OH_Cursor *cursor = OH_Rdb_Query(storeTestRdbStore_, predicates2, NULL, 0);
@@ -511,7 +511,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_008, TestSize.Level1)
 HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_009, TestSize.Level1)
 {
     int errCode = 0;
-    RDB_ValuesBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_Rdb_ValuesBucket *valueBucket = OH_Rdb_CreateValuesBucket();
     OH_VBucket_PutInt64(valueBucket, "id", 1);
     OH_VBucket_PutText(valueBucket, "data1", "zhangSan");
     OH_VBucket_PutInt64(valueBucket, "data2", 12800);

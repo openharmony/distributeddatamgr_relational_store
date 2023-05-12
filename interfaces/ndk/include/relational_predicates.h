@@ -20,12 +20,12 @@
 extern "C" {
 #endif
 
-enum OrderByType {
-    ASC = 0,
-    DESC = 1,
+enum OH_Rdb_OrderByType {
+    RDB_PRE_ASC = 0,
+    RDB_PRE_DESC = 1,
 };
 
-struct OH_Predicates{
+typedef struct OH_Predicates{
     int id;
     int (*OH_Predicates_EqualTo)(OH_Predicates *, const char *, const char *);
     int (*OH_Predicates_NotEqualTo)(OH_Predicates *, const char *, const char *);
@@ -42,7 +42,7 @@ struct OH_Predicates{
     int (*OH_Predicates_LessThan)(OH_Predicates *, const char *, const char *);
     int (*OH_Predicates_GreaterThanOrEqualTo)(OH_Predicates *, const char *, const char *);
     int (*OH_Predicates_LessThanOrEqualTo)(OH_Predicates *, const char *, const char *);
-    int (*OH_Predicates_OrderBy)(OH_Predicates *, const char *, OrderByType);
+    int (*OH_Predicates_OrderBy)(OH_Predicates *, const char *, OH_Rdb_OrderByType);
     int (*OH_Predicates_Distinct)(OH_Predicates *);
     int (*OH_Predicates_Limit)(OH_Predicates *, unsigned int);
     int (*OH_Predicates_Offset)(OH_Predicates *, unsigned int);
@@ -50,7 +50,7 @@ struct OH_Predicates{
     int (*OH_Predicates_In)(OH_Predicates *, char const *, char const *const *, const int);
     int (*OH_Predicates_NotIn)(OH_Predicates *, char const *, char const *const *, const int);
     int (*OH_Predicates_Clear)(OH_Predicates *);
-};
+} OH_Predicates;
 
 OH_Predicates *OH_Rdb_CreatePredicates(char const *table);
 int OH_Rdb_DestroyPredicates(OH_Predicates *predicates);
@@ -70,7 +70,7 @@ int PREDICATES_GreaterThan(OH_Predicates *predicates, const char *field, const c
 int PREDICATES_LessThan(OH_Predicates *predicates, const char *field, const char *value);
 int PREDICATES_GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field, const char *value);
 int PREDICATES_LessThanOrEqualTo(OH_Predicates *predicates, const char *field, const char *value);
-int PREDICATES_OrderBy(OH_Predicates *predicates, const char *field, OrderByType type);
+int PREDICATES_OrderBy(OH_Predicates *predicates, const char *field, OH_Rdb_OrderByType type);
 int PREDICATES_Distinct(OH_Predicates *predicates);
 int PREDICATES_Limit(OH_Predicates *predicates, unsigned int value);
 int PREDICATES_Offset(OH_Predicates *predicates, unsigned int rowOffset);
@@ -83,4 +83,4 @@ int PREDICATES_Clear(OH_Predicates *predicates);
 };
 #endif
 
-#endif //RELATIONAL_PREDICATES_H
+#endif // RELATIONAL_PREDICATES_H

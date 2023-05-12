@@ -22,7 +22,7 @@
 namespace OHOS {
 namespace NativeRdb {
 constexpr int RDB_VALUESBUCKET_CID = 1234562;
-class ValuesBucketImpl : public RDB_ValuesBucket {
+class ValuesBucketImpl : public OH_Rdb_ValuesBucket {
 public:
     ValuesBucketImpl() {
         id = RDB_VALUESBUCKET_CID;
@@ -32,4 +32,4 @@ public:
 };
 } // namespace NativeRdb
 } // namespace OHOS
-#endif //RELATIONAL_VALUES_BUCKET_IMPL_H
+#endif // RELATIONAL_VALUES_BUCKET_IMPL_H

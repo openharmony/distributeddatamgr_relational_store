@@ -409,7 +409,7 @@ int SqliteStatement::GetSize(int index, size_t &size) const
         size = sqlite3_column_bytes(stmtHandle, index);
         return E_OK;
     }
-    
+
     return E_INVALID_COLUMN_TYPE;
 }
 
