@@ -40,8 +40,8 @@ class MainOpenCallback : public OHOS::NativeRdb::RdbOpenCallback {
 public:
     int OnCreate(OHOS::NativeRdb::RdbStore &rdbStore) override;
     int OnUpgrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion) override;
-    int OnDowngrade(OHOS::NativeRdb::RdbStore  &rdbStore, int oldVersion, int newVersion) override;
-    int OnOpen(OHOS::NativeRdb::RdbStore  &rdbStore) override;
+    int OnDowngrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion) override;
+    int OnOpen(OHOS::NativeRdb::RdbStore &rdbStore) override;
     int onCorruption(std::string databaseFile) override;
 
     OH_Rdb_OpenCallback rdbStoreOpenCallback;
@@ -158,7 +158,7 @@ int OH_Rdb_DeleteStore(const char *path)
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int OH_Rdb_Insert(OH_Rdb_Store *store, char const *table, OH_Rdb_ValuesBucket *valuesBucket)
+int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_Rdb_ValuesBucket *valuesBucket)
 {
     if (store == nullptr || table == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
@@ -192,14 +192,14 @@ int OH_Rdb_Update(OH_Rdb_Store *store, OH_Rdb_ValuesBucket *valueBucket, OH_Pred
     }
 }
 
-int OH_Rdb_Delete(OH_Rdb_Store *store, OH_Predicates *predicate)
+int OH_Rdb_Delete(OH_Rdb_Store *store, OH_Predicates *predicates)
 {
-    if (store == nullptr || predicate == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
+    if (store == nullptr || predicates == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     int deletedRows = -1;
     OHOS::NativeRdb::StoreImpl *tempStore = static_cast<OHOS::NativeRdb::StoreImpl *>(store);
-    OHOS::NativeRdb::PredicateImpl *tempPredicate = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
+    OHOS::NativeRdb::PredicateImpl *tempPredicate = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicates);
     int ret = tempStore->GetStore()->Delete(deletedRows, (tempPredicate->GetPredicates()));
     if (deletedRows >= 0) {
         return deletedRows;
@@ -208,14 +208,15 @@ int OH_Rdb_Delete(OH_Rdb_Store *store, OH_Predicates *predicate)
     }
 }
 
-OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicate, char const *const *columnNames, int length)
+OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const char *const *columnNames, int length)
 {
-    if (store == nullptr || predicate == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
+    if (store == nullptr || predicates == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
         return nullptr;
     }
     OHOS::NativeRdb::StoreImpl *tempStore = static_cast<OHOS::NativeRdb::StoreImpl *>(store);
-    OHOS::NativeRdb::PredicateImpl *tempPredicate = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
+    OHOS::NativeRdb::PredicateImpl *tempPredicate = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicates);
     std::vector<std::string> columns;
+    columns.reserve(length);
     if (columnNames != nullptr) {
         for (int i = 0; i < length; i++) {
             columns.push_back(std::string(columnNames[i]));
@@ -231,7 +232,7 @@ OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicate, char cons
     return new OHOS::NativeRdb::CursorImpl(retParam);
 }
 
-OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, char const *sql)
+OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, const char *sql)
 {
     if (store == nullptr || sql == nullptr || store->id != OHOS::NativeRdb::RDB_STORE_CID) {
         return nullptr;
@@ -246,7 +247,7 @@ OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, char const *sql)
     return new OHOS::NativeRdb::CursorImpl(retParam);
 }
 
-int OH_Rdb_Execute(OH_Rdb_Store *store, char const *sql)
+int OH_Rdb_Execute(OH_Rdb_Store *store, const char *sql)
 {
     if (store == nullptr || sql == nullptr ||store->id != OHOS::NativeRdb::RDB_STORE_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
