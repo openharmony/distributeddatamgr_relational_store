@@ -22,7 +22,7 @@ OHOS::NativeRdb::RdbPredicates &OHOS::NativeRdb::PredicateImpl::GetPredicates()
     return predicates_;
 }
 
-OH_Predicates *OH_Rdb_CreatePredicates(char const *table)
+OH_Predicates *OH_Rdb_CreatePredicates(const char *table)
 {
     if (table == nullptr) {
         return nullptr;
@@ -40,7 +40,7 @@ int OH_Rdb_DestroyPredicates(OH_Predicates *predicate)
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int PREDICATES_EqualTo(OH_Predicates *predicate, char const *field, char const *value)
+int PREDICATES_EqualTo(OH_Predicates *predicate, const char *field, const char *value)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
@@ -50,7 +50,7 @@ int PREDICATES_EqualTo(OH_Predicates *predicate, char const *field, char const *
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int PREDICATES_NotEqualTo(OH_Predicates *predicate, char const *field, char const *value)
+int PREDICATES_NotEqualTo(OH_Predicates *predicate, const char *field, const char *value)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
@@ -233,13 +233,14 @@ int PREDICATES_Offset(OH_Predicates *predicate, unsigned int rowOffset)
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int PREDICATES_GroupBy(OH_Predicates *predicate, char const *const *field, const int length)
+int PREDICATES_GroupBy(OH_Predicates *predicate, const char *const *field, const int length)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
     std::vector<std::string> vec;
+    vec.reserve(length);
     if (field != nullptr) {
         for (int i = 0; i < length; i++) {
             vec.push_back(std::string(field[i]));
@@ -250,13 +251,14 @@ int PREDICATES_GroupBy(OH_Predicates *predicate, char const *const *field, const
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int PREDICATES_In(OH_Predicates *predicate, char const *filed, char const *const *values, const int length)
+int PREDICATES_In(OH_Predicates *predicate, const char *filed, const char *const *values, const int length)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
     std::vector<std::string> vec;
+    vec.reserve(length);
     if (values != nullptr) {
         for (int i = 0; i < length; i++) {
             vec.push_back(std::string(values[i]));
@@ -267,13 +269,14 @@ int PREDICATES_In(OH_Predicates *predicate, char const *filed, char const *const
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int PREDICATES_NotIn(OH_Predicates *predicate, char const *filed, char const *const *values, const int length)
+int PREDICATES_NotIn(OH_Predicates *predicate, const char *filed, const char *const *values, const int length)
 {
     if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
     std::vector<std::string> vec;
+    vec.reserve(length);
     if (values != nullptr) {
         for (int i = 0; i < length; i++) {
             vec.push_back(std::string(values[i]));

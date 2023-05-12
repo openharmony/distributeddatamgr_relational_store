@@ -46,7 +46,7 @@ std::shared_ptr<OHOS::NativeRdb::ResultSet> OHOS::NativeRdb::CursorImpl::GetResu
 
 int CURSOR_GetColumnCount(OH_Cursor *cursor, int *count)
 {
-    if (cursor == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
+    if (cursor == nullptr || count == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::CursorImpl *tempCursor = static_cast<OHOS::NativeRdb::CursorImpl *>(cursor);
@@ -55,19 +55,19 @@ int CURSOR_GetColumnCount(OH_Cursor *cursor, int *count)
 
 int CURSOR_GetColumnType(OH_Cursor *cursor, int32_t columnIndex, OH_Rdb_ColumnType *columnType)
 {
-    if (cursor == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
+    if (cursor == nullptr || columnType == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::CursorImpl *tempCursor = static_cast<OHOS::NativeRdb::CursorImpl *>(cursor);
     OHOS::NativeRdb::ColumnType type;
     int error = tempCursor->GetResultSet()->GetColumnType(columnIndex, type);
-    *columnType = OH_Rdb_ColumnType((int)type);
+    *columnType = static_cast<OH_Rdb_ColumnType>(static_cast<int>(type));
     return error;
 }
 
 int CURSOR_GetColumnIndex(OH_Cursor *cursor, const char *name, int *columnIndex)
 {
-    if (cursor == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
+    if (cursor == nullptr || name == nullptr || columnIndex == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::CursorImpl *tempCursor = static_cast<OHOS::NativeRdb::CursorImpl *>(cursor);
@@ -76,7 +76,7 @@ int CURSOR_GetColumnIndex(OH_Cursor *cursor, const char *name, int *columnIndex)
 
 int CURSOR_GetColumnName(OH_Cursor *cursor, int32_t columnIndex, char *name, int length)
 {
-    if (cursor == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
+    if (cursor == nullptr || name == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::CursorImpl *tempCursor = static_cast<OHOS::NativeRdb::CursorImpl *>(cursor);
@@ -94,7 +94,7 @@ int CURSOR_GetColumnName(OH_Cursor *cursor, int32_t columnIndex, char *name, int
 
 int CURSOR_GetRowCount(OH_Cursor *cursor, int *count)
 {
-    if (cursor == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
+    if (cursor == nullptr || count == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::CursorImpl *tempCursor = static_cast<OHOS::NativeRdb::CursorImpl *>(cursor);
@@ -112,7 +112,7 @@ int CURSOR_GoToNextRow(OH_Cursor *cursor)
 
 int CURSOR_GetSize(OH_Cursor *cursor, int32_t columnIndex, size_t *size)
 {
-    if (cursor == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
+    if (cursor == nullptr || size == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::CursorImpl *tempCursor = static_cast<OHOS::NativeRdb::CursorImpl *>(cursor);
@@ -121,7 +121,7 @@ int CURSOR_GetSize(OH_Cursor *cursor, int32_t columnIndex, size_t *size)
 
 int CURSOR_GetText(OH_Cursor *cursor, int32_t columnIndex, char *value, int length)
 {
-    if (cursor == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
+    if (cursor == nullptr || value == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::CursorImpl *tempCursor = static_cast<OHOS::NativeRdb::CursorImpl *>(cursor);
@@ -139,17 +139,16 @@ int CURSOR_GetText(OH_Cursor *cursor, int32_t columnIndex, char *value, int leng
 
 int CURSOR_GetInt64(OH_Cursor *cursor, int32_t columnIndex, int64_t *value)
 {
-    if (cursor == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
+    if (cursor == nullptr || value == nullptr ||cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::CursorImpl *tempCursor = static_cast<OHOS::NativeRdb::CursorImpl *>(cursor);
-    int errCode = tempCursor->GetResultSet()->GetLong(columnIndex, *value);
-    return errCode;
+    return tempCursor->GetResultSet()->GetLong(columnIndex, *value);
 }
 
 int CURSOR_GetReal(OH_Cursor *cursor, int32_t columnIndex, double *value)
 {
-    if (cursor == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
+    if (cursor == nullptr || value == nullptr ||cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::CursorImpl *tempCursor = static_cast<OHOS::NativeRdb::CursorImpl *>(cursor);
@@ -158,7 +157,7 @@ int CURSOR_GetReal(OH_Cursor *cursor, int32_t columnIndex, double *value)
 
 int CURSOR_GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned char *value, int length)
 {
-    if (cursor == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
+    if (cursor == nullptr || value == nullptr ||cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::CursorImpl *tempCursor = static_cast<OHOS::NativeRdb::CursorImpl *>(cursor);
@@ -176,7 +175,7 @@ int CURSOR_GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned char *value,
 
 int CURSOR_IsNull(OH_Cursor *cursor, int32_t columnIndex, bool *isNull)
 {
-    if (cursor == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
+    if (cursor == nullptr || isNull == nullptr || cursor->id != OHOS::NativeRdb::RDB_CURSOR_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     OHOS::NativeRdb::CursorImpl *tempCursor = static_cast<OHOS::NativeRdb::CursorImpl *>(cursor);

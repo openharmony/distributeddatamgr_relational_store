@@ -60,19 +60,19 @@ int OH_Rdb_CloseStore(OH_Rdb_Store *store);
 int OH_Rdb_ClearCache();
 int OH_Rdb_DeleteStore(const char *path);
 
-int OH_Rdb_Insert(OH_Rdb_Store *store, char const *table, OH_Rdb_ValuesBucket *valuesBucket);
+int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_Rdb_ValuesBucket *valuesBucket);
 int OH_Rdb_Update(OH_Rdb_Store *store, OH_Rdb_ValuesBucket *valuesBucket, OH_Predicates *predicates);
-int OH_Rdb_Delete(OH_Rdb_Store *store, OH_Predicates *predicate);
-OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicate, char const *const *columnNames, int length);
-int OH_Rdb_Execute(OH_Rdb_Store *store, char const *sql);
-OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, char const *sql);
+int OH_Rdb_Delete(OH_Rdb_Store *store, OH_Predicates *predicates);
+OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const char *const *columnNames, int length);
+int OH_Rdb_Execute(OH_Rdb_Store *store, const char *sql);
+OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, const char *sql);
 int OH_Rdb_Transaction(OH_Rdb_Store *store);
 int OH_Rdb_RollBack(OH_Rdb_Store *store);
 int OH_Rdb_Commit(OH_Rdb_Store *store);
 int OH_Rdb_Backup(OH_Rdb_Store *store, const char *databasePath);
 int OH_Rdb_Restore(OH_Rdb_Store *store, const char *databasePath);
 int OH_Rdb_GetVersion(OH_Rdb_Store *store, int *version);
-int OH_Rdb_SetVersion(OH_Rdb_Store *store, const int version);
+int OH_Rdb_SetVersion(OH_Rdb_Store *store, int version);
 
 #ifdef __cplusplus
 };

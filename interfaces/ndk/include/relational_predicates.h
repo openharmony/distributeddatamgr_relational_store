@@ -46,13 +46,13 @@ typedef struct OH_Predicates{
     int (*OH_Predicates_Distinct)(OH_Predicates *);
     int (*OH_Predicates_Limit)(OH_Predicates *, unsigned int);
     int (*OH_Predicates_Offset)(OH_Predicates *, unsigned int);
-    int (*OH_Predicates_GroupBy)(OH_Predicates *, char const *const *, const int);
-    int (*OH_Predicates_In)(OH_Predicates *, char const *, char const *const *, const int);
-    int (*OH_Predicates_NotIn)(OH_Predicates *, char const *, char const *const *, const int);
+    int (*OH_Predicates_GroupBy)(OH_Predicates *, const char *const *, const int);
+    int (*OH_Predicates_In)(OH_Predicates *, const char *, const char *const *, const int);
+    int (*OH_Predicates_NotIn)(OH_Predicates *, const char *, const char *const *, const int);
     int (*OH_Predicates_Clear)(OH_Predicates *);
 } OH_Predicates;
 
-OH_Predicates *OH_Rdb_CreatePredicates(char const *table);
+OH_Predicates *OH_Rdb_CreatePredicates(const char *table);
 int OH_Rdb_DestroyPredicates(OH_Predicates *predicates);
 
 int PREDICATES_EqualTo(OH_Predicates *predicates, const char *field, const char *value);
@@ -74,9 +74,9 @@ int PREDICATES_OrderBy(OH_Predicates *predicates, const char *field, OH_Rdb_Orde
 int PREDICATES_Distinct(OH_Predicates *predicates);
 int PREDICATES_Limit(OH_Predicates *predicates, unsigned int value);
 int PREDICATES_Offset(OH_Predicates *predicates, unsigned int rowOffset);
-int PREDICATES_GroupBy(OH_Predicates *predicates, char const *const *fields, int length);
-int PREDICATES_In(OH_Predicates *predicates, char const *filed, char const *const *values, const int length);
-int PREDICATES_NotIn(OH_Predicates *predicates, char const *filed, char const *const *values, const int length);
+int PREDICATES_GroupBy(OH_Predicates *predicates, const char *const *fields, int length);
+int PREDICATES_In(OH_Predicates *predicates, const char *filed, const char *const *values, const int length);
+int PREDICATES_NotIn(OH_Predicates *predicates, const char *filed, const char *const *values, const int length);
 int PREDICATES_Clear(OH_Predicates *predicates);
 
 #ifdef __cplusplus

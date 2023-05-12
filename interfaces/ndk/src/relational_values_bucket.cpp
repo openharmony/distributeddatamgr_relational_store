@@ -69,12 +69,21 @@ int OH_VBucket_PutBlob(OH_Rdb_ValuesBucket *bucket, const char *name, const uint
     if (bucket == nullptr || name == nullptr || bucket->id != OHOS::NativeRdb::RDB_VALUESBUCKET_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
-    std::vector<uint8_t> vector(size);
-    errno_t result = memcpy_s(vector.data(), size, value, size);
-    if (result != EOK) {
-        return OH_Rdb_ErrCode::RDB_ERR;
+    std::vector<uint8_t> blobValue;
+    blobValue.reserve(size);
+    if (value != nullptr) {
+        for (int i = 0; i < size; i++) {
+            blobValue.push_back(value[i]);
+        }
     }
-    static_cast<OHOS::NativeRdb::ValuesBucketImpl *>(bucket)->valuesBucket_.Put(name, OHOS::NativeRdb::ValueObject(vector));
+
+
+//    std::vector<uint8_t> vector(size);
+//    errno_t result = memcpy_s(vector.data(), size, value, size);
+//    if (result != EOK) {
+//        return OH_Rdb_ErrCode::RDB_ERR;
+//    }
+    static_cast<OHOS::NativeRdb::ValuesBucketImpl *>(bucket)->valuesBucket_.Put(name, OHOS::NativeRdb::ValueObject(blobValue));
     bucket->capability += 1;
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }

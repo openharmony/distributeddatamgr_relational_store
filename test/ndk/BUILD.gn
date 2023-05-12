@@ -25,13 +25,6 @@ config("module_private_config") {
     "${relational_store_innerapi_path}/appdatafwk/include",
     "${relational_store_base_path}/interfaces/ndk/src",
   ]
-
-  if (relational_store_rdb_support_icu) {
-    include_dirs += [
-      "//third_party/icu/icu4c/source/i18n",
-      "//third_party/icu/icu4c/source/common",
-    ]
-  }
 }
 
 ohos_unittest("NativeRdbNdkTest") {
