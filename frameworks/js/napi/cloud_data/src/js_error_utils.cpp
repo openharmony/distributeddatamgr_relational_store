@@ -23,6 +23,8 @@ using JsErrorCode = OHOS::CloudData::JsErrorCode;
 
 static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { Status::INVALID_ARGUMENT, 401, "Parameter error." },
+    { Status::PERMISSION_DENIED, 201, "Permission denied." },
+    { Status::NOT_SUPPORT, 801, "Not support." }
 };
 
 const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode)
