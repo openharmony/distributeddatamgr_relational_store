@@ -29,72 +29,68 @@
 namespace OHOS {
 namespace AppDataMgrJsKit {
 namespace JSUtils {
-    constexpr int OK = 0;
-    constexpr int ERR = -1;
-    constexpr int32_t DEFAULT_BUF_SIZE = 1024;
-    // 1 is the margin
-    constexpr int32_t BUF_CACHE_MARGIN = 4 + 1;
-    constexpr int32_t ASYNC_RST_SIZE = 2;
-    constexpr int32_t MAX_VALUE_LENGTH = 8 * 1024;
-    constexpr int32_t SYNC_RESULT_ELEMNT_NUM = 2;
+constexpr int OK = 0;
+constexpr int ERR = -1;
+constexpr int32_t DEFAULT_BUF_SIZE = 1024;
+// 1 is the margin
+constexpr int32_t BUF_CACHE_MARGIN = 4 + 1;
+constexpr int32_t ASYNC_RST_SIZE = 2;
+constexpr int32_t MAX_VALUE_LENGTH = 8 * 1024;
+constexpr int32_t SYNC_RESULT_ELEMNT_NUM = 2;
 
-    std::string Convert2String(napi_env env, napi_value jsStr, bool useDefaultBufSize = true);
-    int32_t Convert2Bool(napi_env env, napi_value jsBool, bool &output);
-    int32_t Convert2Int32(napi_env env, napi_value jsNum, int32_t &output);
-    int32_t Convert2Double(napi_env env, napi_value jsNum, double &output);
-    int32_t Convert2String(napi_env env, napi_value jsStr, std::string &output);
-    int32_t Convert2U8Vector(napi_env env, napi_value jsValue, std::vector<uint8_t> &output);
-    std::vector<std::string> Convert2StrVector(napi_env env, napi_value value);
-    std::vector<uint8_t> Convert2U8Vector(napi_env env, napi_value jsValue);
-    std::string ConvertAny2String(napi_env env, const napi_value jsValue);
-    int Covert2StingBoolMap(napi_env env, napi_value jsValue, std::map<std::string, bool> &output);
-    int Convert2StringInt32Map(napi_env env, napi_value jsValue, std::map<std::string, int32_t> &output);
+std::string Convert2String(napi_env env, napi_value jsStr, bool useDefaultBufSize = true);
+int32_t Convert2Bool(napi_env env, napi_value jsBool, bool &output);
+int32_t Convert2Int32(napi_env env, napi_value jsNum, int32_t &output);
+int32_t Convert2Double(napi_env env, napi_value jsNum, double &output);
+int32_t Convert2String(napi_env env, napi_value jsStr, std::string &output);
+int32_t Convert2U8Vector(napi_env env, napi_value jsValue, std::vector<uint8_t> &output);
+std::vector<std::string> Convert2StrVector(napi_env env, napi_value value);
+std::vector<uint8_t> Convert2U8Vector(napi_env env, napi_value jsValue);
+std::string ConvertAny2String(napi_env env, const napi_value jsValue);
+int Covert2StingBoolMap(napi_env env, napi_value jsValue, std::map<std::string, bool> &output);
+int Convert2StringInt32Map(napi_env env, napi_value jsValue, std::map<std::string, int32_t> &output);
 
-    int32_t Convert2StrVector(napi_env env, napi_value value, std::vector<std::string> &output);
-    int32_t Convert2BoolVector(napi_env env, napi_value value, std::vector<bool> &output);
-    int32_t Convert2DoubleVector(napi_env env, napi_value value, std::vector<double> &output);
+int32_t Convert2StrVector(napi_env env, napi_value value, std::vector<std::string> &output);
+int32_t Convert2BoolVector(napi_env env, napi_value value, std::vector<bool> &output);
+int32_t Convert2DoubleVector(napi_env env, napi_value value, std::vector<double> &output);
 
-    napi_value Convert2JSValue(napi_env env, const std::vector<std::string> &value);
-    napi_value Convert2JSValue(napi_env env, const std::string &value);
-    napi_value Convert2JSValue(napi_env env, const std::vector<uint8_t> &value);
-    napi_value Convert2JSValue(napi_env env, int32_t value);
-    napi_value Convert2JSValue(napi_env env, int64_t value);
-    napi_value Convert2JSValue(napi_env env, double value);
-    napi_value Convert2JSValue(napi_env env, bool value);
-    napi_value Convert2JSValue(napi_env env, const std::map<std::string, int> &value);
-    napi_value Convert2JSValue(napi_env env, const std::monostate &value);
+napi_value Convert2JSValue(napi_env env, const std::vector<std::string> &value);
+napi_value Convert2JSValue(napi_env env, const std::string &value);
+napi_value Convert2JSValue(napi_env env, const std::vector<uint8_t> &value);
+napi_value Convert2JSValue(napi_env env, int32_t value);
+napi_value Convert2JSValue(napi_env env, int64_t value);
+napi_value Convert2JSValue(napi_env env, double value);
+napi_value Convert2JSValue(napi_env env, bool value);
+napi_value Convert2JSValue(napi_env env, const std::map<std::string, int> &value);
+napi_value Convert2JSValue(napi_env env, const std::monostate &value);
 
-    int32_t Convert2JSValue(napi_env env, std::string value, napi_value &output);
-    int32_t Convert2JSValue(napi_env env, bool value, napi_value &output);
-    int32_t Convert2JSValue(napi_env env, double value, napi_value &output);
-    int32_t Convert2JSStringArr(napi_env env, std::vector<std::string> value, napi_value &output);
-    int32_t Convert2JSBoolArr(napi_env env, std::vector<bool> value, napi_value &output);
-    int32_t Convert2JSDoubleArr(napi_env env, std::vector<double> value, napi_value &output);
+int32_t Convert2JSValue(napi_env env, std::string value, napi_value &output);
+int32_t Convert2JSValue(napi_env env, bool value, napi_value &output);
+int32_t Convert2JSValue(napi_env env, double value, napi_value &output);
+int32_t Convert2JSStringArr(napi_env env, std::vector<std::string> value, napi_value &output);
+int32_t Convert2JSBoolArr(napi_env env, std::vector<bool> value, napi_value &output);
+int32_t Convert2JSDoubleArr(napi_env env, std::vector<double> value, napi_value &output);
 
-    template<typename T>
-    napi_value Convert2JSValue(napi_env env, const T &value);
+template<typename T> napi_value Convert2JSValue(napi_env env, const T &value);
 
-    template<typename _T>
-    napi_value GetJSValue(napi_env env, const _T &value)
-    {
-        return nullptr;
+template<typename _T> napi_value GetJSValue(napi_env env, const _T &value)
+{
+    return nullptr;
+}
+
+template<typename _T, typename _First, typename... _Types> napi_value GetJSValue(napi_env env, const _T &value)
+{
+    auto *val = std::get_if<_First>(&value);
+    if (val != nullptr) {
+        return Convert2JSValue(env, *val);
     }
+    return GetJSValue<_T, _Types...>(env, value);
+}
 
-    template<typename _T, typename _First, typename... _Types>
-    napi_value GetJSValue(napi_env env, const _T &value)
-    {
-        auto *val = std::get_if<_First>(&value);
-        if (val != nullptr) {
-            return Convert2JSValue(env, *val);
-        }
-        return GetJSValue<_T, _Types...>(env, value);
-    }
-
-    template<typename... _Types>
-    napi_value Convert2JSValue(napi_env env, const std::variant<_Types...> &value)
-    {
-        return GetJSValue<decltype(value), _Types...>(env, value);
-    }
+template<typename... _Types> napi_value Convert2JSValue(napi_env env, const std::variant<_Types...> &value)
+{
+    return GetJSValue<decltype(value), _Types...>(env, value);
+}
 } // namespace JSUtils
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
