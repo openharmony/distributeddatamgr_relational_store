@@ -1,0 +1,41 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/ohos.gni")
+import("//build/ohos/ace/ace.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+
+ohos_shared_library("clouddata") {
+  sources = [
+    "${cloud_data_native_path}/src/cloud_manager.cpp",
+    "${cloud_data_native_path}/src/cloud_service_proxy.cpp",
+  ]
+
+  include_dirs = [
+    "${cloud_data_native_path}/include",
+    "${kvstore_path}/common",
+    "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_innerapi_path}/cloud_data/include",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog_native:libhilog",
+    "hitrace_native:hitrace_meter",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
+
+  subsystem_name = "distributeddatamgr"
+  part_name = "relational_store"
+  relative_install_dir = "module/data"
+}
