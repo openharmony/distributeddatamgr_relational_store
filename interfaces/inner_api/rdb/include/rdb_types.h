@@ -51,6 +51,9 @@ struct RdbSyncerParam {
 enum SyncMode {
     PUSH,
     PULL,
+    TIME_FIRST,
+    NATIVE_FIRST,
+    CLOUD_FIRST,
 };
 
 struct SyncOption {
@@ -96,6 +99,7 @@ struct RdbPredicates {
 
 enum SubscribeMode {
     REMOTE,
+    CLOUD,
     SUBSCRIBE_MODE_MAX
 };
 

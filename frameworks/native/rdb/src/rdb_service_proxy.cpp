@@ -83,7 +83,7 @@ std::string RdbServiceProxy::ObtainDistributedTableName(const std::string &devic
     return reply.ReadString();
 }
 
-int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam& param)
+int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param)
 {
     notifier_ = new (std::nothrow) RdbNotifierStub(
         [this] (uint32_t seqNum, const SyncResult& result) {
@@ -342,4 +342,14 @@ int32_t RdbServiceProxy::DestroyRDBTable(const RdbSyncerParam &param)
     return status;
 }
 
+int32_t RdbServiceProxy::GetSchema(const RdbSyncerParam &param)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(RDB_SERVICE_CMD_GET_SCHEMA, reply, param);
+    if (status != RDB_OK) {
+        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
+            param.storeName_.c_str());
+    }
+    return status;
+}
 } // namespace OHOS::DistributedRdb
