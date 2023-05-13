@@ -89,7 +89,6 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
 
-
     std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
     errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
     if (errCode != E_OK) {
