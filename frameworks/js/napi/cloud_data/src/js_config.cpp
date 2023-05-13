@@ -80,7 +80,7 @@ napi_value JsConfig::EnableCloud(napi_env env, napi_callback_info info)
         }
         int32_t cStatus = proxy->EnableCloud(ctxt->accountId, ctxt->switches);
         ZLOGD("EnableCloud return %{public}d", cStatus);
-        ctxt->status = (GenerateNapiError(static_cast<Status>(cStatus), ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+        ctxt->status = (GenerateNapiError(cStatus, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
                            ? napi_ok
                            : napi_generic_failure;
     };
@@ -124,7 +124,7 @@ napi_value JsConfig::DisableCloud(napi_env env, napi_callback_info info)
         }
         int32_t cStatus = proxy->DisableCloud(ctxt->accountId);
         ZLOGD("DisableCloud return %{public}d", cStatus);
-        ctxt->status = (GenerateNapiError(static_cast<Status>(cStatus), ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+        ctxt->status = (GenerateNapiError(cStatus, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
                            ? napi_ok
                            : napi_generic_failure;
     };
@@ -178,7 +178,7 @@ napi_value JsConfig::ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
         }
         int32_t cStatus = proxy->ChangeAppSwitch(ctxt->accountId, ctxt->bundleName, ctxt->state);
         ZLOGD("ChangeAppCloudSwitch return %{public}d", cStatus);
-        ctxt->status = (GenerateNapiError(static_cast<Status>(cStatus), ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+        ctxt->status = (GenerateNapiError(cStatus, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
                            ? napi_ok
                            : napi_generic_failure;
     };
@@ -230,7 +230,7 @@ napi_value JsConfig::Clean(napi_env env, napi_callback_info info)
         }
         int32_t cStatus = proxy->Clean(ctxt->accountId, ctxt->appActions);
         ZLOGD("Clean return %{public}d", cStatus);
-        ctxt->status = (GenerateNapiError(static_cast<Status>(cStatus), ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+        ctxt->status = (GenerateNapiError(cStatus, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
                            ? napi_ok
                            : napi_generic_failure;
     };
@@ -278,7 +278,7 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
         }
         int32_t cStatus = proxy->NotifyDataChange(ctxt->accountId, ctxt->bundleName);
         ZLOGD("NotifyDataChange return %{public}d", cStatus);
-        ctxt->status = (GenerateNapiError(static_cast<Status>(cStatus), ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+        ctxt->status = (GenerateNapiError(cStatus, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
                            ? napi_ok
                            : napi_generic_failure;
     };
