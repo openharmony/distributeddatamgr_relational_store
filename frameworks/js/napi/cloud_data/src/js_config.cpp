@@ -15,7 +15,11 @@
 #define LOG_TAG "JsConfig"
 #include "js_config.h"
 
+#include <memory>
+#include <stddef.h>
+
 #include "cloud_manager.h"
+#include "cloud_service.h"
 #include "js_error_utils.h"
 #include "js_utils.h"
 #include "log_print.h"
@@ -49,12 +53,11 @@ napi_value JsConfig::EnableCloud(napi_env env, napi_callback_info info)
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
         // required 2 arguments :: <accountId> <switches>
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
-        constexpr int ARGV_FIRST = 0;
-        constexpr int ARGV_SECOND = 1;
-        int status = JSUtils::Convert2String(env, argv[ARGV_FIRST], ctxt->accountId);
+        // 0 is the index of argument accountId, 1 is the index of argument switches
+        int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of accountId must be string.");
-        status = JSUtils::Covert2StingBoolMap(env, argv[ARGV_SECOND], ctxt->tempSwitches);
+        status = JSUtils::Convert2Value(env, argv[1], ctxt->tempSwitches);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of switches must be {[bundleName: string]: boolean}.");
         for (auto item : ctxt->tempSwitches) {
@@ -65,7 +68,16 @@ napi_value JsConfig::EnableCloud(napi_env env, napi_callback_info info)
     ASSERT_NULL(!ctxt->isThrowError, "EnableCloud exit");
 
     auto execute = [ctxt]() {
-        auto proxy = CloudManager::GetInstance().GetCloudService();
+        auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+        if (proxy == nullptr) {
+            if (state != CloudService::SERVER_UNAVAILABLE) {
+                state = CloudService::NOT_SUPPORT;
+            }
+            ctxt->status = (GenerateNapiError(state, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+                               ? napi_ok
+                               : napi_generic_failure;
+            return;
+        }
         int32_t cStatus = proxy->EnableCloud(ctxt->accountId, ctxt->switches);
         ZLOGD("EnableCloud return %{public}d", cStatus);
         ctxt->status = (GenerateNapiError(static_cast<Status>(cStatus), ctxt->jsCode, ctxt->error) == Status::SUCCESS)
@@ -91,8 +103,8 @@ napi_value JsConfig::DisableCloud(napi_env env, napi_callback_info info)
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
         // required 1 arguments :: <accountId>
         ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
-        constexpr int ARGV_FIRST = 0;
-        int status = JSUtils::Convert2String(env, argv[ARGV_FIRST], ctxt->accountId);
+        // 0 is the index of argument accountId
+        int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of accountId must be string.");
     });
@@ -100,7 +112,16 @@ napi_value JsConfig::DisableCloud(napi_env env, napi_callback_info info)
     ASSERT_NULL(!ctxt->isThrowError, "DisableCloud exit");
 
     auto execute = [ctxt]() {
-        auto proxy = CloudManager::GetInstance().GetCloudService();
+        auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+        if (proxy == nullptr) {
+            if (state != CloudService::SERVER_UNAVAILABLE) {
+                state = CloudService::NOT_SUPPORT;
+            }
+            ctxt->status = (GenerateNapiError(state, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+                               ? napi_ok
+                               : napi_generic_failure;
+            return;
+        }
         int32_t cStatus = proxy->DisableCloud(ctxt->accountId);
         ZLOGD("DisableCloud return %{public}d", cStatus);
         ctxt->status = (GenerateNapiError(static_cast<Status>(cStatus), ctxt->jsCode, ctxt->error) == Status::SUCCESS)
@@ -128,26 +149,33 @@ napi_value JsConfig::ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
     };
     auto ctxt = std::make_shared<ChangeAppSwitchContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
-        // required 3 arguments :: <accountId> <bundleName> <status>
+        // required 3 arguments :: <accountId> <bundleName> <state>
         ASSERT_BUSINESS_ERR(ctxt, argc >= 3, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
-        constexpr int ARGV_FIRST = 0;
-        constexpr int ARGV_SECOND = 1;
-        constexpr int ARGV_THIRD = 1;
-        int status = JSUtils::Convert2String(env, argv[ARGV_FIRST], ctxt->accountId);
+        // 0 is the index of argument accountId, 1 is the index of argument bundleName, 2 is the index of argument state
+        int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of accountId must be string.");
-        status = JSUtils::Convert2String(env, argv[ARGV_SECOND], ctxt->bundleName);
+        status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of bundleName must be string.");
-        status = JSUtils::Convert2Bool(env, argv[ARGV_THIRD], ctxt->state);
+        status = JSUtils::Convert2Value(env, argv[2], ctxt->state);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
-            "The type of bundleName must be boolean.");
+            "The type of status must be boolean.");
     });
 
     ASSERT_NULL(!ctxt->isThrowError, "ChangeAppCloudSwitch exit");
 
     auto execute = [ctxt]() {
-        auto proxy = CloudManager::GetInstance().GetCloudService();
+        auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+        if (proxy == nullptr) {
+            if (state != CloudService::SERVER_UNAVAILABLE) {
+                state = CloudService::NOT_SUPPORT;
+            }
+            ctxt->status = (GenerateNapiError(state, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+                               ? napi_ok
+                               : napi_generic_failure;
+            return;
+        }
         int32_t cStatus = proxy->ChangeAppSwitch(ctxt->accountId, ctxt->bundleName, ctxt->state);
         ZLOGD("ChangeAppCloudSwitch return %{public}d", cStatus);
         ctxt->status = (GenerateNapiError(static_cast<Status>(cStatus), ctxt->jsCode, ctxt->error) == Status::SUCCESS)
@@ -168,31 +196,39 @@ napi_value JsConfig::Clean(napi_env env, napi_callback_info info)
 {
     struct CleanContext : public ContextBase {
         std::string accountId;
-        std::map<std::string, int32_t> actions;
+        std::map<std::string, int32_t> appActions;
     };
     auto ctxt = std::make_shared<CleanContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
-        // required 2 arguments :: <accountId> <actions>
+        // required 2 arguments :: <accountId> <appActions>
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
-        constexpr int ARGV_FIRST = 0;
-        constexpr int ARGV_SECOND = 1;
-        int status = JSUtils::Convert2String(env, argv[ARGV_FIRST], ctxt->accountId);
+        // 0 is the index of argument accountId, 1 is the index of argument
+        int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of accountId must be string.");
-        status = JSUtils::Convert2StringInt32Map(env, argv[ARGV_SECOND], ctxt->actions);
+        status = JSUtils::Convert2Value(env, argv[1], ctxt->appActions);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of actions must be {[bundleName: string]: int32_t}.");
-        for (auto item : ctxt->actions) {
+        for (auto item : ctxt->appActions) {
             ASSERT_BUSINESS_ERR(ctxt, ValidSubscribeType(item.second), Status::INVALID_ARGUMENT,
-                "Action in map is incorrect.");
+                "Action in map appActions is incorrect.");
         }
     });
 
     ASSERT_NULL(!ctxt->isThrowError, "Clean exit");
 
     auto execute = [ctxt]() {
-        auto proxy = CloudManager::GetInstance().GetCloudService();
-        int32_t cStatus = proxy->Clean(ctxt->accountId, ctxt->actions);
+        auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+        if (proxy == nullptr) {
+            if (state != CloudService::SERVER_UNAVAILABLE) {
+                state = CloudService::NOT_SUPPORT;
+            }
+            ctxt->status = (GenerateNapiError(state, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+                               ? napi_ok
+                               : napi_generic_failure;
+            return;
+        }
+        int32_t cStatus = proxy->Clean(ctxt->accountId, ctxt->appActions);
         ZLOGD("Clean return %{public}d", cStatus);
         ctxt->status = (GenerateNapiError(static_cast<Status>(cStatus), ctxt->jsCode, ctxt->error) == Status::SUCCESS)
                            ? napi_ok
@@ -218,12 +254,11 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
         // required 2 arguments :: <accountId> <bundleName>
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
-        constexpr int ARGV_FIRST = 0;
-        constexpr int ARGV_SECOND = 1;
-        int status = JSUtils::Convert2String(env, argv[ARGV_FIRST], ctxt->accountId);
+        // 0 is the index of argument accountId, 1 is the index of argument bundleName
+        int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of accountId must be string.");
-        status = JSUtils::Convert2String(env, argv[ARGV_SECOND], ctxt->bundleName);
+        status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of bundleName must be string.");
     });
@@ -231,7 +266,16 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
     ASSERT_NULL(!ctxt->isThrowError, "NotifyDataChange exit");
 
     auto execute = [ctxt]() {
-        auto proxy = CloudManager::GetInstance().GetCloudService();
+        auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+        if (proxy == nullptr) {
+            if (state != CloudService::SERVER_UNAVAILABLE) {
+                state = CloudService::NOT_SUPPORT;
+            }
+            ctxt->status = (GenerateNapiError(state, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+                               ? napi_ok
+                               : napi_generic_failure;
+            return;
+        }
         int32_t cStatus = proxy->NotifyDataChange(ctxt->accountId, ctxt->bundleName);
         ZLOGD("NotifyDataChange return %{public}d", cStatus);
         ctxt->status = (GenerateNapiError(static_cast<Status>(cStatus), ctxt->jsCode, ctxt->error) == Status::SUCCESS)
@@ -243,8 +287,15 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
 
 napi_value JsConfig::New(napi_env env, napi_callback_info info)
 {
-    napi_value self;
-    NAPI_CALL(env, napi_get_cb_info(env, info, NULL, NULL, &self, nullptr));
+    napi_value self = nullptr;
+    size_t argc = ARGC_MAX;
+    napi_value argv[ARGC_MAX] = { 0 };
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
+    if (self == nullptr) {
+        napi_new_instance(env, JSUtils::GetClass(env, "ohos.cloudData", "Config"), argc, argv, &self);
+        return self;
+    }
+
     auto finalize = [](napi_env env, void *data, void *hint) {
         ZLOGD("cloudConfig finalize.");
         auto *config = reinterpret_cast<JsConfig *>(data);
@@ -264,20 +315,17 @@ napi_value JsConfig::New(napi_env env, napi_callback_info info)
 
 napi_value JsConfig::InitConfig(napi_env env, napi_value exports)
 {
-    const napi_property_descriptor desc[] = {
-        DECLARE_NAPI_STATIC_FUNCTION("enableCloud", JsConfig::EnableCloud),
-        DECLARE_NAPI_STATIC_FUNCTION("disableCloud", JsConfig::DisableCloud),
-        DECLARE_NAPI_STATIC_FUNCTION("changeAppCloudSwitch", JsConfig::ChangeAppCloudSwitch),
-        DECLARE_NAPI_STATIC_FUNCTION("clean", JsConfig::Clean),
-        DECLARE_NAPI_STATIC_FUNCTION("notifyDataChange", JsConfig::NotifyDataChange),
-
+    auto lambda = []() -> std::vector<napi_property_descriptor> {
+        std::vector<napi_property_descriptor> properties = {
+            DECLARE_NAPI_STATIC_FUNCTION("enableCloud", JsConfig::EnableCloud),
+            DECLARE_NAPI_STATIC_FUNCTION("disableCloud", JsConfig::DisableCloud),
+            DECLARE_NAPI_STATIC_FUNCTION("changeAppCloudSwitch", JsConfig::ChangeAppCloudSwitch),
+            DECLARE_NAPI_STATIC_FUNCTION("clean", JsConfig::Clean),
+            DECLARE_NAPI_STATIC_FUNCTION("notifyDataChange", JsConfig::NotifyDataChange),
+        };
+        return properties;
     };
-    size_t count = sizeof(desc) / sizeof(desc[0]);
-    napi_status status = napi_define_properties(env, exports, count, desc);
-    ZLOGI("init cloudData config %{public}d", status);
-    napi_value cons = nullptr;
-    NAPI_CALL(env, napi_define_class(env, "Config", NAPI_AUTO_LENGTH, New, nullptr,
-                       sizeof(desc) / sizeof(napi_property_descriptor), desc, &cons));
-    NAPI_CALL(env, napi_set_named_property(env, exports, "Config", cons));
+    auto jsCtor = JSUtils::DefineClass(env, "Config", lambda, JsConfig::New);
+    NAPI_CALL(env, napi_set_named_property(env, exports, "Config", jsCtor));
     return exports;
 }

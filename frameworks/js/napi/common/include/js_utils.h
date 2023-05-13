@@ -16,8 +16,10 @@
 #ifndef DISTRIBUTEDDATAMGR_APPDATAMGR_JSUTILS_H
 #define DISTRIBUTEDDATAMGR_APPDATAMGR_JSUTILS_H
 
+#include <functional>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <string>
 #include <variant>
 #include <vector>
@@ -38,17 +40,28 @@ constexpr int32_t ASYNC_RST_SIZE = 2;
 constexpr int32_t MAX_VALUE_LENGTH = 8 * 1024;
 constexpr int32_t SYNC_RESULT_ELEMNT_NUM = 2;
 
+using Descriptor = std::function<std::vector<napi_property_descriptor>()>;
+
+/* napi_define_class  wrapper */
+napi_value DefineClass(napi_env env, const std::string &name, const Descriptor &descriptor, napi_callback ctor);
+napi_value GetClass(napi_env env, const std::string &spaceName, const std::string &className);
 std::string Convert2String(napi_env env, napi_value jsStr, bool useDefaultBufSize = true);
 int32_t Convert2Bool(napi_env env, napi_value jsBool, bool &output);
 int32_t Convert2Int32(napi_env env, napi_value jsNum, int32_t &output);
 int32_t Convert2Double(napi_env env, napi_value jsNum, double &output);
 int32_t Convert2String(napi_env env, napi_value jsStr, std::string &output);
 int32_t Convert2U8Vector(napi_env env, napi_value jsValue, std::vector<uint8_t> &output);
+int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, int32_t> &output);
+int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, bool> &output);
+int32_t Convert2Value(napi_env env, napi_value jsBool, bool &output);
+int32_t Convert2Value(napi_env env, napi_value jsNum, int32_t &output);
+int32_t Convert2Value(napi_env env, napi_value jsStr, std::string &output);
+int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, int32_t> &output);
+int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, bool> &output);
 std::vector<std::string> Convert2StrVector(napi_env env, napi_value value);
 std::vector<uint8_t> Convert2U8Vector(napi_env env, napi_value jsValue);
 std::string ConvertAny2String(napi_env env, const napi_value jsValue);
-int Covert2StingBoolMap(napi_env env, napi_value jsValue, std::map<std::string, bool> &output);
-int Convert2StringInt32Map(napi_env env, napi_value jsValue, std::map<std::string, int32_t> &output);
+
 
 int32_t Convert2StrVector(napi_env env, napi_value value, std::vector<std::string> &output);
 int32_t Convert2BoolVector(napi_env env, napi_value value, std::vector<bool> &output);
