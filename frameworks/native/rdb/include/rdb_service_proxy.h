@@ -64,7 +64,7 @@ protected:
     int32_t DoAsync(const RdbSyncerParam& param, uint32_t seqNum, const SyncOption& option,
                     const RdbPredicates& predicates) override;
 
-    int32_t DoSubscribe(const RdbSyncerParam& param) override;
+    int32_t DoSubscribe(const RdbSyncerParam& param, const SubscribeOption &option) override;
 
     int32_t DoUnSubscribe(const RdbSyncerParam& param) override;
 
