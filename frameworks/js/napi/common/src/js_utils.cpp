@@ -91,6 +91,16 @@ int32_t JSUtils::Convert2Bool(napi_env env, napi_value jsBool, bool &output)
     return OK;
 }
 
+int32_t JSUtils::Convert2Int32(napi_env env, napi_value jsNum, int32_t &output)
+{
+    napi_status status = napi_get_value_int32(env, jsNum, &output);
+    if (status != napi_ok) {
+        LOG_ERROR("JSUtils::Convert2Value get jsVal failed, status = %{public}d", status);
+        return ERR;
+    }
+    return OK;
+}
+
 int32_t JSUtils::Convert2Double(napi_env env, napi_value jsNum, double &output)
 {
     double number = 0.0;
@@ -244,6 +254,58 @@ std::string JSUtils::ConvertAny2String(napi_env env, napi_value jsValue)
     }
 
     return "invalid type";
+}
+
+int JSUtils::Covert2StingBoolMap(napi_env env, napi_value jsValue, std::map<std::string, bool> &output)
+{
+    LOG_DEBUG("napi_value -> std::map<std::string, bool> ");
+    output.clear();
+    napi_value jsMapList = nullptr;
+    uint32_t jsCount = 0;
+    napi_status status = napi_get_property_names(env, jsValue, &jsMapList);
+    status = napi_get_array_length(env, jsMapList, &jsCount);
+    LOG_DEBUG("jsCount: %{public}d", jsCount);
+    NAPI_ASSERT_BASE(env, (status == napi_ok) && (jsCount > 0), "get_map failed!", ERR);
+    napi_value jsKey = nullptr;
+    napi_value jsVal = nullptr;
+    for (uint32_t index = 0; index < jsCount; index++) {
+        status = napi_get_element(env, jsMapList, index, &jsKey);
+        NAPI_ASSERT_BASE(env, (jsKey != nullptr) && (status == napi_ok), "no element", ERR);
+        std::string key;
+        Convert2String(env, jsKey, key);
+        status = napi_get_property(env, jsValue, jsKey, &jsVal);
+        NAPI_ASSERT_BASE(env, (jsVal != nullptr) && (status == napi_ok), "no element", ERR);
+        bool val;
+        Convert2Bool(env, jsVal, val);
+        output.insert(std::pair<std::string, bool>(key, val));
+    }
+    return OK;
+}
+
+int JSUtils::Convert2StringInt32Map(napi_env env, napi_value jsValue, std::map<std::string, int32_t> &output)
+{
+    LOG_DEBUG("napi_value -> std::map<std::string, int32_t> ");
+    output.clear();
+    napi_value jsMapList = nullptr;
+    uint32_t jsCount = 0;
+    napi_status status = napi_get_property_names(env, jsValue, &jsMapList);
+    status = napi_get_array_length(env, jsMapList, &jsCount);
+    LOG_DEBUG("jsCOUNT: %{public}d", jsCount);
+    NAPI_ASSERT_BASE(env, (status == napi_ok) && (jsCount > 0), "get_map failed!", ERR);
+    napi_value jsKey = nullptr;
+    napi_value jsVal = nullptr;
+    for (uint32_t index = 0; index < jsCount; index++) {
+        status = napi_get_element(env, jsMapList, index, &jsKey);
+        NAPI_ASSERT_BASE(env, (jsKey != nullptr) && (status == napi_ok), "no element", ERR);
+        std::string key;
+        Convert2String(env, jsKey, key);
+        status = napi_get_property(env, jsValue, jsKey, &jsVal);
+        NAPI_ASSERT_BASE(env, (jsVal != nullptr) && (status == napi_ok), "no element", ERR);
+        int32_t val;
+        Convert2Int32(env, jsVal, val);
+        output.insert(std::pair<std::string, int32_t>(key, val));
+    }
+    return OK;
 }
 
 napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<std::string> &value)
