@@ -89,20 +89,25 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
 
+
+    std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
+    errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
+    if (errCode != E_OK) {
+        LOG_ERROR("GetRdbService failed, err is %{public}d.", errCode);
+        return E_OK;
+    }
+    errCode = service->GetSchema(syncerParam_);
+    if (errCode != E_OK) {
+        LOG_ERROR("GetSchema failed, err is %{public}d.", errCode);
+    }
     // open uri share
     if (!config.GetUri().empty()) {
-        std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-        errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
-        if (errCode != E_OK) {
-            LOG_ERROR("RdbStoreImpl::InnerOpen get service failed, err is %{public}d.", errCode);
-            return E_OK;
-        }
         errCode = service->CreateRDBTable(syncerParam_, config.GetWritePermission(), config.GetReadPermission());
         if (errCode != E_OK) {
-            LOG_ERROR("RdbStoreImpl::InnerOpen service CreateRDBTable failed");
-            return E_OK;
+            LOG_ERROR("CreateRDBTable failed");
+        } else {
+            isShared_ = true;
         }
-        isShared_ = true;
     }
 #endif
     return E_OK;
