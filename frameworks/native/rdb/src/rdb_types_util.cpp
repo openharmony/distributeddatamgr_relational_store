@@ -79,7 +79,7 @@ template<>
 bool Unmarshalling(SubOption &output, MessageParcel &data)
 {
     int32_t mode = static_cast<int32_t>(output.mode);
-    auto ret = ITypesUtil::Unmarshal(data);
+    auto ret = ITypesUtil::Unmarshal(data, mode);
     output.mode = static_cast<decltype(output.mode)>(mode);
     return ret;
 }
