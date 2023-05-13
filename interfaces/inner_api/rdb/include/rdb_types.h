@@ -100,6 +100,7 @@ struct RdbPredicates {
 enum SubscribeMode {
     REMOTE,
     CLOUD,
+    CLOUD_DETAIL,
     SUBSCRIBE_MODE_MAX
 };
 

@@ -221,11 +221,11 @@ std::string RdbServiceProxy::RemoveSuffix(const std::string& name)
 int32_t RdbServiceProxy::Subscribe(const RdbSyncerParam &param, const SubscribeOption &option,
                                    RdbStoreObserver *observer)
 {
-    if (option.mode != SubscribeMode::REMOTE) {
+    if (option.mode < SubscribeMode::REMOTE || option.mode >= SUBSCRIBE_MODE_MAX) {
         ZLOGE("subscribe mode invalid");
         return RDB_ERROR;
     }
-    if (DoSubscribe(param) != RDB_OK) {
+    if (DoSubscribe(param, option) != RDB_OK) {
         ZLOGI("communicate to server failed");
         return RDB_ERROR;
     }
@@ -244,10 +244,10 @@ int32_t RdbServiceProxy::Subscribe(const RdbSyncerParam &param, const SubscribeO
     return RDB_OK;
 }
 
-int32_t RdbServiceProxy::DoSubscribe(const RdbSyncerParam &param)
+int32_t RdbServiceProxy::DoSubscribe(const RdbSyncerParam &param, const SubscribeOption &option)
 {
     MessageParcel reply;
-    int32_t status = IPC_SEND(RDB_SERVICE_CMD_SUBSCRIBE, reply, param);
+    int32_t status = IPC_SEND(RDB_SERVICE_CMD_SUBSCRIBE, reply, param, option);
     if (status != RDB_OK) {
         ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
             status, param.bundleName_.c_str(), param.storeName_.c_str());
