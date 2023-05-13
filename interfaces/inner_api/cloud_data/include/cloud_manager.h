@@ -19,9 +19,9 @@
 #include <mutex>
 
 #include "cloud_service.h"
-#include "rdb_visibility.h"
+
 namespace OHOS::CloudData {
-class RDB_API_EXPORT CloudManager {
+class CloudManager {
 public:
     static CloudManager &GetInstance();
     std::pair<int32_t, std::shared_ptr<CloudService>> GetCloudService();
