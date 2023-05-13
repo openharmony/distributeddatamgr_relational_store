@@ -127,16 +127,6 @@ int32_t JSUtils::Convert2Bool(napi_env env, napi_value jsBool, bool &output)
     return OK;
 }
 
-int32_t JSUtils::Convert2Int32(napi_env env, napi_value jsNum, int32_t &output)
-{
-    napi_status status = napi_get_value_int32(env, jsNum, &output);
-    if (status != napi_ok) {
-        LOG_ERROR("JSUtils::Convert2Value get jsVal failed, status = %{public}d", status);
-        return ERR;
-    }
-    return OK;
-}
-
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsNum, int32_t &output)
 {
     napi_status status = napi_get_value_int32(env, jsNum, &output);
@@ -144,19 +134,6 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsNum, int32_t &output)
         LOG_ERROR("JSUtils::Convert2Value get jsVal failed, status = %{public}d", status);
         return ERR;
     }
-    return OK;
-}
-
-
-int32_t JSUtils::Convert2Value(napi_env env, napi_value jsBool, bool &output)
-{
-    bool bValue = false;
-    napi_status status = napi_get_value_bool(env, jsBool, &bValue);
-    if (status != napi_ok) {
-        LOG_ERROR("JSUtils::Convert2Value get jsVal failed, status = %{public}d", status);
-        return ERR;
-    }
-    output = bValue;
     return OK;
 }
 
@@ -578,7 +555,7 @@ int32_t JSUtils::Convert2JSStringArr(napi_env env, std::vector<std::string> valu
 napi_value JSUtils::DefineClass(napi_env env, const std::string &name, const Descriptor &descriptor, napi_callback ctor)
 {
     // base64("data.cloudData") as rootPropName, i.e. global.<root>
-    const std::string rootPropName = "ZGF0YS5jbG91ZERhdGE="; 
+    const std::string rootPropName = "ZGF0YS5jbG91ZERhdGE=";
     napi_value root = nullptr;
     bool hasRoot = false;
     napi_value global = nullptr;

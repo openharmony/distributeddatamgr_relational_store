@@ -47,7 +47,6 @@ napi_value DefineClass(napi_env env, const std::string &name, const Descriptor &
 napi_value GetClass(napi_env env, const std::string &spaceName, const std::string &className);
 std::string Convert2String(napi_env env, napi_value jsStr, bool useDefaultBufSize = true);
 int32_t Convert2Bool(napi_env env, napi_value jsBool, bool &output);
-int32_t Convert2Int32(napi_env env, napi_value jsNum, int32_t &output);
 int32_t Convert2Double(napi_env env, napi_value jsNum, double &output);
 int32_t Convert2String(napi_env env, napi_value jsStr, std::string &output);
 int32_t Convert2U8Vector(napi_env env, napi_value jsValue, std::vector<uint8_t> &output);
@@ -56,8 +55,6 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, bo
 int32_t Convert2Value(napi_env env, napi_value jsBool, bool &output);
 int32_t Convert2Value(napi_env env, napi_value jsNum, int32_t &output);
 int32_t Convert2Value(napi_env env, napi_value jsStr, std::string &output);
-int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, int32_t> &output);
-int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, bool> &output);
 std::vector<std::string> Convert2StrVector(napi_env env, napi_value value);
 std::vector<uint8_t> Convert2U8Vector(napi_env env, napi_value jsValue);
 std::string ConvertAny2String(napi_env env, const napi_value jsValue);
