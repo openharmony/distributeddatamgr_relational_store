@@ -19,6 +19,11 @@
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
+static const std::map<std::string, std::string> NAMESPACES = {
+    { "ohos.cloudData", "ZGF0YS5jbG91ZERhdGE=" },
+    { "ohos.distributedKVStore", "ZGF0YS5kaXN0cmlidXRlZGt2c3RvcmU=" },
+};
+
 std::string JSUtils::Convert2String(napi_env env, napi_value jsStr, bool useDefaultBufSize)
 {
     size_t str_buffer_size = 0;
@@ -55,6 +60,37 @@ int32_t JSUtils::Convert2String(napi_env env, napi_value jsStr, std::string &out
     }
     output = std::string(str);
     delete[] str;
+    return OK;
+}
+
+int32_t JSUtils::Convert2Value(napi_env env, napi_value jsStr, std::string &output)
+{
+    char *str = new (std::nothrow) char[MAX_VALUE_LENGTH + 1];
+    if (str == nullptr) {
+        LOG_ERROR("JSUtils::Convert2Value new failed, str is nullptr");
+        return ERR;
+    }
+    size_t valueSize = 0;
+    napi_status status = napi_get_value_string_utf8(env, jsStr, str, MAX_VALUE_LENGTH, &valueSize);
+    if (status != napi_ok) {
+        LOG_ERROR("JSUtils::Convert2Value get jsVal failed, status = %{public}d", status);
+        delete[] str;
+        return ERR;
+    }
+    output = std::string(str);
+    delete[] str;
+    return OK;
+}
+
+int32_t JSUtils::Convert2Value(napi_env env, napi_value jsBool, bool &output)
+{
+    bool bValue = false;
+    napi_status status = napi_get_value_bool(env, jsBool, &bValue);
+    if (status != napi_ok) {
+        LOG_ERROR("JSUtils::Convert2Value get jsVal failed, status = %{public}d", status);
+        return ERR;
+    }
+    output = bValue;
     return OK;
 }
 
@@ -98,6 +134,29 @@ int32_t JSUtils::Convert2Int32(napi_env env, napi_value jsNum, int32_t &output)
         LOG_ERROR("JSUtils::Convert2Value get jsVal failed, status = %{public}d", status);
         return ERR;
     }
+    return OK;
+}
+
+int32_t JSUtils::Convert2Value(napi_env env, napi_value jsNum, int32_t &output)
+{
+    napi_status status = napi_get_value_int32(env, jsNum, &output);
+    if (status != napi_ok) {
+        LOG_ERROR("JSUtils::Convert2Value get jsVal failed, status = %{public}d", status);
+        return ERR;
+    }
+    return OK;
+}
+
+
+int32_t JSUtils::Convert2Value(napi_env env, napi_value jsBool, bool &output)
+{
+    bool bValue = false;
+    napi_status status = napi_get_value_bool(env, jsBool, &bValue);
+    if (status != napi_ok) {
+        LOG_ERROR("JSUtils::Convert2Value get jsVal failed, status = %{public}d", status);
+        return ERR;
+    }
+    output = bValue;
     return OK;
 }
 
@@ -256,33 +315,7 @@ std::string JSUtils::ConvertAny2String(napi_env env, napi_value jsValue)
     return "invalid type";
 }
 
-int JSUtils::Covert2StingBoolMap(napi_env env, napi_value jsValue, std::map<std::string, bool> &output)
-{
-    LOG_DEBUG("napi_value -> std::map<std::string, bool> ");
-    output.clear();
-    napi_value jsMapList = nullptr;
-    uint32_t jsCount = 0;
-    napi_status status = napi_get_property_names(env, jsValue, &jsMapList);
-    status = napi_get_array_length(env, jsMapList, &jsCount);
-    LOG_DEBUG("jsCount: %{public}d", jsCount);
-    NAPI_ASSERT_BASE(env, (status == napi_ok) && (jsCount > 0), "get_map failed!", ERR);
-    napi_value jsKey = nullptr;
-    napi_value jsVal = nullptr;
-    for (uint32_t index = 0; index < jsCount; index++) {
-        status = napi_get_element(env, jsMapList, index, &jsKey);
-        NAPI_ASSERT_BASE(env, (jsKey != nullptr) && (status == napi_ok), "no element", ERR);
-        std::string key;
-        Convert2String(env, jsKey, key);
-        status = napi_get_property(env, jsValue, jsKey, &jsVal);
-        NAPI_ASSERT_BASE(env, (jsVal != nullptr) && (status == napi_ok), "no element", ERR);
-        bool val;
-        Convert2Bool(env, jsVal, val);
-        output.insert(std::pair<std::string, bool>(key, val));
-    }
-    return OK;
-}
-
-int JSUtils::Convert2StringInt32Map(napi_env env, napi_value jsValue, std::map<std::string, int32_t> &output)
+int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, int32_t> &output)
 {
     LOG_DEBUG("napi_value -> std::map<std::string, int32_t> ");
     output.clear();
@@ -298,12 +331,37 @@ int JSUtils::Convert2StringInt32Map(napi_env env, napi_value jsValue, std::map<s
         status = napi_get_element(env, jsMapList, index, &jsKey);
         NAPI_ASSERT_BASE(env, (jsKey != nullptr) && (status == napi_ok), "no element", ERR);
         std::string key;
-        Convert2String(env, jsKey, key);
+        Convert2Value(env, jsKey, key);
         status = napi_get_property(env, jsValue, jsKey, &jsVal);
         NAPI_ASSERT_BASE(env, (jsVal != nullptr) && (status == napi_ok), "no element", ERR);
         int32_t val;
-        Convert2Int32(env, jsVal, val);
+        Convert2Value(env, jsVal, val);
         output.insert(std::pair<std::string, int32_t>(key, val));
+    }
+    return OK;
+}
+int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, bool> &output)
+{
+    LOG_DEBUG("napi_value -> std::map<std::string, bool> ");
+    output.clear();
+    napi_value jsMapList = nullptr;
+    uint32_t jsCount = 0;
+    napi_status status = napi_get_property_names(env, jsValue, &jsMapList);
+    status = napi_get_array_length(env, jsMapList, &jsCount);
+    LOG_DEBUG("jsCount: %{public}d", jsCount);
+    NAPI_ASSERT_BASE(env, (status == napi_ok) && (jsCount > 0), "get_map failed!", ERR);
+    napi_value jsKey = nullptr;
+    napi_value jsVal = nullptr;
+    for (uint32_t index = 0; index < jsCount; index++) {
+        status = napi_get_element(env, jsMapList, index, &jsKey);
+        NAPI_ASSERT_BASE(env, (jsKey != nullptr) && (status == napi_ok), "no element", ERR);
+        std::string key;
+        Convert2Value(env, jsKey, key);
+        status = napi_get_property(env, jsValue, jsKey, &jsVal);
+        NAPI_ASSERT_BASE(env, (jsVal != nullptr) && (status == napi_ok), "no element", ERR);
+        bool val;
+        Convert2Value(env, jsVal, val);
+        output.insert(std::pair<std::string, bool>(key, val));
     }
     return OK;
 }
@@ -515,6 +573,73 @@ int32_t JSUtils::Convert2JSStringArr(napi_env env, std::vector<std::string> valu
         }
     }
     return OK;
+}
+
+napi_value JSUtils::DefineClass(napi_env env, const std::string &name, const Descriptor &descriptor, napi_callback ctor)
+{
+    // base64("data.cloudData") as rootPropName, i.e. global.<root>
+    const std::string rootPropName = "ZGF0YS5jbG91ZERhdGE="; 
+    napi_value root = nullptr;
+    bool hasRoot = false;
+    napi_value global = nullptr;
+    napi_get_global(env, &global);
+    napi_has_named_property(env, global, rootPropName.c_str(), &hasRoot);
+    if (hasRoot) {
+        napi_get_named_property(env, global, rootPropName.c_str(), &root);
+    } else {
+        napi_create_object(env, &root);
+        napi_set_named_property(env, global, rootPropName.c_str(), root);
+    }
+
+    std::string propName = "constructor_of_" + name;
+    napi_value constructor = nullptr;
+    bool hasProp = false;
+    napi_has_named_property(env, root, propName.c_str(), &hasProp);
+    if (hasProp) {
+        napi_get_named_property(env, root, propName.c_str(), &constructor);
+        if (constructor != nullptr) {
+            LOG_DEBUG("got data.cloudData.%{public}s as constructor", propName.c_str());
+            return constructor;
+        }
+        hasProp = false; // no constructor.
+    }
+    auto properties = descriptor();
+    NAPI_CALL(env, napi_define_class(env, name.c_str(), name.size(), ctor, nullptr, properties.size(),
+                       properties.data(), &constructor));
+    NAPI_ASSERT(env, constructor != nullptr, "napi_define_class failed!");
+
+    if (!hasProp) {
+        napi_set_named_property(env, root, propName.c_str(), constructor);
+        LOG_DEBUG("save constructor to data.cloudData.%{public}s", propName.c_str());
+    }
+    return constructor;
+}
+
+napi_value JSUtils::GetClass(napi_env env, const std::string &spaceName, const std::string &className)
+{
+    auto it = NAMESPACES.find(spaceName);
+    if (it == NAMESPACES.end()) {
+        return nullptr;
+    }
+
+    napi_value root = nullptr;
+    napi_value global = nullptr;
+    napi_get_global(env, &global);
+    napi_get_named_property(env, global, it->second.c_str(), &root);
+    std::string propName = "constructor_of_" + className;
+    napi_value constructor = nullptr;
+    bool hasProp = false;
+    napi_has_named_property(env, root, propName.c_str(), &hasProp);
+    if (!hasProp) {
+        return nullptr;
+    }
+    napi_get_named_property(env, root, propName.c_str(), &constructor);
+    if (constructor != nullptr) {
+        LOG_DEBUG("got data.cloudData.%{public}s as constructor", propName.c_str());
+        return constructor;
+    }
+    hasProp = false; // no constructor.
+    return constructor;
 }
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
