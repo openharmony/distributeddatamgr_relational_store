@@ -100,7 +100,18 @@ int RdbManagerImpl::GetRdbService(const RdbSyncerParam &param, std::shared_ptr<R
         ZLOGE("get rdb service failed");
         return E_NOT_SUPPORTED;
     }
-    sptr<RdbServiceProxy> serviceProxy = iface_cast<DistributedRdb::RdbServiceProxy>(remote);
+    sptr<DistributedRdb::RdbServiceProxy> serviceProxy = nullptr;
+    if (remote->IsProxyObject()) {
+        serviceProxy = iface_cast<DistributedRdb::RdbServiceProxy>(remote);
+    }
+
+    if (serviceProxy == nullptr) {
+        serviceProxy = new (std::nothrow) RdbServiceProxy(remote);
+    }
+
+    if (serviceProxy == nullptr) {
+        return E_ERROR;
+    }
     if (serviceProxy->InitNotifier(param) != RDB_OK) {
         ZLOGE("init notifier failed");
         return E_ERROR;
