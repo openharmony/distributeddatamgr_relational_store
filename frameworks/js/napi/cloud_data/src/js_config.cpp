@@ -15,8 +15,6 @@
 #define LOG_TAG "JsConfig"
 #include "js_config.h"
 
-#include <cstddef.h>
-
 #include <memory>
 
 #include "cloud_manager.h"
@@ -25,6 +23,7 @@
 #include "js_utils.h"
 #include "log_print.h"
 #include "napi_queue.h"
+#include "stddef.h"
 
 using namespace OHOS::CloudData;
 using namespace OHOS::AppDataMgrJsKit;
