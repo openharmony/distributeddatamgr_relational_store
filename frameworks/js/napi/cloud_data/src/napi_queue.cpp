@@ -73,7 +73,7 @@ napi_value NapiQueue::AsyncWork(napi_env env, std::shared_ptr<ContextBase> ctxt,
     NapiAsyncExecute execute, NapiAsyncComplete complete)
 {
     ZLOGD("name=%{public}s", name.c_str());
-    AsyncContext *aCtx = new (std::nothow) AsyncContext;
+    AsyncContext *aCtx = new (std::nothrow) AsyncContext;
     if (aCtx == nullptr) {
         return nullptr;
     }
