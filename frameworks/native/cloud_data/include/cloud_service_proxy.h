@@ -23,7 +23,7 @@
 namespace OHOS::CloudData {
 class CloudServiceProxy : public IRemoteProxy<ICloudService> {
 public:
-    explicit CloudServiceProxy(const sptr<IRemoteObject>& object);
+    explicit CloudServiceProxy(const sptr<IRemoteObject> &object);
     virtual ~CloudServiceProxy() = default;
     int32_t EnableCloud(const std::string &id, const std::map<std::string, int32_t> &switches) override;
     int32_t DisableCloud(const std::string &id) override;
