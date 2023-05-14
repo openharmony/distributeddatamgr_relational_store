@@ -15,7 +15,7 @@
 #define LOG_TAG "JsConfig"
 #include "js_config.h"
 
-#include <stddef.h>
+#include <cstddef.h>
 
 #include <memory>
 

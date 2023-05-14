@@ -55,7 +55,7 @@ Status GenerateNapiError(int32_t status, int32_t &errCode, std::string &errMessa
     if (errCode == 0) {
         return Status::SUCCESS;
     }
-    return status;
+    return static_cast<Status>(status);
 }
 
 void ThrowNapiError(napi_env env, int32_t status, std::string errMessage, bool isParamsCheck)
