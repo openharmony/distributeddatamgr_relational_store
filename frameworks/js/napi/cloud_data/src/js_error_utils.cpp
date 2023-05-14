@@ -42,7 +42,7 @@ const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode)
     return std::nullopt;
 }
 
-Status GenerateNapiError(Status status, int32_t &errCode, std::string &errMessage)
+Status GenerateNapiError(int32_t status, int32_t &errCode, std::string &errMessage)
 {
     auto errorMsg = GetJsErrorCode(status);
     if (errorMsg.has_value()) {
