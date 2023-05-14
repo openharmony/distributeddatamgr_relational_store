@@ -46,8 +46,13 @@ public:
         ERROR,
         INVALID_ARGUMENT,
         SERVER_UNAVAILABLE,
+        FEATURE_UNAVAILABLE,
+        NOT_SUPPORT,
+        CLOUD_DISABLE,
+        CLOUD_DISABLE_SWITCH,
         IPC_ERROR,
-        IPC_PARCEL_ERROR
+        IPC_PARCEL_ERROR,
+        PERMISSION_DENIED
     };
 
     virtual ~CloudService() = default;

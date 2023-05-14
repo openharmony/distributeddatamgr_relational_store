@@ -51,34 +51,34 @@ CloudManager &CloudManager::GetInstance()
     return instance;
 }
 
-std::shared_ptr<CloudService> CloudManager::GetCloudService()
+std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService()
 {
     std::lock_guard<decltype(mutex_)> lg(mutex_);
     if (cloudService_ != nullptr) {
-        return cloudService_;
+        return std::make_pair(CloudService::Status::SUCCESS, cloudService_);
     }
 
     auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saMgr == nullptr) {
         ZLOGE("get system ability manager failed");
-        return nullptr;
+        return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
     }
     auto dataMgrObject = saMgr->CheckSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
     if (dataMgrObject == nullptr) {
         ZLOGE("get distributed data manager failed");
-        return nullptr;
+        return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
     }
 
     sptr<DataMgrService> dataMgr = new (std::nothrow) DataMgrService(dataMgrObject);
     if (dataMgr == nullptr) {
         ZLOGE("new CloudDataServiceProxy failed");
-        return nullptr;
+        return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
     }
 
     auto cloudObject = dataMgr->GetFeatureInterface(CloudService::SERVICE_NAME);
     if (cloudObject == nullptr) {
         ZLOGE("get cloud service failed");
-        return nullptr;
+        return std::make_pair(CloudService::Status::FEATURE_UNAVAILABLE, nullptr);
     }
 
     cloudObject->AddDeathRecipient(new CloudDeath([this]() {
@@ -88,14 +88,14 @@ std::shared_ptr<CloudService> CloudManager::GetCloudService()
 
     sptr<CloudServiceProxy> proxy = new (std::nothrow) CloudServiceProxy(cloudObject);
     if (proxy == nullptr) {
-        return nullptr;
+        return std::make_pair(CloudService::Status::FEATURE_UNAVAILABLE, nullptr);
     }
 
     cloudService_ = std::shared_ptr<CloudService>(proxy.GetRefPtr(), [holder = proxy](const auto *) {});
     if (cloudService_ == nullptr) {
-        return nullptr;
+        return std::make_pair(CloudService::Status::FEATURE_UNAVAILABLE, nullptr);
     }
-    return cloudService_;
+    return std::make_pair(CloudService::Status::SUCCESS, cloudService_);
 }
 
 DataMgrService::DataMgrService(const sptr<IRemoteObject> &impl) : IRemoteProxy<CloudData::IKvStoreDataService>(impl)
