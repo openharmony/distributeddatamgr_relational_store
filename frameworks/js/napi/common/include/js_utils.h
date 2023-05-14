@@ -59,7 +59,6 @@ std::vector<std::string> Convert2StrVector(napi_env env, napi_value value);
 std::vector<uint8_t> Convert2U8Vector(napi_env env, napi_value jsValue);
 std::string ConvertAny2String(napi_env env, const napi_value jsValue);
 
-
 int32_t Convert2StrVector(napi_env env, napi_value value, std::vector<std::string> &output);
 int32_t Convert2BoolVector(napi_env env, napi_value value, std::vector<bool> &output);
 int32_t Convert2DoubleVector(napi_env env, napi_value value, std::vector<double> &output);
