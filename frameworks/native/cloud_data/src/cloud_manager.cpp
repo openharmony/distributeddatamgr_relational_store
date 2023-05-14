@@ -95,7 +95,7 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
     if (cloudService_ == nullptr) {
         return std::make_pair(CloudService::Status::FEATURE_UNAVAILABLE, nullptr);
     }
-    return std::make_pair(CloudService::Status::SUCCESS, nullptr);
+    return std::make_pair(CloudService::Status::SUCCESS, cloudService_);
 }
 
 DataMgrService::DataMgrService(const sptr<IRemoteObject> &impl) : IRemoteProxy<CloudData::IKvStoreDataService>(impl)

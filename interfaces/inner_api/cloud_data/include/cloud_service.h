@@ -21,7 +21,8 @@
 namespace OHOS::CloudData {
 class CloudService {
 public:
-    enum TransId : int32_t {
+    enum TransId : int32_t
+    {
         TRANS_HEAD,
         TRANS_ENABLE_CLOUD = TRANS_HEAD,
         TRANS_DISABLE_CLOUD,
@@ -30,11 +31,21 @@ public:
         TRANS_NOTIFY_DATA_CHANGE,
         TRANS_BUTT,
     };
-    enum Action : int32_t { CLEAR_CLOUD_INFO, CLEAR_CLOUD_DATA_AND_INFO, CLEAR_CLOUD_BUTT };
+    enum Action : int32_t
+    {
+        CLEAR_CLOUD_INFO,
+        CLEAR_CLOUD_DATA_AND_INFO,
+        CLEAR_CLOUD_BUTT
+    };
 
-    enum Switch : int32_t { SWITCH_ON, SWITCH_OFF };
+    enum Switch : int32_t
+    {
+        SWITCH_ON,
+        SWITCH_OFF
+    };
 
-    enum Status : int32_t {
+    enum Status : int32_t
+    {
         SUCCESS = 0,
         ERROR,
         INVALID_ARGUMENT,
