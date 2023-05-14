@@ -23,7 +23,7 @@
 #include "js_utils.h"
 #include "log_print.h"
 #include "napi_queue.h"
-#include "stddef.h"
+#include <cstddef>
 
 using namespace OHOS::CloudData;
 using namespace OHOS::AppDataMgrJsKit;
