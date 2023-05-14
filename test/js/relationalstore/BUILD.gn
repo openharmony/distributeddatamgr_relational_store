@@ -27,11 +27,4 @@ group("performancetest") {
 
   deps += [ "performance/src:RelationalStorePerfJsTest" ]
 }
-
-group("cloudtest") {
-  testonly = true
-  deps = []
-
-  deps += [ "clouddata/src:CloudConfigJsTest" ]
-}
 ###############################################################################
