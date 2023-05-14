@@ -19,6 +19,7 @@
 #include "rdb_types.h"
 #include "rdb_visibility.h"
 namespace OHOS::ITypesUtil {
+using SubOption = DistributedRdb::SubscribeOption;
 using SyncerParam = DistributedRdb::RdbSyncerParam;
 using SyncOption = DistributedRdb::SyncOption;
 using RdbPredicates = DistributedRdb::RdbPredicates;
@@ -39,5 +40,9 @@ template<>
 API_EXPORT bool Marshalling(const RdbOperation &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(RdbOperation &output, MessageParcel &data);
+template<>
+API_EXPORT bool Marshalling(const SubOption &input, MessageParcel &data);
+template<>
+API_EXPORT bool Unmarshalling(SubOption &output, MessageParcel &data);
 }
 #endif // DISTRIBUTED_RDB_RDB_TYPES_UTIL_H
