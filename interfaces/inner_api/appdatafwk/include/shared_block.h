@@ -51,6 +51,10 @@ public:
         CELL_UNIT_TYPE_STRING = 3,
         /** Indicates the current Cell Unit data type is BLOB at the specified row and column.*/
         CELL_UNIT_TYPE_BLOB = 4,
+        /** Indicates the current Cell Unit data type is Asset at the specified row and column.*/
+        CELL_UNIT_TYPE_ASSET = 5,
+        /** Indicates the current Cell Unit data type is Assets at the specified row and column.*/
+        CELL_UNIT_TYPE_ASSETS = 6,
     };
 
     /**
@@ -145,6 +149,16 @@ public:
      * @brief Put Double data to the shared block.
      */
     API_EXPORT int PutDouble(uint32_t row, uint32_t column, double value);
+
+    /**
+     * @brief Put Asset data to the shared block.
+     */
+    API_EXPORT int PutAsset(uint32_t row, uint32_t column, const void *value, size_t size);
+
+    /**
+     * @brief Put Assets data to the shared block.
+     */
+    API_EXPORT int PutAssets(uint32_t row, uint32_t column, const void *value, size_t size);
 
     /**
      * @brief Put Null data to the shared block.

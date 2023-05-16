@@ -69,6 +69,39 @@ bool Unmarshalling(RdbOperation &output, MessageParcel &data)
     return ret;
 }
 
+template<> 
+bool Marshalling(const ValueObject &input, MessageParcel &data)
+{
+    return Marshal(data, input.value);
+}
+template<> 
+bool Unmarshalling(ValueObject &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.value);
+}
+
+template<> 
+bool Marshalling(const ValuesBucket &input, MessageParcel &data)
+{
+    return Marshal(data, input.values_);
+}
+template<> 
+bool Unmarshalling(ValuesBucket &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.values_);
+}
+
+template<>
+bool Marshalling(const Asset &input, MessageParcel &data)
+{
+    return Marshal(data, input.version, input.name, input.size, input.modifyTime, input.uri);
+}
+template<>
+bool Unmarshalling(Asset &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.version, output.name, output.size, output.modifyTime, output.uri);
+}
+
 template<>
 bool Marshalling(const SubOption &input, MessageParcel &data)
 {

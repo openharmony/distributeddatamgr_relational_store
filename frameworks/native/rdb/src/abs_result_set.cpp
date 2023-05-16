@@ -21,6 +21,7 @@
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_trace.h"
+#include "result_set.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -47,9 +48,15 @@ ValueObject RowEntity::Get(int index) const
     return indexs_[index]->second;
 }
 
-void RowEntity::Get(std::map<std::string, ValueObject> &outValues) const
+const std::map<std::string, ValueObject> &RowEntity::Get() const
 {
-    outValues = values_;
+    return values_;
+}
+
+std::map<std::string, ValueObject> RowEntity::Steal()
+{
+    indexs_.clear();
+    return std::move(values_);
 }
 
 void RowEntity::Clear()
@@ -353,6 +360,26 @@ int AbsResultSet::Close()
 {
     isClosed = true;
     return E_OK;
+}
+
+int AbsResultSet::GetModifyTime(std::string &modifyTime)
+{
+    return E_NOT_SUPPORT;
+}
+
+int AbsResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
+{
+    return E_NOT_SUPPORT;
+}
+
+int AbsResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
+{
+    return E_NOT_SUPPORT;
+}
+
+int AbsResultSet::Get(int32_t col, ValueObject &value)
+{
+    return E_NOT_SUPPORT;
 }
 } // namespace NativeRdb
 } // namespace OHOS

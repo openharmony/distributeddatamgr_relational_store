@@ -15,20 +15,21 @@
 
 #include "rdb_utils.h"
 
+#include "raw_data_parser.h"
 #include "rdb_logger.h"
-
 using namespace OHOS::RdbDataShareAdapter;
 using namespace OHOS::DataShare;
 using namespace OHOS::NativeRdb;
 
 constexpr RdbUtils::OperateHandler RdbUtils::HANDLERS[LAST_TYPE];
 
-ValuesBucket RdbUtils::ToValuesBucket(const DataShareValuesBucket &valuesBucket)
+ValuesBucket RdbUtils::ToValuesBucket(DataShareValuesBucket valuesBucket)
 {
     std::map<std::string, ValueObject> valuesMap;
-    auto values = valuesBucket.valuesMap;
-    for (auto &[key, value] : values) {
-        valuesMap.insert(std::pair<std::string, ValueObject>(key, ValueObject(value)));
+    for (auto &[key, dsValue] : valuesBucket.valuesMap) {
+        ValueObject::Type value;
+        RawDataParser::Convert(std::move(dsValue), value);
+        valuesMap.insert(std::pair<std::string, ValueObject>(key, std::move(value)));
     }
     return ValuesBucket(valuesMap);
 }

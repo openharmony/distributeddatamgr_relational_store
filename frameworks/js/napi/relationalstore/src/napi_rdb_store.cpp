@@ -692,35 +692,10 @@ int ParseBindArgs(const napi_env &env, const napi_value &arg, std::shared_ptr<Rd
         napi_get_element(env, arg, i, &element);
         napi_valuetype type;
         napi_typeof(env, element, &type);
-        switch (type) {
-            case napi_boolean: {
-                bool value = false;
-                int32_t ret = JSUtils::Convert2Bool(env, element, value);
-                CHECK_RETURN_SET(ret == OK, std::make_shared<ParamError>(std::to_string(i), "a correct boolean"));
-                context->bindArgs.push_back(ValueObject(value));
-            } break;
-            case napi_number: {
-                double value;
-                int32_t ret = JSUtils::Convert2Double(env, element, value);
-                CHECK_RETURN_SET(ret == OK, std::make_shared<ParamError>(std::to_string(i), "a correct number"));
-                context->bindArgs.push_back(ValueObject(value));
-            } break;
-            case napi_null: {
-                context->bindArgs.push_back(ValueObject());
-            } break;
-            case napi_string: {
-                context->bindArgs.push_back(ValueObject(JSUtils::Convert2String(env, element, false)));
-            } break;
-            case napi_object: {
-                std::vector<uint8_t> value;
-                int32_t ret = JSUtils::Convert2U8Vector(env, element, value);
-                CHECK_RETURN_SET(ret == OK, std::make_shared<ParamError>(std::to_string(i), "Uint8Array"));
-                context->bindArgs.push_back(ValueObject(value));
-            } break;
-            default: {
-                CHECK_RETURN_SET(false, std::make_shared<ParamError>(std::to_string(i), "a valid ValueType"));
-            } break;
-        }
+        ValueObject valueObject;
+        int32_t ret = JSUtils::Convert2Value(env, element, valueObject.value);
+        CHECK_RETURN_SET(ret == OK, std::make_shared<ParamError>(std::to_string(i), "ValueObject"));
+        context->bindArgs.push_back(std::move(valueObject));
     }
     return OK;
 }
