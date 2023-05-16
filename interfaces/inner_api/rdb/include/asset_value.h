@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,17 +13,18 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_RDB_IRESULT_SET_H
-#define NATIVE_RDB_IRESULT_SET_H
-
-#include "abs_result_set.h"
-#include "iremote_broker.h"
-
+#ifndef OHOS_RELATIONAL_STORE_INNER_API_ASSET_VALUE_H
+#define OHOS_RELATIONAL_STORE_INNER_API_ASSET_VALUE_H
+#include <string>
 namespace OHOS::NativeRdb {
-class IResultSet : public AbsResultSet, public IRemoteBroker {
-public:
-    virtual ~IResultSet() = default;
-    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS::NativeRdb.IResultSet");
+struct AssetValue {
+    uint32_t version = 0;
+    std::string name;
+    std::string uri;
+    std::string createTime;
+    std::string modifyTime;
+    std::string size;
+    std::string hash;
 };
-} // namespace OHOS::NativeRdb
-#endif // NATIVE_RDB_IRESULT_SET_H
+}
+#endif // OHOS_RELATIONAL_STORE_INNER_API_ASSET_VALUE_H

@@ -33,7 +33,9 @@ std::shared_ptr<AbsSharedResultSet> ISharedResultSetProxy::CreateProxy(MessagePa
         return nullptr;
     }
     sptr<ISharedResultSet> result = iface_cast<ISharedResultSet>(remoter);
-    result->Unmarshalling(parcel);
+    if (result->sharedBlock_ == nullptr) {
+        AppDataFwk::SharedBlock::ReadMessageParcel(parcel, result->sharedBlock_);
+    }
     return std::shared_ptr<AbsSharedResultSet>(result.GetRefPtr(), [keep = result] (AbsSharedResultSet *) {});
 }
 

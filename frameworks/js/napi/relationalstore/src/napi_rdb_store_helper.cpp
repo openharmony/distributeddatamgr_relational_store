@@ -77,7 +77,7 @@ int ParseIsEncrypt(const napi_env &env, const napi_value &object, std::shared_pt
     napi_status status = napi_get_named_property(env, object, "encrypt", &value);
     if (status == napi_ok && value != nullptr) {
         bool isEncrypt = false;
-        JSUtils::Convert2Bool(env, value, isEncrypt);
+        JSUtils::Convert2Value(env, value, isEncrypt);
         context->config.SetEncryptStatus(isEncrypt);
     }
     return OK;

@@ -36,7 +36,9 @@ sptr<ISharedResultSet> ISharedResultSetStub::CreateStub(std::shared_ptr<AbsShare
         return nullptr;
     }
     parcel.WriteRemoteObject(stub->AsObject());
-    result->Marshalling(parcel);
+    if (result->sharedBlock_ != nullptr) {
+        result->sharedBlock_->WriteMessageParcel(parcel);
+    }
     return stub;
 }
 
