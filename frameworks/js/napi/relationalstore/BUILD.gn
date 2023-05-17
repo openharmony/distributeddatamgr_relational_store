@@ -42,10 +42,7 @@ if (is_ohos) {
       "${relational_store_napi_path}/relationalstore/include",
     ]
 
-    defines = [
-      "SQLITE_DISTRIBUTE_RELATIONAL",
-      "MOD_NAME=\"data.relationalStore\"",
-    ]
+    defines = [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
 
     sources += [
       "${relational_store_js_common_path}/src/js_ability.cpp",
@@ -85,10 +82,7 @@ if (is_ohos) {
     ]
 
     buildos = "windows"
-    defines = [
-      "WINDOWS_PLATFORM",
-      "MOD_NAME=\"data.relationalStore\"",
-    ]
+    defines = [ "WINDOWS_PLATFORM" ]
 
     sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
 
@@ -119,10 +113,7 @@ if (is_ohos) {
     ]
 
     buildos = "mac"
-    defines = [
-      "MAC_PLATFORM",
-      "MOD_NAME=\"data.relationalStore\"",
-    ]
+    defines = [ "MAC_PLATFORM" ]
 
     sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
 
@@ -155,10 +146,7 @@ if (is_ohos) {
       "-stdlib=libc++",
     ]
 
-    defines = [
-      "ANDROID_PLATFORM",
-      "MOD_NAME=\"data_relationalStore\"",
-    ]
+    defines = [ "ANDROID_PLATFORM" ]
 
     sources += [
       "${relational_store_js_common_path}/mock/src/js_ability.cpp",
@@ -193,10 +181,7 @@ if (is_ohos) {
       "-stdlib=libc++",
     ]
 
-    defines = [
-      "IOS_PLATFORM",
-      "MOD_NAME=\"data.relationalStore\"",
-    ]
+    defines = [ "IOS_PLATFORM" ]
 
     sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
 
