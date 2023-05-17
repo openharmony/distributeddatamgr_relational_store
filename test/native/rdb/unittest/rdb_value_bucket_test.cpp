@@ -212,7 +212,7 @@ HWTEST_F(ValuesBucketTest, Values_Bucket_004, TestSize.Level1)
  */
 HWTEST_F(ValuesBucketTest, Values_Bucket_005, TestSize.Level1)
 {
-    Parcel parcel;
+    MessageParcel parcel;
     ValuesBucket values;
     for (int i = 0; i < GlobalExpr::SQLITE_MAX_COLUMN + 1; i++) {
         values.PutInt("id" + std::to_string(i), i);
