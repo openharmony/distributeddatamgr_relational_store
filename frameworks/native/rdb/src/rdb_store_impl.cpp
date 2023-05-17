@@ -95,13 +95,9 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
         LOG_ERROR("GetRdbService failed, err is %{public}d.", errCode);
         return E_OK;
     }
-    errCode = service->GetSchema(syncerParam_);
-    if (errCode != E_OK) {
-        LOG_ERROR("GetSchema failed, err is %{public}d.", errCode);
-    }
-    // open uri share
+    service->GetSchema(syncerParam_);
     if (!config.GetUri().empty()) {
-        errCode = service->CreateRDBTable(syncerParam_, config.GetWritePermission(), config.GetReadPermission());
+        errCode = service->CreateRDBTable(syncerParam_);
         if (errCode != E_OK) {
             LOG_ERROR("CreateRDBTable failed");
         } else {

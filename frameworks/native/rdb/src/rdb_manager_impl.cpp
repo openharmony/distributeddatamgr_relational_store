@@ -95,7 +95,7 @@ int RdbManagerImpl::GetRdbService(const RdbSyncerParam &param, std::shared_ptr<R
         return E_ERROR;
     }
 
-    auto remote = distributedDataMgr_->GetFeatureInterface("relational_store");
+    auto remote = distributedDataMgr_->GetFeatureInterface(DistributedRdb::RdbService::SERVICE_NAME);
     if (remote == nullptr) {
         ZLOGE("get rdb service failed");
         return E_NOT_SUPPORTED;
