@@ -56,14 +56,15 @@ public:
     virtual int32_t RemoteQuery(const RdbSyncerParam &param, const std::string &device, const std::string &sql,
         const std::vector<std::string> &selectionArgs, sptr<IRemoteObject> &resultSet) = 0;
 
-    virtual int32_t CreateRDBTable(const RdbSyncerParam &param, const std::string &writePermission,
-        const std::string &readPermission) = 0;
+    virtual int32_t CreateRDBTable(const RdbSyncerParam &param) = 0;
 
     virtual int32_t DestroyRDBTable(const RdbSyncerParam &param) = 0;
 
     virtual int32_t InitNotifier(const RdbSyncerParam &param, const sptr<IRemoteObject> notifier) = 0;
 
     virtual int32_t GetSchema(const RdbSyncerParam &param) = 0;
+
+    static constexpr const char *SERVICE_NAME = "relational_store";
 protected:
     virtual int32_t DoSync(const RdbSyncerParam &param, const SyncOption &option, const RdbPredicates &predicates,
         SyncResult &result) = 0;
