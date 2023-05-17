@@ -64,7 +64,7 @@ public:
 
     virtual int32_t GetSchema(const RdbSyncerParam &param) = 0;
 
-    static constexpr const char *SERVICE_NAME = "relational_store";
+    inline static constexpr const char *SERVICE_NAME = "relational_store";
 protected:
     virtual int32_t DoSync(const RdbSyncerParam &param, const SyncOption &option, const RdbPredicates &predicates,
         SyncResult &result) = 0;
