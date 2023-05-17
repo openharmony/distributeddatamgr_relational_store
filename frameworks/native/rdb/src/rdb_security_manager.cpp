@@ -430,11 +430,12 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
 
 void RdbSecurityManager::Init(const std::string &bundleName, const std::string &path)
 {
-    rootKeyAlias_ = GenerateRootKeyAlias(bundleName, path);
+    ParsePath(path);
+    bundleName_ = bundleName;
+    rootKeyAlias_ = GenerateRootKeyAlias();
     nonce_ = std::vector<uint8_t>(RDB_HKS_BLOB_TYPE_NONCE, RDB_HKS_BLOB_TYPE_NONCE + strlen(RDB_HKS_BLOB_TYPE_NONCE));
     aad_ = std::vector<uint8_t>(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD));
 
-    ParsePath(path);
     if (CheckRootKeyExists()) {
         return;
     }
@@ -577,15 +578,14 @@ RdbPassword RdbSecurityManager::GetRdbPassword(KeyFileType keyFile)
     return LoadSecretKeyFromFile(keyFile);
 }
 
-std::vector<uint8_t> RdbSecurityManager::GenerateRootKeyAlias(const std::string &bundleName, const std::string &path)
+std::vector<uint8_t> RdbSecurityManager::GenerateRootKeyAlias()
 {
-    bundleName_ = bundleName;
     std::vector<uint8_t> rootKeyAlias =
         std::vector<uint8_t>(RDB_ROOT_KEY_ALIAS_PREFIX, RDB_ROOT_KEY_ALIAS_PREFIX + strlen(RDB_ROOT_KEY_ALIAS_PREFIX));
     if (!bundleName_.empty()) {
-        rootKeyAlias.insert(rootKeyAlias.end(), bundleName.begin(), bundleName.end());
+        rootKeyAlias.insert(rootKeyAlias.end(), bundleName_.begin(), bundleName_.end());
     } else {
-        rootKeyAlias.insert(rootKeyAlias.end(), path.begin(), path.end());
+        rootKeyAlias.insert(rootKeyAlias.end(), dbDir_.begin(), dbDir_.end());
     }
 
     return rootKeyAlias;
