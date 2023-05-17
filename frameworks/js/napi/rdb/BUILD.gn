@@ -88,6 +88,7 @@ ohos_shared_library("napi_rdb") {
   }
 
   subsystem_name = "distributeddatamgr"
+  innerapi_tags = [ "platformsdk" ]
   part_name = "relational_store"
 }
 
