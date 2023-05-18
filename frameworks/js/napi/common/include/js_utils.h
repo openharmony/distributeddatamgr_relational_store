@@ -111,7 +111,7 @@ napi_value Convert2JSValue(napi_env env, const std::variant<_Types...> &value);
 template<typename _T>
 int32_t GetCPPValue(napi_env env, napi_value jsValue, _T &value)
 {
-    return napi_invalid_arg;
+    return ERR;
 }
 
 template<typename _T, typename _First, typename... _Types>
@@ -119,10 +119,8 @@ int32_t GetCPPValue(napi_env env, napi_value jsValue, _T &value)
 {
     _First cValue;
     auto ret = Convert2Value(env, jsValue, cValue);
-    if (ret != napi_invalid_arg) {
-        if (ret == napi_ok) {
-            value = cValue;
-        }
+    if (ret == OK) {
+        value = cValue;
         return ret;
     }
     return GetCPPValue<_T, _Types...>(env, jsValue, value);
