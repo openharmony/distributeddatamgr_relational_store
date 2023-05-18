@@ -60,34 +60,30 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, double &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::string &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::vector<uint8_t> &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::monostate &value);
+int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, int32_t> &output);
+int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, bool> &output);
 
 template<typename T>
 int32_t Convert2Value(napi_env env, napi_value jsValue, T &output);
+
 template<typename T>
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::vector<T> &value);
-template<typename... _Types>
-int32_t Convert2Value(napi_env env, napi_value jsValue, std::variant<_Types...> &value);
 
-template<typename... _Types>
-napi_value Convert2JSValue(napi_env env, const std::variant<_Types...> &value);
+template<typename... Types>
+int32_t Convert2Value(napi_env env, napi_value jsValue, std::variant<Types...> &value);
 
-int32_t Convert2JSValue(napi_env env, std::string value, napi_value &output);
-int32_t Convert2JSValue(napi_env env, bool value, napi_value &output);
-int32_t Convert2JSValue(napi_env env, double value, napi_value &output);
 using Descriptor = std::function<std::vector<napi_property_descriptor>()>;
-
 /* napi_define_class  wrapper */
 napi_value DefineClass(napi_env env, const std::string &name, const Descriptor &descriptor, napi_callback ctor);
 napi_value GetClass(napi_env env, const std::string &spaceName, const std::string &className);
 std::string Convert2String(napi_env env, napi_value jsStr, bool useDefaultBufSize = true);
-int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, int32_t> &output);
-int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, bool> &output);
-int32_t Convert2Value(napi_env env, napi_value jsBool, bool &output);
-int32_t Convert2Value(napi_env env, napi_value jsNum, int32_t &output);
-int32_t Convert2Value(napi_env env, napi_value jsStr, std::string &output);
 std::vector<std::string> Convert2StrVector(napi_env env, napi_value value);
 std::vector<uint8_t> Convert2U8Vector(napi_env env, napi_value jsValue);
 std::string ConvertAny2String(napi_env env, napi_value jsValue);
+
+int32_t Convert2JSValue(napi_env env, std::string value, napi_value &output);
+int32_t Convert2JSValue(napi_env env, bool value, napi_value &output);
+int32_t Convert2JSValue(napi_env env, double value, napi_value &output);
 
 napi_value Convert2JSValue(napi_env env, const std::vector<std::string> &value);
 napi_value Convert2JSValue(napi_env env, const std::string &value);
@@ -102,44 +98,45 @@ napi_value Convert2JSValue(napi_env env, const std::monostate &value);
 
 template<typename T>
 napi_value Convert2JSValue(napi_env env, const T &value);
+
 template<typename T>
 napi_value Convert2JSValue(napi_env env, const std::vector<T> &value);
 
-template<typename... _Types>
-napi_value Convert2JSValue(napi_env env, const std::variant<_Types...> &value);
+template<typename... Types>
+napi_value Convert2JSValue(napi_env env, const std::variant<Types...> &value);
 
-template<typename _T>
-int32_t GetCPPValue(napi_env env, napi_value jsValue, _T &value)
+template<typename T>
+int32_t GetCPPValue(napi_env env, napi_value jsValue, T &value)
 {
     return ERR;
 }
 
-template<typename _T, typename _First, typename... _Types>
-int32_t GetCPPValue(napi_env env, napi_value jsValue, _T &value)
+template<typename T, typename First, typename... Types>
+int32_t GetCPPValue(napi_env env, napi_value jsValue, T &value)
 {
-    _First cValue;
+    First cValue;
     auto ret = Convert2Value(env, jsValue, cValue);
     if (ret == OK) {
         value = cValue;
         return ret;
     }
-    return GetCPPValue<_T, _Types...>(env, jsValue, value);
+    return GetCPPValue<T, Types...>(env, jsValue, value);
 }
 
-template<typename _T>
-napi_value GetJSValue(napi_env env, const _T &value)
+template<typename T>
+napi_value GetJSValue(napi_env env, const T &value)
 {
     return nullptr;
 }
 
-template<typename _T, typename _First, typename... _Types>
-napi_value GetJSValue(napi_env env, const _T &value)
+template<typename T, typename First, typename... Types>
+napi_value GetJSValue(napi_env env, const T &value)
 {
-    auto *val = std::get_if<_First>(&value);
+    auto *val = std::get_if<First>(&value);
     if (val != nullptr) {
         return Convert2JSValue(env, *val);
     }
-    return GetJSValue<_T, _Types...>(env, value);
+    return GetJSValue<T, Types...>(env, value);
 }
 } // namespace JSUtils
 
@@ -161,10 +158,10 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<T> 
     return napi_ok;
 }
 
-template<typename... _Types>
-int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::variant<_Types...> &value)
+template<typename... Types>
+int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::variant<Types...> &value)
 {
-    return GetCPPValue<decltype(value), _Types...>(env, jsValue, value);
+    return GetCPPValue<decltype(value), Types...>(env, jsValue, value);
 }
 
 template<typename T>
@@ -182,12 +179,11 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<T> &value)
     return jsValue;
 }
 
-template<typename... _Types>
-napi_value JSUtils::Convert2JSValue(napi_env env, const std::variant<_Types...> &value)
+template<typename... Types>
+napi_value JSUtils::Convert2JSValue(napi_env env, const std::variant<Types...> &value)
 {
-    return GetJSValue<decltype(value), _Types...>(env, value);
+    return GetJSValue<decltype(value), Types...>(env, value);
 }
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
-
 #endif // DISTRIBUTEDDATAMGR_APPDATAMGR_JSUTILS_H
