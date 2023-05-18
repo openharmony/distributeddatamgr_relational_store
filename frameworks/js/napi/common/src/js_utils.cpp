@@ -38,16 +38,15 @@ std::string JSUtils::Convert2String(napi_env env, napi_value jsStr, bool useDefa
     str_buffer_size = (useDefaultBufSize && (str_buffer_size > DEFAULT_BUF_SIZE))
                           ? (DEFAULT_BUF_SIZE + BUF_CACHE_MARGIN)
                           : (str_buffer_size + BUF_CACHE_MARGIN);
-    char *buf = new (std::nothrow) char[str_buffer_size];
+    auto buf = std::make_unique<char[]>(str_buffer_size);
     if (buf == nullptr) {
         LOG_ERROR("JSUtils::Convert2String new failed, buf is nullptr");
         return "";
     }
     size_t len = 0;
-    napi_get_value_string_utf8(env, jsStr, buf, str_buffer_size, &len);
+    napi_get_value_string_utf8(env, jsStr, buf.get(), str_buffer_size, &len);
     buf[len] = 0;
-    std::string value(buf);
-    delete[] buf;
+    std::string value(buf.get());
     return value;
 }
 
@@ -131,6 +130,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, int32_t &output
     }
     return OK;
 }
+
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, bool &output)
 {
     bool bValue = false;
@@ -167,20 +167,18 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, double &output)
 
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &output)
 {
-    char *str = new (std::nothrow) char[MAX_VALUE_LENGTH + 1];
+    std::unique_ptr<char[]> str = std::make_unique<char[]>(MAX_VALUE_LENGTH + 1);
     if (str == nullptr) {
         LOG_ERROR("JSUtils::Convert2Value new failed, str is nullptr");
         return ERR;
     }
     size_t valueSize = 0;
-    napi_status status = napi_get_value_string_utf8(env, jsValue, str, MAX_VALUE_LENGTH, &valueSize);
+    napi_status status = napi_get_value_string_utf8(env, jsValue, str.get(), MAX_VALUE_LENGTH, &valueSize);
     if (status != napi_ok) {
         LOG_ERROR("JSUtils::Convert2Value get jsVal failed, status = %{public}d", status);
-        delete[] str;
         return ERR;
     }
-    output = std::string(str);
-    delete[] str;
+    output = std::string(str.get());
     return OK;
 }
 
@@ -219,6 +217,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::monostate 
     if (equal) {
         return OK;
     }
+    LOG_ERROR("JSUtils::Convert2Value jsValue is not null");
     return ERR;
 }
 
