@@ -291,6 +291,7 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config)
     if (!config.GetEncryptKey().empty() && !config.IsEncrypt()) {
         key = config.GetEncryptKey();
     } else if (config.IsEncrypt()) {
+        RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
         rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbKeyFile::PUB_KEY_FILE);
         key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
     } else {
