@@ -220,7 +220,7 @@ HWTEST_F(ValuesBucketTest, Values_Bucket_005, TestSize.Level1)
 
     EXPECT_EQ(true, values.Marshalling(parcel));
     auto valuesBucket = std::shared_ptr<ValuesBucket>(ValuesBucket::Unmarshalling(parcel));
-    EXPECT_EQ(true, valuesBucket->IsEmpty());
+    EXPECT_FALSE(valuesBucket->IsEmpty());
 }
 
 /**
