@@ -470,8 +470,8 @@ int32_t JSUtils::Convert2JSValue(napi_env env, double value, napi_value &output)
 
 napi_value JSUtils::Convert2JSValue(napi_env env, const std::monostate &value)
 {
-    napi_value result;
-    napi_get_undefined(env, &result);
+    napi_value result = nullptr;
+    napi_get_null(env, &result);
     return result;
 }
 
