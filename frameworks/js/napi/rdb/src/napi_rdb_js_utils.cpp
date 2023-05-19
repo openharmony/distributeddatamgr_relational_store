@@ -15,13 +15,22 @@
 
 #include "napi_rdb_js_utils.h"
 #include "result_set.h"
+#include "js_logger.h"
 namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
 using namespace NativeRdb;
 template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
 {
-    NAPI_CALL_BASE(env, GetProperty(env, jsValue, output, version), napi_invalid_arg);
+    napi_valuetype type;
+    napi_status status = napi_typeof(env, jsValue, &type);
+    if (status != napi_ok || type != napi_object) {
+        LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
+        return napi_invalid_arg;
+    }
+
+    NAPI_CALL_BASE(env, Convert2ValueExt(env, GetNamedProperty(env, jsValue, "version"), output.version),
+        napi_invalid_arg);
     NAPI_CALL_BASE(env, GetProperty(env, jsValue, output, name), napi_invalid_arg);
     NAPI_CALL_BASE(env, GetProperty(env, jsValue, output, uri), napi_invalid_arg);
     NAPI_CALL_BASE(env, GetProperty(env, jsValue, output, createTime), napi_invalid_arg);
