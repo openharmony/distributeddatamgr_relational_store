@@ -40,7 +40,7 @@ std::string JSUtils::Convert2String(napi_env env, napi_value jsStr, bool useDefa
                           : (str_buffer_size + BUF_CACHE_MARGIN);
     auto buf = std::make_unique<char[]>(str_buffer_size);
     if (buf == nullptr) {
-        LOG_ERROR("JSUtils::Convert2String new failed, buf is nullptr");
+        LOG_ERROR("Convert2String new failed, buf is nullptr");
         return "";
     }
     size_t len = 0;
@@ -111,21 +111,35 @@ std::string JSUtils::ConvertAny2String(napi_env env, napi_value jsValue)
     return "invalid type";
 }
 
-int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, uint32_t &output)
+int32_t JSUtils::Convert2ValueExt(napi_env env, napi_value jsValue, uint32_t &output)
 {
-    napi_status status = napi_get_value_uint32(env, jsValue, &output);
+    napi_valuetype type;
+    napi_status status = napi_typeof(env, jsValue, &type);
+    if (status != napi_ok || type != napi_number) {
+        LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
+        return ERR;
+    }
+
+    status = napi_get_value_uint32(env, jsValue, &output);
     if (status != napi_ok) {
-        LOG_ERROR("JSUtils::Convert2Value get jsVal failed, status = %{public}d", status);
+        LOG_ERROR("Convert2Value napi_get_value_uint32 failed, status = %{public}d", status);
         return ERR;
     }
     return OK;
 }
 
-int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, int32_t &output)
+int32_t JSUtils::Convert2ValueExt(napi_env env, napi_value jsValue, int32_t &output)
 {
-    napi_status status = napi_get_value_int32(env, jsValue, &output);
+    napi_valuetype type;
+    napi_status status = napi_typeof(env, jsValue, &type);
+    if (status != napi_ok || type != napi_number) {
+        LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
+        return ERR;
+    }
+
+    status = napi_get_value_int32(env, jsValue, &output);
     if (status != napi_ok) {
-        LOG_ERROR("JSUtils::Convert2Value get jsVal failed, status = %{public}d", status);
+        LOG_ERROR("Convert2Value napi_get_value_int32 failed, status = %{public}d", status);
         return ERR;
     }
     return OK;
@@ -133,21 +147,35 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, int32_t &output
 
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, bool &output)
 {
+    napi_valuetype type;
+    napi_status status = napi_typeof(env, jsValue, &type);
+    if (status != napi_ok || type != napi_boolean) {
+        LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
+        return ERR;
+    }
+
     bool bValue = false;
-    napi_status status = napi_get_value_bool(env, jsValue, &bValue);
+    status = napi_get_value_bool(env, jsValue, &bValue);
     if (status != napi_ok) {
-        LOG_ERROR("JSUtils::Convert2Value get jsVal failed, status = %{public}d", status);
+        LOG_ERROR("Convert2Value napi_get_value_bool failed, status = %{public}d", status);
         return ERR;
     }
     output = bValue;
     return OK;
 }
 
-int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, int64_t &output)
+int32_t JSUtils::Convert2ValueExt(napi_env env, napi_value jsValue, int64_t &output)
 {
-    napi_status status = napi_get_value_int64(env, jsValue, &output);
+    napi_valuetype type;
+    napi_status status = napi_typeof(env, jsValue, &type);
+    if (status != napi_ok || type != napi_number) {
+        LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
+        return ERR;
+    }
+
+    status = napi_get_value_int64(env, jsValue, &output);
     if (status != napi_ok) {
-        LOG_ERROR("JSUtils::Convert2Value get jsVal failed, status = %{public}d", status);
+        LOG_ERROR("Convert2Value napi_get_value_int32 failed, status = %{public}d", status);
         return ERR;
     }
     return OK;
@@ -155,27 +183,44 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, int64_t &output
 
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, double &output)
 {
+    napi_valuetype type;
+    napi_status status = napi_typeof(env, jsValue, &type);
+    if (status != napi_ok || type != napi_number) {
+        LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
+        return ERR;
+    }
+
     double number = 0.0;
-    napi_status status = napi_get_value_double(env, jsValue, &number);
+    status = napi_get_value_double(env, jsValue, &number);
     if (status != napi_ok) {
-        LOG_ERROR("JSUtils::Convert2Value get jsVal failed, status = %{public}d", status);
+        LOG_ERROR("Convert2Value napi_get_value_double failed, status = %{public}d", status);
         return ERR;
     }
     output = number;
     return OK;
 }
 
+int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, int64_t &output)
+{
+    LOG_INFO("Convert2Value js just support double data not support int64_t");
+    return ERR;
+}
+
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &output)
 {
-    std::unique_ptr<char[]> str = std::make_unique<char[]>(MAX_VALUE_LENGTH + 1);
+    size_t length = MAX_VALUE_LENGTH;
+    napi_get_value_string_utf8(env, jsValue, nullptr, 0, &length);
+    length = length < MAX_VALUE_LENGTH ? MAX_VALUE_LENGTH : length;
+    std::unique_ptr<char[]> str = std::make_unique<char[]>(length + 1);
     if (str == nullptr) {
-        LOG_ERROR("JSUtils::Convert2Value new failed, str is nullptr");
+        LOG_ERROR("Convert2Value new failed, str is nullptr");
         return ERR;
     }
+
     size_t valueSize = 0;
-    napi_status status = napi_get_value_string_utf8(env, jsValue, str.get(), MAX_VALUE_LENGTH, &valueSize);
+    auto status = napi_get_value_string_utf8(env, jsValue, str.get(), length, &valueSize);
     if (status != napi_ok) {
-        LOG_ERROR("JSUtils::Convert2Value get jsVal failed, status = %{public}d", status);
+        LOG_ERROR("Convert2Value napi_get_value_string_utf8 failed, status = %{public}d", status);
         return ERR;
     }
     output = std::string(str.get());
@@ -217,7 +262,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::monostate 
     if (equal) {
         return OK;
     }
-    LOG_ERROR("JSUtils::Convert2Value jsValue is not null");
+    LOG_ERROR("Convert2Value jsValue is not null");
     return ERR;
 }
 
@@ -241,7 +286,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
         status = napi_get_property(env, jsValue, jsKey, &jsVal);
         NAPI_ASSERT_BASE(env, (jsVal != nullptr) && (status == napi_ok), "no element", ERR);
         int32_t val;
-        Convert2Value(env, jsVal, val);
+        Convert2ValueExt(env, jsVal, val);
         output.insert(std::pair<std::string, int32_t>(key, val));
     }
     return OK;

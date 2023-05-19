@@ -52,11 +52,13 @@ constexpr int32_t SYNC_RESULT_ELEMNT_NUM = 2;
 
 napi_value GetNamedProperty(napi_env env, napi_value object, const char *name);
 
-int32_t Convert2Value(napi_env env, napi_value jsValue, uint32_t &output);
-int32_t Convert2Value(napi_env env, napi_value jsValue, int32_t &output);
+int32_t Convert2ValueExt(napi_env env, napi_value jsValue, uint32_t &output);
+int32_t Convert2ValueExt(napi_env env, napi_value jsValue, int32_t &output);
+int32_t Convert2ValueExt(napi_env env, napi_value jsValue, int64_t &output);
+
 int32_t Convert2Value(napi_env env, napi_value jsValue, bool &output);
-int32_t Convert2Value(napi_env env, napi_value jsValue, int64_t &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, double &output);
+int32_t Convert2Value(napi_env env, napi_value jsValue, int64_t &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::string &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::vector<uint8_t> &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::monostate &value);
