@@ -110,7 +110,7 @@ napi_value Convert2JSValue(napi_env env, const std::variant<Types...> &value);
 template<typename T>
 int32_t GetCPPValue(napi_env env, napi_value jsValue, T &value)
 {
-    return ERR;
+    return napi_invalid_arg;
 }
 
 template<typename T, typename First, typename... Types>
@@ -118,7 +118,7 @@ int32_t GetCPPValue(napi_env env, napi_value jsValue, T &value)
 {
     First cValue;
     auto ret = Convert2Value(env, jsValue, cValue);
-    if (ret == OK) {
+    if (ret == napi_ok) {
         value = cValue;
         return ret;
     }
@@ -145,16 +145,26 @@ napi_value GetJSValue(napi_env env, const T &value)
 template<typename T>
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<T> &value)
 {
+    bool isArray = false;
+    napi_is_array(env, jsValue, &isArray);
+    if (!isArray) {
+        return napi_invalid_arg;
+    }
+
     uint32_t arrLen = 0;
     napi_get_array_length(env, jsValue, &arrLen);
     if (arrLen == 0) {
         return napi_ok;
     }
+
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value element;
         napi_get_element(env, jsValue, i, &element);
         T item;
-        Convert2Value(env, element, item);
+        auto status = Convert2Value(env, element, item);
+        if (status != napi_ok) {
+            return napi_invalid_arg;
+        }
         value.push_back(std::move(item));
     }
     return napi_ok;
