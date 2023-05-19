@@ -690,8 +690,6 @@ int ParseBindArgs(const napi_env &env, const napi_value &arg, std::shared_ptr<Rd
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value element;
         napi_get_element(env, arg, i, &element);
-        napi_valuetype type;
-        napi_typeof(env, element, &type);
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, element, valueObject.value);
         CHECK_RETURN_SET(ret == OK, std::make_shared<ParamError>(std::to_string(i), "ValueObject"));
