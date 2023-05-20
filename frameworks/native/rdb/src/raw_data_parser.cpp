@@ -24,17 +24,19 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Asset &a
     if (used + sizeof(asset.version) > length) {
         return used;
     }
-    memcpy_s(&asset.version, sizeof(asset.version), data, length);
-    return sizeof(asset.version);
+    memcpy_s(&asset.version, sizeof(asset.version), data, sizeof(asset.version));
+    used += sizeof(asset.version);
+    return used;
 }
+
 size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Assets &assets)
 {
     size_t used = 0;
     uint16_t num = 0;
-    if (used + sizeof(uint16_t) > length) {
+    if (used + sizeof(num) > length) {
         return used;
     }
-    memcpy_s(&num, sizeof(num), data, length);
+    memcpy_s(&num, sizeof(num), data, sizeof(num));
     used += sizeof(uint16_t);
     while (used < length) {
         Asset asset;
