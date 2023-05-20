@@ -113,6 +113,52 @@ public:
     API_EXPORT int GetDouble(int columnIndex, double &value) override;
 
     /**
+     * @brief Obtains the value of the specified column in the current row as asset.
+     *
+     * The implementation class determines whether to throw an exception if the value of the specified column
+     * in the current row is null or the specified column is not of the Asset type.
+     *
+     * @param columnIndex Indicates the specified column index, which starts from 0.
+     *
+     * @return Returns the value of the specified column as a double.
+     */
+    API_EXPORT int GetAsset(int32_t col, ValueObject::Asset &value) override;
+
+    /**
+     * @brief Obtains the value of the specified column in the current row as assets.
+     *
+     * The implementation class determines whether to throw an exception if the value of the specified column
+     * in the current row is null or the specified column is not of the Assets type.
+     *
+     * @param columnIndex Indicates the specified column index, which starts from 0.
+     *
+     * @return Returns the value of the specified column as a double.
+     */
+    API_EXPORT int GetAssets(int32_t col, ValueObject::Assets &value) override;
+
+    /**
+     * @brief Obtains the value of the specified column in the current row as ValueObject.
+     *
+     * The implementation class determines whether to throw an exception if the value of the specified column
+     * in the current row is null or the specified column is not of the double type.
+     *
+     * @param columnIndex Indicates the specified column index, which starts from 0.
+     *
+     * @return Returns the value of the specified column as a double.
+     */
+    API_EXPORT int Get(int32_t col, ValueObject &value) override;
+
+    /**
+     * @brief Get the modify time of the cloud data.
+     *
+     * @param modifyTime Indicates the data modify utc time.
+     *
+     * @return Returns true if the value of the specified column in the current row is null;
+     * returns false otherwise.
+     */
+    API_EXPORT int GetModifyTime(std::string &modifyTime) override;
+
+    /**
      * @brief Checks whether the value of the specified column in the current row is null.
      *
      * @param columnIndex Indicates the specified column index, which starts from 0.
