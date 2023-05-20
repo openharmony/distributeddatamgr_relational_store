@@ -62,7 +62,11 @@ AbsResultSet::AbsResultSet() : rowPos_(INIT_POS), isClosed(false)
 {
 }
 
-AbsResultSet::~AbsResultSet() {}
+AbsResultSet::~AbsResultSet()
+{
+    rowPos_ = INIT_POS;
+    isClosed = false;
+}
 
 int AbsResultSet::GetRowCount(int &count)
 {
