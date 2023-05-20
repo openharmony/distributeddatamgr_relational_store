@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <mutex>
 
 #include "result_set.h"
 #include "value_object.h"
@@ -272,6 +273,7 @@ protected:
 
     // Indicates whether the result set is closed
     bool isClosed;
+    std::mutex columnMapLock_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
