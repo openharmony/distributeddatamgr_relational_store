@@ -436,7 +436,7 @@ int SqliteStatement::GetColumn(int index, ValueObject &value) const
         value = std::move(asset);
         return E_OK;
     }
-    if (declType == ValueObject::DeclType<Asset>()) {
+    if (declType == ValueObject::DeclType<Assets>()) {
         Assets assets;
         RawDataParser::ParserRawData(blob, size, assets);
         value = std::move(assets);

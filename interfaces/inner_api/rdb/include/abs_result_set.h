@@ -116,7 +116,7 @@ public:
      * @brief Obtains the value of the specified column in the current row as asset.
      *
      * The implementation class determines whether to throw an exception if the value of the specified column
-     * in the current row is null or the specified column is not of the double type.
+     * in the current row is null or the specified column is not of the Asset type.
      *
      * @param columnIndex Indicates the specified column index, which starts from 0.
      *
@@ -128,7 +128,7 @@ public:
      * @brief Obtains the value of the specified column in the current row as assets.
      *
      * The implementation class determines whether to throw an exception if the value of the specified column
-     * in the current row is null or the specified column is not of the double type.
+     * in the current row is null or the specified column is not of the Assets type.
      *
      * @param columnIndex Indicates the specified column index, which starts from 0.
      *
