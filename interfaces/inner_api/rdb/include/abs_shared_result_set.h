@@ -22,8 +22,6 @@
 #include <vector>
 
 #include "abs_result_set.h"
-#include "message_parcel.h"
-#include "parcel.h"
 #include "shared_block.h"
 #include "shared_result_set.h"
 
@@ -115,6 +113,30 @@ public:
     API_EXPORT int GetDouble(int columnIndex, double &value) override;
 
     /**
+     * @brief Obtains the value of the specified column in the current row as asset.
+     *
+     * The implementation class determines whether to throw an exception if the value of the specified column
+     * in the current row is null or the specified column is not of the double type.
+     *
+     * @param columnIndex Indicates the specified column index, which starts from 0.
+     *
+     * @return Returns the value of the specified column as a double.
+     */
+    API_EXPORT int GetAsset(int32_t col, ValueObject::Asset &value) override;
+	
+	/**
+     * @brief Obtains the value of the specified column in the current row as assets.
+     *
+     * The implementation class determines whether to throw an exception if the value of the specified column
+     * in the current row is null or the specified column is not of the double type.
+     *
+     * @param columnIndex Indicates the specified column index, which starts from 0.
+     *
+     * @return Returns the value of the specified column as a double.
+     */
+    API_EXPORT int GetAssets(int32_t col, ValueObject::Assets &value) override;
+
+    /**
      * @brief Checks whether the value of the specified column in the current row is null.
      *
      * @param columnIndex Indicates the specified column index, which starts from 0.
@@ -190,16 +212,12 @@ protected:
     void ClosedBlock();
     virtual void Finalize();
 
-    friend class ISharedResultSetStub;
-    friend class ISharedResultSetProxy;
-    bool Unmarshalling(MessageParcel &parcel);
-    bool Marshalling(MessageParcel &parcel);
-
 private:
     // The default position of the cursor
     static const int INIT_POS = -1;
     static const size_t DEFAULT_BLOCK_SIZE = 2 * 1024 * 1024;
-
+    friend class ISharedResultSetStub;
+    friend class ISharedResultSetProxy;
     // The SharedBlock owned by this AbsSharedResultSet
     AppDataFwk::SharedBlock *sharedBlock_  = nullptr;
 };

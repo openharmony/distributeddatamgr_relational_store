@@ -20,6 +20,7 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/base_transaction.cpp",
   "${relational_store_native_path}/rdb/src/base_transaction.h",
   "${relational_store_native_path}/rdb/src/logger.h",
+  "${relational_store_native_path}/rdb/src/raw_data_parser.cpp",
   "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
   "${relational_store_native_path}/rdb/src/rdb_predicates.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
@@ -189,6 +190,7 @@ if (is_ohos) {
       "//commonlibrary/c_utils/base/include",
       "include",
       "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
+      "${relational_store_native_path}/rdb/include",
     ]
 
     defines = [
@@ -206,8 +208,10 @@ if (is_ohos) {
     }
 
     defines += [ "WINDOWS_PLATFORM" ]
-    include_dirs += [ "//third_party/sqlite/include" ]
-
+    include_dirs += [
+      "//foundation/distributeddatamgr/kv_store/frameworks/common",
+      "//third_party/sqlite/include",
+    ]
     libs = [ "//prebuilts/mingw-w64/ohos/linux-x86_64/clang-mingw/x86_64-w64-mingw32/lib/libws2_32.a" ]
   }
 
@@ -276,6 +280,7 @@ if (is_ohos) {
       "//commonlibrary/c_utils/base/include",
       "include",
       "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
+      "${relational_store_native_path}/rdb/include",
     ]
 
     defines = [
@@ -293,7 +298,10 @@ if (is_ohos) {
     }
 
     defines += [ "MAC_PLATFORM" ]
-    include_dirs += [ "//third_party/sqlite/include" ]
+    include_dirs += [
+      "//foundation/distributeddatamgr/kv_store/frameworks/common",
+      "//third_party/sqlite/include",
+    ]
   }
 
   config("native_rdb_public_config") {
@@ -357,6 +365,8 @@ if (is_ohos) {
       "${relational_store_innerapi_path}/rdb/mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "${relational_store_innerapi_path}/rdb/include",
+      "//foundation/distributeddatamgr/kv_store/frameworks/common",
+      "${relational_store_native_path}/rdb/include",
     ]
 
     defines = [
@@ -416,6 +426,7 @@ if (is_ohos) {
       "${relational_store_innerapi_path}/rdb/mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "${relational_store_innerapi_path}/rdb/include",
+      "${relational_store_native_path}/rdb/include",
     ]
 
     defines = [

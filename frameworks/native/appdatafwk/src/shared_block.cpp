@@ -349,6 +349,16 @@ int SharedBlock::PutString(uint32_t row, uint32_t column, const char *value, siz
     return PutBlobOrString(row, column, value, sizeIncludingNull, CELL_UNIT_TYPE_STRING);
 }
 
+int SharedBlock::PutAsset(uint32_t row, uint32_t column, const void *value, size_t size)
+{
+    return PutBlobOrString(row, column, value, size, CELL_UNIT_TYPE_ASSET);
+}
+
+int SharedBlock::PutAssets(uint32_t row, uint32_t column, const void *value, size_t size)
+{
+    return PutBlobOrString(row, column, value, size, CELL_UNIT_TYPE_ASSETS);
+}
+
 int SharedBlock::PutBlobOrString(uint32_t row, uint32_t column, const void *value, size_t size, int32_t type)
 {
     if (mReadOnly) {

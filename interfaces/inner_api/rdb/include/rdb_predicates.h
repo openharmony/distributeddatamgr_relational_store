@@ -15,8 +15,6 @@
 
 #ifndef NATIVE_RDB_RDBPREDICATES_H
 #define NATIVE_RDB_RDBPREDICATES_H
-
-
 #include "abs_rdb_predicates.h"
 #include "rdb_visibility.h"
 

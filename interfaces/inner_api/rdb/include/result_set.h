@@ -28,9 +28,11 @@ struct API_EXPORT RowEntity {
 public:
     API_EXPORT void Put(const std::string &name, const ValueObject &value);
     API_EXPORT ValueObject Get(const std::string &name) const;
-    API_EXPORT ValueObject Get(const int index) const;
-    API_EXPORT void Get(std::map<std::string, ValueObject> &outValues) const;
+    API_EXPORT ValueObject Get(int index) const;
+    API_EXPORT const std::map<std::string, ValueObject> &Get() const;
+    API_EXPORT std::map<std::string, ValueObject> Steal();
     API_EXPORT void Clear();
+
 private:
     std::map<std::string, ValueObject> values_;
     std::vector<decltype(values_)::iterator> indexs_;
@@ -47,10 +49,14 @@ public:
      */
     virtual ~ResultSet() {}
 
+    virtual int GetAsset(int32_t col, ValueObject::Asset &value) = 0;
+    virtual int GetAssets(int32_t col, ValueObject::Assets &value) = 0;
+    virtual int Get(int32_t col, ValueObject &value) = 0;
     /**
      * @brief Gets the entire row of data for the current row from the result set.
      */
-    API_EXPORT virtual int GetRow(RowEntity &rowEntity) = 0;
+    virtual int GetRow(RowEntity &rowEntity) = 0;
+    virtual int GetModifyTime(std::string &modifyTime) = 0;
 };
 
 } // namespace NativeRdb
