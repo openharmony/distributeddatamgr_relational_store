@@ -292,6 +292,7 @@ int AbsResultSet::GetColumnCount(int &count)
 
 int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex)
 {
+    std::lock_guard<std::mutex> lock(columnMapLock_);
     auto it = columnMap_.find(columnName);
     if (it != columnMap_.end()) {
         columnIndex = it->second;
