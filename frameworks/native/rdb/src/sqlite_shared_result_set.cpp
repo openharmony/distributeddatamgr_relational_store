@@ -60,11 +60,16 @@ int SqliteSharedResultSet::PrepareStep(SqliteConnection* connection)
 
     return E_OK;
 }
+
 int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
     if (!columnNames_.empty()) {
         columnNames = columnNames_;
         return E_OK;
+    }
+
+    if (IsClosed()) {
+        return E_STEP_RESULT_CLOSED;
     }
 
     SqliteConnection *connection = connectionPool_->AcquireConnection(true);
@@ -108,6 +113,11 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
 
 int SqliteSharedResultSet::GetRowCount(int &count)
 {
+    if (IsClosed()) {
+        count = NO_COUNT;
+        return E_STEP_RESULT_CLOSED;
+    }
+
     if (rowNum == NO_COUNT) {
         FillSharedBlock(0);
     }
@@ -217,7 +227,7 @@ void SqliteSharedResultSet::SetFillBlockForwardOnly(bool isOnlyFillResultSetBloc
 
 void SqliteSharedResultSet::Finalize()
 {
-    if (!AbsSharedResultSet::IsClosed()) {
+    if (!IsClosed()) {
         Close();
     }
 }
