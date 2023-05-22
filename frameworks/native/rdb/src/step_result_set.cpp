@@ -402,6 +402,36 @@ int StepResultSet::GetDouble(int columnIndex, double &value)
     return E_OK;
 }
 
+int StepResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
+{
+    return GetValue(col, value);
+}
+
+int StepResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
+{
+    return GetValue(col, value);
+}
+
+int StepResultSet::Get(int32_t col, ValueObject &value)
+{
+    return GetValue(col, value);
+}
+
+int StepResultSet::GetModifyTime(std::string &modifyTime)
+{
+    if (rowPos_ == INIT_POS) {
+        LOG_ERROR("query not executed.");
+        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+    }
+    auto index = std::find(columnNames_.begin(), columnNames_.end(), "modifyTime");
+    int errCode = sqliteStatement->GetColumnString(index - columnNames_.begin(), modifyTime);
+    if (errCode != E_OK) {
+        LOG_ERROR("ret is %{public}d", errCode);
+        return errCode;
+    }
+    return E_OK;
+}
+
 int StepResultSet::GetSize(int columnIndex, size_t &size)
 {
     if (rowPos_ == INIT_POS) {

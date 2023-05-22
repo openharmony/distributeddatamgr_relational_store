@@ -35,7 +35,6 @@ public:
     void PutBool(const std::string &columnName, bool value);
     void PutBlob(const std::string &columnName, const std::vector<uint8_t> &value);
     void PutNull(const std::string &columnName);
-    void Put(const std::string &columnName, const ValueObject &value);
     void Delete(const std::string &columnName);
     void Clear();
     int Size() const;

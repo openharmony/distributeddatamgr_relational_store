@@ -102,13 +102,6 @@ public:
     RDB_API_EXPORT void PutNull(const std::string &columnName);
 
     /**
-     * @brief Put value object to this {@code ValuesBucket} object for the given column name.
-     *
-     * @param columnName Indicates the name of the column.
-     */
-    API_EXPORT void Put(const std::string &columnName, const ValueObject &value);
-
-    /**
      * @brief Delete the ValueObject object for the given column name.
      *
      * @param columnName Indicates the name of the column.
