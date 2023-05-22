@@ -14,8 +14,6 @@
  */
 
 #include "raw_data_parser.h"
-
-#include "securec.h"
 #include "value_object.h"
 namespace OHOS::NativeRdb {
 size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Asset &asset)
@@ -24,7 +22,9 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Asset &a
     if (used + sizeof(asset.version) > length) {
         return used;
     }
-    memcpy_s(&asset.version, sizeof(asset.version), data, sizeof(asset.version));
+    std::vector<uint8_t> alignData;
+    alignData.assign(data, data + sizeof(asset.version));
+    asset.version = *(reinterpret_cast<decltype(&asset.version)>(alignData.data()));
     used += sizeof(asset.version);
     return used;
 }
@@ -36,9 +36,12 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Assets &
     if (used + sizeof(num) > length) {
         return used;
     }
-    memcpy_s(&num, sizeof(num), data, sizeof(num));
+    std::vector<uint8_t> alignData;
+    alignData.assign(data, data + sizeof(num));
+    num = *(reinterpret_cast<decltype(&num)>(alignData.data()));
     used += sizeof(uint16_t);
-    while (used < length) {
+    uint16_t count = 0;
+    while (used < length && count < num) {
         Asset asset;
         auto dataLen = ParserRawData(&data[used], length - used, asset);
         if (dataLen == 0) {
@@ -46,6 +49,7 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Assets &
         }
         used += dataLen;
         assets.push_back(std::move(asset));
+        count++;
     }
     return used;
 }
