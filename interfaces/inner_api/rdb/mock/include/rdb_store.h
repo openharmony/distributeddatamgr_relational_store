@@ -60,7 +60,8 @@ public:
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
     virtual int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
-    virtual int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey) = 0;
+    virtual int Backup(const std::string databasePath,
+        const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>()) = 0;
     virtual int Attach(
         const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey) = 0;
 
@@ -81,7 +82,7 @@ public:
     virtual bool IsOpen() const = 0;
     virtual bool IsReadOnly() const = 0;
     virtual bool IsMemoryRdb() const = 0;
-    virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey) = 0;
+    virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) = 0;
     virtual int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
         const std::vector<uint8_t> &newKey) = 0;
 };

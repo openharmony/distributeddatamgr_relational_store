@@ -239,9 +239,8 @@ int OH_Rdb_Backup(OH_Rdb_Store *store, const char *databasePath)
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     auto tempStore = static_cast<OHOS::RdbNdk::StoreImpl *>(store);
-    std::vector<uint8_t> vec;
 
-    return tempStore->GetStore()->Backup(databasePath, vec);
+    return tempStore->GetStore()->Backup(databasePath);
 }
 
 int OH_Rdb_Restore(OH_Rdb_Store *store, const char *databasePath)
@@ -252,9 +251,8 @@ int OH_Rdb_Restore(OH_Rdb_Store *store, const char *databasePath)
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     auto tempStore = static_cast<OHOS::RdbNdk::StoreImpl *>(store);
-    std::vector<uint8_t> vec;
 
-    return tempStore->GetStore()->Restore(databasePath, vec);
+    return tempStore->GetStore()->Restore(databasePath);
 }
 
 int OH_Rdb_GetVersion(OH_Rdb_Store *store, int *version)

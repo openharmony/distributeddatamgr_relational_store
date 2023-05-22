@@ -62,7 +62,8 @@ public:
         const std::vector<ValueObject> &bindArgs) override;
     int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
-    int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey) override;
+    int Backup(const std::string databasePath,
+        const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>()) override;
     int Attach(const std::string &alias, const std::string &pathName,
         const std::vector<uint8_t> destEncryptKey) override;
     int GetVersion(int &version) override;
@@ -80,7 +81,7 @@ public:
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
 #endif
-    int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey) override;
+    int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) override;
     int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
         const std::vector<uint8_t> &newKey) override;
     std::string GetName();
