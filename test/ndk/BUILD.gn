@@ -33,7 +33,6 @@ ohos_unittest("NativeRdbNdkTest") {
   sources = [
     "unittest/rdb_cursor_test.cpp",
     "unittest/rdb_predicates_test.cpp",
-    "unittest/rdb_store_open_callback_test.cpp",
     "unittest/rdb_store_test.cpp",
   ]
 
@@ -44,11 +43,7 @@ ohos_unittest("NativeRdbNdkTest") {
     "relational_store:native_rdb_ndk",
   ]
 
-  deps = [
-    "//third_party/googletest:gtest_main",
-    "//third_party/icu/icu4c:shared_icui18n",
-    "//third_party/icu/icu4c:shared_icuuc",
-  ]
+  deps = [ "//third_party/googletest:gtest_main" ]
 }
 
 ###############################################################################

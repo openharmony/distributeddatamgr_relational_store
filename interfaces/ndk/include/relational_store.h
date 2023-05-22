@@ -25,48 +25,33 @@ extern "C" {
 #endif
 
 enum OH_Rdb_SecurityLevel {
-    RDB_S1 = 1,
-    RDB_S2,
-    RDB_S3,
-    RDB_S4,
-    RDB_LAST
-};
-
-enum OH_Rdb_Bool {
-    RDB_FALSE,
-    RDB_TRUE
+    S1 = 1,
+    S2,
+    S3,
+    S4
 };
 
 typedef struct {
     const char *path;
-    enum OH_Rdb_Bool isEncrypt;
+    BOOL isEncrypt;
     enum OH_Rdb_SecurityLevel securityLevel;
 } OH_Rdb_Config;
 
 typedef struct {
-    int id;
+    int64_t id;
 } OH_Rdb_Store;
 
-typedef struct {
-    int (*OH_Callback_OnCreate)(OH_Rdb_Store *);
-    int (*OH_Callback_OnUpgrade)(OH_Rdb_Store *, int, int);
-    int (*OH_Callback_OnDowngrade)(OH_Rdb_Store *, int, int);
-    int (*OH_Callback_OnOpen)(OH_Rdb_Store *);
-    int (*OH_Callback_OnCorruption)(const char *);
-} OH_Rdb_OpenCallback;
-
-OH_Rdb_Store *OH_Rdb_GetOrOpen(OH_Rdb_Config const *config, int version, OH_Rdb_OpenCallback *openCallback, int *errCode);
+OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode);
 int OH_Rdb_CloseStore(OH_Rdb_Store *store);
-int OH_Rdb_ClearCache();
 int OH_Rdb_DeleteStore(const char *path);
 
-int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_Rdb_ValuesBucket *valuesBucket);
-int OH_Rdb_Update(OH_Rdb_Store *store, OH_Rdb_ValuesBucket *valuesBucket, OH_Predicates *predicates);
+int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_Rdb_VBucket *valuesBucket);
+int OH_Rdb_Update(OH_Rdb_Store *store, OH_Rdb_VBucket *valuesBucket, OH_Predicates *predicates);
 int OH_Rdb_Delete(OH_Rdb_Store *store, OH_Predicates *predicates);
 OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const char *const *columnNames, int length);
 int OH_Rdb_Execute(OH_Rdb_Store *store, const char *sql);
 OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, const char *sql);
-int OH_Rdb_Transaction(OH_Rdb_Store *store);
+int OH_Rdb_BeginTransaction(OH_Rdb_Store *store);
 int OH_Rdb_RollBack(OH_Rdb_Store *store);
 int OH_Rdb_Commit(OH_Rdb_Store *store);
 int OH_Rdb_Backup(OH_Rdb_Store *store, const char *databasePath);

@@ -16,6 +16,10 @@
 #ifndef RELATIONAL_CURSOR_H
 #define RELATIONAL_CURSOR_H
 
+#define BOOL int
+#define TRUE 1
+#define FALSE 0
+
 #include <cstdint>
 #include <stddef.h>
 #ifdef __cplusplus
@@ -23,15 +27,15 @@ extern "C" {
 #endif
 
 enum OH_Rdb_ColumnType {
-    RDB_TYPE_NULL = 0,
-    RDB_TYPE_INT64,
-    RDB_TYPE_REAL,
-    RDB_TYPE_TEXT,
-    RDB_TYPE_BLOB,
+    TYPE_NULL = 0,
+    TYPE_INT64,
+    TYPE_REAL,
+    TYPE_TEXT,
+    TYPE_BLOB,
 };
 
 typedef struct OH_Cursor{
-    int id;
+    int64_t id;
     int (*OH_Cursor_GetColumnCount)(OH_Cursor *, int *);
     int (*OH_Cursor_GetColumnType)(OH_Cursor *, int32_t, OH_Rdb_ColumnType *);
     int (*OH_Cursor_GetColumnIndex)(OH_Cursor *, const char *, int *);
@@ -43,23 +47,9 @@ typedef struct OH_Cursor{
     int (*OH_Cursor_GetInt64)(OH_Cursor *, int32_t, int64_t *);
     int (*OH_Cursor_GetReal)(OH_Cursor *, int32_t, double *);
     int (*OH_Cursor_GetBlob)(OH_Cursor *, int32_t, unsigned char *, int);
-    int (*OH_Cursor_IsNull)(OH_Cursor *, int32_t, bool *);
+    int (*OH_Cursor_IsNull)(OH_Cursor *, int32_t, BOOL *);
     int (*OH_Cursor_Close)(OH_Cursor *);
 } OH_Cursor;
-
-int CURSOR_GetColumnCount(OH_Cursor *cursor, int *count);
-int CURSOR_GetColumnType(OH_Cursor *cursor, int32_t columnIndex, OH_Rdb_ColumnType *columnType);
-int CURSOR_GetColumnIndex(OH_Cursor *cursor, const char *name, int *columnIndex);
-int CURSOR_GetColumnName(OH_Cursor *cursor, int32_t columnIndex, char *name, int length);
-int CURSOR_GetRowCount(OH_Cursor *cursor, int *count);
-int CURSOR_GoToNextRow(OH_Cursor *cursor);
-int CURSOR_GetSize(OH_Cursor *cursor, int32_t columnIndex, size_t *size);
-int CURSOR_GetText(OH_Cursor *cursor, int32_t columnIndex, char *value, int length);
-int CURSOR_GetInt64(OH_Cursor *cursor, int32_t columnIndex, int64_t *value);
-int CURSOR_GetReal(OH_Cursor *cursor, int32_t columnIndex, double *value);
-int CURSOR_GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned char *value, int length);
-int CURSOR_IsNull(OH_Cursor *cursor, int32_t columnIndex, bool *isNull);
-int CURSOR_Close(OH_Cursor *cursor);
 
 #ifdef __cplusplus
 };

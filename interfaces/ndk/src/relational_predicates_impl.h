@@ -19,9 +19,34 @@
 #include "rdb_predicates.h"
 #include "relational_predicates.h"
 
+OH_Predicates PREDICATES_EqualTo(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+OH_Predicates PREDICATES_NotEqualTo(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+OH_Predicates PREDICATES_BeginWrap(OH_Predicates *predicates);
+OH_Predicates PREDICATES_EndWrap(OH_Predicates *predicates);
+OH_Predicates PREDICATES_Or(OH_Predicates *predicates);
+OH_Predicates PREDICATES_And(OH_Predicates *predicates);
+OH_Predicates PREDICATES_IsNull(OH_Predicates *predicates, const char *field);
+OH_Predicates PREDICATES_IsNotNull(OH_Predicates *predicates, const char *field);
+OH_Predicates PREDICATES_Like(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+OH_Predicates PREDICATES_Between(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+OH_Predicates PREDICATES_NotBetween(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+OH_Predicates PREDICATES_GreaterThan(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+OH_Predicates PREDICATES_LessThan(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+OH_Predicates PREDICATES_GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+OH_Predicates PREDICATES_LessThanOrEqualTo(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+OH_Predicates PREDICATES_OrderBy(OH_Predicates *predicates, const char *field, OH_Rdb_OrderType type);
+OH_Predicates PREDICATES_Distinct(OH_Predicates *predicates);
+OH_Predicates PREDICATES_Limit(OH_Predicates *predicates, unsigned int value);
+OH_Predicates PREDICATES_Offset(OH_Predicates *predicates, unsigned int rowOffset);
+OH_Predicates PREDICATES_GroupBy(OH_Predicates *predicates, OH_Rdb_VObject *);
+OH_Predicates PREDICATES_In(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+OH_Predicates PREDICATES_NotIn(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+OH_Predicates PREDICATES_Clear(OH_Predicates *predicates);
+int PREDICATES_Close(OH_Predicates *predicates);
+
 namespace OHOS {
-namespace NativeRdb {
-constexpr int RDB_PREDICATES_CID = 1234561;
+namespace RdbNdk {
+constexpr int RDB_PREDICATES_CID = 1234561; // The class id used to uniquely identify the OH_Predicates class.
 class PredicateImpl : public OH_Predicates {
 public:
     PredicateImpl(const char *table) : predicates_(table)
@@ -50,12 +75,13 @@ public:
         OH_Predicates_In = PREDICATES_In;
         OH_Predicates_NotIn = PREDICATES_NotIn;
         OH_Predicates_Clear = PREDICATES_Clear;
+        OH_Predicates_Close = PREDICATES_Close;
     }
-    RdbPredicates &GetPredicates();
+    OHOS::NativeRdb::RdbPredicates &GetPredicates();
 
 private:
-    RdbPredicates predicates_;
+    OHOS::NativeRdb::RdbPredicates predicates_;
 };
-} // namespace NativeRdb
+} // namespace RdbNdk
 } // namespace OHOS
 #endif // RELATIONAL_PREDICATES_IMPL_H

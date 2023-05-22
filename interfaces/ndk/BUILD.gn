@@ -22,7 +22,9 @@ ohos_ndk_headers("native_rdb_ndk_header") {
     "./include/relational_error_code.h",
     "./include/relational_predicates.h",
     "./include/relational_store.h",
+    "./include/relational_value_object.h",
     "./include/relational_values_bucket.h",
+    "./include/ndk_logger.h",
   ]
 }
 
@@ -37,18 +39,16 @@ ohos_ndk_library("libnative_rdb_ndk") {
 ohos_shared_library("native_rdb_ndk") {
   include_dirs = [
     "./include",
-    "${relational_store_base_path}/frameworks/ndk/include",
   ]
   sources = [
-    "${relational_store_base_path}/interfaces/ndk/src/relational_cursor.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/relational_predicates.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/relational_store.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/relational_values_bucket.cpp",
+    "src/relational_cursor.cpp",
+    "src/relational_predicates.cpp",
+    "src/relational_store.cpp",
+    "src/relational_value_object.cpp",
+    "src/relational_values_bucket.cpp",
   ]
 
   defines = [ "API_EXPORT=__attribute__((visibility (\"default\")))" ]
-
-  deps = [ "//third_party/sqlite:sqlite" ]
 
   external_deps = [
     "c_utils:utils",

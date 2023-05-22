@@ -15,9 +15,15 @@
 #include "relational_predicates.h"
 
 #include "relational_predicates_impl.h"
+#include "relational_value_object_impl.h"
 #include "relational_error_code.h"
+#include "sqlite_global_config.h"
+#include "ndk_logger.h"
 
-OHOS::NativeRdb::RdbPredicates &OHOS::NativeRdb::PredicateImpl::GetPredicates()
+using OHOS::RdbNdk::RDB_NDK_LABEL;
+using namespace OHOS::NativeRdb;
+
+RdbPredicates &OHOS::RdbNdk::PredicateImpl::GetPredicates()
 {
     return predicates_;
 }
@@ -27,272 +33,351 @@ OH_Predicates *OH_Rdb_CreatePredicates(const char *table)
     if (table == nullptr) {
         return nullptr;
     }
-    return new OHOS::NativeRdb::PredicateImpl(table);
+    return new OHOS::RdbNdk::PredicateImpl(table);
 }
 
-int OH_Rdb_DestroyPredicates(OH_Predicates *predicate)
+int OH_Rdb_DestroyPredicates(OH_Predicates *predicates)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
+        return RDB_ERR_INVALID_ARGS;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
     delete tempPredicates;
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int PREDICATES_EqualTo(OH_Predicates *predicate, const char *field, const char *value)
+OH_Predicates PREDICATES_EqualTo(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
+        || valueObject == nullptr) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d,"
+                  "valueObject is NULL ? %{public}d",
+            (predicates == nullptr), (field == nullptr), (valueObject == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
-    tempPredicates->GetPredicates().EqualTo(field, value);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
+    std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
+    tempPredicates->GetPredicates().EqualTo(field, tempValue[0]);
+    return *predicates;
 }
 
-int PREDICATES_NotEqualTo(OH_Predicates *predicate, const char *field, const char *value)
+OH_Predicates PREDICATES_NotEqualTo(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
+        || valueObject == nullptr) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d,"
+                  "valueObject is NULL ? %{public}d",
+            (predicates == nullptr), (field == nullptr), (valueObject == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
-    tempPredicates->GetPredicates().NotEqualTo(field, value);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
+    std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
+    tempPredicates->GetPredicates().NotEqualTo(field, tempValue[0]);
+    return *predicates;
 }
 
-int PREDICATES_BeginWrap(OH_Predicates *predicate)
+OH_Predicates PREDICATES_BeginWrap(OH_Predicates *predicates)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
     tempPredicates->GetPredicates().BeginWrap();
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return *predicates;
 }
 
-int PREDICATES_EndWrap(OH_Predicates *predicate)
+OH_Predicates PREDICATES_EndWrap(OH_Predicates *predicates)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
     tempPredicates->GetPredicates().EndWrap();
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return *predicates;
 }
 
-int PREDICATES_Or(OH_Predicates *predicate)
+OH_Predicates PREDICATES_Or(OH_Predicates *predicates)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
     tempPredicates->GetPredicates().Or();
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return *predicates;
 }
 
-int PREDICATES_And(OH_Predicates *predicate)
+OH_Predicates PREDICATES_And(OH_Predicates *predicates)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
     tempPredicates->GetPredicates().And();
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return *predicates;
 }
 
-int PREDICATES_IsNull(OH_Predicates *predicate, const char *field)
+OH_Predicates PREDICATES_IsNull(OH_Predicates *predicates, const char *field)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d",
+                 (predicates == nullptr), (field == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
     tempPredicates->GetPredicates().IsNull(field);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return *predicates;
 }
 
-int PREDICATES_IsNotNull(OH_Predicates *predicate, const char *field)
+OH_Predicates PREDICATES_IsNotNull(OH_Predicates *predicates, const char *field)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d",
+                 (predicates == nullptr), (field == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
     tempPredicates->GetPredicates().IsNotNull(field);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return *predicates;
 }
 
-int PREDICATES_Like(OH_Predicates *predicate, const char *field, const char *value)
+OH_Predicates PREDICATES_Like(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
+        || valueObject == nullptr) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d,"
+                  "valueObject is NULL ? %{public}d",
+            (predicates == nullptr), (field == nullptr), (valueObject == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
-    tempPredicates->GetPredicates().Like(field, value);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
+    std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
+    tempPredicates->GetPredicates().Like(field, tempValue[0]);
+    return *predicates;
 }
 
-int PREDICATES_Between(OH_Predicates *predicate, const char *field, const char *betweenValue, const char *andValue)
+OH_Predicates PREDICATES_Between(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
+        || valueObject == nullptr) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d,"
+                  "valueObject is NULL ? %{public}d",
+            (predicates == nullptr), (field == nullptr), (valueObject == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
-    tempPredicates->GetPredicates().Between(field, betweenValue, andValue);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
+    if (tempValue.size() != 2) {
+        LOG_ERROR("size is %{public}d", tempValue.size());
+        return *predicates;
+    }
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
+
+    tempPredicates->GetPredicates().Between(field, tempValue[0], tempValue[1]);
+    return *predicates;
 }
 
-int PREDICATES_NotBetween(OH_Predicates *predicate, const char *field, const char *betweenValue, const char *andValue)
+OH_Predicates PREDICATES_NotBetween(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
+        || valueObject == nullptr) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d,"
+                  "valueObject is NULL ? %{public}d",
+            (predicates == nullptr), (field == nullptr), (valueObject == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
-    tempPredicates->GetPredicates().NotBetween(field, betweenValue, andValue);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
+    if (tempValue.size() != 2) {
+        LOG_ERROR("size is %{public}d", tempValue.size());
+        return *predicates;
+    }
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
+    tempPredicates->GetPredicates().NotBetween(field, tempValue[0], tempValue[1]);
+    return *predicates;
 }
 
-int PREDICATES_GreaterThan(OH_Predicates *predicate, const char *field, const char *value)
+OH_Predicates PREDICATES_GreaterThan(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
+        || valueObject == nullptr) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d,"
+                  "valueObject is NULL ? %{public}d",
+            (predicates == nullptr), (field == nullptr), (valueObject == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
-    tempPredicates->GetPredicates().GreaterThan(field, value);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
+    std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
+    tempPredicates->GetPredicates().GreaterThan(field, tempValue[0]);
+    return *predicates;
 }
 
-int PREDICATES_LessThan(OH_Predicates *predicate, const char *field, const char *value)
+OH_Predicates PREDICATES_LessThan(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
+        || valueObject == nullptr) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d,"
+                  "valueObject is NULL ? %{public}d",
+            (predicates == nullptr), (field == nullptr), (valueObject == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
-    tempPredicates->GetPredicates().LessThan(field, value);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
+    std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
+    tempPredicates->GetPredicates().LessThan(field, tempValue[0]);
+    return *predicates;
 }
 
-int PREDICATES_GreaterThanOrEqualTo(OH_Predicates *predicate, const char *field, const char *value)
+OH_Predicates PREDICATES_GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
+        || valueObject == nullptr) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d,"
+                  "valueObject is NULL ? %{public}d",
+            (predicates == nullptr), (field == nullptr), (valueObject == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
-    tempPredicates->GetPredicates().GreaterThanOrEqualTo(field, value);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
+    std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
+    tempPredicates->GetPredicates().GreaterThanOrEqualTo(field, tempValue[0]);
+    return *predicates;
 }
-int PREDICATES_LessThanOrEqualTo(OH_Predicates *predicate, const char *field, const char *value)
+OH_Predicates PREDICATES_LessThanOrEqualTo(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
+        || valueObject == nullptr) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d,"
+                  "valueObject is NULL ? %{public}d",
+            (predicates == nullptr), (field == nullptr), (valueObject == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
-    tempPredicates->GetPredicates().LessThanOrEqualTo(field, value);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
+    std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
+    tempPredicates->GetPredicates().LessThanOrEqualTo(field, tempValue[0]);
+    return *predicates;
 }
 
-int PREDICATES_OrderBy(OH_Predicates *predicate, const char *field, OH_Rdb_OrderByType type)
+OH_Predicates PREDICATES_OrderBy(OH_Predicates *predicates, const char *field, OH_Rdb_OrderType type)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d",
+                 (predicates == nullptr), (field == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
-    if (type == OH_Rdb_OrderByType::RDB_PRE_DESC) {
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
+    if (type == OH_Rdb_OrderType::DESC) {
         tempPredicates->GetPredicates().OrderByDesc(field);
-        return OH_Rdb_ErrCode::RDB_ERR_OK;
+        return *predicates;
     }
     tempPredicates->GetPredicates().OrderByAsc(field);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return *predicates;
 }
 
-int PREDICATES_Distinct(OH_Predicates *predicate)
+OH_Predicates PREDICATES_Distinct(OH_Predicates *predicates)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
     tempPredicates->GetPredicates().Distinct();
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return *predicates;
 }
 
-int PREDICATES_Limit(OH_Predicates *predicate, unsigned int value)
+OH_Predicates PREDICATES_Limit(OH_Predicates *predicates, unsigned int value)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
     tempPredicates->GetPredicates().Limit(value);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return *predicates;
 }
 
-int PREDICATES_Offset(OH_Predicates *predicate, unsigned int rowOffset)
+OH_Predicates PREDICATES_Offset(OH_Predicates *predicates, unsigned int rowOffset)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
     tempPredicates->GetPredicates().Offset(rowOffset);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return *predicates;
 }
 
-int PREDICATES_GroupBy(OH_Predicates *predicate, const char *const *field, const int length)
+OH_Predicates PREDICATES_GroupBy(OH_Predicates *predicates, OH_Rdb_VObject *valueObject)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || valueObject == nullptr) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, valueObject is NULL ? %{public}d,",
+                 (predicates == nullptr), (valueObject == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
-    std::vector<std::string> vec;
-    vec.reserve(length);
-    if (field != nullptr) {
-        for (int i = 0; i < length; i++) {
-            vec.push_back(std::string(field[i]));
-        }
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
+    std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
+    if (tempValue.size() > OHOS::NativeRdb::GlobalExpr::SQLITE_MAX_COLUMN) {
+        return *predicates;
     }
-
-    tempPredicates->GetPredicates().GroupBy(vec);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    tempPredicates->GetPredicates().GroupBy(tempValue);
+    return *predicates;
 }
 
-int PREDICATES_In(OH_Predicates *predicate, const char *filed, const char *const *values, const int length)
+OH_Predicates PREDICATES_In(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || valueObject == nullptr) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d,"
+                  "valueObject is NULL ? %{public}d",
+            (predicates == nullptr), (field == nullptr), (valueObject == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
-    std::vector<std::string> vec;
-    vec.reserve(length);
-    if (values != nullptr) {
-        for (int i = 0; i < length; i++) {
-            vec.push_back(std::string(values[i]));
-        }
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
+    std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
+    if (tempValue.size() > OHOS::NativeRdb::GlobalExpr::SQLITE_MAX_COLUMN) {
+        return *predicates;
     }
 
-    tempPredicates->GetPredicates().In(filed, vec);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    tempPredicates->GetPredicates().In(field, tempValue);
+    return *predicates;
 }
 
-int PREDICATES_NotIn(OH_Predicates *predicate, const char *filed, const char *const *values, const int length)
+OH_Predicates PREDICATES_NotIn(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || valueObject == nullptr) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d,"
+                  "valueObject is NULL ? %{public}d",
+            (predicates == nullptr), (field == nullptr), (valueObject == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
-    std::vector<std::string> vec;
-    vec.reserve(length);
-    if (values != nullptr) {
-        for (int i = 0; i < length; i++) {
-            vec.push_back(std::string(values[i]));
-        }
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
+    std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
+    if (tempValue.size() > OHOS::NativeRdb::GlobalExpr::SQLITE_MAX_COLUMN) {
+        return *predicates;
     }
 
-    tempPredicates->GetPredicates().NotIn(filed, vec);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    tempPredicates->GetPredicates().NotIn(field, tempValue);
+    return *predicates;
 }
 
-int PREDICATES_Clear(OH_Predicates *predicate)
+OH_Predicates PREDICATES_Clear(OH_Predicates *predicates)
 {
-    if (predicate == nullptr || predicate->id != OHOS::NativeRdb::RDB_PREDICATES_CID) {
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
+        return *predicates;
     }
-    OHOS::NativeRdb::PredicateImpl *tempPredicates = static_cast<OHOS::NativeRdb::PredicateImpl *>(predicate);
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
     tempPredicates->GetPredicates().Clear();
+    return *predicates;
+}
+
+int PREDICATES_Close(OH_Predicates *predicates)
+{
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    }
+    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
+    delete tempPredicates;
+    tempPredicates = nullptr;
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }

@@ -18,17 +18,33 @@
 
 #include "relational_cursor.h"
 #include "result_set.h"
+#include <memory>
+
+int CURSOR_GetColumnCount(OH_Cursor *cursor, int *count);
+int CURSOR_GetColumnType(OH_Cursor *cursor, int32_t columnIndex, OH_Rdb_ColumnType *columnType);
+int CURSOR_GetColumnIndex(OH_Cursor *cursor, const char *name, int *columnIndex);
+int CURSOR_GetColumnName(OH_Cursor *cursor, int32_t columnIndex, char *name, int length);
+int CURSOR_GetRowCount(OH_Cursor *cursor, int *count);
+int CURSOR_GoToNextRow(OH_Cursor *cursor);
+int CURSOR_GetSize(OH_Cursor *cursor, int32_t columnIndex, size_t *size);
+int CURSOR_GetText(OH_Cursor *cursor, int32_t columnIndex, char *value, int length);
+int CURSOR_GetInt64(OH_Cursor *cursor, int32_t columnIndex, int64_t *value);
+int CURSOR_GetReal(OH_Cursor *cursor, int32_t columnIndex, double *value);
+int CURSOR_GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned char *value, int length);
+int CURSOR_IsNull(OH_Cursor *cursor, int32_t columnIndex, BOOL *isNull);
+int CURSOR_Close(OH_Cursor *cursor);
+
 namespace OHOS {
-namespace NativeRdb {
-constexpr int RDB_CURSOR_CID = 1234563;
+namespace RdbNdk {
+constexpr int RDB_CURSOR_CID = 1234563; // The class id used to uniquely identify the OH_Cursor class.
 class CursorImpl : public OH_Cursor {
 public:
-    CursorImpl(std::shared_ptr<ResultSet> resultSet);
-    std::shared_ptr<ResultSet> GetResultSet();
+    CursorImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet);
+    std::shared_ptr<OHOS::NativeRdb::ResultSet> GetResultSet();
 
 private:
-    std::shared_ptr<ResultSet> resultSet_;
+    std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet_;
 };
-} // namespace NativeRdb
+} // namespace RdbNdk
 } // namespace OHOS
 #endif // RELATIONAL_CURSOR_IMPL_H

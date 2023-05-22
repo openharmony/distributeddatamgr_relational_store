@@ -86,6 +86,7 @@
                             "relational_predicates.h",
                             "relational_store.h",
                             "relational_cursor.h",
+                            "relational_value_object.h",
                             "relational_values_bucket.h"
                         ],
                         "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/ndk/include"

@@ -18,6 +18,7 @@
 #include <string>
 #include "common.h"
 #include "relational_store.h"
+#include "relational_value_object.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -37,20 +38,19 @@ void RdbNdkPredicatesTest::SetUpTestCase(void)
 {
     OH_Rdb_Config config;
     config.path = predicatesTestPath_.c_str();
-    config.securityLevel = OH_Rdb_SecurityLevel::RDB_S1;
-    config.isEncrypt = OH_Rdb_Bool::RDB_FALSE;
+    config.securityLevel = OH_Rdb_SecurityLevel::S1;
+    config.isEncrypt = FALSE;
 
-    int version = 1;
     int errCode = 0;
     char table[] = "test";
-    predicatesTestRdbStore_ = OH_Rdb_GetOrOpen(&config, version, NULL, &errCode);
+    predicatesTestRdbStore_ = OH_Rdb_GetOrOpen(&config, &errCode);
     EXPECT_NE(predicatesTestRdbStore_, NULL);
 
     char createTableSql[] = "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
                             "data3 FLOAT, data4 BLOB, data5 TEXT);";
     errCode = OH_Rdb_Execute(predicatesTestRdbStore_, createTableSql);
 
-    OH_Rdb_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_Rdb_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
     OH_VBucket_PutInt64(valueBucket, "id", 1);
     OH_VBucket_PutText(valueBucket, "data1", "zhangSan");
     OH_VBucket_PutInt64(valueBucket, "data2", 12800);
@@ -79,10 +79,14 @@ void RdbNdkPredicatesTest::SetUpTestCase(void)
     OH_VBucket_PutText(valueBucket, "data5", "ABCDEFGHI");
     errCode = OH_Rdb_Insert(predicatesTestRdbStore_, table, valueBucket);
     EXPECT_EQ(errCode, 3);
+
+    OH_VBucket_Close(valueBucket);
 }
 
 void RdbNdkPredicatesTest::TearDownTestCase(void)
 {
+    delete predicatesTestRdbStore_;
+    predicatesTestRdbStore_ = NULL;
     OH_Rdb_DeleteStore(predicatesTestPath_.c_str());
 }
 
@@ -103,17 +107,24 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_001, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    errCode = predicates->OH_Predicates_BeginWrap(predicates);
-    errCode = predicates->OH_Predicates_EqualTo(predicates, "data1", "zhangSan");
-    errCode = predicates->OH_Predicates_Or(predicates);
-    errCode = predicates->OH_Predicates_EqualTo(predicates, "data3", "200.1");
-    errCode = predicates->OH_Predicates_EndWrap(predicates);
+    OH_Rdb_VObject *valueObject = OH_Rdb_CreateValueObject();
+    uint32_t count = 1;
+    const char *data1Value = "zhangSan";
+    OH_ValueObject_PutText(valueObject, data1Value);
+    predicates->OH_Predicates_BeginWrap(predicates).OH_Predicates_EqualTo(predicates, "data1", valueObject)
+        .OH_Predicates_Or(predicates);
+    double data3Value = 200.1;
+    OH_ValueObject_PutDouble(valueObject, &data3Value, count);
+    predicates->OH_Predicates_EqualTo(predicates, "data3", valueObject).OH_Predicates_EndWrap(predicates);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);
     int rowCount = 0;
     errCode = cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
+
+    predicates->OH_Predicates_Close(predicates);
+    OH_Rdb_DestroyValueObject(valueObject);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -126,7 +137,10 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_002, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    errCode = predicates->OH_Predicates_NotEqualTo(predicates, "data1", "zhangSan");
+    OH_Rdb_VObject *valueObject = OH_Rdb_CreateValueObject();
+    const char *data1Value = "zhangSan";
+    OH_ValueObject_PutText(valueObject, data1Value);
+    predicates->OH_Predicates_NotEqualTo(predicates, "data1", valueObject);
     EXPECT_EQ(errCode, 0);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
@@ -134,6 +148,9 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_002, TestSize.Level1)
     int rowCount = 0;
     errCode = cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
+
+    OH_Rdb_DestroyValueObject(valueObject);
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -146,8 +163,10 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_003, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    errCode = predicates->OH_Predicates_GreaterThan(predicates, "data5", "ABCDEFG");
-    EXPECT_EQ(errCode, 0);
+    OH_Rdb_VObject *valueObject = OH_Rdb_CreateValueObject();
+    const char *data5Value = "ABCDEFG";
+    OH_ValueObject_PutText(valueObject, data5Value);
+    predicates->OH_Predicates_GreaterThan(predicates, "data5", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);
@@ -179,14 +198,14 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_003, TestSize.Level1)
     cursor->OH_Cursor_GetReal(cursor, 3, &data3Value);
     EXPECT_EQ(data3Value, 200.1);
 
-    bool isNull = false;
+    BOOL isNull = FALSE;
     cursor->OH_Cursor_IsNull(cursor, 4, &isNull);
     EXPECT_EQ(isNull, true);
 
     cursor->OH_Cursor_GetSize(cursor, 5, &size);
-    char data5Value[size + 1];
-    cursor->OH_Cursor_GetText(cursor, 5, data5Value, size + 1);
-    EXPECT_EQ(strcmp(data5Value, "ABCDEFGH"), 0);
+    char data5Value_1[size + 1];
+    cursor->OH_Cursor_GetText(cursor, 5, data5Value_1, size + 1);
+    EXPECT_EQ(strcmp(data5Value_1, "ABCDEFGH"), 0);
 
     cursor->OH_Cursor_GoToNextRow(cursor);
 
@@ -208,9 +227,12 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_003, TestSize.Level1)
     EXPECT_EQ(isNull, true);
 
     cursor->OH_Cursor_GetSize(cursor, 5, &size);
-    char data5Value_1[size + 1];
-    cursor->OH_Cursor_GetText(cursor, 5, data5Value_1, size + 1);
-    EXPECT_EQ(strcmp(data5Value_1, "ABCDEFGHI"), 0);
+    char data5Value_2[size + 1];
+    cursor->OH_Cursor_GetText(cursor, 5, data5Value_2, size + 1);
+    EXPECT_EQ(strcmp(data5Value_2, "ABCDEFGHI"), 0);
+
+    OH_Rdb_DestroyValueObject(valueObject);
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -223,13 +245,19 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_004, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    predicates->OH_Predicates_GreaterThanOrEqualTo(predicates, "data5", "ABCDEFG");
+    OH_Rdb_VObject *valueObject = OH_Rdb_CreateValueObject();
+    const char *data5Value = "ABCDEFG";
+    OH_ValueObject_PutText(valueObject, data5Value);
+    predicates->OH_Predicates_GreaterThanOrEqualTo(predicates, "data5", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);
     int rowCount = 0;
     errCode = cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 3);
+
+    OH_Rdb_DestroyValueObject(valueObject);
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -242,13 +270,19 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_005, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    predicates->OH_Predicates_LessThan(predicates, "data5", "ABCDEFG");
+    OH_Rdb_VObject *valueObject = OH_Rdb_CreateValueObject();
+    const char *data5Value = "ABCDEFG";
+    OH_ValueObject_PutText(valueObject, data5Value);
+    predicates->OH_Predicates_LessThan(predicates, "data5", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);
     int rowCount = 0;
     errCode = cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 0);
+
+    OH_Rdb_DestroyValueObject(valueObject);
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -261,13 +295,19 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_006, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    predicates->OH_Predicates_LessThanOrEqualTo(predicates, "data5", "ABCDEFG");
+    OH_Rdb_VObject *valueObject = OH_Rdb_CreateValueObject();
+    const char *data5Value = "ABCDEFG";
+    OH_ValueObject_PutText(valueObject, data5Value);
+    predicates->OH_Predicates_LessThanOrEqualTo(predicates, "data5", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);
     int rowCount = 0;
     errCode = cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
+
+    OH_Rdb_DestroyValueObject(valueObject);
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -287,6 +327,8 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_007, TestSize.Level1)
     int rowCount = 0;
     errCode = cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
+
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -306,6 +348,8 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_008, TestSize.Level1)
     int rowCount = 0;
     errCode = cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
+
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -318,13 +362,24 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_009, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    predicates->OH_Predicates_Between(predicates, "data2", "12000", "13000");
+    OH_Rdb_VObject *valueObject = OH_Rdb_CreateValueObject();
+    int64_t data2Value[] = {12000, 13000};
+    uint32_t len = sizeof(data2Value) / sizeof(data2Value[0]);
+    OH_ValueObject_PutInt64(valueObject, data2Value, len);
+    predicates->OH_Predicates_Between(predicates, "data2", valueObject);
+    double data3Value[] = {0.1, 101.1};
+    len = sizeof(data3Value) / sizeof(data3Value[0]);
+    OH_ValueObject_PutDouble(valueObject, data3Value, len);
+    predicates->OH_Predicates_Between(predicates, "data3", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);
     int rowCount = 0;
     errCode = cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
+
+    OH_Rdb_DestroyValueObject(valueObject);
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -337,13 +392,20 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_010, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    predicates->OH_Predicates_NotBetween(predicates, "data2", "12000", "13000");
+    OH_Rdb_VObject *valueObject = OH_Rdb_CreateValueObject();
+    int64_t data2Value[] = {12000, 13000};
+    int len = sizeof(data2Value) / sizeof(data2Value[0]);
+    OH_ValueObject_PutInt64(valueObject, data2Value, len);
+    predicates->OH_Predicates_NotBetween(predicates, "data2", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);
     int rowCount = 0;
     errCode = cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
+
+    OH_Rdb_DestroyValueObject(valueObject);
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -356,7 +418,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_011, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    predicates->OH_Predicates_OrderBy(predicates, "data2", OH_Rdb_OrderByType::RDB_PRE_ASC);
+    predicates->OH_Predicates_OrderBy(predicates, "data2", OH_Rdb_OrderType::ASC);
     predicates->OH_Predicates_Limit(predicates, 1);
     predicates->OH_Predicates_Offset(predicates, 1);
     predicates->OH_Predicates_Distinct(predicates);
@@ -374,6 +436,8 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_011, TestSize.Level1)
     int64_t longValue;
     cursor->OH_Cursor_GetInt64(cursor, columnIndex, &longValue);
     EXPECT_EQ(longValue, 13800);
+
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -386,15 +450,20 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_012, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    const char *names[] = {"zhangSan", "liSi"};
-    int len = sizeof(names) / sizeof(names[0]);
-    predicates->OH_Predicates_In(predicates, "data1", names, len);
+    OH_Rdb_VObject *valueObject = OH_Rdb_CreateValueObject();
+    const char *data1Value[] = {"zhangSan", "liSi"};
+    int len = sizeof(data1Value) / sizeof(data1Value[0]);
+    OH_ValueObject_PutTexts(valueObject, data1Value, len);
+    predicates->OH_Predicates_In(predicates, "data1", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);
     int rowCount = 0;
     errCode = cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
+
+    OH_Rdb_DestroyValueObject(valueObject);
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -407,15 +476,20 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_013, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    const char *names[] = {"zhangSan", "liSi"};
-    int len = sizeof(names) / sizeof(names[0]);
-    predicates->OH_Predicates_NotIn(predicates, "data1", names, len);
+    OH_Rdb_VObject *valueObject = OH_Rdb_CreateValueObject();
+    const char *data1Value[] = {"zhangSan", "liSi"};
+    int len = sizeof(data1Value) / sizeof(data1Value[0]);
+    OH_ValueObject_PutTexts(valueObject, data1Value, len);
+    predicates->OH_Predicates_NotIn(predicates, "data1", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);
     int rowCount = 0;
     errCode = cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
+
+    OH_Rdb_DestroyValueObject(valueObject);
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -428,13 +502,22 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_014, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    predicates->OH_Predicates_Like(predicates, "data5", "ABCD%");
+    OH_Rdb_VObject *valueObject = OH_Rdb_CreateValueObject();
+    const char *data5Value = "ABCD%";
+    OH_ValueObject_PutText(valueObject, data5Value);
+    predicates->OH_Predicates_Like(predicates, "data5", valueObject);
+    const char *data2Value = "%800";
+    OH_ValueObject_PutText(valueObject, data2Value);
+    predicates->OH_Predicates_Like(predicates, "data2", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);
     int rowCount = 0;
     errCode = cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 3);
+
+    OH_Rdb_DestroyValueObject(valueObject);
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -447,15 +530,20 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_015, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
+    OH_Rdb_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *columnNames[] = {"data1", "data2"};
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
-    predicates->OH_Predicates_GroupBy(predicates, columnNames, len);
+    OH_ValueObject_PutTexts(valueObject, columnNames, len);
+    predicates->OH_Predicates_GroupBy(predicates, valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);
     int rowCount = 0;
     errCode = cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 3);
+
+    OH_Rdb_DestroyValueObject(valueObject);
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -468,15 +556,23 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_016, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    predicates->OH_Predicates_EqualTo(predicates, "data1", "zhangSan");
+    OH_Rdb_VObject *valueObject = OH_Rdb_CreateValueObject();
+    const char *data1Value = "zhangSan";
+    OH_ValueObject_PutText(valueObject, data1Value);
+    predicates->OH_Predicates_EqualTo(predicates, "data1", valueObject);
     predicates->OH_Predicates_And(predicates);
-    predicates->OH_Predicates_EqualTo(predicates, "data3", "100.1");
+    double data3Value = 100.1;
+    OH_ValueObject_PutDouble(valueObject, &data3Value, 1);
+    predicates->OH_Predicates_EqualTo(predicates, "data3", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);
     int rowCount = 0;
     errCode = cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
+
+    OH_Rdb_DestroyValueObject(valueObject);
+    predicates->OH_Predicates_Close(predicates);
     errCode = cursor->OH_Cursor_Close(cursor);
 }
 
@@ -489,7 +585,10 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_017, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    predicates->OH_Predicates_EqualTo(predicates, "data1", "zhangSan");
+    OH_Rdb_VObject *valueObject = OH_Rdb_CreateValueObject();
+    const char *data1Value = "zhangSan";
+    OH_ValueObject_PutText(valueObject, data1Value);
+    predicates->OH_Predicates_EqualTo(predicates, "data1", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);
@@ -499,11 +598,14 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_017, TestSize.Level1)
     errCode = cursor->OH_Cursor_Close(cursor);
 
     predicates->OH_Predicates_Clear(predicates);
-    predicates->OH_Predicates_NotEqualTo(predicates, "data1", "zhangSan");
+    predicates->OH_Predicates_NotEqualTo(predicates, "data1", valueObject);
     cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);
     errCode = cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
+
+    OH_Rdb_DestroyValueObject(valueObject);
+    predicates->OH_Predicates_Close(predicates);
     errCode = cursor->OH_Cursor_Close(cursor);
 }
 
