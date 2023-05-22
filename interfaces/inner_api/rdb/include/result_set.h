@@ -47,10 +47,14 @@ public:
      */
     virtual ~ResultSet() {}
 
+    virtual int GetAsset(int32_t col, ValueObject::Asset &value) = 0;
+    virtual int GetAssets(int32_t col, ValueObject::Assets &value) = 0;
+    virtual int Get(int32_t col, ValueObject &value) = 0;
     /**
      * @brief Gets the entire row of data for the current row from the result set.
      */
-    API_EXPORT virtual int GetRow(RowEntity &rowEntity) = 0;
+    virtual int GetRow(RowEntity &rowEntity) = 0;
+    virtual int GetModifyTime(std::string &modifyTime) = 0;
 
     /**
      * @brief Get the size of blob or text.
@@ -58,7 +62,6 @@ public:
      * @param columnIndex Indicates the zero-based index of the target column.
      */
     API_EXPORT virtual int GetSize(int columnIndex, size_t &size) = 0;
-
 };
 
 } // namespace NativeRdb
