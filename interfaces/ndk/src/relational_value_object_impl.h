@@ -13,26 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef RELATIONAL_STORE_IMPL_H
-#define RELATIONAL_STORE_IMPL_H
+#ifndef RELATIONAL_VALUE_OBJECT_IMPL_H
+#define RELATIONAL_VALUE_OBJECT_IMPL_H
 
-#include <memory>
-
-#include "rdb_store.h"
-#include "relational_predicates.h"
-#include "relational_store.h"
+#include "relational_value_object.h"
+#include <vector>
+#include <string>
 
 namespace OHOS {
 namespace RdbNdk {
-constexpr int RDB_STORE_CID = 1234560; // The class id used to uniquely identify the OH_Rdb_Store class.
-class StoreImpl : public OH_Rdb_Store {
+constexpr int RDB_VOBJECT_CID = 1234565; // The class id used to uniquely identify the OH_Rdb_VObject class.
+class ValueObjectImpl : public OH_Rdb_VObject {
 public:
-    StoreImpl(std::shared_ptr<OHOS::NativeRdb::RdbStore> store);
-    std::shared_ptr<OHOS::NativeRdb::RdbStore> GetStore();
-
+    ValueObjectImpl() {
+        id = RDB_VOBJECT_CID;
+    }
+    std::vector<std::string> &getValue();
 private:
-    std::shared_ptr<OHOS::NativeRdb::RdbStore> store_;
+    std::vector<std::string> value;
 };
 } // namespace RdbNdk
 } // namespace OHOS
-#endif // RELATIONAL_STORE_IMPL_H
+#endif // RELATIONAL_VALUE_OBJECT_IMPL_H

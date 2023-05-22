@@ -37,20 +37,19 @@ void RdbNdkCursorTest::SetUpTestCase(void)
 {
     OH_Rdb_Config config = {0};
     config.path = cursorTestPath_.c_str();
-    config.securityLevel = OH_Rdb_SecurityLevel::RDB_S1;
-    config.isEncrypt = OH_Rdb_Bool::RDB_FALSE;
+    config.securityLevel = OH_Rdb_SecurityLevel::S1;
+    config.isEncrypt = FALSE;
 
-    int version = 1;
     int errCode = 0;
     char table[] = "test";
-    cursorTestRdbStore_ = OH_Rdb_GetOrOpen(&config, version, NULL, &errCode);
+    cursorTestRdbStore_ = OH_Rdb_GetOrOpen(&config, &errCode);
     EXPECT_NE(cursorTestRdbStore_, NULL);
 
     char createTableSql[] = "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
                             "data3 FLOAT, data4 BLOB, data5 TEXT);";
     errCode = OH_Rdb_Execute(cursorTestRdbStore_, createTableSql);
 
-    OH_Rdb_ValuesBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_Rdb_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
     OH_VBucket_PutInt64(valueBucket, "id", 1);
     OH_VBucket_PutText(valueBucket, "data1", "zhangSan");
     OH_VBucket_PutInt64(valueBucket, "data2", 12800);
@@ -79,10 +78,14 @@ void RdbNdkCursorTest::SetUpTestCase(void)
     OH_VBucket_PutText(valueBucket, "data5", "ABCDEFGHI");
     errCode = OH_Rdb_Insert(cursorTestRdbStore_, table, valueBucket);
     EXPECT_EQ(errCode, 3);
+
+    OH_VBucket_Close(valueBucket);
 }
 
 void RdbNdkCursorTest::TearDownTestCase(void)
 {
+    delete cursorTestRdbStore_;
+    cursorTestRdbStore_ = NULL;
     OH_Rdb_DeleteStore(cursorTestPath_.c_str());
 }
 
@@ -110,22 +113,24 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_001, TestSize.Level1)
 
     OH_Rdb_ColumnType type;
     errCode = cursor->OH_Cursor_GetColumnType(cursor, 0, &type);
-    EXPECT_EQ(type, OH_Rdb_ColumnType::RDB_TYPE_INT64);
+    EXPECT_EQ(type, OH_Rdb_ColumnType::TYPE_INT64);
 
     errCode = cursor->OH_Cursor_GetColumnType(cursor, 1, &type);;
-    EXPECT_EQ(type, OH_Rdb_ColumnType::RDB_TYPE_TEXT);
+    EXPECT_EQ(type, OH_Rdb_ColumnType::TYPE_TEXT);
 
     errCode = cursor->OH_Cursor_GetColumnType(cursor, 2, &type);
-    EXPECT_EQ(type, OH_Rdb_ColumnType::RDB_TYPE_INT64);
+    EXPECT_EQ(type, OH_Rdb_ColumnType::TYPE_INT64);
 
     errCode = cursor->OH_Cursor_GetColumnType(cursor, 3, &type);
-    EXPECT_EQ(type, OH_Rdb_ColumnType::RDB_TYPE_REAL);
+    EXPECT_EQ(type, OH_Rdb_ColumnType::TYPE_REAL);
 
     errCode = cursor->OH_Cursor_GetColumnType(cursor, 4, &type);
-    EXPECT_EQ(type, OH_Rdb_ColumnType::RDB_TYPE_BLOB);
+    EXPECT_EQ(type, OH_Rdb_ColumnType::TYPE_BLOB);
 
     errCode = cursor->OH_Cursor_GetColumnType(cursor, 5, &type);
-    EXPECT_EQ(type, OH_Rdb_ColumnType::RDB_TYPE_TEXT);
+    EXPECT_EQ(type, OH_Rdb_ColumnType::TYPE_TEXT);
+
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -157,6 +162,8 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_002, TestSize.Level1)
 
     errCode = cursor->OH_Cursor_GetColumnIndex(cursor, "data5", &columnIndex);
     EXPECT_EQ(columnIndex, 5);
+
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -188,6 +195,8 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_003, TestSize.Level1)
 
     errCode = cursor->OH_Cursor_GetColumnName(cursor, 5, name, 6);
     EXPECT_EQ(strcmp(name, "data5"), 0);
+
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -248,8 +257,10 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_004, TestSize.Level1)
     cursor->OH_Cursor_GetReal(cursor, 2, &data3Value);
     EXPECT_EQ(data3Value, 200.1);
 
-    bool isNull = false;
+    BOOL isNull = FALSE;
     cursor->OH_Cursor_IsNull(cursor, 3, &isNull);
     EXPECT_EQ(isNull, true);
+
+    predicates->OH_Predicates_Close(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
