@@ -227,7 +227,8 @@ public:
      * @param databasePath Indicates the database file path.
      * @param destEncryptKey Indicates the database encrypt key.
      */
-    virtual int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey) = 0;
+    virtual int Backup(const std::string databasePath,
+        const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>()) = 0;
 
     /**
      * @brief Attaches a database.
@@ -348,7 +349,7 @@ public:
      * @param backupPath  Indicates the name that saves the database file path.
      * @param newKey Indicates the database new key.
      */
-    virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey) = 0;
+    virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) = 0;
 
     /**
      * @brief Restores a database from a specified encrypted or unencrypted database file.
