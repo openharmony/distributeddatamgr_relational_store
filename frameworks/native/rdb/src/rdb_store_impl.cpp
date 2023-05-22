@@ -91,18 +91,13 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
 
     std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
     errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
-    if (errCode != E_OK) {
+    if (errCode != E_OK || service == nullptr) {
         LOG_ERROR("GetRdbService failed, err is %{public}d.", errCode);
         return E_OK;
     }
-    service->GetSchema(syncerParam_);
-    if (!config.GetUri().empty()) {
-        errCode = service->CreateRDBTable(syncerParam_);
-        if (errCode != E_OK) {
-            LOG_ERROR("CreateRDBTable failed");
-        } else {
-            isShared_ = true;
-        }
+    errCode = service->GetSchema(syncerParam_);
+    if (errCode != E_OK) {
+        LOG_ERROR("GetSchema failed, err is %{public}d.", errCode);
     }
 #endif
     return E_OK;
@@ -117,19 +112,6 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
 RdbStoreImpl::~RdbStoreImpl()
 {
     delete connectionPool;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    if (isShared_) {
-        std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-        int errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
-        if (errCode != E_OK) {
-            LOG_ERROR("RdbStoreImpl::~RdbStoreImpl get service failed");
-            return;
-        }
-        if (service->DestroyRDBTable(syncerParam_) != E_OK) {
-            LOG_ERROR("RdbStoreImpl::~RdbStoreImpl service DestroyRDBTable failed");
-        }
-    }
-#endif
 }
 #ifdef WINDOWS_PLATFORM
 void RdbStoreImpl::Clear()

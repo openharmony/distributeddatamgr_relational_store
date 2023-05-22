@@ -35,8 +35,6 @@ public:
         RDB_SERVICE_CMD_SUBSCRIBE,
         RDB_SERVICE_CMD_UNSUBSCRIBE,
         RDB_SERVICE_CMD_REMOTE_QUERY,
-        RDB_SERVICE_CREATE_RDB_TABLE,
-        RDB_SERVICE_DESTROY_RDB_TABLE,
         RDB_SERVICE_CMD_GET_SCHEMA,
         RDB_SERVICE_CMD_MAX
     };
@@ -55,10 +53,6 @@ public:
 
     virtual int32_t RemoteQuery(const RdbSyncerParam &param, const std::string &device, const std::string &sql,
         const std::vector<std::string> &selectionArgs, sptr<IRemoteObject> &resultSet) = 0;
-
-    virtual int32_t CreateRDBTable(const RdbSyncerParam &param) = 0;
-
-    virtual int32_t DestroyRDBTable(const RdbSyncerParam &param) = 0;
 
     virtual int32_t InitNotifier(const RdbSyncerParam &param, const sptr<IRemoteObject> notifier) = 0;
 
