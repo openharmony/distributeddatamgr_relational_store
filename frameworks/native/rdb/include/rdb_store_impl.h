@@ -133,7 +133,6 @@ private:
     std::string name;
     std::string fileType;
     std::stack<TransactionObserver *> transactionObserverStack;
-    bool isShared_ = false;
     DistributedRdb::RdbSyncerParam syncerParam_;
     bool isEncrypt_;
 };
