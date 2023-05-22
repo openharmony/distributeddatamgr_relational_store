@@ -319,6 +319,60 @@ int AbsSharedResultSet::GetDouble(int columnIndex, double &value)
     }
 }
 
+int AbsSharedResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    int errorCode = CheckState(col);
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
+
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(sharedBlock_->GetBlockPos(), col);
+    if (!cellUnit) {
+        LOG_ERROR("GetAsset cellUnit is null!");
+        return E_ERROR;
+    }
+
+    if (cellUnit->type != AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET) {
+        LOG_ERROR("GetAsset AppDataFwk::SharedBlock::nothing !");
+        return E_INVALID_OBJECT_TYPE;
+    }
+
+    size_t size = 0;
+    auto data = reinterpret_cast<const uint8_t *>(sharedBlock_->GetCellUnitValueBlob(cellUnit, &size));
+    ValueObject::Asset asset;
+    RawDataParser::ParserRawData(data, size, asset);
+    value = std::move(asset);
+    return E_OK;
+}
+
+int AbsSharedResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    int errorCode = CheckState(col);
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
+
+    auto *cellUnit = sharedBlock_->GetCellUnit(sharedBlock_->GetBlockPos(), col);
+    if (!cellUnit) {
+        LOG_ERROR("GetAssets cellUnit is null!");
+        return E_ERROR;
+    }
+
+    if (cellUnit->type != AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS) {
+        LOG_ERROR("GetAssets AppDataFwk::SharedBlock::nothing !");
+        return E_INVALID_OBJECT_TYPE;
+    }
+
+    size_t size = 0;
+    auto data = reinterpret_cast<const uint8_t *>(sharedBlock_->GetCellUnitValueBlob(cellUnit, &size));
+    ValueObject::Assets assets;
+    RawDataParser::ParserRawData(data, size, assets);
+    value = std::move(assets);
+    return E_OK;
+}
+
 int AbsSharedResultSet::GetSize(int columnIndex, size_t &size)
 {
     size = 0;
