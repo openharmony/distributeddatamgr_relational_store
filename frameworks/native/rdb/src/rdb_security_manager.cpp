@@ -22,11 +22,18 @@
 
 #include "directory_ex.h"
 #include "file_ex.h"
-#include "hks_mem.h"
 #include "hks_param.h"
 #include "logger.h"
 #include "sqlite_database_utils.h"
 #include "sqlite_utils.h"
+
+#define HKS_FREE(PTR) \
+{ \
+    if ((PTR) != nullptr) { \
+        free(PTR); \
+        (PTR) = nullptr; \
+    } \
+}
 
 namespace OHOS {
 namespace NativeRdb {
@@ -129,17 +136,17 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
         }
         if (HksUpdate(handle, paramSet, &inDataSeg, &outDataSeg) != HKS_SUCCESS) {
             LOG_ERROR("HksUpdate Failed.");
-            HksFree(outDataSeg.data);
+            HKS_FREE(outDataSeg.data);
             return HKS_FAILURE;
         }
         if (memcpy_s(cur, outDataSeg.size, outDataSeg.data, outDataSeg.size) != 0) {
             LOG_ERROR("Method memcpy_s failed");
-            HksFree(outDataSeg.data);
+            HKS_FREE(outDataSeg.data);
             return HKS_FAILURE;
         }
         cur += outDataSeg.size;
         outData->size += outDataSeg.size;
-        HksFree(outDataSeg.data);
+        HKS_FREE(outDataSeg.data);
         if ((!isFinished) && (inDataSeg.data + MAX_UPDATE_SIZE > lastPtr)) {
             LOG_ERROR("isFinished and inDataSeg data Error");
             return HKS_FAILURE;
@@ -154,16 +161,16 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
     }
     if (HksFinish(handle, paramSet, &inDataSeg, &outDataFinish) != HKS_SUCCESS) {
         LOG_ERROR("HksFinish Failed.");
-        HksFree(outDataFinish.data);
+        HKS_FREE(outDataFinish.data);
         return HKS_FAILURE;
     }
     if (memcpy_s(cur, outDataFinish.size, outDataFinish.data, outDataFinish.size) != 0) {
         LOG_ERROR("Method memcpy_s failed");
-        HksFree(outDataFinish.data);
+        HKS_FREE(outDataFinish.data);
         return HKS_FAILURE;
     }
     outData->size += outDataFinish.size;
-    HksFree(outDataFinish.data);
+    HKS_FREE(outDataFinish.data);
 
     return HKS_SUCCESS;
 }
@@ -421,11 +428,12 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
 
 void RdbSecurityManager::Init(const std::string &bundleName, const std::string &path)
 {
-    rootKeyAlias_ = GenerateRootKeyAlias(bundleName);
+    ParsePath(path);
+    bundleName_ = bundleName;
+    rootKeyAlias_ = GenerateRootKeyAlias();
     nonce_ = std::vector<uint8_t>(RDB_HKS_BLOB_TYPE_NONCE, RDB_HKS_BLOB_TYPE_NONCE + strlen(RDB_HKS_BLOB_TYPE_NONCE));
     aad_ = std::vector<uint8_t>(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD));
 
-    ParsePath(path);
     if (CheckRootKeyExists()) {
         return;
     }
@@ -568,16 +576,16 @@ RdbPassword RdbSecurityManager::GetRdbPassword(KeyFileType keyFile)
     return LoadSecretKeyFromFile(keyFile);
 }
 
-std::vector<uint8_t> RdbSecurityManager::GenerateRootKeyAlias(const std::string &bundleName)
+std::vector<uint8_t> RdbSecurityManager::GenerateRootKeyAlias()
 {
-    bundleName_ = bundleName;
-    if (bundleName_.empty()) {
-        LOG_ERROR("BundleName is empty!");
-        return {};
-    }
     std::vector<uint8_t> rootKeyAlias =
         std::vector<uint8_t>(RDB_ROOT_KEY_ALIAS_PREFIX, RDB_ROOT_KEY_ALIAS_PREFIX + strlen(RDB_ROOT_KEY_ALIAS_PREFIX));
-    rootKeyAlias.insert(rootKeyAlias.end(), bundleName.begin(), bundleName.end());
+    if (!bundleName_.empty()) {
+        rootKeyAlias.insert(rootKeyAlias.end(), bundleName_.begin(), bundleName_.end());
+    } else {
+        rootKeyAlias.insert(rootKeyAlias.end(), dbDir_.begin(), dbDir_.end());
+    }
+
     return rootKeyAlias;
 }
 

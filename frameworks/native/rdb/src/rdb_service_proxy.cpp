@@ -20,9 +20,35 @@
 #include "log_print.h"
 
 namespace OHOS::DistributedRdb {
+#define IPC_SEND(code, reply, ...)                                          \
+({                                                                          \
+    int32_t __status = RDB_OK;                                              \
+    do {                                                                    \
+        MessageParcel request;                                              \
+        if (!request.WriteInterfaceToken(GetDescriptor())) {                \
+            __status = RDB_ERROR;                                           \
+            break;                                                          \
+        }                                                                   \
+        if (!ITypesUtil::Marshal(request, ##__VA_ARGS__)) {                 \
+            __status = RDB_ERROR;                                           \
+            break;                                                          \
+        }                                                                   \
+        MessageOption option;                                               \
+        auto result = remote_->SendRequest((code), request, reply, option); \
+        if (result != 0) {                                                  \
+            __status = RDB_ERROR;                                           \
+            break;                                                          \
+        }                                                                   \
+                                                                            \
+        ITypesUtil::Unmarshal(reply, __status);                             \
+    } while (0);                                                            \
+    __status;                                                               \
+})
+
 RdbServiceProxy::RdbServiceProxy(const sptr<IRemoteObject> &object)
     : IRemoteProxy<IRdbService>(object)
 {
+    remote_ = Remote();
 }
 
 void RdbServiceProxy::OnSyncComplete(uint32_t seqNum, const SyncResult &result)
@@ -48,26 +74,16 @@ void RdbServiceProxy::OnDataChange(const std::string& storeName, const std::vect
 
 std::string RdbServiceProxy::ObtainDistributedTableName(const std::string &device, const std::string &table)
 {
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(IRdbService::GetDescriptor())) {
-        ZLOGE("write descriptor failed");
-        return "";
-    }
-    if (!ITypesUtil::Marshal(data, device, table)) {
-        ZLOGE("write to message parcel failed");
-        return "";
-    }
-
     MessageParcel reply;
-    MessageOption option;
-    if (Remote()->SendRequest(RDB_SERVICE_CMD_OBTAIN_TABLE, data, reply, option) != 0) {
-        ZLOGE("send request failed");
+    int32_t status = IPC_SEND(RDB_SERVICE_CMD_OBTAIN_TABLE, reply, device, table);
+    if (status != RDB_OK) {
+        ZLOGE("status:%{public}d, device:%{public}.6s, table:%{public}s", status, device.c_str(), table.c_str());
         return "";
     }
     return reply.ReadString();
 }
 
-int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam& param)
+int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param)
 {
     notifier_ = new (std::nothrow) RdbNotifierStub(
         [this] (uint32_t seqNum, const SyncResult& result) {
@@ -93,25 +109,12 @@ int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam& param)
 
 int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param, const sptr<IRemoteObject> notifier)
 {
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(IRdbService::GetDescriptor())) {
-        ZLOGE("write descriptor failed");
-        return RDB_ERROR;
-    }
-    if (!ITypesUtil::Marshal(data, param, notifier)) {
-        ZLOGE("write to message parcel failed");
-        return RDB_ERROR;
-    }
-
     MessageParcel reply;
-    MessageOption option;
-    if (Remote()->SendRequest(RDB_SERVICE_CMD_INIT_NOTIFIER, data, reply, option) != 0) {
-        ZLOGE("send request failed");
-        return RDB_ERROR;
+    int32_t status = IPC_SEND(RDB_SERVICE_CMD_INIT_NOTIFIER, reply, param, notifier);
+    if (status != RDB_OK) {
+        ZLOGE("status:%{public}d, bundleName:%{public}s", status, param.bundleName_.c_str());
     }
-
-    int32_t res = RDB_ERROR;
-    return reply.ReadInt32(res) ? res : RDB_ERROR;
+    return status;
 }
 
 uint32_t RdbServiceProxy::GetSeqNum()
@@ -122,21 +125,12 @@ uint32_t RdbServiceProxy::GetSeqNum()
 int32_t RdbServiceProxy::DoSync(const RdbSyncerParam& param, const SyncOption &option,
                                 const RdbPredicates &predicates, SyncResult& result)
 {
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(IRdbService::GetDescriptor())) {
-        ZLOGE("write descriptor failed");
-        return RDB_ERROR;
-    }
-    if (!ITypesUtil::Marshal(data, param, option, predicates)) {
-        ZLOGE("write to message parcel failed");
-        return RDB_ERROR;
-    }
-
     MessageParcel reply;
-    MessageOption opt;
-    if (Remote()->SendRequest(RDB_SERVICE_CMD_SYNC, data, reply, opt) != 0) {
-        ZLOGE("send request failed");
-        return RDB_ERROR;
+    int32_t status = IPC_SEND(RDB_SERVICE_CMD_SYNC, reply, param, option, predicates);
+    if (status != RDB_OK) {
+        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
+            status, param.bundleName_.c_str(), param.storeName_.c_str());
+        return status;
     }
 
     if (!ITypesUtil::Unmarshal(reply, result)) {
@@ -165,25 +159,13 @@ int32_t RdbServiceProxy::DoSync(const RdbSyncerParam& param, const SyncOption &o
 int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam& param, uint32_t seqNum, const SyncOption &option,
                                  const RdbPredicates &predicates)
 {
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(IRdbService::GetDescriptor())) {
-        ZLOGE("write descriptor failed");
-        return RDB_ERROR;
-    }
-    if (!ITypesUtil::Marshal(data, param, seqNum, option, predicates)) {
-        ZLOGE("write to message parcel failed");
-        return RDB_ERROR;
-    }
-
     MessageParcel reply;
-    MessageOption opt;
-    if (Remote()->SendRequest(RDB_SERVICE_CMD_ASYNC, data, reply, opt) != 0) {
-        ZLOGE("send request failed");
-        return RDB_ERROR;
+    int32_t status = IPC_SEND(RDB_SERVICE_CMD_ASYNC, reply, param, seqNum, option, predicates);
+    if (status != RDB_OK) {
+        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s, seqNum:%{public}u",
+            status, param.bundleName_.c_str(), param.storeName_.c_str(), seqNum);
     }
-
-    int32_t res = RDB_ERROR;
-    return reply.ReadInt32(res) ? res : RDB_ERROR;
+    return status;
 }
 
 int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam& param, const SyncOption &option,
@@ -208,25 +190,13 @@ int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam& param, const SyncOption &
 
 int32_t RdbServiceProxy::SetDistributedTables(const RdbSyncerParam& param, const std::vector<std::string> &tables)
 {
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(IRdbService::GetDescriptor())) {
-        ZLOGE("write descriptor failed");
-        return RDB_ERROR;
-    }
-    if (!ITypesUtil::Marshal(data, param, tables)) {
-        ZLOGE("write to message parcel failed");
-        return RDB_ERROR;
-    }
-
     MessageParcel reply;
-    MessageOption option;
-    if (Remote()->SendRequest(RDB_SERVICE_CMD_SET_DIST_TABLE, data, reply, option) != 0) {
-        ZLOGE("send request failed");
-        return RDB_ERROR;
+    int32_t status = IPC_SEND(RDB_SERVICE_CMD_SET_DIST_TABLE, reply, param, tables);
+    if (status != RDB_OK) {
+        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
+            status, param.bundleName_.c_str(), param.storeName_.c_str());
     }
-
-    int32_t res = RDB_ERROR;
-    return reply.ReadInt32(res) ? res : RDB_ERROR;
+    return status;
 }
 
 int32_t RdbServiceProxy::Sync(const RdbSyncerParam& param, const SyncOption &option,
@@ -251,11 +221,11 @@ std::string RdbServiceProxy::RemoveSuffix(const std::string& name)
 int32_t RdbServiceProxy::Subscribe(const RdbSyncerParam &param, const SubscribeOption &option,
                                    RdbStoreObserver *observer)
 {
-    if (option.mode != SubscribeMode::REMOTE) {
+    if (option.mode < SubscribeMode::REMOTE || option.mode >= SUBSCRIBE_MODE_MAX) {
         ZLOGE("subscribe mode invalid");
         return RDB_ERROR;
     }
-    if (DoSubscribe(param) != RDB_OK) {
+    if (DoSubscribe(param, option) != RDB_OK) {
         ZLOGI("communicate to server failed");
         return RDB_ERROR;
     }
@@ -274,27 +244,15 @@ int32_t RdbServiceProxy::Subscribe(const RdbSyncerParam &param, const SubscribeO
     return RDB_OK;
 }
 
-int32_t RdbServiceProxy::DoSubscribe(const RdbSyncerParam &param)
+int32_t RdbServiceProxy::DoSubscribe(const RdbSyncerParam &param, const SubscribeOption &option)
 {
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(IRdbService::GetDescriptor())) {
-        ZLOGE("write descriptor failed");
-        return RDB_ERROR;
-    }
-    if (!ITypesUtil::Marshal(data, param)) {
-        ZLOGE("write to message parcel failed");
-        return RDB_ERROR;
-    }
-
     MessageParcel reply;
-    MessageOption option;
-    if (Remote()->SendRequest(RDB_SERVICE_CMD_SUBSCRIBE, data, reply, option) != 0) {
-        ZLOGE("send request failed");
-        return RDB_ERROR;
+    int32_t status = IPC_SEND(RDB_SERVICE_CMD_SUBSCRIBE, reply, param, option);
+    if (status != RDB_OK) {
+        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
+            status, param.bundleName_.c_str(), param.storeName_.c_str());
     }
-
-    int32_t res = RDB_ERROR;
-    return reply.ReadInt32(res) ? res : RDB_ERROR;
+    return status;
 }
 
 int32_t RdbServiceProxy::UnSubscribe(const RdbSyncerParam &param, const SubscribeOption &option,
@@ -314,50 +272,23 @@ int32_t RdbServiceProxy::UnSubscribe(const RdbSyncerParam &param, const Subscrib
 
 int32_t RdbServiceProxy::DoUnSubscribe(const RdbSyncerParam &param)
 {
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(IRdbService::GetDescriptor())) {
-        ZLOGE("write descriptor failed");
-        return RDB_ERROR;
-    }
-    if (!ITypesUtil::Marshal(data, param)) {
-        ZLOGE("write to message parcel failed");
-        return RDB_ERROR;
-    }
-
     MessageParcel reply;
-    MessageOption option;
-    if (Remote()->SendRequest(RDB_SERVICE_CMD_UNSUBSCRIBE, data, reply, option) != 0) {
-        ZLOGE("send request failed");
-        return RDB_ERROR;
+    int32_t status = IPC_SEND(RDB_SERVICE_CMD_UNSUBSCRIBE, reply, param);
+    if (status != RDB_OK) {
+        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
+            status, param.bundleName_.c_str(), param.storeName_.c_str());
     }
-
-    int32_t res = RDB_ERROR;
-    return reply.ReadInt32(res) ? res : RDB_ERROR;
+    return status;
 }
 
 int32_t RdbServiceProxy::RemoteQuery(const RdbSyncerParam& param, const std::string& device, const std::string& sql,
                                      const std::vector<std::string>& selectionArgs, sptr<IRemoteObject>& resultSet)
 {
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(IRdbService::GetDescriptor())) {
-        ZLOGE("write descriptor failed");
-        return RDB_ERROR;
-    }
-    if (!ITypesUtil::Marshal(data, param, device, sql, selectionArgs)) {
-        ZLOGE("write to message parcel failed");
-        return RDB_ERROR;
-    }
-
     MessageParcel reply;
-    MessageOption option;
-    if (Remote()->SendRequest(RDB_SERVICE_CMD_REMOTE_QUERY, data, reply, option) != 0) {
-        ZLOGE("send request failed");
-        return RDB_ERROR;
-    }
-
-    int32_t status = reply.ReadInt32();
-    if (status != RdbStatus::RDB_OK) {
-        ZLOGE("remote query failed, server side status is %{public}d", status);
+    int32_t status = IPC_SEND(RDB_SERVICE_CMD_REMOTE_QUERY, reply, param, device, sql, selectionArgs);
+    if (status != RDB_OK) {
+        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s, device:%{public}.6s",
+            status, param.bundleName_.c_str(), param.storeName_.c_str(), device.c_str());
         return status;
     }
 
@@ -389,55 +320,36 @@ void RdbServiceProxy::ImportObservers(ObserverMap &observers)
 int32_t RdbServiceProxy::CreateRDBTable(
     const RdbSyncerParam &param, const std::string &writePermission, const std::string &readPermission)
 {
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(IRdbService::GetDescriptor())) {
-        ZLOGE("write descriptor failed");
-        return RDB_ERROR;
-    }
-    if (!ITypesUtil::Marshal(data, param, writePermission, readPermission)) {
-        ZLOGE("write to message parcel failed");
-        return RDB_ERROR;
-    }
-
     MessageParcel reply;
-    MessageOption option;
-    if (Remote()->SendRequest(RDB_SERVICE_CREATE_RDB_TABLE, data, reply, option) != 0) {
-        ZLOGE("send request failed");
-        return RDB_ERROR;
+    int32_t status = IPC_SEND(RDB_SERVICE_CREATE_RDB_TABLE, reply, param, writePermission, readPermission);
+    if (status != RDB_OK) {
+        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s,"
+            "writePermission:%{public}.6s, readPermission:%{public}.6s",
+            status, param.bundleName_.c_str(), param.storeName_.c_str(),
+            writePermission.c_str(), readPermission.c_str());
     }
-
-    int32_t status = reply.ReadInt32();
-    if (status != RdbStatus::RDB_OK) {
-        ZLOGE("remote query failed, server side status is %{public}d", status);
-        return status;
-    }
-    return RDB_OK;
+    return status;
 }
 
 int32_t RdbServiceProxy::DestroyRDBTable(const RdbSyncerParam &param)
 {
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(IRdbService::GetDescriptor())) {
-        ZLOGE("write descriptor failed");
-        return RDB_ERROR;
-    }
-    if (!ITypesUtil::Marshal(data, param)) {
-        ZLOGE("write to message parcel failed");
-        return RDB_ERROR;
-    }
-
     MessageParcel reply;
-    MessageOption option;
-    if (Remote()->SendRequest(RDB_SERVICE_DESTROY_RDB_TABLE, data, reply, option) != 0) {
-        ZLOGE("send request failed");
-        return RDB_ERROR;
+    int32_t status = IPC_SEND(RDB_SERVICE_DESTROY_RDB_TABLE, reply, param);
+    if (status != RDB_OK) {
+        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
+            status, param.bundleName_.c_str(), param.storeName_.c_str());
     }
+    return status;
+}
 
-    int32_t status = reply.ReadInt32();
-    if (status != RdbStatus::RDB_OK) {
-        ZLOGE("remote query failed, server side status is %{public}d", status);
-        return status;
+int32_t RdbServiceProxy::GetSchema(const RdbSyncerParam &param)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(RDB_SERVICE_CMD_GET_SCHEMA, reply, param);
+    if (status != RDB_OK) {
+        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
+            param.storeName_.c_str());
     }
-    return RDB_OK;
+    return status;
 }
 } // namespace OHOS::DistributedRdb

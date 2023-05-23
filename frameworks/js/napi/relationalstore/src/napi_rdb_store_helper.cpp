@@ -77,7 +77,7 @@ int ParseIsEncrypt(const napi_env &env, const napi_value &object, std::shared_pt
     napi_status status = napi_get_named_property(env, object, "encrypt", &value);
     if (status == napi_ok && value != nullptr) {
         bool isEncrypt = false;
-        JSUtils::Convert2Bool(env, value, isEncrypt);
+        JSUtils::Convert2Value(env, value, isEncrypt);
         context->config.SetEncryptStatus(isEncrypt);
     }
     return OK;
@@ -92,9 +92,13 @@ int ParseContextProperty(const napi_env &env, std::shared_ptr<HelperRdbContext> 
     context->config.SetModuleName(context->abilitycontext->GetModuleName());
     context->config.SetArea(context->abilitycontext->GetArea());
     context->config.SetBundleName(context->abilitycontext->GetBundleName());
-    context->config.SetUri(context->abilitycontext->GetUri());
-    context->config.SetReadPermission(context->abilitycontext->GetReadPermission());
-    context->config.SetWritePermission(context->abilitycontext->GetWritePermission());
+    if (!context->abilitycontext->IsHasProxyDataConfig()) {
+        context->config.SetUri(context->abilitycontext->GetUri());
+        context->config.SetReadPermission(context->abilitycontext->GetReadPermission());
+        context->config.SetWritePermission(context->abilitycontext->GetWritePermission());
+    } else {
+        context->config.SetUri("dataProxy");
+    }
     context->isSystemAppCalled = context->abilitycontext->IsSystemAppCalled();
     return OK;
 }
@@ -186,7 +190,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         bool checked = JSAbility::CheckContext(env, info);
         CHECK_RETURN_SET_E(checked, std::make_shared<ParamError>("context", "a valid Context."));
-        CHECK_RETURN_SET_E(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 or 3"));
+        CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         CHECK_RETURN(OK == ParseContext(env, argv[0], context));
         CHECK_RETURN(OK == ParseStoreConfig(env, argv[1], context));
     };
@@ -214,7 +218,7 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
     LOG_DEBUG("RelationalStoreJsKit::DeleteRdbStore start");
     auto context = std::make_shared<HelperRdbContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 or 3"));
+        CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         CHECK_RETURN(OK == ParseContext(env, argv[0], context));
         CHECK_RETURN(OK == ParsePath(env, argv[1], context));
     };

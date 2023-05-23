@@ -20,222 +20,145 @@
 
 namespace OHOS {
 namespace NativeRdb {
-ValueObject::ValueObject() : type(ValueObjectType::TYPE_NULL)
+ValueObject::ValueObject()
 {
 }
 
-ValueObject::ValueObject(ValueObject::Type valueObject) noexcept : value(std::move(valueObject))
+ValueObject::ValueObject(ValueObject::Type val) noexcept : value(std::move(val))
 {
-    type = ValueObjectType(value.index());
 }
 
-ValueObject::ValueObject(ValueObject &&valueObject) noexcept
+ValueObject::ValueObject(ValueObject &&val) noexcept
 {
-    if (this == &valueObject) {
+    if (this == &val) {
         return;
     }
-    type = valueObject.type;
-    value = std::move(valueObject.value);
-    valueObject.type = ValueObjectType::TYPE_NULL;
+    value = std::move(val.value);
 }
 
-ValueObject::ValueObject(const ValueObject &valueObject)
+ValueObject::ValueObject(const ValueObject &val)
 {
-    if (this == &valueObject) {
+    if (this == &val) {
         return;
     }
-    type = valueObject.type;
-    value = valueObject.value;
+    value = val.value;
 }
 
 ValueObject::~ValueObject()
 {
 }
 
-ValueObject::ValueObject(int val) : type(ValueObjectType::TYPE_INT)
+ValueObject::ValueObject(int val) : value(static_cast<int64_t>(val))
 {
-    value = static_cast<int64_t>(val);
 }
 
-ValueObject::ValueObject(int64_t val) : type(ValueObjectType::TYPE_INT)
+ValueObject::ValueObject(int64_t val) : value(val)
 {
-    value = val;
-}
-ValueObject::ValueObject(double val) : type(ValueObjectType::TYPE_DOUBLE)
-{
-    value = val;
-}
-ValueObject::ValueObject(bool val) : type(ValueObjectType::TYPE_BOOL)
-{
-    value = val;
-}
-ValueObject::ValueObject(const std::string &val) : type(ValueObjectType::TYPE_STRING)
-{
-    value = val;
-}
-ValueObject::ValueObject(const char *val) : type(ValueObjectType::TYPE_STRING)
-{
-    value = std::string(val);
-}
-ValueObject::ValueObject(const std::vector<uint8_t> &val) : type(ValueObjectType::TYPE_BLOB)
-{
-    std::vector<uint8_t> blob = val;
-    value = blob;
 }
 
-ValueObject &ValueObject::operator=(ValueObject &&valueObject) noexcept
+ValueObject::ValueObject(double val) : value(val)
 {
-    if (this == &valueObject) {
+}
+
+ValueObject::ValueObject(bool val) : value(val)
+{
+}
+
+ValueObject::ValueObject(std::string val) : value(std::move(val))
+{
+}
+
+ValueObject::ValueObject(const char *val) : ValueObject(std::string(val))
+{
+}
+
+ValueObject::ValueObject(const std::vector<uint8_t> &val) : value(val)
+{
+}
+
+ValueObject::ValueObject(ValueObject::Asset val) : value(std::move(val))
+{
+}
+
+ValueObject::ValueObject(ValueObject::Assets val) : value(std::move(val))
+{
+}
+
+ValueObject &ValueObject::operator=(ValueObject &&val) noexcept
+{
+    if (this == &val) {
         return *this;
     }
-    type = valueObject.type;
-    value = std::move(valueObject.value);
-    valueObject.type = ValueObjectType::TYPE_NULL;
+    value = std::move(val.value);
     return *this;
 }
 
-ValueObject &ValueObject::operator=(const ValueObject &valueObject)
+ValueObject &ValueObject::operator=(const ValueObject &val)
 {
-    if (this == &valueObject) {
+    if (this == &val) {
         return *this;
     }
-    type = valueObject.type;
-    value = valueObject.value;
+    value = val.value;
     return *this;
 }
 
 ValueObjectType ValueObject::GetType() const
 {
-    return type;
+    return ValueObjectType(value.index());
 }
 
 int ValueObject::GetInt(int &val) const
 {
-    if (type != ValueObjectType::TYPE_INT) {
-        return E_INVALID_OBJECT_TYPE;
-    }
-
-    int64_t v = std::get<int64_t>(value);
-    val = static_cast<int>(v);
-    return E_OK;
+    int64_t value;
+    auto ret = Get(value);
+    val = value;
+    return ret;
 }
 
 int ValueObject::GetLong(int64_t &val) const
 {
-    if (type != ValueObjectType::TYPE_INT) {
-        return E_INVALID_OBJECT_TYPE;
-    }
-
-    val = std::get<int64_t>(value);
-    return E_OK;
+    return Get(val);
 }
 
 int ValueObject::GetDouble(double &val) const
 {
-    if (type != ValueObjectType::TYPE_DOUBLE) {
-        return E_INVALID_OBJECT_TYPE;
-    }
-
-    val = std::get<double>(value);
-    return E_OK;
+    return Get(val);
 }
 
 int ValueObject::GetBool(bool &val) const
 {
-    if (type != ValueObjectType::TYPE_BOOL) {
-        return E_INVALID_OBJECT_TYPE;
-    }
-
-    val = std::get<bool>(value);
-    return E_OK;
+    return Get(val);
 }
 
 int ValueObject::GetString(std::string &val) const
 {
-    if (type != ValueObjectType::TYPE_STRING) {
-        return E_INVALID_OBJECT_TYPE;
-    }
-
-    val = std::get<std::string>(value);
-    return E_OK;
+    return Get(val);
 }
 
 int ValueObject::GetBlob(std::vector<uint8_t> &val) const
 {
-    if (type != ValueObjectType::TYPE_BLOB) {
+    return Get(val);
+}
+
+int ValueObject::GetAsset(Asset &val) const
+{
+    return Get(val);
+}
+
+int ValueObject::GetAssets(Assets &val) const
+{
+    return Get(val);
+}
+
+template<class T>
+int ValueObject::Get(T &output) const
+{
+    const T *v = std::get_if<T>(&value);
+    if (v == nullptr) {
         return E_INVALID_OBJECT_TYPE;
     }
-
-    val = std::get<std::vector<uint8_t>>(value);
+    output = static_cast<T>(*v);
     return E_OK;
 }
-
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-bool ValueObject::Marshalling(Parcel &parcel) const
-{
-    switch (this->type) {
-        case ValueObjectType::TYPE_NULL: {
-            parcel.WriteInt16((int16_t) ValueObjectType::TYPE_NULL);
-            break;
-        }
-        case ValueObjectType::TYPE_INT: {
-            parcel.WriteInt16((int16_t) ValueObjectType::TYPE_INT);
-            parcel.WriteInt64(std::get<int64_t>(value));
-            break;
-        }
-        case ValueObjectType::TYPE_DOUBLE: {
-            parcel.WriteInt16((int16_t) ValueObjectType::TYPE_DOUBLE);
-            parcel.WriteDouble(std::get<double>(value));
-            break;
-        }
-        case ValueObjectType::TYPE_STRING: {
-            parcel.WriteInt16((int16_t) ValueObjectType::TYPE_STRING);
-            parcel.WriteString(std::get<std::string>(value));
-            break;
-        }
-        case ValueObjectType::TYPE_BLOB: {
-            parcel.WriteInt16((int16_t) ValueObjectType::TYPE_BLOB);
-            parcel.WriteUInt8Vector(std::get<std::vector<uint8_t>>(value));
-            break;
-        }
-        case ValueObjectType::TYPE_BOOL: {
-            parcel.WriteInt16((int16_t) ValueObjectType::TYPE_BOOL);
-            parcel.WriteBool(std::get<bool>(value));
-            break;
-        }
-        default:
-            break;
-    }
-    return true;
-}
-
-ValueObject *ValueObject::Unmarshalling(Parcel &parcel)
-{
-    switch (parcel.ReadInt16()) {
-        case (int16_t)ValueObjectType::TYPE_NULL: {
-            return new ValueObject();
-        }
-        case (int16_t)ValueObjectType::TYPE_INT: {
-            return new ValueObject(parcel.ReadInt64());
-        }
-        case (int16_t)ValueObjectType::TYPE_DOUBLE: {
-            return new ValueObject(parcel.ReadDouble());
-        }
-        case (int16_t)ValueObjectType::TYPE_STRING: {
-            return new ValueObject(parcel.ReadString());
-        }
-        case (int16_t)ValueObjectType::TYPE_BLOB: {
-            std::vector<uint8_t> val;
-            parcel.ReadUInt8Vector(&val);
-            return new ValueObject(val);
-        }
-        case (int16_t)ValueObjectType::TYPE_BOOL: {
-            return new ValueObject(parcel.ReadBool());
-        }
-        default:
-            return new ValueObject();
-    }
-}
-#endif
 } // namespace NativeRdb
 } // namespace OHOS

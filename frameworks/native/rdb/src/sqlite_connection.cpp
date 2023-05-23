@@ -32,7 +32,7 @@
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "directory_ex.h"
 #include "rdb_security_manager.h"
 #include "relational/relational_store_sqlite_ext.h"
@@ -45,10 +45,12 @@ namespace NativeRdb {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 // error status
 const int ERROR_STATUS = -1;
+#if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using RdbKeyFile = RdbSecurityManager::KeyFileType;
 #endif
+#endif
 
-SqliteConnection *SqliteConnection::Open(const SqliteConfig &config, bool isWriteConnection, int &errCode)
+SqliteConnection *SqliteConnection::Open(const RdbStoreConfig &config, bool isWriteConnection, int &errCode)
 {
     auto connection = new (std::nothrow) SqliteConnection(isWriteConnection);
     if (connection == nullptr) {
@@ -75,7 +77,7 @@ SqliteConnection::SqliteConnection(bool isWriteConnection)
 {
 }
 
-int SqliteConnection::InnerOpen(const SqliteConfig &config)
+int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 {
     std::string dbPath;
     if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
@@ -141,18 +143,74 @@ int SqliteConnection::InnerOpen(const SqliteConfig &config)
     return E_OK;
 }
 
-int SqliteConnection::Config(const SqliteConfig &config)
+int SqliteConnection::SetCustomFunctions(const RdbStoreConfig &config)
+{
+    int errCode;
+    customScalarFunctions_ = config.GetScalarFunctions();
+    for (auto &it : customScalarFunctions_) {
+        errCode = SetCustomScalarFunction(it.first, it.second.argc_, &it.second.function_);
+        if (errCode != E_OK) {
+            return errCode;
+        }
+    }
+    return E_OK;
+}
+
+static void CustomScalarFunctionCallback(sqlite3_context *ctx, int argc, sqlite3_value **argv)
+{
+    if (ctx == nullptr || argv == nullptr) {
+        LOG_ERROR("ctx or argv is nullptr");
+        return;
+    }
+    auto function = static_cast<ScalarFunction *>(sqlite3_user_data(ctx));
+    if (function == nullptr) {
+        LOG_ERROR("function is nullptr");
+        return;
+    }
+
+    std::vector<std::string> argsVector;
+    for (int i = 0; i < argc; ++i) {
+        auto arg = reinterpret_cast<const char*>(sqlite3_value_text(argv[i]));
+        if (arg == nullptr) {
+            LOG_ERROR("arg is nullptr, index is %{public}d", i);
+            sqlite3_result_null(ctx);
+            return;
+        }
+        argsVector.emplace_back(std::string(arg));
+    }
+
+    std::string result = (*function)(argsVector);
+    if (result.empty()) {
+        sqlite3_result_null(ctx);
+        return;
+    }
+    sqlite3_result_text(ctx, result.c_str(), -1, SQLITE_TRANSIENT);
+}
+
+int SqliteConnection::SetCustomScalarFunction(const std::string &functionName, int argc, ScalarFunction *function)
+{
+    int err = sqlite3_create_function_v2(dbHandle,
+                                         functionName.c_str(),
+                                         argc,
+                                         SQLITE_UTF8,
+                                         function,
+                                         &CustomScalarFunctionCallback,
+                                         nullptr,
+                                         nullptr,
+                                         nullptr);
+    if (err != SQLITE_OK) {
+        LOG_ERROR("SetCustomScalarFunction errCode is %{public}d", err);
+    }
+    return err;
+}
+
+int SqliteConnection::Config(const RdbStoreConfig &config)
 {
     if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
         return E_OK;
     }
 
     int errCode = SetPageSize(config);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    errCode = SetEncryptAlgo(config);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -177,6 +235,11 @@ int SqliteConnection::Config(const SqliteConfig &config)
         return errCode;
     }
 
+    errCode = SetCustomFunctions(config);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
     return E_OK;
 }
 
@@ -194,7 +257,7 @@ SqliteConnection::~SqliteConnection()
     }
 }
 
-int SqliteConnection::SetPageSize(const SqliteConfig &config)
+int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
 {
     if (isReadOnly || config.GetPageSize() == GlobalExpr::DB_PAGE_SIZE) {
         return E_OK;
@@ -219,50 +282,38 @@ int SqliteConnection::SetPageSize(const SqliteConfig &config)
     return errCode;
 }
 
-int SqliteConnection::SetEncryptAlgo(const SqliteConfig &config)
+int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config)
 {
-    int errCode = E_OK;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    if (!config.IsAutoEncrypt() && config.GetEncryptKey().empty()) {
-        return errCode;
-    }
-#endif
-    std::string sqlStr = "PRAGMA codec_hmac_algo=" + config.GetEncryptAlgo();
-    errCode = ExecuteSql(sqlStr);
-    if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection SetEncryptAlgorithm fail, err = %{public}d", errCode);
-        return errCode;
-    }
-
-    sqlStr = "PRAGMA codec_rekey_hmac_algo=" + config.GetEncryptAlgo();
-    errCode = ExecuteSql(sqlStr);
-    if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection set rekey Algo fail, err = %{public}d", errCode);
-        return errCode;
-    }
-
-    return errCode;
-}
-
-int SqliteConnection::SetEncryptKey(const SqliteConfig &config)
-{
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     std::vector<uint8_t> key;
     RdbPassword rdbPwd;
-    if (!config.GetEncryptKey().empty() && !config.IsAutoEncrypt()) {
+    int errCode = E_OK;
+    if (!config.GetEncryptKey().empty() && !config.IsEncrypt()) {
         key = config.GetEncryptKey();
-    } else if (config.IsAutoEncrypt()) {
+    } else if (config.IsEncrypt()) {
+        RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
         rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbKeyFile::PUB_KEY_FILE);
         key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
     } else {
         return E_OK;
     }
 
-    int errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
+    errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
     key.assign(key.size(), 0);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("SqliteConnection SetEncryptKey fail, err = %{public}d", errCode);
         return SQLiteError::ErrNo(errCode);
+    }
+
+    errCode = ExecuteSql(GlobalExpr::CODEC_HMAC_ALGO);
+    if (errCode != E_OK) {
+        LOG_ERROR("SqliteConnection set sha algo failed, err = %{public}d", errCode);
+        return errCode;
+    }
+    errCode = ExecuteSql(GlobalExpr::CODEC_REKEY_HMAC_ALGO);
+    if (errCode != E_OK) {
+        LOG_ERROR("SqliteConnection set rekey sha algo failed, err = %{public}d", errCode);
+        return errCode;
     }
 
     if (rdbPwd.isKeyExpired) {
@@ -308,7 +359,7 @@ int SqliteConnection::SetBusyTimeout(int timeout)
     return E_OK;
 }
 
-int SqliteConnection::SetJournalMode(const SqliteConfig &config)
+int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
 {
     if (isReadOnly || config.GetJournalMode().compare(GlobalExpr::DB_DEFAULT_JOURNAL_MODE) == 0) {
         return E_OK;
@@ -343,7 +394,7 @@ int SqliteConnection::SetJournalMode(const SqliteConfig &config)
     return errCode;
 }
 
-int SqliteConnection::SetJournalSizeLimit(const SqliteConfig &config)
+int SqliteConnection::SetJournalSizeLimit(const RdbStoreConfig &config)
 {
     if (isReadOnly || config.GetJournalSize() == GlobalExpr::DB_JOURNAL_SIZE) {
         return E_OK;
@@ -369,7 +420,7 @@ int SqliteConnection::SetJournalSizeLimit(const SqliteConfig &config)
     return errCode;
 }
 
-int SqliteConnection::SetAutoCheckpoint(const SqliteConfig &config)
+int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
 {
     if (isReadOnly || config.IsAutoCheck() == GlobalExpr::DB_AUTO_CHECK) {
         return E_OK;
@@ -729,7 +780,7 @@ int SqliteConnection::ConfigLocale(const std::string localeStr)
 }
 #endif
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 /**
  * Executes a statement and populates the specified with a range of results.
  */

@@ -34,7 +34,7 @@
 #include "directory_ex.h"
 #endif
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "iresult_set.h"
 #include "rdb_device_manager_adapter.h"
 #include "rdb_manager.h"
@@ -52,9 +52,9 @@
 #endif
 
 namespace OHOS::NativeRdb {
-std::shared_ptr<RdbStore> RdbStoreImpl::Open(const RdbStoreConfig &config, int &errCode)
+std::shared_ptr<RdbStoreImpl> RdbStoreImpl::Open(const RdbStoreConfig &config, int &errCode)
 {
-    std::shared_ptr<RdbStoreImpl> rdbStore = std::make_shared<RdbStoreImpl>();
+    std::shared_ptr<RdbStoreImpl> rdbStore = std::make_shared<RdbStoreImpl>(config);
     errCode = rdbStore->InnerOpen(config);
     if (errCode != E_OK) {
         return nullptr;
@@ -79,7 +79,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     name = config.GetName();
     fileType = config.GetDatabaseFileType();
     isEncrypt_ = config.IsEncrypt();
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     syncerParam_.bundleName_ = config.GetBundleName();
     syncerParam_.hapName_ = config.GetModuleName();
     syncerParam_.storeName_ = config.GetName();
@@ -88,35 +88,40 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.type_ = config.GetDistributedType();
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
+
+    std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
+    errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
+    if (errCode != E_OK) {
+        LOG_ERROR("GetRdbService failed, err is %{public}d.", errCode);
+        return E_OK;
+    }
+    errCode = service->GetSchema(syncerParam_);
+    if (errCode != E_OK) {
+        LOG_ERROR("GetSchema failed, err is %{public}d.", errCode);
+    }
     // open uri share
     if (!config.GetUri().empty()) {
-        std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-        errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
-        if (errCode != E_OK) {
-            LOG_ERROR("RdbStoreImpl::InnerOpen get service failed, err is %{public}d.", errCode);
-            return E_OK;
-        }
         errCode = service->CreateRDBTable(syncerParam_, config.GetWritePermission(), config.GetReadPermission());
         if (errCode != E_OK) {
-            LOG_ERROR("RdbStoreImpl::InnerOpen service CreateRDBTable failed");
-            return E_OK;
+            LOG_ERROR("CreateRDBTable failed");
+        } else {
+            isShared_ = true;
         }
-        isShared_ = true;
     }
 #endif
     return E_OK;
 }
 
-RdbStoreImpl::RdbStoreImpl()
-    : connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false), isMemoryRdb(false),
-      isEncrypt_(false)
+RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
+    : rdbStoreConfig(config), connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false),
+      isMemoryRdb(false), isEncrypt_(false)
 {
 }
 
 RdbStoreImpl::~RdbStoreImpl()
 {
     delete connectionPool;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     if (isShared_) {
         std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
         int errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
@@ -138,6 +143,10 @@ void RdbStoreImpl::Clear()
 }
 #endif
 
+const RdbStoreConfig &RdbStoreImpl::GetConfig()
+{
+    return rdbStoreConfig;
+}
 int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -152,12 +161,10 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
         return E_OK;
     }
     // prepare batch data & sql
-    std::map<std::string, ValueObject> valuesMap;
     std::vector<std::pair<std::string, std::vector<ValueObject>>> vecVectorObj;
     for (auto iter = initialBatchValues.begin(); iter != initialBatchValues.end(); iter++) {
-        (*iter).GetAll(valuesMap);
-        vecVectorObj.push_back(GetInsertParams(valuesMap, table));
-        valuesMap.clear();
+        auto values = (*iter).GetAll();
+        vecVectorObj.push_back(GetInsertParams(values, table));
     }
 
     // prepare BeginTransaction
@@ -250,17 +257,17 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
     std::stringstream sql;
     sql << "INSERT" << conflictClause << " INTO " << table << '(';
 
-    std::map<std::string, ValueObject> valuesMap;
-    initialValues.GetAll(valuesMap);
     std::vector<ValueObject> bindArgs;
-    for (auto iter = valuesMap.begin(); iter != valuesMap.end(); iter++) {
-        sql << ((iter == valuesMap.begin()) ? "" : ",");
-        sql << iter->first;               // columnName
-        bindArgs.push_back(iter->second); // columnValue
+    const char *split = "";
+    for (auto &[key, val] : initialValues.values_) {
+        sql << split;
+        sql << key;               // columnName
+        bindArgs.push_back(val);  // columnValue
+        split = ",";
     }
 
     sql << ") VALUES (";
-    for (size_t i = 0; i < valuesMap.size(); i++) {
+    for (size_t i = 0; i < initialValues.Size(); i++) {
         sql << ((i == 0) ? "?" : ",?");
     }
     sql << ')';
@@ -310,13 +317,13 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
     std::stringstream sql;
     sql << "UPDATE" << conflictClause << " " << table << " SET ";
 
-    std::map<std::string, ValueObject> valuesMap;
-    values.GetAll(valuesMap);
     std::vector<ValueObject> bindArgs;
-    for (auto iter = valuesMap.begin(); iter != valuesMap.end(); iter++) {
-        sql << ((iter == valuesMap.begin()) ? "" : ",");
-        sql << iter->first << "=?";       // columnName
-        bindArgs.push_back(iter->second); // columnValue
+    const char * split = "";
+    for (auto &[key, val] : values.values_) {
+        sql << split;
+        sql << key << "=?";       // columnName
+        bindArgs.push_back(val);  // columnValue
+        split = ",";
     }
 
     if (whereClause.empty() == false) {
@@ -373,7 +380,7 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
     return errCode;
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
@@ -438,7 +445,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
 }
 #endif
 
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
+#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
 std::unique_ptr<ResultSet> RdbStoreImpl::Query(
     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
@@ -571,8 +578,18 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
 
     std::vector<ValueObject> bindArgs;
     bindArgs.push_back(ValueObject(backupFilePath));
-    if (destEncryptKey.size() != 0) {
+    if (destEncryptKey.size() != 0 && !isEncrypt_) {
         bindArgs.push_back(ValueObject(destEncryptKey));
+        ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    } else if (isEncrypt_) {
+        std::vector<uint8_t> key;
+        RdbPassword rdbPwd;
+        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+        bindArgs.push_back(ValueObject(key));
+        ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+#endif
     } else {
         std::string str = "";
         bindArgs.push_back(ValueObject(str));
@@ -713,8 +730,18 @@ int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
     std::vector<ValueObject> bindArgs;
     bindArgs.push_back(ValueObject(pathName));
     bindArgs.push_back(ValueObject(alias));
-    if (destEncryptKey.size() != 0) {
+    if (destEncryptKey.size() != 0 && !isEncrypt_) {
         bindArgs.push_back(ValueObject(destEncryptKey));
+        ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    } else if (isEncrypt_) {
+        std::vector<uint8_t> key;
+        RdbPassword rdbPwd;
+        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+        bindArgs.push_back(ValueObject(key));
+        ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+#endif
     } else {
         std::string str = "";
         bindArgs.push_back(ValueObject(str));
@@ -897,7 +924,7 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
     return E_OK;
 }
 
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
+#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
 
 std::string RdbStoreImpl::ExtractFilePath(const std::string &fileFullName)
 {
@@ -1065,7 +1092,7 @@ std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
     return resultSet;
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));

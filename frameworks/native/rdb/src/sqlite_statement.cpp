@@ -15,10 +15,11 @@
 
 #include "sqlite_statement.h"
 
-#include <sstream>
 #include <iomanip>
+#include <sstream>
 
 #include "logger.h"
+#include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "sqlite_errno.h"
 

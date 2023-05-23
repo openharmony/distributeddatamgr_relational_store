@@ -22,11 +22,10 @@
 #include <string>
 
 #include "logger.h"
-#include "parcel.h"
+#include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "rdb_trace.h"
 #include "shared_block.h"
-#include "string_ex.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -485,28 +484,6 @@ int AbsSharedResultSet::CheckState(int columnIndex)
     }
 
     return E_OK;
-}
-
-bool AbsSharedResultSet::Marshalling(MessageParcel &parcel)
-{
-    if (sharedBlock_ == nullptr) {
-        LOG_ERROR("AbsSharedResultSet::Marshalling sharedBlock is null.");
-        return false;
-    }
-    LOG_DEBUG("AbsSharedResultSet::Marshalling sharedBlock.");
-    return sharedBlock_->WriteMessageParcel(parcel);
-}
-
-bool AbsSharedResultSet::Unmarshalling(MessageParcel &parcel)
-{
-    if (sharedBlock_ != nullptr) {
-        return false;
-    }
-    int result = AppDataFwk::SharedBlock::ReadMessageParcel(parcel, sharedBlock_);
-    if (result < 0) {
-        LOG_ERROR("AbsSharedResultSet: create from parcel error is %{public}d.", result);
-    }
-    return true;
 }
 } // namespace NativeRdb
 } // namespace OHOS

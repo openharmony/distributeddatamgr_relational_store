@@ -25,6 +25,7 @@ config("module_private_config") {
     "${relational_store_native_path}/rdb/src",
     "${relational_store_innerapi_path}/appdatafwk/include",
     "//commonlibrary/c_utils/base/include",
+    "${common_tool_path}/",
   ]
 
   if (relational_store_rdb_support_icu) {

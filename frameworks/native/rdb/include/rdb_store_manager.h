@@ -22,15 +22,16 @@
 
 #include "rdb_open_callback.h"
 #include "rdb_store_config.h"
+#include "rdb_store_impl.h"
 #include "timer.h"
 
 namespace OHOS {
 namespace NativeRdb {
 struct RdbStoreNode {
-    RdbStoreNode(const std::shared_ptr<RdbStore> &rdbStore);
-    RdbStoreNode &operator=(const std::shared_ptr<RdbStore> &store);
+    RdbStoreNode(const std::shared_ptr<RdbStoreImpl> &rdbStore);
+    RdbStoreNode &operator=(const std::shared_ptr<RdbStoreImpl> &store);
 
-    std::shared_ptr<RdbStore> rdbStore_;
+    std::shared_ptr<RdbStoreImpl> rdbStore_;
     uint32_t timerId_;
 };
 
@@ -51,7 +52,6 @@ private:
         const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
     void RestartTimer(const std::string &path, RdbStoreNode &node);
     void AutoClose(const std::string &path);
-    static void InitSecurityManager(const RdbStoreConfig &config);
     std::mutex mutex_;
     std::shared_ptr<Utils::Timer> timer_;
     std::map<std::string, std::shared_ptr<RdbStoreNode>> storeCache_;

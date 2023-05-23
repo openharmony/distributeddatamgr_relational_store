@@ -19,65 +19,115 @@
 #include <string>
 #include <variant>
 #include <vector>
-#include <parcel.h>
-#include "rdb_visibility.h"
 
+#include "asset_value.h"
+#include "rdb_visibility.h"
 namespace OHOS {
 namespace NativeRdb {
 /**
- * @brief Indicates the ValueObject {@link ValueObject} type.
- */
-enum class ValueObjectType {
-    /** Indicates the ValueObject type is NULL.*/
-    TYPE_NULL = 0,
-    /** Indicates the ValueObject type is int.*/
-    TYPE_INT,
-    /** Indicates the ValueObject type is double.*/
-    TYPE_DOUBLE,
-    /** Indicates the ValueObject type is string.*/
-    TYPE_STRING,
-    /** Indicates the ValueObject type is bool.*/
-    TYPE_BOOL,
-    /** Indicates the ValueObject type is blob.*/
-    TYPE_BLOB,
-};
-
-/**
  * The ValueObject class of RDB.
  */
-class RDB_API_EXPORT ValueObject : public virtual OHOS::Parcelable {
+class API_EXPORT ValueObject {
 public:
     /**
      * @brief Use Type replace std::variant.
      */
-    using Type = std::variant<std::monostate, int64_t, double, std::string, bool, std::vector<uint8_t>>;
+    using Nil = std::monostate;
+    using Blob = std::vector<uint8_t>;
+    using Asset = AssetValue;
+    using Assets = std::vector<Asset>;
+    using Type = std::variant<Nil, int64_t, double, std::string, bool, Blob, Asset, Assets>;
+    template<typename Tp, typename... Types>
+    struct index_of : std::integral_constant<size_t, 0> {};
 
+    template<typename Tp, typename... Types>
+    inline static constexpr size_t index_of_v = index_of<Tp, Types...>::value;
+
+    template<typename Tp, typename First, typename... Rest>
+    struct index_of<Tp, First, Rest...>
+        : std::integral_constant<size_t, std::is_same_v<Tp, First> ? 0 : index_of_v<Tp, Rest...> + 1> {};
+
+    template<typename... Types>
+    struct variant_size_of {
+        static constexpr size_t value = sizeof...(Types);
+    };
+
+    template<typename T, typename... Types>
+    struct variant_index_of {
+        static constexpr size_t value = index_of_v<T, Types...>;
+    };
+
+    template<typename... Types>
+    static variant_size_of<Types...> variant_size_test(const std::variant<Types...> &);
+
+    template<typename T, typename... Types>
+    static variant_index_of<T, Types...> variant_index_test(const T &, const std::variant<Types...> &);
+
+    template<typename T>
+    inline constexpr static int32_t TYPE_INDEX =
+        decltype(variant_index_test(std::declval<T>(), std::declval<Type>()))::value;
+
+    inline constexpr static int32_t TYPE_MAX = decltype(variant_size_test(std::declval<Type>()))::value;
+
+    /**
+     * @brief Indicates the ValueObject {@link ValueObject} type.
+     * */
+    enum TypeId : int32_t {
+        /** Indicates the ValueObject type is NULL.*/
+        TYPE_NULL = TYPE_INDEX<Nil>,
+        /** Indicates the ValueObject type is int.*/
+        TYPE_INT = TYPE_INDEX<int64_t>,
+        /** Indicates the ValueObject type is double.*/
+        TYPE_DOUBLE = TYPE_INDEX<double>,
+        /** Indicates the ValueObject type is string.*/
+        TYPE_STRING = TYPE_INDEX<std::string>,
+        /** Indicates the ValueObject type is bool.*/
+        TYPE_BOOL = TYPE_INDEX<bool>,
+        /** Indicates the ValueObject type is blob.*/
+        TYPE_BLOB = TYPE_INDEX<Blob>,
+        /** Indicates the ValueObject type is asset.*/
+        TYPE_ASSET = TYPE_INDEX<Asset>,
+        /** Indicates the ValueObject type is assets.*/
+        TYPE_ASSETS = TYPE_INDEX<Assets>,
+        /** the BUTT.*/
+        TYPE_BUTT = TYPE_MAX
+    };
+    Type value;
+
+    /**
+     * @brief convert a std::variant input to another std::variant output with different (..._Types)
+     */
+    template<typename T>
+    static inline std::enable_if_t<(TYPE_INDEX<T>) < TYPE_MAX, const char *> DeclType()
+    {
+        return DECLARE_TYPES[TYPE_INDEX<T>];
+    }
     /**
      * @brief Constructor.
      */
-    RDB_API_EXPORT ValueObject();
+    API_EXPORT ValueObject();
 
     /**
      * @brief Destructor.
      */
-    RDB_API_EXPORT ~ValueObject();
+    API_EXPORT ~ValueObject();
 
     /**
      * @brief Constructor.
      *
      * A parameterized constructor used to create a ValueObject instance.
      */
-    RDB_API_EXPORT ValueObject(Type valueObject) noexcept;
+    API_EXPORT ValueObject(Type val) noexcept;
 
     /**
      * @brief Move constructor.
      */
-    RDB_API_EXPORT ValueObject(ValueObject &&valueObject) noexcept;
+    API_EXPORT ValueObject(ValueObject &&val) noexcept;
 
     /**
      * @brief Copy constructor.
      */
-    RDB_API_EXPORT ValueObject(const ValueObject &valueObject);
+    API_EXPORT ValueObject(const ValueObject &val);
 
     /**
      * @brief Constructor.
@@ -86,7 +136,7 @@ public:
      *
      * @param val Indicates an int input parameter.
      */
-    RDB_API_EXPORT ValueObject(int val);
+    API_EXPORT ValueObject(int32_t val);
 
     /**
      * @brief Constructor.
@@ -95,7 +145,7 @@ public:
      *
      * @param val Indicates an int64_t input parameter.
      */
-    RDB_API_EXPORT ValueObject(int64_t val);
+    API_EXPORT ValueObject(int64_t val);
 
     /**
      * @brief Constructor.
@@ -104,7 +154,7 @@ public:
      *
      * @param val Indicates an double input parameter.
      */
-    RDB_API_EXPORT ValueObject(double val);
+    API_EXPORT ValueObject(double val);
 
     /**
      * @brief Constructor.
@@ -113,7 +163,7 @@ public:
      *
      * @param val Indicates an bool input parameter.
      */
-    RDB_API_EXPORT ValueObject(bool val);
+    API_EXPORT ValueObject(bool val);
 
     /**
      * @brief Constructor.
@@ -122,16 +172,16 @@ public:
      *
      * @param val Indicates an string input parameter.
      */
-    RDB_API_EXPORT ValueObject(const std::string &val);
+    API_EXPORT ValueObject(std::string val);
 
     /**
      * @brief Constructor.
      *
-     * This constructor is used to convert the const chars input parameter to a value of type ValueObject.
+     * This constructor is used to convert the const char * input parameter to a value of type ValueObject.
      *
-     * @param val Indicates a const chars input parameter.
+     * @param val Indicates an const char * input parameter.
      */
-    RDB_API_EXPORT ValueObject(const char *val);
+    API_EXPORT ValueObject(const char *val);
 
     /**
      * @brief Constructor.
@@ -140,69 +190,87 @@ public:
      *
      * @param val Indicates an vector<uint8_t> input parameter.
      */
-    RDB_API_EXPORT ValueObject(const std::vector<uint8_t> &blob);
+    API_EXPORT ValueObject(const std::vector<uint8_t> &blob);
+
+    /**
+     * @brief Constructor.
+     *
+     * This constructor is used to convert the Asset input parameter to a value of type ValueObject.
+     *
+     * @param val Indicates an Asset input parameter.
+     */
+    API_EXPORT ValueObject(Asset val);
+
+    /**
+     * @brief Constructor.
+     *
+     * This constructor is used to convert the Assets input parameter to a value of type ValueObject.
+     *
+     * @param val Indicates an Assets input parameter.
+     */
+    API_EXPORT ValueObject(Assets val);
 
     /**
      * @brief Move assignment operator overloaded function.
      */
-    RDB_API_EXPORT ValueObject &operator=(ValueObject &&valueObject) noexcept;
+    API_EXPORT ValueObject &operator=(ValueObject &&valueObject) noexcept;
 
     /**
      * @brief Copy assignment operator overloaded function.
      */
-    RDB_API_EXPORT ValueObject &operator=(const ValueObject &valueObject);
+    API_EXPORT ValueObject &operator=(const ValueObject &valueObject);
 
     /**
      * @brief Obtains the type in this {@code ValueObject} object.
      */
-    RDB_API_EXPORT ValueObjectType GetType() const;
+    API_EXPORT TypeId GetType() const;
 
     /**
      * @brief Obtains the int value in this {@code ValueObject} object.
      */
-    RDB_API_EXPORT int GetInt(int &val) const;
+    API_EXPORT int GetInt(int &val) const;
 
     /**
      * @brief Obtains the long value in this {@code ValueObject} object.
      */
-    RDB_API_EXPORT int GetLong(int64_t &val) const;
+    API_EXPORT int GetLong(int64_t &val) const;
 
     /**
      * @brief Obtains the double value in this {@code ValueObject} object.
      */
-    RDB_API_EXPORT int GetDouble(double &val) const;
+    API_EXPORT int GetDouble(double &val) const;
 
     /**
      * @brief Obtains the bool value in this {@code ValueObject} object.
      */
-    RDB_API_EXPORT int GetBool(bool &val) const;
+    API_EXPORT int GetBool(bool &val) const;
 
     /**
      * @brief Obtains the string value in this {@code ValueObject} object.
      */
-    RDB_API_EXPORT int GetString(std::string &val) const;
+    API_EXPORT int GetString(std::string &val) const;
 
     /**
      * @brief Obtains the vector<uint8_t> value in this {@code ValueObject} object.
      */
-    RDB_API_EXPORT int GetBlob(std::vector<uint8_t> &val) const;
+    API_EXPORT int GetBlob(std::vector<uint8_t> &val) const;
 
     /**
-     * @brief Write to message parcel.
+     * @brief Obtains the vector<uint8_t> value in this {@code ValueObject} object.
      */
-    RDB_API_EXPORT bool Marshalling(Parcel &parcel) const override;
+    API_EXPORT int GetAsset(Asset &val) const;
 
     /**
-     * @brief Obtains a ValueObject object from parcel.
+     * @brief Obtains the vector<uint8_t> value in this {@code ValueObject} object.
      */
-    RDB_API_EXPORT static ValueObject *Unmarshalling(Parcel &parcel);
+    API_EXPORT int GetAssets(Assets &val) const;
 
     /**
      * @brief Type conversion function.
      *
      * @return Returns the int type ValueObject.
      */
-    operator int () const
+    operator int() const
     {
         return static_cast<int>(std::get<int64_t>(value));
     }
@@ -212,7 +280,7 @@ public:
      *
      * @return Returns the int64_t type ValueObject.
      */
-    operator int64_t () const
+    operator int64_t() const
     {
         return std::get<int64_t>(value);
     }
@@ -222,7 +290,7 @@ public:
      *
      * @return Returns the double type ValueObject.
      */
-    operator double () const
+    operator double() const
     {
         return std::get<double>(value);
     }
@@ -232,7 +300,7 @@ public:
      *
      * @return Returns the bool type ValueObject.
      */
-    operator bool () const
+    operator bool() const
     {
         return std::get<bool>(value);
     }
@@ -242,7 +310,7 @@ public:
      *
      * @return Returns the string type ValueObject.
      */
-    operator std::string () const
+    operator std::string() const
     {
         return std::get<std::string>(value);
     }
@@ -252,9 +320,29 @@ public:
      *
      * @return Returns the vector<uint8_t> type ValueObject.
      */
-    operator std::vector<uint8_t> () const
+    operator Blob() const
     {
-        return std::get<std::vector<uint8_t>>(value);
+        return std::get<Blob>(value);
+    }
+
+    /**
+     * @brief Type conversion function.
+     *
+     * @return Returns the vector<uint8_t> type ValueObject.
+     */
+    operator Asset() const
+    {
+        return std::get<Asset>(value);
+    }
+
+    /**
+    * @brief Type conversion function.
+    *
+    * @return Returns the vector<uint8_t> type ValueObject.
+    */
+    operator Assets() const
+    {
+        return std::get<Assets>(value);
     }
 
     /**
@@ -268,10 +356,28 @@ public:
     }
 
 private:
-    ValueObjectType type;
-    Type value;
+    template<class T>
+    int Get(T &output) const;
+    static constexpr const char *DECLARE_TYPES[TypeId::TYPE_BUTT] = {
+        /** Indicates the ValueObject type is NULL.*/
+        "",
+        /** Indicates the ValueObject type is int.*/
+        "INT",
+        /** Indicates the ValueObject type is double.*/
+        "REAL",
+        /** Indicates the ValueObject type is string.*/
+        "TEXT",
+        /** Indicates the ValueObject type is bool.*/
+        "INT",
+        /** Indicates the ValueObject type is blob.*/
+        "BLOB",
+        /** Indicates the ValueObject type is asset.*/
+        "ASSET",
+        /** Indicates the ValueObject type is assets.*/
+        "ASSETS"
+    };
 };
-
+using ValueObjectType = ValueObject::TypeId;
 } // namespace NativeRdb
 } // namespace OHOS
 #endif
