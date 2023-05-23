@@ -22,7 +22,7 @@ extern "C" {
 #endif
 
 typedef struct {
-   int64_t id;
+    int64_t id;
 } OH_Rdb_VObject;
 
 OH_Rdb_VObject *OH_Rdb_CreateValueObject();

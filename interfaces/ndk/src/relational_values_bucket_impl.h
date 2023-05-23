@@ -24,7 +24,8 @@ namespace RdbNdk {
 constexpr int RDB_VBUCKET_CID = 1234562; // The class id used to uniquely identify the OH_Rdb_VBucket class.
 class ValuesBucketImpl : public OH_Rdb_VBucket {
 public:
-    ValuesBucketImpl() {
+    ValuesBucketImpl()
+    {
         id = RDB_VBUCKET_CID;
         capability = 0;
     }

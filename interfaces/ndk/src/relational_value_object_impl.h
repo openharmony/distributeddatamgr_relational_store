@@ -25,7 +25,8 @@ namespace RdbNdk {
 constexpr int RDB_VOBJECT_CID = 1234565; // The class id used to uniquely identify the OH_Rdb_VObject class.
 class ValueObjectImpl : public OH_Rdb_VObject {
 public:
-    ValueObjectImpl() {
+    ValueObjectImpl()
+    {
         id = RDB_VOBJECT_CID;
     }
     std::vector<std::string> &getValue();

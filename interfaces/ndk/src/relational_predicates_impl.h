@@ -32,7 +32,8 @@ OH_Predicates PREDICATES_Between(OH_Predicates *predicates, const char *field, O
 OH_Predicates PREDICATES_NotBetween(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
 OH_Predicates PREDICATES_GreaterThan(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
 OH_Predicates PREDICATES_LessThan(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
-OH_Predicates PREDICATES_GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+OH_Predicates PREDICATES_GreaterThanOrEqualTo(
+    OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
 OH_Predicates PREDICATES_LessThanOrEqualTo(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
 OH_Predicates PREDICATES_OrderBy(OH_Predicates *predicates, const char *field, OH_Rdb_OrderType type);
 OH_Predicates PREDICATES_Distinct(OH_Predicates *predicates);
@@ -49,7 +50,7 @@ namespace RdbNdk {
 constexpr int RDB_PREDICATES_CID = 1234561; // The class id used to uniquely identify the OH_Predicates class.
 class PredicateImpl : public OH_Predicates {
 public:
-    PredicateImpl(const char *table) : predicates_(table)
+    explicit PredicateImpl(const char *table) : predicates_(table)
     {
         id = RDB_PREDICATES_CID;
         OH_Predicates_EqualTo = PREDICATES_EqualTo;

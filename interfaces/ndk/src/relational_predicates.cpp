@@ -125,7 +125,7 @@ OH_Predicates PREDICATES_IsNull(OH_Predicates *predicates, const char *field)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d",
-                 (predicates == nullptr), (field == nullptr));
+            (predicates == nullptr), (field == nullptr));
         return *predicates;
     }
     auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
@@ -137,7 +137,7 @@ OH_Predicates PREDICATES_IsNotNull(OH_Predicates *predicates, const char *field)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d",
-                 (predicates == nullptr), (field == nullptr));
+            (predicates == nullptr), (field == nullptr));
         return *predicates;
     }
     auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
@@ -262,7 +262,7 @@ OH_Predicates PREDICATES_OrderBy(OH_Predicates *predicates, const char *field, O
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d",
-                 (predicates == nullptr), (field == nullptr));
+            (predicates == nullptr), (field == nullptr));
         return *predicates;
     }
     auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
@@ -311,7 +311,7 @@ OH_Predicates PREDICATES_GroupBy(OH_Predicates *predicates, OH_Rdb_VObject *valu
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || valueObject == nullptr) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, valueObject is NULL ? %{public}d,",
-                 (predicates == nullptr), (valueObject == nullptr));
+            (predicates == nullptr), (valueObject == nullptr));
         return *predicates;
     }
     auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
