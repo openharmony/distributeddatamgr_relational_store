@@ -1,11 +1,11 @@
 {
-    "name": "@ohos/distributeddatamgr_relational_store",
+    "name": "@ohos/relational_store",
     "version": "3.1.0",
     "description": "Local Data Management",
     "homePage": "https://gitee.com/openharmony",
     "license": "Apache V2",
     "repository": "https://gitee.com/openharmony/distributeddatamgr_relational_store",
-    "domain": "os",
+    "domain": "ohos",
     "language": "",
     "publishAs": "code-segment",
     "private": false,
@@ -44,8 +44,8 @@
         "adapted_system_type": [
             "standard"
         ],
-        "rom": "",
-        "ram": "",
+        "rom": "1000",
+        "ram": "350",
         "deps": {
             "components": [
                 "ability_runtime",
