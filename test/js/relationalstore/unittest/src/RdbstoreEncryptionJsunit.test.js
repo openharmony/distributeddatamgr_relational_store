@@ -196,6 +196,39 @@ describe('rdbEncryptTest', function () {
 
             await console.log(TAG + "************* RdbEncryptTest_0040 end *************")
         })
+
+    /**
+     * @tc.name RDB Encrypt test
+     * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0050
+     * @tc.desc RDB Encrypt function test for setDistributedTables and insert.
+     */
+    it('RdbEncryptTest_0050', 0, async function (done) {
+        await console.log(TAG + "************* RdbEncryptTest_0050 start *************")
+        let rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG_ENCRYPT)
+        await rdbStore.executeSql(CREATE_TABLE_TEST, null)
+        await rdbStore.setDistributedTables(['test'])
+
+        var u8 = new Uint8Array([1, 2, 3])
+        const valueBucket = {
+            "name": "zhangsan",
+            "age": 18,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        let insertPromise = rdbStore.insert("test", valueBucket)
+        insertPromise.then(async (ret) => {
+            expect(1).assertEqual(ret)
+            console.log(TAG + "insert first done: " + ret)
+            done()
+        }).catch((err) => {
+            expect(false).assertTrue()
+            console.log(TAG + "insert error, err: code = "  + err.code + " message=" + err.message)
+        })
+
+        await insertPromise;
+        done()
+        await console.log(TAG + "************* RdbEncryptTest_0050 end *************")
+    })
         console.log(TAG + "*************Unit Test End*************")
     }
 )
