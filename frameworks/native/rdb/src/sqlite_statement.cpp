@@ -451,6 +451,26 @@ int SqliteStatement::GetColumn(int index, ValueObject &value) const
     return E_OK;
 }
 
+int SqliteStatement::GetSize(int index, size_t &size) const
+{
+    size = 0;
+    if (stmtHandle == nullptr) {
+        return E_INVALID_STATEMENT;
+    }
+
+    if (index >= columnCount) {
+        return E_INVALID_COLUMN_INDEX;
+    }
+
+    int type = sqlite3_column_type(stmtHandle, index);
+    if (type == SQLITE_BLOB || type == SQLITE_TEXT || type == SQLITE_NULL) {
+        size = sqlite3_column_bytes(stmtHandle, index);
+        return E_OK;
+    }
+
+    return E_INVALID_COLUMN_TYPE;
+}
+
 bool SqliteStatement::IsReadOnly() const
 {
     return readOnly;

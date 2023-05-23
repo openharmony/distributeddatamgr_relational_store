@@ -49,6 +49,7 @@ public:
      * @brief Gets the entire row of data for the current row from the result set.
      */
     virtual int GetRow(RowEntity &rowEntity) = 0;
+    virtual int GetSize(int columnIndex, size_t &size) = 0;
     virtual int GetModifyTime(std::string &modifyTime) = 0;
 };
 
