@@ -110,8 +110,8 @@ int CURSOR_GetColumnName(OH_Cursor *cursor, int32_t columnIndex, char *name, int
 int CURSOR_GetRowCount(OH_Cursor *cursor, int *count)
 {
     if (cursor == nullptr || count == nullptr || cursor->id != OHOS::RdbNdk::RDB_CURSOR_CID) {
-        LOG_ERROR("Parameters set error:cursor is NULL ? %{public}d, count is NULL ? %{public}d",
-                 (cursor == nullptr), (count == nullptr));
+        LOG_ERROR("Parameters set error:cursor is NULL ? %{public}d, count is NULL ? %{public}d", (cursor == nullptr),
+            (count == nullptr));
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     auto tempCursor = static_cast<OHOS::RdbNdk::CursorImpl *>(cursor);
