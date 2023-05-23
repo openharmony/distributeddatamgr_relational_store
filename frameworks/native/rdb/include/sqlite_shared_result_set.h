@@ -73,6 +73,7 @@ private:
     int rowNum;
     std::vector<std::string> columnNames_;
     SqliteConnectionPool *connectionPool_;
+    std::mutex columnNamesLock_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
