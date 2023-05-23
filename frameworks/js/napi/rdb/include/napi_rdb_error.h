@@ -33,23 +33,23 @@ constexpr int E_DB_CORRUPTED = 14800011;
 constexpr int E_RESULT_GET_ERROR = 14800013;
 constexpr int E_RESULT_GOTO_ERROR = 14800012;
 
-#define RDB_NAPI_ASSERT_BASE_FROMV9(env, assertion, error, retVal, version)                                     \
-    do {                                                                                                        \
-        if (!(assertion)) {                                                                                     \
-            if ((error) == nullptr) {                                                                           \
-                LOG_ERROR("throw error: error message is empty,version= %{public}d", version);                  \
-                napi_throw_error((env), nullptr, "error message is empty");                                     \
-                return retVal;                                                                                  \
-            }                                                                                                   \
-            if (((version) > (APIVERSION_8)) || ((error->GetCode()) == (401))) {                                \
-                LOG_ERROR("throw error: code = %{public}d , message = %{public}s, version= %{public}d",         \
-                    error->GetCode(), error->GetMessage().c_str(), version);                                    \
-                napi_throw_error((env), std::to_string(error->GetCode()).c_str(), error->GetMessage().c_str()); \
-                return retVal;                                                                                  \
-            }                                                                                                   \
-            LOG_ERROR("nothrow error: code = %{public}d , message = %{public}s, version= %{public}d",           \
-                error->GetCode(), error->GetMessage().c_str(), version);                                        \
-        }                                                                                                       \
+#define RDB_NAPI_ASSERT_BASE_FROMV9(env, assertion, error, retVal, version)                                         \
+    do {                                                                                                            \
+        if (!(assertion)) {                                                                                         \
+            if ((error) == nullptr) {                                                                               \
+                LOG_ERROR("throw error: error message is empty,version= %{public}d", version);                      \
+                napi_throw_error((env), nullptr, "error message is empty");                                         \
+                return retVal;                                                                                      \
+            }                                                                                                       \
+            if (((version) > (APIVERSION_8)) || (((error)->GetCode()) == (401))) {                                  \
+                LOG_ERROR("throw error: code = %{public}d , message = %{public}s, version= %{public}d",             \
+                    (error)->GetCode(), (error)->GetMessage().c_str(), version);                                    \
+                napi_throw_error((env), std::to_string((error)->GetCode()).c_str(), (error)->GetMessage().c_str()); \
+                return retVal;                                                                                      \
+            }                                                                                                       \
+            LOG_ERROR("nothrow error: code = %{public}d , message = %{public}s, version= %{public}d",               \
+                (error)->GetCode(), (error)->GetMessage().c_str(), version);                                        \
+        }                                                                                                           \
     } while (0)
 
 #define RDB_NAPI_ASSERT_FROMV9(env, assertion, error, version) \
