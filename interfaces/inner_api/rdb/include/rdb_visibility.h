@@ -16,12 +16,8 @@
 #ifndef NATIVE_RDB_RDB_VISIBILITY_H
 #define NATIVE_RDB_RDB_VISIBILITY_H
 
-#ifndef RDB_API_EXPORT
-#define RDB_API_EXPORT __attribute__((visibility ("default")))
-#endif
-
-#ifndef RDB_API_LOCAL
-#define RDB_API_LOCAL __attribute__((visibility ("hidden")))
+#ifndef API_EXPORT
+#define API_EXPORT __attribute__((visibility ("default")))
 #endif
 
 #endif // NATIVE_RDB_RDB_VISIBILITY_H

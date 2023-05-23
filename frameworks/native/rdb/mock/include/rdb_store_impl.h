@@ -31,12 +31,13 @@
 namespace OHOS::NativeRdb {
 class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
 public:
-    static std::shared_ptr<RdbStore> Open(const RdbStoreConfig &config, int &errCode);
-    RdbStoreImpl();
+    static std::shared_ptr<RdbStoreImpl> Open(const RdbStoreConfig &config, int &errCode);
+    RdbStoreImpl(const RdbStoreConfig &config);
     ~RdbStoreImpl() override;
 #ifdef WINDOWS_PLATFORM
     void Clear() override;
 #endif
+    const RdbStoreConfig &GetConfig();
     int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
     int BatchInsert(int64_t &outInsertNum, const std::string &table,
         const std::vector<ValuesBucket> &initialBatchValues) override;
@@ -50,7 +51,8 @@ public:
         ConflictResolution conflictResolution) override;
     int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
         const std::vector<std::string> &whereArgs) override;
-    int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
+    int ExecuteSql(
+        const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
@@ -101,6 +103,7 @@ private:
     std::pair<std::string, std::vector<ValueObject>> GetInsertParams(
         std::map<std::string, ValueObject> &valuesMap, const std::string &table);
 
+    const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;
     static const int MAX_IDLE_SESSION_SIZE = 5;
     std::mutex sessionMutex;

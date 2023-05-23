@@ -313,7 +313,7 @@ describe('rdbStoreDistributedTest', function () {
      */
     it('testRdbStoreDistributed0012', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDistributed0012 start *************");
-        rdbStore.on("dataChange", (device) => {
+        rdbStore.on("dataChange", data_relationalStore.SubscribeType.SUBSCRIBE_TYPE_REMOTE, (device) => {
             console.log(TAG + device + " dataChange");
         });
         console.log(TAG + "on dataChange success");
@@ -329,7 +329,7 @@ describe('rdbStoreDistributedTest', function () {
      */
     it('testRdbStoreDistributed0013', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDistributed0013 start *************");
-        rdbStore.off("dataChange", (device) => {
+        rdbStore.off("dataChange", data_relationalStore.SubscribeType.SUBSCRIBE_TYPE_REMOTE, (device) => {
             console.log(TAG + device + " dataChange");
         });
         console.log(TAG + "off dataChange success");

@@ -21,19 +21,6 @@
 #include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
-RdbStoreConfig::RdbStoreConfig(const RdbStoreConfig &config) : autoCheck(false), journalSize(1048576), pageSize(4096)
-{
-    name = config.GetName();
-    path = config.GetPath();
-    storageMode = config.GetStorageMode();
-    journalMode = config.GetJournalMode();
-    syncMode = config.GetSyncMode();
-    readOnly = config.IsReadOnly();
-    databaseFileType = config.GetDatabaseFileType();
-    securityLevel = config.GetSecurityLevel();
-    isCreateNecessary_ = config.IsCreateNecessary();
-}
-
 RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode, bool isReadOnly,
     const std::vector<uint8_t> &encryptKey, const std::string &journalMode, const std::string &syncMode,
     const std::string &databaseFileType, SecurityLevel securityLevel, bool isCreateNecessary, bool autoCheck,
@@ -193,7 +180,7 @@ void RdbStoreConfig::SetReadOnly(bool readOnly)
     this->readOnly = readOnly;
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 int RdbStoreConfig::SetDistributedType(DistributedType type)
 {
     if (type < DistributedType::RDB_DEVICE_COLLABORATION || type >= DistributedType::RDB_DISTRIBUTED_TYPE_MAX) {
@@ -390,5 +377,15 @@ std::vector<uint8_t> RdbStoreConfig::GetEncryptKey() const
 void RdbStoreConfig::ClearEncryptKey()
 {
     encryptKey_.assign(encryptKey_.size(), 0);
+}
+
+void RdbStoreConfig::SetScalarFunction(const std::string &functionName, int argc, ScalarFunction function)
+{
+    customScalarFunctions.try_emplace(functionName, ScalarFunctionInfo(function, argc));
+}
+
+std::map<std::string, ScalarFunctionInfo> RdbStoreConfig::GetScalarFunctions() const
+{
+    return customScalarFunctions;
 }
 } // namespace OHOS::NativeRdb

@@ -15,6 +15,8 @@ declare_args() {
   relational_store_rdb_support_icu = true
 }
 
+common_tool_path = "//foundation/distributeddatamgr/kv_store/frameworks/common"
+
 relational_store_base_path = "//foundation/distributeddatamgr/relational_store"
 
 relational_store_js_common_path =
@@ -26,3 +28,17 @@ relational_store_native_path = "${relational_store_base_path}/frameworks/native"
 
 relational_store_innerapi_path =
     "${relational_store_base_path}/interfaces/inner_api"
+
+cloud_data_native_path =
+    "${relational_store_base_path}/frameworks/native/cloud_data"
+cloud_data_napi_path = "${relational_store_napi_path}/cloud_data"
+
+datashare_path =
+    "//foundation/distributeddatamgr/data_share/interfaces/inner_api"
+
+ipc_path = "//foundation/communication/ipc/interfaces/innerkits"
+
+kvstore_path = "//foundation/distributeddatamgr/kv_store/frameworks"
+
+distributedfile_path =
+    "//foundation/distributeddatamgr/distributedfile/interfaces/kits/js/src"

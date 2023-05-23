@@ -15,8 +15,6 @@
 
 #ifndef NATIVE_RDB_RDBPREDICATES_H
 #define NATIVE_RDB_RDBPREDICATES_H
-
-
 #include "abs_rdb_predicates.h"
 #include "rdb_visibility.h"
 
@@ -25,7 +23,7 @@ namespace NativeRdb {
 /**
  * The RdbPredicates class of RDB.
  */
-class RDB_API_EXPORT RdbPredicates : public AbsRdbPredicates {
+class API_EXPORT RdbPredicates : public AbsRdbPredicates {
 public:
     /**
      * @brief Constructor.
@@ -34,43 +32,43 @@ public:
      *
      * @param tableName Indicates the table name of the database.
      */
-    RDB_API_EXPORT explicit RdbPredicates(std::string tableName);
+    API_EXPORT explicit RdbPredicates(std::string tableName);
 
     /**
      * @brief Destructor.
      */
-    RDB_API_EXPORT ~RdbPredicates() override {}
+    API_EXPORT ~RdbPredicates() override {}
 
     /**
      * @brief Obtains the join clause in the predicates.
      */
-    RDB_API_EXPORT std::string GetJoinClause() const override;
+    API_EXPORT std::string GetJoinClause() const override;
 
     /**
      * @brief Adds a {@code cross join} condition to a SQL statement.
      */
-    RDB_API_EXPORT RdbPredicates *CrossJoin(std::string tableName);
+    API_EXPORT RdbPredicates *CrossJoin(std::string tableName);
 
     /**
      * @brief Adds an {@code inner join} condition to a SQL statement.
      */
-    RDB_API_EXPORT RdbPredicates *InnerJoin(std::string tableName);
+    API_EXPORT RdbPredicates *InnerJoin(std::string tableName);
 
     /**
       * @brief Adds a {@code left outer join} condition to a SQL statement.
       */
-    RDB_API_EXPORT RdbPredicates *LeftOuterJoin(std::string tableName);
+    API_EXPORT RdbPredicates *LeftOuterJoin(std::string tableName);
 
     /**
      * @brief Adds a {@code using} condition to the predicate.
      * This method is similar to {@code using} of the SQL statement.
      */
-    RDB_API_EXPORT RdbPredicates *Using(std::vector<std::string> fields);
+    API_EXPORT RdbPredicates *Using(std::vector<std::string> fields);
 
     /**
      * @brief Adds an {@code on} condition to the predicate.
      */
-    RDB_API_EXPORT RdbPredicates *On(std::vector<std::string> clauses);
+    API_EXPORT RdbPredicates *On(std::vector<std::string> clauses);
 
 private:
     std::string ProcessJoins() const;

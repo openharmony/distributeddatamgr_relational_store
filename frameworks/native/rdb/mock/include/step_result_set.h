@@ -48,6 +48,10 @@ public:
     int GetLong(int columnIndex, int64_t &value) override;
     int GetDouble(int columnIndex, double &value) override;
     int GetSize(int columnIndex, size_t &size) override;
+    int GetAsset(int32_t col, ValueObject::Asset &value) override;
+    int GetAssets(int32_t col, ValueObject::Assets &value) override;
+    int Get(int32_t col, ValueObject &value) override;
+    int GetModifyTime(std::string &modifyTime) override;
     int IsColumnNull(int columnIndex, bool &isNull) override;
     bool IsClosed() const override;
     int Close() override;
@@ -55,6 +59,9 @@ public:
     int PrepareStep();
 
 private:
+    template<typename T>
+    int GetValue(int32_t col, T &value);
+    std::pair<int, ValueObject> GetValueObject(int32_t col, size_t index);
     void Reset();
     std::shared_ptr<RdbStoreImpl> rdb;
     std::string sql;

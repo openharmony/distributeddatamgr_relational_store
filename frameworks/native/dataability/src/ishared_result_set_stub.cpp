@@ -36,7 +36,9 @@ sptr<ISharedResultSet> ISharedResultSetStub::CreateStub(std::shared_ptr<AbsShare
         return nullptr;
     }
     parcel.WriteRemoteObject(stub->AsObject());
-    result->Marshalling(parcel);
+    if (result->sharedBlock_ != nullptr) {
+        result->sharedBlock_->WriteMessageParcel(parcel);
+    }
     return stub;
 }
 
@@ -45,11 +47,6 @@ ISharedResultSetStub::ISharedResultSetStub(std::shared_ptr<AbsSharedResultSet> r
       runnables_(MAX_RUNNABLE),
       thread_(&ISharedResultSetStub::Run, this)
 {
-#if defined(MAC_PLATFORM)
-    pthread_setname_np("RDB_DataAbility");
-#else
-    pthread_setname_np(pthread_self(), "RDB_DataAbility");
-#endif
     thread_.detach();
     LOG_ERROR("ISharedResultSetStub start thread(%{public}" PRIx64 ")", uint64_t(thread_.native_handle()));
 }
@@ -130,6 +127,11 @@ int ISharedResultSetStub::HandleCloseRequest(MessageParcel &data, MessageParcel 
 
 void ISharedResultSetStub::Run()
 {
+#if defined(MAC_PLATFORM)
+    pthread_setname_np("RDB_DataAbility");
+#else
+    pthread_setname_np(pthread_self(), "RDB_DataAbility");
+#endif
     auto handle = thread_.native_handle();
     bool isRunning = true;
     while (isRunning) {

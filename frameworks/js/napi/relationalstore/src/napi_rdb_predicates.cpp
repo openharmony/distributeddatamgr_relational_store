@@ -68,7 +68,7 @@ void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER_SETTER("joinConditions", GetJoinConditions, SetJoinConditions),
         DECLARE_NAPI_GETTER_SETTER("joinNames", GetJoinTableNames, SetJoinTableNames),
         DECLARE_NAPI_GETTER_SETTER("joinTypes", GetJoinTypes, SetJoinTypes),
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
         DECLARE_NAPI_FUNCTION("inDevices", InDevices),
         DECLARE_NAPI_FUNCTION("inAllDevices", InAllDevices),
 #endif
@@ -784,7 +784,7 @@ std::shared_ptr<NativeRdb::RdbPredicates> RdbPredicatesProxy::GetPredicates() co
     return this->predicates_;
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 napi_value RdbPredicatesProxy::InDevices(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbPredicatesProxy::InDevices begin.");

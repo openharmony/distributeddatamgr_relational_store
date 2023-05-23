@@ -12,7 +12,6 @@
 # limitations under the License.
 import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
-import("//foundation/distributeddatamgr/data_share/datashare.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 ohos_copy("relational_store_declaration") {
@@ -27,6 +26,7 @@ ohos_shared_library("napi_rdb") {
     "../common/src/js_utils.cpp",
     "src/napi_async_call.cpp",
     "src/napi_rdb_const_properties.cpp",
+    "src/napi_rdb_js_utils.cpp",
     "src/napi_rdb_predicates.cpp",
     "src/napi_rdb_store.cpp",
     "src/napi_rdb_store_helper.cpp",
@@ -64,9 +64,9 @@ ohos_shared_library("napi_rdb") {
   } else {
     include_dirs = [
       "include",
+      "${datashare_path}/common/include/",
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/rdb/include",
-      "${datashare_base_path}/interfaces/inner_api/common/include/",
     ]
     defines = [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
     sources += [
@@ -125,9 +125,9 @@ ohos_shared_library("rdb") {
   } else {
     include_dirs = [
       "include",
+      "${datashare_path}/common/include/",
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/rdb/include",
-      "${datashare_base_path}/interfaces/inner_api/common/include/",
     ]
     defines = [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
     deps = [ ":napi_rdb" ]

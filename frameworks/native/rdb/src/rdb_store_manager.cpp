@@ -21,16 +21,16 @@
 #include "unistd.h"
 #include "rdb_store_manager.h"
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_security_manager.h"
 #include "security_policy.h"
 #endif
 
 namespace OHOS {
 namespace NativeRdb {
-RdbStoreNode::RdbStoreNode(const std::shared_ptr<RdbStore> &rdbStore) : rdbStore_(rdbStore), timerId_(0) {}
+RdbStoreNode::RdbStoreNode(const std::shared_ptr<RdbStoreImpl> &rdbStore) : rdbStore_(rdbStore), timerId_(0) {}
 
-RdbStoreNode &RdbStoreNode::operator=(const std::shared_ptr<RdbStore> &store)
+RdbStoreNode &RdbStoreNode::operator=(const std::shared_ptr<RdbStoreImpl> &store)
 {
     if (rdbStore_ == store) {
         return *this;
@@ -63,35 +63,28 @@ RdbStoreManager::RdbStoreManager()
     ms_ = 30000;
 }
 
-void RdbStoreManager::InitSecurityManager(const RdbStoreConfig &config)
-{
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    if (config.IsEncrypt()) {
-        RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
-    }
-#endif
-}
-
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &config,
     int &errCode, int version, RdbOpenCallback &openCallback)
 {
-    std::shared_ptr<RdbStore> rdbStore;
+    std::shared_ptr<RdbStoreImpl> rdbStore;
     std::string path = config.GetPath();
     std::lock_guard<std::mutex> lock(mutex_);
-    if (storeCache_.find(path) == storeCache_.end() || storeCache_[path] == nullptr) {
-        InitSecurityManager(config);
-        rdbStore = RdbStoreImpl::Open(config, errCode);
-        if (rdbStore == nullptr) {
-            LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore, err is %{public}d", errCode);
-            return nullptr;
-        }
-        storeCache_[path] = std::make_shared<RdbStoreNode>(rdbStore);
-        RestartTimer(path, *storeCache_[path]);
-    } else {
-        RestartTimer(path, *storeCache_[path]);
+    if (storeCache_.find(path) != storeCache_.end() && storeCache_[path] != nullptr) {
         rdbStore = storeCache_[path]->rdbStore_;
-        return rdbStore;
+        if (rdbStore->GetConfig() == config) {
+            RestartTimer(path, *storeCache_[path]);
+            return rdbStore;
+        }
+        timer_->Unregister(storeCache_[path]->timerId_);
+        storeCache_.erase(path);
     }
+    rdbStore = RdbStoreImpl::Open(config, errCode);
+    if (rdbStore == nullptr) {
+        LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore, err is %{public}d", errCode);
+        return nullptr;
+    }
+    storeCache_[path] = std::make_shared<RdbStoreNode>(rdbStore);
+    RestartTimer(path, *storeCache_[path]);
 
     if (SetSecurityLabel(config) != E_OK) {
         storeCache_.erase(path);
@@ -194,7 +187,7 @@ int RdbStoreManager::ProcessOpenCallback(
 int RdbStoreManager::SetSecurityLabel(const RdbStoreConfig &config)
 {
     int errCode = E_OK;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     errCode = SecurityPolicy::SetSecurityLabel(config);
 #endif
     return errCode;

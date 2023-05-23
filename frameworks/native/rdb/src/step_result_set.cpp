@@ -461,5 +461,31 @@ bool StepResultSet::IsClosed() const
 {
     return isClosed;
 }
+
+template<typename T>
+int StepResultSet::GetValue(int32_t col, T &value)
+{
+    auto [errCode, object] = GetValueObject(col, ValueObject::TYPE_INDEX<decltype(value)>);
+    if (errCode != E_OK) {
+        LOG_ERROR("ret is %{public}d", errCode);
+        return errCode;
+    }
+    value = object;
+    return E_OK;
+}
+
+std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t index)
+{
+    if (rowPos_ == INIT_POS) {
+        LOG_ERROR("query not executed.");
+        return { E_STEP_RESULT_QUERY_NOT_EXECUTED, ValueObject() };
+    }
+    ValueObject value;
+    auto ret = sqliteStatement->GetColumn(col, value);
+    if (index < ValueObject::TYPE_MAX && value.value.index() != index) {
+        return { E_INVALID_COLUMN_TYPE, ValueObject() };
+    }
+    return { ret, std::move(value) };
+}
 } // namespace NativeRdb
 } // namespace OHOS

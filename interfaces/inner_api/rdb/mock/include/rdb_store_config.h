@@ -18,6 +18,8 @@
 
 #include <string>
 #include <vector>
+#include <map>
+#include <functional>
 
 namespace OHOS::NativeRdb {
 // indicates the type of the storage
@@ -61,9 +63,16 @@ static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
 static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "delete";
 static constexpr char DB_DEFAULT_ENCRYPT_ALGO[] = "sha256";
 
+using ScalarFunction = std::function<std::string(const std::vector<std::string>&)>;
+
+struct ScalarFunctionInfo {
+    ScalarFunctionInfo(ScalarFunction function, int argc) : function_(function), argc_(argc) {}
+    ScalarFunction function_;
+    int argc_;
+};
+
 class RdbStoreConfig {
 public:
-    RdbStoreConfig(const RdbStoreConfig &config);
     RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
         const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(), const std::string &journalMode = "delete",
         const std::string &syncMode = "", const std::string &databaseFileType = "",
@@ -125,6 +134,40 @@ public:
     void SetEncryptAlgo(const std::string &encryptAlgo);
     int GetReadConSize() const;
     void SetReadConSize(int readConSize);
+    void SetScalarFunction(const std::string &functionName, int argc, ScalarFunction function);
+    std::map<std::string, ScalarFunctionInfo> GetScalarFunctions() const;
+
+    bool operator==(const RdbStoreConfig &config) const
+    {
+        if (this->customScalarFunctions.size() != config.customScalarFunctions.size()) {
+            return false;
+        }
+
+        auto iter1 = this->customScalarFunctions.begin();
+        auto iter2 = config.customScalarFunctions.begin();
+        for (; iter1 != this->customScalarFunctions.end(); ++iter1, ++iter2) {
+            if (iter1->first != iter2->first) {
+                return false;
+            }
+        }
+
+        if (this->encryptKey_.size() != config.encryptKey_.size()) {
+            return false;
+        }
+
+        for (size_t i = 0; i < encryptKey_.size(); i++) {
+            if (this->encryptKey_[i] != config.encryptKey_[i]) {
+                return false;
+            }
+        }
+
+        return this->path == config.path && this->storageMode == config.storageMode
+               && this->storageMode == config.storageMode && this->journalMode == config.journalMode
+               && this->syncMode == config.syncMode && this->databaseFileType == config.databaseFileType
+               && this->isEncrypt_ == config.isEncrypt_ && this->securityLevel == config.securityLevel
+               && this->journalSize == config.journalSize && this->pageSize == config.pageSize
+               && this->readConSize_ == config.readConSize_;
+    }
 
 private:
     std::string name;
@@ -152,6 +195,8 @@ private:
     int pageSize;
     int readConSize_ = 4;
     std::string encryptAlgo;
+
+    std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
 };
 } // namespace OHOS::NativeRdb
 

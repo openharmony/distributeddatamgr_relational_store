@@ -26,7 +26,6 @@
 #include "napi_rdb_trace.h"
 #include "napi_result_set.h"
 #include "rdb_errno.h"
-#include "securec.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_utils.h"

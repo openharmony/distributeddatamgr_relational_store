@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "sqlite3sym.h"
-#include "sqlite_config.h"
+#include "rdb_store_config.h"
 #include "sqlite_statement.h"
 #include "value_object.h"
 #include "shared_block.h"
@@ -31,7 +31,7 @@ namespace NativeRdb {
 
 class SqliteConnection {
 public:
-    static SqliteConnection *Open(const SqliteConfig &config, bool isWriteConnection, int &errCode);
+    static SqliteConnection *Open(const RdbStoreConfig &config, bool isWriteConnection, int &errCode);
     ~SqliteConnection();
     bool IsWriteConnection() const;
     int Prepare(const std::string &sql, bool &outIsReadOnly);
@@ -60,20 +60,22 @@ public:
 
 private:
     explicit SqliteConnection(bool isWriteConnection);
-    int InnerOpen(const SqliteConfig &config);
-    int Config(const SqliteConfig &config);
-    int SetPageSize(const SqliteConfig &config);
-    int SetEncryptAlgo(const SqliteConfig &config);
-    int SetEncryptKey(const SqliteConfig &config);
-    int SetJournalMode(const SqliteConfig &config);
-    int SetJournalSizeLimit(const SqliteConfig &config);
-    int SetAutoCheckpoint(const SqliteConfig &config);
+    int InnerOpen(const RdbStoreConfig &config);
+    int Config(const RdbStoreConfig &config);
+    int SetPageSize(const RdbStoreConfig &config);
+    int SetEncryptKey(const RdbStoreConfig &config);
+    int SetJournalMode(const RdbStoreConfig &config);
+    int SetJournalSizeLimit(const RdbStoreConfig &config);
+    int SetAutoCheckpoint(const RdbStoreConfig &config);
     int SetWalSyncMode(const std::string &syncMode);
     int PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void LimitPermission(const std::string &dbPath) const;
 
     int SetPersistWal();
     int SetBusyTimeout(int timeout);
+
+    int SetCustomFunctions(const RdbStoreConfig &config);
+    int SetCustomScalarFunction(const std::string &functionName, int argc, ScalarFunction *function);
 
     sqlite3 *dbHandle;
     bool isWriteConnection;
@@ -84,6 +86,7 @@ private:
     int openFlags;
     std::mutex rdbMutex;
     bool inTransaction_;
+    std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
 
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
 };

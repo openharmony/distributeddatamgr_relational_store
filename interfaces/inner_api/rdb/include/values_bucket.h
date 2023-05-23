@@ -15,36 +15,38 @@
 
 #ifndef NATIVE_RDB_VALUES_BUCKET_H
 #define NATIVE_RDB_VALUES_BUCKET_H
-
 #include <map>
 #include <set>
-#include <parcel.h>
 
+#include "parcel.h"
 #include "value_object.h"
-
 namespace OHOS {
 namespace NativeRdb {
 /**
  * The ValuesBucket class of RDB.
  */
-class RDB_API_EXPORT ValuesBucket : public virtual OHOS::Parcelable {
+class API_EXPORT ValuesBucket : public virtual Parcelable {
 public:
     /**
      * @brief Constructor.
      */
-    RDB_API_EXPORT ValuesBucket();
+    API_EXPORT ValuesBucket();
 
     /**
      * @brief Constructor.
      *
      * A parameterized constructor used to create a ValuesBucket instance.
      */
-    RDB_API_EXPORT explicit ValuesBucket(std::map<std::string, ValueObject> &valuesMap);
+    API_EXPORT ValuesBucket(std::map<std::string, ValueObject> values);
+    API_EXPORT ValuesBucket(const ValuesBucket &values);
+    API_EXPORT ValuesBucket &operator =(const ValuesBucket &values);
+    API_EXPORT ValuesBucket(ValuesBucket &&values) noexcept;
+    API_EXPORT ValuesBucket &operator =(ValuesBucket &&values) noexcept;
 
     /**
      * @brief Destructor.
      */
-    RDB_API_EXPORT  ~ValuesBucket();
+    API_EXPORT  ~ValuesBucket();
 
     /**
      * @brief Put the string value to this {@code ValuesBucket} object for the given column name.
@@ -52,7 +54,7 @@ public:
      * @param columnName Indicates the name of the column.
      * @param value Indicates the string value.
      */
-    RDB_API_EXPORT void PutString(const std::string &columnName, const std::string &value);
+    API_EXPORT void PutString(const std::string &columnName, const std::string &value);
 
     /**
      * @brief Put the int value to this {@code ValuesBucket} object for the given column name.
@@ -60,7 +62,7 @@ public:
      * @param columnName Indicates the name of the column.
      * @param value Indicates the int value.
      */
-    RDB_API_EXPORT void PutInt(const std::string &columnName, int value);
+    API_EXPORT void PutInt(const std::string &columnName, int value);
 
     /**
      * @brief Put the long value to this {@code ValuesBucket} object for the given column name.
@@ -68,7 +70,7 @@ public:
      * @param columnName Indicates the name of the column.
      * @param value Indicates the long value.
      */
-    RDB_API_EXPORT void PutLong(const std::string &columnName, int64_t value);
+    API_EXPORT void PutLong(const std::string &columnName, int64_t value);
 
     /**
      * @brief Put the double value to this {@code ValuesBucket} object for the given column name.
@@ -76,7 +78,7 @@ public:
      * @param columnName Indicates the name of the column.
      * @param value Indicates the double value.
      */
-    RDB_API_EXPORT void PutDouble(const std::string &columnName, double value);
+    API_EXPORT void PutDouble(const std::string &columnName, double value);
 
     /**
      * @brief Put the bool value to this {@code ValuesBucket} object for the given column name.
@@ -84,7 +86,7 @@ public:
      * @param columnName Indicates the name of the column.
      * @param value Indicates the bool value.
      */
-    RDB_API_EXPORT void PutBool(const std::string &columnName, bool value);
+    API_EXPORT void PutBool(const std::string &columnName, bool value);
 
     /**
      * @brief Put the vector<uint8_t> value to this {@code ValuesBucket} object for the given column name.
@@ -92,67 +94,77 @@ public:
      * @param columnName Indicates the name of the column.
      * @param value Indicates the vector<uint8_t> value.
      */
-    RDB_API_EXPORT void PutBlob(const std::string &columnName, const std::vector<uint8_t> &value);
+    API_EXPORT void PutBlob(const std::string &columnName, const std::vector<uint8_t> &value);
 
     /**
      * @brief Put NULL to this {@code ValuesBucket} object for the given column name.
      *
      * @param columnName Indicates the name of the column.
      */
-    RDB_API_EXPORT void PutNull(const std::string &columnName);
+    API_EXPORT void PutNull(const std::string &columnName);
+
+    /**
+     * @brief Put the integer double bool string bytes asset asset and so on
+     * to this {@code ValuesBucket} object for the given column name.
+     *
+     * @param columnName Indicates the name of the column.
+     */
+    API_EXPORT void Put(const std::string &columnName, ValueObject value);
 
     /**
      * @brief Delete the ValueObject object for the given column name.
      *
      * @param columnName Indicates the name of the column.
      */
-    RDB_API_EXPORT void Delete(const std::string &columnName);
+    API_EXPORT void Delete(const std::string &columnName);
 
     /**
      * @brief Clear the ValuesBucket object's valuesmap.
      */
-    RDB_API_EXPORT void Clear();
+    API_EXPORT void Clear();
 
     /**
      * @brief Obtains the ValuesBucket object's valuesmap size.
      */
-    RDB_API_EXPORT int Size() const;
+    API_EXPORT int Size() const;
 
     /**
      * @brief Checks whether the ValuesBucket object's valuesmap is empty.
      */
-    RDB_API_EXPORT bool IsEmpty() const;
+    API_EXPORT bool IsEmpty() const;
 
     /**
      * @brief Checks whether the ValuesBucket object's valuesmap contain the specified columnName.
      *
      * @param columnName Indicates the name of the column.
      */
-    RDB_API_EXPORT bool HasColumn(const std::string &columnName) const;
+    API_EXPORT bool HasColumn(const std::string &columnName) const;
 
     /**
      * @brief Obtains the specified value for the given column name.
      *
      * @param columnName Indicates the name of the column.
      */
-    RDB_API_EXPORT bool GetObject(const std::string &columnName, ValueObject &value) const;
+    API_EXPORT bool GetObject(const std::string &columnName, ValueObject &value) const;
 
     /**
      * @brief Obtains the ValuesBucket object's valuesmap.
      */
-    RDB_API_EXPORT void GetAll(std::map<std::string, ValueObject> &valuesMap) const;
+    API_EXPORT std::map<std::string, ValueObject> GetAll() const;
 
     /**
-     * @brief Write to message parcel.
+     * @brief Obtains the ValuesBucket object's valuesmap.
      */
-    RDB_API_EXPORT bool Marshalling(Parcel &parcel) const override;
+    API_EXPORT void GetAll(std::map<std::string, ValueObject> &output) const;
+
+    API_EXPORT bool Marshalling(Parcel &parcel) const override;
 
     /**
      * @brief Obtains a ValuesBucket object from parcel.
      */
-    RDB_API_EXPORT static ValuesBucket *Unmarshalling(Parcel &parcel);
-private:
-    std::map<std::string, ValueObject> valuesMap;
+    API_EXPORT static ValuesBucket *Unmarshalling(Parcel &parcel);
+
+    std::map<std::string, ValueObject> values_;
 };
 
 } // namespace NativeRdb

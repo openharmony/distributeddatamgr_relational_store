@@ -1,0 +1,57 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/ohos.gni")
+import("//foundation/distributeddatamgr/data_share/datashare.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+
+config("rdb_bms_adapter_config") {
+  visibility = [ ":*" ]
+  if (!is_mingw && !is_mac) {
+    cflags_cc = [ "-fvisibility=hidden" ]
+  }
+  include_dirs = [
+    "include",
+    "${relational_store_innerapi_path}/rdb_bms_adaptor/include",
+    "${relational_store_innerapi_path}/rdb/include",
+  ]
+}
+
+config("rdb_bms_adapter_public_config") {
+  visibility = [ ":*" ]
+  include_dirs = [ "include" ]
+}
+
+ohos_shared_library("rdb_bms_adapter") {
+  sources = [
+    "${relational_store_native_path}/rdb_bms_adaptor/src/data_properties.cpp",
+    "${relational_store_native_path}/rdb_bms_adaptor/src/data_share_profile_info.cpp",
+    "${relational_store_native_path}/rdb_bms_adaptor/src/serializable.cpp",
+  ]
+
+  configs = [ ":rdb_bms_adapter_config" ]
+
+  subsystem_name = "distributeddatamgr"
+  part_name = "relational_store"
+
+  external_deps = [
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "hilog_native:libhilog",
+    "resource_management:global_resmgr",
+  ]
+
+  public_configs = [ ":rdb_bms_adapter_public_config" ]
+
+  innerapi_tags = [ "platformsdk" ]
+}

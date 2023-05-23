@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "rdb_store_config.h"
 #include "rdb_store_impl.h"
 #include "rdbimpl_fuzzer.h"
 using namespace OHOS;
@@ -20,7 +21,7 @@ using namespace OHOS::NativeRdb;
 namespace OHOS {
 void RdbStoreImplFuzz(const uint8_t *data, size_t size)
 {
-    RdbStoreImpl rdbStoreImpl;
+    RdbStoreImpl rdbStoreImpl(RdbStoreConfig("name"));
     std::string rawString(reinterpret_cast<const char *>(data), size);
     std::vector<std::string> tables;
     tables.push_back(rawString);

@@ -41,6 +41,7 @@ public:
     int GetColumnLong(int index, int64_t &value) const;
     int GetColumnDouble(int index, double &value) const;
     int GetSize(int index, size_t &size) const;
+    int GetColumn(int index, ValueObject &value) const;
     bool IsReadOnly() const;
     int GetNumParameters(int &numParams) const;
     sqlite3_stmt *GetSql3Stmt() const
@@ -49,6 +50,9 @@ public:
     }
 
 private:
+    using Asset = ValueObject::Asset;
+    using Assets = ValueObject::Assets;
+
     int InnerBindArguments(const std::vector<ValueObject> &bindArgs) const;
     std::string sql;
     sqlite3_stmt *stmtHandle;

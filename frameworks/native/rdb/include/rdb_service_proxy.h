@@ -33,8 +33,8 @@ public:
 
     std::string ObtainDistributedTableName(const std::string& device, const std::string& table) override;
 
-    int32_t InitNotifier(const RdbSyncerParam& param);
-    int32_t InitNotifier(const RdbSyncerParam& param, const sptr<IRemoteObject> notifier) override;
+    int32_t InitNotifier(const RdbSyncerParam &param);
+    int32_t InitNotifier(const RdbSyncerParam &param, const sptr<IRemoteObject> notifier) override;
     
     int32_t SetDistributedTables(const RdbSyncerParam& param, const std::vector<std::string>& tables) override;
     
@@ -56,6 +56,7 @@ public:
 
     void ImportObservers(ObserverMap& observers);
 
+    int32_t GetSchema(const RdbSyncerParam &param) override;
 protected:
     int32_t DoSync(const RdbSyncerParam& param, const SyncOption& option,
                    const RdbPredicates& predicates, SyncResult& result) override;
@@ -63,7 +64,7 @@ protected:
     int32_t DoAsync(const RdbSyncerParam& param, uint32_t seqNum, const SyncOption& option,
                     const RdbPredicates& predicates) override;
 
-    int32_t DoSubscribe(const RdbSyncerParam& param) override;
+    int32_t DoSubscribe(const RdbSyncerParam& param, const SubscribeOption &option) override;
 
     int32_t DoUnSubscribe(const RdbSyncerParam& param) override;
 
@@ -88,6 +89,7 @@ private:
     ObserverMap observers_;
     sptr<RdbNotifierStub> notifier_;
 
+    sptr<IRemoteObject> remote_;
     static inline BrokerDelegator<RdbServiceProxy> delegator_;
 };
 } // namespace OHOS::DistributedRdb

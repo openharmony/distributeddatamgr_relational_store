@@ -24,27 +24,27 @@ namespace NativeRdb {
 /**
  * The TransactionObserver class of RDB.
  */
-class RDB_API_EXPORT TransactionObserver {
+class API_EXPORT TransactionObserver {
 public:
     /**
      * @brief Destructor.
      */
-    RDB_API_EXPORT virtual ~TransactionObserver() {}
+    API_EXPORT virtual ~TransactionObserver() {}
 
     /**
      * @brief Begin transaction.
      */
-    RDB_API_EXPORT virtual void OnBegin() const;
+    API_EXPORT virtual void OnBegin() const;
 
     /**
      * @brief Commit transaction.
      */
-    RDB_API_EXPORT virtual void OnCommit() const;
+    API_EXPORT virtual void OnCommit() const;
 
     /**
      * @brief Rollback transaction.
      */
-    RDB_API_EXPORT virtual void OnRollback() const;
+    API_EXPORT virtual void OnRollback() const;
 };
 } // namespace NativeRdb
 } // namespace OHOS
