@@ -34,7 +34,7 @@ enum OH_Rdb_ColumnType {
     TYPE_BLOB,
 };
 
-typedef struct OH_Cursor{
+typedef struct OH_Cursor {
     int64_t id;
     int (*OH_Cursor_GetColumnCount)(OH_Cursor *, int *);
     int (*OH_Cursor_GetColumnType)(OH_Cursor *, int32_t, OH_Rdb_ColumnType *);

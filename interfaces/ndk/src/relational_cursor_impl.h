@@ -39,7 +39,7 @@ namespace RdbNdk {
 constexpr int RDB_CURSOR_CID = 1234563; // The class id used to uniquely identify the OH_Cursor class.
 class CursorImpl : public OH_Cursor {
 public:
-    CursorImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet);
+    explicit CursorImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet);
     std::shared_ptr<OHOS::NativeRdb::ResultSet> GetResultSet();
 
 private:

@@ -29,7 +29,7 @@ enum OH_Rdb_OrderType {
     DESC = 1,
 };
 
-typedef struct OH_Predicates{
+typedef struct OH_Predicates {
     int64_t id;
     OH_Predicates (*OH_Predicates_EqualTo)(OH_Predicates *, const char *, OH_Rdb_VObject *);
     OH_Predicates (*OH_Predicates_NotEqualTo)(OH_Predicates *, const char *, OH_Rdb_VObject *);

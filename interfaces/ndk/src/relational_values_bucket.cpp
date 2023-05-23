@@ -46,7 +46,8 @@ int OH_VBucket_PutText(OH_Rdb_VBucket *bucket, const char *field, const char *va
     if (bucket == nullptr || field == nullptr || bucket->id != OHOS::RdbNdk::RDB_VBUCKET_CID) {
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
-    static_cast<OHOS::RdbNdk::ValuesBucketImpl *>(bucket)->getValuesBucket().Put(field, OHOS::NativeRdb::ValueObject(value));
+    static_cast<OHOS::RdbNdk::ValuesBucketImpl *>(bucket)->getValuesBucket().Put(
+        field, OHOS::NativeRdb::ValueObject(value));
     bucket->capability += 1;
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
@@ -54,11 +55,12 @@ int OH_VBucket_PutText(OH_Rdb_VBucket *bucket, const char *field, const char *va
 int OH_VBucket_PutInt64(OH_Rdb_VBucket *bucket, const char *field, int64_t value)
 {
     if (bucket == nullptr || field == nullptr || bucket->id != OHOS::RdbNdk::RDB_VBUCKET_CID) {
-        LOG_ERROR("Parameters set error:bucket is NULL ? %{public}d, field is NULL ? %{public}d",
-                 (bucket == nullptr), (field == nullptr));
+        LOG_ERROR("Parameters set error:bucket is NULL ? %{public}d, field is NULL ? %{public}d", (bucket == nullptr),
+            (field == nullptr));
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
-    static_cast<OHOS::RdbNdk::ValuesBucketImpl *>(bucket)->getValuesBucket().Put(field, OHOS::NativeRdb::ValueObject(value));
+    static_cast<OHOS::RdbNdk::ValuesBucketImpl *>(bucket)->getValuesBucket().Put(
+        field, OHOS::NativeRdb::ValueObject(value));
     bucket->capability += 1;
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
@@ -66,11 +68,12 @@ int OH_VBucket_PutInt64(OH_Rdb_VBucket *bucket, const char *field, int64_t value
 int OH_VBucket_PutReal(OH_Rdb_VBucket *bucket, const char *field, double value)
 {
     if (bucket == nullptr || field == nullptr || bucket->id != OHOS::RdbNdk::RDB_VBUCKET_CID) {
-        LOG_ERROR("Parameters set error:bucket is NULL ? %{public}d, field is NULL ? %{public}d",
-                 (bucket == nullptr), (field == nullptr));
+        LOG_ERROR("Parameters set error:bucket is NULL ? %{public}d, field is NULL ? %{public}d", (bucket == nullptr),
+            (field == nullptr));
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
-    static_cast<OHOS::RdbNdk::ValuesBucketImpl *>(bucket)->getValuesBucket().Put(field, OHOS::NativeRdb::ValueObject(value));
+    static_cast<OHOS::RdbNdk::ValuesBucketImpl *>(bucket)->getValuesBucket().Put(
+        field, OHOS::NativeRdb::ValueObject(value));
     bucket->capability += 1;
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
@@ -78,8 +81,8 @@ int OH_VBucket_PutReal(OH_Rdb_VBucket *bucket, const char *field, double value)
 int OH_VBucket_PutBlob(OH_Rdb_VBucket *bucket, const char *field, const uint8_t *value, uint32_t size)
 {
     if (bucket == nullptr || field == nullptr || bucket->id != OHOS::RdbNdk::RDB_VBUCKET_CID) {
-        LOG_ERROR("Parameters set error:bucket is NULL ? %{public}d, field is NULL ? %{public}d",
-                 (bucket == nullptr), (field == nullptr));
+        LOG_ERROR("Parameters set error:bucket is NULL ? %{public}d, field is NULL ? %{public}d", (bucket == nullptr),
+            (field == nullptr));
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     std::vector<uint8_t> blobValue;
@@ -90,7 +93,8 @@ int OH_VBucket_PutBlob(OH_Rdb_VBucket *bucket, const char *field, const uint8_t 
         }
     }
 
-    static_cast<OHOS::RdbNdk::ValuesBucketImpl *>(bucket)->getValuesBucket().Put(field, OHOS::NativeRdb::ValueObject(blobValue));
+    static_cast<OHOS::RdbNdk::ValuesBucketImpl *>(bucket)->getValuesBucket().Put(
+        field, OHOS::NativeRdb::ValueObject(blobValue));
     bucket->capability += 1;
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
@@ -98,8 +102,8 @@ int OH_VBucket_PutBlob(OH_Rdb_VBucket *bucket, const char *field, const uint8_t 
 int OH_VBucket_PutNull(OH_Rdb_VBucket *bucket, const char *field)
 {
     if (bucket == nullptr || field == nullptr || bucket->id != OHOS::RdbNdk::RDB_VBUCKET_CID) {
-        LOG_ERROR("Parameters set error:bucket is NULL ? %{public}d, field is NULL ? %{public}d",
-                 (bucket == nullptr), (field == nullptr));
+        LOG_ERROR("Parameters set error:bucket is NULL ? %{public}d, field is NULL ? %{public}d", (bucket == nullptr),
+            (field == nullptr));
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
     static_cast<OHOS::RdbNdk::ValuesBucketImpl *>(bucket)->getValuesBucket().Put(field, OHOS::NativeRdb::ValueObject());
