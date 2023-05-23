@@ -345,8 +345,8 @@ const std::string ALL_DATA_TYPE_INSERT_SQL = std::string("INSERT INTO AllDataTyp
 
 class PredicateTestOpenCallback : public RdbOpenCallback {
 public:
-    int OnCreate(RdbStore &rdbStore) override;
-    int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
+    int OnCreate(RdbStore &store) override;
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
 };
 
 int PredicateTestOpenCallback::OnCreate(RdbStore &store)

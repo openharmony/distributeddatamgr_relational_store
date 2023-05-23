@@ -42,8 +42,8 @@ const std::string RdbAttachTest::MAIN_DATABASE_NAME = RDB_TEST_PATH + "main.db";
 
 class MainOpenCallback : public RdbOpenCallback {
 public:
-    int OnCreate(RdbStore &rdbStore) override;
-    int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
+    int OnCreate(RdbStore &store) override;
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
     static const std::string CREATE_TABLE_TEST;
 };
 
@@ -64,8 +64,8 @@ const std::string RdbAttachTest::ATTACHED_DATABASE_NAME = RDB_TEST_PATH + "attac
 
 class AttachedOpenCallback : public RdbOpenCallback {
 public:
-    int OnCreate(RdbStore &rdbStore) override;
-    int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
+    int OnCreate(RdbStore &store) override;
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
     static const std::string CREATE_TABLE_TEST;
 };
 
