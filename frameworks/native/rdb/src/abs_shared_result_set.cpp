@@ -372,6 +372,31 @@ int AbsSharedResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
     return E_OK;
 }
 
+int AbsSharedResultSet::GetSize(int columnIndex, size_t &size)
+{
+    size = 0;
+    int errorCode = CheckState(columnIndex);
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
+
+    AppDataFwk::SharedBlock::CellUnit *cellUnit = sharedBlock_->GetCellUnit(sharedBlock_->GetBlockPos(), columnIndex);
+    if (cellUnit == nullptr) {
+        LOG_ERROR("cellUnit is null!");
+        return E_ERROR;
+    }
+
+    int type = cellUnit->type;
+    if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_STRING
+        || type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB
+        || type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL) {
+        sharedBlock_->GetCellUnitValueBlob(cellUnit, &size);
+        return E_OK;
+    }
+
+    return E_INVALID_OBJECT_TYPE;
+}
+
 int AbsSharedResultSet::IsColumnNull(int columnIndex, bool &isNull)
 {
     int errorCode = CheckState(columnIndex);

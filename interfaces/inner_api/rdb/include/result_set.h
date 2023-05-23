@@ -57,6 +57,13 @@ public:
      */
     virtual int GetRow(RowEntity &rowEntity) = 0;
     virtual int GetModifyTime(std::string &modifyTime) = 0;
+
+    /**
+     * @brief Get the size of blob or text.
+     *
+     * @param columnIndex Indicates the zero-based index of the target column.
+     */
+    API_EXPORT virtual int GetSize(int columnIndex, size_t &size) = 0;
 };
 
 } // namespace NativeRdb

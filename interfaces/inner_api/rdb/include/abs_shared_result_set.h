@@ -137,6 +137,13 @@ public:
     API_EXPORT int GetAssets(int32_t col, ValueObject::Assets &value) override;
 
     /**
+     * @brief Get the size of blob or text.
+     *
+     * @param columnIndex Indicates the zero-based index of the target column.
+     */
+    API_EXPORT int GetSize(int columnIndex, size_t &size) override;
+
+    /**
      * @brief Checks whether the value of the specified column in the current row is null.
      *
      * @param columnIndex Indicates the specified column index, which starts from 0.
