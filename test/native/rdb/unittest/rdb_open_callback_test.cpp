@@ -59,10 +59,10 @@ void RdbOpenCallbackTest::TearDown(void)
 
 class OpenCallbackA : public RdbOpenCallback {
 public:
-    int OnCreate(RdbStore &rdbStore) override;
-    int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
-    int OnDowngrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
-    int OnOpen(RdbStore &rdbStore) override;
+    int OnCreate(RdbStore &store) override;
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
+    int OnDowngrade(RdbStore &store, int oldVersion, int newVersion) override;
+    int OnOpen(RdbStore &store) override;
     int onCorruption(std::string databaseFile) override;
 
     static std::string CreateTableSQL(const std::string &tableName);
@@ -269,8 +269,8 @@ HWTEST_F(RdbOpenCallbackTest, RdbOpenCallback_03, TestSize.Level1)
 
 class OpenCallbackB : public RdbOpenCallback {
 public:
-    int OnCreate(RdbStore &rdbStore) override;
-    int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
+    int OnCreate(RdbStore &store) override;
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
 
     static std::string CreateTableSQL(const std::string &tableName);
     static std::string DropTableSQL(const std::string &tableName);

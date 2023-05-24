@@ -686,7 +686,7 @@ int ParseBindArgs(const napi_env &env, const napi_value &arg, std::shared_ptr<Rd
 
     uint32_t arrLen = 0;
     status = napi_get_array_length(env, arg, &arrLen);
-    CHECK_RETURN_SET(status == napi_ok && arrLen >= 0, std::make_shared<ParamError>("values", "not empty."));
+    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("values", "not empty."));
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value element;
         napi_get_element(env, arg, i, &element);
