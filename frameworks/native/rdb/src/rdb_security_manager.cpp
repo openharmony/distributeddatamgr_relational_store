@@ -120,13 +120,10 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
 
     inDataSeg.size = MAX_UPDATE_SIZE;
 
-    bool isFinished = false;
-
     while (inDataSeg.data <= lastPtr) {
         if (inDataSeg.data + MAX_UPDATE_SIZE <= lastPtr) {
             outDataSeg.size = MAX_OUTDATA_SIZE;
         } else {
-            isFinished = true;
             inDataSeg.size = lastPtr - inDataSeg.data + 1;
             break;
         }
@@ -147,8 +144,8 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
         cur += outDataSeg.size;
         outData->size += outDataSeg.size;
         HKS_FREE(outDataSeg.data);
-        if ((!isFinished) && (inDataSeg.data + MAX_UPDATE_SIZE > lastPtr)) {
-            LOG_ERROR("isFinished and inDataSeg data Error");
+        if (inDataSeg.data + MAX_UPDATE_SIZE > lastPtr) {
+            LOG_ERROR("inDataSeg data Error");
             return HKS_FAILURE;
         }
         inDataSeg.data += MAX_UPDATE_SIZE;

@@ -264,7 +264,7 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
     }
 
     int targetValue = config.GetPageSize();
-    int64_t value;
+    int64_t value = 0;
     int errCode = ExecuteGetLong(value, "PRAGMA page_size");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetPageSize fail to get page size : %{public}d", errCode);
@@ -401,7 +401,7 @@ int SqliteConnection::SetJournalSizeLimit(const RdbStoreConfig &config)
     }
 
     int targetValue = SqliteGlobalConfig::GetJournalFileSize();
-    int64_t currentValue;
+    int64_t currentValue = 0;
     int errCode = ExecuteGetLong(currentValue, "PRAGMA journal_size_limit");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetJournalSizeLimit fail to get journal_size_limit : %{public}d", errCode);
@@ -427,7 +427,7 @@ int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
     }
 
     int targetValue = SqliteGlobalConfig::GetWalAutoCheckpoint();
-    int64_t value;
+    int64_t value = 0;
     int errCode = ExecuteGetLong(value, "PRAGMA wal_autocheckpoint");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetAutoCheckpoint fail to get wal_autocheckpoint : %{public}d", errCode);

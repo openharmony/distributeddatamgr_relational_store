@@ -42,7 +42,7 @@ ValueObject RowEntity::Get(const std::string &name) const
 
 ValueObject RowEntity::Get(int index) const
 {
-    if (index < 0 || index >= indexs_.size()) {
+    if (index < 0 || index >= static_cast<int>(indexs_.size())) {
         return ValueObject();
     }
     return indexs_[index]->second;
