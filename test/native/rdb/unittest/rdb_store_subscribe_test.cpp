@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <gtest/gtest.h>
 
+#include <gtest/gtest.h>
 #include <string>
 
 #include "common.h"
@@ -77,6 +77,7 @@ int Callback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 
 class SubObserver : public RdbStoreObserver {
 public:
+    virtual ~SubObserver() {}
     void OnChange(const std::vector<std::string>& devices) override;
 };
 
