@@ -33,6 +33,7 @@ ohos_unittest("RdbBMSAdapterTest") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "relational_store:native_rdb",
     "relational_store:rdb_bms_adapter",
     "resource_management:global_resmgr",
   ]
