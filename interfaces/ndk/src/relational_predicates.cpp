@@ -310,8 +310,8 @@ OH_Predicates PREDICATES_Offset(OH_Predicates *predicates, unsigned int rowOffse
 OH_Predicates PREDICATES_GroupBy(OH_Predicates *predicates, char const *const *fields, int length)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || fields == nullptr) {
-        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, valueObject is NULL ? %{public}d,",
-            (fields == nullptr), (valueObject == nullptr));
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, fields is NULL ? %{public}d,",
+            (predicates == nullptr), (fields == nullptr));
         return *predicates;
     }
     auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
@@ -319,7 +319,7 @@ OH_Predicates PREDICATES_GroupBy(OH_Predicates *predicates, char const *const *f
     vec.reserve(length);
     if (field != nullptr) {
         for (int i = 0; i < length; i++) {
-            vec.push_back(std::string(field[i]));
+            vec.push_back(std::string(fields[i]));
         }
     }
 
