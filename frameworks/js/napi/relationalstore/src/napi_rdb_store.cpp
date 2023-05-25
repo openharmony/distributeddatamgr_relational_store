@@ -184,7 +184,10 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, bool isSystemAppCalled)
 {
-    NAPI_ASSERT_BASE(env, value != nullptr, "RdbStoreProxy::NewInstance get native rdb is null.", nullptr);
+    if (value == nullptr) {
+        LOG_ERROR("value is nullptr ? %{public}d", (value == nullptr));
+        return nullptr;
+    }
     napi_value cons;
     napi_status status = napi_get_reference_value(env, constructor_, &cons);
     if (status != napi_ok) {
