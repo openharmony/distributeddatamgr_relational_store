@@ -15,6 +15,7 @@
 
 #include "data_share_profile_info.h"
 
+#include <algorithm>
 #include <cerrno>
 #include <fstream>
 #include <sstream>
@@ -115,11 +116,13 @@ std::vector<std::string> DataShareProfileInfo::GetResProfileByMetadata(
         return profileInfos;
     }
 
-    for (auto const &meta : metadata) {
-        if (meta.name == DATA_SHARE_PROFILE_META) {
-            return GetResFromResMgr(meta.resource, *resMgr, isCompressed);
-        }
+    auto  it = std::find_if(metadata.begin(), metadata.end(), [](AppExecFwk::Metadata meta) {
+        return meta.name == DATA_SHARE_PROFILE_META;
+    });
+    if (it != metadata.end()) {
+        return GetResFromResMgr(*it.resource, *resMgr, isCompressed);
     }
+
     return profileInfos;
 }
 

@@ -61,6 +61,7 @@ public:
 private:
     explicit SqliteConnection(bool isWriteConnection);
     int InnerOpen(const RdbStoreConfig &config);
+    int GetDbPath(const RdbStoreConfig &config, std::string &dbPath);
     int Config(const RdbStoreConfig &config);
     int SetPageSize(const RdbStoreConfig &config);
     int SetEncryptKey(const RdbStoreConfig &config);
