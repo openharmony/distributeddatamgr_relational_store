@@ -107,7 +107,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeRemote, TestSize.Level1)
     EXPECT_NE(store, nullptr) << "store is nullptr";
     std::shared_ptr<SubObserver> observer = std::make_shared<SubObserver>();
     auto status = store->Subscribe({ SubscribeMode::REMOTE }, observer.get());
-    EXPECT_NE(status, E_OK);
+    EXPECT_EQ(status, E_OK);
 }
 
 /**
@@ -122,7 +122,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeCloud, TestSize.Level1)
     EXPECT_NE(store, nullptr) << "store is nullptr";
     std::shared_ptr<SubObserver> observer = std::make_shared<SubObserver>();
     auto status = store->Subscribe({ SubscribeMode::CLOUD }, observer.get());
-    EXPECT_NE(status, E_OK);
+    EXPECT_EQ(status, E_OK);
 }
 
 /**
@@ -137,5 +137,5 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeCloudDetail, TestSize.Level1)
     EXPECT_NE(store, nullptr) << "store is nullptr";
     std::shared_ptr<SubObserver> observer = std::make_shared<SubObserver>();
     auto status = store->Subscribe({ SubscribeMode::CLOUD_DETAIL }, observer.get());
-    EXPECT_NE(status, E_OK);
+    EXPECT_EQ(status, E_OK);
 }
