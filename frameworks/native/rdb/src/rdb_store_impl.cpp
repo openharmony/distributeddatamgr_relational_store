@@ -161,12 +161,10 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
         return E_OK;
     }
     // prepare batch data & sql
-    std::map<std::string, ValueObject> valuesMap;
     std::vector<std::pair<std::string, std::vector<ValueObject>>> vecVectorObj;
     for (auto iter = initialBatchValues.begin(); iter != initialBatchValues.end(); iter++) {
-        (*iter).GetAll(valuesMap);
-        vecVectorObj.push_back(GetInsertParams(valuesMap, table));
-        valuesMap.clear();
+        auto values = (*iter).GetAll();
+        vecVectorObj.push_back(GetInsertParams(values, table));
     }
 
     // prepare BeginTransaction
@@ -259,17 +257,17 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
     std::stringstream sql;
     sql << "INSERT" << conflictClause << " INTO " << table << '(';
 
-    std::map<std::string, ValueObject> valuesMap;
-    initialValues.GetAll(valuesMap);
     std::vector<ValueObject> bindArgs;
-    for (auto iter = valuesMap.begin(); iter != valuesMap.end(); iter++) {
-        sql << ((iter == valuesMap.begin()) ? "" : ",");
-        sql << iter->first;               // columnName
-        bindArgs.push_back(iter->second); // columnValue
+    const char *split = "";
+    for (auto &[key, val] : initialValues.values_) {
+        sql << split;
+        sql << key;               // columnName
+        bindArgs.push_back(val);  // columnValue
+        split = ",";
     }
 
     sql << ") VALUES (";
-    for (size_t i = 0; i < valuesMap.size(); i++) {
+    for (size_t i = 0; i < initialValues.Size(); i++) {
         sql << ((i == 0) ? "?" : ",?");
     }
     sql << ')';
@@ -319,13 +317,13 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
     std::stringstream sql;
     sql << "UPDATE" << conflictClause << " " << table << " SET ";
 
-    std::map<std::string, ValueObject> valuesMap;
-    values.GetAll(valuesMap);
     std::vector<ValueObject> bindArgs;
-    for (auto iter = valuesMap.begin(); iter != valuesMap.end(); iter++) {
-        sql << ((iter == valuesMap.begin()) ? "" : ",");
-        sql << iter->first << "=?";       // columnName
-        bindArgs.push_back(iter->second); // columnValue
+    const char * split = "";
+    for (auto &[key, val] : values.values_) {
+        sql << split;
+        sql << key << "=?";       // columnName
+        bindArgs.push_back(val);  // columnValue
+        split = ",";
     }
 
     if (whereClause.empty() == false) {
@@ -585,10 +583,8 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     } else if (isEncrypt_) {
-        std::vector<uint8_t> key;
-        RdbPassword rdbPwd;
-        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+        RdbPassword rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        std::vector<uint8_t> key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
         bindArgs.push_back(ValueObject(key));
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
 #endif
@@ -737,10 +733,8 @@ int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     } else if (isEncrypt_) {
-        std::vector<uint8_t> key;
-        RdbPassword rdbPwd;
-        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+        RdbPassword rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        std::vector<uint8_t> key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
         bindArgs.push_back(ValueObject(key));
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
 #endif
@@ -763,7 +757,7 @@ int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
  */
 int RdbStoreImpl::GetVersion(int &version)
 {
-    int64_t value;
+    int64_t value = 0;
     int errCode = ExecuteAndGetLong(value, GlobalExpr::PRAGMA_VERSION, std::vector<ValueObject>());
     version = static_cast<int>(value);
     return errCode;

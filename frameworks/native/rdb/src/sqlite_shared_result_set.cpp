@@ -90,7 +90,8 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
         connectionPool_->ReleaseConnection(connection);
         return errCode;
     }
-
+    
+    std::lock_guard<std::mutex> lock(columnNamesLock_);
     for (int i = 0; i < columnCount; i++) {
         std::string columnName;
         errCode = sqliteStatement->GetColumnName(i, columnName);

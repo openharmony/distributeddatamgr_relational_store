@@ -20,75 +20,363 @@
 #include <variant>
 #include <vector>
 
+#include "asset_value.h"
 namespace OHOS {
 namespace NativeRdb {
-enum class ValueObjectType {
-    TYPE_NULL = 0,
-    TYPE_INT,
-    TYPE_DOUBLE,
-    TYPE_STRING,
-    TYPE_BOOL,
-    TYPE_BLOB,
-};
+/**
+ * The ValueObject class of RDB.
+ */
 class ValueObject {
 public:
-    using Type = std::variant<std::monostate, int64_t, double, std::string, bool, std::vector<uint8_t>>;
+    /**
+     * @brief Use Type replace std::variant.
+     */
+    using Nil = std::monostate;
+    using Blob = std::vector<uint8_t>;
+    using Asset = AssetValue;
+    using Assets = std::vector<Asset>;
+    using Type = std::variant<Nil, int64_t, double, std::string, bool, Blob, Asset, Assets>;
+    template<typename Tp, typename... Types>
+    struct index_of : std::integral_constant<size_t, 0> {};
+
+    template<typename Tp, typename... Types>
+    inline static constexpr size_t index_of_v = index_of<Tp, Types...>::value;
+
+    template<typename Tp, typename First, typename... Rest>
+    struct index_of<Tp, First, Rest...>
+        : std::integral_constant<size_t, std::is_same_v<Tp, First> ? 0 : index_of_v<Tp, Rest...> + 1> {};
+
+    template<typename... Types>
+    struct variant_size_of {
+        static constexpr size_t value = sizeof...(Types);
+    };
+
+    template<typename T, typename... Types>
+    struct variant_index_of {
+        static constexpr size_t value = index_of_v<T, Types...>;
+    };
+
+    template<typename... Types>
+    static variant_size_of<Types...> variant_size_test(const std::variant<Types...> &);
+
+    template<typename T, typename... Types>
+    static variant_index_of<T, Types...> variant_index_test(const T &, const std::variant<Types...> &);
+
+    template<typename T>
+    inline constexpr static int32_t TYPE_INDEX =
+        decltype(variant_index_test(std::declval<T>(), std::declval<Type>()))::value;
+
+    inline constexpr static int32_t TYPE_MAX = decltype(variant_size_test(std::declval<Type>()))::value;
+
+    /**
+     * @brief Indicates the ValueObject {@link ValueObject} type.
+     * */
+    enum TypeId : int32_t {
+        /** Indicates the ValueObject type is NULL.*/
+        TYPE_NULL = TYPE_INDEX<Nil>,
+        /** Indicates the ValueObject type is int.*/
+        TYPE_INT = TYPE_INDEX<int64_t>,
+        /** Indicates the ValueObject type is double.*/
+        TYPE_DOUBLE = TYPE_INDEX<double>,
+        /** Indicates the ValueObject type is string.*/
+        TYPE_STRING = TYPE_INDEX<std::string>,
+        /** Indicates the ValueObject type is bool.*/
+        TYPE_BOOL = TYPE_INDEX<bool>,
+        /** Indicates the ValueObject type is blob.*/
+        TYPE_BLOB = TYPE_INDEX<Blob>,
+        /** Indicates the ValueObject type is asset.*/
+        TYPE_ASSET = TYPE_INDEX<Asset>,
+        /** Indicates the ValueObject type is assets.*/
+        TYPE_ASSETS = TYPE_INDEX<Assets>,
+        /** the BUTT.*/
+        TYPE_BUTT = TYPE_MAX
+    };
+    Type value;
+
+    /**
+     * @brief convert a std::variant input to another std::variant output with different (..._Types)
+     */
+    template<typename T>
+    static inline std::enable_if_t<(TYPE_INDEX<T>) < TYPE_MAX, const char *> DeclType()
+    {
+        return DECLARE_TYPES[TYPE_INDEX<T>];
+    }
+    /**
+     * @brief Constructor.
+     */
     ValueObject();
+
+    /**
+     * @brief Destructor.
+     */
     ~ValueObject();
-    ValueObject(Type valueObject) noexcept;
-    ValueObject(ValueObject &&valueObject) noexcept;
-    ValueObject(const ValueObject &valueObject);
-    ValueObject(int val);
+
+    /**
+     * @brief Constructor.
+     *
+     * A parameterized constructor used to create a ValueObject instance.
+     */
+    ValueObject(Type val) noexcept;
+
+    /**
+     * @brief Move constructor.
+     */
+    ValueObject(ValueObject &&val) noexcept;
+
+    /**
+     * @brief Copy constructor.
+     */
+    ValueObject(const ValueObject &val);
+
+    /**
+     * @brief Constructor.
+     *
+     * This constructor is used to convert the int input parameter to a value of type ValueObject.
+     *
+     * @param val Indicates an int input parameter.
+     */
+    ValueObject(int32_t val);
+
+    /**
+     * @brief Constructor.
+     *
+     * This constructor is used to convert the int64_t input parameter to a value of type ValueObject.
+     *
+     * @param val Indicates an int64_t input parameter.
+     */
     ValueObject(int64_t val);
+
+    /**
+     * @brief Constructor.
+     *
+     * This constructor is used to convert the double input parameter to a value of type ValueObject.
+     *
+     * @param val Indicates an double input parameter.
+     */
     ValueObject(double val);
+
+    /**
+     * @brief Constructor.
+     *
+     * This constructor is used to convert the bool input parameter to a value of type ValueObject.
+     *
+     * @param val Indicates an bool input parameter.
+     */
     ValueObject(bool val);
-    ValueObject(const std::string &val);
+
+    /**
+     * @brief Constructor.
+     *
+     * This constructor is used to convert the string input parameter to a value of type ValueObject.
+     *
+     * @param val Indicates an string input parameter.
+     */
+    ValueObject(std::string val);
+
+    /**
+     * @brief Constructor.
+     *
+     * This constructor is used to convert the const char * input parameter to a value of type ValueObject.
+     *
+     * @param val Indicates an const char * input parameter.
+     */
     ValueObject(const char *val);
+
+    /**
+     * @brief Constructor.
+     *
+     * This constructor is used to convert the vector<uint8_t> input parameter to a value of type ValueObject.
+     *
+     * @param val Indicates an vector<uint8_t> input parameter.
+     */
     ValueObject(const std::vector<uint8_t> &blob);
+
+    /**
+     * @brief Constructor.
+     *
+     * This constructor is used to convert the Asset input parameter to a value of type ValueObject.
+     *
+     * @param val Indicates an Asset input parameter.
+     */
+    ValueObject(Asset val);
+
+    /**
+     * @brief Constructor.
+     *
+     * This constructor is used to convert the Assets input parameter to a value of type ValueObject.
+     *
+     * @param val Indicates an Assets input parameter.
+     */
+    ValueObject(Assets val);
+
+    /**
+     * @brief Move assignment operator overloaded function.
+     */
     ValueObject &operator=(ValueObject &&valueObject) noexcept;
+
+    /**
+     * @brief Copy assignment operator overloaded function.
+     */
     ValueObject &operator=(const ValueObject &valueObject);
 
-    ValueObjectType GetType() const;
+    /**
+     * @brief Obtains the type in this {@code ValueObject} object.
+     */
+    TypeId GetType() const;
+
+    /**
+     * @brief Obtains the int value in this {@code ValueObject} object.
+     */
     int GetInt(int &val) const;
+
+    /**
+     * @brief Obtains the long value in this {@code ValueObject} object.
+     */
     int GetLong(int64_t &val) const;
+
+    /**
+     * @brief Obtains the double value in this {@code ValueObject} object.
+     */
     int GetDouble(double &val) const;
+
+    /**
+     * @brief Obtains the bool value in this {@code ValueObject} object.
+     */
     int GetBool(bool &val) const;
+
+    /**
+     * @brief Obtains the string value in this {@code ValueObject} object.
+     */
     int GetString(std::string &val) const;
+
+    /**
+     * @brief Obtains the vector<uint8_t> value in this {@code ValueObject} object.
+     */
     int GetBlob(std::vector<uint8_t> &val) const;
 
-    operator int () const
+    /**
+     * @brief Obtains the vector<uint8_t> value in this {@code ValueObject} object.
+     */
+    int GetAsset(Asset &val) const;
+
+    /**
+     * @brief Obtains the vector<uint8_t> value in this {@code ValueObject} object.
+     */
+    int GetAssets(Assets &val) const;
+
+    /**
+     * @brief Type conversion function.
+     *
+     * @return Returns the int type ValueObject.
+     */
+    operator int() const
     {
         return static_cast<int>(std::get<int64_t>(value));
     }
-    operator int64_t () const
+
+    /**
+     * @brief Type conversion function.
+     *
+     * @return Returns the int64_t type ValueObject.
+     */
+    operator int64_t() const
     {
         return std::get<int64_t>(value);
     }
-    operator double () const
+
+    /**
+     * @brief Type conversion function.
+     *
+     * @return Returns the double type ValueObject.
+     */
+    operator double() const
     {
         return std::get<double>(value);
     }
-    operator bool () const
+
+    /**
+     * @brief Type conversion function.
+     *
+     * @return Returns the bool type ValueObject.
+     */
+    operator bool() const
     {
         return std::get<bool>(value);
     }
-    operator std::string () const
+
+    /**
+     * @brief Type conversion function.
+     *
+     * @return Returns the string type ValueObject.
+     */
+    operator std::string() const
     {
         return std::get<std::string>(value);
     }
-    operator std::vector<uint8_t> () const
+
+    /**
+     * @brief Type conversion function.
+     *
+     * @return Returns the vector<uint8_t> type ValueObject.
+     */
+    operator Blob() const
     {
-        return std::get<std::vector<uint8_t>>(value);
+        return std::get<Blob>(value);
     }
+
+    /**
+     * @brief Type conversion function.
+     *
+     * @return Returns the vector<uint8_t> type ValueObject.
+     */
+    operator Asset() const
+    {
+        return std::get<Asset>(value);
+    }
+
+    /**
+    * @brief Type conversion function.
+    *
+    * @return Returns the vector<uint8_t> type ValueObject.
+    */
+    operator Assets() const
+    {
+        return std::get<Assets>(value);
+    }
+
+    /**
+     * @brief Type conversion function.
+     *
+     * @return Returns the Type type ValueObject.
+     */
     operator Type() const
     {
         return value;
     }
 
 private:
-    ValueObjectType type;
-    Type value;
+    template<class T>
+    int Get(T &output) const;
+    static constexpr const char *DECLARE_TYPES[TypeId::TYPE_BUTT] = {
+        /** Indicates the ValueObject type is NULL.*/
+        "",
+        /** Indicates the ValueObject type is int.*/
+        "INT",
+        /** Indicates the ValueObject type is double.*/
+        "REAL",
+        /** Indicates the ValueObject type is string.*/
+        "TEXT",
+        /** Indicates the ValueObject type is bool.*/
+        "INT",
+        /** Indicates the ValueObject type is blob.*/
+        "BLOB",
+        /** Indicates the ValueObject type is asset.*/
+        "ASSET",
+        /** Indicates the ValueObject type is assets.*/
+        "ASSETS"
+    };
 };
+using ValueObjectType = ValueObject::TypeId;
 } // namespace NativeRdb
 } // namespace OHOS
 #endif

@@ -19,6 +19,7 @@
 #include <sstream>
 
 #include "logger.h"
+#include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "sqlite_errno.h"
 
@@ -392,6 +393,84 @@ int SqliteStatement::GetColumnDouble(int index, double &value) const
 
     return E_OK;
 }
+
+int SqliteStatement::GetColumn(int index, ValueObject &value) const
+{
+    if (stmtHandle == nullptr) {
+        LOG_ERROR("invalid statement.");
+        return E_INVALID_STATEMENT;
+    }
+
+    if (index >= columnCount) {
+        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount);
+        return E_INVALID_COLUMN_INDEX;
+    }
+
+    int type = sqlite3_column_type(stmtHandle, index);
+    switch (type) {
+        case SQLITE_FLOAT:
+            value = sqlite3_column_double(stmtHandle, index);
+            return E_OK;
+        case SQLITE_INTEGER:
+            value = static_cast<int64_t>(sqlite3_column_int64(stmtHandle, index));
+            return E_OK;
+        case SQLITE_TEXT:
+            value = reinterpret_cast<const char *>(sqlite3_column_text(stmtHandle, index));
+            return E_OK;
+        case SQLITE_NULL:
+            return E_OK;
+        default:
+            break;
+    }
+    const char *decl = sqlite3_column_decltype(stmtHandle, index);
+    if (type != SQLITE_BLOB || decl == nullptr) {
+        LOG_ERROR("invalid type %{public}d.", type);
+        return E_ERROR;
+    }
+    int size = sqlite3_column_bytes(stmtHandle, index);
+    auto blob = static_cast<const uint8_t *>(sqlite3_column_blob(stmtHandle, index));
+    std::string declType = decl;
+    if (declType == ValueObject::DeclType<Asset>()) {
+        Asset asset;
+        RawDataParser::ParserRawData(blob, size, asset);
+        value = std::move(asset);
+        return E_OK;
+    }
+    if (declType == ValueObject::DeclType<Assets>()) {
+        Assets assets;
+        RawDataParser::ParserRawData(blob, size, assets);
+        value = std::move(assets);
+        return E_OK;
+    }
+    std::vector<uint8_t> rawData;
+    if (size > 0 || blob != nullptr) {
+        rawData.resize(size);
+        rawData.assign(blob, blob + size);
+    }
+    value = std::move(rawData);
+    return E_OK;
+}
+
+int SqliteStatement::GetSize(int index, size_t &size) const
+{
+    size = 0;
+    if (stmtHandle == nullptr) {
+        return E_INVALID_STATEMENT;
+    }
+
+    if (index >= columnCount) {
+        return E_INVALID_COLUMN_INDEX;
+    }
+
+    int type = sqlite3_column_type(stmtHandle, index);
+    if (type == SQLITE_BLOB || type == SQLITE_TEXT || type == SQLITE_NULL) {
+        size = sqlite3_column_bytes(stmtHandle, index);
+        return E_OK;
+    }
+
+    return E_INVALID_COLUMN_TYPE;
+}
+
 bool SqliteStatement::IsReadOnly() const
 {
     return readOnly;

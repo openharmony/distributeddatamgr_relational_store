@@ -81,7 +81,7 @@ public:
     /**
      * @brief Convert DataShare::DataShareValuesBucket to NativeRdb::ValuesBucket.
      */
-    API_EXPORT static ValuesBucket ToValuesBucket(const DataShareValuesBucket &bucket);
+    API_EXPORT static ValuesBucket ToValuesBucket(DataShareValuesBucket bucket);
 
     /**
      * @brief Convert DataShare::DataShareAbsPredicates to NativeRdb::RdbPredicates.

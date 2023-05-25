@@ -59,8 +59,8 @@ std::shared_ptr<RdbStore> DistributedTestAgent::store_ = nullptr;
 
 class DistributedTestOpenCallback : public RdbOpenCallback {
 public:
-    int OnCreate(RdbStore &rdbStore) override;
-    int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
+    int OnCreate(RdbStore &store) override;
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
     static const std::string CREATE_TABLE_TEST;
 };
 
@@ -69,12 +69,12 @@ const std::string DistributedTestOpenCallback::CREATE_TABLE_TEST = std::string("
                                                                               "name TEXT NOT NULL, age INTEGER, salary "
                                                                               "REAL, blobType BLOB)");
 
-int DistributedTestOpenCallback::OnCreate(RdbStore &store_)
+int DistributedTestOpenCallback::OnCreate(RdbStore &store)
 {
-    return store_.ExecuteSql(CREATE_TABLE_TEST);
+    return store.ExecuteSql(CREATE_TABLE_TEST);
 }
 
-int DistributedTestOpenCallback::OnUpgrade(RdbStore &store_, int oldVersion, int newVersion)
+int DistributedTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 {
     return E_OK;
 }

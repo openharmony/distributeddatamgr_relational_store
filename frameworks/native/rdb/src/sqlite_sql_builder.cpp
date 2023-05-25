@@ -62,12 +62,12 @@ std::string SqliteSqlBuilder::BuildUpdateString(const ValuesBucket &values, cons
         .append(" ")
         .append(tableName)
         .append(" SET ");
-    std::map<std::string, ValueObject> valuesMap;
-    values.GetAll(valuesMap);
-    for (auto iter = valuesMap.begin(); iter != valuesMap.end(); iter++) {
-        sql.append((iter == valuesMap.begin()) ? "" : ",");
-        sql.append(iter->first).append("=?");
-        bindArgs.push_back(iter->second);
+    const char *split = "";
+    for (auto &[key, val] : values.values_) {
+        sql.append(split);
+        sql.append(key).append("=?");
+        bindArgs.push_back(val);
+        split = ",";
     }
 
     if (!whereArgs.empty()) {
