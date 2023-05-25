@@ -121,6 +121,9 @@ private:
     int FreeTransaction(SqliteConnection *connection, const std::string &sql);
     std::pair<std::string, std::vector<ValueObject>> GetInsertParams(
         std::map<std::string, ValueObject> &valuesMap, const std::string &table);
+    void BindEncryptKey(const std::vector<uint8_t> destEncryptKey, const std::string &backupFilePath,
+        std::vector<ValueObject> &bindArgs);
+    int GetDataBasePath(const std::string databasePath, std::string &backupFilePath);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;

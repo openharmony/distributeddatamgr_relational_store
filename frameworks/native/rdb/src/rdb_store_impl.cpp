@@ -554,16 +554,13 @@ int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string
     return errCode;
 }
 
-/**
- * Restores a database from a specified encrypted or unencrypted database file.
- */
-int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
+int RdbStoreImpl::GetDataBasePath(const std::string databasePath, std::string &backupFilePath)
 {
     if (databasePath.empty()) {
         LOG_ERROR("Empty databasePath.");
         return E_INVALID_FILE_PATH;
     }
-    std::string backupFilePath;
+
     if (ISFILE(databasePath)) {
         backupFilePath = ExtractFilePath(path) + databasePath;
     } else {
@@ -575,8 +572,12 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
     }
 
     LOG_INFO("databasePath is %{public}s.", SqliteUtils::Anonymous(backupFilePath).c_str());
+    return E_OK;
+}
 
-    std::vector<ValueObject> bindArgs;
+void RdbStoreImpl::BindEncryptKey(const std::vector<uint8_t> destEncryptKey, const std::string &backupFilePath,
+                                 std::vector<ValueObject> &bindArgs)
+{
     bindArgs.push_back(ValueObject(backupFilePath));
     if (destEncryptKey.size() != 0 && !isEncrypt_) {
         bindArgs.push_back(ValueObject(destEncryptKey));
@@ -592,14 +593,29 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
         std::string str = "";
         bindArgs.push_back(ValueObject(str));
     }
+}
+
+/**
+ * Restores a database from a specified encrypted or unencrypted database file.
+ */
+int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
+{
+    std::string backupFilePath;
+    int ret = GetDataBasePath(databasePath, backupFilePath);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    std::vector<ValueObject> bindArgs;
+    BindEncryptKey(destEncryptKey, backupFilePath, bindArgs);
 
     SqliteConnection *connection;
-
     std::string sql = GlobalExpr::ATTACH_BACKUP_SQL;
     int errCode = BeginExecuteSql(sql, &connection);
     if (errCode != 0) {
         return errCode;
     }
+
     errCode = connection->ExecuteSql(sql, bindArgs);
     connectionPool->ReleaseConnection(connection);
     if (errCode != E_OK) {
