@@ -130,7 +130,7 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_001, TestSize.Level1)
     errCode = cursor->OH_Cursor_GetColumnType(cursor, 5, &type);
     EXPECT_EQ(type, OH_Rdb_ColumnType::TYPE_TEXT);
 
-    predicates->OH_Predicates_Close(predicates);
+    OH_Rdb_DestroyPredicates(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -163,7 +163,7 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_002, TestSize.Level1)
     errCode = cursor->OH_Cursor_GetColumnIndex(cursor, "data5", &columnIndex);
     EXPECT_EQ(columnIndex, 5);
 
-    predicates->OH_Predicates_Close(predicates);
+    OH_Rdb_DestroyPredicates(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -196,7 +196,7 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_003, TestSize.Level1)
     errCode = cursor->OH_Cursor_GetColumnName(cursor, 5, name, 6);
     EXPECT_EQ(strcmp(name, "data5"), 0);
 
-    predicates->OH_Predicates_Close(predicates);
+    OH_Rdb_DestroyPredicates(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -261,6 +261,6 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_004, TestSize.Level1)
     cursor->OH_Cursor_IsNull(cursor, 3, &isNull);
     EXPECT_EQ(isNull, true);
 
-    predicates->OH_Predicates_Close(predicates);
+    OH_Rdb_DestroyPredicates(predicates);
     cursor->OH_Cursor_Close(cursor);
 }

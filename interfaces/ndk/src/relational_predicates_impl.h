@@ -39,11 +39,10 @@ OH_Predicates PREDICATES_OrderBy(OH_Predicates *predicates, const char *field, O
 OH_Predicates PREDICATES_Distinct(OH_Predicates *predicates);
 OH_Predicates PREDICATES_Limit(OH_Predicates *predicates, unsigned int value);
 OH_Predicates PREDICATES_Offset(OH_Predicates *predicates, unsigned int rowOffset);
-OH_Predicates PREDICATES_GroupBy(OH_Predicates *predicates, OH_Rdb_VObject *);
+OH_Predicates PREDICATES_GroupBy(OH_Predicates *predicates, char const *const *fields, int length);
 OH_Predicates PREDICATES_In(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
 OH_Predicates PREDICATES_NotIn(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
 OH_Predicates PREDICATES_Clear(OH_Predicates *predicates);
-int PREDICATES_Close(OH_Predicates *predicates);
 
 namespace OHOS {
 namespace RdbNdk {
@@ -76,7 +75,6 @@ public:
         OH_Predicates_In = PREDICATES_In;
         OH_Predicates_NotIn = PREDICATES_NotIn;
         OH_Predicates_Clear = PREDICATES_Clear;
-        OH_Predicates_Close = PREDICATES_Close;
     }
     OHOS::NativeRdb::RdbPredicates &GetPredicates();
 

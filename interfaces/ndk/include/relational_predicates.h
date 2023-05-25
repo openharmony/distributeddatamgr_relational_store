@@ -50,11 +50,10 @@ typedef struct OH_Predicates {
     OH_Predicates (*OH_Predicates_Distinct)(OH_Predicates *);
     OH_Predicates (*OH_Predicates_Limit)(OH_Predicates *, unsigned int);
     OH_Predicates (*OH_Predicates_Offset)(OH_Predicates *, unsigned int);
-    OH_Predicates (*OH_Predicates_GroupBy)(OH_Predicates *, OH_Rdb_VObject *);
+    OH_Predicates (*OH_Predicates_GroupBy)(OH_Predicates *, char const *const *, int);
     OH_Predicates (*OH_Predicates_In)(OH_Predicates *, const char *, OH_Rdb_VObject *);
     OH_Predicates (*OH_Predicates_NotIn)(OH_Predicates *, const char *, OH_Rdb_VObject *);
     OH_Predicates (*OH_Predicates_Clear)(OH_Predicates *);
-    int (*OH_Predicates_Close)(OH_Predicates *);
 } OH_Predicates;
 
 OH_Predicates *OH_Rdb_CreatePredicates(const char *table);
