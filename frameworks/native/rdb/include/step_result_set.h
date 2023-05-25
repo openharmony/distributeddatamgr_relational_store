@@ -70,7 +70,6 @@ private:
     bool isAfterLast;
     // The value indicates the row count of the result set
     int rowCount;
-    std::thread::id tid;
     std::shared_ptr<SqliteStatement> sqliteStatement;
     static const int INIT_POS = -1;
     // Max times of retrying step query

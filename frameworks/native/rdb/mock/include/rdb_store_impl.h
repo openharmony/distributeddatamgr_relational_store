@@ -105,8 +105,6 @@ private:
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;
-    static const int MAX_IDLE_SESSION_SIZE = 5;
-    std::mutex sessionMutex;
     bool isOpen;
     std::string path;
     std::string orgPath;
@@ -114,7 +112,6 @@ private:
     bool isMemoryRdb;
     std::string name;
     std::string fileType;
-    std::stack<TransactionObserver *> transactionObserverStack;
     bool isEncrypt_;
 };
 } // namespace OHOS::NativeRdb
