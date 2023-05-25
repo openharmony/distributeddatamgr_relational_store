@@ -22,7 +22,7 @@
 #include <vector>
 #include <string>
 #include <mutex>
-#include "rdb_store_impl.h"
+#include "sqlite_connection_pool.h"
 #include "sqlite_statement.h"
 #include "shared_block.h"
 #include "abs_shared_result_set.h"
@@ -32,18 +32,14 @@ namespace OHOS {
 namespace NativeRdb {
 class SqliteSharedResultSet : public AbsSharedResultSet {
 public:
-    SqliteSharedResultSet(std::shared_ptr<RdbStoreImpl> rdbSreImpl, std::string path, std::string sql,
-        const std::vector<std::string> &selectionArgVec);
     SqliteSharedResultSet(SqliteConnectionPool* connectionPool, std::string path, std::string sql,
         const std::vector<std::string> &bindArgs);
     ~SqliteSharedResultSet() override;
-    int PrepareStep(SqliteConnection* connection);
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int Close() override;
     int GetRowCount(int &count) override;
     bool OnGo(int oldPosition, int newPosition) override;
     void SetBlock(AppDataFwk::SharedBlock *block) override;
-    std::shared_ptr<RdbStore> GetRdbStore() const;
     int PickFillBlockStartPosition(int resultSetPosition, int blockCapacity) const;
     void SetFillBlockForwardOnly(bool isOnlyFillResultSetBlockInput);
 
@@ -51,9 +47,8 @@ protected:
     void Finalize() override;
 
 private:
-    int PrepareStep();
+    std::shared_ptr<SqliteStatement> PrepareStep(SqliteConnection* connection, int &errCode);
     void FillSharedBlock(int requiredPos);
-
 private:
     // The specified value is -1 when there is no data
     static const int NO_COUNT = -1;
@@ -63,12 +58,9 @@ private:
     int resultSetBlockCapacity;
     // Controls fetching of rows relative to requested position
     bool isOnlyFillResultSetBlock;
-    std::mutex sessionMutex;
-    std::shared_ptr<RdbStoreImpl> rdbStoreImpl;
     std::string qrySql;
     std::vector<std::string> selectionArgVec;
     std::shared_ptr<SqliteStatement> sqliteStatement;
-    std::thread::id tid;
     // The number of rows in the cursor
     int rowNum;
     std::vector<std::string> columnNames_;
