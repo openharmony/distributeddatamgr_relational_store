@@ -307,19 +307,23 @@ OH_Predicates PREDICATES_Offset(OH_Predicates *predicates, unsigned int rowOffse
     return *predicates;
 }
 
-OH_Predicates PREDICATES_GroupBy(OH_Predicates *predicates, OH_Rdb_VObject *valueObject)
+OH_Predicates PREDICATES_GroupBy(OH_Predicates *predicates, char const *const *fields, int length)
 {
-    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || valueObject == nullptr) {
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || fields == nullptr) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, valueObject is NULL ? %{public}d,",
-            (predicates == nullptr), (valueObject == nullptr));
+            (fields == nullptr), (valueObject == nullptr));
         return *predicates;
     }
     auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
-    std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
-    if (tempValue.size() > OHOS::NativeRdb::GlobalExpr::SQLITE_MAX_COLUMN) {
-        return *predicates;
+    std::vector<std::string> vec;
+    vec.reserve(length);
+    if (field != nullptr) {
+        for (int i = 0; i < length; i++) {
+            vec.push_back(std::string(field[i]));
+        }
     }
-    tempPredicates->GetPredicates().GroupBy(tempValue);
+
+    tempPredicates->GetPredicates().GroupBy(vec);
     return *predicates;
 }
 
@@ -368,16 +372,4 @@ OH_Predicates PREDICATES_Clear(OH_Predicates *predicates)
     auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
     tempPredicates->GetPredicates().Clear();
     return *predicates;
-}
-
-int PREDICATES_Close(OH_Predicates *predicates)
-{
-    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
-        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
-    }
-    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
-    delete tempPredicates;
-    tempPredicates = nullptr;
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
 }

@@ -139,7 +139,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_001, TestSize.Level1)
 
     OH_Rdb_DestroyValueObject(valueObject);
     OH_VBucket_Close(valueBucket);
-    predicates->OH_Predicates_Close(predicates);
+    OH_Rdb_DestroyPredicates(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -215,7 +215,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_002, TestSize.Level1)
 
     OH_Rdb_DestroyValueObject(valueObject);
     OH_VBucket_Close(valueBucket);
-    predicates->OH_Predicates_Close(predicates);
+    OH_Rdb_DestroyPredicates(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -525,8 +525,8 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_008, TestSize.Level1)
     EXPECT_EQ(strcmp(data5Value, "ABCDEFG"), 0);
 
     OH_Rdb_DestroyValueObject(valueObject);
-    predicates->OH_Predicates_Close(predicates);
-    predicates2->OH_Predicates_Close(predicates2);
+    OH_Rdb_DestroyPredicates(predicates);
+    OH_Rdb_DestroyPredicates(predicates2);
     OH_VBucket_Close(valueBucket);
     cursor->OH_Cursor_Close(cursor);
 }
