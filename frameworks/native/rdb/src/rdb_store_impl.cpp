@@ -554,7 +554,7 @@ int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string
     return errCode;
 }
 
-int RdbStoreImpl::GetDataBasePath(const std::string databasePath, std::string &backupFilePath)
+int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &backupFilePath)
 {
     if (databasePath.empty()) {
         LOG_ERROR("Empty databasePath.");
@@ -575,9 +575,52 @@ int RdbStoreImpl::GetDataBasePath(const std::string databasePath, std::string &b
     return E_OK;
 }
 
-void RdbStoreImpl::BindEncryptKey(const std::vector<uint8_t> destEncryptKey, const std::string &backupFilePath,
-                                 std::vector<ValueObject> &bindArgs)
+int RdbStoreImpl::ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
+    SqliteConnection *connection;
+    int errCode = BeginExecuteSql(sql, &connection);
+    if (errCode != 0) {
+        return errCode;
+    }
+
+    errCode = connection->ExecuteSql(sql, bindArgs);
+    connectionPool->ReleaseConnection(connection);
+    if (errCode != E_OK) {
+        LOG_ERROR("ExecuteSql ATTACH_BACKUP_SQL error %{public}d", errCode);
+        return errCode;
+    }
+    return errCode;
+}
+
+int RdbStoreImpl::ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs)
+{
+    int64_t count;
+    SqliteConnection *connection;
+    int errCode = BeginExecuteSql(sql, &connection);
+    if (errCode != 0) {
+        return errCode;
+    }
+    errCode = connection->ExecuteGetLong(count, sql, bindArgs);
+    connectionPool->ReleaseConnection(connection);
+    if (errCode != E_OK) {
+        LOG_ERROR("ExecuteSql EXPORT_SQL error %{public}d", errCode);
+        return errCode;
+    }
+    return errCode;
+}
+
+/**
+ * Restores a database from a specified encrypted or unencrypted database file.
+ */
+int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
+{
+    std::string backupFilePath;
+    int ret = GetDataBasePath(databasePath, backupFilePath);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    std::vector<ValueObject> bindArgs;
     bindArgs.push_back(ValueObject(backupFilePath));
     if (destEncryptKey.size() != 0 && !isEncrypt_) {
         bindArgs.push_back(ValueObject(destEncryptKey));
@@ -593,61 +636,18 @@ void RdbStoreImpl::BindEncryptKey(const std::vector<uint8_t> destEncryptKey, con
         std::string str = "";
         bindArgs.push_back(ValueObject(str));
     }
-}
 
-/**
- * Restores a database from a specified encrypted or unencrypted database file.
- */
-int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
-{
-    std::string backupFilePath;
-    int ret = GetDataBasePath(databasePath, backupFilePath);
+    ret = ExecuteSqlInner(GlobalExpr::ATTACH_BACKUP_SQL, bindArgs);
     if (ret != E_OK) {
         return ret;
     }
 
-    std::vector<ValueObject> bindArgs;
-    BindEncryptKey(destEncryptKey, backupFilePath, bindArgs);
-
-    SqliteConnection *connection;
-    std::string sql = GlobalExpr::ATTACH_BACKUP_SQL;
-    int errCode = BeginExecuteSql(sql, &connection);
-    if (errCode != 0) {
-        return errCode;
+    ret = ExecuteGetLongInner(GlobalExpr::EXPORT_SQL, std::vector<ValueObject>());
+    if (ret != E_OK) {
+        return ret;
     }
 
-    errCode = connection->ExecuteSql(sql, bindArgs);
-    connectionPool->ReleaseConnection(connection);
-    if (errCode != E_OK) {
-        LOG_ERROR("ExecuteSql ATTACH_BACKUP_SQL error %{public}d", errCode);
-        return errCode;
-    }
-
-    int64_t count;
-    sql = GlobalExpr::EXPORT_SQL;
-    errCode = BeginExecuteSql(sql, &connection);
-    if (errCode != 0) {
-        return errCode;
-    }
-    errCode = connection->ExecuteGetLong(count, sql, std::vector<ValueObject>());
-    connectionPool->ReleaseConnection(connection);
-    if (errCode != E_OK) {
-        LOG_ERROR("ExecuteSql EXPORT_SQL error %{public}d", errCode);
-        return errCode;
-    }
-
-    sql = GlobalExpr::DETACH_BACKUP_SQL;
-    errCode = BeginExecuteSql(sql, &connection);
-    if (errCode != 0) {
-        return errCode;
-    }
-    errCode = connection->ExecuteSql(sql, std::vector<ValueObject>());
-    connectionPool->ReleaseConnection(connection);
-    if (errCode != E_OK) {
-        LOG_ERROR("ExecuteSql DETACH_BACKUP_SQL error %{public}d", errCode);
-        return errCode;
-    }
-    return E_OK;
+    return ExecuteSqlInner(GlobalExpr::DETACH_BACKUP_SQL, std::vector<ValueObject>());
 }
 
 int RdbStoreImpl::BeginExecuteSql(const std::string &sql, SqliteConnection **connection)

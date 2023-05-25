@@ -120,7 +120,7 @@ std::vector<std::string> DataShareProfileInfo::GetResProfileByMetadata(
         return meta.name == DATA_SHARE_PROFILE_META;
     });
     if (it != metadata.end()) {
-        return GetResFromResMgr(*it.resource, *resMgr, isCompressed);
+        return GetResFromResMgr((*it).resource, *resMgr, isCompressed);
     }
 
     return profileInfos;
