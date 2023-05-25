@@ -228,6 +228,11 @@ int ResultSetProxy::GetDouble(int columnIndex, double &value)
     return E_OK;
 }
 
+int ResultSetProxy::GetSize(int columnIndex, size_t &size)
+{
+    return E_NOT_SUPPORT;
+}
+
 int ResultSetProxy::IsColumnNull(int columnIndex, bool &isNull)
 {
     MessageParcel reply;

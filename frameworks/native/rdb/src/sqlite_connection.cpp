@@ -264,7 +264,7 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
     }
 
     int targetValue = config.GetPageSize();
-    int64_t value;
+    int64_t value = 0;
     int errCode = ExecuteGetLong(value, "PRAGMA page_size");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetPageSize fail to get page size : %{public}d", errCode);
@@ -291,6 +291,7 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config)
     if (!config.GetEncryptKey().empty() && !config.IsEncrypt()) {
         key = config.GetEncryptKey();
     } else if (config.IsEncrypt()) {
+        RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
         rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbKeyFile::PUB_KEY_FILE);
         key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
     } else {
@@ -400,7 +401,7 @@ int SqliteConnection::SetJournalSizeLimit(const RdbStoreConfig &config)
     }
 
     int targetValue = SqliteGlobalConfig::GetJournalFileSize();
-    int64_t currentValue;
+    int64_t currentValue = 0;
     int errCode = ExecuteGetLong(currentValue, "PRAGMA journal_size_limit");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetJournalSizeLimit fail to get journal_size_limit : %{public}d", errCode);
@@ -426,7 +427,7 @@ int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
     }
 
     int targetValue = SqliteGlobalConfig::GetWalAutoCheckpoint();
-    int64_t value;
+    int64_t value = 0;
     int errCode = ExecuteGetLong(value, "PRAGMA wal_autocheckpoint");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetAutoCheckpoint fail to get wal_autocheckpoint : %{public}d", errCode);

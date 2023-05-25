@@ -120,13 +120,10 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
 
     inDataSeg.size = MAX_UPDATE_SIZE;
 
-    bool isFinished = false;
-
     while (inDataSeg.data <= lastPtr) {
         if (inDataSeg.data + MAX_UPDATE_SIZE <= lastPtr) {
             outDataSeg.size = MAX_OUTDATA_SIZE;
         } else {
-            isFinished = true;
             inDataSeg.size = lastPtr - inDataSeg.data + 1;
             break;
         }
@@ -147,8 +144,8 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
         cur += outDataSeg.size;
         outData->size += outDataSeg.size;
         HKS_FREE(outDataSeg.data);
-        if ((!isFinished) && (inDataSeg.data + MAX_UPDATE_SIZE > lastPtr)) {
-            LOG_ERROR("isFinished and inDataSeg data Error");
+        if (inDataSeg.data + MAX_UPDATE_SIZE > lastPtr) {
+            LOG_ERROR("inDataSeg data Error");
             return HKS_FAILURE;
         }
         inDataSeg.data += MAX_UPDATE_SIZE;
@@ -428,11 +425,12 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
 
 void RdbSecurityManager::Init(const std::string &bundleName, const std::string &path)
 {
-    rootKeyAlias_ = GenerateRootKeyAlias(bundleName);
+    ParsePath(path);
+    bundleName_ = bundleName;
+    rootKeyAlias_ = GenerateRootKeyAlias();
     nonce_ = std::vector<uint8_t>(RDB_HKS_BLOB_TYPE_NONCE, RDB_HKS_BLOB_TYPE_NONCE + strlen(RDB_HKS_BLOB_TYPE_NONCE));
     aad_ = std::vector<uint8_t>(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD));
 
-    ParsePath(path);
     if (CheckRootKeyExists()) {
         return;
     }
@@ -575,16 +573,16 @@ RdbPassword RdbSecurityManager::GetRdbPassword(KeyFileType keyFile)
     return LoadSecretKeyFromFile(keyFile);
 }
 
-std::vector<uint8_t> RdbSecurityManager::GenerateRootKeyAlias(const std::string &bundleName)
+std::vector<uint8_t> RdbSecurityManager::GenerateRootKeyAlias()
 {
-    bundleName_ = bundleName;
-    if (bundleName_.empty()) {
-        LOG_ERROR("BundleName is empty!");
-        return {};
-    }
     std::vector<uint8_t> rootKeyAlias =
         std::vector<uint8_t>(RDB_ROOT_KEY_ALIAS_PREFIX, RDB_ROOT_KEY_ALIAS_PREFIX + strlen(RDB_ROOT_KEY_ALIAS_PREFIX));
-    rootKeyAlias.insert(rootKeyAlias.end(), bundleName.begin(), bundleName.end());
+    if (!bundleName_.empty()) {
+        rootKeyAlias.insert(rootKeyAlias.end(), bundleName_.begin(), bundleName_.end());
+    } else {
+        rootKeyAlias.insert(rootKeyAlias.end(), dbDir_.begin(), dbDir_.end());
+    }
+
     return rootKeyAlias;
 }
 

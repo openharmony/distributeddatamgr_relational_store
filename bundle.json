@@ -1,11 +1,11 @@
 {
-    "name": "@ohos/distributeddatamgr_relational_store",
+    "name": "@ohos/relational_store",
     "version": "3.1.0",
     "description": "Local Data Management",
     "homePage": "https://gitee.com/openharmony",
     "license": "Apache V2",
     "repository": "https://gitee.com/openharmony/distributeddatamgr_relational_store",
-    "domain": "os",
+    "domain": "ohos",
     "language": "",
     "publishAs": "code-segment",
     "private": false,
@@ -44,8 +44,8 @@
         "adapted_system_type": [
             "standard"
         ],
-        "rom": "",
-        "ram": "",
+        "rom": "1000",
+        "ram": "350",
         "deps": {
             "components": [
                 "ability_runtime",
@@ -73,12 +73,26 @@
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_bms_adapter:rdb_bms_adapter",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/cloud_data:clouddata",
+                "//foundation/distributeddatamgr/relational_store/interfaces/ndk:native_rdb_ndk",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/dataability:dataability",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:rdb",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:napi_rdb",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/relationalstore:relationalstore"
             ],
             "inner_kits": [
+                {
+                    "name": "//foundation/distributeddatamgr/relational_store/interfaces/ndk:native_rdb_ndk",
+                    "header": {
+                        "header_files": [
+                            "relational_predicates.h",
+                            "relational_store.h",
+                            "relational_cursor.h",
+                            "relational_value_object.h",
+                            "relational_values_bucket.h"
+                        ],
+                        "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/ndk/include"
+                    }
+                },
                 {
                     "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
                     "header": {
@@ -157,6 +171,7 @@
                 "//foundation/distributeddatamgr/relational_store/test/js/rdb:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/js/relationalstore:performancetest",
                 "//foundation/distributeddatamgr/relational_store/test/js/relationalstore:unittest",
+                "//foundation/distributeddatamgr/relational_store/test/ndk:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/dataability:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:fuzztest",

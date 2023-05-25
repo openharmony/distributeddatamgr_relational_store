@@ -15,19 +15,17 @@
 
 #ifndef NATIVE_RDB_VALUES_BUCKET_H
 #define NATIVE_RDB_VALUES_BUCKET_H
-
 #include <map>
 #include <set>
-#include <parcel.h>
 
+#include "parcel.h"
 #include "value_object.h"
-
 namespace OHOS {
 namespace NativeRdb {
 /**
  * The ValuesBucket class of RDB.
  */
-class API_EXPORT ValuesBucket : public virtual OHOS::Parcelable {
+class API_EXPORT ValuesBucket : public virtual Parcelable {
 public:
     /**
      * @brief Constructor.
@@ -39,7 +37,11 @@ public:
      *
      * A parameterized constructor used to create a ValuesBucket instance.
      */
-    API_EXPORT explicit ValuesBucket(std::map<std::string, ValueObject> &valuesMap);
+    API_EXPORT ValuesBucket(std::map<std::string, ValueObject> values);
+    API_EXPORT ValuesBucket(const ValuesBucket &values);
+    API_EXPORT ValuesBucket &operator =(const ValuesBucket &values);
+    API_EXPORT ValuesBucket(ValuesBucket &&values) noexcept;
+    API_EXPORT ValuesBucket &operator =(ValuesBucket &&values) noexcept;
 
     /**
      * @brief Destructor.
@@ -102,6 +104,14 @@ public:
     API_EXPORT void PutNull(const std::string &columnName);
 
     /**
+     * @brief Put the integer double bool string bytes asset asset and so on
+     * to this {@code ValuesBucket} object for the given column name.
+     *
+     * @param columnName Indicates the name of the column.
+     */
+    API_EXPORT void Put(const std::string &columnName, ValueObject value);
+
+    /**
      * @brief Delete the ValueObject object for the given column name.
      *
      * @param columnName Indicates the name of the column.
@@ -140,19 +150,21 @@ public:
     /**
      * @brief Obtains the ValuesBucket object's valuesmap.
      */
-    API_EXPORT void GetAll(std::map<std::string, ValueObject> &valuesMap) const;
+    API_EXPORT std::map<std::string, ValueObject> GetAll() const;
 
     /**
-     * @brief Write to message parcel.
+     * @brief Obtains the ValuesBucket object's valuesmap.
      */
+    API_EXPORT void GetAll(std::map<std::string, ValueObject> &output) const;
+
     API_EXPORT bool Marshalling(Parcel &parcel) const override;
 
     /**
      * @brief Obtains a ValuesBucket object from parcel.
      */
     API_EXPORT static ValuesBucket *Unmarshalling(Parcel &parcel);
-private:
-    std::map<std::string, ValueObject> valuesMap;
+
+    std::map<std::string, ValueObject> values_;
 };
 
 } // namespace NativeRdb
