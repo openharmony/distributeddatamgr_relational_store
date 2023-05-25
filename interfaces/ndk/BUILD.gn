@@ -18,7 +18,6 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 ohos_ndk_headers("native_rdb_ndk_header") {
   dest_dir = "$ndk_headers_out_dir/native_rdb"
   sources = [
-    "./include/ndk_logger.h",
     "./include/relational_cursor.h",
     "./include/relational_error_code.h",
     "./include/relational_predicates.h",
