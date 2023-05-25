@@ -317,10 +317,8 @@ OH_Predicates PREDICATES_GroupBy(OH_Predicates *predicates, char const *const *f
     auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
     std::vector<std::string> vec;
     vec.reserve(length);
-    if (field != nullptr) {
-        for (int i = 0; i < length; i++) {
-            vec.push_back(std::string(fields[i]));
-        }
+    for (int i = 0; i < length; i++) {
+        vec.push_back(std::string(fields[i]));
     }
 
     tempPredicates->GetPredicates().GroupBy(vec);
