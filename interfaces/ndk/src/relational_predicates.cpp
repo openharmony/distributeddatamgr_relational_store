@@ -171,7 +171,7 @@ OH_Predicates PREDICATES_Between(OH_Predicates *predicates, const char *field, O
     }
     std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
     if (tempValue.size() != 2) {
-        LOG_ERROR("size is %{public}d", tempValue.size());
+        LOG_ERROR("size is %{public}zu", tempValue.size());
         return *predicates;
     }
     auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
@@ -191,7 +191,7 @@ OH_Predicates PREDICATES_NotBetween(OH_Predicates *predicates, const char *field
     }
     std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
     if (tempValue.size() != 2) {
-        LOG_ERROR("size is %{public}d", tempValue.size());
+        LOG_ERROR("size is %{public}zu", tempValue.size());
         return *predicates;
     }
     auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
