@@ -19,10 +19,7 @@ module_output_path = "relational_store/rdb_bms_adapter"
 config("module_private_config") {
   visibility = [ ":*" ]
 
-  include_dirs = [
-    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_bms_adapter/include",
-    "//commonlibrary/c_utils/base/include",
-  ]
+  include_dirs = [ "${relational_store_base_path}/interfaces/inner_api/rdb_bms_adapter/include" ]
 }
 
 ohos_unittest("RdbBMSAdapterTest") {
@@ -33,18 +30,14 @@ ohos_unittest("RdbBMSAdapterTest") {
   configs = [ ":module_private_config" ]
 
   external_deps = [
-    "c_utils:utils",
-    "hilog_native:libhilog",
-    "relational_store:native_rdb",
-    "relational_store:rdb_bms_adapter",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "relational_store:rdb_bms_adapter",
     "resource_management:global_resmgr",
   ]
 
-  deps = [
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "//third_party/googletest:gtest_main" ]
 }
 
 ###############################################################################
