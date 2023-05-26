@@ -540,7 +540,7 @@ bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSe
     LOG_INFO("LoadSecretKeyFromDisk begin.");
     std::lock_guard<std::mutex> lock(mutex_);
     std::vector<char> content;
-    if (!LoadBufferFromFile(keyPath, content) && !content.empty()) {
+    if (!LoadBufferFromFile(keyPath, content) || content.empty()) {
         LOG_ERROR("LoadBufferFromFile failed!");
         return false;
     }
