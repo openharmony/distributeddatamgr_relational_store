@@ -27,44 +27,9 @@ __attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_RdbJsKit_Values
 {
     napi_value ret;
     NAPI_CALL(env, napi_create_object(env, &ret));
-    std::map<std::string, ValueObject> valuesMap;
-    valuesBucket.GetAll(valuesMap);
-    std::map<std::string, ValueObject>::iterator it;
-    for (it = valuesMap.begin(); it != valuesMap.end(); ++it) {
-        std::string key = it->first;
-        auto valueObject = it->second;
-        napi_value value = nullptr;
-        switch (valueObject.GetType()) {
-            case ValueObjectType::TYPE_NULL: {
-                    value = nullptr;
-                } break;
-            case ValueObjectType::TYPE_INT: {
-                    int64_t intVal = 0;
-                    valueObject.GetLong(intVal);
-                    value = JSUtils::Convert2JSValue(env, intVal);
-                } break;
-            case ValueObjectType::TYPE_DOUBLE: {
-                    double doubleVal = 0L;
-                    valueObject.GetDouble(doubleVal);
-                    value = JSUtils::Convert2JSValue(env, doubleVal);
-                } break;
-            case ValueObjectType::TYPE_BLOB: {
-                    std::vector<uint8_t> blobVal;
-                    valueObject.GetBlob(blobVal);
-                    value = JSUtils::Convert2JSValue(env, blobVal);
-                } break;
-            case ValueObjectType::TYPE_BOOL: {
-                    bool boolVal = false;
-                    valueObject.GetBool(boolVal);
-                    value = JSUtils::Convert2JSValue(env, boolVal);
-                } break;
-            default: {
-                    std::string strVal = "";
-                    valueObject.GetString(strVal);
-                    value = JSUtils::Convert2JSValue(env, strVal);
-                } break;
-        }
-        NAPI_CALL(env, napi_set_named_property(env, ret, key.c_str(), value));
+    for (auto &[key, value]: valuesBucket.values_) {
+        napi_value jsValue = JSUtils::Convert2JSValue(env, value.value);
+        NAPI_CALL(env, napi_set_named_property(env, ret, key.c_str(), jsValue));
     }
 
     return ret;

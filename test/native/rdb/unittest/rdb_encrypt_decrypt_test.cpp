@@ -49,8 +49,8 @@ std::shared_ptr<RdbStore> RdbEncryptTest::testStore = nullptr;
 
 class EncryptTestOpenCallback : public RdbOpenCallback {
 public:
-    int OnCreate(RdbStore &rdbStore) override;
-    int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
+    int OnCreate(RdbStore &store) override;
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
     static const std::string CREATE_TABLE_TEST;
 };
 
@@ -240,7 +240,7 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_05, TestSize.Level1)
     EncryptTestOpenCallback helper;
     int errCode;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(store, nullptr);
+    EXPECT_NE(store, nullptr);
 }
 
 /**
@@ -348,4 +348,19 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_09, TestSize.Level1)
     ret = RdbSecurityManager::GetInstance().SetKeyDistributedStatus(
         RdbSecurityManager::KeyFileType::PUB_KEY_FILE_NEW_KEY, distributedStatus);
     EXPECT_EQ(ret, E_ERROR);
+}
+
+/**
+ * @tc.name: RdbStore_Encrypt_Decrypt_Test_010
+ * @tc.desc: test RdbStore Get Encrypt Store without SetBundleName
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_010, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    EncryptTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
 }

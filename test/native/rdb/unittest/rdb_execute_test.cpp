@@ -42,8 +42,8 @@ std::shared_ptr<RdbStore> RdbExecuteTest::store = nullptr;
 
 class ExecuteTestOpenCallback : public RdbOpenCallback {
 public:
-    int OnCreate(RdbStore &rdbStore) override;
-    int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
+    int OnCreate(RdbStore &store) override;
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
     static const std::string CREATE_TABLE_TEST;
 };
 
@@ -178,6 +178,7 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_002, TestSize.Level1)
     values.PutDouble("salary", 200.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
     ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
     values.Clear();
@@ -187,6 +188,7 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_002, TestSize.Level1)
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
     ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
     int64_t count;

@@ -125,7 +125,7 @@ std::vector<std::string> DataShareProfileInfo::GetResProfileByMetadata(
 
 std::shared_ptr<ResourceManager> DataShareProfileInfo::InitResMgr(const std::string &resourcePath)
 {
-    std::shared_ptr<ResourceManager> resMgr(CreateResourceManager());
+    static std::shared_ptr<ResourceManager> resMgr(CreateResourceManager());
     if (resMgr == nullptr) {
         return nullptr;
     }
@@ -135,11 +135,7 @@ std::shared_ptr<ResourceManager> DataShareProfileInfo::InitResMgr(const std::str
         return nullptr;
     }
     resMgr->UpdateResConfig(*resConfig);
-
-    if (!resMgr->AddResource(resourcePath.c_str())) {
-        LOG_ERROR("add resource failed, resourcePath is %{public}s", resourcePath.c_str());
-        return nullptr;
-    }
+    resMgr->AddResource(resourcePath.c_str());
     return resMgr;
 }
 

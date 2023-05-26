@@ -14,17 +14,37 @@
  */
 
 #include "values_bucket.h"
-#include "sqlite_global_config.h"
-#include "logger.h"
-
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#include "itypes_util.h"
+#endif
 namespace OHOS {
 namespace NativeRdb {
 ValuesBucket::ValuesBucket()
 {
 }
 
-ValuesBucket::ValuesBucket(std::map<std::string, ValueObject> &valuesMap) : valuesMap(valuesMap)
+ValuesBucket::ValuesBucket(std::map<std::string, ValueObject> values) : values_(std::move(values))
 {
+}
+
+ValuesBucket::ValuesBucket(const ValuesBucket &values) : values_(values.values_)
+{
+}
+
+ValuesBucket &ValuesBucket::operator=(const ValuesBucket &values)
+{
+    values_ = values.values_;
+    return *this;
+}
+
+ValuesBucket::ValuesBucket(ValuesBucket &&values) noexcept : values_(std::move(values.values_))
+{
+}
+
+ValuesBucket &ValuesBucket::operator=(ValuesBucket &&values) noexcept
+{
+    values_ = std::move(values.values_);
+    return *this;
 }
 
 ValuesBucket::~ValuesBucket()
@@ -33,63 +53,68 @@ ValuesBucket::~ValuesBucket()
 
 void ValuesBucket::PutString(const std::string &columnName, const std::string &value)
 {
-    valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
+    values_.insert(std::make_pair(columnName, ValueObject(value)));
 }
 
 void ValuesBucket::PutInt(const std::string &columnName, int value)
 {
-    valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
+    values_.insert(std::make_pair(columnName, ValueObject(value)));
 }
 
 void ValuesBucket::PutLong(const std::string &columnName, int64_t value)
 {
-    valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
+    values_.insert(std::make_pair(columnName, ValueObject(value)));
 }
 
 void ValuesBucket::PutDouble(const std::string &columnName, double value)
 {
-    valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
+    values_.insert(std::make_pair(columnName, ValueObject(value)));
 }
 
 void ValuesBucket::PutBool(const std::string &columnName, bool value)
 {
-    valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
+    values_.insert(std::make_pair(columnName, ValueObject(value)));
 }
 
 void ValuesBucket::PutBlob(const std::string &columnName, const std::vector<uint8_t> &value)
 {
-    valuesMap.insert(std::make_pair(columnName, ValueObject(value)));
+    values_.insert(std::make_pair(columnName, ValueObject(value)));
 }
 
 void ValuesBucket::PutNull(const std::string &columnName)
 {
-    valuesMap.insert(std::make_pair(columnName, ValueObject()));
+    values_.insert(std::make_pair(columnName, ValueObject()));
+}
+
+void ValuesBucket::Put(const std::string &columnName, ValueObject value)
+{
+    values_.insert_or_assign(columnName, std::move(value));
 }
 
 void ValuesBucket::Delete(const std::string &columnName)
 {
-    valuesMap.erase(columnName);
+    values_.erase(columnName);
 }
 
 void ValuesBucket::Clear()
 {
-    valuesMap.clear();
+    values_.clear();
 }
 
 int ValuesBucket::Size() const
 {
-    return valuesMap.size();
+    return values_.size();
 }
 
 bool ValuesBucket::IsEmpty() const
 {
-    return valuesMap.empty();
+    return values_.empty();
 }
 
 bool ValuesBucket::HasColumn(const std::string &columnName) const
 {
-    auto iter = valuesMap.find(columnName);
-    if (iter == valuesMap.end()) {
+    auto iter = values_.find(columnName);
+    if (iter == values_.end()) {
         return false;
     }
     return true;
@@ -97,47 +122,42 @@ bool ValuesBucket::HasColumn(const std::string &columnName) const
 
 bool ValuesBucket::GetObject(const std::string &columnName, ValueObject &value) const
 {
-    auto iter = valuesMap.find(columnName);
-    if (iter == valuesMap.end()) {
+    auto iter = values_.find(columnName);
+    if (iter == values_.end()) {
         return false;
     }
     value = iter->second;
     return true;
 }
 
-void ValuesBucket::GetAll(std::map<std::string, ValueObject> &outValuesMap) const
+std::map<std::string, ValueObject> ValuesBucket::GetAll() const
 {
-    outValuesMap = valuesMap;
+    return values_;
 }
 
+void ValuesBucket::GetAll(std::map<std::string, ValueObject> &output) const
+{
+    output = values_;
+}
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 bool ValuesBucket::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteInt32(valuesMap.size());
-    for (auto &it : valuesMap) {
-        parcel.WriteString(it.first);
-        parcel.WriteParcelable(&it.second);
+    MessageParcel *data = static_cast<MessageParcel *>(&parcel);
+    if (data == nullptr) {
+        return false;
     }
-    return true;
+    return ITypesUtil::Marshal(*data, values_);
 }
 
 ValuesBucket *ValuesBucket::Unmarshalling(Parcel &parcel)
 {
-    int mapSize = parcel.ReadInt32();
-    std::map<std::string, ValueObject> valuesMap;
-    ValueObject *value = nullptr;
-    if (mapSize > GlobalExpr::SQLITE_MAX_COLUMN) {
-        LOG_ERROR("The mapSize is %{public}d ", mapSize);
-        return new ValuesBucket(valuesMap);
+    MessageParcel *data = static_cast<MessageParcel *>(&parcel);
+    if (data == nullptr) {
+        return nullptr;
     }
-    for (int i = 0; i < mapSize; i++) {
-        std::string key = parcel.ReadString();
-        value = parcel.ReadParcelable<ValueObject>();
-        valuesMap.insert(std::make_pair(key, *value));
-        delete value;
-    }
-    value = nullptr;
-    return new ValuesBucket(valuesMap);
+    ValuesBucket bucket;
+    ITypesUtil::Unmarshal(*data, bucket.values_);
+    return new (std::nothrow) ValuesBucket(std::move(bucket));
 }
 #endif
 } // namespace NativeRdb

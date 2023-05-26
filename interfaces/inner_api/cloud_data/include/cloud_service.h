@@ -52,7 +52,8 @@ public:
         CLOUD_DISABLE_SWITCH,
         IPC_ERROR,
         IPC_PARCEL_ERROR,
-        PERMISSION_DENIED
+        PERMISSION_DENIED,
+        CLOUD_CONFIG_PERMISSION_DENIED
     };
 
     virtual ~CloudService() = default;

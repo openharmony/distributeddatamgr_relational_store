@@ -195,9 +195,6 @@ napi_value ResultSetProxy::InitializeV9(napi_env env, napi_callback_info info)
 ResultSetProxy::~ResultSetProxy()
 {
     LOG_INFO("ResultSetProxy destructor!");
-    if (resultSet_ != nullptr && !resultSet_->IsClosed()) {
-        resultSet_->Close();
-    }
 }
 
 ResultSetProxy::ResultSetProxy(std::shared_ptr<ResultSet> resultSet)
