@@ -286,7 +286,7 @@ describe('rdbStoreTest', function () {
             storePromise.then(async (ret) => {
                 expect(false).assertTrue()
             }).catch((err) => {
-                expect("14800000").assertEqual(err.code)
+                expect(14800000).assertEqual(err.code)
                 console.log(TAG + "getRdbStore with different securityLevel err: code = " +
                     err.code + " message = " + err.message);
                 done()
@@ -321,13 +321,14 @@ describe('rdbStoreTest', function () {
         try {
             data_relationalStore.getRdbStore(context, config2, async (err, rdbStore) => {
                 if (err) {
-                    expect("14800000").assertEqual(err.code)
+                    expect(14800000).assertEqual(err.code)
                     console.log(TAG + "getRdbStore with different securityLevel err: code = " +
                         err.code + " message = " + err.message);
                     done()
+                } else {
+                    console.log("Get RdbStore successfully.")
+                    expect(false).assertTrue()
                 }
-                console.log("Get RdbStore successfully.")
-                expect(false).assertTrue()
             })
         } catch (e) {
             expect(false).assertTrue()
