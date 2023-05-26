@@ -24,7 +24,8 @@ using JsErrorCode = OHOS::CloudData::JsErrorCode;
 static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { Status::INVALID_ARGUMENT, 401, "Parameter error." },
     { Status::NOT_SUPPORT, 801, "Not support." },
-    { Status::PERMISSION_DENIED, 201, "Permission denied." }
+    { Status::PERMISSION_DENIED, 202, "Permission denied，non-system app called system api." },
+    { Status::CLOUD_CONFIG_PERMISSION_DENIED, 201, "Permission denied." }
 };
 
 const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode)
@@ -61,7 +62,7 @@ Status GenerateNapiError(int32_t status, int32_t &errCode, std::string &errMessa
     return static_cast<Status>(status);
 }
 
-void ThrowNapiError(napi_env env, int32_t status, std::string errMessage, bool isParamsCheck)
+void ThrowNapiError(napi_env env, int32_t status, const std::string &errMessage, bool isParamsCheck)
 {
     ZLOGD("ThrowNapiError message: %{public}s", errMessage.c_str());
     if (status == Status::SUCCESS) {

@@ -21,6 +21,7 @@
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_trace.h"
+#include "result_set.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -41,15 +42,21 @@ ValueObject RowEntity::Get(const std::string &name) const
 
 ValueObject RowEntity::Get(int index) const
 {
-    if (index < 0 || index >= indexs_.size()) {
+    if (index < 0 || index >= static_cast<int>(indexs_.size())) {
         return ValueObject();
     }
     return indexs_[index]->second;
 }
 
-void RowEntity::Get(std::map<std::string, ValueObject> &outValues) const
+const std::map<std::string, ValueObject> &RowEntity::Get() const
 {
-    outValues = values_;
+    return values_;
+}
+
+std::map<std::string, ValueObject> RowEntity::Steal()
+{
+    indexs_.clear();
+    return std::move(values_);
 }
 
 void RowEntity::Clear()
@@ -62,7 +69,11 @@ AbsResultSet::AbsResultSet() : rowPos_(INIT_POS), isClosed(false)
 {
 }
 
-AbsResultSet::~AbsResultSet() {}
+AbsResultSet::~AbsResultSet()
+{
+    rowPos_ = INIT_POS;
+    isClosed = false;
+}
 
 int AbsResultSet::GetRowCount(int &count)
 {
@@ -292,6 +303,7 @@ int AbsResultSet::GetColumnCount(int &count)
 
 int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex)
 {
+    std::lock_guard<std::mutex> lock(columnMapLock_);
     auto it = columnMap_.find(columnName);
     if (it != columnMap_.end()) {
         columnIndex = it->second;
@@ -353,6 +365,26 @@ int AbsResultSet::Close()
 {
     isClosed = true;
     return E_OK;
+}
+
+int AbsResultSet::GetModifyTime(std::string &modifyTime)
+{
+    return E_NOT_SUPPORT;
+}
+
+int AbsResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
+{
+    return E_NOT_SUPPORT;
+}
+
+int AbsResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
+{
+    return E_NOT_SUPPORT;
+}
+
+int AbsResultSet::Get(int32_t col, ValueObject &value)
+{
+    return E_NOT_SUPPORT;
 }
 } // namespace NativeRdb
 } // namespace OHOS

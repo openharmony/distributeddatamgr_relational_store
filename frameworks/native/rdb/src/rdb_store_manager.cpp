@@ -63,15 +63,6 @@ RdbStoreManager::RdbStoreManager()
     ms_ = 30000;
 }
 
-void RdbStoreManager::InitSecurityManager(const RdbStoreConfig &config)
-{
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    if (config.IsEncrypt()) {
-        RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
-    }
-#endif
-}
-
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &config,
     int &errCode, int version, RdbOpenCallback &openCallback)
 {
@@ -87,7 +78,6 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
         timer_->Unregister(storeCache_[path]->timerId_);
         storeCache_.erase(path);
     }
-    InitSecurityManager(config);
     rdbStore = RdbStoreImpl::Open(config, errCode);
     if (rdbStore == nullptr) {
         LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore, err is %{public}d", errCode);

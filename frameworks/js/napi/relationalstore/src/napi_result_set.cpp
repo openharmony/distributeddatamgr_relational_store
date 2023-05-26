@@ -16,14 +16,11 @@
 #include "napi_result_set.h"
 
 #include <functional>
-#include <variant>
 
 #include "js_logger.h"
 #include "js_utils.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_trace.h"
-#include "rdb_errno.h"
-#include "value_object.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_result_set_bridge.h"
@@ -34,25 +31,6 @@ using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS {
-namespace AppDataMgrJsKit {
-namespace JSUtils {
-template<>
-napi_value Convert2JSValue(napi_env env, const RowEntity &rowEntity)
-{
-    napi_value ret;
-    NAPI_CALL(env, napi_create_object(env, &ret));
-    std::map<std::string, NativeRdb::ValueObject> values;
-    rowEntity.Get(values);
-    napi_value value = nullptr;
-    for (auto const &it : values) {
-        value = JSUtils::Convert2JSValue(env, static_cast<ValueObject::Type>(it.second));
-        NAPI_CALL(env, napi_set_named_property(env, ret, it.first.c_str(), value));
-    }
-    return ret;
-}
-}
-}
-
 namespace RelationalStoreJsKit {
 static napi_ref __thread ctorRef_ = nullptr;
 static const int E_OK = 0;
@@ -158,9 +136,6 @@ napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
 ResultSetProxy::~ResultSetProxy()
 {
     LOG_INFO("ResultSetProxy destructor!");
-    if (resultSet_ != nullptr && !resultSet_->IsClosed()) {
-        resultSet_->Close();
-    }
 }
 
 ResultSetProxy::ResultSetProxy(std::shared_ptr<ResultSet> resultSet)

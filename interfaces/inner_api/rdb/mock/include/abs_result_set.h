@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <mutex>
 
 #include "result_set.h"
 #include "value_object.h"
@@ -37,6 +38,10 @@ public:
     int GetInt(int columnIndex, int &value) override;
     int GetLong(int columnIndex, int64_t &value) override;
     int GetDouble(int columnIndex, double &value) override;
+    int GetAsset(int32_t col, ValueObject::Asset &value) override;
+    int GetAssets(int32_t col, ValueObject::Assets &value) override;
+    int Get(int32_t col, ValueObject &value) override;
+    int GetModifyTime(std::string &modifyTime) override;
     int IsColumnNull(int columnIndex, bool &isNull) override;
     int GetRow(RowEntity &rowEntity) override;
     int GoToRow(int position) override;
@@ -70,6 +75,7 @@ protected:
 
     // Indicates whether the result set is closed
     bool isClosed;
+    std::mutex columnMapLock_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

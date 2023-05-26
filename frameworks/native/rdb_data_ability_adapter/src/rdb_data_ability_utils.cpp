@@ -14,6 +14,8 @@
  */
 
 #include "rdb_data_ability_utils.h"
+
+#include "raw_data_parser.h"
 #include "result_set_utils.h"
 
 using namespace OHOS::RdbDataAbilityAdapter;
@@ -28,13 +30,13 @@ RdbDataAbilityUtils::~RdbDataAbilityUtils()
 {
 }
 
-DataShareValuesBucket RdbDataAbilityUtils::ToDataShareValuesBucket(const ValuesBucket &valuesBucket)
+DataShareValuesBucket RdbDataAbilityUtils::ToDataShareValuesBucket(ValuesBucket valuesBucket)
 {
     std::map<std::string, DataShareValueObject::Type> values;
-    std::map<std::string, ValueObject> valuesMap;
-    valuesBucket.GetAll(valuesMap);
-    for (auto &[key, value] : valuesMap) {
-        values.insert({key, value});
+    for (auto &[key, value] : valuesBucket.values_) {
+        DataShareValueObject::Type dsValue;
+        RawDataParser::Convert(std::move(value.value), dsValue);
+        values.insert(std::make_pair(key, std::move(dsValue)));
     }
     return DataShareValuesBucket(std::move(values));
 }
