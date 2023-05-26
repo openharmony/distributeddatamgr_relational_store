@@ -260,5 +260,81 @@ describe('rdbStoreTest', function () {
         done();
         console.log(TAG + "************* testRdbStore0008 end   *************");
     })
+
+    /**
+     * @tc.name rdb store getRdbStore with different securityLevel
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0009
+     * @tc.desc rdb store getRdbStore with different securityLevel
+     * @tc.require: I5PIL6
+     */
+    it('testRdbStore0009', 0, async function (done) {
+        console.log(TAG + "************* testRdbStore0009 start *************");
+        let config1 = {
+            name: "rdbstore.db",
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+        }
+
+        let config2 = {
+            name: "rdbstore.db",
+            securityLevel: data_relationalStore.SecurityLevel.S2,
+        }
+
+        await data_relationalStore.getRdbStore(context, config1);
+
+        try {
+            var storePromise = data_relationalStore.getRdbStore(context, config2);
+            storePromise.then(async (ret) => {
+                expect(false).assertTrue()
+            }).catch((err) => {
+                expect(14800000).assertEqual(err.code)
+                console.log(TAG + "getRdbStore with different securityLevel err: code = " +
+                    err.code + " message = " + err.message);
+                done()
+            })
+        } catch (e) {
+            expect(false).assertTrue()
+        }
+        storePromise = null
+        console.log(TAG + "************* testRdbStore0009 end   *************");
+    })
+
+    /**
+     * @tc.name rdb store getRdbStore with different securityLevel
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0010
+     * @tc.desc rdb store getRdbStore with different securityLevel
+     * @tc.require: I5PIL6
+     */
+    it('testRdbStore0010', 0, async function (done) {
+        console.log(TAG + "************* testRdbStore0010 start *************");
+        let config1 = {
+            name: "rdbstore.db",
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+        }
+
+        let config2 = {
+            name: "rdbstore.db",
+            securityLevel: data_relationalStore.SecurityLevel.S2,
+        }
+
+        await data_relationalStore.getRdbStore(context, config1);
+
+        try {
+            data_relationalStore.getRdbStore(context, config2, async (err, rdbStore) => {
+                if (err) {
+                    expect(14800000).assertEqual(err.code)
+                    console.log(TAG + "getRdbStore with different securityLevel err: code = " +
+                        err.code + " message = " + err.message);
+                    done()
+                } else {
+                    console.log("Get RdbStore successfully.")
+                    expect(false).assertTrue()
+                }
+            })
+        } catch (e) {
+            expect(false).assertTrue()
+        }
+        console.log(TAG + "************* testRdbStore0010 end   *************");
+    })
+
     console.log(TAG + "*************Unit Test End*************");
 })
