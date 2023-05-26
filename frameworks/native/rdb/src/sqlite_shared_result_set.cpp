@@ -23,13 +23,6 @@
 
 namespace OHOS {
 namespace NativeRdb {
-SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<RdbStoreImpl> rdbSreImpl, std::string path,
-    std::string sql, const std::vector<std::string> &bindArgs)
-    : AbsSharedResultSet(path), resultSetBlockCapacity(0), isOnlyFillResultSetBlock(false), rdbStoreImpl(rdbSreImpl),
-      qrySql(sql), selectionArgVec(bindArgs), rowNum(NO_COUNT), connectionPool_(nullptr)
-{
-}
-
 SqliteSharedResultSet::SqliteSharedResultSet(SqliteConnectionPool* connectionPool, std::string path,
                                              std::string sql, const std::vector<std::string> &bindArgs)
     : AbsSharedResultSet(path), resultSetBlockCapacity(0), isOnlyFillResultSetBlock(false),
@@ -40,26 +33,23 @@ SqliteSharedResultSet::SqliteSharedResultSet(SqliteConnectionPool* connectionPoo
 
 SqliteSharedResultSet::~SqliteSharedResultSet() {}
 
-int SqliteSharedResultSet::PrepareStep(SqliteConnection* connection)
+std::shared_ptr<SqliteStatement> SqliteSharedResultSet::PrepareStep(SqliteConnection* connection, int &errCode)
 {
-    if (IsClosed()) {
-        return E_STEP_RESULT_CLOSED;
-    }
-
     if (SqliteDatabaseUtils::GetSqlStatementType(qrySql) != SqliteUtils::STATEMENT_SELECT) {
         LOG_ERROR("StoreSession BeginStepQuery fail : not select sql !");
-        return E_EXECUTE_IN_STEP_QUERY;
+        errCode = E_EXECUTE_IN_STEP_QUERY;
+        return nullptr;
     }
 
-    int errCode;
-    sqliteStatement = connection->BeginStepQuery(errCode, qrySql, selectionArgVec);
+    std::shared_ptr<SqliteStatement> sqliteStatement = connection->BeginStepQuery(errCode,
+        qrySql, selectionArgVec);
     if (sqliteStatement == nullptr) {
         connection->EndStepQuery();
-        return errCode;
     }
 
-    return E_OK;
+    return sqliteStatement;
 }
+
 int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
     if (!columnNames_.empty()) {
@@ -67,13 +57,18 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
         return E_OK;
     }
 
+    if (IsClosed()) {
+        return E_STEP_RESULT_CLOSED;
+    }
+
     SqliteConnection *connection = connectionPool_->AcquireConnection(true);
     if (connection == nullptr) {
         return E_CON_OVER_LIMIT;
     }
 
-    int errCode = PrepareStep(connection);
-    if (errCode) {
+    int errCode = E_OK;
+    std::shared_ptr<SqliteStatement> sqliteStatement = PrepareStep(connection, errCode);
+    if (sqliteStatement == nullptr) {
         connectionPool_->ReleaseConnection(connection);
         return errCode;
     }
@@ -102,35 +97,30 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
     columnCount_ = static_cast<int>(columnNames_.size());
     connection->EndStepQuery();
     connectionPool_->ReleaseConnection(connection);
-    sqliteStatement = nullptr;
 
     return E_OK;
 }
 
 int SqliteSharedResultSet::GetRowCount(int &count)
 {
-    if (rowNum == NO_COUNT) {
-        FillSharedBlock(0);
+    if (rowNum != NO_COUNT) {
+        count = rowNum;
+        return E_OK;
     }
+
+    if (IsClosed()) {
+        return E_STEP_RESULT_CLOSED;
+    }
+
+    FillSharedBlock(0);
     count = rowNum;
     return E_OK;
 }
 
 int SqliteSharedResultSet::Close()
 {
-    std::lock_guard<std::mutex> lock(sessionMutex);
-
     AbsSharedResultSet::Close();
-
     return E_OK;
-}
-
-/**
- * Get the rdb store that this result set is associated with.
- */
-std::shared_ptr<RdbStore> SqliteSharedResultSet::GetRdbStore() const
-{
-    return rdbStoreImpl;
 }
 
 bool SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
@@ -165,7 +155,7 @@ void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
 
     std::vector<ValueObject> bindArgs;
     size_t size = selectionArgVec.size();
-
+    bindArgs.reserve(size);
     for (size_t i = 0; i < size; i++) {
         ValueObject vauObj(selectionArgVec[i]);
         bindArgs.push_back(vauObj);
@@ -218,7 +208,7 @@ void SqliteSharedResultSet::SetFillBlockForwardOnly(bool isOnlyFillResultSetBloc
 
 void SqliteSharedResultSet::Finalize()
 {
-    if (!AbsSharedResultSet::IsClosed()) {
+    if (!IsClosed()) {
         Close();
     }
 }
