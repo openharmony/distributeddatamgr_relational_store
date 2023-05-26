@@ -25,6 +25,7 @@ var rdbStore
 var context = ability_featureAbility.getContext()
 const STORE_CONFIG = {
     name: "BackupResotreTest.db",
+    encrypt: true,
     securityLevel: data_relationalStore.SecurityLevel.S1,
 }
 const DATABASE_BACKUP_NAME = "Backup.db"
