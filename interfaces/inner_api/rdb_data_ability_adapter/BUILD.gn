@@ -22,6 +22,7 @@ config("rdb_data_ability_adapter_config") {
     "include",
     "${datashare_path}/common/include/",
     "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_native_path}/rdb/include",
     "${common_tool_path}/",
   ]
 }

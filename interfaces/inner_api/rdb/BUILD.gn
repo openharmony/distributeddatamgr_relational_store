@@ -74,8 +74,7 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
-      "include",
-      "${relational_store_native_path}/rdb/include",
+      "include"
     ]
   }
 
