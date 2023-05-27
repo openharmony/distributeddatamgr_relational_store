@@ -267,7 +267,7 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
     }
 
     sql << ") VALUES (";
-    for (size_t i = 0; i < initialValues.Size(); i++) {
+    for (int i = 0; i < initialValues.Size(); i++) {
         sql << ((i == 0) ? "?" : ",?");
     }
     sql << ')';
@@ -318,7 +318,7 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
     sql << "UPDATE" << conflictClause << " " << table << " SET ";
 
     std::vector<ValueObject> bindArgs;
-    const char * split = "";
+    const char *split = "";
     for (auto &[key, val] : values.values_) {
         sql << split;
         sql << key << "=?";       // columnName
@@ -583,7 +583,8 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     } else if (isEncrypt_) {
-        RdbPassword rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        RdbPassword rdbPwd =
+            RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
         std::vector<uint8_t> key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
         bindArgs.push_back(ValueObject(key));
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
@@ -733,7 +734,8 @@ int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     } else if (isEncrypt_) {
-        RdbPassword rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        RdbPassword rdbPwd =
+            RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
         std::vector<uint8_t> key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
         bindArgs.push_back(ValueObject(key));
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
