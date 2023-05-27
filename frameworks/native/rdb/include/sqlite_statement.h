@@ -54,6 +54,7 @@ private:
     using Assets = ValueObject::Assets;
 
     int InnerBindArguments(const std::vector<ValueObject> &bindArgs) const;
+    int IsValid(int index) const;
     std::string sql;
     sqlite3_stmt *stmtHandle;
     bool readOnly;

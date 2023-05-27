@@ -69,23 +69,23 @@ bool Unmarshalling(RdbOperation &output, MessageParcel &data)
     return ret;
 }
 
-template<> 
+template<>
 bool Marshalling(const ValueObject &input, MessageParcel &data)
 {
     return Marshal(data, input.value);
 }
-template<> 
+template<>
 bool Unmarshalling(ValueObject &output, MessageParcel &data)
 {
     return Unmarshal(data, output.value);
 }
 
-template<> 
+template<>
 bool Marshalling(const ValuesBucket &input, MessageParcel &data)
 {
     return Marshal(data, input.values_);
 }
-template<> 
+template<>
 bool Unmarshalling(ValuesBucket &output, MessageParcel &data)
 {
     return Unmarshal(data, output.values_);
