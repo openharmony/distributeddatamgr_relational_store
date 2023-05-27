@@ -29,6 +29,7 @@
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
+#include "task_executor.h"
 
 #ifndef WINDOWS_PLATFORM
 #include "directory_ex.h"

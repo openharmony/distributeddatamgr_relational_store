@@ -23,7 +23,6 @@
 #include "rdb_open_callback.h"
 #include "rdb_store_config.h"
 #include "rdb_store_impl.h"
-#include "timer.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -32,7 +31,7 @@ struct RdbStoreNode {
     RdbStoreNode &operator=(const std::shared_ptr<RdbStoreImpl> &store);
 
     std::shared_ptr<RdbStoreImpl> rdbStore_;
-    uint32_t taskId_;
+    uint64_t taskId_;
 };
 
 class RdbStoreManager {
