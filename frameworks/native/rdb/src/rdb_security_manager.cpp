@@ -236,7 +236,6 @@ bool RdbSecurityManager::SaveSecretKeyToFile(RdbSecurityManager::KeyFileType key
 bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &path, RdbSecretKeyData &keyData)
 {
     LOG_INFO("SaveSecretKeyToDisk begin.");
-    std::lock_guard<std::mutex> lock(mutex_);
     std::vector<uint8_t> distributedInByte = TransferTypeToByteArray<uint8_t>(keyData.distributed);
     std::vector<uint8_t> timeInByte = TransferTypeToByteArray<time_t>(keyData.timeValue);
     std::vector<char> secretKeyInChar;
@@ -244,6 +243,7 @@ bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &path, RdbSecretK
     secretKeyInChar.insert(secretKeyInChar.end(), timeInByte.begin(), timeInByte.end());
     secretKeyInChar.insert(secretKeyInChar.end(), keyData.secretKey.begin(), keyData.secretKey.end());
 
+    std::lock_guard<std::mutex> lock(mutex_);
     bool ret = SaveBufferToFile(path, secretKeyInChar);
     if (!ret) {
         LOG_ERROR("SaveBufferToFile failed!");
@@ -496,9 +496,12 @@ bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSe
 {
     LOG_INFO("LoadSecretKeyFromDisk begin.");
     std::vector<char> content;
-    if (!LoadBufferFromFile(keyPath, content)) {
-        LOG_ERROR("LoadBufferFromFile failed!");
-        return false;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!LoadBufferFromFile(keyPath, content) || content.empty()) {
+            LOG_ERROR("LoadBufferFromFile failed!");
+            return false;
+        }
     }
 
     std::vector<uint8_t> distribute;
