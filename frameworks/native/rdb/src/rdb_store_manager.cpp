@@ -18,13 +18,12 @@
 #include "rdb_store_impl.h"
 #include "rdb_trace.h"
 #include "sqlite_global_config.h"
-#include "unistd.h"
+#include "task_executor.h"
 #include "rdb_store_manager.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_security_manager.h"
 #include "security_policy.h"
-#include "task_executor.h"
 #endif
 
 namespace OHOS {

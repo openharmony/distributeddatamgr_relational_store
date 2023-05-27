@@ -239,7 +239,8 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
+    sources +=
+        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
 
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
@@ -259,7 +260,8 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
+    sources +=
+        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
 
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
@@ -328,7 +330,8 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
+    sources +=
+        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
@@ -347,7 +350,8 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
+    sources +=
+        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
@@ -409,7 +413,8 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
+    sources +=
+        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
       "//commonlibrary/c_utils/base:utils",
@@ -471,7 +476,8 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
+    sources +=
+        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
       "//commonlibrary/c_utils/base:utilsbase",
