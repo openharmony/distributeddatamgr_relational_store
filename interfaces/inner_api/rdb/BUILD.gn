@@ -35,7 +35,6 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
   "${relational_store_native_path}/rdb/src/step_result_set.cpp",
   "${relational_store_native_path}/rdb/src/string_utils.cpp",
-  "${relational_store_native_path}/rdb/src/task_executor.cpp",
   "${relational_store_native_path}/rdb/src/value_object.cpp",
   "${relational_store_native_path}/rdb/src/values_bucket.cpp",
 ]
@@ -113,6 +112,7 @@ if (is_ohos) {
       "${relational_store_native_path}/rdb/src/share_block.cpp",
       "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
       "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
+      "${relational_store_native_path}/rdb/src/task_executor.cpp",
       "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
@@ -160,6 +160,7 @@ if (is_ohos) {
       "${relational_store_native_path}/rdb/src/share_block.cpp",
       "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
       "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
+      "${relational_store_native_path}/rdb/src/task_executor.cpp",
       "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
@@ -238,7 +239,7 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+    sources += [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
 
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
@@ -258,7 +259,7 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+    sources += [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
 
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
@@ -327,7 +328,7 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+    sources += [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
@@ -346,7 +347,7 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+    sources += [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
@@ -408,7 +409,7 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+    sources += [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
       "//commonlibrary/c_utils/base:utils",
@@ -470,7 +471,7 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+    sources += [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
       "//commonlibrary/c_utils/base:utilsbase",
