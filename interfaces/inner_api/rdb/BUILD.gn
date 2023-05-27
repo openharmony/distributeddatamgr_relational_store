@@ -35,6 +35,7 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
   "${relational_store_native_path}/rdb/src/step_result_set.cpp",
   "${relational_store_native_path}/rdb/src/string_utils.cpp",
+  "${relational_store_native_path}/rdb/src/task_executor.cpp",
   "${relational_store_native_path}/rdb/src/value_object.cpp",
   "${relational_store_native_path}/rdb/src/values_bucket.cpp",
 ]
