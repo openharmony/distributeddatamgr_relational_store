@@ -373,7 +373,7 @@ int ParseValuesBucket(const napi_env &env, const napi_value &arg, std::shared_pt
         if (ret != OK) {
             LOG_WARN("bad value type of key %{public}s", keyStr.c_str());
         } else {
-            context->valuesBucket.Put(keyStr, valueObject);
+            context->valuesBucket.Put(keyStr, std::move(valueObject));
         }
     }
     LOG_DEBUG("ParseValuesBucket end");
