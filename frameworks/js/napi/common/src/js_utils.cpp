@@ -202,7 +202,6 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, double &output)
 
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, int64_t &output)
 {
-    LOG_INFO("Convert2Value js just support double data not support int64_t");
     return napi_invalid_arg;
 }
 
@@ -217,7 +216,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &ou
 
     size_t length = MAX_VALUE_LENGTH;
     napi_get_value_string_utf8(env, jsValue, nullptr, 0, &length);
-    length = length < MAX_VALUE_LENGTH ? MAX_VALUE_LENGTH : length;
+    length = length < MAX_VALUE_LENGTH ? (MAX_VALUE_LENGTH - 1) : length;
     std::unique_ptr<char[]> str = std::make_unique<char[]>(length + 1);
     if (str == nullptr) {
         LOG_ERROR("Convert2Value new failed, str is nullptr");
@@ -230,6 +229,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &ou
         LOG_ERROR("Convert2Value napi_get_value_string_utf8 failed, status = %{public}d", status);
         return status;
     }
+    str[valueSize] = 0;
     output = std::string(str.get());
     return status;
 }
@@ -263,12 +263,14 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::monostate 
     bool equal = false;
     napi_strict_equals(env, jsValue, tempValue, &equal);
     if (equal) {
+        value = std::monostate();
         return napi_ok;
     }
     napi_get_undefined(env, &tempValue);
     napi_strict_equals(env, jsValue, tempValue, &equal);
     if (equal) {
-        return OK;
+        value = std::monostate();
+        return napi_ok;
     }
     LOG_DEBUG("Convert2Value jsValue is not null");
     return napi_invalid_arg;
@@ -297,8 +299,9 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
         Convert2ValueExt(env, jsVal, val);
         output.insert(std::pair<std::string, int32_t>(key, val));
     }
-    return OK;
+    return napi_ok;
 }
+
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, bool> &output)
 {
     LOG_DEBUG("napi_value -> std::map<std::string, bool> ");
@@ -322,7 +325,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
         Convert2Value(env, jsVal, val);
         output.insert(std::pair<std::string, bool>(key, val));
     }
-    return OK;
+    return napi_ok;
 }
 
 napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<std::string> &value)
