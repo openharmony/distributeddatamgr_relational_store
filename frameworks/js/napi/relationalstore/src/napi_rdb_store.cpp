@@ -370,10 +370,10 @@ int ParseValuesBucket(const napi_env &env, const napi_value &arg, std::shared_pt
         napi_get_property(env, arg, key, &value);
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
-        if (ret != OK) {
-            LOG_WARN("bad value type of key %{public}s", keyStr.c_str());
-        } else {
+        if (ret == napi_ok) {
             context->valuesBucket.Put(keyStr, std::move(valueObject));
+        } else {
+            LOG_WARN("bad value type of key %{public}s", keyStr.c_str());
         }
     }
     LOG_DEBUG("ParseValuesBucket end");
