@@ -116,7 +116,7 @@ std::vector<std::string> DataShareProfileInfo::GetResProfileByMetadata(
         return profileInfos;
     }
 
-    auto  it = std::find_if(metadata.begin(), metadata.end(), [](AppExecFwk::Metadata meta) {
+    auto it = std::find_if(metadata.begin(), metadata.end(), [](AppExecFwk::Metadata meta) {
         return meta.name == DATA_SHARE_PROFILE_META;
     });
     if (it != metadata.end()) {
