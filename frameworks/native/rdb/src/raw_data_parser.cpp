@@ -14,18 +14,30 @@
  */
 
 #include "raw_data_parser.h"
+
 #include "value_object.h"
 namespace OHOS::NativeRdb {
 size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Asset &asset)
 {
     size_t used = 0;
-    if (used + sizeof(asset.version) > length) {
+    uint16_t size = 0;
+    if (used + sizeof(size) > length) {
         return used;
     }
     std::vector<uint8_t> alignData;
-    alignData.assign(data, data + sizeof(asset.version));
-    asset.version = *(reinterpret_cast<decltype(&asset.version)>(alignData.data()));
-    used += sizeof(asset.version);
+    alignData.assign(data, data + sizeof(size));
+    size = *(reinterpret_cast<decltype(&size)>(alignData.data()));
+
+    if (used + sizeof(size) > length) {
+        return used;
+    }
+    used += sizeof(size);
+
+    auto rawData = std::string((char *)(&data[sizeof(uint16_t)]), size);
+    InnerAsset innerAsset = InnerAsset(asset);
+    innerAsset.Unmarshall(rawData);
+    used += size;
+    asset = std::move(innerAsset.asset_);
     return used;
 }
 
@@ -57,8 +69,11 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Assets &
 std::vector<uint8_t> RawDataParser::PackageRawData(const Asset &asset)
 {
     std::vector<uint8_t> rawData;
-    uint32_t version = asset.version;
-    rawData.assign(reinterpret_cast<uint8_t *>(&version), reinterpret_cast<uint8_t *>(&version) + sizeof(version));
+    InnerAsset innerAsset = InnerAsset(asset);
+    auto data = Serializable::Marshall(innerAsset);
+    uint16_t size = (uint16_t)data.length();
+    rawData.assign(reinterpret_cast<uint8_t *>(&size), reinterpret_cast<uint8_t *>(&size) + sizeof(size));
+    rawData.insert(rawData.end(), data.begin(), data.end());
     return rawData;
 }
 
@@ -66,11 +81,34 @@ std::vector<uint8_t> RawDataParser::PackageRawData(const Assets &assets)
 {
     std::vector<uint8_t> rawData;
     uint16_t num = uint16_t(assets.size());
-    rawData.assign(reinterpret_cast<uint8_t *>(&num), reinterpret_cast<uint8_t *>(&num)+ sizeof(num));
+    rawData.assign(reinterpret_cast<uint8_t *>(&num), reinterpret_cast<uint8_t *>(&num) + sizeof(num));
     for (auto &asset : assets) {
         auto data = PackageRawData(asset);
         rawData.insert(rawData.end(), data.begin(), data.end());
     }
     return rawData;
+}
+
+bool RawDataParser::InnerAsset::Marshal(Serializable::json &node) const
+{
+    SetValue(node[GET_NAME(version)], asset_.version);
+    SetValue(node[GET_NAME(name)], asset_.name);
+    SetValue(node[GET_NAME(uri)], asset_.uri);
+    SetValue(node[GET_NAME(createTime)], asset_.createTime);
+    SetValue(node[GET_NAME(modifyTime)], asset_.modifyTime);
+    SetValue(node[GET_NAME(size)], asset_.size);
+    SetValue(node[GET_NAME(hash)], asset_.hash);
+    return true;
+}
+bool RawDataParser::InnerAsset::Unmarshal(const Serializable::json &node)
+{
+    GetValue(node, GET_NAME(version), asset_.version);
+    GetValue(node, GET_NAME(name), asset_.name);
+    GetValue(node, GET_NAME(uri), asset_.uri);
+    GetValue(node, GET_NAME(createTime), asset_.createTime);
+    GetValue(node, GET_NAME(modifyTime), asset_.modifyTime);
+    GetValue(node, GET_NAME(size), asset_.size);
+    GetValue(node, GET_NAME(hash), asset_.hash);
+    return true;
 }
 } // namespace OHOS::NativeRdb
