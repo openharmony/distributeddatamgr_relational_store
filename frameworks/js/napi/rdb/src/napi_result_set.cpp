@@ -33,8 +33,6 @@ using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS {
 namespace RdbJsKit {
-using Asset = AssetValue;
-using Assets = std::vector<Asset>;
 static napi_ref __thread ctorRef_ = nullptr;
 static napi_ref __thread ctorRefV9_ = nullptr;
 static const int E_OK = 0;
