@@ -177,10 +177,10 @@ int AbsSharedResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &value)
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT) {
         LOG_ERROR("AbsSharedResultSet::GetDouble AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT!");
         return E_OK;
-    } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET){
+    } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET) {
         LOG_ERROR("AbsSharedResultSet::GetDouble AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET!");
         return E_OK;
-    } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS){
+    } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS) {
         LOG_ERROR("AbsSharedResultSet::GetDouble AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS!");
         return E_OK;
     } else {
