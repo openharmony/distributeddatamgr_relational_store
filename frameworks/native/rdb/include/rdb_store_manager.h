@@ -23,6 +23,7 @@
 #include "rdb_open_callback.h"
 #include "rdb_store_config.h"
 #include "rdb_store_impl.h"
+#include "task_executor.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -31,7 +32,7 @@ struct RdbStoreNode {
     RdbStoreNode &operator=(const std::shared_ptr<RdbStoreImpl> &store);
 
     std::shared_ptr<RdbStoreImpl> rdbStore_;
-    uint64_t taskId_;
+    TaskExecutor::TaskId taskId_;
 };
 
 class RdbStoreManager {
@@ -53,6 +54,8 @@ private:
     void AutoClose(const std::string &path);
     std::mutex mutex_;
     std::map<std::string, std::shared_ptr<RdbStoreNode>> storeCache_;
+
+    std::shared_ptr<ExecutorPool> pool_;
     // ms_ : [10*1000 ~ 10*60*1000]
     int ms_;
 };

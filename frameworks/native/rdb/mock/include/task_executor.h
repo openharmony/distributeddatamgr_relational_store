@@ -26,16 +26,8 @@ public:
     static constexpr Duration INVALID_DURATION = std::chrono::milliseconds(0);
     static constexpr TaskId INVALID_TASK_ID = static_cast<uint64_t>(0l);
     static constexpr uint64_t UNLIMITED_TIMES = std::numeric_limits<uint64_t>::max();
-
-    static TaskExecutor &GetInstance();
-    TaskId Execute(const Task &task);
-    TaskId Schedule(Duration delay, const Task &task, Duration interval = INVALID_DURATION,
-        uint64_t times = UNLIMITED_TIMES);
-    bool Remove(TaskId taskId, bool wait = false);
-    TaskId Reset(TaskId taskId, Duration interval);
-
-private:
     class ExecutorPool {
+    public:
         ExecutorPool(size_t max, size_t min)
         {
         }
@@ -78,6 +70,11 @@ private:
             return INVALID_TASK_ID;
         }
     };
+    static TaskExecutor &GetInstance();
+    std::shared_ptr<ExecutorPool> GetExecutor();
+    void SetExecutor(std::shared_ptr<ExecutorPool> executor);
+
+private:
     TaskExecutor();
     ~TaskExecutor();
     std::shared_ptr<ExecutorPool> pool_;
