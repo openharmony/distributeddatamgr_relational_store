@@ -121,15 +121,3 @@ int OH_VBucket_Clear(OH_Rdb_VBucket *bucket)
     bucket->capability = 0;
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
-
-int OH_VBucket_Close(OH_Rdb_VBucket *bucket)
-{
-    if (bucket == nullptr || bucket->id != OHOS::RdbNdk::RDB_VBUCKET_CID) {
-        LOG_ERROR("Parameters set error:bucket is NULL ? %{public}d", (bucket == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
-    }
-    auto bucketTemp = static_cast<OHOS::RdbNdk::ValuesBucketImpl *>(bucket);
-    delete bucketTemp;
-    bucketTemp = nullptr;
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
-}

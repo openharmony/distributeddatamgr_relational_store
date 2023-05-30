@@ -80,7 +80,7 @@ void RdbNdkPredicatesTest::SetUpTestCase(void)
     errCode = OH_Rdb_Insert(predicatesTestRdbStore_, table, valueBucket);
     EXPECT_EQ(errCode, 3);
 
-    OH_VBucket_Close(valueBucket);
+    OH_Rdb_DestroyValuesBucket(valueBucket);
 }
 
 void RdbNdkPredicatesTest::TearDownTestCase(void)

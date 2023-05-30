@@ -16,6 +16,27 @@
 #ifndef RELATIONAL_STORE_H
 #define RELATIONAL_STORE_H
 
+/**
+ * @addtogroup relationalStore
+ * @{
+ *
+ * @brief RelationalStore module provides a series of external interfaces for insert data, delete data, update date,
+ * and select data, as well as data encryption, hierarchical data protection, backup, and recovery functions.
+ *
+ * @syscap SystemCapability.DistributedDataManager.RelationalStore.Core
+ * @since 10
+ * @version 1.0
+ */
+
+/**
+ * @file relational_store.h
+ *
+ * @brief Provides database related functions and enumerations.
+ *
+ * @since 10
+ * @version 1.0
+ */
+
 #include "relational_cursor.h"
 #include "relational_predicates.h"
 #include "relational_values_bucket.h"
@@ -24,39 +45,270 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Describe the security level of the database.
+ *
+ * @since 10
+ * @version 1.0
+ */
 enum OH_Rdb_SecurityLevel {
+    /**
+     * @brief S1: means the db is low level security.
+     *
+     * There are some low impact, when the data is leaked.
+     */
     S1 = 1,
+    /**
+     * @brief S2: means the db is middle level security.
+     *
+     * There are some major impact, when the data is leaked.
+     */
     S2,
+    /**
+     * @brief S3: means the db is high level security
+     *
+     * There are some severity impact, when the data is leaked.
+     */
     S3,
+    /**
+     * @brief S4: means the db is critical level security
+     *
+     * There are some critical impact, when the data is leaked.
+     */
     S4
 };
 
+/**
+ * @brief Manages relational database configurations.
+ *
+ * @since 10
+ * @version 1.0
+ */
 typedef struct {
+    /** Indicates the path of the database. */
     const char *path;
+    /** Indicates whether the database is encrypt. */
     BOOL isEncrypt;
+    /** Indicates the security level {@link OH_Rdb_SecurityLevel} of the database. */
     enum OH_Rdb_SecurityLevel securityLevel;
 } OH_Rdb_Config;
 
+/**
+ * @brief Define OH_Rdb_Store type.
+ *
+ * @since 10
+ * @version 1.0
+ */
 typedef struct {
+    /** The id used to uniquely identify the OH_Rdb_Store struct. */
     int64_t id;
 } OH_Rdb_Store;
 
+/**
+ * @brief Obtains an RDB store.
+ *
+ * You can set parameters of the RDB store as required. In general,
+ * this method is recommended to obtain a rdb store.
+ *
+ * @param config Represents a pointer to an {@link OH_Rdb_Config} instance.
+ * Indicates the configuration of the database related to this RDB store.
+ * @param errCode This parameter is the output parameter,
+ * and the execution status of a function is written to this variable.
+ * @return If the creation is successful, a pointer to the instance of the @link OH_Rdb_Store} structure is returned,
+ * otherwise NULL is returned.
+ * @see OH_Rdb_Config, OH_Rdb_Store.
+ * @since 10
+ * @version 1.0
+ */
 OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode);
+
+/**
+ * @brief Close the {@link OH_Rdb_Store} object and reclaim the memory occupied by the object.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @return Returns the status code of the execution. Successful execution returns RDB_ERR_OK,
+ * while failure returns a specific error code. Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
+ * @see OH_Rdb_Store, OH_Rdb_ErrCode.
+ * @since 10
+ * @version 1.0
+ */
 int OH_Rdb_CloseStore(OH_Rdb_Store *store);
+
+/**
+ * @brief Deletes the database with a specified path.
+ *
+ * @param path Indicates the database path.
+ * @return Returns the status code of the execution. Successful execution returns RDB_ERR_OK,
+ * while failure returns a specific error code. Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
+ * @see OH_Rdb_ErrCode.
+ * @since 10
+ * @version 1.0
+ */
 int OH_Rdb_DeleteStore(const char *path);
 
+/**
+ * @brief Inserts a row of data into the target table.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param table Indicates the target table.
+ * @param valuesBucket Indicates the row of data {@link OH_Rdb_VBucket} to be inserted into the table.
+ * @return Returns the rowId if success, returns a specific error code.
+ * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
+ * @see OH_Rdb_Store, OH_Rdb_VBucket, OH_Rdb_ErrCode.
+ * @since 10
+ * @version 1.0
+ */
 int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_Rdb_VBucket *valuesBucket);
+
+/**
+ * @brief Updates data in the database based on specified conditions.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param valuesBucket Indicates the row of data {@link OH_Rdb_VBucket} to be updated in the database
+ * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
+ * Indicates the specified update condition.
+ * @return Returns the number of rows changed if success, otherwise, returns a specific error code.
+ * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
+ * @see OH_Rdb_Store, OH_Rdb_VBucket, OH_Predicates, OH_Rdb_ErrCode.
+ * @since 10
+ * @version 1.0
+ */
 int OH_Rdb_Update(OH_Rdb_Store *store, OH_Rdb_VBucket *valuesBucket, OH_Predicates *predicates);
+
+/**
+ * @brief Deletes data from the database based on specified conditions.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
+ * Indicates the specified delete condition.
+ * @return Returns the number of rows changed if success, otherwise, returns a specific error code.
+ * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
+ * @see OH_Rdb_Store, OH_Predicates, OH_Rdb_ErrCode.
+ * @since 10
+ * @version 1.0
+ */
 int OH_Rdb_Delete(OH_Rdb_Store *store, OH_Predicates *predicates);
+
+/**
+ * @brief Queries data in the database based on specified conditions.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
+ * Indicates the specified query condition.
+ * @param columnNames Indicates the columns to query. If the value is empty array, the query applies to all columns.
+ * @param length Indicates the length of columnNames.
+ * @return If the query is successful, a pointer to the instance of the @link OH_Cursor} structure is returned,
+ * otherwise NULL is returned.
+ * @see OH_Rdb_Store, OH_Predicates, OH_Cursor.
+ * @since 10
+ * @version 1.0
+ */
 OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const char *const *columnNames, int length);
+
+/**
+ * @brief Executes an SQL statement.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param sql Indicates the SQL statement to execute.
+ * @return Returns the status code of the execution.
+ * @see OH_Rdb_Store.
+ * @since 10
+ * @version 1.0
+ */
 int OH_Rdb_Execute(OH_Rdb_Store *store, const char *sql);
+
+/**
+ * @brief Queries data in the database based on SQL statement.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param sql Indicates the SQL statement to execute.
+ * @return If the query is successful, a pointer to the instance of the @link OH_Cursor} structure is returned,
+ * otherwise NULL is returned.
+ * @see OH_Rdb_Store.
+ * @since 10
+ * @version 1.0
+ */
 OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, const char *sql);
+
+/**
+ * @brief Begins a transaction in EXCLUSIVE mode.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @return Returns the status code of the execution.
+ * @see OH_Rdb_Store.
+ * @since 10
+ * @version 1.0
+ */
 int OH_Rdb_BeginTransaction(OH_Rdb_Store *store);
+
+/**
+ * @brief Rollback a transaction in EXCLUSIVE mode.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @return Returns the status code of the execution.
+ * @see OH_Rdb_Store.
+ * @since 10
+ * @version 1.0
+ */
 int OH_Rdb_RollBack(OH_Rdb_Store *store);
+
+/**
+ * @brief Commit a transaction in EXCLUSIVE mode.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @return Returns the status code of the execution.
+ * @see OH_Rdb_Store.
+ * @since 10
+ * @version 1.0
+ */
 int OH_Rdb_Commit(OH_Rdb_Store *store);
+
+/**
+ * @brief Backups a database on specified path.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param databasePath Indicates the database file path.
+ * @return Returns the status code of the execution.
+ * @see OH_Rdb_Store.
+ * @since 10
+ * @version 1.0
+ */
 int OH_Rdb_Backup(OH_Rdb_Store *store, const char *databasePath);
+
+/**
+ * @brief Restores a database from a specified database file.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param databasePath Indicates the database file path.
+ * @return Returns the status code of the execution.
+ * @see OH_Rdb_Store.
+ * @since 10
+ * @version 1.0
+ */
 int OH_Rdb_Restore(OH_Rdb_Store *store, const char *databasePath);
+
+/**
+ * @brief Gets the version of a database.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param version Indicates the version number.
+ * @return Returns the status code of the execution.
+ * @see OH_Rdb_Store.
+ * @since 10
+ * @version 1.0
+ */
 int OH_Rdb_GetVersion(OH_Rdb_Store *store, int *version);
+
+/**
+ * @brief Sets the version of a database.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param version Indicates the version number.
+ * @return Returns the status code of the execution.
+ * @see OH_Rdb_Store.
+ * @since 10
+ * @version 1.0
+ */
 int OH_Rdb_SetVersion(OH_Rdb_Store *store, int version);
 
 #ifdef __cplusplus
