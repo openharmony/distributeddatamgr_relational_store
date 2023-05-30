@@ -155,10 +155,9 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 
 int SqliteConnection::SetCustomFunctions(const RdbStoreConfig &config)
 {
-    int errCode;
     customScalarFunctions_ = config.GetScalarFunctions();
     for (auto &it : customScalarFunctions_) {
-        errCode = SetCustomScalarFunction(it.first, it.second.argc_, &it.second.function_);
+        int errCode = SetCustomScalarFunction(it.first, it.second.argc_, &it.second.function_);
         if (errCode != E_OK) {
             return errCode;
         }

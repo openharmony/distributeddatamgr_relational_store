@@ -281,6 +281,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
     napi_value jsMapList = nullptr;
     uint32_t jsCount = 0;
     napi_status status = napi_get_property_names(env, jsValue, &jsMapList);
+    NAPI_ASSERT_BASE(env, status == napi_ok, "get_property_names failed!", ERR);
     status = napi_get_array_length(env, jsMapList, &jsCount);
     LOG_DEBUG("jsCOUNT: %{public}d", jsCount);
     NAPI_ASSERT_BASE(env, (status == napi_ok) && (jsCount > 0), "get_map failed!", ERR);
@@ -306,6 +307,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
     napi_value jsMapList = nullptr;
     uint32_t jsCount = 0;
     napi_status status = napi_get_property_names(env, jsValue, &jsMapList);
+    NAPI_ASSERT_BASE(env, status == napi_ok, "get_property_names failed!", ERR);
     status = napi_get_array_length(env, jsMapList, &jsCount);
     LOG_DEBUG("jsCount: %{public}d", jsCount);
     NAPI_ASSERT_BASE(env, (status == napi_ok) && (jsCount > 0), "get_map failed!", ERR);

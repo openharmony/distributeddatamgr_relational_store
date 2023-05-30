@@ -31,12 +31,12 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
 
     NAPI_CALL_BASE(env, Convert2ValueExt(env, GetNamedProperty(env, jsValue, "version"), output.version),
         napi_invalid_arg);
-    NAPI_CALL_BASE(env, GetProperty(env, jsValue, output, name), napi_invalid_arg);
-    NAPI_CALL_BASE(env, GetProperty(env, jsValue, output, uri), napi_invalid_arg);
-    NAPI_CALL_BASE(env, GetProperty(env, jsValue, output, createTime), napi_invalid_arg);
-    NAPI_CALL_BASE(env, GetProperty(env, jsValue, output, modifyTime), napi_invalid_arg);
-    NAPI_CALL_BASE(env, GetProperty(env, jsValue, output, size), napi_invalid_arg);
-    NAPI_CALL_BASE(env, GetProperty(env, jsValue, output, hash), napi_invalid_arg);
+    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, name), napi_invalid_arg);
+    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, uri), napi_invalid_arg);
+    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, createTime), napi_invalid_arg);
+    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, modifyTime), napi_invalid_arg);
+    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, size), napi_invalid_arg);
+    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, hash), napi_invalid_arg);
     return napi_ok;
 }
 
@@ -45,13 +45,13 @@ napi_value Convert2JSValue(napi_env env, const Asset &value)
 {
     napi_value object;
     NAPI_CALL_BASE(env, napi_create_object(env, &object), object);
-    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, version), object);
-    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, name), object);
-    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, uri), object);
-    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, createTime), object);
-    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, modifyTime), object);
-    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, size), object);
-    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, hash), object);
+    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, version), object);
+    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, name), object);
+    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, uri), object);
+    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, createTime), object);
+    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, modifyTime), object);
+    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, size), object);
+    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, hash), object);
     return object;
 }
 

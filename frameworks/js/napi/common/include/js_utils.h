@@ -40,13 +40,13 @@ constexpr int32_t ASYNC_RST_SIZE = 2;
 constexpr int32_t MAX_VALUE_LENGTH = 8 * 1024;
 constexpr int32_t SYNC_RESULT_ELEMNT_NUM = 2;
 
-#ifndef AddJsProperty
-#define AddJsProperty(env, object, value, member) \
+#ifndef ADD_JS_PROPERTY
+#define ADD_JS_PROPERTY(env, object, value, member) \
     napi_set_named_property((env), (object), #member, Convert2JSValue((env), (value).member))
 #endif
 
-#ifndef GetProperty
-#define GetProperty(env, object, value, member) \
+#ifndef GET_PROPERTY
+#define GET_PROPERTY(env, object, value, member) \
     Convert2Value((env), GetNamedProperty((env), (object), #member), (value).member)
 #endif
 
