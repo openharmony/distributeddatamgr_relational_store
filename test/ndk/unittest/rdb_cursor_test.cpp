@@ -79,7 +79,7 @@ void RdbNdkCursorTest::SetUpTestCase(void)
     errCode = OH_Rdb_Insert(cursorTestRdbStore_, table, valueBucket);
     EXPECT_EQ(errCode, 3);
 
-    OH_VBucket_Close(valueBucket);
+    OH_Rdb_DestroyValuesBucket(valueBucket);
 }
 
 void RdbNdkCursorTest::TearDownTestCase(void)

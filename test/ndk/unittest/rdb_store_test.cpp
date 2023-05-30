@@ -138,7 +138,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_001, TestSize.Level1)
     EXPECT_EQ(isNull, true);
 
     OH_Rdb_DestroyValueObject(valueObject);
-    OH_VBucket_Close(valueBucket);
+    OH_Rdb_DestroyValuesBucket(valueBucket);
     OH_Rdb_DestroyPredicates(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
@@ -214,7 +214,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_002, TestSize.Level1)
     EXPECT_EQ(strcmp(data5Value, "ABCDEFGH"), 0);
 
     OH_Rdb_DestroyValueObject(valueObject);
-    OH_VBucket_Close(valueBucket);
+    OH_Rdb_DestroyValuesBucket(valueBucket);
     OH_Rdb_DestroyPredicates(predicates);
     cursor->OH_Cursor_Close(cursor);
 }
@@ -259,7 +259,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_003, TestSize.Level1)
     cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
 
-    OH_VBucket_Close(valueBucket);
+    OH_Rdb_DestroyValuesBucket(valueBucket);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -303,7 +303,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_004, TestSize.Level1)
     cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 0);
 
-    OH_VBucket_Close(valueBucket);
+    OH_Rdb_DestroyValuesBucket(valueBucket);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -374,7 +374,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_005, TestSize.Level1)
     cursor->OH_Cursor_GetText(cursor, 5, data5Value, size + 1);
     EXPECT_EQ(strcmp(data5Value, "ABCDEFG"), 0);
 
-    OH_VBucket_Close(valueBucket);
+    OH_Rdb_DestroyValuesBucket(valueBucket);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -444,7 +444,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_007, TestSize.Level1)
     cursor->OH_Cursor_GetRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
 
-    OH_VBucket_Close(valueBucket);
+    OH_Rdb_DestroyValuesBucket(valueBucket);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -527,7 +527,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_008, TestSize.Level1)
     OH_Rdb_DestroyValueObject(valueObject);
     OH_Rdb_DestroyPredicates(predicates);
     OH_Rdb_DestroyPredicates(predicates2);
-    OH_VBucket_Close(valueBucket);
+    OH_Rdb_DestroyValuesBucket(valueBucket);
     cursor->OH_Cursor_Close(cursor);
 }
 
@@ -555,5 +555,5 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_009, TestSize.Level1)
     OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
     EXPECT_EQ(cursor, NULL);
 
-    OH_VBucket_Close(valueBucket);
+    OH_Rdb_DestroyValuesBucket(valueBucket);
 }

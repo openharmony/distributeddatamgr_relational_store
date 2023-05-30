@@ -95,7 +95,7 @@ int OH_Rdb_DeleteStore(const char *path)
     }
     int err = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(path);
     if (err != OHOS::NativeRdb::E_OK) {
-        return err;
+        return OH_Rdb_ErrCode::RDB_ERR;
     }
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
