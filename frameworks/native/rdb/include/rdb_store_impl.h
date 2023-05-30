@@ -26,6 +26,7 @@
 #include "rdb_store_config.h"
 #include "sqlite_connection_pool.h"
 #include "sqlite_statement.h"
+#include "task_executor.h"
 #include "transaction_observer.h"
 
 namespace OHOS::NativeRdb {
@@ -133,6 +134,7 @@ private:
     std::string fileType;
     DistributedRdb::RdbSyncerParam syncerParam_;
     bool isEncrypt_;
+    std::shared_ptr<ExecutorPool> pool_;
 };
 } // namespace OHOS::NativeRdb
 #endif

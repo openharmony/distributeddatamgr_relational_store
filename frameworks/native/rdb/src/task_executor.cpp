@@ -18,7 +18,6 @@
 namespace OHOS::NativeRdb {
 TaskExecutor::TaskExecutor()
 {
-    pool_ = std::make_shared<ExecutorPool>(MAX_THREADS, MIN_THREADS);
 }
 
 TaskExecutor::~TaskExecutor()
@@ -30,37 +29,19 @@ TaskExecutor &TaskExecutor::GetInstance()
 {
     static TaskExecutor instance;
     return instance;
+}
+
+std::shared_ptr<ExecutorPool> TaskExecutor::GetExecutor()
+{
+    if (pool_ == nullptr) {
+        pool_ = std::make_shared<ExecutorPool>(MAX_THREADS, MIN_THREADS);
+    }
+    return pool_;
+}
+
+void TaskExecutor::SetExecutor(std::shared_ptr<ExecutorPool> executor)
+{
+    pool_ = executor;
 };
 
-TaskExecutor::TaskId TaskExecutor::Execute(const Task &task)
-{
-    if (pool_ == nullptr) {
-        return INVALID_TASK_ID;
-    }
-    return pool_->Execute(std::move(task));
-}
-
-TaskExecutor::TaskId TaskExecutor::Schedule(Duration delay, const Task &task, Duration interval, uint64_t times)
-{
-    if (pool_ == nullptr) {
-        return INVALID_TASK_ID;
-    }
-    return pool_->Schedule(task, delay, interval, times);
-}
-
-bool TaskExecutor::Remove(TaskExecutor::TaskId taskId, bool wait)
-{
-    if (pool_ == nullptr) {
-        return false;
-    }
-    return pool_->Remove(taskId, wait);
-}
-
-TaskExecutor::TaskId TaskExecutor::Reset(TaskExecutor::TaskId taskId, Duration interval)
-{
-    if (pool_ == nullptr) {
-        return INVALID_TASK_ID;
-    }
-    return pool_->Reset(taskId, interval);
-}
 } // namespace OHOS::NativeRdb

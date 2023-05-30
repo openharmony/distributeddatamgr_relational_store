@@ -29,25 +29,15 @@ TaskExecutor &TaskExecutor::GetInstance()
 {
     static TaskExecutor instance;
     return instance;
+}
+
+std::shared_ptr<TaskExecutor::ExecutorPool> TaskExecutor::GetExecutor()
+{
+    return pool_;
+}
+
+void TaskExecutor::SetExecutor(std::shared_ptr<TaskExecutor::ExecutorPool> executor)
+{
+    pool_ = executor;
 };
-
-TaskExecutor::TaskId TaskExecutor::Execute(const Task &task)
-{
-    return INVALID_TASK_ID;
-}
-
-TaskExecutor::TaskId TaskExecutor::Schedule(Duration delay, const Task &task, Duration interval, uint64_t times)
-{
-    return INVALID_TASK_ID;
-}
-
-bool TaskExecutor::Remove(TaskExecutor::TaskId taskId, bool wait)
-{
-    return true;
-}
-
-TaskExecutor::TaskId TaskExecutor::Reset(TaskExecutor::TaskId taskId, Duration interval)
-{
-    return INVALID_TASK_ID;
-}
 } // namespace OHOS::NativeRdb

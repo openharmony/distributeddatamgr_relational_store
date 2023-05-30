@@ -67,7 +67,12 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
             RestartTimer(path, *storeCache_[path]);
             return rdbStore;
         }
-        TaskExecutor::GetInstance().Remove(storeCache_[path]->taskId_);
+        if (pool_ == nullptr) {
+            pool_ = TaskExecutor::GetInstance().GetExecutor();
+        }
+        if (pool_ != nullptr) {
+            pool_->Remove(storeCache_[path]->taskId_);
+        }
         storeCache_.erase(path);
     }
     rdbStore = RdbStoreImpl::Open(config, errCode);
@@ -96,9 +101,14 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
 
 void RdbStoreManager::RestartTimer(const std::string &path, RdbStoreNode &node)
 {
-    TaskExecutor::GetInstance().Remove(node.taskId_);
-    node.taskId_ = TaskExecutor::GetInstance().Schedule(
-        std::chrono::milliseconds(ms_), std::bind(&RdbStoreManager::AutoClose, this, path));
+    if (pool_ == nullptr) {
+        pool_ = TaskExecutor::GetInstance().GetExecutor();
+    }
+    if (pool_ != nullptr) {
+        pool_->Remove(node.taskId_);
+        node.taskId_ =
+            pool_->Schedule(std::chrono::milliseconds(ms_), std::bind(&RdbStoreManager::AutoClose, this, path));
+    }
 }
 
 void RdbStoreManager::AutoClose(const std::string &path)
@@ -109,12 +119,13 @@ void RdbStoreManager::AutoClose(const std::string &path)
 void RdbStoreManager::Remove(const std::string &path)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (storeCache_.find(path) == storeCache_.end()) {
+    auto it = storeCache_.find(path);
+    if (it == storeCache_.end()) {
         LOG_INFO("has Removed");
         return;
     }
-    TaskExecutor::GetInstance().Remove(storeCache_[path]->taskId_);
-    storeCache_.erase(path);
+    it->second->taskId_ = TaskExecutor::INVALID_TASK_ID;
+    storeCache_.erase(it);
 }
 
 void RdbStoreManager::Clear()
@@ -123,7 +134,12 @@ void RdbStoreManager::Clear()
     auto iter = storeCache_.begin();
     while (iter != storeCache_.end()) {
         if (iter->second != nullptr) {
-            TaskExecutor::GetInstance().Remove(iter->second->taskId_);
+            if (pool_ == nullptr) {
+                pool_ = TaskExecutor::GetInstance().GetExecutor();
+            }
+            if (pool_ != nullptr) {
+                pool_->Remove(iter->second->taskId_);
+            }
         }
         iter = storeCache_.erase(iter);
     }

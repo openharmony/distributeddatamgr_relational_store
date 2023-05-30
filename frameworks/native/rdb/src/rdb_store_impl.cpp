@@ -29,7 +29,6 @@
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
-#include "task_executor.h"
 
 #ifndef WINDOWS_PLATFORM
 #include "directory_ex.h"
@@ -44,7 +43,6 @@
 #include "result_set_proxy.h"
 #include "runtime_config.h"
 #include "sqlite_shared_result_set.h"
-#include "task_executor.h"
 #endif
 
 #ifdef WINDOWS_PLATFORM
@@ -91,18 +89,23 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
 
-    TaskExecutor::GetInstance().Execute([this]() {
-        std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-        int errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
-        if (errCode != E_OK || service == nullptr) {
-            LOG_ERROR("GetRdbService failed, err is %{public}d.", errCode);
-            return;
-        }
-        errCode = service->GetSchema(syncerParam_);
-        if (errCode != E_OK) {
-            LOG_ERROR("GetSchema failed, err is %{public}d.", errCode);
-        }
-    });
+    if (pool_ == nullptr) {
+        pool_ = TaskExecutor::GetInstance().GetExecutor();
+    }
+    if (pool_ != nullptr) {
+        pool_->Execute([this]() {
+            std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
+            int errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
+            if (errCode != E_OK || service == nullptr) {
+                LOG_ERROR("GetRdbService failed, err is %{public}d.", errCode);
+                return;
+            }
+            errCode = service->GetSchema(syncerParam_);
+            if (errCode != E_OK) {
+                LOG_ERROR("GetSchema failed, err is %{public}d.", errCode);
+            }
+        });
+    }
 #endif
     return E_OK;
 }
