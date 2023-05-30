@@ -28,7 +28,7 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Asset &a
     alignData.assign(data, data + sizeof(size));
     size = *(reinterpret_cast<decltype(&size)>(alignData.data()));
 
-    if (used + sizeof(size) > length) {
+    if (used + size > length) {
         return used;
     }
     used += sizeof(size);
