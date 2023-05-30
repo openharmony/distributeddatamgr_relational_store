@@ -217,6 +217,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &ou
     size_t length = MAX_VALUE_LENGTH;
     napi_get_value_string_utf8(env, jsValue, nullptr, 0, &length);
     length = length < MAX_VALUE_LENGTH ? (MAX_VALUE_LENGTH - 1) : length;
+    /* array init to zero */
     std::unique_ptr<char[]> str = std::make_unique<char[]>(length + 1);
     if (str == nullptr) {
         LOG_ERROR("Convert2Value new failed, str is nullptr");
@@ -229,7 +230,6 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &ou
         LOG_ERROR("Convert2Value napi_get_value_string_utf8 failed, status = %{public}d", status);
         return status;
     }
-    str[valueSize] = 0;
     output = std::string(str.get());
     return status;
 }
@@ -248,7 +248,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<uin
     size_t length = 0;
     void *tmp = nullptr;
     auto status = napi_get_typedarray_info(env, jsValue, &type, &length, &tmp, &input_buffer, &byte_offset);
-    if (status != napi_ok || type != napi_uint8_array ) {
+    if (status != napi_ok || type != napi_uint8_array) {
         return napi_invalid_arg;
     }
     output = (tmp != nullptr ? std::vector<uint8_t>((uint8_t*)tmp, ((uint8_t*)tmp) + length) : std::vector<uint8_t>());
