@@ -170,6 +170,7 @@
                 "//foundation/distributeddatamgr/relational_store/test/js/rdb:performancetest",
                 "//foundation/distributeddatamgr/relational_store/test/js/rdb:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/js/relationalstore:performancetest",
+                "//foundation/distributeddatamgr/relational_store/test/js/relationalstore:cloudtest",
                 "//foundation/distributeddatamgr/relational_store/test/js/relationalstore:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/ndk:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/dataability:unittest",
