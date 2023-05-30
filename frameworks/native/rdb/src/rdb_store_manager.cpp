@@ -28,7 +28,10 @@
 
 namespace OHOS {
 namespace NativeRdb {
-RdbStoreNode::RdbStoreNode(const std::shared_ptr<RdbStoreImpl> &rdbStore) : rdbStore_(rdbStore), taskId_(0) {}
+RdbStoreNode::RdbStoreNode(const std::shared_ptr<RdbStoreImpl> &rdbStore)
+    : rdbStore_(rdbStore), taskId_(TaskExecutor::INVALID_TASK_ID)
+{
+}
 
 RdbStoreNode &RdbStoreNode::operator=(const std::shared_ptr<RdbStoreImpl> &store)
 {
