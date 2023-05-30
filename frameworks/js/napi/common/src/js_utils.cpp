@@ -202,7 +202,6 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, double &output)
 
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, int64_t &output)
 {
-    LOG_INFO("Convert2Value js just support double data not support int64_t");
     return napi_invalid_arg;
 }
 
@@ -217,7 +216,8 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &ou
 
     size_t length = MAX_VALUE_LENGTH;
     napi_get_value_string_utf8(env, jsValue, nullptr, 0, &length);
-    length = length < MAX_VALUE_LENGTH ? MAX_VALUE_LENGTH : length;
+    length = length < MAX_VALUE_LENGTH ? (MAX_VALUE_LENGTH - 1) : length;
+    /* array init to zero */
     std::unique_ptr<char[]> str = std::make_unique<char[]>(length + 1);
     if (str == nullptr) {
         LOG_ERROR("Convert2Value new failed, str is nullptr");
@@ -246,13 +246,12 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<uin
     napi_value input_buffer = nullptr;
     size_t byte_offset = 0;
     size_t length = 0;
-    void *data = nullptr;
-    auto status = napi_get_typedarray_info(env, jsValue, &type, &length, &data, &input_buffer, &byte_offset);
-    if (status != napi_ok || type != napi_uint8_array || data == nullptr) {
+    void *tmp = nullptr;
+    auto status = napi_get_typedarray_info(env, jsValue, &type, &length, &tmp, &input_buffer, &byte_offset);
+    if (status != napi_ok || type != napi_uint8_array) {
         return napi_invalid_arg;
     }
-
-    output = std::vector<uint8_t>((uint8_t *)data, ((uint8_t *)data) + length);
+    output = (tmp != nullptr ? std::vector<uint8_t>((uint8_t*)tmp, ((uint8_t*)tmp) + length) : std::vector<uint8_t>());
     return status;
 }
 
@@ -263,12 +262,14 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::monostate 
     bool equal = false;
     napi_strict_equals(env, jsValue, tempValue, &equal);
     if (equal) {
+        value = std::monostate();
         return napi_ok;
     }
     napi_get_undefined(env, &tempValue);
     napi_strict_equals(env, jsValue, tempValue, &equal);
     if (equal) {
-        return OK;
+        value = std::monostate();
+        return napi_ok;
     }
     LOG_DEBUG("Convert2Value jsValue is not null");
     return napi_invalid_arg;
@@ -298,8 +299,9 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
         Convert2ValueExt(env, jsVal, val);
         output.insert(std::pair<std::string, int32_t>(key, val));
     }
-    return OK;
+    return napi_ok;
 }
+
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, bool> &output)
 {
     LOG_DEBUG("napi_value -> std::map<std::string, bool> ");
@@ -324,7 +326,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
         Convert2Value(env, jsVal, val);
         output.insert(std::pair<std::string, bool>(key, val));
     }
-    return OK;
+    return napi_ok;
 }
 
 napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<std::string> &value)
