@@ -32,6 +32,8 @@ using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
+using Asset = AssetValue;
+using Assets = std::vector<Asset>;
 static napi_ref __thread ctorRef_ = nullptr;
 static const int E_OK = 0;
 
