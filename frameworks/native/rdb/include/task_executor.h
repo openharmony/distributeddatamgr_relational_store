@@ -21,8 +21,7 @@ public:
     using TaskId = ExecutorPool::TaskId;
     using Task = std::function<void()>;
     using Duration = std::chrono::steady_clock::duration;
-    static constexpr TaskId INVALID_TASK_ID = static_cast<uint64_t>(0l);
-    static constexpr uint64_t UNLIMITED_TIMES = std::numeric_limits<uint64_t>::max();
+    static constexpr TaskId INVALID_TASK_ID = ExecutorPool::INVALID_TASK_ID;
 
     static TaskExecutor &GetInstance();
     std::shared_ptr<ExecutorPool> GetExecutor();
@@ -33,6 +32,7 @@ private:
     size_t MIN_THREADS = 0;
     TaskExecutor();
     ~TaskExecutor();
+    mutable std::shared_mutex rwMutex_;
     std::shared_ptr<ExecutorPool> pool_;
 };
 } // namespace OHOS::NativeRdb
