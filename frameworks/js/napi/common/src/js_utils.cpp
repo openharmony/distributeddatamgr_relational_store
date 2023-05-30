@@ -246,13 +246,12 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<uin
     napi_value input_buffer = nullptr;
     size_t byte_offset = 0;
     size_t length = 0;
-    void *data = nullptr;
-    auto status = napi_get_typedarray_info(env, jsValue, &type, &length, &data, &input_buffer, &byte_offset);
-    if (status != napi_ok || type != napi_uint8_array || data == nullptr) {
+    void *tmp = nullptr;
+    auto status = napi_get_typedarray_info(env, jsValue, &type, &length, &tmp, &input_buffer, &byte_offset);
+    if (status != napi_ok || type != napi_uint8_array ) {
         return napi_invalid_arg;
     }
-
-    output = std::vector<uint8_t>((uint8_t *)data, ((uint8_t *)data) + length);
+    output = (tmp != nullptr ? std::vector<uint8_t>((uint8_t*)tmp, ((uint8_t*)tmp) + length) : std::vector<uint8_t>());
     return status;
 }
 
