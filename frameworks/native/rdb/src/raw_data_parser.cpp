@@ -17,6 +17,7 @@
 
 #include "value_object.h"
 namespace OHOS::NativeRdb {
+using Serializable = RdbBMSAdapter::Serializable;
 size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Asset &asset)
 {
     size_t used = 0;
