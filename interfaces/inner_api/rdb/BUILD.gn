@@ -117,8 +117,10 @@ if (is_ohos) {
       "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
-    public_deps =
-        [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
+    public_deps = [
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
+      "../rdb_bms_adapter:rdb_bms_adapter",
+    ]
 
     external_deps = [
       "c_utils:utils",
@@ -145,6 +147,7 @@ if (is_ohos) {
     deps += [
       "${kvstore_path}/libs/distributeddb:distributeddb",
       "//third_party/sqlite:sqlite",
+      "../rdb_bms_adapter:rdb_bms_adapter",
     ]
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
 
@@ -164,8 +167,10 @@ if (is_ohos) {
       "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
-    public_deps =
-        [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
+    public_deps = [
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
+      "../rdb_bms_adapter:rdb_bms_adapter",
+    ]
 
     external_deps = [
       "c_utils:utils",
@@ -246,6 +251,7 @@ if (is_ohos) {
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
+      "../rdb_bms_adapter:rdb_bms_adapter",
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -266,6 +272,7 @@ if (is_ohos) {
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
+      "../rdb_bms_adapter:rdb_bms_adapter",
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -336,6 +343,7 @@ if (is_ohos) {
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
+      "../rdb_bms_adapter:rdb_bms_adapter",
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -355,6 +363,7 @@ if (is_ohos) {
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
+      "../rdb_bms_adapter:rdb_bms_adapter",
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -420,6 +429,7 @@ if (is_ohos) {
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
       "//commonlibrary/c_utils/base:utils",
       "//third_party/sqlite:sqlite_static",
+      "../rdb_bms_adapter:rdb_bms_adapter",
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -484,6 +494,7 @@ if (is_ohos) {
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
       "//commonlibrary/c_utils/base:utilsbase",
       "//third_party/sqlite:sqlite_static",
+      "../rdb_bms_adapter:rdb_bms_adapter",
     ]
     cflags_cc = [ "-std=c++17" ]
 
