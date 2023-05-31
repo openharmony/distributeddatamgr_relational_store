@@ -154,15 +154,15 @@ bool ValuesBucket::Marshalling(Parcel &parcel) const
     return ITypesUtil::Marshal(*data, values_);
 }
 
-ValuesBucket *ValuesBucket::Unmarshalling(Parcel &parcel)
+ValuesBucket ValuesBucket::Unmarshalling(Parcel &parcel)
 {
     MessageParcel *data = static_cast<MessageParcel *>(&parcel);
     if (data == nullptr) {
-        return nullptr;
+        return {};
     }
     ValuesBucket bucket;
     ITypesUtil::Unmarshal(*data, bucket.values_);
-    return new (std::nothrow) ValuesBucket(std::move(bucket));
+    return bucket;
 }
 #endif
 } // namespace NativeRdb
