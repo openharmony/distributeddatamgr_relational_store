@@ -116,7 +116,13 @@ void RdbStoreManager::RestartTimer(const std::string &path, RdbStoreNode &node)
 
 void RdbStoreManager::AutoClose(const std::string &path)
 {
-    this->Remove(path);
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = storeCache_.find(path);
+    if (it == storeCache_.end()) {
+        LOG_INFO("has Removed");
+        return;
+    }
+    storeCache_.erase(it);
 }
 
 void RdbStoreManager::Remove(const std::string &path)
@@ -127,7 +133,9 @@ void RdbStoreManager::Remove(const std::string &path)
         LOG_INFO("has Removed");
         return;
     }
-    it->second->taskId_ = TaskExecutor::INVALID_TASK_ID;
+    if (pool_ != nullptr) {
+        pool_->Remove(it->second->taskId_);
+    }
     storeCache_.erase(it);
 }
 
@@ -136,13 +144,8 @@ void RdbStoreManager::Clear()
     std::lock_guard<std::mutex> lock(mutex_);
     auto iter = storeCache_.begin();
     while (iter != storeCache_.end()) {
-        if (iter->second != nullptr) {
-            if (pool_ == nullptr) {
-                pool_ = TaskExecutor::GetInstance().GetExecutor();
-            }
-            if (pool_ != nullptr) {
-                pool_->Remove(iter->second->taskId_);
-            }
+        if (iter->second != nullptr && pool_ != nullptr) {
+            pool_->Remove(iter->second->taskId_);
         }
         iter = storeCache_.erase(iter);
     }
