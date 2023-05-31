@@ -78,6 +78,7 @@ if (is_ohos) {
       "include",
       "${relational_store_native_path}/rdb/include",
       "../rdb_bms_adapter/include",
+      "//third_party/json/single_include",
     ]
   }
 
@@ -199,6 +200,7 @@ if (is_ohos) {
       "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
       "${relational_store_native_path}/rdb/include",
       "../rdb_bms_adapter/include",
+      "//third_party/json/single_include",
     ]
 
     defines = [
@@ -230,6 +232,7 @@ if (is_ohos) {
       "mock/include",
       "include",
       "../rdb_bms_adapter/include",
+      "//third_party/json/single_include",
     ]
   }
 
@@ -293,6 +296,7 @@ if (is_ohos) {
       "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
       "${relational_store_native_path}/rdb/include",
       "../rdb_bms_adapter/include",
+      "//third_party/json/single_include",
     ]
 
     defines = [
@@ -323,6 +327,7 @@ if (is_ohos) {
       "mock/include",
       "include",
       "../rdb_bms_adapter/include",
+      "//third_party/json/single_include",
     ]
   }
 
@@ -383,6 +388,7 @@ if (is_ohos) {
       "//foundation/distributeddatamgr/kv_store/frameworks/common",
       "${relational_store_native_path}/rdb/include",
       "../rdb_bms_adapter/include",
+      "//third_party/json/single_include",
     ]
 
     defines = [
@@ -409,6 +415,7 @@ if (is_ohos) {
       "${relational_store_native_path}/mock/rdb/include",
       "${relational_store_native_path}/rdb/include",
       "../rdb_bms_adapter/include",
+      "//third_party/json/single_include",
     ]
   }
 
@@ -446,6 +453,7 @@ if (is_ohos) {
       "${relational_store_innerapi_path}/rdb/include",
       "${relational_store_native_path}/rdb/include",
       "../rdb_bms_adapter/include",
+      "//third_party/json/single_include",
     ]
 
     defines = [
@@ -471,6 +479,7 @@ if (is_ohos) {
       "include",
       "${relational_store_native_path}/rdb/include",
       "../rdb_bms_adapter/include",
+      "//third_party/json/single_include",
     ]
   }
 
