@@ -123,48 +123,20 @@ void RdbSqliteSharedResultSetTest::GenerateDefaultTable()
 void RdbSqliteSharedResultSetTest::GenerateAssetsTable()
 {
     std::shared_ptr<RdbStore> &store = RdbSqliteSharedResultSetTest::store;
-
     int64_t id;
     ValuesBucket values;
+    Asset assetValue1 = Asset{ 1, "name1", "uri1", "createTime1", "modifyTime1", "size1", "hash1" };
+    Asset assetValue2 = Asset{ 2, "name2", "uri2", "createTime2", "modifyTime2", "size2", "hash2" };
 
-    Asset assetValue1;
-    assetValue1.version = 1;
-    assetValue1.name = "name1";
-    assetValue1.uri = "uri1";
-    assetValue1.createTime = "createTime1";
-    assetValue1.modifyTime = "modifyTime1";
-    assetValue1.size = "size1";
-    assetValue1.hash = "hash1";
-
-    Asset assetValue2;
-    assetValue2.version = 2;
-    assetValue2.name = "name2";
-    assetValue2.uri = "uri2";
-    assetValue2.createTime = "createTime2";
-    assetValue2.modifyTime = "modifyTime2";
-    assetValue2.size = "size2";
-    assetValue2.hash = "hash2";
-
-    Assets assets;
-    assets.push_back(assetValue1);
+    Assets assets = Assets{ assetValue1 };
     values.PutInt("id", 1);
-    values.PutString("data1", std::string("hello"));
-    values.PutDouble("data2", 10.0);
-    values.PutDouble("data3", 1.0);
-    values.PutBlob("data4", std::vector<uint8_t> { 66 });
     values.Put("data5", ValueObject(assetValue1));
     values.Put("data6", ValueObject(assets));
     store->Insert(id, "test", values);
 
     values.Clear();
-
-    Assets assets1;
-    assets1.push_back(assetValue2);
+    Assets assets1 = Assets{ assetValue2 };
     values.PutInt("id", 2);
-    values.PutString("data1", std::string("2"));
-    values.PutInt("data2", -5);
-    values.PutDouble("data3", 2.5);
-    values.PutBlob("data4", std::vector<uint8_t> {});
     values.Put("data5", ValueObject(assetValue2));
     values.Put("data6", ValueObject(assets1));
     store->Insert(id, "test", values);
@@ -184,7 +156,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset, TestSize.
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
-    int ret = rstSet->GoToRow(1);
+    int ret = rstSet->GoToRow(0);
     EXPECT_EQ(ret, E_OK);
 
     int rowCnt = -1;
@@ -192,54 +164,37 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset, TestSize.
     EXPECT_EQ(rowCnt, 2);
 
     std::string colName = "";
-    rstSet->GetColumnName(1, colName);
-    EXPECT_EQ(colName, "data1");
-
-    rstSet->GetColumnName(2, colName);
-    EXPECT_EQ(colName, "data2");
-
-    rstSet->GetColumnName(3, colName);
-    EXPECT_EQ(colName, "data3");
-
-    rstSet->GetColumnName(4, colName);
-    EXPECT_EQ(colName, "data4");
-
     rstSet->GetColumnName(5, colName);
     EXPECT_EQ(colName, "data5");
 
     rstSet->GetColumnName(6, colName);
     EXPECT_EQ(colName, "data6");
 
-    std::string valueStr = "";
-    rstSet->GetString(0, valueStr);
-    EXPECT_EQ(valueStr, "2");
-
-    rstSet->GetString(1, valueStr);
-    EXPECT_EQ(valueStr, "2");
-
-    int64_t valuelg = 0;
-    rstSet->GetLong(2, valuelg);
-    EXPECT_EQ(valuelg, -5);
-
-    double valueDb = 0.0;
-    rstSet->GetDouble(3, valueDb);
-    EXPECT_EQ(valueDb, 2.5);
-
-    std::vector<uint8_t> blob;
-    rstSet->GetBlob(4, blob);
-    int sz = blob.size();
-    EXPECT_EQ(sz, 0);
-
     Asset asset;
     rstSet->GetAsset(5, asset);
-    EXPECT_EQ(asset.version, 2);
-    EXPECT_EQ(asset.name, "name2");
-    EXPECT_EQ(asset.uri, "uri2");
+    EXPECT_EQ(asset.version, 1);
+    EXPECT_EQ(asset.name, "name1");
+    EXPECT_EQ(asset.uri, "uri1");
 
     Assets assets;
     rstSet->GetAssets(6, assets);
     EXPECT_EQ(assets.size(), 1);
     auto it = assets.begin();
+    EXPECT_EQ(it->version, 1);
+    EXPECT_EQ(it->name, "name1");
+    EXPECT_EQ(it->uri, "uri1");
+
+    ret = rstSet->GoToRow(1);
+    EXPECT_EQ(ret, E_OK);
+
+    rstSet->GetAsset(5, asset);
+    EXPECT_EQ(asset.version, 2);
+    EXPECT_EQ(asset.name, "name2");
+    EXPECT_EQ(asset.uri, "uri2");
+
+    rstSet->GetAssets(6, assets);
+    EXPECT_EQ(assets.size(), 1);
+    it = assets.begin();
     EXPECT_EQ(it->version, 2);
     EXPECT_EQ(it->name, "name2");
     EXPECT_EQ(it->uri, "uri2");

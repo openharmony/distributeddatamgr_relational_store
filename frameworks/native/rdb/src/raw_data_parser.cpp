@@ -15,7 +15,11 @@
 
 #include "raw_data_parser.h"
 
-#include "value_object.h"
+#ifdef WINDOWS_PLATFORM
+#include <arpa/inet.h>
+#else
+#include <endian.h>
+#endif
 namespace OHOS::NativeRdb {
 using Serializable = RdbBMSAdapter::Serializable;
 size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Asset &asset)
@@ -27,7 +31,12 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Asset &a
     }
     std::vector<uint8_t> alignData;
     alignData.assign(data, data + sizeof(size));
-    size = *(reinterpret_cast<decltype(&size)>(alignData.data()));
+
+#ifdef WINDOWS_PLATFORM
+    size = ntohl(*(reinterpret_cast<decltype(&size)>(alignData.data())));
+#else
+    size = le16toh(*(reinterpret_cast<decltype(&size)>(alignData.data())));
+#endif
 
     if (used + size > length) {
         return used;
@@ -72,7 +81,12 @@ std::vector<uint8_t> RawDataParser::PackageRawData(const Asset &asset)
     std::vector<uint8_t> rawData;
     InnerAsset innerAsset = InnerAsset(asset);
     auto data = Serializable::Marshall(innerAsset);
-    uint16_t size = (uint16_t)data.length();
+    uint16_t size;
+#ifdef WINDOWS_PLATFORM
+    size = htonl((uint16_t)data.length());
+#else
+    size = htole16((uint16_t)data.length());
+#endif
     rawData.assign(reinterpret_cast<uint8_t *>(&size), reinterpret_cast<uint8_t *>(&size) + sizeof(size));
     rawData.insert(rawData.end(), data.begin(), data.end());
     return rawData;
