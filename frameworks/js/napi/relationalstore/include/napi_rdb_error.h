@@ -149,7 +149,7 @@ public:
     DbInvalidError() = default;
     std::string GetMessage() override
     {
-        return "Failed open database, invalid database name.";
+        return "Failed to open or delete database by invalid database path.";
     };
     int GetCode() override
     {
