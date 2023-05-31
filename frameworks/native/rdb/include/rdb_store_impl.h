@@ -28,6 +28,9 @@
 #include "sqlite_statement.h"
 #include "transaction_observer.h"
 
+namespace OHOS {
+class ExecutorPool;
+}
 namespace OHOS::NativeRdb {
 class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
 public:
@@ -134,9 +137,9 @@ private:
     bool isMemoryRdb;
     std::string name;
     std::string fileType;
-    bool isShared_ = false;
     DistributedRdb::RdbSyncerParam syncerParam_;
     bool isEncrypt_;
+    std::shared_ptr<ExecutorPool> pool_;
 };
 } // namespace OHOS::NativeRdb
 #endif

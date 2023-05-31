@@ -18,7 +18,7 @@
 #include "rdb_store_impl.h"
 #include "rdb_trace.h"
 #include "sqlite_global_config.h"
-#include "unistd.h"
+#include "task_executor.h"
 #include "rdb_store_manager.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -28,7 +28,10 @@
 
 namespace OHOS {
 namespace NativeRdb {
-RdbStoreNode::RdbStoreNode(const std::shared_ptr<RdbStoreImpl> &rdbStore) : rdbStore_(rdbStore), timerId_(0) {}
+RdbStoreNode::RdbStoreNode(const std::shared_ptr<RdbStoreImpl> &rdbStore)
+    : rdbStore_(rdbStore), taskId_(TaskExecutor::INVALID_TASK_ID)
+{
+}
 
 RdbStoreNode &RdbStoreNode::operator=(const std::shared_ptr<RdbStoreImpl> &store)
 {
@@ -49,18 +52,10 @@ RdbStoreManager::~RdbStoreManager()
 {
     LOG_ERROR("Start");
     Clear();
-    if (timer_ != nullptr) {
-        timer_->Shutdown(true);
-        timer_ = nullptr;
-    }
 }
 
-RdbStoreManager::RdbStoreManager()
+RdbStoreManager::RdbStoreManager() : ms_(30000) // 30000 ms
 {
-    timer_ = std::make_shared<Utils::Timer>("RdbStoreCloser");
-    timer_->Setup();
-    // 30000 ms
-    ms_ = 30000;
 }
 
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &config,
@@ -75,7 +70,12 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
             RestartTimer(path, *storeCache_[path]);
             return rdbStore;
         }
-        timer_->Unregister(storeCache_[path]->timerId_);
+        if (pool_ == nullptr) {
+            pool_ = TaskExecutor::GetInstance().GetExecutor();
+        }
+        if (pool_ != nullptr) {
+            pool_->Remove(storeCache_[path]->taskId_);
+        }
         storeCache_.erase(path);
     }
     rdbStore = RdbStoreImpl::Open(config, errCode);
@@ -104,29 +104,39 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
 
 void RdbStoreManager::RestartTimer(const std::string &path, RdbStoreNode &node)
 {
-    if (timer_ != nullptr) {
-        timer_->Unregister(node.timerId_);
-        // after 30000ms, auto close.
-        node.timerId_ = timer_->Register(std::bind(&RdbStoreManager::AutoClose, this, path), ms_, true);
+    if (pool_ == nullptr) {
+        pool_ = TaskExecutor::GetInstance().GetExecutor();
+    }
+    if (pool_ != nullptr) {
+        pool_->Remove(node.taskId_);
+        node.taskId_ =
+            pool_->Schedule(std::chrono::milliseconds(ms_), std::bind(&RdbStoreManager::AutoClose, this, path));
     }
 }
 
 void RdbStoreManager::AutoClose(const std::string &path)
 {
-    this->Remove(path);
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = storeCache_.find(path);
+    if (it == storeCache_.end()) {
+        LOG_INFO("has Removed");
+        return;
+    }
+    storeCache_.erase(it);
 }
 
 void RdbStoreManager::Remove(const std::string &path)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (storeCache_.find(path) == storeCache_.end()) {
+    auto it = storeCache_.find(path);
+    if (it == storeCache_.end()) {
         LOG_INFO("has Removed");
         return;
     }
-    if (timer_ != nullptr) {
-        timer_->Unregister(storeCache_[path]->timerId_);
+    if (pool_ != nullptr) {
+        pool_->Remove(it->second->taskId_);
     }
-    storeCache_.erase(path);
+    storeCache_.erase(it);
 }
 
 void RdbStoreManager::Clear()
@@ -134,8 +144,8 @@ void RdbStoreManager::Clear()
     std::lock_guard<std::mutex> lock(mutex_);
     auto iter = storeCache_.begin();
     while (iter != storeCache_.end()) {
-        if (timer_ != nullptr && iter->second != nullptr) {
-            timer_->Unregister(iter->second->timerId_);
+        if (iter->second != nullptr && pool_ != nullptr) {
+            pool_->Remove(iter->second->taskId_);
         }
         iter = storeCache_.erase(iter);
     }
