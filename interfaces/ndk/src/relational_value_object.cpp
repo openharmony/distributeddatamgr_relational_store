@@ -52,7 +52,7 @@ int OH_ValueObject_PutInt64(OH_Rdb_VObject *valueObject, int64_t *value, uint32_
     if (count == 1) {
         vObject->getValue().push_back(std::to_string(*value));
     } else {
-        for (int i = 0; i < count; i++) {
+        for (uint32_t i = 0; i < count; i++) {
             vObject->getValue().push_back(std::to_string(value[i]));
         }
     };
@@ -72,7 +72,7 @@ int OH_ValueObject_PutDouble(OH_Rdb_VObject *valueObject, double *value, uint32_
     if (count == 1) {
         vObject->getValue().push_back(std::to_string(*value));
     } else {
-        for (int i = 0; i < count; i++) {
+        for (uint32_t i = 0; i < count; i++) {
             vObject->getValue().push_back(std::to_string(value[i]));
         }
     }
@@ -104,7 +104,7 @@ int OH_ValueObject_PutTexts(OH_Rdb_VObject *valueObject, const char **value, uin
 
     auto vObject = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject);
     vObject->getValue().clear();
-    for (int i = 0; i < count; i++) {
+    for (uint32_t i = 0; i < count; i++) {
         std::string textValue(value[i]);
         vObject->getValue().push_back(textValue);
     }
