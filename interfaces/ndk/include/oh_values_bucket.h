@@ -52,6 +52,7 @@ extern "C" {
 typedef struct OH_VBucket{
     /** The id used to uniquely identify the OH_VBucket struct. */
     int64_t id;
+
     /** Indicates the capability of OH_VBucket. */
     uint16_t capability;
 

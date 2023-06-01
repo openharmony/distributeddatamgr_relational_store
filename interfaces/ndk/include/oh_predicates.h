@@ -65,6 +65,7 @@ enum OH_OrderType {
 typedef struct OH_Predicates {
     /** The id used to uniquely identify the OH_Predicates struct. */
     int64_t id;
+
     /**
      * @brief Function pointer. Restricts the value of the field to be equal to the specified value to the predicates.
      *
@@ -128,7 +129,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates.
      * @since 10
      */
-    OH_Predicates (*or)(OH_Predicates *predicates);
+    OH_Predicates (*orOperate)(OH_Predicates *predicates);
 
     /**
      * @brief Function pointer. Adds an and condition to the predicates.
@@ -140,7 +141,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates.
      * @since 10
      */
-    OH_Predicates (*and)(OH_Predicates *predicates);
+    OH_Predicates (*andOperate)(OH_Predicates *predicates);
 
     /**
      * @brief Function pointer. Restricts the value of the field which is null to the predicates.
