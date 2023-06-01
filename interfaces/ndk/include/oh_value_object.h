@@ -47,8 +47,10 @@ extern "C" {
  *
  * @since 10
  */
-typedef struct OH_VObject{
-    /** The id used to uniquely identify the OH_VObject struct. */
+typedef struct OH_VObject {
+    /**
+     * The id used to uniquely identify the OH_VObject struct.
+     */
     int64_t id;
 
     /**
