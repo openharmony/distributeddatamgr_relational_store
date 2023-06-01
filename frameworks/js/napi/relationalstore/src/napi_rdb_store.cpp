@@ -365,13 +365,27 @@ int ParseValuesBucket(const napi_env &env, const napi_value &arg, std::shared_pt
         napi_value key;
         status = napi_get_element(env, keys, i, &key);
         CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("values", "a ValuesBucket."));
+
         std::string keyStr = JSUtils::Convert2String(env, key);
         napi_value value;
         napi_get_property(env, arg, key, &value);
-        ValueObject valueObject;
-        int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
-        if (ret == napi_ok) {
-            context->valuesBucket.Put(keyStr, std::move(valueObject));
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, value, &valueType);
+        if (valueType == napi_string) {
+            std::string valueString = JSUtils::Convert2String(env, value, false);
+            context->valuesBucket.PutString(keyStr, valueString);
+        } else if (valueType == napi_number) {
+            double valueNumber;
+            napi_get_value_double(env, value, &valueNumber);
+            context->valuesBucket.PutDouble(keyStr, valueNumber);
+        } else if (valueType == napi_boolean) {
+            bool valueBool = false;
+            napi_get_value_bool(env, value, &valueBool);
+            context->valuesBucket.PutBool(keyStr, valueBool);
+        } else if (valueType == napi_null) {
+            context->valuesBucket.PutNull(keyStr);
+        } else if (valueType == napi_object) {
+            context->valuesBucket.PutBlob(keyStr, JSUtils::Convert2U8Vector(env, value));
         } else {
             LOG_WARN("bad value type of key %{public}s", keyStr.c_str());
         }
