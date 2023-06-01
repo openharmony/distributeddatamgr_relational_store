@@ -18,7 +18,7 @@
 
 #include "serializable.h"
 namespace OHOS::RdbBMSAdapter {
-struct API_EXPORT DataProperties : public Serializable {
+struct API_EXPORT DataProperties : public AppDataFwk::Serializable {
     virtual ~DataProperties() = default;
     bool Marshal(json &node) const override;
     bool Unmarshal(const json &node) override;

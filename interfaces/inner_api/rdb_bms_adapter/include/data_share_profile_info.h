@@ -24,7 +24,7 @@
 
 namespace OHOS::RdbBMSAdapter {
 using namespace OHOS::Global::Resource;
-struct API_EXPORT Config final : public Serializable {
+struct API_EXPORT Config final : public AppDataFwk::Serializable {
     std::string uri = "*";
     int crossUserMode = 0;
     std::string writePermission = "";
@@ -33,7 +33,7 @@ struct API_EXPORT Config final : public Serializable {
     bool Unmarshal(const json &node) override;
 };
 
-struct API_EXPORT ProfileInfo : public Serializable {
+struct API_EXPORT ProfileInfo : public AppDataFwk::Serializable {
     std::vector<Config> tableConfig;
     bool Marshal(json &node) const override;
     bool Unmarshal(const json &node) override;

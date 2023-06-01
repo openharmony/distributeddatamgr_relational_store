@@ -186,6 +186,7 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "//commonlibrary/c_utils/base/include",
@@ -221,6 +222,7 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "mock/include",
       "include",
       "//third_party/json/single_include",
@@ -245,6 +247,7 @@ if (is_ohos) {
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -265,6 +268,7 @@ if (is_ohos) {
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -278,6 +282,7 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "//commonlibrary/c_utils/base/include",
@@ -312,6 +317,7 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "mock/include",
       "include",
       "//third_party/json/single_include",
@@ -335,6 +341,7 @@ if (is_ohos) {
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk"
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -354,6 +361,7 @@ if (is_ohos) {
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk"
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -367,6 +375,7 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "${relational_store_innerapi_path}/rdb/mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "${relational_store_innerapi_path}/rdb/include",
@@ -394,6 +403,7 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "mock/include",
       "include",
       "${relational_store_native_path}/mock/rdb/include",
@@ -419,6 +429,7 @@ if (is_ohos) {
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
       "//commonlibrary/c_utils/base:utils",
       "//third_party/sqlite:sqlite_static",
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk"
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -430,6 +441,7 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "${relational_store_innerapi_path}/rdb/mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "${relational_store_innerapi_path}/rdb/include",
@@ -456,6 +468,7 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "mock/include",
       "include",
       "${relational_store_native_path}/rdb/include",
@@ -483,6 +496,7 @@ if (is_ohos) {
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
       "//commonlibrary/c_utils/base:utilsbase",
       "//third_party/sqlite:sqlite_static",
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk"
     ]
     cflags_cc = [ "-std=c++17" ]
 
