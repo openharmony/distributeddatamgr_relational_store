@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef NATIVE_VALUE_OBJECT_H
-#define NATIVE_VALUE_OBJECT_H
+#ifndef OH_VALUE_OBJECT_H
+#define OH_VALUE_OBJECT_H
 
 /**
  * @addtogroup RDB
@@ -30,7 +30,7 @@
  */
 
 /**
- * @file native_value_object.h
+ * @file oh_value_object.h
  *
  * @brief Provides numeric type conversion functions.
  *
@@ -62,7 +62,7 @@ typedef struct OH_VObject{
      * @see OH_VObject.
      * @since 10
      */
-    int (*PutInt64)(OH_VObject *valueObject, int64_t *value, uint32_t count);
+    int (*putInt64)(OH_VObject *valueObject, int64_t *value, uint32_t count);
 
     /**
      * @brief Convert the double input parameter to a value of type {@link OH_VObject}.
@@ -75,7 +75,7 @@ typedef struct OH_VObject{
      * @see OH_VObject.
      * @since 10
      */
-    int (*PutDouble)(OH_VObject *valueObject, double *value, uint32_t count);
+    int (*putDouble)(OH_VObject *valueObject, double *value, uint32_t count);
 
     /**
      * @brief Convert the char input parameter to a value of type {@link OH_VObject}.
@@ -86,7 +86,7 @@ typedef struct OH_VObject{
      * @see OH_VObject.
      * @since 10
      */
-    int (*PutText)(OH_VObject *valueObject, const char *value);
+    int (*putText)(OH_VObject *valueObject, const char *value);
 
     /**
      * @brief Convert the char * array input parameter to a value of type {@link OH_VObject}.
@@ -98,7 +98,7 @@ typedef struct OH_VObject{
      * @see OH_VObject.
      * @since 10
      */
-    int (*PutTexts)(OH_VObject *valueObject, const char **value, uint32_t count);
+    int (*putTexts)(OH_VObject *valueObject, const char **value, uint32_t count);
 
     /**
      * @brief Destroy the {@link OH_VObject} object and reclaim the memory occupied by the object.
@@ -108,11 +108,11 @@ typedef struct OH_VObject{
      * @see OH_VObject.
      * @since 10
      */
-    int (*DestroyValueObject)(OH_VObject *valueObject);
+    int (*destroyValueObject)(OH_VObject *valueObject);
 } OH_VObject;
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // NATIVE_VALUE_OBJECT_H
+#endif // OH_VALUE_OBJECT_H

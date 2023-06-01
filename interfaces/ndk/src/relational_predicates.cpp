@@ -12,40 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "predicates.h"
+#include "oh_predicates.h"
 
 #include "relational_predicates_impl.h"
 #include "relational_value_object_impl.h"
 #include "relational_error_code.h"
 #include "sqlite_global_config.h"
-#include "ndk_logger.h"
+#include "logger.h"
 
 using OHOS::RdbNdk::RDB_NDK_LABEL;
 using namespace OHOS::NativeRdb;
-
-RdbPredicates &OHOS::RdbNdk::PredicateImpl::GetPredicates()
-{
-    return predicates_;
-}
-
-OH_Predicates *OH_Rdb_CreatePredicates(const char *table)
-{
-    if (table == nullptr) {
-        return nullptr;
-    }
-    return new OHOS::RdbNdk::PredicateImpl(table);
-}
-
-int Rdb_DestroyPredicates(OH_Predicates *predicates)
-{
-    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
-        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
-        return RDB_ERR_INVALID_ARGS;
-    }
-    delete predicates;
-    predicates = nullptr;
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
-}
 
 OH_Predicates Rdb_Predicates_EqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
@@ -370,4 +346,57 @@ OH_Predicates Rdb_Predicates_Clear(OH_Predicates *predicates)
     auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
     tempPredicates->GetPredicates().Clear();
     return *predicates;
+}
+
+int Rdb_DestroyPredicates(OH_Predicates *predicates)
+{
+    if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
+        LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
+        return RDB_ERR_INVALID_ARGS;
+    }
+    delete predicates;
+    predicates = nullptr;
+    return OH_Rdb_ErrCode::RDB_ERR_OK;
+}
+
+OHOS::RdbNdk::PredicateImpl::PredicateImpl(const char *table) : predicates_(table)
+{
+    id = RDB_PREDICATES_CID;
+    equalTo = Rdb_Predicates_EqualTo;
+    notEqualTo = Rdb_Predicates_NotEqualTo;
+    beginWrap = Rdb_Predicates_BeginWrap;
+    endWrap = Rdb_Predicates_EndWrap;
+    this->or = Rdb_Predicates_Or;
+    this->and = Rdb_Predicates_And;
+    isNull = Rdb_Predicates_IsNull;
+    isNotNull = Rdb_Predicates_IsNotNull;
+    like = Rdb_Predicates_Like;
+    between = Rdb_Predicates_Between;
+    notBetween = Rdb_Predicates_NotBetween;
+    greaterThan = Rdb_Predicates_GreaterThan;
+    lessThan = Rdb_Predicates_LessThan;
+    greaterThanOrEqualTo = Rdb_Predicates_GreaterThanOrEqualTo;
+    lessThanOrEqualTo = Rdb_Predicates_LessThanOrEqualTo;
+    orderBy = Rdb_Predicates_OrderBy;
+    distinct = Rdb_Predicates_Distinct;
+    limit = Rdb_Predicates_Limit;
+    offset = Rdb_Predicates_Offset;
+    groupBy = Rdb_Predicates_GroupBy;
+    in = Rdb_Predicates_In;
+    notIn = Rdb_Predicates_NotIn;
+    clear = Rdb_Predicates_Clear;
+    destroyPredicates = Rdb_DestroyPredicates;
+}
+
+RdbPredicates &OHOS::RdbNdk::PredicateImpl::GetPredicates()
+{
+    return predicates_;
+}
+
+OH_Predicates *OH_Rdb_CreatePredicates(const char *table)
+{
+    if (table == nullptr) {
+        return nullptr;
+    }
+    return new OHOS::RdbNdk::PredicateImpl(table);
 }

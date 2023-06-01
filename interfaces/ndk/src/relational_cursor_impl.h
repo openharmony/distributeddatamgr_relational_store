@@ -16,23 +16,9 @@
 #ifndef RELATIONAL_CURSOR_IMPL_H
 #define RELATIONAL_CURSOR_IMPL_H
 
-#include "cursor.h"
+#include "oh_cursor.h"
 #include "result_set.h"
 #include <memory>
-
-int Rdb_GetColumnCount(OH_Cursor *cursor, int *count);
-int Rdb_GetColumnType(OH_Cursor *cursor, int32_t columnIndex, OH_ColumnType *columnType);
-int Rdb_GetColumnIndex(OH_Cursor *cursor, const char *name, int *columnIndex);
-int Rdb_GetColumnName(OH_Cursor *cursor, int32_t columnIndex, char *name, int length);
-int Rdb_GetRowCount(OH_Cursor *cursor, int *count);
-int Rdb_GoToNextRow(OH_Cursor *cursor);
-int Rdb_GetSize(OH_Cursor *cursor, int32_t columnIndex, size_t *size);
-int Rdb_GetText(OH_Cursor *cursor, int32_t columnIndex, char *value, int length);
-int Rdb_GetInt64(OH_Cursor *cursor, int32_t columnIndex, int64_t *value);
-int Rdb_GetReal(OH_Cursor *cursor, int32_t columnIndex, double *value);
-int Rdb_GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned char *value, int length);
-int Rdb_IsNull(OH_Cursor *cursor, int32_t columnIndex, bool *isNull);
-int Rdb_Close(OH_Cursor *cursor);
 
 namespace OHOS {
 namespace RdbNdk {

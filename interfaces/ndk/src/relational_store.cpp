@@ -25,7 +25,7 @@
 #include "relational_values_bucket_impl.h"
 #include "relational_error_code.h"
 #include "sqlite_global_config.h"
-#include "ndk_logger.h"
+#include "logger.h"
 using OHOS::RdbNdk::RDB_NDK_LABEL;
 
 OHOS::RdbNdk::StoreImpl::StoreImpl(std::shared_ptr<OHOS::NativeRdb::RdbStore> store)

@@ -16,30 +16,16 @@
 #ifndef RELATIONAL_VALUE_OBJECT_IMPL_H
 #define RELATIONAL_VALUE_OBJECT_IMPL_H
 
-#include "native_value_object.h"
+#include "oh_value_object.h"
 #include <vector>
 #include <string>
-
-int Rdb_ValueObject_PutInt64(OH_VObject *valueObject, int64_t *value, uint32_t count);
-int Rdb_ValueObject_PutDouble(OH_VObject *valueObject, double *value, uint32_t count);
-int Rdb_ValueObject_PutText(OH_VObject *valueObject, const char *value);
-int Rdb_ValueObject_PutTexts(OH_VObject *valueObject, const char **value, uint32_t count);
-int Rdb_DestroyValueObject(OH_VObject *valueObject);
 
 namespace OHOS {
 namespace RdbNdk {
 constexpr int RDB_VOBJECT_CID = 1234565; // The class id used to uniquely identify the OH_Rdb_VObject class.
 class ValueObjectImpl : public OH_VObject {
 public:
-    ValueObjectImpl()
-    {
-        id = RDB_VOBJECT_CID;
-        PutInt64 = Rdb_ValueObject_PutInt64;
-        PutDouble = Rdb_ValueObject_PutDouble;
-        PutText = Rdb_ValueObject_PutText;
-        PutTexts = Rdb_ValueObject_PutTexts;
-        DestroyValueObject = Rdb_DestroyValueObject;
-    }
+    ValueObjectImpl();
     std::vector<std::string> &getValue();
 private:
     std::vector<std::string> value;

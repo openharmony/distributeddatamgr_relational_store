@@ -38,9 +38,9 @@
  * @version 1.0
  */
 
-#include "cursor.h"
-#include "predicates.h"
-#include "native_values_bucket.h"
+#include "oh_cursor.h"
+#include "oh_predicates.h"
+#include "oh_values_bucket.h"
 
 #ifdef __cplusplus
 extern "C" {

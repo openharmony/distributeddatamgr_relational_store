@@ -13,31 +13,12 @@
  * limitations under the License.
  */
 
-#include "native_value_object.h"
+#include "oh_value_object.h"
 #include "relational_value_object_impl.h"
 #include "relational_error_code.h"
-#include "ndk_logger.h"
+#include "logger.h"
 
 using OHOS::RdbNdk::RDB_NDK_LABEL;
-OH_VObject *OH_Rdb_CreateValueObject()
-{
-    return new OHOS::RdbNdk::ValueObjectImpl();
-}
-
-std::vector<std::string> &OHOS::RdbNdk::ValueObjectImpl::getValue()
-{
-    return value;
-}
-
-int Rdb_DestroyValueObject(OH_VObject *valueObject)
-{
-    if (valueObject == nullptr || valueObject->id != OHOS::RdbNdk::RDB_VOBJECT_CID) {
-        LOG_ERROR("Parameters set error:valueObject is NULL ? %{public}d", (valueObject == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
-    }
-    delete static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
-}
 
 int Rdb_ValueObject_PutInt64(OH_VObject *valueObject, int64_t *value, uint32_t count)
 {
@@ -109,4 +90,34 @@ int Rdb_ValueObject_PutTexts(OH_VObject *valueObject, const char **value, uint32
         vObject->getValue().push_back(textValue);
     }
     return OH_Rdb_ErrCode::RDB_ERR_OK;
+}
+
+int Rdb_DestroyValueObject(OH_VObject *valueObject)
+{
+    if (valueObject == nullptr || valueObject->id != OHOS::RdbNdk::RDB_VOBJECT_CID) {
+        LOG_ERROR("Parameters set error:valueObject is NULL ? %{public}d", (valueObject == nullptr));
+        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+    }
+    delete static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject);
+    return OH_Rdb_ErrCode::RDB_ERR_OK;
+}
+
+OHOS::RdbNdk::ValueObjectImpl::ValueObjectImpl()
+{
+    id = RDB_VOBJECT_CID;
+    putInt64 = Rdb_ValueObject_PutInt64;
+    putDouble = Rdb_ValueObject_PutDouble;
+    putText = Rdb_ValueObject_PutText;
+    putTexts = Rdb_ValueObject_PutTexts;
+    destroyValueObject = Rdb_DestroyValueObject;
+}
+
+OH_VObject *OH_Rdb_CreateValueObject()
+{
+    return new OHOS::RdbNdk::ValueObjectImpl();
+}
+
+std::vector<std::string> &OHOS::RdbNdk::ValueObjectImpl::getValue()
+{
+    return value;
 }

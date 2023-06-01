@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "cursor.h"
+#include "oh_cursor.h"
 #include "relational_cursor_impl.h"
 #include "relational_error_code.h"
 #include "rdb_errno.h"
-#include "ndk_logger.h"
+#include "logger.h"
 
 #include <iostream>
 #include <sstream>
@@ -25,30 +25,6 @@
 
 #include "securec.h"
 using OHOS::RdbNdk::RDB_NDK_LABEL;
-OHOS::RdbNdk::CursorImpl::CursorImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
-{
-    id = RDB_CURSOR_CID;
-    resultSet_ = resultSet;
-
-    GetColumnCount = Rdb_GetColumnCount;
-    GetColumnType = Rdb_GetColumnType;
-    GetColumnIndex = Rdb_GetColumnIndex;
-    GetColumnName = Rdb_GetColumnName;
-    GetRowCount = Rdb_GetRowCount;
-    GoToNextRow = Rdb_GoToNextRow;
-    GetSize = Rdb_GetSize;
-    GetText = Rdb_GetText;
-    GetInt64 = Rdb_GetInt64;
-    GetReal = Rdb_GetReal;
-    GetBlob = Rdb_GetBlob;
-    IsNull = Rdb_IsNull;
-    Close = Rdb_Close;
-}
-
-std::shared_ptr<OHOS::NativeRdb::ResultSet> OHOS::RdbNdk::CursorImpl::GetResultSet()
-{
-    return resultSet_;
-}
 
 int Rdb_GetColumnCount(OH_Cursor *cursor, int *count)
 {
@@ -231,4 +207,29 @@ int Rdb_Close(OH_Cursor *cursor)
     delete tempCursor;
     tempCursor = nullptr;
     return errCode;
+}
+
+OHOS::RdbNdk::CursorImpl::CursorImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
+{
+    id = RDB_CURSOR_CID;
+    resultSet_ = resultSet;
+
+    getColumnCount = Rdb_GetColumnCount;
+    getColumnType = Rdb_GetColumnType;
+    getColumnIndex = Rdb_GetColumnIndex;
+    getColumnName = Rdb_GetColumnName;
+    getRowCount = Rdb_GetRowCount;
+    goToNextRow = Rdb_GoToNextRow;
+    getSize = Rdb_GetSize;
+    getText = Rdb_GetText;
+    getInt64 = Rdb_GetInt64;
+    getReal = Rdb_GetReal;
+    getBlob = Rdb_GetBlob;
+    isNull = Rdb_IsNull;
+    close = Rdb_Close;
+}
+
+std::shared_ptr<OHOS::NativeRdb::ResultSet> OHOS::RdbNdk::CursorImpl::GetResultSet()
+{
+    return resultSet_;
 }
