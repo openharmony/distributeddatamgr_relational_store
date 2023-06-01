@@ -115,6 +115,7 @@ if (is_ohos) {
       "${relational_store_native_path}/rdb/src/share_block.cpp",
       "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
       "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
+      "${relational_store_native_path}/rdb/src/task_executor.cpp",
       "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
@@ -162,6 +163,7 @@ if (is_ohos) {
       "${relational_store_native_path}/rdb/src/share_block.cpp",
       "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
       "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
+      "${relational_store_native_path}/rdb/src/task_executor.cpp",
       "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
@@ -247,7 +249,7 @@ if (is_ohos) {
     sources += [
       "${relational_store_native_path}/appdatafwk/src/mingw_endian.cpp",
       "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
-      "${relational_store_native_path}/rdb/mock/src/timer.cpp",
+      "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
     ]
 
     deps += [
@@ -271,7 +273,7 @@ if (is_ohos) {
     sources += [
       "${relational_store_native_path}/appdatafwk/src/mingw_endian.cpp",
       "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
-      "${relational_store_native_path}/rdb/mock/src/timer.cpp",
+      "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
     ]
 
     deps += [
@@ -345,7 +347,8 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+    sources +=
+        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
@@ -365,7 +368,8 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+    sources +=
+        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
@@ -432,7 +436,8 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+    sources +=
+        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
@@ -499,7 +504,8 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+    sources +=
+        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",

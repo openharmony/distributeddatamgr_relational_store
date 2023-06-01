@@ -107,8 +107,7 @@ public:
      *
      * @param columnName Indicates the name of the column.
      */
-    void Put(const std::string &columnName, const ValueObject &value);
-    void Put(const std::string &columnName, ValueObject &&value);
+    void Put(const std::string &columnName, ValueObject value);
 
     /**
      * @brief Delete the ValueObject object for the given column name.
