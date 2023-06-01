@@ -31,15 +31,17 @@ config("appdatafwk_public_config") {
 }
 
 ohos_shared_library("native_appdatafwk") {
-  sources = [ 
+  sources = [
+    "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
     "${relational_store_native_path}/appdatafwk/src/shared_block.cpp",
-    "${relational_store_native_path}/appdatafwk/src/serializable.cpp",  
   ]
 
   if (is_mingw) {
-    sources += [ "${relational_store_native_path}/appdatafwk/src/mingw_endian.cpp" ]
+    sources +=
+        [ "${relational_store_native_path}/appdatafwk/src/mingw_endian.cpp" ]
   } else if (is_ohos || is_mac || is_ios || is_android) {
-    sources += [ "${relational_store_native_path}/appdatafwk/src/general_endian.cpp" ]
+    sources +=
+        [ "${relational_store_native_path}/appdatafwk/src/general_endian.cpp" ]
   }
 
   configs = [ ":appdatafwk_config" ]
