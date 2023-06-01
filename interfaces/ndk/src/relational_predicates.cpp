@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "relational_predicates.h"
+#include "predicates.h"
 
 #include "relational_predicates_impl.h"
 #include "relational_value_object_impl.h"
@@ -36,18 +36,18 @@ OH_Predicates *OH_Rdb_CreatePredicates(const char *table)
     return new OHOS::RdbNdk::PredicateImpl(table);
 }
 
-int OH_Rdb_DestroyPredicates(OH_Predicates *predicates)
+int Rdb_DestroyPredicates(OH_Predicates *predicates)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
         return RDB_ERR_INVALID_ARGS;
     }
-    auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
-    delete tempPredicates;
+    delete predicates;
+    predicates = nullptr;
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-OH_Predicates PREDICATES_EqualTo(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
+OH_Predicates Rdb_Predicates_EqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
         || valueObject == nullptr) {
@@ -62,7 +62,7 @@ OH_Predicates PREDICATES_EqualTo(OH_Predicates *predicates, const char *field, O
     return *predicates;
 }
 
-OH_Predicates PREDICATES_NotEqualTo(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
+OH_Predicates Rdb_Predicates_NotEqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
         || valueObject == nullptr) {
@@ -77,7 +77,7 @@ OH_Predicates PREDICATES_NotEqualTo(OH_Predicates *predicates, const char *field
     return *predicates;
 }
 
-OH_Predicates PREDICATES_BeginWrap(OH_Predicates *predicates)
+OH_Predicates Rdb_Predicates_BeginWrap(OH_Predicates *predicates)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
@@ -88,7 +88,7 @@ OH_Predicates PREDICATES_BeginWrap(OH_Predicates *predicates)
     return *predicates;
 }
 
-OH_Predicates PREDICATES_EndWrap(OH_Predicates *predicates)
+OH_Predicates Rdb_Predicates_EndWrap(OH_Predicates *predicates)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
@@ -99,7 +99,7 @@ OH_Predicates PREDICATES_EndWrap(OH_Predicates *predicates)
     return *predicates;
 }
 
-OH_Predicates PREDICATES_Or(OH_Predicates *predicates)
+OH_Predicates Rdb_Predicates_Or(OH_Predicates *predicates)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
@@ -110,7 +110,7 @@ OH_Predicates PREDICATES_Or(OH_Predicates *predicates)
     return *predicates;
 }
 
-OH_Predicates PREDICATES_And(OH_Predicates *predicates)
+OH_Predicates Rdb_Predicates_And(OH_Predicates *predicates)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
@@ -121,7 +121,7 @@ OH_Predicates PREDICATES_And(OH_Predicates *predicates)
     return *predicates;
 }
 
-OH_Predicates PREDICATES_IsNull(OH_Predicates *predicates, const char *field)
+OH_Predicates Rdb_Predicates_IsNull(OH_Predicates *predicates, const char *field)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d",
@@ -133,7 +133,7 @@ OH_Predicates PREDICATES_IsNull(OH_Predicates *predicates, const char *field)
     return *predicates;
 }
 
-OH_Predicates PREDICATES_IsNotNull(OH_Predicates *predicates, const char *field)
+OH_Predicates Rdb_Predicates_IsNotNull(OH_Predicates *predicates, const char *field)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d",
@@ -145,7 +145,7 @@ OH_Predicates PREDICATES_IsNotNull(OH_Predicates *predicates, const char *field)
     return *predicates;
 }
 
-OH_Predicates PREDICATES_Like(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
+OH_Predicates Rdb_Predicates_Like(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
         || valueObject == nullptr) {
@@ -160,7 +160,7 @@ OH_Predicates PREDICATES_Like(OH_Predicates *predicates, const char *field, OH_R
     return *predicates;
 }
 
-OH_Predicates PREDICATES_Between(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
+OH_Predicates Rdb_Predicates_Between(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
         || valueObject == nullptr) {
@@ -180,7 +180,7 @@ OH_Predicates PREDICATES_Between(OH_Predicates *predicates, const char *field, O
     return *predicates;
 }
 
-OH_Predicates PREDICATES_NotBetween(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
+OH_Predicates Rdb_Predicates_NotBetween(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
         || valueObject == nullptr) {
@@ -199,7 +199,7 @@ OH_Predicates PREDICATES_NotBetween(OH_Predicates *predicates, const char *field
     return *predicates;
 }
 
-OH_Predicates PREDICATES_GreaterThan(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
+OH_Predicates Rdb_Predicates_GreaterThan(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
         || valueObject == nullptr) {
@@ -214,7 +214,7 @@ OH_Predicates PREDICATES_GreaterThan(OH_Predicates *predicates, const char *fiel
     return *predicates;
 }
 
-OH_Predicates PREDICATES_LessThan(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
+OH_Predicates Rdb_Predicates_LessThan(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
         || valueObject == nullptr) {
@@ -229,7 +229,7 @@ OH_Predicates PREDICATES_LessThan(OH_Predicates *predicates, const char *field, 
     return *predicates;
 }
 
-OH_Predicates PREDICATES_GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
+OH_Predicates Rdb_Predicates_GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
         || valueObject == nullptr) {
@@ -243,7 +243,7 @@ OH_Predicates PREDICATES_GreaterThanOrEqualTo(OH_Predicates *predicates, const c
     tempPredicates->GetPredicates().GreaterThanOrEqualTo(field, tempValue[0]);
     return *predicates;
 }
-OH_Predicates PREDICATES_LessThanOrEqualTo(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
+OH_Predicates Rdb_Predicates_LessThanOrEqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
         || valueObject == nullptr) {
@@ -258,7 +258,7 @@ OH_Predicates PREDICATES_LessThanOrEqualTo(OH_Predicates *predicates, const char
     return *predicates;
 }
 
-OH_Predicates PREDICATES_OrderBy(OH_Predicates *predicates, const char *field, OH_Rdb_OrderType type)
+OH_Predicates Rdb_Predicates_OrderBy(OH_Predicates *predicates, const char *field, OH_OrderType type)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d",
@@ -266,7 +266,7 @@ OH_Predicates PREDICATES_OrderBy(OH_Predicates *predicates, const char *field, O
         return *predicates;
     }
     auto tempPredicates = static_cast<OHOS::RdbNdk::PredicateImpl *>(predicates);
-    if (type == OH_Rdb_OrderType::DESC) {
+    if (type == OH_OrderType::DESC) {
         tempPredicates->GetPredicates().OrderByDesc(field);
         return *predicates;
     }
@@ -274,7 +274,7 @@ OH_Predicates PREDICATES_OrderBy(OH_Predicates *predicates, const char *field, O
     return *predicates;
 }
 
-OH_Predicates PREDICATES_Distinct(OH_Predicates *predicates)
+OH_Predicates Rdb_Predicates_Distinct(OH_Predicates *predicates)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
@@ -285,7 +285,7 @@ OH_Predicates PREDICATES_Distinct(OH_Predicates *predicates)
     return *predicates;
 }
 
-OH_Predicates PREDICATES_Limit(OH_Predicates *predicates, unsigned int value)
+OH_Predicates Rdb_Predicates_Limit(OH_Predicates *predicates, unsigned int value)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
@@ -296,7 +296,7 @@ OH_Predicates PREDICATES_Limit(OH_Predicates *predicates, unsigned int value)
     return *predicates;
 }
 
-OH_Predicates PREDICATES_Offset(OH_Predicates *predicates, unsigned int rowOffset)
+OH_Predicates Rdb_Predicates_Offset(OH_Predicates *predicates, unsigned int rowOffset)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
@@ -307,7 +307,7 @@ OH_Predicates PREDICATES_Offset(OH_Predicates *predicates, unsigned int rowOffse
     return *predicates;
 }
 
-OH_Predicates PREDICATES_GroupBy(OH_Predicates *predicates, char const *const *fields, int length)
+OH_Predicates Rdb_Predicates_GroupBy(OH_Predicates *predicates, char const *const *fields, int length)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || fields == nullptr) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, fields is NULL ? %{public}d,",
@@ -325,7 +325,7 @@ OH_Predicates PREDICATES_GroupBy(OH_Predicates *predicates, char const *const *f
     return *predicates;
 }
 
-OH_Predicates PREDICATES_In(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
+OH_Predicates Rdb_Predicates_In(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || valueObject == nullptr) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d,"
@@ -343,7 +343,7 @@ OH_Predicates PREDICATES_In(OH_Predicates *predicates, const char *field, OH_Rdb
     return *predicates;
 }
 
-OH_Predicates PREDICATES_NotIn(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject)
+OH_Predicates Rdb_Predicates_NotIn(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || valueObject == nullptr) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d, field is NULL ? %{public}d,"
@@ -361,7 +361,7 @@ OH_Predicates PREDICATES_NotIn(OH_Predicates *predicates, const char *field, OH_
     return *predicates;
 }
 
-OH_Predicates PREDICATES_Clear(OH_Predicates *predicates)
+OH_Predicates Rdb_Predicates_Clear(OH_Predicates *predicates)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));

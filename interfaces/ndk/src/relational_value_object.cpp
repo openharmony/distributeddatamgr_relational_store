@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#include "relational_value_object.h"
+#include "native_value_object.h"
 #include "relational_value_object_impl.h"
 #include "relational_error_code.h"
 #include "ndk_logger.h"
 
 using OHOS::RdbNdk::RDB_NDK_LABEL;
-OH_Rdb_VObject *OH_Rdb_CreateValueObject()
+OH_VObject *OH_Rdb_CreateValueObject()
 {
     return new OHOS::RdbNdk::ValueObjectImpl();
 }
@@ -29,7 +29,7 @@ std::vector<std::string> &OHOS::RdbNdk::ValueObjectImpl::getValue()
     return value;
 }
 
-int OH_Rdb_DestroyValueObject(OH_Rdb_VObject *valueObject)
+int Rdb_DestroyValueObject(OH_VObject *valueObject)
 {
     if (valueObject == nullptr || valueObject->id != OHOS::RdbNdk::RDB_VOBJECT_CID) {
         LOG_ERROR("Parameters set error:valueObject is NULL ? %{public}d", (valueObject == nullptr));
@@ -39,7 +39,7 @@ int OH_Rdb_DestroyValueObject(OH_Rdb_VObject *valueObject)
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int OH_ValueObject_PutInt64(OH_Rdb_VObject *valueObject, int64_t *value, uint32_t count)
+int Rdb_ValueObject_PutInt64(OH_VObject *valueObject, int64_t *value, uint32_t count)
 {
     if (valueObject == nullptr || value == nullptr || valueObject->id != OHOS::RdbNdk::RDB_VOBJECT_CID) {
         LOG_ERROR("Parameters set error:valueObject is NULL ? %{public}d, value is NULL ? %{public}d",
@@ -59,7 +59,7 @@ int OH_ValueObject_PutInt64(OH_Rdb_VObject *valueObject, int64_t *value, uint32_
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int OH_ValueObject_PutDouble(OH_Rdb_VObject *valueObject, double *value, uint32_t count)
+int Rdb_ValueObject_PutDouble(OH_VObject *valueObject, double *value, uint32_t count)
 {
     if (valueObject == nullptr || value == nullptr || valueObject->id != OHOS::RdbNdk::RDB_VOBJECT_CID) {
         LOG_ERROR("Parameters set error:valueObject is NULL ? %{public}d, value is NULL ? %{public}d",
@@ -79,7 +79,7 @@ int OH_ValueObject_PutDouble(OH_Rdb_VObject *valueObject, double *value, uint32_
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int OH_ValueObject_PutText(OH_Rdb_VObject *valueObject, const char *value)
+int Rdb_ValueObject_PutText(OH_VObject *valueObject, const char *value)
 {
     if (valueObject == nullptr || value == nullptr || valueObject->id != OHOS::RdbNdk::RDB_VOBJECT_CID) {
         LOG_ERROR("Parameters set error:valueObject is NULL ? %{public}d, value is NULL ? %{public}d",
@@ -94,7 +94,7 @@ int OH_ValueObject_PutText(OH_Rdb_VObject *valueObject, const char *value)
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int OH_ValueObject_PutTexts(OH_Rdb_VObject *valueObject, const char **value, uint32_t count)
+int Rdb_ValueObject_PutTexts(OH_VObject *valueObject, const char **value, uint32_t count)
 {
     if (valueObject == nullptr || value == nullptr || valueObject->id != OHOS::RdbNdk::RDB_VOBJECT_CID) {
         LOG_ERROR("Parameters set error:valueObject is NULL ? %{public}d, value is NULL ? %{public}d",

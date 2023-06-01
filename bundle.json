@@ -84,11 +84,11 @@
                     "name": "//foundation/distributeddatamgr/relational_store/interfaces/ndk:native_rdb_ndk",
                     "header": {
                         "header_files": [
-                            "relational_predicates.h",
+                            "predicates.h",
                             "relational_store.h",
-                            "relational_cursor.h",
-                            "relational_value_object.h",
-                            "relational_values_bucket.h"
+                            "cursor.h",
+                            "native_value_object.h",
+                            "native_values_bucket.h"
                         ],
                         "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/ndk/include"
                     }
