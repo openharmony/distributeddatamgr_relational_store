@@ -244,10 +244,13 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+    sources += [
+      "${relational_store_native_path}/appdatafwk/src/mingw_endian.cpp",
+      "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
+      "${relational_store_native_path}/rdb/mock/src/timer.cpp",
+    ]
 
     deps += [
-      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
     ]
@@ -265,10 +268,13 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
+    sources += [
+      "${relational_store_native_path}/appdatafwk/src/mingw_endian.cpp",
+      "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
+      "${relational_store_native_path}/rdb/mock/src/timer.cpp",
+    ]
 
     deps += [
-      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
     ]
