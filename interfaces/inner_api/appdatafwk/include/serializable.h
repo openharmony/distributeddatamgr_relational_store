@@ -24,7 +24,7 @@
 #endif
 #include <nlohmann/json.hpp>
 namespace OHOS {
-namespace RdbBMSAdapter {
+namespace AppDataFwk {
 #ifndef GET_NAME
 #define GET_NAME(value) #value
 #endif
