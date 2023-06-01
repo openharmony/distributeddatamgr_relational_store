@@ -94,14 +94,15 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
         pool_ = TaskExecutor::GetInstance().GetExecutor();
     }
     if (pool_ != nullptr) {
-        pool_->Execute([this]() {
+        auto param = syncerParam_;
+        pool_->Execute([param]() {
             std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-            int errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
+            int errCode = DistributedRdb::RdbManager::GetRdbService(param, service);
             if (errCode != E_OK || service == nullptr) {
                 LOG_ERROR("GetRdbService failed, err is %{public}d.", errCode);
                 return;
             }
-            errCode = service->GetSchema(syncerParam_);
+            errCode = service->GetSchema(param);
             if (errCode != E_OK) {
                 LOG_ERROR("GetSchema failed, err is %{public}d.", errCode);
             }
