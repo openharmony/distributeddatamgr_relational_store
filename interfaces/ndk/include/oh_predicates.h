@@ -51,9 +51,13 @@ extern "C" {
  * @since 10
  */
 enum OH_OrderType {
-    /** Ascend order.*/
+    /**
+     * Ascend order.
+     */
     ASC = 0,
-    /** Descend order.*/
+    /**
+     * Descend order.
+     */
     DESC = 1,
 };
 
@@ -63,7 +67,9 @@ enum OH_OrderType {
  * @since 10
  */
 typedef struct OH_Predicates {
-    /** The id used to uniquely identify the OH_Predicates struct. */
+    /**
+     * The id used to uniquely identify the OH_Predicates struct.
+     */
     int64_t id;
 
     /**
@@ -322,7 +328,6 @@ typedef struct OH_Predicates {
      * @return Returns the self.
      * @see OH_Predicates.
      * @since 10
-     * @version 1.0
      */
     OH_Predicates (*offset)(OH_Predicates *predicates, unsigned int rowOffset);
 
@@ -367,7 +372,6 @@ typedef struct OH_Predicates {
      * @return Returns the self.
      * @see OH_Predicates, OH_VObject.
      * @since 10
-     * @version 1.0
      */
     OH_Predicates (*notIn)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
@@ -378,7 +382,6 @@ typedef struct OH_Predicates {
      * @return Returns the self.
      * @see OH_Predicates.
      * @since 10
-     * @version 1.0
      */
     OH_Predicates (*clear)(OH_Predicates *predicates);
 

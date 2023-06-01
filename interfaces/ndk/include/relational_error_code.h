@@ -36,7 +36,6 @@
  * @brief Declaration error code information.
  *
  * @since 10
- * @version 1.0
  */
 
 #ifdef __cplusplus
@@ -47,14 +46,19 @@ extern "C" {
  * @brief Indicates the error code information.
  *
  * @since 10
- * @version 1.0
  */
 enum OH_Rdb_ErrCode {
-    /** Indicates the parameters is invalid.*/
+    /**
+     * Indicates the parameters is invalid.
+     */
     RDB_ERR_INVALID_ARGS = -2,
-    /** Indicates that the function execution exception.*/
+    /**
+     * Indicates that the function execution exception.
+     */
     RDB_ERR = -1,
-    /** Indicates that the function execution normal.*/
+    /**
+     * Indicates that the function execution normal.
+     */
     RDB_ERR_OK = 0
 };
 

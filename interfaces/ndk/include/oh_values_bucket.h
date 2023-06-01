@@ -35,7 +35,6 @@
  * @brief Define the type of stored key value pairs.
  *
  * @since 10
- * @version 1.0
  */
 
 #include <cstdint>
@@ -47,13 +46,16 @@ extern "C" {
  * @brief Define the OH_VBucket structure type.
  *
  * @since 10
- * @version 1.0
  */
-typedef struct OH_VBucket{
-    /** The id used to uniquely identify the OH_VBucket struct. */
+typedef struct OH_VBucket {
+    /**
+     * The id used to uniquely identify the OH_VBucket struct.
+     */
     int64_t id;
 
-    /** Indicates the capability of OH_VBucket. */
+    /**
+     * Indicates the capability of OH_VBucket.
+     */
     uint16_t capability;
 
     /**

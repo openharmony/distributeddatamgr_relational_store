@@ -84,11 +84,17 @@ enum OH_Rdb_SecurityLevel {
  * @since 10
  */
 typedef struct {
-    /** Indicates the path of the database. */
+    /**
+     * Indicates the path of the database.
+     */
     const char *path;
-    /** Indicates whether the database is encrypt. */
+    /**
+     * Indicates whether the database is encrypt.
+     */
     bool isEncrypt;
-    /** Indicates the security level {@link OH_Rdb_SecurityLevel} of the database. */
+    /**
+     * Indicates the security level {@link OH_Rdb_SecurityLevel} of the database.
+     */
     enum OH_Rdb_SecurityLevel securityLevel;
 } OH_Rdb_Config;
 
@@ -98,7 +104,9 @@ typedef struct {
  * @since 10
  */
 typedef struct {
-    /** The id used to uniquely identify the OH_Rdb_Store struct. */
+    /**
+     * The id used to uniquely identify the OH_Rdb_Store struct.
+     */
     int64_t id;
 } OH_Rdb_Store;
 

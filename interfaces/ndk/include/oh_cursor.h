@@ -50,15 +50,25 @@ extern "C" {
  * @since 10
  */
 enum OH_ColumnType {
-    /** Indicates the column type is NULL.*/
+    /**
+     * Indicates the column type is NULL.
+     */
     TYPE_NULL = 0,
-    /** Indicates the column type is INT64.*/
+    /**
+     * Indicates the column type is INT64.
+     */
     TYPE_INT64,
-    /** Indicates the column type is REAL.*/
+    /**
+     * Indicates the column type is REAL.
+     */
     TYPE_REAL,
-    /** Indicates the column type is TEXT.*/
+    /**
+     * Indicates the column type is TEXT.
+     */
     TYPE_TEXT,
-    /** Indicates the column type is BLOB.*/
+    /**
+     * Indicates the column type is BLOB.
+     */
     TYPE_BLOB,
 };
 
@@ -70,7 +80,9 @@ enum OH_ColumnType {
  * @since 10
  */
 typedef struct OH_Cursor {
-    /** The id used to uniquely identify the OH_Cursor struct. */
+    /**
+     * The id used to uniquely identify the OH_Cursor struct.
+     */
     int64_t id;
     /**
      * @brief Function pointer. Obtains the total number of columns.
