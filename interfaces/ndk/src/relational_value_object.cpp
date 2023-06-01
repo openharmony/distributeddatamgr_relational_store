@@ -112,11 +112,6 @@ OHOS::RdbNdk::ValueObjectImpl::ValueObjectImpl()
     destroyValueObject = Rdb_DestroyValueObject;
 }
 
-OH_VObject *OH_Rdb_CreateValueObject()
-{
-    return new OHOS::RdbNdk::ValueObjectImpl();
-}
-
 std::vector<std::string> &OHOS::RdbNdk::ValueObjectImpl::getValue()
 {
     return value;

@@ -1,5 +1,7 @@
 [
 	{"name":"OH_Rdb_CreatePredicates" },
+	{"name":"OH_Rdb_CreateValueObject" },
+	{"name":"OH_Rdb_CreateValuesBucket" },
 	{"name":"OH_Rdb_GetOrOpen" },
 	{"name":"OH_Rdb_CloseStore" },
 	{"name":"OH_Rdb_DeleteStore" },
@@ -15,7 +17,5 @@
 	{"name":"OH_Rdb_Backup" },
 	{"name":"OH_Rdb_Restore"},
 	{"name":"OH_Rdb_GetVersion"},
-	{"name":"OH_Rdb_SetVersion"},
-	{"name":"OH_Rdb_CreateValueObject" },
-	{"name":"OH_Rdb_CreateValuesBucket" },
+	{"name":"OH_Rdb_SetVersion"}
 ]

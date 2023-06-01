@@ -129,11 +129,6 @@ OHOS::RdbNdk::ValuesBucketImpl::ValuesBucketImpl()
     destroyValuesBucket = Rdb_DestroyValuesBucket;
 }
 
-OH_VBucket *OH_Rdb_CreateValuesBucket()
-{
-    return new OHOS::RdbNdk::ValuesBucketImpl();
-}
-
 OHOS::NativeRdb::ValuesBucket &OHOS::RdbNdk::ValuesBucketImpl::getValuesBucket()
 {
     return valuesBucket_;

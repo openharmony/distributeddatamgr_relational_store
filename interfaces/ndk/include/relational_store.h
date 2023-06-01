@@ -35,11 +35,11 @@
  * @brief Provides database related functions and enumerations.
  *
  * @since 10
- * @version 1.0
  */
 
 #include "oh_cursor.h"
 #include "oh_predicates.h"
+#include "oh_value_object.h"
 #include "oh_values_bucket.h"
 
 #ifdef __cplusplus
@@ -50,7 +50,6 @@ extern "C" {
  * @brief Describe the security level of the database.
  *
  * @since 10
- * @version 1.0
  */
 enum OH_Rdb_SecurityLevel {
     /**
@@ -83,7 +82,6 @@ enum OH_Rdb_SecurityLevel {
  * @brief Manages relational database configurations.
  *
  * @since 10
- * @version 1.0
  */
 typedef struct {
     /** Indicates the path of the database. */
@@ -98,7 +96,6 @@ typedef struct {
  * @brief Define OH_Rdb_Store type.
  *
  * @since 10
- * @version 1.0
  */
 typedef struct {
     /** The id used to uniquely identify the OH_Rdb_Store struct. */
@@ -122,7 +119,6 @@ OH_VObject *OH_Rdb_CreateValueObject();
  * otherwise NULL is returned.
  * @see OH_VBucket.
  * @since 10
- * @version 1.0
  */
 OH_VBucket *OH_Rdb_CreateValuesBucket();
 
@@ -134,7 +130,6 @@ OH_VBucket *OH_Rdb_CreateValuesBucket();
  * otherwise NULL is returned.
  * @see OH_Predicates.
  * @since 10
- * @version 1.0
  */
 OH_Predicates *OH_Rdb_CreatePredicates(const char *table);
 
@@ -152,7 +147,6 @@ OH_Predicates *OH_Rdb_CreatePredicates(const char *table);
  * otherwise NULL is returned.
  * @see OH_Rdb_Config, OH_Rdb_Store.
  * @since 10
- * @version 1.0
  */
 OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode);
 
@@ -164,7 +158,6 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode);
  * while failure returns a specific error code. Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Store, OH_Rdb_ErrCode.
  * @since 10
- * @version 1.0
  */
 int OH_Rdb_CloseStore(OH_Rdb_Store *store);
 
@@ -176,7 +169,6 @@ int OH_Rdb_CloseStore(OH_Rdb_Store *store);
  * while failure returns a specific error code. Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_ErrCode.
  * @since 10
- * @version 1.0
  */
 int OH_Rdb_DeleteStore(const char *path);
 
@@ -190,7 +182,6 @@ int OH_Rdb_DeleteStore(const char *path);
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Store, OH_VBucket, OH_Rdb_ErrCode.
  * @since 10
- * @version 1.0
  */
 int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_VBucket *valuesBucket);
 
@@ -205,7 +196,6 @@ int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_VBucket *valuesBuck
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Store, OH_Bucket, OH_Predicates, OH_Rdb_ErrCode.
  * @since 10
- * @version 1.0
  */
 int OH_Rdb_Update(OH_Rdb_Store *store, OH_VBucket *valuesBucket, OH_Predicates *predicates);
 
@@ -219,7 +209,6 @@ int OH_Rdb_Update(OH_Rdb_Store *store, OH_VBucket *valuesBucket, OH_Predicates *
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Store, OH_Predicates, OH_Rdb_ErrCode.
  * @since 10
- * @version 1.0
  */
 int OH_Rdb_Delete(OH_Rdb_Store *store, OH_Predicates *predicates);
 
@@ -235,7 +224,6 @@ int OH_Rdb_Delete(OH_Rdb_Store *store, OH_Predicates *predicates);
  * otherwise NULL is returned.
  * @see OH_Rdb_Store, OH_Predicates, OH_Cursor.
  * @since 10
- * @version 1.0
  */
 OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const char *const *columnNames, int length);
 
@@ -247,7 +235,6 @@ OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const ch
  * @return Returns the status code of the execution.
  * @see OH_Rdb_Store.
  * @since 10
- * @version 1.0
  */
 int OH_Rdb_Execute(OH_Rdb_Store *store, const char *sql);
 
@@ -260,7 +247,6 @@ int OH_Rdb_Execute(OH_Rdb_Store *store, const char *sql);
  * otherwise NULL is returned.
  * @see OH_Rdb_Store.
  * @since 10
- * @version 1.0
  */
 OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, const char *sql);
 
@@ -271,7 +257,6 @@ OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, const char *sql);
  * @return Returns the status code of the execution.
  * @see OH_Rdb_Store.
  * @since 10
- * @version 1.0
  */
 int OH_Rdb_BeginTransaction(OH_Rdb_Store *store);
 
@@ -282,7 +267,6 @@ int OH_Rdb_BeginTransaction(OH_Rdb_Store *store);
  * @return Returns the status code of the execution.
  * @see OH_Rdb_Store.
  * @since 10
- * @version 1.0
  */
 int OH_Rdb_RollBack(OH_Rdb_Store *store);
 
@@ -293,7 +277,6 @@ int OH_Rdb_RollBack(OH_Rdb_Store *store);
  * @return Returns the status code of the execution.
  * @see OH_Rdb_Store.
  * @since 10
- * @version 1.0
  */
 int OH_Rdb_Commit(OH_Rdb_Store *store);
 
@@ -305,7 +288,6 @@ int OH_Rdb_Commit(OH_Rdb_Store *store);
  * @return Returns the status code of the execution.
  * @see OH_Rdb_Store.
  * @since 10
- * @version 1.0
  */
 int OH_Rdb_Backup(OH_Rdb_Store *store, const char *databasePath);
 
@@ -317,7 +299,6 @@ int OH_Rdb_Backup(OH_Rdb_Store *store, const char *databasePath);
  * @return Returns the status code of the execution.
  * @see OH_Rdb_Store.
  * @since 10
- * @version 1.0
  */
 int OH_Rdb_Restore(OH_Rdb_Store *store, const char *databasePath);
 
@@ -329,7 +310,6 @@ int OH_Rdb_Restore(OH_Rdb_Store *store, const char *databasePath);
  * @return Returns the status code of the execution.
  * @see OH_Rdb_Store.
  * @since 10
- * @version 1.0
  */
 int OH_Rdb_GetVersion(OH_Rdb_Store *store, int *version);
 
@@ -341,7 +321,6 @@ int OH_Rdb_GetVersion(OH_Rdb_Store *store, int *version);
  * @return Returns the status code of the execution.
  * @see OH_Rdb_Store.
  * @since 10
- * @version 1.0
  */
 int OH_Rdb_SetVersion(OH_Rdb_Store *store, int version);
 

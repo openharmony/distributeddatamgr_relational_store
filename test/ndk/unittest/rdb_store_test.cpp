@@ -77,70 +77,70 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_001, TestSize.Level1)
 {
     int errCode = 0;
     OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->PutInt64(valueBucket, "id", 1);
-    valueBucket->PutText(valueBucket, "data1", "zhangSan");
-    valueBucket->PutInt64(valueBucket, "data2", 12800);
-    valueBucket->PutReal(valueBucket, "data3", 100.1);
+    valueBucket->putInt64(valueBucket, "id", 1);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    valueBucket->putReal(valueBucket, "data3", 100.1);
     uint8_t arr[] = {1, 2, 3, 4, 5};
     int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->PutBlob(valueBucket, "data4", arr, len);
-    valueBucket->PutText(valueBucket, "data5", "ABCDEFG");
+    valueBucket->putBlob(valueBucket, "data4", arr, len);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
     EXPECT_EQ(errCode, 1);
 
-    valueBucket->Clear(valueBucket);
-    valueBucket->PutText(valueBucket, "data1", "liSi");
-    valueBucket->PutInt64(valueBucket, "data2", 13800);
-    valueBucket->PutReal(valueBucket, "data3", 200.1);
-    valueBucket->PutNull(valueBucket, "data5");
+    valueBucket->clear(valueBucket);
+    valueBucket->putText(valueBucket, "data1", "liSi");
+    valueBucket->putInt64(valueBucket, "data2", 13800);
+    valueBucket->putReal(valueBucket, "data3", 200.1);
+    valueBucket->putNull(valueBucket, "data5");
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data1Value = "zhangSan";
-    valueObject->PutText(valueObject, data1Value);
-    predicates->EqualTo(predicates, "data1", valueObject);
+    valueObject->putText(valueObject, data1Value);
+    predicates->equalTo(predicates, "data1", valueObject);
     errCode = OH_Rdb_Update(storeTestRdbStore_, valueBucket, predicates);
     EXPECT_EQ(errCode, 1);
 
-    predicates->Clear(predicates);
+    predicates->clear(predicates);
     OH_Cursor *cursor = OH_Rdb_Query(storeTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);
 
     int rowCount = 0;
-    cursor->GetRowCount(cursor, &rowCount);
+    cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
 
-    errCode = cursor->GoToNextRow(cursor);
+    errCode = cursor->goToNextRow(cursor);
     EXPECT_EQ(errCode, 0);
 
     size_t size = 0;
-    cursor->GetSize(cursor, 1, &size);
+    cursor->getSize(cursor, 1, &size);
     char data1Value_1[size + 1];
-    cursor->GetText(cursor, 1, data1Value_1, size + 1);
+    cursor->getText(cursor, 1, data1Value_1, size + 1);
     EXPECT_EQ(strcmp(data1Value_1, "liSi"), 0);
 
     int64_t data2Value;
-    cursor->GetInt64(cursor, 2, &data2Value);
+    cursor->getInt64(cursor, 2, &data2Value);
     EXPECT_EQ(data2Value, 13800);
 
     double data3Value;
-    cursor->GetReal(cursor, 3, &data3Value);
+    cursor->getReal(cursor, 3, &data3Value);
     EXPECT_EQ(data3Value, 200.1);
 
-    cursor->GetSize(cursor, 4, &size);
+    cursor->getSize(cursor, 4, &size);
     unsigned char data4Value[size];
-    cursor->GetBlob(cursor, 4, data4Value, size);
+    cursor->getBlob(cursor, 4, data4Value, size);
     EXPECT_EQ(data4Value[0], 1);
     EXPECT_EQ(data4Value[1], 2);
 
     bool isNull = false;
-    cursor->IsNull(cursor, 5, &isNull);
+    cursor->isNull(cursor, 5, &isNull);
     EXPECT_EQ(isNull, true);
 
-    valueObject->DestroyValueObject(valueObject);
-    valueBucket->DestroyValuesBucket(valueBucket);
-    predicates->DestroyPredicates(predicates);
-    cursor->Close(cursor);
+    valueObject->destroyValueObject(valueObject);
+    valueBucket->destroyValuesBucket(valueBucket);
+    predicates->destroyPredicates(predicates);
+    cursor->close(cursor);
 }
 
 /**
@@ -152,31 +152,31 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_002, TestSize.Level1)
 {
     int errCode = 0;
     OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->PutInt64(valueBucket, "id", 1);
-    valueBucket->PutText(valueBucket, "data1", "zhangSan");
-    valueBucket->PutInt64(valueBucket, "data2", 12800);
-    valueBucket->PutReal(valueBucket, "data3", 100.1);
+    valueBucket->putInt64(valueBucket, "id", 1);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    valueBucket->putReal(valueBucket, "data3", 100.1);
     uint8_t arr[] = {1, 2, 3, 4, 5};
     int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->PutBlob(valueBucket, "data4", arr, len);
-    valueBucket->PutText(valueBucket, "data5", "ABCDEFG");
+    valueBucket->putBlob(valueBucket, "data4", arr, len);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
     EXPECT_EQ(errCode, 1);
 
-    valueBucket->Clear(valueBucket);
-    valueBucket->PutInt64(valueBucket, "id", 2);
-    valueBucket->PutText(valueBucket, "data1", "liSi");
-    valueBucket->PutInt64(valueBucket, "data2", 13800);
-    valueBucket->PutReal(valueBucket, "data3", 200.1);
-    valueBucket->PutText(valueBucket, "data5", "ABCDEFGH");
+    valueBucket->clear(valueBucket);
+    valueBucket->putInt64(valueBucket, "id", 2);
+    valueBucket->putText(valueBucket, "data1", "liSi");
+    valueBucket->putInt64(valueBucket, "data2", 13800);
+    valueBucket->putReal(valueBucket, "data3", 200.1);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFGH");
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
     EXPECT_EQ(errCode, 2);
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_Rdb_VObject *valueObject = OH_Rdb_CreateValueObject();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data1Value = "zhangSan";
-    valueObject->PutText(valueObject, data1Value);
-    predicates->EqualTo(predicates, "data1", valueObject);
+    valueObject->putText(valueObject, data1Value);
+    predicates->equalTo(predicates, "data1", valueObject);
     errCode = OH_Rdb_Delete(storeTestRdbStore_, predicates);
     EXPECT_EQ(errCode, 1);
 
@@ -184,39 +184,39 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_002, TestSize.Level1)
     OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
 
     int rowCount = 0;
-    cursor->GetRowCount(cursor, &rowCount);
+    cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
 
-    errCode = cursor->GoToNextRow(cursor);
+    errCode = cursor->goToNextRow(cursor);
     EXPECT_EQ(errCode, 0);
 
     size_t size = 0;
-    cursor->GetSize(cursor, 1, &size);
+    cursor->getSize(cursor, 1, &size);
     char data1Value_1[size + 1];
-    cursor->GetText(cursor, 1, data1Value_1, size + 1);
+    cursor->getText(cursor, 1, data1Value_1, size + 1);
     EXPECT_EQ(strcmp(data1Value_1, "liSi"), 0);
 
     int64_t data2Value;
-    cursor->GetInt64(cursor, 2, &data2Value);
+    cursor->getInt64(cursor, 2, &data2Value);
     EXPECT_EQ(data2Value, 13800);
 
     double data3Value;
-    cursor->GetReal(cursor, 3, &data3Value);
+    cursor->getReal(cursor, 3, &data3Value);
     EXPECT_EQ(data3Value, 200.1);
 
     bool isNull = false;
-    cursor->IsNull(cursor, 4, &isNull);
+    cursor->isNull(cursor, 4, &isNull);
     EXPECT_EQ(isNull, true);
 
-    cursor->GetSize(cursor, 5, &size);
+    cursor->getSize(cursor, 5, &size);
     char data5Value[size + 1];
-    cursor->GetText(cursor, 5, data5Value, size + 1);
+    cursor->getText(cursor, 5, data5Value, size + 1);
     EXPECT_EQ(strcmp(data5Value, "ABCDEFGH"), 0);
 
-    valueObject->DestroyValueObject(valueObject);
-    valueBucket->DestroyValuesBucket(valueBucket);
-    predicates->DestroyPredicates(predicates);
-    cursor->Close(cursor);
+    valueObject->destroyValueObject(valueObject);
+    valueBucket->destroyValuesBucket(valueBucket);
+    predicates->destroyPredicates(predicates);
+    cursor->close(cursor);
 }
 
 /**
@@ -230,23 +230,23 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_003, TestSize.Level1)
 
     int errCode = 0;
     OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->PutInt64(valueBucket, "id", 1);
-    valueBucket->PutText(valueBucket, "data1", "zhangSan");
-    valueBucket->PutInt64(valueBucket, "data2", 12800);
-    valueBucket->PutReal(valueBucket, "data3", 100.1);
+    valueBucket->putInt64(valueBucket, "id", 1);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    valueBucket->putReal(valueBucket, "data3", 100.1);
     uint8_t arr[] = {1, 2, 3, 4, 5};
     int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->PutBlob(valueBucket, "data4", arr, len);
-    valueBucket->PutText(valueBucket, "data5", "ABCDEFG");
+    valueBucket->putBlob(valueBucket, "data4", arr, len);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
     EXPECT_EQ(errCode, 1);
 
-    valueBucket->Clear(valueBucket);
-    valueBucket->PutInt64(valueBucket, "id", 2);
-    valueBucket->PutText(valueBucket, "data1", "liSi");
-    valueBucket->PutInt64(valueBucket, "data2", 13800);
-    valueBucket->PutReal(valueBucket, "data3", 200.1);
-    valueBucket->PutText(valueBucket, "data5", "ABCDEFGH");
+    valueBucket->clear(valueBucket);
+    valueBucket->putInt64(valueBucket, "id", 2);
+    valueBucket->putText(valueBucket, "data1", "liSi");
+    valueBucket->putInt64(valueBucket, "data2", 13800);
+    valueBucket->putReal(valueBucket, "data3", 200.1);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFGH");
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
     EXPECT_EQ(errCode, 2);
 
@@ -256,11 +256,11 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_003, TestSize.Level1)
     OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
 
     int rowCount = 0;
-    cursor->GetRowCount(cursor, &rowCount);
+    cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
 
-    valueBucket->DestroyValuesBucket(valueBucket);
-    cursor->Close(cursor);
+    valueBucket->destroyValuesBucket(valueBucket);
+    cursor->close(cursor);
 }
 
 /**
@@ -274,23 +274,23 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_004, TestSize.Level1)
 
     int errCode = 0;
     OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->PutInt64(valueBucket, "id", 1);
-    valueBucket->PutText(valueBucket, "data1", "zhangSan");
-    valueBucket->PutInt64(valueBucket, "data2", 12800);
-    valueBucket->PutReal(valueBucket, "data3", 100.1);
+    valueBucket->putInt64(valueBucket, "id", 1);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    valueBucket->putReal(valueBucket, "data3", 100.1);
     uint8_t arr[] = {1, 2, 3, 4, 5};
     int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->PutBlob(valueBucket, "data4", arr, len);
-    valueBucket->PutText(valueBucket, "data5", "ABCDEFG");
+    valueBucket->putBlob(valueBucket, "data4", arr, len);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
     EXPECT_EQ(errCode, 1);
 
-    valueBucket->Clear(valueBucket);
-    valueBucket->PutInt64(valueBucket, "id", 2);
-    valueBucket->PutText(valueBucket, "data1", "liSi");
-    valueBucket->PutInt64(valueBucket, "data2", 13800);
-    valueBucket->PutReal(valueBucket, "data3", 200.1);
-    valueBucket->PutText(valueBucket, "data5", "ABCDEFGH");
+    valueBucket->clear(valueBucket);
+    valueBucket->putInt64(valueBucket, "id", 2);
+    valueBucket->putText(valueBucket, "data1", "liSi");
+    valueBucket->putInt64(valueBucket, "data2", 13800);
+    valueBucket->putReal(valueBucket, "data3", 200.1);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFGH");
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
     EXPECT_EQ(errCode, 2);
 
@@ -300,11 +300,11 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_004, TestSize.Level1)
     OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
 
     int rowCount = 0;
-    cursor->GetRowCount(cursor, &rowCount);
+    cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 0);
 
-    valueBucket->DestroyValuesBucket(valueBucket);
-    cursor->Close(cursor);
+    valueBucket->destroyValuesBucket(valueBucket);
+    cursor->close(cursor);
 }
 
 /**
@@ -316,14 +316,14 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_005, TestSize.Level1)
 {
     int errCode = 0;
     OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->PutInt64(valueBucket, "id", 1);
-    valueBucket->PutText(valueBucket, "data1", "zhangSan");
-    valueBucket->PutInt64(valueBucket, "data2", 12800);
-    valueBucket->PutReal(valueBucket, "data3", 100.1);
+    valueBucket->putInt64(valueBucket, "id", 1);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    valueBucket->putReal(valueBucket, "data3", 100.1);
     uint8_t arr[] = {1, 2, 3, 4, 5};
     int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->PutBlob(valueBucket, "data4", arr, len);
-    valueBucket->PutText(valueBucket, "data5", "ABCDEFG");
+    valueBucket->putBlob(valueBucket, "data4", arr, len);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
     EXPECT_EQ(errCode, 1);
 
@@ -331,9 +331,9 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_005, TestSize.Level1)
     OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
 
     int rowCount = 0;
-    cursor->GetRowCount(cursor, &rowCount);
+    cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
-    cursor->Close(cursor);
+    cursor->close(cursor);
 
     std::string backupPath = RDB_TEST_PATH + "backup.db";
     errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath.c_str());
@@ -343,39 +343,39 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_005, TestSize.Level1)
     EXPECT_EQ(errCode, 0);
 
     cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
-    cursor->GetRowCount(cursor, &rowCount);
+    cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
 
-    errCode = cursor->GoToNextRow(cursor);
+    errCode = cursor->goToNextRow(cursor);
     EXPECT_EQ(errCode, 0);
 
     size_t size = 0;
-    cursor->GetSize(cursor, 1, &size);
+    cursor->getSize(cursor, 1, &size);
     char data1Value[size + 1];
-    cursor->GetText(cursor, 1, data1Value, size + 1);
+    cursor->getText(cursor, 1, data1Value, size + 1);
     EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
 
     int64_t data2Value;
-    cursor->GetInt64(cursor, 2, &data2Value);
+    cursor->getInt64(cursor, 2, &data2Value);
     EXPECT_EQ(data2Value, 12800);
 
     double data3Value;
-    cursor->GetReal(cursor, 3, &data3Value);
+    cursor->getReal(cursor, 3, &data3Value);
     EXPECT_EQ(data3Value, 100.1);
 
-    cursor->GetSize(cursor, 4, &size);
+    cursor->getSize(cursor, 4, &size);
     unsigned char data4Value[size];
-    cursor->GetBlob(cursor, 4, data4Value, size);
+    cursor->getBlob(cursor, 4, data4Value, size);
     EXPECT_EQ(data4Value[0], 1);
     EXPECT_EQ(data4Value[1], 2);
 
-    cursor->GetSize(cursor, 5, &size);
+    cursor->getSize(cursor, 5, &size);
     char data5Value[size + 1];
-    cursor->GetText(cursor, 5, data5Value, size + 1);
+    cursor->getText(cursor, 5, data5Value, size + 1);
     EXPECT_EQ(strcmp(data5Value, "ABCDEFG"), 0);
 
-    valueBucket->DestroyValuesBucket(valueBucket);
-    cursor->Close(cursor);
+    valueBucket->destroyValuesBucket(valueBucket);
+    cursor->close(cursor);
 }
 
 /**
@@ -407,32 +407,32 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_007, TestSize.Level1)
 {
     int errCode = 0;
     OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->PutInt64(valueBucket, "id", 1);
-    valueBucket->PutText(valueBucket, "data1", "zhangSan");
-    valueBucket->PutInt64(valueBucket, "data2", 12800);
-    valueBucket->PutReal(valueBucket, "data3", 100.1);
+    valueBucket->putInt64(valueBucket, "id", 1);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    valueBucket->putReal(valueBucket, "data3", 100.1);
     uint8_t arr[] = {1, 2, 3, 4, 5};
     int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->PutBlob(valueBucket, "data4", arr, len);
-    valueBucket->PutText(valueBucket, "data5", "ABCDEFG");
+    valueBucket->putBlob(valueBucket, "data4", arr, len);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
     EXPECT_EQ(errCode, 1);
 
-    valueBucket->Clear(valueBucket);
-    valueBucket->PutInt64(valueBucket, "id", 2);
-    valueBucket->PutText(valueBucket, "data1", "liSi");
-    valueBucket->PutInt64(valueBucket, "data2", 13800);
-    valueBucket->PutReal(valueBucket, "data3", 200.1);
-    valueBucket->PutText(valueBucket, "data5", "ABCDEFGH");
+    valueBucket->clear(valueBucket);
+    valueBucket->putInt64(valueBucket, "id", 2);
+    valueBucket->putText(valueBucket, "data1", "liSi");
+    valueBucket->putInt64(valueBucket, "data2", 13800);
+    valueBucket->putReal(valueBucket, "data3", 200.1);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFGH");
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "wrong", valueBucket);
     EXPECT_EQ(errCode, -1);
 
-    valueBucket->Clear(valueBucket);
-    valueBucket->PutInt64(valueBucket, "id", 3);
-    valueBucket->PutText(valueBucket, "data1", "wangWu");
-    valueBucket->PutInt64(valueBucket, "data2", 14800);
-    valueBucket->PutReal(valueBucket, "data3", 300.1);
-    valueBucket->PutText(valueBucket, "data5", "ABCDEFGHI");
+    valueBucket->clear(valueBucket);
+    valueBucket->putInt64(valueBucket, "id", 3);
+    valueBucket->putText(valueBucket, "data1", "wangWu");
+    valueBucket->putInt64(valueBucket, "data2", 14800);
+    valueBucket->putReal(valueBucket, "data3", 300.1);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFGHI");
     char *table = NULL;
     errCode = OH_Rdb_Insert(storeTestRdbStore_, table, valueBucket);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS);
@@ -441,11 +441,11 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_007, TestSize.Level1)
     OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
 
     int rowCount = 0;
-    cursor->GetRowCount(cursor, &rowCount);
+    cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
 
-    valueBucket->DestroyValuesBucket(valueBucket);
-    cursor->Close(cursor);
+    valueBucket->destroyValuesBucket(valueBucket);
+    cursor->close(cursor);
 }
 
 /**
@@ -457,28 +457,28 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_008, TestSize.Level1)
 {
     int errCode = 0;
     OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->PutInt64(valueBucket, "id", 1);
-    valueBucket->PutText(valueBucket, "data1", "zhangSan");
-    valueBucket->PutInt64(valueBucket, "data2", 12800);
-    valueBucket->PutReal(valueBucket, "data3", 100.1);
+    valueBucket->putInt64(valueBucket, "id", 1);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    valueBucket->putReal(valueBucket, "data3", 100.1);
     uint8_t arr[] = {1, 2, 3, 4, 5};
     int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->PutBlob(valueBucket, "data4", arr, len);
-    valueBucket->PutText(valueBucket, "data5", "ABCDEFG");
+    valueBucket->putBlob(valueBucket, "data4", arr, len);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
     EXPECT_EQ(errCode, 1);
 
-    valueBucket->Clear(valueBucket);
-    valueBucket->PutText(valueBucket, "data1", "liSi");
-    valueBucket->PutInt64(valueBucket, "data2", 13800);
-    valueBucket->PutReal(valueBucket, "data3", 200.1);
-    valueBucket->PutNull(valueBucket, "data5");
+    valueBucket->clear(valueBucket);
+    valueBucket->putText(valueBucket, "data1", "liSi");
+    valueBucket->putInt64(valueBucket, "data2", 13800);
+    valueBucket->putReal(valueBucket, "data3", 200.1);
+    valueBucket->putNull(valueBucket, "data5");
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("wrong");
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data1Value = "zhangSan";
-    valueObject->PutText(valueObject, data1Value);
-    predicates->EqualTo(predicates, "data1", valueObject);
+    valueObject->putText(valueObject, data1Value);
+    predicates->equalTo(predicates, "data1", valueObject);
     errCode = OH_Rdb_Update(storeTestRdbStore_, valueBucket, predicates);
     EXPECT_EQ(errCode, -1);
 
@@ -493,42 +493,42 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_008, TestSize.Level1)
     EXPECT_NE(cursor, NULL);
 
     int rowCount = 0;
-    cursor->GetRowCount(cursor, &rowCount);
+    cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
 
-    errCode = cursor->GoToNextRow(cursor);
+    errCode = cursor->goToNextRow(cursor);
     EXPECT_EQ(errCode, 0);
 
     size_t size = 0;
-    cursor->GetSize(cursor, 1, &size);
+    cursor->getSize(cursor, 1, &size);
     char data1Value_1[size + 1];
-    cursor->GetText(cursor, 1, data1Value_1, size + 1);
+    cursor->getText(cursor, 1, data1Value_1, size + 1);
     EXPECT_EQ(strcmp(data1Value_1, "zhangSan"), 0);
 
     int64_t data2Value;
-    cursor->GetInt64(cursor, 2, &data2Value);
+    cursor->getInt64(cursor, 2, &data2Value);
     EXPECT_EQ(data2Value, 12800);
 
     double data3Value;
-    cursor->GetReal(cursor, 3, &data3Value);
+    cursor->getReal(cursor, 3, &data3Value);
     EXPECT_EQ(data3Value, 100.1);
 
-    cursor->GetSize(cursor, 4, &size);
+    cursor->getSize(cursor, 4, &size);
     unsigned char data4Value[size];
-    cursor->GetBlob(cursor, 4, data4Value, size);
+    cursor->getBlob(cursor, 4, data4Value, size);
     EXPECT_EQ(data4Value[0], 1);
     EXPECT_EQ(data4Value[1], 2);
 
-    cursor->GetSize(cursor, 5, &size);
+    cursor->getSize(cursor, 5, &size);
     char data5Value[size + 1];
-    cursor->GetText(cursor, 5, data5Value, size + 1);
+    cursor->getText(cursor, 5, data5Value, size + 1);
     EXPECT_EQ(strcmp(data5Value, "ABCDEFG"), 0);
 
-    valueObject->DestroyValueObject(valueObject);
-    predicates->DestroyPredicates(predicates);
-    predicates2->DestroyPredicates(predicates2);
-    valueBucket->DestroyValuesBucket(valueBucket);
-    cursor->Close(cursor);
+    valueObject->destroyValueObject(valueObject);
+    predicates->destroyPredicates(predicates);
+    predicates2->destroyPredicates(predicates2);
+    valueBucket->destroyValuesBucket(valueBucket);
+    cursor->close(cursor);
 }
 
 /**
@@ -540,14 +540,14 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_009, TestSize.Level1)
 {
     int errCode = 0;
     OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->PutInt64(valueBucket, "id", 1);
-    valueBucket->PutText(valueBucket, "data1", "zhangSan");
-    valueBucket->PutInt64(valueBucket, "data2", 12800);
-    valueBucket->PutReal(valueBucket, "data3", 100.1);
+    valueBucket->putInt64(valueBucket, "id", 1);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    valueBucket->putReal(valueBucket, "data3", 100.1);
     uint8_t arr[] = { 1, 2, 3, 4, 5 };
     int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->PutBlob(valueBucket, "data4", arr, len);
-    valueBucket->PutText(valueBucket, "data5", "ABCDEFG");
+    valueBucket->putBlob(valueBucket, "data4", arr, len);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
     EXPECT_EQ(errCode, 1);
 
@@ -555,5 +555,5 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_009, TestSize.Level1)
     OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
     EXPECT_EQ(cursor, NULL);
 
-    valueBucket->DestroyValuesBucket(valueBucket);
+    valueBucket->destroyValuesBucket(valueBucket);
 }

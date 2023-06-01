@@ -366,8 +366,8 @@ OHOS::RdbNdk::PredicateImpl::PredicateImpl(const char *table) : predicates_(tabl
     notEqualTo = Rdb_Predicates_NotEqualTo;
     beginWrap = Rdb_Predicates_BeginWrap;
     endWrap = Rdb_Predicates_EndWrap;
-    this->or = Rdb_Predicates_Or;
-    this->and = Rdb_Predicates_And;
+    orOperate = Rdb_Predicates_Or;
+    andOperate = Rdb_Predicates_And;
     isNull = Rdb_Predicates_IsNull;
     isNotNull = Rdb_Predicates_IsNotNull;
     like = Rdb_Predicates_Like;
@@ -391,12 +391,4 @@ OHOS::RdbNdk::PredicateImpl::PredicateImpl(const char *table) : predicates_(tabl
 RdbPredicates &OHOS::RdbNdk::PredicateImpl::GetPredicates()
 {
     return predicates_;
-}
-
-OH_Predicates *OH_Rdb_CreatePredicates(const char *table)
-{
-    if (table == nullptr) {
-        return nullptr;
-    }
-    return new OHOS::RdbNdk::PredicateImpl(table);
 }
