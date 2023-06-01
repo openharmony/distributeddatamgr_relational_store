@@ -44,10 +44,10 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/rdb_device_manager_adapter/include",
-      "../rdb_bms_adapter/include",
     ]
 
     defines = [
@@ -75,9 +75,9 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "include",
       "${relational_store_native_path}/rdb/include",
-      "../rdb_bms_adapter/include",
       "//third_party/json/single_include",
     ]
   }
@@ -118,10 +118,7 @@ if (is_ohos) {
       "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
-    public_deps = [
-      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
-      "../rdb_bms_adapter:rdb_bms_adapter",
-    ]
+    public_deps = [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
 
     external_deps = [
       "c_utils:utils",
@@ -147,7 +144,6 @@ if (is_ohos) {
 
     deps += [
       "${kvstore_path}/libs/distributeddb:distributeddb",
-      "../rdb_bms_adapter:rdb_bms_adapter",
       "//third_party/sqlite:sqlite",
     ]
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
@@ -168,10 +164,7 @@ if (is_ohos) {
       "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
-    public_deps = [
-      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
-      "../rdb_bms_adapter:rdb_bms_adapter",
-    ]
+    public_deps = [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
 
     external_deps = [
       "c_utils:utils",
@@ -199,7 +192,6 @@ if (is_ohos) {
       "include",
       "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
       "${relational_store_native_path}/rdb/include",
-      "../rdb_bms_adapter/include",
       "//third_party/json/single_include",
     ]
 
@@ -231,7 +223,6 @@ if (is_ohos) {
     include_dirs = [
       "mock/include",
       "include",
-      "../rdb_bms_adapter/include",
       "//third_party/json/single_include",
     ]
   }
@@ -252,7 +243,6 @@ if (is_ohos) {
     sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
 
     deps += [
-      "../rdb_bms_adapter:rdb_bms_adapter",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
     ]
@@ -273,7 +263,6 @@ if (is_ohos) {
     sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
 
     deps += [
-      "../rdb_bms_adapter:rdb_bms_adapter",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
     ]
@@ -295,7 +284,6 @@ if (is_ohos) {
       "include",
       "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
       "${relational_store_native_path}/rdb/include",
-      "../rdb_bms_adapter/include",
       "//third_party/json/single_include",
     ]
 
@@ -326,7 +314,6 @@ if (is_ohos) {
     include_dirs = [
       "mock/include",
       "include",
-      "../rdb_bms_adapter/include",
       "//third_party/json/single_include",
     ]
   }
@@ -346,7 +333,6 @@ if (is_ohos) {
 
     sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
     deps += [
-      "../rdb_bms_adapter:rdb_bms_adapter",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
     ]
@@ -366,7 +352,6 @@ if (is_ohos) {
 
     sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
     deps += [
-      "../rdb_bms_adapter:rdb_bms_adapter",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
     ]
@@ -387,7 +372,6 @@ if (is_ohos) {
       "${relational_store_innerapi_path}/rdb/include",
       "//foundation/distributeddatamgr/kv_store/frameworks/common",
       "${relational_store_native_path}/rdb/include",
-      "../rdb_bms_adapter/include",
       "//third_party/json/single_include",
     ]
 
@@ -414,7 +398,6 @@ if (is_ohos) {
       "include",
       "${relational_store_native_path}/mock/rdb/include",
       "${relational_store_native_path}/rdb/include",
-      "../rdb_bms_adapter/include",
       "//third_party/json/single_include",
     ]
   }
@@ -433,7 +416,6 @@ if (is_ohos) {
 
     sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
     deps += [
-      "../rdb_bms_adapter:rdb_bms_adapter",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
       "//commonlibrary/c_utils/base:utils",
       "//third_party/sqlite:sqlite_static",
@@ -452,7 +434,6 @@ if (is_ohos) {
       "${relational_store_native_path}/rdb/mock/include",
       "${relational_store_innerapi_path}/rdb/include",
       "${relational_store_native_path}/rdb/include",
-      "../rdb_bms_adapter/include",
       "//third_party/json/single_include",
     ]
 
@@ -478,7 +459,6 @@ if (is_ohos) {
       "mock/include",
       "include",
       "${relational_store_native_path}/rdb/include",
-      "../rdb_bms_adapter/include",
       "//third_party/json/single_include",
     ]
   }
@@ -500,7 +480,6 @@ if (is_ohos) {
 
     sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
     deps += [
-      "../rdb_bms_adapter:rdb_bms_adapter",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
       "//commonlibrary/c_utils/base:utilsbase",
       "//third_party/sqlite:sqlite_static",
