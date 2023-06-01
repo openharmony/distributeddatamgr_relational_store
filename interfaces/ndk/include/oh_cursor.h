@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef CURSOR_H
-#define CURSOR_H
+#ifndef OH_CURSOR_H
+#define OH_CURSOR_H
 
 /**
  * @addtogroup RDB
@@ -30,7 +30,7 @@
  */
 
 /**
- * @file cursor.h
+ * @file oh_cursor.h
  *
  * @brief Provides functions and enumerations related to the resultSet.
  *
@@ -81,7 +81,7 @@ typedef struct OH_Cursor {
      * @see OH_Cursor.
      * @since 10
      */
-    int (*GetColumnCount)(OH_Cursor *cursor, int *count);
+    int (*getColumnCount)(OH_Cursor *cursor, int *count);
 
     /**
      * @brief Function pointer. Obtains data type of the given column's value.
@@ -93,7 +93,7 @@ typedef struct OH_Cursor {
      * @see OH_Cursor, OH_ColumnType.
      * @since 10
      */
-    int (*GetColumnType)(OH_Cursor *cursor, int32_t columnIndex, OH_ColumnType *columnType);
+    int (*getColumnType)(OH_Cursor *cursor, int32_t columnIndex, OH_ColumnType *columnType);
 
     /**
      * @brief Function pointer. Obtains the zero-based index for the given column name.
@@ -106,7 +106,7 @@ typedef struct OH_Cursor {
      * @see OH_Cursor.
      * @since 10
      */
-    int (*GetColumnIndex)(OH_Cursor *cursor, const char *name, int *columnIndex);
+    int (*getColumnIndex)(OH_Cursor *cursor, const char *name, int *columnIndex);
 
     /**
      * @brief Function pointer. Obtains the column name at the given column index.
@@ -120,7 +120,7 @@ typedef struct OH_Cursor {
      * @see OH_Cursor.
      * @since 10
      */
-    int (*GetColumnName)(OH_Cursor *cursor, int32_t columnIndex, char *name, int length);
+    int (*getColumnName)(OH_Cursor *cursor, int32_t columnIndex, char *name, int length);
 
     /**
      * @brief Function pointer. Obtains the numbers of rows in the result set.
@@ -132,7 +132,7 @@ typedef struct OH_Cursor {
      * @see OH_Cursor.
      * @since 10
      */
-    int (*GetRowCount)(OH_Cursor *cursor, int *count);
+    int (*getRowCount)(OH_Cursor *cursor, int *count);
 
     /**
      * @brief Function pointer. Move the cursor to the next row.
@@ -142,7 +142,7 @@ typedef struct OH_Cursor {
      * @see OH_Cursor.
      * @since 10
      */
-    int (*GoToNextRow)(OH_Cursor *cursor);
+    int (*goToNextRow)(OH_Cursor *cursor);
 
     /**
      * @brief Function pointer. Obtains the size of blob or text.
@@ -155,7 +155,7 @@ typedef struct OH_Cursor {
      * @see OH_Cursor.
      * @since 10
      */
-    int (*GetSize)(OH_Cursor *cursor, int32_t columnIndex, size_t *size);
+    int (*getSize)(OH_Cursor *cursor, int32_t columnIndex, size_t *size);
 
     /**
      * @brief Function pointer. Obtains the value of the requested column as a string.
@@ -169,7 +169,7 @@ typedef struct OH_Cursor {
      * @see OH_Cursor.
      * @since 10
      */
-    int (*GetText)(OH_Cursor *cursor, int32_t columnIndex, char *value, int length);
+    int (*getText)(OH_Cursor *cursor, int32_t columnIndex, char *value, int length);
 
     /**
      * @brief Function pointer. Obtains the value of the requested column as a int64_t.
@@ -182,7 +182,7 @@ typedef struct OH_Cursor {
      * @see OH_Cursor.
      * @since 10
      */
-    int (*GetInt64)(OH_Cursor *cursor, int32_t columnIndex, int64_t *value);
+    int (*getInt64)(OH_Cursor *cursor, int32_t columnIndex, int64_t *value);
 
     /**
      * @brief Function pointer. Obtains the value of the requested column as a double.
@@ -195,7 +195,7 @@ typedef struct OH_Cursor {
      * @see OH_Cursor.
      * @since 10
      */
-    int (*GetReal)(OH_Cursor *cursor, int32_t columnIndex, double *value);
+    int (*getReal)(OH_Cursor *cursor, int32_t columnIndex, double *value);
 
     /**
      * @brief Function pointer. Obtains the value of the requested column as a byte array.
@@ -209,7 +209,7 @@ typedef struct OH_Cursor {
      * @see OH_Cursor.
      * @since 10
      */
-    int (*GetBlob)(OH_Cursor *cursor, int32_t columnIndex, unsigned char *value, int length);
+    int (*getBlob)(OH_Cursor *cursor, int32_t columnIndex, unsigned char *value, int length);
 
     /**
      * @brief Function pointer. Obtains Whether the value of the requested column is null.
@@ -222,7 +222,7 @@ typedef struct OH_Cursor {
      * @see OH_Cursor.
      * @since 10
      */
-    int (*IsNull)(OH_Cursor *cursor, int32_t columnIndex, bool *isNull);
+    int (*isNull)(OH_Cursor *cursor, int32_t columnIndex, bool *isNull);
 
     /**
      * @brief Function pointer. Closes the result set, releasing all of its resources and making it completely invalid.
@@ -232,11 +232,11 @@ typedef struct OH_Cursor {
      * @see OH_Cursor.
      * @since 10
      */
-    int (*Close)(OH_Cursor *cursor);
+    int (*close)(OH_Cursor *cursor);
 } OH_Cursor;
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // CURSOR_H
+#endif // OH_CURSOR_H

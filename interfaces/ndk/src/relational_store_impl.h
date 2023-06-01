@@ -19,7 +19,7 @@
 #include <memory>
 
 #include "rdb_store.h"
-#include "predicates.h"
+#include "oh_predicates.h"
 #include "relational_store.h"
 
 namespace OHOS {

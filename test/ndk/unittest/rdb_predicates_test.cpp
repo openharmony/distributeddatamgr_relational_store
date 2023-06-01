@@ -18,7 +18,7 @@
 #include <string>
 #include "common.h"
 #include "relational_store.h"
-#include "native_value_object.h"
+#include "oh_value_object.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;

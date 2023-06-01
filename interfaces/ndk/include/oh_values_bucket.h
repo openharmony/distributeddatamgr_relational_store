@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_VALUES_BUCKET_H
-#define NATIVE_VALUES_BUCKET_H
+#ifndef OH_VALUES_BUCKET_H
+#define OH_VALUES_BUCKET_H
 
 /**
  * @addtogroup RDB
@@ -30,7 +30,7 @@
  */
 
 /**
- * @file native_values_bucket.h
+ * @file oh_values_bucket.h
  *
  * @brief Define the type of stored key value pairs.
  *
@@ -65,7 +65,7 @@ typedef struct OH_VBucket{
      * @see OH_VBucket.
      * @since 10
      */
-    int (*PutText)(OH_VBucket *bucket, const char *field, const char *value);
+    int (*putText)(OH_VBucket *bucket, const char *field, const char *value);
 
     /**
      * @brief Put the int64 value to this {@link OH_VBucket} object for the given column name.
@@ -77,7 +77,7 @@ typedef struct OH_VBucket{
      * @see OH_VBucket.
      * @since 10
      */
-    int (*PutInt64)(OH_VBucket *bucket, const char *field, int64_t value);
+    int (*putInt64)(OH_VBucket *bucket, const char *field, int64_t value);
 
     /**
      * @brief Put the double value to this {@link OH_VBucket} object for the given column name.
@@ -89,7 +89,7 @@ typedef struct OH_VBucket{
      * @see OH_VBucket.
      * @since 10
      */
-    int (*PutReal)(OH_VBucket *bucket, const char *field, double value);
+    int (*putReal)(OH_VBucket *bucket, const char *field, double value);
 
     /**
      * @brief Put the const uint8_t * value to this {@link OH_VBucket} object for the given column name.
@@ -102,7 +102,7 @@ typedef struct OH_VBucket{
      * @see OH_VBucket.
      * @since 10
      */
-    int (*PutBlob)(OH_VBucket *bucket, const char *field, const uint8_t *value, uint32_t size);
+    int (*putBlob)(OH_VBucket *bucket, const char *field, const uint8_t *value, uint32_t size);
 
     /**
      * @brief Put NULL to this {@link OH_VBucket} object for the given column name.
@@ -113,7 +113,7 @@ typedef struct OH_VBucket{
      * @see OH_VBucket.
      * @since 10
      */
-    int (*PutNull)(OH_VBucket *bucket, const char *field);
+    int (*putNull)(OH_VBucket *bucket, const char *field);
 
     /**
      * @brief Clear the {@link OH_VBucket} object's values.
@@ -123,7 +123,7 @@ typedef struct OH_VBucket{
      * @see OH_VBucket.
      * @since 10
      */
-    int (*Clear)(OH_VBucket *bucket);
+    int (*clear)(OH_VBucket *bucket);
 
     /**
      * @brief Destroy the {@link OH_VBucket} object and reclaim the memory occupied by the object.
@@ -133,11 +133,11 @@ typedef struct OH_VBucket{
      * @see OH_VBucket.
      * @since 10
      */
-    int (*DestroyValuesBucket)(OH_VBucket *bucket);
+    int (*destroyValuesBucket)(OH_VBucket *bucket);
 } OH_VBucket;
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // NATIVE_VALUES_BUCKET_H
+#endif // OH_VALUES_BUCKET_H
