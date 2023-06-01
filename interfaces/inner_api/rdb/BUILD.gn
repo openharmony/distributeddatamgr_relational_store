@@ -196,6 +196,7 @@ if (is_ohos) {
       "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
       "${relational_store_native_path}/rdb/include",
       "//third_party/json/single_include",
+      "//third_party/lwip/src/include",
     ]
 
     defines = [
@@ -228,6 +229,7 @@ if (is_ohos) {
       "mock/include",
       "include",
       "//third_party/json/single_include",
+      "//third_party/lwip/src/include",
     ]
   }
 
