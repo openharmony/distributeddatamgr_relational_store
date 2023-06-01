@@ -120,6 +120,8 @@
                     "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/appdatafwk:native_appdatafwk",
                     "header": {
                         "header_files": [
+                            "multi_platform_endian.h",
+                            "serializable.h",
                             "shared_block.h"
                         ],
                         "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/appdatafwk/include"
@@ -148,7 +150,6 @@
                     "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_bms_adapter:rdb_bms_adapter",
                     "header": {
                         "header_files": [
-                            "serializable.h",
                             "data_share_profile_info.h",
                             "data_properties.h"
                         ],

@@ -118,7 +118,8 @@ if (is_ohos) {
       "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
-    public_deps = [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
+    public_deps =
+        [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
 
     external_deps = [
       "c_utils:utils",
@@ -164,7 +165,8 @@ if (is_ohos) {
       "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
-    public_deps = [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
+    public_deps =
+        [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
 
     external_deps = [
       "c_utils:utils",
@@ -245,9 +247,9 @@ if (is_ohos) {
     sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
 
     deps += [
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
-      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -266,9 +268,9 @@ if (is_ohos) {
     sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
 
     deps += [
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
-      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -339,9 +341,9 @@ if (is_ohos) {
 
     sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
     deps += [
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
-      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk"
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -359,9 +361,9 @@ if (is_ohos) {
 
     sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
     deps += [
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
-      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk"
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -426,10 +428,10 @@ if (is_ohos) {
 
     sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
     deps += [
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
       "//commonlibrary/c_utils/base:utils",
       "//third_party/sqlite:sqlite_static",
-      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk"
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -493,10 +495,10 @@ if (is_ohos) {
 
     sources += [ "${relational_store_native_path}/rdb/mock/src/timer.cpp" ]
     deps += [
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
       "//commonlibrary/c_utils/base:utilsbase",
       "//third_party/sqlite:sqlite_static",
-      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk"
     ]
     cflags_cc = [ "-std=c++17" ]
 
