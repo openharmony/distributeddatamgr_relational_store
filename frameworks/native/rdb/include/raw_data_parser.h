@@ -32,7 +32,7 @@ public:
     static std::vector<uint8_t> PackageRawData(const Assets &assets);
 
 private:
-    struct InnerAsset : public RdbBMSAdapter::Serializable {
+    struct InnerAsset : public AppDataFwk::Serializable {
         Asset asset_;
         InnerAsset(Asset asset) : asset_(asset) {}
 

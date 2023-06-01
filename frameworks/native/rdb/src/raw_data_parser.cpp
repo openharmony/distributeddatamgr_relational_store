@@ -16,7 +16,7 @@
 #include "raw_data_parser.h"
 #include "multi_platform_endian.h"
 namespace OHOS::NativeRdb {
-using Serializable = RdbBMSAdapter::Serializable;
+using Serializable = AppDataFwk::Serializable;
 size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Asset &asset)
 {
     size_t used = 0;

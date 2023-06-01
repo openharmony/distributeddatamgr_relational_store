@@ -15,7 +15,7 @@
 
 #include "serializable.h"
 namespace OHOS {
-namespace RdbBMSAdapter {
+namespace AppDataFwk {
 Serializable::json Serializable::Marshall() const
 {
     json root;
