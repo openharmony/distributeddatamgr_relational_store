@@ -26,6 +26,7 @@ ohos_fuzztest("RdbImplFuzzTest") {
     "//foundation/distributeddatamgr/kv_store/frameworks/innerkitsimpl/rdb",
     "//foundation/distributeddatamgr/kv_store/frameworks/innerkitsimpl/rdb/include",
     "//commonlibrary/c_utils/base/include",
+    "${common_tool_path}/",
     "//third_party/sqlite/include",
     "//foundation/distributeddatamgr/kv_store/frameworks/libs/distributeddb/common/include/relational",
     "//third_party/jsoncpp/include/json",

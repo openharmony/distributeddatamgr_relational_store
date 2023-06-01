@@ -24,7 +24,7 @@ using JsErrorCode = OHOS::CloudData::JsErrorCode;
 static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { Status::INVALID_ARGUMENT, 401, "Parameter error." },
     { Status::NOT_SUPPORT, 801, "Not support." },
-    { Status::PERMISSION_DENIED, 202, "Permission denied，non-system app called system api." },
+    { Status::PERMISSION_DENIED, 202, "Permission denied, non-system app called system api." },
     { Status::CLOUD_CONFIG_PERMISSION_DENIED, 201, "Permission denied." }
 };
 
