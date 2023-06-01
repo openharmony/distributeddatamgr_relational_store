@@ -13,33 +13,33 @@
  * limitations under the License.
  */
 
-#ifndef RELATIONAL_PREDICATES_H
-#define RELATIONAL_PREDICATES_H
+#ifndef PREDICATES_H
+#define PREDICATES_H
 
 /**
- * @addtogroup relationalStore
+ * @addtogroup RDB
  * @{
  *
- * @brief RelationalStore module provides a series of external interfaces for insert data, delete data, update date,
- * and select data, as well as data encryption, hierarchical data protection, backup, and recovery functions.
+ * @brief The relational database (RDB) store manages data based on relational models.
+ * With the underlying SQLite database, the RDB store provides a complete mechanism for managing local databases.
+ * To satisfy different needs in complicated scenarios, the RDB store offers a series of APIs for performing operations
+ * such as adding, deleting, modifying, and querying data, and supports direct execution of SQL statements.
  *
  * @syscap SystemCapability.DistributedDataManager.RelationalStore.Core
  * @since 10
- * @version 1.0
  */
 
 /**
- * @file relational_predicates.h
+ * @file predicates.h
  *
  * @brief Declared predicate related functions and enumerations.
  *
  * @since 10
- * @version 1.0
  */
 
 #include <cstdint>
 #include <stddef.h>
-#include "relational_value_object.h"
+#include "native_value_object.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,9 +49,8 @@ extern "C" {
  * @brief Result set sort type.
  *
  * @since 10
- * @version 1.0
  */
-enum OH_Rdb_OrderType {
+enum OH_OrderType {
     /** Ascend order.*/
     ASC = 0,
     /** Descend order.*/
@@ -59,10 +58,9 @@ enum OH_Rdb_OrderType {
 };
 
 /**
- * @brief The predicates object of relationalStore.
+ * @brief Define the OH_Predicates structure type.
  *
  * @since 10
- * @version 2.0
  */
 typedef struct OH_Predicates {
     /** The id used to uniquely identify the OH_Predicates struct. */
@@ -74,13 +72,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_Rdb_VObject} instance.
+     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_Rdb_VObject.
+     * @see OH_Predicates, OH_VObject.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_EqualTo)(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+    OH_Predicates (*EqualTo)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer.
@@ -90,14 +87,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_Rdb_VObject} instance.
+     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_Rdb_VObject.
+     * @see OH_Predicates, OH_VObject.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_NotEqualTo)(
-        OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+    OH_Predicates (*NotEqualTo)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer. Add left parenthesis to predicate.
@@ -108,9 +103,8 @@ typedef struct OH_Predicates {
      * @return Returns the self.
      * @see OH_Predicates.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_BeginWrap)(OH_Predicates *predicates);
+    OH_Predicates (*BeginWrap)(OH_Predicates *predicates);
 
     /**
      * @brief Function pointer. Add right parenthesis to predicate.
@@ -121,9 +115,8 @@ typedef struct OH_Predicates {
      * @return Returns the self.
      * @see OH_Predicates.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_EndWrap)(OH_Predicates *predicates);
+    OH_Predicates (*EndWrap)(OH_Predicates *predicates);
 
     /**
      * @brief Function pointer. Adds an or condition to the predicates.
@@ -134,9 +127,8 @@ typedef struct OH_Predicates {
      * @return Returns the self.
      * @see OH_Predicates.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_Or)(OH_Predicates *predicates);
+    OH_Predicates (*Or)(OH_Predicates *predicates);
 
     /**
      * @brief Function pointer. Adds an and condition to the predicates.
@@ -147,9 +139,8 @@ typedef struct OH_Predicates {
      * @return Returns the self.
      * @see OH_Predicates.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_And)(OH_Predicates *predicates);
+    OH_Predicates (*And)(OH_Predicates *predicates);
 
     /**
      * @brief Function pointer. Restricts the value of the field which is null to the predicates.
@@ -161,9 +152,8 @@ typedef struct OH_Predicates {
      * @return Returns the self.
      * @see OH_Predicates.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_IsNull)(OH_Predicates *predicates, const char *field);
+    OH_Predicates (*IsNull)(OH_Predicates *predicates, const char *field);
 
     /**
      * @brief Function pointer. Restricts the value of the field which is not null to the predicates.
@@ -175,9 +165,8 @@ typedef struct OH_Predicates {
      * @return Returns the self.
      * @see OH_Predicates.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_IsNotNull)(OH_Predicates *predicates, const char *field);
+    OH_Predicates (*IsNotNull)(OH_Predicates *predicates, const char *field);
 
     /**
      * @brief Function pointer. Restricts the value of the field to be like the specified value to the predicates.
@@ -186,13 +175,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_Rdb_VObject} instance.
+     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_Rdb_VObject.
+     * @see OH_Predicates, OH_VObject.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_Like)(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+    OH_Predicates (*Like)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer. Restricts the value of the field to be between the specified value to the predicates.
@@ -201,13 +189,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_Rdb_VObject} instance.
+     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_Rdb_VObject.
+     * @see OH_Predicates, OH_VObject.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_Between)(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+    OH_Predicates (*Between)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer.
@@ -217,14 +204,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_Rdb_VObject} instance.
+     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_Rdb_VObject.
+     * @see OH_Predicates, OH_VObject.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_NotBetween)(
-        OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+    OH_Predicates (*NotBetween)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer.
@@ -234,14 +219,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_Rdb_VObject} instance.
+     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_Rdb_VObject.
+     * @see OH_Predicates, OH_VObject.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_GreaterThan)(
-        OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+    OH_Predicates (*GreaterThan)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer.
@@ -251,13 +234,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_Rdb_VObject} instance.
+     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_Rdb_VObject.
+     * @see OH_Predicates, OH_VObject.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_LessThan)(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+    OH_Predicates (*LessThan)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer.
@@ -267,14 +249,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_Rdb_VObject} instance.
+     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_Rdb_VObject.
+     * @see OH_Predicates, OH_VObject.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_GreaterThanOrEqualTo)(
-        OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+    OH_Predicates (*GreaterThanOrEqualTo)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer.
@@ -284,14 +264,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_Rdb_VObject} instance.
+     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_Rdb_VObject.
+     * @see OH_Predicates, OH_VObject.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_LessThanOrEqualTo)(
-        OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+    OH_Predicates (*LessThanOrEqualTo)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer. Restricts the ascending or descending order of the return list.
@@ -301,13 +279,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param type Indicates the sort {@link OH_Rdb_OrderType} type.
+     * @param type Indicates the sort {@link OH_OrderType} type.
      * @return Returns the self.
-     * @see OH_Predicates, OH_Rdb_OrderType.
+     * @see OH_Predicates, OH_OrderType.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_OrderBy)(OH_Predicates *predicates, const char *field, OH_Rdb_OrderType type);
+    OH_Predicates (*OrderBy)(OH_Predicates *predicates, const char *field, OH_OrderType type);
 
     /**
      * @brief Function pointer. Configure predicates to filter duplicate records and retain only one of them.
@@ -318,9 +295,8 @@ typedef struct OH_Predicates {
      * @return Returns the self.
      * @see OH_Predicates.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_Distinct)(OH_Predicates *predicates);
+    OH_Predicates (*Distinct)(OH_Predicates *predicates);
 
     /**
      * @brief Function pointer. Predicate for setting the maximum number of data records.
@@ -328,13 +304,12 @@ typedef struct OH_Predicates {
      * This method is similar LIMIT the SQL statement.
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
-     * @param value Indicates the maximum number of data records.
+     * @param value Indicates the maximum number of records.
      * @return Returns the self.
      * @see OH_Predicates.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_Limit)(OH_Predicates *predicates, unsigned int value);
+    OH_Predicates (*Limit)(OH_Predicates *predicates, unsigned int value);
 
     /**
      * @brief Function pointer. Configure the predicate to specify the starting position of the returned result.
@@ -342,13 +317,13 @@ typedef struct OH_Predicates {
      * This method is similar OFFSET the SQL statement.
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
-     * @param rowOffset Indicates the starting position of the returned result, taking a positive integer value.
+     * @param rowOffset Indicates the number of rows to offset from the beginning. The value is a positive integer.
      * @return Returns the self.
      * @see OH_Predicates.
      * @since 10
      * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_Offset)(OH_Predicates *predicates, unsigned int rowOffset);
+    OH_Predicates (*Offset)(OH_Predicates *predicates, unsigned int rowOffset);
 
     /**
      * @brief Function pointer. Configure predicates to group query results by specified columns.
@@ -361,9 +336,8 @@ typedef struct OH_Predicates {
      * @return Returns the self.
      * @see OH_Predicates.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_GroupBy)(OH_Predicates *predicates, char const *const *fields, int length);
+    OH_Predicates (*GroupBy)(OH_Predicates *predicates, char const *const *fields, int length);
 
     /**
      * @brief Function pointer.
@@ -373,13 +347,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_Rdb_VObject} instance.
+     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_Rdb_VObject.
+     * @see OH_Predicates, OH_VObject.
      * @since 10
-     * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_In)(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+    OH_Predicates (*In)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer.
@@ -389,13 +362,13 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_Rdb_VObject} instance.
+     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_Rdb_VObject.
+     * @see OH_Predicates, OH_VObject.
      * @since 10
      * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_NotIn)(OH_Predicates *predicates, const char *field, OH_Rdb_VObject *valueObject);
+    OH_Predicates (*NotIn)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer. Initialize OH_Predicates object.
@@ -406,35 +379,21 @@ typedef struct OH_Predicates {
      * @since 10
      * @version 1.0
      */
-    OH_Predicates (*OH_Predicates_Clear)(OH_Predicates *predicates);
+    OH_Predicates (*Clear)(OH_Predicates *predicates);
+
+    /**
+     * @brief Destroy the {@link OH_Predicates} object and reclaim the memory occupied by the object.
+     *
+     * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
+     * @return Returns the status code of the execution..
+     * @see OH_Predicates.
+     * @since 10
+     */
+    int (*DestroyPredicates)(OH_Predicates *predicates);
 } OH_Predicates;
-
-/**
- * @brief Create an {@link OH_Predicates} instance.
- *
- * @param table Indicates the table name.
- * @return If the creation is successful, a pointer to the instance of the @link OH_Predicates} structure is returned,
- * otherwise NULL is returned.
- * @see OH_Predicates.
- * @since 10
- * @version 1.0
- */
-OH_Predicates *OH_Rdb_CreatePredicates(const char *table);
-
-/**
- * @brief Destroy the {@link OH_Predicates} object and reclaim the memory occupied by the object.
- *
- * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
- * @return Returns the status code of the execution. Successful execution returns RDB_ERR_OK,
- * while failure returns a specific error code. Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
- * @see OH_Predicates, OH_Rdb_ErrCode.
- * @since 10
- * @version 1.0
- */
-int OH_Rdb_DestroyPredicates(OH_Predicates *predicates);
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // RELATIONAL_PREDICATES_H
+#endif // PREDICATES_H

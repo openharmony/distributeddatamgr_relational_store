@@ -17,15 +17,16 @@
 #define RELATIONAL_ERRNO_CODE_H
 
 /**
- * @addtogroup relationalStore
+ * @addtogroup RDB
  * @{
  *
- * @brief RelationalStore module provides a series of external interfaces for insert data, delete data, update date,
- * and select data, as well as data encryption, hierarchical data protection, backup, and recovery functions.
+ * @brief The relational database (RDB) store manages data based on relational models.
+ * With the underlying SQLite database, the RDB store provides a complete mechanism for managing local databases.
+ * To satisfy different needs in complicated scenarios, the RDB store offers a series of APIs for performing operations
+ * such as adding, deleting, modifying, and querying data, and supports direct execution of SQL statements.
  *
  * @syscap SystemCapability.DistributedDataManager.RelationalStore.Core
  * @since 10
- * @version 1.0
  */
 
 

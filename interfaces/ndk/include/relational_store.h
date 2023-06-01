@@ -17,15 +17,16 @@
 #define RELATIONAL_STORE_H
 
 /**
- * @addtogroup relationalStore
+ * @addtogroup RDB
  * @{
  *
- * @brief RelationalStore module provides a series of external interfaces for insert data, delete data, update date,
- * and select data, as well as data encryption, hierarchical data protection, backup, and recovery functions.
+ * @brief The relational database (RDB) store manages data based on relational models.
+ * With the underlying SQLite database, the RDB store provides a complete mechanism for managing local databases.
+ * To satisfy different needs in complicated scenarios, the RDB store offers a series of APIs for performing operations
+ * such as adding, deleting, modifying, and querying data, and supports direct execution of SQL statements.
  *
  * @syscap SystemCapability.DistributedDataManager.RelationalStore.Core
  * @since 10
- * @version 1.0
  */
 
 /**
@@ -37,9 +38,9 @@
  * @version 1.0
  */
 
-#include "relational_cursor.h"
-#include "relational_predicates.h"
-#include "relational_values_bucket.h"
+#include "cursor.h"
+#include "predicates.h"
+#include "native_values_bucket.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -88,7 +89,7 @@ typedef struct {
     /** Indicates the path of the database. */
     const char *path;
     /** Indicates whether the database is encrypt. */
-    BOOL isEncrypt;
+    bool isEncrypt;
     /** Indicates the security level {@link OH_Rdb_SecurityLevel} of the database. */
     enum OH_Rdb_SecurityLevel securityLevel;
 } OH_Rdb_Config;
@@ -103,6 +104,39 @@ typedef struct {
     /** The id used to uniquely identify the OH_Rdb_Store struct. */
     int64_t id;
 } OH_Rdb_Store;
+
+/**
+ * @brief Create an {@link OH_VObject} instance.
+ *
+ * @return If the creation is successful, a pointer to the instance of the @link OH_VObject} structure is returned,
+ * otherwise NULL is returned.
+ * @see OH_VObject.
+ * @since 10
+ */
+OH_VObject *OH_Rdb_CreateValueObject();
+
+/**
+ * @brief Create an {@link OH_VBucket} object.
+ *
+ * @return If the creation is successful, a pointer to the instance of the @link OH_VBucket} structure is returned,
+ * otherwise NULL is returned.
+ * @see OH_VBucket.
+ * @since 10
+ * @version 1.0
+ */
+OH_VBucket *OH_Rdb_CreateValuesBucket();
+
+/**
+ * @brief Create an {@link OH_Predicates} instance.
+ *
+ * @param table Indicates the table name.
+ * @return If the creation is successful, a pointer to the instance of the @link OH_Predicates} structure is returned,
+ * otherwise NULL is returned.
+ * @see OH_Predicates.
+ * @since 10
+ * @version 1.0
+ */
+OH_Predicates *OH_Rdb_CreatePredicates(const char *table);
 
 /**
  * @brief Obtains an RDB store.
@@ -151,29 +185,29 @@ int OH_Rdb_DeleteStore(const char *path);
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @param table Indicates the target table.
- * @param valuesBucket Indicates the row of data {@link OH_Rdb_VBucket} to be inserted into the table.
+ * @param valuesBucket Indicates the row of data {@link OH_VBucket} to be inserted into the table.
  * @return Returns the rowId if success, returns a specific error code.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
- * @see OH_Rdb_Store, OH_Rdb_VBucket, OH_Rdb_ErrCode.
+ * @see OH_Rdb_Store, OH_VBucket, OH_Rdb_ErrCode.
  * @since 10
  * @version 1.0
  */
-int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_Rdb_VBucket *valuesBucket);
+int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_VBucket *valuesBucket);
 
 /**
  * @brief Updates data in the database based on specified conditions.
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
- * @param valuesBucket Indicates the row of data {@link OH_Rdb_VBucket} to be updated in the database
+ * @param valuesBucket Indicates the row of data {@link OH__VBucket} to be updated in the database
  * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
  * Indicates the specified update condition.
  * @return Returns the number of rows changed if success, otherwise, returns a specific error code.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
- * @see OH_Rdb_Store, OH_Rdb_VBucket, OH_Predicates, OH_Rdb_ErrCode.
+ * @see OH_Rdb_Store, OH_Bucket, OH_Predicates, OH_Rdb_ErrCode.
  * @since 10
  * @version 1.0
  */
-int OH_Rdb_Update(OH_Rdb_Store *store, OH_Rdb_VBucket *valuesBucket, OH_Predicates *predicates);
+int OH_Rdb_Update(OH_Rdb_Store *store, OH_VBucket *valuesBucket, OH_Predicates *predicates);
 
 /**
  * @brief Deletes data from the database based on specified conditions.

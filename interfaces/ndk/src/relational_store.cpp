@@ -81,9 +81,8 @@ int OH_Rdb_CloseStore(OH_Rdb_Store *store)
         LOG_ERROR("Parameters set error:config is NULL ? %{public}d", (store == nullptr));
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
-    auto tempStore = static_cast<OHOS::RdbNdk::StoreImpl *>(store);
-    delete tempStore;
-    tempStore = nullptr;
+    delete store;
+    store = nullptr;
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
@@ -100,7 +99,7 @@ int OH_Rdb_DeleteStore(const char *path)
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_Rdb_VBucket *valuesBucket)
+int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_VBucket *valuesBucket)
 {
     if (store == nullptr || table == nullptr || valuesBucket == nullptr || store->id != OHOS::RdbNdk::RDB_STORE_CID) {
         LOG_ERROR("Parameters set error:store is NULL ? %{public}d, table is NULL ? %{public}d,"
@@ -115,7 +114,7 @@ int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_Rdb_VBucket *values
     return rowId >= 0 ? rowId : OH_Rdb_ErrCode::RDB_ERR;
 }
 
-int OH_Rdb_Update(OH_Rdb_Store *store, OH_Rdb_VBucket *valueBucket, OH_Predicates *predicates)
+int OH_Rdb_Update(OH_Rdb_Store *store, OH_VBucket *valueBucket, OH_Predicates *predicates)
 {
     if (store == nullptr || predicates == nullptr || store->id != OHOS::RdbNdk::RDB_STORE_CID) {
         LOG_ERROR("Parameters set error:store is NULL ? %{public}d, valueBucket is NULL ? %{public}d,"
