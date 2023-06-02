@@ -74,7 +74,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
             pool_ = TaskExecutor::GetInstance().GetExecutor();
         }
         if (pool_ != nullptr) {
-            LOG_INFO("config changed, taskId_ id %{public}lu", storeCache_[path]->taskId_);
+            LOG_INFO("config changed, taskId_ id %{public}llu", storeCache_[path]->taskId_);
             pool_->Remove(storeCache_[path]->taskId_);
         }
         storeCache_.erase(path);
@@ -135,7 +135,7 @@ void RdbStoreManager::Remove(const std::string &path)
         return;
     }
     if (pool_ != nullptr) {
-        LOG_INFO("remove taskId_ %{public}lu", it->second->taskId_);
+        LOG_INFO("remove taskId_ %{public}llu", it->second->taskId_);
         pool_->Remove(it->second->taskId_);
     }
     storeCache_.erase(it);
