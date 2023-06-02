@@ -110,6 +110,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     return E_OK;
 }
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 void RdbStoreImpl::GetSchema()
 {
     if (pool_ == nullptr) {
@@ -131,6 +132,7 @@ void RdbStoreImpl::GetSchema()
         });
     }
 }
+#endif
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
     : rdbStoreConfig(config), connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false),
