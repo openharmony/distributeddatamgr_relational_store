@@ -25,8 +25,10 @@ using Asset = OHOS::NativeRdb::AssetValue;
 using RowEntity = OHOS::NativeRdb::RowEntity;
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, Asset &output);
+
 template<>
 napi_value Convert2JSValue(napi_env env, const Asset &value);
+
 template<>
 napi_value Convert2JSValue(napi_env env, const RowEntity &value);
 }; // namespace JSUtils

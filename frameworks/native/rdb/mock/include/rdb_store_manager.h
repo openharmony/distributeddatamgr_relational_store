@@ -23,7 +23,7 @@
 #include "rdb_open_callback.h"
 #include "rdb_store_config.h"
 #include "rdb_store_impl.h"
-#include "timer.h"
+#include "task_executor.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -32,7 +32,7 @@ struct RdbStoreNode {
     RdbStoreNode &operator=(const std::shared_ptr<RdbStoreImpl> &store);
 
     std::shared_ptr<RdbStoreImpl> rdbStore_;
-    uint32_t timerId_;
+    uint64_t taskId_;
 };
 
 class RdbStoreManager {
@@ -53,7 +53,7 @@ private:
     void RestartTimer(const std::string &path, RdbStoreNode &node);
     void AutoClose(const std::string &path);
     std::mutex mutex_;
-    std::shared_ptr<Utils::Timer> timer_;
+    std::shared_ptr<TaskExecutor::ExecutorPool> pool_;
     std::map<std::string, std::shared_ptr<RdbStoreNode>> storeCache_;
     // ms_ : [10*1000 ~ 10*60*1000]
     int ms_;

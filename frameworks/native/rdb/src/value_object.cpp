@@ -109,7 +109,7 @@ ValueObjectType ValueObject::GetType() const
 
 int ValueObject::GetInt(int &val) const
 {
-    int64_t value;
+    int64_t value = 0;
     auto ret = Get(value);
     val = value;
     return ret;

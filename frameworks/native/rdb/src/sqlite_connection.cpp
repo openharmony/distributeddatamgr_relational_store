@@ -77,19 +77,29 @@ SqliteConnection::SqliteConnection(bool isWriteConnection)
 {
 }
 
-int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
+int SqliteConnection::GetDbPath(const RdbStoreConfig &config, std::string &dbPath)
 {
-    std::string dbPath;
     if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
         dbPath = SqliteGlobalConfig::GetMemoryDbPath();
     } else if (config.GetPath().empty()) {
-        LOG_ERROR("SqliteConnection InnerOpen input empty database path");
+        LOG_ERROR("SqliteConnection GetDbPath input empty database path");
         return E_EMPTY_FILE_NAME;
     } else if (config.GetPath().front() != '/' && config.GetPath().at(1) != ':') {
-        LOG_ERROR("SqliteConnection InnerOpen input relative path");
+        LOG_ERROR("SqliteConnection GetDbPath input relative path");
         return E_RELATIVE_PATH;
     } else {
         dbPath = config.GetPath();
+    }
+    return E_OK;
+}
+
+
+int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
+{
+    std::string dbPath;
+    auto ret = GetDbPath(config, dbPath);
+    if (ret != E_OK) {
+        return ret;
     }
 
     stepStatement = std::make_shared<SqliteStatement>();
@@ -145,10 +155,9 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 
 int SqliteConnection::SetCustomFunctions(const RdbStoreConfig &config)
 {
-    int errCode;
     customScalarFunctions_ = config.GetScalarFunctions();
     for (auto &it : customScalarFunctions_) {
-        errCode = SetCustomScalarFunction(it.first, it.second.argc_, &it.second.function_);
+        int errCode = SetCustomScalarFunction(it.first, it.second.argc_, &it.second.function_);
         if (errCode != E_OK) {
             return errCode;
         }

@@ -28,6 +28,9 @@
 #include "sqlite_statement.h"
 #include "transaction_observer.h"
 
+namespace OHOS {
+class ExecutorPool;
+}
 namespace OHOS::NativeRdb {
 class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
 public:
@@ -121,6 +124,9 @@ private:
     int FreeTransaction(SqliteConnection *connection, const std::string &sql);
     std::pair<std::string, std::vector<ValueObject>> GetInsertParams(
         std::map<std::string, ValueObject> &valuesMap, const std::string &table);
+    int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
+    int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
+    int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;
@@ -131,9 +137,9 @@ private:
     bool isMemoryRdb;
     std::string name;
     std::string fileType;
-    bool isShared_ = false;
     DistributedRdb::RdbSyncerParam syncerParam_;
     bool isEncrypt_;
+    std::shared_ptr<ExecutorPool> pool_;
 };
 } // namespace OHOS::NativeRdb
 #endif
