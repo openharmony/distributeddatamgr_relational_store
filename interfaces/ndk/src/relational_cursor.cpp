@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "relational_cursor.h"
+#include "oh_cursor.h"
 #include "relational_cursor_impl.h"
 #include "relational_error_code.h"
 #include "rdb_errno.h"
-#include "ndk_logger.h"
+#include "logger.h"
 
 #include <iostream>
 #include <sstream>
@@ -25,32 +25,8 @@
 
 #include "securec.h"
 using OHOS::RdbNdk::RDB_NDK_LABEL;
-OHOS::RdbNdk::CursorImpl::CursorImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
-{
-    id = RDB_CURSOR_CID;
-    resultSet_ = resultSet;
 
-    OH_Cursor_GetColumnCount = CURSOR_GetColumnCount;
-    OH_Cursor_GetColumnType = CURSOR_GetColumnType;
-    OH_Cursor_GetColumnIndex = CURSOR_GetColumnIndex;
-    OH_Cursor_GetColumnName = CURSOR_GetColumnName;
-    OH_Cursor_GetRowCount = CURSOR_GetRowCount;
-    OH_Cursor_GoToNextRow = CURSOR_GoToNextRow;
-    OH_Cursor_GetSize = CURSOR_GetSize;
-    OH_Cursor_GetText = CURSOR_GetText;
-    OH_Cursor_GetInt64 = CURSOR_GetInt64;
-    OH_Cursor_GetReal = CURSOR_GetReal;
-    OH_Cursor_GetBlob = CURSOR_GetBlob;
-    OH_Cursor_IsNull = CURSOR_IsNull;
-    OH_Cursor_Close = CURSOR_Close;
-}
-
-std::shared_ptr<OHOS::NativeRdb::ResultSet> OHOS::RdbNdk::CursorImpl::GetResultSet()
-{
-    return resultSet_;
-}
-
-int CURSOR_GetColumnCount(OH_Cursor *cursor, int *count)
+int Rdb_GetColumnCount(OH_Cursor *cursor, int *count)
 {
     if (cursor == nullptr || count == nullptr || cursor->id != OHOS::RdbNdk::RDB_CURSOR_CID) {
         LOG_ERROR("Parameters set error:cursor is NULL ? %{public}d, count is NULL ? %{public}d", (cursor == nullptr),
@@ -61,7 +37,7 @@ int CURSOR_GetColumnCount(OH_Cursor *cursor, int *count)
     return tempCursor->GetResultSet()->GetColumnCount(*count);
 }
 
-int CURSOR_GetColumnType(OH_Cursor *cursor, int32_t columnIndex, OH_Rdb_ColumnType *columnType)
+int Rdb_GetColumnType(OH_Cursor *cursor, int32_t columnIndex, OH_ColumnType *columnType)
 {
     if (cursor == nullptr || columnType == nullptr || cursor->id != OHOS::RdbNdk::RDB_CURSOR_CID) {
         LOG_ERROR("Parameters set error:cursor is NULL ? %{public}d, columnType is NULL ? %{public}d",
@@ -71,11 +47,11 @@ int CURSOR_GetColumnType(OH_Cursor *cursor, int32_t columnIndex, OH_Rdb_ColumnTy
     auto tempCursor = static_cast<OHOS::RdbNdk::CursorImpl *>(cursor);
     OHOS::NativeRdb::ColumnType type;
     int error = tempCursor->GetResultSet()->GetColumnType(columnIndex, type);
-    *columnType = static_cast<OH_Rdb_ColumnType>(static_cast<int>(type));
+    *columnType = static_cast<OH_ColumnType>(static_cast<int>(type));
     return error;
 }
 
-int CURSOR_GetColumnIndex(OH_Cursor *cursor, const char *name, int *columnIndex)
+int Rdb_GetColumnIndex(OH_Cursor *cursor, const char *name, int *columnIndex)
 {
     if (cursor == nullptr || name == nullptr || columnIndex == nullptr || cursor->id != OHOS::RdbNdk::RDB_CURSOR_CID) {
         LOG_ERROR("Parameters set error:cursor is NULL ? %{public}d, name is NULL ? %{public}d,"
@@ -86,7 +62,7 @@ int CURSOR_GetColumnIndex(OH_Cursor *cursor, const char *name, int *columnIndex)
     return tempCursor->GetResultSet()->GetColumnIndex(name, *columnIndex);
 }
 
-int CURSOR_GetColumnName(OH_Cursor *cursor, int32_t columnIndex, char *name, int length)
+int Rdb_GetColumnName(OH_Cursor *cursor, int32_t columnIndex, char *name, int length)
 {
     if (cursor == nullptr || name == nullptr || cursor->id != OHOS::RdbNdk::RDB_CURSOR_CID) {
         LOG_ERROR("Parameters set error:cursor is NULL ? %{public}d, name is NULL ? %{public}d", (cursor == nullptr),
@@ -107,7 +83,7 @@ int CURSOR_GetColumnName(OH_Cursor *cursor, int32_t columnIndex, char *name, int
     return errCode;
 }
 
-int CURSOR_GetRowCount(OH_Cursor *cursor, int *count)
+int Rdb_GetRowCount(OH_Cursor *cursor, int *count)
 {
     if (cursor == nullptr || count == nullptr || cursor->id != OHOS::RdbNdk::RDB_CURSOR_CID) {
         LOG_ERROR("Parameters set error:cursor is NULL ? %{public}d, count is NULL ? %{public}d", (cursor == nullptr),
@@ -118,7 +94,7 @@ int CURSOR_GetRowCount(OH_Cursor *cursor, int *count)
     return tempCursor->GetResultSet()->GetRowCount(*count);
 }
 
-int CURSOR_GoToNextRow(OH_Cursor *cursor)
+int Rdb_GoToNextRow(OH_Cursor *cursor)
 {
     if (cursor == nullptr || cursor->id != OHOS::RdbNdk::RDB_CURSOR_CID) {
         LOG_ERROR("Parameters set error:cursor is NULL ? %{public}d", (cursor == nullptr));
@@ -128,7 +104,7 @@ int CURSOR_GoToNextRow(OH_Cursor *cursor)
     return tempCursor->GetResultSet()->GoToNextRow();
 }
 
-int CURSOR_GetSize(OH_Cursor *cursor, int32_t columnIndex, size_t *size)
+int Rdb_GetSize(OH_Cursor *cursor, int32_t columnIndex, size_t *size)
 {
     if (cursor == nullptr || size == nullptr || cursor->id != OHOS::RdbNdk::RDB_CURSOR_CID) {
         LOG_ERROR("Parameters set error:cursor is NULL ? %{public}d, size is NULL ? %{public}d", (cursor == nullptr),
@@ -139,7 +115,7 @@ int CURSOR_GetSize(OH_Cursor *cursor, int32_t columnIndex, size_t *size)
     return tempCursor->GetResultSet()->GetSize(columnIndex, *size);
 }
 
-int CURSOR_GetText(OH_Cursor *cursor, int32_t columnIndex, char *value, int length)
+int Rdb_GetText(OH_Cursor *cursor, int32_t columnIndex, char *value, int length)
 {
     if (cursor == nullptr || value == nullptr || cursor->id != OHOS::RdbNdk::RDB_CURSOR_CID) {
         LOG_ERROR("Parameters set error:cursor is NULL ? %{public}d, value is NULL ? %{public}d", (cursor == nullptr),
@@ -160,7 +136,7 @@ int CURSOR_GetText(OH_Cursor *cursor, int32_t columnIndex, char *value, int leng
     return errCode;
 }
 
-int CURSOR_GetInt64(OH_Cursor *cursor, int32_t columnIndex, int64_t *value)
+int Rdb_GetInt64(OH_Cursor *cursor, int32_t columnIndex, int64_t *value)
 {
     if (cursor == nullptr || value == nullptr || cursor->id != OHOS::RdbNdk::RDB_CURSOR_CID) {
         LOG_ERROR("Parameters set error:cursor is NULL ? %{public}d, value is NULL ? %{public}d", (cursor == nullptr),
@@ -171,7 +147,7 @@ int CURSOR_GetInt64(OH_Cursor *cursor, int32_t columnIndex, int64_t *value)
     return tempCursor->GetResultSet()->GetLong(columnIndex, *value);
 }
 
-int CURSOR_GetReal(OH_Cursor *cursor, int32_t columnIndex, double *value)
+int Rdb_GetReal(OH_Cursor *cursor, int32_t columnIndex, double *value)
 {
     if (cursor == nullptr || value == nullptr || cursor->id != OHOS::RdbNdk::RDB_CURSOR_CID) {
         LOG_ERROR("Parameters set error:cursor is NULL ? %{public}d, value is NULL ? %{public}d", (cursor == nullptr),
@@ -182,7 +158,7 @@ int CURSOR_GetReal(OH_Cursor *cursor, int32_t columnIndex, double *value)
     return tempCursor->GetResultSet()->GetDouble(columnIndex, *value);
 }
 
-int CURSOR_GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned char *value, int length)
+int Rdb_GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned char *value, int length)
 {
     if (cursor == nullptr || value == nullptr || cursor->id != OHOS::RdbNdk::RDB_CURSOR_CID) {
         LOG_ERROR("Parameters set error:cursor is NULL ? %{public}d, value is NULL ? %{public}d", (cursor == nullptr),
@@ -203,7 +179,7 @@ int CURSOR_GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned char *value,
     return errCode;
 }
 
-int CURSOR_IsNull(OH_Cursor *cursor, int32_t columnIndex, BOOL *isNull)
+int Rdb_IsNull(OH_Cursor *cursor, int32_t columnIndex, bool *isNull)
 {
     if (cursor == nullptr || isNull == nullptr || cursor->id != OHOS::RdbNdk::RDB_CURSOR_CID) {
         LOG_ERROR("Parameters set error:cursor is NULL ? %{public}d, value is NULL ? %{public}d", (cursor == nullptr),
@@ -213,11 +189,11 @@ int CURSOR_IsNull(OH_Cursor *cursor, int32_t columnIndex, BOOL *isNull)
     bool isNULLTemp = false;
     auto tempCursor = static_cast<OHOS::RdbNdk::CursorImpl *>(cursor);
     int ret = tempCursor->GetResultSet()->IsColumnNull(columnIndex, isNULLTemp);
-    isNULLTemp == true ? *isNull = TRUE : *isNull = FALSE;
+    isNULLTemp == true ? *isNull = true : *isNull = false;
     return ret;
 }
 
-int CURSOR_Close(OH_Cursor *cursor)
+int Rdb_Close(OH_Cursor *cursor)
 {
     if (cursor == nullptr || cursor->id != OHOS::RdbNdk::RDB_CURSOR_CID) {
         LOG_ERROR("Parameters set error:cursor is NULL ? %{public}d", (cursor == nullptr));
@@ -231,4 +207,29 @@ int CURSOR_Close(OH_Cursor *cursor)
     delete tempCursor;
     tempCursor = nullptr;
     return errCode;
+}
+
+OHOS::RdbNdk::CursorImpl::CursorImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
+{
+    id = RDB_CURSOR_CID;
+    resultSet_ = resultSet;
+
+    getColumnCount = Rdb_GetColumnCount;
+    getColumnType = Rdb_GetColumnType;
+    getColumnIndex = Rdb_GetColumnIndex;
+    getColumnName = Rdb_GetColumnName;
+    getRowCount = Rdb_GetRowCount;
+    goToNextRow = Rdb_GoToNextRow;
+    getSize = Rdb_GetSize;
+    getText = Rdb_GetText;
+    getInt64 = Rdb_GetInt64;
+    getReal = Rdb_GetReal;
+    getBlob = Rdb_GetBlob;
+    isNull = Rdb_IsNull;
+    close = Rdb_Close;
+}
+
+std::shared_ptr<OHOS::NativeRdb::ResultSet> OHOS::RdbNdk::CursorImpl::GetResultSet()
+{
+    return resultSet_;
 }
