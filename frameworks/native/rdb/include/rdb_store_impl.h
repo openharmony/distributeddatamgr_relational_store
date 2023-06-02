@@ -88,6 +88,7 @@ public:
     int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) override;
     int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
         const std::vector<uint8_t> &newKey) override;
+    void GetSchema();
     std::string GetName();
     std::string GetOrgPath();
     std::string GetFileType();
