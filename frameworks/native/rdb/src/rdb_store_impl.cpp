@@ -29,6 +29,7 @@
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
+#include "task_executor.h"
 
 #ifndef WINDOWS_PLATFORM
 #include "directory_ex.h"
@@ -89,24 +90,23 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
 
-    std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-    errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
-    if (errCode != E_OK) {
-        LOG_ERROR("GetRdbService failed, err is %{public}d.", errCode);
-        return E_OK;
+    if (pool_ == nullptr) {
+        pool_ = TaskExecutor::GetInstance().GetExecutor();
     }
-    errCode = service->GetSchema(syncerParam_);
-    if (errCode != E_OK) {
-        LOG_ERROR("GetSchema failed, err is %{public}d.", errCode);
-    }
-    // open uri share
-    if (!config.GetUri().empty()) {
-        errCode = service->CreateRDBTable(syncerParam_, config.GetWritePermission(), config.GetReadPermission());
-        if (errCode != E_OK) {
-            LOG_ERROR("CreateRDBTable failed");
-        } else {
-            isShared_ = true;
-        }
+    if (pool_ != nullptr) {
+        auto param = syncerParam_;
+        pool_->Execute([param]() {
+            std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
+            int errCode = DistributedRdb::RdbManager::GetRdbService(param, service);
+            if (errCode != E_OK || service == nullptr) {
+                LOG_ERROR("GetRdbService failed, err is %{public}d.", errCode);
+                return;
+            }
+            errCode = service->GetSchema(param);
+            if (errCode != E_OK) {
+                LOG_ERROR("GetSchema failed, err is %{public}d.", errCode);
+            }
+        });
     }
 #endif
     return E_OK;
@@ -121,19 +121,6 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
 RdbStoreImpl::~RdbStoreImpl()
 {
     delete connectionPool;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    if (isShared_) {
-        std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-        int errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
-        if (errCode != E_OK) {
-            LOG_ERROR("RdbStoreImpl::~RdbStoreImpl get service failed");
-            return;
-        }
-        if (service->DestroyRDBTable(syncerParam_) != E_OK) {
-            LOG_ERROR("RdbStoreImpl::~RdbStoreImpl service DestroyRDBTable failed");
-        }
-    }
-#endif
 }
 #ifdef WINDOWS_PLATFORM
 void RdbStoreImpl::Clear()
@@ -267,7 +254,7 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
     }
 
     sql << ") VALUES (";
-    for (size_t i = 0; i < initialValues.Size(); i++) {
+    for (int i = 0; i < initialValues.Size(); i++) {
         sql << ((i == 0) ? "?" : ",?");
     }
     sql << ')';
@@ -318,7 +305,7 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
     sql << "UPDATE" << conflictClause << " " << table << " SET ";
 
     std::vector<ValueObject> bindArgs;
-    const char * split = "";
+    const char *split = "";
     for (auto &[key, val] : values.values_) {
         sql << split;
         sql << key << "=?";       // columnName
@@ -554,16 +541,13 @@ int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string
     return errCode;
 }
 
-/**
- * Restores a database from a specified encrypted or unencrypted database file.
- */
-int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
+int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &backupFilePath)
 {
     if (databasePath.empty()) {
         LOG_ERROR("Empty databasePath.");
         return E_INVALID_FILE_PATH;
     }
-    std::string backupFilePath;
+
     if (ISFILE(databasePath)) {
         backupFilePath = ExtractFilePath(path) + databasePath;
     } else {
@@ -575,6 +559,53 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
     }
 
     LOG_INFO("databasePath is %{public}s.", SqliteUtils::Anonymous(backupFilePath).c_str());
+    return E_OK;
+}
+
+int RdbStoreImpl::ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs)
+{
+    SqliteConnection *connection;
+    int errCode = BeginExecuteSql(sql, &connection);
+    if (errCode != 0) {
+        return errCode;
+    }
+
+    errCode = connection->ExecuteSql(sql, bindArgs);
+    connectionPool->ReleaseConnection(connection);
+    if (errCode != E_OK) {
+        LOG_ERROR("ExecuteSql ATTACH_BACKUP_SQL error %{public}d", errCode);
+        return errCode;
+    }
+    return errCode;
+}
+
+int RdbStoreImpl::ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs)
+{
+    int64_t count;
+    SqliteConnection *connection;
+    int errCode = BeginExecuteSql(sql, &connection);
+    if (errCode != 0) {
+        return errCode;
+    }
+    errCode = connection->ExecuteGetLong(count, sql, bindArgs);
+    connectionPool->ReleaseConnection(connection);
+    if (errCode != E_OK) {
+        LOG_ERROR("ExecuteSql EXPORT_SQL error %{public}d", errCode);
+        return errCode;
+    }
+    return errCode;
+}
+
+/**
+ * Restores a database from a specified encrypted or unencrypted database file.
+ */
+int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
+{
+    std::string backupFilePath;
+    int ret = GetDataBasePath(databasePath, backupFilePath);
+    if (ret != E_OK) {
+        return ret;
+    }
 
     std::vector<ValueObject> bindArgs;
     bindArgs.push_back(ValueObject(backupFilePath));
@@ -583,7 +614,8 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     } else if (isEncrypt_) {
-        RdbPassword rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        RdbPassword rdbPwd =
+            RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
         std::vector<uint8_t> key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
         bindArgs.push_back(ValueObject(key));
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
@@ -593,45 +625,17 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
         bindArgs.push_back(ValueObject(str));
     }
 
-    SqliteConnection *connection;
-
-    std::string sql = GlobalExpr::ATTACH_BACKUP_SQL;
-    int errCode = BeginExecuteSql(sql, &connection);
-    if (errCode != 0) {
-        return errCode;
-    }
-    errCode = connection->ExecuteSql(sql, bindArgs);
-    connectionPool->ReleaseConnection(connection);
-    if (errCode != E_OK) {
-        LOG_ERROR("ExecuteSql ATTACH_BACKUP_SQL error %{public}d", errCode);
-        return errCode;
+    ret = ExecuteSqlInner(GlobalExpr::ATTACH_BACKUP_SQL, bindArgs);
+    if (ret != E_OK) {
+        return ret;
     }
 
-    int64_t count;
-    sql = GlobalExpr::EXPORT_SQL;
-    errCode = BeginExecuteSql(sql, &connection);
-    if (errCode != 0) {
-        return errCode;
-    }
-    errCode = connection->ExecuteGetLong(count, sql, std::vector<ValueObject>());
-    connectionPool->ReleaseConnection(connection);
-    if (errCode != E_OK) {
-        LOG_ERROR("ExecuteSql EXPORT_SQL error %{public}d", errCode);
-        return errCode;
+    ret = ExecuteGetLongInner(GlobalExpr::EXPORT_SQL, std::vector<ValueObject>());
+    if (ret != E_OK) {
+        return ret;
     }
 
-    sql = GlobalExpr::DETACH_BACKUP_SQL;
-    errCode = BeginExecuteSql(sql, &connection);
-    if (errCode != 0) {
-        return errCode;
-    }
-    errCode = connection->ExecuteSql(sql, std::vector<ValueObject>());
-    connectionPool->ReleaseConnection(connection);
-    if (errCode != E_OK) {
-        LOG_ERROR("ExecuteSql DETACH_BACKUP_SQL error %{public}d", errCode);
-        return errCode;
-    }
-    return E_OK;
+    return ExecuteSqlInner(GlobalExpr::DETACH_BACKUP_SQL, std::vector<ValueObject>());
 }
 
 int RdbStoreImpl::BeginExecuteSql(const std::string &sql, SqliteConnection **connection)
@@ -733,7 +737,8 @@ int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     } else if (isEncrypt_) {
-        RdbPassword rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        RdbPassword rdbPwd =
+            RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
         std::vector<uint8_t> key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
         bindArgs.push_back(ValueObject(key));
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);

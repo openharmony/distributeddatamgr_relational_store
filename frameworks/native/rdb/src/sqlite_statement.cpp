@@ -212,14 +212,9 @@ int SqliteStatement::GetNumParameters(int &numParams) const
 
 int SqliteStatement::GetColumnName(int index, std::string &columnName) const
 {
-    if (stmtHandle == nullptr) {
-        LOG_ERROR("invalid statement.");
-        return E_INVALID_STATEMENT;
-    }
-
-    if (index >= columnCount) {
-        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount);
-        return E_INVALID_COLUMN_INDEX;
+    int ret = IsValid(index);
+    if (ret != E_OK) {
+        return ret;
     }
 
     const char *name = sqlite3_column_name(stmtHandle, index);
@@ -233,14 +228,9 @@ int SqliteStatement::GetColumnName(int index, std::string &columnName) const
 
 int SqliteStatement::GetColumnType(int index, int &columnType) const
 {
-    if (stmtHandle == nullptr) {
-        LOG_ERROR("invalid statement.");
-        return E_INVALID_STATEMENT;
-    }
-
-    if (index >= columnCount) {
-        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount);
-        return E_INVALID_COLUMN_INDEX;
+    int ret = IsValid(index);
+    if (ret != E_OK) {
+        return ret;
     }
 
     int type = sqlite3_column_type(stmtHandle, index);
@@ -260,14 +250,9 @@ int SqliteStatement::GetColumnType(int index, int &columnType) const
 
 int SqliteStatement::GetColumnBlob(int index, std::vector<uint8_t> &value) const
 {
-    if (stmtHandle == nullptr) {
-        LOG_ERROR("invalid statement.");
-        return E_INVALID_STATEMENT;
-    }
-
-    if (index >= columnCount) {
-        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount);
-        return E_INVALID_COLUMN_INDEX;
+    int ret = IsValid(index);
+    if (ret != E_OK) {
+        return ret;
     }
 
     int type = sqlite3_column_type(stmtHandle, index);
@@ -290,12 +275,9 @@ int SqliteStatement::GetColumnBlob(int index, std::vector<uint8_t> &value) const
 
 int SqliteStatement::GetColumnString(int index, std::string &value) const
 {
-    if (stmtHandle == nullptr) {
-        return E_INVALID_STATEMENT;
-    }
-
-    if (index >= columnCount) {
-        return E_INVALID_COLUMN_INDEX;
+    int ret = IsValid(index);
+    if (ret != E_OK) {
+        return ret;
     }
 
     int type = sqlite3_column_type(stmtHandle, index);
@@ -332,15 +314,11 @@ int SqliteStatement::GetColumnString(int index, std::string &value) const
 
 int SqliteStatement::GetColumnLong(int index, int64_t &value) const
 {
-    if (stmtHandle == nullptr) {
-        LOG_ERROR("invalid statement.");
-        return E_INVALID_STATEMENT;
+    int ret = IsValid(index);
+    if (ret != E_OK) {
+        return ret;
     }
 
-    if (index >= columnCount) {
-        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount);
-        return E_INVALID_COLUMN_INDEX;
-    }
     char *errStr = nullptr;
     int type = sqlite3_column_type(stmtHandle, index);
     if (type == SQLITE_INTEGER) {
@@ -363,15 +341,11 @@ int SqliteStatement::GetColumnLong(int index, int64_t &value) const
 }
 int SqliteStatement::GetColumnDouble(int index, double &value) const
 {
-    if (stmtHandle == nullptr) {
-        LOG_ERROR("invalid statement.");
-        return E_INVALID_STATEMENT;
+    int ret = IsValid(index);
+    if (ret != E_OK) {
+        return ret;
     }
 
-    if (index >= columnCount) {
-        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount);
-        return E_INVALID_COLUMN_INDEX;
-    }
     char *ptr = nullptr;
     int type = sqlite3_column_type(stmtHandle, index);
     if (type == SQLITE_FLOAT) {
@@ -396,14 +370,9 @@ int SqliteStatement::GetColumnDouble(int index, double &value) const
 
 int SqliteStatement::GetColumn(int index, ValueObject &value) const
 {
-    if (stmtHandle == nullptr) {
-        LOG_ERROR("invalid statement.");
-        return E_INVALID_STATEMENT;
-    }
-
-    if (index >= columnCount) {
-        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount);
-        return E_INVALID_COLUMN_INDEX;
+    int ret = IsValid(index);
+    if (ret != E_OK) {
+        return ret;
     }
 
     int type = sqlite3_column_type(stmtHandle, index);
@@ -464,7 +433,7 @@ int SqliteStatement::GetSize(int index, size_t &size) const
 
     int type = sqlite3_column_type(stmtHandle, index);
     if (type == SQLITE_BLOB || type == SQLITE_TEXT || type == SQLITE_NULL) {
-        size = sqlite3_column_bytes(stmtHandle, index);
+        size = static_cast<size_t>(sqlite3_column_bytes(stmtHandle, index));
         return E_OK;
     }
 
@@ -474,6 +443,21 @@ int SqliteStatement::GetSize(int index, size_t &size) const
 bool SqliteStatement::IsReadOnly() const
 {
     return readOnly;
+}
+
+int SqliteStatement::IsValid(int index) const
+{
+    if (stmtHandle == nullptr) {
+        LOG_ERROR("invalid statement.");
+        return E_INVALID_STATEMENT;
+    }
+
+    if (index >= columnCount) {
+        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount);
+        return E_INVALID_COLUMN_INDEX;
+    }
+
+    return E_OK;
 }
 } // namespace NativeRdb
 } // namespace OHOS
