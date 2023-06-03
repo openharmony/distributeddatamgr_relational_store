@@ -19,7 +19,6 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/abs_result_set.cpp",
   "${relational_store_native_path}/rdb/src/base_transaction.cpp",
   "${relational_store_native_path}/rdb/src/base_transaction.h",
-  "${relational_store_native_path}/rdb/src/logger.h",
   "${relational_store_native_path}/rdb/src/raw_data_parser.cpp",
   "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
   "${relational_store_native_path}/rdb/src/rdb_predicates.cpp",
@@ -45,6 +44,7 @@ if (is_ohos) {
 
     include_dirs = [
       "include",
+      "${relational_store_common_path}/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/rdb_device_manager_adapter/include",
     ]
@@ -188,6 +188,7 @@ if (is_ohos) {
 
     include_dirs = [
       "mock/include",
+      "${relational_store_common_path}/include",
       "${relational_store_native_path}/rdb/mock/include",
       "//commonlibrary/c_utils/base/include",
       "include",
@@ -280,6 +281,7 @@ if (is_ohos) {
 
     include_dirs = [
       "mock/include",
+      "${relational_store_common_path}/include",
       "${relational_store_native_path}/rdb/mock/include",
       "//commonlibrary/c_utils/base/include",
       "include",
@@ -368,6 +370,7 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "${relational_store_common_path}/include",
       "${relational_store_innerapi_path}/rdb/mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "${relational_store_innerapi_path}/rdb/include",
@@ -430,6 +433,7 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "${relational_store_common_path}/include",
       "${relational_store_innerapi_path}/rdb/mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "${relational_store_innerapi_path}/rdb/include",

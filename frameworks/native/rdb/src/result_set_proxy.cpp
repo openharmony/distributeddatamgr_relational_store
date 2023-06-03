@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 #define LOG_TAG "ResultSetProxy"
+#include "result_set_proxy.h"
 
 #include "logger.h"
 #include "message_parcel.h"
 #include "rdb_errno.h"
-#include "result_set_proxy.h"
 
 namespace OHOS::NativeRdb {
 ResultSetProxy::ResultSetProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IResultSet>(impl)

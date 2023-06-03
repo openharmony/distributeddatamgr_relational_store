@@ -16,6 +16,7 @@
 #define LOG_TAG "AbsRdbPredicates"
 
 #include "abs_rdb_predicates.h"
+
 #include "logger.h"
 #include "rdb_trace.h"
 

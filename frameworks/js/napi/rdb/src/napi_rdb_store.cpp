@@ -12,17 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define LOG_TAG "JsRdbStore"
+
+#include "napi_rdb_store.h"
 
 #include <cinttypes>
 #include <string>
 #include <vector>
 
-#include "js_logger.h"
 #include "js_utils.h"
+#include "logger.h"
 #include "napi_async_call.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_predicates.h"
-#include "napi_rdb_store.h"
 #include "napi_rdb_trace.h"
 #include "napi_result_set.h"
 #include "rdb_errno.h"

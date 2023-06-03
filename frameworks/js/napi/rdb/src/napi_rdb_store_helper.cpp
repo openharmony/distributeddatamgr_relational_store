@@ -12,6 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#define LOG_TAG "JsRdbStoreHelper"
+
 #include "napi_rdb_store_helper.h"
 
 #include <functional>
@@ -19,8 +22,8 @@
 #include <vector>
 
 #include "js_ability.h"
-#include "js_logger.h"
 #include "js_utils.h"
+#include "logger.h"
 #include "napi_async_call.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_store.h"

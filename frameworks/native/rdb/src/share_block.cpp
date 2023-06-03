@@ -12,8 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#define LOG_TAG "SharedBlock"
+
 #include "share_block.h"
+
 #include <unistd.h>
+
 #include "logger.h"
 #include "shared_block_serializer_info.h"
 

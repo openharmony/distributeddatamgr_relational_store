@@ -14,17 +14,18 @@
  */
 
 #include <gtest/gtest.h>
+
 #include <random>
 #include <string>
 
 #include "common.h"
-#include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "sqlite_global_config.h"
 
 using namespace testing::ext;
+using namespace OHOS;
 using namespace OHOS::NativeRdb;
 
 class RdbWalLimitTest : public testing::Test {

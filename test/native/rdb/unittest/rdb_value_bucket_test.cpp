@@ -14,10 +14,10 @@
  */
 
 #include <gtest/gtest.h>
+
 #include <string>
 
 #include "itypes_util.h"
-#include "logger.h"
 #include "message_parcel.h"
 #include "parcel.h"
 #include "raw_data_parser.h"

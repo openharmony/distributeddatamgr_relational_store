@@ -18,6 +18,7 @@ config("appdatafwk_config") {
   include_dirs = [
     "include",
     "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb/include",
+    "${relational_store_common_path}/include",
   ]
   if (!is_mingw && !is_mac) {
     cflags_cc = [ "-fvisibility=hidden" ]

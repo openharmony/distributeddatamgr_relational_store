@@ -12,11 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define LOG_TAG "JsDataAbilityPredicates"
 
 #include "napi_data_ability_predicates.h"
 
-#include "js_logger.h"
 #include "js_utils.h"
+#include "logger.h"
 #include "napi_async_proxy.h"
 
 using namespace OHOS::NativeRdb;

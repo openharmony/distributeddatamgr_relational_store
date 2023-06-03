@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "JsAbility"
+
 #include "js_ability.h"
 
 #include "extension_context.h"
-#include "js_logger.h"
+#include "logger.h"
 
 namespace OHOS {
 namespace AppDataMgrJsKit {

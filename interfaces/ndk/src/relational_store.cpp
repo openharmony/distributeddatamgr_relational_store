@@ -13,21 +13,23 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "NdkRelationalStore"
+
 #include "relational_store.h"
 
-#include "relational_cursor_impl.h"
-#include "relational_predicates_impl.h"
-#include "relational_store_impl.h"
-
+#include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_predicates.h"
+#include "relational_cursor_impl.h"
+#include "relational_error_code.h"
+#include "relational_predicates_impl.h"
+#include "relational_store_impl.h"
 #include "relational_value_object_impl.h"
 #include "relational_values_bucket_impl.h"
-#include "relational_error_code.h"
 #include "sqlite_global_config.h"
-#include "logger.h"
-using OHOS::RdbNdk::RDB_NDK_LABEL;
+
+using namespace OHOS::RdbNdk;
 
 OH_VObject *OH_Rdb_CreateValueObject()
 {

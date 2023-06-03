@@ -24,6 +24,7 @@ config("native_dataability_config") {
 
   include_dirs = [
     "include",
+    "${relational_store_common_path}/include",
     "${relational_store_native_path}/dataability/include",
     "${relational_store_native_path}/dataability/src",
   ]

@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "JsSyncCall"
+
 #include "napi_async_call.h"
 
-#include "js_logger.h"
+#include "logger.h"
 #include "napi_rdb_trace.h"
 
 namespace OHOS {

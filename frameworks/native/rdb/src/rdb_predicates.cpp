@@ -13,9 +13,12 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "RdbPredicates"
+
 #include "rdb_predicates.h"
-#include "string_utils.h"
+
 #include "logger.h"
+#include "string_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {

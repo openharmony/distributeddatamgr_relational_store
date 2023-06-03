@@ -13,8 +13,12 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "ISharedResultSetStub"
+
 #include "ishared_result_set_stub.h"
+
 #include <future>
+
 #include "logger.h"
 #include "rdb_errno.h"
 

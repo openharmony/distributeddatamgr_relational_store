@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "SqliteStatement"
+
 #include "sqlite_statement.h"
 
 #include <iomanip>

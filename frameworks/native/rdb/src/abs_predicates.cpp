@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "AbsPredicates"
+
 #include "abs_predicates.h"
 
 #include <algorithm>
@@ -20,8 +22,8 @@
 
 #include "logger.h"
 #include "rdb_trace.h"
-#include "string_utils.h"
 #include "sqlite_sql_builder.h"
+#include "string_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {

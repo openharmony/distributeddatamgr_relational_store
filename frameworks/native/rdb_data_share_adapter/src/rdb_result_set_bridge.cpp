@@ -17,8 +17,8 @@
 
 #include "rdb_result_set_bridge.h"
 
+#include "logger.h"
 #include "rdb_errno.h"
-#include "rdb_logger.h"
 #include "result_set.h"
 #include "securec.h"
 
