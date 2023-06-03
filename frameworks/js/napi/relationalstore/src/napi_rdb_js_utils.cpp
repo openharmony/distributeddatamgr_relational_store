@@ -16,6 +16,12 @@
 #include "napi_rdb_js_utils.h"
 #include "result_set.h"
 #include "js_logger.h"
+#define RDB_NAPI_CALL_BASE(theCall, retVal) \
+    do {                                    \
+        if ((theCall) != napi_ok) {         \
+            return retVal;                  \
+        }                                   \
+    } while (0)
 namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
 using namespace NativeRdb;
@@ -24,19 +30,21 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
 {
     napi_valuetype type;
     napi_status status = napi_typeof(env, jsValue, &type);
-    if (status != napi_ok || type != napi_object) {
+    bool isArray;
+    napi_status status_array = napi_is_array(env, jsValue, &isArray);
+    if (status != napi_ok || type != napi_object || status_array != napi_ok || isArray) {
         LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
         return napi_invalid_arg;
     }
 
-    NAPI_CALL_BASE(env, Convert2ValueExt(env, GetNamedProperty(env, jsValue, "version"), output.version),
+    RDB_NAPI_CALL_BASE(Convert2ValueExt(env, GetNamedProperty(env, jsValue, "version"), output.version),
         napi_invalid_arg);
-    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, name), napi_invalid_arg);
-    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, uri), napi_invalid_arg);
-    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, createTime), napi_invalid_arg);
-    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, modifyTime), napi_invalid_arg);
-    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, size), napi_invalid_arg);
-    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, hash), napi_invalid_arg);
+    RDB_NAPI_CALL_BASE(GET_PROPERTY(env, jsValue, output, name), napi_invalid_arg);
+    RDB_NAPI_CALL_BASE(GET_PROPERTY(env, jsValue, output, uri), napi_invalid_arg);
+    RDB_NAPI_CALL_BASE(GET_PROPERTY(env, jsValue, output, createTime), napi_invalid_arg);
+    RDB_NAPI_CALL_BASE(GET_PROPERTY(env, jsValue, output, modifyTime), napi_invalid_arg);
+    RDB_NAPI_CALL_BASE(GET_PROPERTY(env, jsValue, output, size), napi_invalid_arg);
+    RDB_NAPI_CALL_BASE(GET_PROPERTY(env, jsValue, output, hash), napi_invalid_arg);
     return napi_ok;
 }
 
@@ -44,14 +52,14 @@ template<>
 napi_value Convert2JSValue(napi_env env, const Asset &value)
 {
     napi_value object;
-    NAPI_CALL_BASE(env, napi_create_object(env, &object), object);
-    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, version), object);
-    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, name), object);
-    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, uri), object);
-    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, createTime), object);
-    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, modifyTime), object);
-    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, size), object);
-    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, hash), object);
+    RDB_NAPI_CALL_BASE(napi_create_object(env, &object), object);
+    RDB_NAPI_CALL_BASE(ADD_JS_PROPERTY(env, object, value, version), object);
+    RDB_NAPI_CALL_BASE(ADD_JS_PROPERTY(env, object, value, name), object);
+    RDB_NAPI_CALL_BASE(ADD_JS_PROPERTY(env, object, value, uri), object);
+    RDB_NAPI_CALL_BASE(ADD_JS_PROPERTY(env, object, value, createTime), object);
+    RDB_NAPI_CALL_BASE(ADD_JS_PROPERTY(env, object, value, modifyTime), object);
+    RDB_NAPI_CALL_BASE(ADD_JS_PROPERTY(env, object, value, size), object);
+    RDB_NAPI_CALL_BASE(ADD_JS_PROPERTY(env, object, value, hash), object);
     return object;
 }
 
