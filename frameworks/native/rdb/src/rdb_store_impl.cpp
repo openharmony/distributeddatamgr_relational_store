@@ -89,6 +89,20 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.type_ = config.GetDistributedType();
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
+    GetSchema();
+#endif
+    return E_OK;
+}
+
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+void RdbStoreImpl::GetSchema()
+{
+    std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
+    auto err = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
+    if (err != E_OK || service == nullptr) {
+        LOG_WARN("GetRdbService failed, err is %{public}d.", err);
+        return;
+    }
     if (isEncrypt_) {
         bool status = false;
         RdbSecurityManager::GetInstance().GetKeyDistributedStatus(RdbSecurityManager::KeyFileType::PUB_KEY_FILE,
@@ -99,37 +113,22 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
             syncerParam_.password_ = std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize());
         }
     }
-    GetSchema();
-    if (isEncrypt_) {
-        syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
-        syncerParam_.password_.clear();
-        RdbSecurityManager::GetInstance().SetKeyDistributedStatus(
-            RdbSecurityManager::KeyFileType::PUB_KEY_FILE, true);
-    }
-#endif
-    return E_OK;
-}
-
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-void RdbStoreImpl::GetSchema()
-{
     if (pool_ == nullptr) {
         pool_ = TaskExecutor::GetInstance().GetExecutor();
     }
     if (pool_ != nullptr) {
         auto param = syncerParam_;
-        pool_->Execute([param]() {
-            std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-            auto err = DistributedRdb::RdbManager::GetRdbService(param, service);
-            if (err != E_OK || service == nullptr) {
-                LOG_WARN("GetRdbService failed, err is %{public}d.", err);
-                return;
-            }
-            err = service->GetSchema(param);
+        pool_->Execute([param, service]() {
+            auto err = service->GetSchema(param);
             if (err != E_OK) {
                 LOG_ERROR("GetSchema failed, err is %{public}d.", err);
             }
         });
+    }
+    if (isEncrypt_) {
+        syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
+        syncerParam_.password_.clear();
+        RdbSecurityManager::GetInstance().SetKeyDistributedStatus(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, true);
     }
 }
 #endif

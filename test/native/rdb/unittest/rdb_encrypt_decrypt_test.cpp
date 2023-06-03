@@ -331,13 +331,15 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_09, TestSize.Level1)
 
     bool distributedStatus = false;
     int ret = RdbSecurityManager::GetInstance().GetKeyDistributedStatus(
-        RdbSecurityManager::KeyFileType::PUB_KEY_FILE, distributedStatus);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(distributedStatus, false);
-    ret = RdbSecurityManager::GetInstance().GetKeyDistributedStatus(
         RdbSecurityManager::KeyFileType::PUB_KEY_FILE_NEW_KEY, distributedStatus);
     EXPECT_EQ(ret, E_ERROR);
     EXPECT_EQ(distributedStatus, false);
+
+    ret = RdbSecurityManager::GetInstance().GetKeyDistributedStatus(
+        RdbSecurityManager::KeyFileType::PUB_KEY_FILE, distributedStatus);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(distributedStatus, true);
+
     ret = RdbSecurityManager::GetInstance().SetKeyDistributedStatus(
         RdbSecurityManager::KeyFileType::PUB_KEY_FILE, true);
     EXPECT_EQ(ret, E_OK);
