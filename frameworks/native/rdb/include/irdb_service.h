@@ -28,11 +28,14 @@ public:
 
 class IKvStoreDataService : public IRemoteBroker {
 public:
-    enum { GET_FEATURE_INTERFACE = 0 };
-
-    virtual sptr<IRemoteObject> GetFeatureInterface(const std::string &name) = 0;
+    enum {
+        GET_FEATURE_INTERFACE = 0,
+        REGISTER_DEATH_OBSERVER,
+    };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedKv.IKvStoreDataService");
+    virtual sptr<IRemoteObject> GetFeatureInterface(const std::string &name) = 0;
+    virtual int32_t RegisterDeathObserver(const std::string &bundleName, sptr<IRemoteObject> observer) = 0;
 };
 } // namespace OHOS::DistributedRdb
 #endif

@@ -88,6 +88,7 @@ public:
     int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) override;
     int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
         const std::vector<uint8_t> &newKey) override;
+    void GetSchema();
     std::string GetName();
     std::string GetOrgPath();
     std::string GetFileType();
@@ -104,11 +105,13 @@ public:
     std::shared_ptr<ResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
         const std::vector<std::string> &columns, int &errCode) override;
 
-    int SetDistributedTables(const std::vector<std::string>& tables) override;
+    int SetDistributedTables(const std::vector<std::string>& tables, int32_t type) override;
 
     std::string ObtainDistributedTableName(const std::string& device, const std::string& table, int &errCode) override;
 
-    int Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) override;
+    int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &async) override;
+
+    int Sync(const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async) override;
 
     int Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;
 

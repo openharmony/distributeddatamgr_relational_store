@@ -316,46 +316,10 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_08, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_Encrypt_Decrypt_Test_009
- * @tc.desc: test GetKeyDistributedStatus and SetKeyDistributedStatus
- * @tc.type: FUNC
- */
-HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_09, TestSize.Level1)
-{
-    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
-    config.SetEncryptStatus(true);
-    config.SetBundleName("com.example.TestEncrypt9");
-    EncryptTestOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-
-    bool distributedStatus = false;
-    int ret = RdbSecurityManager::GetInstance().GetKeyDistributedStatus(
-        RdbSecurityManager::KeyFileType::PUB_KEY_FILE, distributedStatus);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(distributedStatus, false);
-    ret = RdbSecurityManager::GetInstance().GetKeyDistributedStatus(
-        RdbSecurityManager::KeyFileType::PUB_KEY_FILE_NEW_KEY, distributedStatus);
-    EXPECT_EQ(ret, E_ERROR);
-    EXPECT_EQ(distributedStatus, false);
-    ret = RdbSecurityManager::GetInstance().SetKeyDistributedStatus(
-        RdbSecurityManager::KeyFileType::PUB_KEY_FILE, true);
-    EXPECT_EQ(ret, E_OK);
-    ret = RdbSecurityManager::GetInstance().GetKeyDistributedStatus(
-        RdbSecurityManager::KeyFileType::PUB_KEY_FILE, distributedStatus);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(distributedStatus, true);
-    ret = RdbSecurityManager::GetInstance().SetKeyDistributedStatus(
-        RdbSecurityManager::KeyFileType::PUB_KEY_FILE_NEW_KEY, distributedStatus);
-    EXPECT_EQ(ret, E_ERROR);
-}
-
-/**
- * @tc.name: RdbStore_Encrypt_Decrypt_Test_010
  * @tc.desc: test RdbStore Get Encrypt Store without SetBundleName
  * @tc.type: FUNC
  */
-HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_010, TestSize.Level1)
+HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_009, TestSize.Level1)
 {
     RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
     config.SetEncryptStatus(true);

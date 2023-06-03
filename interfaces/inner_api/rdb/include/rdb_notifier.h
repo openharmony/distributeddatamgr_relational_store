@@ -19,15 +19,17 @@
 namespace OHOS::DistributedRdb {
 class IRdbNotifier {
 public:
-    enum {
+    using ChangeInfo = RdbStoreObserver::ChangeInfo;
+    using PrimaryFields = std::map<std::string, std::string>;
+    enum Code : int32_t {
         RDB_NOTIFIER_CMD_SYNC_COMPLETE,
         RDB_NOTIFIER_CMD_DATA_CHANGE,
+        RDB_NOTIFIER_CMD_DATA_DETAILS,
         RDB_NOTIFIER_CMD_MAX
     };
+    virtual int32_t OnComplete(uint32_t seqNum, Details &&result) = 0;
 
-    virtual int32_t OnComplete(uint32_t seqNum, const SyncResult& result) = 0;
-
-    virtual int32_t OnChange(const std::string& storeName, const std::vector<std::string>& devices) = 0;
+    virtual int32_t OnChange(const std::string &storeName, const std::vector<std::string> &devices) = 0;
 };
 } // namespace OHOS::DistributedRdb
 #endif
