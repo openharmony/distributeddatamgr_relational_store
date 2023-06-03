@@ -57,23 +57,19 @@ int RdbNotifierStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Message
 
 int32_t RdbNotifierStub::OnCompleteInner(MessageParcel &data, MessageParcel &reply)
 {
-    uint32_t seqNum;
-    if (!data.ReadUint32(seqNum)) {
-        ZLOGI("read seq num failed");
-        return RDB_ERROR;
-    }
-    SyncResult result;
-    if (!ITypesUtil::Unmarshal(data, result)) {
+    uint32_t seqNum = 0;
+    Details result;
+    if (!ITypesUtil::Unmarshal(data, seqNum, result)) {
         ZLOGE("read sync result failed");
         return RDB_ERROR;
     }
-    return OnComplete(seqNum, result);
+    return OnComplete(seqNum, std::move(result));
 }
 
-int32_t RdbNotifierStub::OnComplete(uint32_t seqNum, const SyncResult &result)
+int32_t RdbNotifierStub::OnComplete(uint32_t seqNum, Details &&result)
 {
     if (completeNotifier_) {
-        completeNotifier_(seqNum, result);
+        completeNotifier_(seqNum, std::move(result));
     }
     return RDB_OK;
 }
@@ -81,13 +77,9 @@ int32_t RdbNotifierStub::OnComplete(uint32_t seqNum, const SyncResult &result)
 int32_t RdbNotifierStub::OnChangeInner(MessageParcel &data, MessageParcel &reply)
 {
     std::string storeName;
-    if (!data.ReadString(storeName)) {
-        ZLOGE("read store name failed");
-        return RDB_ERROR;
-    }
     std::vector<std::string> devices;
-    if (!data.ReadStringVector(&devices)) {
-        ZLOGE("read devices failed");
+    if (!ITypesUtil::Unmarshal(data, storeName, devices)) {
+        ZLOGE("read sync result failed");
         return RDB_ERROR;
     }
     return OnChange(storeName, devices);

@@ -23,7 +23,7 @@ namespace OHOS::NativeRdb {
 class AbsRdbPredicates : public AbsPredicates {
 public:
     explicit AbsRdbPredicates(std::string tableName);
-
+    explicit AbsRdbPredicates(std::vector<std::string> tables);
     ~AbsRdbPredicates() override {}
 
     void Clear() override;
@@ -50,7 +50,7 @@ protected:
     int joinCount = 0;
 
 private:
-    std::string tableName;
+    std::string tableName_;
 };
 } // namespace OHOS::NativeRdb
 

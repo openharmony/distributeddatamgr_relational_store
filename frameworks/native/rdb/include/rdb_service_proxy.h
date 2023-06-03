@@ -34,12 +34,14 @@ public:
     std::string ObtainDistributedTableName(const std::string& device, const std::string& table) override;
 
     int32_t InitNotifier(const RdbSyncerParam &param);
-    int32_t InitNotifier(const RdbSyncerParam &param, const sptr<IRemoteObject> notifier) override;
-    
-    int32_t SetDistributedTables(const RdbSyncerParam& param, const std::vector<std::string>& tables) override;
-    
-    int32_t Sync(const RdbSyncerParam& param, const SyncOption& option,
-                 const RdbPredicates& predicates, const SyncCallback& callback) override;
+
+    int32_t InitNotifier(const RdbSyncerParam &param, sptr<IRemoteObject> notifier) override;
+
+    int32_t SetDistributedTables(const RdbSyncerParam &param, const std::vector<std::string> &tables,
+        int32_t type = DISTRIBUTED_DEVICE) override;
+
+    int32_t Sync(const RdbSyncerParam& param, const Option& option,
+                 const RdbPredicates& predicates, const AsyncDetail &async) override;
 
     int32_t Subscribe(const RdbSyncerParam& param, const SubscribeOption& option,
                       RdbStoreObserver *observer) override;
@@ -54,27 +56,25 @@ public:
     void ImportObservers(ObserverMap& observers);
 
     int32_t GetSchema(const RdbSyncerParam &param) override;
-protected:
-    int32_t DoSync(const RdbSyncerParam& param, const SyncOption& option,
-                   const RdbPredicates& predicates, SyncResult& result) override;
-
-    int32_t DoAsync(const RdbSyncerParam& param, uint32_t seqNum, const SyncOption& option,
-                    const RdbPredicates& predicates) override;
-
-    int32_t DoSubscribe(const RdbSyncerParam& param, const SubscribeOption &option) override;
-
-    int32_t DoUnSubscribe(const RdbSyncerParam& param) override;
-
 private:
+    std::pair<int32_t, Details> DoSync(const RdbSyncerParam &param, const Option &option,
+        const RdbPredicates &predicates);
+
+    int32_t DoAsync(const RdbSyncerParam &param, const Option &option, const RdbPredicates &predicates);
+
+    int32_t DoSync(const RdbSyncerParam &param, const Option &option, const RdbPredicates &predicates,
+        const AsyncDetail &async);
+
+    int32_t DoAsync(const RdbSyncerParam &param, const Option &option, const RdbPredicates &predicates,
+        const AsyncDetail &async);
+
+    int32_t DoSubscribe(const RdbSyncerParam& param, const SubscribeOption &option);
+
+    int32_t DoUnSubscribe(const RdbSyncerParam& param);
+
     uint32_t GetSeqNum();
 
-    int32_t DoSync(const RdbSyncerParam& param, const SyncOption& option,
-                   const RdbPredicates& predicates, const SyncCallback& callback);
-
-    int32_t DoAsync(const RdbSyncerParam& param, const SyncOption& option,
-                    const RdbPredicates& predicates, const SyncCallback& callback);
-
-    void OnSyncComplete(uint32_t seqNum, const SyncResult& result);
+    void OnSyncComplete(uint32_t seqNum, Details &&result);
 
     void OnDataChange(const std::string& storeName, const std::vector<std::string>& devices);
 
@@ -82,7 +82,7 @@ private:
 
     std::atomic<uint32_t> seqNum_ {};
 
-    ConcurrentMap<uint32_t, SyncCallback> syncCallbacks_;
+    ConcurrentMap<uint32_t, AsyncDetail> syncCallbacks_;
     ObserverMap observers_;
     sptr<RdbNotifierStub> notifier_;
 

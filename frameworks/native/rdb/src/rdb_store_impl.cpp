@@ -38,7 +38,7 @@
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "iresult_set.h"
 #include "rdb_device_manager_adapter.h"
-#include "rdb_manager.h"
+#include "rdb_manager_impl.h"
 #include "relational_store_manager.h"
 #include "rdb_security_manager.h"
 #include "result_set_proxy.h"
@@ -89,28 +89,39 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.type_ = config.GetDistributedType();
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
+    GetSchema();
+#endif
+    return E_OK;
+}
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+void RdbStoreImpl::GetSchema()
+{
+    auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    if (err != E_OK || service == nullptr) {
+        LOG_WARN("GetRdbService failed, err is %{public}d.", err);
+        return;
+    }
+    if (isEncrypt_) {
+        RdbPassword key =
+            RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        syncerParam_.password_ = std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize());
+    }
     if (pool_ == nullptr) {
         pool_ = TaskExecutor::GetInstance().GetExecutor();
     }
     if (pool_ != nullptr) {
         auto param = syncerParam_;
-        pool_->Execute([param]() {
-            std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-            int errCode = DistributedRdb::RdbManager::GetRdbService(param, service);
-            if (errCode != E_OK || service == nullptr) {
-                LOG_ERROR("GetRdbService failed, err is %{public}d.", errCode);
-                return;
-            }
-            errCode = service->GetSchema(param);
-            if (errCode != E_OK) {
-                LOG_ERROR("GetSchema failed, err is %{public}d.", errCode);
+        auto ser = service;
+        pool_->Execute([param, ser]() {
+            auto err = ser->GetSchema(param);
+            if (err != E_OK) {
+                LOG_ERROR("GetSchema failed, err is %{public}d.", err);
             }
         });
     }
-#endif
-    return E_OK;
 }
+#endif
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
     : rdbStoreConfig(config), connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false),
@@ -121,7 +132,12 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
 RdbStoreImpl::~RdbStoreImpl()
 {
     delete connectionPool;
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
+    syncerParam_.password_.clear();
+#endif
 }
+
 #ifdef WINDOWS_PLATFORM
 void RdbStoreImpl::Clear()
 {
@@ -392,9 +408,9 @@ std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
-    std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-    errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
-    if (errCode != E_OK) {
+    auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    errCode = err;
+    if (err != E_OK) {
         LOG_ERROR("RdbStoreImpl::RemoteQuery get service failed");
         return nullptr;
     }
@@ -1094,42 +1110,22 @@ std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
+int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, int32_t type)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (tables.empty()) {
         LOG_WARN("The distributed tables to be set is empty.");
         return E_OK;
     }
-    if (isEncrypt_) {
-        bool status = false;
-        RdbSecurityManager::GetInstance().GetKeyDistributedStatus(RdbSecurityManager::KeyFileType::PUB_KEY_FILE,
-            status);
-        if (!status) {
-            RdbPassword key =
-                RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-            syncerParam_.password_ = std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize());
-        }
-    }
 
-    std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-    int errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
+    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         return errCode;
     }
-    int32_t errorCode = service->SetDistributedTables(syncerParam_, tables);
+    int32_t errorCode = service->SetDistributedTables(syncerParam_, tables, type);
     if (errorCode != E_OK) {
         LOG_ERROR("Fail to set distributed tables, error=%{public}d", errorCode);
-        syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
-        syncerParam_.password_.clear();
         return errorCode;
-    }
-
-    if (isEncrypt_) {
-        syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
-        syncerParam_.password_.clear();
-        RdbSecurityManager::GetInstance().SetKeyDistributedStatus(
-            RdbSecurityManager::KeyFileType::PUB_KEY_FILE, true);
     }
     return E_OK;
 }
@@ -1155,16 +1151,45 @@ std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, 
     return DistributedDB::RelationalStoreManager::GetDistributedTableName(uuid, table);
 }
 
-int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const SyncCallback &callback)
+int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &callback)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-    int errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
+    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
         return errCode;
     }
-    errCode = service->Sync(syncerParam_, option, predicate.GetDistributedPredicates(), callback);
+    DistributedRdb::RdbService::Option rdbOption;
+    rdbOption.mode = option.mode;
+    rdbOption.isAsync = !option.isBlock;
+    errCode =
+        service->Sync(syncerParam_, rdbOption, predicate.GetDistributedPredicates(), [callback](Details &&details) {
+            Briefs briefs;
+            for (auto &[key, value] : details) {
+                briefs.insert_or_assign(key, value.code);
+            }
+            callback(briefs);
+        });
+    if (errCode != E_OK) {
+        LOG_ERROR("Sync is failed, err is %{public}d.", errCode);
+        return errCode;
+    }
+    return E_OK;
+}
+
+int RdbStoreImpl::Sync(const SyncOption &option, const std::vector<std::string> &tables,
+                       const AsyncDetail &async)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK) {
+        LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
+        return errCode;
+    }
+    DistributedRdb::RdbService::Option rdbOption;
+    rdbOption.mode = option.mode;
+    rdbOption.isAsync = !option.isBlock;
+    errCode = service->Sync(syncerParam_, rdbOption, AbsRdbPredicates(tables).GetDistributedPredicates(), async);
     if (errCode != E_OK) {
         LOG_ERROR("Sync is failed, err is %{public}d.", errCode);
         return errCode;
@@ -1174,8 +1199,7 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
 
 int RdbStoreImpl::Subscribe(const SubscribeOption &option, RdbStoreObserver *observer)
 {
-    std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-    int errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
+    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -1185,8 +1209,7 @@ int RdbStoreImpl::Subscribe(const SubscribeOption &option, RdbStoreObserver *obs
 int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *observer)
 {
     LOG_INFO("enter");
-    std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-    int errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
+    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         return errCode;
     }
