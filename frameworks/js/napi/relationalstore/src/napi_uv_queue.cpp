@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-#include "napi_uv_queue.h"
-#include "uv.h"
-#include "js_logger.h"
+#define LOG_TAG "RdbUvQueue"
 
-using OHOS::AppDataMgrJsKit::PREFIX_LABEL;
+#include "napi_uv_queue.h"
+
+#include "logger.h"
+#include "uv.h"
 
 namespace OHOS::RelationalStoreJsKit {
 NapiUvQueue::NapiUvQueue(napi_env env, napi_value callback)

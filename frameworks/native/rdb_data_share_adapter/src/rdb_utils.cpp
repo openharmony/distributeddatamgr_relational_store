@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "RdbUtils"
+
 #include "rdb_utils.h"
 
+#include "logger.h"
 #include "raw_data_parser.h"
-#include "rdb_logger.h"
 using namespace OHOS::RdbDataShareAdapter;
 using namespace OHOS::DataShare;
 using namespace OHOS::NativeRdb;

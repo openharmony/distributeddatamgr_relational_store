@@ -17,7 +17,7 @@
 
 #include <map>
 
-#include "js_logger.h"
+#include "logger.h"
 #include "rdb_errno.h"
 
 namespace OHOS {

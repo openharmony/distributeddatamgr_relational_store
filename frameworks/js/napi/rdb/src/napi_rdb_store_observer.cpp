@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "JsRdbStoreObserver"
+
 #include "napi_rdb_store_observer.h"
 
-#include "js_logger.h"
 #include "js_utils.h"
+#include "logger.h"
 
 using namespace OHOS::AppDataMgrJsKit;
-using OHOS::AppDataMgrJsKit::PREFIX_LABEL;
 
 namespace OHOS::RdbJsKit {
 NapiRdbStoreObserver::NapiRdbStoreObserver(napi_env env, napi_value callback) : NapiUvQueue(env, callback)

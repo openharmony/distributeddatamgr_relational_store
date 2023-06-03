@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "RdbSecurityManager"
+
 #include "rdb_security_manager.h"
 
 #include <securec.h>

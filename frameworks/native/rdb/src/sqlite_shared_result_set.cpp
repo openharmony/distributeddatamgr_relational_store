@@ -13,13 +13,18 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "SqliteSharedResultSet"
+
 #include "sqlite_shared_result_set.h"
+
+#include <rdb_errno.h>
+
 #include <algorithm>
 #include <memory>
-#include <rdb_errno.h>
+
+#include "logger.h"
 #include "sqlite_database_utils.h"
 #include "sqlite_utils.h"
-#include "logger.h"
 
 namespace OHOS {
 namespace NativeRdb {

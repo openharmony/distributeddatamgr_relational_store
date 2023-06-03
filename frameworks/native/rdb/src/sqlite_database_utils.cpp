@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "SqliteDatabaseUtils"
+
 #include "sqlite_database_utils.h"
 
 #include <sys/stat.h>

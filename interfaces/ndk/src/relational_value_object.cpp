@@ -13,12 +13,14 @@
  * limitations under the License.
  */
 
-#include "oh_value_object.h"
-#include "relational_value_object_impl.h"
-#include "relational_error_code.h"
-#include "logger.h"
+#define LOG_TAG "NdkRelationalValueObject"
 
-using OHOS::RdbNdk::RDB_NDK_LABEL;
+#include "logger.h"
+#include "oh_value_object.h"
+#include "relational_error_code.h"
+#include "relational_value_object_impl.h"
+
+using namespace OHOS::RdbNdk;
 
 int Rdb_ValueObject_PutInt64(OH_VObject *valueObject, int64_t *value, uint32_t count)
 {

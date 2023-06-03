@@ -13,7 +13,10 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "SharedBlockSerializerInfo"
+
 #include "shared_block_serializer_info.h"
+
 #include "logger.h"
 
 namespace OHOS {

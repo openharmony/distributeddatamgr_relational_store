@@ -14,17 +14,18 @@
  */
 
 #include <gtest/gtest.h>
+
 #include <string>
 
-#include "sqlite_shared_result_set.h"
-#include "shared_block.h"
-#include "logger.h"
 #include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "shared_block.h"
+#include "sqlite_shared_result_set.h"
 
 using namespace testing::ext;
+using namespace OHOS;
 using namespace OHOS::NativeRdb;
 class RdbSqliteSharedResultSetTest : public testing::Test {
 public:

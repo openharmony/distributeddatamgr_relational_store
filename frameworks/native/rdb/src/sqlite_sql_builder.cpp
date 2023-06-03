@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "SqliteSqlBuilder"
+
 #include "sqlite_sql_builder.h"
 
 #include <list>

@@ -12,10 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define LOG_TAG "JsUtils"
 
 #include "js_utils.h"
 
-#include "js_logger.h"
+#include "logger.h"
 
 #define CHECK_RETURN_RET(assertion, message, revt)                       \
     do {                                                                 \

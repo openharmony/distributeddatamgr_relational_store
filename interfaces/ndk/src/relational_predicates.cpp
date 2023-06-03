@@ -12,16 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "oh_predicates.h"
 
+#define LOG_TAG "NdkRelationalPredicates"
+
+#include "logger.h"
+#include "oh_predicates.h"
+#include "relational_error_code.h"
 #include "relational_predicates_impl.h"
 #include "relational_value_object_impl.h"
-#include "relational_error_code.h"
 #include "sqlite_global_config.h"
-#include "logger.h"
 
-using OHOS::RdbNdk::RDB_NDK_LABEL;
 using namespace OHOS::NativeRdb;
+using namespace OHOS::RdbNdk;
 
 OH_Predicates Rdb_Predicates_EqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {

@@ -13,6 +13,8 @@
 * limitations under the License.
 */
 
+#define LOG_TAG "SecurityPolicy"
+
 #include "security_policy.h"
 
 #include "logger.h"

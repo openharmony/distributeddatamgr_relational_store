@@ -12,7 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define LOG_TAG "SharedBlock"
+
 #include "shared_block.h"
+
 #include <ashmem.h>
 #include <fcntl.h>
 #include <securec.h>
@@ -22,8 +25,8 @@
 #include <codecvt>
 #include <iostream>
 
-#include "string_ex.h"
 #include "logger.h"
+#include "string_ex.h"
 
 namespace OHOS {
 namespace AppDataFwk {

@@ -21,6 +21,7 @@ config("rdb_bms_adapter_config") {
   }
   include_dirs = [
     "include",
+    "${relational_store_common_path}/include",
     "${relational_store_innerapi_path}/rdb_bms_adaptor/include",
     "${relational_store_innerapi_path}/rdb/include",
   ]

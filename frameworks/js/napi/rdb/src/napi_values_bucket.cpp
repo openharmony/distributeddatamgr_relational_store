@@ -13,12 +13,15 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "JsValuesBucket"
+
 #include "napi_values_bucket.h"
 
-#include "js_logger.h"
 #include "js_utils.h"
+#include "logger.h"
 #include "value_object.h"
 
+using namespace OHOS;
 using namespace OHOS::AppDataMgrJsKit;
 using namespace OHOS::NativeRdb;
 

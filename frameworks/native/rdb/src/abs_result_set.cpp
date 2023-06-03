@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "AbsResultSet"
+
 #include "abs_result_set.h"
 
 #include <algorithm>

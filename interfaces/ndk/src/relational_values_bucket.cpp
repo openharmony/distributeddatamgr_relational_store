@@ -13,15 +13,18 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "NdkRelationalValueBucket"
+
 #include <map>
+
+#include "logger.h"
 #include "oh_values_bucket.h"
-#include "relational_values_bucket_impl.h"
 #include "relational_error_code.h"
+#include "relational_values_bucket_impl.h"
 #include "value_object.h"
 #include "securec.h"
-#include "logger.h"
 
-using OHOS::RdbNdk::RDB_NDK_LABEL;
+using namespace OHOS::RdbNdk;
 
 int Rdb_VBucket_PutText(OH_VBucket *bucket, const char *field, const char *value)
 {
