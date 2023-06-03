@@ -14,7 +14,7 @@
 */
 
 #include "multi_platform_endian.h"
-#include <arpa/inet.h>
+#include <winsock.h>
 
 namespace OHOS::AppDataFwk {
 uint16_t Endian::Le16toh(uint16_t little_endian_16bits)
