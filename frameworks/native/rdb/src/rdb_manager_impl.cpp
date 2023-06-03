@@ -82,6 +82,9 @@ RdbManagerImpl& RdbManagerImpl::GetInstance()
 
 int RdbManagerImpl::GetRdbService(const RdbSyncerParam &param, std::shared_ptr<RdbService> &service)
 {
+    if (param.bundleName_.empty()) {
+        return E_ERROR;
+    }
     std::lock_guard<std::mutex> lock(mutex_);
     if (rdbService_ != nullptr) {
         service = rdbService_;
