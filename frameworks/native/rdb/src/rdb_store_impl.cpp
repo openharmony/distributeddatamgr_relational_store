@@ -120,7 +120,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
 
 RdbStoreImpl::~RdbStoreImpl()
 {
-    LOG_INFO("destroy");
+    LOG_INFO("destroy.");
     delete connectionPool;
 }
 #ifdef WINDOWS_PLATFORM
@@ -481,7 +481,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
     }
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        LOG_INFO("sql ddl execute.");
+        LOG_INFO("sql ddl execute");
         errCode = connectionPool->ReOpenAvailableReadConnections();
     }
     return errCode;
