@@ -557,3 +557,43 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_009, TestSize.Level1)
 
     valueBucket->destroyValuesBucket(valueBucket);
 }
+
+/**
+ * @tc.name: RDB_NDK_store_test_010
+ * @tc.desc: Normal testCase of NDK store for encrypt store.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_010, TestSize.Level1)
+{
+    std::string encryptStoreTestPath_ = RDB_TEST_PATH + "rdb_encrypt_store_test.db";
+    OH_Rdb_Config config;
+    config.path = encryptStoreTestPath_.c_str();
+    config.securityLevel = OH_Rdb_SecurityLevel::S1;
+    config.isEncrypt = true;
+
+    int errCode = 0;
+    OH_Rdb_Store *encryptStoreTestRdbStore_ = OH_Rdb_GetOrOpen(&config, &errCode);
+    EXPECT_NE(encryptStoreTestRdbStore_, NULL);
+
+    char createTableSql[] = "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
+                            "data3 FLOAT, data4 BLOB, data5 TEXT);";
+    errCode = OH_Rdb_Execute(encryptStoreTestRdbStore_, createTableSql);
+    EXPECT_EQ(errCode, 0);
+
+    OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    valueBucket->putInt64(valueBucket, "id", 1);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    valueBucket->putReal(valueBucket, "data3", 100.1);
+    uint8_t arr[] = {1, 2, 3, 4, 5};
+    int len = sizeof(arr) / sizeof(arr[0]);
+    valueBucket->putBlob(valueBucket, "data4", arr, len);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
+    errCode = OH_Rdb_Insert(encryptStoreTestRdbStore_, "test", valueBucket);
+    EXPECT_EQ(errCode, 1);
+
+    valueBucket->destroyValuesBucket(valueBucket);
+    errCode = OH_Rdb_CloseStore(encryptStoreTestRdbStore_);
+    errCode = OH_Rdb_DeleteStore(encryptStoreTestPath_.c_str());
+    EXPECT_EQ(errCode, 0);
+}
