@@ -104,14 +104,9 @@ void RdbStoreImpl::GetSchema()
         return;
     }
     if (isEncrypt_) {
-        bool status = false;
-        RdbSecurityManager::GetInstance().GetKeyDistributedStatus(RdbSecurityManager::KeyFileType::PUB_KEY_FILE,
-            status);
-        if (!status) {
-            RdbPassword key =
-                RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-            syncerParam_.password_ = std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize());
-        }
+        RdbPassword key =
+            RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        syncerParam_.password_ = std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize());
     }
     if (pool_ == nullptr) {
         pool_ = TaskExecutor::GetInstance().GetExecutor();
@@ -125,11 +120,6 @@ void RdbStoreImpl::GetSchema()
             }
         });
     }
-    if (isEncrypt_) {
-        syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
-        syncerParam_.password_.clear();
-        RdbSecurityManager::GetInstance().SetKeyDistributedStatus(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, true);
-    }
 }
 #endif
 
@@ -142,6 +132,8 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
 RdbStoreImpl::~RdbStoreImpl()
 {
     delete connectionPool;
+    syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
+    syncerParam_.password_.clear();
 }
 #ifdef WINDOWS_PLATFORM
 void RdbStoreImpl::Clear()
