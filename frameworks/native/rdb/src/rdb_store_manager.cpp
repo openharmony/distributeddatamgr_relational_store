@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <cinttypes>
+
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_store_impl.h"
@@ -74,6 +76,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
             pool_ = TaskExecutor::GetInstance().GetExecutor();
         }
         if (pool_ != nullptr) {
+            LOG_INFO("config changed, taskId_: %{public}" PRIu64 "", storeCache_[path]->taskId_);
             pool_->Remove(storeCache_[path]->taskId_);
         }
         storeCache_.erase(path);
@@ -134,6 +137,7 @@ void RdbStoreManager::Remove(const std::string &path)
         return;
     }
     if (pool_ != nullptr) {
+        LOG_INFO("remove taskId_: %{public}" PRIu64 "", it->second->taskId_);
         pool_->Remove(it->second->taskId_);
     }
     storeCache_.erase(it);
