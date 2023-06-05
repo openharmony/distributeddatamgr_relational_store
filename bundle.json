@@ -109,7 +109,6 @@
                             "rdb_store_config.h",
                             "result_set.h",
                             "shared_result_set.h",
-                            "transaction_observer.h",
                             "value_object.h",
                             "values_bucket.h"
                         ],
