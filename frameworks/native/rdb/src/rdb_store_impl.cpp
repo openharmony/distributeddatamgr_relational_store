@@ -132,8 +132,10 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
 RdbStoreImpl::~RdbStoreImpl()
 {
     delete connectionPool;
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
     syncerParam_.password_.clear();
+#endif
 }
 #ifdef WINDOWS_PLATFORM
 void RdbStoreImpl::Clear()
