@@ -24,6 +24,7 @@
 #include "sqlite_global_config.h"
 #include "value_object.h"
 #include "values_bucket.h"
+
 using namespace testing::ext;
 using namespace OHOS;
 using namespace OHOS::NativeRdb;

@@ -13,17 +13,12 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "EntryPoint"
-
-#include "logger.h"
-
 #include "napi_rdb_predicates.h"
 #include "napi_rdb_store.h"
 #include "napi_rdb_store_helper.h"
 #include "napi_rdb_const_properties.h"
 #include "napi/native_api.h"
 
-using namespace OHOS;
 using namespace OHOS::RdbJsKit;
 
 EXTERN_C_START
@@ -59,5 +54,4 @@ static napi_module _module = {
 static __attribute__((constructor)) void RegisterModule(void)
 {
     napi_module_register(&_module);
-    LOG_INFO("module register data.rdb");
 }

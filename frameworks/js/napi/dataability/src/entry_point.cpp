@@ -13,16 +13,11 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "EntryPoint"
-
-#include "logger.h"
-
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "napi_data_ability_predicates.h"
 #include "napi_predicates_utils.h"
 
-using namespace OHOS;
 using namespace OHOS::DataAbilityJsKit;
 
 EXTERN_C_START
@@ -56,5 +51,4 @@ static napi_module _module = {
 static __attribute__((constructor)) void RegisterModule(void)
 {
     napi_module_register(&_module);
-    LOG_INFO("module register data.dataAbility");
 }

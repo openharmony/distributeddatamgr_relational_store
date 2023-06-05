@@ -13,8 +13,6 @@
 * limitations under the License.
 */
 
-#define LOG_TAG "SecurityPolicy"
-
 #include "security_policy.h"
 
 #include "logger.h"
@@ -23,6 +21,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 int SecurityPolicy::SetFileSecurityLevel(const std::string &filePath, const std::string &securityLevel)
 {
     bool result = DistributedFS::ModuleSecurityLabel::SecurityLabel::SetSecurityLabel(filePath, securityLevel);

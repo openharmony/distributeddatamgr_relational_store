@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "RdbStoreHelper"
-
 #include "napi_rdb_store_helper.h"
 
 #include <functional>
@@ -34,6 +32,7 @@
 #include "sqlite_database_utils.h"
 #include "unistd.h"
 
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 

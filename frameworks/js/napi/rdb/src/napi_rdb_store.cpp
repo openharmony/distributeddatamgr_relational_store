@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG "JsRdbStore"
 
 #include "napi_rdb_store.h"
 
@@ -34,6 +33,7 @@
 using namespace OHOS::DataShare;
 #endif
 
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 

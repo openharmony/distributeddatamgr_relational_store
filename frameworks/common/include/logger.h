@@ -19,10 +19,12 @@
 #include "hilog/log.h"
 
 namespace OHOS {
+namespace Rdb {
 static inline OHOS::HiviewDFX::HiLogLabel LogLabel()
 {
     return { LOG_CORE, 0xD001650, "Rdb" };
 }
+} // namespace Rdb
 
 namespace RdbNdk {
 static inline OHOS::HiviewDFX::HiLogLabel LogLabel()
@@ -38,55 +40,50 @@ static inline OHOS::HiviewDFX::HiLogLabel LogLabel()
     do {                                                                                  \
         using HiLog = OHOS::HiviewDFX::HiLog;                                             \
         auto lable = LogLabel();                                                          \
-        if (!HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_DEBUG)) {             \
-            break;                                                                        \
+        if (HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_DEBUG)) {              \
+            HiLog::Debug(lable, "::[%{public}s()-%{public}s:%{public}d]: " fmt, __FUNCTION__, FILENAME, __LINE__, \
+                ##__VA_ARGS__);                                                           \
         }                                                                                 \
-        HiLog::Debug(lable, LOG_TAG "::[%{public}s()-%{public}s:%{public}d]: " fmt, __FUNCTION__, FILENAME, __LINE__, \
-            ##__VA_ARGS__); \
     } while (0)
 
-#define LOG_INFO(fmt, ...)                                                               \
-    do {                                                                                 \
-        using HiLog = OHOS::HiviewDFX::HiLog;                                            \
-        auto lable = LogLabel();                                                         \
-        if (!HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_INFO)) {       \
-            break;                                                                       \
-        }                                                                                \
-        HiLog::Info(lable, LOG_TAG "::[%{public}s()-%{public}s:%{public}d]: " fmt, __FUNCTION__, FILENAME, __LINE__, \
-            ##__VA_ARGS__); \
+#define LOG_INFO(fmt, ...)                                                                \
+    do {                                                                                  \
+        using HiLog = OHOS::HiviewDFX::HiLog;                                             \
+        auto lable = LogLabel();                                                          \
+        if (HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_INFO)) {               \
+            HiLog::Info(lable, "::[%{public}s()-%{public}s:%{public}d]: " fmt, __FUNCTION__, FILENAME, __LINE__, \
+                ##__VA_ARGS__);                                                           \
+        }                                                                                 \
     } while (0)
 
-#define LOG_WARN(fmt, ...)                                                               \
-    do {                                                                                 \
-        using HiLog = OHOS::HiviewDFX::HiLog;                                            \
-        auto lable = LogLabel();                                                         \
-        if (!HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_WARN)) {             \
-            break;                                                                       \
-        }                                                                                \
-        HiLog::Warn(lable, LOG_TAG "::[%{public}s()-%{public}s:%{public}d]: " fmt, __FUNCTION__, FILENAME, __LINE__, \
-            ##__VA_ARGS__); \
+#define LOG_WARN(fmt, ...)                                                                \
+    do {                                                                                  \
+        using HiLog = OHOS::HiviewDFX::HiLog;                                             \
+        auto lable = LogLabel();                                                          \
+        if (HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_WARN)) {               \
+            HiLog::Warn(lable, "::[%{public}s()-%{public}s:%{public}d]: " fmt, __FUNCTION__, FILENAME, __LINE__, \
+                ##__VA_ARGS__);                                                           \
+        }                                                                                 \
     } while (0)
 
 #define LOG_ERROR(fmt, ...)                                                               \
     do {                                                                                  \
         using HiLog = OHOS::HiviewDFX::HiLog;                                             \
         auto lable = LogLabel();                                                          \
-        if (!HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_ERROR)) {             \
-            break;                                                                        \
+        if (HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_ERROR)) {              \
+            HiLog::Error(lable, "::[%{public}s()-%{public}s:%{public}d]: " fmt, __FUNCTION__, FILENAME, __LINE__, \
+                ##__VA_ARGS__);                                                           \
         }                                                                                 \
-        HiLog::Error(lable, LOG_TAG "::[%{public}s()-%{public}s:%{public}d]: " fmt, __FUNCTION__, FILENAME, __LINE__, \
-            ##__VA_ARGS__); \
     } while (0)
 
 #define LOG_FATAL(fmt, ...)                                                               \
     do {                                                                                  \
         using HiLog = OHOS::HiviewDFX::HiLog;                                             \
         auto lable = LogLabel();                                                          \
-        if (!HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_FATAL)) {             \
-            break;                                                                        \
+        if (HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_FATAL)) {              \
+            HiLog::Fatal(lable, "::[%{public}s()-%{public}s:%{public}d]: " fmt, __FUNCTION__, FILENAME, __LINE__, \
+                ##__VA_ARGS__);                                                           \
         }                                                                                 \
-        HiLog::Fatal(lable, LOG_TAG "::[%{public}s()-%{public}s:%{public}d]: " fmt, __FUNCTION__, FILENAME, __LINE__, \
-            ##__VA_ARGS__); \
     } while (0)
 
 #endif // RDB_LOGGER_H

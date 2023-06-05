@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "SharedBlock"
-
 #include "share_block.h"
 
 #include <unistd.h>
@@ -24,6 +22,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 const int ERROR_STATUS = -1;
 const unsigned int SLEEP_TIME = 1000;
 // move to the highest 32 bits of 64 bits number

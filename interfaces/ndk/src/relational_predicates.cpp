@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "NdkRelationalPredicates"
-
 #include "logger.h"
 #include "oh_predicates.h"
 #include "relational_error_code.h"

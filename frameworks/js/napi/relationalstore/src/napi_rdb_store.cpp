@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "RdbStore"
-
 #include "napi_rdb_store.h"
 
 #include <cinttypes>
@@ -36,6 +34,7 @@
 using namespace OHOS::DataShare;
 #endif
 
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 

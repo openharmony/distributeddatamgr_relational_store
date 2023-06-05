@@ -91,6 +91,7 @@ ohos_shared_library("napi_rdb") {
   }
 
   subsystem_name = "distributeddatamgr"
+  innerapi_tags = [ "platformsdk" ]
   part_name = "relational_store"
 }
 
@@ -100,7 +101,6 @@ ohos_shared_library("rdb") {
   if (is_mingw || is_mac) {
     include_dirs = [
       "mock/include",
-      "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/mock/include",
       "${relational_store_napi_path}/rdb/mock/include",
       "//commonlibrary/c_utils/base/include",
@@ -129,7 +129,6 @@ ohos_shared_library("rdb") {
     include_dirs = [
       "include",
       "${datashare_path}/common/include/",
-      "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/rdb/include",
     ]

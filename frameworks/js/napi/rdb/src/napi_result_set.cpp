@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "JsResultSet"
-
 #include "napi_result_set.h"
 
 #include <functional>
@@ -31,6 +29,7 @@
 #include "string_ex.h"
 #endif
 
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 

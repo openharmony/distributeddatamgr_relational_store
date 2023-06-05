@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "DataShareProfileInfo"
-
 #include "data_share_profile_info.h"
 
 #include <algorithm>
@@ -27,6 +25,8 @@
 #include "bundle_info.h"
 #include "hilog/log.h"
 namespace OHOS::RdbBMSAdapter {
+using namespace OHOS::Rdb;
+
 constexpr const char *DATA_SHARE_PROFILE_META = "ohos.extension.dataShare";
 constexpr const char *PROFILE_FILE_PREFIX = "$profile:";
 const size_t PROFILE_PREFIX_LEN = strlen(PROFILE_FILE_PREFIX);

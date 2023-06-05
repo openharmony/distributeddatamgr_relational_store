@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "NdkRelationalStore"
-
 #include "relational_store.h"
 
 #include "logger.h"

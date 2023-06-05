@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "JsAbility"
-
 #include "js_ability.h"
 
 #include "extension_context.h"
@@ -22,6 +20,8 @@
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
+using namespace OHOS::Rdb;
+
 Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
 {
     databaseDir_ = stageContext->GetDatabaseDir();

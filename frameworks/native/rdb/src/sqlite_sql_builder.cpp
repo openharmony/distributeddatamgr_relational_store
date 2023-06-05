@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "SqliteSqlBuilder"
-
 #include "sqlite_sql_builder.h"
 
 #include <list>
@@ -27,6 +25,7 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
 
 const std::string SqliteSqlBuilder::patternWords_ = "['\"`]?(\\w+)['\"`]?|['\"`]([^`\"']+)['\"`]";
 const std::string SqliteSqlBuilder::patternTableColumn_ = "(" + patternWords_ + ")[.](" + patternWords_ + "|\\*)";

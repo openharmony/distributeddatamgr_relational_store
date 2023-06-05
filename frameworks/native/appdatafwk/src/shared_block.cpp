@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG "SharedBlock"
 
 #include "shared_block.h"
 
@@ -30,6 +29,8 @@
 
 namespace OHOS {
 namespace AppDataFwk {
+using namespace OHOS::Rdb;
+
 SharedBlock::SharedBlock(const std::string &name, sptr<Ashmem> ashmem, size_t size, bool readOnly)
     : mName(name), ashmem_(ashmem), mSize(size), mReadOnly(readOnly), mHeader(nullptr)
 {

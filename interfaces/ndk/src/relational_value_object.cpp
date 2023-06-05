@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "NdkRelationalValueObject"
-
 #include "logger.h"
 #include "oh_value_object.h"
 #include "relational_error_code.h"

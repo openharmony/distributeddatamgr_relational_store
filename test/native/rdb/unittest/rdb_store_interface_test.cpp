@@ -23,7 +23,6 @@
 #include "rdb_open_callback.h"
 
 using namespace testing::ext;
-using namespace OHOS;
 using namespace OHOS::NativeRdb;
 
 class RdbStoreInterfaceTest : public testing::Test {

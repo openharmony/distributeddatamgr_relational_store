@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "RdbStoreConfigTest"
-
 #include <gtest/gtest.h>
 
 #include <string>
@@ -27,7 +25,7 @@
 #include "unistd.h"
 
 using namespace testing::ext;
-using namespace OHOS;
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 
 class RdbStoreConfigTest : public testing::Test {

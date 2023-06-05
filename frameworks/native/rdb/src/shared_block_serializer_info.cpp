@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "SharedBlockSerializerInfo"
-
 #include "shared_block_serializer_info.h"
 
 #include "logger.h"
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 SharedBlockSerializerInfo::SharedBlockSerializerInfo(AppDataFwk::SharedBlock *sharedBlock, int numColumns, int startPos)
     :sharedBlock_(sharedBlock), anumColumns(numColumns), atotalRows(0), astartPos(startPos), raddedRows(0),
     risFull(false)

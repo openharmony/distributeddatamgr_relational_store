@@ -24,7 +24,6 @@
 #include "rdb_open_callback.h"
 
 using namespace testing::ext;
-using namespace OHOS;
 using namespace OHOS::NativeRdb;
 
 class RdbConcurrentTest : public testing::Test {

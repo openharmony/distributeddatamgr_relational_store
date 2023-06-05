@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "AbsResultSet"
-
 #include "abs_result_set.h"
 
 #include <algorithm>
@@ -27,6 +25,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 void RowEntity::Put(const std::string &name, const ValueObject &value)
 {
     auto it = values_.emplace(name, std::move(value));

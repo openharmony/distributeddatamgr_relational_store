@@ -15,9 +15,9 @@
 
 #ifndef LDBPROJ_JS_CONFIG_H
 #define LDBPROJ_JS_CONFIG_H
+
 #include "cloud_manager.h"
 #include "js_const_properties.h"
-#include "log_print.h"
 
 namespace OHOS::CloudData {
 class JsConfig {

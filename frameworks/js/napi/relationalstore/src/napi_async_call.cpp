@@ -13,13 +13,12 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "AsyncCall"
-
 #include "napi_async_call.h"
 
 #include "logger.h"
 #include "napi_rdb_trace.h"
 
+using namespace OHOS::Rdb;
 using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS {
