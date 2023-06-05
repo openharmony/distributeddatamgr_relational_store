@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "RdbStoreManager"
-
 #include "rdb_store_manager.h"
 
 #include <cinttypes>
@@ -33,6 +31,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 RdbStoreNode::RdbStoreNode(const std::shared_ptr<RdbStoreImpl> &rdbStore)
     : rdbStore_(rdbStore), taskId_(TaskExecutor::INVALID_TASK_ID)
 {
@@ -79,6 +79,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
             pool_ = TaskExecutor::GetInstance().GetExecutor();
         }
         if (pool_ != nullptr) {
+            LOG_INFO("config changed, taskId_: %{public}" PRIu64 "", storeCache_[path]->taskId_);
             pool_->Remove(storeCache_[path]->taskId_);
         }
         storeCache_.erase(path);
@@ -139,6 +140,7 @@ void RdbStoreManager::Remove(const std::string &path)
         return;
     }
     if (pool_ != nullptr) {
+        LOG_INFO("remove taskId_: %{public}" PRIu64 "", it->second->taskId_);
         pool_->Remove(it->second->taskId_);
     }
     storeCache_.erase(it);

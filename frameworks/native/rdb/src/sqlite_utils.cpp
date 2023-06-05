@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "SqliteUtils"
-
 #include "sqlite_utils.h"
 
 #include <sys/stat.h>
@@ -35,6 +33,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 const int SqliteUtils::STATEMENT_SELECT = 1;
 const int SqliteUtils::STATEMENT_UPDATE = 2;
 const int SqliteUtils::STATEMENT_ATTACH = 3;

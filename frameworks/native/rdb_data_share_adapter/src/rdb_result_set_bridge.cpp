@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "RdbResultSetBridge"
-
 #include "rdb_result_set_bridge.h"
 
 #include "logger.h"
@@ -24,7 +22,9 @@
 
 namespace OHOS {
 namespace RdbDataShareAdapter {
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
+
 RdbResultSetBridge::RdbResultSetBridge(std::shared_ptr<ResultSet> resultSet) : rdbResultSet_(resultSet)
 {
 }

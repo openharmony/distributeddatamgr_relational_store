@@ -12,14 +12,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#define LOG_TAG "Const_Properties"
+
 #include "js_const_properties.h"
 
 #include "cloud_service.h"
-#include "log_print.h"
 #include "napi_queue.h"
 
+using namespace OHOS::Rdb;
 using Action = OHOS::CloudData::CloudService::Action;
+
 namespace OHOS::CloudData {
 static napi_status SetNamedProperty(napi_env env, napi_value &obj, const std::string &name, int32_t value)
 {

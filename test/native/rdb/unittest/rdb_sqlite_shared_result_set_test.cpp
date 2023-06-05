@@ -25,7 +25,6 @@
 #include "sqlite_shared_result_set.h"
 
 using namespace testing::ext;
-using namespace OHOS;
 using namespace OHOS::NativeRdb;
 class RdbSqliteSharedResultSetTest : public testing::Test {
 public:

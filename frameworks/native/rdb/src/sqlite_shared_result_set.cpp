@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "SqliteSharedResultSet"
-
 #include "sqlite_shared_result_set.h"
 
 #include <rdb_errno.h>
@@ -28,6 +26,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 SqliteSharedResultSet::SqliteSharedResultSet(SqliteConnectionPool* connectionPool, std::string path,
                                              std::string sql, const std::vector<std::string> &bindArgs)
     : AbsSharedResultSet(path), resultSetBlockCapacity(0), isOnlyFillResultSetBlock(false),

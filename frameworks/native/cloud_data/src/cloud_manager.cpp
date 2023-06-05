@@ -13,17 +13,18 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "CloudManagerImpl"
-
 #include "cloud_manager.h"
 
 #include "cloud_service_proxy.h"
 #include "icloud_service.h"
 #include "iservice_registry.h"
 #include "itypes_util.h"
-#include "log_print.h"
+#include "logger.h"
 #include "system_ability_definition.h"
+
 namespace OHOS::CloudData {
+using namespace OHOS::Rdb;
+
 class DataMgrService : public IRemoteProxy<CloudData::IKvStoreDataService> {
 public:
     explicit DataMgrService(const sptr<IRemoteObject> &impl);
@@ -60,24 +61,24 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
 
     auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saMgr == nullptr) {
-        ZLOGE("get system ability manager failed");
+        LOG_ERROR("get system ability manager failed");
         return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
     }
     auto dataMgrObject = saMgr->CheckSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
     if (dataMgrObject == nullptr) {
-        ZLOGE("get distributed data manager failed");
+        LOG_ERROR("get distributed data manager failed");
         return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
     }
 
     sptr<DataMgrService> dataMgr = new (std::nothrow) DataMgrService(dataMgrObject);
     if (dataMgr == nullptr) {
-        ZLOGE("new CloudDataServiceProxy failed");
+        LOG_ERROR("new CloudDataServiceProxy failed");
         return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
     }
 
     auto cloudObject = dataMgr->GetFeatureInterface(CloudService::SERVICE_NAME);
     if (cloudObject == nullptr) {
-        ZLOGE("get cloud service failed");
+        LOG_ERROR("get cloud service failed");
         return std::make_pair(CloudService::Status::FEATURE_UNAVAILABLE, nullptr);
     }
 
@@ -100,20 +101,20 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
 
 DataMgrService::DataMgrService(const sptr<IRemoteObject> &impl) : IRemoteProxy<CloudData::IKvStoreDataService>(impl)
 {
-    ZLOGI("init proxy");
+    LOG_INFO("init proxy");
 }
 
 sptr<IRemoteObject> DataMgrService::GetFeatureInterface(const std::string &name)
 {
-    ZLOGI("%s", name.c_str());
+    LOG_INFO("%s", name.c_str());
     MessageParcel data;
     if (!data.WriteInterfaceToken(DataMgrService::GetDescriptor())) {
-        ZLOGE("write descriptor failed");
+        LOG_ERROR("write descriptor failed");
         return nullptr;
     }
 
     if (!ITypesUtil::Marshal(data, name)) {
-        ZLOGE("write descriptor failed");
+        LOG_ERROR("write descriptor failed");
         return nullptr;
     }
 
@@ -121,13 +122,13 @@ sptr<IRemoteObject> DataMgrService::GetFeatureInterface(const std::string &name)
     MessageOption mo{ MessageOption::TF_SYNC };
     int32_t error = Remote()->SendRequest(GET_FEATURE_INTERFACE, data, reply, mo);
     if (error != 0) {
-        ZLOGE("SendRequest returned %{public}d", error);
+        LOG_ERROR("SendRequest returned %{public}d", error);
         return nullptr;
     }
 
     sptr<IRemoteObject> remoteObject;
     if (!ITypesUtil::Unmarshal(reply, remoteObject)) {
-        ZLOGE("remote object is nullptr");
+        LOG_ERROR("remote object is nullptr");
         return nullptr;
     }
     return remoteObject;

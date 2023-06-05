@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "RdbHelper"
-
 #include "rdb_helper.h"
 
 #include "logger.h"
@@ -33,6 +31,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode)
 {

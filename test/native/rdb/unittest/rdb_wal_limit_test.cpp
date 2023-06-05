@@ -25,7 +25,6 @@
 #include "sqlite_global_config.h"
 
 using namespace testing::ext;
-using namespace OHOS;
 using namespace OHOS::NativeRdb;
 
 class RdbWalLimitTest : public testing::Test {

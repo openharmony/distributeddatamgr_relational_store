@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "RdbStoreConfig"
-
 #include "rdb_store_config.h"
 
 #include "logger.h"
 #include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
+using namespace OHOS::Rdb;
+
 RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode, bool isReadOnly,
     const std::vector<uint8_t> &encryptKey, const std::string &journalMode, const std::string &syncMode,
     const std::string &databaseFileType, SecurityLevel securityLevel, bool isCreateNecessary, bool autoCheck,

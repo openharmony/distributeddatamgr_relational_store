@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "SqliteDatabaseUtils"
-
 #include "sqlite_database_utils.h"
 
 #include <sys/stat.h>
@@ -43,6 +41,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 std::map<std::string, int> SqliteDatabaseUtils::g_statementType = SqliteDatabaseUtils::MapInit();
 std::mutex SqliteDatabaseUtils::g_locker;
 // Set the file access permissions is 777

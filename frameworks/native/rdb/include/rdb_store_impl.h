@@ -26,7 +26,6 @@
 #include "rdb_store_config.h"
 #include "sqlite_connection_pool.h"
 #include "sqlite_statement.h"
-#include "transaction_observer.h"
 
 namespace OHOS {
 class ExecutorPool;

@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG "JsUtils"
 
 #include "js_utils.h"
-
 #include "logger.h"
+
+using namespace OHOS::Rdb;
 
 #define CHECK_RETURN_RET(assertion, message, revt)                       \
     do {                                                                 \

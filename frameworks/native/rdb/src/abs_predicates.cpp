@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "AbsPredicates"
-
 #include "abs_predicates.h"
 
 #include <algorithm>
@@ -27,6 +25,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 AbsPredicates::AbsPredicates()
 {
     Initial();

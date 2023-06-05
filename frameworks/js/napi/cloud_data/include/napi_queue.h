@@ -12,18 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef LDBPROJ_NAPI_QUEUE_H
 #define LDBPROJ_NAPI_QUEUE_H
+
 #include <functional>
 #include <memory>
 #include <string>
 
-#include "log_print.h"
+#include "logger.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
 
 namespace OHOS::CloudData {
+using namespace OHOS::Rdb;
+
 constexpr size_t ARGC_MAX = 6;
 using NapiCbInfoParser = std::function<void(size_t argc, napi_value *argv)>;
 using NapiAsyncExecute = std::function<void(void)>;
@@ -57,40 +61,40 @@ private:
 };
 
 /* check condition related to argc/argv, return and logging. */
-#define ASSERT_ARGS(ctxt, condition, message)                \
-    do {                                                     \
-        if (!(condition)) {                                  \
-            (ctxt)->status = napi_invalid_arg;               \
-            (ctxt)->error = std::string(message);            \
-            ZLOGE("test (" #condition ") failed: " message); \
-            return;                                          \
-        }                                                    \
+#define ASSERT_ARGS(ctxt, condition, message)                    \
+    do {                                                         \
+        if (!(condition)) {                                      \
+            (ctxt)->status = napi_invalid_arg;                   \
+            (ctxt)->error = std::string(message);                \
+            LOG_ERROR("test (" #condition ") failed: " message); \
+            return;                                              \
+        }                                                        \
     } while (0)
 
-#define ASSERT_STATUS(ctxt, message)                                  \
-    do {                                                              \
-        if ((ctxt)->status != napi_ok) {                              \
-            (ctxt)->error = std::string(message);                     \
-            ZLOGE("test (ctxt->status == napi_ok) failed: " message); \
-            return;                                                   \
-        }                                                             \
+#define ASSERT_STATUS(ctxt, message)                                      \
+    do {                                                                  \
+        if ((ctxt)->status != napi_ok) {                                  \
+            (ctxt)->error = std::string(message);                         \
+            LOG_ERROR("test (ctxt->status == napi_ok) failed: " message); \
+            return;                                                       \
+        }                                                                 \
     } while (0)
 
 /* check condition, return and logging if condition not true. */
-#define ASSERT(condition, message, retVal)                   \
-    do {                                                     \
-        if (!(condition)) {                                  \
-            ZLOGE("test (" #condition ") failed: " message); \
-            return retVal;                                   \
-        }                                                    \
+#define ASSERT(condition, message, retVal)                       \
+    do {                                                         \
+        if (!(condition)) {                                      \
+            LOG_ERROR("test (" #condition ") failed: " message); \
+            return retVal;                                       \
+        }                                                        \
     } while (0)
 
-#define ASSERT_VOID(condition, message)                      \
-    do {                                                     \
-        if (!(condition)) {                                  \
-            ZLOGE("test (" #condition ") failed: " message); \
-            return;                                          \
-        }                                                    \
+#define ASSERT_VOID(condition, message)                          \
+    do {                                                         \
+        if (!(condition)) {                                      \
+            LOG_ERROR("test (" #condition ") failed: " message); \
+            return;                                              \
+        }                                                        \
     } while (0)
 
 #define ASSERT_NULL(condition, message) ASSERT(condition, message, nullptr)

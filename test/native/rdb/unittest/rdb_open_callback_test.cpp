@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "RdbOpenCallbackTest"
-
 #include "rdb_open_callback.h"
 
 #include <gtest/gtest.h>
@@ -27,7 +25,7 @@
 #include "rdb_helper.h"
 
 using namespace testing::ext;
-using namespace OHOS;
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 
 class RdbOpenCallbackTest : public testing::Test {

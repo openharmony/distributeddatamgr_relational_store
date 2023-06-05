@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "RdbStoreImpl"
-
 #include "rdb_store_impl.h"
 
 #include <unistd.h>
@@ -53,6 +51,8 @@
 #endif
 
 namespace OHOS::NativeRdb {
+using namespace OHOS::Rdb;
+
 std::shared_ptr<RdbStoreImpl> RdbStoreImpl::Open(const RdbStoreConfig &config, int &errCode)
 {
     std::shared_ptr<RdbStoreImpl> rdbStore = std::make_shared<RdbStoreImpl>(config);
@@ -120,6 +120,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
 
 RdbStoreImpl::~RdbStoreImpl()
 {
+    LOG_INFO("destroy.");
     delete connectionPool;
 }
 #ifdef WINDOWS_PLATFORM
@@ -480,6 +481,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
     }
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
+        LOG_INFO("sql ddl execute.");
         errCode = connectionPool->ReOpenAvailableReadConnections();
     }
     return errCode;

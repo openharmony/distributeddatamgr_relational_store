@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "RdbPredicates"
-
 #include "rdb_predicates.h"
 
 #include "logger.h"
@@ -22,6 +20,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 RdbPredicates::RdbPredicates(std::string tableName) : AbsRdbPredicates(tableName)
 {
     InitialParam();

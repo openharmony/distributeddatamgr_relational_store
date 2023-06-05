@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "JsSyncCall"
-
 #include "napi_async_call.h"
 
 #include "logger.h"
@@ -22,6 +20,8 @@
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
+using namespace OHOS::Rdb;
+
 void BaseContext::SetAction(
     napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output)
 {

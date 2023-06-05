@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "SqliteGlobalConfig"
-
 #include "sqlite_global_config.h"
 
 #include <sys/stat.h>
@@ -25,6 +23,7 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
 
 void SqliteGlobalConfig::InitSqliteGlobalConfig()
 {

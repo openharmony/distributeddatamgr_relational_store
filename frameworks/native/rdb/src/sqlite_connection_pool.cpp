@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "SqliteConnectionPool"
-
 #include "sqlite_connection_pool.h"
 
 #include <base_transaction.h>
@@ -33,6 +31,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 constexpr std::chrono::seconds WAIT_CONNECT_TIMEOUT(2);
 
 SqliteConnectionPool *SqliteConnectionPool::Create(const RdbStoreConfig &storeConfig, int &errCode)
@@ -294,6 +294,7 @@ int SqliteConnectionPool::ChangeDbFileForRestore(const std::string newPath, cons
         return E_ERROR;
     }
 
+    LOG_ERROR("restore.");
     CloseAllConnections();
 
     std::string currentPath = config.GetPath();

@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "RdbUvQueue"
-
 #include "napi_uv_queue.h"
 
 #include "logger.h"
 #include "uv.h"
 
 namespace OHOS::RelationalStoreJsKit {
+using namespace OHOS::Rdb;
+
 NapiUvQueue::NapiUvQueue(napi_env env, napi_value callback)
     : env_(env)
 {

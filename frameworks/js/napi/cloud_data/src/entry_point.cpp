@@ -12,18 +12,19 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#define LOG_TAG "EntryPoint"
+
 #include "js_config.h"
 #include "js_const_properties.h"
-#include "log_print.h"
+#include "logger.h"
 
 using namespace OHOS::CloudData;
+using namespace OHOS::Rdb;
 
 static napi_value Init(napi_env env, napi_value exports)
 {
     exports = JsConfig::InitConfig(env, exports);
     napi_status status = InitConstProperties(env, exports);
-    ZLOGI("init Enumerate Constants %{public}d", status);
+    LOG_INFO("init Enumerate Constants %{public}d", status);
     return exports;
 }
 
@@ -37,5 +38,5 @@ static __attribute__((constructor)) void RegisterModule()
         .nm_priv = ((void *)0),
         .reserved = { 0 } };
     napi_module_register(&module);
-    ZLOGI("module register data.cloudData");
+    LOG_INFO("module register data.cloudData");
 }
