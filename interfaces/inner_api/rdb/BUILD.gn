@@ -26,9 +26,9 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store_manager.cpp",
+  "${relational_store_native_path}/rdb/src/sql_utils.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_connection.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_connection_pool.cpp",
-  "${relational_store_native_path}/rdb/src/sqlite_database_utils.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_global_config.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_sql_builder.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_statement.cpp",
@@ -73,9 +73,7 @@ if (is_ohos) {
   config("native_rdb_public_config") {
     visibility = [ ":*" ]
 
-    include_dirs = [
-      "include"
-    ]
+    include_dirs = [ "include" ]
   }
 
   base_deps = [
