@@ -293,7 +293,7 @@ int SqliteConnectionPool::ChangeDbFileForRestore(const std::string newPath, cons
         return E_ERROR;
     }
 
-    LOG_ERROR("restore!");
+    LOG_ERROR("restore");
     CloseAllConnections();
 
     std::string currentPath = config.GetPath();
