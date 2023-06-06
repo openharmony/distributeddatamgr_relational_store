@@ -36,6 +36,7 @@ ohos_shared_library("native_appdatafwk") {
   configs = [ ":appdatafwk_config" ]
 
   subsystem_name = "distributeddatamgr"
+  innerapi_tags = [ "platformsdk_indirect" ]
   part_name = "relational_store"
 
   public_deps = [ "${ipc_path}/ipc_single:ipc_single" ]
