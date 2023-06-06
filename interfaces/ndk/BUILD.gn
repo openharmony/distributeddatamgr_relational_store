@@ -29,7 +29,10 @@ ohos_ndk_headers("native_rdb_ndk_header") {
 
 ohos_ndk_library("libnative_rdb_ndk") {
   output_name = "native_rdb_ndk"
+  output_extension = "so"
   ndk_description_file = "./libnative_rdb.ndk.json"
+  system_capability =
+  "SystemCapability.DistributedDataManager.RelationalStore.Core"
   min_compact_version = "10"
 }
 
