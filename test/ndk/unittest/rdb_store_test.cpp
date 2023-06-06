@@ -572,12 +572,12 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_010, TestSize.Level1)
     config.isEncrypt = true;
 
     int errCode = 0;
-    OH_Rdb_Store *encryptStoreTestRdbStore_ = OH_Rdb_GetOrOpen(&config, &errCode);
-    EXPECT_NE(encryptStoreTestRdbStore_, NULL);
+    OH_Rdb_Store *encryptStoreTestRdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
+    EXPECT_NE(encryptStoreTestRdbStore, NULL);
 
     char createTableSql[] = "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
                             "data3 FLOAT, data4 BLOB, data5 TEXT);";
-    errCode = OH_Rdb_Execute(encryptStoreTestRdbStore_, createTableSql);
+    errCode = OH_Rdb_Execute(encryptStoreTestRdbStore, createTableSql);
     EXPECT_EQ(errCode, 0);
 
     OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
@@ -589,11 +589,11 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_010, TestSize.Level1)
     int len = sizeof(arr) / sizeof(arr[0]);
     valueBucket->putBlob(valueBucket, "data4", arr, len);
     valueBucket->putText(valueBucket, "data5", "ABCDEFG");
-    errCode = OH_Rdb_Insert(encryptStoreTestRdbStore_, "test", valueBucket);
+    errCode = OH_Rdb_Insert(encryptStoreTestRdbStore, "test", valueBucket);
     EXPECT_EQ(errCode, 1);
 
     valueBucket->destroyValuesBucket(valueBucket);
-    errCode = OH_Rdb_CloseStore(encryptStoreTestRdbStore_);
+    errCode = OH_Rdb_CloseStore(encryptStoreTestRdbStore);
     errCode = OH_Rdb_DeleteStore(encryptStoreTestPath_.c_str());
     EXPECT_EQ(errCode, 0);
 }
