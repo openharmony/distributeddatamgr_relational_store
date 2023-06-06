@@ -50,8 +50,6 @@ std::shared_ptr<SubObserver> RdbStoreSubTest::observer_ = nullptr;
 
 void RdbStoreSubTest::SetUpTestCase(void)
 {
-    RdbHelper::ClearCache();
-    RdbHelper::DeleteRdbStore(MAIN_DATABASE_NAME);
     store = CreateRDB(1);
     if (observer_ == nullptr) {
         observer_ = std::make_shared<SubObserver>();
@@ -60,9 +58,6 @@ void RdbStoreSubTest::SetUpTestCase(void)
 
 void RdbStoreSubTest::TearDownTestCase(void)
 {
-    store = nullptr;
-    RdbHelper::ClearCache();
-    RdbHelper::DeleteRdbStore(MAIN_DATABASE_NAME);
 }
 
 void RdbStoreSubTest::SetUp()
@@ -81,7 +76,7 @@ public:
 
 int Callback::OnCreate(RdbStore &store)
 {
-    return store.ExecuteSql(RdbStoreSubTest::CREATE_TABLE_TEST);
+    return E_OK;
 }
 
 int Callback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)

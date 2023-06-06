@@ -1170,7 +1170,9 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
             for (auto &[key, value] : details) {
                 briefs.insert_or_assign(key, value.code);
             }
-            callback(briefs);
+            if(callback!=nullptr){
+                callback(briefs);
+            }
         });
     if (errCode != E_OK) {
         LOG_ERROR("Sync is failed, err is %{public}d.", errCode);
