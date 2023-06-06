@@ -24,7 +24,7 @@
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_trace.h"
-#include "sql_utils.h"
+#include "rdb_sql_utils.h"
 #include "sqlite_global_config.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
