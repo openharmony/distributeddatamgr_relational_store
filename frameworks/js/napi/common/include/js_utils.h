@@ -27,7 +27,6 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "rdb_types.h"
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
@@ -97,11 +96,6 @@ napi_value Convert2JSValue(napi_env env, int64_t value);
 napi_value Convert2JSValue(napi_env env, double value);
 napi_value Convert2JSValue(napi_env env, bool value);
 napi_value Convert2JSValue(napi_env env, const std::map<std::string, int> &value);
-napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &statistic);
-napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetail &tableDetail);
-napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetails &tableDetails);
-napi_value Convert2JSValue(napi_env env, const DistributedRdb::ProgressDetail &progressDetail);
-napi_value Convert2JSValue(napi_env env, const DistributedRdb::Details &details);
 napi_value Convert2JSValue(napi_env env, const std::monostate &value);
 
 template<typename T>

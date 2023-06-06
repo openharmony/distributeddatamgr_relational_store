@@ -275,6 +275,22 @@ int ParseSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr
     return OK;
 }
 
+int ParseDistributedTableArg(const napi_env &env, size_t argc, napi_value * argv, std::shared_ptr<RdbStoreContext> context)
+{
+    context->enumArg = 0;
+    if (argc > 1) {
+        napi_valuetype type = napi_undefined;
+        napi_typeof(env, argv[1], &type);
+        CHECK_RETURN_SET(type == napi_number, std::make_shared<ParamError>("mode", "a DistributedType Type."));
+        napi_status status = napi_get_value_int32(env, argv[1], &context->enumArg);
+        CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("mode", "a DistributedType Type."));
+        bool checked = context->enumArg == 0 || context->enumArg == 1;
+        CHECK_RETURN_SET(checked, std::make_shared<ParamError>("mode", "a DistributedType"));
+    }
+    LOG_DEBUG("ParseDistributedTableArg end");
+    return OK;
+}
+
 int ParseCloudSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
     napi_valuetype type = napi_undefined;
@@ -282,10 +298,21 @@ int ParseCloudSyncModeArg(const napi_env &env, const napi_value &arg, std::share
     CHECK_RETURN_SET(type == napi_number, std::make_shared<ParamError>("mode", "a SyncMode Type."));
     napi_status status = napi_get_value_int32(env, arg, &context->enumArg);
     CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("mode", "a SyncMode Type."));
-    bool checked = (context->enumArg > 1 && context->enumArg <= 4);
+    bool checked = (context->enumArg > 2 && context->enumArg <= 5);
     CHECK_RETURN_SET(checked, std::make_shared<ParamError>("mode", "a SyncMode of cloud."));
 
-    LOG_DEBUG("ParseSyncModeArg end");
+    LOG_DEBUG("ParseCloudSyncModeArg end");
+    return OK;
+}
+
+int ParseCloudSyncCallback(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, arg, &valueType);
+    CHECK_RETURN_SET(valueType == napi_function, std::make_shared<ParamNumError>("a callback type"));
+    context->cloudSyncCallback = arg;
+
+    LOG_DEBUG("ParseCloudSyncCallback end");
     return OK;
 }
 
@@ -1045,16 +1072,7 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
         CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 - 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTablesName(env, argv[0], context));
-        if (argc == 2) {
-            napi_valuetype type = napi_undefined;
-            napi_typeof(env, argv[1], &type);
-            CHECK_RETURN_SET_E(type == napi_number && napi_get_value_int32(env, argv[1], &context->enumArg) == napi_ok,
-                std::make_shared<ParamError>("mode", "a SyncMode Type."));
-            bool checked = context->enumArg == 0 || context->enumArg == 1;
-            CHECK_RETURN_SET_E(checked, std::make_shared<ParamError>("mode", "a SyncMode of device."));
-        } else {
-            context->enumArg = 0;
-        }
+        CHECK_RETURN(OK == ParseDistributedTableArg(env, argc, argv, context));
     };
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::SetDistributedTables Async");
@@ -1146,10 +1164,7 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
             CHECK_RETURN(OK == ParseTablesName(env, argv[index], context));
             index++;
         }
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, argv[index], &valueType);
-        CHECK_RETURN_SET_E(valueType == napi_function, std::make_shared<ParamNumError>("a callback type"));
-        context->cloudSyncCallback = argv[index];
+        CHECK_RETURN(OK == ParseCloudSyncCallback(env, argv[index], context));
     };
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::CloudSync Async");
@@ -1200,7 +1215,7 @@ napi_value RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_valu
     }
     SubscribeOption option;
     option.mode = static_cast<SubscribeMode>(mode);
-    auto observer = std::make_shared<NapiRdbStoreObserver>(env, argv[1]);
+    auto observer = std::make_shared<NapiRdbStoreObserver>(env, argv[1], mode);
     int errCode = rdbStore_->Subscribe(option, observer.get());
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_ERROR));
     observers_[mode].push_back(observer);
