@@ -57,6 +57,8 @@ public:
 
     int32_t GetSchema(const RdbSyncerParam &param) override;
 private:
+    using ChangeInfo = RdbStoreObserver::ChangeInfo;
+    using PrimaryFields = RdbStoreObserver::PrimaryFields;
     std::pair<int32_t, Details> DoSync(const RdbSyncerParam &param, const Option &option,
         const RdbPredicates &predicates);
 
@@ -76,7 +78,7 @@ private:
 
     void OnSyncComplete(uint32_t seqNum, Details &&result);
 
-    void OnDataChange(const std::string& storeName, const std::vector<std::string>& devices);
+    void OnDataChange(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo);
 
     std::string RemoveSuffix(const std::string& name);
 

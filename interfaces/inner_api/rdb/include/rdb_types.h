@@ -172,8 +172,9 @@ public:
     };
     using PrimaryKey = std::variant<std::monostate, std::string, int64_t>;
     using ChangeInfo = std::map<std::string, std::vector<PrimaryKey>[CHG_TYPE_BUTT]>;
-    virtual void OnChange(const std::vector<std::string>& devices) = 0; // networkid
-    virtual void OnChange(const Origin &origin, ChangeInfo &&changeInfo)
+    using PrimaryFields = std::map<std::string, std::string>;
+    virtual void OnChange(const std::vector<std::string> &devices) = 0; // networkid
+    virtual void OnChange(const Origin &origin, const PrimaryFields &fields, ChangeInfo &&changeInfo)
     {
         OnChange(origin.id);
     };

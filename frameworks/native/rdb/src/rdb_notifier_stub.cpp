@@ -74,22 +74,24 @@ int32_t RdbNotifierStub::OnComplete(uint32_t seqNum, Details &&result)
     return RDB_OK;
 }
 
+
+int32_t RdbNotifierStub::OnChange(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo)
+{
+    if (changeNotifier_ != nullptr) {
+        changeNotifier_(origin, primaries, std::move(changeInfo));
+    }
+    return RDB_OK;
+}
+
 int32_t RdbNotifierStub::OnChangeInner(MessageParcel &data, MessageParcel &reply)
 {
-    std::string storeName;
-    std::vector<std::string> devices;
-    if (!ITypesUtil::Unmarshal(data, storeName, devices)) {
+    Origin origin;
+    PrimaryFields primaries;
+    ChangeInfo changeInfo;
+    if (!ITypesUtil::Unmarshal(data, origin, primaries, changeInfo)) {
         ZLOGE("read sync result failed");
         return RDB_ERROR;
     }
-    return OnChange(storeName, devices);
-}
-
-int32_t RdbNotifierStub::OnChange(const std::string& storeName, const std::vector<std::string> &devices)
-{
-    if (changeNotifier_) {
-        changeNotifier_(storeName, devices);
-    }
-    return RDB_OK;
+    return OnChange(origin, primaries, std::move(changeInfo));
 }
 } // namespace OHOS::DistributedRdb

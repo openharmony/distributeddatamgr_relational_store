@@ -142,4 +142,28 @@ bool Unmarshalling(Statistic &output, MessageParcel &data)
 {
     return Unmarshal(data, output.total, output.success, output.failed, output.untreated);
 }
+
+template<>
+bool Marshalling(const PrimaryKeys &input, MessageParcel &data)
+{
+    return Marshal(data, input[Observer::CHG_TYPE_INSERT], input[Observer::CHG_TYPE_UPDATE],
+        input[Observer::CHG_TYPE_DELETE]);
+}
+template<>
+bool Unmarshalling(PrimaryKeys &output, MessageParcel &data)
+{
+    return Unmarshal(data, output[Observer::CHG_TYPE_INSERT], output[Observer::CHG_TYPE_UPDATE],
+        output[Observer::CHG_TYPE_DELETE]);
+}
+
+template<>
+bool Marshalling(const Origin &input, MessageParcel &data)
+{
+    return Marshal(data, input.origin, input.id, input.store);
+}
+template<>
+bool Unmarshalling(Origin &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.origin, output.id, output.store);
+}
 }

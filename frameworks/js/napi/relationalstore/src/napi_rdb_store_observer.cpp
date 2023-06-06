@@ -22,7 +22,8 @@ using namespace OHOS::AppDataMgrJsKit;
 using OHOS::AppDataMgrJsKit::PREFIX_LABEL;
 
 namespace OHOS::RelationalStoreJsKit {
-NapiRdbStoreObserver::NapiRdbStoreObserver(napi_env env, napi_value callback) : NapiUvQueue(env, callback)
+NapiRdbStoreObserver::NapiRdbStoreObserver(napi_env env, napi_value callback, int32_t mode)
+    : NapiUvQueue(env, callback), mode_(mode)
 {
     LOG_INFO("NapiRdbStoreObserver construct");
 }
@@ -40,5 +41,16 @@ void NapiRdbStoreObserver::OnChange(const std::vector<std::string> &devices)
         argv[0] = JSUtils::Convert2JSValue(env, devices);
     });
     LOG_INFO("NapiRdbStoreObserver::OnChange end");
+}
+
+void NapiRdbStoreObserver::OnChange(const Origin &origin, const PrimaryFields &fields, ChangeInfo &&changeInfo)
+{
+    if (mode_ == DistributedRdb::CLOUD_DETAIL) {
+        CallFunction([info = std::move(changeInfo)](napi_env env, int &argc, napi_value *argv) {
+            argc = 1;
+            // todo argv[0] = JSUtils::Convert2JSValue(env, info)
+        });
+    }
+    RdbStoreObserver::OnChange(origin, fields, std::move(changeInfo));
 }
 } // namespace OHOS::RelationalStoreJsKit

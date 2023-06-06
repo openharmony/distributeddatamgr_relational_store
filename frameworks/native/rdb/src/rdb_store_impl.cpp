@@ -89,32 +89,36 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.type_ = config.GetDistributedType();
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
-    GetSchema();
+    GetSchema(config);
 #endif
     return E_OK;
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-void RdbStoreImpl::GetSchema()
+void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
 {
-    auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
-    if (err != E_OK || service == nullptr) {
-        LOG_WARN("GetRdbService failed, err is %{public}d.", err);
-        return;
+    std::vector<uint8_t> key = config.GetEncryptKey();
+    RdbPassword rdbPwd;
+    if (config.IsEncrypt()) {
+        RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
+        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        key.assign(key.size(), 0);
+        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
     }
-    if (isEncrypt_) {
-        RdbPassword key =
-            RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-        syncerParam_.password_ = std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize());
-    }
+    syncerParam_.password_ = std::vector<uint8_t>(key.data(), key.data() + key.size());
+    key.assign(key.size(), 0);
     if (pool_ == nullptr) {
         pool_ = TaskExecutor::GetInstance().GetExecutor();
     }
     if (pool_ != nullptr) {
         auto param = syncerParam_;
-        auto ser = service;
-        pool_->Execute([param, ser]() {
-            auto err = ser->GetSchema(param);
+        pool_->Execute([param]() {
+            auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+            if (err != E_OK || service == nullptr) {
+                LOG_WARN("GetRdbService failed, err is %{public}d.", err);
+                return;
+            }
+            err = service->GetSchema(param);
             if (err != E_OK) {
                 LOG_ERROR("GetSchema failed, err is %{public}d.", err);
             }
@@ -132,10 +136,6 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
 RdbStoreImpl::~RdbStoreImpl()
 {
     delete connectionPool;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
-    syncerParam_.password_.clear();
-#endif
 }
 
 #ifdef WINDOWS_PLATFORM
