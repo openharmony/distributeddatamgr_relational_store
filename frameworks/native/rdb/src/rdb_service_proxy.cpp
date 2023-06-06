@@ -56,19 +56,21 @@ RdbServiceProxy::RdbServiceProxy(const sptr<IRemoteObject> &object)
 void RdbServiceProxy::OnSyncComplete(uint32_t seqNum, Details &&result)
 {
     syncCallbacks_.ComputeIfPresent(seqNum, [&result] (const auto& key, const AsyncDetail & callback) {
+        auto finished = result.empty() || (result.begin()->second.progress == SYNC_FINISH);
         callback(std::move(result));
-        return true;
+        return !finished;
     });
-    syncCallbacks_.Erase(seqNum);
 }
 
-void RdbServiceProxy::OnDataChange(const std::string& storeName, const std::vector<std::string> &devices)
+void RdbServiceProxy::OnDataChange(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo)
 {
-    auto name = RemoveSuffix(storeName);
-    observers_.ComputeIfPresent(
-        name, [&devices] (const auto& key, const ObserverMapValue& value) {
-            for (const auto& observer : value.first) {
-                observer->OnChange(devices);
+    auto name = RemoveSuffix(origin.store);
+    observers_.ComputeIfPresent(name,
+        [&origin, &primaries, info = std::move(changeInfo)](const auto &key, const ObserverMapValue &value) mutable {
+            auto size = value.first.size();
+            for (const auto &observer : value.first) {
+                size--;
+                observer->OnChange(origin, primaries, (size > 0) ? ChangeInfo(info) : std::move(info));
             }
             return true;
         });
@@ -92,10 +94,9 @@ int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param)
         [this] (uint32_t seqNum, Details &&result) {
             OnSyncComplete(seqNum, std::move(result));
         },
-        [this] (const std::string& storeName, const std::vector<std::string>& devices) {
-            OnDataChange(storeName, devices);
-        }
-    );
+        [this](const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo) {
+            OnDataChange(origin, primaries, std::move(changeInfo));
+        });
     if (notifier_ == nullptr) {
         ZLOGE("create notifier failed");
         return RDB_ERROR;
@@ -181,7 +182,7 @@ int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam& param, const Option &opti
                                  const RdbPredicates &predicates, const AsyncDetail & callback)
 {
     Option asyncOption = option;
-    if (callback == nullptr) {
+    if (callback != nullptr) {
         asyncOption.seqNum = GetSeqNum();
         if (!syncCallbacks_.Insert(asyncOption.seqNum, callback)) {
             ZLOGI("insert callback failed");
@@ -214,9 +215,9 @@ int32_t RdbServiceProxy::Sync(const RdbSyncerParam &param, const Option &option,
                               const AsyncDetail &async)
 {
     if (option.isAsync) {
-        return DoSync(param, option, predicates, async);
+        return DoAsync(param, option, predicates, async);
     }
-    return DoAsync(param, option, predicates, async);
+    return DoSync(param, option, predicates, async);
 }
 
 std::string RdbServiceProxy::RemoveSuffix(const std::string& name)

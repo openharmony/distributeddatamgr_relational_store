@@ -18,7 +18,7 @@
 
 #include <string>
 #include <vector>
-#include <rdb_types.h>
+#include "rdb_types.h"
 #include "rdb_visibility.h"
 
 namespace OHOS::NativeRdb {

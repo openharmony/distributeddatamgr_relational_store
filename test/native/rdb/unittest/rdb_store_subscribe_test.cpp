@@ -26,7 +26,6 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::DistributedRdb;
-
 class RdbStoreSubTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -37,18 +36,25 @@ public:
     static const std::string MAIN_DATABASE_NAME;
     static std::shared_ptr<RdbStore> CreateRDB(int version);
     static std::shared_ptr<RdbStore> store;
+    static constexpr const char *CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test1(id INTEGER PRIMARY KEY, "
+                                                     "name TEXT NOT NULL, age INTEGER)";
 };
 
-const std::string RdbStoreSubTest::MAIN_DATABASE_NAME = RDB_TEST_PATH + "getrdb.db";
+const std::string RdbStoreSubTest::MAIN_DATABASE_NAME = RDB_TEST_PATH + "subscribe.db";
 std::shared_ptr<RdbStore> RdbStoreSubTest::store = nullptr;
 
 void RdbStoreSubTest::SetUpTestCase(void)
 {
+    RdbHelper::ClearCache();
+    RdbHelper::DeleteRdbStore(MAIN_DATABASE_NAME);
     store = CreateRDB(1);
 }
 
 void RdbStoreSubTest::TearDownTestCase(void)
 {
+    store = nullptr;
+    RdbHelper::ClearCache();
+    RdbHelper::DeleteRdbStore(MAIN_DATABASE_NAME);
 }
 
 void RdbStoreSubTest::SetUp()
@@ -67,7 +73,7 @@ public:
 
 int Callback::OnCreate(RdbStore &store)
 {
-    return E_OK;
+    return store.ExecuteSql(RdbStoreSubTest::CREATE_TABLE_TEST);
 }
 
 int Callback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
@@ -88,6 +94,11 @@ void SubObserver::OnChange(const std::vector<std::string> &devices)
 std::shared_ptr<RdbStore> RdbStoreSubTest::CreateRDB(int version)
 {
     RdbStoreConfig config(RdbStoreSubTest::MAIN_DATABASE_NAME);
+    config.SetBundleName("relational_test");
+    config.SetArea(0);
+    config.SetCreateNecessary(true);
+    config.SetDistributedType(RDB_DEVICE_COLLABORATION);
+    config.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel::S1);
     Callback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, version, helper, errCode);
