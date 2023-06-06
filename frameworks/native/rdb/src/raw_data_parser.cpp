@@ -98,6 +98,8 @@ bool RawDataParser::InnerAsset::Marshal(Serializable::json &node) const
     SetValue(node[GET_NAME(modifyTime)], asset_.modifyTime);
     SetValue(node[GET_NAME(size)], asset_.size);
     SetValue(node[GET_NAME(hash)], asset_.hash);
+    SetValue(node[GET_NAME(assetId)], asset_.assetId);
+    SetValue(node[GET_NAME(subPath)], asset_.subPath);
     return true;
 }
 bool RawDataParser::InnerAsset::Unmarshal(const Serializable::json &node)
@@ -109,6 +111,8 @@ bool RawDataParser::InnerAsset::Unmarshal(const Serializable::json &node)
     GetValue(node, GET_NAME(modifyTime), asset_.modifyTime);
     GetValue(node, GET_NAME(size), asset_.size);
     GetValue(node, GET_NAME(hash), asset_.hash);
+    GetValue(node, GET_NAME(assetId), asset_.assetId);
+    GetValue(node, GET_NAME(subPath), asset_.subPath);
     return true;
 }
 } // namespace OHOS::NativeRdb
