@@ -17,7 +17,7 @@
 #include <algorithm>
 #include <memory>
 #include <rdb_errno.h>
-#include "sql_utils.h"
+#include "rdb_sql_utils.h"
 #include "sqlite_utils.h"
 #include "logger.h"
 

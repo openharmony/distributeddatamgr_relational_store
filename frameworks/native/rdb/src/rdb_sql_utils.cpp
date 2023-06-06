@@ -26,7 +26,7 @@
 
 #include "logger.h"
 #include "rdb_errno.h"
-#include "sql_utils.h"
+#include "rdb_sql_utils.h"
 #include "sqlite_sql_builder.h"
 
 #ifdef WINDOWS_PLATFORM
@@ -42,7 +42,7 @@ namespace NativeRdb {
 /**
  * Get and Check default path.
  */
-std::string SqlUtils::GetDefaultDatabasePath(const std::string &baseDir, const std::string &name, int &errorCode)
+std::string RdbSqlUtils::GetDefaultDatabasePath(const std::string &baseDir, const std::string &name, int &errorCode)
 {
     if (access(baseDir.c_str(), F_OK) != 0) {
         if (MKDIR(baseDir.c_str())) {
@@ -74,7 +74,7 @@ std::string SqlUtils::GetDefaultDatabasePath(const std::string &baseDir, const s
     return realFilePath;
 }
 
-std::string SqlUtils::BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
+std::string RdbSqlUtils::BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
     return SqliteSqlBuilder::BuildQueryString(predicates, columns);
 }

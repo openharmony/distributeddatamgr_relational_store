@@ -24,7 +24,7 @@
 #include "file_ex.h"
 #include "hks_param.h"
 #include "logger.h"
-#include "sql_utils.h"
+#include "rdb_sql_utils.h"
 #include "sqlite_utils.h"
 
 #define HKS_FREE(PTR) \

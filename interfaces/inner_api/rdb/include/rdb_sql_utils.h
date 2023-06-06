@@ -19,7 +19,7 @@
 
 namespace OHOS {
 namespace NativeRdb {
-class API_EXPORT SqlUtils {
+class API_EXPORT RdbSqlUtils {
 public:
     /**
      * @brief get default data base path.
