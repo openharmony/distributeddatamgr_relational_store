@@ -89,34 +89,41 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.type_ = config.GetDistributedType();
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
-    GetSchema();
+    GetSchema(config);
 #endif
     return E_OK;
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-void RdbStoreImpl::GetSchema()
+void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
 {
-    std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-    auto err = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
-    if (err != E_OK || service == nullptr) {
-        LOG_WARN("GetRdbService failed, err is %{public}d.", err);
+    std::vector<uint8_t> key = config.GetEncryptKey();
+    RdbPassword rdbPwd;
+    if (config.IsEncrypt()) {
+        RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
+        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        key.assign(key.size(), 0);
+        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+    } else if (key.empty()) {
         return;
     }
-    if (isEncrypt_) {
-        RdbPassword key =
-            RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-        syncerParam_.password_ = std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize());
-    }
+    syncerParam_.password_ = std::vector<uint8_t>(key.data(), key.data() + key.size());
+    key.assign(key.size(), 0);
     if (pool_ == nullptr) {
         pool_ = TaskExecutor::GetInstance().GetExecutor();
     }
     if (pool_ != nullptr) {
         auto param = syncerParam_;
-        pool_->Execute([param, service]() {
-            auto err = service->GetSchema(param);
-            if (err != E_OK) {
-                LOG_ERROR("GetSchema failed, err is %{public}d.", err);
+        pool_->Execute([param]() {
+            std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
+            int errCode = DistributedRdb::RdbManager::GetRdbService(param, service);
+            if (errCode != E_OK || service == nullptr) {
+                LOG_WARN("GetRdbService failed, err is %{public}d.", errCode);
+                return;
+            }
+            errCode = service->GetSchema(param);
+            if (errCode != E_OK) {
+                LOG_ERROR("GetSchema failed, err is %{public}d.", errCode);
             }
         });
     }
