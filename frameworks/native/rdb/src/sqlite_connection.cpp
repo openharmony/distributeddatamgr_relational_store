@@ -294,20 +294,18 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
 int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    std::vector<uint8_t> key;
+    std::vector<uint8_t> key = config.GetEncryptKey();
     RdbPassword rdbPwd;
-    int errCode = E_OK;
-    if (!config.GetEncryptKey().empty() && !config.IsEncrypt()) {
-        key = config.GetEncryptKey();
-    } else if (config.IsEncrypt()) {
+    if (config.IsEncrypt()) {
         RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
         rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbKeyFile::PUB_KEY_FILE);
+        key.assign(key.size(), 0);
         key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
-    } else {
+    } else if (key.empty()) {
         return E_OK;
     }
 
-    errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
+    int errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
     key.assign(key.size(), 0);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("SqliteConnection SetEncryptKey fail, err = %{public}d", errCode);
