@@ -21,7 +21,6 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "napi_rdb_error.h"
 #include "result_set.h"
 
 namespace OHOS {

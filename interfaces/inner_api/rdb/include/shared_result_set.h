@@ -17,10 +17,13 @@
 #define NATIVE_RDB_SHARED_RESULT_SET_H
 
 #include <string>
-#include "shared_block.h"
+
 #include "rdb_visibility.h"
 
 namespace OHOS {
+namespace AppDataFwk {
+class SharedBlock;
+}
 namespace NativeRdb {
 /**
  * The SharedResultSet class of RDB.

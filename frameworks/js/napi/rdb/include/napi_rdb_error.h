@@ -19,8 +19,6 @@
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
-using namespace OHOS::Rdb;
-
 constexpr int MAX_INPUT_COUNT = 10;
 constexpr int OK = 0;
 constexpr int ERR = -1;

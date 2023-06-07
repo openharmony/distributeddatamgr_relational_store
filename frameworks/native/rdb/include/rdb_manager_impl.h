@@ -38,7 +38,7 @@ public:
 
     static RdbManagerImpl &GetInstance();
 
-    int GetRdbService(const RdbSyncerParam &param, std::shared_ptr<RdbService> &service);
+    std::pair<int32_t, std::shared_ptr<RdbService>> GetRdbService(const RdbSyncerParam &param);
 
     void OnRemoteDied();
 
@@ -62,12 +62,12 @@ private:
 
     void ResetServiceHandle();
 
-    static std::shared_ptr<RdbStoreDataServiceProxy> GetDistributedDataManager();
+    static std::shared_ptr<RdbStoreDataServiceProxy> GetDistributedDataManager(const std::string &bundleName);
 
     std::mutex mutex_;
     std::shared_ptr<RdbStoreDataServiceProxy> distributedDataMgr_;
     std::shared_ptr<RdbService> rdbService_;
-    std::string bundleName_;
+    RdbSyncerParam param_;
 };
 
 class RdbStoreDataServiceProxy : public IRemoteProxy<DistributedRdb::IKvStoreDataService> {
@@ -75,6 +75,7 @@ public:
     explicit RdbStoreDataServiceProxy(const sptr<IRemoteObject> &impl);
     ~RdbStoreDataServiceProxy() = default;
     sptr<IRemoteObject> GetFeatureInterface(const std::string &name) override;
+    int32_t RegisterDeathObserver(const std::string &bundleName, sptr<IRemoteObject> observer) override;
 };
 } // namespace OHOS::DistributedRdb
 #endif
