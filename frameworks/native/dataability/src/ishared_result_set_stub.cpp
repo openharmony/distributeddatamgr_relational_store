@@ -19,7 +19,7 @@
 
 #include "logger.h"
 #include "rdb_errno.h"
-
+#include "shared_block.h"
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 

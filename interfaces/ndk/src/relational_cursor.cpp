@@ -209,10 +209,9 @@ int Rdb_Close(OH_Cursor *cursor)
     return errCode;
 }
 
-OHOS::RdbNdk::CursorImpl::CursorImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
+OHOS::RdbNdk::CursorImpl::CursorImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet) : resultSet_(resultSet)
 {
     id = RDB_CURSOR_CID;
-    resultSet_ = resultSet;
 
     getColumnCount = Rdb_GetColumnCount;
     getColumnType = Rdb_GetColumnType;

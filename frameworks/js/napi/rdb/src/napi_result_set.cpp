@@ -26,6 +26,7 @@
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "abs_shared_result_set.h"
 #include "rdb_result_set_bridge.h"
+#include "shared_block.h"
 #include "string_ex.h"
 #endif
 

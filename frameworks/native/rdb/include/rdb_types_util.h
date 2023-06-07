@@ -15,28 +15,39 @@
 
 #ifndef DISTRIBUTED_RDB_RDB_TYPES_UTIL_H
 #define DISTRIBUTED_RDB_RDB_TYPES_UTIL_H
+
 #include "itypes_util.h"
+#include "rdb_service.h"
 #include "rdb_types.h"
+#include "rdb_visibility.h"
 #include "value_object.h"
 #include "values_bucket.h"
-#include "rdb_visibility.h"
+
 namespace OHOS::ITypesUtil {
 using SubOption = DistributedRdb::SubscribeOption;
 using SyncerParam = DistributedRdb::RdbSyncerParam;
-using SyncOption = DistributedRdb::SyncOption;
+using Option = DistributedRdb::RdbService::Option;
 using RdbPredicates = DistributedRdb::RdbPredicates;
 using RdbOperation = DistributedRdb::RdbPredicateOperation;
 using ValueObject = NativeRdb::ValueObject;
 using ValuesBucket = NativeRdb::ValuesBucket;
 using Asset = NativeRdb::AssetValue;
+using ProgressDetail = DistributedRdb::ProgressDetail;
+using TableDetail = DistributedRdb::TableDetail;
+using Statistic = DistributedRdb::Statistic;
+using Observer = DistributedRdb::RdbStoreObserver;
+using Origin = DistributedRdb::Origin;
+using ChangeInfo = Observer::ChangeInfo;
+using PrimaryKey = Observer::PrimaryKey;
+using PrimaryKeys = std::vector<PrimaryKey>[Observer::CHG_TYPE_BUTT];
 template<>
 API_EXPORT bool Marshalling(const SyncerParam &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(SyncerParam &output, MessageParcel &data);
 template<>
-API_EXPORT bool Marshalling(const SyncOption &input, MessageParcel &data);
+API_EXPORT bool Marshalling(const Option &input, MessageParcel &data);
 template<>
-API_EXPORT bool Unmarshalling(SyncOption &output, MessageParcel &data);
+API_EXPORT bool Unmarshalling(Option &output, MessageParcel &data);
 template<>
 API_EXPORT bool Marshalling(const RdbPredicates &input, MessageParcel &data);
 template<>
@@ -45,6 +56,10 @@ template<>
 API_EXPORT bool Marshalling(const RdbOperation &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(RdbOperation &output, MessageParcel &data);
+template<>
+API_EXPORT bool Marshalling(const SubOption &input, MessageParcel &data);
+template<>
+API_EXPORT bool Unmarshalling(SubOption &output, MessageParcel &data);
 template<>
 API_EXPORT bool Marshalling(const ValueObject &input, MessageParcel &data);
 template<>
@@ -61,5 +76,25 @@ template<>
 API_EXPORT bool Marshalling(const SubOption &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(SubOption &output, MessageParcel &data);
+template<>
+API_EXPORT bool Marshalling(const ProgressDetail &input, MessageParcel &data);
+template<>
+API_EXPORT bool Unmarshalling(ProgressDetail &output, MessageParcel &data);
+template<>
+API_EXPORT bool Marshalling(const TableDetail &input, MessageParcel &data);
+template<>
+API_EXPORT bool Unmarshalling(TableDetail &output, MessageParcel &data);
+template<>
+API_EXPORT bool Marshalling(const Statistic &input, MessageParcel &data);
+template<>
+API_EXPORT bool Unmarshalling(Statistic &output, MessageParcel &data);
+template<>
+API_EXPORT bool Marshalling(const PrimaryKeys &input, MessageParcel &data);
+template<>
+API_EXPORT bool Unmarshalling(PrimaryKeys &output, MessageParcel &data);
+template<>
+API_EXPORT bool Marshalling(const Origin &input, MessageParcel &data);
+template<>
+API_EXPORT bool Unmarshalling(Origin &output, MessageParcel &data);
 }
 #endif // DISTRIBUTED_RDB_RDB_TYPES_UTIL_H

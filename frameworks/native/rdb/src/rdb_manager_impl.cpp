@@ -28,27 +28,36 @@
 
 namespace OHOS::DistributedRdb {
 using namespace OHOS::Rdb;
+using RdbServiceProxy =  DistributedRdb::RdbServiceProxy;
 using namespace OHOS::NativeRdb;
 
-std::shared_ptr<RdbStoreDataServiceProxy> RdbManagerImpl::GetDistributedDataManager()
+class DeathStub : public IRemoteBroker {
+public:
+    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedRdb.DeathStub");
+};
+class DeathStubImpl : public IRemoteStub<DeathStub> {
+};
+std::shared_ptr<RdbStoreDataServiceProxy> RdbManagerImpl::GetDistributedDataManager(const std::string &bundleName)
 {
     auto manager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (manager == nullptr) {
         LOG_ERROR("get system ability manager failed");
         return nullptr;
     }
-    auto remoteObject = manager->CheckSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
-    if (remoteObject == nullptr) {
+    auto dataMgr = manager->CheckSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
+    if (dataMgr == nullptr) {
         LOG_ERROR("get distributed data manager failed");
         return nullptr;
     }
-    sptr<RdbStoreDataServiceProxy> rdbStoreDataServiceProxy = new(std::nothrow) RdbStoreDataServiceProxy(remoteObject);
-    if (rdbStoreDataServiceProxy == nullptr) {
+    sptr<RdbStoreDataServiceProxy> dataService = new (std::nothrow) RdbStoreDataServiceProxy(dataMgr);
+    if (dataService == nullptr) {
         LOG_ERROR("new RdbStoreDataServiceProxy failed");
         return nullptr;
     }
-    return std::shared_ptr<RdbStoreDataServiceProxy>(rdbStoreDataServiceProxy.GetRefPtr(),
-        [holder = rdbStoreDataServiceProxy](const auto *) {});
+
+    sptr<IRemoteObject> observer = new (std::nothrow) DeathStubImpl();
+    dataService->RegisterDeathObserver(bundleName, observer);
+    return std::shared_ptr<RdbStoreDataServiceProxy>(dataService.GetRefPtr(), [dataService, observer](const auto *) {});
 }
 
 static void LinkToDeath(const sptr<IRemoteObject>& remote)
@@ -58,6 +67,7 @@ static void LinkToDeath(const sptr<IRemoteObject>& remote)
         new(std::nothrow) RdbManagerImpl::ServiceDeathRecipient(&manager);
     if (deathRecipient == nullptr) {
         LOG_ERROR("new ServiceDeathRecipient failed");
+        return;
     }
     if (!remote->AddDeathRecipient(deathRecipient)) {
         LOG_ERROR("add death recipient failed");
@@ -80,51 +90,50 @@ RdbManagerImpl& RdbManagerImpl::GetInstance()
     return manager;
 }
 
-int RdbManagerImpl::GetRdbService(const RdbSyncerParam &param, std::shared_ptr<RdbService> &service)
+std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(const RdbSyncerParam &param)
 {
+    if (param.bundleName_.empty()) {
+        return { E_INVALID_ARGS, nullptr };
+    }
+
     std::lock_guard<std::mutex> lock(mutex_);
     if (rdbService_ != nullptr) {
-        service = rdbService_;
-        return E_OK;
+        return { E_OK, rdbService_ };
     }
+
     if (distributedDataMgr_ == nullptr) {
         distributedDataMgr_ = GetDistributedDataManager();
     }
     if (distributedDataMgr_ == nullptr) {
         LOG_ERROR("get distributed data manager failed");
-        return E_ERROR;
+        return { E_ERROR, nullptr };
     }
 
     auto remote = distributedDataMgr_->GetFeatureInterface(DistributedRdb::RdbService::SERVICE_NAME);
     if (remote == nullptr) {
         LOG_ERROR("get rdb service failed");
-        return E_NOT_SUPPORTED;
+        return { E_NOT_SUPPORTED, nullptr };
     }
-    sptr<DistributedRdb::RdbServiceProxy> serviceProxy = nullptr;
+    sptr<RdbServiceProxy> rdbService = nullptr;
     if (remote->IsProxyObject()) {
-        serviceProxy = iface_cast<DistributedRdb::RdbServiceProxy>(remote);
+        rdbService = iface_cast<RdbServiceProxy>(remote);
     }
 
-    if (serviceProxy == nullptr) {
-        serviceProxy = new (std::nothrow) RdbServiceProxy(remote);
+    if (rdbService == nullptr) {
+        rdbService = new (std::nothrow) RdbServiceProxy(remote);
     }
 
-    if (serviceProxy == nullptr) {
-        return E_ERROR;
-    }
-    if (serviceProxy->InitNotifier(param) != RDB_OK) {
+    if (rdbService == nullptr || rdbService->InitNotifier(param) != RDB_OK) {
         LOG_ERROR("init notifier failed");
-        return E_ERROR;
+        return { E_ERROR, nullptr };
     }
-    sptr<IRdbService> serviceBase = serviceProxy;
-    LinkToDeath(serviceBase->AsObject().GetRefPtr());
-    rdbService_ = std::shared_ptr<RdbService>(serviceProxy.GetRefPtr(), [holder = serviceProxy] (const auto*) {});
-    if (rdbService_ == nullptr) {
-        return E_ERROR;
-    }
-    bundleName_ = param.bundleName_;
-    service = rdbService_;
-    return E_OK;
+
+    sptr<IRdbService> serviceBase = rdbService;
+    LinkToDeath(serviceBase->AsObject());
+    // the rdbService is not null, so rdbService.GetRefPtr() is not null;
+    rdbService_ = std::shared_ptr<RdbService>(rdbService.GetRefPtr(), [rdbService](const auto *) {});
+    param_ = param;
+    return { E_OK, rdbService_ };
 }
 
 void RdbManagerImpl::OnRemoteDied()
@@ -139,10 +148,7 @@ void RdbManagerImpl::OnRemoteDied()
     ResetServiceHandle();
 
     std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    RdbSyncerParam param;
-    param.bundleName_ = bundleName_;
-    std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
-    int errCode = GetRdbService(param, service);
+    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param_);
     if (errCode != E_OK) {
         return;
     }
@@ -194,5 +200,31 @@ sptr<IRemoteObject> RdbStoreDataServiceProxy::GetFeatureInterface(const std::str
         return nullptr;
     }
     return remoteObject;
+}
+
+int32_t RdbStoreDataServiceProxy::RegisterDeathObserver(const std::string &bundleName, sptr<IRemoteObject> observer)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(RdbStoreDataServiceProxy::GetDescriptor())) {
+        LOG_ERROR("write descriptor failed");
+        return E_ERROR;
+    }
+
+    if (!ITypesUtil::Marshal(data, bundleName, observer)) {
+        LOG_ERROR("write descriptor failed");
+        return E_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption mo { MessageOption::TF_SYNC };
+    int32_t error = Remote()->SendRequest(REGISTER_DEATH_OBSERVER, data, reply, mo);
+    if (error != 0) {
+        LOG_ERROR("SendRequest returned %{public}d", error);
+        return E_ERROR;
+    }
+
+    int32_t status = E_ERROR;
+    ITypesUtil::Unmarshal(reply, status);
+    return status;
 }
 } // namespace OHOS::DistributedRdb

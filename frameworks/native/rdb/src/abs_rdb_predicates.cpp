@@ -24,13 +24,26 @@ using namespace OHOS::Rdb;
 AbsRdbPredicates::AbsRdbPredicates(std::string tableName)
 {
     if (tableName.empty()) {
-        this->tableName = "";
+        tableName_ = "";
         LOG_INFO("no tableName specified.");
         return;
     }
-    this->tableName = tableName;
+    tableName_ = std::move(tableName);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    predicates_.table_ = tableName;
+    predicates_.tables_.push_back(tableName_);
+#endif
+}
+
+AbsRdbPredicates::AbsRdbPredicates(std::vector<std::string> tables)
+{
+    if (tables.empty()) {
+        tableName_ = "";
+        LOG_INFO("no tableName specified.");
+        return;
+    }
+    tableName_ = *(tables.begin());
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    predicates_.tables_ = std::move(tables);
 #endif
 }
 
@@ -99,7 +112,7 @@ void AbsRdbPredicates::SetJoinConditions(const std::vector<std::string> joinCond
  */
 std::string AbsRdbPredicates::GetJoinClause() const
 {
-    return tableName;
+    return tableName_;
 }
 
 /**
@@ -123,7 +136,7 @@ void AbsRdbPredicates::SetJoinCount(int joinCount)
  */
 std::string AbsRdbPredicates::GetTableName() const
 {
-    return tableName;
+    return tableName_;
 }
 
 std::string AbsRdbPredicates::ToString() const
