@@ -50,7 +50,7 @@ public:
 
     virtual int OnProcessMsg(const std::string &strMsg, int len, std::string &strReturnValue, int returnBufL);
     using SyncOption = DistributedRdb::SyncOption;
-    using SyncCallback = DistributedRdb::SyncCallback;
+    using SyncCallback = DistributedRdb::AsyncBrief;
 };
 
 const std::string DistributedTestAgent::DATABASE_NAME = RDB_TEST_PATH + "distributed_rdb.db";

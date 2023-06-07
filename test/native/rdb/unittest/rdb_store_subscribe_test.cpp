@@ -44,7 +44,7 @@ public:
     static std::shared_ptr<SubObserver> observer_;
 };
 
-const std::string RdbStoreSubTest::MAIN_DATABASE_NAME = RDB_TEST_PATH + "getrdb.db";
+const std::string RdbStoreSubTest::MAIN_DATABASE_NAME = RDB_TEST_PATH + "subscribe.db";
 std::shared_ptr<RdbStore> RdbStoreSubTest::store = nullptr;
 std::shared_ptr<SubObserver> RdbStoreSubTest::observer_ = nullptr;
 
