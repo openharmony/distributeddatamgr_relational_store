@@ -641,39 +641,6 @@ bool RdbSecurityManager::CheckKeyDataFileExists(RdbSecurityManager::KeyFileType 
     }
 }
 
-int RdbSecurityManager::GetKeyDistributedStatus(KeyFileType keyFile, bool &status)
-{
-    LOG_INFO("GetKeyDistributedStatus start.");
-    std::string keyPath;
-    GetKeyPath(keyFile, keyPath);
-
-    RdbSecretKeyData keyData;
-    if (!LoadSecretKeyFromDisk(keyPath, keyData)) {
-        return E_ERROR;
-    }
-
-    status = (keyData.distributed == DISTRIBUTED);
-    return E_OK;
-}
-
-int RdbSecurityManager::SetKeyDistributedStatus(KeyFileType keyFile, bool status)
-{
-    LOG_INFO("SetKeyDistributedStatus start.");
-    std::string keyPath;
-    GetKeyPath(keyFile, keyPath);
-    RdbSecretKeyData keyData;
-    if (!LoadSecretKeyFromDisk(keyPath, keyData)) {
-        return E_ERROR;
-    }
-
-    keyData.distributed = (status ? DISTRIBUTED : UNDISTRIBUTED);
-    if (!SaveSecretKeyToDisk(keyPath, keyData)) {
-        return E_ERROR;
-    }
-
-    return E_OK;
-}
-
 void RdbSecurityManager::GetKeyPath(RdbSecurityManager::KeyFileType keyType, std::string &keyPath)
 {
     if (keyType == KeyFileType::PUB_KEY_FILE) {

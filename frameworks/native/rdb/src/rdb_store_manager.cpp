@@ -82,6 +82,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
             LOG_INFO("config changed, taskId_: %{public}" PRIu64 "", storeCache_[path]->taskId_);
             pool_->Remove(storeCache_[path]->taskId_);
         }
+        LOG_INFO("rdb reference count is %{public}ld", storeCache_[path]->rdbStore_.use_count());
         storeCache_.erase(path);
     }
     rdbStore = RdbStoreImpl::Open(config, errCode);
@@ -89,21 +90,20 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
         LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore, err is %{public}d", errCode);
         return nullptr;
     }
-    storeCache_[path] = std::make_shared<RdbStoreNode>(rdbStore);
-    RestartTimer(path, *storeCache_[path]);
 
     if (SetSecurityLabel(config) != E_OK) {
-        storeCache_.erase(path);
         LOG_ERROR("RdbHelper set security label fail.");
         return nullptr;
     }
 
     errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
     if (errCode != E_OK) {
-        storeCache_.erase(path);
         LOG_ERROR("RdbHelper GetRdbStore ProcessOpenCallback fail");
         return nullptr;
     }
+
+    storeCache_[path] = std::make_shared<RdbStoreNode>(rdbStore);
+    RestartTimer(path, *storeCache_[path]);
 
     return rdbStore;
 }
@@ -128,7 +128,10 @@ void RdbStoreManager::AutoClose(const std::string &path)
         LOG_INFO("has Removed");
         return;
     }
-    storeCache_.erase(it);
+    LOG_INFO("rdb reference count is %{public}ld", (*it).second->rdbStore_.use_count());
+    if ((*it).second->rdbStore_.use_count() > 1) {
+        storeCache_.erase(it);
+    }
 }
 
 void RdbStoreManager::Remove(const std::string &path)
@@ -139,6 +142,7 @@ void RdbStoreManager::Remove(const std::string &path)
         LOG_INFO("has Removed");
         return;
     }
+
     if (pool_ != nullptr) {
         LOG_INFO("remove taskId_: %{public}" PRIu64 "", it->second->taskId_);
         pool_->Remove(it->second->taskId_);

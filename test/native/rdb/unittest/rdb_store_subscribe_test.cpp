@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include <gtest/gtest.h>
 #include <string>
 
@@ -26,6 +25,11 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::DistributedRdb;
+class SubObserver : public RdbStoreObserver {
+public:
+    virtual ~SubObserver() {}
+    void OnChange(const std::vector<std::string>& devices) override;
+};
 
 class RdbStoreSubTest : public testing::Test {
 public:
@@ -37,14 +41,19 @@ public:
     static const std::string MAIN_DATABASE_NAME;
     static std::shared_ptr<RdbStore> CreateRDB(int version);
     static std::shared_ptr<RdbStore> store;
+    static std::shared_ptr<SubObserver> observer_;
 };
 
 const std::string RdbStoreSubTest::MAIN_DATABASE_NAME = RDB_TEST_PATH + "getrdb.db";
 std::shared_ptr<RdbStore> RdbStoreSubTest::store = nullptr;
+std::shared_ptr<SubObserver> RdbStoreSubTest::observer_ = nullptr;
 
 void RdbStoreSubTest::SetUpTestCase(void)
 {
     store = CreateRDB(1);
+    if (observer_ == nullptr) {
+        observer_ = std::make_shared<SubObserver>();
+    }
 }
 
 void RdbStoreSubTest::TearDownTestCase(void)
@@ -75,12 +84,6 @@ int Callback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
     return E_OK;
 }
 
-class SubObserver : public RdbStoreObserver {
-public:
-    virtual ~SubObserver() {}
-    void OnChange(const std::vector<std::string>& devices) override;
-};
-
 void SubObserver::OnChange(const std::vector<std::string> &devices)
 {
 }
@@ -88,6 +91,11 @@ void SubObserver::OnChange(const std::vector<std::string> &devices)
 std::shared_ptr<RdbStore> RdbStoreSubTest::CreateRDB(int version)
 {
     RdbStoreConfig config(RdbStoreSubTest::MAIN_DATABASE_NAME);
+    config.SetBundleName("subscribe_test");
+    config.SetArea(0);
+    config.SetCreateNecessary(true);
+    config.SetDistributedType(RDB_DEVICE_COLLABORATION);
+    config.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel::S1);
     Callback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, version, helper, errCode);
@@ -104,9 +112,9 @@ std::shared_ptr<RdbStore> RdbStoreSubTest::CreateRDB(int version)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeRemote, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is nullptr";
-    std::shared_ptr<SubObserver> observer = std::make_shared<SubObserver>();
-    auto status = store->Subscribe({ SubscribeMode::REMOTE }, observer.get());
+    EXPECT_NE(store, nullptr) << "store is null";
+    EXPECT_NE(observer_, nullptr) << "observer is null";
+    auto status = store->Subscribe({ SubscribeMode::REMOTE }, observer_.get());
     EXPECT_EQ(status, E_OK);
 }
 
@@ -119,9 +127,9 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeRemote, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeCloud, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is nullptr";
-    std::shared_ptr<SubObserver> observer = std::make_shared<SubObserver>();
-    auto status = store->Subscribe({ SubscribeMode::CLOUD }, observer.get());
+    EXPECT_NE(store, nullptr) << "store is null";
+    EXPECT_NE(observer_, nullptr) << "observer is null";
+    auto status = store->Subscribe({ SubscribeMode::CLOUD }, observer_.get());
     EXPECT_EQ(status, E_OK);
 }
 
@@ -134,8 +142,8 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeCloud, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeCloudDetail, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is nullptr";
-    std::shared_ptr<SubObserver> observer = std::make_shared<SubObserver>();
-    auto status = store->Subscribe({ SubscribeMode::CLOUD_DETAIL }, observer.get());
+    EXPECT_NE(store, nullptr) << "store is null";
+    EXPECT_NE(observer_, nullptr) << "observer is null";
+    auto status = store->Subscribe({ SubscribeMode::CLOUD_DETAIL }, observer_.get());
     EXPECT_EQ(status, E_OK);
 }
