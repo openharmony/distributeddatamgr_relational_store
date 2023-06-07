@@ -79,7 +79,6 @@ napi_value ResultSetProxy::GetConstructor(napi_env env)
     LOG_INFO("GetConstructor result set constructor");
     napi_property_descriptor clzDes[] = {
         DECLARE_NAPI_FUNCTION("goToRow", GoToRow),
-        DECLARE_NAPI_FUNCTION("getLong", GetLong),
         DECLARE_NAPI_FUNCTION("getColumnType", GetColumnType),
         DECLARE_NAPI_FUNCTION("goTo", GoTo),
         DECLARE_NAPI_FUNCTION("getColumnIndex", GetColumnIndex),
@@ -90,11 +89,12 @@ napi_value ResultSetProxy::GetConstructor(napi_env env)
         DECLARE_NAPI_FUNCTION("goToNextRow", GoToNextRow),
         DECLARE_NAPI_FUNCTION("goToPreviousRow", GoToPreviousRow),
         DECLARE_NAPI_FUNCTION("getInt", GetInt),
-        DECLARE_NAPI_FUNCTION("getBlob", GetBlob),
-        DECLARE_NAPI_FUNCTION("getAsset", GetAsset),
-        DECLARE_NAPI_FUNCTION("getAssets", GetAssets),
-        DECLARE_NAPI_FUNCTION("getString", GetString),
-        DECLARE_NAPI_FUNCTION("getDouble", GetDouble),
+        DECLARE_NAPI_FUNCTION("getBlob", GetValue<std::vector<uint8_t>>),
+        DECLARE_NAPI_FUNCTION("getAsset", GetValue<Asset>),
+        DECLARE_NAPI_FUNCTION("getAssets", GetValue<Assets>),
+        DECLARE_NAPI_FUNCTION("getString", GetValue<std::string>),
+        DECLARE_NAPI_FUNCTION("getDouble", GetValue<double>),
+        DECLARE_NAPI_FUNCTION("getLong", GetValue<int64_t>),
         DECLARE_NAPI_FUNCTION("isColumnNull", IsColumnNull),
         DECLARE_NAPI_FUNCTION("getRow", GetRow),
 
@@ -416,86 +416,19 @@ napi_value ResultSetProxy::GetInt(napi_env env, napi_callback_info info)
     return JSUtils::Convert2JSValue(env, result);
 }
 
-napi_value ResultSetProxy::GetLong(napi_env env, napi_callback_info info)
-{
-    int32_t columnIndex;
-    auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
-
-    int64_t result;
-    int errCode = resultSetProxy->resultSet_->GetLong(columnIndex, result);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-
-    return JSUtils::Convert2JSValue(env, result);
-}
-
-napi_value ResultSetProxy::GetBlob(napi_env env, napi_callback_info info)
+template<typename T>
+napi_value ResultSetProxy::GetValue(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
 
-    std::vector<uint8_t> result;
-    int errCode = resultSetProxy->resultSet_->GetBlob(columnIndex, result);
+    auto getval = ValueObject(T());
+    int errCode = resultSetProxy->resultSet_->Get(columnIndex, getval);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
 
-    return JSUtils::Convert2JSValue(env, result);
-}
-
-napi_value ResultSetProxy::GetAsset(napi_env env, napi_callback_info info)
-{
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    int32_t columnIndex;
-    auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
-
-    Asset result;
-    int errCode = resultSetProxy->resultSet_->GetAsset(columnIndex, result);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-
-    return JSUtils::Convert2JSValue(env, result);
-}
-
-napi_value ResultSetProxy::GetAssets(napi_env env, napi_callback_info info)
-	{
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    int32_t columnIndex;
-    auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
-
-    Assets result;
-    int errCode = resultSetProxy->resultSet_->GetAssets(columnIndex, result);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-
-    return JSUtils::Convert2JSValue(env, result);
-}
-
-napi_value ResultSetProxy::GetString(napi_env env, napi_callback_info info)
-{
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    int32_t columnIndex;
-    auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
-
-    std::string result;
-    int errCode = resultSetProxy->resultSet_->GetString(columnIndex, result);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-
-    return JSUtils::Convert2JSValue(env, result);
-}
-
-napi_value ResultSetProxy::GetDouble(napi_env env, napi_callback_info info)
-{
-    int32_t columnIndex;
-    auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
-
-    double result = 0.0;
-    int errCode = resultSetProxy->resultSet_->GetDouble(columnIndex, result);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-
-    return JSUtils::Convert2JSValue(env, result);
+    return JSUtils::Convert2JSValue(env, T(getval));
 }
 
 napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)

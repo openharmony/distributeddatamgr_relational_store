@@ -213,6 +213,18 @@ public:
      */
     API_EXPORT bool HasBlock() const;
 
+    /**
+     * @brief Obtains the value of the specified column in the current row as ValueObject.
+     *
+     * The implementation class determines whether to throw an exception if the value of the specified column
+     * in the current row is null or the specified column is not of the double type.
+     *
+     * @param columnIndex Indicates the specified column index, which starts from 0.
+     *
+     * @return Returns the value of the specified column as a double.
+     */
+    API_EXPORT int Get(int32_t col, ValueObject &value) override;
+
 protected:
     int CheckState(int columnIndex);
     void ClearBlock();
