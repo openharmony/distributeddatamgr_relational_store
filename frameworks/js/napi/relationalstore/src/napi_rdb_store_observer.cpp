@@ -48,7 +48,7 @@ void NapiRdbStoreObserver::OnChange(const Origin &origin, const PrimaryFields &f
     if (mode_ == DistributedRdb::CLOUD_DETAIL) {
         CallFunction([info = std::move(changeInfo)](napi_env env, int &argc, napi_value *argv) {
             argc = 1;
-            // todo argv[0] = JSUtils::Convert2JSValue(env, info)
+            // action
         });
     }
     RdbStoreObserver::OnChange(origin, fields, std::move(changeInfo));

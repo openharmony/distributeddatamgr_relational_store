@@ -25,7 +25,7 @@ void RdbStoreImplFuzz(const uint8_t *data, size_t size)
     std::string rawString(reinterpret_cast<const char *>(data), size);
     std::vector<std::string> tables;
     tables.push_back(rawString);
-    rdbStoreImpl.SetDistributedTables(tables, size % 2);
+    rdbStoreImpl.SetDistributedTables(tables, size & 0x1);
 }
 }
 
