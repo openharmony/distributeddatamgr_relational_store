@@ -333,3 +333,41 @@ HWTEST_F(ValuesBucketTest, Convert_To_Subset, TestSize.Level1)
     nil = std::get_if<std::monostate>(&output);
     EXPECT_TRUE(nil != nullptr);
 }
+
+/**
+ * @tc.name: Explicit conversion
+ * @tc.desc: test ValuesObject operator
+ * @tc.type: FUNC
+ */
+HWTEST_F(ValuesBucketTest, Explicit_Conversion, TestSize.Level1)
+{
+    ValueObject valueObject;
+    auto blob = std::vector<uint8_t>(10, 'm');
+    valueObject = ValueObject(blob);
+    auto transformedBlob = ValueObject::Blob(valueObject);
+    ASSERT_EQ(transformedBlob.size(), 10);
+
+    AssetValue asset{ .version = 0, .name = "123", .uri = "my test path", .createTime = "12", .modifyTime = "12"};
+    valueObject = ValueObject(asset);
+    auto transformedAsset = ValueObject::Asset(valueObject);
+    ASSERT_EQ(transformedAsset.version, asset.version);
+    ASSERT_EQ(transformedAsset.name, asset.name);
+    ASSERT_EQ(transformedAsset.uri, asset.uri);
+    ASSERT_EQ(transformedAsset.createTime, asset.createTime);
+
+    auto assets = ValueObject::Assets({ asset });
+    valueObject = ValueObject(assets);
+    auto transformedAssets = ValueObject::Assets(valueObject);
+    ASSERT_EQ(transformedAssets.size(), 1);
+    auto first = transformedAssets.begin();
+    ASSERT_EQ(first->version, asset.version);
+    ASSERT_EQ(first->name, asset.name);
+    ASSERT_EQ(first->uri, asset.uri);
+    ASSERT_EQ(first->createTime, asset.createTime);
+
+    using Type = ValueObject::Type;
+    Type input = asset;
+    valueObject = ValueObject(input);
+    auto transformedType = ValueObject::Type(valueObject);
+    ASSERT_EQ(transformedType.index(), ValueObject::TYPE_ASSET);
+}
