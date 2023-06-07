@@ -101,6 +101,7 @@ ohos_shared_library("rdb") {
   if (is_mingw || is_mac) {
     include_dirs = [
       "mock/include",
+      "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/mock/include",
       "${relational_store_napi_path}/rdb/mock/include",
       "//commonlibrary/c_utils/base/include",
