@@ -25,8 +25,8 @@ struct AssetValue {
     std::string modifyTime;
     std::string size;
     std::string hash;
-    std::string assetId;
-    std::string subPath;
+    std::string path;
+    uint32_t status;
 };
 }
 #endif // OHOS_RELATIONAL_STORE_INNER_API_ASSET_VALUE_H
