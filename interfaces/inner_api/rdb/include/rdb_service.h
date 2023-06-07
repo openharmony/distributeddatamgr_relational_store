@@ -50,7 +50,7 @@ public:
     virtual int32_t SetDistributedTables(
         const RdbSyncerParam &param, const std::vector<std::string> &tables, int32_t type = DISTRIBUTED_DEVICE) = 0;
 
-    virtual int32_t Sync(const RdbSyncerParam &param, const Option &option, const RdbPredicates &predicates,
+    virtual int32_t Sync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
         const AsyncDetail &async) = 0;
 
     virtual int32_t Subscribe(const RdbSyncerParam &param, const SubscribeOption &option,
