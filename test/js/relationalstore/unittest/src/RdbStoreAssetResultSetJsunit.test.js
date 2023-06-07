@@ -20,9 +20,8 @@ var context = ability_featureAbility.getContext()
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-    "data1 text," + "data2 long, " + "data3 double," + "data4 blob, " + "data5 asset, " + "data6 assets )";
-
-const CREATE_TABLE_TEST1 = "CREATE TABLE IF NOT EXISTS test1 (" + "data6 assets )";
+    "data1 asset, " + "data2 asset, " + "data3 assets )";
+const DROP_TABLE_TEST = "DROP TABLE IF EXISTS test";
 
 const STORE_CONFIG = {
     name: "Asset.db",
@@ -34,20 +33,18 @@ describe('rdbResultSetTest', function () {
     beforeAll(async function () {
         console.info(TAG + 'beforeAll')
         rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
-        if (rdbStore == undefined) {
-            console.error("beforeall get rdbstore error is undefined")
-        } else {
-            console.error("beforeall get rdbstore success")
-        }
-        await rdbStore.executeSql(CREATE_TABLE_TEST);
-        await createTest();
+        await rdbStore.executeSql(CREATE_TABLE_TEST, null);
+
     })
 
     beforeEach(async function () {
-        console.info(TAG + 'beforeEach')
+        await rdbStore.executeSql(CREATE_TABLE_TEST, null);
+        console.info(TAG + 'beforeEach');
+        await createTest();
     })
 
-    afterEach(function () {
+    afterEach(async function () {
+        await rdbStore.executeSql(DROP_TABLE_TEST, null);
         console.info(TAG + 'afterEach')
     })
 
@@ -60,78 +57,53 @@ describe('rdbResultSetTest', function () {
     // insert data
     async function createTest() {
         console.log(TAG + "createTest data start");
-        {
-            console.error("create test 1 start")
-            var u8 = new Uint8Array([1, 2, 3])
-            const asset = {
-                version: 1,
-                name: "name1",
-                uri: "uri1",
-                createTime: "createTime1",
-                modifyTime: "modifyTime1",
-                size: "size1",
-                hash: "hash1",
-            }
-            const assets = []
-            assets.push(asset)
-            const valueBucket = {
-                "data1": "hello",
-                "data2": 10,
-                "data3": 1.0,
-                "data4": u8,
-                "data5": asset,
-                "data6": assets,
-            }
-            await rdbStore.insert("test", valueBucket)
-            console.error("create test 1 end")
+        const asset1 = {
+            version: 1,
+            name: "name1",
+            uri: "uri1",
+            createTime: "createTime1",
+            modifyTime: "modifyTime1",
+            size: "size1",
+            hash: "hash1",
         }
-        {
-            console.error("create test 2 start")
-            var u8 = new Uint8Array([3, 4, 5])
-            const asset1 = {
-                version: 1,
-                name: "name1",
-                uri: "uri1",
-                createTime: "createTime1",
-                modifyTime: "modifyTime1",
-                size: "size1",
-                hash: "hash1",
-            }
-            const asset2 = {
-                version: 2,
-                name: "name2",
-                uri: "uri2",
-                createTime: "createTime2",
-                modifyTime: "modifyTime2",
-                size: "size2",
-                hash: "hash2",
-            }
-            const assets = []
-            assets.push(asset1)
-            assets.push(asset2)
-            const valueBucket = {
-                "data1": "2",
-                "data2": -5,
-                "data3": 2.5,
-                "data4": u8,
-                "data5": asset2,
-                "data6": assets,
-            }
-            await rdbStore.insert("test", valueBucket)
-            console.error("create test 2 end")
+        const asset2 = {
+            version: 2,
+            name: "name2",
+            uri: "uri2",
+            createTime: "createTime2",
+            modifyTime: "modifyTime2",
+            size: "size2",
+            hash: "hash2",
         }
-        {
-            console.error("create test 3 start")
-            var u8 = new Uint8Array(0)
-            const valueBucket = {
-                "data1": "hello world",
-                "data2": 3,
-                "data3": 1.8,
-                "data4": u8,
-            }
-            await rdbStore.insert("test", valueBucket)
-            console.error("create test 3 end")
+        const asset3 = {
+            version: 3,
+            name: "name3",
+            uri: "uri3",
+            createTime: "createTime3",
+            modifyTime: "modifyTime3",
+            size: "size3",
+            hash: "hash3",
         }
+        const assets1 = [asset1];
+        const assets2 = [asset1, asset2, asset3];
+        const assets3 = [];
+        let valuesBucket = {
+            "data1": asset1,
+            "data2": asset2,
+            "data3": assets1,
+        }
+        await rdbStore.insert("test", valuesBucket)
+        valuesBucket = {
+            "data1": asset2,
+            "data2": asset3,
+            "data3": assets2,
+        }
+        await rdbStore.insert("test", valuesBucket)
+        valuesBucket = {
+            "data1": asset1,
+            "data3": assets3,
+        }
+        await rdbStore.insert("test", valuesBucket)
         console.log(TAG + "createTest data end");
     }
 
@@ -147,15 +119,25 @@ describe('rdbResultSetTest', function () {
         try {
             expect(true).assertEqual(resultSet.goToFirstRow())
             const id = resultSet.getLong(resultSet.getColumnIndex("id"))
-            const data5 = resultSet.getAsset(resultSet.getColumnIndex("data5"))
-            console.log(TAG + "id=" + id + ", data5=" + data5);
-            expect(1).assertEqual(data5.version);
-            expect("name1").assertEqual(data5.name);
-            expect("uri1").assertEqual(data5.uri);
-            expect("createTime1").assertEqual(data5.createTime);
-            expect("modifyTime1").assertEqual(data5.modifyTime);
-            expect("size1").assertEqual(data5.size);
-            expect("hash1").assertEqual(data5.hash);
+            const data1 = resultSet.getAsset(resultSet.getColumnIndex("data1"))
+            console.log(TAG + "id=" + id + ", data1=" + data1);
+            expect(1).assertEqual(data1.version);
+            expect("name1").assertEqual(data1.name);
+            expect("uri1").assertEqual(data1.uri);
+            expect("createTime1").assertEqual(data1.createTime);
+            expect("modifyTime1").assertEqual(data1.modifyTime);
+            expect("size1").assertEqual(data1.size);
+            expect("hash1").assertEqual(data1.hash);
+
+            const data2 = resultSet.getAsset(resultSet.getColumnIndex("data2"))
+            console.log(TAG + "id=" + id + ", data2=" + data2);
+            expect(2).assertEqual(data2.version);
+            expect("name2").assertEqual(data2.name);
+            expect("uri2").assertEqual(data2.uri);
+            expect("createTime2").assertEqual(data2.createTime);
+            expect("modifyTime2").assertEqual(data2.modifyTime);
+            expect("size2").assertEqual(data2.size);
+            expect("hash2").assertEqual(data2.hash);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -180,15 +162,15 @@ describe('rdbResultSetTest', function () {
             expect(true).assertEqual(resultSet.goToFirstRow())
             expect(true).assertEqual(resultSet.goToNextRow())
             const id = resultSet.getLong(resultSet.getColumnIndex("id"))
-            const data5 = resultSet.getAsset(resultSet.getColumnIndex("data5"))
-            console.log(TAG + "id=" + id + ", data5=" + data5);
-            expect(2).assertEqual(data5.version);
-            expect("name2").assertEqual(data5.name);
-            expect("uri2").assertEqual(data5.uri);
-            expect("createTime2").assertEqual(data5.createTime);
-            expect("modifyTime2").assertEqual(data5.modifyTime);
-            expect("size2").assertEqual(data5.size);
-            expect("hash2").assertEqual(data5.hash);
+            const data1 = resultSet.getAsset(resultSet.getColumnIndex("data1"))
+            console.log(TAG + "id=" + id + ", data1=" + data1);
+            expect(2).assertEqual(data1.version);
+            expect("name2").assertEqual(data1.name);
+            expect("uri2").assertEqual(data1.uri);
+            expect("createTime2").assertEqual(data1.createTime);
+            expect("modifyTime2").assertEqual(data1.modifyTime);
+            expect("size2").assertEqual(data1.size);
+            expect("hash2").assertEqual(data1.hash);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -214,15 +196,15 @@ describe('rdbResultSetTest', function () {
             expect(true).assertEqual(resultSet.goToNextRow())
             expect(true).assertEqual(resultSet.goToNextRow())
             const id = resultSet.getLong(resultSet.getColumnIndex("id"))
-            const data5 = resultSet.getAsset(resultSet.getColumnIndex("data5"))
-            console.log(TAG + "id=" + id + ", data5=" + data5);
-            expect(0).assertEqual(data5.version);
-            expect("").assertEqual(data5.name);
-            expect("").assertEqual(data5.uri);
-            expect("").assertEqual(data5.createTime);
-            expect("").assertEqual(data5.modifyTime);
-            expect("").assertEqual(data5.size);
-            expect("").assertEqual(data5.hash);
+            const data2 = resultSet.getAsset(resultSet.getColumnIndex("data2"))
+            console.log(TAG + "id=" + id + ", data2=" + data2);
+            expect(0).assertEqual(data2.version);
+            expect("").assertEqual(data2.name);
+            expect("").assertEqual(data2.uri);
+            expect("").assertEqual(data2.createTime);
+            expect("").assertEqual(data2.modifyTime);
+            expect("").assertEqual(data2.size);
+            expect("").assertEqual(data2.hash);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -245,12 +227,11 @@ describe('rdbResultSetTest', function () {
         let resultSet = await rdbStore.query(predicates)
         try {
             expect(true).assertEqual(resultSet.goToFirstRow())
-            expect(true).assertEqual(resultSet.goToNextRow())
             const id = resultSet.getLong(resultSet.getColumnIndex("id"))
-            const data6 = resultSet.getAssets(resultSet.getColumnIndex("data6"))
-            console.log(TAG + "id=" + id + ", data6=" + data6);
-            expect(2).assertEqual(data6.length);
-            let asset = data6[0];
+            const data3 = resultSet.getAssets(resultSet.getColumnIndex("data3"))
+            console.log(TAG + "id=" + id + ", data3=" + data3);
+            expect(1).assertEqual(data3.length);
+            let asset = data3[0];
             expect(1).assertEqual(asset.version);
             expect("name1").assertEqual(asset.name);
             expect("uri1").assertEqual(asset.uri);
@@ -258,15 +239,6 @@ describe('rdbResultSetTest', function () {
             expect("modifyTime1").assertEqual(asset.modifyTime);
             expect("size1").assertEqual(asset.size);
             expect("hash1").assertEqual(asset.hash);
-
-            asset = data6[1];
-            expect(2).assertEqual(asset.version);
-            expect("name2").assertEqual(asset.name);
-            expect("uri2").assertEqual(asset.uri);
-            expect("createTime2").assertEqual(asset.createTime);
-            expect("modifyTime2").assertEqual(asset.modifyTime);
-            expect("size2").assertEqual(asset.size);
-            expect("hash2").assertEqual(asset.hash);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -290,11 +262,65 @@ describe('rdbResultSetTest', function () {
         try {
             expect(true).assertEqual(resultSet.goToFirstRow())
             expect(true).assertEqual(resultSet.goToNextRow())
+            const id = resultSet.getLong(resultSet.getColumnIndex("id"))
+            const data3 = resultSet.getAssets(resultSet.getColumnIndex("data3"))
+            console.log(TAG + "id=" + id + ", data3=" + data3);
+            expect(3).assertEqual(data3.length);
+            let asset = data3[0];
+            expect(1).assertEqual(asset.version);
+            expect("name1").assertEqual(asset.name);
+            expect("uri1").assertEqual(asset.uri);
+            expect("createTime1").assertEqual(asset.createTime);
+            expect("modifyTime1").assertEqual(asset.modifyTime);
+            expect("size1").assertEqual(asset.size);
+            expect("hash1").assertEqual(asset.hash);
+
+            asset = data3[1];
+            expect(2).assertEqual(asset.version);
+            expect("name2").assertEqual(asset.name);
+            expect("uri2").assertEqual(asset.uri);
+            expect("createTime2").assertEqual(asset.createTime);
+            expect("modifyTime2").assertEqual(asset.modifyTime);
+            expect("size2").assertEqual(asset.size);
+            expect("hash2").assertEqual(asset.hash);
+
+            asset = data3[2];
+            expect(3).assertEqual(asset.version);
+            expect("name3").assertEqual(asset.name);
+            expect("uri3").assertEqual(asset.uri);
+            expect("createTime3").assertEqual(asset.createTime);
+            expect("modifyTime3").assertEqual(asset.modifyTime);
+            expect("size3").assertEqual(asset.size);
+            expect("hash3").assertEqual(asset.hash);
+
+            resultSet.close();
+            expect(true).assertEqual(resultSet.isClosed)
+        } catch (e) {
+            console.error("error happened" + e.message);
+            expect(null).assertFail();
+        }
+        resultSet = null
+        done();
+        console.log(TAG + "************* testGetAssets0002 end *************");
+    })
+
+    /**
+     * @tc.name resultSet getAssets normal test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0030
+     * @tc.desc resultSet getAssets normal test
+     */
+    it('testGetAssets0003', 0, async function (done) {
+        console.log(TAG + "************* testGetAssets0003 start *************");
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        try {
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            expect(true).assertEqual(resultSet.goToNextRow())
             expect(true).assertEqual(resultSet.goToNextRow())
             const id = resultSet.getLong(resultSet.getColumnIndex("id"))
-            const data6 = resultSet.getAssets(resultSet.getColumnIndex("data6"))
-            console.log(TAG + "id=" + id + ", data6=" + data6);
-            expect(0).assertEqual(data6.length);
+            const data3 = resultSet.getAssets(resultSet.getColumnIndex("data3"))
+            console.log(TAG + "id=" + id + ", data3=" + data3);
+            expect(0).assertEqual(data3.length);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -303,6 +329,6 @@ describe('rdbResultSetTest', function () {
         }
         resultSet = null
         done();
-        console.log(TAG + "************* testGetAssets0002 end *************");
+        console.log(TAG + "************* testGetAssets0003 end *************");
     })
 })
