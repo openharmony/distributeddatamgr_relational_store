@@ -57,6 +57,7 @@ void RdbServiceProxy::OnSyncComplete(uint32_t seqNum, Details &&result)
 {
     syncCallbacks_.ComputeIfPresent(seqNum, [&result] (const auto& key, const AsyncDetail & callback) {
         auto finished = result.empty() || (result.begin()->second.progress == SYNC_FINISH);
+        ZLOGD("Sync complete, seqNum%{public}d, result size:%{public}zu", key, result.size());
         callback(std::move(result));
         return !finished;
     });
