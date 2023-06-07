@@ -101,7 +101,6 @@ if (is_ohos) {
 
     sources += [
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
-      "${relational_store_native_path}/rdb/src/rdb_manager.cpp",
       "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
       "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
       "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
@@ -149,7 +148,6 @@ if (is_ohos) {
 
     sources += [
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
-      "${relational_store_native_path}/rdb/src/rdb_manager.cpp",
       "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
       "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
       "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
