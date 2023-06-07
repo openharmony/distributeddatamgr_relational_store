@@ -89,7 +89,24 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
     syncerParam_.type_ = config.GetDistributedType();
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.password_ = {};
+    GetSchema(config);
+#endif
+    return E_OK;
+}
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
+{
+    std::vector<uint8_t> key = config.GetEncryptKey();
+    RdbPassword rdbPwd;
+    if (config.IsEncrypt()) {
+        RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
+        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        key.assign(key.size(), 0);
+        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+    }
+    syncerParam_.password_ = std::vector<uint8_t>(key.data(), key.data() + key.size());
+    key.assign(key.size(), 0);
     if (pool_ == nullptr) {
         pool_ = TaskExecutor::GetInstance().GetExecutor();
     }
@@ -99,7 +116,7 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
             std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
             int errCode = DistributedRdb::RdbManager::GetRdbService(param, service);
             if (errCode != E_OK || service == nullptr) {
-                LOG_ERROR("GetRdbService failed, err is %{public}d.", errCode);
+                LOG_WARN("GetRdbService failed, err is %{public}d.", errCode);
                 return;
             }
             errCode = service->GetSchema(param);
@@ -108,9 +125,8 @@ int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
             }
         });
     }
-#endif
-    return E_OK;
 }
+#endif
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
     : rdbStoreConfig(config), connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false),
@@ -123,6 +139,7 @@ RdbStoreImpl::~RdbStoreImpl()
     LOG_INFO("destroy.");
     delete connectionPool;
 }
+
 #ifdef WINDOWS_PLATFORM
 void RdbStoreImpl::Clear()
 {
@@ -428,7 +445,8 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
     const std::vector<std::string> &selectionArgs)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    auto resultSet = std::make_unique<SqliteSharedResultSet>(connectionPool, path, sql, selectionArgs);
+    auto resultSet =
+        std::make_unique<SqliteSharedResultSet>(connectionPool, path, sql, selectionArgs, shared_from_this());
     return resultSet;
 }
 #endif
@@ -1103,16 +1121,6 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
         LOG_WARN("The distributed tables to be set is empty.");
         return E_OK;
     }
-    if (isEncrypt_) {
-        bool status = false;
-        RdbSecurityManager::GetInstance().GetKeyDistributedStatus(RdbSecurityManager::KeyFileType::PUB_KEY_FILE,
-            status);
-        if (!status) {
-            RdbPassword key =
-                RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-            syncerParam_.password_ = std::vector<uint8_t>(key.GetData(), key.GetData() + key.GetSize());
-        }
-    }
 
     std::shared_ptr<DistributedRdb::RdbService> service = nullptr;
     int errCode = DistributedRdb::RdbManager::GetRdbService(syncerParam_, service);
@@ -1125,13 +1133,6 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables)
         syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
         syncerParam_.password_.clear();
         return errorCode;
-    }
-
-    if (isEncrypt_) {
-        syncerParam_.password_.assign(syncerParam_.password_.size(), 0);
-        syncerParam_.password_.clear();
-        RdbSecurityManager::GetInstance().SetKeyDistributedStatus(
-            RdbSecurityManager::KeyFileType::PUB_KEY_FILE, true);
     }
     return E_OK;
 }
