@@ -62,7 +62,6 @@ private:
     bool isOnlyFillResultSetBlock;
     std::string qrySql;
     std::vector<std::string> selectionArgVec;
-    std::shared_ptr<SqliteStatement> sqliteStatement;
     // The number of rows in the cursor
     int rowNum;
     std::vector<std::string> columnNames_;
