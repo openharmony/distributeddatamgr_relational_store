@@ -23,7 +23,7 @@
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_security_manager.h"
-#include "sqlite_database_utils.h"
+#include "sqlite_utils.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -275,7 +275,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_03, TestSize.Level1)
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
 
-    SqliteDatabaseUtils::DeleteFile(keyPath);
+    SqliteUtils::DeleteFile(keyPath);
     isFileExists = OHOS::FileExists(keyPath);
     ASSERT_FALSE(isFileExists);
     isFileExists = OHOS::FileExists(newKeyPath);

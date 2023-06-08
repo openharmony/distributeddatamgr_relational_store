@@ -21,7 +21,7 @@
 #include "rdb_errno.h"
 #include "rdb_trace.h"
 #include "sqlite3sym.h"
-#include "sqlite_database_utils.h"
+#include "rdb_sql_utils.h"
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
 
@@ -254,7 +254,7 @@ int StepResultSet::PrepareStep()
         return E_CON_OVER_LIMIT;
     }
 
-    if (!SqliteDatabaseUtils::IsReadOnlySql(sql)) {
+    if (SqliteUtils::GetSqlStatementType(sql) != SqliteUtils::STATEMENT_SELECT) {
         LOG_ERROR("not a select sql!");
         return E_EXECUTE_IN_STEP_QUERY;
     }

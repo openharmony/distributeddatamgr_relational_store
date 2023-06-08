@@ -13,13 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_RDB_RDB_VISIBILITY_H
-#define NATIVE_RDB_RDB_VISIBILITY_H
-#ifndef API_EXPORT
-#if defined(__GNUC__) || defined(__clang__)
-#define API_EXPORT __attribute__((visibility ("default")))
-#else
-#define API_EXPORT
+#ifndef NATIVE_RDB_SQL_UTILS_H
+#define NATIVE_RDB_SQL_UTILS_H
+#include "abs_rdb_predicates.h"
+
+namespace OHOS {
+namespace NativeRdb {
+class API_EXPORT RdbSqlUtils {
+public:
+    /**
+     * @brief get default data base path.
+     */
+    static std::string GetDefaultDatabasePath(const std::string &baseDir, const std::string &name, int &errorCode);
+    /**
+     * @brief build query sql string.
+     */
+    static std::string BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
+};
+} // namespace NativeRdb
+} // namespace OHOS
+
 #endif
-#endif
-#endif // NATIVE_RDB_RDB_VISIBILITY_H
