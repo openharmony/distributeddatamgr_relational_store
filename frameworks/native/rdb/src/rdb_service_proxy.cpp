@@ -191,9 +191,9 @@ int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam& param, const Option &opti
         }
     }
     ZLOGI("num=%{public}u", asyncOption.seqNum);
-    if (DoAsync(param, option, predicates) != RDB_OK) {
+    if (DoAsync(param, asyncOption, predicates) != RDB_OK) {
         ZLOGE("failed");
-        syncCallbacks_.Erase(option.seqNum);
+        syncCallbacks_.Erase(asyncOption.seqNum);
         return RDB_ERROR;
     }
 
