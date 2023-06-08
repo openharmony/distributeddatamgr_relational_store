@@ -17,12 +17,12 @@
 #include <endian.h>
 
 namespace OHOS {
-uint16_t Endian::Le16toh(uint16_t littleEndian)
+uint16_t Endian::LeToH(uint16_t value)
 {
-    return le16toh(littleEndian);
+    return le16toh(value);
 }
-uint16_t Endian::Htole16(uint16_t host)
+uint16_t Endian::HToLe(uint16_t value)
 {
-    return htole16(host);
+    return htole16(value);
 }
 }

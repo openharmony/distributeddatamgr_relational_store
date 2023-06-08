@@ -17,43 +17,42 @@
 #include "multi_platform_endian.h"
 
 #define UNMARSHAL_RETURN_ERR(theCall) \
-    do {                                    \
-        if (!theCall) {                     \
-            return false;                   \
-        }                                   \
+    do {                              \
+        if (!theCall) {               \
+            return false;             \
+        }                             \
     } while (0)
 
 namespace OHOS::NativeRdb {
 size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Asset &asset)
 {
-    constexpr size_t PARSER_FAILED = 0;
     size_t used = 0;
     uint16_t size = 0;
 
-    if (MAGIC_WORD_ASSET.length() > length - used) {
-        return PARSER_FAILED;
+    if (sizeof(ASSET_MAGIC) > length - used) {
+        return 0;
     }
     std::vector<uint8_t> alignData;
-    alignData.assign(data, data + MAGIC_WORD_ASSET.length());
-    used += MAGIC_WORD_ASSET.length();
-    if (std::string(reinterpret_cast<char *>(alignData.data())) != MAGIC_WORD_ASSET) {
-        return PARSER_FAILED;
+    alignData.assign(data, data + sizeof(ASSET_MAGIC));
+    used += sizeof(ASSET_MAGIC);
+    if (*(reinterpret_cast<decltype(&ASSET_MAGIC)>(alignData.data())) != ASSET_MAGIC) {
+        return 0;
     }
 
     if (sizeof(size) > length - used) {
-        return PARSER_FAILED;
+        return 0;
     }
     alignData.assign(data + used , data + used + sizeof(size));
     used += sizeof(size);
-    size = Endian::Le16toh(*(reinterpret_cast<decltype(&size)>(alignData.data())));
+    size = Endian::LeToH(*(reinterpret_cast<decltype(&size)>(alignData.data())));
 
     if (size > length - used) {
-        return PARSER_FAILED;
+        return 0;
     }
     auto rawData = std::string(reinterpret_cast<const char *>(&data[used]), size);
     InnerAsset innerAsset = InnerAsset(asset);
     if (!innerAsset.Unmarshall(rawData)) {
-        return PARSER_FAILED;
+        return 0;
     }
     used += size;
     return used;
@@ -61,22 +60,21 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Asset &a
 
 size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Assets &assets)
 {
-    constexpr size_t PARSER_FAILED = 0;
     size_t used = 0;
     uint16_t num = 0;
 
-    if (MAGIC_WORD_ASSETS.length() > length - used) {
-        return PARSER_FAILED;
+    if (sizeof(ASSETS_MAGIC) > length - used) {
+        return 0;
     }
     std::vector<uint8_t> alignData;
-    alignData.assign(data, data + MAGIC_WORD_ASSETS.length());
-    used += MAGIC_WORD_ASSETS.length();
-    if (std::string(reinterpret_cast<char *>(alignData.data())) != MAGIC_WORD_ASSETS) {
-        return PARSER_FAILED;
+    alignData.assign(data, data + sizeof (ASSETS_MAGIC));
+    used += sizeof (ASSETS_MAGIC);
+    if (*(reinterpret_cast<decltype(&ASSETS_MAGIC)>(alignData.data())) != ASSETS_MAGIC) {
+        return 0;
     }
 
     if (sizeof(num) > length - used) {
-        return PARSER_FAILED;
+        return 0;
     }
     alignData.assign(data, data + sizeof(num));
     num = *(reinterpret_cast<decltype(&num)>(alignData.data()));
@@ -101,8 +99,9 @@ std::vector<uint8_t> RawDataParser::PackageRawData(const Asset &asset)
     InnerAsset innerAsset(const_cast<Asset &>(asset));
     auto data = Serializable::Marshall(innerAsset);
     uint16_t size;
-    size = Endian::Htole16((uint16_t)data.length());
-    rawData.insert(rawData.end(), MAGIC_WORD_ASSET.data(), MAGIC_WORD_ASSET.data() + MAGIC_WORD_ASSET.length());
+    size = Endian::HToLe((uint16_t)data.length());
+    auto magicU8 = reinterpret_cast<uint8_t *>(const_cast<uint32_t *>(&ASSET_MAGIC));
+    rawData.insert(rawData.end(), magicU8, magicU8 + sizeof(ASSET_MAGIC));
     rawData.insert(rawData.end(), reinterpret_cast<uint8_t *>(&size), reinterpret_cast<uint8_t *>(&size) + sizeof(size));
     rawData.insert(rawData.end(), data.begin(), data.end());
     return rawData;
@@ -112,7 +111,8 @@ std::vector<uint8_t> RawDataParser::PackageRawData(const Assets &assets)
 {
     std::vector<uint8_t> rawData;
     uint16_t num = uint16_t(assets.size());
-    rawData.insert(rawData.end(), MAGIC_WORD_ASSETS.data(), MAGIC_WORD_ASSETS.data() + MAGIC_WORD_ASSETS.length());
+    auto magicU8 = reinterpret_cast<uint8_t *>(const_cast<uint32_t *>(&ASSETS_MAGIC));
+    rawData.insert(rawData.end(), magicU8, magicU8 + sizeof(ASSETS_MAGIC));
     rawData.insert(rawData.end(), reinterpret_cast<uint8_t *>(&num), reinterpret_cast<uint8_t *>(&num) + sizeof(num));
     for (auto &asset : assets) {
         auto data = PackageRawData(asset);
