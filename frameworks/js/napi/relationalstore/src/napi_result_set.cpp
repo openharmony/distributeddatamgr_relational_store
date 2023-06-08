@@ -79,6 +79,7 @@ napi_value ResultSetProxy::GetConstructor(napi_env env)
     LOG_INFO("GetConstructor result set constructor");
     napi_property_descriptor clzDes[] = {
         DECLARE_NAPI_FUNCTION("goToRow", GoToRow),
+        DECLARE_NAPI_FUNCTION("getLong", GetLong),
         DECLARE_NAPI_FUNCTION("getColumnType", GetColumnType),
         DECLARE_NAPI_FUNCTION("goTo", GoTo),
         DECLARE_NAPI_FUNCTION("getColumnIndex", GetColumnIndex),
@@ -94,7 +95,6 @@ napi_value ResultSetProxy::GetConstructor(napi_env env)
         DECLARE_NAPI_FUNCTION("getAssets", GetAssets),
         DECLARE_NAPI_FUNCTION("getString", GetString),
         DECLARE_NAPI_FUNCTION("getDouble", GetDouble),
-        DECLARE_NAPI_FUNCTION("getLong", GetLong),
         DECLARE_NAPI_FUNCTION("isColumnNull", IsColumnNull),
         DECLARE_NAPI_FUNCTION("getRow", GetRow),
 
