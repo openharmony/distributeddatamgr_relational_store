@@ -19,13 +19,11 @@
 #include <cstdint>
 #include "rdb_visibility.h"
 namespace OHOS {
-namespace AppDataFwk {
 class API_EXPORT Endian final {
 public:
     static uint16_t Le16toh(uint16_t little_endian_16bits);
     static uint16_t Htole16(uint16_t host_16bits);
 };
-} // namespace AppDataFwk
 } // namespace OHOS
 
 #endif // MULTI_PLATFORM_EDIAN

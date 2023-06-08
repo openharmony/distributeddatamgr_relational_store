@@ -32,9 +32,9 @@ public:
     static std::vector<uint8_t> PackageRawData(const Assets &assets);
 
 private:
-    struct InnerAsset : public AppDataFwk::Serializable {
-        Asset asset_;
-        InnerAsset(Asset asset) : asset_(asset) {}
+    struct InnerAsset : public Serializable {
+        Asset &asset_;
+        explicit InnerAsset(Asset &asset) : asset_(asset) {}
 
         bool Marshal(json &node) const override;
         bool Unmarshal(const json &node) override;
@@ -56,6 +56,8 @@ private:
         }
         return Get<T, O, Rest...>(std::move(input), output);
     }
+    static const inline std::string MAGIC_WORD_ASSET = "asset";
+    static const inline std::string MAGIC_WORD_ASSETS = "assets";
 };
 
 template<typename T, typename... Rest>

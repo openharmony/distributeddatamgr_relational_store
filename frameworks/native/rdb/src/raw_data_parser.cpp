@@ -15,42 +15,72 @@
 
 #include "raw_data_parser.h"
 #include "multi_platform_endian.h"
+
+#define UNMARSHAL_RETURN_ERR(theCall) \
+    do {                                    \
+        if (!theCall) {                     \
+            return false;                   \
+        }                                   \
+    } while (0)
+
 namespace OHOS::NativeRdb {
-using Serializable = AppDataFwk::Serializable;
 size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Asset &asset)
 {
+    constexpr size_t PARSER_FAILED = 0;
     size_t used = 0;
     uint16_t size = 0;
-    if (used + sizeof(size) > length) {
-        return used;
+
+    if (MAGIC_WORD_ASSET.length() > length - used) {
+        return PARSER_FAILED;
     }
     std::vector<uint8_t> alignData;
-    alignData.assign(data, data + sizeof(size));
-    size = AppDataFwk::Endian::Le16toh(*(reinterpret_cast<decltype(&size)>(alignData.data())));
-    if (used + size > length) {
-        return used;
+    alignData.assign(data, data + MAGIC_WORD_ASSET.length());
+    used += MAGIC_WORD_ASSET.length();
+    if (std::string(reinterpret_cast<char *>(alignData.data())) != MAGIC_WORD_ASSET) {
+        return PARSER_FAILED;
     }
-    used += sizeof(size);
 
-    auto rawData = std::string((char *)(&data[sizeof(uint16_t)]), size);
+    if (sizeof(size) > length - used) {
+        return PARSER_FAILED;
+    }
+    alignData.assign(data + used , data + used + sizeof(size));
+    used += sizeof(size);
+    size = Endian::Le16toh(*(reinterpret_cast<decltype(&size)>(alignData.data())));
+
+    if (size > length - used) {
+        return PARSER_FAILED;
+    }
+    auto rawData = std::string(reinterpret_cast<const char *>(&data[used]), size);
     InnerAsset innerAsset = InnerAsset(asset);
-    innerAsset.Unmarshall(rawData);
+    if (!innerAsset.Unmarshall(rawData)) {
+        return PARSER_FAILED;
+    }
     used += size;
-    asset = std::move(innerAsset.asset_);
     return used;
 }
 
 size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Assets &assets)
 {
+    constexpr size_t PARSER_FAILED = 0;
     size_t used = 0;
     uint16_t num = 0;
-    if (used + sizeof(num) > length) {
-        return used;
+
+    if (MAGIC_WORD_ASSETS.length() > length - used) {
+        return PARSER_FAILED;
     }
     std::vector<uint8_t> alignData;
+    alignData.assign(data, data + MAGIC_WORD_ASSETS.length());
+    used += MAGIC_WORD_ASSETS.length();
+    if (std::string(reinterpret_cast<char *>(alignData.data())) != MAGIC_WORD_ASSETS) {
+        return PARSER_FAILED;
+    }
+
+    if (sizeof(num) > length - used) {
+        return PARSER_FAILED;
+    }
     alignData.assign(data, data + sizeof(num));
     num = *(reinterpret_cast<decltype(&num)>(alignData.data()));
-    used += sizeof(uint16_t);
+    used += sizeof(num);
     uint16_t count = 0;
     while (used < length && count < num) {
         Asset asset;
@@ -68,11 +98,12 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Assets &
 std::vector<uint8_t> RawDataParser::PackageRawData(const Asset &asset)
 {
     std::vector<uint8_t> rawData;
-    InnerAsset innerAsset = InnerAsset(asset);
+    InnerAsset innerAsset(const_cast<Asset &>(asset));
     auto data = Serializable::Marshall(innerAsset);
     uint16_t size;
-    size = AppDataFwk::Endian::Htole16((uint16_t)data.length());
-    rawData.assign(reinterpret_cast<uint8_t *>(&size), reinterpret_cast<uint8_t *>(&size) + sizeof(size));
+    size = Endian::Htole16((uint16_t)data.length());
+    rawData.insert(rawData.end(), MAGIC_WORD_ASSET.data(), MAGIC_WORD_ASSET.data() + MAGIC_WORD_ASSET.length());
+    rawData.insert(rawData.end(), reinterpret_cast<uint8_t *>(&size), reinterpret_cast<uint8_t *>(&size) + sizeof(size));
     rawData.insert(rawData.end(), data.begin(), data.end());
     return rawData;
 }
@@ -81,7 +112,8 @@ std::vector<uint8_t> RawDataParser::PackageRawData(const Assets &assets)
 {
     std::vector<uint8_t> rawData;
     uint16_t num = uint16_t(assets.size());
-    rawData.assign(reinterpret_cast<uint8_t *>(&num), reinterpret_cast<uint8_t *>(&num) + sizeof(num));
+    rawData.insert(rawData.end(), MAGIC_WORD_ASSETS.data(), MAGIC_WORD_ASSETS.data() + MAGIC_WORD_ASSETS.length());
+    rawData.insert(rawData.end(), reinterpret_cast<uint8_t *>(&num), reinterpret_cast<uint8_t *>(&num) + sizeof(num));
     for (auto &asset : assets) {
         auto data = PackageRawData(asset);
         rawData.insert(rawData.end(), data.begin(), data.end());
@@ -92,6 +124,8 @@ std::vector<uint8_t> RawDataParser::PackageRawData(const Assets &assets)
 bool RawDataParser::InnerAsset::Marshal(Serializable::json &node) const
 {
     SetValue(node[GET_NAME(version)], asset_.version);
+    SetValue(node[GET_NAME(status)], asset_.status);
+    SetValue(node[GET_NAME(timeStamp)], asset_.timeStamp);
     SetValue(node[GET_NAME(name)], asset_.name);
     SetValue(node[GET_NAME(uri)], asset_.uri);
     SetValue(node[GET_NAME(createTime)], asset_.createTime);
@@ -99,20 +133,20 @@ bool RawDataParser::InnerAsset::Marshal(Serializable::json &node) const
     SetValue(node[GET_NAME(size)], asset_.size);
     SetValue(node[GET_NAME(hash)], asset_.hash);
     SetValue(node[GET_NAME(path)], asset_.path);
-    SetValue(node[GET_NAME(status)], asset_.status);
     return true;
 }
 bool RawDataParser::InnerAsset::Unmarshal(const Serializable::json &node)
 {
-    GetValue(node, GET_NAME(version), asset_.version);
-    GetValue(node, GET_NAME(name), asset_.name);
-    GetValue(node, GET_NAME(uri), asset_.uri);
-    GetValue(node, GET_NAME(createTime), asset_.createTime);
-    GetValue(node, GET_NAME(modifyTime), asset_.modifyTime);
-    GetValue(node, GET_NAME(size), asset_.size);
-    GetValue(node, GET_NAME(hash), asset_.hash);
-    GetValue(node, GET_NAME(path), asset_.path);
-    GetValue(node, GET_NAME(status), asset_.status);
+    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(version), asset_.version));
+    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(status), asset_.status));
+    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(timeStamp), asset_.timeStamp));
+    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(name), asset_.name));
+    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(uri), asset_.uri));
+    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(createTime), asset_.createTime));
+    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(modifyTime), asset_.modifyTime));
+    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(size), asset_.size));
+    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(hash), asset_.hash));
+    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(path), asset_.path));
     return true;
 }
 } // namespace OHOS::NativeRdb

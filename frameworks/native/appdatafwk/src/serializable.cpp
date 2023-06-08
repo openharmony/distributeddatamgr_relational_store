@@ -15,7 +15,6 @@
 
 #include "serializable.h"
 namespace OHOS {
-namespace AppDataFwk {
 Serializable::json Serializable::Marshall() const
 {
     json root;
@@ -93,7 +92,7 @@ bool Serializable::GetValue(const json &node, const std::string &name, int32_t &
     return true;
 }
 
-bool Serializable::GetValue(const json &node, const std::string &name, int64_t &value)
+bool Serializable::GetValue(const json &node, const std::string &name, uint64_t &value)
 {
     auto &subNode = GetSubNode(node, name);
     if (subNode.is_null() || !subNode.is_number_integer()) {
@@ -150,7 +149,7 @@ bool Serializable::SetValue(json &node, const int32_t &value)
     return true;
 }
 
-bool Serializable::SetValue(json &node, const int64_t &value)
+bool Serializable::SetValue(json &node, const uint64_t &value)
 {
     node = value;
     return true;
@@ -190,5 +189,4 @@ const Serializable::json &Serializable::GetSubNode(const json &node, const std::
     }
     return *it;
 }
-} // namespace DistributedData
 } // namespace OHOS

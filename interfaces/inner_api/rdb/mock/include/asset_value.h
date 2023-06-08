@@ -19,6 +19,8 @@
 namespace OHOS::NativeRdb {
 struct AssetValue {
     uint32_t version = 0;
+    uint32_t status = 0;
+    uint64_t timeStamp = 0;
     std::string name;
     std::string uri;
     std::string createTime;
@@ -26,7 +28,6 @@ struct AssetValue {
     std::string size;
     std::string hash;
     std::string path;
-    uint32_t status;
 };
 }
 #endif // OHOS_RELATIONAL_STORE_INNER_API_ASSET_VALUE_H
