@@ -36,6 +36,15 @@ public:
     API_EXPORT explicit AbsRdbPredicates(std::string tableName);
 
     /**
+     * @brief Constructor.
+     *
+     * A parameterized constructor used to create an AbsRdbPredicates instance.
+     *
+     * @param tableName Indicates the table name of the database.
+     */
+    API_EXPORT explicit AbsRdbPredicates(std::vector<std::string> tables);
+
+    /**
      * @brief Destructor.
      */
     API_EXPORT ~AbsRdbPredicates() override {}
@@ -192,7 +201,7 @@ protected:
     int joinCount = 0;
 
 private:
-    std::string tableName;
+    std::string tableName_;
     mutable DistributedRdb::RdbPredicates predicates_;
 };
 } // namespace OHOS::NativeRdb

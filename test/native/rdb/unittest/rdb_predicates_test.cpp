@@ -1613,7 +1613,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetDistributedPredicates_027, TestSize.
     RdbPredicates predicates("AllDataType");
     predicates.EqualTo("stringValue", "ABCDEFGHIJKLMN")->OrderByDesc("integerValue")->Limit(2);
     auto distributedRdbPredicates = predicates.GetDistributedPredicates();
-    EXPECT_EQ(distributedRdbPredicates.table_, "AllDataType");
+    EXPECT_EQ(*(distributedRdbPredicates.tables_.begin()), "AllDataType");
     EXPECT_EQ(distributedRdbPredicates.operations_.size(), 3UL);
     EXPECT_EQ(distributedRdbPredicates.operations_[0].operator_, OHOS::DistributedRdb::EQUAL_TO);
     EXPECT_EQ(distributedRdbPredicates.operations_[0].field_, "stringValue");

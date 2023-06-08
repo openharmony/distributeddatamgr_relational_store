@@ -32,6 +32,8 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
 
+    static bool InsertData(std::shared_ptr<RdbStore> &store, const uint8_t *data, size_t size);
+
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store_;
 };
@@ -45,10 +47,10 @@ public:
     static const std::string CREATE_TABLE_TEST;
 };
 
-const std::string RdbTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABLE IF NOT EXISTS test ")
-                                                              + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                                            "name TEXT NOT NULL, age INTEGER, salary "
-                                                                            "REAL, blobType BLOB)");
+const std::string RdbTestOpenCallback::CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test "
+                                                           "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                           "name TEXT NOT NULL, age INTEGER, salary REAL, "
+                                                           "blobType BLOB)";
 
 int RdbTestOpenCallback::OnCreate(RdbStore &store)
 {
@@ -66,70 +68,77 @@ void RdbStoreFuzzTest::SetUpTestCase(void)
     RdbStoreConfig config(DATABASE_NAME);
     RdbTestOpenCallback helper;
     RdbStoreFuzzTest::store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    if (store_ == nullptr || errCode != E_OK) {
+        return;
+    }
 }
 
 void RdbStoreFuzzTest::TearDownTestCase(void)
 {
-    RdbHelper::DeleteRdbStore(RdbStoreFuzzTest::DATABASE_NAME);
+    if (RdbHelper::DeleteRdbStore(RdbStoreFuzzTest::DATABASE_NAME) != E_OK) {
+        return;
+    }
+}
+
+bool RdbStoreFuzzTest::InsertData(std::shared_ptr<RdbStore> &store, const uint8_t *data, size_t size)
+{
+    int64_t id;
+    ValuesBucket values;
+
+    std::string tableName(data, data + size);
+    std::string valName(data, data + size);
+    int valAge = static_cast<int>(size);
+    double valSalary = static_cast<double>(size);
+
+    values.PutString("name", valName);
+    values.PutInt("age", valAge);
+    values.PutDouble("salary", valSalary);
+    values.PutBlob("blobType", std::vector<uint8_t> {*data, *(data + 1)});
+
+    return store->Insert(id, tableName, values);
 }
 
 bool RdbInsertFuzz(const uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return false;
+    }
+
     std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
     bool result = true;
-    int64_t id;
-    ValuesBucket values;
-    std::string valName(data, data + size);
-    int valAge = static_cast<int>(size);
-    double valSalary = static_cast<double>(size);
-    values.PutString("name", valName + "test1");
-    values.PutInt("age", valAge);
-    values.PutDouble("salary", valSalary);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data});
-    int errCode = store->Insert(id, "test", values);
+
+    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
     if (errCode != E_OK) {
         result = false;
     }
-    values.Clear();
-    values.PutString("name", valName + "test2");
-    values.PutInt("age", valAge + 1);
-    values.PutDouble("salary", valSalary + salaryChange);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *data + 1});
-    store->Insert(id, "test", values);
-    if (errCode != E_OK) {
-        result = false;
-    }
+
     store->ExecuteSql("DELETE FROM test");
     return result;
 }
 
 bool RdbDeleteFuzz(const uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return false;
+    }
+
     std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
     bool result = true;
-    int64_t id;
     int deletedRows;
 
-    ValuesBucket values;
-    std::string valName(data, data + size);
-    int valAge = static_cast<int>(size);
-    double valSalary = static_cast<double>(size);
-    values.PutString("name", valName + "test1");
-    values.PutInt("age", valAge);
-    values.PutDouble("salary", valSalary);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data});
-    store->Insert(id, "test", values);
+    std::string tableName(data, data + size);
+    std::string whereClause(data, data + size);
 
-    values.Clear();
-    values.PutString("name", valName + "test2");
-    values.PutInt("age", valAge + 1);
-    values.PutDouble("salary", valSalary + salaryChange);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *data + 1});
-    store->Insert(id, "test", values);
-    int errCode = store->Delete(deletedRows, "test", "id = 1");
+    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
     if (errCode != E_OK) {
         result = false;
     }
+
+    errCode = store->Delete(deletedRows, tableName, whereClause);
+    if (errCode != E_OK) {
+        result = false;
+    }
+
     store->ExecuteSql("DELETE FROM test");
     return result;
 }

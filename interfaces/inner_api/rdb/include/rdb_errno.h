@@ -40,6 +40,11 @@ constexpr int E_NOT_SUPPORTED = 801;
 constexpr int E_ERROR = E_BASE;
 
 /**
+* @brief The error code for common invalid args.
+*/
+constexpr int E_INVALID_ARGS = (E_BASE + 1);
+
+/**
 * @brief The error code for upgrade the read-only store.
 */
 constexpr int E_CANNOT_UPDATE_READONLY = (E_BASE + 2);
@@ -268,6 +273,8 @@ static constexpr int E_WAL_SIZE_OVER_LIMIT = (E_BASE + 47);
 * @brief The error when the connection count is used up.
 */
 static constexpr int E_CON_OVER_LIMIT = (E_BASE + 48);
+
+constexpr int E_INVALID_BUNDLE_NAME = (E_BASE + 49);
 } // namespace NativeRdb
 } // namespace OHOS
 
