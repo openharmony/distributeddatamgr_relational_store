@@ -58,7 +58,9 @@ void RdbServiceProxy::OnSyncComplete(uint32_t seqNum, Details &&result)
     syncCallbacks_.ComputeIfPresent(seqNum, [&result] (const auto& key, const AsyncDetail & callback) {
         auto finished = result.empty() || (result.begin()->second.progress == SYNC_FINISH);
         ZLOGD("Sync complete, seqNum%{public}d, result size:%{public}zu", key, result.size());
-        callback(std::move(result));
+        if(callback!=nullptr){
+            callback(std::move(result));
+        }
         return !finished;
     });
 }
@@ -337,7 +339,7 @@ int32_t RdbServiceProxy::GetSchema(const RdbSyncerParam &param)
     int32_t status = IPC_SEND(RDB_SERVICE_CMD_GET_SCHEMA, reply, param);
     if (status != RDB_OK) {
         ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
-            param.storeName_.c_str());
+            SqliteUtils::Anonymous(param.storeName_).c_str());
     }
     return status;
 }

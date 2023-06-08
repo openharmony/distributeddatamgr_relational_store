@@ -154,7 +154,12 @@ const RdbStoreConfig &RdbStoreImpl::GetConfig()
 int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    return InsertWithConflictResolution(outRowId, table, initialValues, ConflictResolution::ON_CONFLICT_NONE);
+    auto status =
+        InsertWithConflictResolution(outRowId, table, initialValues, ConflictResolution::ON_CONFLICT_NONE);
+    if (status == E_OK) {
+	    DoCloudSync(table);
+    }
+    return status;
 }
 
 int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
@@ -209,8 +214,11 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
             return FreeTransaction(connection, transaction.GetRollbackStr());
         }
     }
-
-    return FreeTransaction(connection, transaction.GetCommitStr());
+    auto status = FreeTransaction(connection, transaction.GetCommitStr());
+    if (status == E_OK) {
+        DoCloudSync(table);
+    }
+    return status;
 }
 
 std::pair<std::string, std::vector<ValueObject>> RdbStoreImpl::GetInsertParams(
@@ -238,7 +246,11 @@ std::pair<std::string, std::vector<ValueObject>> RdbStoreImpl::GetInsertParams(
 
 int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)
 {
-    return InsertWithConflictResolution(outRowId, table, initialValues, ConflictResolution::ON_CONFLICT_REPLACE);
+    auto status = InsertWithConflictResolution(outRowId, table, initialValues, ConflictResolution::ON_CONFLICT_REPLACE);
+    if (status == E_OK) {
+        DoCloudSync(table);
+    }
+    return status;
 }
 
 int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
@@ -283,7 +295,9 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
 
     errCode = connection->ExecuteForLastInsertedRowId(outRowId, sql.str(), bindArgs);
     connectionPool->ReleaseConnection(connection);
-
+    if (errCode == E_OK) {
+        DoCloudSync(table);
+    }
     return errCode;
 }
 
@@ -330,7 +344,7 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
         split = ",";
     }
 
-    if (whereClause.empty() == false) {
+    if (!whereClause.empty()) {
         sql << " WHERE " << whereClause;
     }
 
@@ -345,7 +359,9 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
 
     errCode = connection->ExecuteForChangedRowCount(changedRows, sql.str(), bindArgs);
     connectionPool->ReleaseConnection(connection);
-
+    if (errCode == E_OK) {
+        DoCloudSync(table);
+    }
     return errCode;
 }
 
@@ -364,7 +380,7 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
 
     std::stringstream sql;
     sql << "DELETE FROM " << table;
-    if (whereClause.empty() == false) {
+    if (!whereClause.empty()) {
         sql << " WHERE " << whereClause;
     }
 
@@ -380,7 +396,9 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
 
     int errCode = connection->ExecuteForChangedRowCount(deletedRows, sql.str(), bindArgs);
     connectionPool->ReleaseConnection(connection);
-
+    if (errCode == E_OK) {
+        DoCloudSync(table);
+    }
     return errCode;
 }
 
@@ -499,6 +517,10 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
         LOG_INFO("sql ddl execute.");
         errCode = connectionPool->ReOpenAvailableReadConnections();
+    }
+
+    if (errCode == E_OK) {
+        DoCloudSync("");
     }
     return errCode;
 }
@@ -1016,6 +1038,42 @@ std::string RdbStoreImpl::GetName()
 {
     return name;
 }
+
+void RdbStoreImpl::DoCloudSync(const std::string &table)
+{
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    if (pool_ == nullptr) {
+        pool_ = TaskExecutor::GetInstance().GetExecutor();
+    }
+    if (pool_ == nullptr) {
+        return;
+    }
+    std::vector<std::string> syncTables;
+    {
+        std::shared_lock<decltype(rwMutex_)> lock(rwMutex_);
+        if (cloudTables_.find(table) == cloudTables_.end() && !table.empty()) {
+            return;
+        }
+        auto duration = std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+            std::chrono::milliseconds(INTERVAL));
+        if (table.empty()) {
+            for (const auto &[key, id] : cloudTables_) {
+                syncTables.push_back(key);
+            }
+        } else {
+            syncTables.push_back(table);
+            if (pool_->Reset(cloudTables_[table], duration) != TaskExecutor::INVALID_TASK_ID) {
+                return;
+            }
+        }
+    }
+    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
+    cloudTables_[table] = pool_->Execute([this, syncTables]() {
+        SyncOption syncOption = { DistributedRdb::TIME_FIRST, false };
+        Sync(syncOption, syncTables, nullptr);
+    });
+#endif
+}
 std::string RdbStoreImpl::GetFileType()
 {
     return fileType;
@@ -1128,6 +1186,12 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
     if (errorCode != E_OK) {
         LOG_ERROR("Fail to set distributed tables, error=%{public}d", errorCode);
         return errorCode;
+    }
+    if (type == DistributedRdb::DISTRIBUTED_CLOUD) {
+        std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
+        std::for_each(tables.begin(), tables.end(),[this](const auto &table){
+            cloudTables_.insert( { table, TaskExecutor::INVALID_TASK_ID } );
+        });
     }
     return E_OK;
 }

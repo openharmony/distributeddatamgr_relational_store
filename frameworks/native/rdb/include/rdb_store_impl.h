@@ -21,6 +21,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <shared_mutex>
 
 #include "rdb_store.h"
 #include "rdb_store_config.h"
@@ -129,6 +130,7 @@ private:
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
+    void DoCloudSync(const std::string &table);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;
@@ -142,6 +144,10 @@ private:
     DistributedRdb::RdbSyncerParam syncerParam_;
     bool isEncrypt_;
     std::shared_ptr<ExecutorPool> pool_;
+
+    mutable std::shared_mutex rwMutex_;
+    static inline uint32_t INTERVAL = 200;
+    std::map<std::string, uint64_t> cloudTables_;
 };
 } // namespace OHOS::NativeRdb
 #endif
