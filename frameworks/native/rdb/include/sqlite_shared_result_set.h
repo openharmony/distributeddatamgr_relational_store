@@ -22,10 +22,12 @@
 #include <vector>
 #include <string>
 #include <mutex>
+
+#include "abs_shared_result_set.h"
+#include "rdb_store_impl.h"
+#include "shared_block.h"
 #include "sqlite_connection_pool.h"
 #include "sqlite_statement.h"
-#include "shared_block.h"
-#include "abs_shared_result_set.h"
 #include "value_object.h"
 
 namespace OHOS {
@@ -33,7 +35,7 @@ namespace NativeRdb {
 class SqliteSharedResultSet : public AbsSharedResultSet {
 public:
     SqliteSharedResultSet(SqliteConnectionPool* connectionPool, std::string path, std::string sql,
-        const std::vector<std::string> &bindArgs);
+        const std::vector<std::string> &bindArgs, std::shared_ptr<RdbStoreImpl> rdb);
     ~SqliteSharedResultSet() override;
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int Close() override;
@@ -60,12 +62,13 @@ private:
     bool isOnlyFillResultSetBlock;
     std::string qrySql;
     std::vector<std::string> selectionArgVec;
-    std::shared_ptr<SqliteStatement> sqliteStatement;
     // The number of rows in the cursor
     int rowNum;
     std::vector<std::string> columnNames_;
     SqliteConnectionPool *connectionPool_;
     std::mutex columnNamesLock_;
+
+    std::shared_ptr<RdbStoreImpl> rdb_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

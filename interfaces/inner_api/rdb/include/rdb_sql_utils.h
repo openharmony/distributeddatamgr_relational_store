@@ -13,24 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef RELATIONAL_CURSOR_IMPL_H
-#define RELATIONAL_CURSOR_IMPL_H
-
-#include "oh_cursor.h"
-#include "result_set.h"
-#include <memory>
+#ifndef NATIVE_RDB_SQL_UTILS_H
+#define NATIVE_RDB_SQL_UTILS_H
+#include "abs_rdb_predicates.h"
 
 namespace OHOS {
-namespace RdbNdk {
-constexpr int RDB_CURSOR_CID = 1234563; // The class id used to uniquely identify the OH_Cursor class.
-class CursorImpl : public OH_Cursor {
+namespace NativeRdb {
+class API_EXPORT RdbSqlUtils {
 public:
-    explicit CursorImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet);
-    std::shared_ptr<OHOS::NativeRdb::ResultSet> GetResultSet();
-
-private:
-    std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet_;
+    /**
+     * @brief get default data base path.
+     */
+    static std::string GetDefaultDatabasePath(const std::string &baseDir, const std::string &name, int &errorCode);
+    /**
+     * @brief build query sql string.
+     */
+    static std::string BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
 };
-} // namespace RdbNdk
+} // namespace NativeRdb
 } // namespace OHOS
-#endif // RELATIONAL_CURSOR_IMPL_H
+
+#endif

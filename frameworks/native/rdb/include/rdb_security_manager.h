@@ -76,8 +76,6 @@ public:
     void DelRdbSecretDataFile(const std::string &path);
     void DelRdbSecretDataFile(RdbSecurityManager::KeyFileType keyFile);
     static RdbSecurityManager &GetInstance();
-    int GetKeyDistributedStatus(KeyFileType keyFile, bool &status);
-    int SetKeyDistributedStatus(KeyFileType keyFile, bool status);
     void Init(const std::string &bundleName, const std::string &path);
     void UpdateKeyFile();
 

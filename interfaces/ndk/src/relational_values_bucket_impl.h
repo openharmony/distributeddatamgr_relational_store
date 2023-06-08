@@ -16,19 +16,15 @@
 #ifndef RELATIONAL_VALUES_BUCKET_IMPL_H
 #define RELATIONAL_VALUES_BUCKET_IMPL_H
 
-#include "relational_values_bucket.h"
+#include "oh_values_bucket.h"
 #include "values_bucket.h"
 
 namespace OHOS {
 namespace RdbNdk {
 constexpr int RDB_VBUCKET_CID = 1234562; // The class id used to uniquely identify the OH_Rdb_VBucket class.
-class ValuesBucketImpl : public OH_Rdb_VBucket {
+class ValuesBucketImpl : public OH_VBucket {
 public:
-    ValuesBucketImpl()
-    {
-        id = RDB_VBUCKET_CID;
-        capability = 0;
-    }
+    ValuesBucketImpl();
     OHOS::NativeRdb::ValuesBucket &getValuesBucket();
 private:
     OHOS::NativeRdb::ValuesBucket valuesBucket_;

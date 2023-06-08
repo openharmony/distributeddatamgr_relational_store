@@ -19,6 +19,7 @@
 #include "js_utils.h"
 #include "result_set.h"
 #include "value_object.h"
+#include "rdb_types.h"
 namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
 using Asset = OHOS::NativeRdb::AssetValue;
@@ -31,6 +32,17 @@ napi_value Convert2JSValue(napi_env env, const Asset &value);
 
 template<>
 napi_value Convert2JSValue(napi_env env, const RowEntity &value);
+
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &statistic);
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetail &tableDetail);
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetails &tableDetails);
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::ProgressDetail &progressDetail);
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::Details &details);
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
 #endif // RDB_JSKIT_NAPI_RDB_JS_UTILS_H

@@ -22,10 +22,16 @@
 namespace OHOS::RelationalStoreJsKit  {
 class NapiRdbStoreObserver : public DistributedRdb::RdbStoreObserver, public NapiUvQueue {
 public:
-    explicit NapiRdbStoreObserver(napi_env env, napi_value callback);
+    using Origin = DistributedRdb::Origin;
+    explicit NapiRdbStoreObserver(napi_env env, napi_value callback, int32_t mode = DistributedRdb::REMOTE);
     virtual ~NapiRdbStoreObserver() noexcept;
 
     void OnChange(const std::vector<std::string>& devices) override;
+
+    void OnChange(const Origin &origin, const PrimaryFields &fields, ChangeInfo &&changeInfo) override;
+
+private:
+    int32_t mode_ = DistributedRdb::REMOTE;
 };
 } // namespace OHOS::RelationalStoreJsKit
 #endif
