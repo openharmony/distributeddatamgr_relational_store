@@ -27,8 +27,8 @@
 #include "napi_rdb_trace.h"
 #include "rdb_errno.h"
 #include "rdb_open_callback.h"
+#include "rdb_sql_utils.h"
 #include "rdb_store_config.h"
-#include "sqlite_database_utils.h"
 #include "unistd.h"
 
 using namespace OHOS::NativeRdb;
@@ -329,7 +329,7 @@ int ParseDatabaseDir(const napi_env &env, std::shared_ptr<HelperRdbContext> cont
     int errorCode = E_OK;
     std::string databaseName = context->config.GetName();
     std::string databaseDir = context->abilitycontext->GetDatabaseDir();
-    std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, databaseName, errorCode);
+    std::string realPath = RdbSqlUtils::GetDefaultDatabasePath(databaseDir, databaseName, errorCode);
     paramError = std::make_shared<ParamTypeError>("config", "a StoreConfig.");
     RDB_CHECK_RETURN_CALL_RESULT(errorCode == E_OK, context->SetError(paramError));
     context->config.SetPath(std::move(realPath));
@@ -402,7 +402,7 @@ int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<Helper
     }
     std::string databaseDir = context->abilitycontext->GetDatabaseDir();
     int errorCode = E_OK;
-    std::string realPath = SqliteDatabaseUtils::GetDefaultDatabasePath(databaseDir, path, errorCode);
+    std::string realPath = RdbSqlUtils::GetDefaultDatabasePath(databaseDir, path, errorCode);
     RDB_CHECK_RETURN_CALL_RESULT(errorCode == E_OK, context->SetError(paramError));
 
     context->config.SetPath(realPath);
