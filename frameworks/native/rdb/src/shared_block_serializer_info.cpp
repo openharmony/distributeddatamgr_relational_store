@@ -15,9 +15,8 @@
 
 #include "shared_block_serializer_info.h"
 
-#include <value_object.h>
-
 #include "logger.h"
+#include "value_object.h"
 
 namespace OHOS {
 namespace NativeRdb {
