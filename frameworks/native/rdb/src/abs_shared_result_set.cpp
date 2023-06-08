@@ -485,52 +485,5 @@ int AbsSharedResultSet::CheckState(int columnIndex)
 
     return E_OK;
 }
-
-int AbsSharedResultSet::Get(int32_t col, ValueObject &value)
-{
-    auto type = value.GetType();
-    int res = E_ERROR;
-    switch (type) {
-        case ValueObject::TYPE_INT: {
-            int64_t inputInt;
-            res = GetLong(col, inputInt);
-            value = ValueObject(inputInt);
-            break;
-        }
-        case ValueObject::TYPE_DOUBLE: {
-            double inputDouble;
-            res = GetDouble(col, inputDouble);
-            value = ValueObject(inputDouble);
-            break;
-        }
-        case ValueObject::TYPE_STRING: {
-            std::string inputString;
-            res = GetString(col, inputString);
-            value = ValueObject(inputString);
-            break;
-        }
-        case ValueObject::TYPE_BLOB: {
-            ValueObject::Blob inputBlob;
-            res = GetBlob(col, inputBlob);
-            value = ValueObject(inputBlob);
-            break;
-        }
-        case ValueObject::TYPE_ASSET: {
-            ValueObject::Asset inputAsset;
-            res = GetAsset(col, inputAsset);
-            value = ValueObject(inputAsset);
-            break;
-        }
-        case ValueObject::TYPE_ASSETS: {
-            ValueObject::Assets inputAssets;
-            res = GetAssets(col, inputAssets);
-            value = ValueObject(inputAssets);
-            break;
-        }
-        default:
-            break;
-    }
-    return res;
-}
 } // namespace NativeRdb
 } // namespace OHOS
