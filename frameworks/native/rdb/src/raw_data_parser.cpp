@@ -42,7 +42,7 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Asset &a
     if (sizeof(size) > length - used) {
         return 0;
     }
-    alignData.assign(data + used , data + used + sizeof(size));
+    alignData.assign(data + used, data + used + sizeof(size));
     used += sizeof(size);
     size = Endian::LeToH(*(reinterpret_cast<decltype(&size)>(alignData.data())));
 
@@ -140,6 +140,11 @@ bool RawDataParser::InnerAsset::Unmarshal(const Serializable::json &node)
     UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(version), asset_.version));
     UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(status), asset_.status));
     UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(timeStamp), asset_.timeStamp));
+    if (asset_.status == AssetValue::STATUS_DOWNLOADING &&
+        std::chrono::time_point<std::chrono::steady_clock>(std::chrono::milliseconds(asset_.timeStamp)) >
+            std::chrono::steady_clock::now()) {
+        asset_.status = AssetValue::STATUS_ABNORMAL;
+    }
     UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(name), asset_.name));
     UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(uri), asset_.uri));
     UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(createTime), asset_.createTime));
