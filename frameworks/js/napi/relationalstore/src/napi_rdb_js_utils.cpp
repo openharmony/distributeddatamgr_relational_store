@@ -67,5 +67,89 @@ napi_value Convert2JSValue(napi_env env, const RowEntity &rowEntity)
     }
     return ret;
 }
+
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &statistic)
+{
+    napi_value jsValue;
+    napi_status status = napi_create_object(env, &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    napi_value total = Convert2JSValue(env, statistic.total);
+    napi_value success = Convert2JSValue(env, statistic.success);
+    napi_value failed = Convert2JSValue(env, statistic.failed);
+    napi_value untreated = Convert2JSValue(env, statistic.untreated);
+
+    napi_set_named_property(env, jsValue, "total", total);
+    napi_set_named_property(env, jsValue, "success", success);
+    napi_set_named_property(env, jsValue, "failed", failed);
+    napi_set_named_property(env, jsValue, "untreated", untreated);
+    return jsValue;
+}
+
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetail &tableDetail)
+{
+    napi_value jsValue;
+    napi_status status = napi_create_object(env, &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    napi_value upload = Convert2JSValue(env, tableDetail.upload);
+    napi_value download = Convert2JSValue(env, tableDetail.download);
+    napi_set_named_property(env, jsValue, "upload", upload);
+    napi_set_named_property(env, jsValue, "download", download);
+    return jsValue;
+}
+
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetails &tableDetails)
+{
+    napi_value jsValue;
+    napi_status status = napi_create_array_with_length(env, tableDetails.size(), &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    int index = 0;
+    for (const auto &[device, result] : tableDetails) {
+        napi_value jsElement;
+        status = napi_create_array_with_length(env, 2, &jsElement);
+        if (status != napi_ok) {
+            return nullptr;
+        }
+        napi_set_element(env, jsElement, 0, Convert2JSValue(env, device));
+        napi_set_element(env, jsElement, 1, Convert2JSValue(env, result));
+        napi_set_element(env, jsValue, index++, jsElement);
+    }
+    return jsValue;
+}
+
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::ProgressDetail &progressDetail)
+{
+    napi_value jsValue;
+    napi_status status = napi_create_object(env, &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    napi_value schedule = Convert2JSValue(env, progressDetail.progress);
+    napi_value code = Convert2JSValue(env, progressDetail.code);
+    napi_value details = Convert2JSValue(env, progressDetail.details);
+    if (details == nullptr) {
+        return nullptr;
+    }
+    napi_set_named_property(env, jsValue, "schedule", schedule);
+    napi_set_named_property(env, jsValue, "code", code);
+    napi_set_named_property(env, jsValue, "details", details);
+    return jsValue;
+}
+
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::Details &details)
+{
+    return nullptr;
+}
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
