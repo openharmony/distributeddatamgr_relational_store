@@ -132,7 +132,7 @@ uint32_t RdbServiceProxy::GetSeqNum()
 }
 
 std::pair<int32_t, Details> RdbServiceProxy::DoSync(const RdbSyncerParam& param, const Option &option,
-                                const RdbPredicates &predicates)
+                                const PredicatesMemo &predicates)
 {
     std::pair<int32_t, Details> result{RDB_ERROR, {}};
     MessageParcel reply;
@@ -152,7 +152,7 @@ std::pair<int32_t, Details> RdbServiceProxy::DoSync(const RdbSyncerParam& param,
     return result;
 }
 
-int32_t RdbServiceProxy::DoSync(const RdbSyncerParam &param, const Option &option, const RdbPredicates &predicates,
+int32_t RdbServiceProxy::DoSync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
     const AsyncDetail &async)
 {
     auto [status, details] = DoSync(param, option, predicates);
@@ -168,7 +168,7 @@ int32_t RdbServiceProxy::DoSync(const RdbSyncerParam &param, const Option &optio
     return RDB_OK;
 }
 
-int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam &param, const Option &option, const RdbPredicates &predicates)
+int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(RDB_SERVICE_CMD_ASYNC, reply, param, option, predicates);
@@ -180,7 +180,7 @@ int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam &param, const Option &opti
 }
 
 int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam& param, const Option &option,
-                                 const RdbPredicates &predicates, const AsyncDetail & callback)
+                                 const PredicatesMemo &predicates, const AsyncDetail & callback)
 {
     Option asyncOption = option;
     if (callback != nullptr) {
@@ -191,9 +191,9 @@ int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam& param, const Option &opti
         }
     }
     ZLOGI("num=%{public}u", asyncOption.seqNum);
-    if (DoAsync(param, option, predicates) != RDB_OK) {
+    if (DoAsync(param, asyncOption, predicates) != RDB_OK) {
         ZLOGE("failed");
-        syncCallbacks_.Erase(option.seqNum);
+        syncCallbacks_.Erase(asyncOption.seqNum);
         return RDB_ERROR;
     }
 
@@ -212,7 +212,7 @@ int32_t RdbServiceProxy::SetDistributedTables(const RdbSyncerParam& param, const
     return status;
 }
 
-int32_t RdbServiceProxy::Sync(const RdbSyncerParam &param, const Option &option, const RdbPredicates &predicates,
+int32_t RdbServiceProxy::Sync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
                               const AsyncDetail &async)
 {
     if (option.isAsync) {
