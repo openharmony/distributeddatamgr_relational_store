@@ -16,9 +16,12 @@
 #ifndef DISTRIBUTED_RDB_RDB_TYPES_H
 #define DISTRIBUTED_RDB_RDB_TYPES_H
 
+#include <cinttypes>
 #include <functional>
 #include <map>
+#include <securec.h>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace OHOS::DistributedRdb {
@@ -51,6 +54,7 @@ struct RdbSyncerParam {
 enum SyncMode {
     PUSH,
     PULL,
+    PULL_PUSH,
     TIME_FIRST,
     NATIVE_FIRST,
     CLOUD_FIRST,
@@ -61,8 +65,44 @@ struct SyncOption {
     bool isBlock;
 };
 
-using SyncResult = std::map<std::string, int>; // networkId
-using SyncCallback = std::function<void(const SyncResult&)>;
+enum DistributedTableType {
+    DISTRIBUTED_DEVICE = 0,
+    DISTRIBUTED_CLOUD
+};
+
+enum Progress {
+    SYNC_BEGIN,
+    SYNC_IN_PROGRESS,
+    SYNC_FINISH,
+};
+
+struct Statistic {
+    int32_t total;
+    int32_t success;
+    int32_t failed;
+    int32_t untreated;
+};
+
+struct TableDetail {
+    Statistic upload;
+    Statistic download;
+};
+
+using TableDetails = std::map<std::string, TableDetail>;
+
+struct ProgressDetail {
+    int32_t progress;
+    int32_t code;
+    TableDetails details;
+};
+
+using Briefs = std::map<std::string, int>;
+using Details = std::map<std::string, ProgressDetail>;
+using AsyncBrief = std::function<void(const Briefs&)>;
+using AsyncDetail = std::function<void(Details &&)>;
+
+using SyncResult = Briefs;
+using SyncCallback = AsyncBrief;
 
 enum RdbPredicateOperator {
     EQUAL_TO,
@@ -92,7 +132,7 @@ struct RdbPredicates {
         operations_.push_back({ op, field, values });
     }
 
-    std::string table_;
+    std::vector<std::string> tables_;
     std::vector<std::string> devices_;
     std::vector<RdbPredicateOperation> operations_;
 };
@@ -108,9 +148,38 @@ struct SubscribeOption {
     SubscribeMode mode;
 };
 
+struct Origin {
+    enum OriginType : int32_t {
+        ORIGIN_LOCAL,
+        ORIGIN_NEARBY,
+        ORIGIN_CLOUD,
+        ORIGIN_ALL,
+        ORIGIN_BUTT,
+    };
+    int32_t origin = ORIGIN_ALL;
+    // origin is ORIGIN_LOCAL, the id is empty
+    // origin is ORIGIN_NEARBY, the id is networkId;
+    // origin is ORIGIN_CLOUD, the id is the cloud account id
+    std::vector<std::string> id;
+    std::string store;
+};
+
 class RdbStoreObserver {
 public:
-    virtual void OnChange(const std::vector<std::string>& devices) = 0; // networkid
+    enum ChangeType : int32_t {
+        CHG_TYPE_INSERT = 0,
+        CHG_TYPE_UPDATE,
+        CHG_TYPE_DELETE,
+        CHG_TYPE_BUTT
+    };
+    using PrimaryKey = std::variant<std::monostate, std::string, int64_t>;
+    using ChangeInfo = std::map<std::string, std::vector<PrimaryKey>[CHG_TYPE_BUTT]>;
+    using PrimaryFields = std::map<std::string, std::string>;
+    virtual void OnChange(const std::vector<std::string> &devices) = 0; // networkid
+    virtual void OnChange(const Origin &origin, const PrimaryFields &fields, ChangeInfo &&changeInfo)
+    {
+        OnChange(origin.id);
+    };
 };
 
 struct DropOption {

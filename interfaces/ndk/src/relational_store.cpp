@@ -22,16 +22,34 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_predicates.h"
+#include "relational_value_object_impl.h"
 #include "relational_values_bucket_impl.h"
 #include "relational_error_code.h"
 #include "sqlite_global_config.h"
-#include "ndk_logger.h"
+#include "logger.h"
 using OHOS::RdbNdk::RDB_NDK_LABEL;
 
-OHOS::RdbNdk::StoreImpl::StoreImpl(std::shared_ptr<OHOS::NativeRdb::RdbStore> store)
+OH_VObject *OH_Rdb_CreateValueObject()
+{
+    return new OHOS::RdbNdk::ValueObjectImpl();
+}
+
+OH_VBucket *OH_Rdb_CreateValuesBucket()
+{
+    return new OHOS::RdbNdk::ValuesBucketImpl();
+}
+
+OH_Predicates *OH_Rdb_CreatePredicates(const char *table)
+{
+    if (table == nullptr) {
+        return nullptr;
+    }
+    return new OHOS::RdbNdk::PredicateImpl(table);
+}
+
+OHOS::RdbNdk::StoreImpl::StoreImpl(std::shared_ptr<OHOS::NativeRdb::RdbStore> store) : store_(store)
 {
     id = RDB_STORE_CID;
-    store_ = store;
 }
 
 std::shared_ptr<OHOS::NativeRdb::RdbStore> OHOS::RdbNdk::StoreImpl::GetStore()
@@ -45,12 +63,12 @@ public:
     int OnUpgrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion) override;
 };
 
-int MainOpenCallback::OnCreate(OHOS::NativeRdb::RdbStore &store)
+int MainOpenCallback::OnCreate(OHOS::NativeRdb::RdbStore &rdbStore)
 {
     return OHOS::NativeRdb::E_OK;
 }
 
-int MainOpenCallback::OnUpgrade(OHOS::NativeRdb::RdbStore &store, int oldVersion, int newVersion)
+int MainOpenCallback::OnUpgrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion)
 {
     return OHOS::NativeRdb::E_OK;
 }
@@ -81,9 +99,8 @@ int OH_Rdb_CloseStore(OH_Rdb_Store *store)
         LOG_ERROR("Parameters set error:config is NULL ? %{public}d", (store == nullptr));
         return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
     }
-    auto tempStore = static_cast<OHOS::RdbNdk::StoreImpl *>(store);
-    delete tempStore;
-    tempStore = nullptr;
+    delete store;
+    store = nullptr;
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
@@ -95,12 +112,12 @@ int OH_Rdb_DeleteStore(const char *path)
     }
     int err = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(path);
     if (err != OHOS::NativeRdb::E_OK) {
-        return err;
+        return OH_Rdb_ErrCode::RDB_ERR;
     }
     return OH_Rdb_ErrCode::RDB_ERR_OK;
 }
 
-int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_Rdb_VBucket *valuesBucket)
+int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_VBucket *valuesBucket)
 {
     if (store == nullptr || table == nullptr || valuesBucket == nullptr || store->id != OHOS::RdbNdk::RDB_STORE_CID) {
         LOG_ERROR("Parameters set error:store is NULL ? %{public}d, table is NULL ? %{public}d,"
@@ -115,7 +132,7 @@ int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_Rdb_VBucket *values
     return rowId >= 0 ? rowId : OH_Rdb_ErrCode::RDB_ERR;
 }
 
-int OH_Rdb_Update(OH_Rdb_Store *store, OH_Rdb_VBucket *valueBucket, OH_Predicates *predicates)
+int OH_Rdb_Update(OH_Rdb_Store *store, OH_VBucket *valueBucket, OH_Predicates *predicates)
 {
     if (store == nullptr || predicates == nullptr || store->id != OHOS::RdbNdk::RDB_STORE_CID) {
         LOG_ERROR("Parameters set error:store is NULL ? %{public}d, valueBucket is NULL ? %{public}d,"

@@ -16,19 +16,16 @@
 #ifndef RELATIONAL_VALUE_OBJECT_IMPL_H
 #define RELATIONAL_VALUE_OBJECT_IMPL_H
 
-#include "relational_value_object.h"
+#include "oh_value_object.h"
 #include <vector>
 #include <string>
 
 namespace OHOS {
 namespace RdbNdk {
 constexpr int RDB_VOBJECT_CID = 1234565; // The class id used to uniquely identify the OH_Rdb_VObject class.
-class ValueObjectImpl : public OH_Rdb_VObject {
+class ValueObjectImpl : public OH_VObject {
 public:
-    ValueObjectImpl()
-    {
-        id = RDB_VOBJECT_CID;
-    }
+    ValueObjectImpl();
     std::vector<std::string> &getValue();
 private:
     std::vector<std::string> value;
