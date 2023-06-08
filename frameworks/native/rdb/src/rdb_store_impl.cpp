@@ -444,8 +444,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
     const std::vector<std::string> &selectionArgs)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    auto resultSet =
-        std::make_unique<SqliteSharedResultSet>(connectionPool, path, sql, selectionArgs, shared_from_this());
+    auto resultSet = std::make_unique<SqliteSharedResultSet>(connectionPool, path, sql, selectionArgs);
     return resultSet;
 }
 #endif

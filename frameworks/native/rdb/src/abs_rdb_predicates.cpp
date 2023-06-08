@@ -168,7 +168,7 @@ AbsRdbPredicates* AbsRdbPredicates::InAllDevices()
     return this;
 }
 
-const DistributedRdb::RdbPredicates& AbsRdbPredicates::GetDistributedPredicates() const
+const DistributedRdb::PredicatesMemo& AbsRdbPredicates::GetDistributedPredicates() const
 {
     int limit = GetLimit();
     if (limit >= 0) {

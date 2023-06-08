@@ -1166,7 +1166,7 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
         auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         SyncOption option;
         option.mode = static_cast<DistributedRdb::SyncMode>(context->syncMode);
-        option.isBlock = true;
+        option.isBlock = false;
 
         return obj->rdbStore_->Sync(option, context->tablesNames, [context](const Details &details) {
             auto callback = std::make_shared<NapiCoudSyncCallback>(context->env_, context->cloudSyncCallback);
