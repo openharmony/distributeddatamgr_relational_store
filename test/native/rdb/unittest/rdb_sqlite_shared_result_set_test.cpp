@@ -146,7 +146,7 @@ void RdbSqliteSharedResultSetTest::GenerateAssetsTable()
  * @tc.name: Sqlite_Shared_Result_Set_Asset
  * @tc.desc: normal testcase of SqliteSharedResultSet for asset and assets
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: AR000134UL
  */
 HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset, TestSize.Level1)
 {
