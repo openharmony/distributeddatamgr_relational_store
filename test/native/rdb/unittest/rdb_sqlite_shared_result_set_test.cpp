@@ -125,8 +125,8 @@ void RdbSqliteSharedResultSetTest::GenerateAssetsTable()
     std::shared_ptr<RdbStore> &store = RdbSqliteSharedResultSetTest::store;
     int64_t id;
     ValuesBucket values;
-    Asset assetValue1 = Asset{ 1, "name1", "uri1", "createTime1", "modifyTime1", "size1", "path1", "assetId1", 0 };
-    Asset assetValue2 = Asset{ 2, "name2", "uri2", "createTime2", "modifyTime2", "size2", "path2", "assetId2", 0 };
+    Asset assetValue1 = Asset{ 1, 1, 1, "name1", "uri1", "createTime1", "modifyTime1", "size1", "hash1", "path1" };
+    Asset assetValue2 = Asset{ 2, 2, 2, "name2", "uri2", "createTime2", "modifyTime2", "size2", "hash2", "path2" };
 
     Assets assets = Assets{ assetValue1 };
     values.PutInt("id", 1);
@@ -175,7 +175,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset, TestSize.
     EXPECT_EQ(asset.version, 1);
     EXPECT_EQ(asset.name, "name1");
     EXPECT_EQ(asset.uri, "uri1");
-    EXPECT_EQ(asset.status, 0);
+    EXPECT_EQ(asset.status, 1);
 
     Assets assets;
     rstSet->GetAssets(6, assets);
@@ -184,7 +184,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset, TestSize.
     EXPECT_EQ(it->version, 1);
     EXPECT_EQ(it->name, "name1");
     EXPECT_EQ(it->uri, "uri1");
-    EXPECT_EQ(it->status, 0);
+    EXPECT_EQ(it->status, 1);
 
     ret = rstSet->GoToRow(1);
     EXPECT_EQ(ret, E_OK);
@@ -193,7 +193,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset, TestSize.
     EXPECT_EQ(asset.version, 2);
     EXPECT_EQ(asset.name, "name2");
     EXPECT_EQ(asset.uri, "uri2");
-    EXPECT_EQ(asset.status, 0);
+    EXPECT_EQ(asset.status, 2);
 
     rstSet->GetAssets(6, assets);
     EXPECT_EQ(assets.size(), 1);
@@ -201,7 +201,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset, TestSize.
     EXPECT_EQ(it->version, 2);
     EXPECT_EQ(it->name, "name2");
     EXPECT_EQ(it->uri, "uri2");
-    EXPECT_EQ(it->status, 0);
+    EXPECT_EQ(it->status, 2);
 
     rstSet->Close();
     bool isClosedFlag = rstSet->IsClosed();

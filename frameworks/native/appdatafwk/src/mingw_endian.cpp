@@ -14,15 +14,14 @@
 */
 
 #include "multi_platform_endian.h"
-#include <winsock.h>
 
-namespace OHOS::AppDataFwk {
-uint16_t Endian::Le16toh(uint16_t little_endian_16bits)
+namespace OHOS {
+uint16_t Endian::Le16toh(uint16_t littleEndian)
 {
-    return ntohl(little_endian_16bits);
+    return littleEndian;
 }
-uint16_t Endian::Htole16(uint16_t host_16bits)
+uint16_t Endian::Htole16(uint16_t host)
 {
-    return htonl(host_16bits);
+    return host;
 }
 }

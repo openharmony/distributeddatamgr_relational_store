@@ -16,13 +16,13 @@
 #include "multi_platform_endian.h"
 #include <endian.h>
 
-namespace OHOS::AppDataFwk {
-uint16_t Endian::Le16toh(uint16_t little_endian_16bits)
+namespace OHOS {
+uint16_t Endian::Le16toh(uint16_t littleEndian)
 {
-    return le16toh(little_endian_16bits);
+    return le16toh(littleEndian);
 }
-uint16_t Endian::Htole16(uint16_t host_16bits)
+uint16_t Endian::Htole16(uint16_t host)
 {
-    return htole16(host_16bits);
+    return htole16(host);
 }
 }
