@@ -111,10 +111,10 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_001, TestSize.Level1)
     uint32_t count = 1;
     const char *data1Value = "zhangSan";
     valueObject->putText(valueObject, data1Value);
-    predicates->beginWrap(predicates).equalTo(predicates, "data1", valueObject).orOperate(predicates);
+    predicates->beginWrap(predicates)->equalTo(predicates, "data1", valueObject)->orOperate(predicates);
     double data3Value = 200.1;
     valueObject->putDouble(valueObject, &data3Value, count);
-    predicates->equalTo(predicates, "data3", valueObject).endWrap(predicates);
+    predicates->equalTo(predicates, "data3", valueObject)->endWrap(predicates);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);

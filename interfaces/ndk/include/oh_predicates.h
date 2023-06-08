@@ -84,7 +84,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates, OH_VObject.
      * @since 10
      */
-    OH_Predicates (*equalTo)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*equalTo)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer.
@@ -99,7 +99,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates, OH_VObject.
      * @since 10
      */
-    OH_Predicates (*notEqualTo)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*notEqualTo)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer. Add left parenthesis to predicate.
@@ -111,7 +111,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates.
      * @since 10
      */
-    OH_Predicates (*beginWrap)(OH_Predicates *predicates);
+    OH_Predicates *(*beginWrap)(OH_Predicates *predicates);
 
     /**
      * @brief Function pointer. Add right parenthesis to predicate.
@@ -123,7 +123,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates.
      * @since 10
      */
-    OH_Predicates (*endWrap)(OH_Predicates *predicates);
+    OH_Predicates *(*endWrap)(OH_Predicates *predicates);
 
     /**
      * @brief Function pointer. Adds an or condition to the predicates.
@@ -135,7 +135,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates.
      * @since 10
      */
-    OH_Predicates (*orOperate)(OH_Predicates *predicates);
+    OH_Predicates *(*orOperate)(OH_Predicates *predicates);
 
     /**
      * @brief Function pointer. Adds an and condition to the predicates.
@@ -147,7 +147,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates.
      * @since 10
      */
-    OH_Predicates (*andOperate)(OH_Predicates *predicates);
+    OH_Predicates *(*andOperate)(OH_Predicates *predicates);
 
     /**
      * @brief Function pointer. Restricts the value of the field which is null to the predicates.
@@ -160,7 +160,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates.
      * @since 10
      */
-    OH_Predicates (*isNull)(OH_Predicates *predicates, const char *field);
+    OH_Predicates *(*isNull)(OH_Predicates *predicates, const char *field);
 
     /**
      * @brief Function pointer. Restricts the value of the field which is not null to the predicates.
@@ -173,7 +173,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates.
      * @since 10
      */
-    OH_Predicates (*isNotNull)(OH_Predicates *predicates, const char *field);
+    OH_Predicates *(*isNotNull)(OH_Predicates *predicates, const char *field);
 
     /**
      * @brief Function pointer. Restricts the value of the field to be like the specified value to the predicates.
@@ -187,7 +187,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates, OH_VObject.
      * @since 10
      */
-    OH_Predicates (*like)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*like)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer. Restricts the value of the field to be between the specified value to the predicates.
@@ -201,7 +201,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates, OH_VObject.
      * @since 10
      */
-    OH_Predicates (*between)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*between)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer.
@@ -216,7 +216,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates, OH_VObject.
      * @since 10
      */
-    OH_Predicates (*notBetween)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*notBetween)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer.
@@ -231,7 +231,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates, OH_VObject.
      * @since 10
      */
-    OH_Predicates (*greaterThan)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*greaterThan)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer.
@@ -246,7 +246,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates, OH_VObject.
      * @since 10
      */
-    OH_Predicates (*lessThan)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*lessThan)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer.
@@ -261,7 +261,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates, OH_VObject.
      * @since 10
      */
-    OH_Predicates (*greaterThanOrEqualTo)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*greaterThanOrEqualTo)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer.
@@ -276,7 +276,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates, OH_VObject.
      * @since 10
      */
-    OH_Predicates (*lessThanOrEqualTo)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*lessThanOrEqualTo)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer. Restricts the ascending or descending order of the return list.
@@ -291,7 +291,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates, OH_OrderType.
      * @since 10
      */
-    OH_Predicates (*orderBy)(OH_Predicates *predicates, const char *field, OH_OrderType type);
+    OH_Predicates *(*orderBy)(OH_Predicates *predicates, const char *field, OH_OrderType type);
 
     /**
      * @brief Function pointer. Configure predicates to filter duplicate records and retain only one of them.
@@ -303,7 +303,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates.
      * @since 10
      */
-    OH_Predicates (*distinct)(OH_Predicates *predicates);
+    OH_Predicates *(*distinct)(OH_Predicates *predicates);
 
     /**
      * @brief Function pointer. Predicate for setting the maximum number of data records.
@@ -316,7 +316,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates.
      * @since 10
      */
-    OH_Predicates (*limit)(OH_Predicates *predicates, unsigned int value);
+    OH_Predicates *(*limit)(OH_Predicates *predicates, unsigned int value);
 
     /**
      * @brief Function pointer. Configure the predicate to specify the starting position of the returned result.
@@ -329,7 +329,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates.
      * @since 10
      */
-    OH_Predicates (*offset)(OH_Predicates *predicates, unsigned int rowOffset);
+    OH_Predicates *(*offset)(OH_Predicates *predicates, unsigned int rowOffset);
 
     /**
      * @brief Function pointer. Configure predicates to group query results by specified columns.
@@ -343,7 +343,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates.
      * @since 10
      */
-    OH_Predicates (*groupBy)(OH_Predicates *predicates, char const *const *fields, int length);
+    OH_Predicates *(*groupBy)(OH_Predicates *predicates, char const *const *fields, int length);
 
     /**
      * @brief Function pointer.
@@ -358,7 +358,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates, OH_VObject.
      * @since 10
      */
-    OH_Predicates (*in)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*in)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer.
@@ -373,7 +373,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates, OH_VObject.
      * @since 10
      */
-    OH_Predicates (*notIn)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*notIn)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
 
     /**
      * @brief Function pointer. Initialize OH_Predicates object.
@@ -383,7 +383,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates.
      * @since 10
      */
-    OH_Predicates (*clear)(OH_Predicates *predicates);
+    OH_Predicates *(*clear)(OH_Predicates *predicates);
 
     /**
      * @brief Destroy the {@link OH_Predicates} object and reclaim the memory occupied by the object.

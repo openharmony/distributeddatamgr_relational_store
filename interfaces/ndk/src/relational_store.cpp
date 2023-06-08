@@ -47,10 +47,9 @@ OH_Predicates *OH_Rdb_CreatePredicates(const char *table)
     return new OHOS::RdbNdk::PredicateImpl(table);
 }
 
-OHOS::RdbNdk::StoreImpl::StoreImpl(std::shared_ptr<OHOS::NativeRdb::RdbStore> store)
+OHOS::RdbNdk::StoreImpl::StoreImpl(std::shared_ptr<OHOS::NativeRdb::RdbStore> store) : store_(store)
 {
     id = RDB_STORE_CID;
-    store_ = store;
 }
 
 std::shared_ptr<OHOS::NativeRdb::RdbStore> OHOS::RdbNdk::StoreImpl::GetStore()
@@ -64,12 +63,12 @@ public:
     int OnUpgrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion) override;
 };
 
-int MainOpenCallback::OnCreate(OHOS::NativeRdb::RdbStore &store)
+int MainOpenCallback::OnCreate(OHOS::NativeRdb::RdbStore &rdbStore)
 {
     return OHOS::NativeRdb::E_OK;
 }
 
-int MainOpenCallback::OnUpgrade(OHOS::NativeRdb::RdbStore &store, int oldVersion, int newVersion)
+int MainOpenCallback::OnUpgrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion)
 {
     return OHOS::NativeRdb::E_OK;
 }
