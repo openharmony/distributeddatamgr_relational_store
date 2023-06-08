@@ -21,8 +21,8 @@
 namespace OHOS {
 class API_EXPORT Endian final {
 public:
-    static uint16_t Le16toh(uint16_t little_endian_16bits);
-    static uint16_t Htole16(uint16_t host_16bits);
+    static uint16_t LeToH(uint16_t value);
+    static uint16_t HToLe(uint16_t value);
 };
 } // namespace OHOS
 

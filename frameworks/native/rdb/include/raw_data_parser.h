@@ -56,8 +56,8 @@ private:
         }
         return Get<T, O, Rest...>(std::move(input), output);
     }
-    static const inline std::string MAGIC_WORD_ASSET = "asset";
-    static const inline std::string MAGIC_WORD_ASSETS = "assets";
+    static constexpr const uint32_t ASSET_MAGIC = 0x41534554;
+    static constexpr const uint32_t ASSETS_MAGIC = 0x41534553;
 };
 
 template<typename T, typename... Rest>
