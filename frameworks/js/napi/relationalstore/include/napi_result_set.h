@@ -72,13 +72,7 @@ private:
     static napi_value GetRow(napi_env env, napi_callback_info info);
     static napi_value IsClosed(napi_env env, napi_callback_info info);
 
-    static napi_value GetSharedBlockName(napi_env env, napi_callback_info info);
-    static napi_value GetSharedBlockAshmemFd(napi_env env, napi_callback_info info);
-
     std::shared_ptr<NativeRdb::ResultSet> resultSet_;
-
-    std::string sharedBlockName_;
-    int32_t sharedBlockAshmemFd_ = -1;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
