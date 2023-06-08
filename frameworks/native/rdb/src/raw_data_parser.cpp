@@ -141,8 +141,7 @@ bool RawDataParser::InnerAsset::Unmarshal(const Serializable::json &node)
     UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(status), asset_.status));
     UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(timeStamp), asset_.timeStamp));
     if (asset_.status == AssetValue::STATUS_DOWNLOADING &&
-        std::chrono::time_point<std::chrono::steady_clock>(std::chrono::milliseconds(asset_.timeStamp)) <
-            std::chrono::steady_clock::now()) {
+        asset_.timeStamp < static_cast<uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count())) {
         asset_.status = AssetValue::STATUS_ABNORMAL;
     }
     UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(name), asset_.name));

@@ -18,6 +18,12 @@
 #include <string>
 namespace OHOS::NativeRdb {
 struct AssetValue {
+    enum Status : int32_t {
+        STATUS_NORMAL,
+        STATUS_ABNORMAL,
+        STATUS_DOWNLOADING,
+        STATUS_BUTT
+    };
     uint32_t version = 0;
     uint32_t status = 0;
     uint64_t timeStamp = 0;
