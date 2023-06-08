@@ -293,7 +293,6 @@ int ParseDistributedTableArg(const napi_env &env, size_t argc, napi_value * argv
 int ParseCloudSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
     auto status = JSUtils::Convert2ValueExt(env, arg, context->syncMode);
-    context->syncMode += 2; // DistributedRdb::TIME_FIRST = 4
     bool checked = (status == napi_ok && context->syncMode >= DistributedRdb::TIME_FIRST
                     && context->syncMode <= DistributedRdb::CLOUD_FIRST);
     CHECK_RETURN_SET(checked, std::make_shared<ParamError>("mode", "a SyncMode of cloud."));
