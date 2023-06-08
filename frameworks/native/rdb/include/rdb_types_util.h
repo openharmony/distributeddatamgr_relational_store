@@ -25,7 +25,7 @@ namespace OHOS::ITypesUtil {
 using SubOption = DistributedRdb::SubscribeOption;
 using SyncerParam = DistributedRdb::RdbSyncerParam;
 using Option = DistributedRdb::RdbService::Option;
-using RdbPredicates = DistributedRdb::RdbPredicates;
+using RdbPredicates = DistributedRdb::PredicatesMemo;
 using RdbOperation = DistributedRdb::RdbPredicateOperation;
 using ValueObject = NativeRdb::ValueObject;
 using ValuesBucket = NativeRdb::ValuesBucket;
