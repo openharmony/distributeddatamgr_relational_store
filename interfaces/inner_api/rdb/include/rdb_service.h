@@ -18,11 +18,13 @@
 
 #include <memory>
 #include <string>
-#include "iremote_object.h"
 #include "rdb_types.h"
 #include "rdb_notifier.h"
 
 namespace OHOS {
+template <typename T>
+class sptr;
+class IRemoteObject;
 namespace DistributedRdb {
 class RdbService {
 public:
