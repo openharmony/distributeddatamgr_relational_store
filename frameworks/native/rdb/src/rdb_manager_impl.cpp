@@ -102,7 +102,7 @@ std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(co
     }
 
     if (distributedDataMgr_ == nullptr) {
-        distributedDataMgr_ = GetDistributedDataManager();
+        distributedDataMgr_ = GetDistributedDataManager(param.bundleName_);
     }
     if (distributedDataMgr_ == nullptr) {
         LOG_ERROR("get distributed data manager failed");

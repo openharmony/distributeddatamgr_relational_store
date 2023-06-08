@@ -62,7 +62,6 @@ void RdbServiceProxy::OnSyncComplete(uint32_t seqNum, Details &&result)
         callback(std::move(result));
         return !finished;
     });
-    syncCallbacks_.Erase(seqNum);
 }
 
 void RdbServiceProxy::OnDataChange(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo)
@@ -188,7 +187,7 @@ int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam& param, const Option &opti
     if (callback != nullptr) {
         asyncOption.seqNum = GetSeqNum();
         if (!syncCallbacks_.Insert(asyncOption.seqNum, callback)) {
-            LOG_INFO("insert callback failed");
+        LOG_INFO("insert callback failed");
             return RDB_ERROR;
         }
     }
@@ -203,7 +202,7 @@ int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam& param, const Option &opti
     return RDB_OK;
 }
 
-int32_t RdbServiceProxy::SetDistributedTables(const RdbSyncerParam& param, const std::vector<std::string> &tables)
+int32_t RdbServiceProxy::SetDistributedTables(const RdbSyncerParam& param, const std::vector<std::string> &tables, int32_t type)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(RDB_SERVICE_CMD_SET_DIST_TABLE, reply, param, tables);

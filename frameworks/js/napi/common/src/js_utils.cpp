@@ -311,6 +311,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
     }
     return napi_ok;
 }
+
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, bool> &output)
 {
     LOG_DEBUG("napi_value -> std::map<std::string, bool> ");

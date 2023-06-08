@@ -22,7 +22,7 @@
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_trace.h"
-#include "sqlite_database_utils.h"
+#include "rdb_sql_utils.h"
 #include "sqlite_global_config.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
@@ -919,14 +919,13 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
     if (sqlType != "ATT") {
         return E_OK;
     }
-    std::string journalMode;
 
-    bool isRead = SqliteDatabaseUtils::BeginExecuteSql(GlobalExpr::PRAGMA_JOUR_MODE_EXP);
-    SqliteConnection *connection = connectionPool->AcquireConnection(isRead);
+    SqliteConnection *connection = connectionPool->AcquireConnection(false);
     if (connection == nullptr) {
         return E_CON_OVER_LIMIT;
     }
-    
+
+    std::string journalMode;
     int errCode =
         connection->ExecuteGetString(journalMode, GlobalExpr::PRAGMA_JOUR_MODE_EXP, std::vector<ValueObject>());
     connectionPool->ReleaseConnection(connection);

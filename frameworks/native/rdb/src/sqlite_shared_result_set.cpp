@@ -21,7 +21,7 @@
 #include <memory>
 
 #include "logger.h"
-#include "sqlite_database_utils.h"
+#include "rdb_sql_utils.h"
 #include "sqlite_utils.h"
 
 namespace OHOS {
@@ -40,7 +40,7 @@ SqliteSharedResultSet::~SqliteSharedResultSet() {}
 
 std::shared_ptr<SqliteStatement> SqliteSharedResultSet::PrepareStep(SqliteConnection* connection, int &errCode)
 {
-    if (SqliteDatabaseUtils::GetSqlStatementType(qrySql) != SqliteUtils::STATEMENT_SELECT) {
+    if (SqliteUtils::GetSqlStatementType(qrySql) != SqliteUtils::STATEMENT_SELECT) {
         LOG_ERROR("StoreSession BeginStepQuery fail : not select sql !");
         errCode = E_EXECUTE_IN_STEP_QUERY;
         return nullptr;
@@ -166,8 +166,7 @@ void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
         bindArgs.push_back(vauObj);
     }
 
-    bool isRead = SqliteDatabaseUtils::BeginExecuteSql(qrySql);
-    SqliteConnection* connection = connectionPool_->AcquireConnection(isRead);
+    SqliteConnection* connection = connectionPool_->AcquireConnection(true);
     if (connection == nullptr) {
         return;
     }
