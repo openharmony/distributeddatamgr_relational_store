@@ -83,7 +83,10 @@ if (is_ohos) {
     ]
 
     buildos = "windows"
-    defines = [ "WINDOWS_PLATFORM" ]
+    defines = [
+      "WINDOWS_PLATFORM",
+      "API_EXPORT=__declspec(dllimport)",
+    ]
 
     sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
 

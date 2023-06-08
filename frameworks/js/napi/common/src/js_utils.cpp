@@ -17,6 +17,14 @@
 
 #include "js_logger.h"
 
+#define CHECK_RETURN_RET(assertion, message, revt)                       \
+    do {                                                                 \
+        if (!(assertion)) {                                              \
+            LOG_WARN("assertion (" #assertion ") failed: " message);     \
+            return revt;                                                 \
+        }                                                                \
+    } while (0)
+
 namespace OHOS {
 namespace AppDataMgrJsKit {
 static const std::map<std::string, std::string> NAMESPACES = {
@@ -281,25 +289,28 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
     napi_value jsMapList = nullptr;
     uint32_t jsCount = 0;
     napi_status status = napi_get_property_names(env, jsValue, &jsMapList);
-    NAPI_ASSERT_BASE(env, status == napi_ok, "get_property_names failed!", ERR);
+    CHECK_RETURN_RET(status == napi_ok, "get_property_names failed", napi_invalid_arg);
     status = napi_get_array_length(env, jsMapList, &jsCount);
     LOG_DEBUG("jsCOUNT: %{public}d", jsCount);
-    NAPI_ASSERT_BASE(env, (status == napi_ok) && (jsCount > 0), "get_map failed!", ERR);
+    CHECK_RETURN_RET(status == napi_ok && jsCount > 0, "get_map failed", napi_invalid_arg);
     napi_value jsKey = nullptr;
     napi_value jsVal = nullptr;
     for (uint32_t index = 0; index < jsCount; index++) {
         status = napi_get_element(env, jsMapList, index, &jsKey);
-        NAPI_ASSERT_BASE(env, (jsKey != nullptr) && (status == napi_ok), "no element", ERR);
+        CHECK_RETURN_RET(status == napi_ok && jsKey != nullptr, "no element", napi_invalid_arg);
         std::string key;
-        Convert2Value(env, jsKey, key);
+        int ret = Convert2Value(env, jsKey, key);
+        CHECK_RETURN_RET(ret == napi_ok, "convert key failed", ret);
         status = napi_get_property(env, jsValue, jsKey, &jsVal);
-        NAPI_ASSERT_BASE(env, (jsVal != nullptr) && (status == napi_ok), "no element", ERR);
+        CHECK_RETURN_RET(status == napi_ok && jsVal != nullptr, "no element", napi_invalid_arg);
         int32_t val;
-        Convert2ValueExt(env, jsVal, val);
+        ret = Convert2ValueExt(env, jsVal, val);
+        CHECK_RETURN_RET(ret == napi_ok, "convert val failed", ret);
         output.insert(std::pair<std::string, int32_t>(key, val));
     }
-    return OK;
+    return napi_ok;
 }
+
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, bool> &output)
 {
     LOG_DEBUG("napi_value -> std::map<std::string, bool> ");
@@ -307,24 +318,26 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
     napi_value jsMapList = nullptr;
     uint32_t jsCount = 0;
     napi_status status = napi_get_property_names(env, jsValue, &jsMapList);
-    NAPI_ASSERT_BASE(env, status == napi_ok, "get_property_names failed!", ERR);
+    CHECK_RETURN_RET(status == napi_ok, "get_property_names failed", napi_invalid_arg);
     status = napi_get_array_length(env, jsMapList, &jsCount);
     LOG_DEBUG("jsCount: %{public}d", jsCount);
-    NAPI_ASSERT_BASE(env, (status == napi_ok) && (jsCount > 0), "get_map failed!", ERR);
+    CHECK_RETURN_RET(status == napi_ok && jsCount > 0, "get_map failed", napi_invalid_arg);
     napi_value jsKey = nullptr;
     napi_value jsVal = nullptr;
     for (uint32_t index = 0; index < jsCount; index++) {
         status = napi_get_element(env, jsMapList, index, &jsKey);
-        NAPI_ASSERT_BASE(env, (jsKey != nullptr) && (status == napi_ok), "no element", ERR);
+        CHECK_RETURN_RET(status == napi_ok && jsKey != nullptr, "no element", napi_invalid_arg);
         std::string key;
-        Convert2Value(env, jsKey, key);
+        int ret = Convert2Value(env, jsKey, key);
+        CHECK_RETURN_RET(ret == napi_ok, "convert key failed", ret);
         status = napi_get_property(env, jsValue, jsKey, &jsVal);
-        NAPI_ASSERT_BASE(env, (jsVal != nullptr) && (status == napi_ok), "no element", ERR);
+        CHECK_RETURN_RET(status == napi_ok && jsVal != nullptr, "no element", napi_invalid_arg);
         bool val;
-        Convert2Value(env, jsVal, val);
+        ret = Convert2Value(env, jsVal, val);
+        CHECK_RETURN_RET(ret == napi_ok, "convert val failed", ret);
         output.insert(std::pair<std::string, bool>(key, val));
     }
-    return OK;
+    return napi_ok;
 }
 
 napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<std::string> &value)

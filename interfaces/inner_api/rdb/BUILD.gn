@@ -23,12 +23,12 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/raw_data_parser.cpp",
   "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
   "${relational_store_native_path}/rdb/src/rdb_predicates.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_sql_utils.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store_manager.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_connection.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_connection_pool.cpp",
-  "${relational_store_native_path}/rdb/src/sqlite_database_utils.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_global_config.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_sql_builder.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_statement.cpp",
@@ -104,7 +104,6 @@ if (is_ohos) {
 
     sources += [
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
-      "${relational_store_native_path}/rdb/src/rdb_manager.cpp",
       "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
       "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
       "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
@@ -152,7 +151,6 @@ if (is_ohos) {
 
     sources += [
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
-      "${relational_store_native_path}/rdb/src/rdb_manager.cpp",
       "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
       "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
       "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",

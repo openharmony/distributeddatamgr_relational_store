@@ -24,7 +24,7 @@
 #include "file_ex.h"
 #include "hks_param.h"
 #include "logger.h"
-#include "sqlite_database_utils.h"
+#include "rdb_sql_utils.h"
 #include "sqlite_utils.h"
 
 #define HKS_FREE(PTR) \
@@ -594,8 +594,8 @@ void RdbSecurityManager::DelRdbSecretDataFile(const std::string &path)
     LOG_INFO("Delete all key files begin.");
     std::lock_guard<std::mutex> lock(mutex_);
     ParsePath(path);
-    SqliteDatabaseUtils::DeleteFile(keyPath_);
-    SqliteDatabaseUtils::DeleteFile(newKeyPath_);
+    SqliteUtils::DeleteFile(keyPath_);
+    SqliteUtils::DeleteFile(newKeyPath_);
 }
 
 bool RdbSecurityManager::IsKeyExpired(const time_t &createTime)
@@ -639,39 +639,6 @@ bool RdbSecurityManager::CheckKeyDataFileExists(RdbSecurityManager::KeyFileType 
     }
 }
 
-int RdbSecurityManager::GetKeyDistributedStatus(KeyFileType keyFile, bool &status)
-{
-    LOG_INFO("GetKeyDistributedStatus start.");
-    std::string keyPath;
-    GetKeyPath(keyFile, keyPath);
-
-    RdbSecretKeyData keyData;
-    if (!LoadSecretKeyFromDisk(keyPath, keyData)) {
-        return E_ERROR;
-    }
-
-    status = (keyData.distributed == DISTRIBUTED);
-    return E_OK;
-}
-
-int RdbSecurityManager::SetKeyDistributedStatus(KeyFileType keyFile, bool status)
-{
-    LOG_INFO("SetKeyDistributedStatus start.");
-    std::string keyPath;
-    GetKeyPath(keyFile, keyPath);
-    RdbSecretKeyData keyData;
-    if (!LoadSecretKeyFromDisk(keyPath, keyData)) {
-        return E_ERROR;
-    }
-
-    keyData.distributed = (status ? DISTRIBUTED : UNDISTRIBUTED);
-    if (!SaveSecretKeyToDisk(keyPath, keyData)) {
-        return E_ERROR;
-    }
-
-    return E_OK;
-}
-
 void RdbSecurityManager::GetKeyPath(RdbSecurityManager::KeyFileType keyType, std::string &keyPath)
 {
     if (keyType == KeyFileType::PUB_KEY_FILE) {
@@ -685,12 +652,12 @@ void RdbSecurityManager::DelRdbSecretDataFile(RdbSecurityManager::KeyFileType ke
 {
     std::string keyPath;
     GetKeyPath(keyFile, keyPath);
-    SqliteDatabaseUtils::DeleteFile(keyPath);
+    SqliteUtils::DeleteFile(keyPath);
 }
 
 void RdbSecurityManager::UpdateKeyFile()
 {
-    if (!SqliteDatabaseUtils::RenameFile(newKeyPath_, keyPath_)) {
+    if (SqliteUtils::RenameFile(newKeyPath_, keyPath_) != E_OK) {
         LOG_ERROR("Rename key file failed.");
         return;
     }

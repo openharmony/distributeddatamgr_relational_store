@@ -15,9 +15,11 @@
 
 #ifndef NATIVE_RDB_RDB_VISIBILITY_H
 #define NATIVE_RDB_RDB_VISIBILITY_H
-
 #ifndef API_EXPORT
+#if defined(__GNUC__) || defined(__clang__)
 #define API_EXPORT __attribute__((visibility ("default")))
+#else
+#define API_EXPORT
 #endif
-
+#endif
 #endif // NATIVE_RDB_RDB_VISIBILITY_H
