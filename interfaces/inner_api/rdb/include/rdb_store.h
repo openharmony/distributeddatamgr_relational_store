@@ -38,9 +38,17 @@ public:
     using SyncOption = DistributedRdb::SyncOption;
 
     /**
-     * @brief Use SyncCallback replace DistributedRdb::SyncCallback namespace.
+     * @brief Use AsyncBrief replace DistributedRdb::AsyncBrief namespace.
      */
-    using SyncCallback = DistributedRdb::SyncCallback;
+    using Briefs = DistributedRdb::Briefs;
+    using AsyncBrief = DistributedRdb::AsyncBrief;
+    using SyncCallback = AsyncBrief;
+
+    /**
+     * @brief Use AsyncBrief replace DistributedRdb::AsyncBrief namespace.
+     */
+    using Details = DistributedRdb::Details;
+    using AsyncDetail = DistributedRdb::AsyncDetail;
 
     /**
      * @brief Use SubscribeMode replace DistributedRdb::SubscribeMode namespace.
@@ -366,7 +374,8 @@ public:
      *
      * @param tables Indicates the tables name you want to set.
      */
-    virtual int SetDistributedTables(const std::vector<std::string>& tables) = 0;
+    virtual int SetDistributedTables(const std::vector<std::string> &tables,
+        int32_t type = DistributedRdb::DistributedTableType::DISTRIBUTED_DEVICE) = 0;
 
     /**
      * @brief Obtain distributed table name of specified remote device according to local table name.
@@ -380,12 +389,20 @@ public:
         const std::string &device, const std::string &table, int &errCode) = 0;
 
     /**
-     * @brief Sync data between devices.
+     * @brief Sync data between devices or cloud.
      *
      * @param device Indicates the remote device.
      * @param predicate Indicates the AbsRdbPredicates {@link AbsRdbPredicates} object.
      */
-    virtual int Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const SyncCallback& callback) = 0;
+    virtual int Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const AsyncBrief& async) = 0;
+
+    /**
+     * @brief Sync data between devices or cloud.
+     *
+     * @param device Indicates the remote device.
+     * @param predicate Indicates the AbsRdbPredicates {@link AbsRdbPredicates} object.
+     */
+    virtual int Sync(const SyncOption& option, const std::vector<std::string>& tables, const AsyncDetail& async) = 0;
 
     /**
      * @brief Subscribe to event changes.

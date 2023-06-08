@@ -54,6 +54,9 @@ static napi_value ExportSyncMode(napi_env env)
 
     SET_NAPI_PROPERTY(syncMode, "SYNC_MODE_PUSH", SyncMode::PUSH);
     SET_NAPI_PROPERTY(syncMode, "SYNC_MODE_PULL", SyncMode::PULL);
+    SET_NAPI_PROPERTY(syncMode, "SYNC_MODE_TIME_FIRST", SyncMode::TIME_FIRST);
+    SET_NAPI_PROPERTY(syncMode, "SYNC_MODE_NATIVE_FIRST", SyncMode::NATIVE_FIRST);
+    SET_NAPI_PROPERTY(syncMode, "SYNC_MODE_CLOUD_FIRST", SyncMode::CLOUD_FIRST);
     napi_object_freeze(env, syncMode);
     return syncMode;
 }
@@ -64,6 +67,7 @@ static napi_value ExportSubscribeType(napi_env env)
     napi_create_object(env, &subscribeType);
 
     SET_NAPI_PROPERTY(subscribeType, "SUBSCRIBE_TYPE_REMOTE", SubscribeMode::REMOTE);
+    SET_NAPI_PROPERTY(subscribeType, "SUBSCRIBE_TYPE_CLOUD", SubscribeMode::REMOTE);
     napi_object_freeze(env, subscribeType);
     return subscribeType;
 }
@@ -81,6 +85,29 @@ static napi_value ExportSecurityLevel(napi_env env)
     return securityLevel;
 }
 #endif
+
+static napi_value ExportProgress(napi_env env)
+{
+    napi_value progress = nullptr;
+    napi_create_object(env, &progress);
+
+    SET_NAPI_PROPERTY(progress, "SYNC_BEGIN", 0);
+    SET_NAPI_PROPERTY(progress, "SYNC_IN_PROGRESS", 1);
+    SET_NAPI_PROPERTY(progress, "SYNC_FINISH", 2);
+    napi_object_freeze(env, progress);
+    return progress;
+}
+
+static napi_value ExportDistributedType(napi_env env)
+{
+    napi_value distributedType = nullptr;
+    napi_create_object(env, &distributedType);
+
+    SET_NAPI_PROPERTY(distributedType, "DISTRIBUTED_DEVICE", 0);
+    SET_NAPI_PROPERTY(distributedType, "DISTRIBUTED_CLOUD", 1);
+    napi_object_freeze(env, distributedType);
+    return distributedType;
+}
 
 static napi_value ExportConflictResolution(napi_env env)
 {
@@ -107,6 +134,8 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("SubscribeType", ExportSubscribeType(env)),
         DECLARE_NAPI_PROPERTY("SecurityLevel", ExportSecurityLevel(env)),
 #endif
+        DECLARE_NAPI_PROPERTY("Progress", ExportProgress(env)),
+        DECLARE_NAPI_PROPERTY("DistributedType", ExportDistributedType(env)),
     };
 
     size_t count = sizeof(properties) / sizeof(properties[0]);

@@ -29,29 +29,26 @@ bool Unmarshalling(SyncerParam &output, MessageParcel &data)
 }
 
 template<>
-bool Marshalling(const SyncOption &input, MessageParcel &data)
+bool Marshalling(const Option &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(data, static_cast<int32_t>(input.mode), input.isBlock);
+    return ITypesUtil::Marshal(data, input.mode, input.seqNum, input.isAsync);
 }
 
 template<>
-bool Unmarshalling(SyncOption &output, MessageParcel &data)
+bool Unmarshalling(Option &output, MessageParcel &data)
 {
-    int32_t mode = static_cast<int32_t>(output.mode);
-    auto ret = ITypesUtil::Unmarshal(data, mode, output.isBlock);
-    output.mode = static_cast<decltype(output.mode)>(mode);
-    return ret;
+    return ITypesUtil::Unmarshal(data, output.mode, output.seqNum, output.isAsync);
 }
 
 template<>
 bool Marshalling(const RdbPredicates &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(data, input.table_, input.devices_, input.operations_);
+    return ITypesUtil::Marshal(data, input.tables_, input.devices_, input.operations_);
 }
 template<>
 bool Unmarshalling(RdbPredicates &output, MessageParcel &data)
 {
-    return ITypesUtil::Unmarshal(data, output.table_, output.devices_, output.operations_);
+    return ITypesUtil::Unmarshal(data, output.tables_, output.devices_, output.operations_);
 }
 
 template<>
@@ -70,6 +67,20 @@ bool Unmarshalling(RdbOperation &output, MessageParcel &data)
 }
 
 template<>
+bool Marshalling(const SubOption &input, MessageParcel &data)
+{
+    return ITypesUtil::Marshal(data, static_cast<int32_t>(input.mode));
+}
+
+template<>
+bool Unmarshalling(SubOption &output, MessageParcel &data)
+{
+    int32_t mode = static_cast<int32_t>(output.mode);
+    auto ret = ITypesUtil::Unmarshal(data, mode);
+    output.mode = static_cast<decltype(output.mode)>(mode);
+    return ret;
+}
+template<> 
 bool Marshalling(const ValueObject &input, MessageParcel &data)
 {
     return Marshal(data, input.value);
@@ -101,19 +112,58 @@ bool Unmarshalling(Asset &output, MessageParcel &data)
 {
     return Unmarshal(data, output.version, output.name, output.size, output.modifyTime, output.uri);
 }
-
 template<>
-bool Marshalling(const SubOption &input, MessageParcel &data)
+bool Marshalling(const ProgressDetail &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(data, static_cast<int32_t>(input.mode));
+    return Marshal(data, input.progress, input.code, input.details);
+}
+template<>
+bool Unmarshalling(ProgressDetail &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.progress, output.code, output.details);
+}
+template<>
+bool Marshalling(const TableDetail &input, MessageParcel &data)
+{
+    return Marshal(data, input.upload, input.download);
+}
+template<>
+bool Unmarshalling(TableDetail &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.upload, output.download);
+}
+template<>
+bool Marshalling(const Statistic &input, MessageParcel &data)
+{
+    return Marshal(data, input.total, input.success, input.failed, input.untreated);
+}
+template<>
+bool Unmarshalling(Statistic &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.total, output.success, output.failed, output.untreated);
 }
 
 template<>
-bool Unmarshalling(SubOption &output, MessageParcel &data)
+bool Marshalling(const PrimaryKeys &input, MessageParcel &data)
 {
-    int32_t mode = static_cast<int32_t>(output.mode);
-    auto ret = ITypesUtil::Unmarshal(data, mode);
-    output.mode = static_cast<decltype(output.mode)>(mode);
-    return ret;
+    return Marshal(data, input[Observer::CHG_TYPE_INSERT], input[Observer::CHG_TYPE_UPDATE],
+        input[Observer::CHG_TYPE_DELETE]);
+}
+template<>
+bool Unmarshalling(PrimaryKeys &output, MessageParcel &data)
+{
+    return Unmarshal(data, output[Observer::CHG_TYPE_INSERT], output[Observer::CHG_TYPE_UPDATE],
+        output[Observer::CHG_TYPE_DELETE]);
+}
+
+template<>
+bool Marshalling(const Origin &input, MessageParcel &data)
+{
+    return Marshal(data, input.origin, input.id, input.store);
+}
+template<>
+bool Unmarshalling(Origin &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.origin, output.id, output.store);
 }
 }

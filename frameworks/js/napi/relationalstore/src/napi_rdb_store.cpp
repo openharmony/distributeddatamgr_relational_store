@@ -41,6 +41,7 @@ using OHOS::DistributedRdb::SubscribeMode;
 using OHOS::DistributedRdb::SubscribeOption;
 using OHOS::DistributedRdb::SyncOption;
 using OHOS::DistributedRdb::SyncResult;
+using OHOS::DistributedRdb::Details;
 #endif
 
 namespace OHOS {
@@ -74,9 +75,13 @@ struct RdbStoreContext : public Context {
     std::string destName;
     std::string srcName;
     int32_t enumArg;
+    int32_t distributedType;
+    int32_t syncMode;
     NativeRdb::ConflictResolution conflictResolution;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     DistributedRdb::SyncResult syncResult;
+
+    napi_value cloudSyncCallback = nullptr;
 #endif
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
 
@@ -149,6 +154,7 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables),
         DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName),
         DECLARE_NAPI_FUNCTION("sync", Sync),
+        DECLARE_NAPI_FUNCTION("cloudSync", CloudSync),
         DECLARE_NAPI_FUNCTION("on", OnEvent),
         DECLARE_NAPI_FUNCTION("off", OffEvent),
 #endif
@@ -265,9 +271,43 @@ int ParseSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr
     napi_status status = napi_get_value_int32(env, arg, &context->enumArg);
     CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("mode", "a SyncMode Type."));
     bool checked = context->enumArg == 0 || context->enumArg == 1;
-    CHECK_RETURN_SET(checked, std::make_shared<ParamError>("mode", "a SyncMode."));
+    CHECK_RETURN_SET(checked, std::make_shared<ParamError>("mode", "a SyncMode of device."));
 
     LOG_DEBUG("ParseSyncModeArg end");
+    return OK;
+}
+
+int ParseDistributedTableArg(const napi_env &env, size_t argc, napi_value * argv, std::shared_ptr<RdbStoreContext> context)
+{
+    context->distributedType = DistributedRdb::DISTRIBUTED_DEVICE;
+    if (argc > 1) {
+        auto status = JSUtils::Convert2ValueExt(env, argv[1], context->distributedType);
+        bool checked = (status == napi_ok && context->distributedType >= DistributedRdb::DISTRIBUTED_DEVICE
+                        && context->distributedType <= DistributedRdb::DISTRIBUTED_CLOUD);
+        CHECK_RETURN_SET(checked, std::make_shared<ParamError>("mode", "a DistributedType"));
+    }
+    LOG_DEBUG("ParseDistributedTableArg end");
+    return OK;
+}
+
+int ParseCloudSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+{
+    auto status = JSUtils::Convert2ValueExt(env, arg, context->syncMode);
+    bool checked = (status == napi_ok && context->syncMode >= DistributedRdb::TIME_FIRST
+                    && context->syncMode <= DistributedRdb::CLOUD_FIRST);
+    CHECK_RETURN_SET(checked, std::make_shared<ParamError>("mode", "a SyncMode of cloud."));
+    LOG_DEBUG("ParseCloudSyncModeArg end");
+    return OK;
+}
+
+int ParseCloudSyncCallback(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, arg, &valueType);
+    CHECK_RETURN_SET(valueType == napi_function, std::make_shared<ParamNumError>("a callback type"));
+    context->cloudSyncCallback = arg;
+
+    LOG_DEBUG("ParseCloudSyncCallback end");
     return OK;
 }
 
@@ -365,7 +405,6 @@ int ParseValuesBucket(const napi_env &env, const napi_value &arg, std::shared_pt
         napi_value key;
         status = napi_get_element(env, keys, i, &key);
         CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("values", "a ValuesBucket."));
-
         std::string keyStr = JSUtils::Convert2String(env, key);
         napi_value value;
         napi_get_property(env, arg, key, &value);
@@ -1025,14 +1064,15 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
     LOG_DEBUG("RdbStoreProxy::SetDistributedTables start");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc == 1, std::make_shared<ParamNumError>("1 or 2"));
+        CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 - 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTablesName(env, argv[0], context));
+        CHECK_RETURN(OK == ParseDistributedTableArg(env, argc, argv, context));
     };
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::SetDistributedTables Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        return obj->rdbStore_->SetDistributedTables(context->tablesNames);
+        return obj->rdbStore_->SetDistributedTables(context->tablesNames, context->distributedType);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
@@ -1104,6 +1144,48 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
     return AsyncCall::Call(env, context);
 }
 
+napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbStoreProxy::CloudSync start");
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN_SET_E(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 - 4"));
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+        CHECK_RETURN(OK == ParseCloudSyncModeArg(env, argv[0], context));
+        uint32_t index = 1;
+        bool isArray = false;
+        napi_is_array(env, argv[index], &isArray);
+        if (isArray) {
+            CHECK_RETURN(OK == ParseTablesName(env, argv[index], context));
+            index++;
+        }
+        CHECK_RETURN(OK == ParseCloudSyncCallback(env, argv[index], context));
+    };
+    auto exec = [context]() -> int {
+        LOG_DEBUG("RdbStoreProxy::CloudSync Async");
+        auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        SyncOption option;
+        option.mode = static_cast<DistributedRdb::SyncMode>(context->syncMode);
+        option.isBlock = true;
+
+        return obj->rdbStore_->Sync(option, context->tablesNames, [context](const Details &details) {
+            auto callback = std::make_shared<NapiCoudSyncCallback>(context->env_, context->cloudSyncCallback);
+            callback->OnSyncCompelete(details);
+        });
+    };
+
+    auto output = [context](napi_env env, napi_value &result) {
+        LOG_DEBUG("RdbStoreProxy::CloudSync output");
+        napi_status status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return AsyncCall::Call(env, context);
+}
+
 napi_value RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv)
 {
     napi_valuetype type;
@@ -1128,7 +1210,7 @@ napi_value RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_valu
     }
     SubscribeOption option;
     option.mode = static_cast<SubscribeMode>(mode);
-    auto observer = std::make_shared<NapiRdbStoreObserver>(env, argv[1]);
+    auto observer = std::make_shared<NapiRdbStoreObserver>(env, argv[1], mode);
     int errCode = rdbStore_->Subscribe(option, observer.get());
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_ERROR));
     observers_[mode].push_back(observer);
@@ -1200,6 +1282,15 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
         return proxy->OffDataChangeEvent(env, argc - 1, argv + 1);
     }
     return nullptr;
+}
+
+void RdbStoreProxy::NapiCoudSyncCallback::OnSyncCompelete(const DistributedRdb::Details &details)
+{
+    LOG_DEBUG("NapiCoudSyncCallback::OnSyncCompelete begin");
+    CallFunction([details](napi_env env, int &argc, napi_value *argv) {
+        argc = 1;
+        argv[0] = details.empty() ? nullptr : JSUtils::Convert2JSValue(env, details.begin()->second);
+    });
 }
 #endif
 } // namespace RelationalStoreJsKit
