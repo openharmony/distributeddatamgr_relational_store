@@ -41,7 +41,7 @@ public:
         int32_t type = DISTRIBUTED_DEVICE) override;
 
     int32_t Sync(const RdbSyncerParam& param, const Option& option,
-                 const RdbPredicates& predicates, const AsyncDetail &async) override;
+                 const PredicatesMemo& predicates, const AsyncDetail &async) override;
 
     int32_t Subscribe(const RdbSyncerParam& param, const SubscribeOption& option,
                       RdbStoreObserver *observer) override;
@@ -60,14 +60,14 @@ private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
     using PrimaryFields = RdbStoreObserver::PrimaryFields;
     std::pair<int32_t, Details> DoSync(const RdbSyncerParam &param, const Option &option,
-        const RdbPredicates &predicates);
+        const PredicatesMemo &predicates);
 
-    int32_t DoAsync(const RdbSyncerParam &param, const Option &option, const RdbPredicates &predicates);
+    int32_t DoAsync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates);
 
-    int32_t DoSync(const RdbSyncerParam &param, const Option &option, const RdbPredicates &predicates,
+    int32_t DoSync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
         const AsyncDetail &async);
 
-    int32_t DoAsync(const RdbSyncerParam &param, const Option &option, const RdbPredicates &predicates,
+    int32_t DoAsync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
         const AsyncDetail &async);
 
     int32_t DoSubscribe(const RdbSyncerParam& param, const SubscribeOption &option);
