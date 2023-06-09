@@ -274,11 +274,6 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::monostate 
     if (equal) {
         return napi_ok;
     }
-    napi_get_undefined(env, &tempValue);
-    napi_strict_equals(env, jsValue, tempValue, &equal);
-    if (equal) {
-        return OK;
-    }
     LOG_DEBUG("Convert2Value jsValue is not null");
     return napi_invalid_arg;
 }
