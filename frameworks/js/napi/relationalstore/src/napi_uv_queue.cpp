@@ -14,11 +14,13 @@
  */
 
 #include "napi_uv_queue.h"
+
+#include "logger.h"
 #include "uv.h"
-#include "js_logger.h"
 
 namespace OHOS::RelationalStoreJsKit {
-using namespace AppDataMgrJsKit;
+using namespace OHOS::Rdb;
+
 NapiUvQueue::NapiUvQueue(napi_env env, napi_value callback)
     : env_(env)
 {

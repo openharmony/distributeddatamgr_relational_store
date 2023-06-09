@@ -70,16 +70,16 @@ void RdbStoreSubTest::TearDown()
 
 class Callback : public RdbOpenCallback {
 public:
-    int OnCreate(RdbStore &rdbStore) override;
-    int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
+    int OnCreate(RdbStore &store) override;
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
 };
 
-int Callback::OnCreate(RdbStore &rdbStore)
+int Callback::OnCreate(RdbStore &store)
 {
     return E_OK;
 }
 
-int Callback::OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion)
+int Callback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 {
     return E_OK;
 }

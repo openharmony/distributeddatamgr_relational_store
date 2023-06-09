@@ -12,14 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "share_block.h"
-#include <algorithm>
+
 #include <unistd.h>
+
+#include <algorithm>
+
 #include "logger.h"
 #include "shared_block_serializer_info.h"
 #include "value_object.h"
+
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 const int ERROR_STATUS = -1;
 const unsigned int SLEEP_TIME = 1000;
 // move to the highest 32 bits of 64 bits number

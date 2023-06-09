@@ -15,9 +15,10 @@
 
 #include "napi_async_call.h"
 
-#include "js_logger.h"
+#include "logger.h"
 #include "napi_rdb_trace.h"
 
+using namespace OHOS::Rdb;
 using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS {

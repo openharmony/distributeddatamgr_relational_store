@@ -21,6 +21,7 @@ config("module_private_config") {
   visibility = [ ":*" ]
 
   include_dirs = [
+    "${relational_store_common_path}/include",
     "${relational_store_native_path}/rdb_data_share_adapter/include",
     "${datashare_common_native_path}/include",
     "${relational_store_innerapi_path}/rdb/src",

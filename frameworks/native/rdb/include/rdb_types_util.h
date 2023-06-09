@@ -15,12 +15,14 @@
 
 #ifndef DISTRIBUTED_RDB_RDB_TYPES_UTIL_H
 #define DISTRIBUTED_RDB_RDB_TYPES_UTIL_H
+
 #include "itypes_util.h"
 #include "rdb_service.h"
 #include "rdb_types.h"
 #include "rdb_visibility.h"
 #include "value_object.h"
 #include "values_bucket.h"
+
 namespace OHOS::ITypesUtil {
 using SubOption = DistributedRdb::SubscribeOption;
 using SyncerParam = DistributedRdb::RdbSyncerParam;

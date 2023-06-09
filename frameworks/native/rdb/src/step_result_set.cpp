@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "StepResultSet"
-
 #include "step_result_set.h"
 
 #include <unistd.h>
@@ -29,6 +27,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, const std::string &sql,
     const std::vector<std::string> &selectionArgs)
     : rdb(rdb), sql(sql), selectionArgs(selectionArgs), isAfterLast(false), rowCount(INIT_POS),

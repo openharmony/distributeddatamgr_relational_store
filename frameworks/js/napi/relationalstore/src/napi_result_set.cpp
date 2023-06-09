@@ -17,8 +17,8 @@
 
 #include <functional>
 
-#include "js_logger.h"
 #include "js_utils.h"
+#include "logger.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_trace.h"
 
@@ -27,6 +27,7 @@
 #include "string_ex.h"
 #endif
 
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 

@@ -15,12 +15,13 @@
 
 #include "napi_predicates_utils.h"
 
-#include "js_logger.h"
 #include "js_utils.h"
+#include "logger.h"
 #include "napi_data_ability_predicates.h"
 #include "napi_rdb_predicates.h"
 #include "predicates_utils.h"
 
+using namespace OHOS::Rdb;
 using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS {
