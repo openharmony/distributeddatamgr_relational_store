@@ -147,7 +147,11 @@ private:
 
     mutable std::shared_mutex rwMutex_;
     static inline uint32_t INTERVAL = 200;
-    std::map<std::string, uint64_t> cloudTables_;
+    std::set<std::string> cloudTables_;
+
+    std::mutex mutex_;
+    uint64_t taskId_ = 0;
+    std::shared_ptr<std::set<std::string>> syncTables_;
 };
 } // namespace OHOS::NativeRdb
 #endif

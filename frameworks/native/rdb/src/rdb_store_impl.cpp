@@ -1043,35 +1043,43 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     if (pool_ == nullptr) {
-        pool_ = TaskExecutor::GetInstance().GetExecutor();
-    }
-    if (pool_ == nullptr) {
         return;
     }
-    std::vector<std::string> syncTables;
     {
         std::shared_lock<decltype(rwMutex_)> lock(rwMutex_);
-        if (cloudTables_.find(table) == cloudTables_.end() && !table.empty()) {
+        if (cloudTables_.empty() || (!table.empty() && cloudTables_.find(table) == cloudTables_.end())) {
             return;
         }
-        auto duration = std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-            std::chrono::milliseconds(INTERVAL));
-        if (table.empty()) {
-            for (const auto &[key, id] : cloudTables_) {
-                syncTables.push_back(key);
-            }
-        } else {
-            syncTables.push_back(table);
-            if (pool_->Reset(cloudTables_[table], duration) != TaskExecutor::INVALID_TASK_ID) {
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (syncTables_ == nullptr) {
+        syncTables_ = std::make_shared<std::set<std::string>>();
+    }
+    auto oldLen = syncTables_->size();
+    if (table.empty()) {
+        syncTables_->insert(cloudTables_.begin(), cloudTables_.end());
+    } else {
+        syncTables_->insert(table);
+    }
+
+    if (syncTables_->size() > oldLen) {
+        auto interval =
+            std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::milliseconds(INTERVAL));
+        if (pool_->Reset(taskId_, interval) != TaskExecutor::INVALID_TASK_ID) {
+            return;
+        }
+        taskId_ = pool_->Schedule(interval, [this]() {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (syncTables_ == nullptr) {
                 return;
             }
-        }
+            std::vector<std::string> tables(syncTables_->begin(), syncTables_->end());
+            SyncOption syncOption = { DistributedRdb::TIME_FIRST, false };
+            Sync(syncOption, tables, nullptr);
+            syncTables_->clear();
+        });
     }
-    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
-    cloudTables_[table] = pool_->Execute([this, syncTables]() {
-        SyncOption syncOption = { DistributedRdb::TIME_FIRST, false };
-        Sync(syncOption, syncTables, nullptr);
-    });
 #endif
 }
 std::string RdbStoreImpl::GetFileType()
@@ -1189,9 +1197,7 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
     }
     if (type == DistributedRdb::DISTRIBUTED_CLOUD) {
         std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
-        std::for_each(tables.begin(), tables.end(),[this](const auto &table){
-            cloudTables_.insert( { table, TaskExecutor::INVALID_TASK_ID } );
-        });
+        cloudTables_.insert(tables.begin(), tables.end());
     }
     return E_OK;
 }
@@ -1234,7 +1240,7 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
             for (auto &[key, value] : details) {
                 briefs.insert_or_assign(key, value.code);
             }
-            if(callback!=nullptr){
+            if (callback != nullptr) {
                 callback(briefs);
             }
         });
