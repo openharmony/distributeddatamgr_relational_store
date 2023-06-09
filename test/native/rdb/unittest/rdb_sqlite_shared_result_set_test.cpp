@@ -126,7 +126,7 @@ void RdbSqliteSharedResultSetTest::GenerateAssetsTable()
     int64_t id;
     ValuesBucket values;
     Asset assetValue1 = Asset{ 1, 1, 1, "name1", "uri1", "createTime1", "modifyTime1", "size1", "hash1", "path1" };
-    Asset assetValue2 = Asset{ 2, 2, 2, "name2", "uri2", "createTime2", "modifyTime2", "size2", "hash2", "path2" };
+    Asset assetValue2 = Asset{ 2, 0, 2, "name2", "uri2", "createTime2", "modifyTime2", "size2", "hash2", "path2" };
 
     Assets assets = Assets{ assetValue1 };
     values.PutInt("id", 1);
@@ -193,7 +193,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset, TestSize.
     EXPECT_EQ(asset.version, 2);
     EXPECT_EQ(asset.name, "name2");
     EXPECT_EQ(asset.uri, "uri2");
-    EXPECT_EQ(asset.status, 2);
+    EXPECT_EQ(asset.status, 0);
 
     rstSet->GetAssets(6, assets);
     EXPECT_EQ(assets.size(), 1);
@@ -201,7 +201,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset, TestSize.
     EXPECT_EQ(it->version, 2);
     EXPECT_EQ(it->name, "name2");
     EXPECT_EQ(it->uri, "uri2");
-    EXPECT_EQ(it->status, 2);
+    EXPECT_EQ(it->status, 0);
 
     rstSet->Close();
     bool isClosedFlag = rstSet->IsClosed();
