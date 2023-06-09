@@ -37,6 +37,7 @@ public:
     void TearDown();
     void GenerateDefaultTable();
     void GenerateAssetsTable();
+    void GenerateTimeoutTable();
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
@@ -126,7 +127,7 @@ void RdbSqliteSharedResultSetTest::GenerateAssetsTable()
     int64_t id;
     ValuesBucket values;
     Asset assetValue1 = Asset{ 1, 1, 1, "name1", "uri1", "createTime1", "modifyTime1", "size1", "hash1", "path1" };
-    Asset assetValue2 = Asset{ 2, 2, 2, "name2", "uri2", "createTime2", "modifyTime2", "size2", "hash2", "path2" };
+    Asset assetValue2 = Asset{ 2, 0, 2, "name2", "uri2", "createTime2", "modifyTime2", "size2", "hash2", "path2" };
 
     Assets assets = Assets{ assetValue1 };
     values.PutInt("id", 1);
@@ -140,6 +141,53 @@ void RdbSqliteSharedResultSetTest::GenerateAssetsTable()
     values.Put("data5", ValueObject(assetValue2));
     values.Put("data6", ValueObject(assets1));
     store->Insert(id, "test", values);
+}
+
+void RdbSqliteSharedResultSetTest::GenerateTimeoutTable()
+{
+    std::shared_ptr<RdbStore> &store = RdbSqliteSharedResultSetTest::store;
+    int64_t id;
+    ValuesBucket values;
+    auto timeout = static_cast<uint64_t>(
+        (std::chrono::steady_clock::now() - std::chrono::seconds(10)).time_since_epoch().count());
+
+    Asset assetValue1 =
+        Asset{ 1, Asset::STATUS_DOWNLOADING, timeout, "name1", "uri1", "createTime1", "modifyTime1", "size1", "hash1", "path1" };
+
+    Assets assets = Assets{ assetValue1 };
+    values.PutInt("id", 1);
+    values.Put("data5", ValueObject(assetValue1));
+    values.Put("data6", ValueObject(assets));
+    store->Insert(id, "test", values);
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_Asset_Timeout
+ * @tc.desc: normal testcase of SqliteSharedResultSet for move
+ * @tc.type: FUNC
+ * @tc.require: AR000134UL
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset_Timeout, TestSize.Level1)
+{
+    GenerateTimeoutTable();
+    std::vector<std::string> selectionArgs;
+    std::unique_ptr<ResultSet> rstSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+    EXPECT_NE(rstSet, nullptr);
+
+    int ret = rstSet->GoToRow(0);
+    EXPECT_EQ(ret, E_OK);
+
+    int rowCnt = -1;
+    ret = rstSet->GetRowCount(rowCnt);
+    EXPECT_EQ(rowCnt, 1);
+
+    Asset asset;
+    rstSet->GetAsset(5, asset);
+    EXPECT_EQ(asset.version, 1);
+    EXPECT_EQ(asset.name, "name1");
+    EXPECT_EQ(asset.uri, "uri1");
+    EXPECT_EQ(asset.status, Asset::STATUS_ABNORMAL);
 }
 
 /* *
@@ -193,7 +241,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset, TestSize.
     EXPECT_EQ(asset.version, 2);
     EXPECT_EQ(asset.name, "name2");
     EXPECT_EQ(asset.uri, "uri2");
-    EXPECT_EQ(asset.status, 2);
+    EXPECT_EQ(asset.status, 0);
 
     rstSet->GetAssets(6, assets);
     EXPECT_EQ(assets.size(), 1);
@@ -201,7 +249,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset, TestSize.
     EXPECT_EQ(it->version, 2);
     EXPECT_EQ(it->name, "name2");
     EXPECT_EQ(it->uri, "uri2");
-    EXPECT_EQ(it->status, 2);
+    EXPECT_EQ(it->status, 0);
 
     rstSet->Close();
     bool isClosedFlag = rstSet->IsClosed();
