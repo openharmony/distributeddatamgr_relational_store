@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 #include "share_block.h"
+#include <algorithm>
 #include <unistd.h>
 #include "logger.h"
 #include "shared_block_serializer_info.h"
-
+#include "value_object.h"
 namespace OHOS {
 namespace NativeRdb {
 const int ERROR_STATUS = -1;
@@ -99,7 +100,7 @@ int SharedBlockSetColumnNum(AppDataFwk::SharedBlock *sharedBlock, int columnNum)
 
 void FillSharedBlockOpt(SharedBlockInfo *info)
 {
-    SharedBlockSerializerInfo serializer(info->sharedBlock, info->numColumns, info->startPos);
+    SharedBlockSerializerInfo serializer(info->sharedBlock, info->statement, info->numColumns, info->startPos);
     Sqlite3SharedBlockMethods sqliteSharedBlock = {
         1,          &serializer,   info->isCountAllRows, info->startPos, info->requiredPos, SeriAddRow,  SeriReset,
         SeriFinish, SeriPutString, SeriPutLong,          SeriPutDouble,  SeriPutBlob,       SeriPutNull, SeriPutOther
@@ -295,9 +296,19 @@ FillOneRowResult FillOneRowOfFloat(AppDataFwk::SharedBlock *sharedBlock, sqlite3
 FillOneRowResult FillOneRowOfBlob(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos,
     int addedRows, int pos)
 {
+    auto action = &AppDataFwk::SharedBlock::PutBlob;
+    auto *declType = sqlite3_column_decltype(statement, pos);
+    if (declType != nullptr) {
+        std::string type(declType);
+        std::transform(type.begin(), type.end(), type.begin(), [](auto ch) { return std::toupper(ch); });
+        action = (type == ValueObject::DeclType<ValueObject::Asset>())   ? &AppDataFwk::SharedBlock::PutAsset
+                 : (type == ValueObject::DeclType<ValueObject::Assets>()) ? &AppDataFwk::SharedBlock::PutAssets
+                                                                         : &AppDataFwk::SharedBlock::PutBlob;
+    }
+
     const void *blob = sqlite3_column_blob(statement, pos);
     auto size = sqlite3_column_bytes(statement, pos);
-    int status = sharedBlock->PutBlob(addedRows, pos, blob, size);
+    int status = (sharedBlock->*action)(addedRows, pos, blob, size);
     if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
         LOG_ERROR("Failed allocating %{public}d bytes for blob at %{public}d,%{public}d, error=%{public}d", size,
             startPos + addedRows, pos, status);
