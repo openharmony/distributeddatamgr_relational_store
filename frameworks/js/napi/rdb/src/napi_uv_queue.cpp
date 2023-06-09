@@ -17,9 +17,8 @@
 #include "uv.h"
 #include "js_logger.h"
 
-using OHOS::AppDataMgrJsKit::PREFIX_LABEL;
-
 namespace OHOS::RdbJsKit {
+using namespace AppDataMgrJsKit;
 NapiUvQueue::NapiUvQueue(napi_env env, napi_value callback)
     : env_(env)
 {

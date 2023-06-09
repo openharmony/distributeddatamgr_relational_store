@@ -173,6 +173,11 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<T> 
 template<typename... Types>
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::variant<Types...> &value)
 {
+    napi_valuetype type;
+    napi_status status = napi_typeof(env, jsValue, &type);
+    if (status != napi_ok || type == napi_undefined) {
+        return napi_invalid_arg;
+    }
     return GetCPPValue<decltype(value), Types...>(env, jsValue, value);
 }
 
