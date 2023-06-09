@@ -14,13 +14,16 @@
  */
 
 #include "shared_block_serializer_info.h"
+
 #include "logger.h"
+#include "value_object.h"
 
 namespace OHOS {
 namespace NativeRdb {
-SharedBlockSerializerInfo::SharedBlockSerializerInfo(AppDataFwk::SharedBlock *sharedBlock, int numColumns, int startPos)
-    :sharedBlock_(sharedBlock), anumColumns(numColumns), atotalRows(0), astartPos(startPos), raddedRows(0),
-    risFull(false)
+SharedBlockSerializerInfo::SharedBlockSerializerInfo(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *stat,
+    int numColumns, int startPos)
+    : sharedBlock_(sharedBlock), statement_(stat), anumColumns(numColumns), atotalRows(0), astartPos(startPos),
+      raddedRows(0), risFull(false)
 {
 }
 
@@ -101,7 +104,17 @@ int SharedBlockSerializerInfo::PutDouble(int row, int column, double value)
 
 int SharedBlockSerializerInfo::PutBlob(int row, int column, const void *blob, int len)
 {
-    int status = sharedBlock_->PutBlob(row, column, blob, len);
+    auto action = &AppDataFwk::SharedBlock::PutBlob;
+    auto *declType = sqlite3_column_decltype(statement_, column);
+    if (declType != nullptr) {
+        std::string type(declType);
+        std::transform(type.begin(), type.end(), type.begin(), [](auto ch) { return std::toupper(ch); });
+        action = (type == ValueObject::DeclType<ValueObject::Asset>())   ? &AppDataFwk::SharedBlock::PutAsset
+                 : (type == ValueObject::DeclType<ValueObject::Assets>()) ? &AppDataFwk::SharedBlock::PutAssets
+                                                                         : &AppDataFwk::SharedBlock::PutBlob;
+    }
+
+    int status = (sharedBlock_->*action)(row, column, blob, len);
     if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
         sharedBlock_->FreeLastRow();
         risFull = true;

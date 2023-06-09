@@ -44,6 +44,7 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/rdb_device_manager_adapter/include",
@@ -73,7 +74,12 @@ if (is_ohos) {
   config("native_rdb_public_config") {
     visibility = [ ":*" ]
 
-    include_dirs = [ "include" ]
+    include_dirs = [
+      "../appdatafwk/include",
+      "include",
+      "${relational_store_native_path}/rdb/include",
+      "//third_party/json/single_include",
+    ]
   }
 
   base_deps = [
@@ -182,12 +188,15 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "//commonlibrary/c_utils/base/include",
       "include",
       "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
       "${relational_store_native_path}/rdb/include",
+      "//third_party/json/single_include",
+      "//third_party/libuv/src/win",
     ]
 
     defines = [
@@ -216,8 +225,11 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "mock/include",
       "include",
+      "//third_party/json/single_include",
+      "//third_party/libuv/src/win",
     ]
   }
 
@@ -234,8 +246,11 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources +=
-        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
+    sources += [
+      "${relational_store_native_path}/appdatafwk/src/mingw_endian.cpp",
+      "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
+      "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
+    ]
 
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
@@ -255,8 +270,11 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources +=
-        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
+    sources += [
+      "${relational_store_native_path}/appdatafwk/src/mingw_endian.cpp",
+      "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
+      "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
+    ]
 
     deps += [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
@@ -274,12 +292,14 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "//commonlibrary/c_utils/base/include",
       "include",
       "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
       "${relational_store_native_path}/rdb/include",
+      "//third_party/json/single_include",
     ]
 
     defines = [
@@ -307,8 +327,10 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "mock/include",
       "include",
+      "//third_party/json/single_include",
     ]
   }
 
@@ -328,6 +350,7 @@ if (is_ohos) {
     sources +=
         [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
     deps += [
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
     ]
@@ -348,6 +371,7 @@ if (is_ohos) {
     sources +=
         [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
     deps += [
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
     ]
@@ -363,11 +387,13 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "${relational_store_innerapi_path}/rdb/mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "${relational_store_innerapi_path}/rdb/include",
       "//foundation/distributeddatamgr/kv_store/frameworks/common",
       "${relational_store_native_path}/rdb/include",
+      "//third_party/json/single_include",
     ]
 
     defines = [
@@ -389,10 +415,12 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "mock/include",
       "include",
       "${relational_store_native_path}/mock/rdb/include",
       "${relational_store_native_path}/rdb/include",
+      "//third_party/json/single_include",
     ]
   }
 
@@ -411,6 +439,7 @@ if (is_ohos) {
     sources +=
         [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
     deps += [
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
       "//commonlibrary/c_utils/base:utils",
       "//third_party/sqlite:sqlite_static",
@@ -425,10 +454,12 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "${relational_store_innerapi_path}/rdb/mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "${relational_store_innerapi_path}/rdb/include",
       "${relational_store_native_path}/rdb/include",
+      "//third_party/json/single_include",
     ]
 
     defines = [
@@ -450,9 +481,11 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "../appdatafwk/include",
       "mock/include",
       "include",
       "${relational_store_native_path}/rdb/include",
+      "//third_party/json/single_include",
     ]
   }
 
@@ -474,6 +507,7 @@ if (is_ohos) {
     sources +=
         [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
     deps += [
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
       "//commonlibrary/c_utils/base:utilsbase",
       "//third_party/sqlite:sqlite_static",

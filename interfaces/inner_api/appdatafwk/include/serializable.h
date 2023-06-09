@@ -24,7 +24,6 @@
 #endif
 #include <nlohmann/json.hpp>
 namespace OHOS {
-namespace RdbBMSAdapter {
 #ifndef GET_NAME
 #define GET_NAME(value) #value
 #endif
@@ -56,6 +55,7 @@ public:
     API_EXPORT static bool GetValue(const json &node, const std::string &name, uint32_t &value);
     API_EXPORT static bool GetValue(const json &node, const std::string &name, int32_t &value);
     API_EXPORT static bool GetValue(const json &node, const std::string &name, int64_t &value);
+    API_EXPORT static bool GetValue(const json &node, const std::string &name, uint64_t &value);
     API_EXPORT static bool GetValue(const json &node, const std::string &name, bool &value);
     API_EXPORT static bool GetValue(const json &node, const std::string &name, std::vector<uint8_t> &value);
     API_EXPORT static bool GetValue(const json &node, const std::string &name, Serializable &value);
@@ -63,6 +63,7 @@ public:
     API_EXPORT static bool SetValue(json &node, const uint32_t &value);
     API_EXPORT static bool SetValue(json &node, const int32_t &value);
     API_EXPORT static bool SetValue(json &node, const int64_t &value);
+    API_EXPORT static bool SetValue(json &node, const uint64_t &value);
     API_EXPORT static bool SetValue(json &node, const bool &value);
     API_EXPORT static bool SetValue(json &node, const std::vector<uint8_t> &value);
     API_EXPORT static bool SetValue(json &node, const Serializable &value);
@@ -118,6 +119,5 @@ protected:
 
     API_EXPORT static const json &GetSubNode(const json &node, const std::string &name);
 };
-} // namespace DistributedData
 } // namespace OHOS
-#endif // OHOS_DISTRIBUTED_DATA_FRAMEWORKS_COMMON_SERIALIZABLE_H
+#endif // DISTRIBUTED_RDB_SERIALIZABLE_H
