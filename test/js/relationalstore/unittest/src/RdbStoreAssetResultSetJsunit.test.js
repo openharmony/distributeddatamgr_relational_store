@@ -58,31 +58,31 @@ describe('rdbResultSetTest', function () {
     async function createTest() {
         console.log(TAG + "createTest data start");
         const asset1 = {
-            version: 1,
             name: "name1",
             uri: "uri1",
             createTime: "createTime1",
             modifyTime: "modifyTime1",
             size: "size1",
-            hash: "hash1",
+            path: "path1",
+            status: 1,
         }
         const asset2 = {
-            version: 2,
             name: "name2",
             uri: "uri2",
             createTime: "createTime2",
             modifyTime: "modifyTime2",
             size: "size2",
-            hash: "hash2",
+            path: "path2",
+            status: 1,
         }
         const asset3 = {
-            version: 3,
             name: "name3",
             uri: "uri3",
             createTime: "createTime3",
             modifyTime: "modifyTime3",
             size: "size3",
-            hash: "hash3",
+            path: "path3",
+            status: 3,
         }
         const assets1 = [asset1];
         const assets2 = [asset1, asset2, asset3];
@@ -121,23 +121,23 @@ describe('rdbResultSetTest', function () {
             const id = resultSet.getLong(resultSet.getColumnIndex("id"))
             const data1 = resultSet.getAsset(resultSet.getColumnIndex("data1"))
             console.log(TAG + "id=" + id + ", data1=" + data1);
-            expect(1).assertEqual(data1.version);
             expect("name1").assertEqual(data1.name);
             expect("uri1").assertEqual(data1.uri);
             expect("createTime1").assertEqual(data1.createTime);
             expect("modifyTime1").assertEqual(data1.modifyTime);
             expect("size1").assertEqual(data1.size);
-            expect("hash1").assertEqual(data1.hash);
+            expect("path1").assertEqual(data1.path);
+            expect(1).assertEqual(data1.status);
 
             const data2 = resultSet.getAsset(resultSet.getColumnIndex("data2"))
             console.log(TAG + "id=" + id + ", data2=" + data2);
-            expect(2).assertEqual(data2.version);
             expect("name2").assertEqual(data2.name);
             expect("uri2").assertEqual(data2.uri);
             expect("createTime2").assertEqual(data2.createTime);
             expect("modifyTime2").assertEqual(data2.modifyTime);
             expect("size2").assertEqual(data2.size);
-            expect("hash2").assertEqual(data2.hash);
+            expect("path2").assertEqual(data2.path);
+            expect(1).assertEqual(data2.status);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -164,13 +164,13 @@ describe('rdbResultSetTest', function () {
             const id = resultSet.getLong(resultSet.getColumnIndex("id"))
             const data1 = resultSet.getAsset(resultSet.getColumnIndex("data1"))
             console.log(TAG + "id=" + id + ", data1=" + data1);
-            expect(2).assertEqual(data1.version);
             expect("name2").assertEqual(data1.name);
             expect("uri2").assertEqual(data1.uri);
             expect("createTime2").assertEqual(data1.createTime);
             expect("modifyTime2").assertEqual(data1.modifyTime);
             expect("size2").assertEqual(data1.size);
-            expect("hash2").assertEqual(data1.hash);
+            expect("path2").assertEqual(data1.path);
+            expect(1).assertEqual(data1.status);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -198,13 +198,13 @@ describe('rdbResultSetTest', function () {
             const id = resultSet.getLong(resultSet.getColumnIndex("id"))
             const data2 = resultSet.getAsset(resultSet.getColumnIndex("data2"))
             console.log(TAG + "id=" + id + ", data2=" + data2);
-            expect(0).assertEqual(data2.version);
             expect("").assertEqual(data2.name);
             expect("").assertEqual(data2.uri);
             expect("").assertEqual(data2.createTime);
             expect("").assertEqual(data2.modifyTime);
             expect("").assertEqual(data2.size);
-            expect("").assertEqual(data2.hash);
+            expect("").assertEqual(data2.path);
+            expect(0).assertEqual(data2.status);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -232,13 +232,13 @@ describe('rdbResultSetTest', function () {
             console.log(TAG + "id=" + id + ", data3=" + data3);
             expect(1).assertEqual(data3.length);
             let asset = data3[0];
-            expect(1).assertEqual(asset.version);
             expect("name1").assertEqual(asset.name);
             expect("uri1").assertEqual(asset.uri);
             expect("createTime1").assertEqual(asset.createTime);
             expect("modifyTime1").assertEqual(asset.modifyTime);
             expect("size1").assertEqual(asset.size);
-            expect("hash1").assertEqual(asset.hash);
+            expect("path1").assertEqual(asset.path);
+            expect(1).assertEqual(asset.status);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -267,36 +267,35 @@ describe('rdbResultSetTest', function () {
             console.log(TAG + "id=" + id + ", data3=" + data3);
             expect(3).assertEqual(data3.length);
             let asset = data3[0];
-            expect(1).assertEqual(asset.version);
             expect("name1").assertEqual(asset.name);
             expect("uri1").assertEqual(asset.uri);
             expect("createTime1").assertEqual(asset.createTime);
             expect("modifyTime1").assertEqual(asset.modifyTime);
             expect("size1").assertEqual(asset.size);
-            expect("hash1").assertEqual(asset.hash);
+            expect("path1").assertEqual(asset.path);
+            expect(1).assertEqual(asset.status);
 
             asset = data3[1];
-            expect(2).assertEqual(asset.version);
             expect("name2").assertEqual(asset.name);
             expect("uri2").assertEqual(asset.uri);
             expect("createTime2").assertEqual(asset.createTime);
             expect("modifyTime2").assertEqual(asset.modifyTime);
             expect("size2").assertEqual(asset.size);
-            expect("hash2").assertEqual(asset.hash);
+            expect("path2").assertEqual(asset.path);
+            expect(1).assertEqual(asset.status);
 
             asset = data3[2];
-            expect(3).assertEqual(asset.version);
             expect("name3").assertEqual(asset.name);
             expect("uri3").assertEqual(asset.uri);
             expect("createTime3").assertEqual(asset.createTime);
             expect("modifyTime3").assertEqual(asset.modifyTime);
             expect("size3").assertEqual(asset.size);
-            expect("hash3").assertEqual(asset.hash);
+            expect("path3").assertEqual(asset.path);
+            expect(3).assertEqual(asset.status);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
         } catch (e) {
-            console.error("error happened" + e.message);
             expect(null).assertFail();
         }
         resultSet = null
