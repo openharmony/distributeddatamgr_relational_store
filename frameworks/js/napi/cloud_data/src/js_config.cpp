@@ -146,7 +146,7 @@ napi_value JsConfig::ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
     struct ChangeAppSwitchContext : public ContextBase {
         std::string accountId;
         std::string bundleName;
-        bool state;
+        CloudService::Switch state;
     };
     auto ctxt = std::make_shared<ChangeAppSwitchContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
@@ -159,9 +159,11 @@ napi_value JsConfig::ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
         status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
         ASSERT_BUSINESS_ERR(
             ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
+        bool state = false;
         status = JSUtils::Convert2Value(env, argv[2], ctxt->state);
         ASSERT_BUSINESS_ERR(
             ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of status must be boolean.");
+        ctxt->state = state ? CloudService::Switch::SWITCH_ON : CloudService::Switch::SWITCH_OFF;
     });
 
     ASSERT_NULL(!ctxt->isThrowError, "ChangeAppCloudSwitch exit");
