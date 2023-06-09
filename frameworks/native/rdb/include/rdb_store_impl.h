@@ -147,11 +147,10 @@ private:
     std::shared_ptr<ExecutorPool> pool_;
 
     mutable std::shared_mutex rwMutex_;
-    static inline uint32_t INTERVAL = 200;
+    static inline constexpr uint32_t INTERVAL = 500;
     std::set<std::string> cloudTables_;
 
     std::mutex mutex_;
-    uint64_t taskId_ = 0;
     std::shared_ptr<std::set<std::string>> syncTables_;
 };
 } // namespace OHOS::NativeRdb
