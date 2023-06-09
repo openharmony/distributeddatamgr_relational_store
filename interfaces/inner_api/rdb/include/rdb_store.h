@@ -376,7 +376,7 @@ public:
      */
     virtual int SetDistributedTables(const std::vector<std::string> &tables,
         int32_t type = DistributedRdb::DistributedTableType::DISTRIBUTED_DEVICE,
-        DistributedRdb::DistributedConfig distributedConfig = { true }) = 0;
+        const DistributedRdb::DistributedConfig &distributedConfig = { true }) = 0;
 
     /**
      * @brief Obtain distributed table name of specified remote device according to local table name.
