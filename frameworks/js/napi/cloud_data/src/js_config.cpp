@@ -12,19 +12,20 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#define LOG_TAG "JsConfig"
+
 #include "js_config.h"
 
+#include <cstddef>
 #include <memory>
 
 #include "cloud_manager.h"
 #include "cloud_service.h"
 #include "js_error_utils.h"
 #include "js_utils.h"
-#include "log_print.h"
+#include "logger.h"
 #include "napi_queue.h"
-#include <cstddef>
 
+using namespace OHOS::Rdb;
 using namespace OHOS::CloudData;
 using namespace OHOS::AppDataMgrJsKit;
 JsConfig::JsConfig()
@@ -79,7 +80,7 @@ napi_value JsConfig::EnableCloud(napi_env env, napi_callback_info info)
             return;
         }
         int32_t cStatus = proxy->EnableCloud(ctxt->accountId, ctxt->switches);
-        ZLOGD("EnableCloud return %{public}d", cStatus);
+        LOG_DEBUG("EnableCloud return %{public}d", cStatus);
         ctxt->status = (GenerateNapiError(cStatus, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
                            ? napi_ok
                            : napi_generic_failure;
@@ -123,7 +124,7 @@ napi_value JsConfig::DisableCloud(napi_env env, napi_callback_info info)
             return;
         }
         int32_t cStatus = proxy->DisableCloud(ctxt->accountId);
-        ZLOGD("DisableCloud return %{public}d", cStatus);
+        LOG_DEBUG("DisableCloud return %{public}d", cStatus);
         ctxt->status = (GenerateNapiError(cStatus, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
                            ? napi_ok
                            : napi_generic_failure;
@@ -177,7 +178,7 @@ napi_value JsConfig::ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
             return;
         }
         int32_t cStatus = proxy->ChangeAppSwitch(ctxt->accountId, ctxt->bundleName, ctxt->state);
-        ZLOGD("ChangeAppCloudSwitch return %{public}d", cStatus);
+        LOG_DEBUG("ChangeAppCloudSwitch return %{public}d", cStatus);
         ctxt->status = (GenerateNapiError(cStatus, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
                            ? napi_ok
                            : napi_generic_failure;
@@ -229,7 +230,7 @@ napi_value JsConfig::Clean(napi_env env, napi_callback_info info)
             return;
         }
         int32_t cStatus = proxy->Clean(ctxt->accountId, ctxt->appActions);
-        ZLOGD("Clean return %{public}d", cStatus);
+        LOG_DEBUG("Clean return %{public}d", cStatus);
         ctxt->status = (GenerateNapiError(cStatus, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
                            ? napi_ok
                            : napi_generic_failure;
@@ -277,7 +278,7 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
             return;
         }
         int32_t cStatus = proxy->NotifyDataChange(ctxt->accountId, ctxt->bundleName);
-        ZLOGD("NotifyDataChange return %{public}d", cStatus);
+        LOG_DEBUG("NotifyDataChange return %{public}d", cStatus);
         ctxt->status = (GenerateNapiError(cStatus, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
                            ? napi_ok
                            : napi_generic_failure;
@@ -297,7 +298,7 @@ napi_value JsConfig::New(napi_env env, napi_callback_info info)
     }
 
     auto finalize = [](napi_env env, void *data, void *hint) {
-        ZLOGD("cloudConfig finalize.");
+        LOG_DEBUG("cloudConfig finalize.");
         auto *config = reinterpret_cast<JsConfig *>(data);
         ASSERT_VOID(config != nullptr, "finalize null!");
         delete config;
@@ -306,7 +307,7 @@ napi_value JsConfig::New(napi_env env, napi_callback_info info)
     ASSERT_ERR(env, cloudConfig != nullptr, Status::INVALID_ARGUMENT, "no memory for cloudConfig.");
     napi_status status = napi_wrap(env, self, cloudConfig, finalize, nullptr, nullptr);
     if (status != napi_ok) {
-        ZLOGE("JsConfig::Initialize napi_wrap failed! code:%{public}d!", status);
+        LOG_ERROR("JsConfig::Initialize napi_wrap failed! code:%{public}d!", status);
         finalize(env, cloudConfig, nullptr);
         return nullptr;
     }

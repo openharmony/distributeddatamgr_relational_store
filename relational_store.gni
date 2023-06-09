@@ -29,6 +29,8 @@ relational_store_native_path = "${relational_store_base_path}/frameworks/native"
 relational_store_innerapi_path =
     "${relational_store_base_path}/interfaces/inner_api"
 
+relational_store_common_path = "${relational_store_base_path}/frameworks/common"
+
 cloud_data_native_path =
     "${relational_store_base_path}/frameworks/native/cloud_data"
 cloud_data_napi_path = "${relational_store_napi_path}/cloud_data"

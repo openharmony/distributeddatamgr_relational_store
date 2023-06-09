@@ -21,6 +21,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 int SecurityPolicy::SetFileSecurityLevel(const std::string &filePath, const std::string &securityLevel)
 {
     bool result = DistributedFS::ModuleSecurityLabel::SecurityLabel::SetSecurityLabel(filePath, securityLevel);

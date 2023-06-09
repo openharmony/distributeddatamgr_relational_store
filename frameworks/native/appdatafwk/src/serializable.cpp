@@ -15,7 +15,6 @@
 
 #include "serializable.h"
 namespace OHOS {
-namespace RdbBMSAdapter {
 Serializable::json Serializable::Marshall() const
 {
     json root;
@@ -93,6 +92,16 @@ bool Serializable::GetValue(const json &node, const std::string &name, int32_t &
     return true;
 }
 
+bool Serializable::GetValue(const json &node, const std::string &name, uint64_t &value)
+{
+    auto &subNode = GetSubNode(node, name);
+    if (subNode.is_null() || !subNode.is_number_integer()) {
+        return false;
+    }
+    subNode.get_to(value);
+    return true;
+}
+
 bool Serializable::GetValue(const json &node, const std::string &name, int64_t &value)
 {
     auto &subNode = GetSubNode(node, name);
@@ -150,6 +159,12 @@ bool Serializable::SetValue(json &node, const int32_t &value)
     return true;
 }
 
+bool Serializable::SetValue(json &node, const uint64_t &value)
+{
+    node = value;
+    return true;
+}
+
 bool Serializable::SetValue(json &node, const int64_t &value)
 {
     node = value;
@@ -190,5 +205,4 @@ const Serializable::json &Serializable::GetSubNode(const json &node, const std::
     }
     return *it;
 }
-} // namespace DistributedData
 } // namespace OHOS

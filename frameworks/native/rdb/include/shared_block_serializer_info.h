@@ -27,7 +27,7 @@ extern "C" {
 #endif
 class SharedBlockSerializerInfo {
 public:
-    SharedBlockSerializerInfo(AppDataFwk::SharedBlock *sharedBlock, int numColumns, int startPos);
+    SharedBlockSerializerInfo(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *stat, int numColumns, int startPos);
     ~SharedBlockSerializerInfo();
     int AddRow(int addedRows);
     int Reset(int startPos);
@@ -43,6 +43,7 @@ public:
     int GetStartPos() const;
 private:
     AppDataFwk::SharedBlock *sharedBlock_;
+    sqlite3_stmt *statement_ = nullptr;
     int anumColumns;
     int atotalRows;
     int astartPos;

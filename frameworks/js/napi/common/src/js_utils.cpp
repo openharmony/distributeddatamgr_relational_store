@@ -14,8 +14,9 @@
  */
 
 #include "js_utils.h"
+#include "logger.h"
 
-#include "js_logger.h"
+using namespace OHOS::Rdb;
 
 #define CHECK_RETURN_RET(assertion, message, revt)                       \
     do {                                                                 \
@@ -272,11 +273,6 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::monostate 
     napi_strict_equals(env, jsValue, tempValue, &equal);
     if (equal) {
         return napi_ok;
-    }
-    napi_get_undefined(env, &tempValue);
-    napi_strict_equals(env, jsValue, tempValue, &equal);
-    if (equal) {
-        return OK;
     }
     LOG_DEBUG("Convert2Value jsValue is not null");
     return napi_invalid_arg;

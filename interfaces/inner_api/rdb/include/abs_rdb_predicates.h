@@ -141,7 +141,7 @@ public:
     /**
      * @brief Get predicates of remote device.
      */
-    API_EXPORT const DistributedRdb::RdbPredicates& GetDistributedPredicates() const;
+    API_EXPORT const DistributedRdb::PredicatesMemo & GetDistributedPredicates() const;
 
     /**
      * @brief Initialize relevant parameters of the union table.
@@ -202,7 +202,7 @@ protected:
 
 private:
     std::string tableName_;
-    mutable DistributedRdb::RdbPredicates predicates_;
+    mutable DistributedRdb::PredicatesMemo predicates_;
 };
 } // namespace OHOS::NativeRdb
 

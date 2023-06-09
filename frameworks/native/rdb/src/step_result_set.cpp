@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "StepResultSet"
-
 #include "step_result_set.h"
 
 #include <unistd.h>
@@ -23,12 +21,14 @@
 #include "rdb_errno.h"
 #include "rdb_trace.h"
 #include "sqlite3sym.h"
-#include "sqlite_database_utils.h"
+#include "rdb_sql_utils.h"
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, const std::string &sql,
     const std::vector<std::string> &selectionArgs)
     : rdb(rdb), sql(sql), selectionArgs(selectionArgs), isAfterLast(false), rowCount(INIT_POS),
@@ -254,7 +254,7 @@ int StepResultSet::PrepareStep()
         return E_CON_OVER_LIMIT;
     }
 
-    if (!SqliteDatabaseUtils::IsReadOnlySql(sql)) {
+    if (SqliteUtils::GetSqlStatementType(sql) != SqliteUtils::STATEMENT_SELECT) {
         LOG_ERROR("not a select sql!");
         return E_EXECUTE_IN_STEP_QUERY;
     }

@@ -17,13 +17,14 @@
 #include <string>
 
 #include "datashare_predicates.h"
-#include "rdb_logger.h"
+#include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_utils.h"
 
 using namespace testing::ext;
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::DataShare;
 using namespace OHOS::RdbDataShareAdapter;

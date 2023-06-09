@@ -38,6 +38,7 @@ ohos_shared_library("clouddata") {
     "${relational_store_js_common_path}/include",
     "${cloud_data_native_path}/include",
     "${kvstore_path}/common",
+    "${relational_store_common_path}/include",
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_innerapi_path}/cloud_data/include",
     "${relational_store_napi_path}/cloud_data/include",

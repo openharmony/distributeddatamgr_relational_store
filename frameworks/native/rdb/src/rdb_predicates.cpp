@@ -14,11 +14,14 @@
  */
 
 #include "rdb_predicates.h"
-#include "string_utils.h"
+
 #include "logger.h"
+#include "string_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 RdbPredicates::RdbPredicates(std::string tableName) : AbsRdbPredicates(tableName)
 {
     InitialParam();

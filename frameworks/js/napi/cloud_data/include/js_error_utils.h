@@ -15,12 +15,12 @@
 
 #ifndef LDBPROJ_JS_ERROR_UTILS_H
 #define LDBPROJ_JS_ERROR_UTILS_H
+
 #include <optional>
 #include <string>
 
 #include "cloud_service.h"
 #include "js_native_api.h"
-#include "log_print.h"
 #include "napi/native_common.h"
 
 namespace OHOS {
