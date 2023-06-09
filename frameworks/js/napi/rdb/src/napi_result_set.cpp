@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
+#include "napi_result_set.h"
+
 #include <functional>
 
-#include "js_logger.h"
 #include "js_utils.h"
+#include "logger.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_trace.h"
-#include "napi_result_set.h"
 #include "rdb_errno.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
@@ -29,6 +30,7 @@
 #include "string_ex.h"
 #endif
 
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 

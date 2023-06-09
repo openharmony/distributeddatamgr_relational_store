@@ -15,10 +15,12 @@
 
 #ifndef NATIVE_RDB_VALUES_BUCKET_H
 #define NATIVE_RDB_VALUES_BUCKET_H
+
 #include <map>
 #include <set>
 
 #include "value_object.h"
+
 namespace OHOS {
 class Parcel;
 namespace NativeRdb {

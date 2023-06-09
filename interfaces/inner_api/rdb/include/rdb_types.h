@@ -16,10 +16,11 @@
 #ifndef DISTRIBUTED_RDB_RDB_TYPES_H
 #define DISTRIBUTED_RDB_RDB_TYPES_H
 
+#include <securec.h>
+
 #include <cinttypes>
 #include <functional>
 #include <map>
-#include <securec.h>
 #include <string>
 #include <variant>
 #include <vector>

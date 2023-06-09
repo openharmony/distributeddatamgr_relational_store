@@ -14,15 +14,20 @@
  */
 
 #include "sqlite_shared_result_set.h"
+
+#include <rdb_errno.h>
+
 #include <algorithm>
 #include <memory>
-#include <rdb_errno.h>
+
+#include "logger.h"
 #include "rdb_sql_utils.h"
 #include "sqlite_utils.h"
-#include "logger.h"
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 SqliteSharedResultSet::SqliteSharedResultSet(SqliteConnectionPool* connectionPool, std::string path,
                                              std::string sql, const std::vector<std::string> &bindArgs)
     : AbsSharedResultSet(path), resultSetBlockCapacity(0), isOnlyFillResultSetBlock(false),

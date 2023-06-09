@@ -15,7 +15,7 @@
 #ifndef RDB_JS_NAPI_ERROR_H
 #define RDB_JS_NAPI_ERROR_H
 
-#include "js_logger.h"
+#include "logger.h"
 
 namespace OHOS {
 namespace AppDataMgrJsKit {

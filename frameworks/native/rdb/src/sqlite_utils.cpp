@@ -15,13 +15,14 @@
 
 #include "sqlite_utils.h"
 
-#include <algorithm>
-#include <climits>
-#include <cstdio>
-#include <cerrno>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include <algorithm>
+#include <cerrno>
+#include <climits>
+#include <cstdio>
 
 #include "logger.h"
 #include "rdb_errno.h"
@@ -32,6 +33,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 const int SqliteUtils::STATEMENT_SELECT = 1;
 const int SqliteUtils::STATEMENT_UPDATE = 2;
 const int SqliteUtils::STATEMENT_ATTACH = 3;

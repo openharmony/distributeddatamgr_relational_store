@@ -16,10 +16,12 @@
 #include "js_ability.h"
 
 #include "extension_context.h"
-#include "js_logger.h"
+#include "logger.h"
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
+using namespace OHOS::Rdb;
+
 Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
 {
     databaseDir_ = stageContext->GetDatabaseDir();

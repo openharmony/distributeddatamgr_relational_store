@@ -12,12 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "abs_shared_result_set.h"
+
+#include <securec.h>
 
 #include <algorithm>
 #include <codecvt>
 #include <iostream>
-#include <securec.h>
 #include <sstream>
 #include <string>
 
@@ -29,6 +31,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 AbsSharedResultSet::AbsSharedResultSet(std::string name)
 {
     AppDataFwk::SharedBlock::Create(name, DEFAULT_BLOCK_SIZE, sharedBlock_);

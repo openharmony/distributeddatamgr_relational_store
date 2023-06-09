@@ -14,11 +14,15 @@
  */
 
 #include "ishared_result_set_proxy.h"
+
 #include "iremote_proxy.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "shared_block.h"
+
 namespace OHOS::NativeRdb {
+using namespace OHOS::Rdb;
+
 std::function<std::shared_ptr<AbsSharedResultSet>(
     MessageParcel &parcel)> ISharedResultSet::consumerCreator_ = ISharedResultSetProxy::CreateProxy;
 BrokerDelegator<ISharedResultSetProxy> ISharedResultSetProxy::delegator_;

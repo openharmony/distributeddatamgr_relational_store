@@ -39,6 +39,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 /**
  * Get and Check default path.
  */

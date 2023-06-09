@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "CloudServiceProxy"
-
 #include "cloud_service_proxy.h"
 #include "itypes_util.h"
-#include "log_print.h"
+#include "logger.h"
 
 namespace OHOS::CloudData {
+using namespace OHOS::Rdb;
+
 #define IPC_SEND(code, reply, ...)                                          \
 ({                                                                          \
     int32_t __status = SUCCESS;                                             \
@@ -56,7 +56,7 @@ int32_t CloudServiceProxy::EnableCloud(const std::string &id, const std::map<std
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_ENABLE_CLOUD, reply, id, switches);
     if (status != SUCCESS) {
-        ZLOGE("status:0x%{public}x id:%{public}.6s size:%{public}zu", status, id.c_str(), switches.size());
+        LOG_ERROR("status:0x%{public}x id:%{public}.6s size:%{public}zu", status, id.c_str(), switches.size());
     }
     return static_cast<Status>(status);
 }
@@ -66,7 +66,7 @@ int32_t CloudServiceProxy::DisableCloud(const std::string &id)
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_DISABLE_CLOUD, reply, id);
     if (status != SUCCESS) {
-        ZLOGE("status:0x%{public}x id:%{public}.6s", status, id.c_str());
+        LOG_ERROR("status:0x%{public}x id:%{public}.6s", status, id.c_str());
     }
     return static_cast<Status>(status);
 }
@@ -76,7 +76,7 @@ int32_t CloudServiceProxy::ChangeAppSwitch(const std::string &id, const std::str
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_CHANGE_APP_SWITCH, reply, id, bundleName, appSwitch);
     if (status != SUCCESS) {
-        ZLOGE("status:0x%{public}x id:%{public}.6s bundleName:%{public}s switch:%{public}d",
+        LOG_ERROR("status:0x%{public}x id:%{public}.6s bundleName:%{public}s switch:%{public}d",
             status, id.c_str(), bundleName.c_str(), appSwitch);
     }
     return static_cast<Status>(status);
@@ -87,7 +87,7 @@ int32_t CloudServiceProxy::Clean(const std::string &id, const std::map<std::stri
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_CLEAN, reply, id, actions);
     if (status != SUCCESS) {
-        ZLOGE("status:0x%{public}x id:%{public}.6s size:%{public}zu", status, id.c_str(), actions.size());
+        LOG_ERROR("status:0x%{public}x id:%{public}.6s size:%{public}zu", status, id.c_str(), actions.size());
     }
     return static_cast<Status>(status);
 }
@@ -97,7 +97,7 @@ int32_t CloudServiceProxy::NotifyDataChange(const std::string &id, const std::st
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_NOTIFY_DATA_CHANGE, reply, id, bundleName);
     if (status != SUCCESS) {
-        ZLOGE("status:0x%{public}x id:%{public}.6s bundleName:%{public}s", status, id.c_str(), bundleName.c_str());
+        LOG_ERROR("status:0x%{public}x id:%{public}.6s bundleName:%{public}s", status, id.c_str(), bundleName.c_str());
     }
     return static_cast<Status>(status);
 }

@@ -14,8 +14,9 @@
  */
 
 #include "js_utils.h"
+#include "logger.h"
 
-#include "js_logger.h"
+using namespace OHOS::Rdb;
 
 #define CHECK_RETURN_RET(assertion, message, revt)                       \
     do {                                                                 \

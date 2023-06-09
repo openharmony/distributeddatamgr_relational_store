@@ -15,9 +15,10 @@
 
 #include "napi_rdb_store_observer.h"
 
-#include "js_logger.h"
 #include "js_utils.h"
+#include "logger.h"
 
+using namespace OHOS::Rdb;
 using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS::RelationalStoreJsKit {

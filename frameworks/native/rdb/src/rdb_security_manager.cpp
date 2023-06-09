@@ -37,6 +37,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 RdbPassword::RdbPassword() = default;
 
 RdbPassword::~RdbPassword()

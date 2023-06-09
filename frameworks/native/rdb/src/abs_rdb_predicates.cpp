@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "AbsRdbPredicates"
-
 #include "abs_rdb_predicates.h"
+
 #include "logger.h"
 #include "rdb_trace.h"
 
 namespace OHOS::NativeRdb {
+using namespace OHOS::Rdb;
+
 AbsRdbPredicates::AbsRdbPredicates(std::string tableName)
 {
     if (tableName.empty()) {

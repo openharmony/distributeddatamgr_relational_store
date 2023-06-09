@@ -17,6 +17,7 @@
 #define NATIVE_RDB_SHARED_RESULT_SET_H
 
 #include <string>
+
 #include "rdb_visibility.h"
 
 namespace OHOS {

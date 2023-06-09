@@ -14,16 +14,17 @@
  */
 
 #include <gtest/gtest.h>
+
 #include <string>
 
 #include "itypes_util.h"
-#include "logger.h"
 #include "message_parcel.h"
 #include "parcel.h"
 #include "raw_data_parser.h"
 #include "sqlite_global_config.h"
 #include "value_object.h"
 #include "values_bucket.h"
+
 using namespace testing::ext;
 using namespace OHOS;
 using namespace OHOS::NativeRdb;

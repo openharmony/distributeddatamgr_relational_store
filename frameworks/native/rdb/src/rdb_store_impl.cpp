@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "RdbStoreImpl"
-
 #include "rdb_store_impl.h"
 
 #include <unistd.h>
@@ -53,6 +51,8 @@
 #endif
 
 namespace OHOS::NativeRdb {
+using namespace OHOS::Rdb;
+
 std::shared_ptr<RdbStoreImpl> RdbStoreImpl::Open(const RdbStoreConfig &config, int &errCode)
 {
     std::shared_ptr<RdbStoreImpl> rdbStore = std::make_shared<RdbStoreImpl>(config);

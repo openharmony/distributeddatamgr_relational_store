@@ -25,6 +25,7 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
 
 const std::string SqliteSqlBuilder::patternWords_ = "['\"`]?(\\w+)['\"`]?|['\"`]([^`\"']+)['\"`]";
 const std::string SqliteSqlBuilder::patternTableColumn_ = "(" + patternWords_ + ")[.](" + patternWords_ + "|\\*)";

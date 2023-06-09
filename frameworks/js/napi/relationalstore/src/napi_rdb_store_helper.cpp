@@ -12,17 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include "napi_rdb_store_helper.h"
+
 #include <functional>
 #include <string>
 #include <vector>
 
 #include "js_ability.h"
-#include "js_logger.h"
 #include "js_utils.h"
+#include "logger.h"
 #include "napi_async_call.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_store.h"
-#include "napi_rdb_store_helper.h"
 #include "napi_rdb_trace.h"
 #include "rdb_errno.h"
 #include "rdb_open_callback.h"
@@ -30,6 +32,7 @@
 #include "rdb_store_config.h"
 #include "unistd.h"
 
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 
