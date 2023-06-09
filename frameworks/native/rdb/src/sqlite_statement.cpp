@@ -143,6 +143,22 @@ int SqliteStatement::InnerBindArguments(const std::vector<ValueObject> &bindArgs
                 errCode = sqlite3_bind_int64(stmtHandle, index, boolVal ? 1 : 0);
                 break;
             }
+            case ValueObjectType::TYPE_ASSET: {
+                Asset asset;
+                arg.GetAsset(asset);
+                auto rawData = RawDataParser::PackageRawData(asset);
+                errCode = sqlite3_bind_blob(stmtHandle, index, static_cast<const void *>(rawData.data()),
+                    rawData.size(), SQLITE_TRANSIENT);
+                break;
+            }
+            case ValueObjectType::TYPE_ASSETS: {
+                Assets assets;
+                arg.GetAssets(assets);
+                auto rawData = RawDataParser::PackageRawData(assets);
+                errCode = sqlite3_bind_blob(stmtHandle, index, static_cast<const void *>(rawData.data()),
+                    rawData.size(), SQLITE_TRANSIENT);
+                break;
+            }
             default: {
                 std::string str;
                 arg.GetString(str);
