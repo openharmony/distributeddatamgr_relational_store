@@ -13,25 +13,26 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "SqliteConnectionPool"
-
 #include "sqlite_connection_pool.h"
+
+#include <base_transaction.h>
+
+#include <condition_variable>
+#include <iostream>
+#include <iterator>
+#include <mutex>
+#include <sstream>
+#include <vector>
 
 #include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 
-#include <condition_variable>
-#include <mutex>
-#include <vector>
-#include <sstream>
-#include <iostream>
-#include <iterator>
-#include <base_transaction.h>
-
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 constexpr std::chrono::seconds WAIT_CONNECT_TIMEOUT(2);
 
 SqliteConnectionPool *SqliteConnectionPool::Create(const RdbStoreConfig &storeConfig, int &errCode)

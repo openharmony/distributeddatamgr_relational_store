@@ -12,13 +12,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#define LOG_TAG "JS_ERROR_UTILS"
 
 #include "js_error_utils.h"
 
 #include <algorithm>
 
+#include "logger.h"
+
 namespace OHOS::CloudData {
+using namespace OHOS::Rdb;
 using JsErrorCode = OHOS::CloudData::JsErrorCode;
 
 static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
@@ -55,7 +57,7 @@ Status GenerateNapiError(int32_t status, int32_t &errCode, std::string &errMessa
         errCode = -1;
         errMessage = "";
     }
-    ZLOGD("GenerateNapiError errCode is %{public}d", errCode);
+    LOG_DEBUG("GenerateNapiError errCode is %{public}d", errCode);
     if (errCode == 0) {
         return Status::SUCCESS;
     }
@@ -64,7 +66,7 @@ Status GenerateNapiError(int32_t status, int32_t &errCode, std::string &errMessa
 
 void ThrowNapiError(napi_env env, int32_t status, const std::string &errMessage, bool isParamsCheck)
 {
-    ZLOGD("ThrowNapiError message: %{public}s", errMessage.c_str());
+    LOG_DEBUG("ThrowNapiError message: %{public}s", errMessage.c_str());
     if (status == Status::SUCCESS) {
         return;
     }

@@ -14,16 +14,17 @@
  */
 
 #include <gtest/gtest.h>
+
 #include <string>
 
 #include "itypes_util.h"
-#include "logger.h"
 #include "message_parcel.h"
 #include "parcel.h"
 #include "raw_data_parser.h"
 #include "sqlite_global_config.h"
 #include "value_object.h"
 #include "values_bucket.h"
+
 using namespace testing::ext;
 using namespace OHOS;
 using namespace OHOS::NativeRdb;
@@ -219,8 +220,8 @@ HWTEST_F(ValuesBucketTest, Values_Bucket_005, TestSize.Level1)
     }
 
     EXPECT_EQ(true, values.Marshalling(parcel));
-    auto valuesBucket = std::shared_ptr<ValuesBucket>(ValuesBucket::Unmarshalling(parcel));
-    EXPECT_FALSE(valuesBucket->IsEmpty());
+    auto valuesBucket = ValuesBucket::Unmarshalling(parcel);
+    EXPECT_FALSE(valuesBucket.IsEmpty());
 }
 
 /**

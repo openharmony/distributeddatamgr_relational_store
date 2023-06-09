@@ -15,17 +15,19 @@
 
 #ifndef NATIVE_RDB_VALUES_BUCKET_H
 #define NATIVE_RDB_VALUES_BUCKET_H
+
 #include <map>
 #include <set>
 
-#include "parcel.h"
 #include "value_object.h"
+
 namespace OHOS {
+class Parcel;
 namespace NativeRdb {
 /**
  * The ValuesBucket class of RDB.
  */
-class API_EXPORT ValuesBucket : public virtual Parcelable {
+class API_EXPORT ValuesBucket {
 public:
     /**
      * @brief Constructor.
@@ -157,12 +159,15 @@ public:
      */
     API_EXPORT void GetAll(std::map<std::string, ValueObject> &output) const;
 
-    API_EXPORT bool Marshalling(Parcel &parcel) const override;
+    /**
+     * @brief set a ValuesBucket object to parcel.
+     */
+    API_EXPORT bool Marshalling(Parcel &parcel) const;
 
     /**
      * @brief Obtains a ValuesBucket object from parcel.
      */
-    API_EXPORT static ValuesBucket *Unmarshalling(Parcel &parcel);
+    API_EXPORT static ValuesBucket Unmarshalling(Parcel &parcel);
 
     std::map<std::string, ValueObject> values_;
 };

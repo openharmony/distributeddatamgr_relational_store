@@ -13,18 +13,18 @@
  * limitations under the License.
  */
 
-#include "oh_cursor.h"
-#include "relational_cursor_impl.h"
-#include "relational_error_code.h"
-#include "rdb_errno.h"
-#include "logger.h"
-
 #include <iostream>
 #include <sstream>
 #include <string>
 
+#include "logger.h"
+#include "oh_cursor.h"
+#include "relational_cursor_impl.h"
+#include "relational_error_code.h"
+#include "rdb_errno.h"
 #include "securec.h"
-using OHOS::RdbNdk::RDB_NDK_LABEL;
+
+using namespace OHOS::RdbNdk;
 
 int Rdb_GetColumnCount(OH_Cursor *cursor, int *count)
 {
@@ -209,10 +209,9 @@ int Rdb_Close(OH_Cursor *cursor)
     return errCode;
 }
 
-OHOS::RdbNdk::CursorImpl::CursorImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
+OHOS::RdbNdk::CursorImpl::CursorImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet) : resultSet_(resultSet)
 {
     id = RDB_CURSOR_CID;
-    resultSet_ = resultSet;
 
     getColumnCount = Rdb_GetColumnCount;
     getColumnType = Rdb_GetColumnType;

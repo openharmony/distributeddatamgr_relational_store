@@ -16,6 +16,9 @@
 #ifndef DISTRIBUTED_RDB_RDB_TYPES_H
 #define DISTRIBUTED_RDB_RDB_TYPES_H
 
+#include <securec.h>
+
+#include <cinttypes>
 #include <functional>
 #include <map>
 #include <string>
@@ -53,7 +56,7 @@ enum SyncMode {
     PUSH,
     PULL,
     PULL_PUSH,
-    TIME_FIRST,
+    TIME_FIRST = 4,
     NATIVE_FIRST,
     CLOUD_FIRST,
 };
@@ -122,7 +125,7 @@ struct RdbPredicateOperation {
     std::vector<std::string> values_;
 };
 
-struct RdbPredicates {
+struct PredicatesMemo {
     inline void AddOperation(const RdbPredicateOperator op, const std::string& field,
                              const std::string& value)
     {

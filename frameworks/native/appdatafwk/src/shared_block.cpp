@@ -12,7 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "shared_block.h"
+
 #include <ashmem.h>
 #include <fcntl.h>
 #include <securec.h>
@@ -22,11 +24,13 @@
 #include <codecvt>
 #include <iostream>
 
-#include "string_ex.h"
 #include "logger.h"
+#include "string_ex.h"
 
 namespace OHOS {
 namespace AppDataFwk {
+using namespace OHOS::Rdb;
+
 SharedBlock::SharedBlock(const std::string &name, sptr<Ashmem> ashmem, size_t size, bool readOnly)
     : mName(name), ashmem_(ashmem), mSize(size), mReadOnly(readOnly), mHeader(nullptr)
 {

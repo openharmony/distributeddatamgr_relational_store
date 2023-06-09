@@ -37,7 +37,11 @@ ohos_ndk_library("libnative_rdb_ndk") {
 }
 
 ohos_shared_library("native_rdb_ndk") {
-  include_dirs = [ "./include" ]
+  include_dirs = [
+    "include",
+    "${relational_store_common_path}/include",
+    "${relational_store_native_path}/rdb/include",
+  ]
   sources = [
     "src/relational_cursor.cpp",
     "src/relational_predicates.cpp",

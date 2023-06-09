@@ -13,15 +13,16 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "RdbServiceProxy"
-
 #include "rdb_service_proxy.h"
+
 #include "itypes_util.h"
-#include "log_print.h"
+#include "logger.h"
 #include "sqlite_utils.h"
 
 namespace OHOS::DistributedRdb {
+using namespace OHOS::Rdb;
 using SqliteUtils = OHOS::NativeRdb::SqliteUtils;
+
 #define IPC_SEND(code, reply, ...)                                          \
 ({                                                                          \
     int32_t __status = RDB_OK;                                              \
@@ -57,8 +58,8 @@ void RdbServiceProxy::OnSyncComplete(uint32_t seqNum, Details &&result)
 {
     syncCallbacks_.ComputeIfPresent(seqNum, [&result] (const auto& key, const AsyncDetail & callback) {
         auto finished = result.empty() || (result.begin()->second.progress == SYNC_FINISH);
-        ZLOGD("Sync complete, seqNum%{public}d, result size:%{public}zu", key, result.size());
-        if(callback!=nullptr){
+        LOG_DEBUG("Sync complete, seqNum%{public}d, result size:%{public}zu", key, result.size());
+        if (callback!=nullptr) {
             callback(std::move(result));
         }
         return !finished;
@@ -84,7 +85,7 @@ std::string RdbServiceProxy::ObtainDistributedTableName(const std::string &devic
     MessageParcel reply;
     int32_t status = IPC_SEND(RDB_SERVICE_CMD_OBTAIN_TABLE, reply, device, table);
     if (status != RDB_OK) {
-        ZLOGE("status:%{public}d, device:%{public}.6s, table:%{public}s", status,
+        LOG_ERROR("status:%{public}d, device:%{public}.6s, table:%{public}s", status,
             SqliteUtils::Anonymous(device).c_str(), SqliteUtils::Anonymous(table).c_str());
         return "";
     }
@@ -101,7 +102,7 @@ int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param)
             OnDataChange(origin, primaries, std::move(changeInfo));
         });
     if (notifier_ == nullptr) {
-        ZLOGE("create notifier failed");
+        LOG_ERROR("create notifier failed");
         return RDB_ERROR;
     }
 
@@ -110,7 +111,7 @@ int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param)
         return RDB_ERROR;
     }
 
-    ZLOGI("success");
+    LOG_INFO("success");
     return RDB_OK;
 }
 
@@ -119,7 +120,7 @@ int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param, sptr<IRemoteO
     MessageParcel reply;
     int32_t status = IPC_SEND(RDB_SERVICE_CMD_INIT_NOTIFIER, reply, param, notifier);
     if (status != RDB_OK) {
-        ZLOGE("status:%{public}d, bundleName:%{public}s", status, param.bundleName_.c_str());
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s", status, param.bundleName_.c_str());
     }
     return status;
 }
@@ -134,35 +135,35 @@ uint32_t RdbServiceProxy::GetSeqNum()
 }
 
 std::pair<int32_t, Details> RdbServiceProxy::DoSync(const RdbSyncerParam& param, const Option &option,
-                                const RdbPredicates &predicates)
+                                const PredicatesMemo &predicates)
 {
     std::pair<int32_t, Details> result{RDB_ERROR, {}};
     MessageParcel reply;
     auto &[status, details] = result;
     status = IPC_SEND(RDB_SERVICE_CMD_SYNC, reply, param, option, predicates);
     if (status != RDB_OK) {
-        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
             status, param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
         return result;
     }
 
     if (!ITypesUtil::Unmarshal(reply, details)) {
-        ZLOGE("read result failed");
+        LOG_ERROR("read result failed");
         status = RDB_ERROR;
         return result;
     }
     return result;
 }
 
-int32_t RdbServiceProxy::DoSync(const RdbSyncerParam &param, const Option &option, const RdbPredicates &predicates,
+int32_t RdbServiceProxy::DoSync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
     const AsyncDetail &async)
 {
     auto [status, details] = DoSync(param, option, predicates);
     if (status != RDB_OK) {
-        ZLOGI("failed");
+        LOG_INFO("failed");
         return RDB_ERROR;
     }
-    ZLOGI("success");
+    LOG_INFO("success");
 
     if (async != nullptr) {
         async(std::move(details));
@@ -170,36 +171,36 @@ int32_t RdbServiceProxy::DoSync(const RdbSyncerParam &param, const Option &optio
     return RDB_OK;
 }
 
-int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam &param, const Option &option, const RdbPredicates &predicates)
+int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(RDB_SERVICE_CMD_ASYNC, reply, param, option, predicates);
     if (status != RDB_OK) {
-        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s, seqNum:%{public}u", status,
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s, seqNum:%{public}u", status,
             param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str(), option.seqNum);
     }
     return status;
 }
 
 int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam& param, const Option &option,
-                                 const RdbPredicates &predicates, const AsyncDetail & callback)
+                                 const PredicatesMemo &predicates, const AsyncDetail & callback)
 {
     Option asyncOption = option;
     if (callback != nullptr) {
         asyncOption.seqNum = GetSeqNum();
         if (!syncCallbacks_.Insert(asyncOption.seqNum, callback)) {
-            ZLOGI("insert callback failed");
+        LOG_INFO("insert callback failed");
             return RDB_ERROR;
         }
     }
-    ZLOGI("num=%{public}u", asyncOption.seqNum);
-    if (DoAsync(param, option, predicates) != RDB_OK) {
-        ZLOGE("failed");
-        syncCallbacks_.Erase(option.seqNum);
+    LOG_INFO("num=%{public}u", asyncOption.seqNum);
+    if (DoAsync(param, asyncOption, predicates) != RDB_OK) {
+        LOG_ERROR("failed");
+        syncCallbacks_.Erase(asyncOption.seqNum);
         return RDB_ERROR;
     }
 
-    ZLOGI("success");
+    LOG_INFO("success");
     return RDB_OK;
 }
 
@@ -208,13 +209,13 @@ int32_t RdbServiceProxy::SetDistributedTables(const RdbSyncerParam& param, const
     MessageParcel reply;
     int32_t status = IPC_SEND(RDB_SERVICE_CMD_SET_DIST_TABLE, reply, param, tables);
     if (status != RDB_OK) {
-        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
             status, param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
     }
     return status;
 }
 
-int32_t RdbServiceProxy::Sync(const RdbSyncerParam &param, const Option &option, const RdbPredicates &predicates,
+int32_t RdbServiceProxy::Sync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
                               const AsyncDetail &async)
 {
     if (option.isAsync) {
@@ -237,11 +238,11 @@ int32_t RdbServiceProxy::Subscribe(const RdbSyncerParam &param, const SubscribeO
                                    RdbStoreObserver *observer)
 {
     if (option.mode < SubscribeMode::REMOTE || option.mode >= SUBSCRIBE_MODE_MAX) {
-        ZLOGE("subscribe mode invalid");
+        LOG_ERROR("subscribe mode invalid");
         return RDB_ERROR;
     }
     if (DoSubscribe(param, option) != RDB_OK) {
-        ZLOGI("communicate to server failed");
+        LOG_INFO("communicate to server failed");
         return RDB_ERROR;
     }
     auto name = RemoveSuffix(param.storeName_);
@@ -249,7 +250,7 @@ int32_t RdbServiceProxy::Subscribe(const RdbSyncerParam &param, const SubscribeO
         name, [observer] (const auto& key, ObserverMapValue& value) {
             for (const auto& element : value.first) {
                 if (element == observer) {
-                    ZLOGE("duplicate observer");
+                    LOG_ERROR("duplicate observer");
                     return true;
                 }
             }
@@ -264,7 +265,7 @@ int32_t RdbServiceProxy::DoSubscribe(const RdbSyncerParam &param, const Subscrib
     MessageParcel reply;
     int32_t status = IPC_SEND(RDB_SERVICE_CMD_SUBSCRIBE, reply, param, option);
     if (status != RDB_OK) {
-        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
             status, param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
     }
     return status;
@@ -277,9 +278,9 @@ int32_t RdbServiceProxy::UnSubscribe(const RdbSyncerParam &param, const Subscrib
     auto name = RemoveSuffix(param.storeName_);
     observers_.ComputeIfPresent(
         name, [observer](const auto& key, ObserverMapValue& value) {
-            ZLOGI("before remove size=%{public}d", static_cast<int>(value.first.size()));
+            LOG_INFO("before remove size=%{public}d", static_cast<int>(value.first.size()));
             value.first.remove(observer);
-            ZLOGI("after  remove size=%{public}d", static_cast<int>(value.first.size()));
+            LOG_INFO("after  remove size=%{public}d", static_cast<int>(value.first.size()));
             return !(value.first.empty());
     });
     return RDB_OK;
@@ -290,7 +291,7 @@ int32_t RdbServiceProxy::DoUnSubscribe(const RdbSyncerParam &param)
     MessageParcel reply;
     int32_t status = IPC_SEND(RDB_SERVICE_CMD_UNSUBSCRIBE, reply, param);
     if (status != RDB_OK) {
-        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
             status, param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
     }
     return status;
@@ -302,14 +303,14 @@ int32_t RdbServiceProxy::RemoteQuery(const RdbSyncerParam& param, const std::str
     MessageParcel reply;
     int32_t status = IPC_SEND(RDB_SERVICE_CMD_REMOTE_QUERY, reply, param, device, sql, selectionArgs);
     if (status != RDB_OK) {
-        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s, device:%{public}.6s",
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s, device:%{public}.6s",
             status, param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str(), device.c_str());
         return status;
     }
 
     sptr<IRemoteObject> remote = reply.ReadRemoteObject();
     if (remote == nullptr) {
-        ZLOGE("read remote object is null");
+        LOG_ERROR("read remote object is null");
         return RDB_ERROR;
     }
     resultSet = remote;
@@ -323,7 +324,7 @@ RdbServiceProxy::ObserverMap RdbServiceProxy::ExportObservers()
 
 void RdbServiceProxy::ImportObservers(ObserverMap &observers)
 {
-    ZLOGI("enter");
+    LOG_INFO("enter");
     SubscribeOption option {SubscribeMode::REMOTE};
     observers.ForEach([this, &option](const std::string& key, const ObserverMapValue& value) {
         for (auto& observer : value.first) {
@@ -338,7 +339,7 @@ int32_t RdbServiceProxy::GetSchema(const RdbSyncerParam &param)
     MessageParcel reply;
     int32_t status = IPC_SEND(RDB_SERVICE_CMD_GET_SCHEMA, reply, param);
     if (status != RDB_OK) {
-        ZLOGE("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
             SqliteUtils::Anonymous(param.storeName_).c_str());
     }
     return status;

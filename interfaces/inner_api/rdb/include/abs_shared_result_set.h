@@ -22,7 +22,6 @@
 #include <vector>
 
 #include "abs_result_set.h"
-#include "shared_block.h"
 #include "shared_result_set.h"
 
 namespace OHOS {

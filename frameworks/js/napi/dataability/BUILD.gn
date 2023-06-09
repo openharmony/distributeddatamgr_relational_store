@@ -24,6 +24,7 @@ ohos_copy("relational_store_declaration") {
 ohos_shared_library("dataability") {
   include_dirs = [
     "include",
+    "${relational_store_common_path}/include",
     "${relational_store_js_common_path}/include",
     "${relational_store_napi_path}/rdb/include",
   ]

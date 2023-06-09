@@ -25,6 +25,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 void RowEntity::Put(const std::string &name, const ValueObject &value)
 {
     auto it = values_.emplace(name, std::move(value));
