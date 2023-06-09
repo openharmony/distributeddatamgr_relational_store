@@ -19,7 +19,6 @@
 #include "js_utils.h"
 
 using namespace OHOS::AppDataMgrJsKit;
-using OHOS::AppDataMgrJsKit::PREFIX_LABEL;
 
 namespace OHOS::RdbJsKit {
 NapiRdbStoreObserver::NapiRdbStoreObserver(napi_env env, napi_value callback) : NapiUvQueue(env, callback)
