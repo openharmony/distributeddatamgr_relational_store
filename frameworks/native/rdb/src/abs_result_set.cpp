@@ -164,6 +164,18 @@ int AbsResultSet::GetRow(RowEntity &rowEntity)
                 rowEntity.Put(columnNames[columnIndex], ValueObject(value));
                 break;
             }
+            case ColumnType::TYPE_ASSET: {
+                ValueObject::Asset value;
+                GetAsset(columnIndex, value);
+                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
+                break;
+            }
+            case ColumnType::TYPE_ASSETS: {
+                ValueObject::Assets value;
+                GetAssets(columnIndex, value);
+                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
+                break;
+            }
             default: {
                 return E_ERROR;
             }

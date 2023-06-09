@@ -111,7 +111,8 @@ public:
      *
      * @param columnName Indicates the name of the column.
      */
-    API_EXPORT void Put(const std::string &columnName, ValueObject value);
+    API_EXPORT void Put(const std::string &columnName, const ValueObject &value);
+    API_EXPORT void Put(const std::string &columnName, ValueObject &&value);
 
     /**
      * @brief Delete the ValueObject object for the given column name.
