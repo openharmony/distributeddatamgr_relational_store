@@ -154,12 +154,7 @@ const RdbStoreConfig &RdbStoreImpl::GetConfig()
 int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    auto status =
-        InsertWithConflictResolution(outRowId, table, initialValues, ConflictResolution::ON_CONFLICT_NONE);
-    if (status == E_OK) {
-	    DoCloudSync(table);
-    }
-    return status;
+    return InsertWithConflictResolution(outRowId, table, initialValues, ConflictResolution::ON_CONFLICT_NONE);
 }
 
 int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
@@ -246,11 +241,7 @@ std::pair<std::string, std::vector<ValueObject>> RdbStoreImpl::GetInsertParams(
 
 int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)
 {
-    auto status = InsertWithConflictResolution(outRowId, table, initialValues, ConflictResolution::ON_CONFLICT_REPLACE);
-    if (status == E_OK) {
-        DoCloudSync(table);
-    }
-    return status;
+    return InsertWithConflictResolution(outRowId, table, initialValues, ConflictResolution::ON_CONFLICT_REPLACE);
 }
 
 int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
@@ -1051,35 +1042,37 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
             return;
         }
     }
-
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (syncTables_ == nullptr) {
-        syncTables_ = std::make_shared<std::set<std::string>>();
-    }
-    auto oldLen = syncTables_->size();
-    if (table.empty()) {
-        syncTables_->insert(cloudTables_.begin(), cloudTables_.end());
-    } else {
-        syncTables_->insert(table);
-    }
-
-    if (syncTables_->size() > oldLen) {
-        auto interval =
-            std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::milliseconds(INTERVAL));
-        if (pool_->Reset(taskId_, interval) != TaskExecutor::INVALID_TASK_ID) {
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (syncTables_ == nullptr) {
+            syncTables_ = std::make_shared<std::set<std::string>>();
+        }
+        auto empty = syncTables_->empty();
+        if (table.empty()) {
+            syncTables_->insert(cloudTables_.begin(), cloudTables_.end());
+        } else {
+            syncTables_->insert(table);
+        }
+        if (!empty) {
             return;
         }
-        taskId_ = pool_->Schedule(interval, [this]() {
+    }
+    auto interval =
+        std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::milliseconds(INTERVAL));
+    pool_->Schedule(interval, [this]() {
+        std::vector<std::string> tables;
+        {
             std::lock_guard<std::mutex> lock(mutex_);
             if (syncTables_ == nullptr) {
                 return;
             }
-            std::vector<std::string> tables(syncTables_->begin(), syncTables_->end());
-            SyncOption syncOption = { DistributedRdb::TIME_FIRST, false };
-            Sync(syncOption, tables, nullptr);
-            syncTables_->clear();
-        });
-    }
+            tables.assign(syncTables_->begin(), syncTables_->end());
+            syncTables_ = nullptr;
+        }
+        SyncOption syncOption = { DistributedRdb::TIME_FIRST, false };
+        LOG_INFO("CloudSync autoSync, tablename:%{public}s", tables.begin()->c_str());
+        Sync(syncOption, tables, nullptr);
+    });
 #endif
 }
 std::string RdbStoreImpl::GetFileType()
@@ -1186,7 +1179,6 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
         LOG_WARN("The distributed tables to be set is empty.");
         return E_OK;
     }
-
     auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         return errCode;
@@ -1196,7 +1188,7 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
         LOG_ERROR("Fail to set distributed tables, error=%{public}d", errorCode);
         return errorCode;
     }
-    if (type == DistributedRdb::DISTRIBUTED_CLOUD) {
+    if (type == DistributedRdb::DISTRIBUTED_CLOUD && distributedConfig.autoSync) {
         std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
         cloudTables_.insert(tables.begin(), tables.end());
     }
