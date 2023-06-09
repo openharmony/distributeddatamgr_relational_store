@@ -21,6 +21,8 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "shared_block.h"
+#include "sqlite_shared_result_set.h"
 #include "value_object.h"
 
 using namespace testing::ext;
