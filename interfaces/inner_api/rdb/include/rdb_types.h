@@ -68,6 +68,10 @@ enum DistributedTableType {
     DISTRIBUTED_CLOUD
 };
 
+struct DistributedConfig {
+    bool autoSync = true;
+};
+
 enum Progress {
     SYNC_BEGIN,
     SYNC_IN_PROGRESS,

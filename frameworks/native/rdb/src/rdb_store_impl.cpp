@@ -1178,7 +1178,8 @@ std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, int32_t type)
+int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, int32_t type,
+    DistributedRdb::DistributedConfig distributedConfig)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (tables.empty()) {
