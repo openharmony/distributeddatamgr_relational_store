@@ -165,13 +165,13 @@ int AbsResultSet::GetRow(RowEntity &rowEntity)
                 break;
             }
             case ColumnType::TYPE_ASSET: {
-                Asset value;
+                ValueObject::Asset value;
                 GetAsset(columnIndex, value);
                 rowEntity.Put(columnNames[columnIndex], ValueObject(value));
                 break;
             }
             case ColumnType::TYPE_ASSETS: {
-                Assets value;
+                ValueObject::Assets value;
                 GetAssets(columnIndex, value);
                 rowEntity.Put(columnNames[columnIndex], ValueObject(value));
                 break;
