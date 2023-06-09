@@ -36,7 +36,7 @@ describe('rdbStoreResultSetGetRowTest', function () {
     beforeEach(async function () {
         console.info(TAG + 'beforeEach')
         await rdbStore.executeSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, " +
-            "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN, data6 INTEGER NOT NULL);");
+            "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN, data6 INTEGER);");
     })
 
     afterEach(async function () {

@@ -39,6 +39,10 @@ enum class ColumnType {
     TYPE_STRING,
     /** Indicates the column type is BLOB.*/
     TYPE_BLOB,
+    /** Indicates the column type is ASSET.*/
+    TYPE_ASSET,
+    /** Indicates the column type is ASSETS.*/
+    TYPE_ASSETS,
 };
 
 /**
