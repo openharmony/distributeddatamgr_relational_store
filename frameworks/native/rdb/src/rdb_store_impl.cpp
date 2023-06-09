@@ -1060,18 +1060,17 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
     auto interval =
         std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::milliseconds(INTERVAL));
     pool_->Schedule(interval, [this]() {
-        std::vector<std::string> tables;
+        std::shared_ptr<std::set<std::string>> ptr;
         {
             std::lock_guard<std::mutex> lock(mutex_);
-            if (syncTables_ == nullptr) {
-                return;
-            }
-            tables.assign(syncTables_->begin(), syncTables_->end());
+            ptr = syncTables_;
             syncTables_ = nullptr;
         }
+        if (ptr == nullptr) {
+            return;
+        }
         SyncOption syncOption = { DistributedRdb::TIME_FIRST, false };
-        LOG_INFO("CloudSync autoSync, tablename:%{public}s", tables.begin()->c_str());
-        Sync(syncOption, tables, nullptr);
+        Sync(syncOption, { ptr->begin(), ptr->end() }, nullptr);
     });
 #endif
 }
@@ -1172,7 +1171,7 @@ std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, int32_t type,
-    DistributedRdb::DistributedConfig distributedConfig)
+    const DistributedRdb::DistributedConfig &distributedConfig)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (tables.empty()) {

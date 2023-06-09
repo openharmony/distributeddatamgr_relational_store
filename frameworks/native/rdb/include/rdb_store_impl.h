@@ -106,7 +106,7 @@ public:
         const std::vector<std::string> &columns, int &errCode) override;
 
     int SetDistributedTables(const std::vector<std::string> &tables, int32_t type,
-        DistributedRdb::DistributedConfig distributedConfig) override;
+        const DistributedRdb::DistributedConfig &distributedConfig) override;
 
     std::string ObtainDistributedTableName(const std::string& device, const std::string& table, int &errCode) override;
 
