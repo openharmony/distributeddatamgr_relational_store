@@ -26,6 +26,7 @@ namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
 using Asset = OHOS::NativeRdb::AssetValue;
 using RowEntity = OHOS::NativeRdb::RowEntity;
+
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, Asset &output);
 
