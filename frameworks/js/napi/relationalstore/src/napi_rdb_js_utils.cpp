@@ -169,5 +169,18 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::Details &details)
 {
     return nullptr;
 }
+
+template<>
+napi_value Convert2JSValue(napi_env env, const JSChangeInfo &value)
+{
+    napi_value object;
+    NAPI_CALL_BASE(env, napi_create_object(env, &object), object);
+    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, table), object);
+    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, type), object);
+    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, inserted), object);
+    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, updated), object);
+    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, deleted), object);
+    return nullptr;
+}
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
