@@ -174,13 +174,16 @@ template<>
 napi_value Convert2JSValue(napi_env env, const JSChangeInfo &value)
 {
     napi_value object;
-    NAPI_CALL_BASE(env, napi_create_object(env, &object), object);
-    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, table), object);
-    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, type), object);
-    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, inserted), object);
-    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, updated), object);
-    NAPI_CALL_BASE(env, AddJsProperty(env, object, value, deleted), object);
-    return nullptr;
+    auto status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    ADD_JS_PROPERTY(env, object, value, table);
+    ADD_JS_PROPERTY(env, object, value, type);
+    ADD_JS_PROPERTY(env, object, value, inserted);
+    ADD_JS_PROPERTY(env, object, value, updated);
+    ADD_JS_PROPERTY(env, object, value, deleted);
+    return object;
 }
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
