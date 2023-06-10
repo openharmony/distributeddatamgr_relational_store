@@ -124,7 +124,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int columnIndex;
@@ -215,7 +215,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, changedRows);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int columnIndex;
@@ -386,7 +386,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int columnIndex;
@@ -507,7 +507,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
         ConflictResolution::ON_CONFLICT_NONE);
     EXPECT_EQ(ret, RdbStoreUpdateTest::E_SQLITE_CONSTRAINT);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int columnIndex;
@@ -629,7 +629,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int columnIndex;
@@ -750,7 +750,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
         ConflictResolution::ON_CONFLICT_ROLLBACK);
     EXPECT_EQ(ret, RdbStoreUpdateTest::E_SQLITE_CONSTRAINT);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int columnIndex;
@@ -872,7 +872,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int columnIndex;
@@ -992,7 +992,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(changedRows, 1);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int columnIndex;

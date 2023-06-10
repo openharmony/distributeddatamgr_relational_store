@@ -124,7 +124,7 @@ int DistributedTestAgent::OnProcessMsg(const std::string &strMsg, int len, std::
     predicate.EqualTo("name", "zhangsan");
     predicate.InAllDevices();
 
-    std::unique_ptr<ResultSet> resultSet =
+    std::shared_ptr<ResultSet> resultSet =
         store_->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string> { "zhangsan" });
     if (resultSet!= nullptr) {
         int position;

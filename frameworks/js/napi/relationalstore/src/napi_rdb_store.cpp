@@ -71,7 +71,7 @@ struct RdbStoreContext : public Context {
     int intOutput;
     std::vector<uint8_t> newKey;
     std::shared_ptr<ResultSet> newResultSet;
-    std::unique_ptr<ResultSet> resultSet_value;
+    std::shared_ptr<ResultSet> resultSet_value;
     std::string aliasName;
     std::string pathName;
     std::string destName;
@@ -614,7 +614,7 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
         return (context->resultSet_value != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = ResultSetProxy::NewInstance(env, std::shared_ptr<ResultSet>(context->resultSet_value.release()));
+        result = ResultSetProxy::NewInstance(env, context->resultSet_value);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
@@ -694,7 +694,7 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
         return (context->resultSet_value != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = ResultSetProxy::NewInstance(env, std::shared_ptr<ResultSet>(context->resultSet_value.release()));
+        result = ResultSetProxy::NewInstance(env, context->resultSet_value);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
@@ -962,7 +962,7 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
         return (context->resultSet_value != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = ResultSetProxy::NewInstance(env, std::shared_ptr<ResultSet>(context->resultSet_value.release()));
+        result = ResultSetProxy::NewInstance(env, context->resultSet_value);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
         LOG_DEBUG("RdbStoreProxy::QueryByStep end");
     };

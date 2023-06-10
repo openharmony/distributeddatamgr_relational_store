@@ -446,8 +446,11 @@ int AbsSharedResultSet::IsColumnNull(int columnIndex, bool &isNull)
 
 int AbsSharedResultSet::Close()
 {
-    AbsResultSet::Close();
-    ClosedBlock();
+    std::unique_lock<std::shared_mutex> lock(mutex_);
+    if (!isClosed) {
+        AbsResultSet::Close();
+        ClosedBlock();
+    }
     return E_OK;
 }
 

@@ -50,11 +50,11 @@ public:
         ConflictResolution conflictResolution) override;
     int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
         const std::vector<std::string> &whereArgs) override;
-    std::unique_ptr<AbsSharedResultSet> Query(int &errCode, bool distinct,
+    std::shared_ptr<AbsSharedResultSet> Query(int &errCode, bool distinct,
         const std::string &table, const std::vector<std::string> &columns,
         const std::string &selection, const std::vector<std::string> &selectionArgs, const std::string &groupBy,
         const std::string &having, const std::string &orderBy, const std::string &limit) override;
-    std::unique_ptr<AbsSharedResultSet> QuerySql(const std::string &sql,
+    std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
     int ExecuteSql(
         const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) override;
@@ -91,11 +91,11 @@ public:
     std::string GetName();
     std::string GetOrgPath();
     std::string GetFileType();
-    std::unique_ptr<ResultSet> QueryByStep(const std::string &sql,
+    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
-    std::unique_ptr<ResultSet> QueryByStep(
+    std::shared_ptr<ResultSet> QueryByStep(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) override;
-    std::unique_ptr<AbsSharedResultSet> Query(
+    std::shared_ptr<AbsSharedResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;

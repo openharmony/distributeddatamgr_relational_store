@@ -171,7 +171,7 @@ HWTEST_F(RdbAttachTest, RdbStore_Attach_002, TestSize.Level1)
 
 void RdbAttachTest::QueryCheck1(std::shared_ptr<RdbStore> &store) const
 {
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1");
     EXPECT_NE(resultSet, nullptr);
     int ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
@@ -207,7 +207,7 @@ void RdbAttachTest::QueryCheck1(std::shared_ptr<RdbStore> &store) const
 
 void RdbAttachTest::QueryCheck2(std::shared_ptr<RdbStore> &store) const
 {
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1");
     EXPECT_NE(resultSet, nullptr);
     int ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
