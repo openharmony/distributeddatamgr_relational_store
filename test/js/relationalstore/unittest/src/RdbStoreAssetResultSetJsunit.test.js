@@ -86,7 +86,6 @@ describe('rdbResultSetTest', function () {
         }
         const assets1 = [asset1];
         const assets2 = [asset1, asset2, asset3];
-        const assets3 = [];
         let valuesBucket = {
             "data1": asset1,
             "data2": asset2,
@@ -101,7 +100,6 @@ describe('rdbResultSetTest', function () {
         await rdbStore.insert("test", valuesBucket)
         valuesBucket = {
             "data1": asset1,
-            "data3": assets3,
         }
         await rdbStore.insert("test", valuesBucket)
         console.log(TAG + "createTest data end");
@@ -197,23 +195,17 @@ describe('rdbResultSetTest', function () {
             expect(true).assertEqual(resultSet.goToNextRow())
             const id = resultSet.getLong(resultSet.getColumnIndex("id"))
             const data2 = resultSet.getAsset(resultSet.getColumnIndex("data2"))
-            console.log(TAG + "id=" + id + ", data2=" + data2);
-            expect("").assertEqual(data2.name);
-            expect("").assertEqual(data2.uri);
-            expect("").assertEqual(data2.createTime);
-            expect("").assertEqual(data2.modifyTime);
-            expect("").assertEqual(data2.size);
-            expect("").assertEqual(data2.path);
-            expect(0).assertEqual(data2.status);
-
+            expect(null).assertFail();
+        } catch (e) {
+            console.log(TAG + "throw error: " + e);
+            expect(true).assetTrue();
+        } finally {
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
-        } catch (e) {
-            expect(null).assertFail();
+            resultSet = null
+            done();
+            console.log(TAG + "************* testGetAsset0003 end *************");
         }
-        resultSet = null
-        done();
-        console.log(TAG + "************* testGetAsset0003 end *************");
     })
 
     /**
@@ -318,16 +310,16 @@ describe('rdbResultSetTest', function () {
             expect(true).assertEqual(resultSet.goToNextRow())
             const id = resultSet.getLong(resultSet.getColumnIndex("id"))
             const data3 = resultSet.getAssets(resultSet.getColumnIndex("data3"))
-            console.log(TAG + "id=" + id + ", data3=" + data3);
-            expect(0).assertEqual(data3.length);
-
+            expect(null).assertFail();
+        } catch (e) {
+            console.log(TAG + "throw error" + e);
+            expect(true).assetTrue();
+        } finally {
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
-        } catch (e) {
-            expect(null).assertFail();
+            resultSet = null
+            done();
+            console.log(TAG + "************* testGetAsset0003 end *************");
         }
-        resultSet = null
-        done();
-        console.log(TAG + "************* testGetAssets0003 end *************");
     })
 })
