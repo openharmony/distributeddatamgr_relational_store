@@ -46,25 +46,11 @@ void NapiRdbStoreObserver::OnChange(const std::vector<std::string> &devices)
 void NapiRdbStoreObserver::OnChange(const Origin &origin, const PrimaryFields &fields, ChangeInfo &&changeInfo)
 {
     if (mode_ == DistributedRdb::CLOUD_DETAIL) {
-        std::vector<JSChangeInfo> infos;
-        for (auto it = changeInfo.begin(); it != changeInfo.end(); ++it) {
-            infos.push_back(JSChangeInfo(origin, it));
-        }
-        CallFunction([infos = std::move(infos)](napi_env env, int &argc, napi_value *argv) {
+        CallFunction([info = std::move(changeInfo)](napi_env env, int &argc, napi_value *argv) {
             argc = 1;
-            argv[0] = JSUtils::Convert2JSValue(env, infos);
+            // action
         });
-        return;
     }
     RdbStoreObserver::OnChange(origin, fields, std::move(changeInfo));
-}
-
-NapiRdbStoreObserver::JSChangeInfo::JSChangeInfo(const Origin &origin, ChangeInfo::iterator info)
-{
-    table = info->first;
-    type = origin.dataType;
-    inserted = std::move(info->second[CHG_TYPE_INSERT]);
-    updated = std::move(info->second[CHG_TYPE_UPDATE]);
-    deleted = std::move(info->second[CHG_TYPE_DELETE]);
 }
 } // namespace OHOS::RelationalStoreJsKit
