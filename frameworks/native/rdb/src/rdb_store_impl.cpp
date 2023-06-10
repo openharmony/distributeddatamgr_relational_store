@@ -385,7 +385,7 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
+std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -394,7 +394,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     return QuerySql(sql, selectionArgs);
 }
 
-std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(
+std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -423,7 +423,7 @@ std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
     return std::make_shared<ResultSetProxy>(remoteResultSet);
 }
 
-std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool distinct, const std::string &table,
+std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool distinct, const std::string &table,
     const std::vector<std::string> &columns, const std::string &selection,
     const std::vector<std::string> &selectionArgs, const std::string &groupBy, const std::string &having,
     const std::string &orderBy, const std::string &limit)
@@ -440,17 +440,16 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool disti
     return resultSet;
 }
 
-std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sql,
+std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sql,
     const std::vector<std::string> &selectionArgs)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    auto resultSet = std::make_unique<SqliteSharedResultSet>(connectionPool, path, sql, selectionArgs);
-    return resultSet;
+    return std::make_shared<SqliteSharedResultSet>(connectionPool, path, sql, selectionArgs);
 }
 #endif
 
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
-std::unique_ptr<ResultSet> RdbStoreImpl::Query(
+std::shared_ptr<ResultSet> RdbStoreImpl::Query(
     const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -1103,11 +1102,10 @@ int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::s
 /**
  * Queries data in the database based on specified conditions.
  */
-std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
+std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
     const std::vector<std::string> &selectionArgs)
 {
-    std::unique_ptr<ResultSet> resultSet = std::make_unique<StepResultSet>(connectionPool, sql, selectionArgs);
-    return resultSet;
+    return std::make_shared<StepResultSet>(connectionPool, sql, selectionArgs);
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -1169,7 +1167,7 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
             for (auto &[key, value] : details) {
                 briefs.insert_or_assign(key, value.code);
             }
-            if(callback!=nullptr){
+            if (callback!=nullptr) {
                 callback(briefs);
             }
         });

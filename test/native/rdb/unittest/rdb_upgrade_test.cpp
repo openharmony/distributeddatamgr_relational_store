@@ -117,7 +117,7 @@ HWTEST_F(RdbUpgradeTest, RdbStore_Upgrade_001, TestSize.Level1)
 
     RdbUpgradeTest::InsertValues(store);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     int ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
@@ -136,7 +136,7 @@ HWTEST_F(RdbUpgradeTest, RdbStore_Upgrade_001, TestSize.Level1)
     UpgradeOpenCallback callBack;
     std::shared_ptr<RdbStore> upgradeStore = RdbHelper::GetRdbStore(config, 2, callBack, errCode);
     EXPECT_NE(upgradeStore, nullptr);
-    std::unique_ptr<ResultSet> upgradeResultSet = upgradeStore->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> upgradeResultSet = upgradeStore->QuerySql("SELECT * FROM test");
     EXPECT_NE(upgradeResultSet, nullptr);
     int columnCount;
     ret = upgradeResultSet->GetColumnCount(columnCount);

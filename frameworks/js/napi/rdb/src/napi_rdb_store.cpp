@@ -71,10 +71,10 @@ struct RdbStoreContext : public BaseContext {
     uint64_t insertNum;
     std::vector<uint8_t> newKey;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    std::unique_ptr<AbsSharedResultSet> resultSet;
+    std::shared_ptr<AbsSharedResultSet> resultSet;
 #endif
     std::shared_ptr<ResultSet> newResultSet;
-    std::unique_ptr<ResultSet> resultSet_value;
+    std::shared_ptr<ResultSet> resultSet_value;
     std::string aliasName;
     std::string pathName;
     std::string destName;
@@ -740,10 +740,10 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
     auto output = [context](napi_env env, napi_value &result) -> int {
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
         result = ResultSetProxy::NewInstance(
-            env, std::shared_ptr<ResultSet>(context->resultSet_value.release()), context->apiversion);
+            env, context->resultSet_value, context->apiversion);
 #else
         result = ResultSetProxy::NewInstance(
-            env, std::shared_ptr<AbsSharedResultSet>(context->resultSet.release()), context->apiversion);
+            env, context->resultSet, context->apiversion);
 #endif
         return (result != nullptr) ? OK : ERR;
     };
@@ -789,10 +789,10 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
     auto output = [context](napi_env env, napi_value &result) -> int {
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
         result = ResultSetProxy::NewInstance(
-            env, std::shared_ptr<ResultSet>(context->resultSet_value.release()), context->apiversion);
+            env, context->resultSet_value, context->apiversion);
 #else
         result = ResultSetProxy::NewInstance(
-            env, std::shared_ptr<AbsSharedResultSet>(context->resultSet.release()), context->apiversion);
+            env, context->resultSet, context->apiversion);
 #endif
         return (result != nullptr) ? OK : ERR;
     };
@@ -1037,8 +1037,7 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
         if (context->resultSet_value != nullptr) {
-            result = ResultSetProxy::NewInstance(
-                env, std::shared_ptr<ResultSet>(context->resultSet_value.release()), context->apiversion);
+            result = ResultSetProxy::NewInstance(env, context->resultSet_value, context->apiversion);
         }
         LOG_DEBUG("RdbStoreProxy::QueryByStep end");
         return (result != nullptr) ? OK : ERR;

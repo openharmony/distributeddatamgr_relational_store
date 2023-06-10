@@ -44,7 +44,7 @@ public:
     void InsertJobDates();
     void InsertEmpDates();
     void InsertSalarygradeDates();
-    int ResultSize(std::unique_ptr<ResultSet> &resultSet);
+    int ResultSize(std::shared_ptr<ResultSet> &resultSet);
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
@@ -368,7 +368,7 @@ void RdbStorePredicateJoinBTest::InsertSalarygradeDates()
     store->Insert(id, "salarygrade", values);
 }
 
-int RdbStorePredicateJoinBTest::ResultSize(std::unique_ptr<ResultSet> &resultSet)
+int RdbStorePredicateJoinBTest::ResultSize(std::shared_ptr<ResultSet> &resultSet)
 {
     if (resultSet->GoToFirstRow() != E_OK) {
         return 0;
@@ -400,7 +400,7 @@ HWTEST_F(RdbStorePredicateJoinBTest, RdbStore_CrossJoinB_001, TestSize.Level1)
     EXPECT_EQ("emp CROSS JOIN dept ON(emp.deptId = dept.id)", predicates.GetJoinClause());
 
     std::vector<std::string> columns;
-    std::unique_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinBTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinBTest::store->Query(predicates, columns);
     EXPECT_EQ(14, ResultSize(allDataTypes));
 
     EXPECT_EQ(E_OK, allDataTypes->GoToFirstRow());
@@ -474,7 +474,7 @@ HWTEST_F(RdbStorePredicateJoinBTest, RdbStore_InnerJoinB_002, TestSize.Level1)
     columns.push_back("t1.salary");
     columns.push_back("t2.jName");
     columns.push_back("t2.description");
-    std::unique_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinBTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinBTest::store->Query(predicates, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes));
     EXPECT_EQ(E_OK, allDataTypes->GoToFirstRow());
 
@@ -520,7 +520,7 @@ HWTEST_F(RdbStorePredicateJoinBTest, RdbStore_InnerJoinB_003, TestSize.Level1)
     columns.push_back("t1.eName");
     columns.push_back("t1.salary");
     columns.push_back("t2.*");
-    std::unique_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinBTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinBTest::store->Query(predicates, columns);
     EXPECT_EQ(14, ResultSize(allDataTypes));
     EXPECT_EQ(E_OK, allDataTypes->GoToFirstRow());
 
@@ -580,7 +580,7 @@ HWTEST_F(RdbStorePredicateJoinBTest, RdbStore_InnerJoinB_004, TestSize.Level1)
     columns.push_back("t3.dName");
     columns.push_back("t3.loc");
     columns.push_back("t4.grade");
-    std::unique_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinBTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinBTest::store->Query(predicates, columns);
     EXPECT_EQ(14, ResultSize(allDataTypes));
     EXPECT_EQ(E_OK, allDataTypes->GoToFirstRow());
 
@@ -637,7 +637,7 @@ HWTEST_F(RdbStorePredicateJoinBTest, RdbStore_LeftOuterJoinB_005, TestSize.Level
     columns.push_back("t1.mgr");
     columns.push_back("t2.id");
     columns.push_back("t2.eName");
-    std::unique_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinBTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinBTest::store->Query(predicates, columns);
     EXPECT_EQ(14, ResultSize(allDataTypes));
     EXPECT_EQ(E_OK, allDataTypes->GoToFirstRow());
 
