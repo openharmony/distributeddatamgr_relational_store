@@ -36,7 +36,7 @@ describe('rdbStoreResultSetGetRowTest', function () {
     beforeEach(async function () {
         console.info(TAG + 'beforeEach')
         await rdbStore.executeSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, " +
-            "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+            "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN, data6 INTEGER);");
     })
 
     afterEach(async function () {
@@ -177,6 +177,30 @@ describe('rdbStoreResultSetGetRowTest', function () {
 
         done();
         console.log(TAG + "************* rdbStoreResultSetGetRowTest0004 end   *************");
+    })
+
+    /**
+     * @tc.name rdb store resultSet insert undefined value and verify test
+     * @tc.number rdbStoreResultSetGetRowTest0006
+     * @tc.desc resultSet getRow test
+     */
+    it('rdbStoreInsertUndefinedValueTest0006', 0, async function (done) {
+        console.log(TAG + "************* rdbStoreInsertUndefinedValueTest0006 start *************");
+        let valueBucket = {
+            data2: 10,
+            data6: undefined
+        };
+        let rowId = await rdbStore.insert("test", valueBucket);
+        expect(1).assertEqual(rowId);
+
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        expect(true).assertEqual(resultSet.goToFirstRow());
+
+        let valueBucket_ret = resultSet.getRow();
+        expect(10).assertEqual(valueBucket_ret["data2"]);
+        done();
+        console.log(TAG + "************* rdbStoreInsertUndefinedValueTest0006 end   *************");
     })
     console.log(TAG + "*************Unit Test End*************");
 })

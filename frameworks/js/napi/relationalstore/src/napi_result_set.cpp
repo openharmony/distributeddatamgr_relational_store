@@ -17,8 +17,8 @@
 
 #include <functional>
 
-#include "js_logger.h"
 #include "js_utils.h"
+#include "logger.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_trace.h"
 
@@ -27,11 +27,14 @@
 #include "string_ex.h"
 #endif
 
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
+using Asset = AssetValue;
+using Assets = std::vector<Asset>;
 static napi_ref __thread ctorRef_ = nullptr;
 static const int E_OK = 0;
 
@@ -89,6 +92,8 @@ napi_value ResultSetProxy::GetConstructor(napi_env env)
         DECLARE_NAPI_FUNCTION("goToPreviousRow", GoToPreviousRow),
         DECLARE_NAPI_FUNCTION("getInt", GetInt),
         DECLARE_NAPI_FUNCTION("getBlob", GetBlob),
+        DECLARE_NAPI_FUNCTION("getAsset", GetAsset),
+        DECLARE_NAPI_FUNCTION("getAssets", GetAssets),
         DECLARE_NAPI_FUNCTION("getString", GetString),
         DECLARE_NAPI_FUNCTION("getDouble", GetDouble),
         DECLARE_NAPI_FUNCTION("isColumnNull", IsColumnNull),
@@ -434,6 +439,34 @@ napi_value ResultSetProxy::GetBlob(napi_env env, napi_callback_info info)
 
     std::vector<uint8_t> result;
     int errCode = resultSetProxy->resultSet_->GetBlob(columnIndex, result);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+
+    return JSUtils::Convert2JSValue(env, result);
+}
+
+napi_value ResultSetProxy::GetAsset(napi_env env, napi_callback_info info)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    int32_t columnIndex;
+    auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+
+    Asset result;
+    int errCode = resultSetProxy->resultSet_->GetAsset(columnIndex, result);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+
+    return JSUtils::Convert2JSValue(env, result);
+}
+
+napi_value ResultSetProxy::GetAssets(napi_env env, napi_callback_info info)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    int32_t columnIndex;
+    auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+
+    Assets result;
+    int errCode = resultSetProxy->resultSet_->GetAssets(columnIndex, result);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);

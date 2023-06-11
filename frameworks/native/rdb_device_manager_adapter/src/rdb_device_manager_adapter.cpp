@@ -13,11 +13,9 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "RdbDeviceManagerAdaptor"
+#include "rdb_device_manager_adapter.h"
 
 #include <string>
-
-#include "rdb_device_manager_adapter.h"
 
 namespace OHOS {
 namespace DeviceManagerAdaptor {

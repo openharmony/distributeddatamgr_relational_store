@@ -15,15 +15,15 @@
 
 #include "sqlite_global_config.h"
 
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #include "logger.h"
 #include "sqlite3sym.h"
 
 namespace OHOS {
 namespace NativeRdb {
-
+using namespace OHOS::Rdb;
 
 void SqliteGlobalConfig::InitSqliteGlobalConfig()
 {

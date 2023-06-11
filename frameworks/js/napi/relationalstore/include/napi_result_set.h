@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "asset_value.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -66,19 +67,15 @@ private:
     static napi_value IsAtFirstRow(napi_env env, napi_callback_info info);
     static napi_value IsAtLastRow(napi_env env, napi_callback_info info);
     static napi_value GetBlob(napi_env env, napi_callback_info info);
+    static napi_value GetAsset(napi_env env, napi_callback_info info);
+    static napi_value GetAssets(napi_env env, napi_callback_info info);
     static napi_value GetString(napi_env env, napi_callback_info info);
     static napi_value GetDouble(napi_env env, napi_callback_info info);
     static napi_value IsColumnNull(napi_env env, napi_callback_info info);
     static napi_value GetRow(napi_env env, napi_callback_info info);
     static napi_value IsClosed(napi_env env, napi_callback_info info);
 
-    static napi_value GetSharedBlockName(napi_env env, napi_callback_info info);
-    static napi_value GetSharedBlockAshmemFd(napi_env env, napi_callback_info info);
-
     std::shared_ptr<NativeRdb::ResultSet> resultSet_;
-
-    std::string sharedBlockName_;
-    int32_t sharedBlockAshmemFd_ = -1;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

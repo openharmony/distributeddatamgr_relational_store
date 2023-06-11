@@ -15,10 +15,11 @@
 
 #include "napi_data_ability_predicates.h"
 
-#include "js_logger.h"
 #include "js_utils.h"
+#include "logger.h"
 #include "napi_async_proxy.h"
 
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 

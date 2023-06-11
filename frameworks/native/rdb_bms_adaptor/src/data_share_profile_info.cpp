@@ -21,16 +21,11 @@
 #include <sstream>
 #include <unistd.h>
 
+#include "logger.h"
 #include "bundle_info.h"
 #include "hilog/log.h"
 namespace OHOS::RdbBMSAdapter {
-static const OHOS::HiviewDFX::HiLogLabel APP_DATA_FWK_LABEL = { LOG_CORE, 0xD001650, "RDB_BMS_ADAPTOR" };
-
-#define LOG_DEBUG(...) ((void)OHOS::HiviewDFX::HiLog::Debug(APP_DATA_FWK_LABEL, __VA_ARGS__))
-#define LOG_INFO(...) ((void)OHOS::HiviewDFX::HiLog::Info(APP_DATA_FWK_LABEL, __VA_ARGS__))
-#define LOG_WARN(...) ((void)OHOS::HiviewDFX::HiLog::Warn(APP_DATA_FWK_LABEL, __VA_ARGS__))
-#define LOG_ERROR(...) ((void)OHOS::HiviewDFX::HiLog::Error(APP_DATA_FWK_LABEL, __VA_ARGS__))
-#define LOG_FATAL(...) ((void)OHOS::HiviewDFX::HiLog::Fatal(APP_DATA_FWK_LABEL, __VA_ARGS__))
+using namespace OHOS::Rdb;
 
 constexpr const char *DATA_SHARE_PROFILE_META = "ohos.extension.dataShare";
 constexpr const char *PROFILE_FILE_PREFIX = "$profile:";

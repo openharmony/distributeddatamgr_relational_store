@@ -25,6 +25,7 @@
 #include "unistd.h"
 
 using namespace testing::ext;
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 
 class RdbStoreConfigTest : public testing::Test {

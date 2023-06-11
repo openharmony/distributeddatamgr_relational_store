@@ -25,6 +25,7 @@
 #include "rdb_helper.h"
 
 using namespace testing::ext;
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 
 class RdbOpenCallbackTest : public testing::Test {

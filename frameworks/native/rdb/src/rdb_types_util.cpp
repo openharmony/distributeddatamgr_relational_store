@@ -161,6 +161,7 @@ bool Marshalling(const Origin &input, MessageParcel &data)
 {
     return Marshal(data, input.origin, input.id, input.store);
 }
+
 template<>
 bool Unmarshalling(Origin &output, MessageParcel &data)
 {

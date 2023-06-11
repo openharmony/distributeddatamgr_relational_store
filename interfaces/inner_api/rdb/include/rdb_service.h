@@ -18,11 +18,14 @@
 
 #include <memory>
 #include <string>
-#include "iremote_object.h"
+
 #include "rdb_types.h"
 #include "rdb_notifier.h"
 
 namespace OHOS {
+template <typename T>
+class sptr;
+class IRemoteObject;
 namespace DistributedRdb {
 class RdbService {
 public:
@@ -50,7 +53,7 @@ public:
     virtual int32_t SetDistributedTables(
         const RdbSyncerParam &param, const std::vector<std::string> &tables, int32_t type = DISTRIBUTED_DEVICE) = 0;
 
-    virtual int32_t Sync(const RdbSyncerParam &param, const Option &option, const RdbPredicates &predicates,
+    virtual int32_t Sync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
         const AsyncDetail &async) = 0;
 
     virtual int32_t Subscribe(const RdbSyncerParam &param, const SubscribeOption &option,

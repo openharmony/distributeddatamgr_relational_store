@@ -25,6 +25,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 void RowEntity::Put(const std::string &name, const ValueObject &value)
 {
     auto it = values_.emplace(name, std::move(value));
@@ -159,6 +161,18 @@ int AbsResultSet::GetRow(RowEntity &rowEntity)
             case ColumnType::TYPE_BLOB: {
                 std::vector<uint8_t> value;
                 GetBlob(columnIndex, value);
+                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
+                break;
+            }
+            case ColumnType::TYPE_ASSET: {
+                ValueObject::Asset value;
+                GetAsset(columnIndex, value);
+                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
+                break;
+            }
+            case ColumnType::TYPE_ASSETS: {
+                ValueObject::Assets value;
+                GetAssets(columnIndex, value);
                 rowEntity.Put(columnNames[columnIndex], ValueObject(value));
                 break;
             }

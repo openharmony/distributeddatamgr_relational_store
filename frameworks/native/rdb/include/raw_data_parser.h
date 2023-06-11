@@ -15,6 +15,8 @@
 
 #ifndef OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_PARSER_H
 #define OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_PARSER_H
+
+#include "serializable.h"
 #include "traits.h"
 #include "value_object.h"
 namespace OHOS::NativeRdb {
@@ -30,6 +32,14 @@ public:
     static std::vector<uint8_t> PackageRawData(const Assets &assets);
 
 private:
+    struct InnerAsset : public Serializable {
+        Asset &asset_;
+        explicit InnerAsset(Asset &asset) : asset_(asset) {}
+
+        bool Marshal(json &node) const override;
+        bool Unmarshal(const json &node) override;
+    };
+
     template<typename T, typename O>
     static bool Get(T &&input, O &output)
     {
@@ -46,6 +56,8 @@ private:
         }
         return Get<T, O, Rest...>(std::move(input), output);
     }
+    static constexpr const uint32_t ASSET_MAGIC = 0x41534554;
+    static constexpr const uint32_t ASSETS_MAGIC = 0x41534553;
 };
 
 template<typename T, typename... Rest>

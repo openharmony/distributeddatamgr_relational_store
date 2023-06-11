@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-#include <climits>
 #include <gtest/gtest.h>
+
+#include <climits>
 #include <string>
 
 #include "common.h"
-#include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"

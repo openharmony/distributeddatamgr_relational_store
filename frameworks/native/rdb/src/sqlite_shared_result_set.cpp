@@ -14,19 +14,24 @@
  */
 
 #include "sqlite_shared_result_set.h"
+
+#include <rdb_errno.h>
+
 #include <algorithm>
 #include <memory>
-#include <rdb_errno.h>
-#include "sqlite_database_utils.h"
-#include "sqlite_utils.h"
+
 #include "logger.h"
+#include "rdb_sql_utils.h"
+#include "sqlite_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
-SqliteSharedResultSet::SqliteSharedResultSet(SqliteConnectionPool* connectionPool, std::string path, std::string sql,
-    const std::vector<std::string> &bindArgs, std::shared_ptr<RdbStoreImpl> rdb)
+using namespace OHOS::Rdb;
+
+SqliteSharedResultSet::SqliteSharedResultSet(SqliteConnectionPool* connectionPool, std::string path,
+                                             std::string sql, const std::vector<std::string> &bindArgs)
     : AbsSharedResultSet(path), resultSetBlockCapacity(0), isOnlyFillResultSetBlock(false),
-      qrySql(sql), selectionArgVec(bindArgs), rowNum(NO_COUNT), rdb_(rdb)
+      qrySql(sql), selectionArgVec(bindArgs), rowNum(NO_COUNT)
 {
     connectionPool_ = connectionPool;
 }
@@ -35,7 +40,7 @@ SqliteSharedResultSet::~SqliteSharedResultSet() {}
 
 std::shared_ptr<SqliteStatement> SqliteSharedResultSet::PrepareStep(SqliteConnection* connection, int &errCode)
 {
-    if (SqliteDatabaseUtils::GetSqlStatementType(qrySql) != SqliteUtils::STATEMENT_SELECT) {
+    if (SqliteUtils::GetSqlStatementType(qrySql) != SqliteUtils::STATEMENT_SELECT) {
         LOG_ERROR("StoreSession BeginStepQuery fail : not select sql !");
         errCode = E_EXECUTE_IN_STEP_QUERY;
         return nullptr;
@@ -161,8 +166,7 @@ void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
         bindArgs.push_back(vauObj);
     }
 
-    bool isRead = SqliteDatabaseUtils::BeginExecuteSql(qrySql);
-    SqliteConnection* connection = connectionPool_->AcquireConnection(isRead);
+    SqliteConnection* connection = connectionPool_->AcquireConnection(true);
     if (connection == nullptr) {
         return;
     }

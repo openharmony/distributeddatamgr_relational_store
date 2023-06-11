@@ -20,11 +20,13 @@
 
 #include "logger.h"
 #include "rdb_trace.h"
-#include "string_utils.h"
 #include "sqlite_sql_builder.h"
+#include "string_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 AbsPredicates::AbsPredicates()
 {
     Initial();

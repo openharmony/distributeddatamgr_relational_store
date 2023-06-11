@@ -39,6 +39,7 @@ if (is_ohos) {
     include_dirs = [
       "include",
       "${datashare_path}/common/include/",
+      "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/relationalstore/include",
     ]
@@ -71,6 +72,7 @@ if (is_ohos) {
   ohos_shared_library("relationalstore") {
     include_dirs = [
       "mock/include",
+      "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/mock/include",
       "${relational_store_napi_path}/relationalstore/mock/include",
       "//commonlibrary/c_utils/base/include",
@@ -83,7 +85,10 @@ if (is_ohos) {
     ]
 
     buildos = "windows"
-    defines = [ "WINDOWS_PLATFORM" ]
+    defines = [
+      "WINDOWS_PLATFORM",
+      "API_EXPORT=__declspec(dllimport)",
+    ]
 
     sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
 
@@ -101,6 +106,7 @@ if (is_ohos) {
   ohos_shared_library("relationalstore") {
     include_dirs = [
       "mock/include",
+      "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/mock/include",
       "${relational_store_napi_path}/relationalstore/mock/include",
       "//commonlibrary/c_utils/base/include",
@@ -132,6 +138,7 @@ if (is_ohos) {
   ohos_source_set("data_relationalstore") {
     include_dirs = [
       "mock/include",
+      "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/mock/include",
       "include",
       "${relational_store_js_common_path}/include",
@@ -167,6 +174,7 @@ if (is_ohos) {
   ohos_source_set("data_relationalstore") {
     include_dirs = [
       "mock/include",
+      "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/mock/include",
       "include",
       "${relational_store_js_common_path}/include",
