@@ -12,21 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG "RdbNotifierStub"
+
 #include "rdb_notifier_stub.h"
+
 #include <ipc_skeleton.h>
+
 #include "itypes_util.h"
-#include "log_print.h"
+#include "logger.h"
+
 namespace OHOS::DistributedRdb {
+using namespace OHOS::Rdb;
+
 RdbNotifierStub::RdbNotifierStub(const SyncCompleteHandler &completeNotifier, const DataChangeHandler &changeNotifier)
     : IRemoteStub<RdbNotifierStubBroker>(), completeNotifier_(completeNotifier), changeNotifier_(changeNotifier)
 {
-    ZLOGI("construct");
+    LOG_INFO("construct");
 }
 
 RdbNotifierStub::~RdbNotifierStub() noexcept
 {
-    ZLOGI("destroy");
+    LOG_INFO("destroy");
 }
 
 bool RdbNotifierStub::CheckInterfaceToken(MessageParcel& data)
@@ -34,7 +39,7 @@ bool RdbNotifierStub::CheckInterfaceToken(MessageParcel& data)
     auto localDescriptor = GetDescriptor();
     auto remoteDescriptor = data.ReadInterfaceToken();
     if (remoteDescriptor != localDescriptor) {
-        ZLOGE("interface token is not equal");
+        LOG_ERROR("interface token is not equal");
         return false;
     }
     return true;
@@ -43,7 +48,7 @@ bool RdbNotifierStub::CheckInterfaceToken(MessageParcel& data)
 int RdbNotifierStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
                                      MessageOption &option)
 {
-    ZLOGD("code:%{public}u, callingPid:%{public}d", code, IPCSkeleton::GetCallingPid());
+    LOG_DEBUG("code:%{public}u, callingPid:%{public}d", code, IPCSkeleton::GetCallingPid());
     if (!CheckInterfaceToken(data)) {
         return RDB_ERROR;
     }
@@ -60,7 +65,7 @@ int32_t RdbNotifierStub::OnCompleteInner(MessageParcel &data, MessageParcel &rep
     uint32_t seqNum = 0;
     Details result;
     if (!ITypesUtil::Unmarshal(data, seqNum, result)) {
-        ZLOGE("read sync result failed");
+        LOG_ERROR("read sync result failed");
         return RDB_ERROR;
     }
     return OnComplete(seqNum, std::move(result));
@@ -89,7 +94,7 @@ int32_t RdbNotifierStub::OnChangeInner(MessageParcel &data, MessageParcel &reply
     PrimaryFields primaries;
     ChangeInfo changeInfo;
     if (!ITypesUtil::Unmarshal(data, origin, primaries, changeInfo)) {
-        ZLOGE("read sync result failed");
+        LOG_ERROR("read sync result failed");
         return RDB_ERROR;
     }
     return OnChange(origin, primaries, std::move(changeInfo));

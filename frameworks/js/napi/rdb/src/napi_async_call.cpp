@@ -15,11 +15,13 @@
 
 #include "napi_async_call.h"
 
-#include "js_logger.h"
+#include "logger.h"
 #include "napi_rdb_trace.h"
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
+using namespace OHOS::Rdb;
+
 void BaseContext::SetAction(
     napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output)
 {

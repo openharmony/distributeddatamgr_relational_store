@@ -17,7 +17,7 @@
 
 #include <cstdlib>
 
-#include "js_logger.h"
+#include "logger.h"
 #if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
 #include "napi_base_context.h"
 #endif

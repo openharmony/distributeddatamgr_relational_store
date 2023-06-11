@@ -16,6 +16,9 @@
 #ifndef DISTRIBUTED_RDB_RDB_TYPES_H
 #define DISTRIBUTED_RDB_RDB_TYPES_H
 
+#include <securec.h>
+
+#include <cinttypes>
 #include <functional>
 #include <map>
 #include <string>
@@ -53,7 +56,7 @@ enum SyncMode {
     PUSH,
     PULL,
     PULL_PUSH,
-    TIME_FIRST,
+    TIME_FIRST = 4,
     NATIVE_FIRST,
     CLOUD_FIRST,
 };
@@ -66,6 +69,10 @@ struct SyncOption {
 enum DistributedTableType {
     DISTRIBUTED_DEVICE = 0,
     DISTRIBUTED_CLOUD
+};
+
+struct DistributedConfig {
+    bool autoSync = true;
 };
 
 enum Progress {
@@ -118,7 +125,7 @@ struct RdbPredicateOperation {
     std::vector<std::string> values_;
 };
 
-struct RdbPredicates {
+struct PredicatesMemo {
     inline void AddOperation(const RdbPredicateOperator op, const std::string& field,
                              const std::string& value)
     {
@@ -154,7 +161,13 @@ struct Origin {
         ORIGIN_ALL,
         ORIGIN_BUTT,
     };
+    enum DataType : int32_t {
+        BASIC_DATA,
+        ASSET_DATA,
+        TYPE_BUTT,
+    };
     int32_t origin = ORIGIN_ALL;
+    int32_t dataType = BASIC_DATA;
     // origin is ORIGIN_LOCAL, the id is empty
     // origin is ORIGIN_NEARBY, the id is networkId;
     // origin is ORIGIN_CLOUD, the id is the cloud account id

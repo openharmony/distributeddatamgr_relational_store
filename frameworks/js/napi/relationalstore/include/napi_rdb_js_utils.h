@@ -15,15 +15,18 @@
 
 #ifndef RDB_JSKIT_NAPI_RDB_JS_UTILS_H
 #define RDB_JSKIT_NAPI_RDB_JS_UTILS_H
+
 #include "asset_value.h"
 #include "js_utils.h"
 #include "result_set.h"
 #include "value_object.h"
 #include "rdb_types.h"
+
 namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
 using Asset = OHOS::NativeRdb::AssetValue;
 using RowEntity = OHOS::NativeRdb::RowEntity;
+
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, Asset &output);
 

@@ -15,19 +15,19 @@
 
 #include "relational_store.h"
 
-#include "relational_cursor_impl.h"
-#include "relational_predicates_impl.h"
-#include "relational_store_impl.h"
-
+#include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_predicates.h"
+#include "relational_cursor_impl.h"
+#include "relational_error_code.h"
+#include "relational_predicates_impl.h"
+#include "relational_store_impl.h"
 #include "relational_value_object_impl.h"
 #include "relational_values_bucket_impl.h"
-#include "relational_error_code.h"
 #include "sqlite_global_config.h"
-#include "logger.h"
-using OHOS::RdbNdk::RDB_NDK_LABEL;
+
+using namespace OHOS::RdbNdk;
 
 OH_VObject *OH_Rdb_CreateValueObject()
 {
@@ -47,10 +47,9 @@ OH_Predicates *OH_Rdb_CreatePredicates(const char *table)
     return new OHOS::RdbNdk::PredicateImpl(table);
 }
 
-OHOS::RdbNdk::StoreImpl::StoreImpl(std::shared_ptr<OHOS::NativeRdb::RdbStore> store)
+OHOS::RdbNdk::StoreImpl::StoreImpl(std::shared_ptr<OHOS::NativeRdb::RdbStore> store) : store_(store)
 {
     id = RDB_STORE_CID;
-    store_ = store;
 }
 
 std::shared_ptr<OHOS::NativeRdb::RdbStore> OHOS::RdbNdk::StoreImpl::GetStore()
@@ -64,12 +63,12 @@ public:
     int OnUpgrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion) override;
 };
 
-int MainOpenCallback::OnCreate(OHOS::NativeRdb::RdbStore &store)
+int MainOpenCallback::OnCreate(OHOS::NativeRdb::RdbStore &rdbStore)
 {
     return OHOS::NativeRdb::E_OK;
 }
 
-int MainOpenCallback::OnUpgrade(OHOS::NativeRdb::RdbStore &store, int oldVersion, int newVersion)
+int MainOpenCallback::OnUpgrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion)
 {
     return OHOS::NativeRdb::E_OK;
 }

@@ -13,12 +13,14 @@
  * limitations under the License.
  */
 
-#include "js_logger.h"
-#include "js_utils.h"
-#include "napi_rdb_error.h"
 #include "napi_rdb_predicates.h"
+
+#include "js_utils.h"
+#include "logger.h"
+#include "napi_rdb_error.h"
 #include "napi_rdb_trace.h"
 
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 

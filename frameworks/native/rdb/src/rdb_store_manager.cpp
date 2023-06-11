@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "rdb_store_manager.h"
+
 #include <cinttypes>
 
 #include "logger.h"
@@ -21,7 +23,6 @@
 #include "rdb_trace.h"
 #include "sqlite_global_config.h"
 #include "task_executor.h"
-#include "rdb_store_manager.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_security_manager.h"
@@ -30,6 +31,8 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
+
 RdbStoreNode::RdbStoreNode(const std::shared_ptr<RdbStoreImpl> &rdbStore)
     : rdbStore_(rdbStore), taskId_(TaskExecutor::INVALID_TASK_ID)
 {
@@ -79,7 +82,6 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
             LOG_INFO("config changed, taskId_: %{public}" PRIu64 "", storeCache_[path]->taskId_);
             pool_->Remove(storeCache_[path]->taskId_);
         }
-        LOG_INFO("rdb reference count is %{public}ld", storeCache_[path]->rdbStore_.use_count());
         storeCache_.erase(path);
     }
     rdbStore = RdbStoreImpl::Open(config, errCode);
@@ -87,20 +89,21 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
         LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore, err is %{public}d", errCode);
         return nullptr;
     }
+    storeCache_[path] = std::make_shared<RdbStoreNode>(rdbStore);
+    RestartTimer(path, *storeCache_[path]);
 
     if (SetSecurityLabel(config) != E_OK) {
+        storeCache_.erase(path);
         LOG_ERROR("RdbHelper set security label fail.");
         return nullptr;
     }
 
     errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
     if (errCode != E_OK) {
+        storeCache_.erase(path);
         LOG_ERROR("RdbHelper GetRdbStore ProcessOpenCallback fail");
         return nullptr;
     }
-
-    storeCache_[path] = std::make_shared<RdbStoreNode>(rdbStore);
-    RestartTimer(path, *storeCache_[path]);
 
     return rdbStore;
 }
@@ -125,10 +128,7 @@ void RdbStoreManager::AutoClose(const std::string &path)
         LOG_INFO("has Removed");
         return;
     }
-    LOG_INFO("rdb reference count is %{public}ld", (*it).second->rdbStore_.use_count());
-    if ((*it).second->rdbStore_.use_count() > 1) {
-        storeCache_.erase(it);
-    }
+    storeCache_.erase(it);
 }
 
 void RdbStoreManager::Remove(const std::string &path)
@@ -139,7 +139,6 @@ void RdbStoreManager::Remove(const std::string &path)
         LOG_INFO("has Removed");
         return;
     }
-
     if (pool_ != nullptr) {
         LOG_INFO("remove taskId_: %{public}" PRIu64 "", it->second->taskId_);
         pool_->Remove(it->second->taskId_);

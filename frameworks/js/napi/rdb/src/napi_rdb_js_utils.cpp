@@ -14,11 +14,15 @@
  */
 
 #include "napi_rdb_js_utils.h"
+
+#include "logger.h"
 #include "result_set.h"
-#include "js_logger.h"
+
 namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
+using namespace OHOS::Rdb;
 using namespace NativeRdb;
+
 template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
 {

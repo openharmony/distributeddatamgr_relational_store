@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,22 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_RDB_LOG_PRINT_H
-#define NATIVE_RDB_LOG_PRINT_H
-
-#include "hilog/log.h"
+#ifndef NATIVE_RDB_SQL_UTILS_H
+#define NATIVE_RDB_SQL_UTILS_H
+#include "abs_rdb_predicates.h"
 
 namespace OHOS {
 namespace NativeRdb {
-
-static const OHOS::HiviewDFX::HiLogLabel RDB_LABEL = { LOG_CORE, 0xD001650, "NativeRDB" };
-
-#define LOG_DEBUG(...) ((void)OHOS::HiviewDFX::HiLog::Debug(RDB_LABEL, __VA_ARGS__))
-#define LOG_INFO(...) ((void)OHOS::HiviewDFX::HiLog::Info(RDB_LABEL, __VA_ARGS__))
-#define LOG_WARN(...) ((void)OHOS::HiviewDFX::HiLog::Warn(RDB_LABEL, __VA_ARGS__))
-#define LOG_ERROR(...) ((void)OHOS::HiviewDFX::HiLog::Error(RDB_LABEL, __VA_ARGS__))
-#define LOG_FATAL(...) ((void)OHOS::HiviewDFX::HiLog::Fatal(RDB_LABEL, __VA_ARGS__))
-
+class API_EXPORT RdbSqlUtils {
+public:
+    /**
+     * @brief get default data base path.
+     */
+    static std::string GetDefaultDatabasePath(const std::string &baseDir, const std::string &name, int &errorCode);
+    /**
+     * @brief build query sql string.
+     */
+    static std::string BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
+};
 } // namespace NativeRdb
 } // namespace OHOS
 

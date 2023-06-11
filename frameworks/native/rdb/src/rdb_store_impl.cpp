@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "RdbStoreImpl"
-
 #include "rdb_store_impl.h"
 
 #include <unistd.h>
@@ -24,7 +22,7 @@
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_trace.h"
-#include "sqlite_database_utils.h"
+#include "rdb_sql_utils.h"
 #include "sqlite_global_config.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
@@ -53,6 +51,8 @@
 #endif
 
 namespace OHOS::NativeRdb {
+using namespace OHOS::Rdb;
+
 std::shared_ptr<RdbStoreImpl> RdbStoreImpl::Open(const RdbStoreConfig &config, int &errCode)
 {
     std::shared_ptr<RdbStoreImpl> rdbStore = std::make_shared<RdbStoreImpl>(config);
@@ -209,8 +209,11 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
             return FreeTransaction(connection, transaction.GetRollbackStr());
         }
     }
-
-    return FreeTransaction(connection, transaction.GetCommitStr());
+    auto status = FreeTransaction(connection, transaction.GetCommitStr());
+    if (status == E_OK) {
+        DoCloudSync(table);
+    }
+    return status;
 }
 
 std::pair<std::string, std::vector<ValueObject>> RdbStoreImpl::GetInsertParams(
@@ -283,7 +286,9 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
 
     errCode = connection->ExecuteForLastInsertedRowId(outRowId, sql.str(), bindArgs);
     connectionPool->ReleaseConnection(connection);
-
+    if (errCode == E_OK) {
+        DoCloudSync(table);
+    }
     return errCode;
 }
 
@@ -330,7 +335,7 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
         split = ",";
     }
 
-    if (whereClause.empty() == false) {
+    if (!whereClause.empty()) {
         sql << " WHERE " << whereClause;
     }
 
@@ -345,7 +350,9 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
 
     errCode = connection->ExecuteForChangedRowCount(changedRows, sql.str(), bindArgs);
     connectionPool->ReleaseConnection(connection);
-
+    if (errCode == E_OK) {
+        DoCloudSync(table);
+    }
     return errCode;
 }
 
@@ -364,7 +371,7 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
 
     std::stringstream sql;
     sql << "DELETE FROM " << table;
-    if (whereClause.empty() == false) {
+    if (!whereClause.empty()) {
         sql << " WHERE " << whereClause;
     }
 
@@ -380,7 +387,9 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
 
     int errCode = connection->ExecuteForChangedRowCount(deletedRows, sql.str(), bindArgs);
     connectionPool->ReleaseConnection(connection);
-
+    if (errCode == E_OK) {
+        DoCloudSync(table);
+    }
     return errCode;
 }
 
@@ -444,8 +453,7 @@ std::unique_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
     const std::vector<std::string> &selectionArgs)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    auto resultSet =
-        std::make_unique<SqliteSharedResultSet>(connectionPool, path, sql, selectionArgs, shared_from_this());
+    auto resultSet = std::make_unique<SqliteSharedResultSet>(connectionPool, path, sql, selectionArgs);
     return resultSet;
 }
 #endif
@@ -500,6 +508,10 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
         LOG_INFO("sql ddl execute.");
         errCode = connectionPool->ReOpenAvailableReadConnections();
+    }
+
+    if (errCode == E_OK) {
+        DoCloudSync("");
     }
     return errCode;
 }
@@ -919,14 +931,13 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
     if (sqlType != "ATT") {
         return E_OK;
     }
-    std::string journalMode;
 
-    bool isRead = SqliteDatabaseUtils::BeginExecuteSql(GlobalExpr::PRAGMA_JOUR_MODE_EXP);
-    SqliteConnection *connection = connectionPool->AcquireConnection(isRead);
+    SqliteConnection *connection = connectionPool->AcquireConnection(false);
     if (connection == nullptr) {
         return E_CON_OVER_LIMIT;
     }
-    
+
+    std::string journalMode;
     int errCode =
         connection->ExecuteGetString(journalMode, GlobalExpr::PRAGMA_JOUR_MODE_EXP, std::vector<ValueObject>());
     connectionPool->ReleaseConnection(connection);
@@ -1016,6 +1027,51 @@ bool RdbStoreImpl::IsMemoryRdb() const
 std::string RdbStoreImpl::GetName()
 {
     return name;
+}
+
+void RdbStoreImpl::DoCloudSync(const std::string &table)
+{
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    if (pool_ == nullptr) {
+        return;
+    }
+    {
+        std::shared_lock<decltype(rwMutex_)> lock(rwMutex_);
+        if (cloudTables_.empty() || (!table.empty() && cloudTables_.find(table) == cloudTables_.end())) {
+            return;
+        }
+    }
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (syncTables_ == nullptr) {
+            syncTables_ = std::make_shared<std::set<std::string>>();
+        }
+        auto empty = syncTables_->empty();
+        if (table.empty()) {
+            syncTables_->insert(cloudTables_.begin(), cloudTables_.end());
+        } else {
+            syncTables_->insert(table);
+        }
+        if (!empty) {
+            return;
+        }
+    }
+    auto interval =
+        std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::milliseconds(INTERVAL));
+    pool_->Schedule(interval, [this]() {
+        std::shared_ptr<std::set<std::string>> ptr;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            ptr = syncTables_;
+            syncTables_ = nullptr;
+        }
+        if (ptr == nullptr) {
+            return;
+        }
+        SyncOption syncOption = { DistributedRdb::TIME_FIRST, false };
+        Sync(syncOption, { ptr->begin(), ptr->end() }, nullptr);
+    });
+#endif
 }
 std::string RdbStoreImpl::GetFileType()
 {
@@ -1113,14 +1169,14 @@ std::unique_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, int32_t type)
+int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, int32_t type,
+    const DistributedRdb::DistributedConfig &distributedConfig)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (tables.empty()) {
         LOG_WARN("The distributed tables to be set is empty.");
         return E_OK;
     }
-
     auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         return errCode;
@@ -1129,6 +1185,10 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
     if (errorCode != E_OK) {
         LOG_ERROR("Fail to set distributed tables, error=%{public}d", errorCode);
         return errorCode;
+    }
+    if (type == DistributedRdb::DISTRIBUTED_CLOUD && distributedConfig.autoSync) {
+        std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
+        cloudTables_.insert(tables.begin(), tables.end());
     }
     return E_OK;
 }
@@ -1171,7 +1231,7 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
             for (auto &[key, value] : details) {
                 briefs.insert_or_assign(key, value.code);
             }
-            if(callback!=nullptr){
+            if (callback != nullptr) {
                 callback(briefs);
             }
         });
