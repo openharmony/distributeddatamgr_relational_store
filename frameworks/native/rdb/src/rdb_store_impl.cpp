@@ -1134,7 +1134,7 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
 std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, const std::string &table, int &errCode)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-	
+
     std::string uuid;
     DeviceManagerAdaptor::RdbDeviceManagerAdaptor &deviceManager =
         DeviceManagerAdaptor::RdbDeviceManagerAdaptor::GetInstance(syncerParam_.bundleName_);
@@ -1148,7 +1148,7 @@ std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, 
         return uuid;
     };
     DistributedDB::RuntimeConfig::SetTranslateToDeviceIdCallback(translateCall);
-	
+
     return DistributedDB::RelationalStoreManager::GetDistributedTableName(uuid, table);
 }
 
