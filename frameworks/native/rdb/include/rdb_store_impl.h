@@ -21,6 +21,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <shared_mutex>
 
 #include "rdb_store.h"
 #include "rdb_store_config.h"
@@ -104,7 +105,8 @@ public:
     std::shared_ptr<ResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
         const std::vector<std::string> &columns, int &errCode) override;
 
-    int SetDistributedTables(const std::vector<std::string>& tables, int32_t type) override;
+    int SetDistributedTables(const std::vector<std::string> &tables, int32_t type,
+        const DistributedRdb::DistributedConfig &distributedConfig) override;
 
     std::string ObtainDistributedTableName(const std::string& device, const std::string& table, int &errCode) override;
 
@@ -129,6 +131,7 @@ private:
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
+    void DoCloudSync(const std::string &table);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;
@@ -142,6 +145,13 @@ private:
     DistributedRdb::RdbSyncerParam syncerParam_;
     bool isEncrypt_;
     std::shared_ptr<ExecutorPool> pool_;
+
+    mutable std::shared_mutex rwMutex_;
+    static inline constexpr uint32_t INTERVAL = 500;
+    std::set<std::string> cloudTables_;
+
+    std::mutex mutex_;
+    std::shared_ptr<std::set<std::string>> syncTables_;
 };
 } // namespace OHOS::NativeRdb
 #endif

@@ -54,6 +54,23 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
 }
 
 template<>
+int32_t Convert2Value(napi_env env, napi_value input, DistributedRdb::DistributedConfig &output)
+{
+    napi_valuetype type;
+    napi_status status = napi_typeof(env, input, &type);
+    if (status != napi_ok || type != napi_object) {
+        LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
+        return napi_invalid_arg;
+    }
+
+    auto ret = Convert2Value(env, GetNamedProperty(env, input, "autoSync"), output.autoSync);
+    if (ret != napi_ok) {
+        return napi_invalid_arg;
+    }
+    return ret;
+}
+
+template<>
 napi_value Convert2JSValue(napi_env env, const Asset &value)
 {
     napi_value object;
