@@ -18,7 +18,7 @@
 
 #define UNMARSHAL_RETURN_ERR(theCall) \
     do {                              \
-        if (!theCall) {               \
+        if (!(theCall)) {               \
             return false;             \
         }                             \
     } while (0)
@@ -45,7 +45,6 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Asset &a
     alignData.assign(data + used, data + used + sizeof(size));
     used += sizeof(size);
     size = Endian::LeToH(*(reinterpret_cast<decltype(&size)>(alignData.data())));
-
     if (size > length - used) {
         return 0;
     }
@@ -98,11 +97,11 @@ std::vector<uint8_t> RawDataParser::PackageRawData(const Asset &asset)
     std::vector<uint8_t> rawData;
     InnerAsset innerAsset(const_cast<Asset &>(asset));
     auto data = Serializable::Marshall(innerAsset);
-    uint16_t size;
-    size = Endian::HToLe((uint16_t)data.length());
+    uint16_t size = Endian::HToLe((uint16_t)data.length());
     auto magicU8 = reinterpret_cast<uint8_t *>(const_cast<uint32_t *>(&ASSET_MAGIC));
     rawData.insert(rawData.end(), magicU8, magicU8 + sizeof(ASSET_MAGIC));
-    rawData.insert(rawData.end(), reinterpret_cast<uint8_t *>(&size), reinterpret_cast<uint8_t *>(&size) + sizeof(size));
+    rawData.insert(rawData.end(), reinterpret_cast<uint8_t *>(&size),
+        reinterpret_cast<uint8_t *>(&size) + sizeof(size));
     rawData.insert(rawData.end(), data.begin(), data.end());
     return rawData;
 }

@@ -173,6 +173,7 @@ public:
      * @brief Gets the entire row of data for the current row from the result set.
      */
     API_EXPORT int GetRow(RowEntity &rowEntity) override;
+    API_EXPORT int GetColumnCount(RowEntity &rowEntity, int columnCount) override;
 
     /**
      * @brief Move the cursor to an absolute position.
