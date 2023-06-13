@@ -117,7 +117,7 @@ int AbsResultSet::IsColumnNull(int columnIndex, bool &isNull)
     return E_OK;
 }
 
-int AbsResultSet::GetRow(RowEntity &rowEntity)
+int AbsResultSet::GetColumnCount(RowEntity &rowEntity, int columnCount)
 {
     rowEntity.Clear();
     std::vector<std::string> columnNames;
@@ -126,8 +126,16 @@ int AbsResultSet::GetRow(RowEntity &rowEntity)
         LOG_ERROR("GetAllColumnNames::ret is %{public}d", ret);
         return ret;
     }
-    int columnCount = static_cast<int>(columnNames.size());
+    columnCount = static_cast<int>(columnNames.size());
+    return E_OK;
+}
 
+int AbsResultSet::GetRow(RowEntity &rowEntity){
+    auto ret = GetColumnCount(rowEntity, columnCount);
+    if (ret != E_OK) {
+        return ret;
+    }
+    
     ColumnType columnType;
     for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
         ret = GetColumnType(columnIndex, columnType);

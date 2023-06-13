@@ -152,7 +152,8 @@ void RdbSqliteSharedResultSetTest::GenerateTimeoutTable()
         (std::chrono::steady_clock::now() - std::chrono::seconds(10)).time_since_epoch().count());
 
     Asset assetValue1 =
-        Asset{ 1, Asset::STATUS_DOWNLOADING, timeout, "name1", "uri1", "createTime1", "modifyTime1", "size1", "hash1", "path1" };
+        Asset{ 1, Asset::STATUS_DOWNLOADING, timeout, "name1", "uri1", "createTime1", "modifyTime1", "size1",
+            "hash1", "path1" };
 
     Assets assets = Assets{ assetValue1 };
     values.PutInt("id", 1);

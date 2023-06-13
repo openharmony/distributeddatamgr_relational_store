@@ -89,7 +89,7 @@ struct RdbStoreContext : public Context {
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
 
     RdbStoreContext()
-        : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(-1),
+        : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(-1), distributedType(0), syncMode(0)
           conflictResolution(NativeRdb::ConflictResolution::ON_CONFLICT_NONE)
     {
     }
@@ -280,7 +280,8 @@ int ParseSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr
     return OK;
 }
 
-int ParseDistributedTableArg(const napi_env &env, size_t argc, napi_value * argv, std::shared_ptr<RdbStoreContext> context)
+int ParseDistributedTableArg(const napi_env &env, size_t argc, napi_value * argv,
+    std::shared_ptr<RdbStoreContext> context)
 {
     context->distributedType = DistributedRdb::DISTRIBUTED_DEVICE;
     if (argc > 1) {
@@ -293,9 +294,11 @@ int ParseDistributedTableArg(const napi_env &env, size_t argc, napi_value * argv
     return OK;
 }
 
-int ParseDistributedConfigArg(const napi_env &env, size_t argc, napi_value * argv, std::shared_ptr<RdbStoreContext> context)
+int ParseDistributedConfigArg(const napi_env &env, size_t argc, napi_value * argv,
+    std::shared_ptr<RdbStoreContext> context)
 {
     context->distributedConfig = { true };
+
     if (argc > 2) {
         auto status = JSUtils::Convert2Value(env, argv[2], context->distributedConfig);
         CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("distributedConfig", "a DistributedConfig type"));
