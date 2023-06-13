@@ -80,7 +80,7 @@ bool Unmarshalling(SubOption &output, MessageParcel &data)
     output.mode = static_cast<decltype(output.mode)>(mode);
     return ret;
 }
-template<> 
+template<>
 bool Marshalling(const ValueObject &input, MessageParcel &data)
 {
     return Marshal(data, input.value);

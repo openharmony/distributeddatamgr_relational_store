@@ -54,6 +54,23 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
 }
 
 template<>
+int32_t Convert2Value(napi_env env, napi_value input, DistributedRdb::DistributedConfig &output)
+{
+    napi_valuetype type;
+    napi_status status = napi_typeof(env, input, &type);
+    if (status != napi_ok || type != napi_object) {
+        LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
+        return napi_invalid_arg;
+    }
+
+    auto ret = Convert2Value(env, GetNamedProperty(env, input, "autoSync"), output.autoSync);
+    if (ret != napi_ok) {
+        return napi_invalid_arg;
+    }
+    return ret;
+}
+
+template<>
 napi_value Convert2JSValue(napi_env env, const Asset &value)
 {
     napi_value object;
@@ -163,6 +180,22 @@ template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::Details &details)
 {
     return nullptr;
+}
+
+template<>
+napi_value Convert2JSValue(napi_env env, const JSChangeInfo &value)
+{
+    napi_value object;
+    auto status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    ADD_JS_PROPERTY(env, object, value, table);
+    ADD_JS_PROPERTY(env, object, value, type);
+    ADD_JS_PROPERTY(env, object, value, inserted);
+    ADD_JS_PROPERTY(env, object, value, updated);
+    ADD_JS_PROPERTY(env, object, value, deleted);
+    return object;
 }
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
