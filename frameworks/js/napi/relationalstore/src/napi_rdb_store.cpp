@@ -74,7 +74,6 @@ struct RdbStoreContext : public Context {
     std::shared_ptr<ResultSet> resultSet_value;
     std::string aliasName;
     std::string pathName;
-    std::string destName;
     std::string srcName;
     int32_t enumArg;
     int32_t distributedType;
