@@ -89,8 +89,10 @@ struct RdbStoreContext : public Context {
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
 
     RdbStoreContext()
-        : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(-1), distributedType(0), syncMode(0)
-          conflictResolution(NativeRdb::ConflictResolution::ON_CONFLICT_NONE)
+        : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(-1), 
+          distributedType(DistributedTableType::DISTRIBUTED_DEVICE),
+          syncMode(SyncMode::PUSH),
+          conflictResolution(ConflictResolution::ON_CONFLICT_NONE)
     {
     }
     virtual ~RdbStoreContext()
