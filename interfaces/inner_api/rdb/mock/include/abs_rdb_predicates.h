@@ -27,7 +27,7 @@ public:
     ~AbsRdbPredicates() override {}
 
     void Clear() override;
-    
+
     std::string ToString() const;
 
     std::string GetTableName() const;

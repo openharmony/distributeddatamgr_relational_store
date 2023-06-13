@@ -23,6 +23,14 @@ namespace OHOS::RelationalStoreJsKit  {
 class NapiRdbStoreObserver : public DistributedRdb::RdbStoreObserver, public NapiUvQueue {
 public:
     using Origin = DistributedRdb::Origin;
+    struct JSChangeInfo {
+        JSChangeInfo(const Origin &origin, ChangeInfo::iterator info);
+        std::string table;
+        int32_t type;
+        std::vector<PrimaryKey> inserted;
+        std::vector<PrimaryKey> updated;
+        std::vector<PrimaryKey> deleted;
+    };
     explicit NapiRdbStoreObserver(napi_env env, napi_value callback, int32_t mode = DistributedRdb::REMOTE);
     virtual ~NapiRdbStoreObserver() noexcept;
 

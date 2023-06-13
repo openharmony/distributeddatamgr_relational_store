@@ -78,6 +78,7 @@ struct RdbStoreContext : public Context {
     int32_t enumArg;
     int32_t distributedType;
     int32_t syncMode;
+    DistributedRdb::DistributedConfig distributedConfig;
     NativeRdb::ConflictResolution conflictResolution;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     DistributedRdb::SyncResult syncResult;
@@ -288,6 +289,17 @@ int ParseDistributedTableArg(const napi_env &env, size_t argc, napi_value * argv
         CHECK_RETURN_SET(checked, std::make_shared<ParamError>("mode", "a DistributedType"));
     }
     LOG_DEBUG("ParseDistributedTableArg end");
+    return OK;
+}
+
+int ParseDistributedConfigArg(const napi_env &env, size_t argc, napi_value * argv, std::shared_ptr<RdbStoreContext> context)
+{
+    context->distributedConfig = { true };
+    if (argc > 2) {
+        auto status = JSUtils::Convert2Value(env, argv[2], context->distributedConfig);
+        CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("distributedConfig", "a DistributedConfig type"));
+    }
+    LOG_DEBUG("ParseDistributedConfigArg end");
     return OK;
 }
 
@@ -1052,15 +1064,17 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
     LOG_DEBUG("RdbStoreProxy::SetDistributedTables start");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 - 3"));
+        CHECK_RETURN_SET_E(1 <= argc && argc <= 3, std::make_shared<ParamNumError>("1 - 4"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTablesName(env, argv[0], context));
         CHECK_RETURN(OK == ParseDistributedTableArg(env, argc, argv, context));
+        CHECK_RETURN(OK == ParseDistributedConfigArg(env, argc, argv, context));
     };
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::SetDistributedTables Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        return obj->rdbStore_->SetDistributedTables(context->tablesNames, context->distributedType);
+        return obj->rdbStore_->SetDistributedTables(
+            context->tablesNames, context->distributedType, context->distributedConfig);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
