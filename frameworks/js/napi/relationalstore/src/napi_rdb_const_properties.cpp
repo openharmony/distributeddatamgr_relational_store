@@ -68,7 +68,7 @@ static napi_value ExportSubscribeType(napi_env env)
 
     SET_NAPI_PROPERTY(subscribeType, "SUBSCRIBE_TYPE_REMOTE", SubscribeMode::REMOTE);
     SET_NAPI_PROPERTY(subscribeType, "SUBSCRIBE_TYPE_CLOUD", SubscribeMode::CLOUD);
-    SET_NAPI_PROPERTY(subscribeType, "SUBSCRIBE_TYPE_CLOUD_DETAIL", SubscribeMode::CLOUD_DETAIL);
+    SET_NAPI_PROPERTY(subscribeType, "SUBSCRIBE_TYPE_CLOUD_DETAILS", SubscribeMode::CLOUD_DETAIL);
     napi_object_freeze(env, subscribeType);
     return subscribeType;
 }
@@ -110,6 +110,29 @@ static napi_value ExportDistributedType(napi_env env)
     return distributedType;
 }
 
+static napi_value ExportChangeType(napi_env env)
+{
+    napi_value changeType = nullptr;
+    napi_create_object(env, &changeType);
+
+    SET_NAPI_PROPERTY(changeType, "DATA_CHANGE", 0);
+    SET_NAPI_PROPERTY(changeType, "ASSET_CHANGE", 1);
+    napi_object_freeze(env, changeType);
+    return changeType;
+}
+
+static napi_value ExportAssetStatus(napi_env env)
+{
+    napi_value assetStatus = nullptr;
+    napi_create_object(env, &assetStatus);
+
+    SET_NAPI_PROPERTY(assetStatus, "ASSET_NORMAL", 0);
+    SET_NAPI_PROPERTY(assetStatus, "ASSET_ABNORMAL", 1);
+    SET_NAPI_PROPERTY(assetStatus, "ASSET_DOWNLOADING", 2);
+    napi_object_freeze(env, assetStatus);
+    return assetStatus;
+}
+
 static napi_value ExportConflictResolution(napi_env env)
 {
     napi_value conflictResolution = nullptr;
@@ -137,6 +160,8 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
 #endif
         DECLARE_NAPI_PROPERTY("Progress", ExportProgress(env)),
         DECLARE_NAPI_PROPERTY("DistributedType", ExportDistributedType(env)),
+        DECLARE_NAPI_PROPERTY("AssetStatus", ExportAssetStatus(env)),
+        DECLARE_NAPI_PROPERTY("ChangeType", ExportChangeType(env)),
     };
 
     size_t count = sizeof(properties) / sizeof(properties[0]);
