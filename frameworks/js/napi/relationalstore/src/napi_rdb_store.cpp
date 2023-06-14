@@ -100,6 +100,8 @@ struct RdbStoreContext : public Context {
     }
 };
 
+constexpr int CPR_SIZE 2;
+
 static __thread napi_ref constructor_ = nullptr;
 
 RdbStoreProxy::RdbStoreProxy()
@@ -301,7 +303,7 @@ int ParseDistributedConfigArg(const napi_env &env, size_t argc, napi_value * arg
 {
     context->distributedConfig = { true };
 
-    if (argc > 2) {
+    if (argc > CPR_SIZE) {
         auto status = JSUtils::Convert2Value(env, argv[2], context->distributedConfig);
         CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("distributedConfig", "a DistributedConfig type"));
     }

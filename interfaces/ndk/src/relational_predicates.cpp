@@ -207,7 +207,8 @@ OH_Predicates *Rdb_Predicates_LessThan(OH_Predicates *predicates, const char *fi
     return predicates;
 }
 
-OH_Predicates *Rdb_Predicates_GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
+OH_Predicates *Rdb_Predicates_GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field,
+    OH_VObject *valueObject)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
         || valueObject == nullptr) {

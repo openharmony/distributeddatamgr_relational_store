@@ -117,7 +117,7 @@ int AbsResultSet::IsColumnNull(int columnIndex, bool &isNull)
     return E_OK;
 }
 
-int AbsResultSet::GetColumnCount(RowEntity &rowEntity, int columnCount)
+int AbsResultSet::GetRow(RowEntity &rowEntity){
 {
     rowEntity.Clear();
     std::vector<std::string> columnNames;
@@ -126,15 +126,7 @@ int AbsResultSet::GetColumnCount(RowEntity &rowEntity, int columnCount)
         LOG_ERROR("GetAllColumnNames::ret is %{public}d", ret);
         return ret;
     }
-    columnCount = static_cast<int>(columnNames.size());
-    return E_OK;
-}
-
-int AbsResultSet::GetRow(RowEntity &rowEntity){
-    auto ret = GetColumnCount(rowEntity, columnCount);
-    if (ret != E_OK) {
-        return ret;
-    }
+    int columnCount = static_cast<int>(columnNames.size());
     
     ColumnType columnType;
     for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
@@ -143,53 +135,62 @@ int AbsResultSet::GetRow(RowEntity &rowEntity){
             LOG_ERROR("GetColumnType::ret is %{public}d", ret);
             return ret;
         }
-        switch (columnType) {
-            case ColumnType::TYPE_NULL: {
-                rowEntity.Put(columnNames[columnIndex], ValueObject());
-                break;
-            }
-            case ColumnType::TYPE_INTEGER: {
-                int64_t value;
-                GetLong(columnIndex, value);
-                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
-                break;
-            }
-            case ColumnType::TYPE_FLOAT: {
-                double value;
-                GetDouble(columnIndex, value);
-                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
-                break;
-            }
-            case ColumnType::TYPE_STRING: {
-                std::string value;
-                GetString(columnIndex, value);
-                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
-                break;
-            }
-            case ColumnType::TYPE_BLOB: {
-                std::vector<uint8_t> value;
-                GetBlob(columnIndex, value);
-                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
-                break;
-            }
-            case ColumnType::TYPE_ASSET: {
-                ValueObject::Asset value;
-                GetAsset(columnIndex, value);
-                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
-                break;
-            }
-            case ColumnType::TYPE_ASSETS: {
-                ValueObject::Assets value;
-                GetAssets(columnIndex, value);
-                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
-                break;
-            }
-            default: {
-                return E_ERROR;
-            }
+        ret = GetRowDataByColumnType(columnType, columnNames, columnIndex);
+        if (ret != E_OK) {
+            LOG_ERROR("GetRowDataByColumnType::ret is %{public}d", ret);
+            return ret;
         }
+        break;
     }
     return E_OK;
+}
+
+int GetRowDataByColumnType(ColumnType &columnType, std::vector<std::string> &columnNames, int &columnIndex){
+    switch (columnType) {
+        case ColumnType::TYPE_NULL: {
+            rowEntity.Put(columnNames[columnIndex], ValueObject());
+            return E_OK;
+        }
+        case ColumnType::TYPE_INTEGER: {
+            int64_t value;
+            GetLong(columnIndex, value);
+            rowEntity.Put(columnNames[columnIndex], ValueObject(value));
+            return E_OK;
+        }
+        case ColumnType::TYPE_FLOAT: {
+            double value;
+            GetDouble(columnIndex, value);
+            rowEntity.Put(columnNames[columnIndex], ValueObject(value));
+            return E_OK;
+        }
+        case ColumnType::TYPE_STRING: {
+            std::string value;
+            GetString(columnIndex, value);
+            rowEntity.Put(columnNames[columnIndex], ValueObject(value));
+            return E_OK;
+        }
+        case ColumnType::TYPE_BLOB: {
+            std::vector<uint8_t> value;
+            GetBlob(columnIndex, value);
+            rowEntity.Put(columnNames[columnIndex], ValueObject(value));
+            return E_OK;
+        }
+        case ColumnType::TYPE_ASSET: {
+            ValueObject::Asset value;
+            GetAsset(columnIndex, value);
+            rowEntity.Put(columnNames[columnIndex], ValueObject(value));
+            return E_OK;
+        }
+        case ColumnType::TYPE_ASSETS: {
+            ValueObject::Assets value;
+            GetAssets(columnIndex, value);
+            rowEntity.Put(columnNames[columnIndex], ValueObject(value));
+            return E_OK;
+        }
+        default: {
+            return E_ERROR;
+        }
+    } 
 }
 
 int AbsResultSet::GoToRow(int position)
