@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,41 @@ const STORE_CONFIG = {
     name: "Asset.db",
     securityLevel: data_relationalStore.SecurityLevel.S1,
 }
+const asset1 = {
+    name: "name1",
+    uri: "uri1",
+    createTime: "createTime1",
+    modifyTime: "modifyTime1",
+    size: "size1",
+    path: "path1",
+    status: 1,
+}
+const asset2 = {
+    name: "name2",
+    uri: "uri2",
+    createTime: "createTime2",
+    modifyTime: "modifyTime2",
+    size: "size2",
+    path: "path2",
+    status: 2,
+}
+const asset3 = {
+    name: "name3",
+    uri: "uri3",
+    createTime: "createTime3",
+    modifyTime: "modifyTime3",
+    size: "size3",
+    path: "path3",
+    status: 3,
+}
+const asset4 = {
+    name: "name4",
+    uri: "uri4",
+    createTime: "createTime4",
+    modifyTime: "modifyTime4",
+    size: "size4",
+    path: "path4",
+}
 var rdbStore = undefined;
 
 describe('rdbResultSetTest', function () {
@@ -34,13 +69,11 @@ describe('rdbResultSetTest', function () {
         console.info(TAG + 'beforeAll')
         rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
         await rdbStore.executeSql(CREATE_TABLE_TEST, null);
-
     })
 
     beforeEach(async function () {
         await rdbStore.executeSql(CREATE_TABLE_TEST, null);
         console.info(TAG + 'beforeEach');
-        await createTest();
     })
 
     afterEach(async function () {
@@ -57,33 +90,6 @@ describe('rdbResultSetTest', function () {
     // insert data
     async function createTest() {
         console.log(TAG + "createTest data start");
-        const asset1 = {
-            name: "name1",
-            uri: "uri1",
-            createTime: "createTime1",
-            modifyTime: "modifyTime1",
-            size: "size1",
-            path: "path1",
-            status: 1,
-        }
-        const asset2 = {
-            name: "name2",
-            uri: "uri2",
-            createTime: "createTime2",
-            modifyTime: "modifyTime2",
-            size: "size2",
-            path: "path2",
-            status: 1,
-        }
-        const asset3 = {
-            name: "name3",
-            uri: "uri3",
-            createTime: "createTime3",
-            modifyTime: "modifyTime3",
-            size: "size3",
-            path: "path3",
-            status: 3,
-        }
         const assets1 = [asset1];
         const assets2 = [asset1, asset2, asset3];
         let valuesBucket = {
@@ -105,12 +111,22 @@ describe('rdbResultSetTest', function () {
         console.log(TAG + "createTest data end");
     }
 
+    async function createErrorTest() {
+        console.log(TAG + "createErrorTest data start");
+        let valuesBucket = {
+            "data1": asset4,
+        }
+        await rdbStore.insert("test", valuesBucket)
+        console.log(TAG + "createErrorTest data end");
+    }
+
     /**
      * @tc.name resultSet getAsset normal test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0010
      * @tc.desc resultSet getAsset normal test
      */
     it('testGetAsset0001', 0, async function (done) {
+        await createTest();
         console.log(TAG + "************* testGetAsset0001 start *************");
         let predicates = await new data_relationalStore.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
@@ -153,6 +169,7 @@ describe('rdbResultSetTest', function () {
      * @tc.desc resultSet getAsset normal test
      */
     it('testGetAsset0002', 0, async function (done) {
+        await createTest();
         console.log(TAG + "************* testGetAsset0002 start *************");
         let predicates = await new data_relationalStore.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
@@ -186,6 +203,7 @@ describe('rdbResultSetTest', function () {
      * @tc.desc resultSet getAsset normal test
      */
     it('testGetAsset0003', 0, async function (done) {
+        await createTest();
         console.log(TAG + "************* testGetAsset0003 start *************");
         let predicates = await new data_relationalStore.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
@@ -209,11 +227,195 @@ describe('rdbResultSetTest', function () {
     })
 
     /**
+     * @tc.name resultSet getAsset normal test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0000
+     * @tc.desc resultSet getAsset normal test
+     */
+    it('testGetAssetStatus', 0, async function (done) {
+        await createErrorTest();
+        console.log(TAG + "************* testGetAsset0000 start *************");
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        try {
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const id = resultSet.getLong(resultSet.getColumnIndex("id"))
+            const data1 = resultSet.getAsset(resultSet.getColumnIndex("data1"))
+            console.log(TAG + "id=" + id + ", data1=" + data1);
+            expect("name4").assertEqual(data1.name);
+            expect("uri4").assertEqual(data1.uri);
+            expect("createTime4").assertEqual(data1.createTime);
+            expect("modifyTime4").assertEqual(data1.modifyTime);
+            expect("size4").assertEqual(data1.size);
+            expect("path4").assertEqual(data1.path);
+            expect(0).assertEqual(data1.status);
+
+            resultSet.close();
+            expect(true).assertEqual(resultSet.isClosed)
+        } catch (e) {
+            expect(null).assertFail();
+        }
+        resultSet = null
+        done();
+        console.log(TAG + "************* testGetAsset0000 end *************");
+    })
+
+    /**
+     * @tc.name resultSet getAsset normal test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0000
+     * @tc.desc resultSet getAsset normal test
+     */
+    it('testGetAssetStatusUndefined', 0, async function (done) {
+        console.log(TAG + "************* testGetAssetStatusUndefined start *************");
+        const asset = {
+            name: "name4",
+            uri: "uri4",
+            createTime: "createTime4",
+            modifyTime: "modifyTime4",
+            size: "size4",
+            path: "path4",
+            status: undefined,
+        }
+        let valuesBucket = {
+            "data1": asset,
+        }
+        await rdbStore.insert("test", valuesBucket)
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        try {
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const id = resultSet.getLong(resultSet.getColumnIndex("id"))
+            const data1 = resultSet.getAsset(resultSet.getColumnIndex("data1"))
+            console.log(TAG + "id=" + id + ", data1=" + data1);
+            expect("name4").assertEqual(data1.name);
+            expect("uri4").assertEqual(data1.uri);
+            expect("createTime4").assertEqual(data1.createTime);
+            expect("modifyTime4").assertEqual(data1.modifyTime);
+            expect("size4").assertEqual(data1.size);
+            expect("path4").assertEqual(data1.path);
+            expect(0).assertEqual(data1.status);
+
+            resultSet.close();
+            expect(true).assertEqual(resultSet.isClosed)
+        } catch (e) {
+            expect(null).assertFail();
+        }
+        resultSet = null
+        done();
+        console.log(TAG + "************* testGetAssetStatusUndefined end *************");
+    })
+
+    /**
+     * @tc.name resultSet getAsset normal test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0000
+     * @tc.desc resultSet getAsset normal test
+     */
+    it('testGetAssetStatusNull', 0, async function (done) {
+        console.log(TAG + "************* testGetAssetStatusNull start *************");
+        const asset = {
+            name: "name4",
+            uri: "uri4",
+            createTime: "createTime4",
+            modifyTime: "modifyTime4",
+            size: "size4",
+            path: "path4",
+            status: null,
+        }
+        let valuesBucket = {
+            "data1": asset,
+        }
+        await rdbStore.insert("test", valuesBucket)
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        try {
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const id = resultSet.getLong(resultSet.getColumnIndex("id"))
+            const data1 = resultSet.getAsset(resultSet.getColumnIndex("data1"))
+            console.log(TAG + "id=" + id + ", data1=" + data1);
+            expect("name4").assertEqual(data1.name);
+            expect("uri4").assertEqual(data1.uri);
+            expect("createTime4").assertEqual(data1.createTime);
+            expect("modifyTime4").assertEqual(data1.modifyTime);
+            expect("size4").assertEqual(data1.size);
+            expect("path4").assertEqual(data1.path);
+            expect(0).assertEqual(data1.status);
+
+            resultSet.close();
+            expect(true).assertEqual(resultSet.isClosed)
+        } catch (e) {
+            expect(null).assertFail();
+        }
+        resultSet = null
+        done();
+        console.log(TAG + "************* testGetAssetStatusNull end *************");
+    })
+
+    /**
+     * @tc.name resultSet getAsset normal test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0040
+     * @tc.desc resultSet getAsset normal test
+     */
+    it('testGetAssetUndefined', 0, async function (done) {
+        console.log(TAG + "************* testGetAssetUndefined start *************");
+        const asset = {
+            name: undefined,
+            uri: undefined,
+            createTime: "createTime",
+            modifyTime: "modifyTime",
+            size: "size",
+            path: "path",
+        }
+        try {
+            let valuesBucket = {
+                "data1": asset,
+            }
+            await rdbStore.insert("test", valuesBucket);
+            console.error(TAG + "testGetAssetUndefined should not come here");
+            expect(null).assertFail();
+            done();
+        } catch (e) {
+            console.log(TAG + "testGetAssetUndefined get error" + e);
+            expect(true).assertTrue();
+            done();
+        }
+    })
+
+    /**
+     * @tc.name resultSet getAsset normal test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0050
+     * @tc.desc resultSet getAsset normal test
+     */
+    it('testGetAssetNull', 0, async function (done) {
+        console.log(TAG + "************* testGetAssetNull start *************");
+        const asset = {
+            name: null,
+            uri: null,
+            createTime: "createTime",
+            modifyTime: "modifyTime",
+            size: "size",
+            path: "path",
+        }
+        try {
+            let valuesBucket = {
+                "data1": asset,
+            }
+            await rdbStore.insert("test", valuesBucket);
+            console.error(TAG + "testGetAssetNull should not come here");
+            expect(null).assertFail();
+            done();
+        } catch (e) {
+            console.log(TAG + "testGetAssetNull get error" + e);
+            expect(true).assertTrue();
+            done();
+        }
+    })
+
+    /**
      * @tc.name resultSet getAssets normal test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0010
      * @tc.desc resultSet getAssets normal test
      */
     it('testGetAssets0001', 0, async function (done) {
+        await createTest();
         console.log(TAG + "************* testGetAssets0001 start *************");
         let predicates = await new data_relationalStore.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
@@ -248,6 +450,7 @@ describe('rdbResultSetTest', function () {
      * @tc.desc resultSet getAssets normal test
      */
     it('testGetAssets0002', 0, async function (done) {
+        await createTest();
         console.log(TAG + "************* testGetAssets0002 start *************");
         let predicates = await new data_relationalStore.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
@@ -301,6 +504,7 @@ describe('rdbResultSetTest', function () {
      * @tc.desc resultSet getAssets normal test
      */
     it('testGetAssets0003', 0, async function (done) {
+        await createTest();
         console.log(TAG + "************* testGetAssets0003 start *************");
         let predicates = await new data_relationalStore.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
