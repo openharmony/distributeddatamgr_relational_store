@@ -24,8 +24,9 @@ using namespace OHOS::Rdb;
 
 Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
 {
+    this->stageContext_ = stageContext;
+    isStageMode_ = true;
     databaseDir_ = stageContext->GetDatabaseDir();
-    preferencesDir_ = stageContext->GetPreferencesDir();
     bundleName_ = stageContext->GetBundleName();
     area_ = stageContext->GetArea();
     auto hapInfo = stageContext->GetHapModuleInfo();
@@ -59,15 +60,14 @@ Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
 Context::Context(std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext)
 {
     databaseDir_ = abilityContext->GetDatabaseDir();
-    preferencesDir_ = abilityContext->GetPreferencesDir();
     bundleName_ = abilityContext->GetBundleName();
     area_ = abilityContext->GetArea();
     auto abilityInfo = abilityContext->GetAbilityInfo();
     if (abilityInfo != nullptr) {
         moduleName_ = abilityInfo->moduleName;
     }
-    LOG_DEBUG("FA: area:%{public}d database:%{private}s preferences:%{private}s bundle:%{public}s hap:%{public}s",
-        area_, databaseDir_.c_str(), preferencesDir_.c_str(), bundleName_.c_str(), moduleName_.c_str());
+    LOG_DEBUG("FA: area:%{public}d database:%{private}s bundle:%{public}s hap:%{public}s",
+        area_, databaseDir_.c_str(), bundleName_.c_str(), moduleName_.c_str());
 }
 
 std::string Context::GetDatabaseDir()
@@ -75,9 +75,9 @@ std::string Context::GetDatabaseDir()
     return databaseDir_;
 }
 
-std::string Context::GetPreferencesDir()
+std::string Context::GetDatabaseDir(const std::string &dataGroupId)
 {
-    return preferencesDir_;
+    return stageContext_->GetDatabaseDir(dataGroupId);  // 暂时定函数重载的方式
 }
 
 std::string Context::GetBundleName()
@@ -114,6 +114,11 @@ bool Context::IsSystemAppCalled()
 bool Context::IsHasProxyDataConfig() const
 {
     return hasProxyDataConfig_;
+}
+
+bool Context::IsStageMode() const
+{
+    return isStageMode_;
 }
 
 bool JSAbility::CheckContext(napi_env env, napi_callback_info info)
