@@ -115,8 +115,8 @@ static napi_value ExportChangeType(napi_env env)
     napi_value changeType = nullptr;
     napi_create_object(env, &changeType);
 
-    SET_NAPI_PROPERTY(changeType, "DATA_CHANGE", 0);
-    SET_NAPI_PROPERTY(changeType, "ASSET_CHANGE", 1);
+    SET_NAPI_PROPERTY(changeType, "DATA_CHANGE", DistributedRdb::Origin::BASIC_DATA);
+    SET_NAPI_PROPERTY(changeType, "ASSET_CHANGE", DistributedRdb::Origin::ASSET_DATA);
     napi_object_freeze(env, changeType);
     return changeType;
 }
@@ -126,9 +126,9 @@ static napi_value ExportAssetStatus(napi_env env)
     napi_value assetStatus = nullptr;
     napi_create_object(env, &assetStatus);
 
-    SET_NAPI_PROPERTY(assetStatus, "ASSET_NORMAL", 0);
-    SET_NAPI_PROPERTY(assetStatus, "ASSET_ABNORMAL", 1);
-    SET_NAPI_PROPERTY(assetStatus, "ASSET_DOWNLOADING", 2);
+    SET_NAPI_PROPERTY(assetStatus, "ASSET_NORMAL", NativeRdb::AssetValue::STATUS_NORMAL);
+    SET_NAPI_PROPERTY(assetStatus, "ASSET_ABNORMAL", NativeRdb::AssetValue::STATUS_ABNORMAL);
+    SET_NAPI_PROPERTY(assetStatus, "ASSET_DOWNLOADING", NativeRdb::AssetValue::STATUS_DOWNLOADING);
     napi_object_freeze(env, assetStatus);
     return assetStatus;
 }
