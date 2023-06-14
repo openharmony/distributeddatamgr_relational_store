@@ -24,16 +24,17 @@ struct AssetValue {
         STATUS_DOWNLOADING,
         STATUS_BUTT
     };
+    static constexpr uint64_t NO_EXPIRES_TIME = 0;
     uint32_t version = 0;
-    uint32_t status = 0;
-    uint64_t timeStamp = 0;
+    uint32_t status = STATUS_NORMAL;
+    uint64_t timeStamp = NO_EXPIRES_TIME;
     std::string name;
     std::string uri;
+    std::string path;
     std::string createTime;
     std::string modifyTime;
     std::string size;
     std::string hash;
-    std::string path;
 };
 }
 #endif // OHOS_RELATIONAL_STORE_INNER_API_ASSET_VALUE_H
