@@ -65,6 +65,10 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 {
+    if (resultSet_ == nullptr) {
+        LOG_ERROR("resultSet is null");
+        return nullptr;
+    }
     return std::make_shared<RdbDataShareAdapter::RdbResultSetBridge>(resultSet_);
 }
 #endif
