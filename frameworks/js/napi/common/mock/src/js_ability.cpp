@@ -31,7 +31,6 @@ Context::Context()
     baseDir = getenv("TEMP");
     if (!baseDir.empty()) {
         databaseDir_ = baseDir + "\\HuaweiDevEcoStudioDatabases";
-        preferencesDir_ = baseDir + "\\HuaweiDevEcoStudioPreferences";
     }
 #endif
 
@@ -40,7 +39,6 @@ Context::Context()
     baseDir = "/Users/" + baseDir + "/Library/Caches";
     if (!baseDir.empty()) {
         databaseDir_ = baseDir + "/HuaweiDevEcoStudioDatabases";
-        preferencesDir_ = baseDir + "/HuaweiDevEcoStudioPreferences";
     }
 #endif
     bundleName_ = "com.example.myapplication";
@@ -56,11 +54,6 @@ Context::Context(std::shared_ptr<AbilityRuntime::Platform::Context> stageContext
 std::string Context::GetDatabaseDir()
 {
     return databaseDir_;
-}
-
-std::string Context::GetPreferencesDir()
-{
-    return preferencesDir_;
 }
 
 std::string Context::GetBundleName()

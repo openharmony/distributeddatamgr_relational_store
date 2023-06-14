@@ -443,6 +443,16 @@ public:
     API_EXPORT std::map<std::string, ScalarFunctionInfo> GetScalarFunctions() const;
 
     /**
+     * @brief Sets the module name for the object.
+     */
+    API_EXPORT void SetDataGroupId(const std::string &DataGroupId);
+
+    /**
+     * @brief Obtains the module name in this {@code StoreConfig} object.
+     */
+    API_EXPORT std::string GetDataGroupId() const;
+
+    /**
      * @brief Overload the line number operator.
      */
     bool operator==(const RdbStoreConfig &config) const
@@ -508,6 +518,7 @@ private:
     int pageSize;
     int readConSize_ = 4;
     std::string encryptAlgo;
+    std::string dataGroupId_;
 
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
 };

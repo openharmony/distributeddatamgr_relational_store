@@ -31,6 +31,8 @@ constexpr int E_NON_SYSTEM_APP_ERROR = 202;
 constexpr int E_INNER_ERROR = 14800000;
 constexpr int E_RESULT_GOTO_ERROR = 14800012;
 constexpr int E_RESULT_GET_ERROR = 14800013;
+constexpr int E_NOT_STAGE_MODE = 14801001;
+constexpr int E_DATA_GROUP_ID_INVALID = 14801002;
 
 const static std::map<int, std::string> ERROR_MAPS = {
     { NativeRdb::E_WAL_SIZE_OVER_LIMIT, "The WAL file size over default limit." },
@@ -39,6 +41,8 @@ const static std::map<int, std::string> ERROR_MAPS = {
     { NativeRdb::E_NOT_SUPPORTED, "Capability not supported" },
     { E_RESULT_GOTO_ERROR, "The result set is empty or the specified location is invalid." },
     { NativeRdb::E_INVALID_STATEMENT, "The column value is null or the column type is incompatible." },
+    { E_NOT_STAGE_MODE, "Only supported in Stage Mode." },
+    { E_DATA_GROUP_ID_INVALID, "The data group id is invalid." },
 };
 
 #define RDB_REVT_NOTHING
