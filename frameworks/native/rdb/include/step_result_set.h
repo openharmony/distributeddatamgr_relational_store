@@ -17,6 +17,7 @@
 #define NATIVE_RDB_STEP_RESULT_SET_H
 
 #include <memory>
+#include <shared_mutex>
 #include <thread>
 #include <vector>
 
@@ -55,14 +56,14 @@ public:
     int IsColumnNull(int columnIndex, bool &isNull) override;
     bool IsClosed() const override;
     int Close() override;
-    int FinishStep();
-    int PrepareStep();
 
 private:
     template<typename T>
     int GetValue(int32_t col, T &value);
     std::pair<int, ValueObject> GetValueObject(int32_t col, size_t index);
     void Reset();
+    int FinishStep();
+    int PrepareStep();
     std::shared_ptr<RdbStoreImpl> rdb;
     std::string sql;
     std::vector<std::string> selectionArgs;
@@ -79,6 +80,7 @@ private:
     SqliteConnectionPool *connectionPool_;
     SqliteConnection *connection_;
     std::vector<std::string> columnNames_;
+    mutable std::shared_mutex mutex_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

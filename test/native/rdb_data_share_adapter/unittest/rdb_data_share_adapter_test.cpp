@@ -174,7 +174,7 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_002, TestSize.Level1)
     DataSharePredicates predicates;
     predicates.EqualTo(column, value);
     std::vector<std::string> columns;
-    std::shared_ptr<AbsSharedResultSet> allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
+    auto allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
     int rowCount;
     allDataTypes.get()->GetRowCount(rowCount);
     EXPECT_EQ(rowCount, 1);
@@ -193,7 +193,7 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_003, TestSize.Level1)
     OHOS::DataShare::DataSharePredicates predicates;
     predicates.GreaterThan("data2", -5);
     std::vector<std::string> columns;
-    std::shared_ptr<AbsSharedResultSet> allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
+    auto allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
     int rdbRowCount;
     allDataTypes.get()->GetRowCount(rdbRowCount);
     EXPECT_EQ(rdbRowCount, 3);
@@ -235,7 +235,7 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_004, TestSize.Level1)
     predicates.SetWhereArgs(std::vector<std::string> { "-5" });
     predicates.SetOrder("data3");
     std::vector<std::string> columns;
-    std::shared_ptr<AbsSharedResultSet> allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
+    auto allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
     int rowCount;
     allDataTypes.get()->GetRowCount(rowCount);
     EXPECT_EQ(rowCount, 3);
@@ -293,7 +293,7 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_005, TestSize.Level1)
     std::string value = "tulip";
     predicates.EqualTo("data1", value);
     std::vector<std::string> columns;
-    std::shared_ptr<AbsSharedResultSet> allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
+    auto allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
     int rowCount;
     allDataTypes.get()->GetRowCount(rowCount);
     EXPECT_EQ(rowCount, 1);
@@ -334,7 +334,7 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_006, TestSize.Level1)
     OHOS::DataShare::DataSharePredicates predicates;
     predicates.Limit(1, 2);
     std::vector<std::string> columns;
-    std::shared_ptr<AbsSharedResultSet> allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
+    auto allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
     int rdbRowCount;
     allDataTypes.get()->GetRowCount(rdbRowCount);
     EXPECT_EQ(rdbRowCount, 1);
@@ -396,7 +396,7 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_007, TestSize.Level1)
     std::string table = "test";
     OHOS::DataShare::DataSharePredicates predicates;
     std::vector<std::string> columns;
-    std::shared_ptr<AbsSharedResultSet> allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
+    auto allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
 
     allDataTypes->GoToFirstRow();
     int64_t int64Value;

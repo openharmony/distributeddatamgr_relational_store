@@ -181,7 +181,7 @@ OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const ch
         }
     }
 
-    std::unique_ptr<OHOS::NativeRdb::ResultSet> resultSet =
+    std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet =
         tempStore->GetStore()->QueryByStep(tempPredicate->GetPredicates(), columns);
     if (resultSet == nullptr) {
         return nullptr;
@@ -198,7 +198,7 @@ OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, const char *sql)
         return nullptr;
     }
     auto tempStore = static_cast<OHOS::RdbNdk::StoreImpl *>(store);
-    std::unique_ptr<OHOS::NativeRdb::ResultSet> resultSet =
+    std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet =
         tempStore->GetStore()->QuerySql(sql, std::vector<std::string>{});
     if (resultSet == nullptr) {
         return nullptr;

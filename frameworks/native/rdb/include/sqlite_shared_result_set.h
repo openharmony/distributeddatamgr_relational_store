@@ -18,10 +18,11 @@
 #define NATIVE_RDB_SQLITE_SHARED_RESULT_SET_H
 
 #include <memory>
+#include <mutex>
+#include <string>
 #include <thread>
 #include <vector>
-#include <string>
-#include <mutex>
+
 #include "sqlite_connection_pool.h"
 #include "sqlite_statement.h"
 #include "shared_block.h"

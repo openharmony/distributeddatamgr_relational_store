@@ -70,14 +70,9 @@ struct RdbStoreContext : public BaseContext {
     uint64_t rowId;
     uint64_t insertNum;
     std::vector<uint8_t> newKey;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    std::unique_ptr<AbsSharedResultSet> resultSet;
-#endif
-    std::shared_ptr<ResultSet> newResultSet;
-    std::unique_ptr<ResultSet> resultSet_value;
+    std::shared_ptr<ResultSet> resultSet;
     std::string aliasName;
     std::string pathName;
-    std::string destName;
     std::string srcName;
     int32_t enumArg;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
@@ -727,24 +722,13 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() {
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
-        context->resultSet_value = obj->rdbStore_->Query(*(context->rdbPredicates), context->columns);
-        LOG_DEBUG("RdbStoreProxy::Query result is nullptr ? %{public}d", (context->resultSet_value == nullptr));
-        return (context->resultSet_value != nullptr) ? OK : ERR;
-#else
         context->resultSet = obj->rdbStore_->Query(*(context->rdbPredicates), context->columns);
         LOG_DEBUG("RdbStoreProxy::Query result is nullptr ? %{public}d", (context->resultSet == nullptr));
         return (context->resultSet != nullptr) ? OK : ERR;
-#endif
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
         result = ResultSetProxy::NewInstance(
-            env, std::shared_ptr<ResultSet>(context->resultSet_value.release()), context->apiversion);
-#else
-        result = ResultSetProxy::NewInstance(
-            env, std::shared_ptr<AbsSharedResultSet>(context->resultSet.release()), context->apiversion);
-#endif
+            env, context->resultSet, context->apiversion);
         return (result != nullptr) ? OK : ERR;
     };
     context->SetAction(env, info, input, exec, output);
@@ -774,9 +758,9 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
     auto exec = [context]() {
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
-        context->resultSet_value = obj->rdbStore_->QueryByStep(context->sql, context->columns);
-        LOG_ERROR("RdbStoreProxy::QuerySql is nullptr ? %{public}d ", context->resultSet_value == nullptr);
-        return (context->resultSet_value != nullptr) ? OK : ERR;
+        context->resultSet = obj->rdbStore_->QueryByStep(context->sql, context->columns);
+        LOG_ERROR("RdbStoreProxy::QuerySql is nullptr ? %{public}d ", context->resultSet == nullptr);
+        return (context->resultSet != nullptr) ? OK : ERR;
 #else
         std::string selectionArgs = ",";
         for (size_t i = 0; i < context->selectionArgs.size(); i++) {
@@ -787,13 +771,8 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
 #endif
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
         result = ResultSetProxy::NewInstance(
-            env, std::shared_ptr<ResultSet>(context->resultSet_value.release()), context->apiversion);
-#else
-        result = ResultSetProxy::NewInstance(
-            env, std::shared_ptr<AbsSharedResultSet>(context->resultSet.release()), context->apiversion);
-#endif
+            env, context->resultSet, context->apiversion);
         return (result != nullptr) ? OK : ERR;
     };
     context->SetAction(env, info, input, exec, output);
@@ -1031,14 +1010,13 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
     auto exec = [context]() {
         LOG_DEBUG("RdbStoreProxy::QueryByStep Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        context->resultSet_value = obj->rdbStore_->QueryByStep(context->sql, context->columns);
-        LOG_ERROR("RdbStoreProxy::QueryByStep is nullptr ? %{public}d ", context->resultSet_value == nullptr);
-        return (context->resultSet_value != nullptr) ? OK : ERR;
+        context->resultSet = obj->rdbStore_->QueryByStep(context->sql, context->columns);
+        LOG_ERROR("RdbStoreProxy::QueryByStep is nullptr ? %{public}d ", context->resultSet == nullptr);
+        return (context->resultSet != nullptr) ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
-        if (context->resultSet_value != nullptr) {
-            result = ResultSetProxy::NewInstance(
-                env, std::shared_ptr<ResultSet>(context->resultSet_value.release()), context->apiversion);
+        if (context->resultSet != nullptr) {
+            result = ResultSetProxy::NewInstance(env, context->resultSet, context->apiversion);
         }
         LOG_DEBUG("RdbStoreProxy::QueryByStep end");
         return (result != nullptr) ? OK : ERR;

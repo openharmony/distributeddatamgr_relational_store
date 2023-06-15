@@ -144,7 +144,7 @@ void RdbConcurrentTest::QueryThread(int n)
 int RdbConcurrentTest::Query()
 {
     std::shared_ptr<RdbStore> &store = RdbConcurrentTest::store;
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     if (resultSet == nullptr) {
         return E_ERROR;
     }
