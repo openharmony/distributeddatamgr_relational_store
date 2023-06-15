@@ -129,7 +129,7 @@ void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
     : rdbStoreConfig(config), connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false),
-      isMemoryRdb(false), isEncrypt_(false)
+      isMemoryRdb(false), isEncrypt_(false), backupFilePath_({})
 {
 }
 
@@ -1110,12 +1110,12 @@ int RdbStoreImpl::ConfigLocale(const std::string localeStr)
 int RdbStoreImpl::Restore(const std::string backupPath, const std::vector<uint8_t> &newKey)
 {
     if (isOpen == false) {
-        LOG_ERROR("ChangeDbFileForRestore:The connection pool has been closed.");
+        LOG_ERROR("The connection pool has been closed.");
         return E_ERROR;
     }
 
     if (connectionPool == nullptr) {
-        LOG_ERROR("ChangeDbFileForRestore:The connectionPool is null.");
+        LOG_ERROR("The connectionPool is null.");
         return E_ERROR;
     }
 
@@ -1126,7 +1126,7 @@ int RdbStoreImpl::Restore(const std::string backupPath, const std::vector<uint8_
     }
 
     if (backupFilePath == path) {
-        LOG_ERROR("ChangeDbFileForRestore:The backupPath and path should not be same.");
+        LOG_ERROR("The backupPath and path should not be same.");
         return E_INVALID_FILE_PATH;
     }
 

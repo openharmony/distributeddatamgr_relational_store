@@ -18,7 +18,7 @@
 #include <string>
 #include "common.h"
 #include "relational_store.h"
-#include "relational_error_code.h"
+#include "relational_store_error_code.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;

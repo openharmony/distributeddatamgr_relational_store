@@ -15,7 +15,7 @@
 
 #include "logger.h"
 #include "oh_predicates.h"
-#include "relational_error_code.h"
+#include "relational_store_error_code.h"
 #include "relational_predicates_impl.h"
 #include "relational_value_object_impl.h"
 #include "sqlite_global_config.h"

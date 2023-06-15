@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RELATIONAL_ERRNO_CODE_H
-#define RELATIONAL_ERRNO_CODE_H
+#ifndef RELATIONAL_STORE_ERRNO_CODE_H
+#define RELATIONAL_STORE_ERRNO_CODE_H
 
 /**
  * @addtogroup RDB
@@ -31,7 +31,7 @@
 
 
 /**
- * @file relational_error_code.h
+ * @file relational_store_error_code.h
  *
  * @brief Declaration error code information.
  *
@@ -313,4 +313,4 @@ typedef enum OH_Rdb_ErrCode {
 };
 #endif
 
-#endif // RELATIONAL_ERRNO_CODE_H
+#endif // RELATIONAL_STORE_ERRNO_CODE_H

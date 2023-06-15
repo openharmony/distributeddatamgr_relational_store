@@ -83,8 +83,6 @@ public:
     virtual bool IsReadOnly() const = 0;
     virtual bool IsMemoryRdb() const = 0;
     virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) = 0;
-    virtual int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
-        const std::vector<uint8_t> &newKey) = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif
