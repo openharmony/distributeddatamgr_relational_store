@@ -48,8 +48,10 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
     NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, modifyTime), napi_invalid_arg);
     NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, size), napi_invalid_arg);
     NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, path), napi_invalid_arg);
-    NAPI_CALL_RETURN_ERR(Convert2ValueExt(env, GetNamedProperty(env, jsValue, "status"), output.status),
-        napi_invalid_arg);
+    auto jsStatus = GetNamedProperty(env, jsValue, "status");
+    if (jsStatus != nullptr) {
+        Convert2ValueExt(env, jsStatus, output.status);
+    }
     return napi_ok;
 }
 
