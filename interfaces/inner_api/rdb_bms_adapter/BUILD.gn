@@ -20,18 +20,21 @@ config("rdb_bms_adapter_config") {
     cflags_cc = [ "-fvisibility=hidden" ]
   }
   include_dirs = [
-    "../appdatafwk/include",
     "include",
     "${relational_store_common_path}/include",
     "${relational_store_innerapi_path}/rdb_bms_adaptor/include",
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_native_path}/rdb/include",
+    "${relational_store_innerapi_path}/appdatafwk/include",
   ]
 }
 
 config("rdb_bms_adapter_public_config") {
   visibility = [ ":*" ]
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+    "${relational_store_innerapi_path}/appdatafwk/include",
+  ]
 }
 
 ohos_shared_library("rdb_bms_adapter") {
@@ -46,7 +49,7 @@ ohos_shared_library("rdb_bms_adapter") {
   part_name = "relational_store"
 
   public_deps =
-      [ "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk" ]
+      [ "${relational_store_innerapi_path}/appdatafwk:relational_common_base" ]
 
   external_deps = [
     "bundle_framework:appexecfwk_base",
