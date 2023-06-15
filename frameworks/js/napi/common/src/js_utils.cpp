@@ -225,6 +225,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &ou
 
     size_t length = MAX_VALUE_LENGTH;
     napi_get_value_string_utf8(env, jsValue, nullptr, 0, &length);
+    length = length + 1; // add the null-terminated byte
     length = length < MAX_VALUE_LENGTH ? MAX_VALUE_LENGTH - 1 : length;
     /* array init to zero */
     std::unique_ptr<char[]> str = std::make_unique<char[]>(length + 1);
