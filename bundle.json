@@ -120,7 +120,6 @@
                     "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/appdatafwk:native_appdatafwk",
                     "header": {
                         "header_files": [
-                            "multi_platform_endian.h",
                             "serializable.h",
                             "shared_block.h"
                         ],
