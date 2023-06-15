@@ -22,7 +22,7 @@ ohos_ndk_headers("native_rdb_ndk_header") {
     "./include/oh_predicates.h",
     "./include/oh_value_object.h",
     "./include/oh_values_bucket.h",
-    "./include/relational_error_code.h",
+    "./include/relational_store_error_code.h",
     "./include/relational_store.h",
   ]
 }

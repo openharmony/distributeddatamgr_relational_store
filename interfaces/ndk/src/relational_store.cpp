@@ -20,7 +20,7 @@
 #include "rdb_helper.h"
 #include "rdb_predicates.h"
 #include "relational_cursor_impl.h"
-#include "relational_error_code.h"
+#include "relational_store_error_code.h"
 #include "relational_predicates_impl.h"
 #include "relational_store_impl.h"
 #include "relational_value_object_impl.h"

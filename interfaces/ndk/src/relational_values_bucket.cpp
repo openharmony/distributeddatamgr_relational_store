@@ -17,7 +17,7 @@
 
 #include "logger.h"
 #include "oh_values_bucket.h"
-#include "relational_error_code.h"
+#include "relational_store_error_code.h"
 #include "relational_values_bucket_impl.h"
 #include "value_object.h"
 #include "securec.h"
