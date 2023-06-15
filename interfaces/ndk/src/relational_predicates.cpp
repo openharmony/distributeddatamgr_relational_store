@@ -146,6 +146,7 @@ OH_Predicates *Rdb_Predicates_Between(OH_Predicates *predicates, const char *fie
         return nullptr;
     }
     std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
+    // The number of arguments required for the between method is 2
     if (tempValue.size() != 2) {
         LOG_ERROR("size is %{public}zu", tempValue.size());
         return predicates;
@@ -166,6 +167,7 @@ OH_Predicates *Rdb_Predicates_NotBetween(OH_Predicates *predicates, const char *
         return nullptr;
     }
     std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
+    // The number of arguments required for the between method is 2
     if (tempValue.size() != 2) {
         LOG_ERROR("size is %{public}zu", tempValue.size());
         return predicates;
@@ -205,7 +207,8 @@ OH_Predicates *Rdb_Predicates_LessThan(OH_Predicates *predicates, const char *fi
     return predicates;
 }
 
-OH_Predicates *Rdb_Predicates_GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
+OH_Predicates *Rdb_Predicates_GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field,
+    OH_VObject *valueObject)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
         || valueObject == nullptr) {

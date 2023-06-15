@@ -261,7 +261,8 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<uin
         return napi_invalid_arg;
     }
 
-    output = (tmp != nullptr ? std::vector<uint8_t>((uint8_t*)tmp, ((uint8_t*)tmp) + length) : std::vector<uint8_t>());
+    output = (tmp != nullptr ? std::vector<uint8_t>(static_cast<uint8_t*>(tmp),
+        static_cast<uint8_t*>(tmp) + length) : std::vector<uint8_t>());
     return status;
 }
 
