@@ -306,6 +306,9 @@ public:
      */
     API_EXPORT int Close() override;
 
+private:
+    int GetRowDataByColumnType(ColumnType &columnType, std::vector<std::string> &columnNames, int &columnIndex);
+
 protected:
     std::map<std::string, int> columnMap_;
     int columnCount_ = -1;
