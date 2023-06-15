@@ -127,7 +127,7 @@ int AbsResultSet::GetRow(RowEntity &rowEntity){
         return ret;
     }
     int columnCount = static_cast<int>(columnNames.size());
-    
+
     ColumnType columnType;
     for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
         ret = GetColumnType(columnIndex, columnType);

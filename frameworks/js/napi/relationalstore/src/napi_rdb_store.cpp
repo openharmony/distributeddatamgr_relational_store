@@ -52,6 +52,7 @@ namespace RelationalStoreJsKit {
 struct PredicatesProxy {
     std::shared_ptr<DataShareAbsPredicates> predicates_;
 };
+constexpr int CPR_SIZE 2;
 #endif
 struct RdbStoreContext : public Context {
     std::string device;
@@ -99,8 +100,6 @@ struct RdbStoreContext : public Context {
     {
     }
 };
-
-constexpr int CPR_SIZE 2;
 
 static __thread napi_ref constructor_ = nullptr;
 

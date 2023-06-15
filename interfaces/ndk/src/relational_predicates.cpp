@@ -23,7 +23,7 @@
 using namespace OHOS::NativeRdb;
 using namespace OHOS::RdbNdk;
 
-constexpr int ERROR_SIZE = 2;
+constexpr int VALUE_SIZE = 2;
 
 OH_Predicates *Rdb_Predicates_EqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
@@ -148,7 +148,7 @@ OH_Predicates *Rdb_Predicates_Between(OH_Predicates *predicates, const char *fie
         return nullptr;
     }
     std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
-    if (tempValue.size() != ERROR_SIZE) {
+    if (tempValue.size() != VALUE_SIZE) {
         LOG_ERROR("size is %{public}zu", tempValue.size());
         return predicates;
     }
@@ -168,7 +168,7 @@ OH_Predicates *Rdb_Predicates_NotBetween(OH_Predicates *predicates, const char *
         return nullptr;
     }
     std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
-    if (tempValue.size() != ERROR_SIZE) {
+    if (tempValue.size() != VALUE_SIZE) {
         LOG_ERROR("size is %{public}zu", tempValue.size());
         return predicates;
     }
