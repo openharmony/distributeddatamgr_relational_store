@@ -135,7 +135,7 @@ uint32_t RdbServiceProxy::GetSeqNum()
 }
 
 std::pair<int32_t, Details> RdbServiceProxy::DoSync(const RdbSyncerParam& param, const Option &option,
-                                const PredicatesMemo &predicates)
+    const PredicatesMemo &predicates)
 {
     std::pair<int32_t, Details> result{RDB_ERROR, {}};
     MessageParcel reply;
@@ -204,7 +204,8 @@ int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam& param, const Option &opti
     return RDB_OK;
 }
 
-int32_t RdbServiceProxy::SetDistributedTables(const RdbSyncerParam& param, const std::vector<std::string> &tables, int32_t type)
+int32_t RdbServiceProxy::SetDistributedTables(const RdbSyncerParam& param, const std::vector<std::string> &tables,
+    int32_t type)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(RDB_SERVICE_CMD_SET_DIST_TABLE, reply, param, tables, type);

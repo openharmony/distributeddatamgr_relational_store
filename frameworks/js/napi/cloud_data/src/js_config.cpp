@@ -28,6 +28,7 @@
 using namespace OHOS::Rdb;
 using namespace OHOS::CloudData;
 using namespace OHOS::AppDataMgrJsKit;
+
 JsConfig::JsConfig()
 {
 }

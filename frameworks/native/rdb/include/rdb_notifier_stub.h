@@ -27,7 +27,8 @@ public:
 class RdbNotifierStub : public IRemoteStub<RdbNotifierStubBroker> {
 public:
     using SyncCompleteHandler = std::function<void(uint32_t, Details &&)>;
-    using DataChangeHandler = std::function<void(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo)>;
+    using DataChangeHandler = std::function<void(const Origin &origin, const PrimaryFields &primaries,
+        ChangeInfo &&changeInfo)>;
     RdbNotifierStub(const SyncCompleteHandler&, const DataChangeHandler&);
     virtual ~RdbNotifierStub() noexcept;
 

@@ -62,6 +62,9 @@ public:
     bool IsClosed() const override;
     int Close() override;
 
+private:
+    int GetRowDataByColumnType(ColumnType &columnType, std::vector<std::string> &columnNames, int &columnIndex);
+
 protected:
     std::map<std::string, int> columnMap_;
     int columnCount_ = -1;
