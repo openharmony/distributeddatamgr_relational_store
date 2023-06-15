@@ -316,6 +316,7 @@ int SqliteConnectionPool::ChangeDbFileForRestore(const std::string newPath, cons
     int retVal = SqliteUtils::RenameFile(backupPath, newPath);
     if (retVal != E_OK) {
         LOG_ERROR("RenameFile error");
+        return retVal;
     }
 
     config.SetPath(newPath);

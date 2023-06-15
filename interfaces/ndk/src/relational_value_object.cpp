@@ -25,7 +25,7 @@ int Rdb_ValueObject_PutInt64(OH_VObject *valueObject, int64_t *value, uint32_t c
     if (valueObject == nullptr || value == nullptr || valueObject->id != OHOS::RdbNdk::RDB_VOBJECT_CID) {
         LOG_ERROR("Parameters set error:valueObject is NULL ? %{public}d, value is NULL ? %{public}d",
             (valueObject == nullptr), (value == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
 
     auto vObject = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject);
@@ -37,7 +37,7 @@ int Rdb_ValueObject_PutInt64(OH_VObject *valueObject, int64_t *value, uint32_t c
             vObject->getValue().push_back(std::to_string(value[i]));
         }
     };
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return OH_Rdb_ErrCode::RDB_OK;
 }
 
 int Rdb_ValueObject_PutDouble(OH_VObject *valueObject, double *value, uint32_t count)
@@ -45,7 +45,7 @@ int Rdb_ValueObject_PutDouble(OH_VObject *valueObject, double *value, uint32_t c
     if (valueObject == nullptr || value == nullptr || valueObject->id != OHOS::RdbNdk::RDB_VOBJECT_CID) {
         LOG_ERROR("Parameters set error:valueObject is NULL ? %{public}d, value is NULL ? %{public}d",
             (valueObject == nullptr), (value == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
 
     auto vObject = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject);
@@ -57,7 +57,7 @@ int Rdb_ValueObject_PutDouble(OH_VObject *valueObject, double *value, uint32_t c
             vObject->getValue().push_back(std::to_string(value[i]));
         }
     }
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return OH_Rdb_ErrCode::RDB_OK;
 }
 
 int Rdb_ValueObject_PutText(OH_VObject *valueObject, const char *value)
@@ -65,14 +65,14 @@ int Rdb_ValueObject_PutText(OH_VObject *valueObject, const char *value)
     if (valueObject == nullptr || value == nullptr || valueObject->id != OHOS::RdbNdk::RDB_VOBJECT_CID) {
         LOG_ERROR("Parameters set error:valueObject is NULL ? %{public}d, value is NULL ? %{public}d",
             (valueObject == nullptr), (value == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
 
     std::string textValue(value);
     auto vObject = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject);
     vObject->getValue().clear();
     vObject->getValue().push_back(textValue);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return OH_Rdb_ErrCode::RDB_OK;
 }
 
 int Rdb_ValueObject_PutTexts(OH_VObject *valueObject, const char **value, uint32_t count)
@@ -80,7 +80,7 @@ int Rdb_ValueObject_PutTexts(OH_VObject *valueObject, const char **value, uint32
     if (valueObject == nullptr || value == nullptr || valueObject->id != OHOS::RdbNdk::RDB_VOBJECT_CID) {
         LOG_ERROR("Parameters set error:valueObject is NULL ? %{public}d, value is NULL ? %{public}d",
             (valueObject == nullptr), (value == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
 
     auto vObject = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject);
@@ -89,17 +89,17 @@ int Rdb_ValueObject_PutTexts(OH_VObject *valueObject, const char **value, uint32
         std::string textValue(value[i]);
         vObject->getValue().push_back(textValue);
     }
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return OH_Rdb_ErrCode::RDB_OK;
 }
 
 int Rdb_DestroyValueObject(OH_VObject *valueObject)
 {
     if (valueObject == nullptr || valueObject->id != OHOS::RdbNdk::RDB_VOBJECT_CID) {
         LOG_ERROR("Parameters set error:valueObject is NULL ? %{public}d", (valueObject == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     delete static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject);
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return OH_Rdb_ErrCode::RDB_OK;
 }
 
 OHOS::RdbNdk::ValueObjectImpl::ValueObjectImpl()

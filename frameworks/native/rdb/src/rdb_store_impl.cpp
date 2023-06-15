@@ -589,6 +589,10 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
         backupFilePath = databasePath;
     }
 
+    if (access(backupFilePath.c_str(), F_OK) != E_OK) {
+        LOG_ERROR("The backupFilePath does not exists.");
+        return E_INVALID_FILE_PATH;
+    }
     LOG_INFO("databasePath is %{public}s.", SqliteUtils::Anonymous(backupFilePath).c_str());
     return E_OK;
 }
@@ -637,6 +641,12 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
     if (ret != E_OK) {
         return ret;
     }
+    auto pos = std::find(backupFilePath_.begin(), backupFilePath_.end(), backupFilePath);
+    if (pos != backupFilePath_.end()) {
+        SqliteUtils::DeleteFile(backupFilePath);
+        backupFilePath_.erase(pos);
+    }
+    backupFilePath_.push_back(backupFilePath);
 
     std::vector<ValueObject> bindArgs;
     bindArgs.push_back(ValueObject(backupFilePath));
@@ -663,7 +673,7 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
 
     ret = ExecuteGetLongInner(GlobalExpr::EXPORT_SQL, std::vector<ValueObject>());
     if (ret != E_OK) {
-        return ret;
+        LOG_ERROR("EXPORT_SQL execution error");
     }
 
     return ExecuteSqlInner(GlobalExpr::DETACH_BACKUP_SQL, std::vector<ValueObject>());
@@ -1099,15 +1109,6 @@ int RdbStoreImpl::ConfigLocale(const std::string localeStr)
 
 int RdbStoreImpl::Restore(const std::string backupPath, const std::vector<uint8_t> &newKey)
 {
-    return ChangeDbFileForRestore(path, backupPath, newKey);
-}
-
-/**
- * Restores a database from a specified encrypted or unencrypted database file.
- */
-int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
-    const std::vector<uint8_t> &newKey)
-{
     if (isOpen == false) {
         LOG_ERROR("ChangeDbFileForRestore:The connection pool has been closed.");
         return E_ERROR;
@@ -1117,45 +1118,19 @@ int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::s
         LOG_ERROR("ChangeDbFileForRestore:The connectionPool is null.");
         return E_ERROR;
     }
-    if (newPath.empty() || backupPath.empty()) {
-        LOG_ERROR("ChangeDbFileForRestore:Empty databasePath.");
-        return E_INVALID_FILE_PATH;
-    }
+
     std::string backupFilePath;
-    std::string restoreFilePath;
-    if (ISFILE(backupPath)) {
-        backupFilePath = ExtractFilePath(path) + backupPath;
-    } else {
-        backupFilePath = backupPath;
-    }
-    if (access(backupFilePath.c_str(), F_OK) != E_OK) {
-        LOG_ERROR("ChangeDbFileForRestore:The backupPath does not exists.");
-        return E_INVALID_FILE_PATH;
+    int ret = GetDataBasePath(backupPath, backupFilePath);
+    if (ret != E_OK) {
+        return ret;
     }
 
-    if (ISFILE(newPath)) {
-        restoreFilePath = ExtractFilePath(path) + newPath;
-    } else {
-        if (!PathToRealPath(ExtractFilePath(newPath), restoreFilePath)) {
-            LOG_ERROR("ChangeDbFileForRestore:Invalid newPath.");
-            return E_INVALID_FILE_PATH;
-        }
-        restoreFilePath = newPath;
-    }
-    if (backupFilePath == restoreFilePath) {
-        LOG_ERROR("ChangeDbFileForRestore:The backupPath and newPath should not be same.");
-        return E_INVALID_FILE_PATH;
-    }
     if (backupFilePath == path) {
         LOG_ERROR("ChangeDbFileForRestore:The backupPath and path should not be same.");
         return E_INVALID_FILE_PATH;
     }
 
-    int ret = connectionPool->ChangeDbFileForRestore(restoreFilePath, backupFilePath, newKey);
-    if (ret == E_OK) {
-        path = restoreFilePath;
-    }
-    return ret;
+    return connectionPool->ChangeDbFileForRestore(path, backupFilePath, newKey);
 }
 
 /**

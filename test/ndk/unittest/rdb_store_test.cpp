@@ -316,7 +316,6 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_005, TestSize.Level1)
 {
     int errCode = 0;
     OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->putInt64(valueBucket, "id", 1);
     valueBucket->putText(valueBucket, "data1", "zhangSan");
     valueBucket->putInt64(valueBucket, "data2", 12800);
     valueBucket->putReal(valueBucket, "data3", 100.1);
@@ -333,46 +332,53 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_005, TestSize.Level1)
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
-    cursor->close(cursor);
 
-    std::string backupPath = RDB_TEST_PATH + "backup.db";
-    errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath.c_str());
+    std::string backupPath1 = RDB_TEST_PATH + "a.db";
+    errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath1.c_str());
     EXPECT_EQ(errCode, 0);
 
-    errCode = OH_Rdb_Restore(storeTestRdbStore_, backupPath.c_str());
+    errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
+    EXPECT_EQ(errCode, 2);
+    std::string backupPath2 = RDB_TEST_PATH + "b.db";
+    errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath2.c_str());
     EXPECT_EQ(errCode, 0);
 
+    errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
+    EXPECT_EQ(errCode, 3);
+    std::string backupPath3 = RDB_TEST_PATH + "c.db";
+    errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath3.c_str());
+    EXPECT_EQ(errCode, 0);
+
+    // Continuous backup
+    errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
+    EXPECT_EQ(errCode, 4);
+    errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath3.c_str());
+    EXPECT_EQ(errCode, 0);
+
+    errCode = OH_Rdb_Restore(storeTestRdbStore_, backupPath1.c_str());
+    EXPECT_EQ(errCode, 0);
     cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
 
-    errCode = cursor->goToNextRow(cursor);
+    errCode = OH_Rdb_Restore(storeTestRdbStore_, backupPath2.c_str());
     EXPECT_EQ(errCode, 0);
+    cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 2);
 
-    size_t size = 0;
-    cursor->getSize(cursor, 1, &size);
-    char data1Value[size + 1];
-    cursor->getText(cursor, 1, data1Value, size + 1);
-    EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
+    errCode = OH_Rdb_Restore(storeTestRdbStore_, backupPath3.c_str());
+    EXPECT_EQ(errCode, 0);
+    cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 4);
 
-    int64_t data2Value;
-    cursor->getInt64(cursor, 2, &data2Value);
-    EXPECT_EQ(data2Value, 12800);
-
-    double data3Value;
-    cursor->getReal(cursor, 3, &data3Value);
-    EXPECT_EQ(data3Value, 100.1);
-
-    cursor->getSize(cursor, 4, &size);
-    unsigned char data4Value[size];
-    cursor->getBlob(cursor, 4, data4Value, size);
-    EXPECT_EQ(data4Value[0], 1);
-    EXPECT_EQ(data4Value[1], 2);
-
-    cursor->getSize(cursor, 5, &size);
-    char data5Value[size + 1];
-    cursor->getText(cursor, 5, data5Value, size + 1);
-    EXPECT_EQ(strcmp(data5Value, "ABCDEFG"), 0);
+    // Continuous restore
+    errCode = OH_Rdb_Restore(storeTestRdbStore_, backupPath3.c_str());
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_FILE_PATH);
+    cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 4);
 
     valueBucket->destroyValuesBucket(valueBucket);
     cursor->close(cursor);
@@ -380,10 +386,76 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_005, TestSize.Level1)
 
 /**
  * @tc.name: RDB_NDK_store_test_006
- * @tc.desc: Normal testCase of NDK store for GetVersion、SetVersion.
+ * @tc.desc: Normal testCase of NDK store for Backup、Restore.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_006, TestSize.Level1)
+{
+    int errCode = 0;
+    OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    valueBucket->putReal(valueBucket, "data3", 100.1);
+    uint8_t arr[] = {1, 2, 3, 4, 5};
+    int len = sizeof(arr) / sizeof(arr[0]);
+    valueBucket->putBlob(valueBucket, "data4", arr, len);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
+    errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
+    EXPECT_EQ(errCode, 1);
+
+    char querySql[] = "SELECT * FROM test";
+    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
+
+    int rowCount = 0;
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 1);
+
+    std::string backupPath = "backup.db";
+    errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath.c_str());
+    EXPECT_EQ(errCode, 0);
+    errCode = OH_Rdb_Restore(storeTestRdbStore_, backupPath.c_str());
+    EXPECT_EQ(errCode, 0);
+    cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 1);
+
+    std::string restorePath = "error.db";
+    errCode = OH_Rdb_Restore(storeTestRdbStore_, restorePath.c_str());
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_FILE_PATH);
+
+    errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
+    EXPECT_EQ(errCode, 2);
+    backupPath = " ";
+    errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath.c_str());
+    EXPECT_EQ(errCode, 0);
+    errCode = OH_Rdb_Restore(storeTestRdbStore_, backupPath.c_str());
+    EXPECT_EQ(errCode, 0);
+    cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 2);
+
+    backupPath = "";
+    errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath.c_str());
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_FILE_PATH);
+
+    backupPath = RDB_TEST_PATH;
+    errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath.c_str());
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_FILE_PATH);
+
+    restorePath = RDB_TEST_PATH;
+    errCode = OH_Rdb_Restore(storeTestRdbStore_, restorePath.c_str());
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_FILE_PATH);
+
+    valueBucket->destroyValuesBucket(valueBucket);
+    cursor->close(cursor);
+}
+
+/**
+ * @tc.name: RDB_NDK_store_test_007
+ * @tc.desc: Normal testCase of NDK store for GetVersion、SetVersion.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_007, TestSize.Level1)
 {
     int errCode = 0;
     int version = 0;
@@ -399,11 +471,11 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_006, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_store_test_007
+ * @tc.name: RDB_NDK_store_test_008
  * @tc.desc: Normal testCase of NDK store for Insert with wrong table name or table is NULL.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_007, TestSize.Level1)
+HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_008, TestSize.Level1)
 {
     int errCode = 0;
     OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
@@ -425,7 +497,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_007, TestSize.Level1)
     valueBucket->putReal(valueBucket, "data3", 200.1);
     valueBucket->putText(valueBucket, "data5", "ABCDEFGH");
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "wrong", valueBucket);
-    EXPECT_EQ(errCode, -1);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_ERR);
 
     valueBucket->clear(valueBucket);
     valueBucket->putInt64(valueBucket, "id", 3);
@@ -435,7 +507,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_007, TestSize.Level1)
     valueBucket->putText(valueBucket, "data5", "ABCDEFGHI");
     char *table = NULL;
     errCode = OH_Rdb_Insert(storeTestRdbStore_, table, valueBucket);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     char querySql[] = "SELECT * FROM test";
     OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
@@ -449,11 +521,11 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_007, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_store_test_008
+ * @tc.name: RDB_NDK_store_test_009
  * @tc.desc: Normal testCase of NDK store for Update with wrong table or table is NULL.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_008, TestSize.Level1)
+HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_009, TestSize.Level1)
 {
     int errCode = 0;
     OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
@@ -486,7 +558,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_008, TestSize.Level1)
     OH_Predicates *predicates1 = OH_Rdb_CreatePredicates(table);
     EXPECT_EQ(predicates1, NULL);
     errCode = OH_Rdb_Update(storeTestRdbStore_, valueBucket, predicates1);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_ERR);
 
     OH_Predicates *predicates2 = OH_Rdb_CreatePredicates("test");
     OH_Cursor *cursor = OH_Rdb_Query(storeTestRdbStore_, predicates2, NULL, 0);
@@ -532,11 +604,11 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_008, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_store_test_009
+ * @tc.name: RDB_NDK_store_test_010
  * @tc.desc: Normal testCase of NDK store for querysql is NULL.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_009, TestSize.Level1)
+HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_010, TestSize.Level1)
 {
     int errCode = 0;
     OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
