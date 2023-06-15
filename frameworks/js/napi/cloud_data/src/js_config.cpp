@@ -99,7 +99,7 @@ napi_value JsConfig::EnableCloud(napi_env env, napi_callback_info info)
 napi_value JsConfig::DisableCloud(napi_env env, napi_callback_info info)
 {
     struct DisableCloudContext : public ContextBase {
-        std::string accountId; 
+        std::string accountId;
     };
     auto ctxt = std::make_shared<DisableCloudContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
