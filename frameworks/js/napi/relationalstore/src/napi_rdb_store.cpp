@@ -91,8 +91,8 @@ struct RdbStoreContext : public Context {
 
     RdbStoreContext()
         : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(-1),
-          distributedType(DistributedTableType::DISTRIBUTED_DEVICE),
-          syncMode(SyncMode::PUSH),
+          distributedType(DistributedRdb::DistributedTableType::DISTRIBUTED_DEVICE),
+          syncMode(DistributedRdb::SyncMode::PUSH),
           conflictResolution(ConflictResolution::ON_CONFLICT_NONE)
     {
     }
