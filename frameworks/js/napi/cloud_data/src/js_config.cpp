@@ -29,7 +29,6 @@ using namespace OHOS::Rdb;
 using namespace OHOS::CloudData;
 using namespace OHOS::AppDataMgrJsKit;
 
-constexpr int PAR_SIZE 2;
 JsConfig::JsConfig()
 {
 }
@@ -100,7 +99,7 @@ napi_value JsConfig::EnableCloud(napi_env env, napi_callback_info info)
 napi_value JsConfig::DisableCloud(napi_env env, napi_callback_info info)
 {
     struct DisableCloudContext : public ContextBase {
-        std::string accountId;
+        std::string accountId; 
     };
     auto ctxt = std::make_shared<DisableCloudContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
@@ -162,7 +161,7 @@ napi_value JsConfig::ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(
             ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
         bool state = false;
-        status = JSUtils::Convert2Value(env, argv[PAR_SIZE], state);
+        status = JSUtils::Convert2Value(env, argv[2], state);
         ASSERT_BUSINESS_ERR(
             ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of status must be boolean.");
         ctxt->state = state ? CloudService::Switch::SWITCH_ON : CloudService::Switch::SWITCH_OFF;

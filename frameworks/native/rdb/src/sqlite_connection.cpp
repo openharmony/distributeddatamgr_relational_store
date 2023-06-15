@@ -95,7 +95,6 @@ int SqliteConnection::GetDbPath(const RdbStoreConfig &config, std::string &dbPat
     return E_OK;
 }
 
-
 int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 {
     std::string dbPath;
