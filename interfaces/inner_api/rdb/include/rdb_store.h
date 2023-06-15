@@ -161,7 +161,7 @@ public:
      * @param orderBy Indicates the orderBy argument.
      * @param limit Indicates the limit argument.
      */
-    virtual std::unique_ptr<AbsSharedResultSet> Query(int &errCode, bool distinct, const std::string &table,
+    virtual std::shared_ptr<AbsSharedResultSet> Query(int &errCode, bool distinct, const std::string &table,
         const std::vector<std::string> &columns, const std::string &selection = "",
         const std::vector<std::string> &selectionArgs = std::vector<std::string>(), const std::string &groupBy = "",
         const std::string &having = "", const std::string &orderBy = "", const std::string &limit = "") = 0;
@@ -172,7 +172,7 @@ public:
      * @param sql Indicates the SQL statement to execute.
      * @param selectionArgs Indicates the selection arguments.
      */
-    virtual std::unique_ptr<AbsSharedResultSet> QuerySql(
+    virtual std::shared_ptr<AbsSharedResultSet> QuerySql(
         const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
 
     /**
@@ -181,7 +181,7 @@ public:
      * @param sql Indicates the SQL statement to execute.
      * @param selectionArgs Indicates the selection arguments.
      */
-    virtual std::unique_ptr<ResultSet> QueryByStep(
+    virtual std::shared_ptr<ResultSet> QueryByStep(
         const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
 
     /**
@@ -261,7 +261,7 @@ public:
      * @param predicates Indicates the specified query condition by the instance object of {@link AbsRdbPredicates}.
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
      */
-    virtual std::unique_ptr<AbsSharedResultSet> Query(
+    virtual std::shared_ptr<AbsSharedResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) = 0;
 
     /**
@@ -270,7 +270,7 @@ public:
      * @param predicates Indicates the specified query condition by the instance object of {@link AbsRdbPredicates}.
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
      */
-    virtual std::unique_ptr<ResultSet> QueryByStep(
+    virtual std::shared_ptr<ResultSet> QueryByStep(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) = 0;
 
     /**

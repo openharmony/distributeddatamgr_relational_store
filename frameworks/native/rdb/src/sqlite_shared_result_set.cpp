@@ -57,12 +57,13 @@ std::shared_ptr<SqliteStatement> SqliteSharedResultSet::PrepareStep(SqliteConnec
 
 int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
+    std::shared_lock<std::shared_mutex> readLock(mutex_);
     if (!columnNames_.empty()) {
         columnNames = columnNames_;
         return E_OK;
     }
 
-    if (IsClosed()) {
+    if (isClosed) {
         return E_STEP_RESULT_CLOSED;
     }
 
@@ -108,12 +109,13 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
 
 int SqliteSharedResultSet::GetRowCount(int &count)
 {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     if (rowNum != NO_COUNT) {
         count = rowNum;
         return E_OK;
     }
 
-    if (IsClosed()) {
+    if (isClosed) {
         return E_STEP_RESULT_CLOSED;
     }
 
@@ -212,9 +214,7 @@ void SqliteSharedResultSet::SetFillBlockForwardOnly(bool isOnlyFillResultSetBloc
 
 void SqliteSharedResultSet::Finalize()
 {
-    if (!IsClosed()) {
-        Close();
-    }
+    Close();
 }
 } // namespace NativeRdb
 } // namespace OHOS
