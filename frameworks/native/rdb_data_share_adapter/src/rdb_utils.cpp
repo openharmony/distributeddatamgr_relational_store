@@ -80,6 +80,10 @@ std::string RdbUtils::ToString(const DataSharePredicatesObject &predicatesObject
 
 std::shared_ptr<ResultSetBridge> RdbUtils::ToResultSetBridge(std::shared_ptr<ResultSet> resultSet)
 {
+    if (resultSet == nullptr) {
+        LOG_ERROR("resultSet is null");
+        return nullptr;
+    }
     return std::make_shared<RdbResultSetBridge>(resultSet);
 }
 
