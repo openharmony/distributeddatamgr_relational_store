@@ -48,6 +48,7 @@ using OHOS::DistributedRdb::Details;
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
+
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 struct PredicatesProxy {
     std::shared_ptr<DataShareAbsPredicates> predicates_;
@@ -89,7 +90,9 @@ struct RdbStoreContext : public Context {
 
     RdbStoreContext()
         : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(-1),
-          conflictResolution(NativeRdb::ConflictResolution::ON_CONFLICT_NONE)
+          distributedType(DistributedRdb::DistributedTableType::DISTRIBUTED_DEVICE),
+          syncMode(DistributedRdb::SyncMode::PUSH),
+          conflictResolution(ConflictResolution::ON_CONFLICT_NONE)
     {
     }
     virtual ~RdbStoreContext()
@@ -279,7 +282,8 @@ int ParseSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr
     return OK;
 }
 
-int ParseDistributedTableArg(const napi_env &env, size_t argc, napi_value * argv, std::shared_ptr<RdbStoreContext> context)
+int ParseDistributedTableArg(const napi_env &env, size_t argc, napi_value * argv,
+    std::shared_ptr<RdbStoreContext> context)
 {
     context->distributedType = DistributedRdb::DISTRIBUTED_DEVICE;
     if (argc > 1) {
@@ -292,7 +296,8 @@ int ParseDistributedTableArg(const napi_env &env, size_t argc, napi_value * argv
     return OK;
 }
 
-int ParseDistributedConfigArg(const napi_env &env, size_t argc, napi_value * argv, std::shared_ptr<RdbStoreContext> context)
+int ParseDistributedConfigArg(const napi_env &env, size_t argc, napi_value * argv,
+    std::shared_ptr<RdbStoreContext> context)
 {
     context->distributedConfig = { true };
     if (argc > 2) {
