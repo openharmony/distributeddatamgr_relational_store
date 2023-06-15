@@ -146,7 +146,7 @@ OH_Predicates *Rdb_Predicates_Between(OH_Predicates *predicates, const char *fie
         return nullptr;
     }
     std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
-    // Determine whether tempvalue have left and right critical values to determine its range
+    // The number of arguments required for the between method is 2
     if (tempValue.size() != 2) {
         LOG_ERROR("size is %{public}zu", tempValue.size());
         return predicates;
@@ -167,7 +167,7 @@ OH_Predicates *Rdb_Predicates_NotBetween(OH_Predicates *predicates, const char *
         return nullptr;
     }
     std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
-    // Determine whether tempvalue have left and right critical values to determine its range
+    // The number of arguments required for the between method is 2
     if (tempValue.size() != 2) {
         LOG_ERROR("size is %{public}zu", tempValue.size());
         return predicates;
