@@ -68,7 +68,7 @@ bool Serializable::GetValue(const json &node, const std::string &name, std::stri
     if (subNode.is_null() || !subNode.is_string()) {
         return false;
     }
-    value = subNode;
+    subNode.get_to(value);
     return true;
 }
 
@@ -128,7 +128,7 @@ bool Serializable::GetValue(const json &node, const std::string &name, std::vect
     if (subNode.is_null() || !subNode.is_array()) {
         return false;
     }
-    value = std::vector<uint8_t>(subNode);
+    subNode.get_to(value);
     return true;
 }
 
