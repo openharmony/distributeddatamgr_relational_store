@@ -48,11 +48,11 @@ using OHOS::DistributedRdb::Details;
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
+constexpr int ARGS_NUMBER = 2;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 struct PredicatesProxy {
     std::shared_ptr<DataShareAbsPredicates> predicates_;
 };
-constexpr int CPR_SIZE 2;
 #endif
 struct RdbStoreContext : public Context {
     std::string device;
@@ -302,7 +302,7 @@ int ParseDistributedConfigArg(const napi_env &env, size_t argc, napi_value * arg
 {
     context->distributedConfig = { true };
 
-    if (argc > CPR_SIZE) {
+    if (argc > ARGS_NUMBER) {
         auto status = JSUtils::Convert2Value(env, argv[2], context->distributedConfig);
         CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("distributedConfig", "a DistributedConfig type"));
     }
