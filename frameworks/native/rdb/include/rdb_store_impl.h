@@ -86,8 +86,6 @@ public:
     int ConfigLocale(const std::string localeStr);
 #endif
     int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) override;
-    int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
-        const std::vector<uint8_t> &newKey) override;
     void GetSchema(const RdbStoreConfig &config);
     std::string GetName();
     std::string GetOrgPath();
@@ -152,6 +150,7 @@ private:
 
     std::mutex mutex_;
     std::shared_ptr<std::set<std::string>> syncTables_;
+    std::vector<std::string> backupFilePath_;
 };
 } // namespace OHOS::NativeRdb
 #endif

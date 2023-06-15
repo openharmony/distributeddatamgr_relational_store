@@ -352,11 +352,11 @@ int Rdb_DestroyPredicates(OH_Predicates *predicates)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
-        return RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     delete predicates;
     predicates = nullptr;
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return OH_Rdb_ErrCode::RDB_OK;
 }
 
 OHOS::RdbNdk::PredicateImpl::PredicateImpl(const char *table) : predicates_(table)
