@@ -589,10 +589,6 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
         backupFilePath = databasePath;
     }
 
-    if (access(backupFilePath.c_str(), F_OK) != E_OK) {
-        LOG_ERROR("The backupFilePath does not exists.");
-        return E_INVALID_FILE_PATH;
-    }
     LOG_INFO("databasePath is %{public}s.", SqliteUtils::Anonymous(backupFilePath).c_str());
     return E_OK;
 }
@@ -632,7 +628,7 @@ int RdbStoreImpl::ExecuteGetLongInner(const std::string &sql, const std::vector<
 }
 
 /**
- * Restores a database from a specified encrypted or unencrypted database file.
+ * Backup a database from a specified encrypted or unencrypted database file.
  */
 int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
 {
@@ -642,21 +638,37 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
         return ret;
     }
     auto pos = std::find(backupFilePath_.begin(), backupFilePath_.end(), backupFilePath);
+    std::string tempPath = backupFilePath + "temp";
     if (pos != backupFilePath_.end()) {
-        SqliteUtils::DeleteFile(backupFilePath);
-        backupFilePath_.erase(pos);
+        SqliteUtils::RenameFile(backupFilePath, tempPath);
+        ret = InnerBackup(databasePath, destEncryptKey);
+        if (ret == E_OK) {
+            SqliteUtils::DeleteFile(tempPath);
+        } else {
+            SqliteUtils::RenameFile(tempPath, backupFilePath);
+        }
+    } else {
+        ret = InnerBackup(databasePath, destEncryptKey);
+        if (ret == E_OK) {
+            backupFilePath_.push_back(backupFilePath);
+        }
     }
-    backupFilePath_.push_back(backupFilePath);
+    return ret;
+}
 
+/**
+ * Backup a database from a specified encrypted or unencrypted database file.
+ */
+int RdbStoreImpl::InnerBackup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
+{
     std::vector<ValueObject> bindArgs;
-    bindArgs.push_back(ValueObject(backupFilePath));
+    bindArgs.push_back(ValueObject(databasePath));
     if (destEncryptKey.size() != 0 && !isEncrypt_) {
         bindArgs.push_back(ValueObject(destEncryptKey));
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     } else if (isEncrypt_) {
-        RdbPassword rdbPwd =
-            RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        RdbPassword rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
         std::vector<uint8_t> key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
         bindArgs.push_back(ValueObject(key));
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
@@ -666,14 +678,16 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
         bindArgs.push_back(ValueObject(str));
     }
 
-    ret = ExecuteSqlInner(GlobalExpr::ATTACH_BACKUP_SQL, bindArgs);
+    int ret = ExecuteSqlInner(GlobalExpr::ATTACH_BACKUP_SQL, bindArgs);
     if (ret != E_OK) {
-        return ret;
+        return ret;   // -1
     }
 
     ret = ExecuteGetLongInner(GlobalExpr::EXPORT_SQL, std::vector<ValueObject>());
     if (ret != E_OK) {
         LOG_ERROR("EXPORT_SQL execution error");
+        ExecuteSqlInner(GlobalExpr::DETACH_BACKUP_SQL, std::vector<ValueObject>());
+        return ret;
     }
 
     return ExecuteSqlInner(GlobalExpr::DETACH_BACKUP_SQL, std::vector<ValueObject>());
@@ -1123,6 +1137,11 @@ int RdbStoreImpl::Restore(const std::string backupPath, const std::vector<uint8_
     int ret = GetDataBasePath(backupPath, backupFilePath);
     if (ret != E_OK) {
         return ret;
+    }
+
+    if (access(backupFilePath.c_str(), F_OK) != E_OK) {
+        LOG_ERROR("The backupFilePath does not exists.");
+        return E_INVALID_FILE_PATH;
     }
 
     if (backupFilePath == path) {

@@ -61,6 +61,8 @@ public:
         const std::vector<ValueObject> &bindArgs) override;
     int Backup(const std::string databasePath,
         const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>()) override;
+    int InnerBackup(const std::string databasePath,
+        const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>());
     int Attach(const std::string &alias, const std::string &pathName,
         const std::vector<uint8_t> destEncryptKey) override;
     int GetVersion(int &version) override;
@@ -114,6 +116,7 @@ private:
     std::string name;
     std::string fileType;
     bool isEncrypt_;
+    std::vector<std::string> backupFilePath_;
 };
 } // namespace OHOS::NativeRdb
 #endif
