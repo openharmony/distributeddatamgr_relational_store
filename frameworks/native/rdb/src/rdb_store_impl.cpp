@@ -582,7 +582,7 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
     if (ISFILE(databasePath)) {
         backupFilePath = ExtractFilePath(path) + databasePath;
     } else {
-        if (!PathToRealPath(ExtractFilePath(databasePath), backupFilePath)) {
+        if (!PathToRealPath(ExtractFilePath(databasePath), backupFilePath) || databasePath.back() == '/') {
             LOG_ERROR("Invalid databasePath.");
             return E_INVALID_FILE_PATH;
         }
@@ -680,7 +680,7 @@ int RdbStoreImpl::InnerBackup(const std::string databasePath, const std::vector<
 
     int ret = ExecuteSqlInner(GlobalExpr::ATTACH_BACKUP_SQL, bindArgs);
     if (ret != E_OK) {
-        return ret;   // -1
+        return ret;
     }
 
     ret = ExecuteGetLongInner(GlobalExpr::EXPORT_SQL, std::vector<ValueObject>());

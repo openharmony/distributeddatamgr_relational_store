@@ -332,6 +332,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_005, TestSize.Level1)
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
+    cursor->close(cursor);
 
     std::string backupPath1 = RDB_TEST_PATH + "a.db";
     errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath1.c_str());
@@ -360,12 +361,14 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_005, TestSize.Level1)
     cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
+    cursor->close(cursor);
 
     errCode = OH_Rdb_Restore(storeTestRdbStore_, backupPath2.c_str());
     EXPECT_EQ(errCode, 0);
     cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
+    cursor->close(cursor);
 
     errCode = OH_Rdb_Restore(storeTestRdbStore_, backupPath3.c_str());
     EXPECT_EQ(errCode, 0);
@@ -409,6 +412,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_006, TestSize.Level1)
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
+    cursor->close(cursor);
 
     std::string backupPath = "backup.db";
     errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath.c_str());
@@ -418,6 +422,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_006, TestSize.Level1)
     cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
+    cursor->close(cursor);
 
     std::string restorePath = "error.db";
     errCode = OH_Rdb_Restore(storeTestRdbStore_, restorePath.c_str());
@@ -433,6 +438,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_006, TestSize.Level1)
     cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
+    cursor->close(cursor);
 
     backupPath = "";
     errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath.c_str());
