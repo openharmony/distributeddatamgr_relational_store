@@ -568,7 +568,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_009, TestSize.Level1)
     OH_Predicates *predicates1 = OH_Rdb_CreatePredicates(table);
     EXPECT_EQ(predicates1, NULL);
     errCode = OH_Rdb_Update(storeTestRdbStore_, valueBucket, predicates1);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_ERR);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     OH_Predicates *predicates2 = OH_Rdb_CreatePredicates("test");
     OH_Cursor *cursor = OH_Rdb_Query(storeTestRdbStore_, predicates2, NULL, 0);
