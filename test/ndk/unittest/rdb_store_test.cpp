@@ -438,6 +438,10 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_006, TestSize.Level1)
     errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath.c_str());
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_FILE_PATH);
 
+    backupPath = RDB_TEST_PATH + "/backup/backup.db";
+    errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath.c_str());
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_FILE_PATH);
+
     backupPath = RDB_TEST_PATH;
     errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath.c_str());
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_FILE_PATH);
