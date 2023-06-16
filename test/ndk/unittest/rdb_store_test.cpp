@@ -375,6 +375,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_005, TestSize.Level1)
     cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 4);
+    cursor->close(cursor);
 
     // Continuous restore
     errCode = OH_Rdb_Restore(storeTestRdbStore_, backupPath3.c_str());
@@ -457,7 +458,6 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_006, TestSize.Level1)
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_FILE_PATH);
 
     valueBucket->destroyValuesBucket(valueBucket);
-    cursor->close(cursor);
 }
 
 /**
