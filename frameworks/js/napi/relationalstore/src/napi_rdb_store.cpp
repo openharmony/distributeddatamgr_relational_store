@@ -1156,7 +1156,7 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
     LOG_DEBUG("RdbStoreProxy::CloudSync start");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 - 4"));
+        CHECK_RETURN_SET_E(argc > 1 || argc < 5, std::make_shared<ParamNumError>("2 - 4"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseCloudSyncModeArg(env, argv[0], context));
         uint32_t index = 1;
@@ -1167,6 +1167,15 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
             index++;
         }
         CHECK_RETURN(OK == ParseCloudSyncCallback(env, argv[index], context));
+        CHECK_RETURN_SET_E(index == argc - 1 || index == argc, std::make_shared<ParamNumError>("2 - 4"));
+        if(index == argc - 1){
+            napi_valuetype valueType = napi_undefined;
+            napi_typeof(env, argv[index], &valueType);
+            if (valueType == napi_function) {
+                LOG_INFO("asyncCall set callback");
+                NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, argv[index], 1, &context->callback_));
+            }
+        }
     };
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::CloudSync Async");
@@ -1187,7 +1196,7 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
 
-    context->SetAction(env, info, input, exec, output);
+    context->SetAll(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return AsyncCall::Call(env, context);
