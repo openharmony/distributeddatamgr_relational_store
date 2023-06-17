@@ -641,14 +641,14 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
     std::string tempPath = backupFilePath + "temp";
     if (pos != backupFilePath_.end()) {
         SqliteUtils::RenameFile(backupFilePath, tempPath);
-        ret = InnerBackup(databasePath, destEncryptKey);
+        ret = InnerBackup(backupFilePath, destEncryptKey);
         if (ret == E_OK) {
             SqliteUtils::DeleteFile(tempPath);
         } else {
             SqliteUtils::RenameFile(tempPath, backupFilePath);
         }
     } else {
-        ret = InnerBackup(databasePath, destEncryptKey);
+        ret = InnerBackup(backupFilePath, destEncryptKey);
         if (ret == E_OK) {
             backupFilePath_.push_back(backupFilePath);
         }
