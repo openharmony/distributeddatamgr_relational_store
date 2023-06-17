@@ -53,43 +53,24 @@
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 
-std::shared_ptr<RdbStoreImpl> RdbStoreImpl::Open(const RdbStoreConfig &config, int &errCode)
+int RdbStoreImpl::InnerOpen()
 {
-    std::shared_ptr<RdbStoreImpl> rdbStore = std::make_shared<RdbStoreImpl>(config);
-    errCode = rdbStore->InnerOpen(config);
-    if (errCode != E_OK) {
-        return nullptr;
-    }
-
-    return rdbStore;
-}
-
-int RdbStoreImpl::InnerOpen(const RdbStoreConfig &config)
-{
-    LOG_INFO("open %{public}s.", SqliteUtils::Anonymous(config.GetPath()).c_str());
+    LOG_INFO("open %{public}s.", SqliteUtils::Anonymous(rdbStoreConfig.GetPath()).c_str());
     int errCode = E_OK;
-    connectionPool = SqliteConnectionPool::Create(config, errCode);
+    connectionPool = SqliteConnectionPool::Create(rdbStoreConfig, errCode);
     if (connectionPool == nullptr) {
         return errCode;
     }
-    isOpen = true;
-    path = config.GetPath();
-    orgPath = path;
-    isReadOnly = config.IsReadOnly();
-    isMemoryRdb = config.IsMemoryRdb();
-    name = config.GetName();
-    fileType = config.GetDatabaseFileType();
-    isEncrypt_ = config.IsEncrypt();
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    syncerParam_.bundleName_ = config.GetBundleName();
-    syncerParam_.hapName_ = config.GetModuleName();
-    syncerParam_.storeName_ = config.GetName();
-    syncerParam_.area_ = config.GetArea();
-    syncerParam_.level_ = static_cast<int32_t>(config.GetSecurityLevel());
-    syncerParam_.type_ = config.GetDistributedType();
-    syncerParam_.isEncrypt_ = config.IsEncrypt();
+    syncerParam_.bundleName_ = rdbStoreConfig.GetBundleName();
+    syncerParam_.hapName_ = rdbStoreConfig.GetModuleName();
+    syncerParam_.storeName_ = rdbStoreConfig.GetName();
+    syncerParam_.area_ = rdbStoreConfig.GetArea();
+    syncerParam_.level_ = static_cast<int32_t>(rdbStoreConfig.GetSecurityLevel());
+    syncerParam_.type_ = rdbStoreConfig.GetDistributedType();
+    syncerParam_.isEncrypt_ = rdbStoreConfig.IsEncrypt();
     syncerParam_.password_ = {};
-    GetSchema(config);
+    GetSchema(rdbStoreConfig);
 #endif
     return E_OK;
 }
@@ -127,16 +108,27 @@ void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
 }
 #endif
 
-RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
-    : rdbStoreConfig(config), connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false),
-      isMemoryRdb(false), isEncrypt_(false)
+RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
+    : rdbStoreConfig(config), connectionPool(nullptr), isOpen(true), path(config.GetPath()), orgPath(config.GetPath()),
+      isReadOnly(config.IsReadOnly()), isMemoryRdb(config.IsMemoryRdb()), name(config.GetName()),
+      fileType(config.GetDatabaseFileType()), isEncrypt_(config.IsEncrypt())
 {
+    errCode = InnerOpen();
+    if (errCode != E_OK) {
+        LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore, err is %{public}d", errCode);
+        if (connectionPool) {
+            delete connectionPool;
+        }
+        isOpen = false;
+    }
 }
 
 RdbStoreImpl::~RdbStoreImpl()
 {
     LOG_INFO("destroy.");
-    delete connectionPool;
+    if (connectionPool) {
+        delete connectionPool;
+    }
 }
 
 #ifdef WINDOWS_PLATFORM
@@ -453,7 +445,7 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
     const std::vector<std::string> &selectionArgs)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    return std::make_shared<SqliteSharedResultSet>(connectionPool, path, sql, selectionArgs);
+    return std::make_shared<SqliteSharedResultSet>(shared_from_this(), path, sql, selectionArgs);
 }
 #endif
 
@@ -1163,7 +1155,7 @@ int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::s
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
     const std::vector<std::string> &selectionArgs)
 {
-    return std::make_shared<StepResultSet>(connectionPool, sql, selectionArgs);
+    return std::make_shared<StepResultSet>(shared_from_this(), sql, selectionArgs);
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)

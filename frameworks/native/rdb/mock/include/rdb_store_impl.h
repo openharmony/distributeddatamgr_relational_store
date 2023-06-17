@@ -30,8 +30,7 @@
 namespace OHOS::NativeRdb {
 class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
 public:
-    static std::shared_ptr<RdbStoreImpl> Open(const RdbStoreConfig &config, int &errCode);
-    RdbStoreImpl(const RdbStoreConfig &config);
+    RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
 #ifdef WINDOWS_PLATFORM
     void Clear() override;
@@ -92,8 +91,11 @@ public:
     int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
     int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
 
+    RdbStoreConfig rdbStoreConfig;
+    SqliteConnectionPool *connectionPool;
+
 private:
-    int InnerOpen(const RdbStoreConfig &config);
+    int InnerOpen();
     int CheckAttach(const std::string &sql);
     bool PathToRealPath(const std::string &path, std::string &realPath);
     std::string ExtractFilePath(const std::string &fileFullName);
@@ -105,9 +107,6 @@ private:
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void DoCloudSync(const std::string &table);
-
-    const RdbStoreConfig rdbStoreConfig;
-    SqliteConnectionPool *connectionPool;
     bool isOpen;
     std::string path;
     std::string orgPath;

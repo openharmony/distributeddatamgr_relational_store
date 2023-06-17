@@ -34,8 +34,7 @@ class ExecutorPool;
 namespace OHOS::NativeRdb {
 class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
 public:
-    static std::shared_ptr<RdbStoreImpl> Open(const RdbStoreConfig &config, int &errCode);
-    RdbStoreImpl(const RdbStoreConfig &config);
+    RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
     const RdbStoreConfig &GetConfig();
     int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
@@ -121,8 +120,11 @@ public:
     // user must use UDID
     bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) override;
 
+    RdbStoreConfig rdbStoreConfig;
+    SqliteConnectionPool *connectionPool;
+
 private:
-    int InnerOpen(const RdbStoreConfig &config);
+    int InnerOpen();
     int CheckAttach(const std::string &sql);
     int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
     int FreeTransaction(SqliteConnection *connection, const std::string &sql);
@@ -132,9 +134,6 @@ private:
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void DoCloudSync(const std::string &table);
-
-    const RdbStoreConfig rdbStoreConfig;
-    SqliteConnectionPool *connectionPool;
     bool isOpen;
     std::string path;
     std::string orgPath;

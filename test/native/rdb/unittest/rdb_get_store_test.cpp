@@ -70,7 +70,6 @@ int GetOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 
 void RdbGetStoreTest::SetUpTestCase(void)
 {
-    RdbStoreManager::GetInstance().SetReleaseTime(1000);
     RdbHelper::DeleteRdbStore(MAIN_DATABASE_NAME);
 }
 

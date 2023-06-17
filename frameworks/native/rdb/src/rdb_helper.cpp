@@ -38,10 +38,7 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     SqliteGlobalConfig::InitSqliteGlobalConfig();
-    std::shared_ptr<RdbStore> rdbStore =
-        RdbStoreManager::GetInstance().GetRdbStore(config, errCode, version, openCallback);
-
-    return rdbStore;
+    return RdbStoreManager::GetInstance().GetRdbStore(config, errCode, version, openCallback);;
 }
 
 void RdbHelper::ClearCache()
@@ -63,7 +60,9 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
     if (dbFileName.empty()) {
         return E_EMPTY_FILE_NAME;
     }
-    RdbStoreManager::GetInstance().Remove(dbFileName);
+    if (RdbStoreManager::GetInstance().IsInUsing(dbFileName)) {
+        return E_RDB_STORE_IN_USING;
+    }
     if (access(dbFileName.c_str(), F_OK) != 0) {
         return E_OK; // not not exist
     }
