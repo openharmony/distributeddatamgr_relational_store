@@ -14,6 +14,7 @@
  */
 
 #include "rdb_store_config.h"
+#include "rdb_errno.h"
 #include "rdb_store_impl.h"
 #include "rdbimpl_fuzzer.h"
 using namespace OHOS;
@@ -21,7 +22,11 @@ using namespace OHOS::NativeRdb;
 namespace OHOS {
 void RdbStoreImplFuzz(const uint8_t *data, size_t size)
 {
-    RdbStoreImpl rdbStoreImpl(RdbStoreConfig("name"));
+    int errorCode = E_ERROR;
+    RdbStoreImpl rdbStoreImpl(RdbStoreConfig("name"), errorCode);
+    if (errorCode != E_OK) {
+        return;
+    }
     std::string rawString(reinterpret_cast<const char *>(data), size);
     std::vector<std::string> tables;
     tables.push_back(rawString);

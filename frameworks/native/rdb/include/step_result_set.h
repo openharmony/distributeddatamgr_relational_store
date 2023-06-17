@@ -31,8 +31,6 @@ class StepResultSet : public AbsResultSet {
 public:
     StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, const std::string &sql,
         const std::vector<std::string> &selectionArgs);
-    StepResultSet(SqliteConnectionPool *pool, const std::string &sql,
-        const std::vector<std::string> &selectionArgs);
     ~StepResultSet() override;
 
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
