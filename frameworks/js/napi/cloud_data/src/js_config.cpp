@@ -62,7 +62,8 @@ napi_value JsConfig::EnableCloud(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of switches must be {[bundleName: string]: boolean}.");
         for (auto item : ctxt->tempSwitches) {
-            ctxt->switches.insert(std::pair<std::string, int32_t>(item.first, static_cast<int32_t>(item.second)));
+            ctxt->switches[item.first] = item.second ? CloudService::Switch::SWITCH_ON
+                                                     : CloudService::Switch::SWITCH_OFF;
         }
     });
 
