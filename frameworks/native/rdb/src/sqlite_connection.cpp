@@ -31,6 +31,7 @@
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
+#include "raw_data_parser.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "directory_ex.h"
@@ -132,6 +133,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
         return SQLiteError::ErrNo(errCode);
     }
 
+    RegDefaultFunctions(dbHandle);
     SetPersistWal();
     SetBusyTimeout(DEFAULT_BUSY_TIMEOUT_MS);
     LimitPermission(dbPath);
@@ -365,6 +367,15 @@ int SqliteConnection::SetBusyTimeout(int timeout)
         return errCode;
     }
     return E_OK;
+}
+
+int SqliteConnection::RegDefaultFunctions(sqlite3 *dbHandle)
+{
+    if (dbHandle == nullptr) {
+        return SQLITE_OK;
+    }
+    return sqlite3_create_function_v2(dbHandle, "merge_assets", 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr,
+        &MergeAssets, nullptr, nullptr, nullptr);
 }
 
 int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
@@ -875,6 +886,86 @@ int SqliteConnection::LimitWalSize()
     }
 
     return E_OK;
+}
+
+void SqliteConnection::MergeAssets(sqlite3_context *ctx, int argc, sqlite3_value **argv)
+{
+    LOG_DEBUG("merge assets begin");
+    if (ctx == nullptr || argc != 2 || argv == nullptr) {
+        LOG_ERROR("Parameter does not meet restrictions.");
+        return;
+    }
+    std::map<std::string, ValueObject::Asset> assets;
+    auto data = static_cast<const uint8_t *>(sqlite3_value_blob(argv[0]));
+    if (data != nullptr) {
+        int len = sqlite3_value_bytes(argv[0]);
+        RawDataParser::ParserRawData(data, len, assets);
+    }
+    LOG_DEBUG("merge assets get old assets");
+    std::map<std::string, ValueObject::Asset> newAssets;
+    data = static_cast<const uint8_t *>(sqlite3_value_blob(argv[1]));
+    if (data != nullptr) {
+        int len = sqlite3_value_bytes(argv[1]);
+        RawDataParser::ParserRawData(data, len, newAssets);
+    }
+    LOG_DEBUG("merge assets get new assets");
+    CompAssets(assets, newAssets);
+    LOG_DEBUG("merge assets comp assets");
+    auto blob = RawDataParser::PackageRawData(assets);
+    sqlite3_result_blob(ctx, blob.data(), blob.size(), SQLITE_TRANSIENT);
+}
+
+void SqliteConnection::CompAssets(std::map<std::string, ValueObject::Asset> &assets, std::map<std::string, ValueObject::Asset> &newAssets)
+{
+    using Status = ValueObject::Asset::Status;
+    auto oldIt = assets.begin();
+    auto newIt = newAssets.begin();
+    for (; oldIt != assets.end() && newIt != newAssets.end(); ) {
+        if (oldIt->first == newIt->first) {
+            if (newIt->second.status == Status::STATUS_DELETE) {
+                oldIt->second.status = Status::STATUS_DELETE;
+            } else {
+                MergeAsset(oldIt->second, newIt->second);
+            }
+            oldIt++;
+            newIt = newAssets.erase(newIt);
+            continue;
+        }
+        if (oldIt->first < newIt->first) {
+            ++oldIt;
+            continue;
+        }
+        newIt = newAssets.erase(newIt);
+    }
+    for (auto &[key, value] : newAssets) {
+        value.status = ValueObject::Asset::Status::STATUS_INSERT;
+        assets.insert(std::pair{key, std::move(value)});
+    }
+}
+
+void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Asset &newAsset)
+{
+    using Status = ValueObject::Asset::Status;
+    auto status = static_cast<int32_t>(oldAsset.status);
+    switch (status) {
+        case Status::STATUS_UNKNOWN:
+        case Status::STATUS_NORMAL:
+        case Status::STATUS_ABNORMAL:
+        case Status::STATUS_INSERT:
+        case Status::STATUS_UPDATE:
+            if (oldAsset.modifyTime != newAsset.modifyTime || oldAsset.size != newAsset.size) {
+                oldAsset.version = newAsset.version;
+                oldAsset.expiresTime = newAsset.expiresTime;
+                oldAsset.uri = newAsset.uri;
+                oldAsset.createTime = newAsset.createTime;
+                oldAsset.modifyTime = newAsset.modifyTime;
+                oldAsset.size = newAsset.size;
+                oldAsset.hash = newAsset.hash;
+                oldAsset.path = newAsset.path;
+                oldAsset.status = Status ::STATUS_UPDATE;
+            }
+        default:;
+    }
 }
 } // namespace NativeRdb
 } // namespace OHOS
