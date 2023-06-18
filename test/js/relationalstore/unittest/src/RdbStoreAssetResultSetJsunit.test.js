@@ -563,7 +563,7 @@ describe('rdbResultSetTest', function () {
         }
         console.log(TAG + "************* testGetAssetsFunc1 insert success *************");
         const asset5 =  {
-            name: "name5",
+            name: "name4",
             uri: "uri5",
             createTime: "createTime5",
             modifyTime: "modifyTime5",
@@ -587,7 +587,7 @@ describe('rdbResultSetTest', function () {
             id = resultSet1.getLong(resultSet1.getColumnIndex("id"))
             expect(1).assertEqual(data3.length);
             let asset = data3[0];
-            expect(data_relationalStore.AssetStatus.ASSET_NORMAL).assertEqual(asset.status);
+            expect(data_relationalStore.AssetStatus.ASSET_UPDATE).assertEqual(asset.status);
         } catch (e) {
             console.log(TAG + "insert throw error" + e);
         }
@@ -631,13 +631,13 @@ describe('rdbResultSetTest', function () {
             id = resultSet.getLong(resultSet.getColumnIndex("id"))
             expect(1).assertEqual(data3.length);
             let asset = data3[0];
-            expect(data_relationalStore.AssetStatus.ASSET_DELETE).assertEqual(asset.status);
+            expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(asset.status);
         } catch (e) {
             console.log(TAG + "insert throw error" + e);
         }
         console.log(TAG + "************* testGetAssetsFunc2 insert success *************");
         const asset5 =  {
-            name: "name5",
+            name: "name4",
             uri: "uri5",
             createTime: "createTime5",
             modifyTime: "modifyTime5",
@@ -662,12 +662,12 @@ describe('rdbResultSetTest', function () {
             expect(1).assertEqual(data3.length);
             let asset = data3[0];
             expect("name4").assertEqual(asset.name);
-            expect("uri4").assertEqual(asset.uri);
-            expect("createTime4").assertEqual(asset.createTime);
-            expect("modifyTime4").assertEqual(asset.modifyTime);
-            expect("size4").assertEqual(asset.size);
-            expect("path4").assertEqual(asset.path);
-            expect(data_relationalStore.AssetStatus.ASSET_DELETE).assertEqual(asset.status);
+            expect("uri5").assertEqual(asset.uri);
+            expect("createTime5").assertEqual(asset.createTime);
+            expect("modifyTime5").assertEqual(asset.modifyTime);
+            expect("size5").assertEqual(asset.size);
+            expect("path5").assertEqual(asset.path);
+            expect(data_relationalStore.AssetStatus.ASSET_UPDATE).assertEqual(asset.status);
         } catch (e) {
             console.log(TAG + "insert throw error" + e);
         }

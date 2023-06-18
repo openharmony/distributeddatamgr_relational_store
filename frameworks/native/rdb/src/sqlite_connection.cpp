@@ -953,7 +953,8 @@ void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Ass
         case Status::STATUS_ABNORMAL:
         case Status::STATUS_INSERT:
         case Status::STATUS_UPDATE:
-            if (oldAsset.modifyTime != newAsset.modifyTime || oldAsset.size != newAsset.size) {
+            if (oldAsset.modifyTime != newAsset.modifyTime || oldAsset.size != newAsset.size ||
+                oldAsset.uri != newAsset.uri || oldAsset.path != newAsset.path) {
                 oldAsset.version = newAsset.version;
                 oldAsset.expiresTime = newAsset.expiresTime;
                 oldAsset.uri = newAsset.uri;
