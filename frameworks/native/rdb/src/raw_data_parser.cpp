@@ -120,11 +120,32 @@ std::vector<uint8_t> RawDataParser::PackageRawData(const Assets &assets)
     return rawData;
 }
 
+size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, std::map<std::string, Asset> &assets)
+{
+    Assets res;
+    auto used = ParserRawData(data, length, res);
+    auto it = res.begin();
+    while (it != res.end()) {
+        assets.insert({ it->name, *it });
+        it++;
+    }
+    return used;
+}
+
+std::vector<uint8_t> RawDataParser::PackageRawData(const std::map<std::string, Asset> &assets)
+{
+    Assets res;
+    for (auto asset : assets) {
+        res.push_back(asset.second);
+    }
+    return PackageRawData(res);
+}
+
 bool RawDataParser::InnerAsset::Marshal(Serializable::json &node) const
 {
     SetValue(node[GET_NAME(version)], asset_.version);
-    SetValue(node[GET_NAME(status)], asset_.status);
-    SetValue(node[GET_NAME(timeStamp)], asset_.timeStamp);
+    SetValue(node[GET_NAME(expiresTime)], asset_.expiresTime);
+    SetValue(node[GET_NAME(id)], asset_.id);
     SetValue(node[GET_NAME(name)], asset_.name);
     SetValue(node[GET_NAME(uri)], asset_.uri);
     SetValue(node[GET_NAME(createTime)], asset_.createTime);
@@ -132,17 +153,14 @@ bool RawDataParser::InnerAsset::Marshal(Serializable::json &node) const
     SetValue(node[GET_NAME(size)], asset_.size);
     SetValue(node[GET_NAME(hash)], asset_.hash);
     SetValue(node[GET_NAME(path)], asset_.path);
+    SetValue(node[GET_NAME(status)], asset_.status);
     return true;
 }
 bool RawDataParser::InnerAsset::Unmarshal(const Serializable::json &node)
 {
     UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(version), asset_.version));
-    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(status), asset_.status));
-    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(timeStamp), asset_.timeStamp));
-    if (asset_.status == AssetValue::STATUS_DOWNLOADING &&
-        asset_.timeStamp < static_cast<uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count())) {
-        asset_.status = AssetValue::STATUS_ABNORMAL;
-    }
+    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(expiresTime), asset_.expiresTime));
+    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(id), asset_.id));
     UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(name), asset_.name));
     UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(uri), asset_.uri));
     UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(createTime), asset_.createTime));
@@ -150,6 +168,11 @@ bool RawDataParser::InnerAsset::Unmarshal(const Serializable::json &node)
     UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(size), asset_.size));
     UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(hash), asset_.hash));
     UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(path), asset_.path));
+    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(status), asset_.status));
+    if (asset_.status == AssetValue::STATUS_DOWNLOADING &&
+        asset_.expiresTime < static_cast<uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count())) {
+        asset_.status = AssetValue::STATUS_ABNORMAL;
+    }
     return true;
 }
 } // namespace OHOS::NativeRdb

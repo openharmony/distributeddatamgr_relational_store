@@ -42,7 +42,7 @@ public:
     int BatchInsert(int64_t &outInsertNum, const std::string &table,
         const std::vector<ValuesBucket> &initialBatchValues) override;
     int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
-    int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues,
+    int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, ValuesBucket values,
         ConflictResolution conflictResolution) override;
     int Update(int &changedRows, const std::string &table, const ValuesBucket &values, const std::string &whereClause,
         const std::vector<std::string> &whereArgs) override;
@@ -131,6 +131,7 @@ private:
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
+    void SetAssetStatusWhileInsert(ValueObject &val);
     void DoCloudSync(const std::string &table);
 
     const RdbStoreConfig rdbStoreConfig;
