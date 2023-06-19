@@ -28,6 +28,7 @@
 #include "sqlite_utils.h"
 #include "step_result_set.h"
 #include "task_executor.h"
+#include "traits.h"
 
 #ifndef WINDOWS_PLATFORM
 #include "directory_ex.h"

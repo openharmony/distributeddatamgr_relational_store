@@ -16,13 +16,6 @@
 #include "raw_data_parser.h"
 #include "multi_platform_endian.h"
 
-#define UNMARSHAL_RETURN_ERR(theCall) \
-    do {                              \
-        if (!(theCall)) {               \
-            return false;             \
-        }                             \
-    } while (0)
-
 namespace OHOS::NativeRdb {
 size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Asset &asset)
 {
@@ -35,7 +28,8 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Asset &a
     std::vector<uint8_t> alignData;
     alignData.assign(data, data + sizeof(ASSET_MAGIC));
     used += sizeof(ASSET_MAGIC);
-    if (*(reinterpret_cast<decltype(&ASSET_MAGIC)>(alignData.data())) != ASSET_MAGIC) {
+    auto hostMagicWord = Endian::LeToH(*(reinterpret_cast<decltype(&ASSET_MAGIC)>(alignData.data())));
+    if (hostMagicWord != ASSET_MAGIC) {
         return 0;
     }
 
@@ -68,7 +62,8 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Assets &
     std::vector<uint8_t> alignData;
     alignData.assign(data, data + sizeof (ASSETS_MAGIC));
     used += sizeof (ASSETS_MAGIC);
-    if (*(reinterpret_cast<decltype(&ASSETS_MAGIC)>(alignData.data())) != ASSETS_MAGIC) {
+    auto hostMagicWord = Endian::LeToH(*(reinterpret_cast<decltype(&ASSETS_MAGIC)>(alignData.data())));
+    if (hostMagicWord != ASSETS_MAGIC) {
         return 0;
     }
 
@@ -76,7 +71,7 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Assets &
         return 0;
     }
     alignData.assign(data, data + sizeof(num));
-    num = *(reinterpret_cast<decltype(&num)>(alignData.data()));
+    num = Endian::LeToH(*(reinterpret_cast<decltype(&num)>(alignData.data())));
     used += sizeof(num);
     uint16_t count = 0;
     while (used < length && count < num) {
@@ -98,7 +93,8 @@ std::vector<uint8_t> RawDataParser::PackageRawData(const Asset &asset)
     InnerAsset innerAsset(const_cast<Asset &>(asset));
     auto data = Serializable::Marshall(innerAsset);
     uint16_t size = Endian::HToLe((uint16_t)data.length());
-    auto magicU8 = reinterpret_cast<uint8_t *>(const_cast<uint32_t *>(&ASSET_MAGIC));
+    auto leMagic = Endian::HToLe(ASSET_MAGIC);
+    auto magicU8 = reinterpret_cast<uint8_t *>(const_cast<uint32_t *>(&leMagic));
     rawData.insert(rawData.end(), magicU8, magicU8 + sizeof(ASSET_MAGIC));
     rawData.insert(rawData.end(), reinterpret_cast<uint8_t *>(&size),
         reinterpret_cast<uint8_t *>(&size) + sizeof(size));
@@ -110,7 +106,8 @@ std::vector<uint8_t> RawDataParser::PackageRawData(const Assets &assets)
 {
     std::vector<uint8_t> rawData;
     uint16_t num = uint16_t(assets.size());
-    auto magicU8 = reinterpret_cast<uint8_t *>(const_cast<uint32_t *>(&ASSETS_MAGIC));
+    auto leMagic = Endian::HToLe(ASSETS_MAGIC);
+    auto magicU8 = reinterpret_cast<uint8_t *>(const_cast<uint32_t *>(&leMagic));
     rawData.insert(rawData.end(), magicU8, magicU8 + sizeof(ASSETS_MAGIC));
     rawData.insert(rawData.end(), reinterpret_cast<uint8_t *>(&num), reinterpret_cast<uint8_t *>(&num) + sizeof(num));
     for (auto &asset : assets) {
@@ -158,21 +155,22 @@ bool RawDataParser::InnerAsset::Marshal(Serializable::json &node) const
 }
 bool RawDataParser::InnerAsset::Unmarshal(const Serializable::json &node)
 {
-    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(version), asset_.version));
-    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(expiresTime), asset_.expiresTime));
-    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(id), asset_.id));
-    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(name), asset_.name));
-    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(uri), asset_.uri));
-    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(createTime), asset_.createTime));
-    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(modifyTime), asset_.modifyTime));
-    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(size), asset_.size));
-    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(hash), asset_.hash));
-    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(path), asset_.path));
-    UNMARSHAL_RETURN_ERR(GetValue(node, GET_NAME(status), asset_.status));
+    bool ret = true;
+    ret = GetValue(node, GET_NAME(version), asset_.version) && ret;
+    ret = GetValue(node, GET_NAME(expiresTime), asset_.expiresTime) && ret;
+    ret = GetValue(node, GET_NAME(id), asset_.id) && ret;
+    ret = GetValue(node, GET_NAME(name), asset_.name) && ret;
+    ret = GetValue(node, GET_NAME(uri), asset_.uri) && ret;
+    ret = GetValue(node, GET_NAME(createTime), asset_.createTime) && ret;
+    ret = GetValue(node, GET_NAME(modifyTime), asset_.modifyTime) && ret;
+    ret = GetValue(node, GET_NAME(size), asset_.size) && ret;
+    ret = GetValue(node, GET_NAME(hash), asset_.hash) && ret;
+    ret = GetValue(node, GET_NAME(path), asset_.path) && ret;
+    ret = GetValue(node, GET_NAME(status), asset_.status) && ret;
     if (asset_.status == AssetValue::STATUS_DOWNLOADING &&
         asset_.expiresTime < static_cast<uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count())) {
         asset_.status = AssetValue::STATUS_ABNORMAL;
     }
-    return true;
+    return ret;
 }
 } // namespace OHOS::NativeRdb
