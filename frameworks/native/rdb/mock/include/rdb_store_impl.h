@@ -106,7 +106,7 @@ private:
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void SetAssetStatusWhileInsert(ValueObject &val);
     void DoCloudSync(const std::string &table);
-    int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, ValuesBucket values,
+    int InnerInsert(int64_t &outRowId, const std::string &table, ValuesBucket values,
         ConflictResolution conflictResolution);
 
     const RdbStoreConfig rdbStoreConfig;
