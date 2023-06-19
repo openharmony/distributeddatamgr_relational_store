@@ -23,6 +23,8 @@ class API_EXPORT Endian final {
 public:
     static uint16_t LeToH(uint16_t value);
     static uint16_t HToLe(uint16_t value);
+    static uint32_t LeToH(uint32_t value);
+    static uint32_t HToLe(uint32_t value);
 };
 } // namespace OHOS
 
