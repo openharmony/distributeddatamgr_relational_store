@@ -49,7 +49,7 @@ extern "C" {
  *
  * @since 10
  */
-enum OH_ColumnType {
+typedef enum OH_ColumnType {
     /**
      * Indicates the column type is NULL.
      */
@@ -70,7 +70,7 @@ enum OH_ColumnType {
      * Indicates the column type is BLOB.
      */
     TYPE_BLOB,
-};
+} OH_ColumnType;
 
 /**
  * @brief Define the OH_Cursor structure type.

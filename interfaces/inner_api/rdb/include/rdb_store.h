@@ -360,16 +360,6 @@ public:
     virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) = 0;
 
     /**
-     * @brief Restores a database from a specified encrypted or unencrypted database file.
-     *
-     * @param newPath  Indicates the database new path.
-     * @param backupPath Indicates the database backup path.
-     * @param newKey Indicates the database new key.
-     */
-    virtual int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
-        const std::vector<uint8_t> &newKey) = 0;
-
-    /**
      * @brief Set table to be distributed table.
      *
      * @param tables Indicates the tables name you want to set.
