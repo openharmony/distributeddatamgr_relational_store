@@ -168,7 +168,7 @@ bool RawDataParser::InnerAsset::Unmarshal(const Serializable::json &node)
     ret = GetValue(node, GET_NAME(path), asset_.path) && ret;
     ret = GetValue(node, GET_NAME(status), asset_.status) && ret;
     if (asset_.status == AssetValue::STATUS_DOWNLOADING &&
-        asset_.expiresTime < static_cast<uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count())) {
+        asset_.expiresTime < static_cast<uint64_t>(std::chrono::system_clock::now().time_since_epoch().count())) {
         asset_.status = AssetValue::STATUS_ABNORMAL;
     }
     return ret;
