@@ -129,7 +129,7 @@ void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
     : rdbStoreConfig(config), connectionPool(nullptr), isOpen(false), path(""), orgPath(""), isReadOnly(false),
-      isMemoryRdb(false), isEncrypt_(false), backupFilePath_({})
+      isMemoryRdb(false), isEncrypt_(false)
 {
 }
 
@@ -582,7 +582,8 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
     if (ISFILE(databasePath)) {
         backupFilePath = ExtractFilePath(path) + databasePath;
     } else {
-        if (!PathToRealPath(ExtractFilePath(databasePath), backupFilePath) || databasePath.back() == '/') {
+        if (!PathToRealPath(ExtractFilePath(databasePath), backupFilePath) || databasePath.back() == '/' ||
+            databasePath.substr(databasePath.length() - 2, 2) == "\\") {
             LOG_ERROR("Invalid databasePath.");
             return E_INVALID_FILE_PATH;
         }
@@ -637,9 +638,8 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
     if (ret != E_OK) {
         return ret;
     }
-    auto pos = std::find(backupFilePath_.begin(), backupFilePath_.end(), backupFilePath);
     std::string tempPath = backupFilePath + "temp";
-    if (pos != backupFilePath_.end()) {
+    if (access(backupFilePath.c_str(), F_OK) != E_OK) {
         SqliteUtils::RenameFile(backupFilePath, tempPath);
         ret = InnerBackup(backupFilePath, destEncryptKey);
         if (ret == E_OK) {
@@ -647,12 +647,9 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
         } else {
             SqliteUtils::RenameFile(tempPath, backupFilePath);
         }
-    } else {
-        ret = InnerBackup(backupFilePath, destEncryptKey);
-        if (ret == E_OK) {
-            backupFilePath_.push_back(backupFilePath);
-        }
+        return ret;
     }
+    ret = InnerBackup(backupFilePath, destEncryptKey);
     return ret;
 }
 
@@ -684,13 +681,10 @@ int RdbStoreImpl::InnerBackup(const std::string databasePath, const std::vector<
     }
 
     ret = ExecuteGetLongInner(GlobalExpr::EXPORT_SQL, std::vector<ValueObject>());
-    if (ret != E_OK) {
-        LOG_ERROR("EXPORT_SQL execution error");
-        ExecuteSqlInner(GlobalExpr::DETACH_BACKUP_SQL, std::vector<ValueObject>());
-        return ret;
-    }
 
-    return ExecuteSqlInner(GlobalExpr::DETACH_BACKUP_SQL, std::vector<ValueObject>());
+    int res = ExecuteSqlInner(GlobalExpr::DETACH_BACKUP_SQL, std::vector<ValueObject>());
+
+    return res == E_OK ? ret : res;
 }
 
 int RdbStoreImpl::BeginExecuteSql(const std::string &sql, SqliteConnection **connection)

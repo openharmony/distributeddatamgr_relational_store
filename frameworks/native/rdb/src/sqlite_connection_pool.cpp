@@ -319,7 +319,6 @@ int SqliteConnectionPool::ChangeDbFileForRestore(const std::string newPath, cons
         return retVal;
     }
 
-    config.SetPath(newPath);
     return Init();
 }
 
