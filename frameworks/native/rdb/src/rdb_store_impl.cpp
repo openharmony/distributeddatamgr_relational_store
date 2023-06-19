@@ -639,7 +639,10 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
         return ret;
     }
     std::string tempPath = backupFilePath + "temp";
-    if (access(backupFilePath.c_str(), F_OK) != E_OK) {
+    while (access(tempPath.c_str(), F_OK) == E_OK) {
+        tempPath += "temp";
+    }
+    if (access(backupFilePath.c_str(), F_OK) == E_OK) {
         SqliteUtils::RenameFile(backupFilePath, tempPath);
         ret = InnerBackup(backupFilePath, destEncryptKey);
         if (ret == E_OK) {
