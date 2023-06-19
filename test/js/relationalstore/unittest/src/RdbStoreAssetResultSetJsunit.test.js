@@ -576,7 +576,7 @@ describe('rdbResultSetTest', function () {
             "data3" : assets,
         }
         predicates.equalTo("id", id);
-        rdbStore.update(valuesBucket, predicates);
+        await rdbStore.update(valuesBucket, predicates);
         console.log(TAG + "************* testGetAssetsFunc1 update success *************");
         let predicates1 = await new data_relationalStore.RdbPredicates("test");
         let resultSet1 = await rdbStore.query(predicates1);
@@ -615,7 +615,7 @@ describe('rdbResultSetTest', function () {
             modifyTime: "modifyTime4",
             size: "size4",
             path: "path4",
-            status: data_relationalStore.AssetStatus.ASSET_DELETE,
+            status: data_relationalStore.AssetStatus.ASSET_NORMAL,
         }
         let assets = [asset];
         let valuesBucket = {
@@ -643,14 +643,14 @@ describe('rdbResultSetTest', function () {
             modifyTime: "modifyTime5",
             size: "size5",
             path: "path5",
-            status: data_relationalStore.AssetStatus.ASSET_NORMAL,
+            status: data_relationalStore.AssetStatus.ASSET_DELETE,
         }
         assets = [asset5];
         valuesBucket = {
             "data3" : assets,
         }
         predicates.equalTo("id", id);
-        rdbStore.update(valuesBucket, predicates);
+        await rdbStore.update(valuesBucket, predicates);
         console.log(TAG + "************* testGetAssetsFunc2 update success *************");
         let predicates1 = await new data_relationalStore.RdbPredicates("test");
         let resultSet1 = await rdbStore.query(predicates1);
@@ -662,12 +662,12 @@ describe('rdbResultSetTest', function () {
             expect(1).assertEqual(data3.length);
             let asset = data3[0];
             expect("name4").assertEqual(asset.name);
-            expect("uri5").assertEqual(asset.uri);
-            expect("createTime5").assertEqual(asset.createTime);
-            expect("modifyTime5").assertEqual(asset.modifyTime);
-            expect("size5").assertEqual(asset.size);
-            expect("path5").assertEqual(asset.path);
-            expect(data_relationalStore.AssetStatus.ASSET_UPDATE).assertEqual(asset.status);
+            expect("uri4").assertEqual(asset.uri);
+            expect("createTime4").assertEqual(asset.createTime);
+            expect("modifyTime4").assertEqual(asset.modifyTime);
+            expect("size4").assertEqual(asset.size);
+            expect("path4").assertEqual(asset.path);
+            expect(data_relationalStore.AssetStatus.ASSET_DELETE).assertEqual(asset.status);
         } catch (e) {
             console.log(TAG + "insert throw error" + e);
         }
