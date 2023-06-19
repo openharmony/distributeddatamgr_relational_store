@@ -37,7 +37,7 @@ public:
     virtual int BatchInsert(int64_t &outInsertNum, const std::string &table,
         const std::vector<ValuesBucket> &initialBatchValues) = 0;
     virtual int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) = 0;
-    virtual int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, ValuesBucket values,
+    virtual int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues,
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
     virtual int Update(int &changedRows, const std::string &table, const ValuesBucket &values,
         const std::string &whereClause = "",

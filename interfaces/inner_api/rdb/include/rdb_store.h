@@ -107,7 +107,7 @@ public:
      * @param initialValues Indicates the row of data {@link ValuesBucket} to be inserted into the table.
      * @param conflictResolution Indicates the {@link ConflictResolution} to insert data into the table.
      */
-    virtual int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, ValuesBucket values,
+    virtual int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues,
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
 
     /**
