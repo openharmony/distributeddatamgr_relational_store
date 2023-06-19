@@ -28,6 +28,7 @@
 #include "sqlite_utils.h"
 #include "step_result_set.h"
 #include "task_executor.h"
+#include "traits.h"
 
 #ifndef WINDOWS_PLATFORM
 #include "directory_ex.h"
@@ -247,11 +248,17 @@ int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const Val
 int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
     const ValuesBucket &initialValues, ConflictResolution conflictResolution)
 {
+    return InnerInsert(outRowId, table, initialValues, conflictResolution);
+}
+
+int RdbStoreImpl::InnerInsert(int64_t &outRowId, const std::string &table,
+    ValuesBucket values, ConflictResolution conflictResolution)
+{
     if (table.empty()) {
         return E_EMPTY_TABLE_NAME;
     }
 
-    if (initialValues.IsEmpty()) {
+    if (values.IsEmpty()) {
         return E_EMPTY_VALUES_BUCKET;
     }
 
@@ -266,15 +273,21 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
 
     std::vector<ValueObject> bindArgs;
     const char *split = "";
-    for (auto &[key, val] : initialValues.values_) {
+    for (auto &[key, val] : values.values_) {
         sql << split;
         sql << key;               // columnName
-        bindArgs.push_back(val);  // columnValue
+        if (val.GetType() == ValueObject::TYPE_ASSETS && conflictResolution == ConflictResolution::ON_CONFLICT_REPLACE) {
+            return E_INVALID_ARGS;
+        }
+        if (val.GetType() == ValueObject::TYPE_ASSET || val.GetType() == ValueObject::TYPE_ASSETS) {
+            SetAssetStatusWhileInsert(val);
+        }
+        bindArgs.push_back(std::move(val));  // columnValue
         split = ",";
     }
 
     sql << ") VALUES (";
-    for (int i = 0; i < initialValues.Size(); i++) {
+    for (size_t i = 0; i < bindArgs.size(); i++) {
         sql << ((i == 0) ? "?" : ",?");
     }
     sql << ')';
@@ -290,6 +303,24 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
         DoCloudSync(table);
     }
     return errCode;
+}
+
+void RdbStoreImpl::SetAssetStatusWhileInsert(ValueObject &val)
+{
+    if (val.GetType() == ValueObject::TYPE_ASSET) {
+        auto *asset = Traits::get_if<ValueObject::Asset>(&val.value);
+        if (asset != nullptr) {
+            asset->status = AssetValue::STATUS_INSERT;
+        }
+    }
+    if (val.GetType() == ValueObject::TYPE_ASSETS) {
+        auto *assets = Traits::get_if<ValueObject::Assets>(&val.value);
+        if (assets != nullptr) {
+            for (auto &asset : *assets) {
+                asset.status = AssetValue::STATUS_INSERT;
+            }
+        }
+    }
 }
 
 int RdbStoreImpl::Update(int &changedRows, const std::string &table, const ValuesBucket &values,
@@ -330,7 +361,11 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
     const char *split = "";
     for (auto &[key, val] : values.values_) {
         sql << split;
-        sql << key << "=?";       // columnName
+        if (val.GetType() == ValueObject::TYPE_ASSETS) {
+            sql << key << "=merge_assets(" << key << ", ?)"; // columnName
+        } else {
+            sql << key << "=?"; // columnName
+        }
         bindArgs.push_back(val);  // columnValue
         split = ",";
     }
