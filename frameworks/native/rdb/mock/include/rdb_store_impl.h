@@ -94,6 +94,8 @@ public:
 
 private:
     int InnerOpen(const RdbStoreConfig &config);
+    int InnerInsert(int64_t &outRowId, const std::string &table, ValuesBucket values,
+        ConflictResolution conflictResolution);
     int CheckAttach(const std::string &sql);
     bool PathToRealPath(const std::string &path, std::string &realPath);
     std::string ExtractFilePath(const std::string &fileFullName);
@@ -106,8 +108,6 @@ private:
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void SetAssetStatusWhileInsert(ValueObject &val);
     void DoCloudSync(const std::string &table);
-    int InnerInsert(int64_t &outRowId, const std::string &table, ValuesBucket values,
-        ConflictResolution conflictResolution);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;
