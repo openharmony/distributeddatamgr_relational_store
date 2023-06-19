@@ -246,6 +246,12 @@ int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const Val
 }
 
 int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
+    const ValuesBucket &initialValues, ConflictResolution conflictResolution)
+{
+    return InsertWithConflictResolution(outRowId, table, initialValues, conflictResolution);
+}
+
+int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
     ValuesBucket values, ConflictResolution conflictResolution)
 {
     if (table.empty()) {
