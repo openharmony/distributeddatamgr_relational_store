@@ -68,8 +68,6 @@ public:
         const std::vector<ValueObject> &bindArgs) override;
     int Backup(const std::string databasePath,
         const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>()) override;
-    int InnerBackup(const std::string databasePath,
-        const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>());
     int Attach(const std::string &alias, const std::string &pathName,
         const std::vector<uint8_t> destEncryptKey) override;
     int GetVersion(int &version) override;
@@ -132,6 +130,8 @@ private:
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void DoCloudSync(const std::string &table);
+    int InnerBackup(const std::string databasePath,
+        const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>());
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;
@@ -152,7 +152,6 @@ private:
 
     std::mutex mutex_;
     std::shared_ptr<std::set<std::string>> syncTables_;
-    std::vector<std::string> backupFilePath_;
 };
 } // namespace OHOS::NativeRdb
 #endif
