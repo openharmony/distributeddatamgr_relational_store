@@ -378,6 +378,7 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "${relational_store_common_path}/include",
       "${relational_store_innerapi_path}/rdb/mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "${relational_store_innerapi_path}/rdb/include",
