@@ -30,6 +30,7 @@ struct AssetValue {
     };
     static constexpr uint64_t NO_EXPIRES_TIME = 0;
     uint32_t version = 0;
+    mutable uint32_t status = STATUS_UNKNOWN;
     uint64_t expiresTime = NO_EXPIRES_TIME;
     std::string id;
     std::string name;
@@ -39,8 +40,6 @@ struct AssetValue {
     std::string size;
     std::string hash;
     std::string path;
-
-    mutable uint32_t status = STATUS_UNKNOWN;
 };
 }
 #endif // OHOS_RELATIONAL_STORE_INNER_API_ASSET_VALUE_H

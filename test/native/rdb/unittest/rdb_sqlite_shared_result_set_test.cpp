@@ -126,8 +126,10 @@ void RdbSqliteSharedResultSetTest::GenerateAssetsTable()
     std::shared_ptr<RdbStore> &store = RdbSqliteSharedResultSetTest::store;
     int64_t id;
     ValuesBucket values;
-    Asset assetValue1 = Asset{ 1, 1, "1", "name1", "uri1", "createTime1", "modifyTime1", "size1", "hash1", "path1" };
-    Asset assetValue2 = Asset{ 2, 2, "2", "name2", "uri2", "createTime2", "modifyTime2", "size2", "hash2", "path2" };
+    Asset assetValue1 = Asset{ 1, Asset::STATUS_DOWNLOADING, 1, "1", "name1", "uri1", "createTime1", "modifyTime1",
+        "size1", "hash1", "path1" };
+    Asset assetValue2 = Asset{ 2, Asset::STATUS_DOWNLOADING, 2, "2", "name2", "uri2", "createTime2", "modifyTime2",
+        "size2", "hash2", "path2" };
 
     Assets assets = Assets{ assetValue1 };
     values.PutInt("id", 1);
@@ -153,6 +155,7 @@ void RdbSqliteSharedResultSetTest::GenerateTimeoutTable()
 
     Asset assetValue1 = Asset{
         1,
+        Asset::STATUS_DOWNLOADING,
         timeout,
         "id",
         "name1",
@@ -162,7 +165,6 @@ void RdbSqliteSharedResultSetTest::GenerateTimeoutTable()
         "size1",
         "hash1",
         "path1",
-        Asset::STATUS_DOWNLOADING,
     };
 
     Assets assets = Assets{ assetValue1 };
