@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "uv_queue.h"
+#include "js_uv_queue.h"
 #include "logger.h"
 
 namespace OHOS::AppDataMgrJsKit {
