@@ -121,10 +121,10 @@ HWTEST_F(RdbBMSAdapterTest, Rdb_BMS_Adapter_006, TestSize.Level1)
     dataProperties.tableName = "table1";
 
     auto dataPropertiesStr = to_string(dataProperties.Marshall());
-    bool isJson = Serializable::IsJson(dataPropertiesStr);
+    bool isJson = OHOS::Serializable::IsJson(dataPropertiesStr);
     EXPECT_EQ(isJson, true);
 
-    auto jsonObject = Serializable::ToJson(dataPropertiesStr);
+    auto jsonObject = OHOS::Serializable::ToJson(dataPropertiesStr);
     auto jsonStr = to_string(jsonObject);
     EXPECT_EQ(dataPropertiesStr, jsonStr);
 }
