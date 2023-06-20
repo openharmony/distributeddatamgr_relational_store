@@ -114,3 +114,17 @@ HWTEST_F(RdbBMSAdapterTest, Rdb_BMS_Adapter_005, TestSize.Level1)
     EXPECT_EQ(dataProperties.type, dataProperties1.type);
 }
 
+HWTEST_F(RdbBMSAdapterTest, Rdb_BMS_Adapter_006, TestSize.Level1)
+{
+    DataProperties dataProperties;
+    dataProperties.storeName = "store1";
+    dataProperties.tableName = "table1";
+
+    auto dataPropertiesStr = to_string(dataProperties.Marshall());
+    bool isJson = IsJson(dataPropertiesStr);
+    EXPECT_EQ(isJson, true);
+
+    auto jsonObject = ToJson(dataPropertiesStr);
+    auto jsonStr = to_string(jsonObject);
+    EXPECT_EQ(dataPropertiesStr, jsonStr);
+}
