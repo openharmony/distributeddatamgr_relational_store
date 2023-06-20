@@ -20,7 +20,7 @@
 #include "rdb_helper.h"
 #include "rdb_predicates.h"
 #include "relational_cursor_impl.h"
-#include "relational_error_code.h"
+#include "relational_store_error_code.h"
 #include "relational_predicates_impl.h"
 #include "relational_store_impl.h"
 #include "relational_value_object_impl.h"
@@ -97,24 +97,20 @@ int OH_Rdb_CloseStore(OH_Rdb_Store *store)
 {
     if (store == nullptr || store->id != OHOS::RdbNdk::RDB_STORE_CID) {
         LOG_ERROR("Parameters set error:config is NULL ? %{public}d", (store == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     delete store;
     store = nullptr;
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return OH_Rdb_ErrCode::RDB_OK;
 }
 
 int OH_Rdb_DeleteStore(const char *path)
 {
     if (path == nullptr) {
         LOG_ERROR("Parameters set error:path is NULL ? %{public}d", (path == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    int err = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(path);
-    if (err != OHOS::NativeRdb::E_OK) {
-        return OH_Rdb_ErrCode::RDB_ERR;
-    }
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return OHOS::NativeRdb::RdbHelper::DeleteRdbStore(path);
 }
 
 int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_VBucket *valuesBucket)
@@ -123,7 +119,7 @@ int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_VBucket *valuesBuck
         LOG_ERROR("Parameters set error:store is NULL ? %{public}d, table is NULL ? %{public}d,"
                   "valuesBucket is NULL ? %{public}d",
             (store == nullptr), (table == nullptr), (valuesBucket == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     int64_t rowId = -1;
     auto tempStore = static_cast<OHOS::RdbNdk::StoreImpl *>(store);
@@ -138,7 +134,7 @@ int OH_Rdb_Update(OH_Rdb_Store *store, OH_VBucket *valueBucket, OH_Predicates *p
         LOG_ERROR("Parameters set error:store is NULL ? %{public}d, valueBucket is NULL ? %{public}d,"
                   "predicates is NULL ? %{public}d",
             (store == nullptr), (valueBucket == nullptr), (predicates == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     int updatedRows = -1;
     auto tempStore = static_cast<OHOS::RdbNdk::StoreImpl *>(store);
@@ -154,7 +150,7 @@ int OH_Rdb_Delete(OH_Rdb_Store *store, OH_Predicates *predicates)
     if (store == nullptr || predicates == nullptr || store->id != OHOS::RdbNdk::RDB_STORE_CID) {
         LOG_ERROR("Parameters set error:store is NULL ? %{public}d, predicates is NULL ? %{public}d",
             (store == nullptr), (predicates == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     int deletedRows = -1;
     auto tempStore = static_cast<OHOS::RdbNdk::StoreImpl *>(store);
@@ -186,8 +182,7 @@ OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const ch
     if (resultSet == nullptr) {
         return nullptr;
     }
-    std::shared_ptr<OHOS::NativeRdb::ResultSet> retParam = std::move(resultSet);
-    return new OHOS::RdbNdk::CursorImpl(retParam);
+    return new OHOS::RdbNdk::CursorImpl(std::move(resultSet));
 }
 
 OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, const char *sql)
@@ -203,8 +198,7 @@ OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, const char *sql)
     if (resultSet == nullptr) {
         return nullptr;
     }
-    std::shared_ptr<OHOS::NativeRdb::ResultSet> retParam = std::move(resultSet);
-    return new OHOS::RdbNdk::CursorImpl(retParam);
+    return new OHOS::RdbNdk::CursorImpl(std::move(resultSet));
 }
 
 int OH_Rdb_Execute(OH_Rdb_Store *store, const char *sql)
@@ -212,7 +206,7 @@ int OH_Rdb_Execute(OH_Rdb_Store *store, const char *sql)
     if (store == nullptr || sql == nullptr ||store->id != OHOS::RdbNdk::RDB_STORE_CID) {
         LOG_ERROR("Parameters set error:store is NULL ? %{public}d, sql is NULL ? %{public}d", (store == nullptr),
             (sql == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     auto tempStore = static_cast<OHOS::RdbNdk::StoreImpl *>(store);
     return tempStore->GetStore()->ExecuteSql(sql, std::vector<OHOS::NativeRdb::ValueObject>{});
@@ -222,7 +216,7 @@ int OH_Rdb_BeginTransaction(OH_Rdb_Store *store)
 {
     if (store == nullptr || store->id != OHOS::RdbNdk::RDB_STORE_CID) {
         LOG_ERROR("Parameters set error:store is NULL ? %{public}d", (store == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     auto tempStore = static_cast<OHOS::RdbNdk::StoreImpl *>(store);
     return tempStore->GetStore()->BeginTransaction();
@@ -232,7 +226,7 @@ int OH_Rdb_RollBack(OH_Rdb_Store *store)
 {
     if (store == nullptr || store->id != OHOS::RdbNdk::RDB_STORE_CID) {
         LOG_ERROR("Parameters set error:store is NULL ? %{public}d", (store == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     auto tempStore = static_cast<OHOS::RdbNdk::StoreImpl *>(store);
     return tempStore->GetStore()->RollBack();
@@ -242,7 +236,7 @@ int OH_Rdb_Commit(OH_Rdb_Store *store)
 {
     if (store == nullptr || store->id != OHOS::RdbNdk::RDB_STORE_CID) {
         LOG_ERROR("Parameters set error:store is NULL ? %{public}d", (store == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     auto tempStore = static_cast<OHOS::RdbNdk::StoreImpl *>(store);
     return tempStore->GetStore()->Commit();
@@ -253,7 +247,7 @@ int OH_Rdb_Backup(OH_Rdb_Store *store, const char *databasePath)
     if (store == nullptr || databasePath == nullptr || store->id != OHOS::RdbNdk::RDB_STORE_CID) {
         LOG_ERROR("Parameters set error:store is NULL ? %{public}d, databasePath is NULL ? %{public}d",
             (store == nullptr), (databasePath == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     auto tempStore = static_cast<OHOS::RdbNdk::StoreImpl *>(store);
 
@@ -265,7 +259,7 @@ int OH_Rdb_Restore(OH_Rdb_Store *store, const char *databasePath)
     if (store == nullptr || databasePath == nullptr || store->id != OHOS::RdbNdk::RDB_STORE_CID) {
         LOG_ERROR("Parameters set error:store is NULL ? %{public}d, databasePath is NULL ? %{public}d",
             (store == nullptr), (databasePath == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     auto tempStore = static_cast<OHOS::RdbNdk::StoreImpl *>(store);
 
@@ -276,7 +270,7 @@ int OH_Rdb_GetVersion(OH_Rdb_Store *store, int *version)
 {
     if (store == nullptr || store->id != OHOS::RdbNdk::RDB_STORE_CID) {
         LOG_ERROR("Parameters set error:store is NULL ? %{public}d", (store == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     auto tempStore = static_cast<OHOS::RdbNdk::StoreImpl *>(store);
     return tempStore->GetStore()->GetVersion(*version);
@@ -286,7 +280,7 @@ int OH_Rdb_SetVersion(OH_Rdb_Store *store, int version)
 {
     if (store == nullptr || store->id != OHOS::RdbNdk::RDB_STORE_CID) {
         LOG_ERROR("Parameters set error:store is NULL ? %{public}d", (store == nullptr));
-        return OH_Rdb_ErrCode::RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     auto tempStore = static_cast<OHOS::RdbNdk::StoreImpl *>(store);
     return tempStore->GetStore()->SetVersion(version);

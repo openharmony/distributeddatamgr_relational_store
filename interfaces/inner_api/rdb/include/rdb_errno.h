@@ -278,8 +278,6 @@ static constexpr int E_WAL_SIZE_OVER_LIMIT = (E_BASE + 47);
 * @brief The error when the connection count is used up.
 */
 static constexpr int E_CON_OVER_LIMIT = (E_BASE + 48);
-
-constexpr int E_INVALID_BUNDLE_NAME = (E_BASE + 49);
 } // namespace NativeRdb
 } // namespace OHOS
 

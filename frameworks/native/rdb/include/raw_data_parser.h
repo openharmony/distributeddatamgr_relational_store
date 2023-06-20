@@ -28,8 +28,10 @@ public:
     static bool Convert(T input, std::variant<Rest...> &output);
     static size_t ParserRawData(const uint8_t *data, size_t length, Asset &asset);
     static size_t ParserRawData(const uint8_t *data, size_t length, Assets &assets);
+    static size_t ParserRawData(const uint8_t *data, size_t length, std::map<std::string, Asset> &assets);
     static std::vector<uint8_t> PackageRawData(const Asset &asset);
     static std::vector<uint8_t> PackageRawData(const Assets &assets);
+    static std::vector<uint8_t> PackageRawData(const std::map<std::string, Asset> &assets);
 
 private:
     struct InnerAsset : public Serializable {

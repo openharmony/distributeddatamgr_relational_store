@@ -55,6 +55,7 @@ public:
 #endif
 
 private:
+    static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     explicit SqliteConnection(bool isWriteConnection);
     int InnerOpen(const RdbStoreConfig &config);
     int GetDbPath(const RdbStoreConfig &config, std::string &dbPath);
@@ -70,6 +71,10 @@ private:
 
     int SetPersistWal();
     int SetBusyTimeout(int timeout);
+    int RegDefaultFunctions(sqlite3 *dbHandle);
+    static void MergeAssets(sqlite3_context *ctx, int argc, sqlite3_value **argv);
+    static void CompAssets(std::map<std::string, ValueObject::Asset> &oldAssets, std::map<std::string, ValueObject::Asset> &newAssets);
+    static void MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Asset &newAsset);
     int SetCustomFunctions(const RdbStoreConfig &config);
     int SetCustomScalarFunction(const std::string &functionName, int argc, ScalarFunction *function);
 

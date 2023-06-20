@@ -28,6 +28,7 @@
 #include "sqlite_utils.h"
 #include "step_result_set.h"
 #include "task_executor.h"
+#include "traits.h"
 
 #ifndef WINDOWS_PLATFORM
 #include "directory_ex.h"
@@ -239,11 +240,17 @@ int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const Val
 int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
     const ValuesBucket &initialValues, ConflictResolution conflictResolution)
 {
+    return InnerInsert(outRowId, table, initialValues, conflictResolution);
+}
+
+int RdbStoreImpl::InnerInsert(int64_t &outRowId, const std::string &table,
+    ValuesBucket values, ConflictResolution conflictResolution)
+{
     if (table.empty()) {
         return E_EMPTY_TABLE_NAME;
     }
 
-    if (initialValues.IsEmpty()) {
+    if (values.IsEmpty()) {
         return E_EMPTY_VALUES_BUCKET;
     }
 
@@ -258,15 +265,21 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
 
     std::vector<ValueObject> bindArgs;
     const char *split = "";
-    for (auto &[key, val] : initialValues.values_) {
+    for (auto &[key, val] : values.values_) {
         sql << split;
         sql << key;               // columnName
-        bindArgs.push_back(val);  // columnValue
+        if (val.GetType() == ValueObject::TYPE_ASSETS && conflictResolution == ConflictResolution::ON_CONFLICT_REPLACE) {
+            return E_INVALID_ARGS;
+        }
+        if (val.GetType() == ValueObject::TYPE_ASSET || val.GetType() == ValueObject::TYPE_ASSETS) {
+            SetAssetStatusWhileInsert(val);
+        }
+        bindArgs.push_back(std::move(val));  // columnValue
         split = ",";
     }
 
     sql << ") VALUES (";
-    for (int i = 0; i < initialValues.Size(); i++) {
+    for (size_t i = 0; i < bindArgs.size(); i++) {
         sql << ((i == 0) ? "?" : ",?");
     }
     sql << ')';
@@ -282,6 +295,24 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
         DoCloudSync(table);
     }
     return errCode;
+}
+
+void RdbStoreImpl::SetAssetStatusWhileInsert(ValueObject &val)
+{
+    if (val.GetType() == ValueObject::TYPE_ASSET) {
+        auto *asset = Traits::get_if<ValueObject::Asset>(&val.value);
+        if (asset != nullptr) {
+            asset->status = AssetValue::STATUS_INSERT;
+        }
+    }
+    if (val.GetType() == ValueObject::TYPE_ASSETS) {
+        auto *assets = Traits::get_if<ValueObject::Assets>(&val.value);
+        if (assets != nullptr) {
+            for (auto &asset : *assets) {
+                asset.status = AssetValue::STATUS_INSERT;
+            }
+        }
+    }
 }
 
 int RdbStoreImpl::Update(int &changedRows, const std::string &table, const ValuesBucket &values,
@@ -322,7 +353,11 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
     const char *split = "";
     for (auto &[key, val] : values.values_) {
         sql << split;
-        sql << key << "=?";       // columnName
+        if (val.GetType() == ValueObject::TYPE_ASSETS) {
+            sql << key << "=merge_assets(" << key << ", ?)"; // columnName
+        } else {
+            sql << key << "=?"; // columnName
+        }
         bindArgs.push_back(val);  // columnValue
         split = ",";
     }
@@ -445,7 +480,7 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
     const std::vector<std::string> &selectionArgs)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    return std::make_shared<SqliteSharedResultSet>(shared_from_this(), path, sql, selectionArgs);
+    return std::make_shared<SqliteSharedResultSet>(shared_from_this(), connectionPool, path, sql, selectionArgs);
 }
 #endif
 
@@ -573,7 +608,8 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
     if (ISFILE(databasePath)) {
         backupFilePath = ExtractFilePath(path) + databasePath;
     } else {
-        if (!PathToRealPath(ExtractFilePath(databasePath), backupFilePath)) {
+        if (!PathToRealPath(ExtractFilePath(databasePath), backupFilePath) || databasePath.back() == '/' ||
+            databasePath.substr(databasePath.length() - 2, 2) == "\\") {
             LOG_ERROR("Invalid databasePath.");
             return E_INVALID_FILE_PATH;
         }
@@ -619,7 +655,7 @@ int RdbStoreImpl::ExecuteGetLongInner(const std::string &sql, const std::vector<
 }
 
 /**
- * Restores a database from a specified encrypted or unencrypted database file.
+ * Backup a database from a specified encrypted or unencrypted database file.
  */
 int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
 {
@@ -628,16 +664,37 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
     if (ret != E_OK) {
         return ret;
     }
+    std::string tempPath = backupFilePath + "temp";
+    while (access(tempPath.c_str(), F_OK) == E_OK) {
+        tempPath += "temp";
+    }
+    if (access(backupFilePath.c_str(), F_OK) == E_OK) {
+        SqliteUtils::RenameFile(backupFilePath, tempPath);
+        ret = InnerBackup(backupFilePath, destEncryptKey);
+        if (ret == E_OK) {
+            SqliteUtils::DeleteFile(tempPath);
+        } else {
+            SqliteUtils::RenameFile(tempPath, backupFilePath);
+        }
+        return ret;
+    }
+    ret = InnerBackup(backupFilePath, destEncryptKey);
+    return ret;
+}
 
+/**
+ * Backup a database from a specified encrypted or unencrypted database file.
+ */
+int RdbStoreImpl::InnerBackup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
+{
     std::vector<ValueObject> bindArgs;
-    bindArgs.push_back(ValueObject(backupFilePath));
+    bindArgs.push_back(ValueObject(databasePath));
     if (destEncryptKey.size() != 0 && !isEncrypt_) {
         bindArgs.push_back(ValueObject(destEncryptKey));
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     } else if (isEncrypt_) {
-        RdbPassword rdbPwd =
-            RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        RdbPassword rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
         std::vector<uint8_t> key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
         bindArgs.push_back(ValueObject(key));
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
@@ -647,17 +704,16 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
         bindArgs.push_back(ValueObject(str));
     }
 
-    ret = ExecuteSqlInner(GlobalExpr::ATTACH_BACKUP_SQL, bindArgs);
+    int ret = ExecuteSqlInner(GlobalExpr::ATTACH_BACKUP_SQL, bindArgs);
     if (ret != E_OK) {
         return ret;
     }
 
     ret = ExecuteGetLongInner(GlobalExpr::EXPORT_SQL, std::vector<ValueObject>());
-    if (ret != E_OK) {
-        return ret;
-    }
 
-    return ExecuteSqlInner(GlobalExpr::DETACH_BACKUP_SQL, std::vector<ValueObject>());
+    int res = ExecuteSqlInner(GlobalExpr::DETACH_BACKUP_SQL, std::vector<ValueObject>());
+
+    return res == E_OK ? ret : res;
 }
 
 int RdbStoreImpl::BeginExecuteSql(const std::string &sql, SqliteConnection **connection)
@@ -1090,63 +1146,33 @@ int RdbStoreImpl::ConfigLocale(const std::string localeStr)
 
 int RdbStoreImpl::Restore(const std::string backupPath, const std::vector<uint8_t> &newKey)
 {
-    return ChangeDbFileForRestore(path, backupPath, newKey);
-}
-
-/**
- * Restores a database from a specified encrypted or unencrypted database file.
- */
-int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
-    const std::vector<uint8_t> &newKey)
-{
     if (isOpen == false) {
-        LOG_ERROR("ChangeDbFileForRestore:The connection pool has been closed.");
+        LOG_ERROR("The connection pool has been closed.");
         return E_ERROR;
     }
 
     if (connectionPool == nullptr) {
-        LOG_ERROR("ChangeDbFileForRestore:The connectionPool is null.");
+        LOG_ERROR("The connectionPool is null.");
         return E_ERROR;
     }
-    if (newPath.empty() || backupPath.empty()) {
-        LOG_ERROR("ChangeDbFileForRestore:Empty databasePath.");
-        return E_INVALID_FILE_PATH;
-    }
+
     std::string backupFilePath;
-    std::string restoreFilePath;
-    if (ISFILE(backupPath)) {
-        backupFilePath = ExtractFilePath(path) + backupPath;
-    } else {
-        backupFilePath = backupPath;
+    int ret = GetDataBasePath(backupPath, backupFilePath);
+    if (ret != E_OK) {
+        return ret;
     }
+
     if (access(backupFilePath.c_str(), F_OK) != E_OK) {
-        LOG_ERROR("ChangeDbFileForRestore:The backupPath does not exists.");
+        LOG_ERROR("The backupFilePath does not exists.");
         return E_INVALID_FILE_PATH;
     }
 
-    if (ISFILE(newPath)) {
-        restoreFilePath = ExtractFilePath(path) + newPath;
-    } else {
-        if (!PathToRealPath(ExtractFilePath(newPath), restoreFilePath)) {
-            LOG_ERROR("ChangeDbFileForRestore:Invalid newPath.");
-            return E_INVALID_FILE_PATH;
-        }
-        restoreFilePath = newPath;
-    }
-    if (backupFilePath == restoreFilePath) {
-        LOG_ERROR("ChangeDbFileForRestore:The backupPath and newPath should not be same.");
-        return E_INVALID_FILE_PATH;
-    }
     if (backupFilePath == path) {
-        LOG_ERROR("ChangeDbFileForRestore:The backupPath and path should not be same.");
+        LOG_ERROR("The backupPath and path should not be same.");
         return E_INVALID_FILE_PATH;
     }
 
-    int ret = connectionPool->ChangeDbFileForRestore(restoreFilePath, backupFilePath, newKey);
-    if (ret == E_OK) {
-        path = restoreFilePath;
-    }
-    return ret;
+    return connectionPool->ChangeDbFileForRestore(path, backupFilePath, newKey);
 }
 
 /**
@@ -1155,7 +1181,7 @@ int RdbStoreImpl::ChangeDbFileForRestore(const std::string newPath, const std::s
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
     const std::vector<std::string> &selectionArgs)
 {
-    return std::make_shared<StepResultSet>(shared_from_this(), sql, selectionArgs);
+    return std::make_shared<StepResultSet>(shared_from_this(), connectionPool, sql, selectionArgs);
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)

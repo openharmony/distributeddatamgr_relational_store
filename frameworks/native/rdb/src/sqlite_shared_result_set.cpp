@@ -28,9 +28,9 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-SqliteSharedResultSet::SqliteSharedResultSet(
-    std::shared_ptr<RdbStoreImpl> store, std::string path, std::string sql, const std::vector<std::string> &bindArgs)
-    : AbsSharedResultSet(path), store_(store), connectionPool_(store->connectionPool), resultSetBlockCapacity(0),
+SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<RdbStoreImpl> store, SqliteConnectionPool *connectionPool,
+    std::string path, std::string sql, const std::vector<std::string> &bindArgs)
+    : AbsSharedResultSet(path), store_(store), connectionPool_(connectionPool), resultSetBlockCapacity(0),
       isOnlyFillResultSetBlock(false), qrySql(sql), selectionArgVec(bindArgs), rowNum(NO_COUNT)
 {
 }

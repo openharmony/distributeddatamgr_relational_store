@@ -60,9 +60,7 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
     if (dbFileName.empty()) {
         return E_EMPTY_FILE_NAME;
     }
-    if (RdbStoreManager::GetInstance().IsInUsing(dbFileName)) {
-        return E_RDB_STORE_IN_USING;
-    }
+    RdbStoreManager::GetInstance().IsInUsing(dbFileName); // maybe need to return here
     if (access(dbFileName.c_str(), F_OK) != 0) {
         return E_OK; // not not exist
     }
