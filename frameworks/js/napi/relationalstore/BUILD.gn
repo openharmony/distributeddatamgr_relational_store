@@ -23,6 +23,7 @@ ohos_copy("relational_store_declaration") {
 
 sources = [
   "../common/src/js_utils.cpp",
+  "../common/src/js_uv_queue.cpp",
   "src/entry_point.cpp",
   "src/napi_async_call.cpp",
   "src/napi_rdb_const_properties.cpp",

@@ -80,11 +80,11 @@ struct RdbStoreContext : public Context {
     int32_t distributedType;
     int32_t syncMode;
     DistributedRdb::DistributedConfig distributedConfig;
+    napi_ref asyncHolder = nullptr;
     NativeRdb::ConflictResolution conflictResolution;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     DistributedRdb::SyncResult syncResult;
 
-    napi_value cloudSyncCallback = nullptr;
 #endif
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
 
@@ -219,6 +219,7 @@ napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::R
         LOG_ERROR("RdbStoreProxy::NewInstance native instance is nullptr! code:%{public}d!", status);
         return instance;
     }
+    proxy->queue_ = std::make_shared<AppDataMgrJsKit::UvQueue>(env);
     proxy->rdbStore_ = std::move(value);
     proxy->isSystemAppCalled_ = isSystemAppCalled;
     return instance;
@@ -323,7 +324,7 @@ int ParseCloudSyncCallback(const napi_env &env, const napi_value &arg, std::shar
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, arg, &valueType);
     CHECK_RETURN_SET(valueType == napi_function, std::make_shared<ParamNumError>("a callback type"));
-    context->cloudSyncCallback = arg;
+    napi_create_reference(env, arg, 1, &context->asyncHolder);
 
     LOG_DEBUG("ParseCloudSyncCallback end");
     return OK;
@@ -1156,7 +1157,7 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
     LOG_DEBUG("RdbStoreProxy::CloudSync start");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc > 1 || argc < 5, std::make_shared<ParamNumError>("2 - 4"));
+        CHECK_RETURN_SET_E(argc > 1 && argc < 5, std::make_shared<ParamNumError>("2 - 4"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseCloudSyncModeArg(env, argv[0], context));
         uint32_t index = 1;
@@ -1166,9 +1167,9 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
             CHECK_RETURN(OK == ParseTablesName(env, argv[index], context));
             index++;
         }
-        CHECK_RETURN(OK == ParseCloudSyncCallback(env, argv[index], context));
+        CHECK_RETURN(OK == ParseCloudSyncCallback(env, argv[index++], context));
         CHECK_RETURN_SET_E(index == argc - 1 || index == argc, std::make_shared<ParamNumError>("2 - 4"));
-        if(index == argc - 1){
+        if (index == argc - 1) {
             napi_valuetype valueType = napi_undefined;
             napi_typeof(env, argv[index], &valueType);
             if (valueType == napi_function) {
@@ -1184,10 +1185,18 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
         option.mode = static_cast<DistributedRdb::SyncMode>(context->syncMode);
         option.isBlock = false;
 
-        return obj->rdbStore_->Sync(option, context->tablesNames, [context](const Details &details) {
-            auto callback = std::make_shared<NapiCoudSyncCallback>(context->env_, context->cloudSyncCallback);
-            callback->OnSyncCompelete(details);
-        });
+        context->execCode_ = obj->rdbStore_->Sync(option, context->tableNames,
+            [queue = obj->queue_, callback = context->asyncHolder](const Details &details) {
+               if (queue == nullptr || callback == nullptr) {
+                   return;
+               }
+               bool repeat = !details.empty() && details.begin()->second.progess != DistributedRdb::SYCN_FINISH;
+               queue->AsyncCall({ callback, repeat }, [details](napi_env env, int &argc, napi_value *argv) -> void {
+                    argc = 1;
+                    argv[0] = details.empty() ? nullptr : JSUtils::Convert2JSValue(env, details.begin()->second);
+               });
+            });
+        return OK;
     };
 
     auto output = [context](napi_env env, napi_value &result) {
