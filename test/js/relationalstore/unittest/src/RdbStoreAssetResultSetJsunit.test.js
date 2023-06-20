@@ -34,7 +34,7 @@ const asset1 = {
     modifyTime: "modifyTime1",
     size: "size1",
     path: "path1",
-    status: 1,
+    status: data_relationalStore.AssetStatus.ASSET_NORMAL,
 }
 const asset2 = {
     name: "name2",
@@ -43,7 +43,7 @@ const asset2 = {
     modifyTime: "modifyTime2",
     size: "size2",
     path: "path2",
-    status: 2,
+    status: data_relationalStore.AssetStatus.ASSET_NORMAL,
 }
 const asset3 = {
     name: "name3",
@@ -52,7 +52,7 @@ const asset3 = {
     modifyTime: "modifyTime3",
     size: "size3",
     path: "path3",
-    status: 3,
+    status: data_relationalStore.AssetStatus.ASSET_NORMAL,
 }
 const asset4 = {
     name: "name4",
@@ -141,7 +141,7 @@ describe('rdbResultSetTest', function () {
             expect("modifyTime1").assertEqual(data1.modifyTime);
             expect("size1").assertEqual(data1.size);
             expect("path1").assertEqual(data1.path);
-            expect(1).assertEqual(data1.status);
+            expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(data1.status);
 
             const data2 = resultSet.getAsset(resultSet.getColumnIndex("data2"))
             console.log(TAG + "id=" + id + ", data2=" + data2);
@@ -151,7 +151,7 @@ describe('rdbResultSetTest', function () {
             expect("modifyTime2").assertEqual(data2.modifyTime);
             expect("size2").assertEqual(data2.size);
             expect("path2").assertEqual(data2.path);
-            expect(1).assertEqual(data2.status);
+            expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(data2.status);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -185,7 +185,7 @@ describe('rdbResultSetTest', function () {
             expect("modifyTime2").assertEqual(data1.modifyTime);
             expect("size2").assertEqual(data1.size);
             expect("path2").assertEqual(data1.path);
-            expect(1).assertEqual(data1.status);
+            expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(data1.status);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -247,7 +247,7 @@ describe('rdbResultSetTest', function () {
             expect("modifyTime4").assertEqual(data1.modifyTime);
             expect("size4").assertEqual(data1.size);
             expect("path4").assertEqual(data1.path);
-            expect(0).assertEqual(data1.status);
+            expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(data1.status);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -292,7 +292,7 @@ describe('rdbResultSetTest', function () {
             expect("modifyTime4").assertEqual(data1.modifyTime);
             expect("size4").assertEqual(data1.size);
             expect("path4").assertEqual(data1.path);
-            expect(0).assertEqual(data1.status);
+            expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(data1.status);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -337,7 +337,7 @@ describe('rdbResultSetTest', function () {
             expect("modifyTime4").assertEqual(data1.modifyTime);
             expect("size4").assertEqual(data1.size);
             expect("path4").assertEqual(data1.path);
-            expect(0).assertEqual(data1.status);
+            expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(data1.status);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -432,7 +432,7 @@ describe('rdbResultSetTest', function () {
             expect("modifyTime1").assertEqual(asset.modifyTime);
             expect("size1").assertEqual(asset.size);
             expect("path1").assertEqual(asset.path);
-            expect(1).assertEqual(asset.status);
+            expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(asset.status);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -468,7 +468,7 @@ describe('rdbResultSetTest', function () {
             expect("modifyTime1").assertEqual(asset.modifyTime);
             expect("size1").assertEqual(asset.size);
             expect("path1").assertEqual(asset.path);
-            expect(1).assertEqual(asset.status);
+            expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(asset.status);
 
             asset = data3[1];
             expect("name2").assertEqual(asset.name);
@@ -477,7 +477,7 @@ describe('rdbResultSetTest', function () {
             expect("modifyTime2").assertEqual(asset.modifyTime);
             expect("size2").assertEqual(asset.size);
             expect("path2").assertEqual(asset.path);
-            expect(1).assertEqual(asset.status);
+            expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(asset.status);
 
             asset = data3[2];
             expect("name3").assertEqual(asset.name);
@@ -486,7 +486,7 @@ describe('rdbResultSetTest', function () {
             expect("modifyTime3").assertEqual(asset.modifyTime);
             expect("size3").assertEqual(asset.size);
             expect("path3").assertEqual(asset.path);
-            expect(3).assertEqual(asset.status);
+            expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(asset.status);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -525,5 +525,159 @@ describe('rdbResultSetTest', function () {
             done();
             console.log(TAG + "************* testGetAsset0003 end *************");
         }
+    })
+
+    /**
+     * @tc.name resultSet getAssets normal test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0030
+     * @tc.desc resultSet getAssets normal test
+     */
+    it('testGetAssetsFunc1', 0, async function (done) {
+        console.log(TAG + "************* testGetAssetsFunc1 begin *************");
+        const asset = {
+            name: "name4",
+            uri: "uri4",
+            createTime: "createTime4",
+            modifyTime: "modifyTime4",
+            size: "size4",
+            path: "path4",
+            status: data_relationalStore.AssetStatus.ASSET_DELETE,
+        }
+        let assets = [asset];
+        let valuesBucket = {
+            "data3" : assets,
+        }
+        await rdbStore.insert("test", valuesBucket);
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        var id;
+        try {
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const data3 = resultSet.getAssets(resultSet.getColumnIndex("data3"))
+            id = resultSet.getLong(resultSet.getColumnIndex("id"))
+            expect(1).assertEqual(data3.length);
+            let asset = data3[0];
+            expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(asset.status);
+        } catch (e) {
+            console.log(TAG + "insert throw error" + e);
+        }
+        console.log(TAG + "************* testGetAssetsFunc1 insert success *************");
+        const asset5 =  {
+            name: "name4",
+            uri: "uri5",
+            createTime: "createTime5",
+            modifyTime: "modifyTime5",
+            size: "size5",
+            path: "path5",
+            status: data_relationalStore.AssetStatus.ASSET_NORMAL,
+        }
+        assets = [asset5];
+        valuesBucket = {
+            "data3" : assets,
+        }
+        predicates.equalTo("id", id);
+        await rdbStore.update(valuesBucket, predicates);
+        console.log(TAG + "************* testGetAssetsFunc1 update success *************");
+        let predicates1 = await new data_relationalStore.RdbPredicates("test");
+        let resultSet1 = await rdbStore.query(predicates1);
+        console.log(TAG + "************* testGetAssetsFunc1 query success *************");
+        try {
+            expect(true).assertEqual(resultSet1.goToFirstRow())
+            const data3 = resultSet1.getAssets(resultSet1.getColumnIndex("data3"))
+            id = resultSet1.getLong(resultSet1.getColumnIndex("id"))
+            expect(1).assertEqual(data3.length);
+            let asset = data3[0];
+            expect(data_relationalStore.AssetStatus.ASSET_UPDATE).assertEqual(asset.status);
+        } catch (e) {
+            console.log(TAG + "insert throw error" + e);
+        }
+        resultSet.close();
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet1.close();
+        expect(true).assertEqual(resultSet1.isClosed)
+        resultSet = null
+        resultSet1 = null
+        done();
+        console.log(TAG + "************* testGetAssetsFunc1 end *************");
+    })
+
+    /**
+     * @tc.name resultSet getAssets normal test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0030
+     * @tc.desc resultSet getAssets normal test
+     */
+    it('testGetAssetsFunc2', 0, async function (done) {
+        console.log(TAG + "************* testGetAssetsFunc2 begin *************");
+        const asset = {
+            name: "name4",
+            uri: "uri4",
+            createTime: "createTime4",
+            modifyTime: "modifyTime4",
+            size: "size4",
+            path: "path4",
+            status: data_relationalStore.AssetStatus.ASSET_NORMAL,
+        }
+        let assets = [asset];
+        let valuesBucket = {
+            "data3" : assets,
+        }
+        await rdbStore.insert("test", valuesBucket);
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        var id;
+        try {
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const data3 = resultSet.getAssets(resultSet.getColumnIndex("data3"))
+            id = resultSet.getLong(resultSet.getColumnIndex("id"))
+            expect(1).assertEqual(data3.length);
+            let asset = data3[0];
+            expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(asset.status);
+        } catch (e) {
+            console.log(TAG + "insert throw error" + e);
+        }
+        console.log(TAG + "************* testGetAssetsFunc2 insert success *************");
+        const asset5 =  {
+            name: "name4",
+            uri: "uri5",
+            createTime: "createTime5",
+            modifyTime: "modifyTime5",
+            size: "size5",
+            path: "path5",
+            status: data_relationalStore.AssetStatus.ASSET_DELETE,
+        }
+        assets = [asset5];
+        valuesBucket = {
+            "data3" : assets,
+        }
+        predicates.equalTo("id", id);
+        await rdbStore.update(valuesBucket, predicates);
+        console.log(TAG + "************* testGetAssetsFunc2 update success *************");
+        let predicates1 = await new data_relationalStore.RdbPredicates("test");
+        let resultSet1 = await rdbStore.query(predicates1);
+        console.log(TAG + "************* testGetAssetsFunc2 query success *************");
+        try {
+            expect(true).assertEqual(resultSet1.goToFirstRow())
+            const data3 = resultSet1.getAssets(resultSet1.getColumnIndex("data3"))
+            id = resultSet1.getLong(resultSet1.getColumnIndex("id"))
+            expect(1).assertEqual(data3.length);
+            let asset = data3[0];
+            expect("name4").assertEqual(asset.name);
+            expect("uri4").assertEqual(asset.uri);
+            expect("createTime4").assertEqual(asset.createTime);
+            expect("modifyTime4").assertEqual(asset.modifyTime);
+            expect("size4").assertEqual(asset.size);
+            expect("path4").assertEqual(asset.path);
+            expect(data_relationalStore.AssetStatus.ASSET_DELETE).assertEqual(asset.status);
+        } catch (e) {
+            console.log(TAG + "insert throw error" + e);
+        }
+        resultSet.close();
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet1.close();
+        expect(true).assertEqual(resultSet1.isClosed)
+        resultSet = null
+        resultSet1 = null
+        done();
+        console.log(TAG + "************* testGetAssetsFunc2 end *************");
     })
 })

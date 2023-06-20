@@ -53,20 +53,20 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
     int &errCode, int version, RdbOpenCallback &openCallback)
 {
     std::string path = config.GetPath();
-    std::lock_guard<std::mutex> lock(mutex_); // TODO this lock should only work on storeCache_, add one more lock for connectionpool
+    std::lock_guard<std::mutex> lock(mutex_); // TOD this lock should only work on storeCache_, add one more lock for connectionpool
     if (storeCache_.find(path) != storeCache_.end()) {
         std::shared_ptr<RdbStoreImpl> rdbStore = storeCache_[path].lock();
         if (rdbStore != nullptr && rdbStore->GetConfig() == config) {
             return rdbStore;
         }
-        storeCache_.erase(path); // TODO reconfigure store should be repeated this
+        storeCache_.erase(path); // TOD reconfigure store should be repeated this
     }
 
     std::shared_ptr<RdbStoreImpl> rdbStore(new (std::nothrow) RdbStoreImpl(config, errCode),
         [this, path](RdbStoreImpl *ptr) {
             LOG_INFO("delete %{public}s as no more used.", SqliteUtils::Anonymous(ptr->GetPath()).c_str());
             delete ptr;
-            if (storeCache_.find(path) != storeCache_.end()) { // TODO need add lock to storeCache_
+            if (storeCache_.find(path) != storeCache_.end()) { // TOD need add lock to storeCache_
                 storeCache_.erase(path);
             }
         });
@@ -90,7 +90,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
     return rdbStore;
 }
 
-void RdbStoreManager::Clear() // TODO delete for no use
+void RdbStoreManager::Clear()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     auto iter = storeCache_.begin();
@@ -105,9 +105,10 @@ bool RdbStoreManager::IsInUsing(const std::string &path)
     std::lock_guard<std::mutex> lock(mutex_);
     if (storeCache_.find(path) != storeCache_.end()) {
         if (storeCache_[path].lock()) {
+            LOG_INFO("store in use by %{public}ld holders", storeCache_[path].lock().use_count());
             return true;
         }
-        storeCache_.erase(path);
+        storeCache_.erase(path); // clean invalid store ptr
     }
     return false;
 }

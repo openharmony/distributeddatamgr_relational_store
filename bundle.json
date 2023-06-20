@@ -87,7 +87,7 @@
                             "oh_predicates.h",
                             "relational_store.h",
                             "oh_cursor.h",
-                            "relational_error_code.h",
+                            "relational_store_error_code.h",
                             "oh_value_object.h",
                             "oh_values_bucket.h"
                         ],

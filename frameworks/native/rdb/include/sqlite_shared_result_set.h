@@ -34,8 +34,8 @@ namespace OHOS {
 namespace NativeRdb {
 class SqliteSharedResultSet : public AbsSharedResultSet {
 public:
-    SqliteSharedResultSet(std::shared_ptr<RdbStoreImpl> store, std::string path, std::string sql,
-        const std::vector<std::string> &bindArgs);
+    SqliteSharedResultSet(std::shared_ptr<RdbStoreImpl> store, SqliteConnectionPool *connectionPool, std::string path,
+        std::string sql, const std::vector<std::string> &bindArgs);
     ~SqliteSharedResultSet() override;
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int Close() override;
