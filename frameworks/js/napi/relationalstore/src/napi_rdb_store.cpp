@@ -285,8 +285,15 @@ int ParseDistributedTableArg(const napi_env &env, size_t argc, napi_value * argv
     context->distributedType = DistributedRdb::DISTRIBUTED_DEVICE;
     if (argc > 1) {
         auto status = JSUtils::Convert2ValueExt(env, argv[1], context->distributedType);
-        bool checked = (status == napi_ok && context->distributedType >= DistributedRdb::DISTRIBUTED_DEVICE
-                        && context->distributedType <= DistributedRdb::DISTRIBUTED_CLOUD);
+        bool checked = false;
+        if (status != napi_ok && context->callback_== nullptr) {
+            napi_valuetype type;
+            status = napi_typeof(env, argv[1], &type);
+            checked = (status == napi_ok && (type == napi_undefined || type == napi_null));
+        }else{
+            checked = (status == napi_ok && context->distributedType >= DistributedRdb::DISTRIBUTED_DEVICE
+                       && context->distributedType <= DistributedRdb::DISTRIBUTED_CLOUD);
+        }
         CHECK_RETURN_SET(checked, std::make_shared<ParamError>("mode", "a DistributedType"));
     }
     LOG_DEBUG("ParseDistributedTableArg end");
@@ -295,9 +302,17 @@ int ParseDistributedTableArg(const napi_env &env, size_t argc, napi_value * argv
 
 int ParseDistributedConfigArg(const napi_env &env, size_t argc, napi_value * argv, std::shared_ptr<RdbStoreContext> context)
 {
-    context->distributedConfig = { true };
+    context->distributedConfig = { false };
     if (argc > 2) {
         auto status = JSUtils::Convert2Value(env, argv[2], context->distributedConfig);
+        bool checked = false;
+        if (status != napi_ok && context->callback_== nullptr) {
+            napi_valuetype type;
+            status = napi_typeof(env, argv[2], &type);
+            checked = (status == napi_ok && (type == napi_undefined || type == napi_null));
+        }else{
+            checked = (status == napi_ok);
+        }
         CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("distributedConfig", "a DistributedConfig type"));
     }
     LOG_DEBUG("ParseDistributedConfigArg end");
