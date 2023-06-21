@@ -14,6 +14,9 @@
  */
 
 #include "raw_data_parser.h"
+
+#include <chrono>
+
 #include "multi_platform_endian.h"
 
 namespace OHOS::NativeRdb {

@@ -34,8 +34,7 @@ class ExecutorPool;
 namespace OHOS::NativeRdb {
 class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
 public:
-    static std::shared_ptr<RdbStoreImpl> Open(const RdbStoreConfig &config, int &errCode);
-    RdbStoreImpl(const RdbStoreConfig &config);
+    RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
     const RdbStoreConfig &GetConfig();
     int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
@@ -120,7 +119,7 @@ public:
     bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) override;
 
 private:
-    int InnerOpen(const RdbStoreConfig &config);
+    int InnerOpen();
     int InnerInsert(int64_t &outRowId, const std::string &table, ValuesBucket values,
         ConflictResolution conflictResolution);
     int CheckAttach(const std::string &sql);

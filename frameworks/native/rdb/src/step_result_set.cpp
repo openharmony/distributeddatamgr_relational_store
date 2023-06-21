@@ -29,24 +29,17 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, const std::string &sql,
-    const std::vector<std::string> &selectionArgs)
-    : rdb(rdb), sql(sql), selectionArgs(selectionArgs), isAfterLast(false), rowCount(INIT_POS),
-      sqliteStatement(nullptr), connectionPool_(nullptr), connection_(nullptr)
+StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, SqliteConnectionPool *connectionPool,
+    const std::string &sql, const std::vector<std::string> &selectionArgs)
+    : rdb(rdb), connectionPool_(connectionPool), sql(sql), selectionArgs(selectionArgs), isAfterLast(false),
+      rowCount(INIT_POS), sqliteStatement(nullptr), connection_(connectionPool_->AcquireConnection(true))
 {
-}
-StepResultSet::StepResultSet(SqliteConnectionPool *pool, const std::string &sql,
-                             const std::vector<std::string> &selectionArgs)
-    : sql(sql), selectionArgs(selectionArgs), isAfterLast(false), rowCount(INIT_POS),
-      sqliteStatement(nullptr)
-{
-    connectionPool_ = pool;
-    connection_ = connectionPool_->AcquireConnection(true);
 }
 
 StepResultSet::~StepResultSet()
 {
     Close();
+    rdb.reset();
 }
 
 int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
@@ -237,7 +230,6 @@ int StepResultSet::Close()
     }
     isClosed = true;
     int errCode = FinishStep();
-    rdb = nullptr;
 
     connectionPool_->ReleaseConnection(connection_);
     connection_ = nullptr;

@@ -77,6 +77,7 @@ private:
     std::mutex transMutex;
     bool transactionUsed;
 };
+
 } // namespace NativeRdb
 } // namespace OHOS
 #endif

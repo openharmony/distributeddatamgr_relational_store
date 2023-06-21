@@ -30,8 +30,7 @@
 namespace OHOS::NativeRdb {
 class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
 public:
-    static std::shared_ptr<RdbStoreImpl> Open(const RdbStoreConfig &config, int &errCode);
-    RdbStoreImpl(const RdbStoreConfig &config);
+    RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
 #ifdef WINDOWS_PLATFORM
     void Clear() override;
@@ -91,7 +90,7 @@ public:
     int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
 
 private:
-    int InnerOpen(const RdbStoreConfig &config);
+    int InnerOpen();
     int InnerInsert(int64_t &outRowId, const std::string &table, ValuesBucket values,
         ConflictResolution conflictResolution);
     int CheckAttach(const std::string &sql);
@@ -108,6 +107,7 @@ private:
     void DoCloudSync(const std::string &table);
     int InnerBackup(const std::string databasePath,
         const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>());
+
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;

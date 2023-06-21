@@ -23,18 +23,19 @@
 #include <thread>
 #include <vector>
 
+#include "abs_shared_result_set.h"
+#include "rdb_store_impl.h"
+#include "shared_block.h"
 #include "sqlite_connection_pool.h"
 #include "sqlite_statement.h"
-#include "shared_block.h"
-#include "abs_shared_result_set.h"
 #include "value_object.h"
 
 namespace OHOS {
 namespace NativeRdb {
 class SqliteSharedResultSet : public AbsSharedResultSet {
 public:
-    SqliteSharedResultSet(SqliteConnectionPool* connectionPool, std::string path, std::string sql,
-        const std::vector<std::string> &bindArgs);
+    SqliteSharedResultSet(std::shared_ptr<RdbStoreImpl> store, SqliteConnectionPool *connectionPool, std::string path,
+        std::string sql, const std::vector<std::string> &bindArgs);
     ~SqliteSharedResultSet() override;
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int Close() override;
@@ -55,6 +56,8 @@ private:
     static const int NO_COUNT = -1;
     // The pick position of the shared block for search
     static const int PICK_POS = 3;
+    std::shared_ptr<RdbStoreImpl> store_;
+    SqliteConnectionPool *connectionPool_;
     // The number of rows that can fit in the shared block, 0 if unknown
     int resultSetBlockCapacity;
     // Controls fetching of rows relative to requested position
@@ -64,7 +67,6 @@ private:
     // The number of rows in the cursor
     int rowNum;
     std::vector<std::string> columnNames_;
-    SqliteConnectionPool *connectionPool_;
     std::mutex columnNamesLock_;
 };
 } // namespace NativeRdb
