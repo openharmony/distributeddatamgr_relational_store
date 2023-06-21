@@ -718,6 +718,10 @@ int SqliteConnection::DesFinalize()
     if (errCode != SQLITE_OK) {
         return errCode;
     }
+
+    if (dbHandle != nullptr) {
+        sqlite3_db_release_memory(dbHandle);
+    }
     return errCode;
 }
 
