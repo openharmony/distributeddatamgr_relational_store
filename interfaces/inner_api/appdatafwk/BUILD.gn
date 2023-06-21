@@ -43,28 +43,56 @@ config("common_public_config") {
   ]
 }
 
-ohos_shared_library("relational_common_base") {
-  sources =
-      [ "${relational_store_native_path}/appdatafwk/src/serializable.cpp" ]
+if (is_android || is_ios) {
+  ohos_source_set("relational_common_base") {
+    sources =
+        [ "${relational_store_native_path}/appdatafwk/src/serializable.cpp" ]
 
-  if (is_mingw || is_mac || is_ios) {
-    sources +=
-        [ "${relational_store_native_path}/appdatafwk/src/mingw_endian.cpp" ]
-  } else if (is_ohos || is_android) {
-    sources +=
-        [ "${relational_store_native_path}/appdatafwk/src/general_endian.cpp" ]
-    cflags_cc = [ "-fvisibility=hidden" ]
+    if (is_mingw || is_mac || is_ios) {
+      sources +=
+          [ "${relational_store_native_path}/appdatafwk/src/mingw_endian.cpp" ]
+    } else if (is_ohos || is_android) {
+      sources += [
+        "${relational_store_native_path}/appdatafwk/src/general_endian.cpp",
+      ]
+      cflags_cc = [ "-fvisibility=hidden" ]
+    }
+
+    configs = [
+      ":common_public_config",
+      ":appdatafwk_public_config",
+    ]
+
+    subsystem_name = "distributeddatamgr"
+    part_name = "relational_store"
+
+    public_configs = [ ":common_public_config" ]
   }
+} else {
+  ohos_shared_library("relational_common_base") {
+    sources =
+        [ "${relational_store_native_path}/appdatafwk/src/serializable.cpp" ]
 
-  configs = [
-    ":common_public_config",
-    ":appdatafwk_public_config",
-  ]
+    if (is_mingw || is_mac || is_ios) {
+      sources +=
+          [ "${relational_store_native_path}/appdatafwk/src/mingw_endian.cpp" ]
+    } else if (is_ohos || is_android) {
+      sources += [
+        "${relational_store_native_path}/appdatafwk/src/general_endian.cpp",
+      ]
+      cflags_cc = [ "-fvisibility=hidden" ]
+    }
 
-  subsystem_name = "distributeddatamgr"
-  part_name = "relational_store"
+    configs = [
+      ":common_public_config",
+      ":appdatafwk_public_config",
+    ]
 
-  public_configs = [ ":common_public_config" ]
+    subsystem_name = "distributeddatamgr"
+    part_name = "relational_store"
+
+    public_configs = [ ":common_public_config" ]
+  }
 }
 
 ohos_shared_library("native_appdatafwk") {
