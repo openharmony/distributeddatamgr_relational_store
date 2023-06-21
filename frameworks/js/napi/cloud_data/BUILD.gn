@@ -54,8 +54,6 @@ ohos_shared_library("clouddata") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
-    "relational_store:native_appdatafwk",
-    "relational_store:native_rdb",
     "samgr:samgr_proxy",
   ]
 
