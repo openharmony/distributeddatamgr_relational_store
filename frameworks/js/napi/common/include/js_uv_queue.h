@@ -33,7 +33,7 @@ public:
         UvCallback(CallbackGetter getter) : getter_(std::move(getter)) {}
         bool IsNull()
         {
-            return (callback == nullptr || getter_ == nullptr);
+            return (callback_ == nullptr && getter_ == nullptr);
         }
     };
 
@@ -46,6 +46,7 @@ private:
     struct UvEntry {
         napi_env env;
         napi_ref callback;
+        bool repeat = false;
         CallbackGetter getter;
         ArgsGenerator args;
         ~UvEntry()
