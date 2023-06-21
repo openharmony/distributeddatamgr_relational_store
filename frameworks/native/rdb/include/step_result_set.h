@@ -29,9 +29,7 @@ namespace OHOS {
 namespace NativeRdb {
 class StepResultSet : public AbsResultSet {
 public:
-    StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, const std::string &sql,
-        const std::vector<std::string> &selectionArgs);
-    StepResultSet(SqliteConnectionPool *pool, const std::string &sql,
+    StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, SqliteConnectionPool *connectionPool, const std::string &sql,
         const std::vector<std::string> &selectionArgs);
     ~StepResultSet() override;
 
@@ -65,6 +63,7 @@ private:
     int FinishStep();
     int PrepareStep();
     std::shared_ptr<RdbStoreImpl> rdb;
+    SqliteConnectionPool *connectionPool_;
     std::string sql;
     std::vector<std::string> selectionArgs;
     // Whether reach the end of this result set or not
@@ -77,7 +76,6 @@ private:
     static const int STEP_QUERY_RETRY_MAX_TIMES = 50;
     // Interval of retrying step query in millisecond
     static const int STEP_QUERY_RETRY_INTERVAL = 1000;
-    SqliteConnectionPool *connectionPool_;
     SqliteConnection *connection_;
     std::vector<std::string> columnNames_;
     mutable std::shared_mutex mutex_;

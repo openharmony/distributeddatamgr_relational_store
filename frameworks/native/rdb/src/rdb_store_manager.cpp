@@ -15,6 +15,7 @@
 
 #include "rdb_store_manager.h"
 
+#include <algorithm>
 #include <cinttypes>
 
 #include "logger.h"
@@ -22,31 +23,16 @@
 #include "rdb_store_impl.h"
 #include "rdb_trace.h"
 #include "sqlite_global_config.h"
-#include "task_executor.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_security_manager.h"
 #include "security_policy.h"
 #endif
+#include "sqlite_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
-RdbStoreNode::RdbStoreNode(const std::shared_ptr<RdbStoreImpl> &rdbStore)
-    : rdbStore_(rdbStore), taskId_(TaskExecutor::INVALID_TASK_ID)
-{
-}
-
-RdbStoreNode &RdbStoreNode::operator=(const std::shared_ptr<RdbStoreImpl> &store)
-{
-    if (rdbStore_ == store) {
-        return *this;
-    }
-    rdbStore_ = std::move(store);
-    return *this;
-}
-
 RdbStoreManager &RdbStoreManager::GetInstance()
 {
     static RdbStoreManager manager;
@@ -59,91 +45,49 @@ RdbStoreManager::~RdbStoreManager()
     Clear();
 }
 
-RdbStoreManager::RdbStoreManager() : ms_(30000) // 30000 ms
+RdbStoreManager::RdbStoreManager()
 {
 }
 
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &config,
     int &errCode, int version, RdbOpenCallback &openCallback)
 {
-    std::shared_ptr<RdbStoreImpl> rdbStore;
     std::string path = config.GetPath();
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (storeCache_.find(path) != storeCache_.end() && storeCache_[path] != nullptr) {
-        rdbStore = storeCache_[path]->rdbStore_;
-        if (rdbStore->GetConfig() == config) {
-            RestartTimer(path, *storeCache_[path]);
+    std::lock_guard<std::mutex> lock(mutex_); // TOD this lock should only work on storeCache_, add one more lock for connectionpool
+    if (storeCache_.find(path) != storeCache_.end()) {
+        std::shared_ptr<RdbStoreImpl> rdbStore = storeCache_[path].lock();
+        if (rdbStore != nullptr && rdbStore->GetConfig() == config) {
             return rdbStore;
         }
-        if (pool_ == nullptr) {
-            pool_ = TaskExecutor::GetInstance().GetExecutor();
-        }
-        if (pool_ != nullptr) {
-            LOG_INFO("config changed, taskId_: %{public}" PRIu64 "", storeCache_[path]->taskId_);
-            pool_->Remove(storeCache_[path]->taskId_);
-        }
-        storeCache_.erase(path);
+        storeCache_.erase(path); // TOD reconfigure store should be repeated this
     }
-    rdbStore = RdbStoreImpl::Open(config, errCode);
-    if (rdbStore == nullptr) {
-        LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore, err is %{public}d", errCode);
+
+    std::shared_ptr<RdbStoreImpl> rdbStore(new (std::nothrow) RdbStoreImpl(config, errCode),
+        [this, path](RdbStoreImpl *ptr) {
+            LOG_INFO("delete %{public}s as no more used.", SqliteUtils::Anonymous(ptr->GetPath()).c_str());
+            delete ptr;
+            if (storeCache_.find(path) != storeCache_.end()) { // TOD need add lock to storeCache_
+                storeCache_.erase(path);
+            }
+        });
+    if (errCode != E_OK) {
+        LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore as memory issue, rc=%{public}d", errCode);
         return nullptr;
     }
-    storeCache_[path] = std::make_shared<RdbStoreNode>(rdbStore);
-    RestartTimer(path, *storeCache_[path]);
 
     if (SetSecurityLabel(config) != E_OK) {
-        storeCache_.erase(path);
         LOG_ERROR("RdbHelper set security label fail.");
         return nullptr;
     }
 
     errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
     if (errCode != E_OK) {
-        storeCache_.erase(path);
         LOG_ERROR("RdbHelper GetRdbStore ProcessOpenCallback fail");
         return nullptr;
     }
 
+    storeCache_[path] = rdbStore;
     return rdbStore;
-}
-
-void RdbStoreManager::RestartTimer(const std::string &path, RdbStoreNode &node)
-{
-    if (pool_ == nullptr) {
-        pool_ = TaskExecutor::GetInstance().GetExecutor();
-    }
-    if (pool_ != nullptr) {
-        pool_->Remove(node.taskId_);
-        node.taskId_ =
-            pool_->Schedule(std::chrono::milliseconds(ms_), std::bind(&RdbStoreManager::AutoClose, this, path));
-    }
-}
-
-void RdbStoreManager::AutoClose(const std::string &path)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto it = storeCache_.find(path);
-    if (it == storeCache_.end()) {
-        LOG_INFO("has Removed");
-        return;
-    }
-    storeCache_.erase(it);
-}
-
-void RdbStoreManager::Remove(const std::string &path)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto it = storeCache_.find(path);
-    if (it == storeCache_.end()) {
-        LOG_INFO("has Removed");
-        return;
-    }
-    if (pool_ != nullptr) {
-        LOG_INFO("remove taskId_: %{public}" PRIu64 "", it->second->taskId_);
-        pool_->Remove(it->second->taskId_);
-    }
-    storeCache_.erase(it);
 }
 
 void RdbStoreManager::Clear()
@@ -151,11 +95,22 @@ void RdbStoreManager::Clear()
     std::lock_guard<std::mutex> lock(mutex_);
     auto iter = storeCache_.begin();
     while (iter != storeCache_.end()) {
-        if (iter->second != nullptr && pool_ != nullptr) {
-            pool_->Remove(iter->second->taskId_);
-        }
         iter = storeCache_.erase(iter);
     }
+    storeCache_.clear();
+}
+
+bool RdbStoreManager::IsInUsing(const std::string &path)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (storeCache_.find(path) != storeCache_.end()) {
+        if (storeCache_[path].lock()) {
+            LOG_INFO("store in use by %{public}ld holders", storeCache_[path].lock().use_count());
+            return true;
+        }
+        storeCache_.erase(path); // clean invalid store ptr
+    }
+    return false;
 }
 
 int RdbStoreManager::ProcessOpenCallback(
@@ -203,15 +158,10 @@ int RdbStoreManager::ProcessOpenCallback(
 }
 int RdbStoreManager::SetSecurityLabel(const RdbStoreConfig &config)
 {
-    int errCode = E_OK;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    errCode = SecurityPolicy::SetSecurityLabel(config);
+    return SecurityPolicy::SetSecurityLabel(config);
 #endif
-    return errCode;
-}
-void RdbStoreManager::SetReleaseTime(int ms)
-{
-    ms_ = ms;
+    return E_OK;
 }
 } // namespace NativeRdb
 } // namespace OHOS
