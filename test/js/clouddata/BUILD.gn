@@ -15,9 +15,9 @@ import("//build/test.gni")
 
 #################################group#########################################
 group("cloudtest") {
-    testonly = true
-    deps = []
+  testonly = true
+  deps = []
 
-    deps += [ "clouddata/src:CloudConfigJsTest" ]
+  deps += [ "clouddata/src:CloudConfigJsTest" ]
 }
 ###############################################################################
