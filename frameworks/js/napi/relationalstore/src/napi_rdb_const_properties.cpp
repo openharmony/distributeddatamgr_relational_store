@@ -127,6 +127,9 @@ static napi_value ExportAssetStatus(napi_env env)
     napi_create_object(env, &assetStatus);
 
     SET_NAPI_PROPERTY(assetStatus, "ASSET_NORMAL", NativeRdb::AssetValue::STATUS_NORMAL);
+    SET_NAPI_PROPERTY(assetStatus, "ASSET_INSERT", NativeRdb::AssetValue::STATUS_INSERT);
+    SET_NAPI_PROPERTY(assetStatus, "ASSET_UPDATE", NativeRdb::AssetValue::STATUS_UPDATE);
+    SET_NAPI_PROPERTY(assetStatus, "ASSET_DELETE", NativeRdb::AssetValue::STATUS_DELETE);
     SET_NAPI_PROPERTY(assetStatus, "ASSET_ABNORMAL", NativeRdb::AssetValue::STATUS_ABNORMAL);
     SET_NAPI_PROPERTY(assetStatus, "ASSET_DOWNLOADING", NativeRdb::AssetValue::STATUS_DOWNLOADING);
     napi_object_freeze(env, assetStatus);

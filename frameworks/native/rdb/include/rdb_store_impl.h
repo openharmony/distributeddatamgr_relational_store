@@ -86,8 +86,6 @@ public:
     int ConfigLocale(const std::string localeStr);
 #endif
     int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) override;
-    int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
-        const std::vector<uint8_t> &newKey) override;
     void GetSchema(const RdbStoreConfig &config);
     std::string GetName();
     std::string GetOrgPath();
@@ -123,6 +121,8 @@ public:
 
 private:
     int InnerOpen(const RdbStoreConfig &config);
+    int InnerInsert(int64_t &outRowId, const std::string &table, ValuesBucket values,
+        ConflictResolution conflictResolution);
     int CheckAttach(const std::string &sql);
     int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
     int FreeTransaction(SqliteConnection *connection, const std::string &sql);
@@ -131,7 +131,10 @@ private:
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
+    void SetAssetStatusWhileInsert(ValueObject &val);
     void DoCloudSync(const std::string &table);
+    int InnerBackup(const std::string databasePath,
+        const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>());
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;
