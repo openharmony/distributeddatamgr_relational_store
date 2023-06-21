@@ -50,7 +50,7 @@ extern "C" {
  *
  * @since 10
  */
-enum OH_OrderType {
+typedef enum OH_OrderType {
     /**
      * Ascend order.
      */
@@ -59,7 +59,7 @@ enum OH_OrderType {
      * Descend order.
      */
     DESC = 1,
-};
+} OH_OrderType;
 
 /**
  * @brief Define the OH_Predicates structure type.

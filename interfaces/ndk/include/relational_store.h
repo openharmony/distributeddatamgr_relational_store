@@ -51,7 +51,7 @@ extern "C" {
  *
  * @since 10
  */
-enum OH_Rdb_SecurityLevel {
+typedef enum OH_Rdb_SecurityLevel {
     /**
      * @brief S1: means the db is low level security.
      *
@@ -76,7 +76,7 @@ enum OH_Rdb_SecurityLevel {
      * There are some critical impact, when the data is leaked.
      */
     S4
-};
+} OH_Rdb_SecurityLevel;
 
 /**
  * @brief Manages relational database configurations.
@@ -162,7 +162,7 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode);
  * @brief Close the {@link OH_Rdb_Store} object and reclaim the memory occupied by the object.
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
- * @return Returns the status code of the execution. Successful execution returns RDB_ERR_OK,
+ * @return Returns the status code of the execution. Successful execution returns RDB_OK,
  * while failure returns a specific error code. Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Store, OH_Rdb_ErrCode.
  * @since 10
@@ -173,7 +173,7 @@ int OH_Rdb_CloseStore(OH_Rdb_Store *store);
  * @brief Deletes the database with a specified path.
  *
  * @param path Indicates the database path.
- * @return Returns the status code of the execution. Successful execution returns RDB_ERR_OK,
+ * @return Returns the status code of the execution. Successful execution returns RDB_OK,
  * while failure returns a specific error code. Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_ErrCode.
  * @since 10

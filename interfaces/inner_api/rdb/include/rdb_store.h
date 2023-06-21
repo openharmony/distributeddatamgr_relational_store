@@ -107,8 +107,7 @@ public:
      * @param initialValues Indicates the row of data {@link ValuesBucket} to be inserted into the table.
      * @param conflictResolution Indicates the {@link ConflictResolution} to insert data into the table.
      */
-    virtual int InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
-        const ValuesBucket &initialValues,
+    virtual int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues,
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
 
     /**
@@ -358,16 +357,6 @@ public:
      * @param newKey Indicates the database new key.
      */
     virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) = 0;
-
-    /**
-     * @brief Restores a database from a specified encrypted or unencrypted database file.
-     *
-     * @param newPath  Indicates the database new path.
-     * @param backupPath Indicates the database backup path.
-     * @param newKey Indicates the database new key.
-     */
-    virtual int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
-        const std::vector<uint8_t> &newKey) = 0;
 
     /**
      * @brief Set table to be distributed table.

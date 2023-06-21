@@ -14,8 +14,8 @@ import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 config("cloud_public_config") {
   visibility = [
-    "../../../../datamgr_service/*",
-    "../../../../relational_store/*",
+    "${distributeddata_base_path}/datamgr_service/*",
+    "${distributeddata_base_path}/relational_store/*",
   ]
 
   include_dirs = [ "include" ]
