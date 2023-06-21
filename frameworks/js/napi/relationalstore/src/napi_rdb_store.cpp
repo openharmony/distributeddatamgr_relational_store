@@ -313,7 +313,7 @@ int ParseDistributedConfigArg(const napi_env &env, size_t argc, napi_value * arg
         }else{
             checked = (status == napi_ok);
         }
-        CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("distributedConfig", "a DistributedConfig type"));
+        CHECK_RETURN_SET(checked, std::make_shared<ParamError>("distributedConfig", "a DistributedConfig type"));
     }
     LOG_DEBUG("ParseDistributedConfigArg end");
     return OK;
