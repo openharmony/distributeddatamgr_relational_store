@@ -76,6 +76,12 @@ ohos_shared_library("napi_rdb") {
       "src/napi_rdb_store_observer.cpp",
     ]
 
+    deps = [
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
+      "${relational_store_innerapi_path}/rdb:native_rdb",
+      "${relational_store_innerapi_path}/rdb_data_share_adapter:rdb_data_share_adapter",
+    ]
+
     external_deps = [
       "ability_runtime:abilitykit_native",
       "ability_runtime:napi_base_context",
@@ -84,9 +90,6 @@ ohos_shared_library("napi_rdb") {
       "hilog_native:libhilog",
       "hitrace_native:hitrace_meter",
       "napi:ace_napi",
-      "relational_store:native_appdatafwk",
-      "relational_store:native_rdb",
-      "relational_store:rdb_data_share_adapter",
     ]
   }
 
@@ -134,7 +137,14 @@ ohos_shared_library("rdb") {
       "${relational_store_napi_path}/rdb/include",
     ]
     defines = [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
-    deps = [ ":napi_rdb" ]
+
+    deps = [
+      ":napi_rdb",
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
+      "${relational_store_innerapi_path}/rdb:native_rdb",
+      "${relational_store_innerapi_path}/rdb_data_share_adapter:rdb_data_share_adapter",
+    ]
+
     external_deps = [
       "ability_runtime:abilitykit_native",
       "ability_runtime:napi_base_context",
@@ -142,9 +152,6 @@ ohos_shared_library("rdb") {
       "hilog_native:libhilog",
       "hitrace_native:hitrace_meter",
       "napi:ace_napi",
-      "relational_store:native_appdatafwk",
-      "relational_store:native_rdb",
-      "relational_store:rdb_data_share_adapter",
     ]
   }
 
