@@ -1201,6 +1201,9 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
 
     auto output = [context](napi_env env, napi_value &result) {
         LOG_DEBUG("RdbStoreProxy::CloudSync output");
+        if (context->execCode_ != E_OK && context->asyncHolder != nullptr) {
+            napi_delete_reference(env, context->asyncHolder);
+        }
         napi_status status = napi_get_undefined(env, &result);
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
