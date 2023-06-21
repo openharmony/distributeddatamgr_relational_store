@@ -329,7 +329,7 @@ napi_value JsConfig::InitConfig(napi_env env, napi_value exports)
         };
         return properties;
     };
-    auto jsCtor = JSUtils::DefineClass(env, "Config", lambda, JsConfig::New);
+    auto jsCtor = JSUtils::DefineClass(env, "ohos.data.cloudData", "Config", lambda, JsConfig::New);
     NAPI_CALL(env, napi_set_named_property(env, exports, "Config", jsCtor));
     return exports;
 }

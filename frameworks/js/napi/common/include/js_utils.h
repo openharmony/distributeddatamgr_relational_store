@@ -23,7 +23,7 @@
 #include <string>
 #include <variant>
 #include <vector>
-
+#include <optional>
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -39,6 +39,11 @@ constexpr int32_t BUF_CACHE_MARGIN = 4 + 1;
 constexpr int32_t ASYNC_RST_SIZE = 2;
 constexpr int32_t MAX_VALUE_LENGTH = 8 * 1024;
 constexpr int32_t SYNC_RESULT_ELEMNT_NUM = 2;
+struct JsFeatureSpace {
+    const char* spaceName;
+    const char* nameBase64;
+    bool isComponent;
+};
 
 #ifndef ADD_JS_PROPERTY
 #define ADD_JS_PROPERTY(env, object, value, member) \
@@ -75,8 +80,10 @@ template<typename... Types>
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::variant<Types...> &value);
 
 using Descriptor = std::function<std::vector<napi_property_descriptor>()>;
+const std::optional<JsFeatureSpace> GetJsFeatureSpace(const std::string &name);
 /* napi_define_class  wrapper */
-napi_value DefineClass(napi_env env, const std::string &name, const Descriptor &descriptor, napi_callback ctor);
+napi_value DefineClass(napi_env env, const std::string &spaceName, const std::string &className,
+    const Descriptor &descriptor, napi_callback ctor);
 napi_value GetClass(napi_env env, const std::string &spaceName, const std::string &className);
 std::string Convert2String(napi_env env, napi_value jsStr, bool useDefaultBufSize = true);
 std::vector<std::string> Convert2StrVector(napi_env env, napi_value value);
