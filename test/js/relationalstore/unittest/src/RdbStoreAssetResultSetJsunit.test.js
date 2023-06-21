@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -111,13 +111,13 @@ describe('rdbResultSetTest', function () {
         console.log(TAG + "createTest data end");
     }
 
-    async function createErrorTest() {
-        console.log(TAG + "createErrorTest data start");
+    async function createStatusTest() {
+        console.log(TAG + "createStatusTest data start");
         let valuesBucket = {
             "data1": asset4,
         }
         await rdbStore.insert("test", valuesBucket)
-        console.log(TAG + "createErrorTest data end");
+        console.log(TAG + "createStatusTest data end");
     }
 
     /**
@@ -215,8 +215,7 @@ describe('rdbResultSetTest', function () {
             const data2 = resultSet.getAsset(resultSet.getColumnIndex("data2"))
             expect(null).assertFail();
         } catch (e) {
-            console.log(TAG + "throw error: " + e);
-            expect(true).assetTrue();
+            expect(e.code == 14800000).assertTrue()
         } finally {
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -227,12 +226,12 @@ describe('rdbResultSetTest', function () {
     })
 
     /**
-     * @tc.name resultSet getAsset normal test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0000
-     * @tc.desc resultSet getAsset normal test
+     * @tc.name resultSet getAsset status test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_status
+     * @tc.desc resultSet getAsset status  test
      */
     it('testGetAssetStatus', 0, async function (done) {
-        await createErrorTest();
+        await createStatusTest();
         console.log(TAG + "************* testGetAsset0000 start *************");
         let predicates = await new data_relationalStore.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
@@ -260,9 +259,9 @@ describe('rdbResultSetTest', function () {
     })
 
     /**
-     * @tc.name resultSet getAsset normal test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0000
-     * @tc.desc resultSet getAsset normal test
+     * @tc.name resultSet getAsset status undefined test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_status_undefined
+     * @tc.desc resultSet getAsset status undefined test
      */
     it('testGetAssetStatusUndefined', 0, async function (done) {
         console.log(TAG + "************* testGetAssetStatusUndefined start *************");
@@ -305,9 +304,9 @@ describe('rdbResultSetTest', function () {
     })
 
     /**
-     * @tc.name resultSet getAsset normal test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0000
-     * @tc.desc resultSet getAsset normal test
+     * @tc.name resultSet getAsset status null test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_status_null
+     * @tc.desc resultSet getAsset status undefined test
      */
     it('testGetAssetStatusNull', 0, async function (done) {
         console.log(TAG + "************* testGetAssetStatusNull start *************");
@@ -350,9 +349,9 @@ describe('rdbResultSetTest', function () {
     })
 
     /**
-     * @tc.name resultSet getAsset normal test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0040
-     * @tc.desc resultSet getAsset normal test
+     * @tc.name resultSet getAsset undefined test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_undefined
+     * @tc.desc resultSet getAsset undefined test
      */
     it('testGetAssetUndefined', 0, async function (done) {
         console.log(TAG + "************* testGetAssetUndefined start *************");
@@ -373,16 +372,15 @@ describe('rdbResultSetTest', function () {
             expect(null).assertFail();
             done();
         } catch (e) {
-            console.log(TAG + "testGetAssetUndefined get error" + e);
-            expect(true).assertTrue();
+            expect(e.code == 14800000).assertTrue()
             done();
         }
     })
 
     /**
-     * @tc.name resultSet getAsset normal test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0050
-     * @tc.desc resultSet getAsset normal test
+     * @tc.name resultSet getAsset null test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_null
+     * @tc.desc resultSet getAsset null test
      */
     it('testGetAssetNull', 0, async function (done) {
         console.log(TAG + "************* testGetAssetNull start *************");
@@ -403,15 +401,14 @@ describe('rdbResultSetTest', function () {
             expect(null).assertFail();
             done();
         } catch (e) {
-            console.log(TAG + "testGetAssetNull get error" + e);
-            expect(true).assertTrue();
+            expect(e.code == 14800000).assertTrue()
             done();
         }
     })
 
     /**
      * @tc.name resultSet getAssets normal test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0010
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_Assets_0010
      * @tc.desc resultSet getAssets normal test
      */
     it('testGetAssets0001', 0, async function (done) {
@@ -446,8 +443,8 @@ describe('rdbResultSetTest', function () {
 
     /**
      * @tc.name resultSet getAssets normal test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0020
-     * @tc.desc resultSet getAssets normal test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_Assets_0030
+     * @tc.desc resultSet getAssets multi rows test
      */
     it('testGetAssets0002', 0, async function (done) {
         await createTest();
@@ -499,9 +496,9 @@ describe('rdbResultSetTest', function () {
     })
 
     /**
-     * @tc.name resultSet getAssets normal test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0030
-     * @tc.desc resultSet getAssets normal test
+     * @tc.name resultSet getAssets empty assets test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_Assets_0030
+     * @tc.desc resultSet getAssets empty assets test
      */
     it('testGetAssets0003', 0, async function (done) {
         await createTest();
@@ -516,8 +513,7 @@ describe('rdbResultSetTest', function () {
             const data3 = resultSet.getAssets(resultSet.getColumnIndex("data3"))
             expect(null).assertFail();
         } catch (e) {
-            console.log(TAG + "throw error" + e);
-            expect(true).assetTrue();
+            expect(e.code == 14800000).assertTrue()
         } finally {
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
@@ -528,12 +524,12 @@ describe('rdbResultSetTest', function () {
     })
 
     /**
-     * @tc.name resultSet getAssets normal test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0030
-     * @tc.desc resultSet getAssets normal test
+     * @tc.name resultSet getAssets update1 test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_Assets_Func1
+     * @tc.desc resultSet getAssets and update test
      */
-    it('testGetAssetsFunc1', 0, async function (done) {
-        console.log(TAG + "************* testGetAssetsFunc1 begin *************");
+    it('testGetAssetsUpdate1', 0, async function (done) {
+        console.log(TAG + "************* testGetAssetsUpdate1 begin *************");
         const asset = {
             name: "name4",
             uri: "uri4",
@@ -559,9 +555,10 @@ describe('rdbResultSetTest', function () {
             let asset = data3[0];
             expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(asset.status);
         } catch (e) {
-            console.log(TAG + "insert throw error" + e);
+            console.log(TAG + "insert throw error: " + e.code + ", message is " + e.message);
+            expect(null).assertFail();
         }
-        console.log(TAG + "************* testGetAssetsFunc1 insert success *************");
+        console.log(TAG + "************* testGetAssetsUpdate1 insert success *************");
         const asset5 =  {
             name: "name4",
             uri: "uri5",
@@ -577,10 +574,10 @@ describe('rdbResultSetTest', function () {
         }
         predicates.equalTo("id", id);
         await rdbStore.update(valuesBucket, predicates);
-        console.log(TAG + "************* testGetAssetsFunc1 update success *************");
+        console.log(TAG + "************* testGetAssetsUpdate1 update success *************");
         let predicates1 = await new data_relationalStore.RdbPredicates("test");
         let resultSet1 = await rdbStore.query(predicates1);
-        console.log(TAG + "************* testGetAssetsFunc1 query success *************");
+        console.log(TAG + "************* testGetAssetsUpdate1 query success *************");
         try {
             expect(true).assertEqual(resultSet1.goToFirstRow())
             const data3 = resultSet1.getAssets(resultSet1.getColumnIndex("data3"))
@@ -589,7 +586,7 @@ describe('rdbResultSetTest', function () {
             let asset = data3[0];
             expect(data_relationalStore.AssetStatus.ASSET_UPDATE).assertEqual(asset.status);
         } catch (e) {
-            console.log(TAG + "insert throw error" + e);
+            console.log(TAG + "update throw error: " + e.code + ", message is " + e.message);
         }
         resultSet.close();
         expect(true).assertEqual(resultSet.isClosed)
@@ -598,16 +595,16 @@ describe('rdbResultSetTest', function () {
         resultSet = null
         resultSet1 = null
         done();
-        console.log(TAG + "************* testGetAssetsFunc1 end *************");
+        console.log(TAG + "************* testGetAssetsUpdate1 end *************");
     })
 
     /**
-     * @tc.name resultSet getAssets normal test
+     * @tc.name resultSet getAssets update2 test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0030
-     * @tc.desc resultSet getAssets normal test
+     * @tc.desc resultSet getAssets and update test
      */
-    it('testGetAssetsFunc2', 0, async function (done) {
-        console.log(TAG + "************* testGetAssetsFunc2 begin *************");
+    it('testGetAssetsUpdate2', 0, async function (done) {
+        console.log(TAG + "************* testGetAssetsUpdate2 begin *************");
         const asset = {
             name: "name4",
             uri: "uri4",
@@ -633,9 +630,10 @@ describe('rdbResultSetTest', function () {
             let asset = data3[0];
             expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(asset.status);
         } catch (e) {
-            console.log(TAG + "insert throw error" + e);
+            console.log(TAG + "insert throw error: " + e.code + ", message is " + e.message);
+            expect(null).assertFail();
         }
-        console.log(TAG + "************* testGetAssetsFunc2 insert success *************");
+        console.log(TAG + "************* testGetAssetsUpdate2 insert success *************");
         const asset5 =  {
             name: "name4",
             uri: "uri5",
@@ -651,10 +649,10 @@ describe('rdbResultSetTest', function () {
         }
         predicates.equalTo("id", id);
         await rdbStore.update(valuesBucket, predicates);
-        console.log(TAG + "************* testGetAssetsFunc2 update success *************");
+        console.log(TAG + "************* testGetAssetsUpdate2 update success *************");
         let predicates1 = await new data_relationalStore.RdbPredicates("test");
         let resultSet1 = await rdbStore.query(predicates1);
-        console.log(TAG + "************* testGetAssetsFunc2 query success *************");
+        console.log(TAG + "************* testGetAssetsUpdate2 query success *************");
         try {
             expect(true).assertEqual(resultSet1.goToFirstRow())
             const data3 = resultSet1.getAssets(resultSet1.getColumnIndex("data3"))
@@ -669,7 +667,8 @@ describe('rdbResultSetTest', function () {
             expect("path4").assertEqual(asset.path);
             expect(data_relationalStore.AssetStatus.ASSET_DELETE).assertEqual(asset.status);
         } catch (e) {
-            console.log(TAG + "insert throw error" + e);
+            console.log(TAG + "update throw error: " + e.code + ", message is " + e.message);
+            expect(null).assertFail();
         }
         resultSet.close();
         expect(true).assertEqual(resultSet.isClosed)
@@ -678,6 +677,6 @@ describe('rdbResultSetTest', function () {
         resultSet = null
         resultSet1 = null
         done();
-        console.log(TAG + "************* testGetAssetsFunc2 end *************");
+        console.log(TAG + "************* testGetAssetsUpdate2 end *************");
     })
 })
