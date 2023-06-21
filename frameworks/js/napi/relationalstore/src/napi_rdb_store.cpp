@@ -27,6 +27,7 @@
 #include "napi_rdb_trace.h"
 #include "napi_result_set.h"
 #include "rdb_errno.h"
+#include "rdb_types.h"
 #include "securec.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -81,11 +82,8 @@ struct RdbStoreContext : public Context {
     int32_t syncMode;
     DistributedRdb::DistributedConfig distributedConfig;
     NativeRdb::ConflictResolution conflictResolution;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     DistributedRdb::SyncResult syncResult;
-
     napi_value cloudSyncCallback = nullptr;
-#endif
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
 
     RdbStoreContext()
