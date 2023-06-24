@@ -70,7 +70,12 @@ struct RdbStoreContext : public BaseContext {
     uint64_t rowId;
     uint64_t insertNum;
     std::vector<uint8_t> newKey;
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+    std::shared_ptr<AbsSharedResultSet> resultSet;
+#else
     std::shared_ptr<ResultSet> resultSet;
+#endif
+    std::shared_ptr<ResultSet> stepResultSet;
     std::string aliasName;
     std::string pathName;
     std::string srcName;
@@ -1010,13 +1015,13 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
     auto exec = [context]() {
         LOG_DEBUG("RdbStoreProxy::QueryByStep Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        context->resultSet = obj->rdbStore_->QueryByStep(context->sql, context->columns);
-        LOG_ERROR("RdbStoreProxy::QueryByStep is nullptr ? %{public}d ", context->resultSet == nullptr);
-        return (context->resultSet != nullptr) ? OK : ERR;
+        context->stepResultSet = obj->rdbStore_->QueryByStep(context->sql, context->columns);
+        LOG_ERROR("RdbStoreProxy::QueryByStep is nullptr ? %{public}d ", context->stepResultSet == nullptr);
+        return (context->stepResultSet != nullptr) ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
-        if (context->resultSet != nullptr) {
-            result = ResultSetProxy::NewInstance(env, context->resultSet, context->apiversion);
+        if (context->stepResultSet != nullptr) {
+            result = ResultSetProxy::NewInstance(env, context->stepResultSet, context->apiversion);
         }
         LOG_DEBUG("RdbStoreProxy::QueryByStep end");
         return (result != nullptr) ? OK : ERR;
