@@ -100,16 +100,17 @@ void RdbStoreManager::Clear()
     storeCache_.clear();
 }
 
-bool RdbStoreManager::IsInUsing(const std::string &path)
+bool RdbStoreManager::Remove(const std::string &path)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (storeCache_.find(path) != storeCache_.end()) {
         if (storeCache_[path].lock()) {
             LOG_INFO("store in use by %{public}ld holders", storeCache_[path].lock().use_count());
-            return true;
         }
         storeCache_.erase(path); // clean invalid store ptr
+        return true;
     }
+
     return false;
 }
 
