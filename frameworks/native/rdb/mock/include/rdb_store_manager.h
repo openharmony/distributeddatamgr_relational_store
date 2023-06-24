@@ -34,7 +34,7 @@ public:
     std::shared_ptr<RdbStore> GetRdbStore(const RdbStoreConfig &config,
         int &errCode, int version, RdbOpenCallback &openCallback);
     void Clear();
-    bool IsInUsing(const std::string &path);
+    bool Remove(const std::string &path);
     int SetSecurityLabel(const RdbStoreConfig &config);
 
 private:
