@@ -59,6 +59,21 @@ describe('rdbStoreDistributedCloudTest', function () {
                 console.log(TAG + "create table product failed")
                 expect(null).assertFail()
             }
+
+            sqlStatement = "CREATE TABLE IF NOT EXISTS local (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "name TEXT NOT NULL," +
+                "price REAL," +
+                "vendor INTEGER," +
+                "describe TEXT)"
+            try {
+                await rdbStore.executeSql(sqlStatement, null)
+                console.log(TAG + "create table local success")
+                done()
+            } catch (err) {
+                console.log(TAG + "create table local failed")
+                expect(null).assertFail()
+            }
         } catch (err) {
             console.log(TAG + "create rdb store failed" + `, error code is ${err.code}, message is ${err.message}`)
             expect(null).assertFail()
@@ -316,6 +331,95 @@ describe('rdbStoreDistributedCloudTest', function () {
             done()
         }
         console.log(TAG + "************* testRdbStoreCloud0009 end *************");
+    })
+
+    /**
+     * @tc.name undefined parameter of setdistributed with callback
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_0010
+     * @tc.desc test the undefined parameter of setdistributed with callback
+     */
+    it('testRdbStoreCloud0010', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreCloud0010 start *************");
+        try {
+            rdbStore.setDistributedTables(['local'], undefined, function (err) {
+                console.log(TAG + "set local to be distributed device table success");
+                expect(true).assertTrue();
+                done();
+            })
+        } catch (err) {
+            console.log(TAG + `set employee to be distributed table failed, err code is ${err.code}, message is ${err.message}.`);
+            expect(false).assertTrue();
+            done()
+        }
+        console.log(TAG + "************* testRdbStoreCloud0010 end *************");
+    })
+
+    /**
+     * @tc.name null parameter of setdistributed with callback
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_0011
+     * @tc.desc test the null parameter of setdistributed with callback
+     */
+    it('testRdbStoreCloud0011', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreCloud0011 start *************");
+        try {
+            let config = {
+                autoSync:false
+            }
+            rdbStore.setDistributedTables(['local'], null, config, function (err) {
+                console.log(TAG + "set local to be distributed device table success");
+                expect(true).assertTrue();
+                done();
+            })
+        } catch (err) {
+            console.log(TAG + `set employee to be distributed table failed, err code is ${err.code}, message is ${err.message}.`);
+            expect(false).assertTrue();
+            done()
+        }
+        console.log(TAG + "************* testRdbStoreCloud0011 end *************");
+    })
+
+    /**
+     * @tc.name null parameter of setdistributed with callback
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_0012
+     * @tc.desc test the null parameter of setdistributed with callback
+     */
+    it('testRdbStoreCloud0012', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreCloud0012 start *************");
+        try {
+            rdbStore.setDistributedTables(['local'], relationalStore.DistributedType.DISTRIBUTED_CLOUD, null,
+                function (err) {
+                    console.log(TAG + "set local to be distributed cloud table success");
+                    expect(true).assertTrue();
+                    done();
+                })
+        } catch (err) {
+            console.log(TAG + `set employee to be distributed table failed, err code is ${err.code}, message is ${err.message}.`);
+            expect(false).assertTrue();
+            done()
+        }
+        console.log(TAG + "************* testRdbStoreCloud0012 end *************");
+    })
+
+    /**
+     * @tc.name undefined parameter of setdistributed with callback
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_0013
+     * @tc.desc test the undefined parameter of setdistributed with callback
+     */
+    it('testRdbStoreCloud0013', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreCloud0013 start *************");
+        try {
+            rdbStore.setDistributedTables(['local'], relationalStore.DistributedType.DISTRIBUTED_CLOUD, undefined,
+                function (err) {
+                    console.log(TAG + "set local to be distributed cloud table success");
+                    expect(true).assertTrue();
+                    done();
+                })
+        } catch (err) {
+            console.log(TAG + `set employee to be distributed table failed, err code is ${err.code}, message is ${err.message}.`);
+            expect(false).assertTrue();
+            done()
+        }
+        console.log(TAG + "************* testRdbStoreCloud0013 end *************");
     })
 
     console.log(TAG + "*************Unit Test End*************");
