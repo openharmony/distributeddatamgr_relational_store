@@ -55,6 +55,11 @@ constexpr int E_CANNOT_UPDATE_READONLY = (E_BASE + 2);
 constexpr int E_REMOVE_FILE = (E_BASE + 3);
 
 /**
+* @brief The error code when deleting a file fails for rdb store in using.
+*/
+constexpr int E_RDB_STORE_IN_USING = (E_BASE + 4);
+
+/**
 * @brief The error code for a table name is empty.
 */
 constexpr int E_EMPTY_TABLE_NAME = (E_BASE + 5);
@@ -273,8 +278,6 @@ static constexpr int E_WAL_SIZE_OVER_LIMIT = (E_BASE + 47);
 * @brief The error when the connection count is used up.
 */
 static constexpr int E_CON_OVER_LIMIT = (E_BASE + 48);
-
-constexpr int E_INVALID_BUNDLE_NAME = (E_BASE + 49);
 } // namespace NativeRdb
 } // namespace OHOS
 

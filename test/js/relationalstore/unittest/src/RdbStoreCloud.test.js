@@ -214,16 +214,16 @@ describe('rdbStoreDistributedCloudTest', function () {
             }
             await rdbStore.setDistributedTables(['local'], undefined,
                 config).then((err)=>{
-                console.log(TAG + "set employee and product to be distributed cloud table success");
+                console.log(TAG + "set local to be distributed device table success");
                 expect(true).assertTrue();
                 done();
             }).catch((err)=>{
-                console.log(TAG + `set employee and product to be distributed table failed 1, err code is ${err.code}, message is ${err.message}.`);
+                console.log(TAG + `set local to be distributed table failed 1, err code is ${err.code}, message is ${err.message}.`);
                 expect(false).assertTrue();
                 done()
             });
         } catch (err) {
-            console.log(TAG + `set employee and product to be distributed table failed 2, err code is ${err.code}, message is ${err.message}.`);
+            console.log(TAG + `set local to be distributed table failed 2, err code is ${err.code}, message is ${err.message}.`);
             expect(false).assertTrue();
             done()
         }
@@ -239,16 +239,16 @@ describe('rdbStoreDistributedCloudTest', function () {
         console.log(TAG + "************* testRdbStoreCloud0006 start *************");
         try {
             await rdbStore.setDistributedTables(['local'], null).then((err)=>{
-                console.log(TAG + "set employee and product to be distributed cloud table success");
+                console.log(TAG + "set local to be distributed device table success");
                 expect(true).assertTrue();
                 done();
             }).catch((err)=>{
-                console.log(TAG + `set employee and product to be distributed table failed 1, err code is ${err.code}, message is ${err.message}.`);
+                console.log(TAG + `set local to be distributed table failed 1, err code is ${err.code}, message is ${err.message}.`);
                 expect(false).assertTrue();
                 done()
             });
         } catch (err) {
-            console.log(TAG + `set employee and product to be distributed table failed 2, err code is ${err.code}, message is ${err.message}.`);
+            console.log(TAG + `set local to be distributed table failed 2, err code is ${err.code}, message is ${err.message}.`);
             expect(false).assertTrue();
             done()
         }
@@ -265,16 +265,16 @@ describe('rdbStoreDistributedCloudTest', function () {
         try {
             await rdbStore.setDistributedTables(['employee'], relationalStore.DistributedType.DISTRIBUTED_CLOUD
             ).then((err)=>{
-                console.log(TAG + "set employee and product to be distributed cloud table success");
+                console.log(TAG + "set employee to be distributed cloud table success");
                 expect(true).assertTrue();
                 done();
             }).catch((err)=>{
-                console.log(TAG + `set employee and product to be distributed table failed 1, err code is ${err.code}, message is ${err.message}.`);
+                console.log(TAG + `set employee to be distributed table failed 1, err code is ${err.code}, message is ${err.message}.`);
                 expect(false).assertTrue();
                 done()
             });
         } catch (err) {
-            console.log(TAG + `set employee and product to be distributed table failed 2, err code is ${err.code}, message is ${err.message}.`);
+            console.log(TAG + `set employee to be distributed table failed 2, err code is ${err.code}, message is ${err.message}.`);
             expect(false).assertTrue();
             done()
         }
@@ -291,16 +291,16 @@ describe('rdbStoreDistributedCloudTest', function () {
         try {
             await rdbStore.setDistributedTables(['employee'], relationalStore.DistributedType.DISTRIBUTED_CLOUD,
                 undefined).then((err)=>{
-                console.log(TAG + "set employee and product to be distributed cloud table success");
+                console.log(TAG + "set employee to be distributed cloud table success");
                 expect(true).assertTrue();
                 done();
             }).catch((err)=>{
-                console.log(TAG + `set employee and product to be distributed table failed 1, err code is ${err.code}, message is ${err.message}.`);
+                console.log(TAG + `set employee to be distributed table failed 1, err code is ${err.code}, message is ${err.message}.`);
                 expect(false).assertTrue();
                 done()
             });
         } catch (err) {
-            console.log(TAG + `set employee and product to be distributed table failed 2, err code is ${err.code}, message is ${err.message}.`);
+            console.log(TAG + `set employee to be distributed table failed 2, err code is ${err.code}, message is ${err.message}.`);
             expect(false).assertTrue();
             done()
         }
@@ -317,16 +317,16 @@ describe('rdbStoreDistributedCloudTest', function () {
         try {
             await rdbStore.setDistributedTables(['employee'], relationalStore.DistributedType.DISTRIBUTED_CLOUD, null
             ).then((err)=>{
-                console.log(TAG + "set employee and product to be distributed cloud table success");
+                console.log(TAG + "set employee to be distributed cloud table success");
                 expect(true).assertTrue();
                 done();
             }).catch((err)=>{
-                console.log(TAG + `set employee and product to be distributed table failed 1, err code is ${err.code}, message is ${err.message}.`);
+                console.log(TAG + `set employee to be distributed table failed 1, err code is ${err.code}, message is ${err.message}.`);
                 expect(false).assertTrue();
                 done()
             });
         } catch (err) {
-            console.log(TAG + `set employee and product to be distributed table failed 2, err code is ${err.code}, message is ${err.message}.`);
+            console.log(TAG + `set employee to be distributed table failed 2, err code is ${err.code}, message is ${err.message}.`);
             expect(false).assertTrue();
             done()
         }
@@ -371,7 +371,7 @@ describe('rdbStoreDistributedCloudTest', function () {
                 done();
             })
         } catch (err) {
-            console.log(TAG + `set employee to be distributed table failed, err code is ${err.code}, message is ${err.message}.`);
+            console.log(TAG + `set local to be distributed table failed, err code is ${err.code}, message is ${err.message}.`);
             expect(false).assertTrue();
             done()
         }
@@ -393,7 +393,7 @@ describe('rdbStoreDistributedCloudTest', function () {
                     done();
                 })
         } catch (err) {
-            console.log(TAG + `set employee to be distributed table failed, err code is ${err.code}, message is ${err.message}.`);
+            console.log(TAG + `set local to be distributed table failed, err code is ${err.code}, message is ${err.message}.`);
             expect(false).assertTrue();
             done()
         }
@@ -415,7 +415,7 @@ describe('rdbStoreDistributedCloudTest', function () {
                     done();
                 })
         } catch (err) {
-            console.log(TAG + `set employee to be distributed table failed, err code is ${err.code}, message is ${err.message}.`);
+            console.log(TAG + `set local to be distributed table failed, err code is ${err.code}, message is ${err.message}.`);
             expect(false).assertTrue();
             done()
         }

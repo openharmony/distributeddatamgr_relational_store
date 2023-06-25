@@ -33,9 +33,9 @@ public:
     void SetUp();
     void TearDown();
     void CheckResultSet(std::shared_ptr<RdbStore> &store);
-    void CheckAge(std::unique_ptr<ResultSet> &resultSet);
-    void CheckSalary(std::unique_ptr<ResultSet> &resultSet);
-    void CheckBlob(std::unique_ptr<ResultSet> &resultSet);
+    void CheckAge(std::shared_ptr<ResultSet> &resultSet);
+    void CheckSalary(std::shared_ptr<ResultSet> &resultSet);
+    void CheckBlob(std::shared_ptr<ResultSet> &resultSet);
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
@@ -139,7 +139,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Insert_001, TestSize.Level1)
 
 void RdbStoreInsertTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
 {
-    std::unique_ptr<ResultSet> resultSet =
+    std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
     EXPECT_NE(resultSet, nullptr);
 
@@ -191,7 +191,7 @@ void RdbStoreInsertTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     EXPECT_EQ(ret, E_OK);
 }
 
-void RdbStoreInsertTest::CheckAge(std::unique_ptr<ResultSet> &resultSet)
+void RdbStoreInsertTest::CheckAge(std::shared_ptr<ResultSet> &resultSet)
 {
     int columnIndex;
     int intVal;
@@ -206,7 +206,7 @@ void RdbStoreInsertTest::CheckAge(std::unique_ptr<ResultSet> &resultSet)
     EXPECT_EQ(18, intVal);
 }
 
-void RdbStoreInsertTest::CheckSalary(std::unique_ptr<ResultSet> &resultSet)
+void RdbStoreInsertTest::CheckSalary(std::shared_ptr<ResultSet> &resultSet)
 {
     int columnIndex;
     double dVal;
@@ -221,7 +221,7 @@ void RdbStoreInsertTest::CheckSalary(std::unique_ptr<ResultSet> &resultSet)
     EXPECT_EQ(100.5, dVal);
 }
 
-void RdbStoreInsertTest::CheckBlob(std::unique_ptr<ResultSet> &resultSet)
+void RdbStoreInsertTest::CheckBlob(std::shared_ptr<ResultSet> &resultSet)
 {
     int columnIndex;
     std::vector<uint8_t> blob;
@@ -307,7 +307,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_001, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     ret = resultSet->GoToNextRow();
@@ -390,7 +390,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_002, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     ret = resultSet->GoToNextRow();
@@ -616,7 +616,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_006_007, Test
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(id, 1);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     ret = resultSet->GoToNextRow();

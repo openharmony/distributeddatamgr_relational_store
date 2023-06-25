@@ -70,7 +70,6 @@ int GetOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 
 void RdbGetStoreTest::SetUpTestCase(void)
 {
-    RdbStoreManager::GetInstance().SetReleaseTime(1000);
     RdbHelper::DeleteRdbStore(MAIN_DATABASE_NAME);
 }
 
@@ -127,7 +126,7 @@ void RdbGetStoreTest::QueryCheck1(std::shared_ptr<RdbStore> &store) const
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
@@ -142,7 +141,7 @@ void RdbGetStoreTest::QueryCheck1(std::shared_ptr<RdbStore> &store) const
 
 void RdbGetStoreTest::QueryCheck2(std::shared_ptr<RdbStore> &store) const
 {
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1");
     EXPECT_NE(resultSet, nullptr);
     int ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);

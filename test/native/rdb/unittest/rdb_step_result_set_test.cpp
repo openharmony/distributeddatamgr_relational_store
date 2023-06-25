@@ -133,7 +133,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_001, TestSize.Level1)
 {
     GenerateDefaultTable();
 
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     bool bResultSet = true;
     int iRet = resultSet->IsStarted(bResultSet);
@@ -208,7 +208,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_001, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_002, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int count = -1;
@@ -264,7 +264,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_002, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_003, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int position = INT_MIN;
@@ -347,7 +347,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_003, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_004, TestSize.Level1)
 {
     GenerateDefaultEmptyTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int position = INT_MIN;
@@ -391,7 +391,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_004, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_005, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
@@ -449,7 +449,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_005, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_006, TestSize.Level1)
 {
     GenerateDefaultEmptyTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     EXPECT_NE(E_OK, resultSet->GoToFirstRow());
@@ -492,7 +492,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_006, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_007, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int moveTimes = 0;
@@ -529,7 +529,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_007, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_008, TestSize.Level1)
 {
     GenerateDefaultEmptyTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int moveTimes = 0;
@@ -567,7 +567,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_008, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_009, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int iValue;
@@ -628,7 +628,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_009, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_010, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     std::string strValue;
@@ -677,7 +677,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_010, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_011, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     double dValue;
@@ -725,7 +725,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_011, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_012, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     std::vector<uint8_t> blobValue;
@@ -781,7 +781,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_012, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_013, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     ColumnType type;
@@ -825,7 +825,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_013, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_014, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int columnIndex;
@@ -863,7 +863,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_014, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_015, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     std::vector<std::string> allColumnNames;
@@ -903,7 +903,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_015, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_016, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     bool bResultSet = false;
@@ -937,7 +937,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_016, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, testGetRowCount003, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     bool bResultSet = true;
@@ -1028,7 +1028,7 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount003, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, testGetRowCount004, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     bool bResultSet = true;
@@ -1117,7 +1117,7 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount004, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, testGoToRow005, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     bool bResultSet = true;
@@ -1193,7 +1193,7 @@ HWTEST_F(RdbStepResultSetTest, testGoToRow005, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, testGo006, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     int position = INT_MIN;
     int iRet = resultSet->GetRowIndex(position);
@@ -1272,7 +1272,7 @@ HWTEST_F(RdbStepResultSetTest, testGo006, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int count = -1;
@@ -1385,7 +1385,7 @@ HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, testSqlStep008, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     bool bResultSet = true;
@@ -1460,7 +1460,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep008, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, testSqlStep009, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int count = -1;
@@ -1523,7 +1523,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep009, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, testSqlStep010, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int position = INT_MIN;
@@ -1611,7 +1611,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep011, TestSize.Level1)
     store->ExecuteSql(
         insertSql, std::vector<ValueObject> { ValueObject(std::string(arr, arrLen)), ValueObject((int)10),
                        ValueObject((double)1.0), ValueObject((std::vector<uint8_t>)typeBlob) });
-    std::unique_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     int iRet = resultSet->GoToFirstRow();

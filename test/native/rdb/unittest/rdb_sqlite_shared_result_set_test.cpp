@@ -126,8 +126,10 @@ void RdbSqliteSharedResultSetTest::GenerateAssetsTable()
     std::shared_ptr<RdbStore> &store = RdbSqliteSharedResultSetTest::store;
     int64_t id;
     ValuesBucket values;
-    Asset assetValue1 = Asset{ 1, 1, 1, "name1", "uri1", "createTime1", "modifyTime1", "size1", "hash1", "path1" };
-    Asset assetValue2 = Asset{ 2, 0, 2, "name2", "uri2", "createTime2", "modifyTime2", "size2", "hash2", "path2" };
+    Asset assetValue1 = Asset{ 1, Asset::STATUS_DOWNLOADING, 1, "1", "name1", "uri1", "createTime1", "modifyTime1",
+        "size1", "hash1", "path1" };
+    Asset assetValue2 = Asset{ 2, Asset::STATUS_DOWNLOADING, 2, "2", "name2", "uri2", "createTime2", "modifyTime2",
+        "size2", "hash2", "path2" };
 
     Assets assets = Assets{ assetValue1 };
     values.PutInt("id", 1);
@@ -151,8 +153,19 @@ void RdbSqliteSharedResultSetTest::GenerateTimeoutTable()
     auto timeout = static_cast<uint64_t>(
         (std::chrono::steady_clock::now() - std::chrono::seconds(10)).time_since_epoch().count());
 
-    Asset assetValue1 =
-        Asset{ 1, Asset::STATUS_DOWNLOADING, timeout, "name1", "uri1", "createTime1", "modifyTime1", "size1", "hash1", "path1" };
+    Asset assetValue1 = Asset{
+        1,
+        Asset::STATUS_DOWNLOADING,
+        timeout,
+        "id",
+        "name1",
+        "uri1",
+        "createTime1",
+        "modifyTime1",
+        "size1",
+        "hash1",
+        "path1",
+    };
 
     Assets assets = Assets{ assetValue1 };
     values.PutInt("id", 1);
@@ -171,7 +184,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset_Timeout, T
 {
     GenerateTimeoutTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -187,7 +200,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset_Timeout, T
     EXPECT_EQ(asset.version, 1);
     EXPECT_EQ(asset.name, "name1");
     EXPECT_EQ(asset.uri, "uri1");
-    EXPECT_EQ(asset.status, Asset::STATUS_ABNORMAL);
+    EXPECT_EQ(asset.status, Asset::STATUS_INSERT);
 }
 
 /* *
@@ -200,7 +213,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset, TestSize.
 {
     GenerateAssetsTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -223,7 +236,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset, TestSize.
     EXPECT_EQ(asset.version, 1);
     EXPECT_EQ(asset.name, "name1");
     EXPECT_EQ(asset.uri, "uri1");
-    EXPECT_EQ(asset.status, 1);
+    EXPECT_EQ(asset.status, AssetValue::STATUS_INSERT);
 
     Assets assets;
     rstSet->GetAssets(6, assets);
@@ -232,7 +245,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset, TestSize.
     EXPECT_EQ(it->version, 1);
     EXPECT_EQ(it->name, "name1");
     EXPECT_EQ(it->uri, "uri1");
-    EXPECT_EQ(it->status, 1);
+    EXPECT_EQ(it->status, AssetValue::STATUS_INSERT);
 
     ret = rstSet->GoToRow(1);
     EXPECT_EQ(ret, E_OK);
@@ -241,7 +254,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset, TestSize.
     EXPECT_EQ(asset.version, 2);
     EXPECT_EQ(asset.name, "name2");
     EXPECT_EQ(asset.uri, "uri2");
-    EXPECT_EQ(asset.status, 0);
+    EXPECT_EQ(asset.status, AssetValue::STATUS_INSERT);
 
     rstSet->GetAssets(6, assets);
     EXPECT_EQ(assets.size(), 1);
@@ -249,7 +262,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_Asset, TestSize.
     EXPECT_EQ(it->version, 2);
     EXPECT_EQ(it->name, "name2");
     EXPECT_EQ(it->uri, "uri2");
-    EXPECT_EQ(it->status, 0);
+    EXPECT_EQ(it->status, AssetValue::STATUS_INSERT);
 
     rstSet->Close();
     bool isClosedFlag = rstSet->IsClosed();
@@ -266,7 +279,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_001, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -365,7 +378,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_002, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -451,7 +464,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_003, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -504,7 +517,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_004, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -548,7 +561,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_005, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -602,7 +615,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_006, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -655,7 +668,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_007, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -695,7 +708,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_008, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -746,7 +759,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_009, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -781,7 +794,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_010, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -822,7 +835,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_011, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -856,7 +869,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_012, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -906,7 +919,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_013, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -928,7 +941,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_014, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -961,7 +974,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_015, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -994,7 +1007,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_016, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -1035,7 +1048,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_017, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<ResultSet> rstSet =
+    std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
@@ -1056,7 +1069,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_017, TestSize.Le
 HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_018, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::unique_ptr<ResultSet> resultSet =
+    std::shared_ptr<ResultSet> resultSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
@@ -1093,7 +1106,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_019, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<AbsResultSet> resultSet =
+    std::shared_ptr<AbsResultSet> resultSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(resultSet, nullptr);
 
@@ -1137,7 +1150,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_020, TestSize.Le
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
-    std::unique_ptr<AbsResultSet> resultSet =
+    std::shared_ptr<AbsResultSet> resultSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT data1, data2 FROM test", selectionArgs);
     EXPECT_NE(resultSet, nullptr);
 

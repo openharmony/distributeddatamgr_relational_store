@@ -48,8 +48,14 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
     NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, modifyTime), napi_invalid_arg);
     NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, size), napi_invalid_arg);
     NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, path), napi_invalid_arg);
-    NAPI_CALL_RETURN_ERR(Convert2ValueExt(env, GetNamedProperty(env, jsValue, "status"), output.status),
-        napi_invalid_arg);
+    output.hash = output.modifyTime + "_" + output.size;
+    auto jsStatus = GetNamedProperty(env, jsValue, "status");
+    if (jsStatus != nullptr) {
+        Convert2ValueExt(env, jsStatus, output.status);
+    }
+    if (output.status != AssetValue::STATUS_DELETE) {
+        output.status = AssetValue::STATUS_UNKNOWN;
+    }
     return napi_ok;
 }
 
@@ -77,10 +83,12 @@ napi_value Convert2JSValue(napi_env env, const Asset &value)
     NAPI_CALL_RETURN_ERR(napi_create_object(env, &object), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, name), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, uri), object);
+    NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, id), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, createTime), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, modifyTime), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, size), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, path), object);
+    NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, hash), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, status), object);
     return object;
 }

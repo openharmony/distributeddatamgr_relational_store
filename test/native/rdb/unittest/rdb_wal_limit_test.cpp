@@ -43,12 +43,12 @@ public:
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
-    static std::unique_ptr<ResultSet> resultSet;
+    static std::shared_ptr<ResultSet> resultSet;
 };
 
 const std::string RdbWalLimitTest::DATABASE_NAME = RDB_TEST_PATH + "walLimit_test.db";
 std::shared_ptr<RdbStore> RdbWalLimitTest::store = nullptr;
-std::unique_ptr<ResultSet> RdbWalLimitTest::resultSet = nullptr;
+std::shared_ptr<ResultSet> RdbWalLimitTest::resultSet = nullptr;
 
 // create 1M data
 std::vector<uint8_t> blobValue = RdbWalLimitTest::CreateRandomData(1 * 1024 * 1024);

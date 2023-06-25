@@ -30,8 +30,7 @@
 namespace OHOS::NativeRdb {
 class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
 public:
-    static std::shared_ptr<RdbStoreImpl> Open(const RdbStoreConfig &config, int &errCode);
-    RdbStoreImpl(const RdbStoreConfig &config);
+    RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
 #ifdef WINDOWS_PLATFORM
     void Clear() override;
@@ -79,21 +78,21 @@ public:
     int ConfigLocale(const std::string localeStr);
 #endif
     int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) override;
-    int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
-        const std::vector<uint8_t> &newKey) override;
     std::string GetName();
     std::string GetOrgPath();
     std::string GetFileType();
-    std::unique_ptr<ResultSet> QueryByStep(const std::string &sql,
+    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
-    std::unique_ptr<ResultSet> Query(
+    std::shared_ptr<ResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
     int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
 
 private:
-    int InnerOpen(const RdbStoreConfig &config);
+    int InnerOpen();
+    int InnerInsert(int64_t &outRowId, const std::string &table, ValuesBucket values,
+        ConflictResolution conflictResolution);
     int CheckAttach(const std::string &sql);
     bool PathToRealPath(const std::string &path, std::string &realPath);
     std::string ExtractFilePath(const std::string &fileFullName);
@@ -104,7 +103,11 @@ private:
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
+    void SetAssetStatusWhileInsert(ValueObject &val);
     void DoCloudSync(const std::string &table);
+    int InnerBackup(const std::string databasePath,
+        const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>());
+
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;

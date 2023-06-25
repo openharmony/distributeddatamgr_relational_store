@@ -16,6 +16,7 @@ declare_args() {
 }
 
 common_tool_path = "//foundation/distributeddatamgr/kv_store/frameworks/common"
+distributeddata_base_path = "//foundation/distributeddatamgr"
 
 relational_store_base_path = "//foundation/distributeddatamgr/relational_store"
 

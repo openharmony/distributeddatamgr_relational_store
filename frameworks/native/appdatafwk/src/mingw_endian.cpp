@@ -24,4 +24,12 @@ uint16_t Endian::HToLe(uint16_t value)
 {
     return value;
 }
+uint32_t Endian::LeToH(uint32_t value)
+{
+    return value;
+}
+uint32_t Endian::HToLe(uint32_t value)
+{
+    return value;
+}
 }

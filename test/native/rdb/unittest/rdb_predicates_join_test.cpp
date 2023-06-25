@@ -42,7 +42,7 @@ public:
     void GenerateAllTables();
     void InsertUserDates();
     void InsertBookDates();
-    int ResultSize(std::unique_ptr<ResultSet> &resultSet);
+    int ResultSize(std::shared_ptr<ResultSet> &resultSet);
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
@@ -170,7 +170,7 @@ void RdbStorePredicateJoinTest::InsertBookDates()
     store->Insert(id, "book", values);
 }
 
-int RdbStorePredicateJoinTest::ResultSize(std::unique_ptr<ResultSet> &resultSet)
+int RdbStorePredicateJoinTest::ResultSize(std::shared_ptr<ResultSet> &resultSet)
 {
     if (resultSet->GoToFirstRow() != E_OK) {
         return 0;
@@ -203,7 +203,7 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_CrossJoin_001, TestSize.Level1)
     EXPECT_EQ("user CROSS JOIN book ON(user.userId = book.userId)", predicates.GetJoinClause());
 
     std::vector<std::string> columns;
-    std::unique_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
 
     EXPECT_EQ(E_OK, allDataTypes->GoToFirstRow());
@@ -259,7 +259,7 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_InnerJoin_002, TestSize.Level1)
     EXPECT_EQ("ON(user.userId = book.userId)", predicates.GetJoinConditions()[0]);
 
     std::vector<std::string> columns;
-    std::unique_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes));
     EXPECT_EQ(E_OK, allDataTypes->GoToFirstRow());
 
@@ -315,7 +315,7 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_LeftOuterJoin_003, TestSize.Level1)
     EXPECT_EQ("USING(userId)", predicates.GetJoinConditions()[0]);
 
     std::vector<std::string> columns;
-    std::unique_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes));
 
     EXPECT_EQ(E_OK, allDataTypes->GoToFirstRow());
@@ -368,6 +368,6 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_LeftOuterJoin_004, TestSize.Level1)
     EXPECT_EQ("ON(user.userId = book.userId)", predicates.GetJoinConditions()[0]);
 
     std::vector<std::string> columns;
-    std::unique_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
     EXPECT_EQ(5, ResultSize(allDataTypes));
 }

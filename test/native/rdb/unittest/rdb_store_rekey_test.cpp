@@ -181,7 +181,7 @@ void RdbRekeyTest::InsertData(std::shared_ptr<RdbStore> &store)
 
 void RdbRekeyTest::CheckQueryData(std::shared_ptr<RdbStore> &store)
 {
-    std::unique_ptr<ResultSet> resultSet =
+    std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
     EXPECT_NE(resultSet, nullptr);
     int result = resultSet->GoToFirstRow();

@@ -24,6 +24,8 @@
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
+using namespace OHOS::Rdb;
+
 Context::Context()
 {
     std::string baseDir = "";

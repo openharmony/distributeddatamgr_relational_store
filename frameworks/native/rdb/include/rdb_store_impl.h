@@ -34,8 +34,7 @@ class ExecutorPool;
 namespace OHOS::NativeRdb {
 class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
 public:
-    static std::shared_ptr<RdbStoreImpl> Open(const RdbStoreConfig &config, int &errCode);
-    RdbStoreImpl(const RdbStoreConfig &config);
+    RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
     const RdbStoreConfig &GetConfig();
     int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
@@ -51,11 +50,11 @@ public:
         ConflictResolution conflictResolution) override;
     int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
         const std::vector<std::string> &whereArgs) override;
-    std::unique_ptr<AbsSharedResultSet> Query(int &errCode, bool distinct,
+    std::shared_ptr<AbsSharedResultSet> Query(int &errCode, bool distinct,
         const std::string &table, const std::vector<std::string> &columns,
         const std::string &selection, const std::vector<std::string> &selectionArgs, const std::string &groupBy,
         const std::string &having, const std::string &orderBy, const std::string &limit) override;
-    std::unique_ptr<AbsSharedResultSet> QuerySql(const std::string &sql,
+    std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
     int ExecuteSql(
         const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) override;
@@ -86,17 +85,15 @@ public:
     int ConfigLocale(const std::string localeStr);
 #endif
     int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) override;
-    int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
-        const std::vector<uint8_t> &newKey) override;
     void GetSchema(const RdbStoreConfig &config);
     std::string GetName();
     std::string GetOrgPath();
     std::string GetFileType();
-    std::unique_ptr<ResultSet> QueryByStep(const std::string &sql,
+    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
-    std::unique_ptr<ResultSet> QueryByStep(
+    std::shared_ptr<ResultSet> QueryByStep(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) override;
-    std::unique_ptr<AbsSharedResultSet> Query(
+    std::shared_ptr<AbsSharedResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
@@ -122,7 +119,9 @@ public:
     bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) override;
 
 private:
-    int InnerOpen(const RdbStoreConfig &config);
+    int InnerOpen();
+    int InnerInsert(int64_t &outRowId, const std::string &table, ValuesBucket values,
+        ConflictResolution conflictResolution);
     int CheckAttach(const std::string &sql);
     int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
     int FreeTransaction(SqliteConnection *connection, const std::string &sql);
@@ -131,7 +130,10 @@ private:
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
+    void SetAssetStatusWhileInsert(ValueObject &val);
     void DoCloudSync(const std::string &table);
+    int InnerBackup(const std::string databasePath,
+        const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>());
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;

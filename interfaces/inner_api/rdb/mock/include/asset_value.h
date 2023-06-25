@@ -19,14 +19,20 @@
 namespace OHOS::NativeRdb {
 struct AssetValue {
     enum Status : int32_t {
+        STATUS_UNKNOWN,
         STATUS_NORMAL,
+        STATUS_INSERT,
+        STATUS_UPDATE,
+        STATUS_DELETE,
         STATUS_ABNORMAL,
         STATUS_DOWNLOADING,
         STATUS_BUTT
     };
+    static constexpr uint64_t NO_EXPIRES_TIME = 0;
     uint32_t version = 0;
-    uint32_t status = 0;
-    uint64_t timeStamp = 0;
+    mutable uint32_t status = STATUS_UNKNOWN;
+    uint64_t expiresTime = NO_EXPIRES_TIME;
+    std::string id;
     std::string name;
     std::string uri;
     std::string createTime;
