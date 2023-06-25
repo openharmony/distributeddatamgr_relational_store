@@ -280,23 +280,21 @@ int ParseSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr
     return OK;
 }
 
-int ParseDistributedTableArg(const napi_env &env, size_t argc, napi_value * argv, std::shared_ptr<RdbStoreContext> context)
+int ParseDistributedTypeArg(const napi_env &env, size_t argc, napi_value * argv, std::shared_ptr<RdbStoreContext> context)
 {
     context->distributedType = DistributedRdb::DISTRIBUTED_DEVICE;
     if (argc > 1) {
         auto status = JSUtils::Convert2ValueExt(env, argv[1], context->distributedType);
         bool checked = false;
-        if (status != napi_ok && context->callback_== nullptr) {
-            napi_valuetype type;
-            status = napi_typeof(env, argv[1], &type);
-            checked = (status == napi_ok && (type == napi_undefined || type == napi_null));
-        }else{
-            checked = (status == napi_ok && context->distributedType >= DistributedRdb::DISTRIBUTED_DEVICE
-                       && context->distributedType <= DistributedRdb::DISTRIBUTED_CLOUD);
+        if (status != napi_ok) {
+            checked = JSUtils::IsNull(env, argv[1]);
+        } else {
+            checked = context->distributedType >= DistributedRdb::DISTRIBUTED_DEVICE
+                       && context->distributedType <= DistributedRdb::DISTRIBUTED_CLOUD;
         }
         CHECK_RETURN_SET(checked, std::make_shared<ParamError>("mode", "a DistributedType"));
     }
-    LOG_DEBUG("ParseDistributedTableArg end");
+    LOG_DEBUG("ParseDistributedTypeArg end");
     return OK;
 }
 
@@ -305,14 +303,7 @@ int ParseDistributedConfigArg(const napi_env &env, size_t argc, napi_value * arg
     context->distributedConfig = { false };
     if (argc > 2) {
         auto status = JSUtils::Convert2Value(env, argv[2], context->distributedConfig);
-        bool checked = false;
-        if (status != napi_ok && context->callback_== nullptr) {
-            napi_valuetype type;
-            status = napi_typeof(env, argv[2], &type);
-            checked = (status == napi_ok && (type == napi_undefined || type == napi_null));
-        }else{
-            checked = (status == napi_ok);
-        }
+        bool checked = status == napi_ok || JSUtils::IsNull(env, argv[2]);
         CHECK_RETURN_SET(checked, std::make_shared<ParamError>("distributedConfig", "a DistributedConfig type"));
     }
     LOG_DEBUG("ParseDistributedConfigArg end");
