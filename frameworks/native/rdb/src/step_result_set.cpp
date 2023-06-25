@@ -29,36 +29,30 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, const std::string &sql,
-    const std::vector<std::string> &selectionArgs)
-    : rdb(rdb), sql(sql), selectionArgs(selectionArgs), isAfterLast(false), rowCount(INIT_POS),
-      sqliteStatement(nullptr), connectionPool_(nullptr), connection_(nullptr)
+StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, SqliteConnectionPool *connectionPool,
+    const std::string &sql, const std::vector<std::string> &selectionArgs)
+    : rdb(rdb), connectionPool_(connectionPool), sql(sql), selectionArgs(selectionArgs), isAfterLast(false),
+      rowCount(INIT_POS), sqliteStatement(nullptr), connection_(connectionPool_->AcquireConnection(true))
 {
-}
-StepResultSet::StepResultSet(SqliteConnectionPool *pool, const std::string &sql,
-                             const std::vector<std::string> &selectionArgs)
-    : sql(sql), selectionArgs(selectionArgs), isAfterLast(false), rowCount(INIT_POS),
-      sqliteStatement(nullptr)
-{
-    connectionPool_ = pool;
-    connection_ = connectionPool_->AcquireConnection(true);
 }
 
 StepResultSet::~StepResultSet()
 {
     Close();
+    rdb.reset();
 }
 
 int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
-    if (isClosed) {
-        LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
-    }
-
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     if (!columnNames_.empty()) {
         columnNames = columnNames_;
         return E_OK;
+    }
+
+    if (isClosed) {
+        LOG_ERROR("resultSet closed");
+        return E_STEP_RESULT_CLOSED;
     }
 
     int errCode = PrepareStep();
@@ -91,6 +85,7 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 
 int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     if (isClosed) {
         LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
@@ -184,6 +179,12 @@ int StepResultSet::GoToRow(int position)
  */
 int StepResultSet::GoToNextRow()
 {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (isClosed) {
+        LOG_ERROR("resultSet closed");
+        return E_STEP_RESULT_CLOSED;
+    }
+
     int errCode = PrepareStep();
     if (errCode) {
         LOG_ERROR("PrepareStep ret %{public}d", errCode);
@@ -223,12 +224,12 @@ int StepResultSet::GoToNextRow()
 
 int StepResultSet::Close()
 {
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     if (isClosed) {
         return E_OK;
     }
     isClosed = true;
     int errCode = FinishStep();
-    rdb = nullptr;
 
     connectionPool_->ReleaseConnection(connection_);
     connection_ = nullptr;
@@ -240,11 +241,6 @@ int StepResultSet::Close()
  */
 int StepResultSet::PrepareStep()
 {
-    if (isClosed) {
-        LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
-    }
-
     if (sqliteStatement != nullptr) {
         return E_OK;
     }
@@ -334,6 +330,10 @@ int StepResultSet::IsAtFirstRow(bool &result) const
 
 int StepResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
 {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (isClosed) {
+        return E_STEP_RESULT_CLOSED;
+    }
     if (rowPos_ == INIT_POS) {
         LOG_ERROR("query not executed.");
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
@@ -344,8 +344,12 @@ int StepResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
 
 int StepResultSet::GetString(int columnIndex, std::string &value)
 {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (isClosed) {
+        return E_STEP_RESULT_CLOSED;
+    }
+
     if (rowPos_ == INIT_POS) {
-        LOG_ERROR("query not executed.");
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
 
@@ -359,8 +363,11 @@ int StepResultSet::GetString(int columnIndex, std::string &value)
 
 int StepResultSet::GetInt(int columnIndex, int &value)
 {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (isClosed) {
+        return E_STEP_RESULT_CLOSED;
+    }
     if (rowPos_ == INIT_POS) {
-        LOG_ERROR("query not executed.");
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
 
@@ -376,8 +383,11 @@ int StepResultSet::GetInt(int columnIndex, int &value)
 
 int StepResultSet::GetLong(int columnIndex, int64_t &value)
 {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (isClosed) {
+        return E_STEP_RESULT_CLOSED;
+    }
     if (rowPos_ == INIT_POS) {
-        LOG_ERROR("query not executed.");
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
     int errCode = sqliteStatement->GetColumnLong(columnIndex, value);
@@ -390,8 +400,11 @@ int StepResultSet::GetLong(int columnIndex, int64_t &value)
 
 int StepResultSet::GetDouble(int columnIndex, double &value)
 {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (isClosed) {
+        return E_STEP_RESULT_CLOSED;
+    }
     if (rowPos_ == INIT_POS) {
-        LOG_ERROR("query not executed.");
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
     int errCode = sqliteStatement->GetColumnDouble(columnIndex, value);
@@ -419,8 +432,11 @@ int StepResultSet::Get(int32_t col, ValueObject &value)
 
 int StepResultSet::GetModifyTime(std::string &modifyTime)
 {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (isClosed) {
+        return E_STEP_RESULT_CLOSED;
+    }
     if (rowPos_ == INIT_POS) {
-        LOG_ERROR("query not executed.");
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
     auto index = std::find(columnNames_.begin(), columnNames_.end(), "modifyTime");
@@ -434,6 +450,7 @@ int StepResultSet::GetModifyTime(std::string &modifyTime)
 
 int StepResultSet::GetSize(int columnIndex, size_t &size)
 {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     if (rowPos_ == INIT_POS) {
         size = 0;
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
@@ -459,6 +476,7 @@ int StepResultSet::IsColumnNull(int columnIndex, bool &isNull)
  */
 bool StepResultSet::IsClosed() const
 {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     return isClosed;
 }
 
@@ -476,10 +494,15 @@ int StepResultSet::GetValue(int32_t col, T &value)
 
 std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t index)
 {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (isClosed) {
+        return { E_STEP_RESULT_CLOSED, ValueObject() };
+    }
+
     if (rowPos_ == INIT_POS) {
-        LOG_ERROR("query not executed.");
         return { E_STEP_RESULT_QUERY_NOT_EXECUTED, ValueObject() };
     }
+
     ValueObject value;
     auto ret = sqliteStatement->GetColumn(col, value);
     if (index < ValueObject::TYPE_MAX && value.value.index() != index) {

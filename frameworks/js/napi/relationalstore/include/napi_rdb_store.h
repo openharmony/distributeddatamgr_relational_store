@@ -78,7 +78,7 @@ private:
 
     class NapiCoudSyncCallback : public NapiUvQueue {
     public:
-        explicit NapiCoudSyncCallback(napi_env env, napi_value callback) : NapiUvQueue(env, callback){}
+        explicit NapiCoudSyncCallback(napi_env env, napi_value callback) : NapiUvQueue(env, callback) {}
         virtual ~NapiCoudSyncCallback() = default;
 
         void OnSyncCompelete(const DistributedRdb::Details &details);

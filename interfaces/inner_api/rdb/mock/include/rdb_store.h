@@ -37,8 +37,7 @@ public:
     virtual int BatchInsert(int64_t &outInsertNum, const std::string &table,
         const std::vector<ValuesBucket> &initialBatchValues) = 0;
     virtual int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) = 0;
-    virtual int InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
-        const ValuesBucket &initialValues,
+    virtual int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues,
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
     virtual int Update(int &changedRows, const std::string &table, const ValuesBucket &values,
         const std::string &whereClause = "",
@@ -48,7 +47,7 @@ public:
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
     virtual int Delete(int &deletedRows, const std::string &table, const std::string &whereClause = "",
         const std::vector<std::string> &whereArgs = std::vector<std::string>()) = 0;
-    virtual std::unique_ptr<ResultSet> QueryByStep(
+    virtual std::shared_ptr<ResultSet> QueryByStep(
         const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
     virtual int ExecuteSql(
         const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
@@ -66,7 +65,7 @@ public:
         const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey) = 0;
 
     virtual int Count(int64_t &outValue, const AbsRdbPredicates &predicates) = 0;
-    virtual std::unique_ptr<ResultSet> Query(
+    virtual std::shared_ptr<ResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) = 0;
     virtual int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) = 0;
     virtual int Delete(int &deletedRows, const AbsRdbPredicates &predicates) = 0;
@@ -83,8 +82,6 @@ public:
     virtual bool IsReadOnly() const = 0;
     virtual bool IsMemoryRdb() const = 0;
     virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) = 0;
-    virtual int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
-        const std::vector<uint8_t> &newKey) = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif

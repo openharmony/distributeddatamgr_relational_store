@@ -15,7 +15,7 @@
 
 #include "logger.h"
 #include "oh_predicates.h"
-#include "relational_error_code.h"
+#include "relational_store_error_code.h"
 #include "relational_predicates_impl.h"
 #include "relational_value_object_impl.h"
 #include "sqlite_global_config.h"
@@ -146,6 +146,7 @@ OH_Predicates *Rdb_Predicates_Between(OH_Predicates *predicates, const char *fie
         return nullptr;
     }
     std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
+    // The number of arguments required for the between method is 2
     if (tempValue.size() != 2) {
         LOG_ERROR("size is %{public}zu", tempValue.size());
         return predicates;
@@ -166,6 +167,7 @@ OH_Predicates *Rdb_Predicates_NotBetween(OH_Predicates *predicates, const char *
         return nullptr;
     }
     std::vector<std::string> tempValue = static_cast<OHOS::RdbNdk::ValueObjectImpl *>(valueObject)->getValue();
+    // The number of arguments required for the between method is 2
     if (tempValue.size() != 2) {
         LOG_ERROR("size is %{public}zu", tempValue.size());
         return predicates;
@@ -205,7 +207,8 @@ OH_Predicates *Rdb_Predicates_LessThan(OH_Predicates *predicates, const char *fi
     return predicates;
 }
 
-OH_Predicates *Rdb_Predicates_GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
+OH_Predicates *Rdb_Predicates_GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field,
+    OH_VObject *valueObject)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID || field == nullptr
         || valueObject == nullptr) {
@@ -352,11 +355,11 @@ int Rdb_DestroyPredicates(OH_Predicates *predicates)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
         LOG_ERROR("Parameters set error:predicates is NULL ? %{public}d", (predicates == nullptr));
-        return RDB_ERR_INVALID_ARGS;
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     delete predicates;
     predicates = nullptr;
-    return OH_Rdb_ErrCode::RDB_ERR_OK;
+    return OH_Rdb_ErrCode::RDB_OK;
 }
 
 OHOS::RdbNdk::PredicateImpl::PredicateImpl(const char *table) : predicates_(table)

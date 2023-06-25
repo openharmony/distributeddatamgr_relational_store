@@ -98,7 +98,7 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_001, TestSize
     EXPECT_EQ(E_OK, errorCode);
     EXPECT_EQ(1, rowId);
 
-    std::unique_ptr<ResultSet> resultSet = RdbStepResultSetGetRowTest::store->QueryByStep("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = RdbStepResultSetGetRowTest::store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
@@ -136,7 +136,7 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_002, TestSize
     EXPECT_EQ(E_OK, errorCode);
     EXPECT_EQ(1, rowId);
 
-    std::unique_ptr<ResultSet> resultSet = RdbStepResultSetGetRowTest::store->QueryByStep("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = RdbStepResultSetGetRowTest::store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
@@ -174,7 +174,7 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_003, TestSize
     EXPECT_EQ(E_OK, errorCode);
     EXPECT_EQ(1, rowId);
 
-    std::unique_ptr<ResultSet> resultSet = RdbStepResultSetGetRowTest::store->QueryByStep("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = RdbStepResultSetGetRowTest::store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
@@ -232,7 +232,7 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_004, TestSize
     EXPECT_EQ(E_OK, errorCode);
     EXPECT_EQ(1, rowId);
 
-    std::unique_ptr<ResultSet> resultSet =
+    std::shared_ptr<ResultSet> resultSet =
         RdbStepResultSetGetRowTest::store->QueryByStep("SELECT data1, data2 FROM test");
     EXPECT_NE(resultSet, nullptr);
 

@@ -199,7 +199,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_002, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(count, 3);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
@@ -265,7 +265,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_003, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(count, 0);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -333,7 +333,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(count, 3);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
@@ -401,7 +401,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(count, 3);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
@@ -470,7 +470,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_003, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(count, 3);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
@@ -539,7 +539,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_004, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(count, 3);
 
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
@@ -583,7 +583,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_001, TestSize.Level1)
     int ret = store->BatchInsert(insertNum, "test", valuesBuckets);
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(100, insertNum);
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     int rowCount = 0;
     resultSet->GetRowCount(rowCount);
     EXPECT_EQ(100, rowCount);
@@ -619,7 +619,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_002, TestSize.Level1)
     EXPECT_EQ(E_OK, error);
     EXPECT_EQ(100, number);
     int rowCount = 0;
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     resultSet->GetRowCount(rowCount);
     EXPECT_EQ(100, rowCount);
 }
@@ -658,7 +658,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
     EXPECT_EQ(100, number);
 
     int rowCount = 0;
-    std::unique_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     resultSet->GetRowCount(rowCount);
     EXPECT_EQ(100, rowCount);
 

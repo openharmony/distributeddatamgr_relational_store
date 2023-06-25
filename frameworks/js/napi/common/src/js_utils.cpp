@@ -225,6 +225,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &ou
 
     size_t length = MAX_VALUE_LENGTH;
     napi_get_value_string_utf8(env, jsValue, nullptr, 0, &length);
+    length = length + 1; // add the null-terminated byte
     length = length < MAX_VALUE_LENGTH ? MAX_VALUE_LENGTH - 1 : length;
     /* array init to zero */
     std::unique_ptr<char[]> str = std::make_unique<char[]>(length + 1);
@@ -261,7 +262,8 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<uin
         return napi_invalid_arg;
     }
 
-    output = (tmp != nullptr ? std::vector<uint8_t>((uint8_t*)tmp, ((uint8_t*)tmp) + length) : std::vector<uint8_t>());
+    output = (tmp != nullptr ? std::vector<uint8_t>(static_cast<uint8_t*>(tmp),
+        static_cast<uint8_t*>(tmp) + length) : std::vector<uint8_t>());
     return status;
 }
 
@@ -485,6 +487,13 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::monostate &value)
     napi_value result = nullptr;
     napi_get_null(env, &result);
     return result;
+}
+
+bool JSUtils::IsNull(napi_env env, napi_value value)
+{
+    napi_valuetype type = napi_undefined;
+    napi_status status = napi_typeof(env, value, &type);
+    return status == napi_ok && (type == napi_undefined || type == napi_null);
 }
 
 napi_value JSUtils::DefineClass(napi_env env, const std::string &name, const Descriptor &descriptor, napi_callback ctor)

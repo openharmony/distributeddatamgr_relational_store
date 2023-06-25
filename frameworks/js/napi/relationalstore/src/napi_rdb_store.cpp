@@ -27,6 +27,7 @@
 #include "napi_rdb_trace.h"
 #include "napi_result_set.h"
 #include "rdb_errno.h"
+#include "rdb_types.h"
 #include "securec.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -48,6 +49,7 @@ using OHOS::DistributedRdb::Details;
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
+
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 struct PredicatesProxy {
     std::shared_ptr<DataShareAbsPredicates> predicates_;
@@ -71,26 +73,24 @@ struct RdbStoreContext : public Context {
     int intOutput;
     std::vector<uint8_t> newKey;
     std::shared_ptr<ResultSet> newResultSet;
-    std::unique_ptr<ResultSet> resultSet_value;
+    std::shared_ptr<ResultSet> resultSet_value;
     std::string aliasName;
     std::string pathName;
-    std::string destName;
     std::string srcName;
     int32_t enumArg;
     int32_t distributedType;
     int32_t syncMode;
     DistributedRdb::DistributedConfig distributedConfig;
     NativeRdb::ConflictResolution conflictResolution;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     DistributedRdb::SyncResult syncResult;
-
     napi_value cloudSyncCallback = nullptr;
-#endif
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
 
     RdbStoreContext()
         : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(-1),
-          conflictResolution(NativeRdb::ConflictResolution::ON_CONFLICT_NONE)
+          distributedType(DistributedRdb::DistributedTableType::DISTRIBUTED_DEVICE),
+          syncMode(DistributedRdb::SyncMode::PUSH),
+          conflictResolution(ConflictResolution::ON_CONFLICT_NONE)
     {
     }
     virtual ~RdbStoreContext()
@@ -298,7 +298,8 @@ int ParseDistributedTypeArg(const napi_env &env, size_t argc, napi_value * argv,
     return OK;
 }
 
-int ParseDistributedConfigArg(const napi_env &env, size_t argc, napi_value * argv, std::shared_ptr<RdbStoreContext> context)
+int ParseDistributedConfigArg(const napi_env &env, size_t argc, napi_value * argv,
+    std::shared_ptr<RdbStoreContext> context)
 {
     context->distributedConfig = { false };
     if (argc > 2) {
@@ -632,7 +633,7 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
         return (context->resultSet_value != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = ResultSetProxy::NewInstance(env, std::shared_ptr<ResultSet>(context->resultSet_value.release()));
+        result = ResultSetProxy::NewInstance(env, context->resultSet_value);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
@@ -712,7 +713,7 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
         return (context->resultSet_value != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = ResultSetProxy::NewInstance(env, std::shared_ptr<ResultSet>(context->resultSet_value.release()));
+        result = ResultSetProxy::NewInstance(env, context->resultSet_value);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
@@ -980,7 +981,7 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
         return (context->resultSet_value != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = ResultSetProxy::NewInstance(env, std::shared_ptr<ResultSet>(context->resultSet_value.release()));
+        result = ResultSetProxy::NewInstance(env, context->resultSet_value);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
         LOG_DEBUG("RdbStoreProxy::QueryByStep end");
     };
@@ -1074,7 +1075,7 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
         CHECK_RETURN_SET_E(1 <= argc && argc <= 3, std::make_shared<ParamNumError>("1 - 4"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTablesName(env, argv[0], context));
-        CHECK_RETURN(OK == ParseDistributedTableArg(env, argc, argv, context));
+        CHECK_RETURN(OK == ParseDistributedTypeArg(env, argc, argv, context));
         CHECK_RETURN(OK == ParseDistributedConfigArg(env, argc, argv, context));
     };
     auto exec = [context]() -> int {

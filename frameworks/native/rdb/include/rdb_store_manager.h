@@ -23,18 +23,9 @@
 #include "rdb_open_callback.h"
 #include "rdb_store_config.h"
 #include "rdb_store_impl.h"
-#include "task_executor.h"
 
 namespace OHOS {
 namespace NativeRdb {
-struct RdbStoreNode {
-    RdbStoreNode(const std::shared_ptr<RdbStoreImpl> &rdbStore);
-    RdbStoreNode &operator=(const std::shared_ptr<RdbStoreImpl> &store);
-
-    std::shared_ptr<RdbStoreImpl> rdbStore_;
-    TaskExecutor::TaskId taskId_;
-};
-
 class RdbStoreManager {
 public:
     static RdbStoreManager &GetInstance();
@@ -42,22 +33,15 @@ public:
     virtual ~RdbStoreManager();
     std::shared_ptr<RdbStore> GetRdbStore(const RdbStoreConfig &config,
         int &errCode, int version, RdbOpenCallback &openCallback);
-    void Remove(const std::string &path);
     void Clear();
+    bool Remove(const std::string &path);
     int SetSecurityLabel(const RdbStoreConfig &config);
-    void SetReleaseTime(int ms);
 
 private:
     int ProcessOpenCallback(RdbStore &rdbStore,
         const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
-    void RestartTimer(const std::string &path, RdbStoreNode &node);
-    void AutoClose(const std::string &path);
     std::mutex mutex_;
-    std::map<std::string, std::shared_ptr<RdbStoreNode>> storeCache_;
-
-    std::shared_ptr<ExecutorPool> pool_;
-    // ms_ : [10*1000 ~ 10*60*1000]
-    int ms_;
+    std::map<std::string, std::weak_ptr<RdbStoreImpl>> storeCache_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

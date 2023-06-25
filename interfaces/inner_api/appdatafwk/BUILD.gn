@@ -17,9 +17,8 @@ config("appdatafwk_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
-    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb/include",
+    "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_common_path}/include",
-    "//third_party/json/single_include",
   ]
   if (!is_mingw && !is_mac) {
     cflags_cc = [ "-fvisibility=hidden" ]
@@ -28,22 +27,77 @@ config("appdatafwk_config") {
 
 config("appdatafwk_public_config") {
   visibility = [ ":*" ]
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+    "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_common_path}/include",
+  ]
+}
+
+config("common_public_config") {
+  visibility = [ ":*" ]
+  include_dirs = [
+    "include",
+    "${relational_store_common_path}/include",
+    "//third_party/json/single_include",
+  ]
+}
+
+if (is_android || is_ios) {
+  ohos_source_set("relational_common_base") {
+    sources =
+        [ "${relational_store_native_path}/appdatafwk/src/serializable.cpp" ]
+
+    if (is_mingw || is_mac || is_ios) {
+      sources +=
+          [ "${relational_store_native_path}/appdatafwk/src/mingw_endian.cpp" ]
+    } else if (is_ohos || is_android) {
+      sources += [
+        "${relational_store_native_path}/appdatafwk/src/general_endian.cpp",
+      ]
+      cflags_cc = [ "-fvisibility=hidden" ]
+    }
+
+    configs = [
+      ":common_public_config",
+      ":appdatafwk_public_config",
+    ]
+
+    subsystem_name = "distributeddatamgr"
+    part_name = "relational_store"
+
+    public_configs = [ ":common_public_config" ]
+  }
+} else {
+  ohos_shared_library("relational_common_base") {
+    sources =
+        [ "${relational_store_native_path}/appdatafwk/src/serializable.cpp" ]
+
+    if (is_mingw || is_mac || is_ios) {
+      sources +=
+          [ "${relational_store_native_path}/appdatafwk/src/mingw_endian.cpp" ]
+    } else if (is_ohos || is_android) {
+      sources += [
+        "${relational_store_native_path}/appdatafwk/src/general_endian.cpp",
+      ]
+      cflags_cc = [ "-fvisibility=hidden" ]
+    }
+
+    configs = [
+      ":common_public_config",
+      ":appdatafwk_public_config",
+    ]
+
+    subsystem_name = "distributeddatamgr"
+    part_name = "relational_store"
+
+    public_configs = [ ":common_public_config" ]
+  }
 }
 
 ohos_shared_library("native_appdatafwk") {
-  sources = [
-    "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
-    "${relational_store_native_path}/appdatafwk/src/shared_block.cpp",
-  ]
-
-  if (is_mingw) {
-    sources +=
-        [ "${relational_store_native_path}/appdatafwk/src/mingw_endian.cpp" ]
-  } else if (is_ohos || is_mac || is_ios || is_android) {
-    sources +=
-        [ "${relational_store_native_path}/appdatafwk/src/general_endian.cpp" ]
-  }
+  sources =
+      [ "${relational_store_native_path}/appdatafwk/src/shared_block.cpp" ]
 
   configs = [ ":appdatafwk_config" ]
 
