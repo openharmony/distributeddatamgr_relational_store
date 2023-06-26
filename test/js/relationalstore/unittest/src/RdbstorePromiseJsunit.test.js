@@ -200,5 +200,35 @@ describe('rdbStorePromiseTest', function () {
         console.log(TAG + "************* testRdbStorePromiseTest0005 end *************")
     })
 
+    /**
+     * @tc.name rdb getRdbStore err params
+     * @tc.number testRdbStorePromiseTest0006
+     * @tc.desc rdb getRdbStore with dataGroupId in FA mode
+     */
+    it('testRdbStorePromiseTest0006', 0, async function (done) {
+        console.log(TAG + "************* testRdbStorePromiseTest0006 start *************")
+        try {
+            const STORE_CONFIG = {
+                name: "dataGroupId.db",
+                encrypt: false,
+                securityLevel: data_relationalStore.SecurityLevel.S1,
+                dataGroupId: "12345678",
+            }
+            data_relationalStore.getRdbStore(context, STORE_CONFIG).then((rdbStore) => {
+                console.log("Get RdbStore successfully.")
+                expect(false).assertTrue()
+            }).catch((err) => {
+                console.info("Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
+                expect(false).assertTrue()
+            })
+        } catch (err) {
+            console.info("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
+            expect("14801001").assertEqual(err.code)
+            done()
+        }
+        done()
+        console.log(TAG + "************* testRdbStorePromiseTest0006 end *************")
+    })
+
     console.log(TAG + "*************Unit Test End*************");
 })

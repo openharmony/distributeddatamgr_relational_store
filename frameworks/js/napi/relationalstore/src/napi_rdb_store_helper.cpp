@@ -139,13 +139,15 @@ int ParseSecurityLevel(const napi_env &env, const napi_value &object, std::share
 
 int ParseDataGroupId(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
-    napi_value value = nullptr;
-    napi_status status = napi_get_named_property(env, object, "dataGroupId", &value);
-    if (status == napi_ok && value != nullptr) {
+    bool hasProp = false;
+    napi_status status = napi_has_named_property(env, object, "dataGroupId", &hasProp);
+    if (status == napi_ok && hasProp) {
+        napi_value value = nullptr;
+        status = napi_get_named_property(env, object, "dataGroupId", &value);
         std::string dataGroupId = JSUtils::Convert2String(env, value);
         CHECK_RETURN_SET(!dataGroupId.empty(), std::make_shared<ParamError>
             ("StoreConfig.dataGroupId", "not empty."));
-        CHECK_RETURN_SET_E(context->abilitycontext->IsStageMode(), std::make_shared<InnerError>(E_NOT_STAGE_MODE));
+        CHECK_RETURN_SET(context->abilitycontext->IsStageMode(), std::make_shared<InnerError>(E_NOT_STAGE_MODE));
         context->config.SetDataGroupId(JSUtils::Convert2String(env, value));
     }
     return OK;
@@ -178,7 +180,7 @@ int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<Helper
     return OK;
 }
 
-bool IsNapiTypeString(napi_env env, size_t argc, napi_value *argv, size_t arg)
+bool IsTypeString(napi_env env, size_t argc, napi_value *argv, size_t arg)
 {
     if (arg >= argc) {
         return false;
@@ -238,7 +240,7 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         CHECK_RETURN(OK == ParseContext(env, argv[0], context));
-        if (IsNapiTypeString(env, argc, argv, 1)) {
+        if (IsTypeString(env, argc, argv, 1)) {
             CHECK_RETURN(OK == ParsePath(env, argv[1], context));
         } else {
             CHECK_RETURN(OK == ParseStoreConfig(env, argv[1], context));
