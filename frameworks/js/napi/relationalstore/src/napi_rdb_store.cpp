@@ -280,19 +280,16 @@ int ParseSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr
     return OK;
 }
 
-int ParseDistributedTypeArg(const napi_env &env, size_t argc, napi_value * argv, std::shared_ptr<RdbStoreContext> context)
+int ParseDistributedTypeArg(const napi_env &env, size_t argc, napi_value * argv,
+    std::shared_ptr<RdbStoreContext> context)
 {
     context->distributedType = DistributedRdb::DISTRIBUTED_DEVICE;
     if (argc > 1) {
         auto status = JSUtils::Convert2ValueExt(env, argv[1], context->distributedType);
-        bool checked = false;
-        if (status != napi_ok) {
-            checked = JSUtils::IsNull(env, argv[1]);
-        } else {
-            checked = context->distributedType >= DistributedRdb::DISTRIBUTED_DEVICE
+        bool checked = status == napi_ok && context->distributedType >= DistributedRdb::DISTRIBUTED_DEVICE
                        && context->distributedType <= DistributedRdb::DISTRIBUTED_CLOUD;
-        }
-        CHECK_RETURN_SET(checked, std::make_shared<ParamError>("mode", "a DistributedType"));
+        CHECK_RETURN_SET(JSUtils::IsNull(env, argv[1]) || checked,
+            std::make_shared<ParamError>("mode", "a DistributedType"));
     }
     LOG_DEBUG("ParseDistributedTypeArg end");
     return OK;
