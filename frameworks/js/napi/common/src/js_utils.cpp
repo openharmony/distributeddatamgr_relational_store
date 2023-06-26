@@ -15,7 +15,7 @@
 
 #include "js_utils.h"
 #include "logger.h"
-
+#include <cstring>
 using namespace OHOS::Rdb;
 
 #define CHECK_RETURN_RET(assertion, message, revt)                       \
@@ -28,10 +28,30 @@ using namespace OHOS::Rdb;
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
-static const std::map<std::string, std::string> NAMESPACES = {
-    { "ohos.cloudData", "ZGF0YS5jbG91ZERhdGE=" },
-    { "ohos.distributedKVStore", "ZGF0YS5kaXN0cmlidXRlZGt2c3RvcmU=" },
+static constexpr JSUtils::JsFeatureSpace FEATURE_NAME_SPACES[] = {
+    { "ohos.data.cloudData", "ZGF0YS5jbG91ZERhdGE=", true },
+    { "ohos.data.dataAbility", "ZGF0YS5kYXRhQWJpbGl0eQ==", true },
+    { "ohos.data.dataShare", "ZGF0YS5kYXRhU2hhcmU=", false },
+    { "ohos.data.distributedDataObject", "ZGF0YS5kaXN0cmlidXRlZERhdGFPYmplY3Q=", false },
+    { "ohos.data.distributedKVStore", "ZGF0YS5kaXN0cmlidXRlZEtWU3RvcmU=", false },
+    { "ohos.data.rdb", "ZGF0YS5yZGI=", true },
+    { "ohos.data.relationalStore", "ZGF0YS5yZWxhdGlvbmFsU3RvcmU=", true },
 };
+
+const std::optional<JSUtils::JsFeatureSpace> JSUtils::GetJsFeatureSpace(const std::string &name)
+{
+    auto jsFeature = JsFeatureSpace{ name.data(), nullptr, false };
+    auto iter = std::lower_bound(FEATURE_NAME_SPACES,
+        FEATURE_NAME_SPACES + sizeof(FEATURE_NAME_SPACES) / sizeof(FEATURE_NAME_SPACES[0]), jsFeature,
+        [](const JsFeatureSpace &JsFeatureSpace1, const JsFeatureSpace &JsFeatureSpace2) {
+            return strcmp(JsFeatureSpace1.spaceName, JsFeatureSpace2.spaceName) < 0;
+        });
+    if (iter < FEATURE_NAME_SPACES + sizeof(FEATURE_NAME_SPACES) / sizeof(FEATURE_NAME_SPACES[0])
+        && strcmp(iter->spaceName, name.data()) == 0) {
+        return *iter;
+    }
+    return std::nullopt;
+}
 
 napi_value JSUtils::GetNamedProperty(napi_env env, napi_value object, const char *name)
 {
@@ -489,10 +509,17 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::monostate &value)
     return result;
 }
 
-napi_value JSUtils::DefineClass(napi_env env, const std::string &name, const Descriptor &descriptor, napi_callback ctor)
+napi_value JSUtils::DefineClass(napi_env env, const std::string &spaceName, const std::string &className,
+    const Descriptor &descriptor, napi_callback ctor)
 {
-    // base64("data.cloudData") as rootPropName, i.e. global.<root>
-    const std::string rootPropName = "ZGF0YS5jbG91ZERhdGE=";
+    auto featureSpace = GetJsFeatureSpace(spaceName);
+    if (!featureSpace.has_value() || !featureSpace->isComponent) {
+        return nullptr;
+    }
+    if (GetClass(env, spaceName, className)) {
+        return GetClass(env, spaceName, className);
+    }
+    auto rootPropName = std::string(featureSpace->nameBase64);
     napi_value root = nullptr;
     bool hasRoot = false;
     napi_value global = nullptr;
@@ -505,7 +532,7 @@ napi_value JSUtils::DefineClass(napi_env env, const std::string &name, const Des
         napi_set_named_property(env, global, rootPropName.c_str(), root);
     }
 
-    std::string propName = "constructor_of_" + name;
+    std::string propName = "constructor_of_" + className;
     napi_value constructor = nullptr;
     bool hasProp = false;
     napi_has_named_property(env, root, propName.c_str(), &hasProp);
@@ -518,7 +545,7 @@ napi_value JSUtils::DefineClass(napi_env env, const std::string &name, const Des
         hasProp = false; // no constructor.
     }
     auto properties = descriptor();
-    NAPI_CALL(env, napi_define_class(env, name.c_str(), name.size(), ctor, nullptr, properties.size(),
+    NAPI_CALL(env, napi_define_class(env, className.c_str(), className.size(), ctor, nullptr, properties.size(),
                        properties.data(), &constructor));
     NAPI_ASSERT(env, constructor != nullptr, "napi_define_class failed!");
 
@@ -531,15 +558,20 @@ napi_value JSUtils::DefineClass(napi_env env, const std::string &name, const Des
 
 napi_value JSUtils::GetClass(napi_env env, const std::string &spaceName, const std::string &className)
 {
-    auto it = NAMESPACES.find(spaceName);
-    if (it == NAMESPACES.end()) {
+    auto featureSpace = GetJsFeatureSpace(spaceName);
+    if (!featureSpace.has_value()) {
         return nullptr;
     }
-
+    auto rootPropName = std::string(featureSpace->nameBase64);
     napi_value root = nullptr;
     napi_value global = nullptr;
     napi_get_global(env, &global);
-    napi_get_named_property(env, global, it->second.c_str(), &root);
+    bool hasRoot;
+    napi_has_named_property(env, global, rootPropName.c_str(), &hasRoot);
+    if (!hasRoot) {
+        return nullptr;
+    }
+    napi_get_named_property(env, global, rootPropName.c_str(), &root);
     std::string propName = "constructor_of_" + className;
     napi_value constructor = nullptr;
     bool hasProp = false;
