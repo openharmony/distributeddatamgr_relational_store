@@ -289,7 +289,11 @@ int ParseDistributedTypeArg(const napi_env &env, size_t argc, napi_value * argv,
         bool checked = status == napi_ok && context->distributedType >= DistributedRdb::DISTRIBUTED_DEVICE
                        && context->distributedType <= DistributedRdb::DISTRIBUTED_CLOUD;
         CHECK_RETURN_SET(JSUtils::IsNull(env, argv[1]) || checked,
+<<<<<<< HEAD
             std::make_shared<ParamError>("distributedType", "a DistributedType"));
+=======
+            std::make_shared<ParamError>("mode", "a DistributedType"));
+>>>>>>> 154c0e9809d81f674785f8acf07ad8a8024b81ea
     }
     LOG_DEBUG("ParseDistributedTypeArg end");
     return OK;
