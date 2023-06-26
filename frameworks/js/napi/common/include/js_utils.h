@@ -70,6 +70,8 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, std::monostate &value);
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, int32_t> &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, bool> &output);
 
+bool IsNull(napi_env env, napi_value value);
+
 template<typename T>
 int32_t Convert2Value(napi_env env, napi_value jsValue, T &output);
 

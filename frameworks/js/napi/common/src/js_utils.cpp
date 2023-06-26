@@ -509,6 +509,13 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::monostate &value)
     return result;
 }
 
+bool JSUtils::IsNull(napi_env env, napi_value value)
+{
+    napi_valuetype type = napi_undefined;
+    napi_status status = napi_typeof(env, value, &type);
+    return status == napi_ok && (type == napi_undefined || type == napi_null);
+}
+
 napi_value JSUtils::DefineClass(napi_env env, const std::string &spaceName, const std::string &className,
     const Descriptor &descriptor, napi_callback ctor)
 {
