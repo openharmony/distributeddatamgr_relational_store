@@ -63,12 +63,9 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
     }
 
     std::shared_ptr<RdbStoreImpl> rdbStore(new (std::nothrow) RdbStoreImpl(config, errCode),
-        [this, path](RdbStoreImpl *ptr) {
+        [](RdbStoreImpl *ptr) {
             LOG_INFO("delete %{public}s as no more used.", SqliteUtils::Anonymous(ptr->GetPath()).c_str());
             delete ptr;
-            if (storeCache_.find(path) != storeCache_.end()) { // TOD need add lock to storeCache_
-                storeCache_.erase(path);
-            }
         });
     if (errCode != E_OK) {
         LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore as memory issue, rc=%{public}d", errCode);
