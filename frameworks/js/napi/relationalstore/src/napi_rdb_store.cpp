@@ -280,28 +280,29 @@ int ParseSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr
     return OK;
 }
 
-int ParseDistributedTableArg(const napi_env &env, size_t argc, napi_value * argv,
+int ParseDistributedTypeArg(const napi_env &env, size_t argc, napi_value * argv,
     std::shared_ptr<RdbStoreContext> context)
 {
     context->distributedType = DistributedRdb::DISTRIBUTED_DEVICE;
     if (argc > 1) {
         auto status = JSUtils::Convert2ValueExt(env, argv[1], context->distributedType);
-        bool checked = (status == napi_ok && context->distributedType >= DistributedRdb::DISTRIBUTED_DEVICE
-                        && context->distributedType <= DistributedRdb::DISTRIBUTED_CLOUD);
-        CHECK_RETURN_SET(checked, std::make_shared<ParamError>("mode", "a DistributedType"));
+        bool checked = status == napi_ok && context->distributedType >= DistributedRdb::DISTRIBUTED_DEVICE
+                       && context->distributedType <= DistributedRdb::DISTRIBUTED_CLOUD;
+        CHECK_RETURN_SET(JSUtils::IsNull(env, argv[1]) || checked,
+            std::make_shared<ParamError>("distributedType", "a DistributedType"));
     }
-    LOG_DEBUG("ParseDistributedTableArg end");
+    LOG_DEBUG("ParseDistributedTypeArg end");
     return OK;
 }
 
 int ParseDistributedConfigArg(const napi_env &env, size_t argc, napi_value * argv,
     std::shared_ptr<RdbStoreContext> context)
 {
-    context->distributedConfig = { true };
+    context->distributedConfig = { false };
     if (argc > 2) {
         auto status = JSUtils::Convert2Value(env, argv[2], context->distributedConfig);
-        CHECK_RETURN_SET(status == napi_ok,
-            std::make_shared<ParamError>("distributedConfig", "a DistributedConfig type"));
+        bool checked = status == napi_ok || JSUtils::IsNull(env, argv[2]);
+        CHECK_RETURN_SET(checked, std::make_shared<ParamError>("distributedConfig", "a DistributedConfig type"));
     }
     LOG_DEBUG("ParseDistributedConfigArg end");
     return OK;
@@ -1071,7 +1072,7 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
         CHECK_RETURN_SET_E(1 <= argc && argc <= 3, std::make_shared<ParamNumError>("1 - 4"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTablesName(env, argv[0], context));
-        CHECK_RETURN(OK == ParseDistributedTableArg(env, argc, argv, context));
+        CHECK_RETURN(OK == ParseDistributedTypeArg(env, argc, argv, context));
         CHECK_RETURN(OK == ParseDistributedConfigArg(env, argc, argv, context));
     };
     auto exec = [context]() -> int {
