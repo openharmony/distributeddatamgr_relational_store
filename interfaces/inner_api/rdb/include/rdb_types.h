@@ -152,7 +152,6 @@ struct Date {
     int64_t date;
 };
 
-
 enum SubscribeMode {
     REMOTE,
     CLOUD,
