@@ -21,6 +21,7 @@
 
 #include "logger.h"
 #include "rdb_errno.h"
+#include "rdb_store.h"
 #include "rdb_trace.h"
 #include "rdb_sql_utils.h"
 #include "sqlite_global_config.h"
@@ -36,6 +37,7 @@
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "iresult_set.h"
+#include "raw_data_parser.h"
 #include "rdb_device_manager_adapter.h"
 #include "rdb_manager_impl.h"
 #include "relational_store_manager.h"
@@ -241,6 +243,62 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
     const ValuesBucket &initialValues, ConflictResolution conflictResolution)
 {
     return InnerInsert(outRowId, table, initialValues, conflictResolution);
+}
+
+std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
+    const std::string &table, const std::string &columnName, std::vector<ValueObject> &PKey)
+{
+    if (table.empty() || columnName.empty() || PKey.empty()) {
+        LOG_ERROR("invalid para.");
+        return {};
+    }
+    if (PKey.begin()->GetType() != ValueObject::TypeId::TYPE_INT ||
+        PKey.begin()->GetType() != ValueObject::TypeId::TYPE_STRING) {
+        LOG_ERROR("invalid PRIKey type.");
+        return {};
+    }
+
+    auto logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
+    std::vector<std::vector<uint8_t>> hashKeys;
+    hashKeys.reserve(PKey.size());
+    std::map<std::string, DistributedDB::Type> tmp;
+    std::map<PRIKey, Date> result;
+    for (const auto &key : PKey) {
+        DistributedDB::Type value;
+        if (!RawDataParser::Convert(key.value, value)) {
+            continue;
+        }
+        tmp[table] = value;
+        auto hashKey = DistributedDB::RelationalStoreManager::CalcPrimaryKeyHash(tmp);
+        if (hashKey.empty()) {
+            LOG_DEBUG("hash key fail");
+            continue;
+        }
+        hashKeys.emplace_back(std::move(hashKey));
+        PRIKey tmpKey;
+        RawDataParser::Convert(key.value, tmpKey);
+        result[tmpKey] = Date(0);
+    }
+
+    std::string sql;
+    sql.append("select timestamp/10000 from "); // 百ns > ms
+    sql.append(logTable);
+    sql.append(" where hash_key=?");
+    auto resultSet = QueryByStep(sql, std::move(PKey));
+    int count = 0;
+    if (resultSet->GetRowCount(count) != E_OK || count != result.size()) {
+        resultSet->Close();
+        return {};
+    }
+    auto it = result.begin();
+    for (int i = 0; i < count; i++) {
+        int64_t timeStamp;
+        resultSet->GetLong(i, timeStamp);
+        it->second = Date(timeStamp);
+        it++;
+    }
+    resultSet->Close();
+    return result;
 }
 
 int RdbStoreImpl::InnerInsert(int64_t &outRowId, const std::string &table,

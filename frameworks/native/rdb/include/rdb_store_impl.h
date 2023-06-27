@@ -118,6 +118,9 @@ public:
     // user must use UDID
     bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) override;
 
+    std::map<PRIKey, Date> GetModifyTime(
+        const std::string &table, const std::string &columnName, std::vector<ValueObject> &PKey) override;
+
 private:
     int InnerOpen();
     int InnerInsert(int64_t &outRowId, const std::string &table, ValuesBucket values,
