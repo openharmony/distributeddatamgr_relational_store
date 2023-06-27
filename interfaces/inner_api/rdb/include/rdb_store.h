@@ -69,6 +69,12 @@ public:
      * @brief Use RdbStoreObserver replace DistributedRdb::RdbStoreObserver namespace.
      */
     using RdbStoreObserver = DistributedRdb::RdbStoreObserver;
+    using PRIKey = RdbStoreObserver::PrimaryKey;
+
+    /**
+     * @brief Use Date replace DistributedRdb::Date namespace.
+     */
+    using Date = DistributedRdb::Date;
 
     /**
      * @brief Destructor.
@@ -413,6 +419,18 @@ public:
      * @param option Indicates the drop option.
      */
     virtual bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) = 0;
+
+    /**
+     * @brief Get the the specified column modify time.
+     *
+     * @param table Indicates the specified table.
+     * @param columnName Indicates the column.
+     * @param PRIKey Indicates the primary key.
+     *
+     * @return Returns the specified column modify time.
+     */
+    virtual std::map<PRIKey, Date> GetModifyTime(
+        const std::string &table, const std::string &columnName, std::vector<ValueObject> &PKey) = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif

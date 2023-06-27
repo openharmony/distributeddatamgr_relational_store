@@ -451,6 +451,16 @@ napi_value JSUtils::Convert2JSValue(napi_env env, bool value)
     return jsValue;
 }
 
+napi_value JSUtils::Convert2JSValue(napi_env env, Date date)
+{
+    napi_value jsValue;
+    napi_status status = napi_create_date(env, date, &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    return jsValue;
+}
+
 napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<std::string, int> &value)
 {
     napi_value jsValue;

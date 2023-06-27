@@ -142,6 +142,17 @@ struct PredicatesMemo {
     std::vector<RdbPredicateOperation> operations_;
 };
 
+struct Date {
+    Date() {}
+    Date(int64_t date) : date(date) {}
+    operator double() const
+    {
+        return static_cast<double>(date);
+    }
+    int64_t date;
+};
+
+
 enum SubscribeMode {
     REMOTE,
     CLOUD,

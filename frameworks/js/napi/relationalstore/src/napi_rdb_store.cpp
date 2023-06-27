@@ -158,6 +158,7 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName),
         DECLARE_NAPI_FUNCTION("sync", Sync),
         DECLARE_NAPI_FUNCTION("cloudSync", CloudSync),
+        DECLARE_NAPI_FUNCTION("GetModifyTime", GetModifyTime),
         DECLARE_NAPI_FUNCTION("on", OnEvent),
         DECLARE_NAPI_FUNCTION("off", OffEvent),
 #endif
@@ -1191,6 +1192,35 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return AsyncCall::Call(env, context);
+}
+
+napi_value RdbStoreProxy::GetModifyTime(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbStoreProxy::GetModifyTime start");
+    size_t argc = 3;
+    napi_value argv[3] = { nullptr };
+    napi_value self = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
+    RDB_NAPI_ASSERT(env, status == napi_ok && argc == 3, std::make_shared<ParamNumError>("3"));
+
+    std::string table;
+    auto cvStatus = JSUtils::Convert2Value(env, argv[0], table);
+    RDB_NAPI_ASSERT(env, cvStatus == napi_ok && !table.empty(), std::make_shared<ParamError>("table", "string"));
+    std::string columnName;
+    cvStatus = JSUtils::Convert2Value(env, argv[1], columnName);
+    RDB_NAPI_ASSERT(
+        env, cvStatus == napi_ok && !columnName.empty(), std::make_shared<ParamError>("columnName", "string"));
+    std::vector<ValueObject> PKey;
+    cvStatus = JSUtils::Convert2Value(env, argv[2], PKey);
+    RDB_NAPI_ASSERT(env, cvStatus == napi_ok && !PKey.empty(),
+        std::make_shared<ParamError>("PRIKey", "number or string"));
+
+    auto proxy = GetNativeInstance(env, self);
+    RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
+
+    auto result = proxy->rdbStore_->GetModifyTime(table, columnName, PKey);
+    RDB_NAPI_ASSERT(env, !result.empty(), std::make_shared<InnerError>(14800000));
+    return JSUtils::Convert2JSValue(env, result);
 }
 
 napi_value RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv)
