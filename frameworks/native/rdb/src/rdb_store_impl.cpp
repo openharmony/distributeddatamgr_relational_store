@@ -293,7 +293,11 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
     auto it = result.begin();
     for (int i = 0; i < count; i++) {
         int64_t timeStamp;
-        resultSet->GetLong(i, timeStamp);
+        auto err = resultSet->GetLong(i, timeStamp);
+        if (err != E_OK) {
+            LOG_ERROR("query err:%{public}d", err);
+            return {};
+        }
         it->second = Date(timeStamp);
         it++;
     }
