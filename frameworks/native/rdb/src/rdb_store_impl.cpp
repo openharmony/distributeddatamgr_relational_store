@@ -296,6 +296,7 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
         auto err = resultSet->GetLong(i, timeStamp);
         if (err != E_OK) {
             LOG_ERROR("query err:%{public}d", err);
+            resultSet->Close();
             return {};
         }
         it->second = Date(timeStamp);
