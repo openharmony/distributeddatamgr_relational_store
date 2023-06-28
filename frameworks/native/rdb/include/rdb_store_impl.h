@@ -91,6 +91,7 @@ public:
     std::string GetFileType();
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
+    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, std::vector<ValueObject> &&args) override;
     std::shared_ptr<ResultSet> QueryByStep(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) override;
     std::shared_ptr<AbsSharedResultSet> Query(

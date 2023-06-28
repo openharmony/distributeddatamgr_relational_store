@@ -1247,6 +1247,11 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
     return std::make_shared<StepResultSet>(shared_from_this(), connectionPool, sql, selectionArgs);
 }
 
+std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, std::vector<ValueObject> &&args)
+{
+    return std::make_shared<StepResultSet>(shared_from_this(), connectionPool, sql, std::move(args));
+}
+
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, int32_t type,
     const DistributedRdb::DistributedConfig &distributedConfig)
