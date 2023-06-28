@@ -158,7 +158,7 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName),
         DECLARE_NAPI_FUNCTION("sync", Sync),
         DECLARE_NAPI_FUNCTION("cloudSync", CloudSync),
-        DECLARE_NAPI_FUNCTION("GetModifyTime", GetModifyTime),
+        DECLARE_NAPI_FUNCTION("getModifyTime", GetModifyTime),
         DECLARE_NAPI_FUNCTION("on", OnEvent),
         DECLARE_NAPI_FUNCTION("off", OffEvent),
 #endif
