@@ -188,6 +188,13 @@ public:
      */
     virtual std::shared_ptr<ResultSet> QueryByStep(
         const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
+    /**
+     * @brief Queries data in the database based on SQL statement.
+     *
+     * @param sql Indicates the SQL statement to execute.
+     * @param selectionArgs Indicates the selection arguments.
+     */
+    virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, std::vector<ValueObject> &&args) = 0;
 
     /**
      * @brief Executes an SQL statement that contains specified parameters.
