@@ -360,7 +360,7 @@ int AbsSharedResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
         return E_ERROR;
     }
 
-    if (cellUnit->type != AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET) {
+    if (cellUnit->type != AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET && cellUnit->cell.stringOrBlobValue.size > 0) {
         LOG_ERROR("GetAsset AppDataFwk::SharedBlock::nothing !");
         return E_INVALID_OBJECT_TYPE;
     }
@@ -387,7 +387,7 @@ int AbsSharedResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
         return E_ERROR;
     }
 
-    if (cellUnit->type != AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS) {
+    if (cellUnit->type != AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS && cellUnit->cell.stringOrBlobValue.size > 0) {
         LOG_ERROR("GetAssets AppDataFwk::SharedBlock::nothing !");
         return E_INVALID_OBJECT_TYPE;
     }
