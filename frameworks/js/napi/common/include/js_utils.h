@@ -46,7 +46,6 @@ struct JsFeatureSpace {
     bool isComponent;
 };
 
-using Date = OHOS::DistributedRdb::Date;
 #ifndef ADD_JS_PROPERTY
 #define ADD_JS_PROPERTY(env, object, value, member) \
     napi_set_named_property((env), (object), #member, Convert2JSValue((env), (value).member))
@@ -108,7 +107,6 @@ napi_value Convert2JSValue(napi_env env, double value);
 napi_value Convert2JSValue(napi_env env, bool value);
 napi_value Convert2JSValue(napi_env env, const std::map<std::string, int> &value);
 napi_value Convert2JSValue(napi_env env, const std::monostate &value);
-napi_value Convert2JSValue(napi_env env, Date date);
 
 template<typename T>
 napi_value Convert2JSValue(napi_env env, const T &value);
