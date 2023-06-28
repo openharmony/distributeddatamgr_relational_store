@@ -159,12 +159,11 @@ bool Unmarshalling(PrimaryKeys &output, MessageParcel &data)
 template<>
 bool Marshalling(const Origin &input, MessageParcel &data)
 {
-    return Marshal(data, input.origin, input.id, input.store);
+    return Marshal(data, input.origin, input.dataType, input.id, input.store);
 }
-
 template<>
 bool Unmarshalling(Origin &output, MessageParcel &data)
 {
-    return Unmarshal(data, output.origin, output.id, output.store);
+    return Unmarshal(data, output.origin, output.dataType, output.id, output.store);
 }
 }
