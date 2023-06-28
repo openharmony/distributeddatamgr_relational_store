@@ -39,7 +39,7 @@ ohos_unittest("NativeRdbNdkTest") {
   configs = [ ":module_private_config" ]
 
   external_deps = [
-    "hilog_native:libhilog",
+    "hilog:libhilog",
     "relational_store:native_rdb_ndk",
   ]
 

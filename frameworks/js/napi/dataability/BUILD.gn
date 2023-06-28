@@ -43,7 +43,7 @@ ohos_shared_library("dataability") {
   ]
 
   external_deps = [
-    "hilog_native:libhilog",
+    "hilog:libhilog",
     "napi:ace_napi",
   ]
 
