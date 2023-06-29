@@ -360,8 +360,14 @@ int AbsSharedResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
         return E_ERROR;
     }
 
-    if (cellUnit->type != AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET && cellUnit->cell.stringOrBlobValue.size > 0) {
-        LOG_ERROR("GetAsset AppDataFwk::SharedBlock::nothing !");
+    if (cellUnit->type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL) {
+        LOG_ERROR("GetAsset the type of cell is null !");
+        return E_NULL_OBJECT;
+    }
+    
+    if (cellUnit->type != AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET) {
+        LOG_ERROR("GetAssets the type of cell is not assets, type is %{public}d, col is %{public}d!", cellUnit->type,
+            col);
         return E_INVALID_OBJECT_TYPE;
     }
 
@@ -387,8 +393,14 @@ int AbsSharedResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
         return E_ERROR;
     }
 
-    if (cellUnit->type != AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS && cellUnit->cell.stringOrBlobValue.size > 0) {
-        LOG_ERROR("GetAssets AppDataFwk::SharedBlock::nothing !");
+    if (cellUnit->type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL) {
+        LOG_ERROR("GetAssets the type of cell is null !");
+        return E_NULL_OBJECT;
+    }
+
+    if (cellUnit->type != AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS) {
+        LOG_ERROR("GetAssets the type of cell is not assets, type is %{public}d, col is %{public}d!", cellUnit->type,
+            col);
         return E_INVALID_OBJECT_TYPE;
     }
 
