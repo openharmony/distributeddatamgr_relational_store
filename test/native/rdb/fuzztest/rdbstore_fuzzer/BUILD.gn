@@ -35,7 +35,7 @@ ohos_fuzztest("RdbStoreFuzzTest") {
   sources = [ "rdbstore_fuzzer.cpp" ]
 
   external_deps = [
-    "hilog_native:libhilog",
+    "hilog:libhilog",
     "relational_store:native_rdb",
   ]
 }
