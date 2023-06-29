@@ -259,7 +259,7 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
     }
 
     auto logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
-    std::vector<std::vector<uint8_t>> hashKeys;
+    std::vector<ValueObject> hashKeys;
     hashKeys.reserve(PKey.size());
     std::map<std::string, DistributedDB::Type> tmp;
     std::map<PRIKey, Date> result;
@@ -274,7 +274,7 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
             LOG_DEBUG("hash key fail");
             continue;
         }
-        hashKeys.emplace_back(std::move(hashKey));
+        hashKeys.emplace_back(ValueObject(hashKey));
         PRIKey tmpKey;
         RawDataParser::Convert(key.value, tmpKey);
         result[tmpKey] = Date(0);
@@ -284,7 +284,7 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
     sql.append("select timestamp/10000 from "); // 百ns > ms
     sql.append(logTable);
     sql.append(" where hash_key=?");
-    auto resultSet = QueryByStep(sql, std::move(PKey));
+    auto resultSet = QueryByStep(sql, std::move(hashKeys));
     int count = 0;
     if (resultSet->GetRowCount(count) != E_OK || count != result.size()) {
         resultSet->Close();
