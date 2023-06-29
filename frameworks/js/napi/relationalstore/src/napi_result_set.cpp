@@ -457,10 +457,11 @@ napi_value ResultSetProxy::GetAsset(napi_env env, napi_callback_info info)
 
     Asset result;
     int errCode = resultSetProxy->resultSet_->GetAsset(columnIndex, result);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-    if (result.hash == "") {
+    if (errCode == E_NULL_OBJECT) {
+        LOG_DEBUG("getAsset col %{public}d is null ", columnIndex);
         return JSUtils::Convert2JSValue(env, std::monostate());
     }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -474,10 +475,11 @@ napi_value ResultSetProxy::GetAssets(napi_env env, napi_callback_info info)
 
     Assets result;
     int errCode = resultSetProxy->resultSet_->GetAssets(columnIndex, result);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-    if (result.empty()) {
+    if (errCode == E_NULL_OBJECT) {
+        LOG_DEBUG("getAssets col %{public}d is null ", columnIndex);
         return JSUtils::Convert2JSValue(env, std::monostate());
     }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);
 }

@@ -106,6 +106,7 @@ describe('rdbResultSetTest', function () {
         await rdbStore.insert("test", valuesBucket)
         valuesBucket = {
             "data1": asset1,
+            "data3": new Array(),
         }
         await rdbStore.insert("test", valuesBucket)
         console.log(TAG + "createTest data end");
@@ -513,7 +514,7 @@ describe('rdbResultSetTest', function () {
             const id = resultSet.getLong(resultSet.getColumnIndex("id"))
             const data3 = resultSet.getAssets(resultSet.getColumnIndex("data3"))
             console.log(TAG + "id=" + id + ", data3=" + data3);
-            expect(data3).assertEqual(null);
+            expect(data3.length).assertEqual(0);
 
             resultSet.close();
             expect(true).assertEqual(resultSet.isClosed)
