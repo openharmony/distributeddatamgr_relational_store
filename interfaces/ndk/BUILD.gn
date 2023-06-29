@@ -56,7 +56,7 @@ ohos_shared_library("native_rdb_ndk") {
 
   external_deps = [
     "c_utils:utils",
-    "hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
   part_name = "relational_store"

@@ -123,8 +123,8 @@ if (is_ohos) {
     external_deps = [
       "c_utils:utils",
       "device_manager:devicemanagersdk",
-      "hilog_native:libhilog",
-      "hitrace_native:hitrace_meter",
+      "hilog:libhilog",
+      "hitrace:hitrace_meter",
       "huks:libhukssdk",
       "ipc:ipc_core",
       "samgr:samgr_proxy",
@@ -172,8 +172,8 @@ if (is_ohos) {
     external_deps = [
       "c_utils:utils",
       "device_manager:devicemanagersdk",
-      "hilog_native:libhilog",
-      "hitrace_native:hitrace_meter",
+      "hilog:libhilog",
+      "hitrace:hitrace_meter",
       "huks:libhukssdk",
       "ipc:ipc_core",
       "samgr:samgr_proxy",

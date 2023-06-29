@@ -35,7 +35,7 @@ ohos_unittest("NativeDataAbilityTest") {
 
   external_deps = [
     "c_utils:utils",
-    "hilog_native:libhilog",
+    "hilog:libhilog",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
   ]
