@@ -83,6 +83,7 @@ public:
     std::string GetFileType();
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
+    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, std::vector<ValueObject> &&args) override;
     std::shared_ptr<ResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
