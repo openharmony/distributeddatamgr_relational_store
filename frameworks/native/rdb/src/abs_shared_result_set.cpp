@@ -173,22 +173,22 @@ int AbsSharedResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &value)
         }
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_INTEGER) {
-        LOG_ERROR("AbsSharedResultSet::GetDouble AppDataFwk::SharedBlock::CELL_UNIT_TYPE_INTEGER!");
+        LOG_ERROR("AbsSharedResultSet::GetBlob AppDataFwk::SharedBlock::CELL_UNIT_TYPE_INTEGER!");
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL) {
-        LOG_ERROR("AbsSharedResultSet::GetDouble AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL!");
+        LOG_ERROR("AbsSharedResultSet::GetBlob AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL!");
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT) {
-        LOG_ERROR("AbsSharedResultSet::GetDouble AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT!");
+        LOG_ERROR("AbsSharedResultSet::GetBlob AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT!");
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET) {
-        LOG_ERROR("AbsSharedResultSet::GetDouble AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET!");
-        return E_OK;
+        LOG_ERROR("AbsSharedResultSet::GetBlob AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET!");
+        return E_INVALID_OBJECT_TYPE;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS) {
-        LOG_ERROR("AbsSharedResultSet::GetDouble AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS!");
-        return E_OK;
+        LOG_ERROR("AbsSharedResultSet::GetBlob AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS!");
+        return E_INVALID_OBJECT_TYPE;
     } else {
-        LOG_ERROR("AbsSharedResultSet::GetDouble AppDataFwk::SharedBlock::nothing !");
+        LOG_ERROR("AbsSharedResultSet::GetBlob AppDataFwk::SharedBlock::nothing !");
         return E_INVALID_OBJECT_TYPE;
     }
 }
@@ -230,9 +230,11 @@ int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB) {
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET) {
-        return E_OK;
+        LOG_ERROR("AbsSharedResultSet::GetString AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET !");
+        return E_INVALID_OBJECT_TYPE;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS) {
-        return E_OK;
+        LOG_ERROR("AbsSharedResultSet::GetString AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS !");
+        return E_INVALID_OBJECT_TYPE;
     } else {
         LOG_ERROR("AbsSharedResultSet::GetString is failed!");
         return E_ERROR;
@@ -288,11 +290,11 @@ int AbsSharedResultSet::GetLong(int columnIndex, int64_t &value)
         value = 0L;
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET) {
-        value = 0L;
-        return E_OK;
+        LOG_ERROR("AbsSharedResultSet::GetLong AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET !");
+        return E_INVALID_OBJECT_TYPE;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS) {
-        value = 0L;
-        return E_OK;
+        LOG_ERROR("AbsSharedResultSet::GetLong AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS !");
+        return E_INVALID_OBJECT_TYPE;
     } else {
         LOG_ERROR("AbsSharedResultSet::GetLong Nothing !");
         return E_INVALID_OBJECT_TYPE;
@@ -333,12 +335,10 @@ int AbsSharedResultSet::GetDouble(int columnIndex, double &value)
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET) {
         LOG_ERROR("AbsSharedResultSet::GetDouble AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET!");
-        value = 0.0;
-        return E_OK;
+        return E_INVALID_OBJECT_TYPE;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS) {
         LOG_ERROR("AbsSharedResultSet::GetDouble AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS!");
-        value = 0.0;
-        return E_OK;
+        return E_INVALID_OBJECT_TYPE;
     } else {
         LOG_ERROR("AbsSharedResultSet::GetDouble AppDataFwk::SharedBlock::nothing !");
         value = 0.0;
@@ -360,8 +360,14 @@ int AbsSharedResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
         return E_ERROR;
     }
 
+    if (cellUnit->type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL) {
+        LOG_ERROR("GetAsset the type of cell is null !");
+        return E_NULL_OBJECT;
+    }
+    
     if (cellUnit->type != AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET) {
-        LOG_ERROR("GetAsset AppDataFwk::SharedBlock::nothing !");
+        LOG_ERROR("GetAssets the type of cell is not assets, type is %{public}d, col is %{public}d!", cellUnit->type,
+            col);
         return E_INVALID_OBJECT_TYPE;
     }
 
@@ -387,8 +393,14 @@ int AbsSharedResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
         return E_ERROR;
     }
 
+    if (cellUnit->type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL) {
+        LOG_ERROR("GetAssets the type of cell is null !");
+        return E_NULL_OBJECT;
+    }
+
     if (cellUnit->type != AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS) {
-        LOG_ERROR("GetAssets AppDataFwk::SharedBlock::nothing !");
+        LOG_ERROR("GetAssets the type of cell is not assets, type is %{public}d, col is %{public}d!", cellUnit->type,
+            col);
         return E_INVALID_OBJECT_TYPE;
     }
 
