@@ -64,7 +64,7 @@ const asset4 = {
 }
 var rdbStore = undefined;
 
-describe('rdbResultSetTest', function () {
+describe('rdbAssetResultSetTest', function () {
     beforeAll(async function () {
         console.info(TAG + 'beforeAll')
         rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
