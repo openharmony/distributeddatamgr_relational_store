@@ -77,7 +77,7 @@ int32_t Convert2Value(napi_env env, napi_value input, DistributedRdb::Distribute
 }
 
 template<>
-int32_t Convert2Value(napi_env env, napi_value input, valueObject &output)
+int32_t Convert2Value(napi_env env, napi_value input, ValueObject &output)
 {
     return Convert2Value(env, input, output.value);
 }
