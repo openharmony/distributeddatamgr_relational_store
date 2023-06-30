@@ -1219,7 +1219,7 @@ napi_value RdbStoreProxy::GetModifyTime(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
 
     auto result = proxy->rdbStore_->GetModifyTime(table, columnName, PKey);
-    RDB_NAPI_ASSERT(env, !result.empty(), std::make_shared<InnerError>(14800000));
+    RDB_NAPI_ASSERT(env, !result.empty(), std::make_shared<InnerError>(E_INNER_ERROR));
     return JSUtils::Convert2JSValue(env, result);
 }
 
