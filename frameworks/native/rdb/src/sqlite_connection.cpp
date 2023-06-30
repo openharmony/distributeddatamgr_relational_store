@@ -374,6 +374,7 @@ int SqliteConnection::RegDefaultFunctions(sqlite3 *dbHandle)
     if (dbHandle == nullptr) {
         return SQLITE_OK;
     }
+    // The number of parameters is 2
     return sqlite3_create_function_v2(dbHandle, "merge_assets", 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr,
         &MergeAssets, nullptr, nullptr, nullptr);
 }
@@ -895,6 +896,7 @@ int SqliteConnection::LimitWalSize()
 void SqliteConnection::MergeAssets(sqlite3_context *ctx, int argc, sqlite3_value **argv)
 {
     LOG_DEBUG("merge assets begin");
+    // 2 is the number of parameters
     if (ctx == nullptr || argc != 2 || argv == nullptr) {
         LOG_ERROR("Parameter does not meet restrictions.");
         return;
@@ -919,12 +921,13 @@ void SqliteConnection::MergeAssets(sqlite3_context *ctx, int argc, sqlite3_value
     sqlite3_result_blob(ctx, blob.data(), blob.size(), SQLITE_TRANSIENT);
 }
 
-void SqliteConnection::CompAssets(std::map<std::string, ValueObject::Asset> &assets, std::map<std::string, ValueObject::Asset> &newAssets)
+void SqliteConnection::CompAssets(std::map<std::string, ValueObject::Asset> &assets, std::map<std::string,
+    ValueObject::Asset> &newAssets)
 {
     using Status = ValueObject::Asset::Status;
     auto oldIt = assets.begin();
     auto newIt = newAssets.begin();
-    for (; oldIt != assets.end() && newIt != newAssets.end(); ) {
+    for (; oldIt != assets.end() && newIt != newAssets.end();) {
         if (oldIt->first == newIt->first) {
             if (newIt->second.status == Status::STATUS_DELETE) {
                 oldIt->second.status = Status::STATUS_DELETE;
@@ -969,7 +972,8 @@ void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Ass
                 oldAsset.path = newAsset.path;
                 oldAsset.status = Status ::STATUS_UPDATE;
             }
-        default:;
+        default:
+            return;
     }
 }
 } // namespace NativeRdb
