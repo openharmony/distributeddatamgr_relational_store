@@ -29,14 +29,14 @@ using Asset = OHOS::NativeRdb::AssetValue;
 using RowEntity = OHOS::NativeRdb::RowEntity;
 using Date = OHOS::DistributedRdb::Date;
 using PRIKey = OHOS::DistributedRdb::RdbStoreObserver::PrimaryKey;
-using valueObject = OHOS::NativeRdb::ValueObject;
+using ValueObject = OHOS::NativeRdb::ValueObject;
 using JSChangeInfo = OHOS::RelationalStoreJsKit::NapiRdbStoreObserver::JSChangeInfo;
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, Asset &output);
 
 template<>
-int32_t Convert2Value(napi_env env, napi_value input, valueObject &output);
+int32_t Convert2Value(napi_env env, napi_value input, ValueObject &output);
 
 template<>
 napi_value Convert2JSValue(napi_env env, const Asset &value);
