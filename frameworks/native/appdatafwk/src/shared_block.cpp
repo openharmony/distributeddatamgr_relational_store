@@ -151,6 +151,10 @@ int SharedBlock::Clear()
     if (mReadOnly) {
         return SHARED_BLOCK_INVALID_OPERATION;
     }
+    if (mHeader == nullptr) {
+        LOG_ERROR("SharedBlock::Clear mHeader is nullptr");
+        return SHARED_BLOCK_BAD_VALUE;
+    }
 
     mHeader->unusedOffset = sizeof(SharedBlockHeader) + sizeof(RowGroupHeader);
     mHeader->firstRowGroupOffset = sizeof(SharedBlockHeader);
