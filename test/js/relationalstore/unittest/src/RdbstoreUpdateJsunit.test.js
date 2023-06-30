@@ -778,7 +778,7 @@ describe('rdbStoreUpdateTest', function () {
             await predicates.equalTo("age", "19")
             let updatePromise = rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
             updatePromise.then(async (ret) => {
-                aexpect(null).assertFail();
+                expect(null).assertFail();
                 await console.log(TAG + "update done: " + ret);
             }).catch((err) => {
                 expect(null).assertFail();
