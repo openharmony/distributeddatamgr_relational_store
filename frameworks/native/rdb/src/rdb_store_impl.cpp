@@ -291,7 +291,7 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
         std::vector<ValueObject> bindArg = { haskKey };
         auto resultSet = QueryByStep(sql, std::move(bindArg));
         int count = 0;
-        if (resultSet == nullptr || resultSet->GetRowCount() != E_OK || count <= 0) {
+        if (resultSet == nullptr || resultSet->GetRowCount(count) != E_OK || count <= 0) {
             LOG_ERROR("get resultSet err.");
             return {};
         }
@@ -303,7 +303,7 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
             resultSet->Close();
             return {};
         }
-        result[*it] = Data(timeStamp);
+        result[*it] = Date(timeStamp);
         it++;
         resultSet->Close();
     }
