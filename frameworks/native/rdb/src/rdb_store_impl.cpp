@@ -260,9 +260,10 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
 
     auto logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
     std::vector<ValueObject> hashKeys;
+    std::vector<PRIKey> priKeys;
     hashKeys.reserve(PKey.size());
+    priKeys.reserve(PKey.size());
     std::map<std::string, DistributedDB::Type> tmp;
-    std::map<PRIKey, Date> result;
     for (const auto &key : PKey) {
         DistributedDB::Type value;
         if (!RawDataParser::Convert(key.value, value)) {
@@ -277,32 +278,35 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
         hashKeys.emplace_back(ValueObject(hashKey));
         PRIKey tmpKey;
         RawDataParser::Convert(key.value, tmpKey);
-        result[tmpKey] = Date(0);
+        priKeys.emplace_back(std::move(tmpKey));
     }
 
     std::string sql;
     sql.append("select timestamp/10000 from "); // 百ns > ms
     sql.append(logTable);
     sql.append(" where hash_key=?");
-    auto resultSet = QueryByStep(sql, std::move(hashKeys));
-    int count = 0;
-    if (resultSet->GetRowCount(count) != E_OK || count != result.size()) {
-        resultSet->Close();
-        return {};
-    }
-    auto it = result.begin();
-    for (int i = 0; i < count; i++) {
+    std::map<PRIKey, Date> result;
+    auto it = priKeys.begin();
+    for (auto &haskKey : hashKeys) {
+        std::vector<ValueObject> bindArg = { haskKey };
+        auto resultSet = QueryByStep(sql, std::move(bindArg));
+        int count = 0;
+        if (resultSet == nullptr || resultSet->GetRowCount() != E_OK || count <= 0) {
+            LOG_ERROR("get resultSet err.");
+            return {};
+        }
+        resultSet->GoToRow(0);
         int64_t timeStamp;
-        auto err = resultSet->GetLong(i, timeStamp);
+        auto err = resultSet->GetLong(0, timeStamp);
         if (err != E_OK) {
-            LOG_ERROR("query err:%{public}d", err);
+            LOG_ERROR("query err:%{public}d.", err);
             resultSet->Close();
             return {};
         }
-        it->second = Date(timeStamp);
+        result[*it] = Data(timeStamp);
         it++;
+        resultSet->Close();
     }
-    resultSet->Close();
     return result;
 }
 
