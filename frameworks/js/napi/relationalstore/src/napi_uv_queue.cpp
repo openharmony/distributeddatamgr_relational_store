@@ -55,6 +55,9 @@ void NapiUvQueue::CallFunction(NapiArgsGenerator genArgs)
     uv_queue_work(loop_, work, [](uv_work_t* work) {}, [](uv_work_t* work, int st) {
             auto queue = static_cast<NapiUvQueue*>(work->data);
             napi_handle_scope scope = nullptr;
+            if (queue == nullptr) {
+                return;
+            }
             napi_open_handle_scope(queue->env_, &scope);
             if (scope == nullptr) {
                 return;
