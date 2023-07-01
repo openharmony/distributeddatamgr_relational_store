@@ -28,7 +28,6 @@ namespace JSUtils {
 using Asset = OHOS::NativeRdb::AssetValue;
 using RowEntity = OHOS::NativeRdb::RowEntity;
 using Date = OHOS::DistributedRdb::Date;
-using PRIKey = OHOS::DistributedRdb::RdbStoreObserver::PrimaryKey;
 using ValueObject = OHOS::NativeRdb::ValueObject;
 using JSChangeInfo = OHOS::RelationalStoreJsKit::NapiRdbStoreObserver::JSChangeInfo;
 
@@ -56,8 +55,6 @@ template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::Details &details);
 template<>
 napi_value Convert2JSValue(napi_env env, const JSChangeInfo &value);
-template<>
-napi_value Convert2JSValue(napi_env env, const std::map<PRIKey, Date> &value);
 template<>
 napi_value Convert2JSValue(napi_env env, const Date &date);
 }; // namespace JSUtils

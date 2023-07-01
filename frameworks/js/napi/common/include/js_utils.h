@@ -113,6 +113,9 @@ napi_value Convert2JSValue(napi_env env, const T &value);
 template<typename T>
 napi_value Convert2JSValue(napi_env env, const std::vector<T> &value);
 
+template<typename K, typename V>
+napi_value Convert2JSValue(napi_env env, const std::map<K, V> &value);
+
 template<typename... Types>
 napi_value Convert2JSValue(napi_env env, const std::variant<Types...> &value);
 
@@ -177,6 +180,30 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<T> 
         value.push_back(std::move(item));
     }
     return napi_ok;
+}
+
+template<typename K, typename V>
+napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<K, V> &value)
+{
+    napi_value jsValue;
+    napi_status status = napi_create_array_with_length(env, value.size(), &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    int index = 0;
+    for (const auto &item : value) {
+        napi_value jsElement;
+        status = napi_create_array_with_length(env, SYNC_RESULT_ELEMNT_NUM, &jsElement);
+        if (status != napi_ok) {
+            return nullptr;
+        }
+        napi_set_element(env, jsElement, 0, Convert2JSValue(env, item.first));
+        napi_set_element(env, jsElement, 1, Convert2JSValue(env, item.second));
+        napi_set_element(env, jsValue, index++, jsElement);
+    }
+
+    return jsValue;
 }
 
 template<typename... Types>
