@@ -118,6 +118,7 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
         return {};
     }
     if (PKey.begin()->GetType() != ValueObject::TypeId::TYPE_INT &&
+        PKey.begin()->GetType() != ValueObject::TypeId::TYPE_DOUBLE &&
         PKey.begin()->GetType() != ValueObject::TypeId::TYPE_STRING) {
         LOG_ERROR("invalid PRIKey type.");
         return {};

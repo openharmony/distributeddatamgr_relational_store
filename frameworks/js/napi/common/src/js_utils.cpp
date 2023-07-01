@@ -231,19 +231,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, double &output)
 
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, int64_t &output)
 {
-    napi_valuetype type;
-    napi_status status = napi_typeof(env, jsValue, &type);
-    if (status != napi_ok || type != napi_number) {
-        LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
-        return napi_invalid_arg;
-    }
-
-    status = napi_get_value_int64(env, jsValue, &output);
-    if (status != napi_ok) {
-        LOG_DEBUG("Convert2Value napi_get_value_int64 failed, status = %{public}d", status);
-        return status;
-    }
-    return status;
+    return napi_invalid_arg;
 }
 
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &output)
