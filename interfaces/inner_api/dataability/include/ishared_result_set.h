@@ -18,6 +18,7 @@
 #include <memory>
 #include "iremote_broker.h"
 #include "abs_shared_result_set.h"
+#include "distributeddata_relational_store_ipc_interface_code.h"
 namespace OHOS::NativeRdb {
 class API_EXPORT ISharedResultSet : public AbsSharedResultSet, public IRemoteBroker {
 public:
@@ -25,38 +26,7 @@ public:
     API_EXPORT static std::shared_ptr<AbsSharedResultSet> ReadFromParcel(MessageParcel &parcel);
     API_EXPORT static sptr<ISharedResultSet> WriteToParcel(
         std::shared_ptr<AbsSharedResultSet> resultSet, MessageParcel &parcel);
-
-protected:
-    enum {
-        FUNC_GET_ROW_COUNT,
-        FUNC_GET_ALL_COLUMN_NAMES,
-        FUNC_ON_GO,
-        FUNC_CLOSE,
-        FUNC_GET_BLOB,
-        FUNC_GET_STRING,
-        FUNC_GET_INT,
-        FUNC_GET_LONG,
-        FUNC_GET_DOUBLE,
-        FUNC_IS_COLUMN_NULL,
-        FUNC_GO_TO,
-        FUNC_GO_TO_ROW,
-        FUNC_GO_TO_FISTR_ROW,
-        FUNC_GO_TO_LAST_ROW,
-        FUNC_GO_TO_NEXT_ROW,
-        FUNC_GO_TO_PREV_ROW,
-        FUNC_IS_AT_FIRST_ROW,
-        FUNC_IS_AT_LAST_ROW,
-        FUNC_IS_STARTED_ROW,
-        FUNC_IS_ENDED_ROW,
-        FUNC_IS_CLOSED,
-        FUNC_GET_COLUMN_COUNT,
-        FUNC_GET_COLUMN_INDEX,
-        FUNC_GET_COLUMN_NAME,
-        FUNC_GET_COLUMN_TYPE,
-        FUNC_GET_ROW_INDEX,
-        FUNC_BUTT
-    };
-    
+ 
 private:
     static std::function<std::shared_ptr<AbsSharedResultSet>(MessageParcel &parcel)> consumerCreator_;
     static std::function<sptr<ISharedResultSet>(std::shared_ptr<AbsSharedResultSet>, MessageParcel &)> providerCreator_;

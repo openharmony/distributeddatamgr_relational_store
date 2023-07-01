@@ -25,7 +25,8 @@ using namespace OHOS::Rdb;
 
 std::function<sptr<ISharedResultSet>(std::shared_ptr<AbsSharedResultSet>,
     MessageParcel &)> ISharedResultSet::providerCreator_ = ISharedResultSetStub::CreateStub;
-constexpr ISharedResultSetStub::Handler ISharedResultSetStub::handlers[ISharedResultSet::FUNC_BUTT];
+constexpr ISharedResultSetStub::Handler ISharedResultSetStub::handlers[
+    static_cast<uint32_t>(DistributedRdb::RelStore::RelStoreInterfaceCode::FUNC_BUTT)];
 
 sptr<ISharedResultSet> ISharedResultSetStub::CreateStub(std::shared_ptr<AbsSharedResultSet> result,
     OHOS::MessageParcel &parcel)
@@ -71,7 +72,7 @@ int ISharedResultSetStub::OnRemoteRequest(uint32_t code, OHOS::MessageParcel &da
         return INVALID_FD;
     }
 
-    if (code >= FUNC_BUTT) {
+    if (code >= static_cast<uint32_t>(DistributedRdb::RelStore::RelStoreInterfaceCode::FUNC_BUTT)) {
         LOG_ERROR("OnRemoteRequest method code(%{public}d) out of range", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
