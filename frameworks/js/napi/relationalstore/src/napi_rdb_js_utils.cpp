@@ -213,30 +213,6 @@ napi_value Convert2JSValue(napi_env env, const JSChangeInfo &value)
 }
 
 template<>
-napi_value Convert2JSValue(napi_env env, const std::map<PRIKey, Date> &value)
-{
-    napi_value jsValue;
-    napi_status status = napi_create_array_with_length(env, value.size(), &jsValue);
-    if (status != napi_ok) {
-        return nullptr;
-    }
-
-    int index = 0;
-    for (const auto &[key, date] : value) {
-        napi_value jsElement;
-        status = napi_create_array_with_length(env, SYNC_RESULT_ELEMNT_NUM, &jsElement);
-        if (status != napi_ok) {
-            return nullptr;
-        }
-        napi_set_element(env, jsElement, 0, Convert2JSValue(env, key));
-        napi_set_element(env, jsElement, 1, Convert2JSValue(env, date));
-        napi_set_element(env, jsValue, index++, jsElement);
-    }
-
-    return jsValue;
-}
-
-template<>
 napi_value Convert2JSValue(napi_env env, const Date &date)
 {
     napi_value jsValue;
