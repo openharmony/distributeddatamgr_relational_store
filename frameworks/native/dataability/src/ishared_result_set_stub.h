@@ -55,7 +55,8 @@ private:
     SafeBlockQueue<std::function<bool()>> runnables_;
     bool isRunning_ = true;
     std::thread thread_;
-    static constexpr Handler handlers[FUNC_BUTT] {
+    static constexpr Handler handlers[
+        static_cast<uint32_t>(DistributedRdb::RelStore::RelStoreInterfaceCode::FUNC_BUTT)] {
         &ISharedResultSetStub::HandleGetRowCountRequest,
         &ISharedResultSetStub::HandleGetAllColumnNamesRequest,
         &ISharedResultSetStub::HandleOnGoRequest,

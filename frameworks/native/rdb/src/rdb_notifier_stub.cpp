@@ -53,7 +53,8 @@ int RdbNotifierStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Message
         return RDB_ERROR;
     }
 
-    if (code >= 0 && code < RDB_NOTIFIER_CMD_MAX) {
+    if (code >= 0 &&
+        code < static_cast<uint32_t>(RelStore::RelStoreInterfaceCode::RDB_NOTIFIER_CMD_MAX)) {
         return (this->*HANDLES[code])(data, reply);
     }
 

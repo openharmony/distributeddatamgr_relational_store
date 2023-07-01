@@ -42,10 +42,12 @@ private:
     bool CheckInterfaceToken(MessageParcel& data);
 
     using RequestHandle = int32_t (RdbNotifierStub::*)(MessageParcel&, MessageParcel&);
-    static constexpr RequestHandle HANDLES[RDB_NOTIFIER_CMD_MAX] = {
-        [RDB_NOTIFIER_CMD_SYNC_COMPLETE] = &RdbNotifierStub::OnCompleteInner,
-        [RDB_NOTIFIER_CMD_DATA_CHANGE] = &RdbNotifierStub::OnChangeInner,
-    };
+    static constexpr RequestHandle HANDLES[
+        static_cast<uint32_t>(RelStore::RelStoreInterfaceCode::RDB_NOTIFIER_CMD_MAX)] = {
+        [static_cast<uint32_t>(RelStore::RelStoreInterfaceCode::RDB_NOTIFIER_CMD_SYNC_COMPLETE)] =
+            &RdbNotifierStub::OnCompleteInner,
+        [static_cast<uint32_t>(RelStore::RelStoreInterfaceCode::RDB_NOTIFIER_CMD_DATA_CHANGE)] =
+            &RdbNotifierStub::OnChangeInner,
 
     SyncCompleteHandler completeNotifier_;
     DataChangeHandler changeNotifier_;
