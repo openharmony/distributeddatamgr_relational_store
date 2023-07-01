@@ -48,6 +48,7 @@ private:
             &RdbNotifierStub::OnCompleteInner,
         [static_cast<uint32_t>(RelStore::RelStoreInterfaceCode::RDB_NOTIFIER_CMD_DATA_CHANGE)] =
             &RdbNotifierStub::OnChangeInner,
+    };
 
     SyncCompleteHandler completeNotifier_;
     DataChangeHandler changeNotifier_;
