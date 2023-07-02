@@ -1216,7 +1216,7 @@ napi_value RdbStoreProxy::GetModifyTime(napi_env env, napi_callback_info info)
     LOG_DEBUG("RdbStoreProxy::GetModifyTime start");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc == 3, std::make_shared<ParamNumError>("3"));
+        CHECK_RETURN_SET_E(argc == 3, std::make_shared<ParamNumError>("3 - 4"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
         CHECK_RETURN(OK == ParseColumnName(env, argv[1], context));
