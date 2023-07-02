@@ -23,6 +23,8 @@
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 
+using ResultSetCode = OHOS::DistributedRdb::RelationalStore::IResultSetInterfaceCode;
+
 std::function<std::shared_ptr<AbsSharedResultSet>(
     MessageParcel &parcel)> ISharedResultSet::consumerCreator_ = ISharedResultSetProxy::CreateProxy;
 BrokerDelegator<ISharedResultSetProxy> ISharedResultSetProxy::delegator_;
@@ -56,8 +58,7 @@ int ISharedResultSetProxy::GetAllColumnNames(std::vector<std::string> &columnNam
     MessageParcel reply;
     MessageOption msgOption;
     int errCode = Remote()->SendRequest(
-        static_cast<uint32_t>(DistributedRdb::RelStore::RelStoreInterfaceCode::FUNC_GET_ALL_COLUMN_NAMES),
-        request, reply, msgOption);
+        static_cast<uint32_t>(ResultSetCode::FUNC_GET_ALL_COLUMN_NAMES), request, reply, msgOption);
     if (errCode != 0) {
         LOG_ERROR("GetAllColumnNames IPC Error %{public}x", errCode);
         return -errCode;
@@ -86,8 +87,7 @@ int ISharedResultSetProxy::GetRowCount(int &count)
     MessageParcel reply;
     MessageOption msgOption;
     int errCode = Remote()->SendRequest(
-        static_cast<uint32_t>(DistributedRdb::RelStore::RelStoreInterfaceCode::FUNC_GET_ROW_COUNT),
-        request, reply, msgOption);
+        static_cast<uint32_t>(ResultSetCode::FUNC_GET_ROW_COUNT), request, reply, msgOption);
     if (errCode != 0) {
         LOG_ERROR("GetRowCount IPC Error %{public}x", errCode);
         return -errCode;
@@ -112,9 +112,7 @@ bool ISharedResultSetProxy::OnGo(int oldRowIndex, int newRowIndex)
     request.WriteInt32(newRowIndex);
     MessageParcel reply;
     MessageOption msgOption;
-    int errCode = Remote()->SendRequest(
-        static_cast<uint32_t>(DistributedRdb::RelStore::RelStoreInterfaceCode::FUNC_ON_GO),
-        request, reply, msgOption);
+    int errCode = Remote()->SendRequest(static_cast<uint32_t>(ResultSetCode::FUNC_ON_GO), request, reply, msgOption);
     if (errCode != 0) {
         LOG_ERROR("OnGo IPC Error %{public}x", errCode);
         return -errCode;
@@ -130,9 +128,7 @@ int ISharedResultSetProxy::Close()
     request.WriteInterfaceToken(GetDescriptor());
     MessageParcel reply;
     MessageOption msgOption;
-    int errCode = Remote()->SendRequest(
-        static_cast<uint32_t>(DistributedRdb::RelStore::RelStoreInterfaceCode::FUNC_CLOSE),
-        request, reply, msgOption);
+    int errCode = Remote()->SendRequest(static_cast<uint32_t>(ResultSetCode::FUNC_CLOSE), request, reply, msgOption);
     if (errCode != 0) {
         LOG_ERROR("Close IPC Error %{public}x", errCode);
         return -errCode;
