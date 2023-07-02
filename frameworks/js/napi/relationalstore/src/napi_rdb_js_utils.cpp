@@ -77,12 +77,6 @@ int32_t Convert2Value(napi_env env, napi_value input, DistributedRdb::Distribute
 }
 
 template<>
-int32_t Convert2Value(napi_env env, napi_value input, ValueObject &output)
-{
-    return Convert2Value(env, input, output.value);
-}
-
-template<>
 napi_value Convert2JSValue(napi_env env, const Asset &value)
 {
     napi_value object;
@@ -221,6 +215,24 @@ napi_value Convert2JSValue(napi_env env, const Date &date)
         return nullptr;
     }
     return jsValue;
+}
+
+template<>
+std::string ToString(const T &key)
+{
+    auto strVal = std::get_if<std::string>(&key);
+    if (strVal != nullptr) {
+        return *strVal;
+    }
+    auto intVal = std::get_if<int64_t>(&key);
+    if (intVal != nullptr) {
+        return std::to_string(*intVal);
+    }
+    auto dbVal = std::get_if<double>(&key);
+    if (dbVal != nullptr) {
+        return std::to_string(*dbVal);
+    }
+    return {};
 }
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
