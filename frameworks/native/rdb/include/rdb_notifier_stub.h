@@ -19,6 +19,8 @@
 #include <iremote_broker.h>
 #include <iremote_stub.h>
 namespace OHOS::DistributedRdb {
+using NotifierIFCode = RelationalStore::IRdbNotifierInterfaceCode;
+
 class RdbNotifierStubBroker : public IRdbNotifier, public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedRdb.IRdbNotifier");
@@ -42,12 +44,9 @@ private:
     bool CheckInterfaceToken(MessageParcel& data);
 
     using RequestHandle = int32_t (RdbNotifierStub::*)(MessageParcel&, MessageParcel&);
-    static constexpr RequestHandle HANDLES[
-        static_cast<uint32_t>(RelStore::RelStoreInterfaceCode::RDB_NOTIFIER_CMD_MAX)] = {
-        [static_cast<uint32_t>(RelStore::RelStoreInterfaceCode::RDB_NOTIFIER_CMD_SYNC_COMPLETE)] =
-            &RdbNotifierStub::OnCompleteInner,
-        [static_cast<uint32_t>(RelStore::RelStoreInterfaceCode::RDB_NOTIFIER_CMD_DATA_CHANGE)] =
-            &RdbNotifierStub::OnChangeInner,
+    static constexpr RequestHandle HANDLES[static_cast<uint32_t>(NotifierIFCode::RDB_NOTIFIER_CMD_MAX)] = {
+        [static_cast<uint32_t>(NotifierIFCode::RDB_NOTIFIER_CMD_SYNC_COMPLETE)] = &RdbNotifierStub::OnCompleteInner,
+        [static_cast<uint32_t>(NotifierIFCode::RDB_NOTIFIER_CMD_DATA_CHANGE)] = &RdbNotifierStub::OnChangeInner,
     };
 
     SyncCompleteHandler completeNotifier_;
