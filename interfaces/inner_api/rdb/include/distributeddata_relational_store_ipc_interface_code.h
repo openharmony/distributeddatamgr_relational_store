@@ -14,12 +14,19 @@
  */
 
 /* SAID:1301 */
+/* FeatureSystem: rdb_service */
 #ifndef DISTRIBUTEDDATA_RELATIONAL_STORE_IPC_INTERFACE_H
 #define DISTRIBUTEDDATA_RELATIONAL_STORE_IPC_INTERFACE_H
 
 namespace OHOS::DistributedRdb {
-namespace RelStore {
-enum class RelStoreInterfaceCode {
+namespace RelationalStore {
+enum class IRdbNotifierInterfaceCode {
+    RDB_NOTIFIER_CMD_SYNC_COMPLETE = 0,
+    RDB_NOTIFIER_CMD_DATA_CHANGE,
+    RDB_NOTIFIER_CMD_MAX
+};
+
+enum class IResultSetInterfaceCode {
     FUNC_GET_ROW_COUNT,
     FUNC_GET_ALL_COLUMN_NAMES,
     FUNC_ON_GO,
@@ -47,10 +54,17 @@ enum class RelStoreInterfaceCode {
     FUNC_GET_COLUMN_TYPE,
     FUNC_GET_ROW_INDEX,
     FUNC_BUTT,
-    RDB_NOTIFIER_CMD_SYNC_COMPLETE = 0,
-    RDB_NOTIFIER_CMD_DATA_CHANGE,
-    RDB_NOTIFIER_CMD_MAX
 };
+
+enum class KvStoreInterfaceCode {
+    GET_FEATURE_INTERFACE = 0,
+    REGISTER_DEATH_OBSERVER,
+}；
+
+enum class CloudKvStoreInterfaceCode {
+    GET_FEATURE_INTERFACE = 0
+}；
+
 }
 } // namespace OHOS
 
