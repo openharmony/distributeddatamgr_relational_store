@@ -77,6 +77,7 @@ struct RdbStoreContext : public Context {
     std::string aliasName;
     std::string pathName;
     std::string srcName;
+    std::string columnName;
     int32_t enumArg;
     int32_t distributedType;
     int32_t syncMode;
@@ -85,6 +86,8 @@ struct RdbStoreContext : public Context {
     DistributedRdb::SyncResult syncResult;
     napi_value cloudSyncCallback = nullptr;
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
+    std::vector<NativeRdb::RdbStore::PRIKey> keys;
+    std::map<RdbStore::PRIKey, RdbStore::Date> modifyTime;
 
     RdbStoreContext()
         : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(-1),
@@ -249,6 +252,20 @@ int ParseTableName(const napi_env &env, const napi_value &arg, std::shared_ptr<R
     CHECK_RETURN_SET(!context->tableName.empty(), std::make_shared<ParamError>("table", "not empty"));
 
     LOG_DEBUG("ParseTableName end");
+    return OK;
+}
+
+int ParseColumnName(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+{
+    context->columnName = JSUtils::Convert2String(env, arg);
+    CHECK_RETURN_SET(!context->columnName.empty(), std::make_shared<ParamError>("columnName", "not string"));
+    return OK;
+}
+
+int ParsePrimaryKey(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+{
+    JSUtils::Convert2Value(env, arg, context->keys);
+    CHECK_RETURN_SET(!context->keys.empty(), std::make_shared<ParamError>("PRIKey", "not number or string"));
     return OK;
 }
 
@@ -1197,30 +1214,38 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::GetModifyTime(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::GetModifyTime start");
-    size_t argc = 3;
-    napi_value argv[3] = { nullptr };
-    napi_value self = nullptr;
-    napi_status status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
-    RDB_NAPI_ASSERT(env, status == napi_ok && argc == 3, std::make_shared<ParamNumError>("3"));
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN_SET_E(argc == 3, std::make_shared<ParamNumError>("3"));
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+        CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
+        CHECK_RETURN(OK == ParseColumnName(env, argv[1], context));
+        CHECK_RETURN(OK == ParsePrimaryKey(env, argv[2], context));
+    };
+    auto exec = [context]() -> int {
+        LOG_DEBUG("RdbStoreProxy::GetModifyTime Async");
+        auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        context->modifyTime = obj->rdbStore_->GetModifyTime(context->tableName, context->columnName, context->keys);
+        return context->modifyTime.empty() ? E_ERROR : E_OK;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        LOG_DEBUG("RdbStoreProxy::GetModifyTime output");
+        result = JSUtils::Convert2JSValue(env, context->modifyTime);
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
 
-    std::string table;
-    auto cvStatus = JSUtils::Convert2Value(env, argv[0], table);
-    RDB_NAPI_ASSERT(env, cvStatus == napi_ok && !table.empty(), std::make_shared<ParamError>("table", "string"));
-    std::string columnName;
-    cvStatus = JSUtils::Convert2Value(env, argv[1], columnName);
-    RDB_NAPI_ASSERT(
-        env, cvStatus == napi_ok && !columnName.empty(), std::make_shared<ParamError>("columnName", "string"));
-    std::vector<NativeRdb::RdbStore::PRIKey> PKey;
-    cvStatus = JSUtils::Convert2Value(env, argv[2], PKey);
-    RDB_NAPI_ASSERT(env, cvStatus == napi_ok && !PKey.empty(),
-        std::make_shared<ParamError>("PRIKey", "number or string"));
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return AsyncCall::Call(env, context);
+}
 
-    auto proxy = GetNativeInstance(env, self);
-    RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
+napi_value RdbStoreProxy::GetModifyTime(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbStoreProxy::GetModifyTime start");
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
 
-    auto result = proxy->rdbStore_->GetModifyTime(table, columnName, PKey);
-    RDB_NAPI_ASSERT(env, !result.empty(), std::make_shared<InnerError>(E_INNER_ERROR));
-    return JSUtils::Convert2JSValue(env, result);
+    };
 }
 
 napi_value RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv)
