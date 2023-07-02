@@ -128,7 +128,7 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
     std::map<std::string, DistributedDB::Type> tmp;
     for (const auto &key : PKey) {
         DistributedDB::Type value;
-        RawDataParser::Convert(key.value, value);
+        RawDataParser::Convert(key, value);
         tmp[columnName] = value;
         auto hashKey = DistributedDB::RelationalStoreManager::CalcPrimaryKeyHash(tmp);
         if (hashKey.empty()) {
@@ -173,7 +173,7 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTimeByRowId(
     sql.append(GetSqlArgs(PKey.size()));
     sql.append(")");
     std::vector<ValueObject> args;
-    args.reserve(PKey.size())
+    args.reserve(PKey.size());
     for (auto &key : PKey) {
         ValueObject::Type value;
         RawDataParser::Convert(key, value);

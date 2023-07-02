@@ -55,7 +55,7 @@ napi_value Convert2JSValue(napi_env env, const JSChangeInfo &value);
 template<>
 napi_value Convert2JSValue(napi_env env, const Date &date);
 template<>
-std::string ToString(const T &key);
+std::string ToString(const PRIKey &key);
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
 #endif // RDB_JSKIT_NAPI_RDB_JS_UTILS_H
