@@ -1239,15 +1239,6 @@ napi_value RdbStoreProxy::GetModifyTime(napi_env env, napi_callback_info info)
     return AsyncCall::Call(env, context);
 }
 
-napi_value RdbStoreProxy::GetModifyTime(napi_env env, napi_callback_info info)
-{
-    LOG_DEBUG("RdbStoreProxy::GetModifyTime start");
-    auto context = std::make_shared<RdbStoreContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-
-    };
-}
-
 napi_value RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv)
 {
     napi_valuetype type;
