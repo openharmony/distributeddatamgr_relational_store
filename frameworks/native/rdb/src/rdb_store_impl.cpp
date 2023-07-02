@@ -111,22 +111,22 @@ void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
 }
 
 std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
-    const std::string &table, const std::string &columnName, std::vector<PRIKey> &PKey)
+    const std::string &table, const std::string &columnName, std::vector<PRIKey> &keys)
 {
-    if (table.empty() || columnName.empty() || PKey.empty()) {
+    if (table.empty() || columnName.empty() || keys.empty()) {
         LOG_ERROR("invalid para.");
         return {};
     }
 
     auto logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
     if (columnName == "rowid") {
-        return GetModifyTimeByRowId(logTable, PKey);
+        return GetModifyTimeByRowId(logTable, keys);
     }
     std::vector<ValueObject> hashKeys;
-    hashKeys.reserve(PKey.size());
+    hashKeys.reserve(keys.size());
     std::map<std::vector<uint8_t>, PRIKey> keyMap;
     std::map<std::string, DistributedDB::Type> tmp;
-    for (const auto &key : PKey) {
+    for (const auto &key : keys) {
         DistributedDB::Type value;
         RawDataParser::Convert(key, value);
         tmp[columnName] = value;
@@ -164,17 +164,17 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
 }
 
 std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTimeByRowId(
-    const std::string &logTable, std::vector<PRIKey> &PKey)
+    const std::string &logTable, std::vector<PRIKey> &keys)
 {
     std::string sql;
     sql.append("select data_key, timestamp/10000 from ");
     sql.append(logTable);
     sql.append(" where data_key in (");
-    sql.append(GetSqlArgs(PKey.size()));
+    sql.append(GetSqlArgs(keys.size()));
     sql.append(")");
     std::vector<ValueObject> args;
-    args.reserve(PKey.size());
-    for (auto &key : PKey) {
+    args.reserve(keys.size());
+    for (auto &key : keys) {
         ValueObject::Type value;
         RawDataParser::Convert(key, value);
         args.emplace_back(ValueObject(value));
