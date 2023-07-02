@@ -120,7 +120,7 @@ public:
     bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) override;
 
     std::map<PRIKey, Date> GetModifyTime(
-        const std::string &table, const std::string &columnName, std::vector<ValueObject> &PKey) override;
+        const std::string &table, const std::string &columnName, std::vector<PRIKey> &PKey) override;
 
 private:
     int InnerOpen();
@@ -138,6 +138,9 @@ private:
     void DoCloudSync(const std::string &table);
     int InnerBackup(const std::string databasePath,
         const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>());
+    std::map<PRIKey, Date> GetModifyTimeByRowId(
+        const std::string &logTable, std::vector<PRIKey> &PKey);
+    std::string GetSqlArgs(size_t size);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;

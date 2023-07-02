@@ -1210,7 +1210,7 @@ napi_value RdbStoreProxy::GetModifyTime(napi_env env, napi_callback_info info)
     cvStatus = JSUtils::Convert2Value(env, argv[1], columnName);
     RDB_NAPI_ASSERT(
         env, cvStatus == napi_ok && !columnName.empty(), std::make_shared<ParamError>("columnName", "string"));
-    std::vector<ValueObject> PKey;
+    std::vector<NativeRdb::RdbStore::PRIKey> PKey;
     cvStatus = JSUtils::Convert2Value(env, argv[2], PKey);
     RDB_NAPI_ASSERT(env, cvStatus == napi_ok && !PKey.empty(),
         std::make_shared<ParamError>("PRIKey", "number or string"));
