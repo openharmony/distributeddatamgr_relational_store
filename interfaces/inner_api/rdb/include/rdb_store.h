@@ -430,7 +430,7 @@ public:
      * @return Returns the specified column modify time.
      */
     virtual std::map<PRIKey, Date> GetModifyTime(
-        const std::string &table, const std::string &columnName, std::vector<PRIKey> &PKey) = 0;
+        const std::string &table, const std::string &columnName, std::vector<PRIKey> &keys) = 0;
 
     /**
    * @brief Queries data in the database based on SQL statement.

@@ -230,7 +230,7 @@ std::string ToString(const PRIKey &key)
     }
     auto dbVal = std::get_if<double>(&key);
     if (dbVal != nullptr) {
-        return std::to_string(*dbVal);
+        return std::to_string(static_cast<int64_t>(*dbVal));
     }
     return {};
 }
