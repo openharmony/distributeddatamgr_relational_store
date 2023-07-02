@@ -59,12 +59,11 @@ enum class IResultSetInterfaceCode {
 enum class KvStoreInterfaceCode {
     GET_FEATURE_INTERFACE = 0,
     REGISTER_DEATH_OBSERVER,
-}；
+};
 
 enum class CloudKvStoreInterfaceCode {
     GET_FEATURE_INTERFACE = 0
-}；
-
+};
 }
 } // namespace OHOS
 
