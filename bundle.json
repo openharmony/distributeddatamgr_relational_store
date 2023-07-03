@@ -62,12 +62,10 @@
                 "samgr"
             ],
             "third_party": [
-                "gtest_main",
+                "googletest",
                 "icu",
-                "libsec_shared",
+                "i18n",
                 "libxml2",
-                "shared_icui18n",
-                "shared_icuuc",
                 "sqlite"
             ]
         },
