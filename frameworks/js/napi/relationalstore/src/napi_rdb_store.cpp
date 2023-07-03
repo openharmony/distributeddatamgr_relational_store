@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "js_utils.h"
+#include "js_common.h"
 #include "logger.h"
 #include "napi_async_call.h"
 #include "napi_rdb_error.h"
@@ -112,16 +113,6 @@ RdbStoreProxy::~RdbStoreProxy()
 bool RdbStoreProxy::IsSystemAppCalled()
 {
     return isSystemAppCalled_;
-}
-
-bool IsNapiTypeString(napi_env env, size_t argc, napi_value *argv, size_t arg)
-{
-    if (arg >= argc) {
-        return false;
-    }
-    napi_valuetype type;
-    NAPI_CALL_BASE(env, napi_typeof(env, argv[arg], &type), false);
-    return type == napi_string;
 }
 
 void RdbStoreProxy::Init(napi_env env, napi_value exports)
