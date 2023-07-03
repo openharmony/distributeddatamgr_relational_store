@@ -141,6 +141,7 @@ private:
     std::map<PRIKey, Date> GetModifyTimeByRowId(
         const std::string &logTable, std::vector<PRIKey> &keys);
     std::string GetSqlArgs(size_t size);
+    std::string StringToUpper(std::string str);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;
@@ -157,6 +158,7 @@ private:
 
     mutable std::shared_mutex rwMutex_;
     static inline constexpr uint32_t INTERVAL = 500;
+    constexpr const char *ROW_ID = "ROWID"
     std::set<std::string> cloudTables_;
 
     std::mutex mutex_;
