@@ -21,6 +21,7 @@
 
 #include "rdb_types.h"
 #include "rdb_notifier.h"
+#include "distributeddata_relational_store_ipc_interface_code.h"
 
 namespace OHOS {
 template <typename T>
@@ -29,19 +30,6 @@ class IRemoteObject;
 namespace DistributedRdb {
 class RdbService {
 public:
-    enum {
-        RDB_SERVICE_CMD_OBTAIN_TABLE,
-        RDB_SERVICE_CMD_INIT_NOTIFIER,
-        RDB_SERVICE_CMD_SET_DIST_TABLE,
-        RDB_SERVICE_CMD_SYNC,
-        RDB_SERVICE_CMD_ASYNC,
-        RDB_SERVICE_CMD_SUBSCRIBE,
-        RDB_SERVICE_CMD_UNSUBSCRIBE,
-        RDB_SERVICE_CMD_REMOTE_QUERY,
-        RDB_SERVICE_CMD_GET_SCHEMA,
-        RDB_SERVICE_CMD_MAX
-    };
-
     struct Option {
         int32_t mode;
         uint32_t seqNum = 0;
