@@ -22,6 +22,7 @@
 namespace OHOS::DistributedRdb {
 using namespace OHOS::Rdb;
 using SqliteUtils = OHOS::NativeRdb::SqliteUtils;
+using RdbServiceCode = OHOS::DistributedRdb::RelationalStore::RdbServiceInterfaceCode;
 
 #define IPC_SEND(code, reply, ...)                                          \
 ({                                                                          \
@@ -83,7 +84,7 @@ void RdbServiceProxy::OnDataChange(const Origin &origin, const PrimaryFields &pr
 std::string RdbServiceProxy::ObtainDistributedTableName(const std::string &device, const std::string &table)
 {
     MessageParcel reply;
-    int32_t status = IPC_SEND(RDB_SERVICE_CMD_OBTAIN_TABLE, reply, device, table);
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_OBTAIN_TABLE), reply, device, table);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, device:%{public}.6s, table:%{public}s", status,
             SqliteUtils::Anonymous(device).c_str(), SqliteUtils::Anonymous(table).c_str());
@@ -118,7 +119,8 @@ int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param)
 int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param, sptr<IRemoteObject> notifier)
 {
     MessageParcel reply;
-    int32_t status = IPC_SEND(RDB_SERVICE_CMD_INIT_NOTIFIER, reply, param, notifier);
+    int32_t status = IPC_SEND(
+        static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_INIT_NOTIFIER), reply, param, notifier);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s", status, param.bundleName_.c_str());
     }
@@ -140,7 +142,7 @@ std::pair<int32_t, Details> RdbServiceProxy::DoSync(const RdbSyncerParam& param,
     std::pair<int32_t, Details> result{RDB_ERROR, {}};
     MessageParcel reply;
     auto &[status, details] = result;
-    status = IPC_SEND(RDB_SERVICE_CMD_SYNC, reply, param, option, predicates);
+    status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_SYNC), reply, param, option, predicates);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
             status, param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
@@ -174,7 +176,8 @@ int32_t RdbServiceProxy::DoSync(const RdbSyncerParam &param, const Option &optio
 int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates)
 {
     MessageParcel reply;
-    int32_t status = IPC_SEND(RDB_SERVICE_CMD_ASYNC, reply, param, option, predicates);
+    int32_t status = IPC_SEND(
+        static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_ASYNC), reply, param, option, predicates);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s, seqNum:%{public}u", status,
             param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str(), option.seqNum);
@@ -208,7 +211,8 @@ int32_t RdbServiceProxy::SetDistributedTables(const RdbSyncerParam& param, const
     int32_t type)
 {
     MessageParcel reply;
-    int32_t status = IPC_SEND(RDB_SERVICE_CMD_SET_DIST_TABLE, reply, param, tables, type);
+    int32_t status = IPC_SEND(
+        static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_SET_DIST_TABLE), reply, param, tables, type);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s, type:%{public}d",
             status, param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str(), type);
@@ -264,7 +268,8 @@ int32_t RdbServiceProxy::Subscribe(const RdbSyncerParam &param, const SubscribeO
 int32_t RdbServiceProxy::DoSubscribe(const RdbSyncerParam &param, const SubscribeOption &option)
 {
     MessageParcel reply;
-    int32_t status = IPC_SEND(RDB_SERVICE_CMD_SUBSCRIBE, reply, param, option);
+    int32_t status = IPC_SEND(
+        static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_SUBSCRIBE), reply, param, option);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
             status, param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
@@ -290,7 +295,7 @@ int32_t RdbServiceProxy::UnSubscribe(const RdbSyncerParam &param, const Subscrib
 int32_t RdbServiceProxy::DoUnSubscribe(const RdbSyncerParam &param)
 {
     MessageParcel reply;
-    int32_t status = IPC_SEND(RDB_SERVICE_CMD_UNSUBSCRIBE, reply, param);
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_UNSUBSCRIBE), reply, param);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
             status, param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
@@ -302,7 +307,8 @@ int32_t RdbServiceProxy::RemoteQuery(const RdbSyncerParam& param, const std::str
                                      const std::vector<std::string>& selectionArgs, sptr<IRemoteObject>& resultSet)
 {
     MessageParcel reply;
-    int32_t status = IPC_SEND(RDB_SERVICE_CMD_REMOTE_QUERY, reply, param, device, sql, selectionArgs);
+    int32_t status = IPC_SEND(
+        static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_REMOTE_QUERY), reply, param, device, sql, selectionArgs);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s, device:%{public}.6s",
             status, param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str(), device.c_str());
@@ -338,7 +344,7 @@ void RdbServiceProxy::ImportObservers(ObserverMap &observers)
 int32_t RdbServiceProxy::GetSchema(const RdbSyncerParam &param)
 {
     MessageParcel reply;
-    int32_t status = IPC_SEND(RDB_SERVICE_CMD_GET_SCHEMA, reply, param);
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_GET_SCHEMA), reply, param);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
             SqliteUtils::Anonymous(param.storeName_).c_str());
