@@ -64,7 +64,20 @@ enum class KvStoreInterfaceCode {
 enum class CloudKvStoreInterfaceCode {
     GET_FEATURE_INTERFACE = 0
 };
-}
-} // namespace OHOS
+
+enum class RdbServiceInterfaceCode {
+    RDB_SERVICE_CMD_OBTAIN_TABLE,
+    RDB_SERVICE_CMD_INIT_NOTIFIER,
+    RDB_SERVICE_CMD_SET_DIST_TABLE,
+    RDB_SERVICE_CMD_SYNC,
+    RDB_SERVICE_CMD_ASYNC,
+    RDB_SERVICE_CMD_SUBSCRIBE,
+    RDB_SERVICE_CMD_UNSUBSCRIBE,
+    RDB_SERVICE_CMD_REMOTE_QUERY,
+    RDB_SERVICE_CMD_GET_SCHEMA,
+    RDB_SERVICE_CMD_MAX
+};
+} // namespace RelationalStore
+} // namespace OHOS::DistributedRdb
 
 #endif // DISTRIBUTEDDATA_RELATIONAL_STORE_IPC_INTERFACE_H
