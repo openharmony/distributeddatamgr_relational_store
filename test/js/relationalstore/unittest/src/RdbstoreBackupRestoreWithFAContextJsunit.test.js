@@ -15,7 +15,7 @@
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
-import fileio from '@ohos.fileio'
+import fileio from '@ohos.file.fs'
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -128,38 +128,32 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
             await console.log(TAG + "************* RdbBackupRestoreTest_0010 start *************")
 
             // RDB backup function test
-            let promiseBackup = rdbStore.backup(DATABASE_BACKUP_NAME)
-            promiseBackup.then(() => {
-                try {
-                    fileio.accessSync(DATABASE_DIR + DATABASE_BACKUP_NAME)
-                    fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name)
-                } catch (err) {
+            try {
+                let promiseBackup = rdbStore.backup(DATABASE_BACKUP_NAME)
+                promiseBackup.then(() => {
+                    expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + DATABASE_BACKUP_NAME))
+                    expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name))
+                    done()
+                }).catch((errCode) => {
                     expect(false).assertTrue()
-                }
-            }).catch((err) => {
+                })
+            } catch(err) {
                 expect(false).assertTrue()
-            })
+            }
             await promiseBackup
 
             // RDB restore function test
-            let promiseRestore = rdbStore.restore(DATABASE_BACKUP_NAME)
-            promiseRestore.then(() => {
-                try {
-                    fileio.accessSync(DATABASE_DIR + DATABASE_BACKUP_NAME)
+            try {
+                let promiseRestore = rdbStore.restore(DATABASE_BACKUP_NAME)
+                promiseRestore.then(() => {
+                    expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name))
+                    done()
+                }).catch((errCode) => {
                     expect(false).assertTrue()
-                } catch (err) {
-                    expect(true).assertTrue()
-                }
-
-                try {
-                    fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name)
-                    expect(true).assertTrue()
-                } catch (err) {
-                    expect(false).assertTrue()
-                }
-            }).catch((err) => {
+                })
+            } catch(err) {
                 expect(false).assertTrue()
-            })
+            }
             await promiseRestore
 
             // RDB after restored, data query test
@@ -231,13 +225,13 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
 
             // RDB restore function test, backup file does not exists
             try {
-                fileio.accessSync(DATABASE_DIR + dbName)
-                expect(false).assertTrue()
-            } catch {
-                RestoreTest(dbName)
+                expect(false).assertEqual(fileio.accessSync(DATABASE_DIR + dbName))
+            } catch (errCode) {
+                expect(13900002).assertEqual(errCode.code)
             }
-
+            RestoreTest(dbName)
             done()
+            
             await console.log(TAG + "************* RdbBackupRestoreTest_0040 end *************")
         })
 

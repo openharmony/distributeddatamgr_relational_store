@@ -583,15 +583,20 @@ describe('rdbStoreUpdateTest', function () {
             }
             let predicates = await new data_relationalStore.RdbPredicates("test")
             await predicates.equalTo("age", "19")
-            let updatePromise = rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
-            updatePromise.then(async (ret) => {
-                await console.log(TAG + "update done: " + ret);
-                expect(null).assertFail();
-            }).catch((err) => {
-                console.log(TAG + "update error");
-                expect(null).assertFail();
-            })
-            done()
+            try {
+                let updatePromise = rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
+                updatePromise.then(async (ret) => {
+                    await console.log(TAG + "update done: " + ret);
+                    expect(null).assertFail();
+                }).catch((errCode) => {
+                    console.log(TAG + "insert with wrong valuebucket and ConflictResolution is ON_CONFLICT_ROLLBACK")
+                    expect(14800000).assertEqual(errCode.code)
+                    done()
+                })
+            } catch(err) {
+                console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+                expect(null).assertFail()
+            }
         }
 
         {
@@ -776,15 +781,20 @@ describe('rdbStoreUpdateTest', function () {
             }
             let predicates = await new data_relationalStore.RdbPredicates("test")
             await predicates.equalTo("age", "19")
-            let updatePromise = rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
-            updatePromise.then(async (ret) => {
-                expect(null).assertFail();
-                await console.log(TAG + "update done: " + ret);
-            }).catch((err) => {
-                expect(null).assertFail();
-                console.log(TAG + "update error");
-            })
-            done()
+            try {
+                let updatePromise = rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
+                updatePromise.then(async (ret) => {
+                    await console.log(TAG + "update done: " + ret);
+                    expect(null).assertFail();
+                }).catch((errCode) => {
+                    console.log(TAG + "insert with wrong valuebucket and ConflictResolution is ON_CONFLICT_ROLLBACK")
+                    expect(14800000).assertEqual(errCode.code)
+                    done()
+                })
+            } catch(err) {
+                console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+                expect(null).assertFail()
+            }
         }
 
         {

@@ -416,13 +416,13 @@ describe('rdbStoreInsertTest', function () {
                     expect(1).assertEqual(ret)
                     console.log(TAG + "insert first done: " + ret)
                     expect(null).assertFail()
-                }).catch((err) => {
+                }).catch((errCode) => {
                     console.log(TAG + "insert with wrong valuebucket and ConflictResolution is ON_CONFLICT_ROLLBACK")
+                    expect(14800000).assertEqual(errCode.code)
                     done()
                 })
             } catch(err) {
                 console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
-                expect("401").assertEqual(err.code)
                 expect(null).assertFail()
             }
         }
