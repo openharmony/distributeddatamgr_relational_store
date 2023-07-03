@@ -366,7 +366,8 @@ int RdbStoreImpl::InnerInsert(int64_t &outRowId, const std::string &table,
     for (auto &[key, val] : values.values_) {
         sql << split;
         sql << key;               // columnName
-        if (val.GetType() == ValueObject::TYPE_ASSETS && conflictResolution == ConflictResolution::ON_CONFLICT_REPLACE) {
+        if (val.GetType() == ValueObject::TYPE_ASSETS &&
+            conflictResolution == ConflictResolution::ON_CONFLICT_REPLACE) {
             return E_INVALID_ARGS;
         }
         if (val.GetType() == ValueObject::TYPE_ASSET || val.GetType() == ValueObject::TYPE_ASSETS) {
@@ -706,6 +707,7 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
     if (ISFILE(databasePath)) {
         backupFilePath = ExtractFilePath(path) + databasePath;
     } else {
+        // 2 represents two characters starting from the len - 2 position
         if (!PathToRealPath(ExtractFilePath(databasePath), backupFilePath) || databasePath.back() == '/' ||
             databasePath.substr(databasePath.length() - 2, 2) == "\\") {
             LOG_ERROR("Invalid databasePath.");
