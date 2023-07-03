@@ -113,8 +113,26 @@ napi_value Convert2JSValue(napi_env env, const T &value);
 template<typename T>
 napi_value Convert2JSValue(napi_env env, const std::vector<T> &value);
 
+template<typename K, typename V>
+napi_value Convert2JSValue(napi_env env, const std::map<K, V> &value);
+
 template<typename... Types>
 napi_value Convert2JSValue(napi_env env, const std::variant<Types...> &value);
+
+template<typename T>
+std::string ToString(const T &key);
+
+template<typename K>
+std::enable_if_t<!std::is_same_v<K, std::string>, std::string> ConvertMapKey(const K &key)
+{
+    return ToString(key);
+}
+
+template<typename K>
+std::enable_if_t<std::is_same_v<K, std::string>, const std::string &> ConvertMapKey(const K &key)
+{
+    return key;
+}
 
 template<typename T>
 int32_t GetCPPValue(napi_env env, napi_value jsValue, T &value)
@@ -177,6 +195,25 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<T> 
         value.push_back(std::move(item));
     }
     return napi_ok;
+}
+
+template<typename K, typename V>
+napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<K, V> &value)
+{
+    napi_value jsValue;
+    napi_status status = napi_create_object(env, &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    for (const auto &[key, val] : value) {
+        const std::string &name = ConvertMapKey(key);
+        status = napi_set_named_property(env, jsValue, name.c_str(), Convert2JSValue(env, val));
+        if (status != napi_ok) {
+            return nullptr;
+        }
+    }
+    return jsValue;
 }
 
 template<typename... Types>

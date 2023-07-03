@@ -82,6 +82,7 @@ public:
     virtual bool IsReadOnly() const = 0;
     virtual bool IsMemoryRdb() const = 0;
     virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) = 0;
+    virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, std::vector<ValueObject> &&args) = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif

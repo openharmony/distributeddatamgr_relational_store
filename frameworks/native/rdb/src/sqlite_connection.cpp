@@ -706,6 +706,20 @@ std::shared_ptr<SqliteStatement> SqliteConnection::BeginStepQuery(
     return stepStatement;
 }
 
+std::shared_ptr<SqliteStatement> SqliteConnection::BeginStepQuery(int &errCode, const std::string &sql,
+    const std::vector<ValueObject> &args) const
+{
+    errCode = stepStatement->Prepare(dbHandle, sql);
+    if (errCode != E_OK) {
+        return nullptr;
+    }
+    errCode = stepStatement->BindArguments(args);
+    if (errCode != E_OK) {
+        return nullptr;
+    }
+    return stepStatement;
+}
+
 int SqliteConnection::DesFinalize()
 {
     int errCode = 0;

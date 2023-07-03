@@ -71,6 +71,7 @@ private:
     static napi_value ObtainDistributedTableName(napi_env env, napi_callback_info info);
     static napi_value Sync(napi_env env, napi_callback_info info);
     static napi_value CloudSync(napi_env env, napi_callback_info info);
+    static napi_value GetModifyTime(napi_env env, napi_callback_info info);
     static napi_value OnEvent(napi_env env, napi_callback_info info);
     static napi_value OffEvent(napi_env env, napi_callback_info info);
 
