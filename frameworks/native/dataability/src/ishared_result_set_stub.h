@@ -21,6 +21,8 @@
 #include "ishared_result_set.h"
 #include "iremote_stub.h"
 namespace OHOS::NativeRdb {
+using ResultSetCode = OHOS::DistributedRdb::RelationalStore::IResultSetInterfaceCode;
+
 class ISharedResultSetStub : public IRemoteStub<ISharedResultSet> {
 public:
     explicit ISharedResultSetStub(std::shared_ptr<AbsSharedResultSet> resultSet);
@@ -55,7 +57,7 @@ private:
     SafeBlockQueue<std::function<bool()>> runnables_;
     bool isRunning_ = true;
     std::thread thread_;
-    static constexpr Handler handlers[FUNC_BUTT] {
+    static constexpr Handler handlers[static_cast<uint32_t>(ResultSetCode::FUNC_BUTT)] {
         &ISharedResultSetStub::HandleGetRowCountRequest,
         &ISharedResultSetStub::HandleGetAllColumnNamesRequest,
         &ISharedResultSetStub::HandleOnGoRequest,

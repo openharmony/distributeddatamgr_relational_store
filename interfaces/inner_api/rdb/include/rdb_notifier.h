@@ -16,16 +16,12 @@
 #ifndef DISTRIBUTED_RDB_RDB_NOTIFIER_H
 #define DISTRIBUTED_RDB_RDB_NOTIFIER_H
 #include "rdb_types.h"
+#include "distributeddata_relational_store_ipc_interface_code.h"
 namespace OHOS::DistributedRdb {
 class IRdbNotifier {
 public:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
     using PrimaryFields = std::map<std::string, std::string>;
-    enum Code : int32_t {
-        RDB_NOTIFIER_CMD_SYNC_COMPLETE,
-        RDB_NOTIFIER_CMD_DATA_CHANGE,
-        RDB_NOTIFIER_CMD_MAX
-    };
     virtual int32_t OnComplete(uint32_t seqNum, Details &&result) = 0;
 
     virtual int32_t OnChange(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo) = 0;

@@ -18,6 +18,7 @@
 
 #include "cloud_service.h"
 #include "iremote_broker.h"
+#include "distributeddata_relational_store_ipc_interface_code.h"
 
 namespace OHOS::CloudData {
 class ICloudService : public CloudService, public IRemoteBroker {
@@ -27,8 +28,6 @@ public:
 
 class IKvStoreDataService : public IRemoteBroker {
 public:
-    enum { GET_FEATURE_INTERFACE = 0 };
-
     virtual sptr<IRemoteObject> GetFeatureInterface(const std::string &name) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedKv.IKvStoreDataService");
