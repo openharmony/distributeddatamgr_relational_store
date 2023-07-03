@@ -141,7 +141,6 @@ private:
     std::map<PRIKey, Date> GetModifyTimeByRowId(
         const std::string &logTable, std::vector<PRIKey> &keys);
     std::string GetSqlArgs(size_t size);
-    std::string StringToUpper(std::string str);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;

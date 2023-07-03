@@ -119,7 +119,7 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
     }
 
     auto logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
-    if (StringToUpper(columnName) == ROW_ID) {
+    if (SqliteUtils::StrToUpper(columnName) == ROW_ID) {
         return GetModifyTimeByRowId(logTable, keys);
     }
     std::vector<ValueObject> hashKeys;
@@ -204,14 +204,6 @@ std::string RdbStoreImpl::GetSqlArgs(size_t size)
         args[(i << 1) - 1] = ',';
     }
     return args;
-}
-
-std::string RdbStoreImpl::StringToUpper(std::string str);
-{
-    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) {
-        return std::toupper(c);
-    });
-    return str;
 }
 #endif
 
