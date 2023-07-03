@@ -1205,14 +1205,14 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
 
         context->execCode_ = obj->rdbStore_->Sync(option, context->tablesNames,
             [queue = obj->queue_, callback = context->asyncHolder](const Details &details) {
-               if (queue == nullptr || callback == nullptr) {
-                   return;
-               }
-               bool repeat = !details.empty() && details.begin()->second.progress != DistributedRdb::SYNC_FINISH;
-               queue->AsyncCall({ callback, repeat }, [details](napi_env env, int &argc, napi_value *argv) -> void {
+                if (queue == nullptr || callback == nullptr) {
+                    return;
+                }
+                bool repeat = !details.empty() && details.begin()->second.progress != DistributedRdb::SYNC_FINISH;
+                queue->AsyncCall({ callback, repeat }, [details](napi_env env, int &argc, napi_value *argv) -> void {
                     argc = 1;
                     argv[0] = details.empty() ? nullptr : JSUtils::Convert2JSValue(env, details.begin()->second);
-               });
+                });
             });
         return OK;
     };
