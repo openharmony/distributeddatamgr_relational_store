@@ -30,6 +30,7 @@ namespace OHOS::DistributedRdb {
 using namespace OHOS::Rdb;
 using RdbServiceProxy =  DistributedRdb::RdbServiceProxy;
 using namespace OHOS::NativeRdb;
+using namespace OHOS::DistributedRdb::RelationalStore;
 
 class DeathStub : public IRemoteBroker {
 public:
@@ -188,7 +189,8 @@ sptr<IRemoteObject> RdbStoreDataServiceProxy::GetFeatureInterface(const std::str
 
     MessageParcel reply;
     MessageOption mo { MessageOption::TF_SYNC };
-    int32_t error = Remote()->SendRequest(GET_FEATURE_INTERFACE, data, reply, mo);
+    int32_t error = Remote()->SendRequest(
+        static_cast<uint32_t>(KvStoreInterfaceCode::GET_FEATURE_INTERFACE), data, reply, mo);
     if (error != 0) {
         LOG_ERROR("SendRequest returned %{public}d", error);
         return nullptr;
@@ -217,7 +219,8 @@ int32_t RdbStoreDataServiceProxy::RegisterDeathObserver(const std::string &bundl
 
     MessageParcel reply;
     MessageOption mo { MessageOption::TF_SYNC };
-    int32_t error = Remote()->SendRequest(REGISTER_DEATH_OBSERVER, data, reply, mo);
+    int32_t error = Remote()->SendRequest(
+        static_cast<uint32_t>(KvStoreInterfaceCode::REGISTER_DEATH_OBSERVER), data, reply, mo);
     if (error != 0) {
         LOG_ERROR("SendRequest returned %{public}d", error);
         return E_ERROR;

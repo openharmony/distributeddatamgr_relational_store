@@ -24,6 +24,7 @@
 
 namespace OHOS::CloudData {
 using namespace OHOS::Rdb;
+using namespace OHOS::DistributedRdb::RelationalStore;
 
 class DataMgrService : public IRemoteProxy<CloudData::IKvStoreDataService> {
 public:
@@ -120,7 +121,8 @@ sptr<IRemoteObject> DataMgrService::GetFeatureInterface(const std::string &name)
 
     MessageParcel reply;
     MessageOption mo{ MessageOption::TF_SYNC };
-    int32_t error = Remote()->SendRequest(GET_FEATURE_INTERFACE, data, reply, mo);
+    int32_t error = Remote()->SendRequest(
+        static_cast<uint32_t>(CloudKvStoreInterfaceCode::GET_FEATURE_INTERFACE), data, reply, mo);
     if (error != 0) {
         LOG_ERROR("SendRequest returned %{public}d", error);
         return nullptr;
