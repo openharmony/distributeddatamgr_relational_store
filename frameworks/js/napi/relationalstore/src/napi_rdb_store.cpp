@@ -337,6 +337,16 @@ int ParseCloudSyncModeArg(const napi_env &env, const napi_value &arg, std::share
     return OK;
 }
 
+int ParseCallback(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_status status = napi_typeof(env, arg, &valueType);
+    CHECK_RETURN_SET((status == napi_ok && valueType == napi_function),
+        std::make_shared<ParamError>("callback", "a function."));
+    NAPI_CALL_BASE(env, napi_create_reference(env, arg, 1, &context->callback_), ERR);
+    return OK;
+}
+
 int ParseCloudSyncCallback(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
 {
     napi_valuetype valueType = napi_undefined;
@@ -1188,12 +1198,7 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParseCloudSyncCallback(env, argv[index++], context));
         CHECK_RETURN_SET_E(index == argc - 1 || index == argc, std::make_shared<ParamNumError>("2 - 4"));
         if (index == argc - 1) {
-            napi_valuetype valueType = napi_undefined;
-            napi_typeof(env, argv[index], &valueType);
-            if (valueType == napi_function) {
-                LOG_INFO("asyncCall set callback");
-                NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, argv[index], 1, &context->callback_));
-            }
+            CHECK_RETURN(OK == ParseCallback(env, argv[index], context));
         }
     };
     auto exec = [context]() -> int {
@@ -1216,7 +1221,6 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
             });
         return OK;
     };
-
     auto output = [context](napi_env env, napi_value &result) {
         LOG_DEBUG("RdbStoreProxy::CloudSync output");
         if (context->execCode_ != E_OK && context->asyncHolder != nullptr) {
@@ -1225,7 +1229,6 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
         napi_status status = napi_get_undefined(env, &result);
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
-
     context->SetAll(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
