@@ -21,6 +21,7 @@
 
 #include "logger.h"
 #include "rdb_errno.h"
+#include "rdb_store.h"
 #include "rdb_trace.h"
 #include "rdb_sql_utils.h"
 #include "sqlite_global_config.h"
@@ -36,6 +37,7 @@
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "iresult_set.h"
+#include "raw_data_parser.h"
 #include "rdb_device_manager_adapter.h"
 #include "rdb_manager_impl.h"
 #include "relational_store_manager.h"
@@ -106,6 +108,102 @@ void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
             }
         });
     }
+}
+
+std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
+    const std::string &table, const std::string &columnName, std::vector<PRIKey> &keys)
+{
+    if (table.empty() || columnName.empty() || keys.empty()) {
+        LOG_ERROR("invalid para.");
+        return {};
+    }
+
+    auto logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
+    if (columnName == "rowid") {
+        return GetModifyTimeByRowId(logTable, keys);
+    }
+    std::vector<ValueObject> hashKeys;
+    hashKeys.reserve(keys.size());
+    std::map<std::vector<uint8_t>, PRIKey> keyMap;
+    std::map<std::string, DistributedDB::Type> tmp;
+    for (const auto &key : keys) {
+        DistributedDB::Type value;
+        RawDataParser::Convert(key, value);
+        tmp[columnName] = value;
+        auto hashKey = DistributedDB::RelationalStoreManager::CalcPrimaryKeyHash(tmp);
+        if (hashKey.empty()) {
+            LOG_DEBUG("hash key fail");
+            continue;
+        }
+        hashKeys.emplace_back(ValueObject(hashKey));
+        keyMap[hashKey] = key;
+    }
+
+    std::string sql;
+    sql.append("select hash_key, timestamp/10000 from ");
+    sql.append(logTable);
+    sql.append(" where hash_key in (");
+    sql.append(GetSqlArgs(hashKeys.size()));
+    sql.append(")");
+    auto resultSet = QueryByStep(sql, std::move(hashKeys));
+    int count = 0;
+    if (resultSet == nullptr || resultSet->GetRowCount(count) != E_OK || count <= 0) {
+        LOG_ERROR("get resultSet err.");
+        return {};
+    }
+    std::map<PRIKey, Date> result;
+    for (int i = 0; i < count; i++) {
+        resultSet->GoToRow(i);
+        std::vector<uint8_t> hashKey;
+        int64_t timeStamp;
+        resultSet->GetBlob(0, hashKey);
+        resultSet->GetLong(1, timeStamp);
+        result[keyMap[hashKey]] = Date(timeStamp);
+    }
+    return result;
+}
+
+std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTimeByRowId(
+    const std::string &logTable, std::vector<PRIKey> &keys)
+{
+    std::string sql;
+    sql.append("select data_key, timestamp/10000 from ");
+    sql.append(logTable);
+    sql.append(" where data_key in (");
+    sql.append(GetSqlArgs(keys.size()));
+    sql.append(")");
+    std::vector<ValueObject> args;
+    args.reserve(keys.size());
+    for (auto &key : keys) {
+        ValueObject::Type value;
+        RawDataParser::Convert(key, value);
+        args.emplace_back(ValueObject(value));
+    }
+    auto resultSet = QueryByStep(sql, std::move(args));
+    int count = 0;
+    if (resultSet == nullptr || resultSet->GetRowCount(count) != E_OK || count <= 0) {
+        LOG_ERROR("get resultSet err.");
+        return {};
+    }
+    std::map<PRIKey, Date> result;
+    for (int i = 0; i < count; i++) {
+        resultSet->GoToRow(i);
+        int rowId;
+        int64_t timeStamp;
+        resultSet->GetInt(0, rowId);
+        resultSet->GetLong(1, timeStamp);
+        result[rowId] = Date(timeStamp);
+    }
+    return result;
+}
+
+std::string RdbStoreImpl::GetSqlArgs(size_t size)
+{
+    std::string args((size << 1) - 1, '?');
+    for (size_t i = 1; i < size; ++i) {
+        args[(i << 1) - 1] = ',';
+    }
+    return args;
 }
 #endif
 
@@ -1182,6 +1280,11 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
     const std::vector<std::string> &selectionArgs)
 {
     return std::make_shared<StepResultSet>(shared_from_this(), connectionPool, sql, selectionArgs);
+}
+
+std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, std::vector<ValueObject> &&args)
+{
+    return std::make_shared<StepResultSet>(shared_from_this(), connectionPool, sql, std::move(args));
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)

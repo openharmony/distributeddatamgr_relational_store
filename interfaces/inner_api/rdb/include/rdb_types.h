@@ -142,6 +142,16 @@ struct PredicatesMemo {
     std::vector<RdbPredicateOperation> operations_;
 };
 
+struct Date {
+    Date() {}
+    Date(int64_t date) : date(date) {}
+    operator double() const
+    {
+        return static_cast<double>(date);
+    }
+    int64_t date;
+};
+
 enum SubscribeMode {
     REMOTE,
     CLOUD,
@@ -183,7 +193,7 @@ public:
         CHG_TYPE_DELETE,
         CHG_TYPE_BUTT
     };
-    using PrimaryKey = std::variant<std::monostate, std::string, int64_t>;
+    using PrimaryKey = std::variant<std::monostate, std::string, int64_t, double>;
     using ChangeInfo = std::map<std::string, std::vector<PrimaryKey>[CHG_TYPE_BUTT]>;
     using PrimaryFields = std::map<std::string, std::string>;
     virtual void OnChange(const std::vector<std::string> &devices) = 0; // networkid

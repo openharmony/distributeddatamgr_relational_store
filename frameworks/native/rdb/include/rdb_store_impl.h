@@ -91,6 +91,7 @@ public:
     std::string GetFileType();
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &selectionArgs) override;
+    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, std::vector<ValueObject> &&args) override;
     std::shared_ptr<ResultSet> QueryByStep(
         const AbsRdbPredicates &predicates, const std::vector<std::string> columns) override;
     std::shared_ptr<AbsSharedResultSet> Query(
@@ -118,6 +119,9 @@ public:
     // user must use UDID
     bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) override;
 
+    std::map<PRIKey, Date> GetModifyTime(
+        const std::string &table, const std::string &columnName, std::vector<PRIKey> &keys) override;
+
 private:
     int InnerOpen();
     int InnerInsert(int64_t &outRowId, const std::string &table, ValuesBucket values,
@@ -134,6 +138,9 @@ private:
     void DoCloudSync(const std::string &table);
     int InnerBackup(const std::string databasePath,
         const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>());
+    std::map<PRIKey, Date> GetModifyTimeByRowId(
+        const std::string &logTable, std::vector<PRIKey> &keys);
+    std::string GetSqlArgs(size_t size);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;

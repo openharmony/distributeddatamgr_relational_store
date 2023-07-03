@@ -31,6 +31,8 @@ class StepResultSet : public AbsResultSet {
 public:
     StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, SqliteConnectionPool *connectionPool, const std::string &sql,
         const std::vector<std::string> &selectionArgs);
+    StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, SqliteConnectionPool *pool, const std::string &sql,
+        std::vector<ValueObject> &&args);
     ~StepResultSet() override;
 
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
@@ -66,6 +68,7 @@ private:
     SqliteConnectionPool *connectionPool_;
     std::string sql;
     std::vector<std::string> selectionArgs;
+    std::vector<ValueObject> args_;
     // Whether reach the end of this result set or not
     bool isAfterLast;
     // The value indicates the row count of the result set

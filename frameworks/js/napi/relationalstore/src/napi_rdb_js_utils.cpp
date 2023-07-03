@@ -205,5 +205,34 @@ napi_value Convert2JSValue(napi_env env, const JSChangeInfo &value)
     ADD_JS_PROPERTY(env, object, value, deleted);
     return object;
 }
+
+template<>
+napi_value Convert2JSValue(napi_env env, const Date &date)
+{
+    napi_value jsValue;
+    napi_status status = napi_create_date(env, date, &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    return jsValue;
+}
+
+template<>
+std::string ToString(const PRIKey &key)
+{
+    auto strVal = std::get_if<std::string>(&key);
+    if (strVal != nullptr) {
+        return *strVal;
+    }
+    auto intVal = std::get_if<int64_t>(&key);
+    if (intVal != nullptr) {
+        return std::to_string(*intVal);
+    }
+    auto dbVal = std::get_if<double>(&key);
+    if (dbVal != nullptr) {
+        return std::to_string(static_cast<int64_t>(*dbVal));
+    }
+    return {};
+}
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
