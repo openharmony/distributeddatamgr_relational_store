@@ -50,7 +50,6 @@ public:
         const std::string &group, const std::string &order, int limit, int offset);
     static std::string BuildSqlStringFromPredicatesNoWhere(const std::string &index, const std::string &whereClause,
         const std::string &group, const std::string &order, int limit, int offset);
-    static std::string PredicatesNormalize(const std::string &source, int &errorCode);
     static std::string BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
     static std::string BuildCountString(const AbsRdbPredicates &predicates);
     static std::string BuildSqlStringFromPredicates(const AbsRdbPredicates &predicates);
