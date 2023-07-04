@@ -17,7 +17,7 @@
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
 import cloudData from '@ohos.data.cloudData';
 
-describe('CloudConfigPromiseTest', function () {
+describe('CloudConfigTest', function () {
     /**
      * @tc.name EnabledCloudInvalidArgsTest
      * @tc.desc Test Js Api EnabledCloud with invalid args
@@ -211,4 +211,55 @@ describe('CloudConfigPromiseTest', function () {
         }
         done();
     })
+
+    /**
+     * @tc.name CleanInvalidArgsNumsTest
+     * @tc.desc Test Js Api Clean which parameters number are less
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('CleanInvalidArgsNumsTest', 0, async function (done) {
+        console.info('CleanInvalidArgsNumsTest');
+        try {
+            let account = "test_id";
+            await cloudData.Config.clean(account).then(() => {
+                console.info('CleanInvalidArgsNumsTest success');
+                expect(null).assertFail();
+            }).catch((error) => {
+                console.error('CleanInvalidArgsNumsTest clean fail' + `, error code is ${error.code}, message is ${error.message}`);
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            console.error('CleanInvalidArgsNumsTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+    })
+
+    /**
+     * @tc.name CleanInvalidArgsTest
+     * @tc.desc Test Js Api Clean which parameters are invalid
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('CleanInvalidArgsTest', 0, async function (done) {
+        console.info('CleanInvalidArgsTest');
+        try {
+            let account = "test_id";
+            let bundleName1 = "test_bundleName1";
+            let appActions = {[bundleName1]: 3};
+            await cloudData.Config.clean(account, appActions).then(() => {
+                console.info('CleanInvalidArgsTest success');
+                expect(null).assertFail();
+            }).catch((error) => {
+                console.error('CleanInvalidArgsTest clean fail' + `, error code is ${error.code}, message is ${error.message}`);
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            console.error('CleanInvalidArgsTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+    })
+
 })
