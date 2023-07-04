@@ -956,7 +956,7 @@ void SqliteConnection::CompAssets(std::map<std::string, ValueObject::Asset> &ass
             ++oldIt;
             continue;
         }
-        newIt = newAssets.erase(newIt);
+        newIt++;
     }
     for (auto &[key, value] : newAssets) {
         value.status = ValueObject::Asset::Status::STATUS_INSERT;
