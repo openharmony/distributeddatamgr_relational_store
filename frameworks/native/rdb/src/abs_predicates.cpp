@@ -459,7 +459,7 @@ AbsPredicates *AbsPredicates::GroupBy(std::vector<std::string> fields)
             return this;
         }
         int errorCode = 0;
-        std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
+        std::string normalizedField = SqliteSqlBuilder::PredicatesNormalize(field, errorCode);
         group = group + normalizedField + ",";
     }
     size_t pos = group.find_last_of(",");
@@ -620,7 +620,7 @@ void AbsPredicates::AppendWhereClauseWithInOrNotIn(
     std::string methodName, std::string field, std::vector<std::string> replaceValues)
 {
     int errorCode = 0;
-    std::string normalizedField = SqliteSqlBuilder::Normalize(field, errorCode);
+    std::string normalizedField = SqliteSqlBuilder::PredicatesNormalize(field, errorCode);
     whereClause += normalizedField + StringUtils::SurroundWithFunction(methodName, ",", replaceValues);
 }
 
