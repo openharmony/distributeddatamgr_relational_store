@@ -157,6 +157,7 @@ private:
 
     mutable std::shared_mutex rwMutex_;
     static inline constexpr uint32_t INTERVAL = 500;
+    static constexpr const char *ROW_ID = "ROWID";
     std::set<std::string> cloudTables_;
 
     std::mutex mutex_;

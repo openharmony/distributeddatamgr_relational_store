@@ -38,7 +38,6 @@ void UvQueue::AsyncCall(UvCallback callback, ArgsGenerator genArgs)
         LOG_ERROR("loop_ or callback is nullptr");
         return;
     }
-
     uv_work_t* work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
         LOG_ERROR("no memory for uv_work_t");
@@ -74,7 +73,6 @@ void UvQueue::AsyncCall(UvCallback callback, ArgsGenerator genArgs)
                 argc = ARGC_MAX;
                 entry->args(entry->env, argc, argv);
             }
-            LOG_DEBUG("queue uv_after_work_cb");
             napi_value global = nullptr;
             napi_get_global(entry->env, &global);
             napi_value result;
