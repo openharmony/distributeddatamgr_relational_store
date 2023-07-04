@@ -119,7 +119,7 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
     }
 
     auto logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
-    if (columnName == "rowid") {
+    if (SqliteUtils::StrToUpper(columnName) == ROW_ID) {
         return GetModifyTimeByRowId(logTable, keys);
     }
     std::vector<ValueObject> hashKeys;
