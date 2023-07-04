@@ -64,7 +64,6 @@
             "third_party": [
                 "googletest",
                 "icu",
-                "libxml2",
                 "sqlite"
             ]
         },
