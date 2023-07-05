@@ -26,10 +26,6 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
-const std::string SqliteSqlBuilder::patternWords_ = "['\"`]?(\\w+)['\"`]?|['\"`]([^`\"']+)['\"`]";
-const std::string SqliteSqlBuilder::patternTableColumn_ = "(" + patternWords_ + ")[.](" + patternWords_ + "|\\*)";
-
 std::vector<std::string> g_onConflictClause = {
     "", " OR ROLLBACK", " OR ABORT", " OR FAIL", " OR IGNORE", " OR REPLACE"
 };
@@ -245,7 +241,7 @@ void SqliteSqlBuilder::AppendColumns(std::string &builder, const std::vector<std
             if (i > 0) {
                 builder.append(", ");
             }
-            builder.append(NormalizeAlias(column, errorCode));
+            builder.append(column);
         }
     }
 
@@ -270,11 +266,6 @@ void SqliteSqlBuilder::AppendExpr(std::string &builder, std::vector<std::string>
     builder += ' ';
 }
 
-bool SqliteSqlBuilder::IsNotEmptyString(const std::string &str)
-{
-    return (!str.empty());
-}
-
 std::string SqliteSqlBuilder::BuildQueryString(
     const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
@@ -296,173 +287,6 @@ std::string SqliteSqlBuilder::BuildCountString(const AbsRdbPredicates &predicate
 {
     std::string tableName = predicates.GetTableName();
     return "SELECT COUNT(*) FROM " + tableName + BuildSqlStringFromPredicates(predicates);
-}
-
-
-std::string SqliteSqlBuilder::PredicatesNormalize(const std::string &source, int &errorCode)
-{
-    errorCode = 0;
-    if (StringUtils::IsEmpty(source)) {
-        LOG_ERROR("Input param is empty.");
-        return "";
-    }
-
-    auto index = source.rfind("(*");
-    if (index != std::string::npos) {
-        return source;
-    }
-
-    index = source.rfind(".");
-    if (index == std::string::npos) {
-        return StringUtils::SurroundWithQuote(source, "`");
-    }
-
-    auto fIndex = source.find(".");
-    if (index != fIndex) {
-        LOG_ERROR("More than one '.' exists in source");
-        errorCode = -1;
-        return "";
-    }
-
-    std::string retStr1 =  StringUtils::SurroundWithQuote(source.substr(0, index), "`");
-    std::string source2 =  StringUtils::Trim(source.substr(index + 1));
-    std::string retStr2 = source2 == "*" ? source2 : StringUtils::SurroundWithQuote(source2, "`");
-
-    return retStr1 + "." + retStr2;
-}
-
-std::string SqliteSqlBuilder::NormalizeWords(const std::string &source, int &errorCode)
-{
-    DISTRIBUTED_DATA_HITRACE("SqliteSqlBuilder::NormalizeWords");
-    errorCode = 0;
-    if (StringUtils::IsEmpty(source)) {
-        return "";
-    }
-    std::string strTrimed = StringUtils::Trim(source);
-    std::string obj = "*";
-    if (obj == strTrimed) {
-        return "*";
-    }
-    std::regex pattern("^(" + patternWords_ + ")$");
-    std::smatch result;
-    auto wordMatcher = std::regex_match(strTrimed, result, pattern);
-    if (!wordMatcher) {
-        return "";
-    }
-    std::string words = StringUtils::IsEmpty(result[2]) ? result[3] : result[2];
-    return StringUtils::SurroundWithQuote(words, "`");
-}
-
-std::string SqliteSqlBuilder::NormalizeTableColumn(const std::string &source, int &errorCode)
-{
-    DISTRIBUTED_DATA_HITRACE("SqliteSqlBuilder::NormalizeTableColumn");
-    errorCode = 0;
-    if (StringUtils::IsEmpty(source)) {
-        return "";
-    }
-    std::string strTrimed = StringUtils::Trim(source);
-    std::regex pattern_table("^(" + patternWords_ + ")[.](" + patternWords_ + "|\\*)$");
-    std::smatch result;
-    bool columnMatcher = std::regex_match(strTrimed, result, pattern_table);
-    if (!columnMatcher) {
-        return "";
-    }
-    std::string firstName = StringUtils::IsEmpty(result[2]) ? StringUtils::Trim(result[3])
-                                                            : StringUtils::Trim(result[2]);
-    std::string lastName = StringUtils::IsEmpty(result[5]) ? StringUtils::Trim(result[6])
-                                                           : StringUtils::Trim(result[5]);
-    lastName = StringUtils::IsEmpty(lastName) ? StringUtils::Trim(result[4]) : lastName;
-    std::string aresult(StringUtils::SurroundWithQuote(firstName, "`"));
-    std::string obj = "*";
-    if (obj == lastName) {
-        aresult.append(".").append(lastName);
-    } else {
-        aresult.append(".").append(StringUtils::SurroundWithQuote(lastName, "`"));
-    }
-    return aresult;
-}
-
-std::string SqliteSqlBuilder::NormalizeMethodPattern(const std::string &source, int &errorCode)
-{
-    DISTRIBUTED_DATA_HITRACE("SqliteSqlBuilder::NormalizeMethodPattern");
-    errorCode = 0;
-    if (StringUtils::IsEmpty(source)) {
-        return "";
-    }
-    std::string strTrimed = StringUtils::Trim(source);
-    std::regex pattern("^(\\w+)(\\()(.*)(\\))$");
-    std::smatch result;
-    bool columnMatcher = std::regex_match(strTrimed, result, pattern);
-    if (!columnMatcher) {
-        return StringUtils::SurroundWithQuote(strTrimed, "`");
-    }
-    std::string methodName = StringUtils::Trim(result[1]);
-    std::string methodParams = StringUtils::Trim(result[3]);
-    if (StringUtils::IsEmpty(methodParams)) {
-        return methodName.append("()");
-    }
-    return methodName.append("(").append(methodParams).append(")");
-}
-
-std::string SqliteSqlBuilder::Normalize(const std::string &words, int &errorCode)
-{
-    DISTRIBUTED_DATA_HITRACE("SqliteSqlBuilder::Normalize");
-    errorCode = 0;
-    std::string aresult = NormalizeWords(words, errorCode);
-    if (!StringUtils::IsEmpty(aresult)) {
-        return aresult;
-    }
-    aresult = NormalizeTableColumn(words, errorCode);
-    if (!StringUtils::IsEmpty(aresult)) {
-        return aresult;
-    }
-    aresult = NormalizeMethodPattern(words, errorCode);
-    if (!StringUtils::IsEmpty(aresult)) {
-        return aresult;
-    }
-    return "";
-}
-
-std::string SqliteSqlBuilder::NormalizeAlias(const std::string &source, int &errorCode)
-{
-    errorCode = 0;
-    if (StringUtils::IsEmpty(source)) {
-        return "";
-    }
-    std::string strTrimed = StringUtils::Trim(source);
-    std::regex pattern("^(.+)\\s+(AS|as)\\s+(" + patternWords_ + ")$");
-    std::smatch result;
-    bool columnMatcher = std::regex_match(strTrimed, result, pattern);
-    if (!columnMatcher) {
-        return Normalize(strTrimed, errorCode);
-    }
-    std::string words = StringUtils::Trim(result[1]);
-    if (StringUtils::IsEmpty(words)) {
-        errorCode = E_SQLITE_SQL_BUILDER_NORMALIZE_FAIL;
-        return "";
-    }
-    std::string aresult = Normalize(words, errorCode);
-    if (StringUtils::IsEmpty(aresult)) {
-        LOG_DEBUG("NormalizeAlias words no match Normalize %{public}s", words.c_str());
-        return "";
-    }
-
-    std::string alias = result[3];
-    if (StringUtils::IsEmpty(alias)) {
-        LOG_DEBUG("NormalizeAlias alias is empty");
-        return aresult;
-    }
-    std::string obj = aresult.substr(aresult.length() - 1, 1);
-    if ("*" == obj) {
-        errorCode = E_SQLITE_SQL_BUILDER_NORMALIZE_FAIL;
-        return "";
-    }
-    std::string presult = NormalizeWords(alias, errorCode);
-    if (!StringUtils::IsEmpty(presult)) {
-        LOG_DEBUG("NormalizeAlias alias no match NormalizeWords %{public}s", alias.c_str());
-        aresult.append(" as ").append(presult);
-    }
-    return aresult;
 }
 } // namespace NativeRdb
 } // namespace OHOS
