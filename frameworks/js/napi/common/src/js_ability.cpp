@@ -75,9 +75,9 @@ std::string Context::GetDatabaseDir()
     return databaseDir_;
 }
 
-std::string Context::GetDatabaseDir(const std::string &dataGroupId)
+std::string Context::GetGroupDir(const std::string &dataGroupId)
 {
-    return stageContext_->GetDatabaseDir(dataGroupId);  // 暂时定函数重载的方式
+    return stageContext_->GetGroupDir(dataGroupId);
 }
 
 std::string Context::GetBundleName()
