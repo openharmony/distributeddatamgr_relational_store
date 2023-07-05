@@ -107,7 +107,7 @@ HWTEST_F(DataAbilityUtilsTest, DataAbilityUtilsTest_002, TestSize.Level1)
     predicates->SetOrder(order);
     predicates->Distinct();
 
-    std::string whereClause = "`name` = ? ";
+    std::string whereClause = "name = ? ";
     auto dataSharePredicates = RdbDataAbilityUtils::ToDataSharePredicates(*predicates);
     std::string dataShareWhereClause = dataSharePredicates.GetWhereClause();
     EXPECT_EQ(dataShareWhereClause, whereClause);
