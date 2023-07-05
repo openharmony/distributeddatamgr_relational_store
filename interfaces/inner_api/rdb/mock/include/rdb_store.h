@@ -25,10 +25,15 @@
 #include "value_object.h"
 #include "values_bucket.h"
 #include "rdb_common.h"
+#include "rdb_types.h"
 
 namespace OHOS::NativeRdb {
 class RdbStore {
 public:
+    using RdbStoreObserver = DistributedRdb::RdbStoreObserver;
+    using PRIKey = RdbStoreObserver::PrimaryKey;
+    using Date = DistributedRdb::Date;
+
     virtual ~RdbStore() {}
 #ifdef WINDOWS_PLATFORM
     virtual void Clear();

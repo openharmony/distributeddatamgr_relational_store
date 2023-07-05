@@ -19,6 +19,7 @@
 #include <list>
 #include <mutex>
 
+#include "js_uv_queue.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -66,6 +67,7 @@ private:
 
     std::mutex mutex_;
     bool isSystemAppCalled_ = false;
+    std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
