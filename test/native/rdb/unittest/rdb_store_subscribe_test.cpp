@@ -58,6 +58,7 @@ void RdbStoreSubTest::SetUpTestCase(void)
 
 void RdbStoreSubTest::TearDownTestCase(void)
 {
+    RdbHelper::DeleteRdbStore(MAIN_DATABASE_NAME);
 }
 
 void RdbStoreSubTest::SetUp()
