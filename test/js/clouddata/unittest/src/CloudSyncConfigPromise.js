@@ -17,7 +17,7 @@
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
 import cloudData from '@ohos.data.cloudData';
 
-describe('CloudConfigTest', function () {
+describe('CloudConfigPromiseTest', function () {
     /**
      * @tc.name EnabledCloudInvalidArgsTest
      * @tc.desc Test Js Api EnabledCloud with invalid args
