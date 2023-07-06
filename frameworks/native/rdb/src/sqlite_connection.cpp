@@ -945,6 +945,9 @@ void SqliteConnection::CompAssets(std::map<std::string, ValueObject::Asset> &ass
         if (oldIt->first == newIt->first) {
             if (newIt->second.status == Status::STATUS_DELETE) {
                 oldIt->second.status = Status::STATUS_DELETE;
+                oldIt->second.hash = "";
+                oldIt->second.modifyTime = "";
+                oldIt->second.size = "";
             } else {
                 MergeAsset(oldIt->second, newIt->second);
             }
