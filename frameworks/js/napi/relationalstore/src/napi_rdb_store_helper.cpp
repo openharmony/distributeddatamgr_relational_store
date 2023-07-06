@@ -18,10 +18,8 @@
 #include <functional>
 #include <string>
 #include <vector>
-
 #include "js_ability.h"
 #include "js_utils.h"
-#include "js_common.h"
 #include "logger.h"
 #include "napi_async_call.h"
 #include "napi_rdb_error.h"
@@ -181,6 +179,16 @@ int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<Helper
     return OK;
 }
 
+bool IsTypeString(napi_env env, size_t argc, napi_value *argv, size_t arg)
+{
+    if (arg >= argc) {
+        return false;
+    }
+    napi_valuetype type;
+    NAPI_CALL_BASE(env, napi_typeof(env, argv[arg], &type), false);
+    return type == napi_string;
+}
+
 class DefaultOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &rdbStore) override
@@ -231,7 +239,7 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         CHECK_RETURN(OK == ParseContext(env, argv[0], context));
-        if (IsNapiTypeString(env, argc, argv, 1)) {
+        if (IsTypeString(env, argc, argv, 1)) {
             CHECK_RETURN(OK == ParsePath(env, argv[1], context));
         } else {
             CHECK_RETURN(OK == ParseStoreConfig(env, argv[1], context));
