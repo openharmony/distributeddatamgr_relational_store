@@ -334,13 +334,13 @@ const std::string CREATE_TABLE_ALL_DATA_TYPE_SQL = std::string("CREATE TABLE IF 
         std::string("primLongValue INTEGER  NOT NULL, primShortValue INTEGER  NOT NULL, ") +
         std::string("primFloatValue REAL  NOT NULL, primDoubleValue REAL  NOT NULL, ") +
         std::string("primBooleanValue INTEGER  NOT NULL, primByteValue INTEGER  NOT NULL, ") +
-        std::string("primCharValue TEXT, `order` INTEGER);");
+        std::string("primCharValue TEXT, `orderr` INTEGER);");
 
 const std::string ALL_DATA_TYPE_INSERT_SQL = std::string("INSERT INTO AllDataType (id, integerValue, longValue, ") +
         std::string("shortValue, booleanValue, doubleValue, floatValue, stringValue, blobValue, ") +
         std::string("clobValue, byteValue, timeValue, characterValue, primIntValue, primLongValue, ") +
         std::string("primShortValue, primFloatValue, primDoubleValue, ") +
-        std::string("primBooleanValue, primByteValue, primCharValue, `order`) ") +
+        std::string("primBooleanValue, primByteValue, primCharValue, `orderr`) ") +
         std::string("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);");
 
 class PredicateTestOpenCallback : public RdbOpenCallback {
@@ -1507,18 +1507,19 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
     ->Or()
     ->EqualTo("integerValue", std::to_string(INT_MAX))
     ->EndWrap()->OrderByDesc("integerValue")->Limit(2);
-    std::vector<std::string> columns = {"booleanValue", "doubleValue", "order"};
+    std::vector<std::string> columns = {"booleanValue", "doubleValue", "orderr"};
     std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     allDataTypes1->GoToFirstRow();
-    EXPECT_EQ(2, ResultSize(allDataTypes1));
+    int count = ResultSize(allDataTypes1);
+    EXPECT_EQ(2, count);
 
     EXPECT_EQ("AllDataType", predicates1.GetTableName());
     EXPECT_EQ(2, predicates1.GetLimit());
 
     EXPECT_EQ(true, predicates1.GetWhereClause().find("stringValue") != std::string::npos);
-    std::vector<std::string> agrs = predicates1.GetWhereArgs();
-    auto ret = find(agrs.begin(), agrs.end(), "ABCDEFGHIJKLMN");
-    EXPECT_EQ(true, ret != agrs.end());
+    std::vector<std::string> args = predicates1.GetWhereArgs();
+    auto ret = find(args.begin(), args.end(), "ABCDEFGHIJKLMN");
+    EXPECT_EQ(true, ret != args.end());
 
     std::vector<std::string> lists = {"ohos", "bazhahei", "zhaxidelie"};
     predicates1.SetJoinTableNames(lists);
@@ -1528,18 +1529,18 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
     predicates1.SetOrder("ohos");
     predicates1.Distinct();
 
-    agrs = predicates1.GetJoinTableNames();
-    ret = find(agrs.begin(), agrs.end(), "zhaxidelie");
-    EXPECT_EQ(true, ret != agrs.end());
+    args = predicates1.GetJoinTableNames();
+    ret = find(args.begin(), args.end(), "zhaxidelie");
+    EXPECT_EQ(true, ret != args.end());
     EXPECT_EQ(1, predicates1.GetJoinCount());
 
-    agrs = predicates1.GetJoinConditions();
-    ret = find(agrs.begin(), agrs.end(), "zhaxidelie");
-    EXPECT_EQ(true, ret != agrs.end());
+    args = predicates1.GetJoinConditions();
+    ret = find(args.begin(), args.end(), "zhaxidelie");
+    EXPECT_EQ(true, ret != args.end());
 
-    agrs = predicates1.GetJoinTypes();
-    ret = find(agrs.begin(), agrs.end(), "zhaxidelie");
-    EXPECT_EQ(true, ret != agrs.end());
+    args = predicates1.GetJoinTypes();
+    ret = find(args.begin(), args.end(), "zhaxidelie");
+    EXPECT_EQ(true, ret != args.end());
     EXPECT_EQ(true, predicates1.GetJoinClause().find("ohos") != std::string::npos);
     EXPECT_EQ("ohos", predicates1.GetOrder());
     EXPECT_EQ(true, predicates1.IsDistinct());
@@ -1577,8 +1578,8 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ToString_025, TestSize.Level1)
         ->OrderByDesc("integerValue")
         ->Limit(2);
     std::string toString = predicates1.ToString();
-    std::string result = "TableName = AllDataType, {WhereClause:`stringValue` = ? AND  ( `integerValue` = ?  OR "
-                         "`integerValue` = ?  ) , whereArgs:{ABCDEFGHIJKLMN, 1, 2147483647, }, order:`integerValue` "
+    std::string result = "TableName = AllDataType, {WhereClause:stringValue = ? AND  ( integerValue = ?  OR "
+                         "integerValue = ?  ) , whereArgs:{ABCDEFGHIJKLMN, 1, 2147483647, }, orderr:integerValue "
                          "DESC , group:, index:, limit:2, offset:-1, distinct:0, isNeedAnd:1, isSorted:1}";
     EXPECT_EQ(result, toString);
 }
