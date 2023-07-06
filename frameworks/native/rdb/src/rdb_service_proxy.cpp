@@ -71,11 +71,11 @@ void RdbServiceProxy::OnDataChange(const Origin &origin, const PrimaryFields &pr
 {
     auto name = RemoveSuffix(origin.store);
     observers_.ComputeIfPresent(name,
-        [&origin, &primaries, info = std::move(changeInfo)](const auto &key, const ObserverMapValue &value) mutable {
-            auto size = value.first.size();
-            for (const auto &observer : value.first) {
+        [&origin, &primaries, info = std::move(changeInfo)](const auto &key, const std::list<ObserverParam> &value) mutable {
+            auto size = value.size();
+            for (const auto &param : value) {
                 size--;
-                observer->OnChange(origin, primaries, (size > 0) ? ChangeInfo(info) : std::move(info));
+                param.observer->OnChange(origin, primaries, (size > 0) ? ChangeInfo(info) : std::move(info));
             }
             return true;
         });
@@ -242,26 +242,28 @@ std::string RdbServiceProxy::RemoveSuffix(const std::string& name)
 int32_t RdbServiceProxy::Subscribe(const RdbSyncerParam &param, const SubscribeOption &option,
                                    RdbStoreObserver *observer)
 {
+    if (observer == nullptr) {
+        LOG_ERROR("observer is null");
+        return RDB_ERROR;
+    }
     if (option.mode < SubscribeMode::REMOTE || option.mode >= SUBSCRIBE_MODE_MAX) {
         LOG_ERROR("subscribe mode invalid");
         return RDB_ERROR;
     }
     if (DoSubscribe(param, option) != RDB_OK) {
-        LOG_INFO("communicate to server failed");
         return RDB_ERROR;
     }
     auto name = RemoveSuffix(param.storeName_);
-    observers_.Compute(
-        name, [observer] (const auto& key, ObserverMapValue& value) {
-            for (const auto& element : value.first) {
-                if (element == observer) {
-                    LOG_ERROR("duplicate observer");
-                    return true;
-                }
+    observers_.Compute(name, [observer, &param, &option](const auto &key, std::list<ObserverParam> &value) {
+        for (const auto &element : value) {
+            if (element.observer == observer) {
+                LOG_ERROR("duplicate observer");
+                return true;
             }
-            value.first.push_back(observer);
-            return true;
-        });
+        }
+        value.push_back({ observer, param.bundleName_, option });
+        return true;
+    });
     return RDB_OK;
 }
 
@@ -280,14 +282,21 @@ int32_t RdbServiceProxy::DoSubscribe(const RdbSyncerParam &param, const Subscrib
 int32_t RdbServiceProxy::UnSubscribe(const RdbSyncerParam &param, const SubscribeOption &option,
                                      RdbStoreObserver *observer)
 {
-    DoUnSubscribe(param);
+    if (observer == nullptr) {
+        LOG_ERROR("observer is null");
+        return RDB_ERROR;
+    }
+    if (DoUnSubscribe(param) != RDB_OK) {
+        return RDB_ERROR;
+    }
     auto name = RemoveSuffix(param.storeName_);
-    observers_.ComputeIfPresent(
-        name, [observer](const auto& key, ObserverMapValue& value) {
-            LOG_INFO("before remove size=%{public}d", static_cast<int>(value.first.size()));
-            value.first.remove(observer);
-            LOG_INFO("after  remove size=%{public}d", static_cast<int>(value.first.size()));
-            return !(value.first.empty());
+    observers_.ComputeIfPresent(name, [observer](const auto &key, std::list<ObserverParam> &value) {
+        LOG_INFO("before remove size=%{public}d", static_cast<int>(value.size()));
+        value.remove_if([observer](const ObserverParam &param) {
+            return param.observer == observer;
+        });
+        LOG_INFO("after  remove size=%{public}d", static_cast<int>(value.size()));
+        return !(value.empty());
     });
     return RDB_OK;
 }
@@ -332,10 +341,12 @@ RdbServiceProxy::ObserverMap RdbServiceProxy::ExportObservers()
 void RdbServiceProxy::ImportObservers(ObserverMap &observers)
 {
     LOG_INFO("enter");
-    SubscribeOption option {SubscribeMode::REMOTE};
-    observers.ForEach([this, &option](const std::string& key, const ObserverMapValue& value) {
-        for (auto& observer : value.first) {
-            Subscribe(value.second, option, observer);
+    observers.ForEach([this](const std::string &key, const std::list<ObserverParam> &value) {
+        RdbSyncerParam syncerParam;
+        for (const auto &param : value) {
+            syncerParam.bundleName_ = param.bundleName;
+            syncerParam.storeName_ = key;
+            Subscribe(syncerParam, param.subscribeOption, param.observer);
         }
         return false;
     });
