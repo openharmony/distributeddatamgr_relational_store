@@ -136,10 +136,10 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
                 }).catch((errCode) => {
                     expect(false).assertTrue()
                 })
+                await promiseBackup;
             } catch(err) {
                 expect(false).assertTrue()
             }
-            await promiseBackup
 
             // RDB restore function test
             try {
@@ -150,10 +150,10 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
                 }).catch((errCode) => {
                     expect(false).assertTrue()
                 })
+                await promiseRestore
             } catch(err) {
                 expect(false).assertTrue()
             }
-            await promiseRestore
 
             // RDB after restored, data query test
             let predicates = new data_relationalStore.RdbPredicates("test")
@@ -230,7 +230,6 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
             }
             RestoreTest(dbName)
             done()
-            
             await console.log(TAG + "************* RdbBackupRestoreTest_0040 end *************")
         })
 
