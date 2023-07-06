@@ -133,7 +133,6 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
                 promiseBackup.then(() => {
                     expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + DATABASE_BACKUP_NAME))
                     expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name))
-                    done()
                 }).catch((errCode) => {
                     expect(false).assertTrue()
                 })
