@@ -26,8 +26,12 @@
 namespace OHOS::DistributedRdb {
 class RdbServiceProxy : public IRemoteProxy<IRdbService> {
 public:
-    using ObserverMapValue = std::pair<std::list<RdbStoreObserver*>, RdbSyncerParam>;
-    using ObserverMap = ConcurrentMap<std::string, ObserverMapValue>;
+    struct ObserverParam{
+        RdbStoreObserver* observer;
+        std::string bundleName;
+        SubscribeOption subscribeOption {SubscribeMode::REMOTE};
+    };
+    using ObserverMap = ConcurrentMap<std::string, std::list<ObserverParam>>;
 
     explicit RdbServiceProxy(const sptr<IRemoteObject>& object);
 
