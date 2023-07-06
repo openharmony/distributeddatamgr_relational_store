@@ -82,7 +82,7 @@ enum Progress {
 };
 
 enum ProgressCode {
-    SUCCESS,
+    SUCCESS = 0,
     UNKNOWN_ERROR,
     NETWORK_ERROR,
     CLOUD_DISABLED,
