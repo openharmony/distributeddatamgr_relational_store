@@ -1360,15 +1360,6 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
     }
     return nullptr;
 }
-
-void RdbStoreProxy::NapiCoudSyncCallback::OnSyncCompelete(const DistributedRdb::Details &details)
-{
-    LOG_DEBUG("NapiCoudSyncCallback::OnSyncCompelete begin");
-    CallFunction([details](napi_env env, int &argc, napi_value *argv) {
-        argc = 1;
-        argv[0] = details.empty() ? nullptr : JSUtils::Convert2JSValue(env, details.begin()->second);
-    });
-}
 #endif
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
