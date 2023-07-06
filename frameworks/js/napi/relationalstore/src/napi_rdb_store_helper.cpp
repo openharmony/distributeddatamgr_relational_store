@@ -102,7 +102,7 @@ int ParseDatabaseDir(const napi_env &env, const napi_value &object, std::shared_
     if (dataGroupId.empty()) {
         databaseDir = context->abilitycontext->GetDatabaseDir();
     } else {
-        databaseDir = context->abilitycontext->GetGroupDir(dataGroupId);
+        databaseDir = context->abilitycontext->GetDatabaseDir(dataGroupId);
         CHECK_RETURN_SET(!databaseDir.empty(), std::make_shared<InnerError>(E_DATA_GROUP_ID_INVALID));
     }
 
@@ -207,8 +207,6 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
     LOG_DEBUG("RelationalStoreJsKit::GetRdbStore start");
     auto context = std::make_shared<HelperRdbContext>();
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        bool checked = JSAbility::CheckContext(env, info);
-        CHECK_RETURN_SET_E(checked, std::make_shared<ParamError>("context", "a valid Context."));
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         CHECK_RETURN(OK == ParseContext(env, argv[0], context));
         CHECK_RETURN(OK == ParseStoreConfig(env, argv[1], context));

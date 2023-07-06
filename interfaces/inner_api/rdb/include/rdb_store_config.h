@@ -445,12 +445,12 @@ public:
     /**
      * @brief Sets the module name for the object.
      */
-    API_EXPORT void SetDataGroupId(const std::string &DataGroupId);
+    void SetDataGroupId(const std::string &DataGroupId);
 
     /**
      * @brief Obtains the module name in this {@code StoreConfig} object.
      */
-    API_EXPORT std::string GetDataGroupId() const;
+    std::string GetDataGroupId() const;
 
     /**
      * @brief Overload the line number operator.
