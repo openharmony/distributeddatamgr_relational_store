@@ -53,8 +53,6 @@ Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
     }
     auto appInfo = stageContext->GetApplicationInfo();
     isSystemAppCalled_ = appInfo == nullptr ? false : appInfo->isSystemApp;
-    LOG_DEBUG("Stage: area:%{public}d, bundleName:%{public}s, moduleName:%{public}s", area_, bundleName_.c_str(),
-        moduleName_.c_str());
 }
 
 Context::Context(std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext)
@@ -66,8 +64,6 @@ Context::Context(std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext)
     if (abilityInfo != nullptr) {
         moduleName_ = abilityInfo->moduleName;
     }
-    LOG_DEBUG("FA: area:%{public}d database:%{private}s bundle:%{public}s hap:%{public}s",
-        area_, databaseDir_.c_str(), bundleName_.c_str(), moduleName_.c_str());
 }
 
 std::string Context::GetDatabaseDir()
@@ -75,9 +71,9 @@ std::string Context::GetDatabaseDir()
     return databaseDir_;
 }
 
-std::string Context::GetGroupDir(const std::string &dataGroupId)
+std::string Context::GetDatabaseDir(const std::string &dataGroupId)
 {
-    return stageContext_->GetGroupDir(dataGroupId);
+    return stageContext_->GetDatabaseDir(dataGroupId);
 }
 
 std::string Context::GetBundleName()
