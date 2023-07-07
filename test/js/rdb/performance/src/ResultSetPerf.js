@@ -32,7 +32,7 @@ const BASE_COUNT = 2000; // loop times
 const SPECIAL_BASE_COUNT = 12000;
 const BASE_LINE_TABLE = 500; // callback tablet base line
 const BASE_LINE_PHONE = 1000; // callback phone base line
-const BASE_LINE = (deviceInfo.deviceType == "tablet") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
+const BASE_LINE = (deviceInfo.deviceType == "tablet" || deviceType == "2in1") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
 
 describe('resultSetPerf', function () {
   beforeAll(async function () {
