@@ -230,5 +230,34 @@ describe('rdbStorePromiseTest', function () {
         console.log(TAG + "************* testRdbStorePromiseTest0006 end *************")
     })
 
+    /**
+     * @tc.name rdb deleteRdbStore use STORE_CONFIG
+     * @tc.number testRdbStorePromiseTest0007
+     * @tc.desc rdb deleteRdbStore use STORE_CONFIG
+     */
+    it('testRdbStorePromiseTest0007', 0, async function (done) {
+        console.log(TAG + "************* testRdbStorePromiseTest0007 start *************");
+        const STORE_CONFIG = {
+            name: "dataGroupId.db",
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+        }
+        await data_relationalStore.getRdbStore(context, STORE_CONFIG)
+        try {
+            data_relationalStore.deleteRdbStore(context, STORE_CONFIG).then((err) => {
+                console.log("Delete RdbStore successfully.")
+                done()
+            }).catch((err) => {
+                console.info("Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
+                expect(false).assertTrue()
+            })
+        } catch(err) {
+            console.info("catch err: Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
+            expect(false).assertTrue()
+        }
+        done()
+        console.log(TAG + "************* testRdbStorePromiseTest0007 end *************")
+    })
+
     console.log(TAG + "*************Unit Test End*************");
 })
+
