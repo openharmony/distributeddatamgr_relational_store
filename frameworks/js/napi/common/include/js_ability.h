@@ -32,7 +32,7 @@ public:
     explicit Context(std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext);
 
     std::string GetDatabaseDir();
-    std::string GetDatabaseDir(const std::string &dataGroupId);
+    int GetSystemDatabaseDir(const std::string &dataGroupId, std::string &databaseDir);
     std::string GetBundleName();
     std::string GetModuleName();
     std::string GetUri();

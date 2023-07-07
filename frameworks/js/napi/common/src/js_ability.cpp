@@ -71,9 +71,9 @@ std::string Context::GetDatabaseDir()
     return databaseDir_;
 }
 
-std::string Context::GetDatabaseDir(const std::string &dataGroupId)
+int Context::GetSystemDatabaseDir(const std::string &dataGroupId, std::string &databaseDir)
 {
-    return stageContext_->GetDatabaseDir(dataGroupId);
+    return stageContext_->GetSystemDatabaseDir(dataGroupId, databaseDir);
 }
 
 std::string Context::GetBundleName()
