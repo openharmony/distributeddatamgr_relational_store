@@ -102,8 +102,10 @@ int ParseDatabaseDir(const napi_env &env, const napi_value &object, std::shared_
     if (dataGroupId.empty()) {
         databaseDir = context->abilitycontext->GetDatabaseDir();
     } else {
-        databaseDir = context->abilitycontext->GetDatabaseDir(dataGroupId);
-        CHECK_RETURN_SET(!databaseDir.empty(), std::make_shared<InnerError>(E_DATA_GROUP_ID_INVALID));
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+        errorCode = context->abilitycontext->GetSystemDatabaseDir(dataGroupId, databaseDir);
+        CHECK_RETURN_SET((errorCode == E_OK), std::make_shared<InnerError>(E_DATA_GROUP_ID_INVALID));
+#endif
     }
 
     std::string realPath = RdbSqlUtils::GetDefaultDatabasePath(databaseDir, databaseName, errorCode);
