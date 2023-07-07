@@ -29,7 +29,7 @@ var rdbStore = undefined;
 const BASE_COUNT = 2000; // loop times
 const BASE_LINE_TABLE = 2500; // callback tablet base line
 const BASE_LINE_PHONE = 3000; // callback phone base line
-const BASE_LINE = (deviceInfo.deviceType == "tablet") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
+const BASE_LINE = (deviceInfo.deviceType == "tablet" || deviceType == "2in1") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
 
 describe('rdbHelperPromisePerf', function () {
   beforeAll(async function () {
