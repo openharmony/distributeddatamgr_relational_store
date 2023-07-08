@@ -231,9 +231,9 @@ describe('rdbStorePromiseTest', function () {
     })
 
     /**
-     * @tc.name rdb deleteRdbStore use STORE_CONFIG
+     * @tc.name rdb deleteRdbStore use storeConfig
      * @tc.number testRdbStorePromiseTest0007
-     * @tc.desc rdb deleteRdbStore use STORE_CONFIG
+     * @tc.desc rdb deleteRdbStore use storeConfig
      */
     it('testRdbStorePromiseTest0007', 0, async function (done) {
         console.log(TAG + "************* testRdbStorePromiseTest0007 start *************");
@@ -260,4 +260,3 @@ describe('rdbStorePromiseTest', function () {
 
     console.log(TAG + "*************Unit Test End*************");
 })
-
