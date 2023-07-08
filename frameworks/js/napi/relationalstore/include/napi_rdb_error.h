@@ -41,7 +41,7 @@ const static std::map<int, std::string> ERROR_MAPS = {
     { NativeRdb::E_NOT_SUPPORTED, "Capability not supported" },
     { E_RESULT_GOTO_ERROR, "The result set is empty or the specified location is invalid." },
     { NativeRdb::E_INVALID_STATEMENT, "The column value is null or the column type is incompatible." },
-    { E_NOT_STAGE_MODE, "Only supported in Stage Mode." },
+    { E_NOT_STAGE_MODE, "Only supported in stage mode." },
     { E_DATA_GROUP_ID_INVALID, "The data group id is invalid." },
 };
 
