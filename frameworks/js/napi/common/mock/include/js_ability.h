@@ -35,7 +35,6 @@ public:
 #endif
 
     std::string GetDatabaseDir();
-    std::string GetPreferencesDir();
     std::string GetBundleName();
     std::string GetModuleName();
     std::string GetUri();
@@ -48,7 +47,6 @@ public:
 private:
     int32_t area_ = 0;
     std::string databaseDir_;
-    std::string preferencesDir_;
     std::string bundleName_;
     std::string moduleName_;
     std::string uri_;

@@ -388,4 +388,14 @@ std::map<std::string, ScalarFunctionInfo> RdbStoreConfig::GetScalarFunctions() c
 {
     return customScalarFunctions;
 }
+
+void RdbStoreConfig::SetDataGroupId(const std::string &DataGroupId)
+{
+    dataGroupId_ = DataGroupId;
+}
+
+std::string RdbStoreConfig::GetDataGroupId() const
+{
+    return dataGroupId_;
+}
 } // namespace OHOS::NativeRdb

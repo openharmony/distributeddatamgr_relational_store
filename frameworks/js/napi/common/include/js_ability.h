@@ -32,7 +32,7 @@ public:
     explicit Context(std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext);
 
     std::string GetDatabaseDir();
-    std::string GetPreferencesDir();
+    int GetSystemDatabaseDir(const std::string &dataGroupId, std::string &databaseDir);
     std::string GetBundleName();
     std::string GetModuleName();
     std::string GetUri();
@@ -41,11 +41,11 @@ public:
     int32_t GetArea() const;
     bool IsSystemAppCalled();
     bool IsHasProxyDataConfig() const;
+    bool IsStageMode() const;
 
 private:
     int32_t area_ = 0;
     std::string databaseDir_;
-    std::string preferencesDir_;
     std::string bundleName_;
     std::string moduleName_;
     std::string uri_;
@@ -53,6 +53,8 @@ private:
     std::string writePermission_;
     bool hasProxyDataConfig_ = false;
     bool isSystemAppCalled_ = false;
+    bool isStageMode_ = false;
+    std::shared_ptr<AbilityRuntime::Context> stageContext_;
 };
 
 class JSAbility final {
