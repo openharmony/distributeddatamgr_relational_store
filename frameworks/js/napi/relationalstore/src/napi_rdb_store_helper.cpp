@@ -199,8 +199,6 @@ public:
 
 napi_value GetRdbStore(napi_env env, napi_callback_info info)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    LOG_DEBUG("RelationalStoreJsKit::GetRdbStore start");
     auto context = std::make_shared<HelperRdbContext>();
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
@@ -208,7 +206,6 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParseStoreConfig(env, argv[1], context));
     };
     auto exec = [context]() -> int {
-        LOG_DEBUG("RelationalStoreJsKit::GetRdbStore Async");
         int errCode = OK;
         DefaultOpenCallback callback;
         context->proxy = RdbHelper::GetRdbStore(context->config, -1, callback, errCode);
@@ -217,7 +214,6 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
     auto output = [context](napi_env env, napi_value &result) {
         result = RdbStoreProxy::NewInstance(env, context->proxy, context->isSystemAppCalled);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
-        LOG_DEBUG("RelationalStoreJsKit::GetRdbStore end");
     };
     context->SetAction(env, info, input, exec, output);
 
@@ -227,8 +223,6 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
 
 napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    LOG_DEBUG("RelationalStoreJsKit::DeleteRdbStore start");
     auto context = std::make_shared<HelperRdbContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
@@ -245,7 +239,6 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, OK, &result);
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
-        LOG_DEBUG("RelationalStoreJsKit::DeleteRdbStore end");
     };
     context->SetAction(env, info, input, exec, output);
 
