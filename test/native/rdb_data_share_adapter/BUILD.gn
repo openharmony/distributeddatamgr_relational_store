@@ -50,8 +50,6 @@ ohos_unittest("RdbDataShareAdapterTest") {
   configs = [ ":module_private_config" ]
 
   external_deps = [
-    "ability_base:zuri",
-    "ability_runtime:dataobs_manager",
     "c_utils:utils",
     "hilog:libhilog",
     "relational_store:native_rdb",
