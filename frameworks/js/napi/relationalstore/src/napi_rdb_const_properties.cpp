@@ -178,6 +178,7 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("SecurityLevel", ExportSecurityLevel(env)),
 #endif
         DECLARE_NAPI_PROPERTY("Progress", ExportProgress(env)),
+        DECLARE_NAPI_PROPERTY("ProgressCode", ExportProgressCode(env)),
         DECLARE_NAPI_PROPERTY("DistributedType", ExportDistributedType(env)),
         DECLARE_NAPI_PROPERTY("AssetStatus", ExportAssetStatus(env)),
         DECLARE_NAPI_PROPERTY("ChangeType", ExportChangeType(env)),
