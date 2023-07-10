@@ -117,5 +117,15 @@ bool Context::IsHasProxyDataConfig() const
 {
     return hasProxyDataConfig_;
 }
+
+bool Context::IsStageMode() const
+{
+    return isStageMode_;
+}
+
+int Context::GetSystemDatabaseDir(const std::string &dataGroupId, std::string &databaseDir)
+{
+    return false;
+}
 } // namespace AppDataMgrJsKit
 } // namespace OHOS

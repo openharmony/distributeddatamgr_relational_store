@@ -43,6 +43,8 @@ public:
     int32_t GetArea() const;
     bool IsSystemAppCalled();
     bool IsHasProxyDataConfig() const;
+    int GetSystemDatabaseDir(const std::string &dataGroupId, std::string &databaseDir);
+    bool IsStageMode() const;
 
 private:
     int32_t area_ = 0;
@@ -54,6 +56,8 @@ private:
     std::string writePermission_;
     bool hasProxyDataConfig_ = false;
     bool isSystemAppCalled_ = false;
+    bool isStageMode_ = false;
+
 };
 
 class JSAbility final {
