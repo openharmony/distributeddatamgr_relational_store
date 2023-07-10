@@ -53,6 +53,7 @@
                 "common_event_service",
                 "c_utils",
                 "device_manager",
+                "ffrt",
                 "hilog",
                 "hitrace",
                 "huks",

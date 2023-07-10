@@ -98,10 +98,8 @@ int ParseDatabaseDir(const napi_env &env, const napi_value &object, std::shared_
     }
 
     std::string databaseDir;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     errorCode = context->abilitycontext->GetSystemDatabaseDir(context->config.GetDataGroupId(), databaseDir);
     CHECK_RETURN_SET((errorCode == E_OK), std::make_shared<InnerError>(E_DATA_GROUP_ID_INVALID));
-#endif
 
     std::string realPath = RdbSqlUtils::GetDefaultDatabasePath(databaseDir, databaseName, errorCode);
     CHECK_RETURN_SET(errorCode == E_OK, std::make_shared<ParamError>("config", "a StoreConfig."));
@@ -144,9 +142,7 @@ int ParseDataGroupId(const napi_env &env, const napi_value &object, std::shared_
         std::string dataGroupId = JSUtils::Convert2String(env, value);
         CHECK_RETURN_SET(!dataGroupId.empty(), std::make_shared<ParamError>
             ("StoreConfig.dataGroupId", "not empty."));
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
         CHECK_RETURN_SET(context->abilitycontext->IsStageMode(), std::make_shared<InnerError>(E_NOT_STAGE_MODE));
-#endif
         context->config.SetDataGroupId(JSUtils::Convert2String(env, value));
     }
     return OK;
