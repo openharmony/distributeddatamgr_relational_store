@@ -91,11 +91,3 @@ private:
 } // namespace RdbJsKit
 } // namespace OHOS
 #endif // RDB_JSKIT_NAPI_RESULT_SET_H
-
-EXTERN_C_START
-__attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_NewInstance(
-    napi_env env, OHOS::NativeRdb::AbsSharedResultSet *resultSet);
-
-__attribute__((visibility("default"))) OHOS::NativeRdb::AbsSharedResultSet *
-NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_GetNativeObject(const napi_env &env, const napi_value &arg);
-EXTERN_C_END
