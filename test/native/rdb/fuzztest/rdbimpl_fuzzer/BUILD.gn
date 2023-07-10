@@ -60,8 +60,6 @@ ohos_fuzztest("RdbImplFuzzTest") {
   ]
 
   external_deps = [
-    "ability_base:zuri",
-    "ability_runtime:dataobs_manager",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
