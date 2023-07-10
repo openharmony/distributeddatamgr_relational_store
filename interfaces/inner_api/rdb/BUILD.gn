@@ -38,7 +38,7 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/values_bucket.cpp",
 ]
 
-if (is_ohos) {
+if (is_ohos && !build_ohos_sdk) {
   config("native_rdb_config") {
     visibility = [ ":*" ]
 
@@ -506,4 +506,6 @@ if (is_ohos) {
     public_configs = [ ":native_rdb_public_config" ]
     subsystem_name = "distributeddatamgr"
   }
+} else {
+  not_needed([ "base_sources" ])
 }
