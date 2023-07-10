@@ -121,7 +121,7 @@ if (is_ohos) {
     ]
 
     external_deps = [
-      "ability_base:zuri",
+#      "ability_base:zuri",
 #      "ability_runtime:dataobs_manager",
       "c_utils:utils",
       "device_manager:devicemanagersdk",
