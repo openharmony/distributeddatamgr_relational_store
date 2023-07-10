@@ -99,6 +99,22 @@ static napi_value ExportProgress(napi_env env)
     return progress;
 }
 
+static napi_value ExportProgressCode(napi_env env)
+{
+    napi_value progressCode = nullptr;
+    napi_create_object(env, &progressCode);
+
+    SET_NAPI_PROPERTY(progressCode, "SUCCESS", 0);
+    SET_NAPI_PROPERTY(progressCode, "UNKNOWN_ERROR", 1);
+    SET_NAPI_PROPERTY(progressCode, "NETWORK_ERROR", 2);
+    SET_NAPI_PROPERTY(progressCode, "CLOUD_DISABLED", 3);
+    SET_NAPI_PROPERTY(progressCode, "LOCKED_BY_OTHERS", 4);
+    SET_NAPI_PROPERTY(progressCode, "RECORD_LIMIT_EXCEEDED", 5);
+    SET_NAPI_PROPERTY(progressCode, "NO_SPACE_FOR_ASSET", 6);
+    napi_object_freeze(env, progressCode);
+    return progressCode;
+}
+
 static napi_value ExportDistributedType(napi_env env)
 {
     napi_value distributedType = nullptr;
