@@ -1535,7 +1535,6 @@ int RdbStoreImpl::UnSubscribeRemote(const SubscribeOption& option, RdbStoreObser
 
 int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *observer)
 {
-    LOG_INFO("enter");
     if (option.mode == SubscribeMode::LOCAL && observer) {
         return UnSubscribeLocal(option, observer);
     } else if (option.mode == SubscribeMode::LOCAL && !observer) {
