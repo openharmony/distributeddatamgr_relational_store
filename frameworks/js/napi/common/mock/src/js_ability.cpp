@@ -126,7 +126,7 @@ bool Context::IsStageMode() const
 int Context::GetSystemDatabaseDir(const std::string &dataGroupId, std::string &databaseDir)
 {
     databaseDir = databaseDir_;
-    return true;
+    return 0;
 }
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
