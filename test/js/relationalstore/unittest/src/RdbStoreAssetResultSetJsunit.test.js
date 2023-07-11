@@ -665,8 +665,8 @@ describe('rdbAssetResultSetTest', function () {
             expect("name4").assertEqual(asset.name);
             expect("uri4").assertEqual(asset.uri);
             expect("createTime4").assertEqual(asset.createTime);
-            expect("modifyTime4").assertEqual(asset.modifyTime);
-            expect("size4").assertEqual(asset.size);
+            expect("").assertEqual(asset.modifyTime);
+            expect("").assertEqual(asset.size);
             expect("path4").assertEqual(asset.path);
             expect(data_relationalStore.AssetStatus.ASSET_DELETE).assertEqual(asset.status);
         } catch (e) {

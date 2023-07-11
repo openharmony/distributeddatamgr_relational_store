@@ -136,6 +136,8 @@ public:
     int GetReadConSize() const;
     void SetReadConSize(int readConSize);
     void SetScalarFunction(const std::string &functionName, int argc, ScalarFunction function);
+    void SetDataGroupId(const std::string &dataGroupId);
+    std::string GetDataGroupId() const;
     std::map<std::string, ScalarFunctionInfo> GetScalarFunctions() const;
 
     bool operator==(const RdbStoreConfig &config) const
@@ -196,6 +198,7 @@ private:
     int pageSize;
     int readConSize_ = 4;
     std::string encryptAlgo;
+    std::string dataGroupId_;
 
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
 };

@@ -80,7 +80,8 @@ private:
 
     int RegDefaultFunctions(sqlite3 *dbHandle);
     static void MergeAssets(sqlite3_context *ctx, int argc, sqlite3_value **argv);
-    static void CompAssets(std::map<std::string, ValueObject::Asset> &oldAssets, std::map<std::string, ValueObject::Asset> &newAssets);
+    static void CompAssets(std::map<std::string, ValueObject::Asset> &oldAssets, std::map<std::string,
+        ValueObject::Asset> &newAssets);
     static void MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Asset &newAsset);
 
     int SetCustomFunctions(const RdbStoreConfig &config);

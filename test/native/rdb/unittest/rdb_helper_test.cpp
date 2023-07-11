@@ -54,6 +54,7 @@ void RdbHelperTest::SetUpTestCase(void)
 
 void RdbHelperTest::TearDownTestCase(void)
 {
+    RdbHelper::DeleteRdbStore(rdbStorePath);
 }
 
 void RdbHelperTest::SetUp(void)
