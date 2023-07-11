@@ -412,6 +412,11 @@ public:
     virtual int UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
 
     /**
+     * @brief When SubscribeMode is LOCAL or LOCALSHARED, this function needs to be called to trigger callback.
+     */
+    virtual int Notify(const std::string &event);
+
+    /**
      * @brief Drop the specified devices Data.
      *
      * User must use UDID

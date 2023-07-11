@@ -43,6 +43,7 @@ const static std::map<int, std::string> ERROR_MAPS = {
     { NativeRdb::E_INVALID_STATEMENT, "The column value is null or the column type is incompatible." },
     { E_NOT_STAGE_MODE, "Only supported in stage mode." },
     { E_DATA_GROUP_ID_INVALID, "The data group id is invalid." },
+    { NativeRdb::E_GET_DATAOBSMGRCLIENT_FAIL, "Failed to get DataObsMgrClient." },
 };
 
 #define RDB_REVT_NOTHING

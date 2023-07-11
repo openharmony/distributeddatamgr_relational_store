@@ -59,6 +59,11 @@ void NapiRdbStoreObserver::OnChange(const Origin &origin, const PrimaryFields &f
     RdbStoreObserver::OnChange(origin, fields, std::move(changeInfo));
 }
 
+void NapiRdbStoreObserver::OnChange()
+{
+    CallFunction([](napi_env env, int &argc, napi_value *argv) {});
+}
+
 NapiRdbStoreObserver::JSChangeInfo::JSChangeInfo(const Origin &origin, ChangeInfo::iterator info)
 {
     table = info->first;
