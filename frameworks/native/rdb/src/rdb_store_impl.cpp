@@ -1459,12 +1459,12 @@ int RdbStoreImpl::Subscribe(const SubscribeOption &option, RdbStoreObserver *obs
 
 int RdbStoreImpl::UnSubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     auto obs = localObservers_.find(option.event);
     if (obs == localObservers_.end()) {
         return E_OK;
     }
 
-    std::lock_guard<std::mutex> lock(mutex_);
     auto &list = obs->second;
     for (auto it = list.begin(); it != list.end(); it++) {
         if ((*it).get() == observer) {
@@ -1480,6 +1480,7 @@ int RdbStoreImpl::UnSubscribeLocal(const SubscribeOption& option, RdbStoreObserv
 
 int RdbStoreImpl::UnSubscribeLocalAll(const SubscribeOption& option)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     localObservers_.erase(option.event);
     return E_OK;
 }
@@ -1487,7 +1488,6 @@ int RdbStoreImpl::UnSubscribeLocalAll(const SubscribeOption& option)
 int RdbStoreImpl::UnSubscribeLocalShared(const SubscribeOption& option, std::shared_ptr<AAFwk::DataObsMgrClient> client,
     std::list<sptr<RdbStoreLocalSharedObserver>> &observes, RdbStoreObserver *observer)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     for (auto it = observes.begin(); it != observes.end(); it++) {
         if ((*it)->getObserver() == observer) {
             int32_t err = client->UnregisterObserver(GetUri(option.event), *it);
