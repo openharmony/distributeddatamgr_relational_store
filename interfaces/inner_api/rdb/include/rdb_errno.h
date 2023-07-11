@@ -283,6 +283,11 @@ static constexpr int E_CON_OVER_LIMIT = (E_BASE + 48);
 * @brief The error when the sharedblock unit is null.
 */
 static constexpr int E_NULL_OBJECT = (E_BASE + 49);
+
+/**
+* @brief Failed to get DataObsMgrClient.
+*/
+static constexpr int E_GET_DATAOBSMGRCLIENT_FAIL = (E_BASE + 50);
 } // namespace NativeRdb
 } // namespace OHOS
 
