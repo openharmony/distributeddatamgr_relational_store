@@ -1488,6 +1488,7 @@ int RdbStoreImpl::UnSubscribeLocalAll(const SubscribeOption& option)
 int RdbStoreImpl::UnSubscribeLocalShared(const SubscribeOption& option, std::shared_ptr<AAFwk::DataObsMgrClient> client,
     std::list<sptr<RdbStoreLocalSharedObserver>> &observes, RdbStoreObserver *observer)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     for (auto it = observes.begin(); it != observes.end(); it++) {
         if ((*it)->getObserver() == observer) {
             int32_t err = client->UnregisterObserver(GetUri(option.event), *it);
@@ -1508,6 +1509,7 @@ int RdbStoreImpl::UnSubscribeLocalShared(const SubscribeOption& option, std::sha
 int RdbStoreImpl::UnSubscribeLocalSharedAll(const SubscribeOption& option,
     std::shared_ptr<AAFwk::DataObsMgrClient> client, std::list<sptr<RdbStoreLocalSharedObserver>> &observes)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     auto it = observes.begin();
     while (it != observes.end()) {
         int32_t err = client->UnregisterObserver(GetUri(option.event), *it);
@@ -1539,6 +1541,7 @@ int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *o
     } else if (option.mode == SubscribeMode::LOCAL && !observer) {
         return UnSubscribeLocalAll(option);
     } else if (option.mode == SubscribeMode::LOCAL_SHARED) {
+        std::lock_guard<std::mutex> lock(mutex_);
         auto obs = localSharedObservers_.find(option.event);
         if (obs == localSharedObservers_.end()) {
             return E_OK;
@@ -1562,23 +1565,23 @@ int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *o
 
 int RdbStoreImpl::Notify(const std::string &event)
 {
+    auto client = OHOS::AAFwk::DataObsMgrClient::GetInstance();
+    if (client == nullptr) {
+        LOG_ERROR("Failed to get DataObsMgrClient.");
+        return E_GET_DATAOBSMGRCLIENT_FAIL;
+    }
+    int32_t err = client->NotifyChange(GetUri(event));
+    if (err != 0) {
+        LOG_ERROR("Notify failed.");
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
     auto obs = localObservers_.find(event);
     if (obs != localObservers_.end()) {
         auto &list = obs->second;
         for (auto &it : list) {
             it->OnChange();
         }
-    }
-
-    auto client = OHOS::AAFwk::DataObsMgrClient::GetInstance();
-    if (client == nullptr) {
-        LOG_ERROR("Failed to get DataObsMgrClient.");
-        return E_GET_DATAOBSMGRCLIENT_FAIL;
-    }
-
-    int32_t err = client->NotifyChange(GetUri(event));
-    if (err != 0) {
-        LOG_ERROR("Notify failed.");
     }
 
     return E_OK;
