@@ -414,7 +414,7 @@ public:
     /**
      * @brief When SubscribeMode is LOCAL or LOCALSHARED, this function needs to be called to trigger callback.
      */
-    virtual int Notify(const std::string &event) = 0;
+    virtual int Notify(const std::string &event);
 
     /**
      * @brief Drop the specified devices Data.
