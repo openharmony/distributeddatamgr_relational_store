@@ -166,11 +166,14 @@ enum SubscribeMode {
     REMOTE,
     CLOUD,
     CLOUD_DETAIL,
+    LOCAL,
+    LOCAL_SHARED,
     SUBSCRIBE_MODE_MAX
 };
 
 struct SubscribeOption {
     SubscribeMode mode;
+    std::string event;
 };
 
 struct Origin {
@@ -203,6 +206,7 @@ public:
         CHG_TYPE_DELETE,
         CHG_TYPE_BUTT
     };
+    virtual ~RdbStoreObserver() {};
     using PrimaryKey = std::variant<std::monostate, std::string, int64_t, double>;
     using ChangeInfo = std::map<std::string, std::vector<PrimaryKey>[CHG_TYPE_BUTT]>;
     using PrimaryFields = std::map<std::string, std::string>;
@@ -211,6 +215,7 @@ public:
     {
         OnChange(origin.id);
     };
+    virtual void OnChange() {};
 };
 
 struct DropOption {

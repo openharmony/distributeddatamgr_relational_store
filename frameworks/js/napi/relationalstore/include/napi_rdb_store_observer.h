@@ -38,6 +38,8 @@ public:
 
     void OnChange(const Origin &origin, const PrimaryFields &fields, ChangeInfo &&changeInfo) override;
 
+    void OnChange() override;
+
 private:
     int32_t mode_ = DistributedRdb::REMOTE;
 };
