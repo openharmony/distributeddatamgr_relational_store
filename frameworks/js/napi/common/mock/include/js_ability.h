@@ -57,7 +57,6 @@ private:
     bool hasProxyDataConfig_ = false;
     bool isSystemAppCalled_ = false;
     bool isStageMode_ = false;
-
 };
 
 class JSAbility final {

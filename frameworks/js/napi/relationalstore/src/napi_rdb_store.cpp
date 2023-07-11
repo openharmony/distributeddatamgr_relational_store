@@ -1406,7 +1406,7 @@ napi_value RdbStoreProxy::Notify(napi_env env, napi_callback_info info)
     napi_value self = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
     RDB_NAPI_ASSERT(env, status == napi_ok && argc == 1, std::make_shared<ParamNumError>("1"));
-    auto * proxy = GetNativeInstance(env, self);
+    auto *proxy = GetNativeInstance(env, self);
     RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
 
     int errCode = proxy->rdbStore_->Notify(JSUtils::Convert2String(env, argv[0]));
