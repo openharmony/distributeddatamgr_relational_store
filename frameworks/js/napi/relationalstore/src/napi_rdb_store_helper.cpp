@@ -98,7 +98,7 @@ int ParseDatabaseDir(const napi_env &env, const napi_value &object, std::shared_
     }
 
     std::string databaseDir;
-    if (context->config.GetDataGroupId().empty()){
+    if (context->config.GetDataGroupId().empty()) {
         databaseDir = context->abilitycontext->GetDatabaseDir();
     } else {
         errorCode = context->abilitycontext->GetSystemDatabaseDir(context->config.GetDataGroupId(), databaseDir);
