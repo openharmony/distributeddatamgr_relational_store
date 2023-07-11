@@ -96,6 +96,7 @@ int ParseDatabaseDir(const napi_env &env, const napi_value &object, std::shared_
     if (databaseName.find("/") != std::string::npos) {
         CHECK_RETURN_SET(false, std::make_shared<ParamError>("StoreConfig.name", "a file name without path"));
     }
+    context->config.SetName(std::move(databaseName));
 
     std::string databaseDir;
     if (context->config.GetDataGroupId().empty()) {
