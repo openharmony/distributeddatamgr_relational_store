@@ -382,11 +382,11 @@ if (is_ohos && !build_ohos_sdk) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "${distributedfile_path}/mod_securitylabel",
       "${relational_store_common_path}/include",
       "${relational_store_innerapi_path}/rdb/mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "${relational_store_innerapi_path}/rdb/include",
-      "//foundation/distributeddatamgr/kv_store/frameworks/common",
       "${relational_store_native_path}/rdb/include",
     ]
 
@@ -422,14 +422,17 @@ if (is_ohos && !build_ohos_sdk) {
     defines = [ "ANDROID_PLATFORM" ]
 
     part_name = "relational_store"
+
     sources = base_sources
 
     configs = [ ":native_rdb_config" ]
 
     deps = base_deps
 
-    sources +=
-        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
+    sources += [
+      "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
+      "${relational_store_native_path}/rdb/src/security_policy.cpp",
+    ]
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
@@ -446,6 +449,7 @@ if (is_ohos && !build_ohos_sdk) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "${distributedfile_path}/mod_securitylabel",
       "${relational_store_common_path}/include",
       "${relational_store_innerapi_path}/rdb/mock/include",
       "${relational_store_native_path}/rdb/mock/include",
@@ -493,8 +497,10 @@ if (is_ohos && !build_ohos_sdk) {
 
     deps = base_deps
 
-    sources +=
-        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
+    sources += [
+      "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
+      "${relational_store_native_path}/rdb/src/security_policy.cpp",
+    ]
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
