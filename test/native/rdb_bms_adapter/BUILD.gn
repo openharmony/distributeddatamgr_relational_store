@@ -30,17 +30,17 @@ ohos_unittest("RdbBMSAdapterTest") {
   configs = [ ":module_private_config" ]
 
   external_deps = [
-    "ability_base:zuri",
-    "ability_runtime:dataobs_manager",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
-    "relational_store:native_rdb",
     "relational_store:rdb_bms_adapter",
     "resource_management:global_resmgr",
   ]
 
-  deps = [ "//third_party/googletest:gtest_main" ]
+  deps = [
+    "${relational_store_innerapi_path}/rdb:native_rdb",
+    "//third_party/googletest:gtest_main",
+  ]
 }
 
 ###############################################################################
