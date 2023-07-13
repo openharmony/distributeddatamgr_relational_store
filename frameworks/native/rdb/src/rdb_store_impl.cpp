@@ -1400,24 +1400,28 @@ int RdbStoreImpl::SubscribeLocal(const SubscribeOption& option, RdbStoreObserver
     localObservers_.try_emplace(option.event);
     auto &list = localObservers_.find(option.event)->second;
     for (auto it = list.begin(); it != list.end(); it++) {
-        if ((*it).get() == observer) {
-            LOG_ERROR("duplicate subscrib");
+        if ((*it)->getObserver() == observer) {
+            LOG_ERROR("duplicate subscribe");
             return E_OK;
         }
     }
 
-    localObservers_[option.event].push_back(std::shared_ptr<RdbStoreObserver>(observer));
+    localObservers_[option.event].push_back(std::make_shared<RdbStoreLocalObserver>(observer));
     return E_OK;
 }
 
 int RdbStoreImpl::SubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer)
 {
+    if (rdbStoreConfig.GetDataGroupId().empty()) {
+        return 14801001; // E_NOT_STAGE_MODE
+    }
+
     std::lock_guard<std::mutex> lock(mutex_);
     localSharedObservers_.try_emplace(option.event);
     auto &list = localSharedObservers_.find(option.event)->second;
     for (auto it = list.begin(); it != list.end(); it++) {
         if ((*it)->getObserver() == observer) {
-            LOG_ERROR("duplicate subscrib");
+            LOG_ERROR("duplicate subscribe");
             return E_OK;
         }
     }
@@ -1467,11 +1471,12 @@ int RdbStoreImpl::UnSubscribeLocal(const SubscribeOption& option, RdbStoreObserv
 
     auto &list = obs->second;
     for (auto it = list.begin(); it != list.end(); it++) {
-        if ((*it).get() == observer) {
-            list.erase(it);
+        if ((*it)->getObserver() == observer) {
+            it = list.erase(it);
             break;
         }
     }
+
     if (list.empty()) {
         localObservers_.erase(option.event);
     }
@@ -1481,43 +1486,70 @@ int RdbStoreImpl::UnSubscribeLocal(const SubscribeOption& option, RdbStoreObserv
 int RdbStoreImpl::UnSubscribeLocalAll(const SubscribeOption& option)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    auto obs = localObservers_.find(option.event);
+    if (obs == localObservers_.end()) {
+        return E_OK;
+    }
+
     localObservers_.erase(option.event);
     return E_OK;
 }
 
-int RdbStoreImpl::UnSubscribeLocalShared(const SubscribeOption& option, std::shared_ptr<AAFwk::DataObsMgrClient> client,
-    std::list<sptr<RdbStoreLocalSharedObserver>> &observes, RdbStoreObserver *observer)
+int RdbStoreImpl::UnSubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    for (auto it = observes.begin(); it != observes.end(); it++) {
+    auto obs = localSharedObservers_.find(option.event);
+    if (obs == localSharedObservers_.end()) {
+        return E_OK;
+    }
+
+    auto client = OHOS::AAFwk::DataObsMgrClient::GetInstance();
+    if (client == nullptr) {
+        LOG_ERROR("Failed to get DataObsMgrClient.");
+        return E_GET_DATAOBSMGRCLIENT_FAIL;
+    }
+
+    auto &list = obs->second;
+    for (auto it = list.begin(); it != list.end(); it++) {
         if ((*it)->getObserver() == observer) {
             int32_t err = client->UnregisterObserver(GetUri(option.event), *it);
             if (err != 0) {
-                LOG_ERROR("UnSubscribe failed.");
+                LOG_ERROR("UnSubscribeLocalShared failed.");
                 return err;
             }
-            observes.erase(it);
+            list.erase(it);
             break;
         }
     }
-    if (observes.empty()) {
+    if (list.empty()) {
         localSharedObservers_.erase(option.event);
     }
     return E_OK;
 }
 
-int RdbStoreImpl::UnSubscribeLocalSharedAll(const SubscribeOption& option,
-    std::shared_ptr<AAFwk::DataObsMgrClient> client, std::list<sptr<RdbStoreLocalSharedObserver>> &observes)
+int RdbStoreImpl::UnSubscribeLocalSharedAll(const SubscribeOption& option)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto it = observes.begin();
-    while (it != observes.end()) {
+    auto obs = localSharedObservers_.find(option.event);
+    if (obs == localSharedObservers_.end()) {
+        return E_OK;
+    }
+
+    auto client = OHOS::AAFwk::DataObsMgrClient::GetInstance();
+    if (client == nullptr) {
+        LOG_ERROR("Failed to get DataObsMgrClient.");
+        return E_GET_DATAOBSMGRCLIENT_FAIL;
+    }
+
+    auto &list = obs->second;
+    auto it = list.begin();
+    while (it != list.end()) {
         int32_t err = client->UnregisterObserver(GetUri(option.event), *it);
         if (err != 0) {
             LOG_ERROR("UnSubscribe failed.");
             return err;
         }
-        it = observes.erase(it);
+        it = list.erase(it);
     }
 
     localSharedObservers_.erase(option.event);
@@ -1540,25 +1572,8 @@ int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *o
     } else if (option.mode == SubscribeMode::LOCAL && !observer) {
         return UnSubscribeLocalAll(option);
     } else if (option.mode == SubscribeMode::LOCAL_SHARED) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        auto obs = localSharedObservers_.find(option.event);
-        if (obs == localSharedObservers_.end()) {
-            return E_OK;
-        }
-
-        auto client = OHOS::AAFwk::DataObsMgrClient::GetInstance();
-        if (client == nullptr) {
-            LOG_ERROR("Failed to get DataObsMgrClient.");
-            return E_GET_DATAOBSMGRCLIENT_FAIL;
-        }
-
-        if (observer) {
-            return UnSubscribeLocalShared(option, client, obs->second, observer);
-        } else {
-            return UnSubscribeLocalSharedAll(option, client, obs->second);
-        }
+        valueBool ? return UnSubscribeLocalShared(option, observer) : return UnSubscribeLocalSharedAll(option);
     }
-
     return UnSubscribeRemote(option, observer);
 }
 
@@ -1582,7 +1597,6 @@ int RdbStoreImpl::Notify(const std::string &event)
             it->OnChange();
         }
     }
-
     return E_OK;
 }
 
