@@ -81,6 +81,16 @@ enum Progress {
     SYNC_FINISH,
 };
 
+enum ProgressCode {
+    SUCCESS = 0,
+    UNKNOWN_ERROR,
+    NETWORK_ERROR,
+    CLOUD_DISABLED,
+    LOCKED_BY_OTHERS,
+    RECORD_LIMIT_EXCEEDED,
+    NO_SPACE_FOR_ASSET,
+};
+
 struct Statistic {
     uint32_t total;
     uint32_t success;
