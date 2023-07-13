@@ -1216,7 +1216,7 @@ napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
     option.mode = static_cast<SubscribeMode>(mode);
     auto observer = std::make_shared<NapiRdbStoreObserver>(env, argv[1], mode);
     int errCode = rdbStore_->Subscribe(option, observer.get());
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_ERROR));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     observers_[mode].push_back(observer);
     LOG_INFO("subscribe success");
     return nullptr;
@@ -1272,7 +1272,7 @@ napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
     for (auto it = observers_[mode].begin(); it != observers_[mode].end(); it++) {
         if (**it == argv[1]) {
             int errCode = rdbStore_->UnSubscribe(option, it->get());
-            RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(E_ERROR));
+            RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
             observers_[mode].erase(it);
             LOG_INFO("observer unsubscribe success");
             return nullptr;
@@ -1287,7 +1287,7 @@ napi_value RdbStoreProxy::UnRegisteredObserver(napi_env env, const DistributedRd
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
     auto obs = observers.find(option.event);
-    if (obs != observers.end()) {
+    if (obs == observers.end()) {
         LOG_INFO("observer not found, event: %{public}s", option.event.c_str());
         return nullptr;
     }
