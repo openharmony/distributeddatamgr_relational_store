@@ -1571,8 +1571,10 @@ int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *o
         return UnSubscribeLocal(option, observer);
     } else if (option.mode == SubscribeMode::LOCAL && !observer) {
         return UnSubscribeLocalAll(option);
-    } else if (option.mode == SubscribeMode::LOCAL_SHARED) {
-        valueBool ? return UnSubscribeLocalShared(option, observer) : return UnSubscribeLocalSharedAll(option);
+    } else if (option.mode == SubscribeMode::LOCAL_SHARED && observer) {
+        return UnSubscribeLocalShared(option, observer);
+    } else if (option.mode == SubscribeMode::LOCAL_SHARED && !observer) {
+        return UnSubscribeLocalSharedAll(option);
     }
     return UnSubscribeRemote(option, observer);
 }
