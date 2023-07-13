@@ -79,14 +79,6 @@ private:
     static constexpr int MIN_ON_EVENT_ARG_NUM = 2;
     static constexpr int MAX_ON_EVENT_ARG_NUM = 5;
 
-    class NapiCoudSyncCallback : public NapiUvQueue {
-    public:
-        explicit NapiCoudSyncCallback(napi_env env, napi_value callback) : NapiUvQueue(env, callback) {}
-        virtual ~NapiCoudSyncCallback() = default;
-
-        void OnSyncCompelete(const DistributedRdb::Details &details);
-    };
-
     napi_value OnRemote(napi_env env, size_t argc, napi_value *argv);
     napi_value OnLocal(napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback);
     napi_value RegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option,
