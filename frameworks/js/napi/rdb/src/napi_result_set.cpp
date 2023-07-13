@@ -562,20 +562,18 @@ napi_value ResultSetProxy::GetSharedBlockAshmemFd(napi_env env, napi_callback_in
 } // namespace OHOS
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-EXTERN_C_START
-__attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_NewInstance(
-    napi_env env, OHOS::NativeRdb::AbsSharedResultSet *resultSet)
+
+__attribute__((visibility("default"))) napi_value NewCInstance(napi_env env,
+    napi_value arg) asm("NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_NewInstance");
+napi_value NewCInstance(napi_env env, std::shared_ptr<OHOS::NativeRdb::AbsSharedResultSet> resultSet)
 {
-    return OHOS::RdbJsKit::ResultSetProxy::NewInstance(
-        env, std::shared_ptr<OHOS::NativeRdb::AbsSharedResultSet>(resultSet));
+    return OHOS::RdbJsKit::ResultSetProxy::NewInstance(env, resultSet);
 }
 
-__attribute__((visibility("default"))) OHOS::NativeRdb::AbsSharedResultSet *
-NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_GetNativeObject(const napi_env &env, const napi_value &arg)
+__attribute__((visibility("default"))) std::shared_ptr<OHOS::NativeRdb::AbsSharedResultSet> GetCObject(napi_env env,
+    napi_value arg) asm("NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_GetNativeObject");
+std::shared_ptr<OHOS::NativeRdb::AbsSharedResultSet> GetCObject(napi_env env, napi_value arg)
 {
-    // the resultSet maybe release.
-    auto resultSet = OHOS::RdbJsKit::ResultSetProxy::GetNativeObject(env, arg);
-    return resultSet.get();
+    return OHOS::RdbJsKit::ResultSetProxy::GetNativeObject(env, arg);
 }
-EXTERN_C_END
 #endif
