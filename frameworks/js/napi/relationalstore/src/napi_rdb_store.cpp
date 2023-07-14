@@ -1292,8 +1292,8 @@ napi_value RdbStoreProxy::UnRegisteredObserver(napi_env env, const DistributedRd
         return nullptr;
     }
 
-    auto &list = obs->second;
     if (callback) {
+        auto &list = obs->second;
         for (auto it = list.begin(); it != list.end(); it++) {
             if (**it == callback) {
                 int errCode = rdbStore_->UnSubscribe(option, it->get());
@@ -1328,6 +1328,7 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
     napi_value argv[3]{};
     napi_value self = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
+    //'argc == 3' represents the number of parameters is three
     RDB_NAPI_ASSERT(env, status == napi_ok && (argc == 3), std::make_shared<ParamNumError>("3"));
 
     auto proxy = GetNativeInstance(env, self);
@@ -1347,11 +1348,13 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
         RDB_NAPI_ASSERT(env, type == napi_string, std::make_shared<ParamError>("event", "string"));
         std::string event = JSUtils::Convert2String(env, argv[0], false);
         RDB_NAPI_ASSERT(env, !event.empty(), std::make_shared<ParamError>("event", "a not empty string."));
+        //'argv[2]' represents a callback function 
         napi_typeof(env, argv[2], &type);
         RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
         SubscribeOption option;
         option.event = event;
         valueBool ? option.mode = SubscribeMode::LOCAL_SHARED : option.mode = SubscribeMode::LOCAL;
+        //'argv[2]' represents a callback function
         return proxy->OnLocal(env, option, argv[2]);
     } else {
         RDB_NAPI_ASSERT(env, false,
@@ -1363,9 +1366,11 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
 {
     size_t argc = 3;
+    //'argv[3]' represents an array containing three elements
     napi_value argv[3] = { nullptr };
     napi_value self = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
+    //'argc == 2 || argc == 3' represents the number of parameters is two or three
     RDB_NAPI_ASSERT(env, status == napi_ok && (argc == 2 || argc == 3), std::make_shared<ParamNumError>("2 or 3"));
 
     auto proxy = GetNativeInstance(env, self);
@@ -1384,13 +1389,16 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
         std::string event = JSUtils::Convert2String(env, argv[0], false);
         RDB_NAPI_ASSERT(env, !event.empty(), std::make_shared<ParamError>("event", "a not empty string."));
 
+        //'argc == 3' represents determine whether the value of variable 'argc' is equal to '3'
         if (argc == 3) {
+            //'argv[2]' represents a callback function 
             napi_typeof(env, argv[2], &type);
             RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
         }
         SubscribeOption option;
         option.event = event;
         valueBool ? option.mode = SubscribeMode::LOCAL_SHARED : option.mode = SubscribeMode::LOCAL;
+        //'argv[2]' represents a callback function
         return proxy->OffLocal(env, option, argv[2]);
     } else {
         RDB_NAPI_ASSERT(env, false,
