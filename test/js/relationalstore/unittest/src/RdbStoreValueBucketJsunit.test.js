@@ -14,6 +14,8 @@
  */
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
+import ability_featureAbility from '@ohos.ability.featureAbility'
+var context = ability_featureAbility.getContext()
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -22,16 +24,16 @@ const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIM
 const DELETE_TABLE_TEST = "DELETE FROM test;";
 
 const STORE_CONFIG = {
-    name: "Resultset.db",
+    name: "ValueBucket.db",
     securityLevel: data_relationalStore.SecurityLevel.S1,
 }
 var rdbStore = undefined;
 
 
-describe('rdbResultSetTest', function () {
+describe('rdbValueBucketTest', function () {
     beforeAll(async function () {
         console.info(TAG + 'beforeAll')
-        rdbStore = await data_relationalStore.getRdbStore(globalThis.context, STORE_CONFIG);
+        rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
         await rdbStore.executeSql(CREATE_TABLE_TEST, null);
     })
 
@@ -47,7 +49,7 @@ describe('rdbResultSetTest', function () {
     afterAll(async function () {
         console.info(TAG + 'afterAll')
         rdbStore = null
-        await data_relationalStore.deleteRdbStore(globalThis.context, "Resultset.db");
+        await data_relationalStore.deleteRdbStore(context, "ValueBucket.db");
     })
 
     /**
