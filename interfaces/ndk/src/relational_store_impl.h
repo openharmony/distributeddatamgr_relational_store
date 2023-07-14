@@ -24,11 +24,13 @@
 
 namespace OHOS {
 namespace RdbNdk {
-constexpr int RDB_STORE_CID = 1234560; // The class id used to uniquely identify the OH_Rdb_Store class.
-class StoreImpl : public OH_Rdb_Store {
+class RelationalStore : public OH_Rdb_Store {
 public:
-    explicit StoreImpl(std::shared_ptr<OHOS::NativeRdb::RdbStore> store);
-    std::shared_ptr<OHOS::NativeRdb::RdbStore> GetStore();
+    explicit RelationalStore(std::shared_ptr<OHOS::NativeRdb::RdbStore> store);
+    std::shared_ptr<OHOS::NativeRdb::RdbStore> GetStore()
+    {
+        return store_;
+    }
 
 private:
     std::shared_ptr<OHOS::NativeRdb::RdbStore> store_;

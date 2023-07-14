@@ -39,7 +39,7 @@
 
 #include "oh_cursor.h"
 #include "oh_predicates.h"
-#include "oh_value_object.h"
+#include "oh_predicates_objects.h"
 #include "oh_values_bucket.h"
 
 #ifdef __cplusplus
@@ -83,11 +83,28 @@ typedef enum OH_Rdb_SecurityLevel {
  *
  * @since 10
  */
+#pragma pack(1)
 typedef struct {
     /**
-     * Indicates the path of the database.
+     * Indicates the size of the {@link OH_Rdb_Config}, must be filled with sizeof({@link OH_Rdb_Config}).
      */
-    const char *path;
+    int selfSize;
+    /**
+     * Indicates the dir of the database.
+     */
+    const char *dataBaseDir;
+    /**
+     * Indicates the name of the database.
+     */
+    const char *storeName;
+    /**
+     * Indicates the bundle name of the application.
+     */
+    const char *bundleName;
+    /**
+     * Indicates the module name of the application.
+     */
+    const char *moduleName;
     /**
      * Indicates whether the database is encrypt.
      */
@@ -95,8 +112,9 @@ typedef struct {
     /**
      * Indicates the security level {@link OH_Rdb_SecurityLevel} of the database.
      */
-    enum OH_Rdb_SecurityLevel securityLevel;
+    int securityLevel;
 } OH_Rdb_Config;
+#pragma pack()
 
 /**
  * @brief Define OH_Rdb_Store type.
@@ -111,14 +129,14 @@ typedef struct {
 } OH_Rdb_Store;
 
 /**
- * @brief Create an {@link OH_VObject} instance.
+ * @brief Create an {@link OH_PredicatesObjects} instance.
  *
- * @return If the creation is successful, a pointer to the instance of the @link OH_VObject} structure is returned,
- * otherwise NULL is returned.
- * @see OH_VObject.
+ * @return If the creation is successful, a pointer to the instance of the @link OH_PredicatesObjects} structure
+ * is returned, otherwise NULL is returned.
+ * @see OH_PredicatesObjects.
  * @since 10
  */
-OH_VObject *OH_Rdb_CreateValueObject();
+OH_PredicatesObjects *OH_Rdb_CreatePredicatesObjects();
 
 /**
  * @brief Create an {@link OH_VBucket} object.
@@ -172,13 +190,14 @@ int OH_Rdb_CloseStore(OH_Rdb_Store *store);
 /**
  * @brief Deletes the database with a specified path.
  *
- * @param path Indicates the database path.
+ * @param config Represents a pointer to an {@link OH_Rdb_Config} instance.
+ * Indicates the configuration of the database related to this RDB store.
  * @return Returns the status code of the execution. Successful execution returns RDB_OK,
  * while failure returns a specific error code. Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_ErrCode.
  * @since 10
  */
-int OH_Rdb_DeleteStore(const char *path);
+int OH_Rdb_DeleteStore(const OH_Rdb_Config *config);
 
 /**
  * @brief Inserts a row of data into the target table.

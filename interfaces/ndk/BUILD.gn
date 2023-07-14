@@ -20,7 +20,7 @@ ohos_ndk_headers("native_rdb_ndk_header") {
   sources = [
     "./include/oh_cursor.h",
     "./include/oh_predicates.h",
-    "./include/oh_value_object.h",
+    "./include/oh_predicates_objects.h",
     "./include/oh_values_bucket.h",
     "./include/relational_store.h",
     "./include/relational_store_error_code.h",
@@ -36,7 +36,7 @@ ohos_ndk_library("libnative_rdb_ndk") {
   system_capability_headers = [
     "$ndk_headers_out_dir/database/rdb/oh_cursor.h",
     "$ndk_headers_out_dir/database/rdb/oh_predicates.h",
-    "$ndk_headers_out_dir/database/rdb/oh_value_object.h",
+    "$ndk_headers_out_dir/database/rdb/oh_predicates_objects.h",
     "$ndk_headers_out_dir/database/rdb/oh_values_bucket.h",
     "$ndk_headers_out_dir/database/rdb/relational_store.h",
     "$ndk_headers_out_dir/database/rdb/relational_store_error_code.h",
@@ -53,8 +53,8 @@ if (!build_ohos_sdk) {
     sources = [
       "src/relational_cursor.cpp",
       "src/relational_predicates.cpp",
+      "src/relational_predicates_objects.cpp",
       "src/relational_store.cpp",
-      "src/relational_value_object.cpp",
       "src/relational_values_bucket.cpp",
     ]
 
