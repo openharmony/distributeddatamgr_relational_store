@@ -1412,10 +1412,6 @@ int RdbStoreImpl::SubscribeLocal(const SubscribeOption& option, RdbStoreObserver
 
 int RdbStoreImpl::SubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer)
 {
-    if (rdbStoreConfig.GetDataGroupId().empty()) {
-        return 14801001; // E_NOT_STAGE_MODE
-    }
-
     std::lock_guard<std::mutex> lock(mutex_);
     localSharedObservers_.try_emplace(option.event);
     auto &list = localSharedObservers_.find(option.event)->second;
