@@ -39,7 +39,7 @@
 
 #include <cstdint>
 #include <stddef.h>
-#include "oh_value_object.h"
+#include "oh_predicates_objects.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -79,12 +79,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param objects Represents a pointer to an {@link OH_PredicatesObjects} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_VObject.
+     * @see OH_Predicates, OH_PredicatesObjects.
      * @since 10
      */
-    OH_Predicates *(*equalTo)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*equalTo)(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *objects);
 
     /**
      * @brief Function pointer.
@@ -94,12 +94,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param objects Represents a pointer to an {@link OH_PredicatesObjects} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_VObject.
+     * @see OH_Predicates, OH_PredicatesObjects.
      * @since 10
      */
-    OH_Predicates *(*notEqualTo)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*notEqualTo)(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *objects);
 
     /**
      * @brief Function pointer. Add left parenthesis to predicate.
@@ -182,12 +182,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param objects Represents a pointer to an {@link OH_PredicatesObjects} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_VObject.
+     * @see OH_Predicates, OH_PredicatesObjects.
      * @since 10
      */
-    OH_Predicates *(*like)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*like)(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *objects);
 
     /**
      * @brief Function pointer. Restricts the value of the field to be between the specified value to the predicates.
@@ -196,12 +196,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param objects Represents a pointer to an {@link OH_PredicatesObjects} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_VObject.
+     * @see OH_Predicates, OH_PredicatesObjects.
      * @since 10
      */
-    OH_Predicates *(*between)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*between)(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *objects);
 
     /**
      * @brief Function pointer.
@@ -211,12 +211,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param objects Represents a pointer to an {@link OH_PredicatesObjects} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_VObject.
+     * @see OH_Predicates, OH_PredicatesObjects.
      * @since 10
      */
-    OH_Predicates *(*notBetween)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*notBetween)(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *objects);
 
     /**
      * @brief Function pointer.
@@ -226,12 +226,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param objects Represents a pointer to an {@link OH_PredicatesObjects} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_VObject.
+     * @see OH_Predicates, OH_PredicatesObjects.
      * @since 10
      */
-    OH_Predicates *(*greaterThan)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*greaterThan)(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *objects);
 
     /**
      * @brief Function pointer.
@@ -241,12 +241,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param objects Represents a pointer to an {@link OH_PredicatesObjects} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_VObject.
+     * @see OH_Predicates, OH_PredicatesObjects.
      * @since 10
      */
-    OH_Predicates *(*lessThan)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*lessThan)(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *objects);
 
     /**
      * @brief Function pointer.
@@ -256,12 +256,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param objects Represents a pointer to an {@link OH_PredicatesObjects} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_VObject.
+     * @see OH_Predicates, OH_PredicatesObjects.
      * @since 10
      */
-    OH_Predicates *(*greaterThanOrEqualTo)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*greaterThanOrEqualTo)(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *objects);
 
     /**
      * @brief Function pointer.
@@ -271,12 +271,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param objects Represents a pointer to an {@link OH_PredicatesObjects} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_VObject.
+     * @see OH_Predicates, OH_PredicatesObjects.
      * @since 10
      */
-    OH_Predicates *(*lessThanOrEqualTo)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*lessThanOrEqualTo)(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *objects);
 
     /**
      * @brief Function pointer. Restricts the ascending or descending order of the return list.
@@ -353,12 +353,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param objects Represents a pointer to an {@link OH_PredicatesObjects} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_VObject.
+     * @see OH_Predicates, OH_PredicatesObjects.
      * @since 10
      */
-    OH_Predicates *(*in)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*in)(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *objects);
 
     /**
      * @brief Function pointer.
@@ -368,12 +368,12 @@ typedef struct OH_Predicates {
      *
      * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
      * @param field Indicates the column name in the database table.
-     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param objects Represents a pointer to an {@link OH_PredicatesObjects} instance.
      * @return Returns the self.
-     * @see OH_Predicates, OH_VObject.
+     * @see OH_Predicates, OH_PredicatesObjects.
      * @since 10
      */
-    OH_Predicates *(*notIn)(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    OH_Predicates *(*notIn)(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *objects);
 
     /**
      * @brief Function pointer. Initialize OH_Predicates object.
@@ -393,7 +393,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates.
      * @since 10
      */
-    int (*destroyPredicates)(OH_Predicates *predicates);
+    int (*destroy)(OH_Predicates *predicates);
 } OH_Predicates;
 
 #ifdef __cplusplus

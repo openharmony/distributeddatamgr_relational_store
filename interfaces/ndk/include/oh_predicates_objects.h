@@ -30,7 +30,7 @@
  */
 
 /**
- * @file oh_value_object.h
+ * @file oh_predicates_objects.h
  *
  * @brief Provides numeric type conversion functions.
  *
@@ -43,75 +43,75 @@ extern "C" {
 #endif
 
 /**
- * @brief Define the OH_VObject structure type.
+ * @brief Define the OH_PredicatesObjects structure type.
  *
  * @since 10
  */
-typedef struct OH_VObject {
+typedef struct OH_PredicatesObjects {
     /**
-     * The id used to uniquely identify the OH_VObject struct.
+     * The id used to uniquely identify the OH_PredicatesObjects struct.
      */
     int64_t id;
 
     /**
-     * @brief Convert the int64 input parameter to a value of type {@link OH_VObject}.
+     * @brief Convert the int64 input parameter to a value of type {@link OH_PredicatesObjects}.
      *
-     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param valueObject Represents a pointer to an {@link OH_PredicatesObjects} instance.
      * @param value Represents a pointer to an int64_t input parameter or the array of type int64_t.
      * @param count If value is a pointer to a single numerical value, count = 1;
      * if value is a pointer to an array, count is the size of the array.
      * @return Returns the status code of the execution.
-     * @see OH_VObject.
+     * @see OH_PredicatesObjects.
      * @since 10
      */
-    int (*putInt64)(OH_VObject *valueObject, int64_t *value, uint32_t count);
+    int (*putInt64)(OH_PredicatesObjects *objects, int64_t *value, uint32_t count);
 
     /**
-     * @brief Convert the double input parameter to a value of type {@link OH_VObject}.
+     * @brief Convert the double input parameter to a value of type {@link OH_PredicatesObjects}.
      *
-     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param valueObject Represents a pointer to an {@link OH_PredicatesObjects} instance.
      * @param value Represents a pointer to an double input parameter or the array of type double.
      * @param count If value is a pointer to a single numerical value, count = 1;
      * if value is a pointer to an array, count is the size of the array.
      * @return Returns the status code of the execution.
-     * @see OH_VObject.
+     * @see OH_PredicatesObjects.
      * @since 10
      */
-    int (*putDouble)(OH_VObject *valueObject, double *value, uint32_t count);
+    int (*putDouble)(OH_PredicatesObjects *objects, double *value, uint32_t count);
 
     /**
-     * @brief Convert the char input parameter to a value of type {@link OH_VObject}.
+     * @brief Convert the char input parameter to a value of type {@link OH_PredicatesObjects}.
      *
-     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param valueObject Represents a pointer to an {@link OH_PredicatesObjects} instance.
      * @param value Indicates the const char * input parameter.
      * @return Returns the status code of the execution.
-     * @see OH_VObject.
+     * @see OH_PredicatesObjects.
      * @since 10
      */
-    int (*putText)(OH_VObject *valueObject, const char *value);
+    int (*putText)(OH_PredicatesObjects *objects, const char *value);
 
     /**
-     * @brief Convert the char * array input parameter to a value of type {@link OH_VObject}.
+     * @brief Convert the char * array input parameter to a value of type {@link OH_PredicatesObjects}.
      *
-     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param valueObject Represents a pointer to an {@link OH_PredicatesObjects} instance.
      * @param value Indicates the const char * array input parameter.
      * @param count Indicates the size of the value.
      * @return Returns the status code of the execution.
-     * @see OH_VObject.
+     * @see OH_PredicatesObjects.
      * @since 10
      */
-    int (*putTexts)(OH_VObject *valueObject, const char **value, uint32_t count);
+    int (*putTexts)(OH_PredicatesObjects *objects, const char **value, uint32_t count);
 
     /**
-     * @brief Destroy the {@link OH_VObject} object and reclaim the memory occupied by the object.
+     * @brief Destroy the {@link OH_PredicatesObjects} object and reclaim the memory occupied by the object.
      *
-     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param valueObject Represents a pointer to an {@link OH_PredicatesObjects} instance.
      * @return Returns the status code of the execution.
-     * @see OH_VObject.
+     * @see OH_PredicatesObjects.
      * @since 10
      */
-    int (*destroyValueObject)(OH_VObject *valueObject);
-} OH_VObject;
+    int (*destroy)(OH_PredicatesObjects *objects);
+} OH_PredicatesObjects;
 
 #ifdef __cplusplus
 };

@@ -16,6 +16,8 @@
 #include <gtest/gtest.h>
 
 #include <string>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "common.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
@@ -29,27 +31,34 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static void InitRdbConfig()
+    {
+        config_.dataBaseDir = RDB_TEST_PATH;
+        config_.storeName = "rdb_predicates_test.db";
+        config_.bundleName = "";
+        config_.moduleName = "";
+        config_.securityLevel = OH_Rdb_SecurityLevel::S1;
+        config_.isEncrypt = false;
+    }
+    static OH_Rdb_Config config_;
 };
 
-std::string storeTestPath_ = RDB_TEST_PATH + "rdb_store_test.db";
 OH_Rdb_Store *storeTestRdbStore_;
-
+OH_Rdb_Config RdbNdkStoreTest::config_ = {0};
 void RdbNdkStoreTest::SetUpTestCase(void)
 {
-    OH_Rdb_Config config;
-    config.path = storeTestPath_.c_str();
-    config.securityLevel = OH_Rdb_SecurityLevel::S1;
-    config.isEncrypt = false;
-
+    InitRdbConfig();
+    mkdir(config_.dataBaseDir, 0770);
     int errCode = 0;
-    storeTestRdbStore_ = OH_Rdb_GetOrOpen(&config, &errCode);
+    storeTestRdbStore_ = OH_Rdb_GetOrOpen(&config_, &errCode);
     EXPECT_NE(storeTestRdbStore_, NULL);
 }
 
 void RdbNdkStoreTest::TearDownTestCase(void)
 {
     int errCode = OH_Rdb_CloseStore(storeTestRdbStore_);
-    errCode = OH_Rdb_DeleteStore(storeTestPath_.c_str());
+    EXPECT_EQ(errCode, 0);
+    errCode = OH_Rdb_DeleteStore(&config_);
     EXPECT_EQ(errCode, 0);
 }
 
@@ -95,7 +104,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_001, TestSize.Level1)
     valueBucket->putNull(valueBucket, "data5");
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
+    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
     const char *data1Value = "zhangSan";
     valueObject->putText(valueObject, data1Value);
     predicates->equalTo(predicates, "data1", valueObject);
@@ -137,10 +146,10 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_001, TestSize.Level1)
     cursor->isNull(cursor, 5, &isNull);
     EXPECT_EQ(isNull, true);
 
-    valueObject->destroyValueObject(valueObject);
-    valueBucket->destroyValuesBucket(valueBucket);
-    predicates->destroyPredicates(predicates);
-    cursor->close(cursor);
+    valueObject->destroy(valueObject);
+    valueBucket->destroy(valueBucket);
+    predicates->destroy(predicates);
+    cursor->destroy(cursor);
 }
 
 /**
@@ -173,7 +182,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_002, TestSize.Level1)
     EXPECT_EQ(errCode, 2);
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
+    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
     const char *data1Value = "zhangSan";
     valueObject->putText(valueObject, data1Value);
     predicates->equalTo(predicates, "data1", valueObject);
@@ -213,10 +222,10 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_002, TestSize.Level1)
     cursor->getText(cursor, 5, data5Value, size + 1);
     EXPECT_EQ(strcmp(data5Value, "ABCDEFGH"), 0);
 
-    valueObject->destroyValueObject(valueObject);
-    valueBucket->destroyValuesBucket(valueBucket);
-    predicates->destroyPredicates(predicates);
-    cursor->close(cursor);
+    valueObject->destroy(valueObject);
+    valueBucket->destroy(valueBucket);
+    predicates->destroy(predicates);
+    cursor->destroy(cursor);
 }
 
 /**
@@ -259,8 +268,8 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_003, TestSize.Level1)
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
 
-    valueBucket->destroyValuesBucket(valueBucket);
-    cursor->close(cursor);
+    valueBucket->destroy(valueBucket);
+    cursor->destroy(cursor);
 }
 
 /**
@@ -303,8 +312,8 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_004, TestSize.Level1)
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 0);
 
-    valueBucket->destroyValuesBucket(valueBucket);
-    cursor->close(cursor);
+    valueBucket->destroy(valueBucket);
+    cursor->destroy(cursor);
 }
 
 /**
@@ -332,21 +341,21 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_005, TestSize.Level1)
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
-    cursor->close(cursor);
+    cursor->destroy(cursor);
 
-    std::string backupPath1 = RDB_TEST_PATH + "a.db";
+    std::string backupPath1 = RDB_TEST_PATH + std::string("a.db");
     errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath1.c_str());
     EXPECT_EQ(errCode, 0);
 
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
     EXPECT_EQ(errCode, 2);
-    std::string backupPath2 = RDB_TEST_PATH + "b.db";
+    std::string backupPath2 = RDB_TEST_PATH +  std::string("b.db");
     errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath2.c_str());
     EXPECT_EQ(errCode, 0);
 
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "test", valueBucket);
     EXPECT_EQ(errCode, 3);
-    std::string backupPath3 = RDB_TEST_PATH + "c.db";
+    std::string backupPath3 = RDB_TEST_PATH +  std::string("c.db");
     errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath3.c_str());
     EXPECT_EQ(errCode, 0);
 
@@ -361,21 +370,21 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_005, TestSize.Level1)
     cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
-    cursor->close(cursor);
+    cursor->destroy(cursor);
 
     errCode = OH_Rdb_Restore(storeTestRdbStore_, backupPath2.c_str());
     EXPECT_EQ(errCode, 0);
     cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
-    cursor->close(cursor);
+    cursor->destroy(cursor);
 
     errCode = OH_Rdb_Restore(storeTestRdbStore_, backupPath3.c_str());
     EXPECT_EQ(errCode, 0);
     cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 4);
-    cursor->close(cursor);
+    cursor->destroy(cursor);
 
     // Continuous restore
     errCode = OH_Rdb_Restore(storeTestRdbStore_, backupPath3.c_str());
@@ -384,8 +393,8 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_005, TestSize.Level1)
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 4);
 
-    valueBucket->destroyValuesBucket(valueBucket);
-    cursor->close(cursor);
+    valueBucket->destroy(valueBucket);
+    cursor->destroy(cursor);
 }
 
 /**
@@ -413,7 +422,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_006, TestSize.Level1)
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
-    cursor->close(cursor);
+    cursor->destroy(cursor);
 
     std::string backupPath = "backup.db";
     errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath.c_str());
@@ -423,7 +432,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_006, TestSize.Level1)
     cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
-    cursor->close(cursor);
+    cursor->destroy(cursor);
 
     std::string restorePath = "error.db";
     errCode = OH_Rdb_Restore(storeTestRdbStore_, restorePath.c_str());
@@ -439,13 +448,13 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_006, TestSize.Level1)
     cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
-    cursor->close(cursor);
+    cursor->destroy(cursor);
 
     backupPath = "";
     errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath.c_str());
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_FILE_PATH);
 
-    backupPath = RDB_TEST_PATH + "/backup/backup.db";
+    backupPath = RDB_TEST_PATH + std::string("/backup/backup.db");
     errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath.c_str());
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_FILE_PATH);
 
@@ -457,7 +466,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_006, TestSize.Level1)
     errCode = OH_Rdb_Restore(storeTestRdbStore_, restorePath.c_str());
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_FILE_PATH);
 
-    valueBucket->destroyValuesBucket(valueBucket);
+    valueBucket->destroy(valueBucket);
 }
 
 /**
@@ -526,8 +535,8 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_008, TestSize.Level1)
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
 
-    valueBucket->destroyValuesBucket(valueBucket);
-    cursor->close(cursor);
+    valueBucket->destroy(valueBucket);
+    cursor->destroy(cursor);
 }
 
 /**
@@ -557,7 +566,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_009, TestSize.Level1)
     valueBucket->putNull(valueBucket, "data5");
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("wrong");
-    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
+    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
     const char *data1Value = "zhangSan";
     valueObject->putText(valueObject, data1Value);
     predicates->equalTo(predicates, "data1", valueObject);
@@ -606,11 +615,11 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_009, TestSize.Level1)
     cursor->getText(cursor, 5, data5Value, size + 1);
     EXPECT_EQ(strcmp(data5Value, "ABCDEFG"), 0);
 
-    valueObject->destroyValueObject(valueObject);
-    predicates->destroyPredicates(predicates);
-    predicates2->destroyPredicates(predicates2);
-    valueBucket->destroyValuesBucket(valueBucket);
-    cursor->close(cursor);
+    valueObject->destroy(valueObject);
+    predicates->destroy(predicates);
+    predicates2->destroy(predicates2);
+    valueBucket->destroy(valueBucket);
+    cursor->destroy(cursor);
 }
 
 /**
@@ -637,5 +646,5 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_010, TestSize.Level1)
     OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
     EXPECT_EQ(cursor, NULL);
 
-    valueBucket->destroyValuesBucket(valueBucket);
+    valueBucket->destroy(valueBucket);
 }

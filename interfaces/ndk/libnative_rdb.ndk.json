@@ -1,6 +1,6 @@
 [
 	{"name":"OH_Rdb_CreatePredicates" },
-	{"name":"OH_Rdb_CreateValueObject" },
+	{"name":"OH_Rdb_CreatePredicatesObjects" },
 	{"name":"OH_Rdb_CreateValuesBucket" },
 	{"name":"OH_Rdb_GetOrOpen" },
 	{"name":"OH_Rdb_CloseStore" },
