@@ -36,6 +36,22 @@ class ExecutorPool;
 }
 
 namespace OHOS::NativeRdb {
+class RdbStoreLocalObserver {
+public:
+    explicit RdbStoreLocalObserver(DistributedRdb::RdbStoreObserver *observer) : observer_(observer) {};
+    virtual ~RdbStoreLocalObserver() {};
+    void OnChange()
+    {
+        observer_->OnChange();
+    }
+    DistributedRdb::RdbStoreObserver *getObserver()
+    {
+        return observer_;
+    }
+private:
+    DistributedRdb::RdbStoreObserver *observer_ = nullptr;
+};
+
 class RdbStoreLocalSharedObserver : public AAFwk::DataAbilityObserverStub {
 public:
     explicit RdbStoreLocalSharedObserver(DistributedRdb::RdbStoreObserver *observer) : observer_(observer) {};
@@ -170,10 +186,8 @@ private:
 
     int UnSubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
     int UnSubscribeLocalAll(const SubscribeOption& option);
-    int UnSubscribeLocalShared(const SubscribeOption& option, std::shared_ptr<AAFwk::DataObsMgrClient> client,
-        std::list<sptr<RdbStoreLocalSharedObserver>> &observes, RdbStoreObserver *observer);
-    int UnSubscribeLocalSharedAll(const SubscribeOption& option,
-        std::shared_ptr<AAFwk::DataObsMgrClient> client, std::list<sptr<RdbStoreLocalSharedObserver>> &observes);
+    int UnSubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
+    int UnSubscribeLocalSharedAll(const SubscribeOption& option);
     int UnSubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
 
     const RdbStoreConfig rdbStoreConfig;
@@ -197,7 +211,7 @@ private:
     std::mutex mutex_;
     std::shared_ptr<std::set<std::string>> syncTables_;
     static constexpr char SCHEME_RDB[] = "rdb://";
-    std::map<std::string, std::list<std::shared_ptr<RdbStoreObserver>>> localObservers_;
+    std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
     std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
 };
 } // namespace OHOS::NativeRdb
