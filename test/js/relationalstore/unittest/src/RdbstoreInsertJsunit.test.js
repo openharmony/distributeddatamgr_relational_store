@@ -162,7 +162,7 @@ describe('rdbStoreInsertTest', function () {
                 "blobType": u8,
             }
             try {
-                let insertPromise = rdbStore.insert(null, valueBucket)            
+                let insertPromise = rdbStore.insert(null, valueBucket)
                 insertPromise.then(async (ret) => {
                     expect(1).assertEqual(ret)
                     console.log(TAG + "insert first done: " + ret)
@@ -425,6 +425,7 @@ describe('rdbStoreInsertTest', function () {
             } catch (err) {
                 console.log("catch err: failed, err: code=" + err.code + " message=" + err.message);
                 expect(14800000).assertEqual(err.code);
+                rdbStore.rollBack();
             }
         }
 
