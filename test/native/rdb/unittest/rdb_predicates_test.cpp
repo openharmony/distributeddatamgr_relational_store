@@ -1579,7 +1579,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ToString_025, TestSize.Level1)
         ->Limit(2);
     std::string toString = predicates1.ToString();
     std::string result = "TableName = AllDataType, {WhereClause:stringValue = ? AND  ( integerValue = ?  OR "
-                         "integerValue = ?  ) , whereArgs:{ABCDEFGHIJKLMN, 1, 2147483647, }, orderr:integerValue "
+                         "integerValue = ?  ) , whereArgs:{ABCDEFGHIJKLMN, 1, 2147483647, }, order:integerValue "
                          "DESC , group:, index:, limit:2, offset:-1, distinct:0, isNeedAnd:1, isSorted:1}";
     EXPECT_EQ(result, toString);
 }

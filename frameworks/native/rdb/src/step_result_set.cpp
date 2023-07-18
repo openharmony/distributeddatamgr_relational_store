@@ -224,10 +224,12 @@ int StepResultSet::GoToNextRow()
         isAfterLast = true;
         rowCount = rowPos_ + 1;
         FinishStep();
+        rowPos_ = rowCount;
         return E_STEP_RESULT_IS_AFTER_LAST;
     } else {
         LOG_ERROR("step ret is %{public}d", errCode);
         FinishStep();
+        rowPos_ = rowCount;
         return SQLiteError::ErrNo(errCode);
     }
 }

@@ -320,12 +320,12 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_003, TestSize.Level1)
 
     iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(-1, position);
+    EXPECT_EQ(3, position);
 
-    bResultSet = true;
+    bResultSet = false;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, false);
+    EXPECT_EQ(bResultSet, true);
 
     bResultSet = true;
     iRet = resultSet->IsAtFirstRow(bResultSet);
@@ -369,17 +369,17 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_004, TestSize.Level1)
 
     iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(-1, position);
+    EXPECT_EQ(0, position);
 
-    bResultSet = true;
+    bResultSet = false;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, false);
+    EXPECT_EQ(bResultSet, true);
 
-    bResultSet = true;
+    bResultSet = false;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, false);
+    EXPECT_EQ(bResultSet, true);
 }
 
 /* *
@@ -455,32 +455,32 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_006, TestSize.Level1)
     EXPECT_NE(E_OK, resultSet->GoToFirstRow());
 
     int position = INT_MIN;
-    bool bResultSet = true;
+    bool bResultSet = false;
     int iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(-1, position);
+    EXPECT_EQ(0, position);
 
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, false);
+    EXPECT_EQ(bResultSet, true);
 
-    bResultSet = true;
+    bResultSet = false;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, false);
+    EXPECT_EQ(bResultSet, true);
 
     EXPECT_NE(E_OK, resultSet->GoToNextRow());
     EXPECT_NE(E_OK, resultSet->GoToFirstRow());
 
-    bResultSet = true;
+    bResultSet = false;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, false);
+    EXPECT_EQ(bResultSet, true);
 
-    bResultSet = true;
+    bResultSet = false;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, false);
+    EXPECT_EQ(bResultSet, true);
 }
 
 /* *
@@ -513,7 +513,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_007, TestSize.Level1)
     }
     iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(-1, position);
+    EXPECT_EQ(3, position);
 
     bResultSet = false;
     iRet = resultSet->IsEnded(bResultSet);
@@ -540,7 +540,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_008, TestSize.Level1)
     bool bResultSet = false;
     int iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(-1, position);
+    EXPECT_EQ(0, position);
 
     iRet = resultSet->IsEnded(bResultSet);
     EXPECT_EQ(E_OK, iRet);
@@ -551,7 +551,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_008, TestSize.Level1)
     }
     iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(-1, position);
+    EXPECT_EQ(1, position);
 
     bResultSet = false;
     iRet = resultSet->IsEnded(bResultSet);
@@ -1368,7 +1368,7 @@ HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
 
     iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(-1, position);
+    EXPECT_EQ(3, position);
 
     bResultSet = false;
     iRet = resultSet->IsEnded(bResultSet);
@@ -1574,12 +1574,12 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep010, TestSize.Level1)
 
     iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(-1, position);
+    EXPECT_EQ(3, position);
 
-    bResultSet = true;
+    bResultSet = false;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, false);
+    EXPECT_EQ(bResultSet, true);
 
     bResultSet = true;
     iRet = resultSet->IsAtFirstRow(bResultSet);
