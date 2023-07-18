@@ -66,7 +66,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
 
     std::shared_ptr<RdbStoreImpl> rdbStore(new (std::nothrow) RdbStoreImpl(config, errCode),
         [](RdbStoreImpl *ptr) {
-            LOG_INFO("delete %{public}s as no more used.", SqliteUtils::Anonymous(ptr->GetPath()).c_str());
+            LOG_DEBUG("delete %{public}s as no more used.", SqliteUtils::Anonymous(ptr->GetPath()).c_str());
             delete ptr;
         });
     if (errCode != E_OK) {
