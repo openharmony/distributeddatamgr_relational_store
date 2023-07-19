@@ -92,10 +92,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     deps = base_deps
 
-    deps += [
-      "${kvstore_path}/libs/distributeddb:distributeddb",
-      "//third_party/sqlite:sqlite",
-    ]
+    deps += [ "//third_party/sqlite:sqlite" ]
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
     cflags_cc = [ "-fvisibility=hidden" ]
 
@@ -129,6 +126,7 @@ if (is_ohos && !build_ohos_sdk) {
       "hitrace:hitrace_meter",
       "huks:libhukssdk",
       "ipc:ipc_core",
+      "kv_store:distributeddb",
       "samgr:samgr_proxy",
     ]
 
@@ -144,10 +142,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     deps = base_deps
 
-    deps += [
-      "${kvstore_path}/libs/distributeddb:distributeddb",
-      "//third_party/sqlite:sqlite",
-    ]
+    deps += [ "//third_party/sqlite:sqlite" ]
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
 
     sources += [
@@ -180,6 +175,7 @@ if (is_ohos && !build_ohos_sdk) {
       "hitrace:hitrace_meter",
       "huks:libhukssdk",
       "ipc:ipc_core",
+      "kv_store:distributeddb",
       "samgr:samgr_proxy",
     ]
 
