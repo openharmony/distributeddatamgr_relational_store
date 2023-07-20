@@ -60,6 +60,7 @@
                 "napi",
                 "resource_management",
                 "samgr"
+                "ability_base"
             ],
             "third_party": [
                 "googletest",
