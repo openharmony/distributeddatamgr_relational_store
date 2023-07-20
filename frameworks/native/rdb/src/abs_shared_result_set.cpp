@@ -106,7 +106,7 @@ int AbsSharedResultSet::GoToRow(int position)
     int rowCnt = 0;
     GetRowCount(rowCnt);
     if (rowCnt == 0) {
-        LOG_WARN("No data!");
+        LOG_DEBUG("No data!");
         return E_ERROR;
     }
 
