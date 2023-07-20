@@ -44,4 +44,4 @@ ipc_path = "//foundation/communication/ipc/interfaces/innerkits"
 kvstore_path = "//foundation/distributeddatamgr/kv_store/frameworks"
 
 distributedfile_path =
-    "//foundation/filemanagement/file_api/interfaces/kits/js/src/mod_securitylabel/security_label.h"
+    "//foundation/filemanagement/file_api/interfaces/kits/js/src"
