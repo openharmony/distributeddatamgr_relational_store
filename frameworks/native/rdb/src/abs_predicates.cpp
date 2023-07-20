@@ -117,7 +117,7 @@ AbsPredicates *AbsPredicates::Or()
 AbsPredicates *AbsPredicates::And()
 {
     if (!isNeedAnd) {
-        LOG_WARN("fail to add And.");
+        LOG_DEBUG("fail to add And.");
         return this;
     }
     return this;
