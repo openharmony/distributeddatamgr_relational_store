@@ -216,7 +216,7 @@ int AbsResultSet::GoToFirstRow()
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int ret = GoToRow(0);
     if (ret != E_OK) {
-        LOG_WARN("GoToRow ret is %{public}d", ret);
+        LOG_DEBUG("GoToRow ret is %{public}d", ret);
         return ret;
     }
     return E_OK;
@@ -245,7 +245,7 @@ int AbsResultSet::GoToNextRow()
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int ret = GoToRow(rowPos_ + 1);
     if (ret != E_OK) {
-        LOG_WARN("GoToRow ret is %{public}d", ret);
+        LOG_DEBUG("GoToRow ret is %{public}d", ret);
         return ret;
     }
     return E_OK;
