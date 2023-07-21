@@ -235,6 +235,7 @@ void RdbQueryFuzz2(const uint8_t *data, size_t size)
     std::string tableName(data, data + size);
     std::string valName(data, data + size);
     std::string valAge(data, data + size);
+    // 4 represents the value of 'valAgeChange' is a string consist of 4 bytes start from 'data+size'
     std::string valAgeChange(data + size, data + size + 4);
 
     AbsRdbPredicates predicates(tableName);
