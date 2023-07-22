@@ -130,7 +130,7 @@ std::string JSUtils::ConvertAny2String(napi_env env, napi_value jsValue)
         napi_get_value_bool(env, jsValue, &valueBool);
         return std::to_string(valueBool);
     } else if (valueType == napi_null) {
-        return "null";
+        return "";
     } else if (valueType == napi_object) {
         std::vector<uint8_t> bytes = JSUtils::Convert2U8Vector(env, jsValue);
         std::string ret(bytes.begin(), bytes.end());

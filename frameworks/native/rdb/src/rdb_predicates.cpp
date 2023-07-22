@@ -22,7 +22,7 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-RdbPredicates::RdbPredicates(std::string tableName) : AbsRdbPredicates(tableName)
+RdbPredicates::RdbPredicates(const std::string &tableName) : AbsRdbPredicates(tableName)
 {
     InitialParam();
 }
@@ -38,7 +38,7 @@ std::string RdbPredicates::GetJoinClause() const
 /**
  * Adds a {@code cross join} condition to a SQL statement.
  */
-RdbPredicates *RdbPredicates::CrossJoin(std::string tableName)
+RdbPredicates *RdbPredicates::CrossJoin(const std::string &tableName)
 {
     return Join(JoinType::CROSS, tableName);
 }
@@ -46,7 +46,7 @@ RdbPredicates *RdbPredicates::CrossJoin(std::string tableName)
 /**
  * Adds an {@code inner join} condition to a SQL statement.
  */
-RdbPredicates *RdbPredicates::InnerJoin(std::string tableName)
+RdbPredicates *RdbPredicates::InnerJoin(const std::string &tableName)
 {
     return Join(JoinType::INNER, tableName);
 }
@@ -54,14 +54,14 @@ RdbPredicates *RdbPredicates::InnerJoin(std::string tableName)
 /**
  * Adds a {@code left outer join} condition to a SQL statement.
  */
-RdbPredicates *RdbPredicates::LeftOuterJoin(std::string tableName)
+RdbPredicates *RdbPredicates::LeftOuterJoin(const std::string &tableName)
 {
     return Join(JoinType::LEFT, tableName);
 }
 /**
  * Adds a condition to a SQL statement.
  */
-RdbPredicates *RdbPredicates::Join(int join, std::string tableName)
+RdbPredicates *RdbPredicates::Join(int join, const std::string &tableName)
 {
     if (tableName.empty()) {
         LOG_WARN("RdbPredicates join failed: table name is null or empty.");
@@ -77,7 +77,7 @@ RdbPredicates *RdbPredicates::Join(int join, std::string tableName)
 /**
  * Adds a {@code using} condition to the predicate. This method is similar to {@code using} of the SQL statement.
  */
-RdbPredicates *RdbPredicates::Using(std::vector<std::string> fields)
+RdbPredicates *RdbPredicates::Using(const std::vector<std::string> &fields)
 {
     if (fields.size() == 0) {
         LOG_WARN("RdbPredicates Using failed : clauses is null.");
@@ -99,7 +99,7 @@ RdbPredicates *RdbPredicates::Using(std::vector<std::string> fields)
 /**
  * Adds an {@code on} condition to the predicate.
  */
-RdbPredicates *RdbPredicates::On(std::vector<std::string> clauses)
+RdbPredicates *RdbPredicates::On(const std::vector<std::string> &clauses)
 {
     if (clauses.size() == 0) {
         LOG_WARN("RdbPredicates on failed : clauses is null.");

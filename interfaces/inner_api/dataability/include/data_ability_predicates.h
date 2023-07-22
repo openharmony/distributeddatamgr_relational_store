@@ -36,7 +36,7 @@ public:
     /**
      * @brief Constructor.
      */
-    API_EXPORT explicit DataAbilityPredicates(std::string rawSelection);
+    API_EXPORT explicit DataAbilityPredicates(const std::string &rawSelection);
 
     /**
      * @brief Constructor.

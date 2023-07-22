@@ -22,8 +22,8 @@
 namespace OHOS::NativeRdb {
 class AbsRdbPredicates : public AbsPredicates {
 public:
-    explicit AbsRdbPredicates(std::string tableName);
-    explicit AbsRdbPredicates(std::vector<std::string> tables);
+    explicit AbsRdbPredicates(const std::string &tableName);
+    explicit AbsRdbPredicates(const std::vector<std::string> &tables);
     ~AbsRdbPredicates() override {}
 
     void Clear() override;
@@ -34,11 +34,11 @@ public:
 
     virtual void InitialParam();
     virtual std::vector<std::string> GetJoinTypes();
-    virtual void SetJoinTypes(const std::vector<std::string> joinTypes);
+    virtual void SetJoinTypes(const std::vector<std::string> &joinTypes);
     virtual std::vector<std::string> GetJoinTableNames();
-    virtual void SetJoinTableNames(const std::vector<std::string> joinTableNames);
+    virtual void SetJoinTableNames(const std::vector<std::string> &joinTableNames);
     virtual std::vector<std::string> GetJoinConditions();
-    virtual void SetJoinConditions(const std::vector<std::string> joinConditions);
+    virtual void SetJoinConditions(const std::vector<std::string> &joinConditions);
     virtual std::string GetJoinClause() const;
     virtual int GetJoinCount() const;
     virtual void SetJoinCount(int joinCount);
