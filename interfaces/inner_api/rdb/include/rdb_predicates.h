@@ -32,7 +32,7 @@ public:
      *
      * @param tableName Indicates the table name of the database.
      */
-    API_EXPORT explicit RdbPredicates(std::string tableName);
+    API_EXPORT explicit RdbPredicates(const std::string &tableName);
 
     /**
      * @brief Destructor.
@@ -47,33 +47,33 @@ public:
     /**
      * @brief Adds a {@code cross join} condition to a SQL statement.
      */
-    API_EXPORT RdbPredicates *CrossJoin(std::string tableName);
+    API_EXPORT RdbPredicates *CrossJoin(const std::string &tableName);
 
     /**
      * @brief Adds an {@code inner join} condition to a SQL statement.
      */
-    API_EXPORT RdbPredicates *InnerJoin(std::string tableName);
+    API_EXPORT RdbPredicates *InnerJoin(const std::string &tableName);
 
     /**
       * @brief Adds a {@code left outer join} condition to a SQL statement.
       */
-    API_EXPORT RdbPredicates *LeftOuterJoin(std::string tableName);
+    API_EXPORT RdbPredicates *LeftOuterJoin(const std::string &tableName);
 
     /**
      * @brief Adds a {@code using} condition to the predicate.
      * This method is similar to {@code using} of the SQL statement.
      */
-    API_EXPORT RdbPredicates *Using(std::vector<std::string> fields);
+    API_EXPORT RdbPredicates *Using(const std::vector<std::string> &fields);
 
     /**
      * @brief Adds an {@code on} condition to the predicate.
      */
-    API_EXPORT RdbPredicates *On(std::vector<std::string> clauses);
+    API_EXPORT RdbPredicates *On(const std::vector<std::string> &clauses);
 
 private:
     std::string ProcessJoins() const;
     std::string GetGrammar(int type) const;
-    RdbPredicates *Join(int join, std::string tableName);
+    RdbPredicates *Join(int join, const std::string &tableName);
 };
 } // namespace NativeRdb
 } // namespace OHOS
