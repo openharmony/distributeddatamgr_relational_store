@@ -23,9 +23,9 @@ namespace OHOS {
 namespace NativeRdb {
 class StringUtils {
 public:
-    static std::string SurroundWithQuote(std::string value, std::string quote);
+    static std::string SurroundWithQuote(const std::string &value, const std::string &quote);
     static std::string SurroundWithFunction(
-        std::string function, std::string separator, std::vector<std::string> array);
+        const std::string &function, const std::string &separator, const std::vector<std::string> &array);
     static bool IsEmpty(std::string source)
     {
         return (source.empty());
