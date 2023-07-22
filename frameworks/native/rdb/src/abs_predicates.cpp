@@ -49,10 +49,10 @@ bool AbsPredicates::IsNeedAnd() const
 /**
  * Restricts the value of the field to be greater than the specified value.
  */
-AbsPredicates *AbsPredicates::EqualTo(std::string field, std::string value)
+AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const std::string &value)
 {
     DISTRIBUTED_DATA_HITRACE("AbsPredicates::EqualTo");
-    bool chekParaFlag = CheckParameter("equalTo", field, { value });
+    bool chekParaFlag = CheckParameter("equalTo", field, { std::move(value) });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: EqualTo() fails because Invalid parameter.");
         return this;
@@ -70,9 +70,9 @@ AbsPredicates *AbsPredicates::EqualTo(std::string field, std::string value)
 /**
  * Restricts the value of the field to be unequal to the specified value.
  */
-AbsPredicates *AbsPredicates::NotEqualTo(std::string field, std::string value)
+AbsPredicates *AbsPredicates::NotEqualTo(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("notEqualTo", field, { value });
+    bool chekParaFlag = CheckParameter("notEqualTo", field, { std::move(value) });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: NotEqualTo() fails because Invalid parameter.");
         return this;
@@ -117,7 +117,7 @@ AbsPredicates *AbsPredicates::Or()
 AbsPredicates *AbsPredicates::And()
 {
     if (!isNeedAnd) {
-        LOG_DEBUG("fail to add And.");
+        LOG_WARN("fail to add And.");
         return this;
     }
     return this;
@@ -126,9 +126,9 @@ AbsPredicates *AbsPredicates::And()
 /**
  * Restricts the value of the field to contain the specified string.
  */
-AbsPredicates *AbsPredicates::Contains(std::string field, std::string value)
+AbsPredicates *AbsPredicates::Contains(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("contains", field, { value });
+    bool chekParaFlag = CheckParameter("contains", field, { std::move(value) });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: Contains() fails because Invalid parameter.");
         return this;
@@ -142,9 +142,9 @@ AbsPredicates *AbsPredicates::Contains(std::string field, std::string value)
 /**
  * Restricts the field to start with the specified string.
  */
-AbsPredicates *AbsPredicates::BeginsWith(std::string field, std::string value)
+AbsPredicates *AbsPredicates::BeginsWith(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("beginsWith", field, { value });
+    bool chekParaFlag = CheckParameter("beginsWith", field, { std::move(value) });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: BeginsWith() fails because Invalid parameter.");
         return this;
@@ -158,9 +158,9 @@ AbsPredicates *AbsPredicates::BeginsWith(std::string field, std::string value)
 /**
  * Restricts the field to end with the specified string.
  */
-AbsPredicates *AbsPredicates::EndsWith(std::string field, std::string value)
+AbsPredicates *AbsPredicates::EndsWith(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("endsWith", field, { value });
+    bool chekParaFlag = CheckParameter("endsWith", field, { std::move(value) });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: EndsWith() fails because Invalid parameter.");
         return this;
@@ -174,7 +174,7 @@ AbsPredicates *AbsPredicates::EndsWith(std::string field, std::string value)
 /**
  * Restricts the value of the field to be null.
  */
-AbsPredicates *AbsPredicates::IsNull(std::string field)
+AbsPredicates *AbsPredicates::IsNull(const std::string &field)
 {
     bool chekParaFlag = CheckParameter("isNull", field, {});
     if (!chekParaFlag) {
@@ -189,7 +189,7 @@ AbsPredicates *AbsPredicates::IsNull(std::string field)
 /**
  * estricts the value of the field not to be null.
  */
-AbsPredicates *AbsPredicates::IsNotNull(std::string field)
+AbsPredicates *AbsPredicates::IsNotNull(const std::string &field)
 {
     bool chekParaFlag = CheckParameter("isNotNull", field, {});
     if (!chekParaFlag) {
@@ -204,9 +204,9 @@ AbsPredicates *AbsPredicates::IsNotNull(std::string field)
 /**
  * Restricts the value of the field to have a pattern like field.
  */
-AbsPredicates *AbsPredicates::Like(std::string field, std::string value)
+AbsPredicates *AbsPredicates::Like(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("like", field, { value });
+    bool chekParaFlag = CheckParameter("like", field, { std::move(value) });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: Like() fails because Invalid parameter.");
         return this;
@@ -220,9 +220,9 @@ AbsPredicates *AbsPredicates::Like(std::string field, std::string value)
 /**
  * Configures to match the specified field whose data type is String and the value contains a wildcard.
  */
-AbsPredicates *AbsPredicates::Glob(std::string field, std::string value)
+AbsPredicates *AbsPredicates::Glob(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("glob", field, { value });
+    bool chekParaFlag = CheckParameter("glob", field, { std::move(value) });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: Glob() fails because Invalid parameter.");
         return this;
@@ -238,7 +238,7 @@ AbsPredicates *AbsPredicates::Glob(std::string field, std::string value)
  */
 AbsPredicates *AbsPredicates::Between(std::string field, std::string low, std::string high)
 {
-    bool chekParaFlag = CheckParameter("between", field, { low, high });
+    bool chekParaFlag = CheckParameter("between", field, { std::move(low), std::move(high) });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: Between() fails because Invalid parameter.");
         return this;
@@ -255,7 +255,7 @@ AbsPredicates *AbsPredicates::Between(std::string field, std::string low, std::s
  */
 AbsPredicates *AbsPredicates::NotBetween(std::string field, std::string low, std::string high)
 {
-    bool chekParaFlag = CheckParameter("notBetween", field, { low, high });
+    bool chekParaFlag = CheckParameter("notBetween", field, { std::move(low), std::move(high) });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: NotBetween() fails because Invalid parameter.");
         return this;
@@ -270,9 +270,9 @@ AbsPredicates *AbsPredicates::NotBetween(std::string field, std::string low, std
 /**
  * Restricts the value of the field to be greater than the specified value.
  */
-AbsPredicates *AbsPredicates::GreaterThan(std::string field, std::string value)
+AbsPredicates *AbsPredicates::GreaterThan(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("greaterThan", field, { value });
+    bool chekParaFlag = CheckParameter("greaterThan", field, { std::move(value) });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: GreaterThan() fails because Invalid parameter.");
         return this;
@@ -286,9 +286,9 @@ AbsPredicates *AbsPredicates::GreaterThan(std::string field, std::string value)
 /**
  * Restricts the value of the field to be smaller than the specified value.
  */
-AbsPredicates *AbsPredicates::LessThan(std::string field, std::string value)
+AbsPredicates *AbsPredicates::LessThan(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("lessThan", field, { value });
+    bool chekParaFlag = CheckParameter("lessThan", field, { std::move(value) });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: LessThan() fails because Invalid parameter.");
         return this;
@@ -302,9 +302,9 @@ AbsPredicates *AbsPredicates::LessThan(std::string field, std::string value)
 /**
  * Restricts the value of the field to be greater than or equal to the specified value.
  */
-AbsPredicates *AbsPredicates::GreaterThanOrEqualTo(std::string field, std::string value)
+AbsPredicates *AbsPredicates::GreaterThanOrEqualTo(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("greaterThanOrEqualTo", field, { value });
+    bool chekParaFlag = CheckParameter("greaterThanOrEqualTo", field, { std::move(value) });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: GreaterThanOrEqualTo() fails because Invalid parameter.");
         return this;
@@ -318,9 +318,9 @@ AbsPredicates *AbsPredicates::GreaterThanOrEqualTo(std::string field, std::strin
 /**
  * Restricts the value of the field to be smaller than or equal to the specified value.
  */
-AbsPredicates *AbsPredicates::LessThanOrEqualTo(std::string field, std::string value)
+AbsPredicates *AbsPredicates::LessThanOrEqualTo(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("greaterThanOrEqualTo", field, { value });
+    bool chekParaFlag = CheckParameter("greaterThanOrEqualTo", field, { std::move(value) });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: LessThanOrEqualTo() fails because Invalid parameter.");
         return this;
@@ -335,7 +335,7 @@ AbsPredicates *AbsPredicates::LessThanOrEqualTo(std::string field, std::string v
  * Restricts the ascending order of the return list. When there are several orders,
  * the one close to the head has the highest priority.
  */
-AbsPredicates *AbsPredicates::OrderByAsc(std::string field)
+AbsPredicates *AbsPredicates::OrderByAsc(const std::string &field)
 {
     bool chekParaFlag = CheckParameter("orderByAsc", field, {});
     if (!chekParaFlag) {
@@ -354,7 +354,7 @@ AbsPredicates *AbsPredicates::OrderByAsc(std::string field)
  * Restricts the descending order of the return list. When there are several orders,
  * the one close to the head has the highest priority.
  */
-AbsPredicates *AbsPredicates::OrderByDesc(std::string field)
+AbsPredicates *AbsPredicates::OrderByDesc(const std::string &field)
 {
     bool chekParaFlag = CheckParameter("orderByDesc", field, {});
     if (!chekParaFlag) {
@@ -402,7 +402,7 @@ AbsPredicates *AbsPredicates::Offset(int rowOffset)
         return this;
     }
     if (rowOffset < 1) {
-        LOG_DEBUG("AbsPredicates offset(): the value of offset can't be less than or equal to zero.");
+        LOG_WARN("AbsPredicates offset(): the value of offset can't be less than or equal to zero.");
         return this;
     }
     offset = rowOffset;
@@ -412,7 +412,7 @@ AbsPredicates *AbsPredicates::Offset(int rowOffset)
 /**
  * Configures {@code AbsPredicates} to group query results by specified columns.
  */
-AbsPredicates *AbsPredicates::GroupBy(std::vector<std::string> fields)
+AbsPredicates *AbsPredicates::GroupBy(const std::vector<std::string> &fields)
 {
     if (fields.empty()) {
         LOG_WARN("AbsPredicates: groupBy() fails because fields can't be null.");
@@ -436,7 +436,7 @@ AbsPredicates *AbsPredicates::GroupBy(std::vector<std::string> fields)
 /**
  * Configures {@code AbsPredicates} to specify the index column.
  */
-AbsPredicates *AbsPredicates::IndexedBy(std::string indexName)
+AbsPredicates *AbsPredicates::IndexedBy(const std::string &indexName)
 {
     bool chekParaFlag = CheckParameter("indexedBy", indexName, {});
     if (!chekParaFlag) {
@@ -450,7 +450,7 @@ AbsPredicates *AbsPredicates::IndexedBy(std::string indexName)
 /**
  * Configures to match the specified field whose data type is String array and values are within a given range.
  */
-AbsPredicates *AbsPredicates::In(std::string field, std::vector<std::string> values)
+AbsPredicates *AbsPredicates::In(const std::string &field, const std::vector<std::string> &values)
 {
     bool chekParaFlag = CheckParameter("in", field, {});
     if (!chekParaFlag) {
@@ -465,9 +465,9 @@ AbsPredicates *AbsPredicates::In(std::string field, std::vector<std::string> val
     CheckIsNeedAnd();
 
     std::vector<std::string> replaceValues;
-    for (auto &i : values) {
+    for (auto &value : values) {
         replaceValues.push_back("?");
-        whereArgs.push_back(i);
+        whereArgs.push_back(std::move(value));
     }
     AppendWhereClauseWithInOrNotIn(" IN ", field, replaceValues);
     return this;
@@ -476,7 +476,7 @@ AbsPredicates *AbsPredicates::In(std::string field, std::vector<std::string> val
 /**
  * Configures to match the specified field whose data type is String array and values are out of a given range.
  */
-AbsPredicates *AbsPredicates::NotIn(std::string field, std::vector<std::string> values)
+AbsPredicates *AbsPredicates::NotIn(const std::string &field, const std::vector<std::string> &values)
 {
     bool chekParaFlag = CheckParameter("notIn", field, {});
     if (!chekParaFlag) {
@@ -489,9 +489,9 @@ AbsPredicates *AbsPredicates::NotIn(std::string field, std::vector<std::string> 
     }
     CheckIsNeedAnd();
     std::vector<std::string> replaceValues;
-    for (auto &i : values) {
+    for (auto &value : values) {
         replaceValues.push_back("?");
-        whereArgs.push_back(i);
+        whereArgs.push_back(std::move(value));
     }
     AppendWhereClauseWithInOrNotIn(" NOT IN ", field, replaceValues);
     return this;
@@ -515,14 +515,14 @@ void AbsPredicates::Initial()
  * Check the parameter validity.
  */
 bool AbsPredicates::CheckParameter(
-    std::string methodName, std::string field, std::initializer_list<std::string> args) const
+    const std::string &methodName, const std::string &field, const std::initializer_list<std::string> &args) const
 {
     if (field.empty()) {
         LOG_WARN("QueryImpl(): string 'field' is empty.");
         return false;
     }
     if (args.size() != 0) {
-        for (auto i : args) {
+        for (auto &i : args) {
             if (i.empty()) {
                 LOG_WARN("QueryImpl(): value is empty.");
                 return false;
@@ -532,43 +532,16 @@ bool AbsPredicates::CheckParameter(
     return true;
 }
 
-std::string AbsPredicates::RemoveQuotes(std::string source) const
+std::string AbsPredicates::RemoveQuotes(const std::string &source) const
 {
+    std::string src = source;
     if (source.empty()) {
         return source;
     }
-    source.erase(std::remove(source.begin(), source.end(), '\''), source.end());
-    source.erase(std::remove(source.begin(), source.end(), '\"'), source.end());
-    source.erase(std::remove(source.begin(), source.end(), '`'), source.end());
-    return source;
-}
-
-std::string AbsPredicates::Normalized(std::string source)
-{
-    // split contains className, attributeName
-    const int splitSize = 2;
-    if (source.empty()) {
-        return source;
-    }
-    if (source.find(".") == source.npos) {
-        return StringUtils::SurroundWithQuote(source, "`");
-    }
-    size_t pos = source.find(".");
-    size_t left = 0;
-    std::vector<std::string> split;
-    while (pos != source.npos) {
-        split.push_back(source.substr(left, pos - left));
-        left = pos + 1;
-        pos = source.find(".", left);
-    }
-    if (left < source.length()) {
-        split.push_back(source.substr(left));
-    }
-    if (split.size() != splitSize) {
-        return source;
-    }
-    source = StringUtils::SurroundWithQuote(split[0], "`") + "." + StringUtils::SurroundWithQuote(split[1], "`");
-    return source;
+    src.erase(std::remove(src.begin(), src.end(), '\''), src.end());
+    src.erase(std::remove(src.begin(), src.end(), '\"'), src.end());
+    src.erase(std::remove(src.begin(), src.end(), '`'), src.end());
+    return src;
 }
 
 void AbsPredicates::CheckIsNeedAnd()
@@ -581,7 +554,7 @@ void AbsPredicates::CheckIsNeedAnd()
 }
 
 void AbsPredicates::AppendWhereClauseWithInOrNotIn(
-    std::string methodName, std::string field, std::vector<std::string> replaceValues)
+    const std::string &methodName, const std::string &field, const std::vector<std::string> &replaceValues)
 {
     whereClause += field + StringUtils::SurroundWithFunction(methodName, ",", replaceValues);
 }
@@ -591,7 +564,7 @@ std::string AbsPredicates::GetWhereClause() const
     return whereClause;
 }
 
-void AbsPredicates::SetWhereClause(std::string whereClause)
+void AbsPredicates::SetWhereClause(const std::string &whereClause)
 {
     if (whereClause.empty()) {
         return;
@@ -604,7 +577,7 @@ std::vector<std::string> AbsPredicates::GetWhereArgs() const
     return whereArgs;
 }
 
-void AbsPredicates::SetWhereArgs(std::vector<std::string> whereArgs)
+void AbsPredicates::SetWhereArgs(const std::vector<std::string> &whereArgs)
 {
     this->whereArgs = whereArgs;
 }
@@ -614,7 +587,7 @@ std::string AbsPredicates::GetOrder() const
     return order;
 }
 
-void AbsPredicates::SetOrder(std::string order)
+void AbsPredicates::SetOrder(const std::string &order)
 {
     if (order.empty()) {
         return;
