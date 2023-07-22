@@ -26,7 +26,7 @@ DataAbilityPredicates::DataAbilityPredicates() : isRawSelection(false), judgeSou
 {
 }
 
-DataAbilityPredicates::DataAbilityPredicates(std::string rawSelection) : isRawSelection(true), judgeSource(false)
+DataAbilityPredicates::DataAbilityPredicates(const std::string &rawSelection) : isRawSelection(true), judgeSource(false)
 {
     AbsPredicates::SetWhereClause(rawSelection);
 }

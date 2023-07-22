@@ -34,11 +34,11 @@ public:
     };
 
     API_EXPORT std::string GetWhereClause() const;
-    API_EXPORT void SetWhereClause(std::string whereClause);
+    API_EXPORT void SetWhereClause(const std::string &whereClause);
     API_EXPORT std::vector<std::string> GetWhereArgs() const;
-    API_EXPORT void SetWhereArgs(std::vector<std::string> whereArgs);
+    API_EXPORT void SetWhereArgs(const std::vector<std::string> &whereArgs);
     API_EXPORT std::string GetOrder() const;
-    API_EXPORT void SetOrder(std::string order);
+    API_EXPORT void SetOrder(const std::string &order);
     API_EXPORT int GetLimit() const;
     API_EXPORT int GetOffset() const;
     API_EXPORT bool IsDistinct() const;
@@ -49,34 +49,34 @@ public:
 
 public:
     API_EXPORT virtual void Clear();
-    API_EXPORT virtual AbsPredicates *EqualTo(std::string field, std::string value);
-    API_EXPORT virtual AbsPredicates *NotEqualTo(std::string field, std::string value);
+    API_EXPORT virtual AbsPredicates *EqualTo(const std::string &field, const std::string &value);
+    API_EXPORT virtual AbsPredicates *NotEqualTo(const std::string &field, const std::string &value);
     API_EXPORT virtual AbsPredicates *BeginWrap();
     API_EXPORT virtual AbsPredicates *EndWrap();
     API_EXPORT virtual AbsPredicates *Or();
     API_EXPORT virtual AbsPredicates *And();
-    API_EXPORT virtual AbsPredicates *Contains(std::string field, std::string value);
-    API_EXPORT virtual AbsPredicates *BeginsWith(std::string field, std::string value);
-    API_EXPORT virtual AbsPredicates *EndsWith(std::string field, std::string value);
-    API_EXPORT virtual AbsPredicates *IsNull(std::string field);
-    API_EXPORT virtual AbsPredicates *IsNotNull(std::string field);
-    API_EXPORT virtual AbsPredicates *Like(std::string field, std::string value);
-    API_EXPORT virtual AbsPredicates *Glob(std::string field, std::string value);
+    API_EXPORT virtual AbsPredicates *Contains(const std::string &field, const std::string &value);
+    API_EXPORT virtual AbsPredicates *BeginsWith(const std::string &field, const std::string &value);
+    API_EXPORT virtual AbsPredicates *EndsWith(const std::string &field, const std::string &value);
+    API_EXPORT virtual AbsPredicates *IsNull(const std::string &field);
+    API_EXPORT virtual AbsPredicates *IsNotNull(const std::string &field);
+    API_EXPORT virtual AbsPredicates *Like(const std::string &field, const std::string &value);
+    API_EXPORT virtual AbsPredicates *Glob(const std::string &field, const std::string &value);
     API_EXPORT virtual AbsPredicates *Between(std::string field, std::string low, std::string high);
     API_EXPORT virtual AbsPredicates *NotBetween(std::string field, std::string low, std::string high);
-    API_EXPORT virtual AbsPredicates *GreaterThan(std::string field, std::string value);
-    API_EXPORT virtual AbsPredicates *LessThan(std::string field, std::string value);
-    API_EXPORT virtual AbsPredicates *GreaterThanOrEqualTo(std::string field, std::string value);
-    API_EXPORT virtual AbsPredicates *LessThanOrEqualTo(std::string field, std::string value);
-    API_EXPORT virtual AbsPredicates *OrderByAsc(std::string field);
-    API_EXPORT virtual AbsPredicates *OrderByDesc(std::string field);
+    API_EXPORT virtual AbsPredicates *GreaterThan(const std::string &field, const std::string &value);
+    API_EXPORT virtual AbsPredicates *LessThan(const std::string &field, const std::string &value);
+    API_EXPORT virtual AbsPredicates *GreaterThanOrEqualTo(const std::string &field, const std::string &value);
+    API_EXPORT virtual AbsPredicates *LessThanOrEqualTo(const std::string &field, const std::string &value);
+    API_EXPORT virtual AbsPredicates *OrderByAsc(const std::string &field);
+    API_EXPORT virtual AbsPredicates *OrderByDesc(const std::string &field);
     API_EXPORT virtual AbsPredicates *Distinct();
     API_EXPORT virtual AbsPredicates *Limit(int value);
     API_EXPORT virtual AbsPredicates *Offset(int rowOffset);
-    API_EXPORT virtual AbsPredicates *GroupBy(std::vector<std::string> fields);
-    API_EXPORT virtual AbsPredicates *IndexedBy(std::string indexName);
-    API_EXPORT virtual AbsPredicates *In(std::string field, std::vector<std::string> values);
-    API_EXPORT virtual AbsPredicates *NotIn(std::string field, std::vector<std::string> values);
+    API_EXPORT virtual AbsPredicates *GroupBy(const std::vector<std::string> &fields);
+    API_EXPORT virtual AbsPredicates *IndexedBy(const std::string &indexName);
+    API_EXPORT virtual AbsPredicates *In(const std::string &field, const std::vector<std::string> &values);
+    API_EXPORT virtual AbsPredicates *NotIn(const std::string &field, const std::vector<std::string> &values);
 
 private:
     std::string whereClause;
@@ -91,12 +91,12 @@ private:
     bool isSorted;
 
     void Initial();
-    bool CheckParameter(std::string methodName, std::string field, std::initializer_list<std::string> args) const;
-    std::string RemoveQuotes(std::string source) const;
-    std::string Normalized(std::string source);
+    bool CheckParameter(
+        const std::string &methodName, const std::string &field, const std::initializer_list<std::string> &args) const;
+    std::string RemoveQuotes(const std::string &source) const;
     void CheckIsNeedAnd();
-    void AppendWhereClauseWithInOrNotIn(std::string methodName, std::string field,
-        std::vector<std::string> replaceValues);
+    void AppendWhereClauseWithInOrNotIn(const std::string &methodName, const std::string &field,
+        const std::vector<std::string> &replaceValues);
 };
 } // namespace NativeRdb
 } // namespace OHOS
