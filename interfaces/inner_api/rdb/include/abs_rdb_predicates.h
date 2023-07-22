@@ -33,7 +33,7 @@ public:
      *
      * @param tableName Indicates the table name of the database.
      */
-    API_EXPORT explicit AbsRdbPredicates(std::string tableName);
+    API_EXPORT explicit AbsRdbPredicates(const std::string &tableName);
 
     /**
      * @brief Constructor.
@@ -42,7 +42,7 @@ public:
      *
      * @param tableName Indicates the table name of the database.
      */
-    API_EXPORT explicit AbsRdbPredicates(std::vector<std::string> tables);
+    API_EXPORT explicit AbsRdbPredicates(const std::vector<std::string> &tables);
 
     /**
      * @brief Destructor.
@@ -94,7 +94,7 @@ public:
      *
      * @return Returns the self.
      */
-    API_EXPORT AbsRdbPredicates* EqualTo(std::string field, std::string value) override;
+    API_EXPORT AbsRdbPredicates* EqualTo(const std::string &field, const std::string &value) override;
 
     /**
      * @brief Restricts the value of the field to be not equal to the specified value to the remote AbsRdbPredicates.
@@ -106,7 +106,7 @@ public:
      *
      * @return Returns the self.
      */
-    API_EXPORT AbsRdbPredicates* NotEqualTo(std::string field, std::string value) override;
+    API_EXPORT AbsRdbPredicates* NotEqualTo(const std::string &field, const std::string &value) override;
 
     /**
      * @brief Adds an and condition to the remote AbsRdbPredicates.
@@ -128,7 +128,7 @@ public:
      *
      * @param field Indicates the column name for sorting the return list.
      */
-    API_EXPORT AbsRdbPredicates* OrderByAsc(std::string field) override;
+    API_EXPORT AbsRdbPredicates* OrderByAsc(const std::string &field) override;
 
     /**
      * @brief Restricts the descending order of the return list. When there are several orders,
@@ -136,7 +136,7 @@ public:
      *
      * @param field Indicates the column name for sorting the return list.
      */
-    API_EXPORT AbsRdbPredicates* OrderByDesc(std::string field) override;
+    API_EXPORT AbsRdbPredicates* OrderByDesc(const std::string &field) override;
 
     /**
      * @brief Get predicates of remote device.
@@ -157,7 +157,7 @@ public:
      * @brief Sets the join types in the predicates. The value can be {@code INNER JOIN}, {@code LEFT OUTER JOIN},
      * and {@code CROSS JOIN}.
      */
-    API_EXPORT virtual void SetJoinTypes(const std::vector<std::string> joinTypes);
+    API_EXPORT virtual void SetJoinTypes(const std::vector<std::string> &joinTypes);
 
     /**
      * @brief Obtains the database table names of the joins in the predicates.
@@ -167,7 +167,7 @@ public:
     /**
      * @brief Sets the database table names of the joins in the predicates.
      */
-    API_EXPORT virtual void SetJoinTableNames(const std::vector<std::string> joinTableNames);
+    API_EXPORT virtual void SetJoinTableNames(const std::vector<std::string> &joinTableNames);
 
     /**
      * @brief Obtains the join conditions in the predicates.
@@ -177,7 +177,7 @@ public:
     /**
      * @brief Sets the join conditions required in the predicates.
      */
-    API_EXPORT virtual void SetJoinConditions(const std::vector<std::string> joinConditions);
+    API_EXPORT virtual void SetJoinConditions(const std::vector<std::string> &joinConditions);
 
     /**
      * @brief Obtains the join clause in the predicates.
