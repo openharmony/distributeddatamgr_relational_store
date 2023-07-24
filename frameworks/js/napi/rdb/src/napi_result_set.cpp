@@ -51,7 +51,7 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<AbsSharedRe
         return instance;
     }
 
-    if (resultSet->GetBlock() != nullptr) {
+    if (resultSet != nullptr && resultSet->GetBlock() != nullptr) {
         proxy->sharedBlockName_ = resultSet->GetBlock()->Name();
         proxy->sharedBlockAshmemFd_ = resultSet->GetBlock()->GetFd();
     }
@@ -242,7 +242,8 @@ ResultSetProxy *ResultSetProxy::ParseInt32FieldByName(
     napi_get_cb_info(env, info, &argc, args, &self, nullptr);
     ResultSetProxy *resultSetProxy = nullptr;
     napi_unwrap(env, self, reinterpret_cast<void **>(&resultSetProxy));
-    RDB_CHECK_RETURN_NULLPTR(napi_get_value_int32(env, args[0], &field) == napi_ok);
+    RDB_CHECK_RETURN_NULLPTR(napi_get_value_int32(env, args[0], &field) == napi_ok, 
+        "napi_get_value_int32 reurn invalid");
     return resultSetProxy;
 }
 
@@ -253,7 +254,8 @@ ResultSetProxy *ResultSetProxy::ParseFieldByName(napi_env env, napi_callback_inf
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &self, nullptr);
     ResultSetProxy *resultSetProxy = nullptr;
-    RDB_CHECK_RETURN_NULLPTR(napi_unwrap(env, self, reinterpret_cast<void **>(&resultSetProxy)) == napi_ok);
+    RDB_CHECK_RETURN_NULLPTR(napi_unwrap(env, self, 
+        reinterpret_cast<void **>(&resultSetProxy)) == napi_ok, "napi_unwrap return invalid");
     field = JSUtils::Convert2String(env, args[0]);
     return resultSetProxy;
 }
@@ -273,8 +275,8 @@ napi_value ResultSetProxy::GoToRow(napi_env env, napi_callback_info info)
 {
     int32_t position;
     auto resultSetProxy = ParseInt32FieldByName(env, info, position, "position");
-    RDB_NAPI_ASSERT_FROMV9(
-        env, resultSetProxy != nullptr, std::make_shared<ResultGotoError>(), resultSetProxy->apiversion);
+    RDB_NAPI_ASSERT_FROMV9(env, resultSetProxy != nullptr && resultSetProxy->resultSet_ != nullptr, 
+        std::make_shared<ResultGotoError>(), resultSetProxy->apiversion);
     int errCode = resultSetProxy->resultSet_->GoToRow(position);
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
@@ -295,7 +297,8 @@ napi_value ResultSetProxy::GetLong(napi_env env, napi_callback_info info)
     int32_t columnIndex;
     int64_t result;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
+    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr && resultSetProxy->resultSet_ != nullptr, 
+        "resultSetProxy or resultSet_ is nullptr");
     int errCode = resultSetProxy->resultSet_->GetLong(columnIndex, result);
     int version = resultSetProxy->apiversion;
     RDB_NAPI_ASSERT_FROMV9(env, errCode == E_OK, std::make_shared<ResultGetError>(), version);
@@ -307,7 +310,8 @@ napi_value ResultSetProxy::GetColumnType(napi_env env, napi_callback_info info)
     int32_t columnIndex;
     ColumnType columnType;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
+    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr && resultSetProxy->resultSet_ != nullptr,
+        "resultSetProxy or resultSet_ is nullptr");
     int errCode = resultSetProxy->resultSet_->GetColumnType(columnIndex, columnType);
     int version = resultSetProxy->apiversion;
     RDB_NAPI_ASSERT_FROMV9(env, errCode == E_OK, std::make_shared<ResultGetError>(), version);
@@ -318,8 +322,8 @@ napi_value ResultSetProxy::GoTo(napi_env env, napi_callback_info info)
 {
     int32_t offset;
     auto resultSetProxy = ParseInt32FieldByName(env, info, offset, "offset");
-    RDB_NAPI_ASSERT_FROMV9(
-        env, resultSetProxy != nullptr, std::make_shared<ResultGotoError>(), resultSetProxy->apiversion);
+    RDB_NAPI_ASSERT_FROMV9(env, resultSetProxy != nullptr && resultSetProxy->resultSet_ != nullptr, 
+        std::make_shared<ResultGotoError>(), resultSetProxy->apiversion);
     int errCode = resultSetProxy->resultSet_->GoTo(offset);
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
@@ -329,7 +333,8 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
     std::string input;
     int32_t result = -1;
     auto resultSetProxy = ParseFieldByName(env, info, input);
-    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
+    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr && resultSetProxy->resultSet_ != nullptr,
+        "resultSetProxy or resultSet_ is nullptr");
     int errCode = resultSetProxy->resultSet_->GetColumnIndex(input, result);
     if (errCode != E_OK) {
         LOG_ERROR("GetColumnIndex failed code:%{public}d, version:%{public}d", errCode, resultSetProxy->apiversion);
@@ -342,7 +347,8 @@ napi_value ResultSetProxy::GetInt(napi_env env, napi_callback_info info)
     int32_t columnIndex;
     int32_t result;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
+    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr && resultSetProxy->resultSet_ != nullptr,
+        "resultSetProxy or resultSet_ is nullptr");
     int errCode = resultSetProxy->resultSet_->GetInt(columnIndex, result);
     int version = resultSetProxy->apiversion;
     RDB_NAPI_ASSERT_FROMV9(env, errCode == E_OK, std::make_shared<ResultGetError>(), version);
@@ -354,7 +360,8 @@ napi_value ResultSetProxy::GetColumnName(napi_env env, napi_callback_info info)
     int32_t columnIndex;
     std::string result;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
+    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr && resultSetProxy->resultSet_ != nullptr,
+        "resultSetProxy or resultSet_ is nullptr");
     int errCode = resultSetProxy->resultSet_->GetColumnName(columnIndex, result);
     if (errCode != E_OK) {
         LOG_ERROR("GetColumnName failed code:%{public}d, version:%{public}d", errCode, resultSetProxy->apiversion);
@@ -482,7 +489,8 @@ napi_value ResultSetProxy::GetBlob(napi_env env, napi_callback_info info)
     int32_t columnIndex;
     std::vector<uint8_t> result;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
+    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr && resultSetProxy->resultSet_ != nullptr,
+        "resultSetProxy or resultSet_ is nullptr");
     int errCode = resultSetProxy->resultSet_->GetBlob(columnIndex, result);
     int version = resultSetProxy->apiversion;
     RDB_NAPI_ASSERT_FROMV9(env, errCode == E_OK, std::make_shared<ResultGetError>(), version);
@@ -495,7 +503,8 @@ napi_value ResultSetProxy::GetString(napi_env env, napi_callback_info info)
     int32_t columnIndex;
     std::string result;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
+    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr && resultSetProxy->resultSet_ != nullptr,
+        "resultSetProxy or resultSet_ is nullptr");
     int errCode = resultSetProxy->resultSet_->GetString(columnIndex, result);
     int version = resultSetProxy->apiversion;
     RDB_NAPI_ASSERT_FROMV9(env, errCode == E_OK, std::make_shared<ResultGetError>(), version);
@@ -507,7 +516,8 @@ napi_value ResultSetProxy::GetDouble(napi_env env, napi_callback_info info)
     int32_t columnIndex;
     double result = 0.0;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
+    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr && resultSetProxy->resultSet_ != nullptr,
+        "resultSetProxy or resultSet_ is nullptr");
     int errCode = resultSetProxy->resultSet_->GetDouble(columnIndex, result);
     int version = resultSetProxy->apiversion;
     RDB_NAPI_ASSERT_FROMV9(env, errCode == E_OK, std::make_shared<ResultGetError>(), version);
@@ -519,7 +529,8 @@ napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
     int32_t columnIndex;
     bool result = false;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr);
+    RDB_CHECK_RETURN_NULLPTR(resultSetProxy != nullptr && resultSetProxy->resultSet_ != nullptr,
+        "resultSetProxy or resultSet_ is nullptr");
     int errCode = resultSetProxy->resultSet_->IsColumnNull(columnIndex, result);
     int version = resultSetProxy->apiversion;
     RDB_NAPI_ASSERT_FROMV9(env, errCode == E_OK, std::make_shared<ResultGetError>(), version);
@@ -544,6 +555,8 @@ napi_value ResultSetProxy::GetSharedBlockName(napi_env env, napi_callback_info i
 
     ResultSetProxy *proxy;
     NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy)));
+    RDB_CHECK_RETURN_NULLPTR(proxy != nullptr, 
+        "ResultSetProxy::GetSharedBlockName proxy is nullptr");
 
     return JSUtils::Convert2JSValue(env, proxy->sharedBlockName_);
 }
@@ -555,6 +568,8 @@ napi_value ResultSetProxy::GetSharedBlockAshmemFd(napi_env env, napi_callback_in
 
     ResultSetProxy *proxy;
     NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy)));
+    RDB_CHECK_RETURN_NULLPTR(proxy != nullptr, 
+        "ResultSetProxy::GetSharedBlockAshmemFd proxy is nullptr");
 
     return JSUtils::Convert2JSValue(env, proxy->sharedBlockAshmemFd_);
 }

@@ -52,6 +52,8 @@ constexpr int E_RESULT_GOTO_ERROR = 14800012;
         }                                                                                                           \
     } while (0)
 
+#define RDB_REVT_NOTHING
+
 #define RDB_NAPI_ASSERT_FROMV9(env, assertion, error, version) \
     RDB_NAPI_ASSERT_BASE_FROMV9(env, assertion, error, nullptr, version)
 
@@ -66,12 +68,32 @@ constexpr int E_RESULT_GOTO_ERROR = 14800012;
         }                                       \
     } while (0)
 
-#define RDB_CHECK_RETURN_NULLPTR(assertion) \
-    do {                                    \
-        if (!(assertion)) {                 \
-            return nullptr;                 \
-        }                                   \
+#define RDB_CHECK_RETURN_NULLPTR(assertion, message)    \
+    do {                                                \
+        if (!(assertion)) {                             \
+            LOG_ERROR("%{public}s", message);           \
+            return nullptr;                             \
+        }                                               \
     } while (0)
+
+#define RDB_CHECK_RETURN_VOID(assertion, message)   \
+    do {                                            \
+        if (!(assertion)) {                         \
+            LOG_ERROR("%{public}s", message);       \
+            return;                                 \
+        }                                           \
+    } while (0)
+
+#define CHECK_RETURN_CORE(assertion, theCall, revt)      \
+    do {                                                 \
+        if (!(assertion)) {                              \
+            theCall;                                     \
+            return revt;                                 \
+        }                                                \
+    } while (0)
+
+#define CHECK_RETURN_ERR(assertion) \
+    CHECK_RETURN_CORE(assertion, RDB_REVT_NOTHING, ERR)
 
 #define RDB_CHECK_RETURN_CALL_RESULT(assertion, theCall) \
     do {                                                 \

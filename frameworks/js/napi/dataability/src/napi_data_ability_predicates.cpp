@@ -18,6 +18,7 @@
 #include "js_utils.h"
 #include "logger.h"
 #include "napi_async_proxy.h"
+#include "napi_predicates_utils.h"
 
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
@@ -191,7 +192,9 @@ napi_value DataAbilityPredicatesProxy::EqualTo(napi_env env, napi_callback_info 
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::EqualTo Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->EqualTo(field, value);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->EqualTo(field, value);
     return thiz;
 }
 
@@ -204,7 +207,9 @@ napi_value DataAbilityPredicatesProxy::NotEqualTo(napi_env env, napi_callback_in
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::NotEqualTo Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->NotEqualTo(field, value);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->NotEqualTo(field, value);
     return thiz;
 }
 
@@ -212,7 +217,9 @@ napi_value DataAbilityPredicatesProxy::BeginWrap(napi_env env, napi_callback_inf
 {
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
-    GetNativePredicates(env, info)->BeginWrap();
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->BeginWrap();
     return thiz;
 }
 
@@ -220,7 +227,9 @@ napi_value DataAbilityPredicatesProxy::EndWrap(napi_env env, napi_callback_info 
 {
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
-    GetNativePredicates(env, info)->EndWrap();
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->EndWrap();
     return thiz;
 }
 
@@ -228,7 +237,9 @@ napi_value DataAbilityPredicatesProxy::Or(napi_env env, napi_callback_info info)
 {
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
-    GetNativePredicates(env, info)->Or();
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->Or();
     return thiz;
 }
 
@@ -236,7 +247,9 @@ napi_value DataAbilityPredicatesProxy::And(napi_env env, napi_callback_info info
 {
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
-    GetNativePredicates(env, info)->And();
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->And();
     return thiz;
 }
 
@@ -249,8 +262,9 @@ napi_value DataAbilityPredicatesProxy::Contains(napi_env env, napi_callback_info
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::Contains Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
-
-    GetNativePredicates(env, info)->Contains(field, value);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->Contains(field, value);
     return thiz;
 }
 
@@ -263,7 +277,9 @@ napi_value DataAbilityPredicatesProxy::BeginsWith(napi_env env, napi_callback_in
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::BeginsWith Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->BeginsWith(field, value);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->BeginsWith(field, value);
     return thiz;
 }
 
@@ -276,7 +292,9 @@ napi_value DataAbilityPredicatesProxy::EndsWith(napi_env env, napi_callback_info
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::EndsWith Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->EndsWith(field, value);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->EndsWith(field, value);
     return thiz;
 }
 
@@ -288,7 +306,9 @@ napi_value DataAbilityPredicatesProxy::IsNull(napi_env env, napi_callback_info i
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::IsNull Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
-    GetNativePredicates(env, info)->IsNull(field);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->IsNull(field);
     return thiz;
 }
 
@@ -300,7 +320,9 @@ napi_value DataAbilityPredicatesProxy::IsNotNull(napi_env env, napi_callback_inf
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::IsNotNull Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
-    GetNativePredicates(env, info)->IsNotNull(field);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->IsNotNull(field);
     return thiz;
 }
 
@@ -313,7 +335,9 @@ napi_value DataAbilityPredicatesProxy::Like(napi_env env, napi_callback_info inf
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::Like Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->Like(field, value);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->Like(field, value);
     return thiz;
 }
 
@@ -326,7 +350,9 @@ napi_value DataAbilityPredicatesProxy::Glob(napi_env env, napi_callback_info inf
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::Glob Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->Glob(field, value);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->Glob(field, value);
     return thiz;
 }
 
@@ -340,7 +366,9 @@ napi_value DataAbilityPredicatesProxy::Between(napi_env env, napi_callback_info 
     std::string field = JSUtils::Convert2String(env, args[0]);
     std::string low = JSUtils::ConvertAny2String(env, args[1]);
     std::string high = JSUtils::ConvertAny2String(env, args[2]);
-    GetNativePredicates(env, info)->Between(field, low, high);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->Between(field, low, high);
     return thiz;
 }
 
@@ -354,7 +382,9 @@ napi_value DataAbilityPredicatesProxy::NotBetween(napi_env env, napi_callback_in
     std::string field = JSUtils::Convert2String(env, args[0]);
     std::string low = JSUtils::ConvertAny2String(env, args[1]);
     std::string high = JSUtils::ConvertAny2String(env, args[2]);
-    GetNativePredicates(env, info)->NotBetween(field, low, high);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->NotBetween(field, low, high);
     return thiz;
 }
 
@@ -367,7 +397,9 @@ napi_value DataAbilityPredicatesProxy::GreaterThan(napi_env env, napi_callback_i
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::GreaterThan Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->GreaterThan(field, value);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->GreaterThan(field, value);
     return thiz;
 }
 
@@ -380,7 +412,9 @@ napi_value DataAbilityPredicatesProxy::LessThan(napi_env env, napi_callback_info
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::LessThan Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->LessThan(field, value);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->LessThan(field, value);
     return thiz;
 }
 
@@ -393,7 +427,9 @@ napi_value DataAbilityPredicatesProxy::GreaterThanOrEqualTo(napi_env env, napi_c
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::GreaterThanOrEqualTo Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->GreaterThanOrEqualTo(field, value);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->GreaterThanOrEqualTo(field, value);
     return thiz;
 }
 
@@ -406,7 +442,9 @@ napi_value DataAbilityPredicatesProxy::LessThanOrEqualTo(napi_env env, napi_call
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::LessThanOrEqualTo Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
     std::string value = JSUtils::ConvertAny2String(env, args[1]);
-    GetNativePredicates(env, info)->LessThanOrEqualTo(field, value);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->LessThanOrEqualTo(field, value);
     return thiz;
 }
 
@@ -418,7 +456,9 @@ napi_value DataAbilityPredicatesProxy::OrderByAsc(napi_env env, napi_callback_in
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::OrderByAsc Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
-    GetNativePredicates(env, info)->OrderByAsc(field);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->OrderByAsc(field);
     return thiz;
 }
 
@@ -430,7 +470,9 @@ napi_value DataAbilityPredicatesProxy::OrderByDesc(napi_env env, napi_callback_i
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::OrderByDesc Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
-    GetNativePredicates(env, info)->OrderByDesc(field);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->OrderByDesc(field);
     return thiz;
 }
 
@@ -438,7 +480,9 @@ napi_value DataAbilityPredicatesProxy::Distinct(napi_env env, napi_callback_info
 {
     napi_value thiz;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
-    GetNativePredicates(env, info)->Distinct();
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->Distinct();
     return thiz;
 }
 
@@ -451,7 +495,9 @@ napi_value DataAbilityPredicatesProxy::Limit(napi_env env, napi_callback_info in
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::Limit Invalid argvs!");
     int32_t limit = 0;
     napi_get_value_int32(env, args[0], &limit);
-    GetNativePredicates(env, info)->Limit(limit);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->Limit(limit);
     return thiz;
 }
 
@@ -464,7 +510,9 @@ napi_value DataAbilityPredicatesProxy::Offset(napi_env env, napi_callback_info i
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::Offset Invalid argvs!");
     int32_t offset = 0;
     napi_get_value_int32(env, args[0], &offset);
-    GetNativePredicates(env, info)->Offset(offset);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->Offset(offset);
     return thiz;
 }
 
@@ -476,7 +524,9 @@ napi_value DataAbilityPredicatesProxy::GroupBy(napi_env env, napi_callback_info 
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::GroupBy Invalid argvs!");
     std::vector<std::string> fields = JSUtils::Convert2StrVector(env, args[0]);
-    GetNativePredicates(env, info)->GroupBy(fields);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->GroupBy(fields);
     return thiz;
 }
 
@@ -488,7 +538,9 @@ napi_value DataAbilityPredicatesProxy::IndexedBy(napi_env env, napi_callback_inf
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::IndexedBy Invalid argvs!");
     std::string indexName = JSUtils::Convert2String(env, args[0]);
-    GetNativePredicates(env, info)->IndexedBy(indexName);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->IndexedBy(indexName);
     return thiz;
 }
 
@@ -501,7 +553,9 @@ napi_value DataAbilityPredicatesProxy::In(napi_env env, napi_callback_info info)
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::In Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
     std::vector<std::string> values = JSUtils::Convert2StrVector(env, args[1]);
-    GetNativePredicates(env, info)->In(field, values);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->In(field, values);
     return thiz;
 }
 
@@ -514,7 +568,9 @@ napi_value DataAbilityPredicatesProxy::NotIn(napi_env env, napi_callback_info in
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::NotIn Invalid argvs!");
     std::string field = JSUtils::Convert2String(env, args[0]);
     std::vector<std::string> values = JSUtils::Convert2StrVector(env, args[1]);
-    GetNativePredicates(env, info)->NotIn(field, values);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->NotIn(field, values);
     return thiz;
 }
 
@@ -522,7 +578,9 @@ napi_value DataAbilityPredicatesProxy::Clear(napi_env env, napi_callback_info in
 {
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
-    GetNativePredicates(env, info)->Clear();
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->Clear();
     return thiz;
 }
 
@@ -530,7 +588,9 @@ napi_value DataAbilityPredicatesProxy::IsRawSelection(napi_env env, napi_callbac
 {
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
-    bool out = GetNativePredicates(env, info)->IsRawSelection();
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    bool out = nativePredicates->IsRawSelection();
     return JSUtils::Convert2JSValue(env, out);
 }
 
@@ -541,7 +601,9 @@ std::shared_ptr<NativeRdb::DataAbilityPredicates> DataAbilityPredicatesProxy::Ge
 
 napi_value DataAbilityPredicatesProxy::GetWhereClause(napi_env env, napi_callback_info info)
 {
-    auto ret = GetNativePredicates(env, info)->GetWhereClause();
+    auto nativePredicates = GetNativePredicates(env, info); 
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    auto ret = nativePredicates->GetWhereClause();
     return JSUtils::Convert2JSValue(env, ret);
 }
 
@@ -554,14 +616,18 @@ napi_value DataAbilityPredicatesProxy::SetWhereClause(napi_env env, napi_callbac
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::SetWhereClause Invalid argvs!");
 
     std::string whereClause = JSUtils::Convert2String(env, args[0]);
-    GetNativePredicates(env, info)->SetWhereClause(whereClause);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->SetWhereClause(whereClause);
 
     return thiz;
 }
 
 napi_value DataAbilityPredicatesProxy::GetWhereArgs(napi_env env, napi_callback_info info)
 {
-    auto ret = GetNativePredicates(env, info)->GetWhereArgs();
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    auto ret = nativePredicates->GetWhereArgs();
     return JSUtils::Convert2JSValue(env, ret);
 }
 
@@ -574,14 +640,18 @@ napi_value DataAbilityPredicatesProxy::SetWhereArgs(napi_env env, napi_callback_
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::SetWhereArgs Invalid argvs!");
 
     std::vector<std::string> whereArgs = JSUtils::Convert2StrVector(env, args[0]);
-    GetNativePredicates(env, info)->SetWhereArgs(whereArgs);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->SetWhereArgs(whereArgs);
 
     return thiz;
 }
 
 napi_value DataAbilityPredicatesProxy::GetOrder(napi_env env, napi_callback_info info)
 {
-    auto ret = GetNativePredicates(env, info)->GetOrder();
+    auto nativePredicates = GetNativePredicates(env, info); 
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    auto ret = nativePredicates->GetOrder();
     return JSUtils::Convert2JSValue(env, ret);
 }
 
@@ -594,46 +664,62 @@ napi_value DataAbilityPredicatesProxy::SetOrder(napi_env env, napi_callback_info
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::SetOrder Invalid argvs!");
 
     std::string order = JSUtils::Convert2String(env, args[0]);
-    GetNativePredicates(env, info)->SetOrder(order);
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    nativePredicates->SetOrder(order);
 
     return thiz;
 }
 
 napi_value DataAbilityPredicatesProxy::GetLimit(napi_env env, napi_callback_info info)
 {
-    return JSUtils::Convert2JSValue(env, GetNativePredicates(env, info)->GetLimit());
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    return JSUtils::Convert2JSValue(env, nativePredicates->GetLimit());
 }
 
 napi_value DataAbilityPredicatesProxy::GetOffset(napi_env env, napi_callback_info info)
 {
-    return JSUtils::Convert2JSValue(env, GetNativePredicates(env, info)->GetOffset());
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    return JSUtils::Convert2JSValue(env, nativePredicates->GetOffset());
 }
 
 napi_value DataAbilityPredicatesProxy::IsDistinct(napi_env env, napi_callback_info info)
 {
-    return JSUtils::Convert2JSValue(env, GetNativePredicates(env, info)->IsDistinct());
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    return JSUtils::Convert2JSValue(env, nativePredicates->IsDistinct());
 }
 
 napi_value DataAbilityPredicatesProxy::GetGroup(napi_env env, napi_callback_info info)
 {
-    auto ret = GetNativePredicates(env, info)->GetGroup();
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    auto ret = nativePredicates->GetGroup();
     return JSUtils::Convert2JSValue(env, ret);
 }
 
 napi_value DataAbilityPredicatesProxy::GetIndex(napi_env env, napi_callback_info info)
 {
-    auto ret = GetNativePredicates(env, info)->GetIndex();
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    auto ret = nativePredicates->GetIndex();
     return JSUtils::Convert2JSValue(env, ret);
 }
 
 napi_value DataAbilityPredicatesProxy::IsNeedAnd(napi_env env, napi_callback_info info)
 {
-    return JSUtils::Convert2JSValue(env, GetNativePredicates(env, info)->IsNeedAnd());
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    return JSUtils::Convert2JSValue(env, nativePredicates->IsNeedAnd());
 }
 
 napi_value DataAbilityPredicatesProxy::IsSorted(napi_env env, napi_callback_info info)
 {
-    return JSUtils::Convert2JSValue(env, GetNativePredicates(env, info)->IsSorted());
+    auto nativePredicates = GetNativePredicates(env, info);
+    RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
+    return JSUtils::Convert2JSValue(env, nativePredicates->IsSorted());
 }
 } // namespace DataAbilityJsKit
 } // namespace OHOS
