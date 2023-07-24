@@ -130,58 +130,58 @@ describe('CloudConfigCallbackTest', function () {
     })
 
     /**
-     * @tc.name ChangeAppCloudInvalidArgsCallbackTest
-     * @tc.desc Test Js Api ChangeAppCloudSwitch with invalid args
+     * @tc.name ChangeCloudByAppInvalidArgsCallbackTest
+     * @tc.desc Test Js Api ChangeCloudSwitchByApp with invalid args
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('ChangeAppCloudInvalidArgsTest', 0, function (done) {
-        console.info('ChangeAppCloudInvalidArgsCallbackTest');
+    it('ChangeCloudByAppInvalidArgsTest', 0, function (done) {
+        console.info('ChangeCloudByAppInvalidArgsCallbackTest');
         try {
             let account = "test_id";
             let bundleName = "test_bundleName";
-            cloudData.Config.changeAppCloudSwitch(account, bundleName, null, function (err) {
+            cloudData.Config.changeCloudSwitchByApp(account, bundleName, null, function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();
-                    console.info('ChangeAppCloudInvalidArgsCallbackTest changeAppCloudSwitch success');
+                    console.info('ChangeCloudByAppInvalidArgsCallbackTest changeCloudSwitchByApp success');
                     done();
                     return;
                 }
-                console.error('ChangeAppCloudInvalidArgsCallbackTest changeAppCloudSwitch fail' + `, error code is ${err.code}, message is ${err.message}`);
+                console.error('ChangeCloudByAppInvalidArgsCallbackTest changeCloudSwitchByApp fail' + `, error code is ${err.code}, message is ${err.message}`);
                 expect(null).assertFail();
                 done();
             });
         } catch (e) {
-            console.error('ChangeAppCloudInvalidArgsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            console.error('ChangeCloudByAppInvalidArgsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
             done();
         }
     })
 
     /**
-     * @tc.name ChangeAppCloudInvalidArgsNumsCallbackTest
-     * @tc.desc Test Js Api ChangeAppCloudSwitch which parameters number are less
+     * @tc.name ChangeCloudByAppInvalidArgsNumsCallbackTest
+     * @tc.desc Test Js Api ChangeCloudSwitchByApp which parameters number are less
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('ChangeAppCloudInvalidArgsNumsCallbackTest', 0, function (done) {
-        console.info('ChangeAppCloudInvalidArgsNumsCallbackTest');
+    it('ChangeCloudByAppInvalidArgsNumsCallbackTest', 0, function (done) {
+        console.info('ChangeCloudByAppInvalidArgsNumsCallbackTest');
         try {
             let account = "test_id";
             let bundleName = "test_bundleName";
-            cloudData.Config.changeAppCloudSwitch(account, bundleName, function (err) {
+            cloudData.Config.changeCloudSwitchByApp(account, bundleName, function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();
-                    console.info('ChangeAppCloudInvalidArgsNumsCallbackTest changeAppCloudSwitch success');
+                    console.info('ChangeCloudByAppInvalidArgsNumsCallbackTest changeCloudSwitchByApp success');
                     done();
                     return;
                 }
-                console.error('ChangeAppCloudInvalidArgsNumsCallbackTest changeAppCloudSwitch fail' + `, error code is ${err.code}, message is ${err.message}`);
+                console.error('ChangeCloudByAppInvalidArgsNumsCallbackTest changeCloudSwitchByApp fail' + `, error code is ${err.code}, message is ${err.message}`);
                 expect(null).assertFail();
                 done();
             });
         } catch (e) {
-            console.error('ChangeAppCloudInvalidArgsNumsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            console.error('ChangeCloudByAppInvalidArgsNumsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
             done();
         }
@@ -244,58 +244,58 @@ describe('CloudConfigCallbackTest', function () {
     })
 
     /**
-     * @tc.name CleanInvalidArgsNumsCallbackTest
-     * @tc.desc Test Js Api Clean which parameters number are less
+     * @tc.name ClearInvalidArgsNumsCallbackTest
+     * @tc.desc Test Js Api Clear which parameters number are less
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('CleanInvalidArgsNumsCallbackTest', 0, function (done) {
-        console.info('CleanInvalidArgsNumsCallbackTest');
+    it('ClearInvalidArgsNumsCallbackTest', 0, function (done) {
+        console.info('ClearInvalidArgsNumsCallbackTest');
         try {
             let account = "test_id";
-            cloudData.Config.clean(account, function (err) {
+            cloudData.Config.clear(account, function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();
-                    console.info('CleanInvalidArgsNumsCallbackTest clean success');
+                    console.info('ClearInvalidArgsNumsCallbackTest clear success');
                     done();
                     return;
                 }
-                console.error('CleanInvalidArgsNumsCallbackTest clean fail' + `, error code is ${err.code}, message is ${err.message}`);
+                console.error('ClearInvalidArgsNumsCallbackTest clear fail' + `, error code is ${err.code}, message is ${err.message}`);
                 expect(null).assertFail();
                 done();
             });
         } catch (e) {
-            console.error('CleanInvalidArgsNumsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            console.error('ClearInvalidArgsNumsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
             done();
         }
     })
 
     /**
-     * @tc.name CleanInvalidArgsCallbackTest
-     * @tc.desc Test Js Api Clean which parameters are invalid
+     * @tc.name ClearInvalidArgsCallbackTest
+     * @tc.desc Test Js Api Clear which parameters are invalid
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('CleanInvalidArgsCallbackTest', 0, function (done) {
-        console.info('CleanInvalidArgsNumsCallbackTest');
+    it('ClearInvalidArgsCallbackTest', 0, function (done) {
+        console.info('ClearInvalidArgsNumsCallbackTest');
         try {
             let account = "test_id";
             let bundleName1 = "test_bundleName1";
             let appActions = {[bundleName1]: 3};
-            cloudData.Config.clean(account, appActions, function (err) {
+            cloudData.Config.clear(account, appActions, function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();
-                    console.info('CleanInvalidArgsCallbackTest clean success');
+                    console.info('CleanInvalidArgsCallbackTest clear success');
                     done();
                     return;
                 }
-                console.error('CleanInvalidArgsCallbackTest clean fail' + `, error code is ${err.code}, message is ${err.message}`);
+                console.error('ClearInvalidArgsCallbackTest clear fail' + `, error code is ${err.code}, message is ${err.message}`);
                 expect(null).assertFail();
                 done();
             });
         } catch (e) {
-            console.error('CleanInvalidArgsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            console.error('ClearInvalidArgsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
             done();
         }

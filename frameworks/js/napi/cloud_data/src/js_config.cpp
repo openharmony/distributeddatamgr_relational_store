@@ -323,8 +323,8 @@ napi_value JsConfig::InitConfig(napi_env env, napi_value exports)
         std::vector<napi_property_descriptor> properties = {
             DECLARE_NAPI_STATIC_FUNCTION("enableCloud", JsConfig::EnableCloud),
             DECLARE_NAPI_STATIC_FUNCTION("disableCloud", JsConfig::DisableCloud),
-            DECLARE_NAPI_STATIC_FUNCTION("changeAppCloudSwitch", JsConfig::ChangeAppCloudSwitch),
-            DECLARE_NAPI_STATIC_FUNCTION("clean", JsConfig::Clean),
+            DECLARE_NAPI_STATIC_FUNCTION("changeCloudSwitchByApp", JsConfig::ChangeAppCloudSwitch),
+            DECLARE_NAPI_STATIC_FUNCTION("clear", JsConfig::Clean),
             DECLARE_NAPI_STATIC_FUNCTION("notifyDataChange", JsConfig::NotifyDataChange),
         };
         return properties;
