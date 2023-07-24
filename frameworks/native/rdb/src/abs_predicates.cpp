@@ -52,7 +52,7 @@ bool AbsPredicates::IsNeedAnd() const
 AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const std::string &value)
 {
     DISTRIBUTED_DATA_HITRACE("AbsPredicates::EqualTo");
-    bool chekParaFlag = CheckParameter("equalTo", field, { std::move(value) });
+    bool chekParaFlag = CheckParameter("equalTo", field, { value });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: EqualTo() fails because Invalid parameter.");
         return this;
@@ -72,7 +72,7 @@ AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const std::strin
  */
 AbsPredicates *AbsPredicates::NotEqualTo(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("notEqualTo", field, { std::move(value) });
+    bool chekParaFlag = CheckParameter("notEqualTo", field, { value });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: NotEqualTo() fails because Invalid parameter.");
         return this;
@@ -128,7 +128,7 @@ AbsPredicates *AbsPredicates::And()
  */
 AbsPredicates *AbsPredicates::Contains(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("contains", field, { std::move(value) });
+    bool chekParaFlag = CheckParameter("contains", field, { value });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: Contains() fails because Invalid parameter.");
         return this;
@@ -144,7 +144,7 @@ AbsPredicates *AbsPredicates::Contains(const std::string &field, const std::stri
  */
 AbsPredicates *AbsPredicates::BeginsWith(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("beginsWith", field, { std::move(value) });
+    bool chekParaFlag = CheckParameter("beginsWith", field, { value });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: BeginsWith() fails because Invalid parameter.");
         return this;
@@ -160,7 +160,7 @@ AbsPredicates *AbsPredicates::BeginsWith(const std::string &field, const std::st
  */
 AbsPredicates *AbsPredicates::EndsWith(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("endsWith", field, { std::move(value) });
+    bool chekParaFlag = CheckParameter("endsWith", field, { value });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: EndsWith() fails because Invalid parameter.");
         return this;
@@ -206,7 +206,7 @@ AbsPredicates *AbsPredicates::IsNotNull(const std::string &field)
  */
 AbsPredicates *AbsPredicates::Like(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("like", field, { std::move(value) });
+    bool chekParaFlag = CheckParameter("like", field, { value });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: Like() fails because Invalid parameter.");
         return this;
@@ -222,7 +222,7 @@ AbsPredicates *AbsPredicates::Like(const std::string &field, const std::string &
  */
 AbsPredicates *AbsPredicates::Glob(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("glob", field, { std::move(value) });
+    bool chekParaFlag = CheckParameter("glob", field, { value });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: Glob() fails because Invalid parameter.");
         return this;
@@ -238,7 +238,7 @@ AbsPredicates *AbsPredicates::Glob(const std::string &field, const std::string &
  */
 AbsPredicates *AbsPredicates::Between(std::string field, std::string low, std::string high)
 {
-    bool chekParaFlag = CheckParameter("between", field, { std::move(low), std::move(high) });
+    bool chekParaFlag = CheckParameter("between", field, { low, high });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: Between() fails because Invalid parameter.");
         return this;
@@ -255,7 +255,7 @@ AbsPredicates *AbsPredicates::Between(std::string field, std::string low, std::s
  */
 AbsPredicates *AbsPredicates::NotBetween(std::string field, std::string low, std::string high)
 {
-    bool chekParaFlag = CheckParameter("notBetween", field, { std::move(low), std::move(high) });
+    bool chekParaFlag = CheckParameter("notBetween", field, { low, high });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: NotBetween() fails because Invalid parameter.");
         return this;
@@ -272,7 +272,7 @@ AbsPredicates *AbsPredicates::NotBetween(std::string field, std::string low, std
  */
 AbsPredicates *AbsPredicates::GreaterThan(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("greaterThan", field, { std::move(value) });
+    bool chekParaFlag = CheckParameter("greaterThan", field, { value });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: GreaterThan() fails because Invalid parameter.");
         return this;
@@ -288,7 +288,7 @@ AbsPredicates *AbsPredicates::GreaterThan(const std::string &field, const std::s
  */
 AbsPredicates *AbsPredicates::LessThan(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("lessThan", field, { std::move(value) });
+    bool chekParaFlag = CheckParameter("lessThan", field, { value });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: LessThan() fails because Invalid parameter.");
         return this;
@@ -304,7 +304,7 @@ AbsPredicates *AbsPredicates::LessThan(const std::string &field, const std::stri
  */
 AbsPredicates *AbsPredicates::GreaterThanOrEqualTo(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("greaterThanOrEqualTo", field, { std::move(value) });
+    bool chekParaFlag = CheckParameter("greaterThanOrEqualTo", field, { value });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: GreaterThanOrEqualTo() fails because Invalid parameter.");
         return this;
@@ -320,7 +320,7 @@ AbsPredicates *AbsPredicates::GreaterThanOrEqualTo(const std::string &field, con
  */
 AbsPredicates *AbsPredicates::LessThanOrEqualTo(const std::string &field, const std::string &value)
 {
-    bool chekParaFlag = CheckParameter("greaterThanOrEqualTo", field, { std::move(value) });
+    bool chekParaFlag = CheckParameter("greaterThanOrEqualTo", field, { value });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: LessThanOrEqualTo() fails because Invalid parameter.");
         return this;
