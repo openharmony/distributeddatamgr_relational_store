@@ -111,7 +111,7 @@ void AsyncCall::OnExecute(napi_env env, void *data)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     BaseContext *context = reinterpret_cast<BaseContext *>(data);
-    if (context->exec_) {
+    if (context && context->exec_) {
         context->execStatus = context->exec_();
         context->exec_ = nullptr;
     }
@@ -124,6 +124,9 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
     napi_value output = nullptr;
     int outStatus = ERR;
     // if async execute status is not napi_ok then un-execute out function
+    if (context == nullptr) {
+        return;
+    }
     if ((context->execStatus == OK) && context->output_) {
         outStatus = context->output_(env, output);
     }

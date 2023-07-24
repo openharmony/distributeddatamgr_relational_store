@@ -48,8 +48,10 @@ Context::Context()
 
 #if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
 Context::Context(std::shared_ptr<AbilityRuntime::Platform::Context> stageContext)
-{
-    databaseDir_ = stageContext->GetDatabaseDir();
+{   
+    if (stageContext != nullptr) {
+        databaseDir_ = stageContext->GetDatabaseDir();
+    }
 }
 #endif
 

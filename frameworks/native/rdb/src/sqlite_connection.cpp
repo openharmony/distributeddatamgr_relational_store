@@ -689,6 +689,9 @@ int SqliteConnection::ExecuteGetString(
 std::shared_ptr<SqliteStatement> SqliteConnection::BeginStepQuery(
     int &errCode, const std::string &sql, const std::vector<std::string> &selectionArgs) const
 {
+    if (!stepStatement) {
+        return nullptr;
+    }
     errCode = stepStatement->Prepare(dbHandle, sql);
     if (errCode != E_OK) {
         return nullptr;
