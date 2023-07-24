@@ -43,7 +43,7 @@ public:
     /**
      * @brief Obtains a block from the {@link SharedResultSet}.
      */
-    virtual AppDataFwk::SharedBlock *GetBlock() const = 0;
+    virtual AppDataFwk::SharedBlock *GetBlock() = 0;
 
     /**
      * @brief Adds the data of a {@code SharedResultSet} to a {@link SharedBlock}.
