@@ -23,7 +23,6 @@ using namespace OHOS;
 using namespace OHOS::NativeRdb;
 
 namespace OHOS {
-
 class RdbStoreFuzzTest {
 public:
     static void SetUpTestCase(void);
@@ -78,6 +77,10 @@ void RdbStoreFuzzTest::TearDownTestCase(void)
 
 bool RdbStoreFuzzTest::InsertData(std::shared_ptr<RdbStore> &store, const uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return false;
+    }
+
     int64_t id;
     ValuesBucket values;
 
@@ -89,7 +92,8 @@ bool RdbStoreFuzzTest::InsertData(std::shared_ptr<RdbStore> &store, const uint8_
     values.PutString("name", valName);
     values.PutInt("age", valAge);
     values.PutDouble("salary", valSalary);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *(data + 1)});
+
+    values.PutBlob("blobType", std::vector<uint8_t> {*data, *(data + size)});
 
     return store->Insert(id, tableName, values);
 }
@@ -128,7 +132,7 @@ bool RdbDeleteFuzz(const uint8_t *data, size_t size)
 
     int deletedRows;
     std::string tableName(data, data + size);
-    std::string whereClause(data + 1, data + size + 1);
+    std::string whereClause(data, data + size);
     errCode = store->Delete(deletedRows, tableName, whereClause);
     if (errCode != E_OK) {
         result = false;
@@ -157,13 +161,13 @@ bool RdbUpdateFuzz(const uint8_t *data, size_t size)
     std::string valName(data, data + size);
     int valAge = static_cast<int>(*data);
     double valSalary = static_cast<double>(*data);
-    std::string whereClause(data + 1, data + size + 1);
+    std::string whereClause(data, data + size);
     std::string tableName(data, data + size);
 
     values.PutString("name", valName);
     values.PutInt("age", valAge);
     values.PutDouble("salary", valSalary);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *(data + 2)});
+    values.PutBlob("blobType", std::vector<uint8_t> {*data, *(data + size)});
     errCode = store->Update(changedRows, tableName, values, whereClause,
         std::vector<std::string> { valName });
     if (errCode != E_OK) {
@@ -235,8 +239,7 @@ void RdbQueryFuzz2(const uint8_t *data, size_t size)
     std::string tableName(data, data + size);
     std::string valName(data, data + size);
     std::string valAge(data, data + size);
-    // 4 represents the value of 'valAgeChange' is a string consist of 4 bytes start from 'data+size'
-    std::string valAgeChange(data + size, data + size + 4);
+    std::string valAgeChange(data, data + size);
 
     AbsRdbPredicates predicates(tableName);
 
@@ -266,12 +269,12 @@ void RdbQueryFuzz2(const uint8_t *data, size_t size)
 
     predicates.Clear();
     predicates.In("name",
-        std::vector<std::string> {reinterpret_cast<const char*>(data + 1), reinterpret_cast<const char*>(data + 2)});
+        std::vector<std::string> {reinterpret_cast<const char*>(data), reinterpret_cast<const char*>(data + size)});
     store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
 
     predicates.Clear();
     predicates.NotIn("name",
-        std::vector<std::string> {reinterpret_cast<const char*>(data + 1), reinterpret_cast<const char*>(data + 2)});
+        std::vector<std::string> {reinterpret_cast<const char*>(data), reinterpret_cast<const char*>(data + size)});
     store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
     store->ExecuteSql("DELETE FROM test");
 }
@@ -290,4 +293,3 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::RdbStoreFuzzTest::TearDownTestCase();
     return 0;
 }
-
