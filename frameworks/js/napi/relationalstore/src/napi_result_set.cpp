@@ -144,7 +144,7 @@ napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
 
 ResultSetProxy::~ResultSetProxy()
 {
-    LOG_INFO("ResultSetProxy destructor!");
+    LOG_DEBUG("ResultSetProxy destructor!");
 }
 
 ResultSetProxy::ResultSetProxy(std::shared_ptr<ResultSet> resultSet)
