@@ -92,10 +92,10 @@ void SubObserver::OnChange(const std::vector<std::string> &devices)
 
 void SubObserver::OnChange()
 {
-    const std::string CREATE_TABLE_TEST = std::string("CREATE TABLE IF NOT EXISTS test ")
-                                          + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                        "name TEXT NOT NULL, age INTEGER, salary "
-                                                        "REAL, blobType BLOB)");
+    const std::string CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test "
+                                          "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                          "name TEXT NOT NULL, age INTEGER, salary "
+                                          "REAL, blobType BLOB)";
     RdbStoreSubTest::store->ExecuteSql(CREATE_TABLE_TEST);
     ValuesBucket values;
     int64_t id;
