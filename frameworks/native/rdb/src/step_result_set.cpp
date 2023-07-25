@@ -162,7 +162,7 @@ int StepResultSet::GoToRow(int position)
     }
     // If the moved position is less than zero, reset the result and return an error
     if (position < 0) {
-        LOG_ERROR("position %{public}d.", position);
+        LOG_DEBUG("position %{public}d.", position);
         Reset();
         return E_ERROR;
     }

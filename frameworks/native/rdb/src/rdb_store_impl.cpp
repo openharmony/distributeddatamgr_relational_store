@@ -58,7 +58,7 @@ using namespace OHOS::Rdb;
 
 int RdbStoreImpl::InnerOpen()
 {
-    LOG_INFO("open %{public}s.", SqliteUtils::Anonymous(rdbStoreConfig.GetPath()).c_str());
+    LOG_DEBUG("open %{public}s.", SqliteUtils::Anonymous(rdbStoreConfig.GetPath()).c_str());
     int errCode = E_OK;
     connectionPool = SqliteConnectionPool::Create(rdbStoreConfig, errCode);
     if (connectionPool == nullptr) {
@@ -99,7 +99,7 @@ void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
         pool_->Execute([param]() {
             auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
             if (err != E_OK || service == nullptr) {
-                LOG_WARN("GetRdbService failed, err is %{public}d.", err);
+                LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);
                 return;
             }
             err = service->GetSchema(param);
@@ -224,7 +224,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
 
 RdbStoreImpl::~RdbStoreImpl()
 {
-    LOG_INFO("destroy.");
+    LOG_DEBUG("destroy.");
     if (connectionPool) {
         delete connectionPool;
     }
@@ -631,7 +631,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
     }
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        LOG_INFO("sql ddl execute.");
+        LOG_DEBUG("sql ddl execute.");
         errCode = connectionPool->ReOpenAvailableReadConnections();
     }
 

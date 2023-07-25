@@ -117,7 +117,7 @@ AbsPredicates *AbsPredicates::Or()
 AbsPredicates *AbsPredicates::And()
 {
     if (!isNeedAnd) {
-        LOG_WARN("fail to add And.");
+        LOG_DEBUG("fail to add And.");
         return this;
     }
     return this;
@@ -402,7 +402,7 @@ AbsPredicates *AbsPredicates::Offset(int rowOffset)
         return this;
     }
     if (rowOffset < 1) {
-        LOG_WARN("AbsPredicates offset(): the value of offset can't be less than or equal to zero.");
+        LOG_DEBUG("AbsPredicates offset(): the value of offset can't be less than or equal to zero.");
         return this;
     }
     offset = rowOffset;
