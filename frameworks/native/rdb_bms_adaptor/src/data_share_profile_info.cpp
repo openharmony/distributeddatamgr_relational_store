@@ -27,7 +27,7 @@
 namespace OHOS::RdbBMSAdapter {
 using namespace OHOS::Rdb;
 
-std::shared_mutex DataShareProfileInfo::infosMutex_;
+std::mutex DataShareProfileInfo::infosMutex_;
 
 constexpr const char *DATA_SHARE_PROFILE_META = "ohos.extension.dataShare";
 constexpr const char *PROFILE_FILE_PREFIX = "$profile:";
@@ -64,7 +64,7 @@ bool ProfileInfo::Unmarshal(const json &node)
 bool DataShareProfileInfo::GetResConfigFile(
     const AppExecFwk::ExtensionAbilityInfo &extensionInfo, std::vector<std::string> &profileInfos)
 {
-    std::shared_lock<std::shared_mutex> lock(infosMutex_);
+    std::lock_guard<std::mutex> lock(infosMutex_);
     bool isCompressed = !extensionInfo.hapPath.empty();
     std::string resourcePath = isCompressed ? extensionInfo.hapPath : extensionInfo.resourcePath;
     profileInfos = GetResProfileByMetadata(extensionInfo.metadata, resourcePath, isCompressed);
@@ -77,7 +77,7 @@ bool DataShareProfileInfo::GetResConfigFile(
 bool DataShareProfileInfo::GetDataPropertiesFromProxyDatas(const OHOS::AppExecFwk::ProxyData &proxyData,
     const std::string &resourcePath, bool isCompressed, DataProperties &dataProperties)
 {
-    std::shared_lock<std::shared_mutex> lock(infosMutex_);
+    std::lock_guard<std::mutex> lock(infosMutex_);
     std::vector<std::string> infos;
     infos = GetResProfileByMetadata(proxyData.metadata, resourcePath, isCompressed);
     if (infos.empty()) {
