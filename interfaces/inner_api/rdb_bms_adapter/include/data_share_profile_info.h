@@ -22,6 +22,8 @@
 #include "resource_manager.h"
 #include "serializable.h"
 
+#include <shared_mutex>
+
 namespace OHOS::RdbBMSAdapter {
 using namespace OHOS::Global::Resource;
 struct API_EXPORT Config final : public Serializable {
@@ -57,6 +59,7 @@ private:
         bool isCompressed);
     static std::string ReadProfile(const std::string &resPath);
     static bool IsFileExisted(const std::string &filePath);
+    static std::shared_mutex infosMutex_;
 };
 } // namespace OHOS::RdbBMSAdapter
 #endif // RDB_BMS_ADAPTER_PROFILE_INFO_H
