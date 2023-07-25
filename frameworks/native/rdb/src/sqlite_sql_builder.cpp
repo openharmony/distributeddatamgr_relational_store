@@ -172,8 +172,8 @@ std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const std::string &in
 {
     std::string sqlString;
 
-    std::string limitStr = (limit == -1) ? "" : std::to_string(limit);
-    std::string offsetStr = (offset == -1) ? "" : std::to_string(offset);
+    std::string limitStr = (limit == INT_MIN) ? "" : std::to_string(limit);
+    std::string offsetStr = (offset == INT_MIN) ? "" : std::to_string(offset);
 
     AppendClause(sqlString, " INDEXED BY ", index);
     AppendClause(sqlString, " WHERE ", whereClause);
@@ -189,8 +189,8 @@ std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const AbsRdbPredicate
 {
     std::string sqlString;
 
-    std::string limitStr = (predicates.GetLimit() == -1) ? "" : std::to_string(predicates.GetLimit());
-    std::string offsetStr = (predicates.GetOffset() == -1) ? "" : std::to_string(predicates.GetOffset());
+    std::string limitStr = (predicates.GetLimit() == INT_MIN) ? "" : std::to_string(predicates.GetLimit());
+    std::string offsetStr = (predicates.GetOffset() == INT_MIN) ? "" : std::to_string(predicates.GetOffset());
 
     AppendClause(sqlString, " INDEXED BY ", predicates.GetIndex());
     AppendClause(sqlString, " WHERE ", predicates.GetWhereClause());
@@ -206,8 +206,8 @@ std::string SqliteSqlBuilder::BuildSqlStringFromPredicatesNoWhere(const std::str
     const std::string &whereClause, const std::string &group, const std::string &order, int limit, int offset)
 {
     std::string sqlString;
-    std::string limitStr = (limit == -1) ? "" : std::to_string(limit);
-    std::string offsetStr = (offset == -1) ? "" : std::to_string(offset);
+    std::string limitStr = (limit == INT_MIN) ? "" : std::to_string(limit);
+    std::string offsetStr = (offset == INT_MIN) ? "" : std::to_string(offset);
 
     AppendClause(sqlString, " INDEXED BY ", index);
     AppendClause(sqlString, " ", whereClause);

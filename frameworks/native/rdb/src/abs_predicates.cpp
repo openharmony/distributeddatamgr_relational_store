@@ -380,16 +380,28 @@ AbsPredicates *AbsPredicates::Distinct()
  */
 AbsPredicates *AbsPredicates::Limit(int value)
 {
-    if (limit != -1) {
-        LOG_WARN("AbsPredicates limit(): limit cannot be set twice.");
+    if (limit != INT_MIN) {
+        LOG_WARN("limit cannot be set twice.");
         return this;
     }
-    if (value < 1) {
-        LOG_WARN("AbsPredicates limit(): limit cannot be less than or equal to zero.");
-        return this;
-    }
+    value = (value < 0) ? -1 : value;
     limit = value;
     return this;
+}
+
+/**
+ * Restricts the max number of return records.
+ */
+AbsPredicates *AbsPredicates::Limit(int offsetValue, int limitValue)
+{
+    if (limit != INT_MIN) {
+        LOG_WARN("limit cannot be set twice.");
+        return this;
+    }
+    limitValue = (limitValue < 0) ? -1 : limitValue;
+    limit = limitValue;
+
+    return Offset(offsetValue);
 }
 
 /**
@@ -397,15 +409,13 @@ AbsPredicates *AbsPredicates::Limit(int value)
  */
 AbsPredicates *AbsPredicates::Offset(int rowOffset)
 {
-    if (offset != -1) {
+    if (offset != INT_MIN) {
         LOG_WARN("AbsPredicates offset(): offset cannot be set twice.");
         return this;
     }
-    if (rowOffset < 1) {
-        LOG_WARN("AbsPredicates offset(): the value of offset can't be less than or equal to zero.");
-        return this;
-    }
+    rowOffset = (rowOffset < 0) ? -1 : rowOffset;
     offset = rowOffset;
+
     return this;
 }
 
@@ -507,8 +517,8 @@ void AbsPredicates::Initial()
     order.clear();
     group.clear();
     index.clear();
-    limit = -1;
-    offset = -1;
+    limit = INT_MIN;
+    offset = INT_MIN;
 }
 
 /**
