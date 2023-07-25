@@ -1604,19 +1604,32 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_InDevices_InAllDevices_026, TestSize.Le
 }
 
 /* *
- * @tc.name: RdbStore_GetDistributedPredicates_027
- * @tc.desc: Normal testCase of RdbPredicates for GetDistributedPredicates method
+ * @tc.name: RdbStore_getStatement_getBindArgs_027
+ * @tc.desc: Normal testCase of RdbPredicates for getStatement and getBindArgs method
  * @tc.type: FUNC
- * @tc.require:
+ * @tc.require: AR
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_GetDistributedPredicates_027, TestSize.Level1)
+HWTEST_F(RdbStorePredicateTest, RdbStore_getStatement_getBindArgs_027, TestSize.Level1)
 {
     RdbPredicates predicates("AllDataType");
-    predicates.EqualTo("stringValue", "ABCDEFGHIJKLMN")->OrderByDesc("integerValue")->Limit(2);
-    auto distributedRdbPredicates = predicates.GetDistributedPredicates();
-    EXPECT_EQ(*(distributedRdbPredicates.tables_.begin()), "AllDataType");
-    EXPECT_EQ(distributedRdbPredicates.operations_.size(), 3UL);
-    EXPECT_EQ(distributedRdbPredicates.operations_[0].operator_, OHOS::DistributedRdb::EQUAL_TO);
-    EXPECT_EQ(distributedRdbPredicates.operations_[0].field_, "stringValue");
-    EXPECT_EQ(distributedRdbPredicates.operations_[0].values_[0], "ABCDEFGHIJKLMN");
+    predicates.EqualTo("stringValue", "ABCDEFGHIJKLMN")
+        ->BeginWrap()
+        ->EqualTo("integerValue", "1")
+        ->Or()
+        ->EqualTo("integerValue", std::to_string(INT_MAX))
+        ->EndWrap()
+        ->OrderByDesc("integerValue")
+        ->Limit(-1, -1);
+
+    std::vector<std::string> columns;
+    int count = 0;
+    std::shared_ptr<ResultSet> resultSet = RdbStorePredicateTest::store->Query(predicates, columns);
+    resultSet->GetRowCount(count);
+    EXPECT_EQ(2, count);
+
+    std::string statement = predicates.getStatement(&predicates);
+    std::vector<std::string> bindArgs = predicates.getBindArgs(&predicates);
+    EXPECT_EQ(statement, " WHERE stringValue = ? AND  ( integerValue = ?  OR integerValue = ?  )  ORDER BY "
+                         "integerValue DESC  LIMIT -1 OFFSET -1");
+    EXPECT_EQ(bindArgs[0], "ABCDEFGHIJKLMN");
 }

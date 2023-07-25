@@ -72,6 +72,7 @@ public:
     API_EXPORT virtual AbsPredicates *OrderByDesc(const std::string &field);
     API_EXPORT virtual AbsPredicates *Distinct();
     API_EXPORT virtual AbsPredicates *Limit(int value);
+    API_EXPORT virtual AbsPredicates *Limit(int offsetValue, int limitValue);
     API_EXPORT virtual AbsPredicates *Offset(int rowOffset);
     API_EXPORT virtual AbsPredicates *GroupBy(const std::vector<std::string> &fields);
     API_EXPORT virtual AbsPredicates *IndexedBy(const std::string &indexName);

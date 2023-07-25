@@ -70,6 +70,8 @@ void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER_SETTER("joinConditions", GetJoinConditions, SetJoinConditions),
         DECLARE_NAPI_GETTER_SETTER("joinNames", GetJoinTableNames, SetJoinTableNames),
         DECLARE_NAPI_GETTER_SETTER("joinTypes", GetJoinTypes, SetJoinTypes),
+        DECLARE_NAPI_GETTER("statement", GetStatement),
+        DECLARE_NAPI_GETTER("bindArgs", GetBindArgs),
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
         DECLARE_NAPI_FUNCTION("inDevices", InDevices),
         DECLARE_NAPI_FUNCTION("inAllDevices", InAllDevices),
@@ -563,10 +565,27 @@ napi_value RdbPredicatesProxy::Limit(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbPredicatesProxy::Limit begin.");
     napi_value thiz = nullptr;
-    int32_t limit = 0;
-    auto predicatesProxy = ParseInt32FieldByName(env, info, thiz, limit, "value");
+    size_t argc = 2;
+    napi_value args[2] = { 0 };
+    napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    RdbPredicatesProxy *predicatesProxy = GetNativePredicates(env, info);
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->predicates_);
-    predicatesProxy->predicates_->Limit(limit);
+    RDB_NAPI_ASSERT(env, argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 or 2"));
+
+    int32_t offsetValue = INT_MIN, limitValue = INT_MIN;
+    if (argc == 1) {
+        napi_status status = napi_get_value_int32(env, args[0], &limitValue);
+        RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("limitValue", "a number."));
+        predicatesProxy->predicates_->Limit(limitValue);
+    } else {
+        napi_status status = napi_get_value_int32(env, args[0], &offsetValue);
+        RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("offsetValue", "a number."));
+
+        status = napi_get_value_int32(env, args[1], &limitValue);
+        RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("limitValue", "a number."));
+        predicatesProxy->predicates_->Limit(offsetValue, limitValue);
+    }
+
     return thiz;
 }
 
@@ -669,6 +688,28 @@ napi_value RdbPredicatesProxy::On(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->predicates_);
     predicatesProxy->predicates_->On(clauses);
     return thiz;
+}
+
+napi_value RdbPredicatesProxy::GetStatement(napi_env env, napi_callback_info info)
+{
+    napi_value thiz = nullptr;
+    napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
+    RdbPredicatesProxy *predicatesProxy = GetNativePredicates(env, info);
+    CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->predicates_);
+
+    std::string statement = predicatesProxy->predicates_->getStatement(predicatesProxy->predicates_.get());
+    return JSUtils::Convert2JSValue(env, statement);
+}
+
+napi_value RdbPredicatesProxy::GetBindArgs(napi_env env, napi_callback_info info)
+{
+    napi_value thiz = nullptr;
+    napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
+    RdbPredicatesProxy *predicatesProxy = GetNativePredicates(env, info);
+    CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->predicates_);
+
+    std::vector<std::string> bindArgs = predicatesProxy->predicates_->getBindArgs(predicatesProxy->predicates_.get());
+    return JSUtils::Convert2JSValue(env, bindArgs);
 }
 
 napi_value RdbPredicatesProxy::Clear(napi_env env, napi_callback_info info)
