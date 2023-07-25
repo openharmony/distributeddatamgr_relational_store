@@ -143,11 +143,11 @@ describe('CloudConfigCallbackTest', function () {
             cloudData.Config.changeAppCloudSwitch(account, bundleName, null, function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();
-                    console.info('ChangeAppCloudInvalidArgsCallbackTest ChangeAppCloudSwitch success');
+                    console.info('ChangeAppCloudInvalidArgsCallbackTest changeAppCloudSwitch success');
                     done();
                     return;
                 }
-                console.error('ChangeAppCloudInvalidArgsCallbackTest ChangeAppCloudSwitch fail' + `, error code is ${err.code}, message is ${err.message}`);
+                console.error('ChangeAppCloudInvalidArgsCallbackTest changeAppCloudSwitch fail' + `, error code is ${err.code}, message is ${err.message}`);
                 expect(null).assertFail();
                 done();
             });
