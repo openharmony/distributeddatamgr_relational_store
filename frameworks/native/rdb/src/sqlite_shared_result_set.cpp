@@ -36,7 +36,6 @@ SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<RdbStoreImpl> store
 }
 
 SqliteSharedResultSet::~SqliteSharedResultSet() {
-    store_.reset();
 }
 
 std::shared_ptr<SqliteStatement> SqliteSharedResultSet::PrepareStep(SqliteConnection* connection, int &errCode)
