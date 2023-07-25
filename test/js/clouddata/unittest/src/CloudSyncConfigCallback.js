@@ -130,58 +130,58 @@ describe('CloudConfigCallbackTest', function () {
     })
 
     /**
-     * @tc.name ChangeCloudByAppInvalidArgsCallbackTest
-     * @tc.desc Test Js Api ChangeCloudSwitchByApp with invalid args
+     * @tc.name ChangeAppCloudInvalidArgsCallbackTest
+     * @tc.desc Test Js Api ChangeAppCloudSwitch with invalid args
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('ChangeCloudByAppInvalidArgsTest', 0, function (done) {
-        console.info('ChangeCloudByAppInvalidArgsCallbackTest');
+    it('ChangeAppCloudInvalidArgsCallbackTest', 0, function (done) {
+        console.info('ChangeAppCloudInvalidArgsCallbackTest');
         try {
             let account = "test_id";
             let bundleName = "test_bundleName";
-            cloudData.Config.changeCloudSwitchByApp(account, bundleName, null, function (err) {
+            cloudData.Config.changeAppCloudSwitch(account, bundleName, null, function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();
-                    console.info('ChangeCloudByAppInvalidArgsCallbackTest changeCloudSwitchByApp success');
+                    console.info('ChangeAppCloudInvalidArgsCallbackTest ChangeAppCloudSwitch success');
                     done();
                     return;
                 }
-                console.error('ChangeCloudByAppInvalidArgsCallbackTest changeCloudSwitchByApp fail' + `, error code is ${err.code}, message is ${err.message}`);
+                console.error('ChangeAppCloudInvalidArgsCallbackTest ChangeAppCloudSwitch fail' + `, error code is ${err.code}, message is ${err.message}`);
                 expect(null).assertFail();
                 done();
             });
         } catch (e) {
-            console.error('ChangeCloudByAppInvalidArgsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            console.error('ChangeAppCloudInvalidArgsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
             done();
         }
     })
 
     /**
-     * @tc.name ChangeCloudByAppInvalidArgsNumsCallbackTest
-     * @tc.desc Test Js Api ChangeCloudSwitchByApp which parameters number are less
+     * @tc.name ChangeAppCloudInvalidArgsNumsCallbackTest
+     * @tc.desc Test Js Api ChangeAppCloudSwitch which parameters number are less
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('ChangeCloudByAppInvalidArgsNumsCallbackTest', 0, function (done) {
-        console.info('ChangeCloudByAppInvalidArgsNumsCallbackTest');
+    it('ChangeAppCloudInvalidArgsNumsCallbackTest', 0, function (done) {
+        console.info('ChangeAppCloudInvalidArgsNumsCallbackTest');
         try {
             let account = "test_id";
             let bundleName = "test_bundleName";
-            cloudData.Config.changeCloudSwitchByApp(account, bundleName, function (err) {
+            cloudData.Config.changeAppCloudSwitch(account, bundleName, function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();
-                    console.info('ChangeCloudByAppInvalidArgsNumsCallbackTest changeCloudSwitchByApp success');
+                    console.info('ChangeAppCloudInvalidArgsNumsCallbackTest changeAppCloudSwitch success');
                     done();
                     return;
                 }
-                console.error('ChangeCloudByAppInvalidArgsNumsCallbackTest changeCloudSwitchByApp fail' + `, error code is ${err.code}, message is ${err.message}`);
+                console.error('ChangeAppCloudInvalidArgsNumsCallbackTest changeAppCloudSwitch fail' + `, error code is ${err.code}, message is ${err.message}`);
                 expect(null).assertFail();
                 done();
             });
         } catch (e) {
-            console.error('ChangeCloudByAppInvalidArgsNumsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            console.error('ChangeAppCloudInvalidArgsNumsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
             done();
         }

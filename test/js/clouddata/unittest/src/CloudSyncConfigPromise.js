@@ -115,50 +115,50 @@ describe('CloudConfigPromiseTest', function () {
     })
 
     /**
-     * @tc.name ChangeCloudByAppInvalidArgsTest
-     * @tc.desc Test Js Api ChangeCloudSwitchByApp with invalid args
+     * @tc.name ChangeAppCloudInvalidArgsTest
+     * @tc.desc Test Js Api ChangeAppCloudSwitch with invalid args
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('ChangeCloudByAppInvalidArgsTest', 0, async function (done) {
-        console.info('ChangeCloudByAppInvalidArgsTest');
+    it('ChangeAppCloudInvalidArgsTest', 0, async function (done) {
+        console.info('ChangeAppCloudInvalidArgsTest');
         try {
             let account = "test_id";
             let bundleName = "test_bundleName";
-            await cloudData.Config.changeCloudSwitchByApp(account, bundleName, null).then(() => {
-                console.info('ChangeCloudByAppInvalidArgsTest success');
+            await cloudData.Config.changeAppCloudSwitch(account, bundleName, null).then(() => {
+                console.info('ChangeAppCloudInvalidArgsTest success');
                 expect(null).assertFail();
             }).catch((error) => {
-                console.error('ChangeCloudByAppInvalidArgsTest changeAppCloudSwitch fail' + `, error code is ${error.code}, message is ${error.message}`);
+                console.error('ChangeAppCloudInvalidArgsTest changeAppCloudSwitch fail' + `, error code is ${error.code}, message is ${error.message}`);
                 expect(null).assertFail();
             });
         } catch (e) {
-            console.error('ChangeCloudByAppInvalidArgsTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            console.error('ChangeAppCloudInvalidArgsTest fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
         }
         done();
     })
 
     /**
-     * @tc.name ChangeCloudByAppInvalidArgsNumsTest
-     * @tc.desc Test Js Api ChangeCloudSwitchByApp which parameters number are less
+     * @tc.name ChangeAppCloudInvalidArgsNumsTest
+     * @tc.desc Test Js Api ChangeAppCloudSwitch which parameters number are less
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('ChangeCloudByAppInvalidArgsNumsTest', 0, async function (done) {
-        console.info('ChangeCloudByAppInvalidArgsNumsTest');
+    it('ChangeAppCloudInvalidArgsNumsTest', 0, async function (done) {
+        console.info('ChangeAppCloudInvalidArgsNumsTest');
         try {
             let account = "test_id";
             let bundleName = "test_bundleName";
-            await cloudData.Config.changeCloudSwitchByApp(account, bundleName).then(() => {
-                console.info('ChangeCloudByAppInvalidArgsNumsTest success');
+            await cloudData.Config.changeAppCloudSwitch(account, bundleName).then(() => {
+                console.info('ChangeAppCloudInvalidArgsNumsTest success');
                 expect(null).assertFail();
             }).catch((error) => {
-                console.error('ChangeCloudByAppInvalidArgsNumsTest changeCloudSwitchByApp fail' + `, error code is ${error.code}, message is ${error.message}`);
+                console.error('ChangeAppCloudInvalidArgsNumsTest changeAppCloudSwitch fail' + `, error code is ${error.code}, message is ${error.message}`);
                 expect(null).assertFail();
             });
         } catch (e) {
-            console.error('ChangeCloudByAppInvalidArgsNumsTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            console.error('ChangeAppCloudInvalidArgsNumsTest fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
         }
         done();
