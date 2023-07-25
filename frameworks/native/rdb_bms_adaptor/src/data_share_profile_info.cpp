@@ -64,7 +64,6 @@ bool ProfileInfo::Unmarshal(const json &node)
 bool DataShareProfileInfo::GetResConfigFile(
     const AppExecFwk::ExtensionAbilityInfo &extensionInfo, std::vector<std::string> &profileInfos)
 {
-    std::lock_guard<std::mutex> lock(infosMutex_);
     bool isCompressed = !extensionInfo.hapPath.empty();
     std::string resourcePath = isCompressed ? extensionInfo.hapPath : extensionInfo.resourcePath;
     profileInfos = GetResProfileByMetadata(extensionInfo.metadata, resourcePath, isCompressed);
@@ -77,7 +76,6 @@ bool DataShareProfileInfo::GetResConfigFile(
 bool DataShareProfileInfo::GetDataPropertiesFromProxyDatas(const OHOS::AppExecFwk::ProxyData &proxyData,
     const std::string &resourcePath, bool isCompressed, DataProperties &dataProperties)
 {
-    std::lock_guard<std::mutex> lock(infosMutex_);
     std::vector<std::string> infos;
     infos = GetResProfileByMetadata(proxyData.metadata, resourcePath, isCompressed);
     if (infos.empty()) {
@@ -127,6 +125,7 @@ std::vector<std::string> DataShareProfileInfo::GetResProfileByMetadata(
 
 std::shared_ptr<ResourceManager> DataShareProfileInfo::InitResMgr(const std::string &resourcePath)
 {
+    std::lock_guard<std::mutex> lock(infosMutex_);
     static std::shared_ptr<ResourceManager> resMgr(CreateResourceManager());
     if (resMgr == nullptr) {
         return nullptr;
