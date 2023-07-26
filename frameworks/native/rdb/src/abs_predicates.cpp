@@ -380,10 +380,6 @@ AbsPredicates *AbsPredicates::Distinct()
  */
 AbsPredicates *AbsPredicates::Limit(int value)
 {
-    if (limit != INT_MIN) {
-        LOG_WARN("limit cannot be set twice.");
-        return this;
-    }
     value = (value < 0) ? -1 : value;
     limit = value;
     return this;
@@ -394,10 +390,6 @@ AbsPredicates *AbsPredicates::Limit(int value)
  */
 AbsPredicates *AbsPredicates::Limit(int offsetValue, int limitValue)
 {
-    if (limit != INT_MIN) {
-        LOG_WARN("limit cannot be set twice.");
-        return this;
-    }
     limitValue = (limitValue < 0) ? -1 : limitValue;
     limit = limitValue;
 
@@ -409,10 +401,6 @@ AbsPredicates *AbsPredicates::Limit(int offsetValue, int limitValue)
  */
 AbsPredicates *AbsPredicates::Offset(int rowOffset)
 {
-    if (offset != INT_MIN) {
-        LOG_WARN("AbsPredicates offset(): offset cannot be set twice.");
-        return this;
-    }
     rowOffset = (rowOffset < 0) ? -1 : rowOffset;
     offset = rowOffset;
 
