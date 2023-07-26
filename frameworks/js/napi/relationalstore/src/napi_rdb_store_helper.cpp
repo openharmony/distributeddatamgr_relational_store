@@ -171,7 +171,8 @@ int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<Helper
     size_t pos = path.find_first_of('/');
     CHECK_RETURN_SET(pos == std::string::npos, std::make_shared<ParamError>("name", "a without path without /."));
 
-    CHECK_RETURN_SET(context->abilitycontext != nullptr, std::make_shared<ParamError>("abilitycontext", "abilitycontext is nullptr"));
+    CHECK_RETURN_SET(context->abilitycontext != nullptr,
+        std::make_shared<ParamError>("abilitycontext", "abilitycontext is nullptr"));
     std::string databaseDir = context->abilitycontext->GetDatabaseDir();
     int errorCode = E_OK;
     std::string realPath = RdbSqlUtils::GetDefaultDatabasePath(databaseDir, path, errorCode);
