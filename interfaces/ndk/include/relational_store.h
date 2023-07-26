@@ -39,7 +39,7 @@
 
 #include "oh_cursor.h"
 #include "oh_predicates.h"
-#include "oh_predicates_objects.h"
+#include "oh_value_object.h"
 #include "oh_values_bucket.h"
 
 #ifdef __cplusplus
@@ -53,27 +53,19 @@ extern "C" {
  */
 typedef enum OH_Rdb_SecurityLevel {
     /**
-     * @brief S1: means the db is low level security.
-     *
-     * There are some low impact, when the data is leaked.
+     * @brief Low-level security. Data leaks have a minor impact.
      */
     S1 = 1,
     /**
-     * @brief S2: means the db is middle level security.
-     *
-     * There are some major impact, when the data is leaked.
+     * @brief Medium-level security. Data leaks have a major impact.
      */
     S2,
     /**
-     * @brief S3: means the db is high level security
-     *
-     * There are some severity impact, when the data is leaked.
+     * @brief High-level security. Data leaks have a severe impact.
      */
     S3,
     /**
-     * @brief S4: means the db is critical level security
-     *
-     * There are some critical impact, when the data is leaked.
+     * @brief Critical-level security. Data leaks have a critical impact.
      */
     S4
 } OH_Rdb_SecurityLevel;
@@ -86,11 +78,11 @@ typedef enum OH_Rdb_SecurityLevel {
 #pragma pack(1)
 typedef struct {
     /**
-     * Indicates the size of the {@link OH_Rdb_Config}, must be filled with sizeof({@link OH_Rdb_Config}).
+     * Indicates the size of the {@link OH_Rdb_Config}. It is mandatory.
      */
     int selfSize;
     /**
-     * Indicates the dir of the database.
+     * Indicates the directory of the database.
      */
     const char *dataBaseDir;
     /**
@@ -106,7 +98,7 @@ typedef struct {
      */
     const char *moduleName;
     /**
-     * Indicates whether the database is encrypt.
+     * Indicates whether the database is encrypted.
      */
     bool isEncrypt;
     /**
@@ -129,17 +121,17 @@ typedef struct {
 } OH_Rdb_Store;
 
 /**
- * @brief Create an {@link OH_PredicatesObjects} instance.
+ * @brief Creates an {@link OH_VObject} instance.
  *
- * @return If the creation is successful, a pointer to the instance of the @link OH_PredicatesObjects} structure
- * is returned, otherwise NULL is returned.
- * @see OH_PredicatesObjects.
+ * @return If the creation is successful, a pointer to the instance of the @link OH_VObject} structure is returned,
+ * otherwise NULL is returned.
+ * @see OH_VObject.
  * @since 10
  */
-OH_PredicatesObjects *OH_Rdb_CreatePredicatesObjects();
+OH_VObject *OH_Rdb_CreateValueObject();
 
 /**
- * @brief Create an {@link OH_VBucket} object.
+ * @brief Creates an {@link OH_VBucket} object.
  *
  * @return If the creation is successful, a pointer to the instance of the @link OH_VBucket} structure is returned,
  * otherwise NULL is returned.
@@ -149,7 +141,7 @@ OH_PredicatesObjects *OH_Rdb_CreatePredicatesObjects();
 OH_VBucket *OH_Rdb_CreateValuesBucket();
 
 /**
- * @brief Create an {@link OH_Predicates} instance.
+ * @brief Creates an {@link OH_Predicates} instance.
  *
  * @param table Indicates the table name.
  * @return If the creation is successful, a pointer to the instance of the @link OH_Predicates} structure is returned,
@@ -266,7 +258,7 @@ OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const ch
 int OH_Rdb_Execute(OH_Rdb_Store *store, const char *sql);
 
 /**
- * @brief Queries data in the database based on SQL statement.
+ * @brief Queries data in the database based on an SQL statement.
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @param sql Indicates the SQL statement to execute.
@@ -288,7 +280,7 @@ OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, const char *sql);
 int OH_Rdb_BeginTransaction(OH_Rdb_Store *store);
 
 /**
- * @brief Rollback a transaction in EXCLUSIVE mode.
+ * @brief Rolls back a transaction in EXCLUSIVE mode.
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @return Returns the status code of the execution.
@@ -298,7 +290,7 @@ int OH_Rdb_BeginTransaction(OH_Rdb_Store *store);
 int OH_Rdb_RollBack(OH_Rdb_Store *store);
 
 /**
- * @brief Commit a transaction in EXCLUSIVE mode.
+ * @brief Commits a transaction in EXCLUSIVE mode.
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @return Returns the status code of the execution.
@@ -308,7 +300,7 @@ int OH_Rdb_RollBack(OH_Rdb_Store *store);
 int OH_Rdb_Commit(OH_Rdb_Store *store);
 
 /**
- * @brief Backups a database on specified path.
+ * @brief Backs up a database on specified path.
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @param databasePath Indicates the database file path.

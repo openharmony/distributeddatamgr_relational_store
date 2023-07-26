@@ -20,7 +20,7 @@
 #include <sys/types.h>
 #include "common.h"
 #include "relational_store.h"
-#include "oh_predicates_objects.h"
+#include "oh_value_object.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -115,7 +115,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_001, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     uint32_t count = 1;
     const char *data1Value = "zhangSan";
     valueObject->putText(valueObject, data1Value);
@@ -144,7 +144,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_002, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data1Value = "zhangSan";
     valueObject->putText(valueObject, data1Value);
     predicates->notEqualTo(predicates, "data1", valueObject);
@@ -170,7 +170,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_003, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data5Value = "ABCDEFG";
     valueObject->putText(valueObject, data5Value);
     predicates->greaterThan(predicates, "data5", valueObject);
@@ -252,7 +252,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_004, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data5Value = "ABCDEFG";
     valueObject->putText(valueObject, data5Value);
     predicates->greaterThanOrEqualTo(predicates, "data5", valueObject);
@@ -277,7 +277,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_005, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data5Value = "ABCDEFG";
     valueObject->putText(valueObject, data5Value);
     predicates->lessThan(predicates, "data5", valueObject);
@@ -302,7 +302,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_006, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data5Value = "ABCDEFG";
     valueObject->putText(valueObject, data5Value);
     predicates->lessThanOrEqualTo(predicates, "data5", valueObject);
@@ -369,7 +369,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_009, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     int64_t data2Value[] = {12000, 13000};
     uint32_t len = sizeof(data2Value) / sizeof(data2Value[0]);
     valueObject->putInt64(valueObject, data2Value, len);
@@ -399,7 +399,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_010, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     int64_t data2Value[] = {12000, 13000};
     int len = sizeof(data2Value) / sizeof(data2Value[0]);
     valueObject->putInt64(valueObject, data2Value, len);
@@ -457,7 +457,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_012, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data1Value[] = {"zhangSan", "liSi"};
     int len = sizeof(data1Value) / sizeof(data1Value[0]);
     valueObject->putTexts(valueObject, data1Value, len);
@@ -483,7 +483,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_013, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data1Value[] = {"zhangSan", "liSi"};
     int len = sizeof(data1Value) / sizeof(data1Value[0]);
     valueObject->putTexts(valueObject, data1Value, len);
@@ -509,7 +509,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_014, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data5Value = "ABCD%";
     valueObject->putText(valueObject, data5Value);
     predicates->like(predicates, "data5", valueObject);
@@ -560,7 +560,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_016, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data1Value = "zhangSan";
     valueObject->putText(valueObject, data1Value);
     predicates->equalTo(predicates, "data1", valueObject);
@@ -589,7 +589,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_017, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data1Value = "zhangSan";
     valueObject->putText(valueObject, data1Value);
     predicates->equalTo(predicates, "data1", valueObject);

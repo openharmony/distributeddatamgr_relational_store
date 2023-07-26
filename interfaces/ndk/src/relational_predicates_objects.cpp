@@ -14,15 +14,15 @@
  */
 
 #include "logger.h"
-#include "oh_predicates_objects.h"
+#include "oh_value_object.h"
 #include "relational_store_error_code.h"
 #include "relational_predicates_objects.h"
 
 namespace OHOS {
 namespace RdbNdk {
-// The class id used to uniquely identify the OH_PredicatesObjects class.
+// The class id used to uniquely identify the OH_VObject class.
 constexpr int RDB_PREDICATES_OBJECTS_CID = 1234565;
-int RelationalPredicatesObjects::PutInt64(OH_PredicatesObjects *objects, int64_t *value, uint32_t count)
+int RelationalPredicatesObjects::PutInt64(OH_VObject *objects, int64_t *value, uint32_t count)
 {
     auto self = GetSelf(objects);
     if (self == nullptr || value == nullptr || count == 0) {
@@ -36,7 +36,7 @@ int RelationalPredicatesObjects::PutInt64(OH_PredicatesObjects *objects, int64_t
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int RelationalPredicatesObjects::PutDouble(OH_PredicatesObjects *objects, double *value, uint32_t count)
+int RelationalPredicatesObjects::PutDouble(OH_VObject *objects, double *value, uint32_t count)
 {
     auto self = GetSelf(objects);
     if (self == nullptr || value == nullptr || count == 0) {
@@ -50,7 +50,7 @@ int RelationalPredicatesObjects::PutDouble(OH_PredicatesObjects *objects, double
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int RelationalPredicatesObjects::PutText(OH_PredicatesObjects *objects, const char *value)
+int RelationalPredicatesObjects::PutText(OH_VObject *objects, const char *value)
 {
     auto self = GetSelf(objects);
     if (self == nullptr || value == nullptr) {
@@ -62,7 +62,7 @@ int RelationalPredicatesObjects::PutText(OH_PredicatesObjects *objects, const ch
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int RelationalPredicatesObjects::PutTexts(OH_PredicatesObjects *objects, const char **value, uint32_t count)
+int RelationalPredicatesObjects::PutTexts(OH_VObject *objects, const char **value, uint32_t count)
 {
     auto self = GetSelf(objects);
     if (self == nullptr || value == nullptr || count == 0) {
@@ -77,7 +77,7 @@ int RelationalPredicatesObjects::PutTexts(OH_PredicatesObjects *objects, const c
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int RelationalPredicatesObjects::Destroy(OH_PredicatesObjects *objects)
+int RelationalPredicatesObjects::Destroy(OH_VObject *objects)
 {
     auto self = GetSelf(objects);
     if (self == nullptr) {
@@ -97,7 +97,7 @@ RelationalPredicatesObjects::RelationalPredicatesObjects()
     destroy = Destroy;
 }
 
-RelationalPredicatesObjects *RelationalPredicatesObjects::GetSelf(OH_PredicatesObjects *objects)
+RelationalPredicatesObjects *RelationalPredicatesObjects::GetSelf(OH_VObject *objects)
 {
     if (objects == nullptr || objects->id != OHOS::RdbNdk::RDB_PREDICATES_OBJECTS_CID) {
         LOG_ERROR("predicates objects invalid. is null %{public}d", (objects == nullptr));

@@ -30,7 +30,7 @@
 
 using namespace OHOS::RdbNdk;
 constexpr int RDB_STORE_CID = 1234560; // The class id used to uniquely identify the OH_Rdb_Store class.
-OH_PredicatesObjects *OH_Rdb_CreatePredicatesObjects()
+OH_VObject *OH_Rdb_CreateValueObject()
 {
     return new (std::nothrow) RelationalPredicatesObjects();
 }

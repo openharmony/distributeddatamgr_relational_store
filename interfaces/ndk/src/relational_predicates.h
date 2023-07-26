@@ -28,33 +28,33 @@ public:
     static RelationalPredicate *GetSelf(OH_Predicates *predicates);
     OHOS::NativeRdb::RdbPredicates &Get();
 private:
-    static OH_Predicates *EqualTo(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *valueObject);
-    static OH_Predicates *NotEqualTo(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *valueObject);
+    static OH_Predicates *EqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    static OH_Predicates *NotEqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
     static OH_Predicates *BeginWrap(OH_Predicates *predicates);
     static OH_Predicates *EndWrap(OH_Predicates *predicates);
     static OH_Predicates *Or(OH_Predicates *predicates);
     static OH_Predicates *And(OH_Predicates *predicates);
     static OH_Predicates *IsNull(OH_Predicates *predicates, const char *field);
     static OH_Predicates *IsNotNull(OH_Predicates *predicates, const char *field);
-    static OH_Predicates *Like(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *valueObject);
-    static OH_Predicates *Between(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *valueObject);
-    static OH_Predicates *NotBetween(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *valueObject);
-    static OH_Predicates *GreaterThan(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *valueObject);
-    static OH_Predicates *LessThan(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *valueObject);
+    static OH_Predicates *Like(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    static OH_Predicates *Between(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    static OH_Predicates *NotBetween(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    static OH_Predicates *GreaterThan(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    static OH_Predicates *LessThan(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
     static OH_Predicates *GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field,
-        OH_PredicatesObjects *valueObject);
+        OH_VObject *valueObject);
     static OH_Predicates *LessThanOrEqualTo(OH_Predicates *predicates, const char *field,
-        OH_PredicatesObjects *valueObject);
+        OH_VObject *valueObject);
     static OH_Predicates *OrderBy(OH_Predicates *predicates, const char *field, OH_OrderType type);
     static OH_Predicates *Distinct(OH_Predicates *predicates);
     static OH_Predicates *Limit(OH_Predicates *predicates, unsigned int value);
     static OH_Predicates *Offset(OH_Predicates *predicates, unsigned int rowOffset);
     static OH_Predicates *GroupBy(OH_Predicates *predicates, char const *const *fields, int length);
-    static OH_Predicates *In(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *objects);
-    static OH_Predicates *NotIn(OH_Predicates *predicates, const char *field, OH_PredicatesObjects *objects);
+    static OH_Predicates *In(OH_Predicates *predicates, const char *field, OH_VObject *objects);
+    static OH_Predicates *NotIn(OH_Predicates *predicates, const char *field, OH_VObject *objects);
     static OH_Predicates *Clear(OH_Predicates *predicates);
     static int Destroy(OH_Predicates *predicates);
-    static bool GetObjects(OH_Predicates *predicates, OH_PredicatesObjects *objects,
+    static bool GetObjects(OH_Predicates *predicates, OH_VObject *objects,
         std::vector<std::string> &values);
     OHOS::NativeRdb::RdbPredicates predicates_;
 };
