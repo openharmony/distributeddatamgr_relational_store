@@ -90,7 +90,7 @@
                             "relational_store.h",
                             "oh_cursor.h",
                             "relational_store_error_code.h",
-                            "oh_predicates_objects.h",
+                            "oh_value_object.h",
                             "oh_values_bucket.h"
                         ],
                         "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/ndk/include"

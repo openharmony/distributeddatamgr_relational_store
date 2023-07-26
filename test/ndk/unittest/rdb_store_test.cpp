@@ -104,7 +104,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_001, TestSize.Level1)
     valueBucket->putNull(valueBucket, "data5");
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data1Value = "zhangSan";
     valueObject->putText(valueObject, data1Value);
     predicates->equalTo(predicates, "data1", valueObject);
@@ -182,7 +182,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_002, TestSize.Level1)
     EXPECT_EQ(errCode, 2);
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data1Value = "zhangSan";
     valueObject->putText(valueObject, data1Value);
     predicates->equalTo(predicates, "data1", valueObject);
@@ -566,7 +566,7 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_009, TestSize.Level1)
     valueBucket->putNull(valueBucket, "data5");
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("wrong");
-    OH_PredicatesObjects *valueObject = OH_Rdb_CreatePredicatesObjects();
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data1Value = "zhangSan";
     valueObject->putText(valueObject, data1Value);
     predicates->equalTo(predicates, "data1", valueObject);
