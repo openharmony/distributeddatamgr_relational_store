@@ -601,7 +601,7 @@ std::shared_ptr<NativeRdb::DataAbilityPredicates> DataAbilityPredicatesProxy::Ge
 
 napi_value DataAbilityPredicatesProxy::GetWhereClause(napi_env env, napi_callback_info info)
 {
-    auto nativePredicates = GetNativePredicates(env, info); 
+    auto nativePredicates = GetNativePredicates(env, info);
     RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
     auto ret = nativePredicates->GetWhereClause();
     return JSUtils::Convert2JSValue(env, ret);
@@ -649,7 +649,7 @@ napi_value DataAbilityPredicatesProxy::SetWhereArgs(napi_env env, napi_callback_
 
 napi_value DataAbilityPredicatesProxy::GetOrder(napi_env env, napi_callback_info info)
 {
-    auto nativePredicates = GetNativePredicates(env, info); 
+    auto nativePredicates = GetNativePredicates(env, info);
     RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
     auto ret = nativePredicates->GetOrder();
     return JSUtils::Convert2JSValue(env, ret);
