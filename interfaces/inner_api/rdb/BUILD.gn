@@ -66,6 +66,7 @@ if (is_ohos && !build_ohos_sdk) {
     defines += [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
     include_dirs += [
       "${kvstore_path}/common",
+      "${kvstore_interface_path}",
       "${distributedfile_path}/mod_securitylabel",
     ]
   }
