@@ -57,7 +57,6 @@ std::shared_ptr<SqliteStatement> SqliteSharedResultSet::PrepareStep(SqliteConnec
 
 int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
-    std::shared_lock<std::shared_mutex> readLock(mutex_);
     if (!columnNames_.empty()) {
         columnNames = columnNames_;
         return E_OK;
@@ -109,7 +108,6 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
 
 int SqliteSharedResultSet::GetRowCount(int &count)
 {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
     if (rowNum != NO_COUNT) {
         count = rowNum;
         return E_OK;
