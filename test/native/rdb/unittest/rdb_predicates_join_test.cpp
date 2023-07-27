@@ -451,6 +451,7 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_LeftOuterJoin_008, TestSize.Level1)
     std::vector<std::string> columns;
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes));
+    allDataTypes.close();
 }
 
 /* *
@@ -475,4 +476,5 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_LeftOuterJoin_009, TestSize.Level1)
     std::vector<std::string> columns;
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
     EXPECT_NE(allDataTypes, nullptr);
+    allDataTypes.close();
 }
