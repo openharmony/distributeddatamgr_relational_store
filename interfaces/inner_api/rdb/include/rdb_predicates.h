@@ -73,12 +73,12 @@ public:
     /**
      * @brief Get statement with predicates.
      */
-    API_EXPORT std::string getStatement(RdbPredicates *rdbPredicates);
+    API_EXPORT std::string GetStatement();
 
     /**
      * @brief Get arguments with predicates.
      */
-    API_EXPORT std::vector<std::string> getBindArgs(RdbPredicates *rdbPredicates);
+    API_EXPORT std::vector<std::string> GetBindArgs();
 
 private:
     std::string ProcessJoins() const;

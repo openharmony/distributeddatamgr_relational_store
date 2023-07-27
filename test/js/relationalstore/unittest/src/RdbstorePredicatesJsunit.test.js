@@ -1968,7 +1968,7 @@ describe('rdbPredicatesTest', function () {
         let predicates = new data_relationalStore.RdbPredicates("AllDataType");
         predicates.like("stringValue", "ABCDEFGHIJKLMN").limitAs(0);
         let result = await rdbStore.query(predicates);
-        expect(0).assertEqual(result.rowCount);
+        expect(3).assertEqual(result.rowCount);
         result.close()
         result = null
         done();
@@ -2015,12 +2015,17 @@ describe('rdbPredicatesTest', function () {
         expect(3).assertEqual(result.rowCount);
         predicates.clear();
 
-        predicates.equalTo("booleanValue", true);
+        predicates.like("stringValue", "ABCDEFGHIJKLMN")
+        predicates.orderByAsc("id");
         predicates.limitAs(-1, -1);
         result = await rdbStore.query(predicates);
-        expect(1).assertEqual(result.rowCount);
-        expect(" WHERE booleanValue = ?  LIMIT -1 OFFSET -1").assertEqual(predicates.statement);
-        expect("1").assertEqual(predicates.bindArgs[0]);
+        expect(3).assertEqual(result.rowCount);
+        expect(" WHERE stringValue LIKE ?  ORDER BY id ASC  LIMIT -1 OFFSET -1").assertEqual(predicates.statement);
+        expect("ABCDEFGHIJKLMN").assertEqual(predicates.bindArgs[0]);
+        expect(true).assertEqual(result.goToFirstRow())
+        expect(1).assertEqual(result.getLong(0));
+        expect(2147483647).assertEqual(result.getLong(1));
+        expect(DOUBLE_MAX).assertEqual(result.getDouble(2));
         result.close()
         result = null
         done();
