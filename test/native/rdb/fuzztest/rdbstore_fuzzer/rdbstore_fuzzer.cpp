@@ -92,8 +92,7 @@ bool RdbStoreFuzzTest::InsertData(std::shared_ptr<RdbStore> &store, const uint8_
     values.PutString("name", valName);
     values.PutInt("age", valAge);
     values.PutDouble("salary", valSalary);
-
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *(data + size)});
+    values.PutBlob("blobType", std::vector<uint8_t> (data, data + size));
 
     return store->Insert(id, tableName, values);
 }
@@ -167,7 +166,8 @@ bool RdbUpdateFuzz(const uint8_t *data, size_t size)
     values.PutString("name", valName);
     values.PutInt("age", valAge);
     values.PutDouble("salary", valSalary);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *(data + size)});
+    values.PutBlob("blobType", std::vector<uint8_t> (data, data + size));
+
     errCode = store->Update(changedRows, tableName, values, whereClause,
         std::vector<std::string> { valName });
     if (errCode != E_OK) {
@@ -192,34 +192,35 @@ void RdbQueryFuzz1(const uint8_t *data, size_t size)
 
     std::string tableName(data, data + size);
     std::string valName(data, data + size);
+    std::string vectorElem(data, data + size);
     AbsRdbPredicates predicates(tableName);
 
     predicates.EqualTo("name", valName);
-    store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
     predicates.NotEqualTo("name", valName);
-    store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
     predicates.Contains("name", valName);
-    store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
     predicates.BeginsWith("name", valName);
-    store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
     predicates.EndsWith("name", valName);
-    store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
     predicates.Like("name", valName);
-    store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
     predicates.Glob("name", valName);
-    store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
+    store->Query(predicates, {vectorElem});
     store->ExecuteSql("DELETE FROM test");
 }
 
@@ -240,42 +241,41 @@ void RdbQueryFuzz2(const uint8_t *data, size_t size)
     std::string valName(data, data + size);
     std::string valAge(data, data + size);
     std::string valAgeChange(data, data + size);
+    std::string vectorElem(data, data + size);
 
     AbsRdbPredicates predicates(tableName);
 
     predicates.Clear();
     predicates.Between("age", valAge, valAgeChange);
-    store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
     predicates.NotBetween("age", valAge, valAgeChange);
-    store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
     predicates.GreaterThan("age", valAge);
-    store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
     predicates.LessThan("age", valAgeChange);
-    store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
     predicates.GreaterThanOrEqualTo("age", valAge);
-    store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
     predicates.LessThanOrEqualTo("age", valAgeChange);
-    store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
-    predicates.In("name",
-        std::vector<std::string> {reinterpret_cast<const char*>(data), reinterpret_cast<const char*>(data + size)});
-    store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
+    predicates.In("name", {vectorElem});
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
-    predicates.NotIn("name",
-        std::vector<std::string> {reinterpret_cast<const char*>(data), reinterpret_cast<const char*>(data + size)});
-    store->Query(predicates, std::vector<std::string> {reinterpret_cast<const char*>(data)});
+    predicates.NotIn("name", {vectorElem});
+    store->Query(predicates, {vectorElem});
     store->ExecuteSql("DELETE FROM test");
 }
 }
