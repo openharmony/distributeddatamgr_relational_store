@@ -131,7 +131,10 @@ bool JSAbility::CheckContext(napi_env env, napi_callback_info info)
 std::shared_ptr<Context> JSAbility::GetContext(napi_env env, napi_value value)
 {
     bool mode = false;
-    AbilityRuntime::IsStageContext(env, value, mode);
+    if (AbilityRuntime::IsStageContext(env, value, mode) != napi_ok) {
+        LOG_DEBUG("IsStageContext result is error");
+        return nullptr;
+    }
     if (mode) {
         LOG_DEBUG("Get context as stage mode.");
         auto stageContext = AbilityRuntime::GetStageModeContext(env, value);

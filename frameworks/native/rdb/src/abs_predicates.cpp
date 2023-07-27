@@ -378,31 +378,31 @@ AbsPredicates *AbsPredicates::Distinct()
 /**
  * Restricts the max number of return records.
  */
-AbsPredicates *AbsPredicates::Limit(int value)
+AbsPredicates *AbsPredicates::Limit(int limit)
 {
-    value = (value < 0) ? -1 : value;
-    limit = value;
+    limit = (limit <= 0) ? -1 : limit;
+    this->limit = limit;
     return this;
 }
 
 /**
  * Restricts the max number of return records.
  */
-AbsPredicates *AbsPredicates::Limit(int offsetValue, int limitValue)
+AbsPredicates *AbsPredicates::Limit(int offset, int limit)
 {
-    limitValue = (limitValue < 0) ? -1 : limitValue;
-    limit = limitValue;
+    limit = (limit <= 0) ? -1 : limit;
+    this->limit = limit;
 
-    return Offset(offsetValue);
+    return Offset(offset);
 }
 
 /**
  * Configures to specify the start position of the returned result.
  */
-AbsPredicates *AbsPredicates::Offset(int rowOffset)
+AbsPredicates *AbsPredicates::Offset(int offset)
 {
-    rowOffset = (rowOffset < 0) ? -1 : rowOffset;
-    offset = rowOffset;
+    offset = (offset < 0) ? -1 : offset;
+    this->offset = offset;
 
     return this;
 }

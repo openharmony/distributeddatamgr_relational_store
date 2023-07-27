@@ -32,8 +32,8 @@ public:
     RdbPredicates *LeftOuterJoin(const std::string &tableName);
     RdbPredicates *Using(const std::vector<std::string> &fields);
     RdbPredicates *On(const std::vector<std::string> &clauses);
-    std::string getStatement(RdbPredicates *rdbPredicates);
-    std::vector<std::string> getBindArgs(RdbPredicates *rdbPredicates);
+    std::string GetStatement();
+    std::vector<std::string> GetBindArgs();
 
 private:
     std::string ProcessJoins() const;

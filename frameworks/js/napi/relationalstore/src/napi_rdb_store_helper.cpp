@@ -51,9 +51,6 @@ struct HelperRdbContext : public Context {
 
 int ParseContext(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
-    napi_valuetype type;
-    napi_typeof(env, object, &type);
-    CHECK_RETURN_SET(type == napi_object, std::make_shared<ParamError>("context", "object."));
     auto abilityContext = JSAbility::GetContext(env, object);
     CHECK_RETURN_SET(abilityContext != nullptr, std::make_shared<ParamError>("context", "a Context."));
     context->abilitycontext = abilityContext;

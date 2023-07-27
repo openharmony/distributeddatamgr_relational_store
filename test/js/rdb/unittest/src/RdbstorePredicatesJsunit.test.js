@@ -1964,7 +1964,7 @@ describe('rdbPredicatesTest', function () {
         let predicates = new dataRdb.RdbPredicates("AllDataType");
         predicates.like("stringValue", "ABCDEFGHIJKLMN").limitAs(0);
         let result = await rdbStore.query(predicates);
-        expect(0).assertEqual(result.rowCount);
+        expect(3).assertEqual(result.rowCount);
         result.close()
         result = null
         done();

@@ -119,12 +119,12 @@ RdbPredicates *RdbPredicates::On(const std::vector<std::string> &clauses)
     return this;
 }
 
-std::string RdbPredicates::getStatement(RdbPredicates *rdbPredicates)
+std::string RdbPredicates::GetStatement()
 {
-    return SqliteSqlBuilder::BuildSqlStringFromPredicates(*rdbPredicates);
+    return SqliteSqlBuilder::BuildSqlStringFromPredicates(*this);
 }
 
-std::vector<std::string> RdbPredicates::getBindArgs(RdbPredicates *rdbPredicates)
+std::vector<std::string> RdbPredicates::GetBindArgs()
 {
     return GetWhereArgs();
 }

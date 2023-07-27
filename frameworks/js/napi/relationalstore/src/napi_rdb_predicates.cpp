@@ -572,18 +572,19 @@ napi_value RdbPredicatesProxy::Limit(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->predicates_);
     RDB_NAPI_ASSERT(env, argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 or 2"));
 
-    int32_t offsetValue = INT_MIN, limitValue = INT_MIN;
+    int32_t offset = 0;
+    int32_t limit = 0;
     if (argc == 1) {
-        napi_status status = napi_get_value_int32(env, args[0], &limitValue);
-        RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("limitValue", "a number."));
-        predicatesProxy->predicates_->Limit(limitValue);
+        napi_status status = napi_get_value_int32(env, args[0], &limit);
+        RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("limit", "a number."));
+        predicatesProxy->predicates_->Limit(limit);
     } else {
-        napi_status status = napi_get_value_int32(env, args[0], &offsetValue);
-        RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("offsetValue", "a number."));
+        napi_status status = napi_get_value_int32(env, args[0], &offset);
+        RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("offset", "a number."));
 
-        status = napi_get_value_int32(env, args[1], &limitValue);
-        RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("limitValue", "a number."));
-        predicatesProxy->predicates_->Limit(offsetValue, limitValue);
+        status = napi_get_value_int32(env, args[1], &limit);
+        RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("limit", "a number."));
+        predicatesProxy->predicates_->Limit(offset, limit);
     }
 
     return thiz;
@@ -697,7 +698,7 @@ napi_value RdbPredicatesProxy::GetStatement(napi_env env, napi_callback_info inf
     RdbPredicatesProxy *predicatesProxy = GetNativePredicates(env, info);
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->predicates_);
 
-    std::string statement = predicatesProxy->predicates_->getStatement(predicatesProxy->predicates_.get());
+    std::string statement = predicatesProxy->predicates_->GetStatement();
     return JSUtils::Convert2JSValue(env, statement);
 }
 
@@ -708,7 +709,7 @@ napi_value RdbPredicatesProxy::GetBindArgs(napi_env env, napi_callback_info info
     RdbPredicatesProxy *predicatesProxy = GetNativePredicates(env, info);
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->predicates_);
 
-    std::vector<std::string> bindArgs = predicatesProxy->predicates_->getBindArgs(predicatesProxy->predicates_.get());
+    std::vector<std::string> bindArgs = predicatesProxy->predicates_->GetBindArgs();
     return JSUtils::Convert2JSValue(env, bindArgs);
 }
 
