@@ -393,6 +393,7 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_LeftOuterJoin_005, TestSize.Level1)
     std::vector<std::string> columns;
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
     EXPECT_EQ(5, ResultSize(allDataTypes));
+    allDataTypes.close();
 }
 
 /* *
