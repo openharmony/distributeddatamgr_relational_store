@@ -43,5 +43,7 @@ ipc_path = "//foundation/communication/ipc/interfaces/innerkits"
 
 kvstore_path = "//foundation/distributeddatamgr/kv_store/frameworks"
 
+kvstore_interface_path = "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata/include"
+
 distributedfile_path =
     "//foundation/filemanagement/file_api/interfaces/kits/js/src"
