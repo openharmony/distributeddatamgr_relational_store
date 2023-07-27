@@ -57,10 +57,6 @@ const std::string CREATE_TABLE_BOOK_SQL = "CREATE TABLE IF NOT EXISTS book "
                                           "(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT, userId INTEGER,"
                                           "FOREIGN KEY (userId) REFERENCES user (userId) "
                                           "ON UPDATE NO ACTION ON DELETE CASCADE)";
-const std::string CREATE_TABLE_Class_SQL = "CREATE TABLE IF NOT EXISTS class "
-                                           "(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT, userId INTEGER,"
-                                           "FOREIGN KEY (userId) REFERENCES user (userId) "
-                                           "ON UPDATE NO ACTION ON DELETE CASCADE)";
 
 class PredicateJoinTestOpenCallback : public RdbOpenCallback {
 public:
@@ -105,9 +101,6 @@ void RdbStorePredicateJoinTest::GenerateAllTables()
 
     RdbStorePredicateJoinTest::store->ExecuteSql(CREATE_TABLE_BOOK_SQL);
     RdbStorePredicateJoinTest::InsertBookDates();
-
-    RdbStorePredicateJoinTest::store->ExecuteSql(CREATE_TABLE_Class_SQL);
-    RdbStorePredicateJoinTest::InsertClassDates();
 }
 
 void RdbStorePredicateJoinTest::InsertUserDates()
@@ -176,29 +169,6 @@ void RdbStorePredicateJoinTest::InsertBookDates()
     values.PutString("name", std::string("ShuiHuZhuan"));
     values.PutInt("userId", 3);
     store->Insert(id, "book", values);
-}
-
-void RdbStorePredicateJoinTest::InsertClassDates()
-{
-    int64_t  id;
-    ValuesBucket values;
-
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("liQi"));
-    values.PutInt("userId", 1);
-    store->Insert(id, "class", values);
-
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("XiYouJi"));
-    values.PutInt("userId", 2);
-    store->Insert(id, "class", values);
-
-    values.Clear();
-    values.PutInt("id", 3);
-    values.PutString("name", std::string("HuZhuan"));
-    values.PutInt("userId", 3);
-    store->Insert(id, "class", values);
 }
 
 int RdbStorePredicateJoinTest::ResultSize(std::shared_ptr<ResultSet> &resultSet)
@@ -415,15 +385,14 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_LeftOuterJoin_005, TestSize.Level1)
     std::vector<std::string> clauses;
     clauses.push_back("user.userId = book.userId");
     std::vector<std::string> joinTypes;
-    joinTypes.push_back("LEFT OUTER JOIN");
 
     predicates.LeftOuterJoin("")->On(clauses);
     EXPECT_EQ(joinTypes, predicates.GetJoinTypes());
-    EXPECT_EQ("ON(user.userId = book.userId)", predicates.GetJoinConditions()[0]);
+    EXPECT_EQ(joinTypes, predicates.GetJoinConditions());
 
     std::vector<std::string> columns;
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
-    EXPECT_EQ(allDataTypes, nullptr);
+    EXPECT_EQ(5, ResultSize(allDataTypes));
 }
 
 /* *
@@ -441,11 +410,7 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_LeftOuterJoin_006, TestSize.Level1)
 
     predicates.LeftOuterJoin("book")->On(clauses);
     EXPECT_EQ(joinTypes, predicates.GetJoinTypes());
-    EXPECT_EQ("", predicates.GetJoinConditions()[0]);
-
-    std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
-    EXPECT_EQ(allDataTypes, nullptr);
+    EXPECT_EQ(clauses, predicates.GetJoinConditions());
 }
 
 /* *
@@ -463,16 +428,12 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_LeftOuterJoin_007, TestSize.Level1)
     std::vector<std::string> joinTypes;
     joinTypes.push_back("LEFT OUTER JOIN");
     EXPECT_EQ(joinTypes, predicates.GetJoinTypes());
-    EXPECT_EQ("", predicates.GetJoinConditions()[0]);
-
-    std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
-    EXPECT_EQ(nullptr, allDataTypes);
+    EXPECT_EQ(fields, predicates.GetJoinConditions());
 }
 
 /* *
  * @tc.name: RdbStore_LeftOuterJoin_008
- * @tc.desc: Abnormal testCase of RdbPredicates for LeftOuterJoin, if join count rather than 1
+ * @tc.desc: Abnormal testCase of RdbPredicates for LeftOuterJoin, if tableName is ""
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStorePredicateJoinTest, RdbStore_LeftOuterJoin_008, TestSize.Level1)
@@ -481,12 +442,35 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_LeftOuterJoin_008, TestSize.Level1)
 
     std::vector<std::string> fields;
     fields.push_back("userId");
-    predicates.LeftOuterJoin("book").LeftOuterJoin("class")->Using(fields)->EqualTo("name", "SanGuo");
+    predicates.LeftOuterJoin("")->Using(fields)->EqualTo("name", "SanGuo");
 
     std::vector<std::string> joinTypes;
-    joinTypes.push_back("LEFT OUTER JOIN");
     EXPECT_EQ(joinTypes, predicates.GetJoinTypes());
-    EXPECT_EQ("USING(userId)", predicates.GetJoinConditions()[0]);
+    EXPECT_EQ(joinTypes, predicates.GetJoinConditions());
+
+    std::vector<std::string> columns;
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allDataTypes));
+}
+
+/* *
+ * @tc.name: RdbStore_LeftOuterJoin_009
+ * @tc.desc: Abnormal testCase of RdbPredicates for LeftOuterJoin, if join count rather than 1
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStorePredicateJoinTest, RdbStore_LeftOuterJoin_009, TestSize.Level1)
+{
+    RdbPredicates predicates("user");
+
+    std::vector<std::string> fields;
+    fields.push_back("userId");
+    predicates.LeftOuterJoin("book")->LeftOuterJoin("book");
+    EXPECT_EQ(2, predicates.GetJoinCount());
+    predicates.Using(fields)->EqualTo("name", "SanGuo");
+
+    std::vector<std::string> joinTypes{"LEFT OUTER JOIN", "LEFT OUTER JOIN"};
+    EXPECT_EQ(joinTypes, predicates.GetJoinTypes());
+    EXPECT_EQ(0, predicates.GetJoinCount());
 
     std::vector<std::string> columns;
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinTest::store->Query(predicates, columns);
