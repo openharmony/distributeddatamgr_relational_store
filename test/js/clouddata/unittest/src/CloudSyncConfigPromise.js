@@ -213,50 +213,50 @@ describe('CloudConfigPromiseTest', function () {
     })
 
     /**
-     * @tc.name CleanInvalidArgsNumsTest
+     * @tc.name ClearInvalidArgsNumsTest
      * @tc.desc Test Js Api Clean which parameters number are less
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('CleanInvalidArgsNumsTest', 0, async function (done) {
-        console.info('CleanInvalidArgsNumsTest');
+    it('ClearInvalidArgsNumsTest', 0, async function (done) {
+        console.info('ClearInvalidArgsNumsTest');
         try {
             let account = "test_id";
-            await cloudData.Config.clean(account).then(() => {
-                console.info('CleanInvalidArgsNumsTest success');
+            await cloudData.Config.clear(account).then(() => {
+                console.info('ClearInvalidArgsNumsTest success');
                 expect(null).assertFail();
             }).catch((error) => {
-                console.error('CleanInvalidArgsNumsTest clean fail' + `, error code is ${error.code}, message is ${error.message}`);
+                console.error('ClearInvalidArgsNumsTest clear fail' + `, error code is ${error.code}, message is ${error.message}`);
                 expect(null).assertFail();
             });
         } catch (e) {
-            console.error('CleanInvalidArgsNumsTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            console.error('ClearInvalidArgsNumsTest fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
         }
         done();
     })
 
     /**
-     * @tc.name CleanInvalidArgsTest
-     * @tc.desc Test Js Api Clean which parameters are invalid
+     * @tc.name ClearInvalidArgsTest
+     * @tc.desc Test Js Api Clear which parameters are invalid
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('CleanInvalidArgsTest', 0, async function (done) {
-        console.info('CleanInvalidArgsTest');
+    it('ClearInvalidArgsTest', 0, async function (done) {
+        console.info('ClearInvalidArgsTest');
         try {
             let account = "test_id";
             let bundleName1 = "test_bundleName1";
             let appActions = {[bundleName1]: 3};
-            await cloudData.Config.clean(account, appActions).then(() => {
-                console.info('CleanInvalidArgsTest success');
+            await cloudData.Config.clear(account, appActions).then(() => {
+                console.info('ClearInvalidArgsTest success');
                 expect(null).assertFail();
             }).catch((error) => {
-                console.error('CleanInvalidArgsTest clean fail' + `, error code is ${error.code}, message is ${error.message}`);
+                console.error('ClearInvalidArgsTest clean fail' + `, error code is ${error.code}, message is ${error.message}`);
                 expect(null).assertFail();
             });
         } catch (e) {
-            console.error('CleanInvalidArgsTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            console.error('ClearInvalidArgsTest fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
         }
         done();
