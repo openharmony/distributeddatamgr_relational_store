@@ -1993,6 +1993,46 @@ describe('rdbPredicatesTest', function () {
     })
 
     /**
+     * @tc.name predicates limit normal test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0176
+     * @tc.desc predicates limit normal test
+     */
+    it('testLimit0007', 0, async function (done) {
+        console.log(TAG + "************* testLimit0007 start *************");
+        let predicates = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates.limitAs(-1);
+        let result = await rdbStore.query(predicates);
+        expect(3).assertEqual(result.rowCount);
+        predicates.clear();
+
+        predicates.limitAs(1, 1);
+        result = await rdbStore.query(predicates);
+        expect(1).assertEqual(result.rowCount);
+        predicates.clear();
+
+        predicates.limitAs(0, -1);
+        result = await rdbStore.query(predicates);
+        expect(3).assertEqual(result.rowCount);
+        predicates.clear();
+
+        predicates.like("stringValue", "ABCDEFGHIJKLMN")
+        predicates.orderByAsc("id");
+        predicates.limitAs(-1, -1);
+        result = await rdbStore.query(predicates);
+        expect(3).assertEqual(result.rowCount);
+        expect(" WHERE stringValue LIKE ?  ORDER BY id ASC  LIMIT -1 OFFSET -1").assertEqual(predicates.statement);
+        expect("ABCDEFGHIJKLMN").assertEqual(predicates.bindArgs[0]);
+        expect(true).assertEqual(result.goToFirstRow())
+        expect(1).assertEqual(result.getLong(0));
+        expect(2147483647).assertEqual(result.getLong(1));
+        expect(DOUBLE_MAX).assertEqual(result.getDouble(2));
+        result.close()
+        result = null
+        done();
+        console.log(TAG + "************* testLimit0007 end *************");
+    })
+
+    /**
      * @tc.name predicates offset normal test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0180
      * @tc.desc predicates offset normal test

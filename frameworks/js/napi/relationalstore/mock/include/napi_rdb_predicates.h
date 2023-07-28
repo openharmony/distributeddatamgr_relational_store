@@ -96,6 +96,8 @@ private:
     static napi_value GetJoinConditions(napi_env env, napi_callback_info info);
     static napi_value InnerJoin(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
+    static napi_value GetStatement(napi_env env, napi_callback_info info);
+    static napi_value GetBindArgs(napi_env env, napi_callback_info info);
 
     std::shared_ptr<NativeRdb::RdbPredicates> predicates_;
 };

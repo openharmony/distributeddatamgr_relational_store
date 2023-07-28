@@ -17,6 +17,7 @@
 
 #include "logger.h"
 #include "string_utils.h"
+#include "sqlite_sql_builder.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -116,6 +117,16 @@ RdbPredicates *RdbPredicates::On(const std::vector<std::string> &clauses)
     joinCount--;
     joinConditions.push_back(StringUtils::SurroundWithFunction("ON", "AND", clauses));
     return this;
+}
+
+std::string RdbPredicates::GetStatement()
+{
+    return SqliteSqlBuilder::BuildSqlStringFromPredicates(*this);
+}
+
+std::vector<std::string> RdbPredicates::GetBindArgs()
+{
+    return GetWhereArgs();
 }
 
 std::string RdbPredicates::ProcessJoins() const

@@ -1440,7 +1440,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ClearMethod_022, TestSize.Level1)
 
     predicates1.Clear();
     EXPECT_EQ("AllDataType", predicates1.GetTableName());
-    EXPECT_EQ(-1, predicates1.GetLimit());
+    EXPECT_EQ(-2147483648, predicates1.GetLimit());
     EXPECT_EQ(true,  predicates1.GetWhereClause().empty());
     EXPECT_EQ(true,  predicates1.GetWhereArgs().empty());
 
@@ -1603,7 +1603,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
 
     predicates1.Clear();
     EXPECT_EQ("AllDataType", predicates1.GetTableName());
-    EXPECT_EQ(-1, predicates1.GetLimit());
+    EXPECT_EQ(-2147483648, predicates1.GetLimit());
     EXPECT_EQ(true, predicates1.GetWhereClause().empty());
     EXPECT_EQ(true, predicates1.GetWhereArgs().empty());
 
@@ -1636,7 +1636,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ToString_025, TestSize.Level1)
     std::string toString = predicates1.ToString();
     std::string result = "TableName = AllDataType, {WhereClause:stringValue = ? AND  ( integerValue = ?  OR "
                          "integerValue = ?  ) , whereArgs:{ABCDEFGHIJKLMN, 1, 2147483647, }, order:integerValue "
-                         "DESC , group:, index:, limit:2, offset:-1, distinct:0, isNeedAnd:1, isSorted:1}";
+                         "DESC , group:, index:, limit:2, offset:-2147483648, distinct:0, isNeedAnd:1, isSorted:1}";
     EXPECT_EQ(result, toString);
 }
 
@@ -2133,4 +2133,35 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_SetOrder_001, TestSize.Level1)
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
+}
+
+/* *
+ * @tc.name: RdbStore_GetStatement_GetBindArgs_001
+ * @tc.desc: Normal testCase of RdbPredicates for GetStatement and GetBindArgs method
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_GetStatement_GetBnidArgs_001, TestSize.Level1)
+{
+    RdbPredicates predicates("AllDataType");
+    predicates.EqualTo("stringValue", "ABCDEFGHIJKLMN")
+        ->BeginWrap()
+        ->EqualTo("integerValue", "1")
+        ->Or()
+        ->EqualTo("integerValue", std::to_string(INT_MAX))
+        ->EndWrap()
+        ->OrderByDesc("integerValue")
+        ->Limit(-1, -1);
+
+    std::vector<std::string> columns;
+    int count = 0;
+    std::shared_ptr<ResultSet> resultSet = RdbStorePredicateTest::store->Query(predicates, columns);
+    resultSet->GetRowCount(count);
+    EXPECT_EQ(2, count);
+
+    std::string statement = predicates.GetStatement();
+    std::vector<std::string> bindArgs = predicates.GetBindArgs();
+    EXPECT_EQ(statement, " WHERE stringValue = ? AND  ( integerValue = ?  OR integerValue = ?  )  ORDER BY "
+                         "integerValue DESC  LIMIT -1 OFFSET -1");
+    EXPECT_EQ(bindArgs[0], "ABCDEFGHIJKLMN");
 }
