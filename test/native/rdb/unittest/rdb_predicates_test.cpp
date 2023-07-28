@@ -1645,8 +1645,8 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_getStatement_getBindArgs_028, TestSize.
     resultSet->GetRowCount(count);
     EXPECT_EQ(2, count);
 
-    std::string statement = predicates.getStatement(&predicates);
-    std::vector<std::string> bindArgs = predicates.getBindArgs(&predicates);
+    std::string statement = predicates.GetStatement();
+    std::vector<std::string> bindArgs = predicates.GetBindArgs();
     EXPECT_EQ(statement, " WHERE stringValue = ? AND  ( integerValue = ?  OR integerValue = ?  )  ORDER BY "
                          "integerValue DESC  LIMIT -1 OFFSET -1");
     EXPECT_EQ(bindArgs[0], "ABCDEFGHIJKLMN");
