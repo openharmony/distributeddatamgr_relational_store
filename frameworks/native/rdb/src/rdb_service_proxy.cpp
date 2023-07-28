@@ -83,14 +83,7 @@ void RdbServiceProxy::OnDataChange(const Origin &origin, const PrimaryFields &pr
 
 std::string RdbServiceProxy::ObtainDistributedTableName(const std::string &device, const std::string &table)
 {
-    MessageParcel reply;
-    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_OBTAIN_TABLE), reply, device, table);
-    if (status != RDB_OK) {
-        LOG_ERROR("status:%{public}d, device:%{public}.6s, table:%{public}s", status,
-            SqliteUtils::Anonymous(device).c_str(), SqliteUtils::Anonymous(table).c_str());
-        return "";
-    }
-    return reply.ReadString();
+    return "";
 }
 
 int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param)
