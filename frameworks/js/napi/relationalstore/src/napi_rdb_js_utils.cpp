@@ -119,6 +119,7 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &statis
 
     napi_set_named_property(env, jsValue, "total", total);
     napi_set_named_property(env, jsValue, "success", success);
+    napi_set_named_property(env, jsValue, "successful", success);
     napi_set_named_property(env, jsValue, "failed", failed);
     napi_set_named_property(env, jsValue, "remained", untreated);
     return jsValue;

@@ -262,7 +262,7 @@ SqliteConnection::~SqliteConnection()
         if (stepStatement != nullptr) {
             stepStatement->Finalize();
         }
-        int errCode = sqlite3_close(dbHandle);
+        int errCode = sqlite3_close_v2(dbHandle);
         if (errCode != SQLITE_OK) {
             LOG_ERROR("SqliteConnection ~SqliteConnection: could not close database err = %{public}d", errCode);
         }

@@ -46,6 +46,7 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
         DECLARE_NAPI_PROPERTY("Action", ExportAction(env)),
+        DECLARE_NAPI_PROPERTY("ClearAction", ExportAction(env)),
     };
     size_t count = sizeof(properties) / sizeof(properties[0]);
 

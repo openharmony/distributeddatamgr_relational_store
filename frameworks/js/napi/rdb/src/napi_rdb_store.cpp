@@ -359,8 +359,8 @@ int ParsePredicates(const napi_env &env, const napi_value &arg, std::shared_ptr<
         || CheckGlobalProperty(env, arg, "RdbPredicatesConstructorV9")) {
         LOG_DEBUG("Parse RDB Predicates");
         napi_unwrap(env, arg, reinterpret_cast<void **>(&context->predicatesProxy));
-        RDB_CHECK_RETURN_CALL_RESULT(context->predicatesProxy != nullptr 
-            && context->predicatesProxy->GetPredicates() != nullptr, context->SetError(paramError));
+        RDB_CHECK_RETURN_CALL_RESULT(context->predicatesProxy != nullptr &&
+            context->predicatesProxy->GetPredicates() != nullptr, context->SetError(paramError));
         context->tableName = context->predicatesProxy->GetPredicates()->GetTableName();
         context->rdbPredicates = context->predicatesProxy->GetPredicates();
         LOG_DEBUG("ParsePredicates end");
@@ -848,7 +848,7 @@ napi_value RdbStoreProxy::Count(napi_env env, napi_callback_info info)
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         std::int64_t temp = 0;
         CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
-        CHECK_RETURN_ERR(context->predicatesProxy != nullptr && 
+        CHECK_RETURN_ERR(context->predicatesProxy != nullptr &&
             context->predicatesProxy->GetPredicates() != nullptr);
         int errCode = obj->rdbStore_->Count(temp, *(context->predicatesProxy->GetPredicates()));
         context->rowId = temp;
@@ -937,8 +937,8 @@ napi_value RdbStoreProxy::IsHoldingConnection(napi_env env, napi_callback_info i
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr 
-        && rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
+    NAPI_ASSERT(env, rdbStoreProxy != nullptr &&
+        rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
     bool out = rdbStoreProxy->rdbStore_->IsHoldingConnection();
     LOG_DEBUG("RdbStoreProxy::IsHoldingConnection out is : %{public}d", out);
     return JSUtils::Convert2JSValue(env, out);

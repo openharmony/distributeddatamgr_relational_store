@@ -17,7 +17,6 @@
 #define NATIVE_RDB_ABS_SHARED_RESULT_SET_H
 
 #include <memory>
-#include <shared_mutex>
 #include <string>
 #include <thread>
 #include <vector>
@@ -220,7 +219,6 @@ protected:
     void ClosedBlock();
     virtual void Finalize();
 
-    std::shared_mutex mutex_;
 private:
     // The default position of the cursor
     static const int INIT_POS = -1;
