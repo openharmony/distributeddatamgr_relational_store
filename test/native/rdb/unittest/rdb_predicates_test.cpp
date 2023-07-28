@@ -1440,7 +1440,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ClearMethod_022, TestSize.Level1)
 
     predicates1.Clear();
     EXPECT_EQ("AllDataType", predicates1.GetTableName());
-    EXPECT_EQ(-1, predicates1.GetLimit());
+    EXPECT_EQ(-2147483648, predicates1.GetLimit());
     EXPECT_EQ(true,  predicates1.GetWhereClause().empty());
     EXPECT_EQ(true,  predicates1.GetWhereArgs().empty());
 
@@ -1603,7 +1603,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
 
     predicates1.Clear();
     EXPECT_EQ("AllDataType", predicates1.GetTableName());
-    EXPECT_EQ(-1, predicates1.GetLimit());
+    EXPECT_EQ(-2147483648, predicates1.GetLimit());
     EXPECT_EQ(true, predicates1.GetWhereClause().empty());
     EXPECT_EQ(true, predicates1.GetWhereArgs().empty());
 
@@ -1636,7 +1636,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ToString_025, TestSize.Level1)
     std::string toString = predicates1.ToString();
     std::string result = "TableName = AllDataType, {WhereClause:stringValue = ? AND  ( integerValue = ?  OR "
                          "integerValue = ?  ) , whereArgs:{ABCDEFGHIJKLMN, 1, 2147483647, }, order:integerValue "
-                         "DESC , group:, index:, limit:2, offset:-1, distinct:0, isNeedAnd:1, isSorted:1}";
+                         "DESC , group:, index:, limit:2, offset:-2147483648, distinct:0, isNeedAnd:1, isSorted:1}";
     EXPECT_EQ(result, toString);
 }
 
