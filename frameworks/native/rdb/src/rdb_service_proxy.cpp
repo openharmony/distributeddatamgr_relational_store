@@ -71,13 +71,15 @@ void RdbServiceProxy::OnDataChange(const Origin &origin, const PrimaryFields &pr
 {
     auto name = RemoveSuffix(origin.store);
     observers_.ComputeIfPresent(name,
-        [&origin, &primaries, info = std::move(changeInfo)](const auto &key, const std::list<ObserverParam> &value) mutable {
-            auto size = value.size();
-            for (const auto &param : value) {
-                size--;
-                param.observer->OnChange(origin, primaries, (size > 0) ? ChangeInfo(info) : std::move(info));
+        [&origin, &primaries, info = std::move(changeInfo)](const auto &key, std::list<ObserverParam> &value) mutable {
+            auto it = value.begin();
+            while (it != value.end()) {
+                if (it->observer == nullptr) {
+                    it = value.erase(it);
+                }
+                it->observer->OnChange(origin, primaries, (++it) == value.end() ? ChangeInfo(info) : std::move(info));
             }
-            return true;
+            return !value.empty();
         });
 }
 
@@ -192,7 +194,7 @@ int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam& param, const Option &opti
     if (callback != nullptr) {
         asyncOption.seqNum = GetSeqNum();
         if (!syncCallbacks_.Insert(asyncOption.seqNum, callback)) {
-        LOG_INFO("insert callback failed");
+            LOG_INFO("insert callback failed");
             return RDB_ERROR;
         }
     }
@@ -243,7 +245,6 @@ int32_t RdbServiceProxy::Subscribe(const RdbSyncerParam &param, const SubscribeO
                                    RdbStoreObserver *observer)
 {
     if (observer == nullptr) {
-        LOG_ERROR("observer is null");
         return RDB_ERROR;
     }
     if (option.mode < SubscribeMode::REMOTE || option.mode >= SUBSCRIBE_MODE_MAX) {
@@ -333,12 +334,12 @@ int32_t RdbServiceProxy::RemoteQuery(const RdbSyncerParam& param, const std::str
     return RDB_OK;
 }
 
-RdbServiceProxy::ObserverMap RdbServiceProxy::ExportObservers()
+RdbServiceProxy::Observers RdbServiceProxy::ExportObservers()
 {
     return observers_;
 }
 
-void RdbServiceProxy::ImportObservers(ObserverMap &observers)
+void RdbServiceProxy::ImportObservers(Observers &observers)
 {
     LOG_INFO("enter");
     observers.ForEach([this](const std::string &key, const std::list<ObserverParam> &value) {
