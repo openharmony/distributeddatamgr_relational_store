@@ -60,7 +60,7 @@ int RelationalCursor::GetColumnIndex(OH_Cursor *cursor, const char *name, int *c
 int RelationalCursor::GetColumnName(OH_Cursor *cursor, int32_t columnIndex, char *name, int length)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || name == nullptr || length == 0) {
+    if (self == nullptr || name == nullptr || length <= 0) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     std::string str;
@@ -106,7 +106,7 @@ int RelationalCursor::GetSize(OH_Cursor *cursor, int32_t columnIndex, size_t *si
 int RelationalCursor::GetText(OH_Cursor *cursor, int32_t columnIndex, char *value, int length)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || value == nullptr || length == 0) {
+    if (self == nullptr || value == nullptr || length <= 0) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     std::string str;
@@ -143,7 +143,7 @@ int RelationalCursor::GetReal(OH_Cursor *cursor, int32_t columnIndex, double *va
 int RelationalCursor::GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned char *value, int length)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || value == nullptr || length == 0) {
+    if (self == nullptr || value == nullptr || length <= 0) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     std::vector<uint8_t> vec;
