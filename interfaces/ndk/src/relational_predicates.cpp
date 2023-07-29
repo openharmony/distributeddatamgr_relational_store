@@ -31,7 +31,9 @@ OH_Predicates *RelationalPredicate::EqualTo(OH_Predicates *predicates, const cha
         return self;
     }
     std::vector<std::string> values = selfObjects->Get();
-    self->predicates_.EqualTo(field, values[0]);
+    if (!values.empty()) {
+        self->predicates_.EqualTo(field, values[0]);
+    }
     return self;
 }
 
@@ -44,7 +46,9 @@ OH_Predicates *RelationalPredicate::NotEqualTo(OH_Predicates *predicates, const 
         return self;
     }
     std::vector<std::string> values = selfObjects->Get();
-    self->predicates_.NotEqualTo(field, values[0]);
+    if (!values.empty()) {
+        self->predicates_.NotEqualTo(field, values[0]);
+    }
     return self;
 }
 
@@ -116,7 +120,9 @@ OH_Predicates *RelationalPredicate::Like(OH_Predicates *predicates, const char *
         return self;
     }
     std::vector<std::string> values = selfObjects->Get();
-    self->predicates_.Like(field, values[0]);
+    if (!values.empty()) {
+        self->predicates_.Like(field, values[0]);
+    }
     return self;
 }
 
@@ -135,7 +141,7 @@ OH_Predicates *RelationalPredicate::Between(OH_Predicates *predicates, const cha
     }
 
     self->predicates_.Between(field, values[0], values[1]);
-    return predicates;
+    return self;
 }
 
 OH_Predicates *RelationalPredicate::NotBetween(OH_Predicates *predicates, const char *field,
@@ -165,7 +171,9 @@ OH_Predicates *RelationalPredicate::GreaterThan(OH_Predicates *predicates, const
         return self;
     }
     std::vector<std::string> values = selfObjects->Get();
-    self->predicates_.GreaterThan(field, values[0]);
+    if (!values.empty()) {
+        self->predicates_.GreaterThan(field, values[0]);
+    }
     return self;
 }
 
@@ -178,7 +186,9 @@ OH_Predicates *RelationalPredicate::LessThan(OH_Predicates *predicates, const ch
         return self;
     }
     std::vector<std::string> values = selfObjects->Get();
-    self->predicates_.LessThan(field, values[0]);
+    if (!values.empty()) {
+        self->predicates_.LessThan(field, values[0]);
+    }
     return self;
 }
 
@@ -191,8 +201,10 @@ OH_Predicates *RelationalPredicate::GreaterThanOrEqualTo(OH_Predicates *predicat
         return self;
     }
     std::vector<std::string> values = selfObjects->Get();
-    self->predicates_.GreaterThanOrEqualTo(field, values[0]);
-    return predicates;
+    if (!values.empty()) {
+        self->predicates_.GreaterThanOrEqualTo(field, values[0]);
+    }
+    return self;
 }
 OH_Predicates *RelationalPredicate::LessThanOrEqualTo(OH_Predicates *predicates, const char *field,
     OH_VObject *objects)
@@ -203,8 +215,10 @@ OH_Predicates *RelationalPredicate::LessThanOrEqualTo(OH_Predicates *predicates,
         return self;
     }
     std::vector<std::string> values = selfObjects->Get();
-    self->predicates_.LessThanOrEqualTo(field, values[0]);
-    return predicates;
+    if (!values.empty()) {
+        self->predicates_.LessThanOrEqualTo(field, values[0]);
+    }
+    return self;
 }
 
 OH_Predicates *RelationalPredicate::OrderBy(OH_Predicates *predicates, const char *field, OH_OrderType type)
@@ -215,10 +229,10 @@ OH_Predicates *RelationalPredicate::OrderBy(OH_Predicates *predicates, const cha
     }
     if (type == OH_OrderType::DESC) {
         self->predicates_.OrderByDesc(field);
-        return predicates;
+        return self;
     }
     self->predicates_.OrderByAsc(field);
-    return predicates;
+    return self;
 }
 
 OH_Predicates *RelationalPredicate::Distinct(OH_Predicates *predicates)
@@ -228,7 +242,7 @@ OH_Predicates *RelationalPredicate::Distinct(OH_Predicates *predicates)
         return self;
     }
     self->predicates_.Distinct();
-    return predicates;
+    return self;
 }
 
 OH_Predicates *RelationalPredicate::Limit(OH_Predicates *predicates, unsigned int value)
@@ -238,7 +252,7 @@ OH_Predicates *RelationalPredicate::Limit(OH_Predicates *predicates, unsigned in
         return self;
     }
     self->predicates_.Limit(value);
-    return predicates;
+    return self;
 }
 
 OH_Predicates *RelationalPredicate::Offset(OH_Predicates *predicates, unsigned int rowOffset)

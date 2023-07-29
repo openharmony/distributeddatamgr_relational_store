@@ -39,6 +39,7 @@ public:
         config_.moduleName = "";
         config_.securityLevel = OH_Rdb_SecurityLevel::S1;
         config_.isEncrypt = false;
+        config_.selfSize = sizeof(OH_Rdb_Config);
     }
     static OH_Rdb_Config config_;
 };
