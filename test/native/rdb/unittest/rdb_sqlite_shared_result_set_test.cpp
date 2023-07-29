@@ -1167,3 +1167,81 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_020, TestSize.Le
     std::string data1ValueByIndex = rowEntity.Get(0);
     EXPECT_EQ("hello", data1ValueByIndex);
 }
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_021
+ * @tc.desc: Abnormal testcase of SqliteSharedResultSet for PrepareStep, if len(qrySql) is less than 3
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_021, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SE", selectionArgs);
+    EXPECT_NE(resultSet, nullptr);
+
+    std::vector<std::string> columnNames;
+    int ret = resultSet->GetAllColumnNames(columnNames);
+    EXPECT_EQ(E_EXECUTE_IN_STEP_QUERY, ret);
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_022
+ * @tc.desc: Abnormal testcase of SqliteSharedResultSet for PrepareStep, if qrySql is invalid
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_022, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT FROM", selectionArgs);
+    EXPECT_NE(resultSet, nullptr);
+
+    std::vector<std::string> columnNames;
+    int ret = resultSet->GetAllColumnNames(columnNames);
+    EXPECT_EQ(-1, ret);
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_023
+ * @tc.desc: Abnormal testcase of SqliteSharedResultSet for GetAllColumnNames, if resultSet is closed
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_023, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+    EXPECT_NE(resultSet, nullptr);
+
+    resultSet->Close();
+
+    std::vector<std::string> columnNames;
+    int ret = resultSet->GetAllColumnNames(columnNames);
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, ret);
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_024
+ * @tc.desc: Abnormal testcase of SqliteSharedResultSet for GetRowCount, if resultSet is closed
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_024, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+    EXPECT_NE(resultSet, nullptr);
+
+    resultSet->Close();
+
+    int count = 0;
+    int ret = resultSet->GetRowCount(count);
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, ret);
+}
