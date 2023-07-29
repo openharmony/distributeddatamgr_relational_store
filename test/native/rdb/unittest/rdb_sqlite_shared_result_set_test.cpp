@@ -1245,3 +1245,149 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_024, TestSize.Le
     int ret = resultSet->GetRowCount(count);
     EXPECT_EQ(E_STEP_RESULT_CLOSED, ret);
 }
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_025
+ * @tc.desc: Abnormal testcase of SqliteSharedResultSet for GoToRow, if position is less than 0
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_025, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+    EXPECT_NE(resultSet, nullptr);
+
+    int ret = resultSet->GoToRow(-10);
+    EXPECT_EQ(E_ERROR, ret);
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_026
+ * @tc.desc: Abnormal testcase of SqliteSharedResultSet for GetBlob, if position is less than 0
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_026, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+    EXPECT_NE(resultSet, nullptr);
+
+    resultSet->GoToFirstRow();
+
+    std::vector<uint8_t> blob;
+    int ret = resultSet->GetBlob(-10, blob);
+    EXPECT_EQ(E_INVALID_COLUMN_INDEX, ret);
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_027
+ * @tc.desc: Abnormal testcase of SqliteSharedResultSet for GetAsset, if col is less than 0
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_027, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+    EXPECT_NE(resultSet, nullptr);
+
+    resultSet->GoToFirstRow();
+
+    ValueObject::Asset value;
+    int ret = resultSet->GetAsset(-10, value);
+    EXPECT_EQ(E_INVALID_COLUMN_INDEX, ret);
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_028
+ * @tc.desc: Abnormal testcase of SqliteSharedResultSet for GetAssets, if col is less than 0
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_028, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+    EXPECT_NE(resultSet, nullptr);
+
+    resultSet->GoToFirstRow();
+
+    ValueObject::Assets value;
+    int ret = resultSet->GetAssets(-10, value);
+    EXPECT_EQ(E_INVALID_COLUMN_INDEX, ret);
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_029
+ * @tc.desc: Abnormal testcase of SqliteSharedResultSet for GetSize, if columnIndex is less than 0
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_029, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+    EXPECT_NE(resultSet, nullptr);
+
+    resultSet->GoToFirstRow();
+
+    size_t size;
+    int ret = resultSet->GetSize(-10, size);
+    EXPECT_EQ(E_INVALID_COLUMN_INDEX, ret);
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_030
+ * @tc.desc: Abnormal testcase of SqliteSharedResultSet for IsColumnNull, if columnIndex is less than 0
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_030, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+    EXPECT_NE(resultSet, nullptr);
+
+    resultSet->GoToFirstRow();
+
+    bool isNUll;
+    int ret = resultSet->IsColumnNull(-10, isNUll);
+    EXPECT_EQ(E_INVALID_COLUMN_INDEX, ret);
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_031
+ * @tc.desc: Abnormal testcase of SqliteSharedResultSet for Close, if close resultSet twice
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_031, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+    EXPECT_NE(resultSet, nullptr);
+
+    int ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+
+    bool isClosed = resultSet->IsClosed();
+    EXPECT_EQ(isClosed, true);
+
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+}
