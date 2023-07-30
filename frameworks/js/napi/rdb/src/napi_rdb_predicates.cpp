@@ -583,7 +583,7 @@ napi_value RdbPredicatesProxy::Distinct(napi_env env, napi_callback_info info)
 napi_value RdbPredicatesProxy::Limit(napi_env env, napi_callback_info info)
 {
     napi_value thiz = nullptr;
-    int32_t limit = 0;
+    int32_t limit = INT_MIN;
     auto predicatesProxy = ParseInt32FieldByName(env, info, thiz, limit, "value");
     RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr && predicatesProxy->predicates_ != nullptr,
         "RdbPredicatesProxy predicatesProxy or predicates_ is nullptr");
@@ -594,7 +594,7 @@ napi_value RdbPredicatesProxy::Limit(napi_env env, napi_callback_info info)
 napi_value RdbPredicatesProxy::Offset(napi_env env, napi_callback_info info)
 {
     napi_value thiz = nullptr;
-    int32_t offset = 0;
+    int32_t offset = INT_MIN;
     auto predicatesProxy = ParseInt32FieldByName(env, info, thiz, offset, "rowOffset");
     RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr && predicatesProxy->predicates_ != nullptr,
         "RdbPredicatesProxy predicatesProxy or predicates_ is nullptr");

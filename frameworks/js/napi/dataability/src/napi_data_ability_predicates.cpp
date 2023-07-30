@@ -493,7 +493,7 @@ napi_value DataAbilityPredicatesProxy::Limit(napi_env env, napi_callback_info in
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::Limit Invalid argvs!");
-    int32_t limit = 0;
+    int32_t limit = INT_MIN;
     napi_get_value_int32(env, args[0], &limit);
     auto nativePredicates = GetNativePredicates(env, info);
     RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
@@ -508,7 +508,7 @@ napi_value DataAbilityPredicatesProxy::Offset(napi_env env, napi_callback_info i
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::Offset Invalid argvs!");
-    int32_t offset = 0;
+    int32_t offset = INT_MIN;
     napi_get_value_int32(env, args[0], &offset);
     auto nativePredicates = GetNativePredicates(env, info);
     RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");

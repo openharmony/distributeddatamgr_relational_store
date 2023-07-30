@@ -30,9 +30,7 @@ namespace NativeRdb {
 class StepResultSet : public AbsResultSet {
 public:
     StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, SqliteConnectionPool *connectionPool, const std::string &sql,
-        const std::vector<std::string> &selectionArgs);
-    StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, SqliteConnectionPool *pool, const std::string &sql,
-        std::vector<ValueObject> &&args);
+        const std::vector<ValueObject> &selectionArgs);
     ~StepResultSet() override;
 
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
@@ -67,7 +65,6 @@ private:
     std::shared_ptr<RdbStoreImpl> rdb;
     SqliteConnectionPool *connectionPool_;
     std::string sql;
-    std::vector<std::string> selectionArgs;
     std::vector<ValueObject> args_;
     // Whether reach the end of this result set or not
     bool isAfterLast;

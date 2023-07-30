@@ -145,7 +145,7 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
     sql.append(" where hash_key in (");
     sql.append(GetSqlArgs(hashKeys.size()));
     sql.append(")");
-    auto resultSet = QueryByStep(sql, std::move(hashKeys));
+    auto resultSet = QueryByStep(sql, hashKeys);
     int count = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(count) != E_OK || count <= 0) {
         LOG_ERROR("get resultSet err.");
@@ -179,7 +179,7 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTimeByRowId(
         RawDataParser::Convert(key, value);
         args.emplace_back(ValueObject(value));
     }
-    auto resultSet = QueryByStep(sql, std::move(args));
+    auto resultSet = QueryByStep(sql, args);
     int count = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(count) != E_OK || count <= 0) {
         LOG_ERROR("get resultSet err.");
@@ -373,7 +373,7 @@ int RdbStoreImpl::InnerInsert(int64_t &outRowId, const std::string &table,
         if (val.GetType() == ValueObject::TYPE_ASSET || val.GetType() == ValueObject::TYPE_ASSETS) {
             SetAssetStatusWhileInsert(val);
         }
-        bindArgs.push_back(std::move(val));  // columnValue
+        bindArgs.push_back(val);  // columnValue
         split = ",";
     }
 
@@ -417,19 +417,41 @@ void RdbStoreImpl::SetAssetStatusWhileInsert(ValueObject &val)
 int RdbStoreImpl::Update(int &changedRows, const std::string &table, const ValuesBucket &values,
     const std::string &whereClause, const std::vector<std::string> &whereArgs)
 {
+    std::vector<ValueObject> bindArgs;
+    for (auto &item : whereArgs) {
+        bindArgs.push_back(ValueObject(item));
+    }
+    return UpdateWithConflictResolution(
+        changedRows, table, values, whereClause, bindArgs, ConflictResolution::ON_CONFLICT_NONE);
+}
+
+int RdbStoreImpl::Update(int &changedRows, const std::string &table, const ValuesBucket &values,
+    const std::string &whereClause, const std::vector<ValueObject> &bindArgs)
+{
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     return UpdateWithConflictResolution(
-        changedRows, table, values, whereClause, whereArgs, ConflictResolution::ON_CONFLICT_NONE);
+        changedRows, table, values, whereClause, bindArgs, ConflictResolution::ON_CONFLICT_NONE);
 }
 
 int RdbStoreImpl::Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates)
 {
     return Update(
-        changedRows, predicates.GetTableName(), values, predicates.GetWhereClause(), predicates.GetWhereArgs());
+        changedRows, predicates.GetTableName(), values, predicates.GetWhereClause(), predicates.GetBindArgs());
 }
 
 int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
     const std::string &whereClause, const std::vector<std::string> &whereArgs, ConflictResolution conflictResolution)
+{
+    std::vector<ValueObject> bindArgs;
+    for (auto &item : whereArgs) {
+        bindArgs.push_back(ValueObject(item));
+    }
+    return UpdateWithConflictResolution(
+        changedRows, table, values, whereClause, bindArgs, conflictResolution);
+}
+
+int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
+    const std::string &whereClause, const std::vector<ValueObject> &bindArgs, ConflictResolution conflictResolution)
 {
     if (table.empty()) {
         return E_EMPTY_TABLE_NAME;
@@ -448,7 +470,7 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
     std::stringstream sql;
     sql << "UPDATE" << conflictClause << " " << table << " SET ";
 
-    std::vector<ValueObject> bindArgs;
+    std::vector<ValueObject> tmpBindArgs;
     const char *split = "";
     for (auto &[key, val] : values.values_) {
         sql << split;
@@ -457,7 +479,7 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
         } else {
             sql << key << "=?"; // columnName
         }
-        bindArgs.push_back(val);  // columnValue
+        tmpBindArgs.push_back(val);  // columnValue
         split = ",";
     }
 
@@ -465,16 +487,14 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
         sql << " WHERE " << whereClause;
     }
 
-    for (auto &iter : whereArgs) {
-        bindArgs.push_back(ValueObject(iter));
-    }
+    tmpBindArgs.insert(tmpBindArgs.end(), bindArgs.begin(), bindArgs.end());
 
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
     if (connection == nullptr) {
         return E_CON_OVER_LIMIT;
     }
 
-    errCode = connection->ExecuteForChangedRowCount(changedRows, sql.str(), bindArgs);
+    errCode = connection->ExecuteForChangedRowCount(changedRows, sql.str(), tmpBindArgs);
     connectionPool->ReleaseConnection(connection);
     if (errCode == E_OK) {
         DoCloudSync(table);
@@ -485,11 +505,21 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
 int RdbStoreImpl::Delete(int &deletedRows, const AbsRdbPredicates &predicates)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    return Delete(deletedRows, predicates.GetTableName(), predicates.GetWhereClause(), predicates.GetWhereArgs());
+    return Delete(deletedRows, predicates.GetTableName(), predicates.GetWhereClause(), predicates.GetBindArgs());
 }
 
 int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
     const std::vector<std::string> &whereArgs)
+{
+    std::vector<ValueObject> bindArgs;
+    for (auto &item : whereArgs) {
+        bindArgs.push_back(ValueObject(item));
+    }
+    return Delete(deletedRows, table, whereClause, bindArgs);
+}
+
+int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
+    const std::vector<ValueObject> &bindArgs)
 {
     if (table.empty()) {
         return E_EMPTY_TABLE_NAME;
@@ -499,11 +529,6 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
     sql << "DELETE FROM " << table;
     if (!whereClause.empty()) {
         sql << " WHERE " << whereClause;
-    }
-
-    std::vector<ValueObject> bindArgs;
-    for (auto &iter : whereArgs) {
-        bindArgs.push_back(ValueObject(iter));
     }
 
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
@@ -521,21 +546,19 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
-    const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
-    return QuerySql(sql, selectionArgs);
+    return QuerySql(sql, predicates.GetBindArgs());
 }
 
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
-    const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
-    return QueryByStep(sql, selectionArgs);
+    return QueryByStep(sql, predicates.GetBindArgs());
 }
 
 std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
@@ -578,36 +601,37 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool disti
 std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sql,
     const std::vector<std::string> &selectionArgs)
 {
+    std::vector<ValueObject> bindArgs;
+    for (auto &item : selectionArgs) {
+        bindArgs.push_back(ValueObject(item));
+    }
+    return std::make_shared<SqliteSharedResultSet>(shared_from_this(), connectionPool, path, sql, bindArgs);
+}
+
+std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sql,
+    const std::vector<ValueObject> &bindArgs)
+{
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    return std::make_shared<SqliteSharedResultSet>(shared_from_this(), connectionPool, path, sql, selectionArgs);
+    return std::make_shared<SqliteSharedResultSet>(shared_from_this(), connectionPool, path, sql, bindArgs);
 }
 #endif
 
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
 std::shared_ptr<ResultSet> RdbStoreImpl::Query(
-    const AbsRdbPredicates &predicates, const std::vector<std::string> columns)
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("RdbStoreImpl::Query on called.");
-    std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
-    return QueryByStep(sql, selectionArgs);
+    return QueryByStep(sql, predicates.GetBindArgs());
 }
 #endif
 
 int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
 {
-    LOG_DEBUG("RdbStoreImpl::Count on called.");
-    std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildCountString(predicates);
 
-    std::vector<ValueObject> bindArgs;
-    std::vector<std::string> whereArgs = predicates.GetWhereArgs();
-    for (const auto& whereArg : whereArgs) {
-        bindArgs.emplace_back(whereArg);
-    }
-
-    return ExecuteAndGetLong(outValue, sql, bindArgs);
+    return ExecuteAndGetLong(outValue, sql, predicates.GetBindArgs());
 }
 
 int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs)
@@ -1281,12 +1305,16 @@ int RdbStoreImpl::Restore(const std::string backupPath, const std::vector<uint8_
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
     const std::vector<std::string> &selectionArgs)
 {
-    return std::make_shared<StepResultSet>(shared_from_this(), connectionPool, sql, selectionArgs);
+    std::vector<ValueObject> bindArgs;
+    for (auto &item : selectionArgs) {
+        bindArgs.push_back(ValueObject(item));
+    }
+    return std::make_shared<StepResultSet>(shared_from_this(), connectionPool, sql, bindArgs);
 }
 
-std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, std::vector<ValueObject> &&args)
+std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, const std::vector<ValueObject> &args)
 {
-    return std::make_shared<StepResultSet>(shared_from_this(), connectionPool, sql, std::move(args));
+    return std::make_shared<StepResultSet>(shared_from_this(), connectionPool, sql, args);
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)

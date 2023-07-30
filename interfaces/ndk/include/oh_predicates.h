@@ -393,7 +393,7 @@ typedef struct OH_Predicates {
      * @see OH_Predicates.
      * @since 10
      */
-    int (*destroyPredicates)(OH_Predicates *predicates);
+    int (*destroy)(OH_Predicates *predicates);
 } OH_Predicates;
 
 #ifdef __cplusplus

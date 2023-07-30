@@ -45,34 +45,39 @@ public:
     virtual int InsertWithConflictResolution(
         int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues,
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
-    virtual int Update(int &changedRows, const std::string &table, const ValuesBucket &values,
-        const std::string &whereClause = "",
-        const std::vector<std::string> &whereArgs = std::vector<std::string>()) = 0;
+    virtual int Update(int &changedRows, const std::string &table, const ValuesBucket &values, const std::string &whereClause,
+        const std::vector<std::string> &whereArgs) = 0;
+    virtual int Update(int &changedRows, const std::string &table, const ValuesBucket &values, const std::string &whereClause,
+        const std::vector<ValueObject> &bindArgs) = 0;
     virtual int UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
-        const std::string &whereClause = "", const std::vector<std::string> &whereArgs = std::vector<std::string>(),
-        ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
-    virtual int Delete(int &deletedRows, const std::string &table, const std::string &whereClause = "",
-        const std::vector<std::string> &whereArgs = std::vector<std::string>()) = 0;
-    virtual std::shared_ptr<ResultSet> QueryByStep(
-        const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
-    virtual int ExecuteSql(
-        const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+        const std::string &whereClause, const std::vector<std::string> &whereArgs,
+        ConflictResolution conflictResolution)  = 0;
+    virtual int UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
+        const std::string &whereClause, const std::vector<ValueObject> &bindArgs,
+        ConflictResolution conflictResolution) = 0;
+    virtual int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
+        const std::vector<std::string> &whereArgs) = 0;
+    virtual int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
+        const std::vector<ValueObject> &bindArgs) = 0;
+    virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql,
+        const std::vector<std::string> &selectionArgs) = 0;
+    virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const std::vector<ValueObject> &args) = 0;
+    virtual int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = {}) = 0;
     virtual int ExecuteAndGetLong(int64_t &outValue, const std::string &sql,
-        const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+        const std::vector<ValueObject> &bindArgs = {}) = 0;
     virtual int ExecuteAndGetString(std::string &outValue, const std::string &sql,
-        const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+        const std::vector<ValueObject> &bindArgs = {}) = 0;
     virtual int ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql,
-        const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+        const std::vector<ValueObject> &bindArgs = {}) = 0;
     virtual int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
-        const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
-    virtual int Backup(const std::string databasePath,
-        const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>()) = 0;
+        const std::vector<ValueObject> &bindArgs = {}) = 0;
+    virtual int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey = {}) = 0;
     virtual int Attach(
         const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey) = 0;
 
     virtual int Count(int64_t &outValue, const AbsRdbPredicates &predicates) = 0;
     virtual std::shared_ptr<ResultSet> Query(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> columns) = 0;
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) = 0;
     virtual int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) = 0;
     virtual int Delete(int &deletedRows, const AbsRdbPredicates &predicates) = 0;
 
@@ -87,8 +92,7 @@ public:
     virtual bool IsOpen() const = 0;
     virtual bool IsReadOnly() const = 0;
     virtual bool IsMemoryRdb() const = 0;
-    virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) = 0;
-    virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, std::vector<ValueObject> &&args) = 0;
+    virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = {}) = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif

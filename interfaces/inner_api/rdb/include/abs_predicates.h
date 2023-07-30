@@ -77,9 +77,9 @@ public:
     API_EXPORT virtual AbsPredicates *OrderByAsc(const std::string &field);
     API_EXPORT virtual AbsPredicates *OrderByDesc(const std::string &field);
     API_EXPORT virtual AbsPredicates *Distinct();
-    API_EXPORT virtual AbsPredicates *Limit(int limit);
-    API_EXPORT virtual AbsPredicates *Limit(int offset, int limit);
-    API_EXPORT virtual AbsPredicates *Offset(int offset);
+    API_EXPORT virtual AbsPredicates *Limit(const int limit);
+    API_EXPORT virtual AbsPredicates *Limit(const int offset, const int limit);
+    API_EXPORT virtual AbsPredicates *Offset(const int offset);
     API_EXPORT virtual AbsPredicates *GroupBy(const std::vector<std::string> &fields);
     API_EXPORT virtual AbsPredicates *IndexedBy(const std::string &indexName);
     [[deprecated("Use In(const std::string &, const std::vector<ValueObject> &) instead.")]]
@@ -103,7 +103,7 @@ private:
 
     void Initial();
     bool CheckParameter(
-        const std::string &methodName, const std::string &field, const std::initializer_list<std::string> &args) const;
+        const std::string &methodName, const std::string &field, const std::initializer_list<ValueObject> &args) const;
     std::string RemoveQuotes(const std::string &source) const;
     void CheckIsNeedAnd();
     void AppendWhereClauseWithInOrNotIn(const std::string &methodName, const std::string &field,

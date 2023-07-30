@@ -35,8 +35,8 @@ ohos_unittest("NativeRdbNdkTest") {
   sources = [
     "${relational_store_base_path}/interfaces/ndk/src/relational_cursor.cpp",
     "${relational_store_base_path}/interfaces/ndk/src/relational_predicates.cpp",
+    "${relational_store_base_path}/interfaces/ndk/src/relational_predicates_objects.cpp",
     "${relational_store_base_path}/interfaces/ndk/src/relational_store.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/relational_value_object.cpp",
     "${relational_store_base_path}/interfaces/ndk/src/relational_values_bucket.cpp",
     "unittest/rdb_cursor_test.cpp",
     "unittest/rdb_predicates_test.cpp",

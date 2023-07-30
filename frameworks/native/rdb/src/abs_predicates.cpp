@@ -51,7 +51,6 @@ bool AbsPredicates::IsNeedAnd() const
  */
 AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const ValueObject &value)
 {
-    DISTRIBUTED_DATA_HITRACE("AbsPredicates::EqualTo");
     bool chekParaFlag = CheckParameter("equalTo", field, { value });
     if (!chekParaFlag) {
         LOG_WARN("AbsPredicates: EqualTo() fails because Invalid parameter.");
@@ -378,32 +377,26 @@ AbsPredicates *AbsPredicates::Distinct()
 /**
  * Restricts the max number of return records.
  */
-AbsPredicates *AbsPredicates::Limit(int limit)
+AbsPredicates *AbsPredicates::Limit(const int limit)
 {
-    limit = (limit <= 0) ? -1 : limit;
-    this->limit = limit;
+    this->limit = (limit <= 0) ? -1 : limit;
     return this;
 }
 
 /**
  * Restricts the max number of return records.
  */
-AbsPredicates *AbsPredicates::Limit(int offset, int limit)
+AbsPredicates *AbsPredicates::Limit(const int offset, const int limit)
 {
-    limit = (limit <= 0) ? -1 : limit;
-    this->limit = limit;
-
-    return Offset(offset);
+    return this->Limit(limit)->Offset(offset);
 }
 
 /**
  * Configures to specify the start position of the returned result.
  */
-AbsPredicates *AbsPredicates::Offset(int offset)
+AbsPredicates *AbsPredicates::Offset(const int offset)
 {
-    offset = (offset < 0) ? -1 : offset;
-    this->offset = offset;
-
+    this->offset = (offset < 0) ? -1 : offset;
     return this;
 }
 
@@ -449,7 +442,7 @@ AbsPredicates *AbsPredicates::In(const std::string &field, const std::vector<std
 {
     std::vector<ValueObject> bindArgs;
     for (auto &arg : values) {
-        bindArgs.push_back(ValueObject(std::move(arg)));
+        bindArgs.push_back(ValueObject(arg));
     }
     return In(field, bindArgs);
 }
@@ -484,7 +477,7 @@ AbsPredicates *AbsPredicates::NotIn(const std::string &field, const std::vector<
 {
     std::vector<ValueObject> bindArgs;
     for (auto &arg : values) {
-        bindArgs.push_back(ValueObject(std::move(arg)));
+        bindArgs.push_back(ValueObject(arg));
     }
     return NotIn(field, bindArgs);
 }
@@ -531,16 +524,16 @@ void AbsPredicates::Initial()
  * Check the parameter validity.
  */
 bool AbsPredicates::CheckParameter(
-    const std::string &methodName, const std::string &field, const std::initializer_list<std::string> &args) const
+    const std::string &methodName, const std::string &field, const std::initializer_list<ValueObject> &args) const
 {
     if (field.empty()) {
-        LOG_WARN("QueryImpl(): string 'field' is empty.");
+        LOG_WARN("%{public}s: string 'field' is empty.", methodName.c_str());
         return false;
     }
-    if (args.size() != 0) {
-        for (auto &i : args) {
-            if (i.empty()) {
-                LOG_WARN("QueryImpl(): value is empty.");
+    for (auto &arg : args) {
+        if (auto pval = std::get_if<std::string>(&arg.value)) {
+            if ((*pval).empty()) {
+                LOG_WARN("%{public}s: value is empty.", methodName.c_str());
                 return false;
             }
         }
@@ -592,7 +585,9 @@ std::vector<std::string> AbsPredicates::GetWhereArgs() const
 {
     std::vector<std::string> whereArgs;
     for (auto &arg : this->bindArgs) {
-        whereArgs.push_back(std::get<std::string>(arg.value));
+        if (auto pval = std::get_if<std::string>(&arg.value)){
+            whereArgs.push_back(std::get<std::string>(arg.value));
+        }
     }
     return whereArgs;
 }
@@ -601,7 +596,7 @@ void AbsPredicates::SetWhereArgs(const std::vector<std::string> &whereArgs)
 {
     this->bindArgs.clear();
     for (auto &arg : whereArgs) {
-        this->bindArgs.push_back(ValueObject(std::move(arg)));
+        this->bindArgs.push_back(ValueObject(arg));
     }
 }
 

@@ -136,7 +136,7 @@ typedef struct OH_VBucket {
      * @see OH_VBucket.
      * @since 10
      */
-    int (*destroyValuesBucket)(OH_VBucket *bucket);
+    int (*destroy)(OH_VBucket *bucket);
 } OH_VBucket;
 
 #ifdef __cplusplus

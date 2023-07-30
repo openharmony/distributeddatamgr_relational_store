@@ -77,7 +77,7 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_002, TestSize.Level1)
     EXPECT_EQ(false, predicates1->IsRawSelection());
     predicates1->Clear();
 
-    EXPECT_EQ(-1, predicates1->GetLimit());
+    EXPECT_EQ(INT_MIN, predicates1->GetLimit());
     EXPECT_EQ(true, predicates1->GetWhereClause().empty());
     EXPECT_EQ(true, predicates1->GetWhereArgs().empty());
     EXPECT_EQ(true, predicates1->GetOrder().empty());
