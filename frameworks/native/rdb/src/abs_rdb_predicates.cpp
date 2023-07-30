@@ -139,19 +139,6 @@ std::string AbsRdbPredicates::GetTableName() const
     return tableName_;
 }
 
-std::string AbsRdbPredicates::ToString() const
-{
-    std::string args;
-    for (const auto& item : GetWhereArgs()) {
-        args += item + ", ";
-    }
-    return "TableName = " + GetTableName() + ", {WhereClause:" + GetWhereClause() + ", whereArgs:{" + args + "}"
-           + ", order:" + GetOrder() + ", group:" + GetGroup() + ", index:" + GetIndex()
-           + ", limit:" + std::to_string(GetLimit()) + ", offset:" + std::to_string(GetOffset())
-           + ", distinct:" + std::to_string(IsDistinct()) + ", isNeedAnd:" + std::to_string(IsNeedAnd())
-           + ", isSorted:" + std::to_string(IsSorted()) + "}";
-}
-
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 AbsRdbPredicates* AbsRdbPredicates::InDevices(std::vector<std::string> &devices)
 {
@@ -179,16 +166,20 @@ const DistributedRdb::PredicatesMemo& AbsRdbPredicates::GetDistributedPredicates
     return predicates_;
 }
 
-AbsRdbPredicates* AbsRdbPredicates::EqualTo(const std::string &field, const std::string &value)
+AbsRdbPredicates* AbsRdbPredicates::EqualTo(const std::string &field, const ValueObject &value)
 {
     DISTRIBUTED_DATA_HITRACE("AbsRdbPredicates::EqualTo");
-    predicates_.AddOperation(DistributedRdb::EQUAL_TO, field, value);
+    if (auto pval = std::get_if<std::string>(&value.value)) {
+        predicates_.AddOperation(DistributedRdb::EQUAL_TO, field, std::move(*pval));
+    }
     return (AbsRdbPredicates *)AbsPredicates::EqualTo(field, value);
 }
 
-AbsRdbPredicates* AbsRdbPredicates::NotEqualTo(const std::string &field, const std::string &value)
+AbsRdbPredicates* AbsRdbPredicates::NotEqualTo(const std::string &field, const ValueObject &value)
 {
-    predicates_.AddOperation(DistributedRdb::NOT_EQUAL_TO, field, value);
+    if (auto pval = std::get_if<std::string>(&value.value)) {
+        predicates_.AddOperation(DistributedRdb::NOT_EQUAL_TO, field, std::move(*pval));
+    }
     return (AbsRdbPredicates *)AbsPredicates::NotEqualTo(field, value);
 }
 

@@ -49,7 +49,7 @@ bool AbsPredicates::IsNeedAnd() const
 /**
  * Restricts the value of the field to be greater than the specified value.
  */
-AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const std::string &value)
+AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const ValueObject &value)
 {
     DISTRIBUTED_DATA_HITRACE("AbsPredicates::EqualTo");
     bool chekParaFlag = CheckParameter("equalTo", field, { value });
@@ -63,14 +63,14 @@ AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const std::strin
         isNeedAnd = true;
     }
     whereClause += field + " = ? ";
-    whereArgs.push_back(value);
+    bindArgs.push_back(value);
     return this;
 }
 
 /**
  * Restricts the value of the field to be unequal to the specified value.
  */
-AbsPredicates *AbsPredicates::NotEqualTo(const std::string &field, const std::string &value)
+AbsPredicates *AbsPredicates::NotEqualTo(const std::string &field, const ValueObject &value)
 {
     bool chekParaFlag = CheckParameter("notEqualTo", field, { value });
     if (!chekParaFlag) {
@@ -79,7 +79,7 @@ AbsPredicates *AbsPredicates::NotEqualTo(const std::string &field, const std::st
     }
     CheckIsNeedAnd();
     whereClause += field + " <> ? ";
-    whereArgs.push_back(value);
+    bindArgs.push_back(value);
     return this;
 }
 
@@ -135,7 +135,7 @@ AbsPredicates *AbsPredicates::Contains(const std::string &field, const std::stri
     }
     CheckIsNeedAnd();
     whereClause += field + " LIKE ? ";
-    whereArgs.push_back("%" + value + "%");
+    bindArgs.push_back(ValueObject("%" + value + "%"));
     return this;
 }
 
@@ -151,7 +151,7 @@ AbsPredicates *AbsPredicates::BeginsWith(const std::string &field, const std::st
     }
     CheckIsNeedAnd();
     whereClause += field + " LIKE ? ";
-    whereArgs.push_back(value + "%");
+    bindArgs.push_back(ValueObject(value + "%"));
     return this;
 }
 
@@ -167,7 +167,7 @@ AbsPredicates *AbsPredicates::EndsWith(const std::string &field, const std::stri
     }
     CheckIsNeedAnd();
     whereClause += field + " LIKE ? ";
-    whereArgs.push_back("%" + value);
+    bindArgs.push_back(ValueObject("%" + value));
     return this;
 }
 
@@ -213,7 +213,7 @@ AbsPredicates *AbsPredicates::Like(const std::string &field, const std::string &
     }
     CheckIsNeedAnd();
     whereClause += field + " LIKE ? ";
-    whereArgs.push_back(value);
+    bindArgs.push_back(ValueObject(value));
     return this;
 }
 
@@ -229,14 +229,14 @@ AbsPredicates *AbsPredicates::Glob(const std::string &field, const std::string &
     }
     CheckIsNeedAnd();
     whereClause += field + " GLOB ? ";
-    whereArgs.push_back(value);
+    bindArgs.push_back(value);
     return this;
 }
 
 /**
  * Restricts the value of the field to be unequal to the specified value.
  */
-AbsPredicates *AbsPredicates::Between(std::string field, std::string low, std::string high)
+AbsPredicates *AbsPredicates::Between(const std::string &field, const ValueObject &low, const ValueObject &high)
 {
     bool chekParaFlag = CheckParameter("between", field, { low, high });
     if (!chekParaFlag) {
@@ -245,15 +245,15 @@ AbsPredicates *AbsPredicates::Between(std::string field, std::string low, std::s
     }
     CheckIsNeedAnd();
     whereClause += field + " BETWEEN ? AND ? ";
-    whereArgs.push_back(low);
-    whereArgs.push_back(high);
+    bindArgs.push_back(low);
+    bindArgs.push_back(high);
     return this;
 }
 
 /**
  * Configures to match the specified field whose data type is String and value is out of a given range.
  */
-AbsPredicates *AbsPredicates::NotBetween(std::string field, std::string low, std::string high)
+AbsPredicates *AbsPredicates::NotBetween(const std::string &field, const ValueObject &low, const ValueObject &high)
 {
     bool chekParaFlag = CheckParameter("notBetween", field, { low, high });
     if (!chekParaFlag) {
@@ -262,15 +262,15 @@ AbsPredicates *AbsPredicates::NotBetween(std::string field, std::string low, std
     }
     CheckIsNeedAnd();
     whereClause += field + " NOT BETWEEN ? AND ? ";
-    whereArgs.push_back(low);
-    whereArgs.push_back(high);
+    bindArgs.push_back(low);
+    bindArgs.push_back(high);
     return this;
 }
 
 /**
  * Restricts the value of the field to be greater than the specified value.
  */
-AbsPredicates *AbsPredicates::GreaterThan(const std::string &field, const std::string &value)
+AbsPredicates *AbsPredicates::GreaterThan(const std::string &field, const ValueObject &value)
 {
     bool chekParaFlag = CheckParameter("greaterThan", field, { value });
     if (!chekParaFlag) {
@@ -279,14 +279,14 @@ AbsPredicates *AbsPredicates::GreaterThan(const std::string &field, const std::s
     }
     CheckIsNeedAnd();
     whereClause += field + " > ? ";
-    whereArgs.push_back(value);
+    bindArgs.push_back(value);
     return this;
 }
 
 /**
  * Restricts the value of the field to be smaller than the specified value.
  */
-AbsPredicates *AbsPredicates::LessThan(const std::string &field, const std::string &value)
+AbsPredicates *AbsPredicates::LessThan(const std::string &field, const ValueObject &value)
 {
     bool chekParaFlag = CheckParameter("lessThan", field, { value });
     if (!chekParaFlag) {
@@ -295,14 +295,14 @@ AbsPredicates *AbsPredicates::LessThan(const std::string &field, const std::stri
     }
     CheckIsNeedAnd();
     whereClause += field + " < ? ";
-    whereArgs.push_back(value);
+    bindArgs.push_back(value);
     return this;
 }
 
 /**
  * Restricts the value of the field to be greater than or equal to the specified value.
  */
-AbsPredicates *AbsPredicates::GreaterThanOrEqualTo(const std::string &field, const std::string &value)
+AbsPredicates *AbsPredicates::GreaterThanOrEqualTo(const std::string &field, const ValueObject &value)
 {
     bool chekParaFlag = CheckParameter("greaterThanOrEqualTo", field, { value });
     if (!chekParaFlag) {
@@ -311,14 +311,14 @@ AbsPredicates *AbsPredicates::GreaterThanOrEqualTo(const std::string &field, con
     }
     CheckIsNeedAnd();
     whereClause += field + " >= ? ";
-    whereArgs.push_back(value);
+    bindArgs.push_back(value);
     return this;
 }
 
 /**
  * Restricts the value of the field to be smaller than or equal to the specified value.
  */
-AbsPredicates *AbsPredicates::LessThanOrEqualTo(const std::string &field, const std::string &value)
+AbsPredicates *AbsPredicates::LessThanOrEqualTo(const std::string &field, const ValueObject &value)
 {
     bool chekParaFlag = CheckParameter("greaterThanOrEqualTo", field, { value });
     if (!chekParaFlag) {
@@ -327,7 +327,7 @@ AbsPredicates *AbsPredicates::LessThanOrEqualTo(const std::string &field, const 
     }
     CheckIsNeedAnd();
     whereClause += field + " <= ? ";
-    whereArgs.push_back(value);
+    bindArgs.push_back(value);
     return this;
 }
 
@@ -445,10 +445,19 @@ AbsPredicates *AbsPredicates::IndexedBy(const std::string &indexName)
     return this;
 }
 
+AbsPredicates *AbsPredicates::In(const std::string &field, const std::vector<std::string> &values)
+{
+    std::vector<ValueObject> bindArgs;
+    for (auto &arg : values) {
+        bindArgs.push_back(ValueObject(std::move(arg)));
+    }
+    return In(field, bindArgs);
+}
+
 /**
  * Configures to match the specified field whose data type is String array and values are within a given range.
  */
-AbsPredicates *AbsPredicates::In(const std::string &field, const std::vector<std::string> &values)
+AbsPredicates *AbsPredicates::In(const std::string &field, const std::vector<ValueObject> &values)
 {
     bool chekParaFlag = CheckParameter("in", field, {});
     if (!chekParaFlag) {
@@ -465,16 +474,25 @@ AbsPredicates *AbsPredicates::In(const std::string &field, const std::vector<std
     std::vector<std::string> replaceValues;
     for (auto &value : values) {
         replaceValues.push_back("?");
-        whereArgs.push_back(std::move(value));
+        bindArgs.push_back(std::move(value));
     }
     AppendWhereClauseWithInOrNotIn(" IN ", field, replaceValues);
     return this;
 }
 
+AbsPredicates *AbsPredicates::NotIn(const std::string &field, const std::vector<std::string> &values)
+{
+    std::vector<ValueObject> bindArgs;
+    for (auto &arg : values) {
+        bindArgs.push_back(ValueObject(std::move(arg)));
+    }
+    return NotIn(field, bindArgs);
+}
+
 /**
  * Configures to match the specified field whose data type is String array and values are out of a given range.
  */
-AbsPredicates *AbsPredicates::NotIn(const std::string &field, const std::vector<std::string> &values)
+AbsPredicates *AbsPredicates::NotIn(const std::string &field, const std::vector<ValueObject> &values)
 {
     bool chekParaFlag = CheckParameter("notIn", field, {});
     if (!chekParaFlag) {
@@ -489,7 +507,7 @@ AbsPredicates *AbsPredicates::NotIn(const std::string &field, const std::vector<
     std::vector<std::string> replaceValues;
     for (auto &value : values) {
         replaceValues.push_back("?");
-        whereArgs.push_back(std::move(value));
+        bindArgs.push_back(std::move(value));
     }
     AppendWhereClauseWithInOrNotIn(" NOT IN ", field, replaceValues);
     return this;
@@ -500,7 +518,7 @@ void AbsPredicates::Initial()
     distinct = false;
     isNeedAnd = false;
     isSorted = false;
-    whereArgs.clear();
+    bindArgs.clear();
     whereClause.clear();
     order.clear();
     group.clear();
@@ -572,12 +590,29 @@ void AbsPredicates::SetWhereClause(const std::string &whereClause)
 
 std::vector<std::string> AbsPredicates::GetWhereArgs() const
 {
+    std::vector<std::string> whereArgs;
+    for (auto &arg : this->bindArgs) {
+        whereArgs.push_back(std::get<std::string>(arg.value));
+    }
     return whereArgs;
 }
 
 void AbsPredicates::SetWhereArgs(const std::vector<std::string> &whereArgs)
 {
-    this->whereArgs = whereArgs;
+    this->bindArgs.clear();
+    for (auto &arg : whereArgs) {
+        this->bindArgs.push_back(ValueObject(std::move(arg)));
+    }
+}
+
+std::vector<ValueObject> AbsPredicates::GetBindArgs() const
+{
+    return bindArgs;
+}
+
+void AbsPredicates::SetBindArgs(const std::vector<ValueObject> &bindArgs)
+{
+    this->bindArgs = bindArgs;
 }
 
 std::string AbsPredicates::GetOrder() const

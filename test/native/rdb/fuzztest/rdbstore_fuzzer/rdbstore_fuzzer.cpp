@@ -195,11 +195,11 @@ void RdbQueryFuzz1(const uint8_t *data, size_t size)
     std::string vectorElem(data, data + size);
     AbsRdbPredicates predicates(tableName);
 
-    predicates.EqualTo("name", valName);
+    predicates.EqualTo("name", ValueObject(valName));
     store->Query(predicates, {vectorElem});
 
     predicates.Clear();
-    predicates.NotEqualTo("name", valName);
+    predicates.NotEqualTo("name", ValueObject(valName));
     store->Query(predicates, {vectorElem});
 
     predicates.Clear();
@@ -239,43 +239,44 @@ void RdbQueryFuzz2(const uint8_t *data, size_t size)
 
     std::string tableName(data, data + size);
     std::string valName(data, data + size);
-    std::string valAge(data, data + size);
-    std::string valAgeChange(data, data + size);
-    std::string vectorElem(data, data + size);
+    ValueObject valAge(std::string(data, data + size));
+    ValueObject valAgeChange(std::string(data, data + size));
+    std::vector<std::string> bindaArgs({std::string(data, data + size)});
+    std::vector<ValueObject> vectorElem({std::string(data, data + size)});
 
     AbsRdbPredicates predicates(tableName);
 
     predicates.Clear();
     predicates.Between("age", valAge, valAgeChange);
-    store->Query(predicates, {vectorElem});
+    store->Query(predicates, bindaArgs);
 
     predicates.Clear();
     predicates.NotBetween("age", valAge, valAgeChange);
-    store->Query(predicates, {vectorElem});
+    store->Query(predicates, bindaArgs);
 
     predicates.Clear();
     predicates.GreaterThan("age", valAge);
-    store->Query(predicates, {vectorElem});
+    store->Query(predicates, bindaArgs);
 
     predicates.Clear();
     predicates.LessThan("age", valAgeChange);
-    store->Query(predicates, {vectorElem});
+    store->Query(predicates, bindaArgs);
 
     predicates.Clear();
     predicates.GreaterThanOrEqualTo("age", valAge);
-    store->Query(predicates, {vectorElem});
+    store->Query(predicates, bindaArgs);
 
     predicates.Clear();
     predicates.LessThanOrEqualTo("age", valAgeChange);
-    store->Query(predicates, {vectorElem});
+    store->Query(predicates, bindaArgs);
 
     predicates.Clear();
-    predicates.In("name", {vectorElem});
-    store->Query(predicates, {vectorElem});
+    predicates.In("name", vectorElem);
+    store->Query(predicates, bindaArgs);
 
     predicates.Clear();
-    predicates.NotIn("name", {vectorElem});
-    store->Query(predicates, {vectorElem});
+    predicates.NotIn("name", vectorElem);
+    store->Query(predicates, bindaArgs);
     store->ExecuteSql("DELETE FROM test");
 }
 }

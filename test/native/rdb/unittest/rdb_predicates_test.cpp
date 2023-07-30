@@ -1617,30 +1617,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
 }
 
 /* *
- * @tc.name: RdbStore_ToString_025
- * @tc.desc: Normal testCase of RdbPredicates for clear method
- * @tc.type: FUNC
- * @tc.require: AR000FKD4F
- */
-HWTEST_F(RdbStorePredicateTest, RdbStore_ToString_025, TestSize.Level1)
-{
-    RdbPredicates predicates1("AllDataType");
-    predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")
-        ->BeginWrap()
-        ->EqualTo("integerValue", "1")
-        ->Or()
-        ->EqualTo("integerValue", std::to_string(INT_MAX))
-        ->EndWrap()
-        ->OrderByDesc("integerValue")
-        ->Limit(2);
-    std::string toString = predicates1.ToString();
-    std::string result = "TableName = AllDataType, {WhereClause:stringValue = ? AND  ( integerValue = ?  OR "
-                         "integerValue = ?  ) , whereArgs:{ABCDEFGHIJKLMN, 1, 2147483647, }, order:integerValue "
-                         "DESC , group:, index:, limit:2, offset:-2147483648, distinct:0, isNeedAnd:1, isSorted:1}";
-    EXPECT_EQ(result, toString);
-}
-
-/* *
  * @tc.name: RdbStore_InDevices_InAllDevices_026
  * @tc.desc: Normal testCase of RdbPredicates for InDevices and InAllDevices method
  * @tc.type: FUNC
