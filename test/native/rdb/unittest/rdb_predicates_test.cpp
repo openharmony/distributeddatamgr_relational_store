@@ -1617,6 +1617,30 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
 }
 
 /* *
+ * @tc.name: RdbStore_ToString_025
+ * @tc.desc: Normal testCase of RdbPredicates for clear method
+ * @tc.type: FUNC
+ * @tc.require: AR000FKD4F
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_ToString_025, TestSize.Level1)
+{
+    RdbPredicates predicates1("AllDataType");
+    predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")
+        ->BeginWrap()
+        ->EqualTo("integerValue", "1")
+        ->Or()
+        ->EqualTo("integerValue", std::to_string(INT_MAX))
+        ->EndWrap()
+        ->OrderByDesc("integerValue")
+        ->Limit(2);
+    std::string toString = predicates1.ToString();
+    std::string result = "TableName = AllDataType, {WhereClause:stringValue = ? AND  ( integerValue = ?  OR "
+                         "integerValue = ?  ) , bindArgs:{ABCDEFGHIJKLMN, 1, 2147483647, }, order:integerValue "
+                         "DESC , group:, index:, limit:2, offset:-2147483648, distinct:0, isNeedAnd:1, isSorted:1}";
+    EXPECT_EQ(result, toString);
+}
+
+/* *
  * @tc.name: RdbStore_InDevices_InAllDevices_026
  * @tc.desc: Normal testCase of RdbPredicates for InDevices and InAllDevices method
  * @tc.type: FUNC
@@ -2071,7 +2095,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_IndexedBy_002, TestSize.Level1)
 HWTEST_F(RdbStorePredicateTest, RdbStore_In_001, TestSize.Level1)
 {
     RdbPredicates predicates("AllDataType");
-    predicates.In("", {"1", "3"});
+    predicates.In("", std::vector<ValueObject>{ "1", "3" });
 
     std::vector<std::string> columns;
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
@@ -2087,7 +2111,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_In_001, TestSize.Level1)
 HWTEST_F(RdbStorePredicateTest, RdbStore_In_002, TestSize.Level1)
 {
     RdbPredicates predicates("AllDataType");
-    predicates.In("id", {});
+    predicates.In("id", std::vector<ValueObject>{});
 
     std::vector<std::string> columns;
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);

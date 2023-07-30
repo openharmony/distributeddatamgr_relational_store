@@ -29,9 +29,9 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 
 SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<RdbStoreImpl> store, SqliteConnectionPool *connectionPool,
-    std::string path, std::string sql, const std::vector<std::string> &bindArgs)
+    std::string path, std::string sql, const std::vector<ValueObject> &bindArgs)
     : AbsSharedResultSet(path), store_(store), connectionPool_(connectionPool), resultSetBlockCapacity(0),
-      isOnlyFillResultSetBlock(false), qrySql(sql), selectionArgVec(bindArgs), rowNum(NO_COUNT)
+      isOnlyFillResultSetBlock(false), qrySql(sql), bindArgs_(std::move(bindArgs)), rowNum(NO_COUNT)
 {
 }
 
@@ -47,7 +47,7 @@ std::shared_ptr<SqliteStatement> SqliteSharedResultSet::PrepareStep(SqliteConnec
     }
 
     std::shared_ptr<SqliteStatement> sqliteStatement = connection->BeginStepQuery(errCode,
-        qrySql, selectionArgVec);
+        qrySql, bindArgs_);
     if (sqliteStatement == nullptr) {
         connection->EndStepQuery();
     }
@@ -153,21 +153,13 @@ void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
 {
     ClearBlock();
 
-    std::vector<ValueObject> bindArgs;
-    size_t size = selectionArgVec.size();
-    bindArgs.reserve(size);
-    for (size_t i = 0; i < size; i++) {
-        ValueObject vauObj(selectionArgVec[i]);
-        bindArgs.push_back(vauObj);
-    }
-
     SqliteConnection* connection = connectionPool_->AcquireConnection(true);
     if (connection == nullptr) {
         return;
     }
 
     if (rowNum == NO_COUNT) {
-        connection->ExecuteForSharedBlock(rowNum, qrySql, bindArgs, GetBlock(), requiredPos, requiredPos, true);
+        connection->ExecuteForSharedBlock(rowNum, qrySql, bindArgs_, GetBlock(), requiredPos, requiredPos, true);
         resultSetBlockCapacity = static_cast<int>(GetBlock()->GetRowNum());
         if (resultSetBlockCapacity > 0) {
             GetBlock()->SetStartPos(requiredPos);
@@ -178,7 +170,7 @@ void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
         int blockRowNum = rowNum;
         int startPos =
             isOnlyFillResultSetBlock ? requiredPos : PickFillBlockStartPosition(requiredPos, resultSetBlockCapacity);
-        connection->ExecuteForSharedBlock(blockRowNum, qrySql, bindArgs, GetBlock(), startPos, requiredPos, false);
+        connection->ExecuteForSharedBlock(blockRowNum, qrySql, bindArgs_, GetBlock(), startPos, requiredPos, false);
         int currentBlockCapacity = static_cast<int>(GetBlock()->GetRowNum());
         GetBlock()->SetStartPos((uint32_t)startPos);
         GetBlock()->SetBlockPos(requiredPos - startPos);

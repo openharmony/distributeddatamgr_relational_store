@@ -55,6 +55,11 @@ public:
     API_EXPORT void Clear() override;
 
     /**
+     * @brief Obtains the parameters of the current AbsRdbPredicates object.
+     */
+    API_EXPORT std::string ToString() const;
+
+    /**
      * @brief Obtains the table name.
      */
     API_EXPORT std::string GetTableName() const;
