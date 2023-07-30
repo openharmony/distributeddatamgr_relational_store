@@ -39,7 +39,7 @@ public:
     API_EXPORT ~PredicatesUtils() {}
 
     /**
-     * @brief Set the parameter of whereClause and whereArgs of the specified Predicates.
+     * @brief Set the parameter of whereClause and bindArgs of the specified Predicates.
      */
     API_EXPORT static void SetWhereClauseAndArgs(AbsPredicates *predicates, std::string whereClause,
         std::vector<std::string> whereArgs);

@@ -55,11 +55,6 @@ public:
     API_EXPORT void Clear() override;
 
     /**
-     * @brief Obtains the parameters of the current AbsRdbPredicates object.
-     */
-    API_EXPORT std::string ToString() const;
-
-    /**
      * @brief Obtains the table name.
      */
     API_EXPORT std::string GetTableName() const;
@@ -94,7 +89,7 @@ public:
      *
      * @return Returns the self.
      */
-    API_EXPORT AbsRdbPredicates* EqualTo(const std::string &field, const std::string &value) override;
+    API_EXPORT AbsRdbPredicates* EqualTo(const std::string &field, const ValueObject &value) override;
 
     /**
      * @brief Restricts the value of the field to be not equal to the specified value to the remote AbsRdbPredicates.
@@ -106,7 +101,7 @@ public:
      *
      * @return Returns the self.
      */
-    API_EXPORT AbsRdbPredicates* NotEqualTo(const std::string &field, const std::string &value) override;
+    API_EXPORT AbsRdbPredicates* NotEqualTo(const std::string &field, const ValueObject &value) override;
 
     /**
      * @brief Adds an and condition to the remote AbsRdbPredicates.

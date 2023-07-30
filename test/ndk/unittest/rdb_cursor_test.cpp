@@ -115,7 +115,7 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_001, TestSize.Level1)
     errCode = cursor->getColumnType(cursor, 0, &type);
     EXPECT_EQ(type, OH_ColumnType::TYPE_INT64);
 
-    errCode = cursor->getColumnType(cursor, 1, &type);;
+    errCode = cursor->getColumnType(cursor, 1, &type);
     EXPECT_EQ(type, OH_ColumnType::TYPE_TEXT);
 
     errCode = cursor->getColumnType(cursor, 2, &type);
