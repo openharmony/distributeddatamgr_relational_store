@@ -17,7 +17,6 @@
 #define NATIVE_RDB_ABS_SHARED_RESULT_SET_H
 
 #include <memory>
-#include <shared_mutex>
 #include <string>
 #include <thread>
 #include <vector>
@@ -123,7 +122,7 @@ public:
      * @return Returns the value of the specified column as a double.
      */
     API_EXPORT int GetAsset(int32_t col, ValueObject::Asset &value) override;
-	
+
 	/**
      * @brief Obtains the value of the specified column in the current row as assets.
      *
@@ -184,7 +183,7 @@ public:
     /**
      * @brief Obtains a block from the {@link SharedResultSet}.
      */
-    API_EXPORT AppDataFwk::SharedBlock *GetBlock() const override;
+    API_EXPORT AppDataFwk::SharedBlock *GetBlock() override;
 
     /**
      * @brief Called when the position of the result set changes.
@@ -211,15 +210,15 @@ public:
     /**
      * @brief Checks whether an {@code AbsSharedResultSet} object contains shared blocks.
      */
-    API_EXPORT bool HasBlock() const;
+    API_EXPORT bool HasBlock();
 
 protected:
     int CheckState(int columnIndex);
     void ClearBlock();
+    void InitBlock();
     void ClosedBlock();
     virtual void Finalize();
 
-    std::shared_mutex mutex_;
 private:
     // The default position of the cursor
     static const int INIT_POS = -1;
@@ -227,7 +226,8 @@ private:
     friend class ISharedResultSetStub;
     friend class ISharedResultSetProxy;
     // The SharedBlock owned by this AbsSharedResultSet
-    AppDataFwk::SharedBlock *sharedBlock_  = nullptr;
+    AppDataFwk::SharedBlock *sharedBlock_ = nullptr;
+    std::string sharedBlockName_ = "defaultSharedBlockName";
 };
 } // namespace NativeRdb
 } // namespace OHOS

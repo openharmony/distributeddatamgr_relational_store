@@ -21,11 +21,11 @@
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 
-AbsRdbPredicates::AbsRdbPredicates(std::string tableName)
+AbsRdbPredicates::AbsRdbPredicates(const std::string &tableName)
 {
     if (tableName.empty()) {
         tableName_ = "";
-        LOG_INFO("no tableName specified.");
+        LOG_DEBUG("no tableName specified.");
         return;
     }
     tableName_ = std::move(tableName);
@@ -34,11 +34,11 @@ AbsRdbPredicates::AbsRdbPredicates(std::string tableName)
 #endif
 }
 
-AbsRdbPredicates::AbsRdbPredicates(std::vector<std::string> tables)
+AbsRdbPredicates::AbsRdbPredicates(const std::vector<std::string> &tables)
 {
     if (tables.empty()) {
         tableName_ = "";
-        LOG_INFO("no tableName specified.");
+        LOG_DEBUG("no tableName specified.");
         return;
     }
     tableName_ = *(tables.begin());
@@ -70,7 +70,7 @@ std::vector<std::string> AbsRdbPredicates::GetJoinTypes()
  * Sets the join types in the predicates. The value can be {@code INNER JOIN}, {@code LEFT OUTER JOIN},
  * and {@code CROSS JOIN}.
  */
-void AbsRdbPredicates::SetJoinTypes(const std::vector<std::string> joinTypes)
+void AbsRdbPredicates::SetJoinTypes(const std::vector<std::string> &joinTypes)
 {
     this->joinTypes = joinTypes;
 }
@@ -86,7 +86,7 @@ std::vector<std::string> AbsRdbPredicates::GetJoinTableNames()
 /**
  * Sets the database table names of the joins in the predicates.
  */
-void AbsRdbPredicates::SetJoinTableNames(const std::vector<std::string> joinTableNames)
+void AbsRdbPredicates::SetJoinTableNames(const std::vector<std::string> &joinTableNames)
 {
     this->joinTableNames = joinTableNames;
 }
@@ -102,7 +102,7 @@ std::vector<std::string> AbsRdbPredicates::GetJoinConditions()
 /**
  * Sets the join conditions required in the predicates.
  */
-void AbsRdbPredicates::SetJoinConditions(const std::vector<std::string> joinConditions)
+void AbsRdbPredicates::SetJoinConditions(const std::vector<std::string> &joinConditions)
 {
     this->joinConditions = joinConditions;
 }
@@ -179,14 +179,14 @@ const DistributedRdb::PredicatesMemo& AbsRdbPredicates::GetDistributedPredicates
     return predicates_;
 }
 
-AbsRdbPredicates* AbsRdbPredicates::EqualTo(std::string field, std::string value)
+AbsRdbPredicates* AbsRdbPredicates::EqualTo(const std::string &field, const std::string &value)
 {
     DISTRIBUTED_DATA_HITRACE("AbsRdbPredicates::EqualTo");
     predicates_.AddOperation(DistributedRdb::EQUAL_TO, field, value);
     return (AbsRdbPredicates *)AbsPredicates::EqualTo(field, value);
 }
 
-AbsRdbPredicates* AbsRdbPredicates::NotEqualTo(std::string field, std::string value)
+AbsRdbPredicates* AbsRdbPredicates::NotEqualTo(const std::string &field, const std::string &value)
 {
     predicates_.AddOperation(DistributedRdb::NOT_EQUAL_TO, field, value);
     return (AbsRdbPredicates *)AbsPredicates::NotEqualTo(field, value);
@@ -208,14 +208,14 @@ AbsRdbPredicates* AbsRdbPredicates::Or()
     return (AbsRdbPredicates *)AbsPredicates::Or();
 }
 
-AbsRdbPredicates* AbsRdbPredicates::OrderByAsc(std::string field)
+AbsRdbPredicates* AbsRdbPredicates::OrderByAsc(const std::string &field)
 {
     std::string isAsc = "true";
     predicates_.AddOperation(DistributedRdb::ORDER_BY, field, isAsc);
     return (AbsRdbPredicates *)AbsPredicates::OrderByAsc(field);
 }
 
-AbsRdbPredicates* AbsRdbPredicates::OrderByDesc(std::string field)
+AbsRdbPredicates* AbsRdbPredicates::OrderByDesc(const std::string &field)
 {
     std::string isAsc = "false";
     predicates_.AddOperation(DistributedRdb::ORDER_BY, field, isAsc);

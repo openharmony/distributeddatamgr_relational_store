@@ -24,8 +24,10 @@
 #include "rdb_trace.h"
 #include "sqlite_global_config.h"
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_security_manager.h"
+#endif
 #include "security_policy.h"
 #endif
 #include "sqlite_utils.h"
@@ -64,7 +66,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
 
     std::shared_ptr<RdbStoreImpl> rdbStore(new (std::nothrow) RdbStoreImpl(config, errCode),
         [](RdbStoreImpl *ptr) {
-            LOG_INFO("delete %{public}s as no more used.", SqliteUtils::Anonymous(ptr->GetPath()).c_str());
+            LOG_DEBUG("delete %{public}s as no more used.", SqliteUtils::Anonymous(ptr->GetPath()).c_str());
             delete ptr;
         });
     if (errCode != E_OK) {
@@ -156,7 +158,7 @@ int RdbStoreManager::ProcessOpenCallback(
 }
 int RdbStoreManager::SetSecurityLabel(const RdbStoreConfig &config)
 {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     return SecurityPolicy::SetSecurityLabel(config);
 #endif
     return E_OK;

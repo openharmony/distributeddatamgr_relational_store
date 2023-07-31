@@ -28,7 +28,7 @@ public:
     static napi_value New(napi_env env, napi_callback_info info);
 
     enum {
-        /* exported js Action  is (CloudData::Action-1) */
+        /* exported js ClearAction  is (CloudData::ClearAction-1) */
         CLEAR_CLOUD_INFO = 0,
         CLEAR_CLOUD_DATA_AND_INFO = 1,
     };

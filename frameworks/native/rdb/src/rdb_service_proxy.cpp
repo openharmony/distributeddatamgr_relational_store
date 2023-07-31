@@ -73,25 +73,19 @@ void RdbServiceProxy::OnDataChange(const Origin &origin, const PrimaryFields &pr
         origin.dataType, SqliteUtils::Anonymous(origin.store).c_str());
     auto name = RemoveSuffix(origin.store);
     observers_.ComputeIfPresent(name,
-        [&origin, &primaries, info = std::move(changeInfo)](const auto &key, const std::list<ObserverParam> &value) mutable {
-            auto size = value.size();
-            for (const auto &params : value) {
-                params.observer->OnChange(origin, primaries, --size > 0 ? ChangeInfo(info) : std::move(info));
-            }
-            return !value.empty();
-        });
+        [&origin, &primaries, info = std::move(changeInfo)](const auto &key, const std::list<ObserverParam> &value)
+            mutable {
+                auto size = value.size();
+                for (const auto &params : value) {
+                    params.observer->OnChange(origin, primaries, --size > 0 ? ChangeInfo(info) : std::move(info));
+                }
+                return !value.empty();
+            });
 }
 
 std::string RdbServiceProxy::ObtainDistributedTableName(const std::string &device, const std::string &table)
 {
-    MessageParcel reply;
-    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_OBTAIN_TABLE), reply, device, table);
-    if (status != RDB_OK) {
-        LOG_ERROR("status:%{public}d, device:%{public}.6s, table:%{public}s", status,
-            SqliteUtils::Anonymous(device).c_str(), SqliteUtils::Anonymous(table).c_str());
-        return "";
-    }
-    return reply.ReadString();
+    return "";
 }
 
 int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param)

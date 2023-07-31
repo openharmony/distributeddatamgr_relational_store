@@ -32,10 +32,11 @@ describe('CloudConfigCallbackTest', function () {
                 if (err == undefined) {
                     expect(null).assertFail();
                     console.info('EnabledCloudInvalidArgsCallbackTest enableCloud success');
-                } else {
-                    console.error('EnabledCloudInvalidArgsCallbackTest enableCloud fail' + `, error code is ${err.code}, message is ${err.message}`);
-                    expect(null).assertFail();
+                    done();
+                    return;
                 }
+                console.error('EnabledCloudInvalidArgsCallbackTest enableCloud fail' + `, error code is ${err.code}, message is ${err.message}`);
+                expect(null).assertFail();
                 done();
             });
         } catch (e) {
@@ -52,18 +53,19 @@ describe('CloudConfigCallbackTest', function () {
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('EnabledCloudInvalidArgsNumCallbackTest', 0, async function (done) {
+    it('EnabledCloudInvalidArgsNumCallbackTest', 0, function (done) {
         console.info('EnabledCloudInvalidArgsNumCallbackTest');
         try {
             let account = "test_id";
-            await cloudData.Config.enableCloud(account, function (err) {
+            cloudData.Config.enableCloud(account, function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();
                     console.info('EnabledCloudInvalidArgsNumCallbackTest enableCloud success');
-                } else {
-                    console.error('EnabledCloudCallbackTest enableCloud fail' + `, error code is ${err.code}, message is ${err.message}`);
-                    expect(null).assertFail();
+                    done();
+                    return;
                 }
+                console.error('EnabledCloudCallbackTest enableCloud fail' + `, error code is ${err.code}, message is ${err.message}`);
+                expect(null).assertFail();
                 done();
             });
         } catch (e) {
@@ -79,23 +81,25 @@ describe('CloudConfigCallbackTest', function () {
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('DisableCloudInvalidArgsCallbackTest', 0, async function (done) {
+    it('DisableCloudInvalidArgsCallbackTest', 0, function (done) {
         console.info('DisableCloudInvalidArgsCallbackTest');
         try {
-            await cloudData.Config.disableCloud(null, function (err) {
+            cloudData.Config.disableCloud(null, function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();
                     console.info('DisableCloudInvalidArgsCallbackTest disableCloud success');
-                } else {
-                    console.error('DisableCloudInvalidArgsCallbackTest disableCloud fail' + `, error code is ${err.code}, message is ${err.message}`);
-                    expect(null).assertFail();
+                    done();
+                    return;
                 }
+                console.error('DisableCloudInvalidArgsCallbackTest disableCloud fail' + `, error code is ${err.code}, message is ${err.message}`);
+                expect(null).assertFail();
+                done();
             });
         } catch (e) {
             console.error('DisableCloudInvalidArgsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -104,23 +108,25 @@ describe('CloudConfigCallbackTest', function () {
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('DisableCloudInvalidArgsNumsCallbackTest', 0, async function (done) {
+    it('DisableCloudInvalidArgsNumsCallbackTest', 0, function (done) {
         console.info('DisableCloudInvalidArgsNumsCallbackTest');
         try {
-            await cloudData.Config.disableCloud(function (err) {
+            cloudData.Config.disableCloud(function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();
                     console.info('DisableCloudInvalidArgsNumsCallbackTest disableCloud success');
-                } else {
-                    console.error('DisableCloudInvalidArgsNumsCallbackTest disableCloud fail' + `, error code is ${err.code}, message is ${err.message}`);
-                    expect(null).assertFail();
+                    done();
+                    return;
                 }
+                console.error('DisableCloudInvalidArgsNumsCallbackTest disableCloud fail' + `, error code is ${err.code}, message is ${err.message}`);
+                expect(null).assertFail();
+                done();
             });
         } catch (e) {
             console.error('DisableCloudInvalidArgsNumsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -129,25 +135,27 @@ describe('CloudConfigCallbackTest', function () {
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('ChangeAppCloudInvalidArgsTest', 0, async function (done) {
+    it('ChangeAppCloudInvalidArgsCallbackTest', 0, function (done) {
         console.info('ChangeAppCloudInvalidArgsCallbackTest');
         try {
             let account = "test_id";
             let bundleName = "test_bundleName";
-            await cloudData.Config.changeAppCloudSwitch(account, bundleName, null, function (err) {
+            cloudData.Config.changeAppCloudSwitch(account, bundleName, null, function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();
                     console.info('ChangeAppCloudInvalidArgsCallbackTest changeAppCloudSwitch success');
-                } else {
-                    console.error('ChangeAppCloudInvalidArgsCallbackTest changeAppCloudSwitch fail' + `, error code is ${err.code}, message is ${err.message}`);
-                    expect(null).assertFail();
+                    done();
+                    return;
                 }
+                console.error('ChangeAppCloudInvalidArgsCallbackTest changeAppCloudSwitch fail' + `, error code is ${err.code}, message is ${err.message}`);
+                expect(null).assertFail();
+                done();
             });
         } catch (e) {
             console.error('ChangeAppCloudInvalidArgsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -156,25 +164,27 @@ describe('CloudConfigCallbackTest', function () {
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('ChangeAppCloudInvalidArgsNumsCallbackTest', 0, async function (done) {
+    it('ChangeAppCloudInvalidArgsNumsCallbackTest', 0, function (done) {
         console.info('ChangeAppCloudInvalidArgsNumsCallbackTest');
         try {
             let account = "test_id";
             let bundleName = "test_bundleName";
-            await cloudData.Config.changeAppCloudSwitch(account, bundleName, function (err) {
+            cloudData.Config.changeAppCloudSwitch(account, bundleName, function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();
                     console.info('ChangeAppCloudInvalidArgsNumsCallbackTest changeAppCloudSwitch success');
-                } else {
-                    console.error('ChangeAppCloudInvalidArgsNumsCallbackTest changeAppCloudSwitch fail' + `, error code is ${err.code}, message is ${err.message}`);
-                    expect(null).assertFail();
+                    done();
+                    return;
                 }
+                console.error('ChangeAppCloudInvalidArgsNumsCallbackTest changeAppCloudSwitch fail' + `, error code is ${err.code}, message is ${err.message}`);
+                expect(null).assertFail();
+                done();
             });
         } catch (e) {
             console.error('ChangeAppCloudInvalidArgsNumsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -183,24 +193,26 @@ describe('CloudConfigCallbackTest', function () {
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('NotifyChangeInvalidArgsCallbackTest', 0, async function (done) {
+    it('NotifyChangeInvalidArgsCallbackTest', 0, function (done) {
         console.info('NotifyChangeInvalidArgsCallbackTest');
         try {
             let account = "test_id";
-            await cloudData.Config.notifyDataChange(account, null, function (err) {
+            cloudData.Config.notifyDataChange(account, null, function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();
                     console.info('NotifyChangeInvalidArgsCallbackTest notifyDataChange success');
-                } else {
-                    console.error('NotifyChangeInvalidArgsCallbackTest notifyDataChange fail' + `, error code is ${err.code}, message is ${err.message}`);
-                    expect(null).assertFail();
+                    done();
+                    return;
                 }
+                console.error('NotifyChangeInvalidArgsCallbackTest notifyDataChange fail' + `, error code is ${err.code}, message is ${err.message}`);
+                expect(null).assertFail();
+                done();
             });
         } catch (e) {
             console.error('NotifyChangeInvalidArgsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -209,23 +221,83 @@ describe('CloudConfigCallbackTest', function () {
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
-    it('NotifyChangeInvalidArgsNumsCallbackTest', 0, async function (done) {
+    it('NotifyChangeInvalidArgsNumsCallbackTest', 0, function (done) {
         console.info('NotifyChangeInvalidArgsNumsCallbackTest');
         try {
             let account = "test_id";
-            await cloudData.Config.notifyDataChange(account, function (err) {
+            cloudData.Config.notifyDataChange(account, function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();
                     console.info('NotifyChangeInvalidArgsNumsCallbackTest notifyDataChange success');
-                } else {
-                    console.error('NotifyChangeInvalidArgsNumsCallbackTest notifyDataChange fail' + `, error code is ${err.code}, message is ${err.message}`);
-                    expect(null).assertFail();
+                    done();
+                    return;
                 }
+                console.error('NotifyChangeInvalidArgsNumsCallbackTest notifyDataChange fail' + `, error code is ${err.code}, message is ${err.message}`);
+                expect(null).assertFail();
+                done();
             });
         } catch (e) {
             console.error('NotifyChangeInvalidArgsNumsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
+    })
+
+    /**
+     * @tc.name ClearInvalidArgsNumsCallbackTest
+     * @tc.desc Test Js Api Clear which parameters number are less
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('ClearInvalidArgsNumsCallbackTest', 0, function (done) {
+        console.info('ClearInvalidArgsNumsCallbackTest');
+        try {
+            let account = "test_id";
+            cloudData.Config.clear(account, function (err) {
+                if (err == undefined) {
+                    expect(null).assertFail();
+                    console.info('ClearInvalidArgsNumsCallbackTest clear success');
+                    done();
+                    return;
+                }
+                console.error('ClearInvalidArgsNumsCallbackTest clear fail' + `, error code is ${err.code}, message is ${err.message}`);
+                expect(null).assertFail();
+                done();
+            });
+        } catch (e) {
+            console.error('ClearInvalidArgsNumsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 401).assertTrue();
+            done();
+        }
+    })
+
+    /**
+     * @tc.name ClearInvalidArgsCallbackTest
+     * @tc.desc Test Js Api Clear which parameters are invalid
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('ClearInvalidArgsCallbackTest', 0, function (done) {
+        console.info('ClearInvalidArgsNumsCallbackTest');
+        try {
+            let account = "test_id";
+            let bundleName1 = "test_bundleName1";
+            let appActions = {[bundleName1]: 3};
+            cloudData.Config.clear(account, appActions, function (err) {
+                if (err == undefined) {
+                    expect(null).assertFail();
+                    console.info('CleanInvalidArgsCallbackTest clear success');
+                    done();
+                    return;
+                }
+                console.error('ClearInvalidArgsCallbackTest clear fail' + `, error code is ${err.code}, message is ${err.message}`);
+                expect(null).assertFail();
+                done();
+            });
+        } catch (e) {
+            console.error('ClearInvalidArgsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 401).assertTrue();
+            done();
+        }
     })
 })

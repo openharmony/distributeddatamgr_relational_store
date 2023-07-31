@@ -200,5 +200,63 @@ describe('rdbStorePromiseTest', function () {
         console.log(TAG + "************* testRdbStorePromiseTest0005 end *************")
     })
 
+    /**
+     * @tc.name rdb getRdbStore err params
+     * @tc.number testRdbStorePromiseTest0006
+     * @tc.desc rdb getRdbStore with dataGroupId in FA mode
+     */
+    it('testRdbStorePromiseTest0006', 0, async function (done) {
+        console.log(TAG + "************* testRdbStorePromiseTest0006 start *************")
+        try {
+            const STORE_CONFIG = {
+                name: "dataGroupId.db",
+                encrypt: false,
+                securityLevel: data_relationalStore.SecurityLevel.S1,
+                dataGroupId: "12345678",
+            }
+            data_relationalStore.getRdbStore(context, STORE_CONFIG).then((rdbStore) => {
+                console.log("Get RdbStore successfully.")
+                expect(false).assertTrue()
+            }).catch((err) => {
+                console.info("Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
+                expect(false).assertTrue()
+            })
+        } catch (err) {
+            console.info("catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
+            expect("14801001").assertEqual(err.code)
+            done()
+        }
+        done()
+        console.log(TAG + "************* testRdbStorePromiseTest0006 end *************")
+    })
+
+    /**
+     * @tc.name rdb deleteRdbStore use storeConfig
+     * @tc.number testRdbStorePromiseTest0007
+     * @tc.desc rdb deleteRdbStore use storeConfig
+     */
+    it('testRdbStorePromiseTest0007', 0, async function (done) {
+        console.log(TAG + "************* testRdbStorePromiseTest0007 start *************");
+        const STORE_CONFIG = {
+            name: "dataGroupId.db",
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+        }
+        await data_relationalStore.getRdbStore(context, STORE_CONFIG)
+        try {
+            data_relationalStore.deleteRdbStore(context, STORE_CONFIG).then((err) => {
+                console.log("Delete RdbStore successfully.")
+                done()
+            }).catch((err) => {
+                console.info("Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
+                expect(false).assertTrue()
+            })
+        } catch(err) {
+            console.info("catch err: Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
+            expect(false).assertTrue()
+        }
+        done()
+        console.log(TAG + "************* testRdbStorePromiseTest0007 end *************")
+    })
+
     console.log(TAG + "*************Unit Test End*************");
 })

@@ -23,15 +23,51 @@
 #include <thread>
 #include <shared_mutex>
 
+#include "dataobs_mgr_client.h"
+#include "data_ability_observer_stub.h"
 #include "rdb_store.h"
 #include "rdb_store_config.h"
+#include "refbase.h"
 #include "sqlite_connection_pool.h"
 #include "sqlite_statement.h"
 
 namespace OHOS {
 class ExecutorPool;
 }
+
 namespace OHOS::NativeRdb {
+class RdbStoreLocalObserver {
+public:
+    explicit RdbStoreLocalObserver(DistributedRdb::RdbStoreObserver *observer) : observer_(observer) {};
+    virtual ~RdbStoreLocalObserver() {};
+    void OnChange()
+    {
+        observer_->OnChange();
+    }
+    DistributedRdb::RdbStoreObserver *getObserver()
+    {
+        return observer_;
+    }
+private:
+    DistributedRdb::RdbStoreObserver *observer_ = nullptr;
+};
+
+class RdbStoreLocalSharedObserver : public AAFwk::DataAbilityObserverStub {
+public:
+    explicit RdbStoreLocalSharedObserver(DistributedRdb::RdbStoreObserver *observer) : observer_(observer) {};
+    virtual ~RdbStoreLocalSharedObserver() {};
+    void OnChange() override
+    {
+        observer_->OnChange();
+    }
+    DistributedRdb::RdbStoreObserver *getObserver()
+    {
+        return observer_;
+    }
+private:
+    DistributedRdb::RdbStoreObserver *observer_ = nullptr;
+};
+
 class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
 public:
     RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
@@ -116,6 +152,8 @@ public:
 
     int UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;
 
+    int Notify(const std::string &event) override;
+
     // user must use UDID
     bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) override;
 
@@ -141,6 +179,16 @@ private:
     std::map<PRIKey, Date> GetModifyTimeByRowId(
         const std::string &logTable, std::vector<PRIKey> &keys);
     std::string GetSqlArgs(size_t size);
+    Uri GetUri(const std::string &event);
+    int SubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
+    int SubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
+    int SubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
+
+    int UnSubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
+    int UnSubscribeLocalAll(const SubscribeOption& option);
+    int UnSubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
+    int UnSubscribeLocalSharedAll(const SubscribeOption& option);
+    int UnSubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;
@@ -157,10 +205,14 @@ private:
 
     mutable std::shared_mutex rwMutex_;
     static inline constexpr uint32_t INTERVAL = 500;
+    static constexpr const char *ROW_ID = "ROWID";
     std::set<std::string> cloudTables_;
 
     std::mutex mutex_;
     std::shared_ptr<std::set<std::string>> syncTables_;
+    static constexpr char SCHEME_RDB[] = "rdb://";
+    std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
+    std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
 };
 } // namespace OHOS::NativeRdb
 #endif

@@ -23,20 +23,22 @@ namespace OHOS {
 namespace NativeRdb {
 class RdbPredicates : public AbsRdbPredicates {
 public:
-    explicit RdbPredicates(std::string tableName);
+    explicit RdbPredicates(const std::string &tableName);
     ~RdbPredicates() override {}
 
     std::string GetJoinClause() const override;
-    RdbPredicates *CrossJoin(std::string tableName);
-    RdbPredicates *InnerJoin(std::string tableName);
-    RdbPredicates *LeftOuterJoin(std::string tableName);
-    RdbPredicates *Using(std::vector<std::string> fields);
-    RdbPredicates *On(std::vector<std::string> clauses);
+    RdbPredicates *CrossJoin(const std::string &tableName);
+    RdbPredicates *InnerJoin(const std::string &tableName);
+    RdbPredicates *LeftOuterJoin(const std::string &tableName);
+    RdbPredicates *Using(const std::vector<std::string> &fields);
+    RdbPredicates *On(const std::vector<std::string> &clauses);
+    std::string GetStatement();
+    std::vector<std::string> GetBindArgs();
 
 private:
     std::string ProcessJoins() const;
     std::string GetGrammar(int type) const;
-    RdbPredicates *Join(int join, std::string tableName);
+    RdbPredicates *Join(int join, const std::string &tableName);
 };
 } // namespace NativeRdb
 } // namespace OHOS

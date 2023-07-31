@@ -262,7 +262,7 @@ SqliteConnection::~SqliteConnection()
         if (stepStatement != nullptr) {
             stepStatement->Finalize();
         }
-        int errCode = sqlite3_close(dbHandle);
+        int errCode = sqlite3_close_v2(dbHandle);
         if (errCode != SQLITE_OK) {
             LOG_ERROR("SqliteConnection ~SqliteConnection: could not close database err = %{public}d", errCode);
         }
@@ -689,6 +689,9 @@ int SqliteConnection::ExecuteGetString(
 std::shared_ptr<SqliteStatement> SqliteConnection::BeginStepQuery(
     int &errCode, const std::string &sql, const std::vector<std::string> &selectionArgs) const
 {
+    if (!stepStatement) {
+        return nullptr;
+    }
     errCode = stepStatement->Prepare(dbHandle, sql);
     if (errCode != E_OK) {
         return nullptr;
@@ -945,6 +948,9 @@ void SqliteConnection::CompAssets(std::map<std::string, ValueObject::Asset> &ass
         if (oldIt->first == newIt->first) {
             if (newIt->second.status == Status::STATUS_DELETE) {
                 oldIt->second.status = Status::STATUS_DELETE;
+                oldIt->second.hash = "";
+                oldIt->second.modifyTime = "";
+                oldIt->second.size = "";
             } else {
                 MergeAsset(oldIt->second, newIt->second);
             }
@@ -956,7 +962,7 @@ void SqliteConnection::CompAssets(std::map<std::string, ValueObject::Asset> &ass
             ++oldIt;
             continue;
         }
-        newIt = newAssets.erase(newIt);
+        newIt++;
     }
     for (auto &[key, value] : newAssets) {
         value.status = ValueObject::Asset::Status::STATUS_INSERT;
@@ -986,6 +992,7 @@ void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Ass
                 oldAsset.path = newAsset.path;
                 oldAsset.status = Status ::STATUS_UPDATE;
             }
+            return;
         default:
             return;
     }

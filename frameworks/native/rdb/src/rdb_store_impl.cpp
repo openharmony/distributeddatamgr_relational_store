@@ -58,7 +58,7 @@ using namespace OHOS::Rdb;
 
 int RdbStoreImpl::InnerOpen()
 {
-    LOG_INFO("open %{public}s.", SqliteUtils::Anonymous(rdbStoreConfig.GetPath()).c_str());
+    LOG_DEBUG("open %{public}s.", SqliteUtils::Anonymous(rdbStoreConfig.GetPath()).c_str());
     int errCode = E_OK;
     connectionPool = SqliteConnectionPool::Create(rdbStoreConfig, errCode);
     if (connectionPool == nullptr) {
@@ -99,7 +99,7 @@ void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
         pool_->Execute([param]() {
             auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
             if (err != E_OK || service == nullptr) {
-                LOG_WARN("GetRdbService failed, err is %{public}d.", err);
+                LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);
                 return;
             }
             err = service->GetSchema(param);
@@ -119,7 +119,7 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
     }
 
     auto logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
-    if (columnName == "rowid") {
+    if (SqliteUtils::StrToUpper(columnName) == ROW_ID) {
         return GetModifyTimeByRowId(logTable, keys);
     }
     std::vector<ValueObject> hashKeys;
@@ -224,7 +224,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
 
 RdbStoreImpl::~RdbStoreImpl()
 {
-    LOG_INFO("destroy.");
+    LOG_DEBUG("destroy.");
     if (connectionPool) {
         delete connectionPool;
     }
@@ -631,7 +631,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
     }
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        LOG_INFO("sql ddl execute.");
+        LOG_DEBUG("sql ddl execute.");
         errCode = connectionPool->ReOpenAvailableReadConnections();
     }
 
@@ -1383,7 +1383,61 @@ int RdbStoreImpl::Sync(const SyncOption &option, const std::vector<std::string> 
     return E_OK;
 }
 
-int RdbStoreImpl::Subscribe(const SubscribeOption &option, RdbStoreObserver *observer)
+Uri RdbStoreImpl::GetUri(const std::string &event)
+{
+    std::string rdbUri;
+    if (rdbStoreConfig.GetDataGroupId().empty()) {
+        rdbUri = SCHEME_RDB + rdbStoreConfig.GetBundleName() + "/" + path + "/" + event;
+    } else {
+        rdbUri = SCHEME_RDB + rdbStoreConfig.GetDataGroupId() + "/" + path + "/" + event;
+    }
+    return Uri(rdbUri);
+}
+
+int RdbStoreImpl::SubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    localObservers_.try_emplace(option.event);
+    auto &list = localObservers_.find(option.event)->second;
+    for (auto it = list.begin(); it != list.end(); it++) {
+        if ((*it)->getObserver() == observer) {
+            LOG_ERROR("duplicate subscribe");
+            return E_OK;
+        }
+    }
+
+    localObservers_[option.event].push_back(std::make_shared<RdbStoreLocalObserver>(observer));
+    return E_OK;
+}
+
+int RdbStoreImpl::SubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    localSharedObservers_.try_emplace(option.event);
+    auto &list = localSharedObservers_.find(option.event)->second;
+    for (auto it = list.begin(); it != list.end(); it++) {
+        if ((*it)->getObserver() == observer) {
+            LOG_ERROR("duplicate subscribe");
+            return E_OK;
+        }
+    }
+
+    auto client = OHOS::AAFwk::DataObsMgrClient::GetInstance();
+    if (client == nullptr) {
+        LOG_ERROR("Failed to get DataObsMgrClient.");
+        return E_GET_DATAOBSMGRCLIENT_FAIL;
+    }
+    sptr<RdbStoreLocalSharedObserver> localSharedObserver(new (std::nothrow) RdbStoreLocalSharedObserver(observer));
+    int32_t err = client->RegisterObserver(GetUri(option.event), localSharedObserver);
+    if (err != 0) {
+        LOG_ERROR("Subscribe failed.");
+        return err;
+    }
+    localSharedObservers_[option.event].push_back(std::move(localSharedObserver));
+    return E_OK;
+}
+
+int RdbStoreImpl::SubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer)
 {
     auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
@@ -1392,14 +1446,156 @@ int RdbStoreImpl::Subscribe(const SubscribeOption &option, RdbStoreObserver *obs
     return service->Subscribe(syncerParam_, option, observer);
 }
 
-int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *observer)
+int RdbStoreImpl::Subscribe(const SubscribeOption &option, RdbStoreObserver *observer)
 {
-    LOG_INFO("enter");
+    if (option.mode == SubscribeMode::LOCAL) {
+        return SubscribeLocal(option, observer);
+    }
+    if (option.mode == SubscribeMode::LOCAL_SHARED) {
+        return SubscribeLocalShared(option, observer);
+    }
+    return SubscribeRemote(option, observer);
+}
+
+int RdbStoreImpl::UnSubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto obs = localObservers_.find(option.event);
+    if (obs == localObservers_.end()) {
+        return E_OK;
+    }
+
+    auto &list = obs->second;
+    for (auto it = list.begin(); it != list.end(); it++) {
+        if ((*it)->getObserver() == observer) {
+            it = list.erase(it);
+            break;
+        }
+    }
+
+    if (list.empty()) {
+        localObservers_.erase(option.event);
+    }
+    return E_OK;
+}
+
+int RdbStoreImpl::UnSubscribeLocalAll(const SubscribeOption& option)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto obs = localObservers_.find(option.event);
+    if (obs == localObservers_.end()) {
+        return E_OK;
+    }
+
+    localObservers_.erase(option.event);
+    return E_OK;
+}
+
+int RdbStoreImpl::UnSubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto obs = localSharedObservers_.find(option.event);
+    if (obs == localSharedObservers_.end()) {
+        return E_OK;
+    }
+
+    auto client = OHOS::AAFwk::DataObsMgrClient::GetInstance();
+    if (client == nullptr) {
+        LOG_ERROR("Failed to get DataObsMgrClient.");
+        return E_GET_DATAOBSMGRCLIENT_FAIL;
+    }
+
+    auto &list = obs->second;
+    for (auto it = list.begin(); it != list.end(); it++) {
+        if ((*it)->getObserver() == observer) {
+            int32_t err = client->UnregisterObserver(GetUri(option.event), *it);
+            if (err != 0) {
+                LOG_ERROR("UnSubscribeLocalShared failed.");
+                return err;
+            }
+            list.erase(it);
+            break;
+        }
+    }
+    if (list.empty()) {
+        localSharedObservers_.erase(option.event);
+    }
+    return E_OK;
+}
+
+int RdbStoreImpl::UnSubscribeLocalSharedAll(const SubscribeOption& option)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto obs = localSharedObservers_.find(option.event);
+    if (obs == localSharedObservers_.end()) {
+        return E_OK;
+    }
+
+    auto client = OHOS::AAFwk::DataObsMgrClient::GetInstance();
+    if (client == nullptr) {
+        LOG_ERROR("Failed to get DataObsMgrClient.");
+        return E_GET_DATAOBSMGRCLIENT_FAIL;
+    }
+
+    auto &list = obs->second;
+    auto it = list.begin();
+    while (it != list.end()) {
+        int32_t err = client->UnregisterObserver(GetUri(option.event), *it);
+        if (err != 0) {
+            LOG_ERROR("UnSubscribe failed.");
+            return err;
+        }
+        it = list.erase(it);
+    }
+
+    localSharedObservers_.erase(option.event);
+    return E_OK;
+}
+
+int RdbStoreImpl::UnSubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer)
+{
     auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         return errCode;
     }
     return service->UnSubscribe(syncerParam_, option, observer);
+}
+
+int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *observer)
+{
+    if (option.mode == SubscribeMode::LOCAL && observer) {
+        return UnSubscribeLocal(option, observer);
+    } else if (option.mode == SubscribeMode::LOCAL && !observer) {
+        return UnSubscribeLocalAll(option);
+    } else if (option.mode == SubscribeMode::LOCAL_SHARED && observer) {
+        return UnSubscribeLocalShared(option, observer);
+    } else if (option.mode == SubscribeMode::LOCAL_SHARED && !observer) {
+        return UnSubscribeLocalSharedAll(option);
+    }
+    return UnSubscribeRemote(option, observer);
+}
+
+int RdbStoreImpl::Notify(const std::string &event)
+{
+    auto client = OHOS::AAFwk::DataObsMgrClient::GetInstance();
+    if (client == nullptr) {
+        LOG_ERROR("Failed to get DataObsMgrClient.");
+        return E_GET_DATAOBSMGRCLIENT_FAIL;
+    }
+    int32_t err = client->NotifyChange(GetUri(event));
+    if (err != 0) {
+        LOG_ERROR("Notify failed.");
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto obs = localObservers_.find(event);
+    if (obs != localObservers_.end()) {
+        auto &list = obs->second;
+        for (auto &it : list) {
+            it->OnChange();
+        }
+    }
+    return E_OK;
 }
 
 bool RdbStoreImpl::DropDeviceData(const std::vector<std::string> &devices, const DropOption &option)

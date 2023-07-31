@@ -237,14 +237,14 @@ typedef struct OH_Cursor {
     int (*isNull)(OH_Cursor *cursor, int32_t columnIndex, bool *isNull);
 
     /**
-     * @brief Function pointer. Closes the result set, releasing all of its resources and making it completely invalid.
+     * @brief Function pointer. Destroy the result set, releasing all of its resources and making it completely invalid.
      *
      * @param cursor Represents a pointer to an {@link OH_Cursor} instance.
      * @return Returns the status code of the execution.
      * @see OH_Cursor.
      * @since 10
      */
-    int (*close)(OH_Cursor *cursor);
+    int (*destroy)(OH_Cursor *cursor);
 } OH_Cursor;
 
 #ifdef __cplusplus

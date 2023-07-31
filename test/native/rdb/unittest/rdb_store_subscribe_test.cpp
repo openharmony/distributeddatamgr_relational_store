@@ -29,6 +29,7 @@ class SubObserver : public RdbStoreObserver {
 public:
     virtual ~SubObserver() {}
     void OnChange(const std::vector<std::string>& devices) override;
+    void OnChange() override;
 };
 
 class RdbStoreSubTest : public testing::Test {
@@ -58,6 +59,7 @@ void RdbStoreSubTest::SetUpTestCase(void)
 
 void RdbStoreSubTest::TearDownTestCase(void)
 {
+    RdbHelper::DeleteRdbStore(MAIN_DATABASE_NAME);
 }
 
 void RdbStoreSubTest::SetUp()
@@ -86,6 +88,25 @@ int Callback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 
 void SubObserver::OnChange(const std::vector<std::string> &devices)
 {
+}
+
+void SubObserver::OnChange()
+{
+    const std::string CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test "
+                                          "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                          "name TEXT NOT NULL, age INTEGER, salary "
+                                          "REAL, blobType BLOB)";
+    RdbStoreSubTest::store->ExecuteSql(CREATE_TABLE_TEST);
+    ValuesBucket values;
+    int64_t id;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = RdbStoreSubTest::store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
 }
 
 std::shared_ptr<RdbStore> RdbStoreSubTest::CreateRDB(int version)
@@ -146,4 +167,27 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeCloudDetail, TestSize.Level1)
     EXPECT_NE(observer_, nullptr) << "observer is null";
     auto status = store->Subscribe({ SubscribeMode::CLOUD_DETAIL }, observer_.get());
     EXPECT_EQ(status, E_OK);
+}
+
+/**
+ * @tc.name: RdbStoreSubscribeLocal
+ * @tc.desc: RdbStoreSubscribe
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocal, TestSize.Level1)
+{
+    EXPECT_NE(store, nullptr) << "store is null";
+    EXPECT_NE(observer_, nullptr) << "observer is null";
+    auto status = store->Subscribe({ SubscribeMode::LOCAL, "observer" }, observer_.get());
+    EXPECT_EQ(status, E_OK);
+
+    status = store->Notify("observer");
+    EXPECT_EQ(status, E_OK);
+
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    int count;
+    resultSet->GetRowCount(count);
+    EXPECT_EQ(1, count);
 }

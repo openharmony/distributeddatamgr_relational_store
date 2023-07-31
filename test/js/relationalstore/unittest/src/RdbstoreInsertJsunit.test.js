@@ -162,7 +162,7 @@ describe('rdbStoreInsertTest', function () {
                 "blobType": u8,
             }
             try {
-                let insertPromise = rdbStore.insert(null, valueBucket)            
+                let insertPromise = rdbStore.insert(null, valueBucket)
                 insertPromise.then(async (ret) => {
                     expect(1).assertEqual(ret)
                     console.log(TAG + "insert first done: " + ret)
@@ -410,21 +410,32 @@ describe('rdbStoreInsertTest', function () {
                 "salary": 200.5,
                 "blobType": u8,
             }
-            try {
-                let insertPromise = rdbStore.insert("test", valueBucket, data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
-                insertPromise.then(async (ret) => {
-                    expect(1).assertEqual(ret)
-                    console.log(TAG + "insert first done: " + ret)
-                    expect(null).assertFail()
-                }).catch((err) => {
-                    console.log(TAG + "insert with wrong valuebucket and ConflictResolution is ON_CONFLICT_ROLLBACK")
-                    done()
-                })
-            } catch(err) {
-                console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
-                expect("401").assertEqual(err.code)
-                expect(null).assertFail()
+
+            rdbStore.beginTransaction()
+            const valueBucketInsert = {
+                "name": "wangwu",
+                "age": 30,
+                "salary": 400.5,
+                "blobType": u8,
             }
+            await rdbStore.insert("test", valueBucketInsert)
+            try {
+                await rdbStore.insert("test", valueBucket, data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
+                expect(null).assertFail();;
+            } catch (err) {
+                console.log("catch err: failed, err: code=" + err.code + " message=" + err.message);
+                expect(14800000).assertEqual(err.code);
+                rdbStore.rollBack();
+            }
+        }
+
+        {
+            let predicates = await new data_relationalStore.RdbPredicates("test");
+            let resultSet = await rdbStore.query(predicates);
+
+            expect(1).assertEqual(resultSet.rowCount);
+            resultSet.close();
+            done();
         }
 
         console.log(TAG + "************* InsertWithConflictResolution_0002 end   *************");

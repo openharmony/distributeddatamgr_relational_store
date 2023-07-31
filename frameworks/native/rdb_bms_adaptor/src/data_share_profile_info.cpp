@@ -27,6 +27,8 @@
 namespace OHOS::RdbBMSAdapter {
 using namespace OHOS::Rdb;
 
+std::mutex DataShareProfileInfo::infosMutex_;
+
 constexpr const char *DATA_SHARE_PROFILE_META = "ohos.extension.dataShare";
 constexpr const char *PROFILE_FILE_PREFIX = "$profile:";
 const size_t PROFILE_PREFIX_LEN = strlen(PROFILE_FILE_PREFIX);
@@ -123,6 +125,7 @@ std::vector<std::string> DataShareProfileInfo::GetResProfileByMetadata(
 
 std::shared_ptr<ResourceManager> DataShareProfileInfo::InitResMgr(const std::string &resourcePath)
 {
+    std::lock_guard<std::mutex> lock(infosMutex_);
     static std::shared_ptr<ResourceManager> resMgr(CreateResourceManager());
     if (resMgr == nullptr) {
         return nullptr;

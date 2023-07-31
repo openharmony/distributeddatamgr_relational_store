@@ -38,7 +38,7 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/values_bucket.cpp",
 ]
 
-if (is_ohos) {
+if (is_ohos && !build_ohos_sdk) {
   config("native_rdb_config") {
     visibility = [ ":*" ]
 
@@ -92,10 +92,7 @@ if (is_ohos) {
 
     deps = base_deps
 
-    deps += [
-      "${kvstore_path}/libs/distributeddb:distributeddb",
-      "//third_party/sqlite:sqlite",
-    ]
+    deps += [ "//third_party/sqlite:sqlite" ]
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
     cflags_cc = [ "-fvisibility=hidden" ]
 
@@ -121,12 +118,15 @@ if (is_ohos) {
     ]
 
     external_deps = [
+      "ability_base:zuri",
+      "ability_runtime:dataobs_manager",
       "c_utils:utils",
       "device_manager:devicemanagersdk",
       "hilog:libhilog",
       "hitrace:hitrace_meter",
       "huks:libhukssdk",
       "ipc:ipc_core",
+      "kv_store:distributeddb",
       "samgr:samgr_proxy",
     ]
 
@@ -142,10 +142,7 @@ if (is_ohos) {
 
     deps = base_deps
 
-    deps += [
-      "${kvstore_path}/libs/distributeddb:distributeddb",
-      "//third_party/sqlite:sqlite",
-    ]
+    deps += [ "//third_party/sqlite:sqlite" ]
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
 
     sources += [
@@ -170,12 +167,15 @@ if (is_ohos) {
     ]
 
     external_deps = [
+      "ability_base:zuri",
+      "ability_runtime:dataobs_manager",
       "c_utils:utils",
       "device_manager:devicemanagersdk",
       "hilog:libhilog",
       "hitrace:hitrace_meter",
       "huks:libhukssdk",
       "ipc:ipc_core",
+      "kv_store:distributeddb",
       "samgr:samgr_proxy",
     ]
 
@@ -378,11 +378,11 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "${distributedfile_path}/mod_securitylabel",
       "${relational_store_common_path}/include",
       "${relational_store_innerapi_path}/rdb/mock/include",
       "${relational_store_native_path}/rdb/mock/include",
       "${relational_store_innerapi_path}/rdb/include",
-      "//foundation/distributeddatamgr/kv_store/frameworks/common",
       "${relational_store_native_path}/rdb/include",
     ]
 
@@ -418,14 +418,17 @@ if (is_ohos) {
     defines = [ "ANDROID_PLATFORM" ]
 
     part_name = "relational_store"
+
     sources = base_sources
 
     configs = [ ":native_rdb_config" ]
 
     deps = base_deps
 
-    sources +=
-        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
+    sources += [
+      "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
+      "${relational_store_native_path}/rdb/src/security_policy.cpp",
+    ]
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
@@ -442,6 +445,7 @@ if (is_ohos) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "${distributedfile_path}/mod_securitylabel",
       "${relational_store_common_path}/include",
       "${relational_store_innerapi_path}/rdb/mock/include",
       "${relational_store_native_path}/rdb/mock/include",
@@ -489,8 +493,10 @@ if (is_ohos) {
 
     deps = base_deps
 
-    sources +=
-        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
+    sources += [
+      "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
+      "${relational_store_native_path}/rdb/src/security_policy.cpp",
+    ]
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
@@ -502,4 +508,6 @@ if (is_ohos) {
     public_configs = [ ":native_rdb_public_config" ]
     subsystem_name = "distributeddatamgr"
   }
+} else {
+  not_needed([ "base_sources" ])
 }

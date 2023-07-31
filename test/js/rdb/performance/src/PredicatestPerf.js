@@ -24,7 +24,7 @@ const BASE_COUNT_FIRST = 200;
 const BASE_COUNT_SECOND = 10;
 const BASE_LINE_TABLE = 500; // callback tablet base line
 const BASE_LINE_PHONE = 1000; // callback phone base line
-const BASE_LINE = (deviceInfo.deviceType == "tablet") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
+const BASE_LINE = (deviceInfo.deviceType == "tablet" || deviceType == "2in1") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
 
 describe('predicatesPerf', function () {
   beforeAll(async function () {
