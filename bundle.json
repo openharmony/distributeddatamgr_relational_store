@@ -58,6 +58,7 @@
                 "hitrace",
                 "huks",
                 "ipc",
+                "kv_store",
                 "napi",
                 "resource_management",
                 "samgr"
