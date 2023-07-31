@@ -21,12 +21,20 @@
 
 namespace OHOS {
 namespace RdbNdk {
-constexpr int RDB_VBUCKET_CID = 1234562; // The class id used to uniquely identify the OH_Rdb_VBucket class.
-class ValuesBucketImpl : public OH_VBucket {
+class RelationalValuesBucket : public OH_VBucket {
 public:
-    ValuesBucketImpl();
-    OHOS::NativeRdb::ValuesBucket &getValuesBucket();
+    RelationalValuesBucket();
+    static RelationalValuesBucket *GetSelf(OH_VBucket *bucket);
+    OHOS::NativeRdb::ValuesBucket &Get();
 private:
+    static int PutText(OH_VBucket *bucket, const char *field, const char *value);
+    static int PutInt64(OH_VBucket *bucket, const char *field, int64_t value);
+    static int PutReal(OH_VBucket *bucket, const char *field, double value);
+    static int PutBlob(OH_VBucket *bucket, const char *field, const uint8_t *value, uint32_t size);
+    static int PutNull(OH_VBucket *bucket, const char *field);
+    static int Clear(OH_VBucket *bucket);
+    static int Destroy(OH_VBucket *bucket);
+    static int PutValueObject(OH_VBucket *bucket, const char *field, OHOS::NativeRdb::ValueObject &&value);
     OHOS::NativeRdb::ValuesBucket valuesBucket_;
 };
 } // namespace RdbNdk
