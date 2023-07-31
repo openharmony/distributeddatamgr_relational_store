@@ -23,8 +23,8 @@ PredicatesUtils::PredicatesUtils() {}
 /**
  * Set the param of whereClause and bindArgs of the specified Predicates.
  */
-void PredicatesUtils::SetWhereClauseAndArgs(AbsPredicates *predicates, std::string whereClause,
-    std::vector<std::string> whereArgs)
+void PredicatesUtils::SetWhereClauseAndArgs(AbsPredicates *predicates, const std::string &whereClause,
+    const std::vector<std::string> &whereArgs)
 {
     predicates->SetWhereClause(whereClause);
     predicates->SetWhereArgs(whereArgs);
@@ -33,8 +33,8 @@ void PredicatesUtils::SetWhereClauseAndArgs(AbsPredicates *predicates, std::stri
 /**
  * Sets params of the specified Predicates including distinct, index, group, order, limit and offset.
  */
-void PredicatesUtils::SetAttributes(AbsPredicates *predicates, bool isDistinct, std::string index, std::string group,
-    std::string order, int limit, int offset)
+void PredicatesUtils::SetAttributes(AbsPredicates *predicates, bool isDistinct, const std::string &index,
+    const std::string &group, const std::string &order, const int limit, const int offset)
 {
     if (isDistinct) {
         predicates->Distinct();
@@ -44,13 +44,6 @@ void PredicatesUtils::SetAttributes(AbsPredicates *predicates, bool isDistinct, 
     }
     if (!group.empty()) {
         std::vector<std::string> groupArray;
-        std::string::size_type startpos = 0;
-        while (startpos != std::string::npos) {
-            startpos = group.find('`');
-            if (startpos != std::string::npos) {
-                group.replace(startpos, 1, "");
-            }
-        }
         std::istringstream iss(group);
         std::string temp;
         while (getline(iss, temp, ',')) {
@@ -61,10 +54,10 @@ void PredicatesUtils::SetAttributes(AbsPredicates *predicates, bool isDistinct, 
     if (!order.empty()) {
         predicates->SetOrder(order);
     }
-    if (limit != -1) {
+    if (limit != AbsPredicates::INIT_LIMIT_VALUE) {
         predicates->Limit(limit);
     }
-    if (offset != -1) {
+    if (offset != AbsPredicates::INIT_OFFSET_VALUE) {
         predicates->Offset(offset);
     }
 }

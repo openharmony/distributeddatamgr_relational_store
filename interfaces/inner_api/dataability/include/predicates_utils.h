@@ -41,14 +41,14 @@ public:
     /**
      * @brief Set the parameter of whereClause and bindArgs of the specified Predicates.
      */
-    API_EXPORT static void SetWhereClauseAndArgs(AbsPredicates *predicates, std::string whereClause,
-        std::vector<std::string> whereArgs);
+    API_EXPORT static void SetWhereClauseAndArgs(AbsPredicates *predicates, const std::string &whereClause,
+        const std::vector<std::string> &whereArgs);
 
     /**
      * @brief Sets parameters of the specified Predicates including distinct, index, group, order, limit and offset.
      */
-    API_EXPORT static void SetAttributes(AbsPredicates *predicates, bool isDistinct, std::string index,
-        std::string group, std::string order, int limit, int offset);
+    API_EXPORT static void SetAttributes(AbsPredicates *predicates, bool isDistinct, const std::string &index,
+        const std::string &group, const std::string &order, const int limit, const int offset);
 };
 } // namespace NativeRdb
 } // namespace OHOS

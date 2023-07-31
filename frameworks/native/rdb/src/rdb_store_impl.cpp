@@ -17,13 +17,14 @@
 
 #include <unistd.h>
 
+#include <algorithm>
 #include <sstream>
 
 #include "logger.h"
 #include "rdb_errno.h"
+#include "rdb_sql_utils.h"
 #include "rdb_store.h"
 #include "rdb_trace.h"
-#include "rdb_sql_utils.h"
 #include "sqlite_global_config.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
@@ -418,9 +419,8 @@ int RdbStoreImpl::Update(int &changedRows, const std::string &table, const Value
     const std::string &whereClause, const std::vector<std::string> &whereArgs)
 {
     std::vector<ValueObject> bindArgs;
-    for (auto &item : whereArgs) {
-        bindArgs.push_back(ValueObject(item));
-    }
+    std::for_each(
+        whereArgs.begin(), whereArgs.end(), [&bindArgs](const auto &it) { bindArgs.push_back(ValueObject(it)); });
     return UpdateWithConflictResolution(
         changedRows, table, values, whereClause, bindArgs, ConflictResolution::ON_CONFLICT_NONE);
 }
@@ -443,9 +443,8 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
     const std::string &whereClause, const std::vector<std::string> &whereArgs, ConflictResolution conflictResolution)
 {
     std::vector<ValueObject> bindArgs;
-    for (auto &item : whereArgs) {
-        bindArgs.push_back(ValueObject(item));
-    }
+    std::for_each(
+        whereArgs.begin(), whereArgs.end(), [&bindArgs](const auto &it) { bindArgs.push_back(ValueObject(it)); });
     return UpdateWithConflictResolution(
         changedRows, table, values, whereClause, bindArgs, conflictResolution);
 }
@@ -512,9 +511,8 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
     const std::vector<std::string> &whereArgs)
 {
     std::vector<ValueObject> bindArgs;
-    for (auto &item : whereArgs) {
-        bindArgs.push_back(ValueObject(item));
-    }
+    std::for_each(
+        whereArgs.begin(), whereArgs.end(), [&bindArgs](const auto &it) { bindArgs.push_back(ValueObject(it)); });
     return Delete(deletedRows, table, whereClause, bindArgs);
 }
 
@@ -589,7 +587,7 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool disti
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::string sql;
     errCode = SqliteSqlBuilder::BuildQueryString(distinct, table, columns, selection, groupBy, having, orderBy, limit,
-        "", sql);
+        std::to_string(AbsPredicates::INIT_OFFSET_VALUE), sql);
     if (errCode != E_OK) {
         return nullptr;
     }
@@ -599,12 +597,10 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool disti
 }
 
 std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sql,
-    const std::vector<std::string> &selectionArgs)
+    const std::vector<std::string> &sqlArgs)
 {
     std::vector<ValueObject> bindArgs;
-    for (auto &item : selectionArgs) {
-        bindArgs.push_back(ValueObject(item));
-    }
+    std::for_each(sqlArgs.begin(), sqlArgs.end(), [&bindArgs](const auto &it) { bindArgs.push_back(ValueObject(it)); });
     return std::make_shared<SqliteSharedResultSet>(shared_from_this(), connectionPool, path, sql, bindArgs);
 }
 
@@ -1303,12 +1299,10 @@ int RdbStoreImpl::Restore(const std::string backupPath, const std::vector<uint8_
  * Queries data in the database based on specified conditions.
  */
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
-    const std::vector<std::string> &selectionArgs)
+    const std::vector<std::string> &sqlArgs)
 {
     std::vector<ValueObject> bindArgs;
-    for (auto &item : selectionArgs) {
-        bindArgs.push_back(ValueObject(item));
-    }
+    std::for_each(sqlArgs.begin(), sqlArgs.end(), [&bindArgs](const auto &it) { bindArgs.push_back(ValueObject(it)); });
     return std::make_shared<StepResultSet>(shared_from_this(), connectionPool, sql, bindArgs);
 }
 
@@ -1624,12 +1618,6 @@ int RdbStoreImpl::Notify(const std::string &event)
         }
     }
     return E_OK;
-}
-
-bool RdbStoreImpl::DropDeviceData(const std::vector<std::string> &devices, const DropOption &option)
-{
-    LOG_INFO("not implement");
-    return true;
 }
 #endif
 } // namespace OHOS::NativeRdb

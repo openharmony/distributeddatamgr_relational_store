@@ -572,8 +572,8 @@ napi_value RdbPredicatesProxy::Limit(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->predicates_);
     RDB_NAPI_ASSERT(env, argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 or 2"));
 
-    int32_t offset = INT_MIN;
-    int32_t limit = INT_MIN;
+    int32_t offset = AbsPredicates::INIT_OFFSET_VALUE;
+    int32_t limit = AbsPredicates::INIT_LIMIT_VALUE;
     if (argc == 1) {
         napi_status status = napi_get_value_int32(env, args[0], &limit);
         RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("limit", "a number."));
@@ -594,7 +594,7 @@ napi_value RdbPredicatesProxy::Offset(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbPredicatesProxy::Offset begin.");
     napi_value thiz = nullptr;
-    int32_t offset = INT_MIN;
+    int32_t offset = AbsPredicates::INIT_OFFSET_VALUE;
     auto predicatesProxy = ParseInt32FieldByName(env, info, thiz, offset, "rowOffset");
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->predicates_);
     predicatesProxy->predicates_->Offset(offset);

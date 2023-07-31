@@ -16,6 +16,7 @@
 #ifndef NATIVE_RDB_ABSPREDICATES_H
 #define NATIVE_RDB_ABSPREDICATES_H
 
+#include <climits>
 #include <string>
 #include <vector>
 
@@ -26,6 +27,8 @@ namespace OHOS {
 namespace NativeRdb {
 class API_EXPORT AbsPredicates {
 public:
+    static constexpr int INIT_LIMIT_VALUE = INT_MIN;
+    static constexpr int INIT_OFFSET_VALUE = INT_MIN;
     API_EXPORT AbsPredicates();
     API_EXPORT virtual ~AbsPredicates();
 
@@ -68,8 +71,10 @@ public:
     API_EXPORT virtual AbsPredicates *IsNotNull(const std::string &field);
     API_EXPORT virtual AbsPredicates *Like(const std::string &field, const std::string &value);
     API_EXPORT virtual AbsPredicates *Glob(const std::string &field, const std::string &value);
-    API_EXPORT virtual AbsPredicates *Between(const std::string &field, const ValueObject &low, const ValueObject &high);
-    API_EXPORT virtual AbsPredicates *NotBetween(const std::string &field, const ValueObject &low, const ValueObject &high);
+    API_EXPORT virtual AbsPredicates *Between(
+        const std::string &field, const ValueObject &low, const ValueObject &high);
+    API_EXPORT virtual AbsPredicates *NotBetween(
+        const std::string &field, const ValueObject &low, const ValueObject &high);
     API_EXPORT virtual AbsPredicates *GreaterThan(const std::string &field, const ValueObject &value);
     API_EXPORT virtual AbsPredicates *LessThan(const std::string &field, const ValueObject &value);
     API_EXPORT virtual AbsPredicates *GreaterThanOrEqualTo(const std::string &field, const ValueObject &value);

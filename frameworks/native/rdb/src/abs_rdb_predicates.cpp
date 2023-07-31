@@ -15,6 +15,8 @@
 
 #include "abs_rdb_predicates.h"
 
+#include <variant>
+
 #include "logger.h"
 #include "rdb_trace.h"
 

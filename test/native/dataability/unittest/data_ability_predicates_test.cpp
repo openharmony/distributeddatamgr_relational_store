@@ -77,7 +77,7 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_002, TestSize.Level1)
     EXPECT_EQ(false, predicates1->IsRawSelection());
     predicates1->Clear();
 
-    EXPECT_EQ(INT_MIN, predicates1->GetLimit());
+    EXPECT_EQ(AbsPredicates::INIT_LIMIT_VALUE, predicates1->GetLimit());
     EXPECT_EQ(true, predicates1->GetWhereClause().empty());
     EXPECT_EQ(true, predicates1->GetWhereArgs().empty());
     EXPECT_EQ(true, predicates1->GetOrder().empty());
@@ -213,7 +213,7 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_009, TestSize.Level1)
     EXPECT_EQ(newPredicates->GetWhereClause(), predicates->GetWhereClause());
     EXPECT_EQ(newPredicates->GetWhereArgs(), predicates->GetWhereArgs());
     EXPECT_EQ(newPredicates->GetOrder(), predicates->GetOrder());
-    EXPECT_EQ(-1, newPredicates->GetLimit());
+    EXPECT_EQ(AbsPredicates::INIT_LIMIT_VALUE, newPredicates->GetLimit());
 
     outParcel.FlushBuffer();
 }
@@ -251,9 +251,10 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_010, TestSize.Level1)
     EXPECT_EQ(groupBy, predicates->GetGroup());
     std::string order = outParcel.ReadInt32() != g_invalidObjectFlag ? outParcel.ReadString() : "";
     EXPECT_EQ(order, predicates->GetOrder());
-    int limit = outParcel.ReadInt32() != g_invalidObjectFlag ? outParcel.ReadInt32() : -1;
+    int limit = outParcel.ReadInt32() != g_invalidObjectFlag ? outParcel.ReadInt32() : AbsPredicates::INIT_LIMIT_VALUE;
     EXPECT_EQ(true, predicates->GetLimit() == limit);
-    int offset = outParcel.ReadInt32() != g_invalidObjectFlag ? outParcel.ReadInt32() : -1;
+    int offset = outParcel.ReadInt32() != g_invalidObjectFlag ? outParcel.ReadInt32()
+                                                              : AbsPredicates::INIT_OFFSET_VALUE;
     EXPECT_EQ(offset, predicates->GetOffset());
 
     predicates->Unmarshalling(coutParcel);
@@ -294,9 +295,10 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_011, TestSize.Level1)
     EXPECT_EQ(groupBy, predicates->GetGroup());
     std::string order = outParcel.ReadInt32() != g_invalidObjectFlag ? outParcel.ReadString() : "";
     EXPECT_EQ(order, predicates->GetOrder());
-    int limit = outParcel.ReadInt32() != g_invalidObjectFlag ? outParcel.ReadInt32() : -1;
+    int limit = outParcel.ReadInt32() != g_invalidObjectFlag ? outParcel.ReadInt32() : AbsPredicates::INIT_LIMIT_VALUE;
     EXPECT_EQ(limit, predicates->GetLimit());
-    int offset = outParcel.ReadInt32() != g_invalidObjectFlag ? outParcel.ReadInt32() : -1;
+    int offset = outParcel.ReadInt32() != g_invalidObjectFlag ? outParcel.ReadInt32()
+                                                              : AbsPredicates::INIT_OFFSET_VALUE;
     EXPECT_EQ(offset, predicates->GetOffset());
 
     outParcel.FlushBuffer();
