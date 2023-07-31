@@ -2095,7 +2095,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_IndexedBy_002, TestSize.Level1)
 HWTEST_F(RdbStorePredicateTest, RdbStore_In_001, TestSize.Level1)
 {
     RdbPredicates predicates("AllDataType");
-    predicates.In("", std::vector<ValueObject>{ "1", "3" });
+    predicates.In("", std::vector<std::string>{ "1", "3" });
 
     std::vector<std::string> columns;
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
@@ -2111,7 +2111,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_In_001, TestSize.Level1)
 HWTEST_F(RdbStorePredicateTest, RdbStore_In_002, TestSize.Level1)
 {
     RdbPredicates predicates("AllDataType");
-    predicates.In("id", std::vector<ValueObject>{});
+    predicates.In("id", std::vector<std::string>{});
 
     std::vector<std::string> columns;
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);

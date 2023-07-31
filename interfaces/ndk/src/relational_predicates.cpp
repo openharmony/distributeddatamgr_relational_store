@@ -13,11 +13,14 @@
  * limitations under the License.
  */
 
+#include "relational_predicates.h"
+
+#include <variant>
+
 #include "logger.h"
 #include "oh_predicates.h"
-#include "relational_store_error_code.h"
-#include "relational_predicates.h"
 #include "relational_predicates_objects.h"
+#include "relational_store_error_code.h"
 #include "sqlite_global_config.h"
 
 using namespace OHOS::NativeRdb;
@@ -121,7 +124,7 @@ OH_Predicates *RelationalPredicate::Like(OH_Predicates *predicates, const char *
     }
     std::vector<ValueObject> values = selfObjects->Get();
     if (!values.empty()) {
-        if (auto pval = std::get_if<std::string>(&values[0].value)){
+        if (auto pval = std::get_if<std::string>(&values[0].value)) {
             self->predicates_.Like(field, std::move(*pval));
         }
     }

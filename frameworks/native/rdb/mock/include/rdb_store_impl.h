@@ -89,7 +89,7 @@ public:
     std::string GetOrgPath();
     std::string GetFileType();
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql,
-        const std::vector<std::string> &selectionArgs) override;
+        const std::vector<std::string> &sqlArgs) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const std::vector<ValueObject> &args) override;
     std::shared_ptr<ResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;

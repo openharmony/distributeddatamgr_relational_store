@@ -24,7 +24,7 @@ ValueObject::ValueObject()
 {
 }
 
-ValueObject::ValueObject(ValueObject::Type val) noexcept : value(std::move(val))
+ValueObject::ValueObject(Type val) noexcept : value(std::move(val))
 {
 }
 

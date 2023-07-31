@@ -172,8 +172,8 @@ std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const std::string &in
 {
     std::string sqlString;
 
-    std::string limitStr = (limit == INT_MIN) ? "" : std::to_string(limit);
-    std::string offsetStr = (offset == INT_MIN) ? "" : std::to_string(offset);
+    std::string limitStr = (limit == AbsPredicates::INIT_LIMIT_VALUE) ? "" : std::to_string(limit);
+    std::string offsetStr = (offset == AbsPredicates::INIT_OFFSET_VALUE) ? "" : std::to_string(offset);
 
     AppendClause(sqlString, " INDEXED BY ", index);
     AppendClause(sqlString, " WHERE ", whereClause);
@@ -187,11 +187,12 @@ std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const std::string &in
 
 std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const AbsRdbPredicates &predicates)
 {
+    std::string limitStr =
+        (predicates.GetLimit() == AbsPredicates::INIT_LIMIT_VALUE) ? "" : std::to_string(predicates.GetLimit());
+    std::string offsetStr =
+        (predicates.GetOffset() == AbsPredicates::INIT_OFFSET_VALUE) ? "" : std::to_string(predicates.GetOffset());
+
     std::string sqlString;
-
-    std::string limitStr = (predicates.GetLimit() == INT_MIN) ? "" : std::to_string(predicates.GetLimit());
-    std::string offsetStr = (predicates.GetOffset() == INT_MIN) ? "" : std::to_string(predicates.GetOffset());
-
     AppendClause(sqlString, " INDEXED BY ", predicates.GetIndex());
     AppendClause(sqlString, " WHERE ", predicates.GetWhereClause());
     AppendClause(sqlString, " GROUP BY ", predicates.GetGroup());
@@ -205,10 +206,10 @@ std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const AbsRdbPredicate
 std::string SqliteSqlBuilder::BuildSqlStringFromPredicatesNoWhere(const std::string &index,
     const std::string &whereClause, const std::string &group, const std::string &order, int limit, int offset)
 {
-    std::string sqlString;
-    std::string limitStr = (limit == INT_MIN) ? "" : std::to_string(limit);
-    std::string offsetStr = (offset == INT_MIN) ? "" : std::to_string(offset);
+    std::string limitStr = (limit == AbsPredicates::INIT_LIMIT_VALUE) ? "" : std::to_string(limit);
+    std::string offsetStr = (offset == AbsPredicates::INIT_OFFSET_VALUE) ? "" : std::to_string(offset);
 
+    std::string sqlString;
     AppendClause(sqlString, " INDEXED BY ", index);
     AppendClause(sqlString, " ", whereClause);
     AppendClause(sqlString, " GROUP BY ", group);
