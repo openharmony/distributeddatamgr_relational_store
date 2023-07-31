@@ -110,7 +110,7 @@ typedef struct OH_VObject {
      * @see OH_VObject.
      * @since 10
      */
-    int (*destroyValueObject)(OH_VObject *valueObject);
+    int (*destroy)(OH_VObject *valueObject);
 } OH_VObject;
 
 #ifdef __cplusplus

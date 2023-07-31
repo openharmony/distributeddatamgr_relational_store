@@ -22,13 +22,18 @@
 
 namespace OHOS {
 namespace RdbNdk {
-constexpr int RDB_VOBJECT_CID = 1234565; // The class id used to uniquely identify the OH_Rdb_VObject class.
-class ValueObjectImpl : public OH_VObject {
+class RelationalPredicatesObjects : public OH_VObject {
 public:
-    ValueObjectImpl();
-    std::vector<std::string> &getValue();
+    RelationalPredicatesObjects();
+    static RelationalPredicatesObjects *GetSelf(OH_VObject *objects);
+    std::vector<std::string> &Get();
 private:
-    std::vector<std::string> value;
+    static int PutInt64(OH_VObject *objects, int64_t *value, uint32_t count);
+    static int PutDouble(OH_VObject *objects, double *value, uint32_t count);
+    static int PutText(OH_VObject *objects, const char *value);
+    static int PutTexts(OH_VObject *objects, const char **value, uint32_t count);
+    static int Destroy(OH_VObject *objects);
+    std::vector<std::string> values_;
 };
 } // namespace RdbNdk
 } // namespace OHOS

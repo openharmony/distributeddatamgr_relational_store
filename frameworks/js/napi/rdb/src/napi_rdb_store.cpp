@@ -359,7 +359,8 @@ int ParsePredicates(const napi_env &env, const napi_value &arg, std::shared_ptr<
         || CheckGlobalProperty(env, arg, "RdbPredicatesConstructorV9")) {
         LOG_DEBUG("Parse RDB Predicates");
         napi_unwrap(env, arg, reinterpret_cast<void **>(&context->predicatesProxy));
-        RDB_CHECK_RETURN_CALL_RESULT(context->predicatesProxy != nullptr, context->SetError(paramError));
+        RDB_CHECK_RETURN_CALL_RESULT(context->predicatesProxy != nullptr &&
+            context->predicatesProxy->GetPredicates() != nullptr, context->SetError(paramError));
         context->tableName = context->predicatesProxy->GetPredicates()->GetTableName();
         context->rdbPredicates = context->predicatesProxy->GetPredicates();
         LOG_DEBUG("ParsePredicates end");
@@ -568,6 +569,7 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         int64_t rowId = 0;
         LOG_DEBUG("RdbStoreProxy::Insert Async");
+        CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
         int errCode = obj->rdbStore_->Insert(rowId, context->tableName, context->valuesBucket);
         context->rowId = rowId;
         LOG_DEBUG("RdbStoreProxy::Insert errCode is: %{public}d", errCode);
@@ -580,7 +582,7 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
     };
     context->SetAction(env, info, input, exec, output);
 
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK, "");
     return AsyncCall::Call(env, context);
 }
 
@@ -604,6 +606,7 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
             return E_OK;
         }
         int64_t outInsertNum = 0;
+        CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
         int errCode = obj->rdbStore_->BatchInsert(outInsertNum, context->tableName, context->valuesBuckets);
         context->insertNum = outInsertNum;
         return (errCode == E_OK) ? OK : ERR;
@@ -615,7 +618,7 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
     };
     context->SetAction(env, info, input, exec, output);
 
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK, "");
     return AsyncCall::Call(env, context);
 }
 
@@ -642,6 +645,7 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
         LOG_DEBUG("RdbStoreProxy::Delete Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         int deletedRows = 0;
+        CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
         int errCode = obj->rdbStore_->Delete(deletedRows, *(context->rdbPredicates));
         context->rowId = deletedRows;
         LOG_DEBUG("RdbStoreProxy::Delete errCode is: %{public}d", errCode);
@@ -654,7 +658,7 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
     };
     context->SetAction(env, info, input, exec, output);
 
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK, "");
     return AsyncCall::Call(env, context);
 }
 
@@ -684,6 +688,7 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
         LOG_DEBUG("RdbStoreProxy::Update Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         int changedRows = 0;
+        CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
         int errCode = obj->rdbStore_->Update(changedRows, context->valuesBucket, *(context->rdbPredicates));
         context->rowId = changedRows;
         LOG_DEBUG("RdbStoreProxy::Update errCode is: %{public}d", errCode);
@@ -696,7 +701,7 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
     };
     context->SetAction(env, info, input, exec, output);
 
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK, "");
     return AsyncCall::Call(env, context);
 }
 
@@ -727,6 +732,7 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() {
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
         context->resultSet = obj->rdbStore_->Query(*(context->rdbPredicates), context->columns);
         LOG_DEBUG("RdbStoreProxy::Query result is nullptr ? %{public}d", (context->resultSet == nullptr));
         return (context->resultSet != nullptr) ? OK : ERR;
@@ -738,7 +744,7 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
     };
     context->SetAction(env, info, input, exec, output);
 
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK, "");
     return AsyncCall::Call(env, context);
 }
 
@@ -763,6 +769,7 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
     auto exec = [context]() {
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
+        CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
         context->resultSet = obj->rdbStore_->QueryByStep(context->sql, context->columns);
         LOG_ERROR("RdbStoreProxy::QuerySql is nullptr ? %{public}d ", context->resultSet == nullptr);
         return (context->resultSet != nullptr) ? OK : ERR;
@@ -782,7 +789,7 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
     };
     context->SetAction(env, info, input, exec, output);
 
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK, "");
     return AsyncCall::Call(env, context);
 }
 
@@ -809,6 +816,7 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
     auto exec = [context]() {
         LOG_DEBUG("RdbStoreProxy::ExecuteSql Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
         int errCode = obj->rdbStore_->ExecuteSql(context->sql, context->bindArgs);
         LOG_DEBUG("RdbStoreProxy::ExecuteSql errCode is: %{public}d", errCode);
         return (errCode == E_OK) ? OK : ERR;
@@ -820,7 +828,7 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
     };
     context->SetAction(env, info, input, exec, output);
 
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK, "");
     return AsyncCall::Call(env, context);
 }
 
@@ -839,6 +847,9 @@ napi_value RdbStoreProxy::Count(napi_env env, napi_callback_info info)
         LOG_DEBUG("RdbStoreProxy::Count Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         std::int64_t temp = 0;
+        CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
+        CHECK_RETURN_ERR(context->predicatesProxy != nullptr &&
+            context->predicatesProxy->GetPredicates() != nullptr);
         int errCode = obj->rdbStore_->Count(temp, *(context->predicatesProxy->GetPredicates()));
         context->rowId = temp;
         LOG_DEBUG("RdbStoreProxy::Count errCode is: %{public}d", errCode);
@@ -851,7 +862,7 @@ napi_value RdbStoreProxy::Count(napi_env env, napi_callback_info info)
     };
     context->SetAction(env, info, input, exec, output);
 
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK, "");
     return AsyncCall::Call(env, context);
 }
 
@@ -872,6 +883,7 @@ napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
         LOG_DEBUG("RdbStoreProxy::Replace Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         int64_t rowId = 0;
+        CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
         int errCode = obj->rdbStore_->Replace(rowId, context->tableName, context->valuesBucket);
         context->rowId = rowId;
         LOG_DEBUG("RdbStoreProxy::Replace errCode is:%{public}d", errCode);
@@ -884,7 +896,7 @@ napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
     };
     context->SetAction(env, info, input, exec, output);
 
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK, "");
     return AsyncCall::Call(env, context);
 }
 
@@ -904,6 +916,7 @@ napi_value RdbStoreProxy::Attach(napi_env env, napi_callback_info info)
     auto exec = [context]() {
         LOG_DEBUG("RdbStoreProxy::Attach Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
         int errCode = obj->rdbStore_->Attach(context->aliasName, context->pathName, context->newKey);
         LOG_ERROR("RdbStoreProxy::Attach errCode is:%{public}d ", errCode);
         return (errCode != E_OK) ? OK : ERR;
@@ -915,7 +928,7 @@ napi_value RdbStoreProxy::Attach(napi_env env, napi_callback_info info)
     };
     context->SetAction(env, info, input, exec, output);
 
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK, "");
     return AsyncCall::Call(env, context);
 }
 
@@ -924,7 +937,8 @@ napi_value RdbStoreProxy::IsHoldingConnection(napi_env env, napi_callback_info i
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
+    NAPI_ASSERT(env, rdbStoreProxy != nullptr &&
+        rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
     bool out = rdbStoreProxy->rdbStore_->IsHoldingConnection();
     LOG_DEBUG("RdbStoreProxy::IsHoldingConnection out is : %{public}d", out);
     return JSUtils::Convert2JSValue(env, out);
@@ -935,7 +949,8 @@ napi_value RdbStoreProxy::IsReadOnly(napi_env env, napi_callback_info info)
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
+    NAPI_ASSERT(env, rdbStoreProxy != nullptr
+        && rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
     bool out = rdbStoreProxy->rdbStore_->IsReadOnly();
     LOG_DEBUG("RdbStoreProxy::IsReadOnly out is : %{public}d", out);
     return JSUtils::Convert2JSValue(env, out);
@@ -946,7 +961,8 @@ napi_value RdbStoreProxy::IsMemoryRdb(napi_env env, napi_callback_info info)
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
+    NAPI_ASSERT(env, rdbStoreProxy != nullptr
+        && rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
     bool out = rdbStoreProxy->rdbStore_->IsMemoryRdb();
     LOG_DEBUG("RdbStoreProxy::IsMemoryRdb out is : %{public}d", out);
     return JSUtils::Convert2JSValue(env, out);
@@ -957,7 +973,8 @@ napi_value RdbStoreProxy::GetPath(napi_env env, napi_callback_info info)
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
+    NAPI_ASSERT(env, rdbStoreProxy != nullptr
+        && rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
     std::string path = rdbStoreProxy->rdbStore_->GetPath();
     LOG_DEBUG("RdbStoreProxy::GetPath path is empty ? %{public}d", path.empty());
     return JSUtils::Convert2JSValue(env, path);
@@ -968,7 +985,8 @@ napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info
     napi_value thisObj = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr));
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
+    NAPI_ASSERT(env, rdbStoreProxy != nullptr
+        && rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
     int errCode = rdbStoreProxy->rdbStore_->BeginTransaction();
     NAPI_ASSERT(env, errCode == E_OK, "call BeginTransaction failed");
     LOG_DEBUG("RdbStoreProxy::BeginTransaction end, errCode is:%{public}d", errCode);
@@ -1015,6 +1033,9 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
     auto exec = [context]() {
         LOG_DEBUG("RdbStoreProxy::QueryByStep Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        if (obj == nullptr || obj->rdbStore_ == nullptr) {
+            return ERR;
+        }
         context->stepResultSet = obj->rdbStore_->QueryByStep(context->sql, context->columns);
         LOG_ERROR("RdbStoreProxy::QueryByStep is nullptr ? %{public}d ", context->stepResultSet == nullptr);
         return (context->stepResultSet != nullptr) ? OK : ERR;
@@ -1028,7 +1049,7 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
     };
     context->SetAction(env, info, input, exec, output);
 
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK, "");
     return AsyncCall::Call(env, context);
 }
 
@@ -1048,7 +1069,7 @@ napi_value RdbStoreProxy::IsOpen(napi_env env, napi_callback_info info)
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
+    NAPI_ASSERT(env, (rdbStoreProxy != nullptr) && (rdbStoreProxy->rdbStore_ != nullptr), "RdbStoreProxy is nullptr");
     bool out = rdbStoreProxy->rdbStore_->IsOpen();
     LOG_DEBUG("RdbStoreProxy::IsOpen out is : %{public}d", out);
     return JSUtils::Convert2JSValue(env, out);
@@ -1059,7 +1080,7 @@ napi_value RdbStoreProxy::GetVersion(napi_env env, napi_callback_info info)
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
+    NAPI_ASSERT(env, (rdbStoreProxy != nullptr) && (rdbStoreProxy->rdbStore_ != nullptr), "RdbStoreProxy is nullptr");
     int32_t version = 0;
     int out = rdbStoreProxy->rdbStore_->GetVersion(version);
     LOG_DEBUG("RdbStoreProxy::GetVersion out is : %{public}d", out);
@@ -1074,7 +1095,7 @@ napi_value RdbStoreProxy::SetVersion(napi_env env, napi_callback_info info)
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc == 1, "RdbStoreProxy::SetVersion Invalid argvs!");
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thiz);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
+    NAPI_ASSERT(env, (rdbStoreProxy != nullptr) && (rdbStoreProxy->rdbStore_ != nullptr), "RdbStoreProxy is nullptr");
     int32_t version = 0;
     napi_get_value_int32(env, args[0], &version);
     int out = rdbStoreProxy->rdbStore_->SetVersion(version);
@@ -1097,6 +1118,9 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
     auto exec = [context]() {
         LOG_DEBUG("RdbStoreProxy::SetDistributedTables Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        if (obj == nullptr || obj->rdbStore_.get() == nullptr) {
+            return ERR;
+        }
         int res = obj->rdbStore_->SetDistributedTables(context->tablesName);
         LOG_DEBUG("RdbStoreProxy::SetDistributedTables res is : %{public}d", res);
         return (res == E_OK || res == E_NOT_SUPPORTED) ? OK : ERR;
@@ -1108,7 +1132,7 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
     };
     context->SetAction(env, info, input, exec, output);
 
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK, "");
     return AsyncCall::Call(env, context);
 }
 
@@ -1128,6 +1152,9 @@ napi_value RdbStoreProxy::ObtainDistributedTableName(napi_env env, napi_callback
         LOG_DEBUG("RdbStoreProxy::ObtainDistributedTableName Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         int errCode = E_ERROR;
+        if (obj == nullptr || obj->rdbStore_.get() == nullptr) {
+            return ERR;
+        }
         auto name = obj->rdbStore_->ObtainDistributedTableName(context->device, context->tableName, errCode);
         LOG_INFO("RdbStoreProxy::ObtainDistributedTableName name is empty ? : %{public}d, errCode is %{public}d",
             name.empty(), errCode);
@@ -1142,7 +1169,7 @@ napi_value RdbStoreProxy::ObtainDistributedTableName(napi_env env, napi_callback
     };
     context->SetAction(env, info, input, exec, output);
 
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK, "");
     return AsyncCall::Call(env, context);
 }
 
@@ -1164,6 +1191,9 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
         SyncOption option;
         option.mode = static_cast<DistributedRdb::SyncMode>(context->enumArg);
         option.isBlock = true;
+        if (obj == nullptr || obj->rdbStore_.get() == nullptr) {
+            return ERR;
+        }
         int res = obj->rdbStore_->Sync(option, *context->predicatesProxy->GetPredicates(),
             [context](const SyncResult &result) { context->syncResult = result; });
         LOG_INFO("RdbStoreProxy::Sync res is : %{public}d", res);
@@ -1176,7 +1206,7 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
     };
     context->SetAction(env, info, input, exec, output);
 
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK);
+    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK, "");
     return AsyncCall::Call(env, context);
 }
 
@@ -1204,7 +1234,7 @@ void RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *arg
 
     std::lock_guard<std::mutex> lockGuard(mutex_);
     for (const auto &observer : observers_[mode]) {
-        if (*observer == argv[1]) {
+        if (observer != nullptr && *observer == argv[1]) {
             LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: duplicate subscribe");
             return;
         }
@@ -1247,7 +1277,11 @@ void RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *ar
     option.mode = static_cast<SubscribeMode>(mode);
     std::lock_guard<std::mutex> lockGuard(mutex_);
     for (auto it = observers_[mode].begin(); it != observers_[mode].end(); it++) {
-        if (**it == argv[1]) {
+        if (*it != nullptr && **it == argv[1]) {
+            if (rdbStore_.get() == nullptr) {
+                LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: rdbStore_ invalid");
+                return;
+            }
             rdbStore_->UnSubscribe(option, it->get());
             observers_[mode].erase(it);
             LOG_INFO("RdbStoreProxy::OffDataChangeEvent: unsubscribe success");

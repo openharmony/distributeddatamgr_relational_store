@@ -18,7 +18,6 @@
 #include <functional>
 #include <string>
 #include <vector>
-
 #include "js_ability.h"
 #include "js_utils.h"
 #include "logger.h"
@@ -52,25 +51,12 @@ struct HelperRdbContext : public Context {
 
 int ParseContext(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
+    napi_valuetype type;
+    napi_typeof(env, object, &type);
+    CHECK_RETURN_SET(type == napi_object, std::make_shared<ParamError>("context", "object."));
     auto abilityContext = JSAbility::GetContext(env, object);
     CHECK_RETURN_SET(abilityContext != nullptr, std::make_shared<ParamError>("context", "a Context."));
     context->abilitycontext = abilityContext;
-    return OK;
-}
-
-int ParseDatabaseName(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
-{
-    napi_value value;
-    napi_get_named_property(env, object, "name", &value);
-    CHECK_RETURN_SET(value != nullptr, std::make_shared<ParamError>("config", "a StoreConfig."));
-
-    std::string name = JSUtils::Convert2String(env, value);
-    CHECK_RETURN_SET(!name.empty(), std::make_shared<ParamError>("config", "a StoreConfig."));
-    if (name.find("/") != std::string::npos) {
-        CHECK_RETURN_SET(false, std::make_shared<ParamError>("StoreConfig.name", "a file name without path"));
-    }
-
-    context->config.SetName(std::move(name));
     return OK;
 }
 
@@ -88,10 +74,6 @@ int ParseIsEncrypt(const napi_env &env, const napi_value &object, std::shared_pt
 
 int ParseContextProperty(const napi_env &env, std::shared_ptr<HelperRdbContext> context)
 {
-    if (context->abilitycontext == nullptr) {
-        int status = ParseContext(env, nullptr, context); // when no context as arg got from application.
-        CHECK_RETURN_SET(status == OK, std::make_shared<ParamError>("context", "a Context."));
-    }
     context->config.SetModuleName(context->abilitycontext->GetModuleName());
     context->config.SetArea(context->abilitycontext->GetArea());
     context->config.SetBundleName(context->abilitycontext->GetBundleName());
@@ -106,16 +88,27 @@ int ParseContextProperty(const napi_env &env, std::shared_ptr<HelperRdbContext> 
     return OK;
 }
 
-int ParseDatabaseDir(const napi_env &env, std::shared_ptr<HelperRdbContext> context)
+int ParseDatabaseDir(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
-    if (context->abilitycontext == nullptr) {
-        int status = ParseContext(env, nullptr, context); // when no context as arg got from application.
-        CHECK_RETURN_SET(status == OK, std::make_shared<ParamError>("context", "a Context."));
-    }
-    CHECK_RETURN_SET(context->abilitycontext != nullptr, std::make_shared<ParamError>("context", "a Context."));
     int errorCode = E_OK;
-    std::string databaseName = context->config.GetName();
-    std::string databaseDir = context->abilitycontext->GetDatabaseDir();
+    napi_value value;
+    napi_get_named_property(env, object, "name", &value);
+    CHECK_RETURN_SET(value != nullptr, std::make_shared<ParamError>("config", "a StoreConfig."));
+    std::string databaseName = JSUtils::Convert2String(env, value);
+    CHECK_RETURN_SET(!databaseName.empty(), std::make_shared<ParamError>("StoreConfig.name", "not empty."));
+    if (databaseName.find("/") != std::string::npos) {
+        CHECK_RETURN_SET(false, std::make_shared<ParamError>("StoreConfig.name", "a file name without path"));
+    }
+    context->config.SetName(databaseName);
+
+    std::string databaseDir;
+    if (context->config.GetDataGroupId().empty()) {
+        databaseDir = context->abilitycontext->GetDatabaseDir();
+    } else {
+        errorCode = context->abilitycontext->GetSystemDatabaseDir(context->config.GetDataGroupId(), databaseDir);
+        CHECK_RETURN_SET((errorCode == E_OK), std::make_shared<InnerError>(E_DATA_GROUP_ID_INVALID));
+    }
+
     std::string realPath = RdbSqlUtils::GetDefaultDatabasePath(databaseDir, databaseName, errorCode);
     CHECK_RETURN_SET(errorCode == E_OK, std::make_shared<ParamError>("config", "a StoreConfig."));
     context->config.SetPath(std::move(realPath));
@@ -146,13 +139,30 @@ int ParseSecurityLevel(const napi_env &env, const napi_value &object, std::share
     return OK;
 }
 
+int ParseDataGroupId(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
+{
+    bool hasProp = false;
+    napi_status status = napi_has_named_property(env, object, "dataGroupId", &hasProp);
+    if (status == napi_ok && hasProp) {
+        napi_value value = nullptr;
+        status = napi_get_named_property(env, object, "dataGroupId", &value);
+        CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("config", "with dataGroupId."));
+        std::string dataGroupId = JSUtils::Convert2String(env, value);
+        CHECK_RETURN_SET(!dataGroupId.empty(), std::make_shared<ParamError>
+            ("StoreConfig.dataGroupId", "not empty."));
+        CHECK_RETURN_SET(context->abilitycontext->IsStageMode(), std::make_shared<InnerError>(E_NOT_STAGE_MODE));
+        context->config.SetDataGroupId(JSUtils::Convert2String(env, value));
+    }
+    return OK;
+}
+
 int ParseStoreConfig(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
-    CHECK_RETURN_CORE(OK == ParseDatabaseName(env, object, context), RDB_REVT_NOTHING, ERR);
     CHECK_RETURN_CORE(OK == ParseIsEncrypt(env, object, context), RDB_REVT_NOTHING, ERR);
     CHECK_RETURN_CORE(OK == ParseSecurityLevel(env, object, context), RDB_REVT_NOTHING, ERR);
+    CHECK_RETURN_CORE(OK == ParseDataGroupId(env, object, context), RDB_REVT_NOTHING, ERR);
     CHECK_RETURN_CORE(OK == ParseContextProperty(env, context), RDB_REVT_NOTHING, ERR);
-    CHECK_RETURN_CORE(OK == ParseDatabaseDir(env, context), RDB_REVT_NOTHING, ERR);
+    CHECK_RETURN_CORE(OK == ParseDatabaseDir(env, object, context), RDB_REVT_NOTHING, ERR);
     return OK;
 }
 
@@ -164,6 +174,8 @@ int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<Helper
     size_t pos = path.find_first_of('/');
     CHECK_RETURN_SET(pos == std::string::npos, std::make_shared<ParamError>("name", "a without path without /."));
 
+    CHECK_RETURN_SET(context->abilitycontext != nullptr,
+        std::make_shared<ParamError>("abilitycontext", "abilitycontext is nullptr"));
     std::string databaseDir = context->abilitycontext->GetDatabaseDir();
     int errorCode = E_OK;
     std::string realPath = RdbSqlUtils::GetDefaultDatabasePath(databaseDir, path, errorCode);
@@ -171,6 +183,16 @@ int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<Helper
 
     context->config.SetPath(realPath);
     return OK;
+}
+
+bool IsNapiString(napi_env env, size_t argc, napi_value *argv, size_t arg)
+{
+    if (arg >= argc) {
+        return false;
+    }
+    napi_valuetype type;
+    NAPI_CALL_BASE(env, napi_typeof(env, argv[arg], &type), false);
+    return type == napi_string;
 }
 
 class DefaultOpenCallback : public RdbOpenCallback {
@@ -187,18 +209,13 @@ public:
 
 napi_value GetRdbStore(napi_env env, napi_callback_info info)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    LOG_DEBUG("RelationalStoreJsKit::GetRdbStore start");
     auto context = std::make_shared<HelperRdbContext>();
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        bool checked = JSAbility::CheckContext(env, info);
-        CHECK_RETURN_SET_E(checked, std::make_shared<ParamError>("context", "a valid Context."));
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         CHECK_RETURN(OK == ParseContext(env, argv[0], context));
         CHECK_RETURN(OK == ParseStoreConfig(env, argv[1], context));
     };
     auto exec = [context]() -> int {
-        LOG_DEBUG("RelationalStoreJsKit::GetRdbStore Async");
         int errCode = OK;
         DefaultOpenCallback callback;
         context->proxy = RdbHelper::GetRdbStore(context->config, -1, callback, errCode);
@@ -207,7 +224,6 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
     auto output = [context](napi_env env, napi_value &result) {
         result = RdbStoreProxy::NewInstance(env, context->proxy, context->isSystemAppCalled);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
-        LOG_DEBUG("RelationalStoreJsKit::GetRdbStore end");
     };
     context->SetAction(env, info, input, exec, output);
 
@@ -217,13 +233,15 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
 
 napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    LOG_DEBUG("RelationalStoreJsKit::DeleteRdbStore start");
     auto context = std::make_shared<HelperRdbContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         CHECK_RETURN(OK == ParseContext(env, argv[0], context));
-        CHECK_RETURN(OK == ParsePath(env, argv[1], context));
+        if (IsNapiString(env, argc, argv, 1)) {
+            CHECK_RETURN(OK == ParsePath(env, argv[1], context));
+        } else {
+            CHECK_RETURN(OK == ParseStoreConfig(env, argv[1], context));
+        }
     };
     auto exec = [context]() -> int {
         return RdbHelper::DeleteRdbStore(context->config.GetPath());
@@ -231,7 +249,6 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, OK, &result);
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
-        LOG_DEBUG("RelationalStoreJsKit::DeleteRdbStore end");
     };
     context->SetAction(env, info, input, exec, output);
 

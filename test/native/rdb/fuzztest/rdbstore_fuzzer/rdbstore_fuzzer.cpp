@@ -21,22 +21,20 @@
 
 using namespace OHOS;
 using namespace OHOS::NativeRdb;
-namespace OHOS {
-/* change value */
-constexpr int ageChange = 2;
-constexpr double salaryChange = 100;
-constexpr double salaryChanges = 200;
 
+namespace OHOS {
 class RdbStoreFuzzTest {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
 
+    static bool InsertData(std::shared_ptr<RdbStore> &store, const uint8_t *data, size_t size);
+
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store_;
 };
 std::shared_ptr<RdbStore> RdbStoreFuzzTest::store_ = nullptr;
-const std::string RdbStoreFuzzTest::DATABASE_NAME = "/data/test/rdbstore_test.db";
+const std::string RdbStoreFuzzTest::DATABASE_NAME = "/data/test/rdbStoreFuzz.db";
 
 class RdbTestOpenCallback : public RdbOpenCallback {
 public:
@@ -44,11 +42,10 @@ public:
     int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
     static const std::string CREATE_TABLE_TEST;
 };
-
-const std::string RdbTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABLE IF NOT EXISTS test ")
-                                                              + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                                            "name TEXT NOT NULL, age INTEGER, salary "
-                                                                            "REAL, blobType BLOB)");
+const std::string RdbTestOpenCallback::CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test "
+                                                           "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                           "name TEXT NOT NULL, age INTEGER, salary REAL, "
+                                                           "blobType BLOB)";
 
 int RdbTestOpenCallback::OnCreate(RdbStore &store)
 {
@@ -66,98 +63,113 @@ void RdbStoreFuzzTest::SetUpTestCase(void)
     RdbStoreConfig config(DATABASE_NAME);
     RdbTestOpenCallback helper;
     RdbStoreFuzzTest::store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    if (store_ == nullptr || errCode != E_OK) {
+        return;
+    }
 }
 
 void RdbStoreFuzzTest::TearDownTestCase(void)
 {
-    RdbHelper::DeleteRdbStore(RdbStoreFuzzTest::DATABASE_NAME);
+    if (RdbHelper::DeleteRdbStore(RdbStoreFuzzTest::DATABASE_NAME) != E_OK) {
+        return;
+    }
+}
+
+bool RdbStoreFuzzTest::InsertData(std::shared_ptr<RdbStore> &store, const uint8_t *data, size_t size)
+{
+    if (data == nullptr) {
+        return false;
+    }
+
+    int64_t id;
+    ValuesBucket values;
+
+    std::string tableName(data, data + size);
+    std::string valName(data, data + size);
+    int valAge = static_cast<int>(size);
+    double valSalary = static_cast<double>(size);
+
+    values.PutString("name", valName);
+    values.PutInt("age", valAge);
+    values.PutDouble("salary", valSalary);
+    values.PutBlob("blobType", std::vector<uint8_t> (data, data + size));
+
+    return store->Insert(id, tableName, values);
 }
 
 bool RdbInsertFuzz(const uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return false;
+    }
+
     std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
     bool result = true;
-    int64_t id;
-    ValuesBucket values;
-    std::string valName(data, data + size);
-    int valAge = static_cast<int>(size);
-    double valSalary = static_cast<double>(size);
-    values.PutString("name", valName + "test1");
-    values.PutInt("age", valAge);
-    values.PutDouble("salary", valSalary);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data});
-    int errCode = store->Insert(id, "test", values);
+
+    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
     if (errCode != E_OK) {
         result = false;
     }
-    values.Clear();
-    values.PutString("name", valName + "test2");
-    values.PutInt("age", valAge + 1);
-    values.PutDouble("salary", valSalary + salaryChange);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *data + 1});
-    store->Insert(id, "test", values);
-    if (errCode != E_OK) {
-        result = false;
-    }
+
     store->ExecuteSql("DELETE FROM test");
     return result;
 }
 
 bool RdbDeleteFuzz(const uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return false;
+    }
+
     std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
+
     bool result = true;
-    int64_t id;
-    int deletedRows;
-
-    ValuesBucket values;
-    std::string valName(data, data + size);
-    int valAge = static_cast<int>(size);
-    double valSalary = static_cast<double>(size);
-    values.PutString("name", valName + "test1");
-    values.PutInt("age", valAge);
-    values.PutDouble("salary", valSalary);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data});
-    store->Insert(id, "test", values);
-
-    values.Clear();
-    values.PutString("name", valName + "test2");
-    values.PutInt("age", valAge + 1);
-    values.PutDouble("salary", valSalary + salaryChange);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *data + 1});
-    store->Insert(id, "test", values);
-    int errCode = store->Delete(deletedRows, "test", "id = 1");
+    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
     if (errCode != E_OK) {
         result = false;
     }
+
+    int deletedRows;
+    std::string tableName(data, data + size);
+    std::string whereClause(data, data + size);
+    errCode = store->Delete(deletedRows, tableName, whereClause);
+    if (errCode != E_OK) {
+        result = false;
+    }
+
     store->ExecuteSql("DELETE FROM test");
     return result;
 }
 
 bool RdbUpdateFuzz(const uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return false;
+    }
+
     std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
     bool result = true;
-    int64_t id;
-    int changedRows;
 
+    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
+    if (errCode != E_OK) {
+        result = false;
+    }
+
+    int changedRows;
     ValuesBucket values;
     std::string valName(data, data + size);
-    int valAge = static_cast<int>(size);
-    double valSalary = static_cast<double>(size);
-    values.PutString("name", valName + "test1");
+    int valAge = static_cast<int>(*data);
+    double valSalary = static_cast<double>(*data);
+    std::string whereClause(data, data + size);
+    std::string tableName(data, data + size);
+
+    values.PutString("name", valName);
     values.PutInt("age", valAge);
     values.PutDouble("salary", valSalary);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data});
-    store->Insert(id, "test", values);
+    values.PutBlob("blobType", std::vector<uint8_t> (data, data + size));
 
-    values.Clear();
-    values.PutString("name", valName + "test2");
-    values.PutInt("age", valAge + 1);
-    values.PutDouble("salary", valSalary + salaryChange);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *data + 1});
-    int errCode = store->Update(changedRows, "test", values, "name = ?",
-        std::vector<std::string> { valName + "test1" });
+    errCode = store->Update(changedRows, tableName, values, whereClause,
+        std::vector<std::string> { valName });
     if (errCode != E_OK) {
         result = false;
     }
@@ -165,131 +177,105 @@ bool RdbUpdateFuzz(const uint8_t *data, size_t size)
     return result;
 }
 
-void DBInsert(std::string &valName, int &valAge, double &valSalary,
-    std::shared_ptr<RdbStore> &store, const uint8_t *data)
-{
-    int64_t id;
-    ValuesBucket values;
-    values.PutString("name", valName + "test1");
-    values.PutInt("age", valAge);
-    values.PutDouble("salary", valSalary);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data});
-    store->Insert(id, "test", values);
-
-    values.Clear();
-    values.PutString("name", valName + "test2");
-    values.PutInt("age", valAge + 1);
-    values.PutDouble("salary", valSalary + salaryChange);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *data + 1});
-    store->Insert(id, "test", values);
-
-    values.Clear();
-    values.PutString("name", valName + "test3");
-    values.PutInt("age", valAge + ageChange);
-    values.PutDouble("salary", valSalary + salaryChanges);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *data + 1});
-    store->Insert(id, "test", values);
-
-    values.Clear();
-    values.PutString("name", valName + "test4");
-    values.PutInt("age", valAge + ageChange);
-    values.PutDouble("salary", valSalary + salaryChanges);
-    values.PutBlob("blobType", std::vector<uint8_t> {*data, *data + 1});
-    store->Insert(id, "test", values);
-}
-
 void RdbQueryFuzz1(const uint8_t *data, size_t size)
 {
-    std::string valName(data, data + size);
-    int valAge = static_cast<int>(size);
-    double valSalary = static_cast<double>(size);
+    if (data == nullptr) {
+        return;
+    }
+
     std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
-    AbsRdbPredicates predicates("test");
-    std::vector<std::string> columns;
-    columns.push_back("id");
-    columns.push_back("name");
-    columns.push_back("age");
-    columns.push_back("salary");
-    columns.push_back("blobType");
-    DBInsert(valName, valAge, valSalary, store, data);
 
-    predicates.EqualTo("name", valName + "test1");
-    store->Query(predicates, columns);
+    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
+    if (errCode != E_OK) {
+        return;
+    }
 
-    predicates.Clear();
-    predicates.NotEqualTo("name", valName + "test1");
-    store->Query(predicates, columns);
+    std::string tableName(data, data + size);
+    std::string valName(data, data + size);
+    std::string vectorElem(data, data + size);
+    AbsRdbPredicates predicates(tableName);
+
+    predicates.EqualTo("name", valName);
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
-    predicates.Contains("name", valName + "test1");
-    store->Query(predicates, columns);
+    predicates.NotEqualTo("name", valName);
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
-    predicates.BeginsWith("name", valName + "test1");
-    store->Query(predicates, columns);
+    predicates.Contains("name", valName);
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
-    predicates.EndsWith("name", valName + "test1");
-    store->Query(predicates, columns);
+    predicates.BeginsWith("name", valName);
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
-    predicates.Like("name", valName + "test1");
-    store->Query(predicates, columns);
+    predicates.EndsWith("name", valName);
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
-    predicates.Glob("name", valName + "?est1");
-    store->Query(predicates, columns);
+    predicates.Like("name", valName);
+    store->Query(predicates, {vectorElem});
+
+    predicates.Clear();
+    predicates.Glob("name", valName);
+    store->Query(predicates, {vectorElem});
     store->ExecuteSql("DELETE FROM test");
 }
 
 void RdbQueryFuzz2(const uint8_t *data, size_t size)
 {
-    std::string valName(data, data + size);
-    int valAge = static_cast<int>(size);
-    double valSalary = static_cast<double>(size);
+    if (data == nullptr) {
+        return;
+    }
+
     std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
-    AbsRdbPredicates predicates("test");
-    std::vector<std::string> columns;
-    columns.push_back("id");
-    columns.push_back("name");
-    columns.push_back("age");
-    columns.push_back("salary");
-    columns.push_back("blobType");
-    DBInsert(valName, valAge, valSalary, store, data);
+
+    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
+    if (errCode != E_OK) {
+        return;
+    }
+
+    std::string tableName(data, data + size);
+    std::string valName(data, data + size);
+    std::string valAge(data, data + size);
+    std::string valAgeChange(data, data + size);
+    std::string vectorElem(data, data + size);
+
+    AbsRdbPredicates predicates(tableName);
 
     predicates.Clear();
-    predicates.Between("age", std::to_string(valAge), std::to_string(valAge + ageChange));
-    store->Query(predicates, columns);
+    predicates.Between("age", valAge, valAgeChange);
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
-    predicates.NotBetween("age", std::to_string(valAge), std::to_string(valAge + 1));
-    store->Query(predicates, columns);
+    predicates.NotBetween("age", valAge, valAgeChange);
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
-    predicates.GreaterThan("age", std::to_string(valAge));
-    store->Query(predicates, columns);
+    predicates.GreaterThan("age", valAge);
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
-    predicates.LessThan("age", std::to_string(valAge + ageChange));
-    store->Query(predicates, columns);
+    predicates.LessThan("age", valAgeChange);
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
-    predicates.GreaterThanOrEqualTo("age", std::to_string(valAge));
-    store->Query(predicates, columns);
+    predicates.GreaterThanOrEqualTo("age", valAge);
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
-    predicates.LessThanOrEqualTo("age", std::to_string(valAge + ageChange));
-    store->Query(predicates, columns);
-
-    std::vector<std::string> agrsIn = {std::to_string(INT_MAX)};
-    predicates.Clear();
-    predicates.In("name", agrsIn);
-    store->Query(predicates, columns);
+    predicates.LessThanOrEqualTo("age", valAgeChange);
+    store->Query(predicates, {vectorElem});
 
     predicates.Clear();
-    std::vector<std::string> agrsNotin = {std::to_string(INT_MAX), std::to_string(INT_MIN)};
-    predicates.NotIn("name", agrsNotin);
-    store->Query(predicates, columns);
+    predicates.In("name", {vectorElem});
+    store->Query(predicates, {vectorElem});
+
+    predicates.Clear();
+    predicates.NotIn("name", {vectorElem});
+    store->Query(predicates, {vectorElem});
     store->ExecuteSql("DELETE FROM test");
 }
 }
@@ -307,4 +293,3 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::RdbStoreFuzzTest::TearDownTestCase();
     return 0;
 }
-

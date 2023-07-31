@@ -25,7 +25,7 @@ using namespace OHOS::Rdb;
 
 int SecurityPolicy::SetFileSecurityLevel(const std::string &filePath, const std::string &securityLevel)
 {
-    bool result = DistributedFS::ModuleSecurityLabel::SecurityLabel::SetSecurityLabel(filePath, securityLevel);
+    bool result = FileManagement::ModuleSecurityLabel::SecurityLabel::SetSecurityLabel(filePath, securityLevel);
     LOG_INFO("Set database securityLabel:%{public}s, result:%{public}d.", securityLevel.c_str(), result);
     return result ? E_OK : E_ERROR;
 }
@@ -48,7 +48,7 @@ std::string SecurityPolicy::GetSecurityLevelValue(SecurityLevel securityLevel)
 
 std::string SecurityPolicy::GetFileSecurityLevel(const std::string &filePath)
 {
-    return DistributedFS::ModuleSecurityLabel::SecurityLabel::GetSecurityLabel(filePath);
+    return FileManagement::ModuleSecurityLabel::SecurityLabel::GetSecurityLabel(filePath);
 }
 
 int SecurityPolicy::SetSecurityLabel(const RdbStoreConfig &config)

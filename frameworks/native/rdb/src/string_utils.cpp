@@ -17,23 +17,22 @@
 
 namespace OHOS {
 namespace NativeRdb {
-std::string StringUtils::SurroundWithQuote(std::string value, std::string quote)
+std::string StringUtils::SurroundWithQuote(const std::string &value, const std::string &quote)
 {
     if (value.empty()) {
         return value;
     }
-    std::string str = quote + value + quote;
-    return str;
+    return quote + value + quote;
 }
 
 // Join array members as parameters of a function call.
-std::string StringUtils::SurroundWithFunction(std::string function, std::string separator,
-    std::vector<std::string> array)
+std::string StringUtils::SurroundWithFunction(const std::string &function, const std::string &separator,
+    const std::vector<std::string> &array)
 {
     std::string builder(function);
     builder += "(";
     bool isFirst = true;
-    for (auto text : array) {
+    for (auto &text : array) {
         if (!isFirst) {
             builder = builder + " " + separator + " ";
         } else {

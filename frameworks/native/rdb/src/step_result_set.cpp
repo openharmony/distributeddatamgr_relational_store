@@ -54,7 +54,6 @@ StepResultSet::~StepResultSet()
 
 int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
     if (!columnNames_.empty()) {
         columnNames = columnNames_;
         return E_OK;
@@ -95,7 +94,6 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 
 int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
     if (isClosed) {
         LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
@@ -162,7 +160,7 @@ int StepResultSet::GoToRow(int position)
     }
     // If the moved position is less than zero, reset the result and return an error
     if (position < 0) {
-        LOG_ERROR("position %{public}d.", position);
+        LOG_DEBUG("position %{public}d.", position);
         Reset();
         return E_ERROR;
     }
@@ -189,7 +187,6 @@ int StepResultSet::GoToRow(int position)
  */
 int StepResultSet::GoToNextRow()
 {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
     if (isClosed) {
         LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
@@ -224,17 +221,18 @@ int StepResultSet::GoToNextRow()
         isAfterLast = true;
         rowCount = rowPos_ + 1;
         FinishStep();
+        rowPos_ = rowCount;
         return E_STEP_RESULT_IS_AFTER_LAST;
     } else {
         LOG_ERROR("step ret is %{public}d", errCode);
         FinishStep();
+        rowPos_ = rowCount;
         return SQLiteError::ErrNo(errCode);
     }
 }
 
 int StepResultSet::Close()
 {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
     if (isClosed) {
         return E_OK;
     }
@@ -340,7 +338,6 @@ int StepResultSet::IsAtFirstRow(bool &result) const
 
 int StepResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
 {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
     if (isClosed) {
         return E_STEP_RESULT_CLOSED;
     }
@@ -354,7 +351,6 @@ int StepResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
 
 int StepResultSet::GetString(int columnIndex, std::string &value)
 {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
     if (isClosed) {
         return E_STEP_RESULT_CLOSED;
     }
@@ -373,7 +369,6 @@ int StepResultSet::GetString(int columnIndex, std::string &value)
 
 int StepResultSet::GetInt(int columnIndex, int &value)
 {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
     if (isClosed) {
         return E_STEP_RESULT_CLOSED;
     }
@@ -393,7 +388,6 @@ int StepResultSet::GetInt(int columnIndex, int &value)
 
 int StepResultSet::GetLong(int columnIndex, int64_t &value)
 {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
     if (isClosed) {
         return E_STEP_RESULT_CLOSED;
     }
@@ -410,7 +404,6 @@ int StepResultSet::GetLong(int columnIndex, int64_t &value)
 
 int StepResultSet::GetDouble(int columnIndex, double &value)
 {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
     if (isClosed) {
         return E_STEP_RESULT_CLOSED;
     }
@@ -442,7 +435,6 @@ int StepResultSet::Get(int32_t col, ValueObject &value)
 
 int StepResultSet::GetModifyTime(std::string &modifyTime)
 {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
     if (isClosed) {
         return E_STEP_RESULT_CLOSED;
     }
@@ -460,7 +452,6 @@ int StepResultSet::GetModifyTime(std::string &modifyTime)
 
 int StepResultSet::GetSize(int columnIndex, size_t &size)
 {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
     if (rowPos_ == INIT_POS) {
         size = 0;
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
@@ -486,7 +477,6 @@ int StepResultSet::IsColumnNull(int columnIndex, bool &isNull)
  */
 bool StepResultSet::IsClosed() const
 {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
     return isClosed;
 }
 
@@ -504,7 +494,6 @@ int StepResultSet::GetValue(int32_t col, T &value)
 
 std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t index)
 {
-    std::shared_lock<std::shared_mutex> lock(mutex_);
     if (isClosed) {
         return { E_STEP_RESULT_CLOSED, ValueObject() };
     }

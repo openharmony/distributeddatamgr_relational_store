@@ -60,7 +60,7 @@
     ],
     "requestPermissions": [
       {
-        "name": "ohos.permission.CLOUDDATA_CONFOG"
+        "name": "ohos.permission.CLOUDDATA_CONFIG"
       }
     ]
   }

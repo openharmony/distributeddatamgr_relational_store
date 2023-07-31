@@ -33,7 +33,6 @@ Context::Context()
     baseDir = getenv("TEMP");
     if (!baseDir.empty()) {
         databaseDir_ = baseDir + "\\HuaweiDevEcoStudioDatabases";
-        preferencesDir_ = baseDir + "\\HuaweiDevEcoStudioPreferences";
     }
 #endif
 
@@ -42,7 +41,6 @@ Context::Context()
     baseDir = "/Users/" + baseDir + "/Library/Caches";
     if (!baseDir.empty()) {
         databaseDir_ = baseDir + "/HuaweiDevEcoStudioDatabases";
-        preferencesDir_ = baseDir + "/HuaweiDevEcoStudioPreferences";
     }
 #endif
     bundleName_ = "com.example.myapplication";
@@ -51,18 +49,15 @@ Context::Context()
 #if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
 Context::Context(std::shared_ptr<AbilityRuntime::Platform::Context> stageContext)
 {
-    databaseDir_ = stageContext->GetDatabaseDir();
+    if (stageContext != nullptr) {
+        databaseDir_ = stageContext->GetDatabaseDir();
+    }
 }
 #endif
 
 std::string Context::GetDatabaseDir()
 {
     return databaseDir_;
-}
-
-std::string Context::GetPreferencesDir()
-{
-    return preferencesDir_;
 }
 
 std::string Context::GetBundleName()
@@ -123,6 +118,17 @@ std::shared_ptr<Context> JSAbility::GetContext(napi_env env, napi_value value)
 bool Context::IsHasProxyDataConfig() const
 {
     return hasProxyDataConfig_;
+}
+
+bool Context::IsStageMode() const
+{
+    return isStageMode_;
+}
+
+int Context::GetSystemDatabaseDir(const std::string &dataGroupId, std::string &databaseDir)
+{
+    databaseDir = databaseDir_;
+    return 0;
 }
 } // namespace AppDataMgrJsKit
 } // namespace OHOS

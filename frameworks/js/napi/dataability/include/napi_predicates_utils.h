@@ -23,6 +23,13 @@
 namespace OHOS {
 namespace DataAbilityJsKit {
 napi_value InitPredicatesUtils(napi_env env, napi_value info);
+#define RDB_CHECK_RETURN_NULLPTR(assertion, message)    \
+    do {                                                \
+        if (!(assertion)) {                             \
+            LOG_ERROR("%{public}s", message);           \
+            return nullptr;                             \
+        }                                               \
+    } while (0)
 } // namespace DataAbilityJsKit
 } // namespace OHOS
 #endif // APPDATAMGR_NAPI_PREDICATES_UTILS_H

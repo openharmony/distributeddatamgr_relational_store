@@ -81,7 +81,6 @@ private:
     static const int STEP_QUERY_RETRY_INTERVAL = 1000;
     SqliteConnection *connection_;
     std::vector<std::string> columnNames_;
-    mutable std::shared_mutex mutex_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

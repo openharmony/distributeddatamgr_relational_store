@@ -83,12 +83,10 @@ napi_value Convert2JSValue(napi_env env, const Asset &value)
     NAPI_CALL_RETURN_ERR(napi_create_object(env, &object), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, name), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, uri), object);
-    NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, id), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, createTime), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, modifyTime), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, size), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, path), object);
-    NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, hash), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, status), object);
     return object;
 }
@@ -121,8 +119,9 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &statis
 
     napi_set_named_property(env, jsValue, "total", total);
     napi_set_named_property(env, jsValue, "success", success);
+    napi_set_named_property(env, jsValue, "successful", success);
     napi_set_named_property(env, jsValue, "failed", failed);
-    napi_set_named_property(env, jsValue, "untreated", untreated);
+    napi_set_named_property(env, jsValue, "remained", untreated);
     return jsValue;
 }
 

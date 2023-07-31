@@ -895,3 +895,18 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_027, TestSize.Level1)
     EXPECT_EQ(E_OK, resultSet9->Close());
     EXPECT_EQ(E_OK, resultSet10->Close());
 }
+
+/**
+ * @tc.name: RdbStoreConfig_028
+ * @tc.desc: test RdbStoreConfig interfaces: SetDataGroupId/GetDataGroupId
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_028, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    std::string dataGroupId = "123456";
+    config.SetDataGroupId(dataGroupId);
+    EXPECT_EQ(dataGroupId, config.GetDataGroupId());
+}

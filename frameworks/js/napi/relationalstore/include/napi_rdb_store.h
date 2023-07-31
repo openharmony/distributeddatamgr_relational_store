@@ -74,25 +74,27 @@ private:
     static napi_value GetModifyTime(napi_env env, napi_callback_info info);
     static napi_value OnEvent(napi_env env, napi_callback_info info);
     static napi_value OffEvent(napi_env env, napi_callback_info info);
+    static napi_value Notify(napi_env env, napi_callback_info info);
 
     static constexpr int MIN_ON_EVENT_ARG_NUM = 2;
     static constexpr int MAX_ON_EVENT_ARG_NUM = 5;
 
-    class NapiCoudSyncCallback : public NapiUvQueue {
-    public:
-        explicit NapiCoudSyncCallback(napi_env env, napi_value callback) : NapiUvQueue(env, callback) {}
-        virtual ~NapiCoudSyncCallback() = default;
+    napi_value OnRemote(napi_env env, size_t argc, napi_value *argv);
+    napi_value OnLocal(napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback);
+    napi_value RegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option,
+        std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> &observers, napi_value callback);
 
-        void OnSyncCompelete(const DistributedRdb::Details &details);
-    };
-
-    napi_value OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv);
-    napi_value OffDataChangeEvent(napi_env env, size_t argc, napi_value *argv);
+    napi_value OffRemote(napi_env env, size_t argc, napi_value *argv);
+    napi_value OffLocal(napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback);
+    napi_value UnRegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option,
+        std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> &observers, napi_value callback);
 
     std::mutex mutex_;
     bool isSystemAppCalled_ = false;
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
     std::list<std::shared_ptr<NapiRdbStoreObserver>> observers_[DistributedRdb::SUBSCRIBE_MODE_MAX];
+    std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localObservers_;
+    std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localSharedObservers_;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
