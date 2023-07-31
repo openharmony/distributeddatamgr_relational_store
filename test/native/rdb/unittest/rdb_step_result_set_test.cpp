@@ -1627,3 +1627,150 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep011, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(arrLen, stringValueLen);
 }
+
+/* *
+ * @tc.name: testSqlStep012
+ * @tc.desc: Normal testcase of SqlStep for constructor std::vector<ValueObject>
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, testSqlStep012, TestSize.Level1)
+{
+    GenerateDefaultEmptyTable();
+
+    std::string insertSql = "INSERT INTO test (data1, data2, data3, data4) VALUES (?, ?, ?, ?);";
+    const char arr[] = { 0X11, 0X22, 0X33, 0X44, 0X55, 0X00, 0X66, 0X77, 0X00 };
+    size_t arrLen = sizeof(arr);
+    uint8_t uValue = 66;
+    std::vector<uint8_t> typeBlob;
+    typeBlob.push_back(uValue);
+    store->ExecuteSql(
+        insertSql, std::vector<ValueObject> { ValueObject(std::string(arr, arrLen)), ValueObject((int)10),
+                                              ValueObject((double)1.0), ValueObject((std::vector<uint8_t>)typeBlob) });
+
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT ? FROM test",
+        std::vector<ValueObject> {ValueObject((std::string)"data1")});
+    EXPECT_NE(resultSet, nullptr);
+
+    int iRet = resultSet->GoToFirstRow();
+    EXPECT_EQ(E_OK, iRet);
+    bool bResultSet = false;
+    iRet = resultSet->IsAtFirstRow(bResultSet);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(bResultSet, true);
+
+    EXPECT_EQ(E_OK, resultSet->Close());
+}
+
+/* *
+ * @tc.name: testSqlStep013
+ * @tc.desc: Abnormal testcase of SqlStep, if close resultSet before query
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, testSqlStep013, TestSize.Level1)
+{
+    GenerateDefaultTable();
+
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
+
+    EXPECT_EQ(E_OK, resultSet->Close());
+
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GoToNextRow());
+
+    std::vector<std::string> columnNames;
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetAllColumnNames(columnNames));
+
+    ColumnType columnType;
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetColumnType(1, columnType));
+
+    std::vector<uint8_t> blob;
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetBlob(1, blob));
+
+    std::string valueString;
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetString(1, valueString));
+
+    int valueInt;
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetInt(1, valueInt));
+
+    int64_t valueInt64;
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetLong(1, valueInt64));
+
+    double valuedouble;
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetDouble(1, valuedouble));
+
+    std::string modifyTime;
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetModifyTime(modifyTime));
+
+    ValueObject object;
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->Get(4, object));
+}
+
+/* *
+ * @tc.name: testSqlStep014
+ * @tc.desc: Abnormal testcase of SqlStep for GoToRow, if connection counts over limit
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, testSqlStep014, TestSize.Level1)
+{
+    GenerateDefaultTable();
+
+    std::shared_ptr<ResultSet> resultSet1 = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet1, nullptr);
+
+    std::shared_ptr<ResultSet> resultSet2 = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet2, nullptr);
+
+    std::shared_ptr<ResultSet> resultSet3 = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet2, nullptr);
+
+    std::shared_ptr<ResultSet> resultSet4 = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet2, nullptr);
+
+    std::shared_ptr<ResultSet> resultSet5 = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet2, nullptr);
+
+    EXPECT_EQ(E_CON_OVER_LIMIT, resultSet5->GoToRow(1));
+
+    EXPECT_EQ(E_OK, resultSet1->Close());
+    EXPECT_EQ(E_OK, resultSet2->Close());
+    EXPECT_EQ(E_OK, resultSet3->Close());
+    EXPECT_EQ(E_OK, resultSet4->Close());
+    EXPECT_EQ(E_OK, resultSet5->Close());
+}
+
+/* *
+ * @tc.name: testSqlStep015
+ * @tc.desc: Abnormal testcase of SqlStep for QueryByStep, if sql is inValid
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, testSqlStep015, TestSize.Level1)
+{
+    GenerateDefaultTable();
+
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SE");
+    EXPECT_NE(resultSet, nullptr);
+
+    std::vector<std::string> columnNames;
+    EXPECT_EQ(E_EXECUTE_IN_STEP_QUERY, resultSet->GetAllColumnNames(columnNames));
+
+    EXPECT_EQ(E_OK, resultSet->Close());
+}
+
+/* *
+ * @tc.name: testSqlStep016
+ * @tc.desc: Abnormal testcase of SqlStep for GetSize, if rowPos is inValid
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, testSqlStep016, TestSize.Level1)
+{
+    GenerateDefaultTable();
+
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SE");
+    EXPECT_NE(resultSet, nullptr);
+
+    size_t size;
+    EXPECT_EQ(E_STEP_RESULT_QUERY_NOT_EXECUTED, resultSet->GetSize(2, size));
+
+    EXPECT_EQ(E_OK, resultSet->Close());
+    EXPECT_EQ(true, resultSet->IsClosed());
+}
