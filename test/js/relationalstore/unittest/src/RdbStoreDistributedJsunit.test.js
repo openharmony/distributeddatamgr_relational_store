@@ -338,4 +338,111 @@ describe('rdbStoreDistributedTest', function () {
         console.log(TAG + "************* testRdbStoreDistributed0013 end *************");
     })
     console.log(TAG + "*************Unit Test End*************");
+
+    /**
+     * @tc.name subscribe test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_014
+     * @tc.desc subscribe test
+     */
+    it('testRdbStoreDistributed0014', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreDistributed0014 start *************");
+        rdbStore.on("dataChange", data_relationalStore.SubscribeType.SUBSCRIBE_TYPE_CLOUD, (device) => {
+            console.log(TAG + device + " dataChange");
+        });
+        console.log(TAG + "on dataChange success");
+        expect(rdbStore).assertEqual(rdbStore);
+        console.log(TAG + "************* testRdbStoreDistributed0014 end *************");
+        done()
+    })
+
+    /**
+     * @tc.name unsubscribe test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_015
+     * @tc.desc subscribe test
+     */
+    it('testRdbStoreDistributed0015', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreDistributed0015 start *************");
+        rdbStore.off("dataChange", data_relationalStore.SubscribeType.SUBSCRIBE_TYPE_CLOUD, (device) => {
+            console.log(TAG + device + " dataChange");
+        });
+        console.log(TAG + "off dataChange success");
+        expect(rdbStore).assertEqual(rdbStore);
+        console.log(TAG + "************* testRdbStoreDistributed0015 end *************");
+        done()
+    })
+
+    /**
+     * @tc.name subscribe test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_016
+     * @tc.desc subscribe test
+     */
+    it('testRdbStoreDistributed0016', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreDistributed0016 start *************");
+        rdbStore.on("dataChange", data_relationalStore.SubscribeType.SUBSCRIBE_TYPE_CLOUD_DETAILS, (device) => {
+            console.log(TAG + device + " dataChange");
+        });
+        console.log(TAG + "on dataChange success");
+        expect(rdbStore).assertEqual(rdbStore);
+        console.log(TAG + "************* testRdbStoreDistributed0016 end *************");
+        done()
+    })
+
+    /**
+     * @tc.name unsubscribe test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_017
+     * @tc.desc subscribe test
+     */
+    it('testRdbStoreDistributed0017', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreDistributed0017 start *************");
+        rdbStore.off("dataChange", data_relationalStore.SubscribeType.SUBSCRIBE_TYPE_CLOUD_DETAILS, (device) => {
+            console.log(TAG + device + " dataChange");
+        });
+        console.log(TAG + "off dataChange success");
+        expect(rdbStore).assertEqual(rdbStore);
+        console.log(TAG + "************* testRdbStoreDistributed0017 end *************");
+        done()
+    })
+
+    /**
+     * @tc.name unsubscribe test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_018
+     * @tc.desc unsubscribe when no observer
+     */
+    it('testRdbStoreDistributed0018', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreDistributed0018 start *************");
+        rdbStore.off("dataChange", data_relationalStore.SubscribeType.SUBSCRIBE_TYPE_REMOTE);
+        console.log(TAG + "off dataChange success");
+        expect(rdbStore).assertEqual(rdbStore);
+        console.log(TAG + "************* testRdbStoreDistributed0018 end *************");
+        done()
+    })
+
+    /**
+     * @tc.name unsubscribe test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_019
+     * @tc.desc unsubscribe when observer is null
+     */
+    it('testRdbStoreDistributed0019', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreDistributed0019 start *************");
+        rdbStore.off("dataChange", data_relationalStore.SubscribeType.SUBSCRIBE_TYPE_CLOUD, null);
+        console.log(TAG + "off dataChange success");
+        expect(rdbStore).assertEqual(rdbStore);
+        console.log(TAG + "************* testRdbStoreDistributed0019 end *************");
+        done()
+    })
+
+    /**
+     * @tc.name unsubscribe test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_020
+     * @tc.desc unsubscribe when observer is undefined
+     */
+    it('testRdbStoreDistributed0020', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreDistributed0020 start *************");
+        rdbStore.off("dataChange", data_relationalStore.SubscribeType.SUBSCRIBE_TYPE_CLOUD_DETAILS, undefined);
+        console.log(TAG + "off dataChange success");
+        expect(rdbStore).assertEqual(rdbStore);
+        console.log(TAG + "************* testRdbStoreDistributed0020 end *************");
+        done()
+    })
+    console.log(TAG + "*************Unit Test End*************");
 })
