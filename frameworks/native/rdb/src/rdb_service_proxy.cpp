@@ -69,15 +69,14 @@ void RdbServiceProxy::OnSyncComplete(uint32_t seqNum, Details &&result)
 
 void RdbServiceProxy::OnDataChange(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo)
 {
+    LOG_DEBUG("Data change, origin:%{public}d, dataType:%{public}d storeName:%{public}s", origin.origin,
+        origin.dataType, SqliteUtils::Anonymous(origin.store).c_str());
     auto name = RemoveSuffix(origin.store);
     observers_.ComputeIfPresent(name,
-        [&origin, &primaries, info = std::move(changeInfo)](const auto &key, std::list<ObserverParam> &value) mutable {
-            auto it = value.begin();
-            while (it != value.end()) {
-                if (it->observer == nullptr) {
-                    it = value.erase(it);
-                }
-                it->observer->OnChange(origin, primaries, (++it) == value.end() ? ChangeInfo(info) : std::move(info));
+        [&origin, &primaries, info = std::move(changeInfo)](const auto &key, const std::list<ObserverParam> &value) mutable {
+            auto size = value.size();
+            for (const auto &params : value) {
+                params.observer->OnChange(origin, primaries, --size > 0 ? ChangeInfo(info) : std::move(info));
             }
             return !value.empty();
         });
