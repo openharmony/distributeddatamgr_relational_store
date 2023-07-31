@@ -21,7 +21,7 @@
 namespace OHOS {
 namespace NativeRdb {
 
-static const std::string RDB_TEST_PATH = "/data/test/";
+static constexpr const char *RDB_TEST_PATH = "/data/test/";
 
 } // namespace NativeRdb
 } // namespace OHOS
