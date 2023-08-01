@@ -570,6 +570,7 @@ napi_value RdbPredicatesProxy::Limit(napi_env env, napi_callback_info info)
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RdbPredicatesProxy *predicatesProxy = GetNativePredicates(env, info);
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->predicates_);
+    //Ensure that the number of parameters is 1 or 2
     RDB_NAPI_ASSERT(env, argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 or 2"));
 
     int32_t offset = 0;
