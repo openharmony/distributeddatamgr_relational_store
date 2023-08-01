@@ -76,34 +76,11 @@ std::string SqliteSqlBuilder::BuildUpdateString(const ValuesBucket &values, cons
     return sql;
 }
 
-std::string SqliteSqlBuilder::BuildUpdateStringOnlyWhere(const ValuesBucket &values, const std::string &tableName,
-    const std::vector<std::string> &whereArgs, const std::string &index, const std::string &whereClause,
-    const std::string &group, const std::string &order, int limit, int offset, std::vector<ValueObject> &bindArgs,
-    ConflictResolution conflictResolution)
-{
-    std::string sql;
-
-    sql.append("UPDATE")
-        .append(g_onConflictClause[static_cast<int>(conflictResolution)])
-        .append(" ")
-        .append(tableName)
-        .append(" SET ");
-
-    if (!whereArgs.empty()) {
-        for (size_t i = 0; i < whereArgs.size(); i++) {
-            bindArgs.push_back(ValueObject(whereArgs[i]));
-        }
-    }
-
-    sql.append(BuildSqlStringFromPredicates(index, whereClause, group, order, limit, offset));
-    return sql;
-}
-
 /**
  * Build a query SQL string using the given condition for SQLite.
  */
 int SqliteSqlBuilder::BuildQueryString(bool distinct, const std::string &table, const std::vector<std::string> &columns,
-    const std::string &where, const std::string &groupBy, const std::string &having, const std::string &orderBy,
+    const std::string &where, const std::string &groupBy, const std::string &index, const std::string &orderBy,
     const std::string &limit, const std::string &offset, std::string &outSql)
 {
     if (table.empty()) {
@@ -124,7 +101,7 @@ int SqliteSqlBuilder::BuildQueryString(bool distinct, const std::string &table, 
     int climit = std::stoi(limit);
     int coffset = std::stoi(offset);
     sql.append("FROM ").append(table).append(
-        BuildSqlStringFromPredicates(having, where, groupBy, orderBy, climit, coffset));
+        BuildSqlStringFromPredicates(index, where, groupBy, orderBy, climit, coffset));
     outSql = sql;
 
     return errorCode;
@@ -144,7 +121,8 @@ std::string SqliteSqlBuilder::BuildQueryStringWithExpr(const std::string &tableN
         sql.append("DISTINCT ");
     }
     if (expr.size() != 0) {
-        AppendExpr(sql, expr);
+        int errorCode = 0;
+        AppendColumns(sql, expr, errorCode);
     } else {
         sql.append("* ");
     }
@@ -242,24 +220,6 @@ void SqliteSqlBuilder::AppendColumns(std::string &builder, const std::vector<std
                 builder.append(", ");
             }
             builder.append(column);
-        }
-    }
-
-    builder += ' ';
-}
-
-void SqliteSqlBuilder::AppendExpr(std::string &builder, std::vector<std::string> &exprs)
-{
-    size_t length = exprs.size();
-
-    for (size_t i = 0; i < length; i++) {
-        std::string expr = exprs[i];
-
-        if (expr.size() != 0) {
-            if (i > 0) {
-                builder.append(", ");
-            }
-            builder.append(expr);
         }
     }
 

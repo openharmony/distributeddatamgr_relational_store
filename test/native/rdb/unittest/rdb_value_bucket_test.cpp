@@ -24,6 +24,7 @@
 #include "sqlite_global_config.h"
 #include "value_object.h"
 #include "values_bucket.h"
+#include "rdb_errno.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -257,6 +258,47 @@ HWTEST_F(ValuesBucketTest, Values_Object_001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: Values_Object_002
+ * @tc.desc: test ValuesObject for Get
+ * @tc.type: FUNC
+ */
+HWTEST_F(ValuesBucketTest, Values_Object_002, TestSize.Level1)
+{
+    ValueObject val;
+    int valueInt;
+    int errCode = val.GetInt(valueInt);
+    EXPECT_EQ(E_INVALID_OBJECT_TYPE, errCode);
+
+    int64_t valueInt64;
+    errCode = val.GetLong(valueInt64);
+    EXPECT_EQ(E_INVALID_OBJECT_TYPE, errCode);
+
+    double valueDouble;
+    errCode = val.GetDouble(valueDouble);
+    EXPECT_EQ(E_INVALID_OBJECT_TYPE, errCode);
+
+    bool valueBool = false;
+    errCode = val.GetBool(valueBool);
+    EXPECT_EQ(E_INVALID_OBJECT_TYPE, errCode);
+
+    std::string valueString;
+    errCode = val.GetString(valueString);
+    EXPECT_EQ(E_INVALID_OBJECT_TYPE, errCode);
+
+    std::vector<uint8_t> valueVectorUint8;
+    errCode = val.GetBlob(valueVectorUint8);
+    EXPECT_EQ(E_INVALID_OBJECT_TYPE, errCode);
+
+    AssetValue asset;
+    errCode = val.GetAsset(asset);
+    EXPECT_EQ(E_INVALID_OBJECT_TYPE, errCode);
+
+    auto assets = ValueObject::Assets({ asset });
+    errCode = val.GetAssets(assets);
+    EXPECT_EQ(E_INVALID_OBJECT_TYPE, errCode);
+}
+
+/**
  * @tc.name: Convert from subset
  * @tc.desc: test ValuesObject operator
  * @tc.type: FUNC
@@ -333,4 +375,42 @@ HWTEST_F(ValuesBucketTest, Convert_To_Subset, TestSize.Level1)
     RawDataParser::Convert(input, output);
     nil = std::get_if<std::monostate>(&output);
     EXPECT_TRUE(nil != nullptr);
+}
+
+/**
+ * @tc.name: Explicit conversion
+ * @tc.desc: test ValuesObject operator
+ * @tc.type: FUNC
+ */
+HWTEST_F(ValuesBucketTest, Explicit_Conversion, TestSize.Level1)
+{
+    ValueObject valueObject;
+    auto blob = std::vector<uint8_t>(10, 'm');
+    valueObject = ValueObject(blob);
+    auto transformedBlob = ValueObject::Blob(valueObject);
+    ASSERT_EQ(transformedBlob.size(), 10);
+
+    AssetValue asset{ .version = 0, .name = "123", .uri = "my test path", .createTime = "12", .modifyTime = "12"};
+    valueObject = ValueObject(asset);
+    auto transformedAsset = ValueObject::Asset(valueObject);
+    ASSERT_EQ(transformedAsset.version, asset.version);
+    ASSERT_EQ(transformedAsset.name, asset.name);
+    ASSERT_EQ(transformedAsset.uri, asset.uri);
+    ASSERT_EQ(transformedAsset.createTime, asset.createTime);
+
+    auto assets = ValueObject::Assets({ asset });
+    valueObject = ValueObject(assets);
+    auto transformedAssets = ValueObject::Assets(valueObject);
+    ASSERT_EQ(transformedAssets.size(), 1);
+    auto first = transformedAssets.begin();
+    ASSERT_EQ(first->version, asset.version);
+    ASSERT_EQ(first->name, asset.name);
+    ASSERT_EQ(first->uri, asset.uri);
+    ASSERT_EQ(first->createTime, asset.createTime);
+
+    using Type = ValueObject::Type;
+    Type input = asset;
+    valueObject = ValueObject(input);
+    auto transformedType = ValueObject::Type(valueObject);
+    ASSERT_EQ(transformedType.index(), ValueObject::TYPE_ASSET);
 }
