@@ -692,3 +692,41 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
     resultSet->Close();
     EXPECT_EQ(100, number);
 }
+
+/**
+ * @tc.name: RdbStore_BatchInsert_004
+ * @tc.desc: Abnormal testCase of transaction for batchInsert, if batchInsert in transaction
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_004, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
+    store->ExecuteSql("delete from test");
+
+    int id = 0;
+    std::string name = "zhangsan";
+    int age = 18;
+    double salary = 100.5;
+    std::vector<uint8_t> blob = { 1, 2, 3 };
+    std::vector<ValuesBucket> valuesBuckets;
+    for (int i = 0; i < 10; i++) {
+        ValuesBucket values;
+        values.PutInt("id", id + i);
+        values.PutString("name", name);
+        values.PutInt("age", age + i);
+        values.PutDouble("salary", salary + i);
+        values.PutBlob("blobType", blob);
+        valuesBuckets.push_back(std::move(values));
+    }
+
+    int error = store->BeginTransaction();
+    EXPECT_EQ(E_OK, error);
+
+    int64_t number = 0;
+    error = store->BatchInsert(number, "test", valuesBuckets);
+    EXPECT_EQ(E_TRANSACTION_IN_EXECUTE, error);
+    EXPECT_EQ(0, number);
+
+    error = store->Commit();
+    EXPECT_EQ(E_OK, error);
+}
