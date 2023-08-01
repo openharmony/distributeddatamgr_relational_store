@@ -32,7 +32,7 @@ std::string StringUtils::SurroundWithFunction(const std::string &function, const
     std::string builder(function);
     builder += "(";
     bool isFirst = true;
-    for (auto &text : array) {
+    for (const auto &text : array) {
         if (!isFirst) {
             builder = builder + " " + separator + " ";
         } else {
