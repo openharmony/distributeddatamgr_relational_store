@@ -122,7 +122,7 @@ void RdbStoreDistributedTest::InsertValue(std::shared_ptr<RdbStore> &store)
 void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
 {
     std::shared_ptr<ResultSet> resultSet =
-        store->QuerySql("SELECT * FROM employee WHERE name = ?", { "zhangsan" });
+        store->QuerySql("SELECT * FROM employee WHERE name = ?", std::vector<ValueObject>{ "zhangsan" });
     EXPECT_NE(resultSet, nullptr);
 
     int columnIndex;

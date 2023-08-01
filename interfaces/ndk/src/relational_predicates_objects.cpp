@@ -31,7 +31,7 @@ int RelationalPredicatesObjects::PutInt64(OH_VObject *objects, int64_t *value, u
     self->values_.clear();
     self->values_.reserve(count);
     for (uint32_t i = 0; i < count; i++) {
-        self->values_.push_back(std::to_string(value[i]));
+        self->values_.push_back(value[i]);
     }
     return OH_Rdb_ErrCode::RDB_OK;
 }
@@ -45,7 +45,7 @@ int RelationalPredicatesObjects::PutDouble(OH_VObject *objects, double *value, u
     self->values_.clear();
     self->values_.reserve(count);
     for (uint32_t i = 0; i < count; i++) {
-        self->values_.push_back(std::to_string(value[i]));
+        self->values_.push_back(value[i]);
     }
     return OH_Rdb_ErrCode::RDB_OK;
 }
@@ -106,7 +106,7 @@ RelationalPredicatesObjects *RelationalPredicatesObjects::GetSelf(OH_VObject *ob
     return static_cast<OHOS::RdbNdk::RelationalPredicatesObjects *>(objects);
 }
 
-std::vector<std::string> &RelationalPredicatesObjects::Get()
+std::vector<ValueObject> &RelationalPredicatesObjects::Get()
 {
     return values_;
 }

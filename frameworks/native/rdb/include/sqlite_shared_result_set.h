@@ -35,7 +35,7 @@ namespace NativeRdb {
 class SqliteSharedResultSet : public AbsSharedResultSet {
 public:
     SqliteSharedResultSet(std::shared_ptr<RdbStoreImpl> store, SqliteConnectionPool *connectionPool, std::string path,
-        std::string sql, const std::vector<std::string> &bindArgs);
+        std::string sql, const std::vector<ValueObject> &bindArgs);
     ~SqliteSharedResultSet() override;
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int Close() override;
@@ -63,7 +63,7 @@ private:
     // Controls fetching of rows relative to requested position
     bool isOnlyFillResultSetBlock;
     std::string qrySql;
-    std::vector<std::string> selectionArgVec;
+    std::vector<ValueObject> bindArgs_;
     // The number of rows in the cursor
     int rowNum;
     std::vector<std::string> columnNames_;

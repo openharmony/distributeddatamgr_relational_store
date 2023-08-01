@@ -686,30 +686,6 @@ int SqliteConnection::ExecuteGetString(
     return errCode;
 }
 
-std::shared_ptr<SqliteStatement> SqliteConnection::BeginStepQuery(
-    int &errCode, const std::string &sql, const std::vector<std::string> &selectionArgs) const
-{
-    if (!stepStatement) {
-        return nullptr;
-    }
-    errCode = stepStatement->Prepare(dbHandle, sql);
-    if (errCode != E_OK) {
-        return nullptr;
-    }
-
-    std::vector<ValueObject> bindArgs;
-    for (auto item : selectionArgs) {
-        bindArgs.push_back(ValueObject(item));
-    }
-
-    errCode = stepStatement->BindArguments(bindArgs);
-    if (errCode != E_OK) {
-        return nullptr;
-    }
-
-    return stepStatement;
-}
-
 std::shared_ptr<SqliteStatement> SqliteConnection::BeginStepQuery(int &errCode, const std::string &sql,
     const std::vector<ValueObject> &args) const
 {
