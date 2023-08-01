@@ -46,8 +46,6 @@ public:
     int ExecuteGetString(std::string &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string &sql,
-        const std::vector<std::string> &selectionArgs) const;
-    std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string &sql,
         const std::vector<ValueObject> &args) const;
     int DesFinalize();
     int EndStepQuery();

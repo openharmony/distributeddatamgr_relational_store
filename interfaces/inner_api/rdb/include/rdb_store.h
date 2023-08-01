@@ -42,7 +42,6 @@ public:
      */
     using Briefs = DistributedRdb::Briefs;
     using AsyncBrief = DistributedRdb::AsyncBrief;
-    using SyncCallback = AsyncBrief;
 
     /**
      * @brief Use AsyncBrief replace DistributedRdb::AsyncBrief namespace.
@@ -126,9 +125,22 @@ public:
      * @param whereClause Indicates the where clause.
      * @param whereArgs Indicates the where arguments.
      */
+    [[deprecated("Use Update(int &, const std::string &, const ValuesBucket &, const std::string &,"
+                 " const std::vector<ValueObject> &) instead.")]]
     virtual int Update(int &changedRows, const std::string &table, const ValuesBucket &values,
-        const std::string &whereClause = "",
-        const std::vector<std::string> &whereArgs = std::vector<std::string>()) = 0;
+        const std::string &whereClause, const std::vector<std::string> &whereArgs) = 0;
+
+    /**
+     * @brief Updates data in the database based on specified conditions.
+     *
+     * @param table Indicates the target table.
+     * @param values Indicates the row of data to be updated in the database.
+     * The key-value pairs are associated with column names of the database table.
+     * @param whereClause Indicates the where clause.
+     * @param bindArgs Indicates the where arguments.
+     */
+    virtual int Update(int &changedRows, const std::string &table, const ValuesBucket &values,
+        const std::string &whereClause = "", const std::vector<ValueObject> &bindArgs = {}) = 0;
 
     /**
      * @brief Updates data in the database based on a a specified instance object of RdbPredicates.
@@ -140,8 +152,25 @@ public:
      * @param whereArgs Indicates the where arguments.
      * @param conflictResolution Indicates the {@link ConflictResolution} to insert data into the table.
      */
+    [[deprecated("Use UpdateWithConflictResolution(int &, const std::string &, const ValuesBucket &, "
+                 "const std::string &, const std::vector<ValueObject> &,"
+                 " ConflictResolution conflictResolution) instead.")]]
     virtual int UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
-        const std::string &whereClause = "", const std::vector<std::string> &whereArgs = std::vector<std::string>(),
+        const std::string &whereClause, const std::vector<std::string> &whereArgs,
+        ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
+
+    /**
+     * @brief Updates data in the database based on a a specified instance object of RdbPredicates.
+     *
+     * @param table Indicates the target table.
+     * @param values Indicates the row of data to be updated in the database.
+     * The key-value pairs are associated with column names of the database table.
+     * @param whereClause Indicates the where clause.
+     * @param whereArgs Indicates the where arguments.
+     * @param conflictResolution Indicates the {@link ConflictResolution} to insert data into the table.
+     */
+    virtual int UpdateWithConflictResolution(int &changedRows, const std::string &table,
+        const ValuesBucket &values, const std::string &whereClause = "", const std::vector<ValueObject> &bindArgs = {},
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
 
     /**
@@ -151,8 +180,20 @@ public:
      * @param whereClause Indicates the where clause.
      * @param whereArgs Indicates the where arguments.
      */
+    [[deprecated("Use Delete(int &, const std::string &, const std::string &, const std::vector<ValueObject> &) "
+                 "instead.")]]
+    virtual int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
+        const std::vector<std::string> &whereArgs) = 0;
+
+    /**
+     * @brief Deletes data from the database based on specified conditions.
+     *
+     * @param table Indicates the target table.
+     * @param whereClause Indicates the where clause.
+     * @param bindArgs Indicates the where arguments.
+     */
     virtual int Delete(int &deletedRows, const std::string &table, const std::string &whereClause = "",
-        const std::vector<std::string> &whereArgs = std::vector<std::string>()) = 0;
+        const std::vector<ValueObject> &bindArgs = {}) = 0;
 
     /**
      * @brief Queries data in the database based on specified conditions.
@@ -161,7 +202,7 @@ public:
      * @param table Indicates the target table.
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
      * @param selection Indicates the selection.
-     * @param selectionArgs Indicates the selection arguments.
+     * @param sqlArgs Indicates the selection arguments.
      * @param groupBy Indicates the groupBy argument.
      * @param having Indicates the having argument.
      * @param orderBy Indicates the orderBy argument.
@@ -169,26 +210,44 @@ public:
      */
     virtual std::shared_ptr<AbsSharedResultSet> Query(int &errCode, bool distinct, const std::string &table,
         const std::vector<std::string> &columns, const std::string &selection = "",
-        const std::vector<std::string> &selectionArgs = std::vector<std::string>(), const std::string &groupBy = "",
+        const std::vector<std::string> &sqlArgs = {}, const std::string &groupBy = "",
         const std::string &having = "", const std::string &orderBy = "", const std::string &limit = "") = 0;
 
     /**
      * @brief Queries data in the database based on SQL statement.
      *
      * @param sql Indicates the SQL statement to execute.
-     * @param selectionArgs Indicates the selection arguments.
+     * @param sqlArgs Indicates the selection arguments.
      */
+    [[deprecated("Use QuerySql(const std::string &, const std::vector<ValueObject> &) instead.")]]
     virtual std::shared_ptr<AbsSharedResultSet> QuerySql(
-        const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
+        const std::string &sql, const std::vector<std::string> &sqlArgs) = 0;
 
     /**
      * @brief Queries data in the database based on SQL statement.
      *
      * @param sql Indicates the SQL statement to execute.
-     * @param selectionArgs Indicates the selection arguments.
+     * @param bindArgs Indicates the selection arguments.
      */
-    virtual std::shared_ptr<ResultSet> QueryByStep(
-        const std::string &sql, const std::vector<std::string> &selectionArgs = std::vector<std::string>()) = 0;
+    virtual std::shared_ptr<AbsSharedResultSet> QuerySql(
+        const std::string &sql, const std::vector<ValueObject> &bindArgs = {}) = 0;
+    /**
+     * @brief Queries data in the database based on SQL statement.
+     *
+     * @param sql Indicates the SQL statement to execute.
+     * @param sqlArgs Indicates the selection arguments.
+     */
+    [[deprecated("Use ExecuteSql(const std::string &, const std::vector<ValueObject> &) instead.")]]
+    virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const std::vector<std::string> &sqlArgs) = 0;
+
+    /**
+     * @brief Queries data in the database based on SQL statement.
+     *
+     * @param sql Indicates the SQL statement to execute.
+     * @param args Indicates the selection arguments.
+     */
+    virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql,
+        const std::vector<ValueObject> &args = {}) = 0;
 
     /**
      * @brief Executes an SQL statement that contains specified parameters.
@@ -196,8 +255,7 @@ public:
      * @param sql Indicates the SQL statement to execute.
      * @param bindArgs Indicates the {@link ValueObject} values of the parameters in the SQL statement.
      */
-    virtual int ExecuteSql(
-        const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+    virtual int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = {}) = 0;
 
     /**
      * @brief Executes an SQL statement that contains specified parameters and get a long integer value.
@@ -206,7 +264,7 @@ public:
      * @param bindArgs Indicates the {@link ValueObject} values of the parameters in the SQL statement.
      */
     virtual int ExecuteAndGetLong(int64_t &outValue, const std::string &sql,
-        const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+        const std::vector<ValueObject> &bindArgs = {}) = 0;
 
     /**
      * @brief Executes an SQL statement that contains specified parameters.
@@ -215,7 +273,7 @@ public:
      * @param bindArgs Indicates the {@link ValueObject} values of the parameters in the SQL statement.
      */
     virtual int ExecuteAndGetString(std::string &outValue, const std::string &sql,
-        const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+        const std::vector<ValueObject> &bindArgs = {}) = 0;
 
     /**
      * @brief Executes for last insert row id that contains specified parameters.
@@ -224,7 +282,7 @@ public:
      * @param bindArgs Indicates the {@link ValueObject} values of the parameters in the SQL statement.
      */
     virtual int ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql,
-        const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+        const std::vector<ValueObject> &bindArgs = {}) = 0;
 
     /**
      * @brief Executes for change row count that contains specified parameters.
@@ -233,7 +291,7 @@ public:
      * @param bindArgs Indicates the {@link ValueObject} values of the parameters in the SQL statement.
      */
     virtual int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
-        const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) = 0;
+        const std::vector<ValueObject> &bindArgs = {}) = 0;
 
     /**
      * @brief Restores a database from a specified encrypted or unencrypted database file.
@@ -241,8 +299,7 @@ public:
      * @param databasePath Indicates the database file path.
      * @param destEncryptKey Indicates the database encrypt key.
      */
-    virtual int Backup(const std::string databasePath,
-        const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>()) = 0;
+    virtual int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey = {}) = 0;
 
     /**
      * @brief Attaches a database.
@@ -268,7 +325,7 @@ public:
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
      */
     virtual std::shared_ptr<AbsSharedResultSet> Query(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> columns) = 0;
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) = 0;
 
     /**
      * @brief Queries data in the database based on specified conditions.
@@ -277,7 +334,7 @@ public:
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
      */
     virtual std::shared_ptr<ResultSet> QueryByStep(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> columns) = 0;
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) = 0;
 
     /**
      * @brief Queries remote data in the database based on specified conditions before Synchronizing Data.
@@ -286,8 +343,8 @@ public:
      * @param predicates Indicates the specified query condition by the instance object of {@link AbsRdbPredicates}.
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
      */
-    virtual std::shared_ptr<ResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
-        const std::vector<std::string> &columns, int &errCode) = 0;
+    virtual std::shared_ptr<ResultSet> RemoteQuery(const std::string &device,
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, int &errCode) = 0;
 
     /**
      * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.
@@ -305,6 +362,9 @@ public:
      */
     virtual int Delete(int &deletedRows, const AbsRdbPredicates &predicates) = 0;
 
+    /**
+     * @brief Gets the version of the database.
+     */
     virtual int GetVersion(int &version) = 0;
 
     /**
@@ -363,7 +423,7 @@ public:
      * @param backupPath  Indicates the name that saves the database file path.
      * @param newKey Indicates the database new key.
      */
-    virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) = 0;
+    virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = {}) = 0;
 
     /**
      * @brief Set table to be distributed table.
@@ -391,7 +451,8 @@ public:
      * @param device Indicates the remote device.
      * @param predicate Indicates the AbsRdbPredicates {@link AbsRdbPredicates} object.
      */
-    virtual int Sync(const SyncOption& option, const AbsRdbPredicates& predicate, const AsyncBrief& async) = 0;
+    virtual int Sync(
+        const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &async) = 0;
 
     /**
      * @brief Sync data between devices or cloud.
@@ -399,7 +460,8 @@ public:
      * @param device Indicates the remote device.
      * @param predicate Indicates the AbsRdbPredicates {@link AbsRdbPredicates} object.
      */
-    virtual int Sync(const SyncOption& option, const std::vector<std::string>& tables, const AsyncDetail& async) = 0;
+    virtual int Sync(
+        const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async) = 0;
 
     /**
      * @brief Subscribe to event changes.
@@ -417,16 +479,6 @@ public:
     virtual int Notify(const std::string &event);
 
     /**
-     * @brief Drop the specified devices Data.
-     *
-     * User must use UDID
-     *
-     * @param devices Indicates the specified devices.
-     * @param option Indicates the drop option.
-     */
-    virtual bool DropDeviceData(const std::vector<std::string>& devices, const DropOption& option) = 0;
-
-    /**
      * @brief Get the the specified column modify time.
      *
      * @param table Indicates the specified table.
@@ -437,14 +489,6 @@ public:
      */
     virtual std::map<PRIKey, Date> GetModifyTime(
         const std::string &table, const std::string &columnName, std::vector<PRIKey> &keys) = 0;
-
-    /**
-   * @brief Queries data in the database based on SQL statement.
-   *
-   * @param sql Indicates the SQL statement to execute.
-   * @param args Indicates the selection arguments.
-   */
-    virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, std::vector<ValueObject> &&args) = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif

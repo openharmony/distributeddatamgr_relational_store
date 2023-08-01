@@ -13,11 +13,14 @@
  * limitations under the License.
  */
 
+#include "relational_predicates.h"
+
+#include <variant>
+
 #include "logger.h"
 #include "oh_predicates.h"
-#include "relational_store_error_code.h"
-#include "relational_predicates.h"
 #include "relational_predicates_objects.h"
+#include "relational_store_error_code.h"
 #include "sqlite_global_config.h"
 
 using namespace OHOS::NativeRdb;
@@ -30,7 +33,7 @@ OH_Predicates *RelationalPredicate::EqualTo(OH_Predicates *predicates, const cha
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
-    std::vector<std::string> values = selfObjects->Get();
+    std::vector<ValueObject> values = selfObjects->Get();
     if (!values.empty()) {
         self->predicates_.EqualTo(field, values[0]);
     }
@@ -45,7 +48,7 @@ OH_Predicates *RelationalPredicate::NotEqualTo(OH_Predicates *predicates, const 
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
-    std::vector<std::string> values = selfObjects->Get();
+    std::vector<ValueObject> values = selfObjects->Get();
     if (!values.empty()) {
         self->predicates_.NotEqualTo(field, values[0]);
     }
@@ -119,9 +122,11 @@ OH_Predicates *RelationalPredicate::Like(OH_Predicates *predicates, const char *
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
-    std::vector<std::string> values = selfObjects->Get();
+    std::vector<ValueObject> values = selfObjects->Get();
     if (!values.empty()) {
-        self->predicates_.Like(field, values[0]);
+        if (auto pval = std::get_if<std::string>(&values[0].value)) {
+            self->predicates_.Like(field, std::move(*pval));
+        }
     }
     return self;
 }
@@ -133,7 +138,7 @@ OH_Predicates *RelationalPredicate::Between(OH_Predicates *predicates, const cha
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
-    std::vector<std::string> values = selfObjects->Get();
+    std::vector<ValueObject> values = selfObjects->Get();
     // The number of arguments required for the between method is 2
     if (values.size() != 2) {
         LOG_ERROR("size is %{public}zu", values.size());
@@ -152,7 +157,7 @@ OH_Predicates *RelationalPredicate::NotBetween(OH_Predicates *predicates, const 
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
-    std::vector<std::string> values = selfObjects->Get();
+    std::vector<ValueObject> values = selfObjects->Get();
     // The number of arguments required for the between method is 2
     if (values.size() != 2) {
         LOG_ERROR("size is %{public}zu", values.size());
@@ -170,7 +175,7 @@ OH_Predicates *RelationalPredicate::GreaterThan(OH_Predicates *predicates, const
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
-    std::vector<std::string> values = selfObjects->Get();
+    std::vector<ValueObject> values = selfObjects->Get();
     if (!values.empty()) {
         self->predicates_.GreaterThan(field, values[0]);
     }
@@ -185,7 +190,7 @@ OH_Predicates *RelationalPredicate::LessThan(OH_Predicates *predicates, const ch
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
-    std::vector<std::string> values = selfObjects->Get();
+    std::vector<ValueObject> values = selfObjects->Get();
     if (!values.empty()) {
         self->predicates_.LessThan(field, values[0]);
     }
@@ -200,7 +205,7 @@ OH_Predicates *RelationalPredicate::GreaterThanOrEqualTo(OH_Predicates *predicat
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
-    std::vector<std::string> values = selfObjects->Get();
+    std::vector<ValueObject> values = selfObjects->Get();
     if (!values.empty()) {
         self->predicates_.GreaterThanOrEqualTo(field, values[0]);
     }
@@ -214,7 +219,7 @@ OH_Predicates *RelationalPredicate::LessThanOrEqualTo(OH_Predicates *predicates,
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
-    std::vector<std::string> values = selfObjects->Get();
+    std::vector<ValueObject> values = selfObjects->Get();
     if (!values.empty()) {
         self->predicates_.LessThanOrEqualTo(field, values[0]);
     }
@@ -287,7 +292,7 @@ OH_Predicates *RelationalPredicate::In(OH_Predicates *predicates, const char *fi
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
-    std::vector<std::string> values = selfObjects->Get();
+    std::vector<ValueObject> values = selfObjects->Get();
     if (values.size() > OHOS::NativeRdb::GlobalExpr::SQLITE_MAX_COLUMN) {
         return self;
     }
@@ -303,7 +308,7 @@ OH_Predicates *RelationalPredicate::NotIn(OH_Predicates *predicates, const char 
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
-    std::vector<std::string> values = selfObjects->Get();
+    std::vector<ValueObject> values = selfObjects->Get();
     if (values.size() > OHOS::NativeRdb::GlobalExpr::SQLITE_MAX_COLUMN) {
         return self;
     }

@@ -421,7 +421,7 @@ describe('rdbStoreInsertTest', function () {
             await rdbStore.insert("test", valueBucketInsert)
             try {
                 await rdbStore.insert("test", valueBucket, data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
-                expect(null).assertFail();;
+                expect(null).assertFail();
             } catch (err) {
                 console.log("catch err: failed, err: code=" + err.code + " message=" + err.message);
                 expect(14800000).assertEqual(err.code);

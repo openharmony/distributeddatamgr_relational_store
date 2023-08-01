@@ -38,7 +38,7 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     SqliteGlobalConfig::InitSqliteGlobalConfig();
-    return RdbStoreManager::GetInstance().GetRdbStore(config, errCode, version, openCallback);;
+    return RdbStoreManager::GetInstance().GetRdbStore(config, errCode, version, openCallback);
 }
 
 void RdbHelper::ClearCache()

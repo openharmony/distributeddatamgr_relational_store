@@ -46,8 +46,10 @@ DataAbilityPredicates::DataAbilityPredicates(OHOS::Parcel *source)
         std::string index = (source->ReadInt32() != g_invalidObjectFlag) ? source->ReadString() : "";
         std::string group = (source->ReadInt32() != g_invalidObjectFlag) ? source->ReadString() : "";
         std::string order = (source->ReadInt32() != g_invalidObjectFlag) ? source->ReadString() : "";
-        int limit = (source->ReadInt32() != g_invalidObjectFlag) ? source->ReadInt32() : -1;
-        int offset = (source->ReadInt32() != g_invalidObjectFlag) ? source->ReadInt32() : -1;
+        int limit = (source->ReadInt32() != g_invalidObjectFlag) ? source->ReadInt32()
+                                                                 : AbsPredicates::INIT_LIMIT_VALUE;
+        int offset = (source->ReadInt32() != g_invalidObjectFlag) ? source->ReadInt32()
+                                                                  : AbsPredicates::INIT_OFFSET_VALUE;
         PredicatesUtils::SetWhereClauseAndArgs(this, whereClause, whereArgs);
         PredicatesUtils::SetAttributes(this, isDistinct, index, group, order, limit, offset);
     }
@@ -80,13 +82,13 @@ bool DataAbilityPredicates::Marshalling(OHOS::Parcel &parcel) const
 
     int limit = GetLimit();
     int offset = GetOffset();
-    if (limit != -1) {
+    if (limit != INIT_LIMIT_VALUE) {
         parcel.WriteInt32(g_validObjectFlag);
         parcel.WriteInt32(limit);
     } else {
         parcel.WriteInt32(g_invalidObjectFlag);
     }
-    if (offset != -1) {
+    if (offset != INIT_OFFSET_VALUE) {
         parcel.WriteInt32(g_validObjectFlag);
         parcel.WriteInt32(offset);
     } else {

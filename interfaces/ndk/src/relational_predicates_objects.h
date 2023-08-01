@@ -16,24 +16,27 @@
 #ifndef RELATIONAL_VALUE_OBJECT_IMPL_H
 #define RELATIONAL_VALUE_OBJECT_IMPL_H
 
-#include "oh_value_object.h"
-#include <vector>
 #include <string>
+#include <vector>
+
+#include "oh_value_object.h"
+#include "value_object.h"
 
 namespace OHOS {
 namespace RdbNdk {
+using ValueObject = NativeRdb::ValueObject;
 class RelationalPredicatesObjects : public OH_VObject {
 public:
     RelationalPredicatesObjects();
     static RelationalPredicatesObjects *GetSelf(OH_VObject *objects);
-    std::vector<std::string> &Get();
+    std::vector<ValueObject> &Get();
 private:
     static int PutInt64(OH_VObject *objects, int64_t *value, uint32_t count);
     static int PutDouble(OH_VObject *objects, double *value, uint32_t count);
     static int PutText(OH_VObject *objects, const char *value);
     static int PutTexts(OH_VObject *objects, const char **value, uint32_t count);
     static int Destroy(OH_VObject *objects);
-    std::vector<std::string> values_;
+    std::vector<ValueObject> values_;
 };
 } // namespace RdbNdk
 } // namespace OHOS
