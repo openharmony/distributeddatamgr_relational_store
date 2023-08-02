@@ -57,6 +57,7 @@ public:
     /**
      * @brief Obtains the parameters of the current AbsRdbPredicates object.
      */
+    [[deprecated("Use GetStatement() instead.")]]
     API_EXPORT std::string ToString() const;
 
     /**

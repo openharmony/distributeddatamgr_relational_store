@@ -382,9 +382,9 @@ napi_value DataAbilityPredicatesProxy::Between(napi_env env, napi_callback_info 
     std::string field;
     RDB_CHECK_RETURN_NULLPTR(JSUtils::Convert2Value(env, args[0], field) == napi_ok, "the field is invalid");
     ValueObject low;
-    JSUtils::Convert2Value(env, args[1], low.value);
+    JSUtils::Convert2Value(env, args[1], low);
     ValueObject high;
-    JSUtils::Convert2Value(env, args[2], high.value);
+    JSUtils::Convert2Value(env, args[2], high);
     auto nativePredicates = GetNativePredicates(env, info);
     RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
     nativePredicates->Between(field, low, high);
@@ -401,9 +401,9 @@ napi_value DataAbilityPredicatesProxy::NotBetween(napi_env env, napi_callback_in
     std::string field;
     RDB_CHECK_RETURN_NULLPTR(JSUtils::Convert2Value(env, args[0], field) == napi_ok, "the field is invalid");
     ValueObject low;
-    JSUtils::Convert2Value(env, args[1], low.value);
+    JSUtils::Convert2Value(env, args[1], low);
     ValueObject high;
-    JSUtils::Convert2Value(env, args[2], high.value);
+    JSUtils::Convert2Value(env, args[2], high);
     auto nativePredicates = GetNativePredicates(env, info);
     RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
     nativePredicates->NotBetween(field, low, high);

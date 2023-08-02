@@ -52,7 +52,6 @@ __attribute__((visibility("default"))) ValuesBucket *NAPI_OHOS_Data_RdbJsKit_Val
         LOG_DEBUG("ValuesBucket errr");
         return valuesBucket;
     }
-    LOG_DEBUG("ValuesBucket num:%{public}u ", arrLen);
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value key;
         napi_get_element(env, keys, i, &key);
@@ -64,25 +63,20 @@ __attribute__((visibility("default"))) ValuesBucket *NAPI_OHOS_Data_RdbJsKit_Val
         if (valueType == napi_string) {
             std::string valueString = JSUtils::Convert2String(env, value);
             valuesBucket->PutString(keyStr, valueString);
-            LOG_DEBUG("ValueObject type napi_string");
         } else if (valueType == napi_number) {
             double valueNumber;
             napi_get_value_double(env, value, &valueNumber);
             valuesBucket->PutDouble(keyStr, valueNumber);
-            LOG_DEBUG("ValueObject type napi_number");
         } else if (valueType == napi_boolean) {
             bool valueBool = false;
             napi_get_value_bool(env, value, &valueBool);
             valuesBucket->PutBool(keyStr, valueBool);
-            LOG_DEBUG("ValueObject type napi_boolean");
         } else if (valueType == napi_null) {
             valuesBucket->PutNull(keyStr);
-            LOG_DEBUG("ValueObject type napi_null");
         } else if (valueType == napi_object) {
             std::vector<uint8_t> val = {};
             JSUtils::Convert2Value(env, value, val);
             valuesBucket->PutBlob(keyStr, val);
-            LOG_DEBUG("ValueObject type napi_object");
         } else {
             LOG_WARN("valuesBucket error");
         }

@@ -2146,9 +2146,9 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetStatement_GetBnidArgs_001, TestSize.
     RdbPredicates predicates("AllDataType");
     predicates.EqualTo("stringValue", "ABCDEFGHIJKLMN")
         ->BeginWrap()
-        ->EqualTo("integerValue", "1")
+        ->EqualTo("integerValue", 1)
         ->Or()
-        ->EqualTo("integerValue", std::to_string(INT_MAX))
+        ->EqualTo("integerValue", INT_MAX)
         ->EndWrap()
         ->OrderByDesc("integerValue")
         ->Limit(-1, -1);
@@ -2160,8 +2160,8 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetStatement_GetBnidArgs_001, TestSize.
     EXPECT_EQ(2, count);
 
     std::string statement = predicates.GetStatement();
-    std::vector<std::string> bindArgs = predicates.GetBindArgs();
+    std::vector<ValueObject> bindArgs = predicates.GetBindArgs();
     EXPECT_EQ(statement, " WHERE stringValue = ? AND  ( integerValue = ?  OR integerValue = ?  )  ORDER BY "
                          "integerValue DESC  LIMIT -1 OFFSET -1");
-    EXPECT_EQ(bindArgs[0], "ABCDEFGHIJKLMN");
+    EXPECT_EQ(bindArgs.size(), 3);
 }

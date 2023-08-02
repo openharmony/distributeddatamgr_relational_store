@@ -271,7 +271,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValue(napi_env env, napi_ca
     field = JSUtils::Convert2String(env, args[0]);
     RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamError>("field", "not empty"));
     
-    int32_t ret = JSUtils::Convert2Value(env, args[1], value.value);
+    int32_t ret = JSUtils::Convert2Value(env, args[1], value);
     RDB_NAPI_ASSERT(env, ret == napi_ok, std::make_shared<ParamError>("value", "a " + valueType + " array."));
 
     RdbPredicatesProxy *proxy = nullptr;
@@ -280,8 +280,8 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValue(napi_env env, napi_ca
     return proxy;
 }
 
-RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndStringValue(napi_env env, napi_callback_info info, napi_value &thiz,
-    std::string &field, std::string &value, const std::string valueType)
+RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndStringValue(napi_env env, napi_callback_info info,
+    napi_value &thiz, std::string &field, std::string &value, const std::string valueType)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     size_t argc = 2;
@@ -312,11 +312,10 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldLowAndHigh(
     field = JSUtils::Convert2String(env, args[0]);
     RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamError>("field", "not empty"));
     
-    int32_t ret = JSUtils::Convert2Value(env, args[1], low.value);
+    int32_t ret = JSUtils::Convert2Value(env, args[1], low);
     RDB_NAPI_ASSERT(env, ret == napi_ok, std::make_shared<ParamError>("low", "a valueType."));
-
         
-    ret = JSUtils::Convert2Value(env, args[2], high.value);
+    ret = JSUtils::Convert2Value(env, args[2], high);
     RDB_NAPI_ASSERT(env, ret == napi_ok, std::make_shared<ParamError>("high", "a valueType."));
 
     RdbPredicatesProxy *proxy = nullptr;
@@ -592,6 +591,7 @@ napi_value RdbPredicatesProxy::Limit(napi_env env, napi_callback_info info)
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RdbPredicatesProxy *predicatesProxy = GetNativePredicates(env, info);
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->predicates_);
+    //Ensure that the number of parameters is 1 or 2
     RDB_NAPI_ASSERT(env, argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 or 2"));
 
     int32_t offset = AbsPredicates::INIT_OFFSET_VALUE;
@@ -731,7 +731,7 @@ napi_value RdbPredicatesProxy::GetBindArgs(napi_env env, napi_callback_info info
     RdbPredicatesProxy *predicatesProxy = GetNativePredicates(env, info);
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->predicates_);
 
-    std::vector<std::string> bindArgs = predicatesProxy->predicates_->GetBindArgs();
+    std::vector<ValueObject> bindArgs = predicatesProxy->predicates_->GetBindArgs();
     return JSUtils::Convert2JSValue(env, bindArgs);
 }
 

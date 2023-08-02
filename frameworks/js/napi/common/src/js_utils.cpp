@@ -38,6 +38,40 @@ static constexpr JSUtils::JsFeatureSpace FEATURE_NAME_SPACES[] = {
     { "ohos.data.relationalStore", "ZGF0YS5yZWxhdGlvbmFsU3RvcmU=", true },
 };
 
+int32_t Convert2StrValueOnStack(napi_env env, napi_value jsValue, size_t buffSize, std::string &output)
+{
+    char buffer[JSUtils::DEFAULT_VALUE_LENGTH];
+    napi_status status = napi_get_value_string_utf8(env, jsValue, buffer, buffSize + 1, &buffSize);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_get_value_string_utf8 failed, status = %{public}d", status);
+        return status;
+    }
+    output = std::string(buffer);
+    return status;
+}
+
+int32_t Convert2StrValueOnHeap(napi_env env, napi_value jsValue, size_t buffSize, std::string &output)
+{
+    // cut down with 0 if more than MAX_VALUE_LENGTH
+    if (buffSize + 1 >= JSUtils::MAX_VALUE_LENGTH) {
+        buffSize = JSUtils::MAX_VALUE_LENGTH - 1;
+    }
+    char *buffer = (char *)malloc((buffSize + 1) * sizeof(char));
+    if (buffer == nullptr) {
+        LOG_ERROR("buffer data is nullptr.");
+        return napi_invalid_arg;
+    }
+    napi_status status = napi_get_value_string_utf8(env, jsValue, buffer, buffSize + 1, &buffSize);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_get_value_string_utf8 failed, status = %{public}d", status);
+        free(buffer);
+        return status;
+    }
+    output = std::string(buffer);
+    free(buffer);
+    return status;
+}
+
 const std::optional<JSUtils::JsFeatureSpace> JSUtils::GetJsFeatureSpace(const std::string &name)
 {
     auto jsFeature = JsFeatureSpace{ name.data(), nullptr, false };
@@ -62,7 +96,7 @@ napi_value JSUtils::GetNamedProperty(napi_env env, napi_value object, const char
 
 std::string JSUtils::Convert2String(napi_env env, napi_value jsStr)
 {
-    std::string value = "";
+    std::string value = ""; // TD: need to check everywhere in use whether empty is work well.
     JSUtils::Convert2Value(env, jsStr, value);
     return value;
 }
@@ -170,24 +204,11 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &ou
         return napi_invalid_arg;
     }
 
-    size_t length = MAX_VALUE_LENGTH;
-    napi_get_value_string_utf8(env, jsValue, nullptr, 0, &length);
-    length = (length < MAX_VALUE_LENGTH) ? length : MAX_VALUE_LENGTH;
+    size_t buffSize = 0;
+    napi_get_value_string_utf8(env, jsValue, nullptr, 0, &buffSize);
 
-    std::unique_ptr<char[]> str = std::make_unique<char[]>(length + 1);
-    if (str == nullptr) {
-        LOG_ERROR("new failed, str is nullptr");
-        return napi_generic_failure;
-    }
-
-    size_t valueSize = 0;
-    status = napi_get_value_string_utf8(env, jsValue, str.get(), length, &valueSize);
-    if (status != napi_ok) {
-        LOG_ERROR("napi_get_value_string_utf8 failed, status = %{public}d", status);
-        return status;
-    }
-    output = std::string(str.get());
-    return status;
+    return (buffSize < MAX_VALUE_LENGTH - 1) ? Convert2StrValueOnStack(env, jsValue, buffSize, output)
+                                             : Convert2StrValueOnHeap(env, jsValue, buffSize, output);
 }
 
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<uint8_t> &output)
@@ -394,7 +415,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<std::string, in
     int index = 0;
     for (const auto &[device, result] : value) {
         napi_value jsElement;
-        status = napi_create_array_with_length(env, SYNC_RESULT_ELEMNT_NUM, &jsElement);
+        status = napi_create_array_with_length(env, SYNC_RESULT_ELEMENT_NUM, &jsElement);
         if (status != napi_ok) {
             return nullptr;
         }

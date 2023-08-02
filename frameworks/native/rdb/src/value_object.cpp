@@ -132,7 +132,28 @@ int ValueObject::GetBool(bool &val) const
 
 int ValueObject::GetString(std::string &val) const
 {
-    return Get(val);
+    if (Get(val) == 0) {
+        return 0;
+    }
+
+    double ftmp;
+    if (Get(ftmp) == 0) {
+        val = std::to_string(ftmp);
+        return 0;
+    }
+
+    int64_t itmp;
+    if (Get(itmp) == 0) {
+        val = std::to_string(itmp);
+        return 0;
+    }
+
+    bool btmp;
+    if (Get(btmp) == 0) {
+        val = std::to_string(btmp);
+        return 0;
+    }
+    return -1;
 }
 
 int ValueObject::GetBlob(std::vector<uint8_t> &val) const

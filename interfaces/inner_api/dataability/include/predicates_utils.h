@@ -21,6 +21,8 @@
 #include <vector>
 
 #include "abs_predicates.h"
+#include "value_object.h"
+
 namespace OHOS {
 namespace NativeRdb {
 /**
@@ -41,8 +43,16 @@ public:
     /**
      * @brief Set the parameter of whereClause and bindArgs of the specified Predicates.
      */
+    [[deprecated("Use SetWhereClauseAndArgs(AbsPredicates *, const std::string &,"
+                 " const std::vector<ValueObject> &) instead.")]]
     API_EXPORT static void SetWhereClauseAndArgs(AbsPredicates *predicates, const std::string &whereClause,
         const std::vector<std::string> &whereArgs);
+
+    /**
+     * @brief Set the parameter of whereClause and bindArgs of the specified Predicates.
+     */
+    API_EXPORT static void SetWhereClauseAndArgs(AbsPredicates *predicates, const std::string &whereClause,
+        const std::vector<ValueObject> &bindArgs);
 
     /**
      * @brief Sets parameters of the specified Predicates including distinct, index, group, order, limit and offset.

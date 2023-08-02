@@ -128,7 +128,6 @@ describe('rdbStoreCloudSyncTest', function () {
             });
         } catch (err) {
             console.log(TAG + `get modify time, err code is ${err.code}, message is ${err.message}.`);
-            expect(true).assertTrue();
             done();
         }
         console.log(TAG + "************* testRdbStoreCloudSync0001 end *************");

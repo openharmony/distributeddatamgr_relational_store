@@ -185,7 +185,7 @@ std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const std::string &in
     return sqlString;
 }
 
-std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const AbsRdbPredicates &predicates)
+std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const AbsPredicates &predicates)
 {
     std::string limitStr =
         (predicates.GetLimit() == AbsPredicates::INIT_LIMIT_VALUE) ? "" : std::to_string(predicates.GetLimit());

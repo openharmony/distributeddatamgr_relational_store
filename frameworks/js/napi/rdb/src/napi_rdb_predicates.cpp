@@ -303,8 +303,8 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValue(napi_env env, napi_ca
     return predicatesProxy;
 }
 
-RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndStringValue(napi_env env, napi_callback_info info, napi_value &thiz,
-    std::string &field, std::string &value, const std::string valueType)
+RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndStringValue(napi_env env, napi_callback_info info,
+    napi_value &thiz, std::string &field, std::string &value, const std::string valueType)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     size_t argc = 2;
@@ -338,11 +338,11 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldLowAndHigh(
     RDB_NAPI_ASSERT_FROMV9(env, !field.empty(),
         std::make_shared<ParamTypeError>("field", "a non empty string."), version);
 
-    int32_t ret = JSUtils::Convert2Value(env, args[1], low.value);
+    int32_t ret = JSUtils::Convert2Value(env, args[1], low);
     RDB_NAPI_ASSERT_FROMV9(env, ret == napi_ok,
         std::make_shared<ParamTypeError>("low", "a non empty ValueType."), version);
 
-    ret = JSUtils::Convert2Value(env, args[2], high.value);
+    ret = JSUtils::Convert2Value(env, args[2], high);
     RDB_NAPI_ASSERT_FROMV9(env, ret == napi_ok,
         std::make_shared<ParamTypeError>("high", "a non empty ValueType."), version);
 
