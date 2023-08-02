@@ -26,10 +26,10 @@
 using namespace OHOS::NativeRdb;
 namespace OHOS {
 namespace RdbNdk {
-OH_Predicates *RelationalPredicate::EqualTo(OH_Predicates *predicates, const char *field, OH_VObject *objects)
+OH_Predicates *RelationalPredicate::EqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
-    auto selfObjects = RelationalPredicatesObjects::GetSelf(objects);
+    auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
@@ -41,10 +41,10 @@ OH_Predicates *RelationalPredicate::EqualTo(OH_Predicates *predicates, const cha
 }
 
 OH_Predicates *RelationalPredicate::NotEqualTo(OH_Predicates *predicates, const char *field,
-    OH_VObject *objects)
+    OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
-    auto selfObjects = RelationalPredicatesObjects::GetSelf(objects);
+    auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
@@ -115,10 +115,10 @@ OH_Predicates *RelationalPredicate::IsNotNull(OH_Predicates *predicates, const c
     return self;
 }
 
-OH_Predicates *RelationalPredicate::Like(OH_Predicates *predicates, const char *field, OH_VObject *objects)
+OH_Predicates *RelationalPredicate::Like(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
-    auto selfObjects = RelationalPredicatesObjects::GetSelf(objects);
+    auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
@@ -131,10 +131,10 @@ OH_Predicates *RelationalPredicate::Like(OH_Predicates *predicates, const char *
     return self;
 }
 
-OH_Predicates *RelationalPredicate::Between(OH_Predicates *predicates, const char *field, OH_VObject *objects)
+OH_Predicates *RelationalPredicate::Between(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
-    auto selfObjects = RelationalPredicatesObjects::GetSelf(objects);
+    auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
@@ -150,10 +150,10 @@ OH_Predicates *RelationalPredicate::Between(OH_Predicates *predicates, const cha
 }
 
 OH_Predicates *RelationalPredicate::NotBetween(OH_Predicates *predicates, const char *field,
-    OH_VObject *objects)
+    OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
-    auto selfObjects = RelationalPredicatesObjects::GetSelf(objects);
+    auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
@@ -168,10 +168,10 @@ OH_Predicates *RelationalPredicate::NotBetween(OH_Predicates *predicates, const 
 }
 
 OH_Predicates *RelationalPredicate::GreaterThan(OH_Predicates *predicates, const char *field,
-    OH_VObject *objects)
+    OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
-    auto selfObjects = RelationalPredicatesObjects::GetSelf(objects);
+    auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
@@ -183,10 +183,10 @@ OH_Predicates *RelationalPredicate::GreaterThan(OH_Predicates *predicates, const
 }
 
 OH_Predicates *RelationalPredicate::LessThan(OH_Predicates *predicates, const char *field,
-    OH_VObject *objects)
+    OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
-    auto selfObjects = RelationalPredicatesObjects::GetSelf(objects);
+    auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
@@ -198,10 +198,10 @@ OH_Predicates *RelationalPredicate::LessThan(OH_Predicates *predicates, const ch
 }
 
 OH_Predicates *RelationalPredicate::GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field,
-    OH_VObject *objects)
+    OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
-    auto selfObjects = RelationalPredicatesObjects::GetSelf(objects);
+    auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
@@ -212,10 +212,10 @@ OH_Predicates *RelationalPredicate::GreaterThanOrEqualTo(OH_Predicates *predicat
     return self;
 }
 OH_Predicates *RelationalPredicate::LessThanOrEqualTo(OH_Predicates *predicates, const char *field,
-    OH_VObject *objects)
+    OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
-    auto selfObjects = RelationalPredicatesObjects::GetSelf(objects);
+    auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
@@ -285,10 +285,10 @@ OH_Predicates *RelationalPredicate::GroupBy(OH_Predicates *predicates, char cons
     return self;
 }
 
-OH_Predicates *RelationalPredicate::In(OH_Predicates *predicates, const char *field, OH_VObject *objects)
+OH_Predicates *RelationalPredicate::In(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
-    auto selfObjects = RelationalPredicatesObjects::GetSelf(objects);
+    auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
@@ -301,10 +301,10 @@ OH_Predicates *RelationalPredicate::In(OH_Predicates *predicates, const char *fi
     return self;
 }
 
-OH_Predicates *RelationalPredicate::NotIn(OH_Predicates *predicates, const char *field, OH_VObject *objects)
+OH_Predicates *RelationalPredicate::NotIn(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
-    auto selfObjects = RelationalPredicatesObjects::GetSelf(objects);
+    auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
     if (self == nullptr || selfObjects == nullptr || field == nullptr) {
         return self;
     }
