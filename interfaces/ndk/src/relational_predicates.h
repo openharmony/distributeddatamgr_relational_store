@@ -50,11 +50,11 @@ private:
     static OH_Predicates *Limit(OH_Predicates *predicates, unsigned int value);
     static OH_Predicates *Offset(OH_Predicates *predicates, unsigned int rowOffset);
     static OH_Predicates *GroupBy(OH_Predicates *predicates, char const *const *fields, int length);
-    static OH_Predicates *In(OH_Predicates *predicates, const char *field, OH_VObject *objects);
-    static OH_Predicates *NotIn(OH_Predicates *predicates, const char *field, OH_VObject *objects);
+    static OH_Predicates *In(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    static OH_Predicates *NotIn(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
     static OH_Predicates *Clear(OH_Predicates *predicates);
     static int Destroy(OH_Predicates *predicates);
-    static bool GetObjects(OH_Predicates *predicates, OH_VObject *objects,
+    static bool GetObjects(OH_Predicates *predicates, OH_VObject *valueObject,
         std::vector<std::string> &values);
     OHOS::NativeRdb::RdbPredicates predicates_;
 };
