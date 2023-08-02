@@ -105,6 +105,16 @@ napi_value Convert2JSValue(napi_env env, const RowEntity &rowEntity)
 }
 
 template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, ValueObject &valueObject)
+{
+    auto status = Convert2Value(env, jsValue, valueObject.value);
+    if (status != napi_ok) {
+        return napi_invalid_arg;
+    }
+    return napi_ok;
+}
+
+template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &statistic)
 {
     napi_value jsValue;

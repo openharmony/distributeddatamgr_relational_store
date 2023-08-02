@@ -48,11 +48,13 @@ private:
     static RdbPredicatesProxy *ParseInt32FieldByName(
         napi_env env, napi_callback_info info, napi_value &thiz, int32_t &field, const std::string fieldName);
     static RdbPredicatesProxy *ParseFieldAndValueArray(napi_env env, napi_callback_info info, napi_value &thiz,
-        std::string &field, std::vector<std::string> &value, const std::string valueType);
+        std::string &field, std::vector<NativeRdb::ValueObject> &value, const std::string valueType);
     static RdbPredicatesProxy *ParseFieldAndValue(napi_env env, napi_callback_info info, napi_value &thiz,
+        std::string &field, NativeRdb::ValueObject &value, const std::string valueType);
+    static RdbPredicatesProxy *ParseFieldAndStringValue(napi_env env, napi_callback_info info, napi_value &thiz,
         std::string &field, std::string &value, const std::string valueType);
     static RdbPredicatesProxy *ParseFieldLowAndHigh(napi_env env, napi_callback_info info, napi_value &thiz,
-        std::string &field, std::string &low, std::string &High);
+        std::string &field, NativeRdb::ValueObject &low, NativeRdb::ValueObject &High);
 
     static napi_value EqualTo(napi_env env, napi_callback_info info);
     static napi_value NotEqualTo(napi_env env, napi_callback_info info);
