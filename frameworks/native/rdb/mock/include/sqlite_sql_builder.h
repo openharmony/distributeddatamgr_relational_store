@@ -52,7 +52,7 @@ public:
         const std::string &group, const std::string &order, int limit, int offset);
     static std::string BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
     static std::string BuildCountString(const AbsRdbPredicates &predicates);
-    static std::string BuildSqlStringFromPredicates(const AbsRdbPredicates &predicates);
+    static std::string BuildSqlStringFromPredicates(const AbsPredicates &predicates);
 
 private:
     static void AppendClause(std::string &builder, const std::string &name, const std::string &clause);

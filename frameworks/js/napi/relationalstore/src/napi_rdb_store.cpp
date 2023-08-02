@@ -453,7 +453,7 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
         if (ret == napi_ok) {
             context->valuesBucket.Put(keyStr, std::move(valueObject));
         } else {
-            LOG_WARN("bad value type of key %{public}s", keyStr.c_str());
+            LOG_WARN("bad value type of key %{public}s", keyStr.c_str()); // TD: need to throw error here
         }
     }
     return OK;
@@ -601,7 +601,7 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
         CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
         CHECK_RETURN_ERR(context->rdbPredicates != nullptr);
         return obj->rdbStore_->UpdateWithConflictResolution(context->intOutput, context->tableName,
-            context->valuesBucket, context->rdbPredicates->GetWhereClause(), context->rdbPredicates->GetWhereArgs(),
+            context->valuesBucket, context->rdbPredicates->GetWhereClause(), context->rdbPredicates->GetBindArgs(),
             context->conflictResolution);
     };
     auto output = [context](napi_env env, napi_value &result) {

@@ -256,7 +256,7 @@ describe('rdbStoreDistributedTest', function () {
         console.log(TAG + "************* testRdbStoreDistributed0009 start *************");
         let predicates = new data_relationalStore.RdbPredicates("employee")
         try {
-            predicates = predicates.inDevices("1234567890");
+            predicates = predicates.inDevices(["1234567890"]);
             console.log(TAG + "inDevices success");
             expect(predicates).assertEqual(predicates);
         } catch (err) {
@@ -295,7 +295,7 @@ describe('rdbStoreDistributedTest', function () {
     it('testRdbStoreDistributed0011', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDistributed0011 start *************");
         let predicates = new data_relationalStore.RdbPredicates("employee")
-        predicates = predicates.inDevices("12345678abcd");
+        predicates = predicates.inDevices(["12345678abcd"]);
         rdbStore.sync(data_relationalStore.SyncMode.SYNC_MODE_PUSH, predicates);
         console.log(TAG + "sync push success");
         expect(rdbStore).assertEqual(rdbStore);

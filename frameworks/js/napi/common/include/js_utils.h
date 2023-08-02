@@ -33,9 +33,10 @@ namespace AppDataMgrJsKit {
 namespace JSUtils {
 constexpr int OK = 0;
 constexpr int ERR = -1;
-constexpr int32_t ASYNC_RST_SIZE = 2;
-constexpr int32_t MAX_VALUE_LENGTH = 8 * 1024;
-constexpr int32_t SYNC_RESULT_ELEMNT_NUM = 2;
+constexpr uint32_t ASYNC_RST_SIZE = 2;
+constexpr uint32_t DEFAULT_VALUE_LENGTH = 1024;
+constexpr uint32_t MAX_VALUE_LENGTH = 1024 * 1024 * 8; // the max length of all kand of out string value
+constexpr uint32_t SYNC_RESULT_ELEMENT_NUM = 2;
 struct JsFeatureSpace {
     const char* spaceName;
     const char* nameBase64;

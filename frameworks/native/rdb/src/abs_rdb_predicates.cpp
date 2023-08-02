@@ -31,9 +31,7 @@ AbsRdbPredicates::AbsRdbPredicates(const std::string &tableName)
         return;
     }
     tableName_ = std::move(tableName);
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     predicates_.tables_.push_back(tableName_);
-#endif
 }
 
 AbsRdbPredicates::AbsRdbPredicates(const std::vector<std::string> &tables)
@@ -44,9 +42,7 @@ AbsRdbPredicates::AbsRdbPredicates(const std::vector<std::string> &tables)
         return;
     }
     tableName_ = *(tables.begin());
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     predicates_.tables_ = std::move(tables);
-#endif
 }
 
 void AbsRdbPredicates::Clear()
@@ -154,7 +150,6 @@ std::string AbsRdbPredicates::ToString() const
            + ", isSorted:" + std::to_string(IsSorted()) + "}";
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 AbsRdbPredicates* AbsRdbPredicates::InDevices(std::vector<std::string> &devices)
 {
     predicates_.devices_ = devices;
@@ -223,5 +218,4 @@ AbsRdbPredicates* AbsRdbPredicates::OrderByDesc(const std::string &field)
     predicates_.AddOperation(DistributedRdb::ORDER_BY, field, isAsc);
     return (AbsRdbPredicates *)AbsPredicates::OrderByDesc(field);
 }
-#endif
 } // namespace OHOS::NativeRdb
