@@ -79,7 +79,9 @@ __attribute__((visibility("default"))) ValuesBucket *NAPI_OHOS_Data_RdbJsKit_Val
             valuesBucket->PutNull(keyStr);
             LOG_DEBUG("ValueObject type napi_null");
         } else if (valueType == napi_object) {
-            valuesBucket->PutBlob(keyStr, JSUtils::Convert2U8Vector(env, value));
+            std::vector<uint8_t> val = {};
+            JSUtils::Convert2Value(env, value, val);
+            valuesBucket->PutBlob(keyStr, val);
             LOG_DEBUG("ValueObject type napi_object");
         } else {
             LOG_WARN("valuesBucket error");

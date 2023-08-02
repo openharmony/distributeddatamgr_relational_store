@@ -145,9 +145,8 @@ describe('rdbStoreCloudSyncTest', function () {
             let PRIKey = ["test_key1", "test_key2"];
             rdbStore.getModifyTime("cloud_text", "uuid", PRIKey, function (err, data) {
                 console.log(TAG + `modifyTime:` + JSON.stringify(data));
+                done();
             });
-            expect(true).assertTrue();
-            done();
         } catch (err) {
             console.log(TAG + `get modify time fail, err code is ${err.code}, message is ${err.message}.`);
         }
