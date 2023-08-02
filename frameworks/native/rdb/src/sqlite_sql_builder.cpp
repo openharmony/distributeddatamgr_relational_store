@@ -92,9 +92,8 @@ int SqliteSqlBuilder::BuildQueryString(bool distinct, const std::string &table, 
     if (distinct) {
         sql.append("DISTINCT ");
     }
-    int errorCode = 0;
     if (columns.size() != 0) {
-        AppendColumns(sql, columns, errorCode);
+        AppendColumns(sql, columns);
     } else {
         sql.append("* ");
     }
@@ -104,32 +103,7 @@ int SqliteSqlBuilder::BuildQueryString(bool distinct, const std::string &table, 
         BuildSqlStringFromPredicates(index, where, groupBy, orderBy, climit, coffset));
     outSql = sql;
 
-    return errorCode;
-}
-
-/**
- * Build a query SQL string using the given condition for SQLite.
- */
-std::string SqliteSqlBuilder::BuildQueryStringWithExpr(const std::string &tableName, bool distinct,
-    const std::string &index, const std::string &whereClause, const std::string &group, const std::string &order,
-    int limit, int offset, std::vector<std::string> &expr)
-{
-    std::string sql;
-
-    sql.append("SELECT ");
-    if (distinct) {
-        sql.append("DISTINCT ");
-    }
-    if (expr.size() != 0) {
-        int errorCode = 0;
-        AppendColumns(sql, expr, errorCode);
-    } else {
-        sql.append("* ");
-    }
-    sql.append("FROM ").append(tableName).append(
-        BuildSqlStringFromPredicates(index, whereClause, group, order, limit, offset));
-
-    return sql;
+    return E_OK;
 }
 
 /**
@@ -209,7 +183,7 @@ void SqliteSqlBuilder::AppendClause(std::string &builder, const std::string &nam
 /**
  * Add the names that are non-null in columns to s, separating them with commas.
  */
-void SqliteSqlBuilder::AppendColumns(std::string &builder, const std::vector<std::string> &columns, int &errorCode)
+void SqliteSqlBuilder::AppendColumns(std::string &builder, const std::vector<std::string> &columns)
 {
     size_t length = columns.size();
     for (size_t i = 0; i < length; i++) {

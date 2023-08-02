@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include "common.h"
 #include "relational_store.h"
+#include "relational_store_error_code.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -138,6 +139,13 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_001, TestSize.Level1)
     errCode = cursor->getColumnType(cursor, 5, &type);
     EXPECT_EQ(type, OH_ColumnType::TYPE_TEXT);
 
+    errCode = cursor->getColumnType(nullptr, 5, &type);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = cursor->getColumnType(cursor, -1, &type);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = cursor->getColumnType(cursor, 5, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
     predicates->destroy(predicates);
     cursor->destroy(cursor);
 }
@@ -171,6 +179,13 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_002, TestSize.Level1)
     errCode = cursor->getColumnIndex(cursor, "data5", &columnIndex);
     EXPECT_EQ(columnIndex, 5);
 
+    errCode = cursor->getColumnIndex(nullptr, "data5", &columnIndex);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = cursor->getColumnIndex(cursor, nullptr, &columnIndex);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = cursor->getColumnIndex(cursor, "data5", nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
     predicates->destroy(predicates);
     cursor->destroy(cursor);
 }
@@ -203,6 +218,13 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_003, TestSize.Level1)
 
     errCode = cursor->getColumnName(cursor, 5, name, 6);
     EXPECT_EQ(strcmp(name, "data5"), 0);
+
+    errCode = cursor->getColumnName(nullptr, 5, name, 6);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = cursor->getColumnName(cursor, 5, nullptr, 6);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = cursor->getColumnName(cursor, 5, name, 0);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     predicates->destroy(predicates);
     cursor->destroy(cursor);
@@ -268,6 +290,82 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_004, TestSize.Level1)
     bool isNull = false;
     cursor->isNull(cursor, 3, &isNull);
     EXPECT_EQ(isNull, true);
+
+    predicates->destroy(predicates);
+    cursor->destroy(cursor);
+}
+
+/**
+ * @tc.name: RDB_NDK_cursor_test_004
+ * @tc.desc: Normal testCase of NDK cursor for anomalous branch.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_004, TestSize.Level1)
+{
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
+
+    const char *columnNames[] = {"data1", "data2", "data3", "data4"};
+    int len = sizeof(columnNames) / sizeof(columnNames[0]);
+    OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, columnNames, len);
+    EXPECT_NE(cursor, NULL);
+
+    int rowCount = 0;
+    int errCode = cursor->getRowCount(nullptr, &rowCount);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = cursor->getRowCount(cursor, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    int columnCount = 0;
+    errCode = cursor->getColumnCount(nullptr, &columnCount);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = cursor->getColumnCount(cursor, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    errCode = cursor->goToNextRow(nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    size_t size = 0;
+    errCode = cursor->getSize(nullptr, 0, &size);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = cursor->getSize(cursor, 0, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    char data1Value[size + 1];
+    errCode = cursor->getText(nullptr, 0, data1Value, size + 1);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = cursor->getText(cursor, 0, nullptr, size + 1);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = cursor->getText(cursor, 0, data1Value, 0);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    int64_t data2Value;
+    errCode = cursor->getInt64(nullptr, 1, &data2Value);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = cursor->getInt64(cursor, 1, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    double data3Value;
+    errCode = cursor->getReal(nullptr, 2, &data3Value);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = cursor->getReal(cursor, 2, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    unsigned char data4Value[size];
+    errCode = cursor->getBlob(nullptr, 3, data4Value, size);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = cursor->getBlob(cursor, 3, nullptr, size);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = cursor->getBlob(cursor, 3, data4Value, 0);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    bool isNull = false;
+    errCode = cursor->isNull(nullptr, 3, &isNull);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = cursor->isNull(cursor, 3, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    errCode = cursor->destroy(cursor);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     predicates->destroy(predicates);
     cursor->destroy(cursor);

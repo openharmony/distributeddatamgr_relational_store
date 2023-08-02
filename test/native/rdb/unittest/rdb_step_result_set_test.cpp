@@ -1784,12 +1784,6 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep016, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, testSqlStep017, TestSize.Level1)
 {
     std::vector<std::string> columns = {"data1", "data2"};
-    std::string querySql = SqliteSqlBuilder::BuildQueryStringWithExpr("test", true, "", "", "", "", INT_MIN,  INT_MIN,
-        columns);
-    EXPECT_EQ("SELECT DISTINCT data1, data2 FROM test", querySql);
-    columns.clear();
-    querySql = SqliteSqlBuilder::BuildQueryStringWithExpr("test", false, "", "", "", "", INT_MIN,  INT_MIN, columns);
-    EXPECT_EQ("SELECT * FROM test", querySql);
 
     std::string outSql;
     int errCode = SqliteSqlBuilder::BuildQueryString(false, "", columns, "", "", "", "", "", "", outSql);

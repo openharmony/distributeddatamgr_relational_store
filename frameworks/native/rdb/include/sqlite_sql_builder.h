@@ -37,9 +37,6 @@ public:
     static int BuildQueryString(bool distinct, const std::string &table, const std::vector<std::string> &columns,
         const std::string &where, const std::string &groupBy, const std::string &index, const std::string &orderBy,
         const std::string &limit, const std::string &offset, std::string &outSql);
-    static std::string BuildQueryStringWithExpr(const std::string &tableName, bool distinct, const std::string &index,
-        const std::string &whereClause, const std::string &group, const std::string &order, int limit, int offset,
-        std::vector<std::string> &expr);
     static std::string BuildCountString(const std::string &tableName, const std::string &index,
         const std::string &whereClause, const std::string &group, const std::string &order, int limit, int offset);
     static std::string BuildSqlStringFromPredicates(const std::string &index, const std::string &whereClause,
@@ -52,7 +49,7 @@ public:
 
 private:
     static void AppendClause(std::string &builder, const std::string &name, const std::string &clause);
-    static void AppendColumns(std::string &builder, const std::vector<std::string> &columns, int &errorCode);
+    static void AppendColumns(std::string &builder, const std::vector<std::string> &columns);
 };
 } // namespace NativeRdb
 } // namespace OHOS
