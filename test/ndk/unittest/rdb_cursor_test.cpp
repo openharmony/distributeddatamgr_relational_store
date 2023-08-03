@@ -296,11 +296,11 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_004, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_cursor_test_004
+ * @tc.name: RDB_NDK_cursor_test_005
  * @tc.desc: Normal testCase of NDK cursor for anomalous branch.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_004, TestSize.Level1)
+HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_005, TestSize.Level1)
 {
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
 
@@ -364,7 +364,7 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_004, TestSize.Level1)
     errCode = cursor->isNull(cursor, 3, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
-    errCode = cursor->destroy(cursor);
+    errCode = cursor->destroy(nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     predicates->destroy(predicates);
