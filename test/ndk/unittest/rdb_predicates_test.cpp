@@ -671,10 +671,10 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_019, TestSize.Level1)
     valueObject->putInt64(valueObject, data2Value, len);
     predicates->between(nullptr, "data2", valueObject);
     predicates->between(predicates, nullptr, valueObject);
-    predicates->between(predicates,"data2", nullptr);
+    predicates->between(predicates, "data2", nullptr);
     predicates->notBetween(nullptr, "data2", valueObject);
     predicates->notBetween(predicates, nullptr, valueObject);
-    predicates->notBetween(predicates,"data2", nullptr);
+    predicates->notBetween(predicates, "data2", nullptr);
     int64_t data2Value_1[] = {12000};
     len = sizeof(data2Value_1) / sizeof(data2Value_1[0]);
     valueObject->putInt64(valueObject, data2Value_1, len);
