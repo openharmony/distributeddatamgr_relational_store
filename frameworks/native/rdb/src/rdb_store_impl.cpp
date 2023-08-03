@@ -215,6 +215,9 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
     errCode = InnerOpen();
     if (errCode != E_OK) {
         LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore, err is %{public}d", errCode);
+        if (connectionPool) {
+            delete connectionPool;
+        }
         isOpen = false;
     }
 }
