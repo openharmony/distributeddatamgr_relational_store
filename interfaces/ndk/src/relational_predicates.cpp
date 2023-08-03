@@ -273,7 +273,7 @@ OH_Predicates *RelationalPredicate::Offset(OH_Predicates *predicates, unsigned i
 OH_Predicates *RelationalPredicate::GroupBy(OH_Predicates *predicates, char const *const *fields, int length)
 {
     auto self = GetSelf(predicates);
-    if (self == nullptr || fields == nullptr || length == 0) {
+    if (self == nullptr || fields == nullptr || length <= 0) {
         return self;
     }
     std::vector<std::string> vec;

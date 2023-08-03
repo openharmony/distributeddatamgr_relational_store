@@ -22,6 +22,7 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "sqlite_sql_builder.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -1773,4 +1774,18 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep016, TestSize.Level1)
 
     EXPECT_EQ(E_OK, resultSet->Close());
     EXPECT_EQ(true, resultSet->IsClosed());
+}
+
+/* *
+ * @tc.name: testSqlStep017
+ * @tc.desc: Abnormal testcase for build query string
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, testSqlStep017, TestSize.Level1)
+{
+    std::vector<std::string> columns = {"data1", "data2"};
+
+    std::string outSql;
+    int errCode = SqliteSqlBuilder::BuildQueryString(false, "", columns, "", "", "", "", "", "", outSql);
+    EXPECT_EQ(E_EMPTY_TABLE_NAME, errCode);
 }

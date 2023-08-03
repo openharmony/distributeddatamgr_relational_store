@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#include "relational_store_impl.h"
-
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -80,9 +78,10 @@ RelationalStore *GetRelationalStore(OH_Rdb_Store *store)
 
 OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
 {
-    if (config == nullptr || config->selfSize != sizeof(OH_Rdb_Config)) {
-        LOG_ERROR("Parameters set error:config is NULL ? %{public}d or config size error %{public}d vs %{public}zu",
-            (config == nullptr), config->selfSize, sizeof(OH_Rdb_Config));
+    if (config == nullptr || config->selfSize != sizeof(OH_Rdb_Config) || errCode == nullptr) {
+        LOG_ERROR("Parameters set error:config is NULL ? %{public}d and config size is %{public}zu or "
+                  "errCode is NULL ? %{public}d ",
+            (config == nullptr), sizeof(OH_Rdb_Config), (errCode == nullptr));
         return nullptr;
     }
 
@@ -180,7 +179,7 @@ OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const ch
         return nullptr;
     }
     std::vector<std::string> columns;
-    if (columnNames != nullptr) {
+    if (columnNames != nullptr && length > 0) {
         columns.reserve(length);
         for (int i = 0; i < length; i++) {
             columns.push_back(columnNames[i]);
@@ -248,7 +247,7 @@ int OH_Rdb_Commit(OH_Rdb_Store *store)
 int OH_Rdb_Backup(OH_Rdb_Store *store, const char *databasePath)
 {
     auto rdbStore = GetRelationalStore(store);
-    if (rdbStore == nullptr) {
+    if (rdbStore == nullptr || databasePath == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     return rdbStore->GetStore()->Backup(databasePath);
