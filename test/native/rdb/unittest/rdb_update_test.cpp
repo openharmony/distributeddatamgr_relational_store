@@ -22,6 +22,7 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "sqlite_sql_builder.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -1037,4 +1038,26 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_UpdateSqlBuilder_001
+ * @tc.desc: test RdbStore UpdateSqlBuilder
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateSqlBuilder_001, TestSize.Level1)
+{
+    ValuesBucket values;
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 20);
+    values.PutDouble("salary", 300.5);
+
+    std::vector<ValueObject> bindArgs;
+    std::string updateSql = SqliteSqlBuilder::BuildUpdateString(values, "test", std::vector<std::string>{ "19" },
+        "", "age = ?", "", "", INT_MIN, INT_MIN, bindArgs, ConflictResolution::ON_CONFLICT_NONE);
+    EXPECT_EQ(updateSql, "UPDATE test SET age=?,name=?,salary=? WHERE age = ?");
+
+    updateSql = SqliteSqlBuilder::BuildUpdateString(values, "test", std::vector<std::string>{},
+        "", "", "", "", INT_MIN, INT_MIN, bindArgs, ConflictResolution::ON_CONFLICT_NONE);
+    EXPECT_EQ(updateSql, "UPDATE test SET age=?,name=?,salary=?");
 }
