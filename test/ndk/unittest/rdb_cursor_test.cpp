@@ -25,7 +25,7 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
-class RdbNdkCursorTest : public testing::Test {
+class RdbNativeCursorTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -45,8 +45,8 @@ public:
 };
 
 OH_Rdb_Store *cursorTestRdbStore_;
-OH_Rdb_Config RdbNdkCursorTest::config_ = {0};
-void RdbNdkCursorTest::SetUpTestCase(void)
+OH_Rdb_Config RdbNativeCursorTest::config_ = {0};
+void RdbNativeCursorTest::SetUpTestCase(void)
 {
     InitRdbConfig();
     mkdir(config_.dataBaseDir, 0770);
@@ -91,27 +91,27 @@ void RdbNdkCursorTest::SetUpTestCase(void)
     valueBucket->destroy(valueBucket);
 }
 
-void RdbNdkCursorTest::TearDownTestCase(void)
+void RdbNativeCursorTest::TearDownTestCase(void)
 {
     delete cursorTestRdbStore_;
     cursorTestRdbStore_ = NULL;
     OH_Rdb_DeleteStore(&config_);
 }
 
-void RdbNdkCursorTest::SetUp(void)
+void RdbNativeCursorTest::SetUp(void)
 {
 }
 
-void RdbNdkCursorTest::TearDown(void)
+void RdbNativeCursorTest::TearDown(void)
 {
 }
 
 /**
- * @tc.name: RDB_NDK_cursor_test_001
- * @tc.desc: Normal testCase of NDK cursor for GetColumnType.
+ * @tc.name: RDB_Native_cursor_test_001
+ * @tc.desc: Normal testCase of cursor for GetColumnType.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_001, TestSize.Level1)
+HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_001, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -151,11 +151,11 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_001, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_cursor_test_002
- * @tc.desc: Normal testCase of NDK cursor for GetColumnIndex.
+ * @tc.name: RDB_Native_cursor_test_002
+ * @tc.desc: Normal testCase of cursor for GetColumnIndex.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_002, TestSize.Level1)
+HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_002, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -191,11 +191,11 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_002, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_cursor_test_003
- * @tc.desc: Normal testCase of NDK cursor for GetColumnName.
+ * @tc.name: RDB_Native_cursor_test_003
+ * @tc.desc: Normal testCase of cursor for GetColumnName.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_003, TestSize.Level1)
+HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_003, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -231,11 +231,11 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_003, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_cursor_test_004
- * @tc.desc: Normal testCase of NDK cursor for Getxxx.
+ * @tc.name: RDB_Native_cursor_test_004
+ * @tc.desc: Normal testCase of cursor for Getxxx.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_004, TestSize.Level1)
+HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_004, TestSize.Level1)
 {
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
 
@@ -296,11 +296,11 @@ HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_004, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_cursor_test_005
- * @tc.desc: Normal testCase of NDK cursor for anomalous branch.
+ * @tc.name: RDB_Native_cursor_test_005
+ * @tc.desc: Normal testCase of cursor for anomalous branch.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkCursorTest, RDB_NDK_cursor_test_005, TestSize.Level1)
+HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_005, TestSize.Level1)
 {
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
 
