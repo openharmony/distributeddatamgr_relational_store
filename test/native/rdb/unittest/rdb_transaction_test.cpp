@@ -704,19 +704,14 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_004, TestSize.Level1)
     store->ExecuteSql("delete from test");
 
     int id = 0;
-    std::string name = "zhangsan";
-    int age = 18;
-    double salary = 100.5;
-    std::vector<uint8_t> blob = { 1, 2, 3 };
+    ValuesBucket values;
     std::vector<ValuesBucket> valuesBuckets;
+
     for (int i = 0; i < 10; i++) {
-        ValuesBucket values;
+        values.clear();
         values.PutInt("id", id + i);
-        values.PutString("name", name);
-        values.PutInt("age", age + i);
-        values.PutDouble("salary", salary + i);
-        values.PutBlob("blobType", blob);
-        valuesBuckets.push_back(std::move(values));
+        values.PutString("name", "zhangsan");
+        valuesBuckets.push_back(values);
     }
 
     int error = store->BeginTransaction();
