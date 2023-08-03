@@ -330,13 +330,13 @@ SharedBlock::CellUnit *SharedBlock::GetCellUnit(uint32_t row, uint32_t column)
     }
 
     uint32_t *rowOffset = GetRowOffset(row);
-    if (unlikely(!rowOffset)) {
+    if (!rowOffset) {
         LOG_ERROR("Failed to find rowOffset for row %{public}" PRIu32 ".", row);
         return nullptr;
     }
 
     CellUnit *cellUnit = static_cast<CellUnit *>(OffsetToPtr(*rowOffset));
-    if (unlikely(!cellUnit)) {
+    if (!cellUnit) {
         LOG_ERROR("Failed to find cellUnit for rowOffset %{public}" PRIu32 ".", *rowOffset);
         return nullptr;
     }
