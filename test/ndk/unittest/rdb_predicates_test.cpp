@@ -26,7 +26,7 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
-class RdbNdkPredicatesTest : public testing::Test {
+class RdbNativePredicatesTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -46,8 +46,8 @@ public:
 };
 
 OH_Rdb_Store *predicatesTestRdbStore_;
-OH_Rdb_Config RdbNdkPredicatesTest::config_ = {0};
-void RdbNdkPredicatesTest::SetUpTestCase(void)
+OH_Rdb_Config RdbNativePredicatesTest::config_ = {0};
+void RdbNativePredicatesTest::SetUpTestCase(void)
 {
     InitRdbConfig();
     mkdir(config_.dataBaseDir, 0770);
@@ -93,27 +93,27 @@ void RdbNdkPredicatesTest::SetUpTestCase(void)
     valueBucket->destroy(valueBucket);
 }
 
-void RdbNdkPredicatesTest::TearDownTestCase(void)
+void RdbNativePredicatesTest::TearDownTestCase(void)
 {
     delete predicatesTestRdbStore_;
     predicatesTestRdbStore_ = NULL;
     OH_Rdb_DeleteStore(&config_);
 }
 
-void RdbNdkPredicatesTest::SetUp(void)
+void RdbNativePredicatesTest::SetUp(void)
 {
 }
 
-void RdbNdkPredicatesTest::TearDown(void)
+void RdbNativePredicatesTest::TearDown(void)
 {
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_001
- * @tc.desc: Normal testCase of NDK Predicates for EqualTo、AndOR、beginWrap and endWrap
+ * @tc.name: RDB_Native_predicates_test_001
+ * @tc.desc: Normal testCase of Predicates for EqualTo、AndOR、beginWrap and endWrap
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_001, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_001, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -138,11 +138,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_001, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_002
- * @tc.desc: Normal testCase of NDK Predicates for NotEqualTo
+ * @tc.name: RDB_Native_predicates_test_002
+ * @tc.desc: Normal testCase of Predicates for NotEqualTo
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_002, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_002, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -164,11 +164,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_002, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_003
- * @tc.desc: Normal testCase of NDK Predicates for GreaterThan
+ * @tc.name: RDB_Native_predicates_test_003
+ * @tc.desc: Normal testCase of Predicates for GreaterThan
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_003, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_003, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -246,11 +246,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_003, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_004
- * @tc.desc: Normal testCase of NDK Predicates for GreaterThanOrEqualTo
+ * @tc.name: RDB_Native_predicates_test_004
+ * @tc.desc: Normal testCase of Predicates for GreaterThanOrEqualTo
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_004, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_004, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -271,11 +271,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_004, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_005
- * @tc.desc: Normal testCase of NDK Predicates for LessThan
+ * @tc.name: RDB_Native_predicates_test_005
+ * @tc.desc: Normal testCase of Predicates for LessThan
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_005, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_005, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -296,11 +296,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_005, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_006
- * @tc.desc: Normal testCase of NDK Predicates for LessThanOrEqualTo
+ * @tc.name: RDB_Native_predicates_test_006
+ * @tc.desc: Normal testCase of Predicates for LessThanOrEqualTo
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_006, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_006, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -321,11 +321,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_006, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_007
- * @tc.desc: Normal testCase of NDK Predicates for IsNull.
+ * @tc.name: RDB_Native_predicates_test_007
+ * @tc.desc: Normal testCase of Predicates for IsNull.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_007, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_007, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -342,11 +342,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_007, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_008
- * @tc.desc: Normal testCase of NDK Predicates for IsNull.
+ * @tc.name: RDB_Native_predicates_test_008
+ * @tc.desc: Normal testCase of Predicates for IsNull.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_008, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_008, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -363,11 +363,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_008, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_009
- * @tc.desc: Normal testCase of NDK Predicates for Between
+ * @tc.name: RDB_Native_predicates_test_009
+ * @tc.desc: Normal testCase of Predicates for Between
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_009, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_009, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -393,11 +393,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_009, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_010
- * @tc.desc: Normal testCase of NDK Predicates for NotBetween
+ * @tc.name: RDB_Native_predicates_test_010
+ * @tc.desc: Normal testCase of Predicates for NotBetween
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_010, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_010, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -419,11 +419,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_010, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_011
- * @tc.desc: Normal testCase of NDK Predicates for OrderBy、Limit、Offset.
+ * @tc.name: RDB_Native_predicates_test_011
+ * @tc.desc: Normal testCase of Predicates for OrderBy、Limit、Offset.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_011, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_011, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -451,11 +451,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_011, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_012
- * @tc.desc: Normal testCase of NDK Predicates for In.
+ * @tc.name: RDB_Native_predicates_test_012
+ * @tc.desc: Normal testCase of Predicates for In.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_012, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_012, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -477,11 +477,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_012, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_013
- * @tc.desc: Normal testCase of NDK Predicates for NotIn.
+ * @tc.name: RDB_Native_predicates_test_013
+ * @tc.desc: Normal testCase of Predicates for NotIn.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_013, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_013, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -503,11 +503,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_013, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_014
- * @tc.desc: Normal testCase of NDK Predicates for Like.
+ * @tc.name: RDB_Native_predicates_test_014
+ * @tc.desc: Normal testCase of Predicates for Like.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_014, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_014, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -531,11 +531,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_014, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_015
- * @tc.desc: Normal testCase of NDK Predicates for GroupBy.
+ * @tc.name: RDB_Native_predicates_test_015
+ * @tc.desc: Normal testCase of Predicates for GroupBy.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_015, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_015, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -554,11 +554,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_015, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_016
- * @tc.desc: Normal testCase of NDK Predicates for And.
+ * @tc.name: RDB_Native_predicates_test_016
+ * @tc.desc: Normal testCase of Predicates for And.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_016, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_016, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -583,11 +583,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_016, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_017
- * @tc.desc: Normal testCase of NDK Predicates for Clear.
+ * @tc.name: RDB_Native_predicates_test_017
+ * @tc.desc: Normal testCase of Predicates for Clear.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_017, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_017, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
@@ -615,11 +615,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_017, TestSize.Level1)
     cursor->destroy(cursor);
 }
 /**
- * @tc.name: RDB_NDK_predicates_test_018
- * @tc.desc: Normal testCase of NDK Predicates for table name is NULL.
+ * @tc.name: RDB_Native_predicates_test_018
+ * @tc.desc: Normal testCase of Predicates for table name is NULL.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_018, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_018, TestSize.Level1)
 {
     char *table = NULL;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates(table);
@@ -630,11 +630,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_018, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_019
- * @tc.desc: Normal testCase of NDK Predicates for anomalous branch.
+ * @tc.name: RDB_Native_predicates_test_019
+ * @tc.desc: Normal testCase of Predicates for anomalous branch.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_019, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_019, TestSize.Level1)
 {
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
     EXPECT_NE(predicates, NULL);
@@ -727,11 +727,11 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_019, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_NDK_predicates_test_020
+ * @tc.name: RDB_Native_predicates_test_020
  * @tc.desc: Normal testCase of RelationalPredicatesObjects for anomalous branch.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_020, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_020, TestSize.Level1)
 {
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     int64_t data2Value[] = {12000, 13000};
