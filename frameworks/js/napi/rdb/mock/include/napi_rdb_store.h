@@ -18,6 +18,7 @@
 
 #include <list>
 #include <mutex>
+#include <gmock/gmock.h>
 
 #include "napi/native_api.h"
 #include "napi/native_common.h"
@@ -66,6 +67,10 @@ private:
     static napi_value SetVersion(napi_env env, napi_callback_info info);
     std::mutex mutex_;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
+};
+
+class TestRdbStoreProxy : public RdbStoreProxy {
+     MOCK_CONST_METHOD2(QueryByStep, bool(const std::string&, const std::string&));
 };
 } // namespace RdbJsKit
 } // namespace OHOS
