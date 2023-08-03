@@ -372,7 +372,7 @@ int SharedBlock::PutBlobOrString(uint32_t row, uint32_t column, const void *valu
 
     if (row >= mHeader->rowNums || column >= mHeader->columnNums) {
         LOG_ERROR("Failed to read row %{public}" PRIu32 ", column %{public}" PRIu32 " from a SharedBlock"
-                                                                                    " which has %{public}" PRIu32 " rows, %{public}" PRIu32 " columns.",
+            " which has %{public}" PRIu32 " rows, %{public}" PRIu32 " columns.",
                 row, column, mHeader->rowNums, mHeader->columnNums);
         return SHARED_BLOCK_BAD_VALUE;
     }
@@ -405,7 +405,7 @@ int SharedBlock::PutLong(uint32_t row, uint32_t column, int64_t value)
 
     if (row >= mHeader->rowNums || column >= mHeader->columnNums) {
         LOG_ERROR("Failed to read row %{public}" PRIu32 ", column %{public}" PRIu32 " from a SharedBlock"
-                                                                                    " which has %{public}" PRIu32 " rows, %{public}" PRIu32 " columns.",
+            " which has %{public}" PRIu32 " rows, %{public}" PRIu32 " columns.",
                 row, column, mHeader->rowNums, mHeader->columnNums);
         return SHARED_BLOCK_BAD_VALUE;
     }
