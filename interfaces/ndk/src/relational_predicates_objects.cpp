@@ -97,13 +97,13 @@ RelationalPredicatesObjects::RelationalPredicatesObjects()
     destroy = Destroy;
 }
 
-RelationalPredicatesObjects *RelationalPredicatesObjects::GetSelf(OH_VObject *objects)
+RelationalPredicatesObjects *RelationalPredicatesObjects::GetSelf(OH_VObject *valueObject)
 {
-    if (objects == nullptr || objects->id != OHOS::RdbNdk::RDB_PREDICATES_OBJECTS_CID) {
-        LOG_ERROR("predicates objects invalid. is null %{public}d", (objects == nullptr));
+    if (valueObject == nullptr || valueObject->id != OHOS::RdbNdk::RDB_PREDICATES_OBJECTS_CID) {
+        LOG_ERROR("predicates objects invalid. is null %{public}d", (valueObject == nullptr));
         return nullptr;
     }
-    return static_cast<OHOS::RdbNdk::RelationalPredicatesObjects *>(objects);
+    return static_cast<OHOS::RdbNdk::RelationalPredicatesObjects *>(valueObject);
 }
 
 std::vector<ValueObject> &RelationalPredicatesObjects::Get()
