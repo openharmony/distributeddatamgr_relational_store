@@ -708,7 +708,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_004, TestSize.Level1)
     std::vector<ValuesBucket> valuesBuckets;
 
     for (int i = 0; i < 10; i++) {
-        values.clear();
+        values.Clear();
         values.PutInt("id", id + i);
         values.PutString("name", "zhangsan");
         valuesBuckets.push_back(values);
