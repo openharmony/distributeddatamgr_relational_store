@@ -685,13 +685,15 @@ HWTEST_F(RdbNdkStoreTest, RDB_NDK_store_test_012, TestSize.Level1)
     OH_Rdb_Config config;
     config.dataBaseDir = RDB_TEST_PATH;
     config.storeName = "rdb_store_error.db";
-    config.bundleName = "";
+    config.bundleName = nullptr;
     config.moduleName = "";
     config.securityLevel = OH_Rdb_SecurityLevel::S1;
     config.isEncrypt = false;
     config.selfSize = 0;
 
     auto store = OH_Rdb_GetOrOpen(nullptr, &errCode);
+    EXPECT_EQ(store, nullptr);
+    store = OH_Rdb_GetOrOpen(&config, nullptr);
     EXPECT_EQ(store, nullptr);
     store = OH_Rdb_GetOrOpen(&config, &errCode);
     EXPECT_EQ(store, nullptr);

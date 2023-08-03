@@ -731,7 +731,7 @@ HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_019, TestSize.Level1)
  * @tc.desc: Normal testCase of RelationalPredicatesObjects for anomalous branch.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_018, TestSize.Level1)
+HWTEST_F(RdbNdkPredicatesTest, RDB_NDK_predicates_test_020, TestSize.Level1)
 {
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     int64_t data2Value[] = {12000, 13000};

@@ -78,9 +78,10 @@ RelationalStore *GetRelationalStore(OH_Rdb_Store *store)
 
 OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
 {
-    if (config == nullptr || config->selfSize != sizeof(OH_Rdb_Config)) {
-        LOG_ERROR("Parameters set error:config is NULL ? %{public}d or config size error %{public}d vs %{public}zu",
-            (config == nullptr), config->selfSize, sizeof(OH_Rdb_Config));
+    if (config == nullptr || config->selfSize != sizeof(OH_Rdb_Config) || errCode == nullptr) {
+        LOG_ERROR("Parameters set error:config is NULL ? %{public}d and config size is %{public}zu or "
+                  "errCode is NULL ? %{public}d ",
+            (config == nullptr), sizeof(OH_Rdb_Config), (errCode == nullptr));
         return nullptr;
     }
 
