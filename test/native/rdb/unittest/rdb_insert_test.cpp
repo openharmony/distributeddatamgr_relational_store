@@ -681,21 +681,15 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_008, TestSize
     ValuesBucket values;
 
     values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
     values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
     int ret = store->InsertWithConflictResolution(id, "test", values, static_cast<ConflictResolution>(6));
-    EXPECT_EQ(ret, E_INVALID_CONFLICT_FLAG);
-    EXPECT_EQ(id, 0);
+    EXPECT_EQ(E_INVALID_CONFLICT_FLAG, ret);
+    EXPECT_EQ(0, id);
 
     values.Clear();
     values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
     values.PutInt("age", 18);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
     ret = store->InsertWithConflictResolution(id, "test", values, static_cast<ConflictResolution>(-1));
-    EXPECT_EQ(ret, E_INVALID_CONFLICT_FLAG);
-    EXPECT_EQ(id, 0);
+    EXPECT_EQ(E_INVALID_CONFLICT_FLAGret, ret);
+    EXPECT_EQ(0, id);
 }
