@@ -690,6 +690,6 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_008, TestSize
     values.PutInt("id", 1);
     values.PutInt("age", 18);
     ret = store->InsertWithConflictResolution(id, "test", values, static_cast<ConflictResolution>(-1));
-    EXPECT_EQ(E_INVALID_CONFLICT_FLAGret, ret);
+    EXPECT_EQ(E_INVALID_CONFLICT_FLAG, ret);
     EXPECT_EQ(0, id);
 }
