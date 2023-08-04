@@ -77,6 +77,24 @@ int RelationalPredicatesObjects::PutTexts(OH_VObject *objects, const char **valu
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
+int RelationalPredicatesObjects::putBlob(OH_VObject *objects, const uint8_t *value, uint32_t size)
+{
+    auto self = GetSelf(objects);
+    if (self == nullptr || value == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+
+    self->values_.clear();
+    std::vector<uint8_t> blobValue;
+    blobValue.reserve(size);
+    for (uint32_t i = 0; i < size; i++) {
+        blobValue.push_back(value[i]);
+    }
+
+    self->values_.push_back(blobValue);
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
 int RelationalPredicatesObjects::Destroy(OH_VObject *objects)
 {
     auto self = GetSelf(objects);

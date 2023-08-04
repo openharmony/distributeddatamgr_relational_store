@@ -79,9 +79,9 @@ std::string SqliteSqlBuilder::BuildUpdateString(const ValuesBucket &values, cons
 /**
  * Build a query SQL string using the given condition for SQLite.
  */
-int SqliteSqlBuilder::BuildQueryString(bool distinct, const std::string &table, const std::vector<std::string> &columns,
-    const std::string &where, const std::string &groupBy, const std::string &index, const std::string &orderBy,
-    const std::string &limit, const std::string &offset, std::string &outSql)
+int SqliteSqlBuilder::BuildQueryString(bool distinct, const std::string &table,
+    const std::vector<std::string> &columns, const std::string &whereClause, const std::string &groupBy,
+    const std::string &indexName, const std::string &orderBy, const int &limit, const int &offset, std::string &outSql)
 {
     if (table.empty()) {
         return E_EMPTY_TABLE_NAME;
@@ -97,10 +97,8 @@ int SqliteSqlBuilder::BuildQueryString(bool distinct, const std::string &table, 
     } else {
         sql.append("* ");
     }
-    int climit = std::stoi(limit);
-    int coffset = std::stoi(offset);
     sql.append("FROM ").append(table).append(
-        BuildSqlStringFromPredicates(index, where, groupBy, orderBy, climit, coffset));
+        BuildSqlStringFromPredicates(indexName, whereClause, groupBy, orderBy, limit, offset));
     outSql = sql;
 
     return E_OK;

@@ -35,6 +35,7 @@ private:
     static int PutDouble(OH_VObject *objects, double *value, uint32_t count);
     static int PutText(OH_VObject *objects, const char *value);
     static int PutTexts(OH_VObject *objects, const char **value, uint32_t count);
+    static int putBlob(OH_VObject *objects, const uint8_t *value, uint32_t size);
     static int Destroy(OH_VObject *objects);
     std::vector<ValueObject> values_;
 };
