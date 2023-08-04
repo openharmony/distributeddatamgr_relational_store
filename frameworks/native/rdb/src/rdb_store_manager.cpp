@@ -26,11 +26,13 @@
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#include "rdb_manager_impl.h"
 #include "rdb_security_manager.h"
 #endif
 #include "security_policy.h"
 #endif
 #include "sqlite_utils.h"
+#include "string_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -156,6 +158,25 @@ int RdbStoreManager::ProcessOpenCallback(
 
     return openCallback.OnOpen(rdbStore);
 }
+
+bool RdbStoreManager::Delete(const std::string &path)
+{
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    auto tokens = StringUtils::Split(path, "/");
+    if (!tokens.empty()) {
+        DistributedRdb::RdbSyncerParam param;
+        param.storeName_ = *tokens.rbegin();
+        auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+        if (err == E_OK && service != nullptr) {
+            err = service->Delete(param);
+        }
+        LOG_DEBUG("service delete store, storeName:%{public}s, err = %{public}d",
+            SqliteUtils::Anonymous(param.storeName_).c_str(), err);
+    }
+#endif
+    return Remove(path);
+}
+
 int RdbStoreManager::SetSecurityLabel(const RdbStoreConfig &config)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)

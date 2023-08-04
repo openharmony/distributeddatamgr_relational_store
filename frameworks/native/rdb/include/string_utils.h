@@ -26,6 +26,8 @@ public:
     static std::string SurroundWithQuote(const std::string &value, const std::string &quote);
     static std::string SurroundWithFunction(
         const std::string &function, const std::string &separator, const std::vector<std::string> &array);
+
+    static std::vector<std::string> Split(const std::string &str, const std::string &delim);
     static bool IsEmpty(std::string source)
     {
         return (source.empty());

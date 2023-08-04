@@ -57,6 +57,9 @@ public:
 
     virtual int32_t GetSchema(const RdbSyncerParam &param) = 0;
 
+    //only use param.storeName_
+    virtual int32_t Delete(const RdbSyncerParam &param) = 0;
+
     inline static constexpr const char *SERVICE_NAME = "relational_store";
 };
 }
