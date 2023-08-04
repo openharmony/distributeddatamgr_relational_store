@@ -208,11 +208,11 @@ std::string SqliteSqlBuilder::BuildQueryString(
     std::string groupStr = predicates.GetGroup();
     std::string indexStr = predicates.GetIndex();
     std::string orderStr = predicates.GetOrder();
-    std::string limitStr = std::to_string(predicates.GetLimit());
-    std::string offsetStr = std::to_string(predicates.GetOffset());
+    int limit = predicates.GetLimit();
+    int offset = predicates.GetOffset();
     std::string sqlStr;
     BuildQueryString(
-        distinct, tableNameStr, columns, whereClauseStr, groupStr, indexStr, orderStr, limitStr, offsetStr, sqlStr);
+        distinct, tableNameStr, columns, whereClauseStr, groupStr, indexStr, orderStr, limit, offset, sqlStr);
     return sqlStr;
 }
 
