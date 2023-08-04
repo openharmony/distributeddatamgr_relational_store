@@ -579,20 +579,20 @@ std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
     return std::make_shared<ResultSetProxy>(remoteResultSet);
 }
 
-std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool distinct, const std::string &table,
-    const std::vector<std::string> &columns, const std::string &selection,
-    const std::vector<std::string> &selectionArgs, const std::string &groupBy, const std::string &having,
-    const std::string &orderBy, const std::string &limit)
+std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool distinct,
+    const std::string &table, const std::vector<std::string> &columns,
+    const std::string &whereClause, const std::vector<ValueObject> &bindArgs, const std::string &groupBy,
+    const std::string &indexName, const std::string &orderBy, const int &limit, const int &offset)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::string sql;
-    errCode = SqliteSqlBuilder::BuildQueryString(distinct, table, columns, selection, groupBy, having, orderBy, limit,
-        std::to_string(AbsPredicates::INIT_OFFSET_VALUE), sql);
+    errCode = SqliteSqlBuilder::BuildQueryString(
+        distinct, table, columns, whereClause, groupBy, indexName, orderBy, limit, offset, sql);
     if (errCode != E_OK) {
         return nullptr;
     }
 
-    auto resultSet = QuerySql(sql, selectionArgs);
+    auto resultSet = QuerySql(sql, bindArgs);
     return resultSet;
 }
 

@@ -201,17 +201,18 @@ public:
      * @param distinct Indicates whether to eliminate all duplicate records in the result set.
      * @param table Indicates the target table.
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
-     * @param selection Indicates the selection.
-     * @param sqlArgs Indicates the selection arguments.
+     * @param whereClause Indicates the selection.
+     * @param bindArgs Indicates the selection arguments.
      * @param groupBy Indicates the groupBy argument.
-     * @param having Indicates the having argument.
+     * @param indexName Indicates the index by argument.
      * @param orderBy Indicates the orderBy argument.
      * @param limit Indicates the limit argument.
      */
     virtual std::shared_ptr<AbsSharedResultSet> Query(int &errCode, bool distinct, const std::string &table,
-        const std::vector<std::string> &columns, const std::string &selection = "",
-        const std::vector<std::string> &sqlArgs = {}, const std::string &groupBy = "",
-        const std::string &having = "", const std::string &orderBy = "", const std::string &limit = "") = 0;
+        const std::vector<std::string> &columns, const std::string &whereClause = "",
+        const std::vector<ValueObject> &bindArgs = {}, const std::string &groupBy = "",
+        const std::string &indexName = "", const std::string &orderBy = "",
+        const int &limit = AbsPredicates::INIT_LIMIT_VALUE, const int &offset = AbsPredicates::INIT_LIMIT_VALUE) = 0;
 
     /**
      * @brief Queries data in the database based on SQL statement.
@@ -476,7 +477,7 @@ public:
     /**
      * @brief When SubscribeMode is LOCAL or LOCALSHARED, this function needs to be called to trigger callback.
      */
-    virtual int Notify(const std::string &event);
+    virtual int Notify(const std::string &event) = 0;
 
     /**
      * @brief Get the the specified column modify time.

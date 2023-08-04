@@ -103,6 +103,18 @@ typedef struct OH_VObject {
     int (*putTexts)(OH_VObject *valueObject, const char **value, uint32_t count);
 
     /**
+     * @brief Convert the double input parameter to a value of type {@link OH_VObject}.
+     *
+     * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
+     * @param value Indicates the const uint8_t * value..
+     * @param size Indicates the size of value.
+     * @return Returns the status code of the execution.
+     * @see OH_VObject.
+     * @since 10
+     */
+    int (*putBlob)(OH_VObject *valueObject, const uint8_t *value, uint32_t size);
+
+    /**
      * @brief Destroy the {@link OH_VObject} object and reclaim the memory occupied by the object.
      *
      * @param valueObject Represents a pointer to an {@link OH_VObject} instance.
