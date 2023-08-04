@@ -667,3 +667,29 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_006_007, Test
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 }
+
+/**
+ * @tc.name: RdbStore_InsertWithConflictResolution_008
+ * @tc.desc: Abnormal testCase of InsertWithConflictResolution, if conflictResolution is invalid
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_008, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
+
+    int64_t id;
+    ValuesBucket values;
+
+    values.PutInt("id", 1);
+    values.PutInt("age", 18);
+    int ret = store->InsertWithConflictResolution(id, "test", values, static_cast<ConflictResolution>(6));
+    EXPECT_EQ(E_INVALID_CONFLICT_FLAG, ret);
+    EXPECT_EQ(0, id);
+
+    values.Clear();
+    values.PutInt("id", 1);
+    values.PutInt("age", 18);
+    ret = store->InsertWithConflictResolution(id, "test", values, static_cast<ConflictResolution>(-1));
+    EXPECT_EQ(E_INVALID_CONFLICT_FLAG, ret);
+    EXPECT_EQ(0, id);
+}
