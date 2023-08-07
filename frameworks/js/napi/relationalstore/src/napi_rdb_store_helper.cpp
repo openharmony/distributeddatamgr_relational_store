@@ -166,7 +166,7 @@ int ParseStoreConfig(const napi_env &env, const napi_value &object, std::shared_
     return OK;
 }
 
-int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<HelperRdbContext> context)
+int ParsePath(const napi_env env, const napi_value arg, std::shared_ptr<HelperRdbContext> context)
 {
     std::string path = JSUtils::Convert2String(env, arg);
     CHECK_RETURN_SET(!path.empty(), std::make_shared<ParamError>("name", "a without path non empty string."));

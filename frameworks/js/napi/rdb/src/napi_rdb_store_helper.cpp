@@ -389,7 +389,7 @@ int ParseStoreConfigV9(const napi_env &env, const napi_value &object, std::share
     return OK;
 }
 
-int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<HelperRdbContext> context)
+int ParsePath(const napi_env env, const napi_value arg, std::shared_ptr<HelperRdbContext> context)
 {
     std::string path = JSUtils::Convert2String(env, arg);
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("name", "a without path non empty string.");
@@ -411,7 +411,7 @@ int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<Helper
     return OK;
 }
 
-int ParseVersion(const napi_env &env, const napi_value &arg, std::shared_ptr<HelperRdbContext> context)
+int ParseVersion(const napi_env env, const napi_value arg, std::shared_ptr<HelperRdbContext> context)
 {
     napi_get_value_int32(env, arg, &context->version);
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("version", "an integer greater than 0.");

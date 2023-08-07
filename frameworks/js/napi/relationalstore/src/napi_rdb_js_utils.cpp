@@ -77,6 +77,16 @@ int32_t Convert2Value(napi_env env, napi_value input, DistributedRdb::Distribute
 }
 
 template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, ValueObject &valueObject)
+{
+    auto status = Convert2Value(env, jsValue, valueObject.value);
+    if (status != napi_ok) {
+        return napi_invalid_arg;
+    }
+    return napi_ok;
+}
+
+template<>
 napi_value Convert2JSValue(napi_env env, const Asset &value)
 {
     napi_value object;
@@ -98,10 +108,16 @@ napi_value Convert2JSValue(napi_env env, const RowEntity &rowEntity)
     NAPI_CALL(env, napi_create_object(env, &ret));
     auto &values = rowEntity.Get();
     for (auto const &[key, object] : values) {
-        napi_value value = JSUtils::Convert2JSValue(env, object.value);
+        napi_value value = JSUtils::Convert2JSValue(env, object);
         NAPI_CALL(env, napi_set_named_property(env, ret, key.c_str(), value));
     }
     return ret;
+}
+
+template<>
+napi_value Convert2JSValue(napi_env env, const ValueObject &valueObject)
+{
+    return JSUtils::Convert2JSValue(env, valueObject.value);
 }
 
 template<>

@@ -19,15 +19,28 @@
 
 namespace OHOS {
 namespace NativeRdb {
-PredicatesUtils::PredicatesUtils() {}
+PredicatesUtils::PredicatesUtils()
+{
+}
+
+/**
+ * Set the param of whereClause and bindArgs of the specified Predicates.
+ */
+void PredicatesUtils::SetWhereClauseAndArgs(
+    AbsPredicates *predicates, const std::string &whereClause, const std::vector<std::string> &whereArgs)
+{
+    predicates->SetWhereClause(whereClause);
+    predicates->SetWhereArgs(whereArgs);
+}
+
 /**
  * Set the param of whereClause and bindArgs of the specified Predicates.
  */
 void PredicatesUtils::SetWhereClauseAndArgs(AbsPredicates *predicates, const std::string &whereClause,
-    const std::vector<std::string> &whereArgs)
+    const std::vector<ValueObject> &bindArgs)
 {
     predicates->SetWhereClause(whereClause);
-    predicates->SetWhereArgs(whereArgs);
+    predicates->SetBindArgs(bindArgs);
 }
 
 /**

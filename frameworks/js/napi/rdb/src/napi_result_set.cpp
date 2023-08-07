@@ -86,7 +86,7 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 std::shared_ptr<NativeRdb::AbsSharedResultSet> ResultSetProxy::GetNativeObject(
-    napi_env const &env, napi_value const &arg)
+    napi_env const env, napi_value const arg)
 {
     if (arg == nullptr) {
         LOG_ERROR("ResultSetProxy GetNativeObject arg is null.");

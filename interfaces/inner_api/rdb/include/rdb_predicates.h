@@ -70,16 +70,6 @@ public:
      */
     API_EXPORT RdbPredicates *On(const std::vector<std::string> &clauses);
 
-    /**
-     * @brief Get statement with predicates.
-     */
-    API_EXPORT std::string GetStatement();
-
-    /**
-     * @brief Get arguments with predicates.
-     */
-    API_EXPORT std::vector<std::string> GetBindArgs();
-
 private:
     std::string ProcessJoins() const;
     std::string GetGrammar(int type) const;

@@ -27,6 +27,7 @@ namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
 using Asset = OHOS::NativeRdb::AssetValue;
 using RowEntity = OHOS::NativeRdb::RowEntity;
+using ValueObject = OHOS::NativeRdb::ValueObject;
 using Date = OHOS::DistributedRdb::Date;
 using JSChangeInfo = OHOS::RelationalStoreJsKit::NapiRdbStoreObserver::JSChangeInfo;
 using PRIKey = OHOS::DistributedRdb::RdbStoreObserver::PrimaryKey;
@@ -35,10 +36,16 @@ template<>
 int32_t Convert2Value(napi_env env, napi_value input, Asset &output);
 
 template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, ValueObject &valueObject);
+
+template<>
 napi_value Convert2JSValue(napi_env env, const Asset &value);
 
 template<>
 napi_value Convert2JSValue(napi_env env, const RowEntity &value);
+
+template<>
+napi_value Convert2JSValue(napi_env env, const ValueObject &value);
 
 template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &statistic);
