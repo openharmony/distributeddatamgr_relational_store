@@ -31,7 +31,7 @@ DataAbilityPredicates::DataAbilityPredicates(const std::string &rawSelection) : 
     AbsPredicates::SetWhereClause(rawSelection);
 }
 
-DataAbilityPredicates::DataAbilityPredicates(OHOS::Parcel *source) : judgeSource(true)
+DataAbilityPredicates::DataAbilityPredicates(OHOS::Parcel *source) : isRawSelection(false), judgeSource(true)
 {
     if (source == nullptr) {
         this->judgeSource = false;
