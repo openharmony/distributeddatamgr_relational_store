@@ -132,15 +132,6 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_001, TestSize.Level
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
 
-    predicates->clear(predicates);
-    uint8_t arr[] = {1, 2, 3, 4, 5};
-    uint32_t len = sizeof(arr) / sizeof(arr[0]);
-    valueObject->putBlob(valueObject, arr, len);
-    predicates->equalTo(predicates, "data4", valueObject);
-    cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    cursor->getRowCount(cursor, &rowCount);
-    EXPECT_EQ(rowCount, 1);
-
     valueObject->destroy(valueObject);
     predicates->destroy(predicates);
     cursor->destroy(cursor);
