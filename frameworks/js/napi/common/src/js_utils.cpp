@@ -38,40 +38,6 @@ static constexpr JSUtils::JsFeatureSpace FEATURE_NAME_SPACES[] = {
     { "ohos.data.relationalStore", "ZGF0YS5yZWxhdGlvbmFsU3RvcmU=", true },
 };
 
-int32_t Convert2StrValueOnStack(napi_env env, napi_value jsValue, size_t buffSize, std::string &output)
-{
-    char buffer[JSUtils::DEFAULT_VALUE_LENGTH];
-    napi_status status = napi_get_value_string_utf8(env, jsValue, buffer, buffSize + 1, &buffSize);
-    if (status != napi_ok) {
-        LOG_ERROR("napi_get_value_string_utf8 failed, status = %{public}d", status);
-        return status;
-    }
-    output = std::string(buffer);
-    return status;
-}
-
-int32_t Convert2StrValueOnHeap(napi_env env, napi_value jsValue, size_t buffSize, std::string &output)
-{
-    // cut down with 0 if more than MAX_VALUE_LENGTH
-    if (buffSize + 1 >= JSUtils::MAX_VALUE_LENGTH) {
-        buffSize = JSUtils::MAX_VALUE_LENGTH - 1;
-    }
-    char *buffer = (char *)malloc((buffSize + 1) * sizeof(char));
-    if (buffer == nullptr) {
-        LOG_ERROR("buffer data is nullptr.");
-        return napi_invalid_arg;
-    }
-    napi_status status = napi_get_value_string_utf8(env, jsValue, buffer, buffSize + 1, &buffSize);
-    if (status != napi_ok) {
-        LOG_ERROR("napi_get_value_string_utf8 failed, status = %{public}d", status);
-        free(buffer);
-        return status;
-    }
-    output = std::string(buffer);
-    free(buffer);
-    return status;
-}
-
 const std::optional<JSUtils::JsFeatureSpace> JSUtils::GetJsFeatureSpace(const std::string &name)
 {
     auto jsFeature = JsFeatureSpace{ name.data(), nullptr, false };
@@ -207,8 +173,24 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &ou
     size_t buffSize = 0;
     napi_get_value_string_utf8(env, jsValue, nullptr, 0, &buffSize);
 
-    return (buffSize < MAX_VALUE_LENGTH - 1) ? Convert2StrValueOnStack(env, jsValue, buffSize, output)
-                                             : Convert2StrValueOnHeap(env, jsValue, buffSize, output);
+    // cut down with 0 if more than MAX_VALUE_LENGTH
+    if (buffSize >= JSUtils::MAX_VALUE_LENGTH - 1) {
+        buffSize = JSUtils::MAX_VALUE_LENGTH - 1;
+    }
+    char *buffer = (char *)malloc((buffSize + 1) * sizeof(char));
+    if (buffer == nullptr) {
+        LOG_ERROR("buffer data is nullptr.");
+        return napi_invalid_arg;
+    }
+    status = napi_get_value_string_utf8(env, jsValue, buffer, buffSize + 1, &buffSize);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_get_value_string_utf8 failed, status = %{public}d", status);
+        free(buffer);
+        return status;
+    }
+    output = std::string(buffer);
+    free(buffer);
+    return status;
 }
 
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<uint8_t> &output)
