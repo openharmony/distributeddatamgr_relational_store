@@ -128,7 +128,6 @@ describe('rdbStoreCloudSyncTest', function () {
             });
         } catch (err) {
             console.log(TAG + `get modify time, err code is ${err.code}, message is ${err.message}.`);
-            expect(true).assertTrue();
             done();
         }
         console.log(TAG + "************* testRdbStoreCloudSync0001 end *************");
@@ -145,9 +144,8 @@ describe('rdbStoreCloudSyncTest', function () {
             let PRIKey = ["test_key1", "test_key2"];
             rdbStore.getModifyTime("cloud_text", "uuid", PRIKey, function (err, data) {
                 console.log(TAG + `modifyTime:` + JSON.stringify(data));
+                done();
             });
-            expect(true).assertTrue();
-            done();
         } catch (err) {
             console.log(TAG + `get modify time fail, err code is ${err.code}, message is ${err.message}.`);
         }

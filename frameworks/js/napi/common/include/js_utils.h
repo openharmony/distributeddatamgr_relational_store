@@ -33,12 +33,10 @@ namespace AppDataMgrJsKit {
 namespace JSUtils {
 constexpr int OK = 0;
 constexpr int ERR = -1;
-constexpr int32_t DEFAULT_BUF_SIZE = 1024;
-// 1 is the margin
-constexpr int32_t BUF_CACHE_MARGIN = 4 + 1;
-constexpr int32_t ASYNC_RST_SIZE = 2;
-constexpr int32_t MAX_VALUE_LENGTH = 8 * 1024;
-constexpr int32_t SYNC_RESULT_ELEMNT_NUM = 2;
+constexpr uint32_t ASYNC_RST_SIZE = 2;
+constexpr uint32_t DEFAULT_VALUE_LENGTH = 1024;
+constexpr uint32_t MAX_VALUE_LENGTH = 1024 * 1024 * 8; // the max length of all kand of out string value
+constexpr uint32_t SYNC_RESULT_ELEMENT_NUM = 2;
 struct JsFeatureSpace {
     const char* spaceName;
     const char* nameBase64;
@@ -87,10 +85,7 @@ const std::optional<JsFeatureSpace> GetJsFeatureSpace(const std::string &name);
 napi_value DefineClass(napi_env env, const std::string &spaceName, const std::string &className,
     const Descriptor &descriptor, napi_callback ctor);
 napi_value GetClass(napi_env env, const std::string &spaceName, const std::string &className);
-std::string Convert2String(napi_env env, napi_value jsStr, bool useDefaultBufSize = true);
-std::vector<std::string> Convert2StrVector(napi_env env, napi_value value);
-std::vector<uint8_t> Convert2U8Vector(napi_env env, napi_value jsValue);
-std::string ConvertAny2String(napi_env env, napi_value jsValue);
+std::string Convert2String(napi_env env, napi_value jsStr);
 
 int32_t Convert2JSValue(napi_env env, std::string value, napi_value &output);
 int32_t Convert2JSValue(napi_env env, bool value, napi_value &output);

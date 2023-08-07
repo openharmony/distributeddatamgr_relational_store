@@ -56,26 +56,25 @@ RdbPredicates RdbUtils::ToPredicates(const DataShareAbsPredicates &predicates, c
 
 std::string RdbUtils::ToString(const DataSharePredicatesObject &predicatesObject)
 {
-    std::string str = " ";
     if (auto *val = std::get_if<int>(&predicatesObject.value)) {
-        str = std::to_string(*val);
+        return std::to_string(*val);
     }
     if (auto *val = std::get_if<double>(&predicatesObject.value)) {
-        str = std::to_string(*val);
+        return std::to_string(*val);
     }
     if (auto *val = std::get_if<std::string>(&predicatesObject.value)) {
-        str = *val;
+        return *val;
     }
     if (auto *val = std::get_if<bool>(&predicatesObject.value)) {
-        str = std::to_string(*val);
+        return std::to_string(*val);
     }
     if (auto *val = std::get_if<int64_t>(&predicatesObject.value)) {
-        str = std::to_string(*val);
+        return std::to_string(*val);
     }
     if (auto *val = std::get_if<std::monostate>(&predicatesObject.value)) {
         LOG_INFO("RdbUtils::ToString No matching type");
     }
-    return str;
+    return " ";
 }
 
 std::shared_ptr<ResultSetBridge> RdbUtils::ToResultSetBridge(std::shared_ptr<ResultSet> resultSet)
