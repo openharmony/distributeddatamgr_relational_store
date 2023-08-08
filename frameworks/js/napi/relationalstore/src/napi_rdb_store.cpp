@@ -381,8 +381,13 @@ int ParseSrcName(const napi_env env, const napi_value arg, std::shared_ptr<RdbSt
 
 int ParseColumns(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
+    napi_valuetype type;
+    napi_typeof(env, arg, &type);
+    if (type == napi_undefined || type == napi_null) {
+        return OK;
+    }
     int32_t ret = JSUtils::Convert2Value(env, arg, context->columns);
-    CHECK_RETURN_SET(ret == napi_ok, std::make_shared<ParamError>("columns", "not empty"));
+    CHECK_RETURN_SET(ret == napi_ok, std::make_shared<ParamError>("columns", "a string array"));
     return OK;
 }
 

@@ -314,7 +314,7 @@ public:
 private:
     std::string mName;
     sptr<Ashmem> ashmem_;
-    void *mData;
+    uint8_t *mData;
     size_t mSize;
     bool mReadOnly;
     static const size_t ROW_OFFSETS_NUM = 100;
@@ -354,7 +354,7 @@ private:
      */
     uint32_t Alloc(size_t size, bool aligned = false);
 
-    uint32_t *GetRowOffset(uint32_t row);
+    inline uint32_t *GetRowOffset(uint32_t row);
 
     uint32_t *AllocRowOffset();
 
@@ -365,7 +365,12 @@ private:
 
     uint32_t OffsetFromPtr(void *ptr);
 
-    void *OffsetToPtr(uint32_t offset, uint32_t bufferSize = 0);
+    inline void *OffsetToPtr(uint32_t offset, uint32_t bufferSize = 0) {
+        if (offset + bufferSize > mSize) {
+            return nullptr;
+        }
+        return mData + offset;
+    }
 
     /**
      * Convert utf8 string to utf16.
