@@ -19,12 +19,11 @@ import ability_featureAbility from '@ohos.ability.featureAbility'
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
 const STORE_NAME = "cloud_rdb.db"
-const PARAMETER_ERROR = 401;
 var rdbStore = undefined;
 var context = ability_featureAbility.getContext()
 
-describe('rdbStoreDistributedCloudTest', function () {
-    beforeAll(async function (done) {
+describe('rdbStoreCloud', function () {
+    beforeAll(async function () {
         console.info(TAG + 'beforeAll')
         const config = {
             "name": STORE_NAME,
@@ -37,13 +36,8 @@ describe('rdbStoreDistributedCloudTest', function () {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "name TEXT NOT NULL," +
                 "age INTEGER)"
-            try {
-                await rdbStore.executeSql(sqlStatement, null)
-                console.log(TAG + "create table employee success")
-            } catch (err) {
-                console.log(TAG + "create table employee failed")
-                expect(null).assertFail()
-            }
+            await rdbStore.executeSql(sqlStatement, null)
+            console.log(TAG + "create table employee success")
 
             sqlStatement = "CREATE TABLE IF NOT EXISTS product (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -51,14 +45,8 @@ describe('rdbStoreDistributedCloudTest', function () {
                 "price REAL," +
                 "vendor INTEGER," +
                 "describe TEXT)"
-            try {
-                await rdbStore.executeSql(sqlStatement, null)
-                console.log(TAG + "create table product success")
-                done()
-            } catch (err) {
-                console.log(TAG + "create table product failed")
-                expect(null).assertFail()
-            }
+            await rdbStore.executeSql(sqlStatement, null)
+            console.log(TAG + "create table product success")
 
             sqlStatement = "CREATE TABLE IF NOT EXISTS local (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -66,19 +54,12 @@ describe('rdbStoreDistributedCloudTest', function () {
                 "price REAL," +
                 "vendor INTEGER," +
                 "describe TEXT)"
-            try {
-                await rdbStore.executeSql(sqlStatement, null)
-                console.log(TAG + "create table local success")
-                done()
-            } catch (err) {
-                console.log(TAG + "create table local failed")
-                expect(null).assertFail()
-            }
+            await rdbStore.executeSql(sqlStatement, null)
+            console.log(TAG + "create table local success")
         } catch (err) {
             console.log(TAG + "create rdb store failed" + `, error code is ${err.code}, message is ${err.message}`)
             expect(null).assertFail()
         }
-        done()
     })
 
     beforeEach(async function () {
@@ -106,20 +87,20 @@ describe('rdbStoreDistributedCloudTest', function () {
         console.log(TAG + "************* testRdbStoreCloud0001 start *************");
         try {
             let config = {
-                autoSync:false
+                autoSync: false
             }
             rdbStore.setDistributedTables([], relationalStore.DistributedType.DISTRIBUTED_CLOUD, config,
                 function (err) {
                     console.log(TAG + "set none to be distributed table cloud success");
                     expect(true).assertTrue();
                     done()
+                    console.log(TAG + "************* testRdbStoreCloud0001 end *************");
                 });
         } catch (err) {
-            console.log(TAG + `set none to be distributed table cloud failed, err code is ${err.code}, message is ${err.message}.`);
-            expect(false).assertTrue();
+            console.log(TAG + `set none to be distributed table cloud failed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
             done()
         }
-        console.log(TAG + "************* testRdbStoreCloud0001 end *************");
     })
 
     /**
@@ -131,20 +112,19 @@ describe('rdbStoreDistributedCloudTest', function () {
         console.log(TAG + "************* testRdbStoreCloud0002 start *************");
         try {
             let config = {
-                autoSync:true
+                autoSync: true
             }
             rdbStore.setDistributedTables(['employee'], relationalStore.DistributedType.DISTRIBUTED_CLOUD, config,
                 function (err) {
                     console.log(TAG + "set employee to be distributed cloud table success");
-                    expect(true).assertTrue();
                     done();
+                    console.log(TAG + "************* testRdbStoreCloud0002 end *************");
                 })
         } catch (err) {
-            console.log(TAG + `set employee to be distributed cloud table failed, err code is ${err.code}, message is ${err.message}.`);
-            expect(false).assertTrue();
+            console.log(TAG + `set employee to be distributed failed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
             done()
         }
-        console.log(TAG + "************* testRdbStoreCloud0002 end *************");
     })
 
     /**
@@ -156,20 +136,20 @@ describe('rdbStoreDistributedCloudTest', function () {
         console.log(TAG + "************* testRdbStoreCloud0003 start *************");
         try {
             let config = {
-                autoSync:false
+                autoSync: false
             }
             rdbStore.setDistributedTables(['employee', 'product'],
                 relationalStore.DistributedType.DISTRIBUTED_CLOUD, config, function (err) {
                     console.log(TAG + "set employee and product to be distributed cloud table success");
                     expect(true).assertTrue();
                     done()
+                    console.log(TAG + "************* testRdbStoreCloud0003 end *************");
                 })
         } catch (err) {
-            console.log(TAG + `set employee and product to be distributed cloud table failed, err code is ${err.code}, message is ${err.message}.`);
-            expect(false).assertTrue();
+            console.log(TAG + `set employee and product to be distributed failed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
             done()
         }
-        console.log(TAG + "************* testRdbStoreCloud0003 end *************");
     })
 
     /**
@@ -181,24 +161,24 @@ describe('rdbStoreDistributedCloudTest', function () {
         console.log(TAG + "************* testRdbStoreCloud0004 start *************");
         try {
             let config = {
-                autoSync:false
+                autoSync: false
             }
             await rdbStore.setDistributedTables(['employee', 'product'],
-                relationalStore.DistributedType.DISTRIBUTED_CLOUD, config).then((err)=>{
+                relationalStore.DistributedType.DISTRIBUTED_CLOUD, config).then((err) => {
                 console.log(TAG + "set employee and product to be distributed cloud table success");
                 expect(true).assertTrue();
                 done();
-            }).catch((err)=>{
-                console.log(TAG + `set employee and product to be distributed table failed, err code is ${err.code}, message is ${err.message}.`);
-                expect(false).assertTrue();
+                console.log(TAG + "************* testRdbStoreCloud0004 end *************");
+            }).catch((err) => {
+                console.log(TAG + `set employee and product as distributed, errcode:${JSON.stringify(err)}.`);
+                expect().assertFail();
                 done()
             });
         } catch (err) {
-            console.log(TAG + `set employee and product to be distributed table failed, err code is ${err.code}, message is ${err.message}.`);
-            expect(false).assertTrue();
+            console.log(TAG + `set employee and product as distributed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
             done()
         }
-        console.log(TAG + "************* testRdbStoreCloud0004 end *************");
     })
 
     /**
@@ -210,24 +190,24 @@ describe('rdbStoreDistributedCloudTest', function () {
         console.log(TAG + "************* testRdbStoreCloud0005 start *************");
         try {
             let config = {
-                autoSync:false
+                autoSync: false
             }
             await rdbStore.setDistributedTables(['local'], undefined,
-                config).then((err)=>{
+                config).then((err) => {
                 console.log(TAG + "set local to be distributed device table success");
                 expect(true).assertTrue();
                 done();
-            }).catch((err)=>{
-                console.log(TAG + `set local to be distributed table failed 1, err code is ${err.code}, message is ${err.message}.`);
-                expect(false).assertTrue();
+                console.log(TAG + "************* testRdbStoreCloud0005 end *************");
+            }).catch((err) => {
+                console.log(TAG + `set local to be distributed table failed 1, errcode:${JSON.stringify(err)}.`);
+                expect().assertFail();
                 done()
             });
         } catch (err) {
-            console.log(TAG + `set local to be distributed table failed 2, err code is ${err.code}, message is ${err.message}.`);
-            expect(false).assertTrue();
+            console.log(TAG + `set local to be distributed table failed 2, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
             done()
         }
-        console.log(TAG + "************* testRdbStoreCloud0005 end *************");
     })
 
     /**
@@ -238,21 +218,21 @@ describe('rdbStoreDistributedCloudTest', function () {
     it('testRdbStoreCloud0006', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCloud0006 start *************");
         try {
-            await rdbStore.setDistributedTables(['local'], null).then((err)=>{
+            await rdbStore.setDistributedTables(['local'], null).then((err) => {
                 console.log(TAG + "set local to be distributed device table success");
                 expect(true).assertTrue();
                 done();
-            }).catch((err)=>{
-                console.log(TAG + `set local to be distributed table failed 1, err code is ${err.code}, message is ${err.message}.`);
-                expect(false).assertTrue();
+                console.log(TAG + "************* testRdbStoreCloud0006 end *************");
+            }).catch((err) => {
+                console.log(TAG + `set local to be distributed table failed 1, errcode:${JSON.stringify(err)}.`);
+                expect().assertFail();
                 done()
             });
         } catch (err) {
-            console.log(TAG + `set local to be distributed table failed 2, err code is ${err.code}, message is ${err.message}.`);
-            expect(false).assertTrue();
+            console.log(TAG + `set local to be distributed table failed 2, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
             done()
         }
-        console.log(TAG + "************* testRdbStoreCloud0006 end *************");
     })
 
     /**
@@ -264,21 +244,21 @@ describe('rdbStoreDistributedCloudTest', function () {
         console.log(TAG + "************* testRdbStoreCloud0007 start *************");
         try {
             await rdbStore.setDistributedTables(['employee'], relationalStore.DistributedType.DISTRIBUTED_CLOUD
-            ).then((err)=>{
+            ).then((err) => {
                 console.log(TAG + "set employee to be distributed cloud table success");
                 expect(true).assertTrue();
                 done();
-            }).catch((err)=>{
-                console.log(TAG + `set employee to be distributed table failed 1, err code is ${err.code}, message is ${err.message}.`);
-                expect(false).assertTrue();
+                console.log(TAG + "************* testRdbStoreCloud0007 end *************");
+            }).catch((err) => {
+                console.log(TAG + `set employee to be distributed table failed 1, errcode:${JSON.stringify(err)}.`);
+                expect().assertFail();
                 done()
             });
         } catch (err) {
-            console.log(TAG + `set employee to be distributed table failed 2, err code is ${err.code}, message is ${err.message}.`);
-            expect(false).assertTrue();
+            console.log(TAG + `set employee to be distributed table failed 2, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
             done()
         }
-        console.log(TAG + "************* testRdbStoreCloud0007 end *************");
     })
 
     /**
@@ -290,21 +270,21 @@ describe('rdbStoreDistributedCloudTest', function () {
         console.log(TAG + "************* testRdbStoreCloud0008 start *************");
         try {
             await rdbStore.setDistributedTables(['employee'], relationalStore.DistributedType.DISTRIBUTED_CLOUD,
-                undefined).then((err)=>{
+                undefined).then((err) => {
                 console.log(TAG + "set employee to be distributed cloud table success");
                 expect(true).assertTrue();
                 done();
-            }).catch((err)=>{
-                console.log(TAG + `set employee to be distributed table failed 1, err code is ${err.code}, message is ${err.message}.`);
-                expect(false).assertTrue();
+                console.log(TAG + "************* testRdbStoreCloud0008 end *************");
+            }).catch((err) => {
+                console.log(TAG + `set employee to be distributed table failed 1, errcode:${JSON.stringify(err)}.`);
+                expect().assertFail();
                 done()
             });
         } catch (err) {
-            console.log(TAG + `set employee to be distributed table failed 2, err code is ${err.code}, message is ${err.message}.`);
-            expect(false).assertTrue();
+            console.log(TAG + `set employee to be distributed table failed 2, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
             done()
         }
-        console.log(TAG + "************* testRdbStoreCloud0008 end *************");
     })
 
     /**
@@ -316,21 +296,21 @@ describe('rdbStoreDistributedCloudTest', function () {
         console.log(TAG + "************* testRdbStoreCloud0009 start *************");
         try {
             await rdbStore.setDistributedTables(['employee'], relationalStore.DistributedType.DISTRIBUTED_CLOUD, null
-            ).then((err)=>{
+            ).then((err) => {
                 console.log(TAG + "set employee to be distributed cloud table success");
                 expect(true).assertTrue();
                 done();
-            }).catch((err)=>{
-                console.log(TAG + `set employee to be distributed table failed 1, err code is ${err.code}, message is ${err.message}.`);
-                expect(false).assertTrue();
+                console.log(TAG + "************* testRdbStoreCloud0009 end *************");
+            }).catch((err) => {
+                console.log(TAG + `set employee to be distributed table failed 1, errcode:${JSON.stringify(err)}.`);
+                expect().assertFail();
                 done()
             });
         } catch (err) {
-            console.log(TAG + `set employee to be distributed table failed 2, err code is ${err.code}, message is ${err.message}.`);
-            expect(false).assertTrue();
+            console.log(TAG + `set employee to be distributed table failed 2, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
             done()
         }
-        console.log(TAG + "************* testRdbStoreCloud0009 end *************");
     })
 
     /**
@@ -345,13 +325,13 @@ describe('rdbStoreDistributedCloudTest', function () {
                 console.log(TAG + "set local to be distributed device table success");
                 expect(true).assertTrue();
                 done();
+                console.log(TAG + "************* testRdbStoreCloud0010 end *************");
             })
         } catch (err) {
-            console.log(TAG + `set employee to be distributed table failed, err code is ${err.code}, message is ${err.message}.`);
-            expect(false).assertTrue();
+            console.log(TAG + `set employee to be distributed table failed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
             done()
         }
-        console.log(TAG + "************* testRdbStoreCloud0010 end *************");
     })
 
     /**
@@ -363,19 +343,19 @@ describe('rdbStoreDistributedCloudTest', function () {
         console.log(TAG + "************* testRdbStoreCloud0011 start *************");
         try {
             let config = {
-                autoSync:false
+                autoSync: false
             }
             rdbStore.setDistributedTables(['local'], null, config, function (err) {
                 console.log(TAG + "set local to be distributed device table success");
                 expect(true).assertTrue();
                 done();
+                console.log(TAG + "************* testRdbStoreCloud0011 end *************");
             })
         } catch (err) {
-            console.log(TAG + `set local to be distributed table failed, err code is ${err.code}, message is ${err.message}.`);
-            expect(false).assertTrue();
+            console.log(TAG + `set local to be distributed table failed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
             done()
         }
-        console.log(TAG + "************* testRdbStoreCloud0011 end *************");
     })
 
     /**
@@ -391,13 +371,13 @@ describe('rdbStoreDistributedCloudTest', function () {
                     console.log(TAG + "set local to be distributed cloud table success");
                     expect(true).assertTrue();
                     done();
+                    console.log(TAG + "************* testRdbStoreCloud0012 end *************");
                 })
         } catch (err) {
-            console.log(TAG + `set local to be distributed table failed, err code is ${err.code}, message is ${err.message}.`);
-            expect(false).assertTrue();
+            console.log(TAG + `set local to be distributed table failed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
             done()
         }
-        console.log(TAG + "************* testRdbStoreCloud0012 end *************");
     })
 
     /**
@@ -413,13 +393,13 @@ describe('rdbStoreDistributedCloudTest', function () {
                     console.log(TAG + "set local to be distributed cloud table success");
                     expect(true).assertTrue();
                     done();
+                    console.log(TAG + "************* testRdbStoreCloud0013 end *************");
                 })
         } catch (err) {
-            console.log(TAG + `set local to be distributed table failed, err code is ${err.code}, message is ${err.message}.`);
-            expect(false).assertTrue();
+            console.log(TAG + `set local to be distributed table failed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
             done()
         }
-        console.log(TAG + "************* testRdbStoreCloud0013 end *************");
     })
 
     console.log(TAG + "*************Unit Test End*************");

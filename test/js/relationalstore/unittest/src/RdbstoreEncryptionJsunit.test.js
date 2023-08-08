@@ -73,162 +73,154 @@ async function CreatRdbStore(context, STORE_CONFIG) {
 }
 
 describe('rdbEncryptTest', function () {
-        beforeAll(async function () {
-            console.info(TAG + 'beforeAll')
+    beforeAll(async function () {
+        console.info(TAG + 'beforeAll')
+    })
 
-        })
+    beforeEach(async function () {
+        console.info(TAG + 'beforeEach')
+    })
 
-        beforeEach(async function () {
-            console.info(TAG + 'beforeEach')
+    afterEach(async function () {
+        console.info(TAG + 'afterEach')
+        await data_relationalStore.deleteRdbStore(context, STORE_CONFIG_ENCRYPT.name)
+        await data_relationalStore.deleteRdbStore(context, STORE_CONFIG_UNENCRYPT.name)
+        await data_relationalStore.deleteRdbStore(context, STORE_CONFIG_WRONG.name)
+    })
 
-        })
+    afterAll(async function () {
+        console.info(TAG + 'afterAll')
+    })
 
-        afterEach(async function () {
-            console.info(TAG + 'afterEach')
-            await data_relationalStore.deleteRdbStore(context, STORE_CONFIG_ENCRYPT.name)
-            await data_relationalStore.deleteRdbStore(context, STORE_CONFIG_UNENCRYPT.name)
-            await data_relationalStore.deleteRdbStore(context, STORE_CONFIG_WRONG.name)
-        })
+    console.log(TAG + "*************Unit Test Begin*************")
 
-        afterAll(async function () {
-            console.info(TAG + 'afterAll')
-        })
-
-        console.log(TAG + "*************Unit Test Begin*************")
-
-        /**
-         * @tc.name RDB encrypted test
-         * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0010
-         * @tc.desc RDB create encrypt db test
-         */
-        it('RdbEncryptTest_0010', 0, async function (done) {
-            await console.log(TAG + "************* RdbEncryptTest_0010 start *************")
-            let storePromise = data_relationalStore.getRdbStore(context, STORE_CONFIG_ENCRYPT);
-            storePromise.then(async (store) => {
-                try {
-                    await console.log(TAG + "getRdbStore done: " + store);
-                } catch (err) {
-                    expect(null).assertFail();
-                }
-                store = null
-            }).catch((err) => {
-                expect(null).assertFail();
-            })
-            await storePromise
-            storePromise = null
-
-            done()
-            await console.log(TAG + "************* RdbEncryptTest_0010 end *************")
-        })
-
-        /**
-         * @tc.name RDB unencrypted test
-         * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0020
-         * @tc.desc RDB create unencrypted db test
-         */
-        it('RdbEncryptTest_0020', 0, async function (done) {
-            await console.log(TAG + "************* RdbEncryptTest_0020 start *************")
-            let storePromise = data_relationalStore.getRdbStore(context, STORE_CONFIG_UNENCRYPT);
-            storePromise.then(async (store) => {
-                try {
-                    await console.log(TAG + "getRdbStore done: " + store);
-                } catch (err) {
-                    expect(null).assertFail();
-                }
-                store = null
-            }).catch((err) => {
-                expect(null).assertFail();
-            })
-            await storePromise
-            storePromise = null
-
-            done()
-            await console.log(TAG + "************* RdbEncryptTest_0020 end *************")
-        })
-
-
-        /**
-         * @tc.name RDB Encrypt test
-         * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0030
-         * @tc.desc RDB Encrypt function test
-         */
-        it('RdbEncryptTest_0030', 0, async function (done) {
-            await console.log(TAG + "************* RdbEncryptTest_0030 start *************")
-            let rdbStore = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT)
-            let predicates = new data_relationalStore.RdbPredicates("test")
-            predicates.equalTo("name", "zhangsan")
-            let resultSet = await rdbStore.query(predicates)
+    /**
+     * @tc.name RDB encrypted test
+     * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0010
+     * @tc.desc RDB create encrypt db test
+     */
+    it('RdbEncryptTest_0010', 0, async function (done) {
+        await console.log(TAG + "************* RdbEncryptTest_0010 start *************")
+        let storePromise = data_relationalStore.getRdbStore(context, STORE_CONFIG_ENCRYPT);
+        storePromise.then(async (store) => {
             try {
-                console.log(TAG + "After restore resultSet query done")
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                const id = resultSet.getLong(resultSet.getColumnIndex("id"))
-                const name = resultSet.getString(resultSet.getColumnIndex("name"))
-                const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
-                expect(1).assertEqual(id)
-                expect("zhangsan").assertEqual(name)
-                expect(1).assertEqual(blobType[0])
+                await console.log(TAG + "getRdbStore done: " + store);
             } catch (err) {
-                expect(false).assertTrue()
+                expect(null).assertFail();
             }
-            resultSet.close()
-            resultSet = null
-            rdbStore = null
-            done()
-            await console.log(TAG + "************* RdbEncryptTest_0030 end *************")
+            store = null
+        }).catch((err) => {
+            expect(null).assertFail();
         })
+        await storePromise
+        storePromise = null
 
-        /**
-         * @tc.name RDB Encrypt test
-         * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0040
-         * @tc.desc RDB Encrypt function test
-         */
-        it('RdbEncryptTest_0040', 0, async function () {
-            await console.log(TAG + "************* RdbEncryptTest_0040 start *************")
-            let rdbStore = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT)
-            rdbStore = null
+        done()
+        await console.log(TAG + "************* RdbEncryptTest_0010 end *************")
+    })
 
+    /**
+     * @tc.name RDB unencrypted test
+     * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0020
+     * @tc.desc RDB create unencrypted db test
+     */
+    it('RdbEncryptTest_0020', 0, async function (done) {
+        await console.log(TAG + "************* RdbEncryptTest_0020 start *************")
+        let storePromise = data_relationalStore.getRdbStore(context, STORE_CONFIG_UNENCRYPT);
+        storePromise.then(async (store) => {
             try {
-                rdbStore = await CreatRdbStore(context, STORE_CONFIG_WRONG)
-                expect(false).assertTrue()
+                await console.log(TAG + "getRdbStore done: " + store);
             } catch (err) {
-                expect(err.code).assertEqual(14800000);
+                expect(null).assertFail();
             }
-
-            await console.log(TAG + "************* RdbEncryptTest_0040 end *************")
+            store = null
+        }).catch((err) => {
+            expect(null).assertFail();
         })
+        await storePromise
+        storePromise = null
+
+        done()
+        await console.log(TAG + "************* RdbEncryptTest_0020 end *************")
+    })
+
+
+    /**
+     * @tc.name RDB Encrypt test
+     * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0030
+     * @tc.desc RDB Encrypt function test
+     */
+    it('RdbEncryptTest_0030', 0, async function (done) {
+        await console.log(TAG + "************* RdbEncryptTest_0030 start *************")
+        let rdbStore = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT)
+        let predicates = new data_relationalStore.RdbPredicates("test")
+        predicates.equalTo("name", "zhangsan")
+        let resultSet = await rdbStore.query(predicates)
+        try {
+            console.log(TAG + "After restore resultSet query done")
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const id = resultSet.getLong(resultSet.getColumnIndex("id"))
+            const name = resultSet.getString(resultSet.getColumnIndex("name"))
+            const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+            expect(1).assertEqual(id)
+            expect("zhangsan").assertEqual(name)
+            expect(1).assertEqual(blobType[0])
+        } catch (err) {
+            expect(false).assertTrue()
+        }
+        resultSet.close()
+        resultSet = null
+        rdbStore = null
+        done()
+        await console.log(TAG + "************* RdbEncryptTest_0030 end *************")
+    })
+
+    /**
+     * @tc.name RDB Encrypt test
+     * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0040
+     * @tc.desc RDB Encrypt function test
+     */
+    it('RdbEncryptTest_0040', 0, async function () {
+        await console.log(TAG + "************* RdbEncryptTest_0040 start *************")
+        let rdbStore = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT)
+        rdbStore = null
+
+        try {
+            rdbStore = await CreatRdbStore(context, STORE_CONFIG_WRONG)
+            expect(false).assertTrue()
+        } catch (err) {
+            expect(err.code).assertEqual(14800000);
+        }
+
+        await console.log(TAG + "************* RdbEncryptTest_0040 end *************")
+    })
 
     /**
      * @tc.name RDB Encrypt test
      * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0050
      * @tc.desc RDB Encrypt function test for setDistributedTables and insert.
      */
-    it('RdbEncryptTest_0050', 0, async function (done) {
+    it('RdbEncryptTest_0050', 0, async function () {
         await console.log(TAG + "************* RdbEncryptTest_0050 start *************")
-        let rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG_ENCRYPT)
-        await rdbStore.executeSql(CREATE_TABLE_TEST, null)
-        await rdbStore.setDistributedTables(['test'])
+        try {
+            let rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG_ENCRYPT)
+            await rdbStore.executeSql(CREATE_TABLE_TEST, null)
+            await rdbStore.setDistributedTables(['test'])
 
-        var u8 = new Uint8Array([1, 2, 3])
-        const valueBucket = {
-            "name": "zhangsan",
-            "age": 18,
-            "salary": 100.5,
-            "blobType": u8,
-        }
-        let insertPromise = rdbStore.insert("test", valueBucket)
-        insertPromise.then(async (ret) => {
+            var u8 = new Uint8Array([1, 2, 3])
+            const valueBucket = {
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            let ret = await rdbStore.insert("test", valueBucket)
             expect(1).assertEqual(ret)
-            console.log(TAG + "insert first done: " + ret)
-            done()
-        }).catch((err) => {
-            expect(false).assertTrue()
-            console.log(TAG + "insert error, err: code = "  + err.code + " message=" + err.message)
-        })
-
-        await insertPromise;
-        done()
-        await console.log(TAG + "************* RdbEncryptTest_0050 end *************")
+        } catch (err) {
+            console.log(TAG + `fails errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
+        }
+        console.log(TAG + "************* RdbEncryptTest_0050 end *************")
     })
-        console.log(TAG + "*************Unit Test End*************")
-    }
-)
+    console.log(TAG + "*************Unit Test End*************")
+})
