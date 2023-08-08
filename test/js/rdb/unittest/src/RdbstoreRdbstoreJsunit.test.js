@@ -23,6 +23,7 @@ const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIM
 const STORE_CONFIG = {
     name: "rdbstore.db",
 }
+
 describe('rdbStoreTest', function () {
     beforeAll(async function () {
         console.info(TAG + 'beforeAll')
@@ -48,22 +49,13 @@ describe('rdbStoreTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0010
      * @tc.desc rdb store getRdbStore test
      */
-    it('testRdbStore0001', 0, async function (done) {
+    it('testRdbStore0001', 0, async function () {
         console.log(TAG + "************* testRdbStore0001 start *************");
-        let storePromise = dataRdb.getRdbStore(STORE_CONFIG, 1);
-        storePromise.then(async (store) => {
-            try {
-                await console.log(TAG + "getRdbStore done: " + store);
-            } catch (e) {
-                expect(null).assertFail();
-            }
-            store = null
-        }).catch((err) => {
-            expect(null).assertFail();
-        })
-        await storePromise
-        storePromise = null
-        done();
+        try {
+            await dataRdb.getRdbStore(STORE_CONFIG, 1);
+        } catch (err) {
+            expect().assertFail()
+        }
         console.log(TAG + "************* testRdbStore0001 end   *************");
     })
 
@@ -72,23 +64,15 @@ describe('rdbStoreTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0020
      * @tc.desc rdb store getRdbStore and create table
      */
-    it('testRdbStore0002', 0, async function (done) {
+    it('testRdbStore0002', 0, async function () {
         console.log(TAG + "************* testRdbStore0002 start *************");
-        let storePromise = dataRdb.getRdbStore(STORE_CONFIG, 2);
-        storePromise.then(async (store) => {
-            try {
-                await console.log(TAG + "getRdbStore done: " + store);
-                await store.executeSql(CREATE_TABLE_TEST);
-            } catch (e) {
-                expect(null).assertFail();
-            }
-            store = null
-        }).catch((err) => {
-            expect(null).assertFail();
-        })
-        await storePromise
-        storePromise = null
-        done();
+        try {
+            let store = await dataRdb.getRdbStore(STORE_CONFIG, 2);
+            await store.executeSql(CREATE_TABLE_TEST);
+        } catch (err) {
+            console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail()
+        }
         console.log(TAG + "************* testRdbStore0002 end   *************");
     })
 
@@ -97,23 +81,18 @@ describe('rdbStoreTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0030
      * @tc.desc rdb store getRdbStore with wrong path
      */
-    it('testRdbStore0003', 0, async function (done) {
+    it('testRdbStore0003', 0, async function () {
         console.log(TAG + "************* testRdbStore0003 start *************");
 
         let storeConfig = {
             name: "/wrong/rdbstore.db",
         }
-        try{
-            dataRdb.getRdbStore(storeConfig, 4).then(async (ret) => {
-                await console.info(TAG + "getRdbStore done" + ret);
-                expect(null).assertFail();
-            }).catch((err) => {
-                console.info(TAG + "getRdbStore with wrong path");
-            })
-        } catch(e) {
-            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
-            expect("401").assertEqual(e.code)
-            done();
+        try {
+            await dataRdb.getRdbStore(storeConfig, 4);
+            expect().assertFail()
+        } catch (err) {
+            console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
+            expect("401").assertEqual(err.code)
             console.info(TAG + "************* testRdbStore0003 end   *************");
         }
     })
@@ -123,25 +102,15 @@ describe('rdbStoreTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0040
      * @tc.desc rdb store deleteRdbStore
      */
-    it('testRdbStore0004', 0, async function (done) {
+    it('testRdbStore0004', 0, async function () {
         console.log(TAG + "************* testRdbStore0004 start *************");
-
-        let storePromise = dataRdb.getRdbStore(STORE_CONFIG, 6);
-        storePromise.then(async (store) => {
-            console.log(TAG + "getRdbStore done:" + store);
-            try {
-                await store.executeSql(CREATE_TABLE_TEST);
-            } catch (e) {
-                console.log(TAG + "create table error");
-                expect(null).assertFail();
-            }
-            store = null
-        }).catch((err) => {
-            expect(null).assertFail();
-        })
-        await storePromise
-        storePromise = null
-        done();
+        try {
+            let store = await dataRdb.getRdbStore(STORE_CONFIG, 6);
+            await store.executeSql(CREATE_TABLE_TEST);
+        } catch (err) {
+            console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail()
+        }
         console.log(TAG + "************* testRdbStore0004 end   *************");
     })
 
@@ -150,36 +119,30 @@ describe('rdbStoreTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0050
      * @tc.desc rdb store setVersion & getVersion
      */
-    it('testRdbStore0005', 0, async function (done) {
+    it('testRdbStore0005', 0, async function () {
         console.log(TAG + "************* testRdbStore0005 start *************");
 
-        let storePromise = dataRdb.getRdbStore(STORE_CONFIG, 2);
-        storePromise.then(async (store) => {
-            try {
-                expect(2).assertEqual(store.getVersion())
-                store.setVersion(5)
-                expect(5).assertEqual(store.getVersion())
-                store.setVersion(2147483647)
-                expect(2147483647).assertEqual(store.getVersion())
-                store.setVersion(-2147483648)
-                expect(-2147483648).assertEqual(store.getVersion())
+        let store = await dataRdb.getRdbStore(STORE_CONFIG, 2);
+        try {
+            expect(2).assertEqual(store.getVersion())
+            store.setVersion(5)
+            expect(5).assertEqual(store.getVersion())
+            store.setVersion(2147483647)
+            expect(2147483647).assertEqual(store.getVersion())
+            store.setVersion(-2147483648)
+            expect(-2147483648).assertEqual(store.getVersion())
 
-                // Exceeds the range of 32-bit signed integer value.
-                store.setVersion(2147483647000)
-                expect(-1000).assertEqual(store.getVersion())
-                store.setVersion(-2147483648100)
-                expect(-100).assertEqual(store.getVersion())
-                store = null
-            } catch (e) {
-                expect(null).assertFail();
-            }
-        }).catch((err) => {
-            expect(null).assertFail();
-        })
-        await storePromise
-        storePromise = null
+            // Exceeds the range of 32-bit signed integer value.
+            store.setVersion(2147483647000)
+            expect(-1000).assertEqual(store.getVersion())
+            store.setVersion(-2147483648100)
+            expect(-100).assertEqual(store.getVersion())
+            store = null
+        } catch (err) {
+            console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail()
+        }
         await dataRdb.deleteRdbStore("rdbstore.db");
-        done();
         console.log(TAG + "************* testRdbStore0005 end   *************");
     })
 
