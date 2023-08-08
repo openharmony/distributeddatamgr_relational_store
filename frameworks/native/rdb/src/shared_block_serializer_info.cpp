@@ -46,11 +46,12 @@ int SharedBlockSerializerInfo::Reset(int startPos)
 {
     int status = sharedBlock_->Clear();
     if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
-        LOG_ERROR("reset : Failed in clearing, error=%{public}d", status);
+        LOG_ERROR("SharedBlockSerializerInfo::Reset() Failed in Clear(), error=%{public}d.", status);
         return SQLITE_ERROR;
     }
     status = sharedBlock_->SetColumnNum(anumColumns);
     if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
+        LOG_ERROR("SharedBlockSerializerInfo::Reset() Failed in SetColumnNum(), error=%{public}d.", status);
         return SQLITE_ERROR;
     }
     astartPos = startPos;

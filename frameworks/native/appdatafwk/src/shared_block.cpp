@@ -186,6 +186,7 @@ int SharedBlock::AllocRow()
     /* Fill in the row offset */
     uint32_t *rowOffset = AllocRowOffset();
     if (UNLIKELY(rowOffset == nullptr)) {
+        LOG_ERROR("SharedBlock::AllocRow() Failed in AllocRowOffset().");
         return SHARED_BLOCK_NO_MEMORY;
     }
 
@@ -219,7 +220,6 @@ int SharedBlock::FreeLastRow()
     if (mHeader->rowNums > 0) {
         mHeader->rowNums--;
     }
-
     return SHARED_BLOCK_OK;
 }
 
@@ -262,6 +262,8 @@ uint32_t *SharedBlock::AllocRowOffset()
     if (mHeader->groupOffset[groupPos] == 0) {
         mHeader->groupOffset[groupPos] = Alloc(sizeof(RowGroupHeader));
         if (UNLIKELY(mHeader->groupOffset[groupPos] == 0)) {
+            LOG_ERROR("SharedBlock::AllocRowOffset() Failed to alloc group->nextGroupOffset "
+                "when while loop.");
             return nullptr;
         }
     }
