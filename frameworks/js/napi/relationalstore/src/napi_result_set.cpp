@@ -69,7 +69,7 @@ std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
         LOG_ERROR("resultSet is null");
         return nullptr;
     }
-    return std::make_shared<RdbDataShareAdapter::RdbResultSetBridge>(resultSet_);
+    return std::make_shared<RdbDataShareAdapter::RdbResultSetBridge>(std::move(resultSet_));
 }
 #endif
 
