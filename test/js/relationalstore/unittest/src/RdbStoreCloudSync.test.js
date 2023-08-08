@@ -23,7 +23,7 @@ var rdbStore = undefined;
 var context = ability_featureAbility.getContext()
 
 describe('rdbStoreCloudSyncTest', function () {
-    beforeAll(async function (done) {
+    beforeAll(async function () {
         console.info(TAG + 'beforeAll')
         const config = {
             "name": STORE_NAME,
@@ -47,27 +47,17 @@ describe('rdbStoreCloudSyncTest', function () {
                 "recycled BOOLEAN, " +
                 "recycledTime INTEGER, " +
                 "uuid INTEGER PRIMARY KEY)";
-            try {
-                await rdbStore.executeSql(sql_text, null);
-                await rdbStore.executeSql(sql_int, null);
-                await rdbStore.executeSql(sql_integer, null);
-                console.log(TAG + "create table cloud_text cloud_int cloud_integer success");
-            } catch (err) {
-                console.log(TAG + "create table cloud_text cloud_int cloud_integer failed");
-                expect(null).assertFail();
-            }
+            await rdbStore.executeSql(sql_text, null);
+            await rdbStore.executeSql(sql_int, null);
+            await rdbStore.executeSql(sql_integer, null);
+            console.log(TAG + "create table cloud_text cloud_int cloud_integer success");
 
             let tableArray = ["cloud_text", "cloud_integer"];
             const setConfig = {
                 autoSync: false,
             }
-            let promise = rdbStore.setDistributedTables(
+            await rdbStore.setDistributedTables(
                 tableArray, relationalStore.DistributedType.DISTRIBUTED_CLOUD, setConfig);
-            await promise.then(() => {
-                console.log(TAG + "set disTable success");
-            }).catch((err) => {
-                console.log(TAG + 'set disTable fail, err: ${err}');
-            })
             let vBucketArray1 = new Array();
             for (let i = 0; i < 5; i++) {
                 let valueBucket = {
@@ -91,10 +81,9 @@ describe('rdbStoreCloudSyncTest', function () {
             }
             await rdbStore.batchInsert("cloud_integer", vBucketArray2);
         } catch (err) {
-            console.log(TAG + "create rdb store failed" + `, error code is ${err.code}, message is ${err.message}`)
-            expect(null).assertFail()
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail()
         }
-        done();
     })
 
     beforeEach(async function () {
@@ -118,17 +107,16 @@ describe('rdbStoreCloudSyncTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_SYNC_0001
      * @tc.desc rdb get modify time using wrong primary key type
      */
-    it('testRdbStoreCloudSync0001', 0, async function (done) {
+    it('testRdbStoreCloudSync0001', 0, async function () {
         console.log(TAG + "************* testRdbStoreCloudSync0001 start *************");
         try {
             let key = new Array();
             let PRIKey = [key, "test_key1", "test_key2"];
-            rdbStore.getModifyTime("cloud_text", "uuid", PRIKey, function (err, data) {
-                console.log(TAG + 'modifyTime:' + JSON.stringify(data));
-            });
+            await rdbStore.getModifyTime("cloud_text", "uuid", PRIKey);
+            expect().assertFail();
         } catch (err) {
-            console.log(TAG + `get modify time, err code is ${err.code}, message is ${err.message}.`);
-            done();
+            console.log(TAG + `get modify time, errcode:${JSON.stringify(err)}.`);
+            expect(err.code).assertEqual('401');
         }
         console.log(TAG + "************* testRdbStoreCloudSync0001 end *************");
     })
@@ -143,13 +131,16 @@ describe('rdbStoreCloudSyncTest', function () {
         try {
             let PRIKey = ["test_key1", "test_key2"];
             rdbStore.getModifyTime("cloud_text", "uuid", PRIKey, function (err, data) {
-                console.log(TAG + `modifyTime:` + JSON.stringify(data));
+                console.log(TAG + `modifyTime:` + JSON.stringify(err));
                 done();
+                expect(err.code).assertEqual(14800000);
+                console.log(TAG + "************* testRdbStoreCloudSync0002 end *************");
             });
         } catch (err) {
-            console.log(TAG + `get modify time fail, err code is ${err.code}, message is ${err.message}.`);
+            console.log(TAG + `get modify time fail, errcode:${JSON.stringify(err)}.`);
+            done();
+            expect().assertFail();
         }
-        console.log(TAG + "************* testRdbStoreCloudSync0002 end *************");
     })
 
     /**
@@ -157,17 +148,15 @@ describe('rdbStoreCloudSyncTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_SYNC_0003
      * @tc.desc get modify time using string primary key type and promise method
      */
-    it('testRdbStoreCloudSync0003', 0, async function (done) {
+    it('testRdbStoreCloudSync0003', 0, async function () {
         console.log(TAG + "************* testRdbStoreCloudSync0003 start *************");
+        let PRIKey = ["test_key1", "test_key2"];
         try {
-            let PRIKey = ["test_key1", "test_key2"];
-            await rdbStore.getModifyTime("cloud_text", "uuid", PRIKey).then((data) => {
-                console.log(TAG + `modifyTime:` + JSON.stringify(data));
-                expect(true).assertTrue();
-                done();
-            });
+            await rdbStore.getModifyTime("cloud_text", "uuid", PRIKey);
+            expect().assertFail();
         } catch (err) {
-            console.log(TAG + `get modify time fail, err code is ${err.code}, message is ${err.message}.`);
+            console.log(TAG + `get modify time fail, errcode:${JSON.stringify(err)}.`);
+            expect(err.code).assertEqual(14800000);
         }
         console.log(TAG + "************* testRdbStoreCloudSync0003 end *************");
     })
@@ -182,14 +171,16 @@ describe('rdbStoreCloudSyncTest', function () {
         try {
             let PRIKey = [1, 3, 4];
             rdbStore.getModifyTime("cloud_text", "rowid", PRIKey, function (err, data) {
-                console.log(TAG + `modifyTime:` + JSON.stringify(data));
+                console.log(TAG + `modifyTime:` + JSON.stringify(err));
+                done();
+                expect(err.code).assertEqual(14800000);
+                console.log(TAG + "************* testRdbStoreCloudSync0004 end *************");
             });
-            expect(true).assertTrue();
-            done();
         } catch (err) {
-            console.log(TAG + `get modify time fail, err code is ${err.code}, message is ${err.message}.`);
+            console.log(TAG + `get modify time fail, errcode:${JSON.stringify(err)}.`);
+            done();
+            expect().assertFail();
         }
-        console.log(TAG + "************* testRdbStoreCloudSync0004 end *************");
     })
 
     /**
@@ -197,17 +188,15 @@ describe('rdbStoreCloudSyncTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_SYNC_0005
      * @tc.desc get modify time using rowid and promise method
      */
-    it('testRdbStoreCloudSync0005', 0, async function (done) {
+    it('testRdbStoreCloudSync0005', 0, async function () {
         console.log(TAG + "************* testRdbStoreCloudSync0005 start *************");
+        let PRIKey = [2, 4];
         try {
-            let PRIKey = [2, 4];
-            await rdbStore.getModifyTime("cloud_text", "roWId", PRIKey).then((data) => {
-                console.log(TAG + `modifyTime:` + JSON.stringify(data));
-                expect(true).assertTrue();
-                done();
-            });
+            await rdbStore.getModifyTime("cloud_text", "roWId", PRIKey);
+            expect().assertFail();
         } catch (err) {
-            console.log(TAG + `get modify time fail, err code is ${err.code}, message is ${err.message}.`);
+            console.log(TAG + `get modify time fail, errcode:${JSON.stringify(err)}.`);
+            expect(err.code).assertEqual(14800000);
         }
         console.log(TAG + "************* testRdbStoreCloudSync0005 end *************");
     })
@@ -217,28 +206,22 @@ describe('rdbStoreCloudSyncTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_SYNC_0004
      * @tc.desc get modify time, but not set distributed table
      */
-    it('testRdbStoreCloudSync0006', 0, async function (done) {
+    it('testRdbStoreCloudSync0006', 0, async function () {
         console.log(TAG + "************* testRdbStoreCloudSync0006 start *************");
+        let valueBucket = {
+            "data": "cloud_sync_insert",
+            "recycled": true,
+            "recycledTime": 12345,
+            "uuid": undefined,
+        }
+        await rdbStore.insert("cloud_int", valueBucket);
+        let PRIKey = [0, 1, 2];
         try {
-            for (let i = 0; i < 5; i++) {
-                let valueBucket = {
-                    "data": "cloud_sync_insert",
-                    "recycled": true,
-                    "recycledTime": 12345,
-                    "uuid": i,
-                }
-                let vBucketArray = new Array();
-                vBucketArray.push(valueBucket);
-                await rdbStore.batchInsert("cloud_int", vBucketArray);
-            }
-            let PRIKey = [0, 1, 2];
-            await rdbStore.getModifyTime("cloud_int", "uuid", PRIKey).then((data) => {
-                console.log(TAG + `modifyTime:` + JSON.stringify(data));
-            })
+            await rdbStore.getModifyTime("cloud_int", "uuid", PRIKey)
+            expect().assertFail();
         } catch (err) {
-            console.log(TAG + `get modify time fail, err code is ${err.code}, message is ${err.message}.`);
-            expect(true).assertTrue();
-            done();
+            console.log(TAG + `get modify time fail, errcode:${JSON.stringify(err)}.`);
+            expect(err.code).assertEqual(14800000);
         }
         console.log(TAG + "************* testRdbStoreCloudSync0006 end *************");
     })
@@ -253,14 +236,16 @@ describe('rdbStoreCloudSyncTest', function () {
         try {
             let PRIKey = [1, 2, 4];
             rdbStore.getModifyTime("cloud_integer", "uuid", PRIKey, function (err, data) {
-                console.log(TAG + `modifyTime:` + JSON.stringify(data));
+                console.log(TAG + `modifyTime:` + JSON.stringify(err));
+                done();
+                expect(err.code).assertEqual(14800000);
+                console.log(TAG + "************* testRdbStoreCloudSync0007 end *************");
             });
-            expect(true).assertTrue();
-            done();
         } catch (err) {
-            console.log(TAG + `get modify time fail, err code is ${err.code}, message is ${err.message}.`);
+            console.log(TAG + `get modify time fail, errcode:${JSON.stringify(err)}.`);
+            done();
+            expect().assertFail();
         }
-        console.log(TAG + "************* testRdbStoreCloudSync0007 end *************");
     })
 
     /**
@@ -270,16 +255,16 @@ describe('rdbStoreCloudSyncTest', function () {
      */
     it('testRdbStoreCloudSync0008', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCloudSync0008 start *************");
-        try {
-            let PRIKey = [2, 4];
-            await rdbStore.getModifyTime("cloud_integer", "uuid", PRIKey).then((data) => {
-                console.log(TAG + `modifyTime:` + JSON.stringify(data));
-                expect(true).assertTrue();
-                done();
-            });
-        } catch (err) {
-            console.log(TAG + `get modify time fail, err code is ${err.code}, message is ${err.message}.`);
-        }
+        let PRIKey = [2, 4];
+        await rdbStore.getModifyTime("cloud_integer", "uuid", PRIKey).then((err, data) => {
+            console.log(TAG + `modifyTime:` + JSON.stringify(err));
+            done();
+            expect().assertFail();
+        }).catch((err) => {
+            console.log(TAG + `get modify time fail, errcode:${JSON.stringify(err)}.`);
+            done();
+            expect(err.code).assertEqual(14800000);
+        });
         console.log(TAG + "************* testRdbStoreCloudSync0008 end *************");
     })
 
@@ -291,17 +276,18 @@ describe('rdbStoreCloudSyncTest', function () {
     it('testRdbStoreCloudSync0009', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCloudSync0009 start *************");
         try {
-            rdbStore.cloudSync(relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, function (ProgressDetail) {
-                console.log(TAG + `Progess:` + JSON.stringify(ProgressDetail));
-            }, function (err, data) {
-                console.log(TAG + `cloud sync success:` + err);
+            rdbStore.cloudSync(relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, function (detail) {
+                console.log(TAG + `Progress:` + JSON.stringify(detail));
+                done();
+                expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":[]}');
+                console.log(TAG + "************* testRdbStoreCloudSync0009 end *************");
+            }, () => {
             });
-            expect(true).assertTrue();
-            done();
         } catch (err) {
-            console.log(TAG + `cloud sync fail, err code is ${err.code}, message is ${err.message}.`);
+            console.log(TAG + `cloud sync fail, errcode:${JSON.stringify(err)}.`);
+            done();
+            expect().assertFail();
         }
-        console.log(TAG + "************* testRdbStoreCloudSync0009 end *************");
     })
 
     /**
@@ -311,19 +297,21 @@ describe('rdbStoreCloudSyncTest', function () {
      */
     it('testRdbStoreCloudSync0010', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCloudSync0010 start *************");
-        try {
-            function Progess(ProgressDetail) {
-                console.log(TAG + `Progess:` + JSON.stringify(ProgressDetail));
-            }
-            await rdbStore.cloudSync(relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, Progess).then((data) => {
-                console.log(TAG + `cloud sync success:` + data);
-            });
-            expect(true).assertTrue();
+
+        function Progress(detail) {
+            console.log(TAG + `Progress:` + JSON.stringify(detail));
             done();
-        } catch (err) {
-            console.log(TAG + `cloud sync fail, err code is ${err.code}, message is ${err.message}.`);
+            expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":[]}');
+            console.log(TAG + "************* testRdbStoreCloudSync0010 end *************");
         }
-        console.log(TAG + "************* testRdbStoreCloudSync0010 end *************");
+
+        try {
+            await rdbStore.cloudSync(relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, Progress)
+        } catch (err) {
+            console.log(TAG + `cloud sync fail, errcode:${JSON.stringify(err)}.`);
+            done();
+            expect().assertFail();
+        }
     })
 
     /**
@@ -334,20 +322,22 @@ describe('rdbStoreCloudSyncTest', function () {
     it('testRdbStoreCloudSync0011', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCloudSync0011 start *************");
         try {
-            function Progess(ProgressDetail) {
-                console.log(TAG + `Progess:` + JSON.stringify(ProgressDetail));
+
+            function Progress(detail) {
+                console.log(TAG + `Progress:` + JSON.stringify(detail));
+                done();
+                expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":[]}');
+                console.log(TAG + "************* testRdbStoreCloudSync0011 end *************");
             }
+
             let tableArray = ["cloud_text"];
-            rdbStore.cloudSync(relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, tableArray, Progess,
-                function (err, data) {
-                console.log(TAG + `cloud sync success:` + err);
+            rdbStore.cloudSync(relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, tableArray, Progress, () => {
             });
-            expect(true).assertTrue();
-            done();
         } catch (err) {
-            console.log(TAG + `cloud sync fail, err code is ${err.code}, message is ${err.message}.`);
+            console.log(TAG + `cloud sync fail, errcode:${JSON.stringify(err)}.`);
+            done();
+            expect().assertFail();
         }
-        console.log(TAG + "************* testRdbStoreCloudSync0011 end *************");
     })
 
     /**
@@ -357,21 +347,22 @@ describe('rdbStoreCloudSyncTest', function () {
      */
     it('testRdbStoreCloudSync0012', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCloudSync0012 start *************");
-        try {
-            function Progess(ProgressDetail) {
-                console.log(TAG + `Progess:` + JSON.stringify(ProgressDetail));
-            }
-            let tableArray = ["cloud_text"];
-            await rdbStore.cloudSync(
-                relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, tableArray, Progess).then((data) => {
-                console.log(TAG + `cloud sync success:` + data);
-            });
-            expect(true).assertTrue();
+
+        function Progress(detail) {
+            console.log(TAG + `Progress:` + JSON.stringify(detail));
             done();
-        } catch (err) {
-            console.log(TAG + `cloud sync fail, err code is ${err.code}, message is ${err.message}.`);
+            expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":[]}');
+            console.log(TAG + "************* testRdbStoreCloudSync0012 end *************");
         }
-        console.log(TAG + "************* testRdbStoreCloudSync0012 end *************");
+
+        let tableArray = ["cloud_text"];
+        try {
+            await rdbStore.cloudSync(relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, tableArray, Progress)
+        } catch (err) {
+            console.log(TAG + `cloud sync fail, errcode:${JSON.stringify(err)}.`);
+            done();
+            expect().assertFail();
+        }
     })
 
     /**
@@ -381,21 +372,22 @@ describe('rdbStoreCloudSyncTest', function () {
      */
     it('testRdbStoreCloudSync0013', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCloudSync0013 start *************");
-        try {
-            function Progess(ProgressDetail) {
-                console.log(TAG + `Progess:` + JSON.stringify(ProgressDetail));
-            }
-            let tableArray = ["cloud_text"];
-            await rdbStore.cloudSync(
-                relationalStore.SyncMode.SYNC_MODE_NATIVE_FIRST, tableArray, Progess).then((data) => {
-                console.log(TAG + `cloud sync success:` + data);
-            });
-            expect(true).assertTrue();
+
+        function Progress(detail) {
+            console.log(TAG + `Progress:` + JSON.stringify(detail));
             done();
-        } catch (err) {
-            console.log(TAG + `cloud sync fail, err code is ${err.code}, message is ${err.message}.`);
+            expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":[]}');
+            console.log(TAG + "************* testRdbStoreCloudSync0013 end *************");
         }
-        console.log(TAG + "************* testRdbStoreCloudSync0013 end *************");
+
+        let tableArray = ["cloud_text"];
+        try {
+            await rdbStore.cloudSync(relationalStore.SyncMode.SYNC_MODE_NATIVE_FIRST, tableArray, Progress)
+        } catch (err) {
+            console.log(TAG + `cloud sync fail, errcode:${JSON.stringify(err)}.`);
+            done();
+            expect().assertFail();
+        }
     })
 
     /**
@@ -405,21 +397,22 @@ describe('rdbStoreCloudSyncTest', function () {
      */
     it('testRdbStoreCloudSync0014', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCloudSync0014 start *************");
-        try {
-            function Progess(ProgressDetail) {
-                console.log(TAG + `Progess:` + JSON.stringify(ProgressDetail));
-            }
-            let tableArray = ["cloud_text"];
-            await rdbStore.cloudSync(
-                relationalStore.SyncMode.SYNC_MODE_CLOUD_FIRST, tableArray, Progess).then((data) => {
-                console.log(TAG + `cloud sync success:` + data);
-            });
-            expect(true).assertTrue();
+
+        function Progress(detail) {
+            console.log(TAG + `Progress:` + JSON.stringify(detail));
             done();
-        } catch (err) {
-            console.log(TAG + `cloud sync fail, err code is ${err.code}, message is ${err.message}.`);
+            expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":[]}');
+            console.log(TAG + "************* testRdbStoreCloudSync0014 end *************");
         }
-        console.log(TAG + "************* testRdbStoreCloudSync0014 end *************");
+
+        let tableArray = ["cloud_text"];
+        try {
+            await rdbStore.cloudSync(relationalStore.SyncMode.SYNC_MODE_CLOUD_FIRST, tableArray, Progress)
+        } catch (err) {
+            console.log(TAG + `cloud sync fail, errcode:${JSON.stringify(err)}.`);
+            done();
+            expect().assertFail();
+        }
     })
     console.log(TAG + "*************Unit Test End*************");
 })

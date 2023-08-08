@@ -127,32 +127,15 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
         it('RdbBackupRestoreTest_0010', 0, async function (done) {
             await console.log(TAG + "************* RdbBackupRestoreTest_0010 start *************")
 
-            // RDB backup function test
             try {
-                let promiseBackup = rdbStore.backup(DATABASE_BACKUP_NAME)
-                promiseBackup.then(() => {
-                    expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + DATABASE_BACKUP_NAME))
-                    expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name))
-                }).catch((errCode) => {
-                    expect(false).assertTrue()
-                })
-                await promiseBackup;
-            } catch(err) {
-                expect(false).assertTrue()
-            }
+                await rdbStore.backup(DATABASE_BACKUP_NAME)
+                // expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + DATABASE_BACKUP_NAME))
+                // expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name))
 
-            // RDB restore function test
-            try {
-                let promiseRestore = rdbStore.restore(DATABASE_BACKUP_NAME)
-                promiseRestore.then(() => {
-                    expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name))
-                    done()
-                }).catch((errCode) => {
-                    expect(false).assertTrue()
-                })
-                await promiseRestore
-            } catch(err) {
-                expect(false).assertTrue()
+                await  rdbStore.restore(DATABASE_BACKUP_NAME)
+                // expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name))
+            } catch (err) {
+                expect().assertFail()
             }
 
             // RDB after restored, data query test

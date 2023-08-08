@@ -354,6 +354,11 @@ int ParseSrcName(const napi_env env, const napi_value arg, std::shared_ptr<RdbSt
 
 int ParseColumns(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
+    napi_valuetype type;
+    napi_typeof(env, arg, &type);
+    if (type == napi_undefined || type == napi_null) {
+        return OK;
+    }
     int32_t ret = JSUtils::Convert2Value(env, arg, context->columns);
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("columns", "a non empty string.");
     RDB_CHECK_RETURN_CALL_RESULT(ret == napi_ok, context->SetError(paramError));
@@ -392,6 +397,11 @@ int ParsePath(const napi_env env, const napi_value arg, std::shared_ptr<RdbStore
 
 int ParseWhereArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
+    napi_valuetype type;
+    napi_typeof(env, arg, &type);
+    if (type == napi_undefined || type == napi_null) {
+        return OK;
+    }
     int32_t ret = JSUtils::Convert2Value(env, arg, context->whereArgs);
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("columns", "a non empty string.");
     RDB_CHECK_RETURN_CALL_RESULT(ret == napi_ok, context->SetError(paramError));
@@ -400,6 +410,11 @@ int ParseWhereArgs(const napi_env env, const napi_value arg, std::shared_ptr<Rdb
 
 int ParseSelectionArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
+    napi_valuetype type;
+    napi_typeof(env, arg, &type);
+    if (type == napi_undefined || type == napi_null) {
+        return OK;
+    }
     int32_t ret = JSUtils::Convert2Value(env, arg, context->selectionArgs);
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("columns", "a non empty string.");
     RDB_CHECK_RETURN_CALL_RESULT(ret == napi_ok, context->SetError(paramError));
