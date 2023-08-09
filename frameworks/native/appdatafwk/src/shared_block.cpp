@@ -46,16 +46,6 @@ SharedBlock::~SharedBlock()
     }
 }
 
-std::u16string SharedBlock::ToUtf16(std::string str)
-{
-    return OHOS::Str8ToStr16(str);
-}
-
-std::string SharedBlock::ToUtf8(std::u16string str16)
-{
-    return OHOS::Str16ToStr8(str16);
-}
-
 bool SharedBlock::Init()
 {
     mData = static_cast<uint8_t *>(const_cast<void *>(ashmem_->ReadFromAshmem(sizeof(SharedBlockHeader), 0)));
@@ -112,12 +102,12 @@ int SharedBlock::Create(const std::string &name, size_t size, SharedBlock *&outS
 
 int SharedBlock::WriteMessageParcel(MessageParcel &parcel)
 {
-    return parcel.WriteString16(ToUtf16(mName)) && parcel.WriteAshmem(ashmem_);
+    return parcel.WriteString16(OHOS::Str8ToStr16(mName)) && parcel.WriteAshmem(ashmem_);
 }
 
 int SharedBlock::ReadMessageParcel(MessageParcel &parcel, SharedBlock *&block)
 {
-    std::string name = ToUtf8(parcel.ReadString16());
+    std::string name = OHOS::Str16ToStr8(parcel.ReadString16());
     sptr<Ashmem> ashmem = parcel.ReadAshmem();
     if (UNLIKELY(ashmem == nullptr)) {
         LOG_ERROR("ReadMessageParcel: No ashmem in the parcel.");
@@ -153,25 +143,19 @@ int SharedBlock::Clear()
     if (UNLIKELY(mReadOnly)) {
         return SHARED_BLOCK_INVALID_OPERATION;
     }
-    if (mHeader == nullptr) {
-        LOG_ERROR("SharedBlock::Clear mHeader is nullptr");
-        return SHARED_BLOCK_BAD_VALUE;
+    if (mHeader != nullptr) {
+        mHeader->unusedOffset = sizeof(SharedBlockHeader) + sizeof(RowGroupHeader);
+        mHeader->rowNums = 0;
+        mHeader->columnNums = 0;
+        mHeader->startPos_ = 0;
+        mHeader->lastPos_ = 0;
+        mHeader->blockPos_ = 0;
+        memset_s(mHeader->groupOffset, sizeof(mHeader->groupOffset), 0, sizeof(mHeader->groupOffset));
+        mHeader->groupOffset[0] = sizeof(SharedBlockHeader);
+        return SHARED_BLOCK_OK;
     }
-    mHeader->unusedOffset = sizeof(SharedBlockHeader) + sizeof(RowGroupHeader);
-    mHeader->firstRowGroupOffset = sizeof(SharedBlockHeader);
-    mHeader->rowNums = 0;
-    mHeader->columnNums = 0;
-    mHeader->startPos_ = 0;
-    mHeader->lastPos_ = 0;
-    mHeader->blockPos_ = 0;
-
-    RowGroupHeader *firstGroup = static_cast<RowGroupHeader *>(OffsetToPtr(mHeader->firstRowGroupOffset));
-    if (UNLIKELY(!firstGroup)) {
-        LOG_ERROR("Failed to get group in clear().");
-        return SHARED_BLOCK_BAD_VALUE;
-    }
-    firstGroup->nextGroupOffset = 0;
-    return SHARED_BLOCK_OK;
+    LOG_ERROR("SharedBlock::Clear mHeader is nullptr");
+    return SHARED_BLOCK_BAD_VALUE;
 }
 
 int SharedBlock::SetColumnNum(uint32_t numColumns)
@@ -209,10 +193,10 @@ int SharedBlock::AllocRow()
     size_t fieldDirSize = mHeader->columnNums * sizeof(CellUnit);
 
     /* Aligned */
-    uint32_t fieldDirOffset = Alloc(fieldDirSize, true);
+    uint32_t fieldDirOffset = Alloc(fieldDirSize);
     if (UNLIKELY(!fieldDirOffset)) {
         mHeader->rowNums--;
-        LOG_INFO("Alloc the row failed, so back out the new row accounting from allocRowoffset %{public}" PRIu32 "",
+        LOG_INFO("Alloc the row size %{public}u failed, roll back row number %{public}u", fieldDirOffset,
             mHeader->rowNums);
         return SHARED_BLOCK_NO_MEMORY;
     }
@@ -220,11 +204,6 @@ int SharedBlock::AllocRow()
     CellUnit *fieldDir = static_cast<CellUnit *>(OffsetToPtr(fieldDirOffset));
     if (UNLIKELY(fieldDir == nullptr)) {
         return SHARED_BLOCK_BAD_VALUE;
-    }
-    int result = memset_s(fieldDir, fieldDirSize, 0, fieldDirSize);
-    if (UNLIKELY(result != 0)) {
-        LOG_ERROR("Set memory failed");
-        return SHARED_BLOCK_NO_MEMORY;
     }
 
     *rowOffset = fieldDirOffset;
@@ -244,82 +223,54 @@ int SharedBlock::FreeLastRow()
     return SHARED_BLOCK_OK;
 }
 
-uint32_t SharedBlock::Alloc(size_t size, bool aligned)
+uint32_t SharedBlock::Alloc(size_t size)
 {
     /* Number of unused offsets in the header */
     uint32_t offsetDigit = 3;
-    uint32_t padding = aligned ? (~mHeader->unusedOffset + 1) & offsetDigit : 0;
-    uint32_t offset = mHeader->unusedOffset + padding;
-    uint32_t nextFreeOffset;
-
-    if (UNLIKELY(offset + size > mSize)) {
+    uint32_t offset = mHeader->unusedOffset + ((~mHeader->unusedOffset + 1) & offsetDigit);
+    uint32_t nextFreeOffset = offset + size;
+    if (UNLIKELY(nextFreeOffset > mSize)) {
         LOG_ERROR("SharedBlock is full: requested allocation %{public}zu bytes,"
             " free space %{public}zu bytes, block size %{public}zu bytes",
             size, mSize - mHeader->unusedOffset, mSize);
         return 0;
     }
-    nextFreeOffset = offset + size;
     mHeader->unusedOffset = nextFreeOffset;
     return offset;
 }
 
-uint32_t *SharedBlock::GetRowOffset(uint32_t row)
+uint32_t SharedBlock::GetRowOffset(uint32_t row)
 {
-    RowGroupHeader *group = static_cast<RowGroupHeader *>(OffsetToPtr(mHeader->firstRowGroupOffset));
+    uint32_t groupPos = row / ROW_OFFSETS_NUM;
+    uint32_t rowPos = row % ROW_OFFSETS_NUM;
+    RowGroupHeader *group = static_cast<RowGroupHeader *>(OffsetToPtr(mHeader->groupOffset[groupPos]));
     if (UNLIKELY(group == nullptr)) {
-        LOG_ERROR("Failed to get group in getRowOffset().");
-        return nullptr;
+        LOG_ERROR("Failed to get group %{public}u, offset %{public}u", groupPos, mHeader->groupOffset[groupPos]);
+        return 0;
     }
 
-    while (row >= ROW_OFFSETS_NUM) {
-        group = static_cast<RowGroupHeader *>(OffsetToPtr(group->nextGroupOffset));
-        if (UNLIKELY(group == nullptr)) {
-            LOG_ERROR("Failed to get group in OffsetToPtr(group->nextGroupOffset) when while loop.");
-            return nullptr;
-        }
-        row -= ROW_OFFSETS_NUM;
-    }
-
-    return group->rowOffsets + row;
+    return group->rowOffsets[rowPos];
 }
 
 uint32_t *SharedBlock::AllocRowOffset()
 {
-    uint32_t rowPos = mHeader->rowNums;
+    uint32_t groupPos = mHeader->rowNums / ROW_OFFSETS_NUM;
+    if (mHeader->groupOffset[groupPos] == 0) {
+        mHeader->groupOffset[groupPos] = Alloc(sizeof(RowGroupHeader));
+        if (UNLIKELY(mHeader->groupOffset[groupPos] == 0)) {
+            return nullptr;
+        }
+    }
 
-    RowGroupHeader *group = static_cast<RowGroupHeader *>(OffsetToPtr(mHeader->firstRowGroupOffset));
-    if (group == nullptr) {
-        LOG_ERROR("Failed to get group in allocRowOffset().");
+    uint32_t rowPos = mHeader->rowNums % ROW_OFFSETS_NUM;
+    RowGroupHeader *group = static_cast<RowGroupHeader *>(OffsetToPtr(mHeader->groupOffset[groupPos]));
+    if (UNLIKELY(group == nullptr)) {
+        LOG_ERROR("Failed to get group %{public}u, offset %{public}u", groupPos, mHeader->groupOffset[groupPos]);
         return nullptr;
     }
 
-    while (rowPos > ROW_OFFSETS_NUM) {
-        group = static_cast<RowGroupHeader *>(OffsetToPtr(group->nextGroupOffset));
-        if (UNLIKELY(group == nullptr)) {
-            LOG_ERROR("Failed to get group in OffsetToPtr(group->nextGroupOffset) when while loop.");
-            return nullptr;
-        }
-        rowPos -= ROW_OFFSETS_NUM;
-    }
-    if (rowPos == ROW_OFFSETS_NUM) {
-        if (!group->nextGroupOffset) {
-            /* Aligned */
-            group->nextGroupOffset = Alloc(sizeof(RowGroupHeader), true);
-            if (UNLIKELY(!group->nextGroupOffset)) {
-                return nullptr;
-            }
-        }
-        group = static_cast<RowGroupHeader *>(OffsetToPtr(group->nextGroupOffset));
-        if (UNLIKELY(group == nullptr)) {
-            LOG_ERROR("Failed to get group in OffsetToPtr(group->nextGroupOffset).");
-            return nullptr;
-        }
-        group->nextGroupOffset = 0;
-        rowPos = 0;
-    }
-
     mHeader->rowNums += 1;
-    return &group->rowOffsets[rowPos];
+    return group->rowOffsets + rowPos;
 }
 
 SharedBlock::CellUnit *SharedBlock::GetCellUnit(uint32_t row, uint32_t column)
@@ -331,19 +282,7 @@ SharedBlock::CellUnit *SharedBlock::GetCellUnit(uint32_t row, uint32_t column)
         return nullptr;
     }
 
-    uint32_t *rowOffset = GetRowOffset(row);
-    if (UNLIKELY(!rowOffset)) {
-        LOG_ERROR("Failed to find rowOffset for row %{public}" PRIu32 ".", row);
-        return nullptr;
-    }
-
-    CellUnit *cellUnit = static_cast<CellUnit *>(OffsetToPtr(*rowOffset));
-    if (UNLIKELY(!cellUnit)) {
-        LOG_ERROR("Failed to find cellUnit for rowOffset %{public}" PRIu32 ".", *rowOffset);
-        return nullptr;
-    }
-
-    return &cellUnit[column];
+    return static_cast<CellUnit *>(OffsetToPtr(GetRowOffset(row))) + column;
 }
 
 int SharedBlock::PutBlob(uint32_t row, uint32_t column, const void *value, size_t size)
@@ -378,7 +317,7 @@ int SharedBlock::PutBlobOrString(uint32_t row, uint32_t column, const void *valu
                 row, column, mHeader->rowNums, mHeader->columnNums);
         return SHARED_BLOCK_BAD_VALUE;
     }
-    CellUnit *cellUnit = static_cast<CellUnit *>(OffsetToPtr(*GetRowOffset(row))) + column;
+    CellUnit *cellUnit = static_cast<CellUnit *>(OffsetToPtr(GetRowOffset(row))) + column;
     uint32_t offset = mHeader->unusedOffset;
     uint32_t end = offset + size;
     if (UNLIKELY(end > mSize)) {
@@ -386,9 +325,9 @@ int SharedBlock::PutBlobOrString(uint32_t row, uint32_t column, const void *valu
     }
     mHeader->unusedOffset = end;
 
-    if (UNLIKELY(size != 0)) {
+    if (size != 0) {
         errno_t result = memcpy_s(mData + offset, size, value, size);
-        if (result != EOK) {
+        if (UNLIKELY(result != EOK)) {
             return SHARED_BLOCK_NO_MEMORY;
         }
     }
@@ -412,7 +351,7 @@ int SharedBlock::PutLong(uint32_t row, uint32_t column, int64_t value)
         return SHARED_BLOCK_BAD_VALUE;
     }
 
-    CellUnit *cellUnit = static_cast<CellUnit *>(OffsetToPtr(*GetRowOffset(row))) + column;
+    CellUnit *cellUnit = static_cast<CellUnit *>(OffsetToPtr(GetRowOffset(row))) + column;
     cellUnit->type = CELL_UNIT_TYPE_INTEGER;
     cellUnit->cell.longValue = value;
     return SHARED_BLOCK_OK;
@@ -467,11 +406,6 @@ size_t SharedBlock::SetRawData(const void *rawData, size_t size)
         return SHARED_BLOCK_NO_MEMORY;
     }
     return SHARED_BLOCK_OK;
-}
-
-uint32_t SharedBlock::OffsetFromPtr(void *ptr)
-{
-    return static_cast<uint8_t *>(ptr) - mData;
 }
 } // namespace AppDataFwk
 } // namespace OHOS

@@ -66,20 +66,15 @@ void AbsSharedResultSet::FillBlock(int startRowIndex, AppDataFwk::SharedBlock *b
     return;
 }
 
-void AbsSharedResultSet::InitBlock()
-{
-    if (sharedBlock_ == nullptr) {
-        AppDataFwk::SharedBlock::Create(sharedBlockName_, DEFAULT_BLOCK_SIZE, sharedBlock_);
-    }
-    return;
-}
-
 /**
  * Get current shared block
  */
 AppDataFwk::SharedBlock *AbsSharedResultSet::GetBlock()
 {
-    InitBlock();
+    if (sharedBlock_ != nullptr) {
+        return sharedBlock_;
+    }
+    AppDataFwk::SharedBlock::Create(sharedBlockName_, DEFAULT_BLOCK_SIZE, sharedBlock_);
     return sharedBlock_;
 }
 
