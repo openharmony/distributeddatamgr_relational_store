@@ -197,6 +197,12 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldArrayByName(napi_env env, napi
     RDB_NAPI_ASSERT(env, argc == 1, std::make_shared<ParamNumError>("1"));
 
     int32_t ret = JSUtils::Convert2Value(env, args[0], fieldarray);
+    if (ret != napi_ok && fieldName == "devices") {
+        std::string field;
+        ret = JSUtils::Convert2Value(env, args[0], field);
+        RDB_NAPI_ASSERT(env, ret == napi_ok, std::make_shared<ParamError>(fieldName, "a " + fieldType + " array."));
+        fieldarray.push_back(field);
+    }
     RDB_NAPI_ASSERT(env, ret == napi_ok, std::make_shared<ParamError>(fieldName, "a " + fieldType + " array."));
 
     RdbPredicatesProxy *proxy = nullptr;
