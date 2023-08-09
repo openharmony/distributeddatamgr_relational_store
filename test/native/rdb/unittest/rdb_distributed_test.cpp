@@ -33,10 +33,8 @@ static std::shared_ptr<RdbStore> rdbStore;
 class RdbStoreDistributedTest : public testing::Test {
 public:
     static void SetUpTestCase();
-    static void TearDownTestCase() {
-        RdbHelper::DeleteRdbStore(RdbStoreDistributedTest::DRDB_PATH + RdbStoreDistributedTest::DRDB_NAME);
-    }
-    void SetUp() {}
+    static void TearDownTestCase();
+    void SetUp();
     void TearDown() {}
 
     void InsertValue(std::shared_ptr<RdbStore> &store);
@@ -54,26 +52,23 @@ class TestOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore& store) override
     {
-        std::cout << "on create" << std::endl;
         std::string sql = "CREATE TABLE IF NOT EXISTS employee ("
                           "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                           "name TEXT NOT NULL,"
                           "age INTEGER,"
                           "salary REAL,"
                           "data BLOB)";
-        std::cout << "create table return " << store.ExecuteSql(sql) << std::endl;
+        store.ExecuteSql(sql);
         return 0;
     }
 
     int OnOpen(RdbStore& store) override
     {
-        std::cout << "on open" << std::endl;
         return 0;
     }
 
     int OnUpgrade(RdbStore& store, int currentVersion, int targetVersion) override
     {
-        std::cout << "on upgrade" << std::endl;
         return 0;
     }
 };
@@ -85,7 +80,7 @@ void RdbStoreDistributedTest::SetUpTestCase()
     RdbHelper::DeleteRdbStore(path);
     int fd = open(path.c_str(), O_CREAT, S_IRWXU | S_IRWXG);
     if (fd < 0) {
-        std::cout << "open file failed" << std::endl;
+        return;
     }
     if (fd > 0) {
         close(fd);
@@ -97,11 +92,18 @@ void RdbStoreDistributedTest::SetUpTestCase()
     config.SetName(RdbStoreDistributedTest::DRDB_NAME);
     TestOpenCallback callback;
     rdbStore = RdbHelper::GetRdbStore(config, 1, callback, errCode);
-    if (rdbStore == nullptr) {
-        std::cout << "get rdb store failed" << std::endl;
-    } else {
-        std::cout << "get rdb store success" << std::endl;
-    }
+    EXPECT_NE(nullptr, rdbStore);
+}
+
+void RdbStoreDistributedTest::TearDownTestCase()
+{
+    RdbHelper::DeleteRdbStore(RdbStoreDistributedTest::DRDB_PATH + RdbStoreDistributedTest::DRDB_NAME);
+}
+
+void RdbStoreDistributedTest::SetUp()
+{
+    EXPECT_NE(nullptr, rdbStore);
+    rdbStore->ExecuteSql("DELETE FROM test");
 }
 
 void RdbStoreDistributedTest::InsertValue(std::shared_ptr<RdbStore> &store)
@@ -114,16 +116,15 @@ void RdbStoreDistributedTest::InsertValue(std::shared_ptr<RdbStore> &store)
     values.PutInt("age", 18); // 18 age
     values.PutDouble("salary", 100.5); // 100.5
     values.PutBlob("data", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = store->Insert(id, "employee", values);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(E_OK, store->Insert(id, "employee", values));
     EXPECT_EQ(1, id);
 }
 
 void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
 {
     std::shared_ptr<ResultSet> resultSet =
-        store->QuerySql("SELECT * FROM employee WHERE name = ?", std::vector<ValueObject>{ "zhangsan" });
-    EXPECT_NE(resultSet, nullptr);
+        store->QuerySql("SELECT * FROM employee WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+    EXPECT_NE(nullptr, resultSet);
 
     int columnIndex;
     int intVal;
@@ -131,33 +132,32 @@ void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     ColumnType columnType;
     int position;
     int ret = resultSet->GetRowIndex(position);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(position, -1);
+    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(-1, position);
 
     ret = resultSet->GetColumnType(0, columnType);
-    EXPECT_EQ(ret, E_INVALID_STATEMENT);
+    EXPECT_EQ(E_INVALID_STATEMENT, ret);
 
     ret = resultSet->GoToFirstRow();
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(E_OK, ret);
 
     ret = resultSet->GetColumnIndex("id", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(columnIndex, 0);
+    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(0, columnIndex);
     ret = resultSet->GetColumnType(columnIndex, columnType);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(columnType, ColumnType::TYPE_INTEGER);
     ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(1, intVal);
 
     ret = resultSet->GetColumnIndex("name", columnIndex);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(E_OK, ret);
     ret = resultSet->GetColumnType(columnIndex, columnType);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(columnType, ColumnType::TYPE_STRING);
+    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(ColumnType::TYPE_STRING, columnType);
     ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
-    std::cout << "strVal=" << strVal << std::endl;
+    EXPECT_EQ(E_OK, ret);
     EXPECT_EQ("zhangsan", strVal);
 }
 
@@ -168,7 +168,33 @@ void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
  */
 HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_001, TestSize.Level1)
 {
-    EXPECT_NE(rdbStore, nullptr) << "get rdb store failed";
+    EXPECT_NE(nullptr, rdbStore);
     InsertValue(rdbStore);
     CheckResultSet(rdbStore);
+}
+
+/**
+ * @tc.name: RdbStore_Distributed_Test_002
+ * @tc.desc: Abnormal testCase of ObtainDistributedTableName, if networkId is ""
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_002, TestSize.Level2)
+{
+    EXPECT_NE(nullptr, rdbStore);
+    int errCode;
+    EXPECT_EQ("", rdbStore->ObtainDistributedTableName("", "employee", errCode));
+    EXPECT_EQ(-1, errCode);
+}
+
+/**
+ * @tc.name: RdbStore_Distributed_Test_003
+ * @tc.desc: Abnormal testCase of ObtainDistributedTableName, if networkId is invalid
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_003, TestSize.Level2)
+{
+    EXPECT_NE(nullptr, rdbStore);
+    int errCode;
+    EXPECT_EQ("", rdbStore->ObtainDistributedTableName("123456", "employee", errCode));
+    EXPECT_EQ(-1, errCode);
 }
