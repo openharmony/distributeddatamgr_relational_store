@@ -94,14 +94,14 @@ void RdbStoreImplTest::TearDown(void)
 HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_001, TestSize.Level4)
 {
     RdbStoreImplTest::store->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
-                    "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
-                    "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+        "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int64_t rowId;
     ValuesBucket valuesBucket;
     valuesBucket.PutInt("data_key", ValueObject(1));
     valuesBucket.PutInt("timestamp", ValueObject(1000000000));
     int errorCode = RdbStoreImplTest::store->Insert(rowId,
-                    "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", valuesBucket);
+        "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", valuesBucket);
     EXPECT_EQ(E_OK, errorCode);
     EXPECT_EQ(1, rowId);
 
@@ -123,13 +123,13 @@ HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_001, TestSize.Level4)
 HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_002, TestSize.Level4)
 {
     RdbStoreImplTest::store->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
-                    "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
-                    "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+        "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int64_t rowId;
     ValuesBucket valuesBucket;
     valuesBucket.PutInt("data_key", ValueObject(2));
     int errorCode = RdbStoreImplTest::store->Insert(rowId,
-                    "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", valuesBucket);
+        "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", valuesBucket);
     EXPECT_EQ(E_OK, errorCode);
     EXPECT_EQ(1, rowId);
 
@@ -162,8 +162,8 @@ HWTEST_F(RdbStoreImplTest, GetModifyTime_001, TestSize.Level4)
 HWTEST_F(RdbStoreImplTest, GetModifyTime_002, TestSize.Level4)
 {
     RdbStoreImplTest::store->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
-                "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, hash_key INTEGER, "
-                "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+        "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, hash_key INTEGER, "
+        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
 
     std::vector<RdbStore::PRIKey> PKey = {1};
     auto result = RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
@@ -175,7 +175,7 @@ HWTEST_F(RdbStoreImplTest, GetModifyTime_002, TestSize.Level4)
 
 /* *
  * @tc.name: Rdb_BatchInsertTest_001
- * @tc.desc: Get ModifyTime
+ * @tc.desc: test batchinsert empty valuesBuckets
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplTest, Rdb_BatchInsertTest_001, TestSize.Level4)
@@ -188,15 +188,52 @@ HWTEST_F(RdbStoreImplTest, Rdb_BatchInsertTest_001, TestSize.Level4)
 }
 
 /* *
- * @tc.name: Rdb_BatchInsertTest_002
- * @tc.desc: Get ModifyTime
+ * @tc.name: Rdb_QueryTest_001
+ * @tc.desc: query the inexistent table
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, Rdb_BatchInsertTest_002, TestSize.Level4)
+HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_001, TestSize.Level4)
 {
-    std::vector<ValuesBucket> valuesBuckets;
-    int64_t insertNum = 1;
-    int ret = store->BatchInsert(insertNum, "test", valuesBuckets);
-    EXPECT_EQ(0, insertNum);
-    EXPECT_EQ(E_OK, ret);
+    int errCode = E_OK;
+    RdbStoreImplTest::store->Query(errCode, true, "", std::vector<std::string> {}, "",
+        std::vector<ValueObject> {}, "", "", "", 1, 0);
+    EXPECT_NE(E_OK, errCode);
+}
+
+/* *
+ * @tc.name: Rdb_QueryTest_002
+ * @tc.desc: query test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_002, TestSize.Level4)
+{
+    int errCode = E_OK;
+    RdbStoreImplTest::store->Query(errCode, true, "test", std::vector<std::string> {},
+        "", std::vector<ValueObject> {}, "", "", "", 1, 0);
+    EXPECT_EQ(E_OK, errCode);
+}
+
+/* *
+ * @tc.name: Rdb_RemoteQueryTest_001
+ * @tc.desc: remote query test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_RemoteQueryTest_001, TestSize.Level4)
+{
+    int errCode = E_OK;
+    AbsRdbPredicates predicate("test");
+    predicate.EqualTo("id", 1);
+    RdbStoreImplTest::store->RemoteQuery("", predicate, std::vector<std::string> {}, errCode);
+    EXPECT_NE(E_OK, errCode);
+}
+
+/* *
+ * @tc.name: Rdb_IsHoldingConnectionTset_001
+ * @tc.desc: test holding connection
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_IsHoldingConnectionTset_001, TestSize.Level4)
+{
+    bool ret = RdbStoreImplTest::store->IsHoldingConnection();
+    EXPECT_EQ(true, ret);
 }
