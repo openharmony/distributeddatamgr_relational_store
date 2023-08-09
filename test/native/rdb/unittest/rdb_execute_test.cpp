@@ -242,3 +242,43 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_003, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(journalMode, "wal");
 }
+
+/**
+ * @tc.name: RdbStore_Execute_004
+ * @tc.desc: test RdbStore Execute
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_004, TestSize.Level4)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+
+    std::string journalMode;
+    int ret = store->ExecuteAndGetString(journalMode, "BEG");
+    EXPECT_NE(E_OK, ret);
+}
+
+/**
+ * @tc.name: RdbStore_Execute_005
+ * @tc.desc: test RdbStore Execute
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_005, TestSize.Level4)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    int64_t outValue;
+    int ret = store->ExecuteForLastInsertedRowId(outValue, "", std::vector<ValueObject> {});
+    EXPECT_NE(E_OK, ret);
+}
+
+/**
+ * @tc.name: RdbStore_Execute_006
+ * @tc.desc: test RdbStore Execute
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_006, TestSize.Level4)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    int64_t outValue;
+    int ret = store->ExecuteForChangedRowCount(outValue, "", std::vector<ValueObject> {});
+    EXPECT_NE(E_OK, ret);
+}
