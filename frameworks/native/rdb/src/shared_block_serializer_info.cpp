@@ -25,7 +25,7 @@ using namespace OHOS::Rdb;
 SharedBlockSerializerInfo::SharedBlockSerializerInfo(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *stat,
     int numColumns, int startPos)
     : sharedBlock_(sharedBlock), statement_(stat), anumColumns(numColumns), atotalRows(0), astartPos(startPos),
-      raddedRows(0), risFull(false)
+      raddedRows(0)
 {
 }
 
@@ -39,7 +39,6 @@ int SharedBlockSerializerInfo::AddRow(int addedRows)
         raddedRows = addedRows + 1;
         return SQLITE_OK;
     }
-    risFull = true;
     return SQLITE_FULL;
 }
 
@@ -56,7 +55,6 @@ int SharedBlockSerializerInfo::Reset(int startPos)
     }
     astartPos = startPos;
     raddedRows = 0;
-    risFull = false;
     return SQLITE_OK;
 }
 
@@ -74,7 +72,6 @@ int SharedBlockSerializerInfo::PutLong(int row, int column, sqlite3_int64 value)
         return SQLITE_OK;
     }
     sharedBlock_->FreeLastRow();
-    risFull = true;
     return SQLITE_FULL;
 }
 
@@ -85,7 +82,6 @@ int SharedBlockSerializerInfo::PutDouble(int row, int column, double value)
         return SQLITE_OK;
     }
     sharedBlock_->FreeLastRow();
-    risFull = true;
     return SQLITE_FULL;
 }
 
@@ -106,7 +102,6 @@ int SharedBlockSerializerInfo::PutBlob(int row, int column, const void *blob, in
         return SQLITE_OK;
     }
     sharedBlock_->FreeLastRow();
-    risFull = true;
     return SQLITE_FULL;
 }
 
@@ -117,7 +112,6 @@ int SharedBlockSerializerInfo::PutNull(int row, int column)
         return SQLITE_OK;
     }
     sharedBlock_->FreeLastRow();
-    risFull = true;
     LOG_ERROR("Failed allocating space for a null in column %{public}d, error=%{public}d", column, status);
     return SQLITE_FULL;
 }

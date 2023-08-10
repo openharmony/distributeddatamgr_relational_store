@@ -143,7 +143,7 @@ int SharedBlock::Clear()
     if (UNLIKELY(mReadOnly)) {
         return SHARED_BLOCK_INVALID_OPERATION;
     }
-    if (mHeader != nullptr) {
+    if (LIKELY(mHeader != nullptr)) {
         mHeader->unusedOffset = sizeof(SharedBlockHeader) + sizeof(RowGroupHeader);
         mHeader->rowNums = 0;
         mHeader->columnNums = 0;
@@ -241,8 +241,8 @@ uint32_t SharedBlock::Alloc(size_t size)
 
 uint32_t SharedBlock::GetRowOffset(uint32_t row)
 {
-    uint32_t groupPos = row / ROW_OFFSETS_NUM;
-    uint32_t rowPos = row % ROW_OFFSETS_NUM;
+    uint32_t groupPos = row / ROW_NUM_IN_A_GROUP;
+    uint32_t rowPos = row % ROW_NUM_IN_A_GROUP;
     RowGroupHeader *group = static_cast<RowGroupHeader *>(OffsetToPtr(mHeader->groupOffset[groupPos]));
     if (UNLIKELY(group == nullptr)) {
         LOG_ERROR("Failed to get group %{public}u, offset %{public}u", groupPos, mHeader->groupOffset[groupPos]);
@@ -254,7 +254,11 @@ uint32_t SharedBlock::GetRowOffset(uint32_t row)
 
 uint32_t *SharedBlock::AllocRowOffset()
 {
-    uint32_t groupPos = mHeader->rowNums / ROW_OFFSETS_NUM;
+    uint32_t groupPos = mHeader->rowNums / ROW_NUM_IN_A_GROUP;
+    if (UNLIKELY(groupPos >= GROUP_NUM)) {
+        LOG_ERROR("rows is full. row number %{public}u, groupPos %{public}u", mHeader->rowNums, groupPos);
+        return nullptr;
+    }
     if (mHeader->groupOffset[groupPos] == 0) {
         mHeader->groupOffset[groupPos] = Alloc(sizeof(RowGroupHeader));
         if (UNLIKELY(mHeader->groupOffset[groupPos] == 0)) {
@@ -262,7 +266,7 @@ uint32_t *SharedBlock::AllocRowOffset()
         }
     }
 
-    uint32_t rowPos = mHeader->rowNums % ROW_OFFSETS_NUM;
+    uint32_t rowPos = mHeader->rowNums % ROW_NUM_IN_A_GROUP;
     RowGroupHeader *group = static_cast<RowGroupHeader *>(OffsetToPtr(mHeader->groupOffset[groupPos]));
     if (UNLIKELY(group == nullptr)) {
         LOG_ERROR("Failed to get group %{public}u, offset %{public}u", groupPos, mHeader->groupOffset[groupPos]);
@@ -281,7 +285,6 @@ SharedBlock::CellUnit *SharedBlock::GetCellUnit(uint32_t row, uint32_t column)
             row, column, mHeader->rowNums, mHeader->columnNums);
         return nullptr;
     }
-
     return static_cast<CellUnit *>(OffsetToPtr(GetRowOffset(row))) + column;
 }
 

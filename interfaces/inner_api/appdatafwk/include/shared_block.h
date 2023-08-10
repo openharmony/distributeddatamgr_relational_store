@@ -317,7 +317,8 @@ private:
     uint8_t *mData;
     size_t mSize;
     bool mReadOnly;
-    static const size_t ROW_OFFSETS_NUM = 100;
+    static const size_t ROW_NUM_IN_A_GROUP = 128;
+    static const uint32_t GROUP_NUM = 128;
     /**
     * Default setting for SQLITE_MAX_COLUMN is 2000.
     * We can set it at compile time to as large as 32767
@@ -337,11 +338,11 @@ private:
         uint32_t lastPos_;
         /* current position of the current block. */
         uint32_t blockPos_;
-        uint32_t groupOffset[ROW_OFFSETS_NUM];
+        uint32_t groupOffset[GROUP_NUM];
     };
 
     struct RowGroupHeader {
-        uint32_t rowOffsets[ROW_OFFSETS_NUM];
+        uint32_t rowOffsets[ROW_NUM_IN_A_GROUP];
     };
 
     SharedBlockHeader *mHeader;
