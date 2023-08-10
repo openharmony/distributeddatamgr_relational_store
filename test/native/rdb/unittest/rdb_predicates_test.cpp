@@ -2165,3 +2165,25 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetStatement_GetBnidArgs_001, TestSize.
                          "integerValue DESC  LIMIT -1 OFFSET -1");
     EXPECT_EQ(bindArgs.size(), 3);
 }
+
+/* *
+ * @tc.name: RdbStore_GetStatement_GetBindArgs_002
+ * @tc.desc: Normal testCase of RdbPredicates for GetStatement and GetBindArgs method
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_GetStatement_GetBnidArgs_002, TestSize.Level1)
+{
+    RdbPredicates predicates("AllDataType");
+    predicates.SetWhereClause("integerValue = 1 and ");
+    predicates.EqualTo("stringValue", "ABCDEFGHIJKLMN");
+
+    std::string statement = predicates.GetStatement();
+    EXPECT_EQ(statement, " WHERE integerValue = 1 and stringValue = ? ");
+
+    std::vector<std::string> columns;
+    int count = 0;
+    std::shared_ptr<ResultSet> resultSet = RdbStorePredicateTest::store->Query(predicates, columns);
+    resultSet->GetRowCount(count);
+    EXPECT_EQ(1, count);
+}
