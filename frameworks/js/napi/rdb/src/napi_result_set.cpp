@@ -227,8 +227,8 @@ ResultSetProxy *ResultSetProxy::GetInnerResultSet(napi_env env, napi_callback_in
     napi_value self = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &self, nullptr);
     napi_unwrap(env, self, reinterpret_cast<void **>(&resultSetProxy));
-    RDB_NAPI_ASSERT_FROMV9(env, resultSetProxy != nullptr && resultSetProxy->resultSet_ != nullptr,
-        std::make_shared<ResultGotoError>(), resultSetProxy->apiversion);
+    RDB_NAPI_ASSERT_FROMV9(env, resultSetProxy && resultSetProxy->resultSet_, std::make_shared<ResultGotoError>(),
+        resultSetProxy->apiversion);
 
     version = resultSetProxy->apiversion;
     return resultSetProxy;
