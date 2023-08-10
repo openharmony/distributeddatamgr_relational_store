@@ -251,3 +251,61 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_004, TestSize
 
     resultSet->Close();
 }
+
+/* *
+ * @tc.name: RdbStore_StepResultSet_GetRow_005
+ * @tc.desc: Abnormal testCase of GetRow for rowEntity, if params of Get() is invalid
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_005, TestSize.Level2)
+{
+    ValuesBucket valuesBucket;
+    valuesBucket.PutString("data1", "keep");
+    valuesBucket.PutInt("data2", 10);
+
+    int64_t rowId;
+    EXPECT_EQ(E_OK, RdbStepResultSetGetRowTest::store->Insert(rowId, "test", valuesBucket));
+    EXPECT_EQ(1, rowId);
+
+    std::shared_ptr<ResultSet> resultSet =
+        RdbStepResultSetGetRowTest::store->QueryByStep("SELECT data1, data2 FROM test");
+    EXPECT_NE(nullptr, resultSet);
+
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+
+    RowEntity rowEntity;
+    EXPECT_EQ(E_OK, resultSet->GetRow(rowEntity));
+
+	EXPECT_EQ(ValueObjectType::TYPE_NULL, rowEntity.Get("data3").GetType());
+	EXPECT_EQ(ValueObjectType::TYPE_NULL, rowEntity.Get(-1).GetType());
+	EXPECT_EQ(ValueObjectType::TYPE_NULL, rowEntity.Get(2).GetType());
+
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: RdbStore_StepResultSet_GetRow_006
+ * @tc.desc: Abnormal testCase of GetRow for rowEntity, if close resultSet before GetRow
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_006, TestSize.Level2)
+{
+    ValuesBucket valuesBucket;
+    valuesBucket.PutString("data1", "keep");
+    valuesBucket.PutInt("data2", 10);
+
+    int64_t rowId;
+    EXPECT_EQ(E_OK, RdbStepResultSetGetRowTest::store->Insert(rowId, "test", valuesBucket));
+    EXPECT_EQ(1, rowId);
+
+    std::shared_ptr<ResultSet> resultSet =
+        RdbStepResultSetGetRowTest::store->QueryByStep("SELECT data1, data2 FROM test");
+    EXPECT_NE(nullptr, resultSet);
+
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+
+    EXPECT_EQ(E_OK, resultSet->Close());
+
+    RowEntity rowEntity;
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetRow(rowEntity));
+}
