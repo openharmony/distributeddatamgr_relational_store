@@ -44,7 +44,6 @@ public:
             return SQLITE_OK;
         }
         sharedBlock_->FreeLastRow();
-        risFull = true;
         return SQLITE_FULL;
     }
 
@@ -69,7 +68,6 @@ private:
     int atotalRows;
     int astartPos;
     int raddedRows;
-    bool risFull;
 };
 
 struct Sqlite3SharedBlockMethods {
