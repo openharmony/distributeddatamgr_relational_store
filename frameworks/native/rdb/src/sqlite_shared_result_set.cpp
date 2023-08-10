@@ -152,32 +152,34 @@ int SqliteSharedResultSet::PickFillBlockStartPosition(int resultSetPosition, int
 void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
 {
     ClearBlock();
-
     SqliteConnection* connection = connectionPool_->AcquireConnection(true);
     if (connection == nullptr) {
         return;
     }
-
+    AppDataFwk::SharedBlock *sharedBlock = GetBlock();
+    if (sharedBlock == nullptr) {
+        return;
+    }
     if (rowNum == NO_COUNT) {
-        connection->ExecuteForSharedBlock(rowNum, qrySql, bindArgs_, GetBlock(), requiredPos, requiredPos, true);
-        resultSetBlockCapacity = static_cast<int>(GetBlock()->GetRowNum());
+        connection->ExecuteForSharedBlock(rowNum, qrySql, bindArgs_, sharedBlock, requiredPos, requiredPos, true);
+        resultSetBlockCapacity = static_cast<int>(sharedBlock->GetRowNum());
         if (resultSetBlockCapacity > 0) {
-            GetBlock()->SetStartPos(requiredPos);
-            GetBlock()->SetBlockPos(0);
-            GetBlock()->SetLastPos(requiredPos + resultSetBlockCapacity);
+            sharedBlock->SetStartPos(requiredPos);
+            sharedBlock->SetBlockPos(0);
+            sharedBlock->SetLastPos(requiredPos + resultSetBlockCapacity);
         }
     } else {
         int blockRowNum = rowNum;
         int startPos =
             isOnlyFillResultSetBlock ? requiredPos : PickFillBlockStartPosition(requiredPos, resultSetBlockCapacity);
-        connection->ExecuteForSharedBlock(blockRowNum, qrySql, bindArgs_, GetBlock(), startPos, requiredPos, false);
-        int currentBlockCapacity = static_cast<int>(GetBlock()->GetRowNum());
-        GetBlock()->SetStartPos((uint32_t)startPos);
-        GetBlock()->SetBlockPos(requiredPos - startPos);
-        GetBlock()->SetLastPos(startPos + currentBlockCapacity);
+        connection->ExecuteForSharedBlock(blockRowNum, qrySql, bindArgs_, sharedBlock, startPos, requiredPos, false);
+        int currentBlockCapacity = static_cast<int>(sharedBlock->GetRowNum());
+        sharedBlock->SetStartPos((uint32_t)startPos);
+        sharedBlock->SetBlockPos(requiredPos - startPos);
+        sharedBlock->SetLastPos(startPos + currentBlockCapacity);
         LOG_INFO("requiredPos= %{public}d, startPos_= %{public}" PRIu32 ", lastPos_= %{public}" PRIu32
             ", blockPos_= %{public}" PRIu32 ".",
-            requiredPos, GetBlock()->GetStartPos(), GetBlock()->GetLastPos(), GetBlock()->GetBlockPos());
+            requiredPos, sharedBlock->GetStartPos(), sharedBlock->GetLastPos(), sharedBlock->GetBlockPos());
     }
     connectionPool_->ReleaseConnection(connection);
 }
