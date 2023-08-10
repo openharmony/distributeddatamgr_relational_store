@@ -95,8 +95,8 @@ public:
         const std::vector<ValueObject> &bindArgs) override;
     std::shared_ptr<AbsSharedResultSet> Query(int &errCode, bool distinct,
         const std::string &table, const std::vector<std::string> &columns,
-        const std::string &selection, const std::vector<std::string> &sqlArgs, const std::string &groupBy,
-        const std::string &having, const std::string &orderBy, const std::string &limit) override;
+        const std::string &whereClause, const std::vector<ValueObject> &bindArgs, const std::string &groupBy,
+        const std::string &indexName, const std::string &orderBy, const int &limit, const int &offset) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql,
         const std::vector<std::string> &sqlArgs) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql,
