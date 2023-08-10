@@ -1374,7 +1374,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_030, TestSize.Le
  * @tc.desc: Abnormal testcase of SqliteSharedResultSet for Close, if close resultSet twice
  * @tc.type: FUNC
  */
-HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_031, TestSize.Level1)
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_031, TestSize.Level2)
 {
     GenerateDefaultTable();
     std::vector<std::string> selectionArgs;
@@ -1382,12 +1382,43 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_031, TestSize.Le
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(resultSet, nullptr);
 
-    int ret = resultSet->Close();
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(E_OK, resultSet->Close());
+    EXPECT_EQ(true, resultSet->IsClosed());
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GoToLastRow());
 
-    bool isClosed = resultSet->IsClosed();
-    EXPECT_EQ(isClosed, true);
+    bool isExpectResult = true;
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->IsAtLastRow(isExpectResult));
+    EXPECT_NE(false, isExpectResult);
 
-    ret = resultSet->Close();
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->IsEnded(isExpectResult));
+    EXPECT_NE(false, isExpectResult);
+
+    int columnCount;
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetColumnCount(columnCount));
+
+    std::string columnName;
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetColumnName(1, columnName));
+
+    EXPECT_EQ(E_OK, resultSet->Close());
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_032
+ * @tc.desc: Normal testcase of SqliteSharedResultSet for GetRow
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_032, TestSize.Level1)
+{
+    GenerateAssetsTable();
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+    EXPECT_NE(resultSet, nullptr);
+
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+
+    int iRet = E_ERROR;
+    RowEntity rowEntity;
+    iRet = resultSet->GetRow(rowEntity);
+    EXPECT_EQ(E_OK, iRet);
 }
