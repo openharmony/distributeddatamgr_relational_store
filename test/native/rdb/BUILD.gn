@@ -64,6 +64,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_transaction_test.cpp",
     "unittest/rdb_update_test.cpp",
     "unittest/rdb_upgrade_test.cpp",
+    "unittest/rdb_utils_test.cpp",
     "unittest/rdb_value_bucket_test.cpp",
     "unittest/rdb_wal_limit_test.cpp",
   ]
