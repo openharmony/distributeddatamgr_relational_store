@@ -1786,6 +1786,6 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep017, TestSize.Level1)
     std::vector<std::string> columns = {"data1", "data2"};
 
     std::string outSql;
-    int errCode = SqliteSqlBuilder::BuildQueryString(false, "", columns, "", "", "", "", "", "", outSql);
+    int errCode = SqliteSqlBuilder::BuildQueryString(false, "", columns, "", "", "", "", 0, 0, outSql);
     EXPECT_EQ(E_EMPTY_TABLE_NAME, errCode);
 }

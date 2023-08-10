@@ -690,6 +690,14 @@ void RdbStorePredicateTest::BasicDataTypeTest(RdbPredicates predicates1)
     EXPECT_EQ(E_OK, allDataTypes8->GoToFirstRow());
     allDataTypes8->GetInt(0, valueInt);
     EXPECT_EQ(3, valueInt);
+
+    predicates1.Clear();
+    std::vector<uint8_t> blob = {1, 2, 3};
+    predicates1.EqualTo("blobValue", blob);
+    std::shared_ptr<ResultSet> allDataTypes9 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    int count = 0;
+    allDataTypes9->GetRowCount(count);
+    EXPECT_EQ(3, count);
 }
 
 int RdbStorePredicateTest::ResultSize(std::shared_ptr<ResultSet> &resultSet)
