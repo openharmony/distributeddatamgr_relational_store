@@ -85,7 +85,6 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
         return nullptr;
     }
 
-    *errCode = RDB_OK;
     std::string realPath = OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(config->dataBaseDir,
         config->storeName, *errCode);
     if (*errCode != 0) {
