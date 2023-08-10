@@ -268,8 +268,6 @@ ResultSetProxy *ResultSetProxy::ParseFieldByName(napi_env env, napi_callback_inf
         env, argc == 1, std::make_shared<ParamNumError>("1"), resultSetProxy->apiversion);
 
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_NAPI_ASSERT_FROMV9(env, !field.empty(), std::make_shared<ParamTypeError>("columnName", "a non empty string."),
-        resultSetProxy->apiversion);
     return resultSetProxy;
 }
 
