@@ -276,9 +276,9 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_005, TestSize
     RowEntity rowEntity;
     EXPECT_EQ(E_OK, resultSet->GetRow(rowEntity));
 
-	EXPECT_EQ(ValueObjectType::TYPE_NULL, rowEntity.Get("data3").GetType());
-	EXPECT_EQ(ValueObjectType::TYPE_NULL, rowEntity.Get(-1).GetType());
-	EXPECT_EQ(ValueObjectType::TYPE_NULL, rowEntity.Get(2).GetType());
+    EXPECT_EQ(ValueObjectType::TYPE_NULL, rowEntity.Get("data3").GetType());
+    EXPECT_EQ(ValueObjectType::TYPE_NULL, rowEntity.Get(-1).GetType());
+    EXPECT_EQ(ValueObjectType::TYPE_NULL, rowEntity.Get(2).GetType());
 
     resultSet->Close();
 }
