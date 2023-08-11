@@ -376,14 +376,18 @@ napi_value DataAbilityPredicatesProxy::Between(napi_env env, napi_callback_info 
 {
     napi_value thiz;
     size_t argc = 3;
+    // 3 represents the number of parameters
     napi_value args[3] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::Between Invalid argvs!");
     std::string field;
+    // args[0] represents the first parameter
     RDB_CHECK_RETURN_NULLPTR(JSUtils::Convert2Value(env, args[0], field) == napi_ok, "the field is invalid");
     ValueObject low;
+    // args[1] represents the second parameter
     JSUtils::Convert2Value(env, args[1], low);
     ValueObject high;
+    // args[2] represents the third parameter
     JSUtils::Convert2Value(env, args[2], high);
     auto nativePredicates = GetNativePredicates(env, info);
     RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
@@ -395,14 +399,18 @@ napi_value DataAbilityPredicatesProxy::NotBetween(napi_env env, napi_callback_in
 {
     napi_value thiz;
     size_t argc = 3;
+    // 3 represents the number of parameters
     napi_value args[3] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     NAPI_ASSERT(env, argc > 0, "DataAbilityPredicatesProxy::NotBetween Invalid argvs!");
     std::string field;
+    // args[0] represents the first parameter
     RDB_CHECK_RETURN_NULLPTR(JSUtils::Convert2Value(env, args[0], field) == napi_ok, "the field is invalid");
     ValueObject low;
+    // args[1] represents the second parameter
     JSUtils::Convert2Value(env, args[1], low);
     ValueObject high;
+    // args[2] represents the third parameter
     JSUtils::Convert2Value(env, args[2], high);
     auto nativePredicates = GetNativePredicates(env, info);
     RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
