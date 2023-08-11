@@ -293,17 +293,21 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValue(napi_env env, napi_ca
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     size_t argc = 2;
+    // 2 represents the number of parameters
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
     int version = predicatesProxy->apiversion;
+    // 2 represents the number of parameters
     RDB_NAPI_ASSERT_FROMV9(env, argc == 2, std::make_shared<ParamNumError>("2"), version);
 
+    // args[0] represents the first parameter
     field = JSUtils::Convert2String(env, args[0]);
     RDB_NAPI_ASSERT_FROMV9(env,  !field.empty(),
         std::make_shared<ParamTypeError>("field", "a non empty string."), version);
 
+    // args[1] represents the second parameter
     int ret = JSUtils::Convert2Value(env, args[1], value.value);
     RDB_NAPI_ASSERT_FROMV9(env, ret == napi_ok,
         std::make_shared<ParamTypeError>("value", "a non empty string."), version);
@@ -320,6 +324,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndStringValue(napi_env env, n
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
     int version = predicatesProxy->apiversion;
+    // 2 represents the number of parameters
     RDB_NAPI_ASSERT_FROMV9(env, argc == 2, std::make_shared<ParamNumError>("2"), version);
 
     field = JSUtils::Convert2String(env, args[0]);
@@ -334,21 +339,26 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldLowAndHigh(
     napi_env env, napi_callback_info info, napi_value &thiz, std::string &field, ValueObject &low, ValueObject &high)
 {
     size_t argc = 3;
+    // 3 represents the number of parameters
     napi_value args[3] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
     int version = predicatesProxy->apiversion;
+    // 3 represents the number of parameters
     RDB_NAPI_ASSERT_FROMV9(env, argc == 3, std::make_shared<ParamNumError>("3"), version);
 
+    // args[0] represents the first parameter
     field = JSUtils::Convert2String(env, args[0]);
     RDB_NAPI_ASSERT_FROMV9(env, !field.empty(),
         std::make_shared<ParamTypeError>("field", "a non empty string."), version);
 
+    // args[1] represents the second parameter
     int32_t ret = JSUtils::Convert2Value(env, args[1], low);
     RDB_NAPI_ASSERT_FROMV9(env, ret == napi_ok,
         std::make_shared<ParamTypeError>("low", "a non empty ValueType."), version);
 
+    // args[2] represents the third parameter
     ret = JSUtils::Convert2Value(env, args[2], high);
     RDB_NAPI_ASSERT_FROMV9(env, ret == napi_ok,
         std::make_shared<ParamTypeError>("high", "a non empty ValueType."), version);
