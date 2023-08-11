@@ -179,10 +179,6 @@ int SharedBlock::SetColumnNum(uint32_t numColumns)
 
 int SharedBlock::AllocRow()
 {
-    if (UNLIKELY(mReadOnly)) {
-        return SHARED_BLOCK_INVALID_OPERATION;
-    }
-
     /* Fill in the row offset */
     uint32_t *rowOffset = AllocRowOffset();
     if (UNLIKELY(rowOffset == nullptr)) {
@@ -201,21 +197,12 @@ int SharedBlock::AllocRow()
         return SHARED_BLOCK_NO_MEMORY;
     }
 
-    CellUnit *fieldDir = static_cast<CellUnit *>(OffsetToPtr(fieldDirOffset));
-    if (UNLIKELY(fieldDir == nullptr)) {
-        return SHARED_BLOCK_BAD_VALUE;
-    }
-
     *rowOffset = fieldDirOffset;
     return SHARED_BLOCK_OK;
 }
 
 int SharedBlock::FreeLastRow()
 {
-    if (UNLIKELY(mReadOnly)) {
-        return SHARED_BLOCK_INVALID_OPERATION;
-    }
-
     if (mHeader->rowNums > 0) {
         mHeader->rowNums--;
     }
@@ -239,19 +226,6 @@ uint32_t SharedBlock::Alloc(size_t size)
     return offset;
 }
 
-uint32_t SharedBlock::GetRowOffset(uint32_t row)
-{
-    uint32_t groupPos = row / ROW_NUM_IN_A_GROUP;
-    uint32_t rowPos = row % ROW_NUM_IN_A_GROUP;
-    RowGroupHeader *group = static_cast<RowGroupHeader *>(OffsetToPtr(mHeader->groupOffset[groupPos]));
-    if (UNLIKELY(group == nullptr)) {
-        LOG_ERROR("Failed to get group %{public}u, offset %{public}u", groupPos, mHeader->groupOffset[groupPos]);
-        return 0;
-    }
-
-    return group->rowOffsets[rowPos];
-}
-
 uint32_t *SharedBlock::AllocRowOffset()
 {
     uint32_t groupPos = mHeader->rowNums / ROW_NUM_IN_A_GROUP;
@@ -268,11 +242,6 @@ uint32_t *SharedBlock::AllocRowOffset()
 
     uint32_t rowPos = mHeader->rowNums % ROW_NUM_IN_A_GROUP;
     RowGroupHeader *group = static_cast<RowGroupHeader *>(OffsetToPtr(mHeader->groupOffset[groupPos]));
-    if (UNLIKELY(group == nullptr)) {
-        LOG_ERROR("Failed to get group %{public}u, offset %{public}u", groupPos, mHeader->groupOffset[groupPos]);
-        return nullptr;
-    }
-
     mHeader->rowNums += 1;
     return group->rowOffsets + rowPos;
 }
@@ -285,7 +254,11 @@ SharedBlock::CellUnit *SharedBlock::GetCellUnit(uint32_t row, uint32_t column)
             row, column, mHeader->rowNums, mHeader->columnNums);
         return nullptr;
     }
-    return static_cast<CellUnit *>(OffsetToPtr(GetRowOffset(row))) + column;
+
+    uint32_t groupPos = row / ROW_NUM_IN_A_GROUP;
+    uint32_t rowPos = row % ROW_NUM_IN_A_GROUP;
+    RowGroupHeader *group = reinterpret_cast<RowGroupHeader *>(mData + mHeader->groupOffset[groupPos]);
+    return reinterpret_cast<CellUnit *>(mData + group->rowOffsets[rowPos]) + column;
 }
 
 int SharedBlock::PutBlob(uint32_t row, uint32_t column, const void *value, size_t size)
@@ -310,17 +283,16 @@ int SharedBlock::PutAssets(uint32_t row, uint32_t column, const void *value, siz
 
 int SharedBlock::PutBlobOrString(uint32_t row, uint32_t column, const void *value, size_t size, int32_t type)
 {
-    if (UNLIKELY(mReadOnly)) {
-        return SHARED_BLOCK_INVALID_OPERATION;
-    }
-
     if (UNLIKELY(row >= mHeader->rowNums || column >= mHeader->columnNums)) {
         LOG_ERROR("Failed to read row %{public}" PRIu32 ", column %{public}" PRIu32 " from a SharedBlock"
             " which has %{public}" PRIu32 " rows, %{public}" PRIu32 " columns.",
                 row, column, mHeader->rowNums, mHeader->columnNums);
         return SHARED_BLOCK_BAD_VALUE;
     }
-    CellUnit *cellUnit = static_cast<CellUnit *>(OffsetToPtr(GetRowOffset(row))) + column;
+    uint32_t groupPos = row / ROW_NUM_IN_A_GROUP;
+    uint32_t rowPos = row % ROW_NUM_IN_A_GROUP;
+    RowGroupHeader *group = reinterpret_cast<RowGroupHeader *>(mData + mHeader->groupOffset[groupPos]);
+    CellUnit *cellUnit = reinterpret_cast<CellUnit *>(mData + group->rowOffsets[rowPos]) + column;
     uint32_t offset = mHeader->unusedOffset;
     uint32_t end = offset + size;
     if (UNLIKELY(end > mSize)) {
@@ -343,10 +315,6 @@ int SharedBlock::PutBlobOrString(uint32_t row, uint32_t column, const void *valu
 
 int SharedBlock::PutLong(uint32_t row, uint32_t column, int64_t value)
 {
-    if (UNLIKELY(mReadOnly)) {
-        return SHARED_BLOCK_INVALID_OPERATION;
-    }
-
     if (UNLIKELY(row >= mHeader->rowNums || column >= mHeader->columnNums)) {
         LOG_ERROR("Failed to read row %{public}" PRIu32 ", column %{public}" PRIu32 " from a SharedBlock"
             " which has %{public}" PRIu32 " rows, %{public}" PRIu32 " columns.",
@@ -354,7 +322,10 @@ int SharedBlock::PutLong(uint32_t row, uint32_t column, int64_t value)
         return SHARED_BLOCK_BAD_VALUE;
     }
 
-    CellUnit *cellUnit = static_cast<CellUnit *>(OffsetToPtr(GetRowOffset(row))) + column;
+    uint32_t groupPos = row / ROW_NUM_IN_A_GROUP;
+    uint32_t rowPos = row % ROW_NUM_IN_A_GROUP;
+    RowGroupHeader *group = reinterpret_cast<RowGroupHeader *>(mData + mHeader->groupOffset[groupPos]);
+    CellUnit *cellUnit = reinterpret_cast<CellUnit *>(mData + group->rowOffsets[rowPos]) + column;
     cellUnit->type = CELL_UNIT_TYPE_INTEGER;
     cellUnit->cell.longValue = value;
     return SHARED_BLOCK_OK;
@@ -362,15 +333,17 @@ int SharedBlock::PutLong(uint32_t row, uint32_t column, int64_t value)
 
 int SharedBlock::PutDouble(uint32_t row, uint32_t column, double value)
 {
-    if (UNLIKELY(mReadOnly)) {
-        return SHARED_BLOCK_INVALID_OPERATION;
-    }
-
-    CellUnit *cellUnit = GetCellUnit(row, column);
-    if (UNLIKELY(!cellUnit)) {
+    if (UNLIKELY(row >= mHeader->rowNums || column >= mHeader->columnNums)) {
+        LOG_ERROR("Failed to read row %{public}" PRIu32 ", column %{public}" PRIu32 " from a SharedBlock"
+                  " which has %{public}" PRIu32 " rows, %{public}" PRIu32 " columns.",
+            row, column, mHeader->rowNums, mHeader->columnNums);
         return SHARED_BLOCK_BAD_VALUE;
     }
 
+    uint32_t groupPos = row / ROW_NUM_IN_A_GROUP;
+    uint32_t rowPos = row % ROW_NUM_IN_A_GROUP;
+    RowGroupHeader *group = reinterpret_cast<RowGroupHeader *>(mData + mHeader->groupOffset[groupPos]);
+    CellUnit *cellUnit = reinterpret_cast<CellUnit *>(mData + group->rowOffsets[rowPos]) + column;
     cellUnit->type = CELL_UNIT_TYPE_FLOAT;
     cellUnit->cell.doubleValue = value;
     return SHARED_BLOCK_OK;
@@ -378,14 +351,17 @@ int SharedBlock::PutDouble(uint32_t row, uint32_t column, double value)
 
 int SharedBlock::PutNull(uint32_t row, uint32_t column)
 {
-    if (UNLIKELY(mReadOnly)) {
-        return SHARED_BLOCK_INVALID_OPERATION;
-    }
-
-    CellUnit *cellUnit = GetCellUnit(row, column);
-    if (UNLIKELY(!cellUnit)) {
+    if (UNLIKELY(row >= mHeader->rowNums || column >= mHeader->columnNums)) {
+        LOG_ERROR("Failed to read row %{public}" PRIu32 ", column %{public}" PRIu32 " from a SharedBlock"
+                  " which has %{public}" PRIu32 " rows, %{public}" PRIu32 " columns.",
+            row, column, mHeader->rowNums, mHeader->columnNums);
         return SHARED_BLOCK_BAD_VALUE;
     }
+
+    uint32_t groupPos = row / ROW_NUM_IN_A_GROUP;
+    uint32_t rowPos = row % ROW_NUM_IN_A_GROUP;
+    RowGroupHeader *group = reinterpret_cast<RowGroupHeader *>(mData + mHeader->groupOffset[groupPos]);
+    CellUnit *cellUnit = reinterpret_cast<CellUnit *>(mData + group->rowOffsets[rowPos]) + column;
 
     cellUnit->type = CELL_UNIT_TYPE_NULL;
     cellUnit->cell.stringOrBlobValue.offset = 0;
