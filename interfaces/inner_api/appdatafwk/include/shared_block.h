@@ -351,11 +351,9 @@ private:
      * Allocate a portion of the block. Returns the offset of the allocation.
      * Returns 0 if there isn't enough space.
      */
-    uint32_t Alloc(size_t size);
+    inline uint32_t Alloc(size_t size);
 
-    inline uint32_t GetRowOffset(uint32_t row);
-
-    uint32_t *AllocRowOffset();
+    inline uint32_t *AllocRowOffset();
 
     inline int PutBlobOrString(uint32_t row, uint32_t column, const void *value, size_t size, int32_t type);
 
