@@ -245,40 +245,41 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_003, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_Execute_004
- * @tc.desc: test RdbStore Execute
+ * @tc.desc: Abnormal testCase for ExecuteAndGetString, if sqlstatementtype is special
  * @tc.type: FUNC
  */
 HWTEST_F(RdbExecuteTest, RdbStore_Execute_004, TestSize.Level4)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
 
-    std::string journalMode;
-    int ret = store->ExecuteAndGetString(journalMode, "BEG");
+    std::string outValue;
+    int ret = store->ExecuteAndGetString(outValue, "BEGIN;");
     EXPECT_NE(E_OK, ret);
 }
 
 /**
  * @tc.name: RdbStore_Execute_005
- * @tc.desc: test RdbStore Execute
+ * @tc.desc: Abnormal testCase for ExecuteForLastInsertedRowId, if sql is invalid
+ * @tc.type: FUNC
  * @tc.type: FUNC
  */
 HWTEST_F(RdbExecuteTest, RdbStore_Execute_005, TestSize.Level4)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
     int64_t outValue;
-    int ret = store->ExecuteForLastInsertedRowId(outValue, "", std::vector<ValueObject> {});
+    int ret = store->ExecuteForLastInsertedRowId(outValue, "", {});
     EXPECT_NE(E_OK, ret);
 }
 
 /**
  * @tc.name: RdbStore_Execute_006
- * @tc.desc: test RdbStore Execute
+ * @tc.desc: Abnormal testCase for ExecuteForChangedRowCount, if sql is invalid
  * @tc.type: FUNC
  */
 HWTEST_F(RdbExecuteTest, RdbStore_Execute_006, TestSize.Level4)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
     int64_t outValue;
-    int ret = store->ExecuteForChangedRowCount(outValue, "", std::vector<ValueObject> {});
+    int ret = store->ExecuteForChangedRowCount(outValue, "", {});
     EXPECT_NE(E_OK, ret);
 }
