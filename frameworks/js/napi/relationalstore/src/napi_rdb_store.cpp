@@ -43,6 +43,7 @@ using namespace OHOS::AppDataMgrJsKit;
 using OHOS::DistributedRdb::SubscribeMode;
 using OHOS::DistributedRdb::SubscribeOption;
 using OHOS::DistributedRdb::SyncOption;
+
 using OHOS::DistributedRdb::SyncResult;
 using OHOS::DistributedRdb::Details;
 #endif
@@ -1263,20 +1264,30 @@ napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
     bool valid = (mode >= 0 && mode < SubscribeMode::SUBSCRIBE_MODE_MAX);
     RDB_NAPI_ASSERT(env, valid, std::make_shared<ParamError>("type", "SubscribeType"));
 
-    napi_typeof(env, argv[1], &type);
-    RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
+    bool isNotNull = argc >=2 && !JSUtils::IsNull(env, argv[1]);
+    if (isNotNull) {
+        napi_typeof(env, argv[1], &type);
+        RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
+    }
 
     SubscribeOption option;
     option.mode = static_cast<SubscribeMode>(mode);
     std::lock_guard<std::mutex> lockGuard(mutex_);
-    for (auto it = observers_[mode].begin(); it != observers_[mode].end(); it++) {
-        if (*it != nullptr && **it == argv[1]) {
-            int errCode = rdbStore_->UnSubscribe(option, it->get());
-            RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-            observers_[mode].erase(it);
-            LOG_INFO("observer unsubscribe success");
-            return nullptr;
+    for (auto it = observers_[mode].begin(); it != observers_[mode].end();) {
+        if (*it == nullptr) {
+            it = observers_[mode].erase(it);
+            continue;
         }
+        if (isNotNull && !(**it == argv[1])) {
+            ++it;
+            continue;
+        }
+
+        int errCode = rdbStore_->UnSubscribe(option, it->get());
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        it = observers_[mode].erase(it);
+        LOG_INFO("observer unsubscribe success");
+        return nullptr;
     }
     LOG_INFO("observer not found");
     return nullptr;
