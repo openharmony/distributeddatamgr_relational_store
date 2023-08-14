@@ -94,7 +94,7 @@ int SqliteStatement::BindArguments(const std::vector<ValueObject> &bindArgs) con
             abindArgs.push_back(i);
         }
 
-        for (int i = count; i < numParameters; i++) {
+        for (int i = count; i < numParameters; i++) { // TD: when count <> numParameters
             ValueObject val;
             abindArgs.push_back(val);
         }

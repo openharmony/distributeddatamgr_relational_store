@@ -32,15 +32,35 @@ public:
     int AddRow(int addedRows);
     int Reset(int startPos);
     int Finish(int addedRows, int totalRows);
-    int PutString(int row, int column, const char *text, int sizeIncludingNull);
     int PutLong(int row, int column, sqlite3_int64 value);
     int PutDouble(int row, int column, double value);
     int PutBlob(int row, int column, const void *blob, int len);
     int PutNull(int row, int column);
     int PutOther(int row, int column);
-    int GetTotalRows() const;
-    int GetAddedRows() const;
-    int GetStartPos() const;
+    int PutString(int row, int column, const char *text, int sizeIncludingNull)
+    {
+        int status = sharedBlock_->PutString(row, column, text, sizeIncludingNull);
+        if (status == AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
+            return SQLITE_OK;
+        }
+        sharedBlock_->FreeLastRow();
+        return SQLITE_FULL;
+    }
+
+    int GetTotalRows() const
+    {
+        return atotalRows;
+    }
+
+    int GetAddedRows() const
+    {
+        return raddedRows;
+    }
+
+    int GetStartPos() const
+    {
+        return astartPos;
+    }
 private:
     AppDataFwk::SharedBlock *sharedBlock_;
     sqlite3_stmt *statement_ = nullptr;
@@ -48,7 +68,6 @@ private:
     int atotalRows;
     int astartPos;
     int raddedRows;
-    bool risFull;
 };
 
 struct Sqlite3SharedBlockMethods {

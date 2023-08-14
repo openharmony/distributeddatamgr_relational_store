@@ -519,6 +519,11 @@ void AbsPredicates::AppendWhereClauseWithInOrNotIn(
     whereClause += field + StringUtils::SurroundWithFunction(methodName, ",", replaceValues);
 }
 
+std::string AbsPredicates::GetStatement()  const
+{
+    return SqliteSqlBuilder::BuildSqlStringFromPredicates(*this);
+}
+
 std::string AbsPredicates::GetWhereClause() const
 {
     return whereClause;
@@ -536,9 +541,11 @@ std::vector<std::string> AbsPredicates::GetWhereArgs() const
 {
     std::vector<std::string> whereArgs;
     for (auto &arg : this->bindArgs) {
-        if (auto pval = std::get_if<std::string>(&arg.value)) {
-            whereArgs.push_back(std::get<std::string>(arg.value));
+        std::string temp;
+        if (!arg.GetString(temp)) {
+            LOG_WARN("No matching type, empty string instead.");
         }
+        whereArgs.push_back(temp);
     }
     return whereArgs;
 }

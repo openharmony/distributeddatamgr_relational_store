@@ -69,7 +69,7 @@ std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
         LOG_ERROR("resultSet is null");
         return nullptr;
     }
-    return std::make_shared<RdbDataShareAdapter::RdbResultSetBridge>(resultSet_);
+    return std::make_shared<RdbDataShareAdapter::RdbResultSetBridge>(std::move(resultSet_));
 }
 #endif
 
@@ -190,7 +190,7 @@ ResultSetProxy *ResultSetProxy::ParseInt32FieldByName(
 
     ResultSetProxy *proxy = nullptr;
     napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, proxy && proxy->resultSet_, std::make_shared<ParamError>("resultSet", "null"));
+    RDB_NAPI_ASSERT(env, proxy && proxy->resultSet_, std::make_shared<ParamError>("resultSet", "not null"));
     return proxy;
 }
 
@@ -208,7 +208,7 @@ ResultSetProxy *ResultSetProxy::ParseFieldByName(
 
     ResultSetProxy *proxy = nullptr;
     napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, proxy && proxy->resultSet_, std::make_shared<ParamError>("resultSet", "null"));
+    RDB_NAPI_ASSERT(env, proxy && proxy->resultSet_, std::make_shared<ParamError>("resultSet", "not null"));
     return proxy;
 }
 

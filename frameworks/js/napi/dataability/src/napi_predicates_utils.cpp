@@ -48,7 +48,7 @@ napi_value CreateRdbPredicates(napi_env env, napi_callback_info info)
     auto absPredicates = dataAbilityPredicatesProxy->GetPredicates();
     auto predicates = new NativeRdb::RdbPredicates(tableName);
     NativeRdb::PredicatesUtils::SetWhereClauseAndArgs(
-        predicates, absPredicates->GetWhereClause(), absPredicates->GetWhereArgs());
+        predicates, absPredicates->GetWhereClause(), absPredicates->GetBindArgs());
     NativeRdb::PredicatesUtils::SetAttributes(predicates, absPredicates->IsDistinct(),
         absPredicates->GetIndex(), absPredicates->GetGroup(), absPredicates->GetOrder(), absPredicates->GetLimit(),
         absPredicates->GetOffset());

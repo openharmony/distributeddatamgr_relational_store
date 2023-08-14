@@ -54,10 +54,10 @@ describe('rdbStoreUpdateTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0001
      * @tc.desc resultSet Update test
      */
-    it('testRdbStoreUpdate0001', 0, async function (done) {
+    it('testRdbStoreUpdate0001', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdate0001 start *************");
-        var u8 = new Uint8Array([1, 2, 3])
-        {
+        var u8 = new Uint8Array([1, 2, 3]);
+        try {
             const valueBucket = {
                 "name": "zhangsan",
                 "age": 18,
@@ -66,8 +66,11 @@ describe('rdbStoreUpdateTest', function () {
             }
             let ret = await rdbStore.insert("test", valueBucket)
             expect(1).assertEqual(ret);
+        } catch (err) {
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail()
         }
-        {
+        try {
             var u8 = new Uint8Array([4, 5, 6])
             const valueBucket = {
                 "name": "lisi",
@@ -75,43 +78,40 @@ describe('rdbStoreUpdateTest', function () {
                 "salary": 200.5,
                 "blobType": u8,
             }
-            let predicates = await new data_relationalStore.RdbPredicates("test")
-            await predicates.equalTo("id", "1")
-            let updatePromise = rdbStore.update(valueBucket, predicates)
-            updatePromise.then(async (ret) => {
-                await expect(1).assertEqual(ret);
-                await console.log(TAG + "update done: " + ret);
-                {
-                    let predicates = await new data_relationalStore.RdbPredicates("test")
-                    let resultSet = await rdbStore.query(predicates)
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("id", "1")
+            let ret = await rdbStore.update(valueBucket, predicates)
+            await expect(1).assertEqual(ret);
+            await console.log(TAG + "update done: " + ret);
 
-                    expect(true).assertEqual(resultSet.goToFirstRow())
-                    const id = await resultSet.getLong(resultSet.getColumnIndex("id"))
-                    const name = await resultSet.getString(resultSet.getColumnIndex("name"))
-                    const age = await resultSet.getLong(resultSet.getColumnIndex("age"))
-                    const salary = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
-                    const blobType = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+            predicates = new data_relationalStore.RdbPredicates("test")
+            let resultSet = await rdbStore.query(predicates)
+            try {
+                expect(true).assertEqual(resultSet.goToFirstRow())
+                const id = await resultSet.getLong(resultSet.getColumnIndex("id"))
+                const name = await resultSet.getString(resultSet.getColumnIndex("name"))
+                const age = await resultSet.getLong(resultSet.getColumnIndex("age"))
+                const salary = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                const blobType = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
 
-                    await expect(1).assertEqual(id);
-                    await expect("lisi").assertEqual(name);
-                    await expect(20).assertEqual(age);
-                    await expect(200.5).assertEqual(salary);
-                    await expect(4).assertEqual(blobType[0]);
-                    await expect(5).assertEqual(blobType[1]);
-                    await expect(6).assertEqual(blobType[2]);
-                    await expect(false).assertEqual(resultSet.goToNextRow())
-                    resultSet.close()
-                    resultSet = null
-                }
-
-                done();
-                console.log(TAG + "************* testRdbStoreUpdate0001 end   *************");
-            }).catch((err) => {
-                console.log(TAG + "update error");
-                expect(null).assertFail();
-            })
-            // await updatePromise
+                await expect(1).assertEqual(id);
+                await expect("lisi").assertEqual(name);
+                await expect(20).assertEqual(age);
+                await expect(200.5).assertEqual(salary);
+                await expect(4).assertEqual(blobType[0]);
+                await expect(5).assertEqual(blobType[1]);
+                await expect(6).assertEqual(blobType[2]);
+                await expect(false).assertEqual(resultSet.goToNextRow())
+            } finally {
+                resultSet.close()
+                resultSet = null
+            }
+        } catch (err) {
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail()
         }
+
+        console.log(TAG + "************* testRdbStoreUpdate0001 end   *************");
     })
 
     /**
@@ -119,61 +119,41 @@ describe('rdbStoreUpdateTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0002
      * @tc.desc resultSet Update test
      */
-    it('testRdbStoreUpdate0002', 0, async function (done) {
+    it('testRdbStoreUpdate0002', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdate0002 start *************");
-        {
-            var u8 = new Uint8Array([1, 2, 3])
-            const valueBucket = {
-                "name": "zhangsan",
-                "age": 18,
-                "salary": 100.5,
-                "blobType": u8,
-            }
-            try {
-                let predicates = new data_relationalStore.RdbPredicates("")
-                let updatePromise = rdbStore.update(valueBucket, predicates)
-                updatePromise.then(async (ret) => {
-                    await console.log(TAG + "update done: " + ret);
-                    expect(null).assertFail();
-                }).catch((err) => {
-                    console.log(TAG + "update with null table name");
-                })
-            } catch (err) {
-                console.log(
-                    "catch err: update with null table name failed, err: code=" + err.code + " message=" + err.message)
-                expect("401").assertEqual(err.code)
-            }
-            try {
-                const emptyBucket = {};
-                let predicates = await new data_relationalStore.RdbPredicates("test")
-                let updatePromise = rdbStore.update(emptyBucket, predicates)
-                updatePromise.then(async (ret) => {
-                    await console.log(TAG + "update done: " + ret);
-                    expect(null).assertFail();
-                }).catch((err) => {
-                    console.log(TAG + "update with wrong valueBucket");
-                })
-            } catch (err) {
-                console.log("catch err: update with wrong valueBucket failed, err: code=" + err.code
-                            + " message=" + err.message)
-                expect("401").assertEqual(err.code)
-            }
-            try {
-                let predicates = await new data_relationalStore.RdbPredicates("test")
-                await predicates.equalTo("aaa", "null")
-                let updatePromise = rdbStore.update(valueBucket, predicates)
-                updatePromise.then(async (ret) => {
-                    await console.log(TAG + "update done: " + ret);
-                    expect(null).assertFail();
-                }).catch((err) => {
-                    console.log(TAG + "update with wrong condition");
-                })
-            } catch (err) {
-                console.log("catch err: update with wrong condition failed, err: code=" + err.code
-                            + " message=" + err.message)
-            }
+        var u8 = new Uint8Array([1, 2, 3])
+        const valueBucket = {
+            "name": "zhangsan",
+            "age": 18,
+            "salary": 100.5,
+            "blobType": u8,
         }
-        done();
+        try {
+            let predicates = new data_relationalStore.RdbPredicates("")
+            await rdbStore.update(valueBucket, predicates) // table name should not empty
+            expect().assertFail()
+        } catch (err) {
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect("401").assertEqual(err.code)
+        }
+        try {
+            const emptyBucket = {};
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            await rdbStore.update(emptyBucket, predicates) // emptyBucket should not empty
+            expect().assertFail()
+        } catch (err) {
+            console.log(TAG + `test failed, err: ${JSON.stringify(err)}`)
+            expect(14800000).assertEqual(err.code)
+        }
+        try {
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("aaa", "null") // column aaa not exist
+            await rdbStore.update(valueBucket, predicates)
+            expect().assertFail()
+        } catch (err) {
+            console.log(TAG + `aaa failed, err: ${JSON.stringify(err)}`)
+            expect(14800000).assertEqual(err.code)
+        }
         console.log(TAG + "************* testRdbStoreUpdate0002 end   *************");
     })
 
@@ -182,41 +162,32 @@ describe('rdbStoreUpdateTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0003
      * @tc.desc resultSet Update test
      */
-    it('testRdbStoreUpdate0003', 0, async function (done) {
+    it('testRdbStoreUpdate0003', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdate0003 start *************");
-        {
-            var u8 = new Uint8Array([1, 2, 3])
-            const valueBucket = {
-                "name": "zhangsan",
-                "age": 18,
-                "salary": 100.5,
-                "blobType": u8,
-                "wrongColumn": 100.5,
-            }
-            {
-                let predicates = new data_relationalStore.RdbPredicates("wrongTable")
-                let updatePromise = rdbStore.update(valueBucket, predicates)
-                updatePromise.then(async (ret) => {
-                    await console.log(TAG + "update done: " + ret);
-                    expect(null).assertFail();
-                }).catch((err) => {
-                    console.log(TAG + "update with wrong table name");
-                })
-                // await updatePromise
-            }
-            {
-                let predicates = await new data_relationalStore.RdbPredicates("test")
-                let updatePromise = rdbStore.update(valueBucket, predicates)
-                updatePromise.then(async (ret) => {
-                    await console.log(TAG + "update done: " + ret);
-                    expect(null).assertFail();
-                }).catch((err) => {
-                    console.log(TAG + "update with wrong column name");
-                })
-                // await updatePromise
-            }
+        var u8 = new Uint8Array([1, 2, 3])
+        const valueBucket = {
+            "name": "zhangsan",
+            "age": 18,
+            "salary": 100.5,
+            "blobType": u8,
+            "wrongColumn": 100.5,
         }
-        done();
+        try {
+            let predicates = new data_relationalStore.RdbPredicates("wrongTable")
+            await rdbStore.update(valueBucket, predicates) // wrongTable not exist
+            expect().assertFail()
+        } catch (err) {
+            console.log(TAG + `wrongTable failed, err: ${JSON.stringify(err)}`)
+            expect(14800000).assertEqual(err.code)
+        }
+        try {
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            await rdbStore.update(valueBucket, predicates) // wrongColumn not exist
+            expect().assertFail()
+        } catch (err) {
+            console.log(TAG + `test failed, err: ${JSON.stringify(err)}`)
+            expect(14800000).assertEqual(err.code)
+        }
         console.log(TAG + "************* testRdbStoreUpdate0003 end   *************");
     })
 
@@ -225,44 +196,35 @@ describe('rdbStoreUpdateTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0004
      * @tc.desc resultSet Update test
      */
-    it('testRdbStoreUpdate0004', 0, async function (done) {
+    it('testRdbStoreUpdate0004', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdate0004 start *************");
-        {
-            var u8 = new Uint8Array([1, 2, 3])
-            const valueBucket = {
-                "name": "zhangsan",
-                "age": 18,
-                "salary": 100.5,
-                "blobType": u8,
-            }
-            {
-                let predicates = await new data_relationalStore.RdbPredicates("test")
-                await predicates.equalTo("aaa", "null")
-                let updatePromise = rdbStore.update(valueBucket, predicates)
-                updatePromise.then(async (ret) => {
-                    await console.log(TAG + "update done: " + ret);
-                    expect(null).assertFail();
-                }).catch((err) => {
-                    console.log(TAG + "update with wrong condition");
-                })
-                // await updatePromise
-            }
-            {
-                const emptyBucket = {};
-                let predicates = await new data_relationalStore.RdbPredicates("test")
-                await predicates.equalTo("name", "zhangsan")
-                await predicates.equalTo("age", 18)
-                await predicates.equalTo("null", 100.5)
-                let updatePromise = rdbStore.update(valueBucket, predicates)
-                updatePromise.then(async (ret) => {
-                    await console.log(TAG + "update done: " + ret);
-                    expect(null).assertFail();
-                }).catch((err) => {
-                    console.log(TAG + "update with wrong condition");
-                })
-            }
+        var u8 = new Uint8Array([1, 2, 3])
+        const valueBucket = {
+            "name": "zhangsan",
+            "age": 18,
+            "salary": 100.5,
+            "blobType": u8,
         }
-        done();
+        try {
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("aaa", "null")
+            await rdbStore.update(valueBucket, predicates)
+            expect().assertFail()
+        } catch (err) {
+            console.log(TAG + `test failed, err: ${JSON.stringify(err)}`)
+            expect(14800000).assertEqual(err.code)
+        }
+        try {
+            const emptyBucket = {};
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("name", "zhangsan")
+            predicates.equalTo("age", 18)
+            predicates.equalTo("null", 100.5)
+            await rdbStore.update(emptyBucket, predicates)
+        } catch (err) {
+            console.log(TAG + `emptyBucket failed, err: ${JSON.stringify(err)}`)
+            expect(14800000).assertEqual(err.code)
+        }
         console.log(TAG + "************* testRdbStoreUpdate0004 end   *************");
     })
 
@@ -271,10 +233,10 @@ describe('rdbStoreUpdateTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0005
      * @tc.desc resultSet Update Extra long character test
      */
-    it('testRdbStoreUpdate0005', 0, async function (done) {
+    it('testRdbStoreUpdate0005', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdate0005 start *************");
         var u8 = new Uint8Array([1, 2, 3])
-        {
+        try {
             const valueBucket = {
                 "name": "xiaoming",
                 "age": 18,
@@ -282,8 +244,11 @@ describe('rdbStoreUpdateTest', function () {
                 "blobType": u8,
             }
             await rdbStore.insert("test", valueBucket)
+        } catch (err) {
+            console.log(TAG + `insert failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
-        {
+        try {
             var u8 = new Uint8Array([4, 5, 6])
             var nameStr = "abcd" + "e".repeat(2000) + "./&*$!@()"
             const valueBucket = {
@@ -292,30 +257,28 @@ describe('rdbStoreUpdateTest', function () {
                 "salary": 200.5,
                 "blobType": u8,
             }
-            let predicates = await new data_relationalStore.RdbPredicates("test")
-            await predicates.equalTo("name", "xiaoming")
-            let updatePromise = rdbStore.update(valueBucket, predicates)
-            updatePromise.then(async (ret) => {
-                await expect(1).assertEqual(ret);
-                await console.log(TAG + "update done: " + ret);
-                {
-                    let predicates = await new data_relationalStore.RdbPredicates("test")
-                    predicates.equalTo("age", 20)
-                    let resultSet = await rdbStore.query(predicates)
-                    expect(true).assertEqual(resultSet.goToFirstRow())
-                    const name = await resultSet.getString(resultSet.getColumnIndex("name"))
-                    await expect(nameStr).assertEqual(name);
-                    resultSet.close()
-                    resultSet = null
-                }
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("name", "xiaoming")
+            let ret = await rdbStore.update(valueBucket, predicates)
+            await expect(1).assertEqual(ret);
+            await console.log(TAG + "update done: " + ret);
 
-                done();
-                console.log(TAG + "************* testRdbStoreUpdate0005 end   *************");
-            }).catch((err) => {
-                console.log(TAG + "update error");
-                expect(null).assertFail();
-            })
+            predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("age", 20)
+            let resultSet = await rdbStore.query(predicates)
+            try {
+                expect(true).assertEqual(resultSet.goToFirstRow())
+                const name = await resultSet.getString(resultSet.getColumnIndex("name"))
+                await expect(nameStr).assertEqual(name);
+            } finally {
+                resultSet.close()
+                resultSet = null
+            }
+        } catch (err) {
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail()
         }
+        console.log(TAG + "************* testRdbStoreUpdate0005 end   *************");
     })
 
     /**
@@ -323,10 +286,10 @@ describe('rdbStoreUpdateTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0006
      * @tc.desc resultSet Update Extra long character test
      */
-    it('testRdbStoreUpdate0006', 0, async function (done) {
+    it('testRdbStoreUpdate0006', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdate0006 start *************");
         var u8 = new Uint8Array([1, 2, 3])
-        {
+        try {
             const valueBucket = {
                 "name": "xiaohua",
                 "age": 18,
@@ -334,8 +297,11 @@ describe('rdbStoreUpdateTest', function () {
                 "blobType": u8,
             }
             await rdbStore.insert("test", valueBucket)
+        } catch (err) {
+            console.log(TAG + `insert failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
-        {
+        try {
             var u8 = new Uint8Array([4, 5, 6])
             var nameStr = "橘子是水果" + "e".repeat(2000)
             const valueBucket = {
@@ -344,30 +310,27 @@ describe('rdbStoreUpdateTest', function () {
                 "salary": 200.5,
                 "blobType": u8,
             }
-            let predicates = await new data_relationalStore.RdbPredicates("test")
-            await predicates.equalTo("name", "xiaohua")
-            let updatePromise = rdbStore.update(valueBucket, predicates)
-            updatePromise.then(async (ret) => {
-                await expect(1).assertEqual(ret);
-                await console.log(TAG + "update done: " + ret);
-                {
-                    let predicates = await new data_relationalStore.RdbPredicates("test")
-                    predicates.equalTo("age", 19)
-                    let resultSet = await rdbStore.query(predicates)
-                    expect(true).assertEqual(resultSet.goToFirstRow())
-                    const name = await resultSet.getString(resultSet.getColumnIndex("name"))
-                    await expect(nameStr).assertEqual(name);
-                    resultSet.close()
-                    resultSet = null
-                }
-
-                done();
-                console.log(TAG + "************* testRdbStoreUpdate0006 end   *************");
-            }).catch((err) => {
-                console.log(TAG + "update error");
-                expect(null).assertFail();
-            })
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("name", "xiaohua")
+            let ret = await rdbStore.update(valueBucket, predicates)
+            await expect(1).assertEqual(ret);
+            await console.log(TAG + "update done: " + ret);
+            predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("age", 19)
+            let resultSet = await rdbStore.query(predicates)
+            try {
+                expect(true).assertEqual(resultSet.goToFirstRow())
+                const name = await resultSet.getString(resultSet.getColumnIndex("name"))
+                await expect(nameStr).assertEqual(name);
+            } finally {
+                resultSet.close()
+                resultSet = null
+            }
+        } catch (err) {
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
+        console.log(TAG + "************* testRdbStoreUpdate0006 end   *************");
     })
 
     /**
@@ -375,10 +338,10 @@ describe('rdbStoreUpdateTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0007
      * @tc.desc resultSet Update Extra long character test
      */
-    it('testRdbStoreUpdate0007', 0, async function (done) {
+    it('testRdbStoreUpdate0007', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdate0007 start *************");
         var u8 = new Uint8Array([1, 2, 3])
-        {
+        try {
             const valueBucket = {
                 "name": "xiaocan",
                 "age": 18,
@@ -386,8 +349,11 @@ describe('rdbStoreUpdateTest', function () {
                 "blobType": u8,
             }
             await rdbStore.insert("test", valueBucket)
+        } catch (err) {
+            console.log(TAG + `insert failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
-        {
+        try {
             var u8 = new Uint8Array([4, 5, 6])
             var nameStr = "菠萝是水果" + "e".repeat(2000) + "好吃又不贵"
             const valueBucket = {
@@ -396,30 +362,27 @@ describe('rdbStoreUpdateTest', function () {
                 "salary": 200.5,
                 "blobType": u8,
             }
-            let predicates = await new data_relationalStore.RdbPredicates("test")
-            await predicates.equalTo("name", "xiaocan")
-            let updatePromise = rdbStore.update(valueBucket, predicates)
-            updatePromise.then(async (ret) => {
-                await expect(1).assertEqual(ret);
-                await console.log(TAG + "update done: " + ret);
-                {
-                    let predicates = await new data_relationalStore.RdbPredicates("test")
-                    predicates.equalTo("age", 21)
-                    let resultSet = await rdbStore.query(predicates)
-                    expect(true).assertEqual(resultSet.goToFirstRow())
-                    const name = await resultSet.getString(resultSet.getColumnIndex("name"))
-                    await expect(nameStr).assertEqual(name);
-                    resultSet.close()
-                    resultSet = null
-                }
-
-                done();
-                console.log(TAG + "************* testRdbStoreUpdate0007 end   *************");
-            }).catch((err) => {
-                console.log(TAG + "update error");
-                expect(null).assertFail();
-            })
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("name", "xiaocan")
+            let ret = await rdbStore.update(valueBucket, predicates)
+            await expect(1).assertEqual(ret);
+            await console.log(TAG + "update done: " + ret);
+            predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("age", 21)
+            let resultSet = await rdbStore.query(predicates)
+            try {
+                expect(true).assertEqual(resultSet.goToFirstRow())
+                const name = await resultSet.getString(resultSet.getColumnIndex("name"))
+                await expect(nameStr).assertEqual(name);
+            } finally {
+                resultSet.close()
+                resultSet = null
+            }
+        } catch (err) {
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
+        console.log(TAG + "************* testRdbStoreUpdate0007 end   *************");
     })
 
     /**
@@ -427,7 +390,7 @@ describe('rdbStoreUpdateTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0008
      * @tc.desc rdb update test
      */
-    it('testRdbStoreUpdate0008', 0, async function (done) {
+    it('testRdbStoreUpdate0008', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdate0008 start *************");
         try {
             const valueBucket = {
@@ -438,11 +401,10 @@ describe('rdbStoreUpdateTest', function () {
             }
             var predicate = new dataSharePredicates.DataSharePredicates();
             await rdbStore.update("test", valueBucket, predicate);
-            expect(null).assertFail();
+            expect().assertFail()
         } catch (err) {
-            console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
             expect("202").assertEqual(err.code)
-            done()
         }
         console.log(TAG + "************* testRdbStoreUpdate0008 end *************");
     })
@@ -452,9 +414,9 @@ describe('rdbStoreUpdateTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateWithConflictResolution_0001
      * @tc.desc resultSet Update test
      */
-    it('testRdbStoreUpdateWithConflictResolution0001', 0, async function (done) {
+    it('testRdbStoreUpdateWithConflictResolution0001', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0001 start *************");
-        {
+        try {
             var u8 = new Uint8Array([1, 2, 3])
             const valueBucket = {
                 "id": 1,
@@ -464,8 +426,11 @@ describe('rdbStoreUpdateTest', function () {
                 "blobType": u8,
             }
             await rdbStore.insert("test", valueBucket)
+        } catch (err) {
+            console.log(TAG + `insert failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
-        {
+        try {
             var u8 = new Uint8Array([4, 5, 6])
             const valueBucket = {
                 "id": 2,
@@ -475,9 +440,12 @@ describe('rdbStoreUpdateTest', function () {
                 "blobType": u8,
             }
             await rdbStore.insert("test", valueBucket)
+        } catch (err) {
+            console.log(TAG + `insert2 failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
 
-        {
+        try {
             var u8 = new Uint8Array([7, 8, 9])
             const valueBucket = {
                 "id": 3,
@@ -486,61 +454,58 @@ describe('rdbStoreUpdateTest', function () {
                 "salary": 300.5,
                 "blobType": u8,
             }
-            let predicates = await new data_relationalStore.RdbPredicates("test")
-            await predicates.equalTo("age", "19")
-            let updatePromise = rdbStore.update(valueBucket, predicates)
-            updatePromise.then(async (ret) => {
-                await expect(1).assertEqual(ret);
-                await console.log(TAG + "update done: " + ret);
-                {
-                    let predicates = await new data_relationalStore.RdbPredicates("test")
-                    let resultSet = await rdbStore.query(predicates)
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("age", "19")
+            let ret = await rdbStore.update(valueBucket, predicates)
+            await expect(1).assertEqual(ret);
+            await console.log(TAG + "update done: " + ret);
+            predicates = new data_relationalStore.RdbPredicates("test")
+            let resultSet = await rdbStore.query(predicates)
 
-                    expect(true).assertEqual(resultSet.goToFirstRow())
-                    const id = await resultSet.getLong(resultSet.getColumnIndex("id"))
-                    const name = await resultSet.getString(resultSet.getColumnIndex("name"))
-                    const age = await resultSet.getLong(resultSet.getColumnIndex("age"))
-                    const salary = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
-                    const blobType = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+            try {
+                expect(true).assertEqual(resultSet.goToFirstRow())
+                const id = await resultSet.getLong(resultSet.getColumnIndex("id"))
+                const name = await resultSet.getString(resultSet.getColumnIndex("name"))
+                const age = await resultSet.getLong(resultSet.getColumnIndex("age"))
+                const salary = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                const blobType = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary="
+                    + salary + ", blobType=" + blobType);
 
-                    await expect(1).assertEqual(id);
-                    await expect("zhangsan").assertEqual(name);
-                    await expect(18).assertEqual(age);
-                    await expect(100.5).assertEqual(salary);
-                    await expect(1).assertEqual(blobType[0]);
-                    await expect(2).assertEqual(blobType[1]);
-                    await expect(3).assertEqual(blobType[2]);
-                    console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary="
-                        + salary + ", blobType=" + blobType);
+                await expect(1).assertEqual(id);
+                await expect("zhangsan").assertEqual(name);
+                await expect(18).assertEqual(age);
+                await expect(100.5).assertEqual(salary);
+                await expect(1).assertEqual(blobType[0]);
+                await expect(2).assertEqual(blobType[1]);
+                await expect(3).assertEqual(blobType[2]);
 
-                    await expect(true).assertEqual(resultSet.goToNextRow())
-                    const id_1 = await resultSet.getLong(resultSet.getColumnIndex("id"))
-                    const name_1 = await resultSet.getString(resultSet.getColumnIndex("name"))
-                    const age_1 = await resultSet.getLong(resultSet.getColumnIndex("age"))
-                    const salary_1 = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
-                    const blobType_1 = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                await expect(true).assertEqual(resultSet.goToNextRow())
+                const id_1 = await resultSet.getLong(resultSet.getColumnIndex("id"))
+                const name_1 = await resultSet.getString(resultSet.getColumnIndex("name"))
+                const age_1 = await resultSet.getLong(resultSet.getColumnIndex("age"))
+                const salary_1 = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                const blobType_1 = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                console.log(TAG + "{id=" + id_1 + ", name=" + name_1 + ", age=" + age_1 + ", salary="
+                    + salary_1 + ", blobType=" + blobType_1);
 
-                    await expect(3).assertEqual(id_1);
-                    await expect("wangjing").assertEqual(name_1);
-                    await expect(20).assertEqual(age_1);
-                    await expect(300.5).assertEqual(salary_1);
-                    await expect(7).assertEqual(blobType_1[0]);
-                    await expect(8).assertEqual(blobType_1[1]);
-                    await expect(9).assertEqual(blobType_1[2]);
-                    console.log(TAG + "{id=" + id_1 + ", name=" + name_1 + ", age=" + age_1 + ", salary="
-                        + salary_1 + ", blobType=" + blobType_1);
-                    await expect(false).assertEqual(resultSet.goToNextRow())
-                    resultSet.close()
-                    resultSet = null
-                    done();
-                    console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0001 end   *************");
-                }
-            }).catch((err) => {
-                console.log(TAG + "update error");
-                expect(null).assertFail();
-                console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0001 end   *************");
-            })
+                await expect(3).assertEqual(id_1);
+                await expect("wangjing").assertEqual(name_1);
+                await expect(20).assertEqual(age_1);
+                await expect(300.5).assertEqual(salary_1);
+                await expect(7).assertEqual(blobType_1[0]);
+                await expect(8).assertEqual(blobType_1[1]);
+                await expect(9).assertEqual(blobType_1[2]);
+                await expect(false).assertEqual(resultSet.goToNextRow())
+            } finally {
+                resultSet.close()
+                resultSet = null
+            }
+        } catch (err) {
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
+        console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0001 end   *************");
     })
 
     /**
@@ -548,9 +513,9 @@ describe('rdbStoreUpdateTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateWithConflictResolution_0002
      * @tc.desc resultSet Update test
      */
-    it('testRdbStoreUpdateWithConflictResolution0002', 0, async function (done) {
+    it('testRdbStoreUpdateWithConflictResolution0002', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0002 start *************");
-        {
+        try {
             var u8 = new Uint8Array([1, 2, 3])
             const valueBucket = {
                 "id": 1,
@@ -560,8 +525,11 @@ describe('rdbStoreUpdateTest', function () {
                 "blobType": u8,
             }
             await rdbStore.insert("test", valueBucket)
+        } catch (err) {
+            console.log(TAG + `insert failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
-        {
+        try {
             var u8 = new Uint8Array([4, 5, 6])
             const valueBucket = {
                 "id": 2,
@@ -571,8 +539,11 @@ describe('rdbStoreUpdateTest', function () {
                 "blobType": u8,
             }
             await rdbStore.insert("test", valueBucket)
+        } catch (err) {
+            console.log(TAG + `insert2 failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
-        {
+        try {
             var u8 = new Uint8Array([7, 8, 9])
             const valueBucket = {
                 "id": 3,
@@ -581,27 +552,26 @@ describe('rdbStoreUpdateTest', function () {
                 "salary": 300.5,
                 "blobType": u8,
             }
-            let predicates = await new data_relationalStore.RdbPredicates("test")
-            await predicates.equalTo("age", "19")
-            try {
-                await rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
-                expect(null).assertFail();
-            } catch(err) {
-                console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
-                expect(14800000).assertEqual(err.code)
-            }
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("age", "19")
+            await rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
+            expect().assertFail()
+        } catch (err) {
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect(14800000).assertEqual(err.code)
         }
 
-        {
-            let predicates = await new data_relationalStore.RdbPredicates("test")
-            let resultSet = await rdbStore.query(predicates)
-
+        let predicates = new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        try {
             expect(true).assertEqual(resultSet.goToFirstRow())
             const id = await resultSet.getLong(resultSet.getColumnIndex("id"))
             const name = await resultSet.getString(resultSet.getColumnIndex("name"))
             const age = await resultSet.getLong(resultSet.getColumnIndex("age"))
             const salary = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
             const blobType = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+            console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary="
+                + salary + ", blobType=" + blobType);
 
             await expect(1).assertEqual(id);
             await expect("zhangsan").assertEqual(name);
@@ -610,8 +580,6 @@ describe('rdbStoreUpdateTest', function () {
             await expect(1).assertEqual(blobType[0]);
             await expect(2).assertEqual(blobType[1]);
             await expect(3).assertEqual(blobType[2]);
-            console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary="
-                + salary + ", blobType=" + blobType);
 
             await expect(true).assertEqual(resultSet.goToNextRow())
             const id_1 = await resultSet.getLong(resultSet.getColumnIndex("id"))
@@ -619,6 +587,8 @@ describe('rdbStoreUpdateTest', function () {
             const age_1 = await resultSet.getLong(resultSet.getColumnIndex("age"))
             const salary_1 = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
             const blobType_1 = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+            console.log(TAG + "{id=" + id_1 + ", name=" + name_1 + ", age=" + age_1 + ", salary="
+                + salary_1 + ", blobType=" + blobType_1);
 
             await expect(2).assertEqual(id_1);
             await expect("lisi").assertEqual(name_1);
@@ -627,14 +597,15 @@ describe('rdbStoreUpdateTest', function () {
             await expect(4).assertEqual(blobType_1[0]);
             await expect(5).assertEqual(blobType_1[1]);
             await expect(6).assertEqual(blobType_1[2]);
-            console.log(TAG + "{id=" + id_1 + ", name=" + name_1 + ", age=" + age_1 + ", salary="
-                + salary_1 + ", blobType=" + blobType_1);
             await expect(false).assertEqual(resultSet.goToNextRow())
+        } catch (err) {
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
+        } finally {
             resultSet.close()
             resultSet = null
-            done()
-            console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0002 end   *************");
         }
+        console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0002 end   *************");
     })
 
     /**
@@ -642,9 +613,9 @@ describe('rdbStoreUpdateTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateWithConflictResolution_0003
      * @tc.desc resultSet Update test
      */
-    it('testRdbStoreUpdateWithConflictResolution0003', 0, async function (done) {
+    it('testRdbStoreUpdateWithConflictResolution0003', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0003 start *************");
-        {
+        try {
             var u8 = new Uint8Array([1, 2, 3])
             const valueBucket = {
                 "id": 1,
@@ -654,8 +625,11 @@ describe('rdbStoreUpdateTest', function () {
                 "blobType": u8,
             }
             await rdbStore.insert("test", valueBucket)
+        } catch (err) {
+            console.log(TAG + `insert failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
-        {
+        try {
             var u8 = new Uint8Array([4, 5, 6])
             const valueBucket = {
                 "id": 2,
@@ -665,8 +639,11 @@ describe('rdbStoreUpdateTest', function () {
                 "blobType": u8,
             }
             await rdbStore.insert("test", valueBucket)
+        } catch (err) {
+            console.log(TAG + `insert2 failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
-        {
+        try {
             var u8 = new Uint8Array([7, 8, 9])
             const valueBucket = {
                 "id": 3,
@@ -675,63 +652,58 @@ describe('rdbStoreUpdateTest', function () {
                 "salary": 300.5,
                 "blobType": u8,
             }
-            let predicates = await new data_relationalStore.RdbPredicates("test")
-            await predicates.equalTo("age", "19")
-            let updatePromise = rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
-            updatePromise.then(async (ret) => {
-                await expect(1).assertEqual(ret);
-                await console.log(TAG + "update done: " + ret);
-                {
-                    let predicates = await new data_relationalStore.RdbPredicates("test")
-                    let resultSet = await rdbStore.query(predicates)
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("age", "19")
+            let ret = await rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
+            await expect(1).assertEqual(ret);
+            await console.log(TAG + "update done: " + ret);
 
-                    expect(true).assertEqual(resultSet.goToFirstRow())
-                    const id = await resultSet.getLong(resultSet.getColumnIndex("id"))
-                    const name = await resultSet.getString(resultSet.getColumnIndex("name"))
-                    const age = await resultSet.getLong(resultSet.getColumnIndex("age"))
-                    const salary = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
-                    const blobType = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+            predicates = new data_relationalStore.RdbPredicates("test")
+            let resultSet = await rdbStore.query(predicates)
+            try {
+                expect(true).assertEqual(resultSet.goToFirstRow())
+                const id = await resultSet.getLong(resultSet.getColumnIndex("id"))
+                const name = await resultSet.getString(resultSet.getColumnIndex("name"))
+                const age = await resultSet.getLong(resultSet.getColumnIndex("age"))
+                const salary = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                const blobType = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary="
+                    + salary + ", blobType=" + blobType);
 
-                    await expect(1).assertEqual(id);
-                    await expect("zhangsan").assertEqual(name);
-                    await expect(18).assertEqual(age);
-                    await expect(100.5).assertEqual(salary);
-                    await expect(1).assertEqual(blobType[0]);
-                    await expect(2).assertEqual(blobType[1]);
-                    await expect(3).assertEqual(blobType[2]);
-                    console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary="
-                        + salary + ", blobType=" + blobType);
+                await expect(1).assertEqual(id);
+                await expect("zhangsan").assertEqual(name);
+                await expect(18).assertEqual(age);
+                await expect(100.5).assertEqual(salary);
+                await expect(1).assertEqual(blobType[0]);
+                await expect(2).assertEqual(blobType[1]);
+                await expect(3).assertEqual(blobType[2]);
 
-                    await expect(true).assertEqual(resultSet.goToNextRow())
-                    const id_1 = await resultSet.getLong(resultSet.getColumnIndex("id"))
-                    const name_1 = await resultSet.getString(resultSet.getColumnIndex("name"))
-                    const age_1 = await resultSet.getLong(resultSet.getColumnIndex("age"))
-                    const salary_1 = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
-                    const blobType_1 = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                await expect(true).assertEqual(resultSet.goToNextRow())
+                const id_1 = await resultSet.getLong(resultSet.getColumnIndex("id"))
+                const name_1 = await resultSet.getString(resultSet.getColumnIndex("name"))
+                const age_1 = await resultSet.getLong(resultSet.getColumnIndex("age"))
+                const salary_1 = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                const blobType_1 = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                console.log(TAG + "{id=" + id_1 + ", name=" + name_1 + ", age=" + age_1 + ", salary="
+                    + salary_1 + ", blobType=" + blobType_1);
 
-                    await expect(3).assertEqual(id_1);
-                    await expect("wangjing").assertEqual(name_1);
-                    await expect(20).assertEqual(age_1);
-                    await expect(300.5).assertEqual(salary_1);
-                    await expect(7).assertEqual(blobType_1[0]);
-                    await expect(8).assertEqual(blobType_1[1]);
-                    await expect(9).assertEqual(blobType_1[2]);
-                    console.log(TAG + "{id=" + id_1 + ", name=" + name_1 + ", age=" + age_1 + ", salary="
-                        + salary_1 + ", blobType=" + blobType_1);
-                    await expect(false).assertEqual(resultSet.goToNextRow())
-
-                    resultSet.close()
-                    resultSet = null
-                    done();
-                    console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0003 end   *************");
-                }
-
-            }).catch((err) => {
-                console.log(TAG + "update error");
-                expect(null).assertFail();
-                console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0003 end   *************");
-            })
+                await expect(3).assertEqual(id_1);
+                await expect("wangjing").assertEqual(name_1);
+                await expect(20).assertEqual(age_1);
+                await expect(300.5).assertEqual(salary_1);
+                await expect(7).assertEqual(blobType_1[0]);
+                await expect(8).assertEqual(blobType_1[1]);
+                await expect(9).assertEqual(blobType_1[2]);
+                await expect(false).assertEqual(resultSet.goToNextRow())
+            } finally {
+                resultSet.close()
+                resultSet = null
+            }
+        } catch (err) {
+            console.log(TAG + `insert2 failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
+        console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0003 end   *************");
     })
 
     /**
@@ -739,9 +711,9 @@ describe('rdbStoreUpdateTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateWithConflictResolution_0004
      * @tc.desc resultSet Update test
      */
-    it('testRdbStoreUpdateWithConflictResolution0004', 0, async function (done) {
+    it('testRdbStoreUpdateWithConflictResolution0004', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0004 start *************");
-        {
+        try {
             var u8 = new Uint8Array([1, 2, 3])
             const valueBucket = {
                 "id": 1,
@@ -751,8 +723,11 @@ describe('rdbStoreUpdateTest', function () {
                 "blobType": u8,
             }
             await rdbStore.insert("test", valueBucket)
+        } catch (err) {
+            console.log(TAG + `insert failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
-        {
+        try {
             var u8 = new Uint8Array([4, 5, 6])
             const valueBucket = {
                 "id": 2,
@@ -762,8 +737,11 @@ describe('rdbStoreUpdateTest', function () {
                 "blobType": u8,
             }
             await rdbStore.insert("test", valueBucket)
+        } catch (err) {
+            console.log(TAG + `insert failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
-        {
+        try {
             var u8 = new Uint8Array([7, 8, 9])
             const valueBucket = {
                 "id": 3,
@@ -772,8 +750,8 @@ describe('rdbStoreUpdateTest', function () {
                 "salary": 300.5,
                 "blobType": u8,
             }
-            let predicates = await new data_relationalStore.RdbPredicates("test")
-            await predicates.equalTo("age", "19")
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("age", "19")
 
             rdbStore.beginTransaction()
             const valueBucketInsert = {
@@ -785,57 +763,63 @@ describe('rdbStoreUpdateTest', function () {
             await rdbStore.insert("test", valueBucketInsert)
             try {
                 await rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
-                expect(null).assertFail();
+                expect().assertFail()
             } catch (err) {
                 console.log("catch err: failed, err: code=" + err.code + " message=" + err.message);
                 expect(14800000).assertEqual(err.code);
             }
+        } catch (err) {
+            console.log(TAG + `insert failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
 
-        {
-            let predicates = await new data_relationalStore.RdbPredicates("test")
+        try {
+            let predicates = new data_relationalStore.RdbPredicates("test")
             let resultSet = await rdbStore.query(predicates)
+            try {
+                expect(true).assertEqual(resultSet.goToFirstRow())
+                const id = await resultSet.getLong(resultSet.getColumnIndex("id"))
+                const name = await resultSet.getString(resultSet.getColumnIndex("name"))
+                const age = await resultSet.getLong(resultSet.getColumnIndex("age"))
+                const salary = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                const blobType = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary="
+                    + salary + ", blobType=" + blobType);
 
-            expect(true).assertEqual(resultSet.goToFirstRow())
-            const id = await resultSet.getLong(resultSet.getColumnIndex("id"))
-            const name = await resultSet.getString(resultSet.getColumnIndex("name"))
-            const age = await resultSet.getLong(resultSet.getColumnIndex("age"))
-            const salary = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
-            const blobType = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                await expect(1).assertEqual(id);
+                await expect("zhangsan").assertEqual(name);
+                await expect(18).assertEqual(age);
+                await expect(100.5).assertEqual(salary);
+                await expect(1).assertEqual(blobType[0]);
+                await expect(2).assertEqual(blobType[1]);
+                await expect(3).assertEqual(blobType[2]);
 
-            await expect(1).assertEqual(id);
-            await expect("zhangsan").assertEqual(name);
-            await expect(18).assertEqual(age);
-            await expect(100.5).assertEqual(salary);
-            await expect(1).assertEqual(blobType[0]);
-            await expect(2).assertEqual(blobType[1]);
-            await expect(3).assertEqual(blobType[2]);
-            console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary="
-                + salary + ", blobType=" + blobType);
+                await expect(true).assertEqual(resultSet.goToNextRow())
+                const id_1 = await resultSet.getLong(resultSet.getColumnIndex("id"))
+                const name_1 = await resultSet.getString(resultSet.getColumnIndex("name"))
+                const age_1 = await resultSet.getLong(resultSet.getColumnIndex("age"))
+                const salary_1 = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                const blobType_1 = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                console.log(TAG + "{id=" + id_1 + ", name=" + name_1 + ", age=" + age_1 + ", salary="
+                    + salary_1 + ", blobType=" + blobType_1);
 
-            await expect(true).assertEqual(resultSet.goToNextRow())
-            const id_1 = await resultSet.getLong(resultSet.getColumnIndex("id"))
-            const name_1 = await resultSet.getString(resultSet.getColumnIndex("name"))
-            const age_1 = await resultSet.getLong(resultSet.getColumnIndex("age"))
-            const salary_1 = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
-            const blobType_1 = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
-
-            await expect(2).assertEqual(id_1);
-            await expect("lisi").assertEqual(name_1);
-            await expect(19).assertEqual(age_1);
-            await expect(200.5).assertEqual(salary_1);
-            await expect(4).assertEqual(blobType_1[0]);
-            await expect(5).assertEqual(blobType_1[1]);
-            await expect(6).assertEqual(blobType_1[2]);
-            console.log(TAG + "{id=" + id_1 + ", name=" + name_1 + ", age=" + age_1 + ", salary="
-                + salary_1 + ", blobType=" + blobType_1);
-            await expect(false).assertEqual(resultSet.goToNextRow())
-
-            resultSet.close()
-            resultSet = null
-            done()
-            console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0004 end   *************");
+                await expect(2).assertEqual(id_1);
+                await expect("lisi").assertEqual(name_1);
+                await expect(19).assertEqual(age_1);
+                await expect(200.5).assertEqual(salary_1);
+                await expect(4).assertEqual(blobType_1[0]);
+                await expect(5).assertEqual(blobType_1[1]);
+                await expect(6).assertEqual(blobType_1[2]);
+                await expect(false).assertEqual(resultSet.goToNextRow())
+            } finally {
+                resultSet.close()
+                resultSet = null
+            }
+        } catch (err) {
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
+        console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0004 end   *************");
     })
 
     /**
@@ -843,9 +827,9 @@ describe('rdbStoreUpdateTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateWithConflictResolution_0005
      * @tc.desc resultSet Update test
      */
-    it('testRdbStoreUpdateWithConflictResolution0005', 0, async function (done) {
+    it('testRdbStoreUpdateWithConflictResolution0005', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0005 start *************");
-        {
+        try {
             var u8 = new Uint8Array([1, 2, 3])
             const valueBucket = {
                 "id": 1,
@@ -855,8 +839,11 @@ describe('rdbStoreUpdateTest', function () {
                 "blobType": u8,
             }
             await rdbStore.insert("test", valueBucket)
+        } catch (err) {
+            console.log(TAG + `insert1 failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
-        {
+        try {
             var u8 = new Uint8Array([4, 5, 6])
             const valueBucket = {
                 "id": 2,
@@ -866,8 +853,11 @@ describe('rdbStoreUpdateTest', function () {
                 "blobType": u8,
             }
             await rdbStore.insert("test", valueBucket)
+        } catch (err) {
+            console.log(TAG + `insert2 failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
-        {
+        try {
             var u8 = new Uint8Array([7, 8, 9])
             const valueBucket = {
                 "id": 3,
@@ -876,68 +866,63 @@ describe('rdbStoreUpdateTest', function () {
                 "salary": 300.5,
                 "blobType": u8,
             }
-            let predicates = await new data_relationalStore.RdbPredicates("test")
-            await predicates.equalTo("age", "19")
-            let updatePromise = rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
-            updatePromise.then(async (ret) => {
-                await expect(1).assertEqual(ret);
-                await console.log(TAG + "update done: " + ret);
-                {
-                    let predicates = await new data_relationalStore.RdbPredicates("test")
-                    let resultSet = await rdbStore.query(predicates)
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("age", "19")
+            let ret = await rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
+            await expect(1).assertEqual(ret);
+            await console.log(TAG + "update done: " + ret);
+            predicates = new data_relationalStore.RdbPredicates("test")
+            let resultSet = await rdbStore.query(predicates)
+            try {
 
-                    expect(true).assertEqual(resultSet.goToFirstRow())
-                    const id = await resultSet.getLong(resultSet.getColumnIndex("id"))
-                    const name = await resultSet.getString(resultSet.getColumnIndex("name"))
-                    const age = await resultSet.getLong(resultSet.getColumnIndex("age"))
-                    const salary = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
-                    const blobType = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                expect(true).assertEqual(resultSet.goToFirstRow())
+                const id = await resultSet.getLong(resultSet.getColumnIndex("id"))
+                const name = await resultSet.getString(resultSet.getColumnIndex("name"))
+                const age = await resultSet.getLong(resultSet.getColumnIndex("age"))
+                const salary = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                const blobType = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary="
+                    + salary + ", blobType=" + blobType);
 
-                    await expect(1).assertEqual(id);
-                    await expect("zhangsan").assertEqual(name);
-                    await expect(18).assertEqual(age);
-                    await expect(100.5).assertEqual(salary);
-                    await expect(1).assertEqual(blobType[0]);
-                    await expect(2).assertEqual(blobType[1]);
-                    await expect(3).assertEqual(blobType[2]);
-                    console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary="
-                        + salary + ", blobType=" + blobType);
+                await expect(1).assertEqual(id);
+                await expect("zhangsan").assertEqual(name);
+                await expect(18).assertEqual(age);
+                await expect(100.5).assertEqual(salary);
+                await expect(1).assertEqual(blobType[0]);
+                await expect(2).assertEqual(blobType[1]);
+                await expect(3).assertEqual(blobType[2]);
 
-                    await expect(true).assertEqual(resultSet.goToNextRow())
-                    const id_1 = await resultSet.getLong(resultSet.getColumnIndex("id"))
-                    const name_1 = await resultSet.getString(resultSet.getColumnIndex("name"))
-                    const age_1 = await resultSet.getLong(resultSet.getColumnIndex("age"))
-                    const salary_1 = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
-                    const blobType_1 = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                await expect(true).assertEqual(resultSet.goToNextRow())
+                const id_1 = await resultSet.getLong(resultSet.getColumnIndex("id"))
+                const name_1 = await resultSet.getString(resultSet.getColumnIndex("name"))
+                const age_1 = await resultSet.getLong(resultSet.getColumnIndex("age"))
+                const salary_1 = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                const blobType_1 = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                console.log(TAG + "{id=" + id_1 + ", name=" + name_1 + ", age=" + age_1 + ", salary="
+                    + salary_1 + ", blobType=" + blobType_1);
 
-                    await expect(3).assertEqual(id_1);
-                    await expect("wangjing").assertEqual(name_1);
-                    await expect(20).assertEqual(age_1);
-                    await expect(300.5).assertEqual(salary_1);
-                    await expect(7).assertEqual(blobType_1[0]);
-                    await expect(8).assertEqual(blobType_1[1]);
-                    await expect(9).assertEqual(blobType_1[2]);
-                    console.log(TAG + "{id=" + id_1 + ", name=" + name_1 + ", age=" + age_1 + ", salary="
-                        + salary_1 + ", blobType=" + blobType_1);
-                    await expect(false).assertEqual(resultSet.goToNextRow())
-
-                    resultSet.close()
-                    resultSet = null
-                    done()
-                    console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0005 end   *************");
-                }
-
-            }).catch((err) => {
-                console.log(TAG + "update error");
-                expect(null).assertFail();
-                console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0005 end   *************");
-            })
+                await expect(3).assertEqual(id_1);
+                await expect("wangjing").assertEqual(name_1);
+                await expect(20).assertEqual(age_1);
+                await expect(300.5).assertEqual(salary_1);
+                await expect(7).assertEqual(blobType_1[0]);
+                await expect(8).assertEqual(blobType_1[1]);
+                await expect(9).assertEqual(blobType_1[2]);
+                await expect(false).assertEqual(resultSet.goToNextRow())
+            } finally {
+                resultSet.close()
+                resultSet = null
+            }
+        } catch (err) {
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
+        console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0005 end   *************");
     })
 
-    it('testRdbStoreUpdateWithConflictResolution0006', 0, async function (done) {
+    it('testRdbStoreUpdateWithConflictResolution0006', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0006 start *************");
-        {
+        try {
             var u8 = new Uint8Array([1, 2, 3])
             const valueBucket = {
                 "id": 1,
@@ -947,9 +932,12 @@ describe('rdbStoreUpdateTest', function () {
                 "blobType": u8,
             }
             await rdbStore.insert("test", valueBucket)
+        } catch (err) {
+            console.log(TAG + `insert failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
 
-        {
+        try {
             var u8 = new Uint8Array([4, 5, 6])
             const valueBucket = {
                 "id": 2,
@@ -959,53 +947,51 @@ describe('rdbStoreUpdateTest', function () {
                 "blobType": u8,
             }
             await rdbStore.insert("test", valueBucket)
+        } catch (err) {
+            console.log(TAG + `insert2 failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
-        {
+        try {
             const valueBucket = {
                 "name": "zhangsan",
                 "age": 20,
                 "salary": 300.5,
             }
-            let predicates = await new data_relationalStore.RdbPredicates("test")
-            await predicates.equalTo("age", "19")
-            let updatePromise = rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
-            updatePromise.then(async (ret) => {
-                await expect(1).assertEqual(ret);
-                await console.log(TAG + "update done: " + ret);
-                {
-                    let predicates = await new data_relationalStore.RdbPredicates("test")
-                    let resultSet = await rdbStore.query(predicates)
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("age", "19")
+            let ret = await rdbStore.update(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
+            await expect(1).assertEqual(ret);
+            await console.log(TAG + "update done: " + ret);
+            predicates = new data_relationalStore.RdbPredicates("test")
+            let resultSet = await rdbStore.query(predicates)
+            try {
+                expect(true).assertEqual(resultSet.goToFirstRow())
+                const id = await resultSet.getLong(resultSet.getColumnIndex("id"))
+                const name = await resultSet.getString(resultSet.getColumnIndex("name"))
+                const age = await resultSet.getLong(resultSet.getColumnIndex("age"))
+                const salary = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
+                const blobType = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary="
+                    + salary + ", blobType=" + blobType);
 
-                    expect(true).assertEqual(resultSet.goToFirstRow())
-                    const id = await resultSet.getLong(resultSet.getColumnIndex("id"))
-                    const name = await resultSet.getString(resultSet.getColumnIndex("name"))
-                    const age = await resultSet.getLong(resultSet.getColumnIndex("age"))
-                    const salary = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
-                    const blobType = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+                await expect(2).assertEqual(id);
+                await expect("zhangsan").assertEqual(name);
+                await expect(20).assertEqual(age);
+                await expect(300.5).assertEqual(salary);
+                await expect(4).assertEqual(blobType[0]);
+                await expect(5).assertEqual(blobType[1]);
+                await expect(6).assertEqual(blobType[2]);
 
-                    await expect(2).assertEqual(id);
-                    await expect("zhangsan").assertEqual(name);
-                    await expect(20).assertEqual(age);
-                    await expect(300.5).assertEqual(salary);
-                    await expect(4).assertEqual(blobType[0]);
-                    await expect(5).assertEqual(blobType[1]);
-                    await expect(6).assertEqual(blobType[2]);
-                    console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary="
-                        + salary + ", blobType=" + blobType);
-
-                    await expect(false).assertEqual(resultSet.goToNextRow())
-                    resultSet.close()
-                    resultSet = null
-                    done()
-                    console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0006 end   *************");
-                }
-
-            }).catch((err) => {
-                console.log(TAG + "update error");
-                expect(null).assertFail();
-                console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0006 end   *************");
-            })
+                await expect(false).assertEqual(resultSet.goToNextRow())
+            } finally {
+                resultSet.close()
+                resultSet = null
+            }
+        } catch (err) {
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail();
         }
+        console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0006 end   *************");
     })
 
     /**
@@ -1013,7 +999,7 @@ describe('rdbStoreUpdateTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateWithConflictResolution_0007
      * @tc.desc resultSet Update test
      */
-    it('testRdbStoreUpdateWithConflictResolution0007', 0, async function (done) {
+    it('testRdbStoreUpdateWithConflictResolution0007', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0007 start *************");
         try {
             const valueBucket = {
@@ -1021,16 +1007,15 @@ describe('rdbStoreUpdateTest', function () {
                 "age": 20,
                 "salary": 300.5,
             }
-            let predicates = await new data_relationalStore.RdbPredicates("test")
-            await predicates.equalTo("age", "19")
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("age", "19")
             rdbStore.update(valueBucket, predicates, 6);
-            expect(null).assertFail();
+            expect().assertFail()
         } catch (err) {
-            console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
             expect("401").assertEqual(err.code)
-            console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0007 end   *************");
-            done()
         }
+        console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0007 end   *************");
     })
 
     console.log(TAG + "*************Unit Test End*************");

@@ -40,6 +40,7 @@ namespace NativeRdb {
  */
 std::string RdbSqlUtils::GetDefaultDatabasePath(const std::string &baseDir, const std::string &name, int &errorCode)
 {
+    errorCode = E_OK;
     std::string databasePath = baseDir + "/rdb";
     if (access(databasePath.c_str(), F_OK) != 0) {
         if (MKDIR(databasePath.c_str())) {

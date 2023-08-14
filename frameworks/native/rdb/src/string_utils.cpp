@@ -49,7 +49,7 @@ std::vector<std::string> StringUtils::Split(const std::string &str, const std::s
     std::vector<std::string> res;
     size_t pos = 0;
     while (pos < str.size()) {
-        size_t found = str.find(delim);
+        size_t found = str.find(delim, pos);
         if (found == std::string::npos) {
             res.push_back(str.substr(pos));
             break;

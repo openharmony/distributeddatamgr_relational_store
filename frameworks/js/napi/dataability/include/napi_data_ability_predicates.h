@@ -29,7 +29,7 @@ public:
     static void Init(napi_env env, napi_value exports);
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::DataAbilityPredicates> value);
     static std::shared_ptr<NativeRdb::DataAbilityPredicates> GetNativePredicates(
-        const napi_env &env, const napi_value &arg);
+        const napi_env env, const napi_value arg);
     static void Destructor(napi_env env, void *nativeObject, void *finalize_hint);
 
     DataAbilityPredicatesProxy();
@@ -94,6 +94,6 @@ __attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_DataAbilityJsKi
 
 __attribute__((visibility("default"))) OHOS::NativeRdb::DataAbilityPredicates *
 NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_GetNativeObject(
-    const napi_env &env, const napi_value &arg);
+    const napi_env env, const napi_value arg);
 EXTERN_C_END
 #endif // DATAABILITY_JSKIT_NAPI_DATA_ABILITY_PREDICATES_H
