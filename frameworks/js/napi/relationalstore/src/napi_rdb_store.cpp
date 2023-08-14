@@ -43,6 +43,7 @@ using namespace OHOS::AppDataMgrJsKit;
 using OHOS::DistributedRdb::SubscribeMode;
 using OHOS::DistributedRdb::SubscribeOption;
 using OHOS::DistributedRdb::SyncOption;
+
 using OHOS::DistributedRdb::SyncResult;
 using OHOS::DistributedRdb::Details;
 #endif
@@ -60,8 +61,6 @@ struct RdbStoreContext : public Context {
     std::string tableName;
     std::vector<std::string> tablesNames;
     std::string whereClause;
-    std::vector<std::string> whereArgs;
-    std::vector<std::string> selectionArgs;
     std::string sql;
     RdbPredicatesProxy *predicatesProxy;
     std::vector<std::string> columns;
@@ -246,41 +245,42 @@ int ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<RdbS
     return OK;
 }
 
-int ParseTableName(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseTableName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->tableName = JSUtils::Convert2String(env, arg);
     CHECK_RETURN_SET(!context->tableName.empty(), std::make_shared<ParamError>("table", "not empty"));
     return OK;
 }
 
-int ParseColumnName(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseColumnName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->columnName = JSUtils::Convert2String(env, arg);
     CHECK_RETURN_SET(!context->columnName.empty(), std::make_shared<ParamError>("columnName", "not string"));
     return OK;
 }
 
-int ParsePrimaryKey(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParsePrimaryKey(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     JSUtils::Convert2Value(env, arg, context->keys);
     CHECK_RETURN_SET(!context->keys.empty(), std::make_shared<ParamError>("PRIKey", "not number or string"));
     return OK;
 }
 
-int ParseDevice(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseDevice(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->device = JSUtils::Convert2String(env, arg);
     CHECK_RETURN_SET(!context->device.empty(), std::make_shared<ParamError>("device", "not empty"));
     return OK;
 }
 
-int ParseTablesName(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseTablesName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
-    context->tablesNames = JSUtils::Convert2StrVector(env, arg);
+    int32_t ret = JSUtils::Convert2Value(env, arg, context->tablesNames);
+    CHECK_RETURN_SET(ret == napi_ok, std::make_shared<ParamError>("tablesNames", "not empty"));
     return OK;
 }
 
-int ParseSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseSyncModeArg(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     napi_valuetype type = napi_undefined;
     napi_typeof(env, arg, &type);
@@ -318,7 +318,7 @@ int ParseDistributedConfigArg(const napi_env &env, size_t argc, napi_value * arg
     return OK;
 }
 
-int ParseCloudSyncModeArg(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseCloudSyncModeArg(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     auto status = JSUtils::Convert2ValueExt(env, arg, context->syncMode);
     bool checked = (status == napi_ok && context->syncMode >= DistributedRdb::TIME_FIRST
@@ -327,7 +327,7 @@ int ParseCloudSyncModeArg(const napi_env &env, const napi_value &arg, std::share
     return OK;
 }
 
-int ParseCallback(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseCallback(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     napi_valuetype valueType = napi_undefined;
     napi_status status = napi_typeof(env, arg, &valueType);
@@ -337,7 +337,7 @@ int ParseCallback(const napi_env &env, const napi_value &arg, std::shared_ptr<Rd
     return OK;
 }
 
-int ParseCloudSyncCallback(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseCloudSyncCallback(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, arg, &valueType);
@@ -346,7 +346,7 @@ int ParseCloudSyncCallback(const napi_env &env, const napi_value &arg, std::shar
     return OK;
 }
 
-int ParsePredicates(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParsePredicates(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     napi_unwrap(env, arg, reinterpret_cast<void **>(&context->predicatesProxy));
     CHECK_RETURN_SET(context->predicatesProxy != nullptr,
@@ -356,7 +356,7 @@ int ParsePredicates(const napi_env &env, const napi_value &arg, std::shared_ptr<
     return OK;
 }
 
-int ParseDataSharePredicates(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseDataSharePredicates(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
@@ -373,53 +373,73 @@ int ParseDataSharePredicates(const napi_env &env, const napi_value &arg, std::sh
     return OK;
 }
 
-int ParseNewKey(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
-{
-    context->newKey = JSUtils::Convert2U8Vector(env, arg);
-    return OK;
-}
-
-int ParseSrcName(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseSrcName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->srcName = JSUtils::Convert2String(env, arg);
     CHECK_RETURN_SET(!context->srcName.empty(), std::make_shared<ParamError>("srcName", "not empty"));
     return OK;
 }
 
-int ParseColumns(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseColumns(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
-    context->columns = JSUtils::Convert2StrVector(env, arg);
+    napi_valuetype type;
+    napi_typeof(env, arg, &type);
+    if (type == napi_undefined || type == napi_null) {
+        return OK;
+    }
+    int32_t ret = JSUtils::Convert2Value(env, arg, context->columns);
+    CHECK_RETURN_SET(ret == napi_ok, std::make_shared<ParamError>("columns", "a string array"));
     return OK;
 }
 
-int ParseAlias(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseAlias(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->aliasName = JSUtils::Convert2String(env, arg);
     CHECK_RETURN_SET(!context->aliasName.empty(), std::make_shared<ParamError>("aliasName", "not empty"));
     return OK;
 }
 
-int ParsePath(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParsePath(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->pathName = JSUtils::Convert2String(env, arg);
     CHECK_RETURN_SET(!context->pathName.empty(), std::make_shared<ParamError>("pathName", "not empty"));
     return OK;
 }
 
-int ParseSelectionArgs(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseBindArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
-    context->selectionArgs = JSUtils::Convert2StrVector(env, arg);
+    context->bindArgs.clear();
+    napi_valuetype type;
+    napi_typeof(env, arg, &type);
+    if (type == napi_undefined || type == napi_null) {
+        return OK;
+    }
+    bool isArray = false;
+    napi_status status = napi_is_array(env, arg, &isArray);
+    CHECK_RETURN_SET(status == napi_ok && isArray, std::make_shared<ParamError>("values", "a BindArgs array."));
+
+    uint32_t arrLen = 0;
+    status = napi_get_array_length(env, arg, &arrLen);
+    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("values", "not empty."));
+    for (size_t i = 0; i < arrLen; ++i) {
+        napi_value element;
+        napi_get_element(env, arg, i, &element);
+        ValueObject valueObject;
+        int32_t ret = JSUtils::Convert2Value(env, element, valueObject.value);
+        CHECK_RETURN_SET(ret == OK, std::make_shared<ParamError>(std::to_string(i), "ValueObject"));
+        context->bindArgs.push_back(std::move(valueObject));
+    }
     return OK;
 }
 
-int ParseSql(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseSql(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
-    context->sql = JSUtils::Convert2String(env, arg, false);
+    context->sql = JSUtils::Convert2String(env, arg);
     CHECK_RETURN_SET(!context->sql.empty(), std::make_shared<ParamError>("sql", "not empty"));
     return OK;
 }
 
-int ParseValuesBucket(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     napi_value keys = 0;
     napi_get_property_names(env, arg, &keys);
@@ -437,15 +457,15 @@ int ParseValuesBucket(const napi_env &env, const napi_value &arg, std::shared_pt
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
         if (ret == napi_ok) {
-            context->valuesBucket.Put(keyStr, std::move(valueObject));
+            context->valuesBucket.Put(keyStr, valueObject);
         } else {
-            LOG_WARN("bad value type of key %{public}s", keyStr.c_str());
+            LOG_WARN("bad value type of key %{public}s", keyStr.c_str()); // TD: need to throw error here
         }
     }
     return OK;
 }
 
-int ParseValuesBuckets(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseValuesBuckets(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     bool isArray = false;
     napi_is_array(env, arg, &isArray);
@@ -467,7 +487,7 @@ int ParseValuesBuckets(const napi_env &env, const napi_value &arg, std::shared_p
     return OK;
 }
 
-int ParseConflictResolution(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
+int ParseConflictResolution(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     int32_t conflictResolution = 0;
     napi_get_value_int32(env, arg, &conflictResolution);
@@ -587,7 +607,7 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
         CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
         CHECK_RETURN_ERR(context->rdbPredicates != nullptr);
         return obj->rdbStore_->UpdateWithConflictResolution(context->intOutput, context->tableName,
-            context->valuesBucket, context->rdbPredicates->GetWhereClause(), context->rdbPredicates->GetWhereArgs(),
+            context->valuesBucket, context->rdbPredicates->GetWhereClause(), context->rdbPredicates->GetBindArgs(),
             context->conflictResolution);
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -680,29 +700,15 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseSql(env, argv[0], context));
         if (argc == 2) {
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
-            CHECK_RETURN(OK == ParseColumns(env, argv[1], context));
-#else
-            CHECK_RETURN(OK == ParseSelectionArgs(env, argv[1], context));
-#endif
+            CHECK_RETURN(OK == ParseBindArgs(env, argv[1], context));
         }
     };
     auto exec = [context]() -> int {
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
-        CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
-        context->resultSet_value = obj->rdbStore_->QueryByStep(context->sql, context->columns);
-        LOG_ERROR("RdbStoreProxy::QuerySql is nullptr ? %{public}d ", context->resultSet_value == nullptr);
-#endif
-        std::string selectionArgs = ",";
-        for (size_t i = 0; i < context->selectionArgs.size(); i++) {
-            selectionArgs += context->selectionArgs[i];
-        }
-#if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
-        context->resultSet_value = obj->rdbStore_->QueryByStep(context->sql, context->selectionArgs);
-        LOG_ERROR("RdbStoreProxy::QuerySql is nullptr ? %{public}d ", context->resultSet_value == nullptr);
+#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
+        context->resultSet_value = obj->rdbStore_->QueryByStep(context->sql, context->bindArgs);
 #else
-        context->resultSet_value = obj->rdbStore_->QuerySql(context->sql, context->selectionArgs);
+        context->resultSet_value = obj->rdbStore_->QuerySql(context->sql, context->bindArgs);
 #endif
         return (context->resultSet_value != nullptr) ? E_OK : E_ERROR;
     };
@@ -714,32 +720,6 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return AsyncCall::Call(env, context);
-}
-
-int ParseBindArgs(const napi_env &env, const napi_value &arg, std::shared_ptr<RdbStoreContext> context)
-{
-    context->bindArgs.clear();
-    napi_valuetype type;
-    napi_typeof(env, arg, &type);
-    if (type == napi_undefined || type == napi_null) {
-        return OK;
-    }
-    bool isArray = false;
-    napi_status status = napi_is_array(env, arg, &isArray);
-    CHECK_RETURN_SET(status == napi_ok && isArray, std::make_shared<ParamError>("values", "a BindArgs array."));
-
-    uint32_t arrLen = 0;
-    status = napi_get_array_length(env, arg, &arrLen);
-    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("values", "not empty."));
-    for (size_t i = 0; i < arrLen; ++i) {
-        napi_value element;
-        napi_get_element(env, arg, i, &element);
-        ValueObject valueObject;
-        int32_t ret = JSUtils::Convert2Value(env, element, valueObject.value);
-        CHECK_RETURN_SET(ret == OK, std::make_shared<ParamError>(std::to_string(i), "ValueObject"));
-        context->bindArgs.push_back(std::move(valueObject));
-    }
-    return OK;
 }
 
 napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
@@ -847,7 +827,6 @@ napi_value RdbStoreProxy::Attach(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseAlias(env, argv[0], context));
         CHECK_RETURN(OK == ParsePath(env, argv[1], context));
-        CHECK_RETURN(OK == ParseNewKey(env, argv[2], context));
     };
     auto exec = [context]() -> int {
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
@@ -1285,20 +1264,30 @@ napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
     bool valid = (mode >= 0 && mode < SubscribeMode::SUBSCRIBE_MODE_MAX);
     RDB_NAPI_ASSERT(env, valid, std::make_shared<ParamError>("type", "SubscribeType"));
 
-    napi_typeof(env, argv[1], &type);
-    RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
+    bool isNotNull = argc >=2 && !JSUtils::IsNull(env, argv[1]);
+    if (isNotNull) {
+        napi_typeof(env, argv[1], &type);
+        RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
+    }
 
     SubscribeOption option;
     option.mode = static_cast<SubscribeMode>(mode);
     std::lock_guard<std::mutex> lockGuard(mutex_);
-    for (auto it = observers_[mode].begin(); it != observers_[mode].end(); it++) {
-        if (*it != nullptr && **it == argv[1]) {
-            int errCode = rdbStore_->UnSubscribe(option, it->get());
-            RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-            observers_[mode].erase(it);
-            LOG_INFO("observer unsubscribe success");
-            return nullptr;
+    for (auto it = observers_[mode].begin(); it != observers_[mode].end();) {
+        if (*it == nullptr) {
+            it = observers_[mode].erase(it);
+            continue;
         }
+        if (isNotNull && !(**it == argv[1])) {
+            ++it;
+            continue;
+        }
+
+        int errCode = rdbStore_->UnSubscribe(option, it->get());
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        it = observers_[mode].erase(it);
+        LOG_INFO("observer unsubscribe success");
+        return nullptr;
     }
     LOG_INFO("observer not found");
     return nullptr;
@@ -1368,7 +1357,7 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
 
         napi_typeof(env, argv[0], &type);
         RDB_NAPI_ASSERT(env, type == napi_string, std::make_shared<ParamError>("event", "string"));
-        std::string event = JSUtils::Convert2String(env, argv[0], false);
+        std::string event = JSUtils::Convert2String(env, argv[0]);
         RDB_NAPI_ASSERT(env, !event.empty(), std::make_shared<ParamError>("event", "a not empty string."));
         // 'argv[2]' represents a callback function
         napi_typeof(env, argv[2], &type);
@@ -1408,7 +1397,7 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
         bool valueBool = false;
         napi_get_value_bool(env, argv[1], &valueBool);
 
-        std::string event = JSUtils::Convert2String(env, argv[0], false);
+        std::string event = JSUtils::Convert2String(env, argv[0]);
         RDB_NAPI_ASSERT(env, !event.empty(), std::make_shared<ParamError>("event", "a not empty string."));
 
         // 'argc == 3' represents determine whether the value of variable 'argc' is equal to '3'

@@ -14,6 +14,9 @@
  */
 
 #include "data_ability_predicates.h"
+
+#include <algorithm>
+
 #include "predicates_utils.h"
 
 namespace OHOS {
@@ -31,7 +34,7 @@ DataAbilityPredicates::DataAbilityPredicates(const std::string &rawSelection) : 
     AbsPredicates::SetWhereClause(rawSelection);
 }
 
-DataAbilityPredicates::DataAbilityPredicates(OHOS::Parcel *source)
+DataAbilityPredicates::DataAbilityPredicates(OHOS::Parcel *source) : isRawSelection(false), judgeSource(true)
 {
     if (source == nullptr) {
         this->judgeSource = false;
@@ -50,7 +53,10 @@ DataAbilityPredicates::DataAbilityPredicates(OHOS::Parcel *source)
                                                                  : AbsPredicates::INIT_LIMIT_VALUE;
         int offset = (source->ReadInt32() != g_invalidObjectFlag) ? source->ReadInt32()
                                                                   : AbsPredicates::INIT_OFFSET_VALUE;
-        PredicatesUtils::SetWhereClauseAndArgs(this, whereClause, whereArgs);
+        std::vector<ValueObject> bindArgs;
+        std::for_each(
+            whereArgs.begin(), whereArgs.end(), [&bindArgs](const auto &it) { bindArgs.push_back(ValueObject(it)); });
+        PredicatesUtils::SetWhereClauseAndArgs(this, whereClause, bindArgs);
         PredicatesUtils::SetAttributes(this, isDistinct, index, group, order, limit, offset);
     }
 }

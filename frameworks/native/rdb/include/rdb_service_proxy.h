@@ -26,8 +26,12 @@
 namespace OHOS::DistributedRdb {
 class RdbServiceProxy : public IRemoteProxy<IRdbService> {
 public:
-    using ObserverMapValue = std::pair<std::list<RdbStoreObserver*>, RdbSyncerParam>;
-    using ObserverMap = ConcurrentMap<std::string, ObserverMapValue>;
+    struct ObserverParam {
+        RdbStoreObserver *observer = nullptr;
+        std::string bundleName;
+        SubscribeOption subscribeOption{ SubscribeMode::REMOTE };
+    };
+    using Observers = ConcurrentMap<std::string, std::list<ObserverParam>>;
 
     explicit RdbServiceProxy(const sptr<IRemoteObject>& object);
 
@@ -51,9 +55,9 @@ public:
     int32_t RemoteQuery(const RdbSyncerParam& param, const std::string& device, const std::string& sql,
                         const std::vector<std::string>& selectionArgs, sptr<IRemoteObject>& resultSet) override;
 
-    ObserverMap ExportObservers();
+    Observers ExportObservers();
 
-    void ImportObservers(ObserverMap& observers);
+    void ImportObservers(Observers & observers);
 
     int32_t GetSchema(const RdbSyncerParam &param) override;
 
@@ -87,7 +91,7 @@ private:
     std::atomic<uint32_t> seqNum_ {};
 
     ConcurrentMap<uint32_t, AsyncDetail> syncCallbacks_;
-    ObserverMap observers_;
+    Observers observers_;
     sptr<RdbNotifierStub> notifier_;
 
     sptr<IRemoteObject> remote_;

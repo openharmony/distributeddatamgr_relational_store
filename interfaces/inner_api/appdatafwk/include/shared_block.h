@@ -314,10 +314,11 @@ public:
 private:
     std::string mName;
     sptr<Ashmem> ashmem_;
-    void *mData;
+    uint8_t *mData;
     size_t mSize;
     bool mReadOnly;
-    static const size_t ROW_OFFSETS_NUM = 100;
+    static const size_t ROW_NUM_IN_A_GROUP = 128;
+    static const uint32_t GROUP_NUM = 128;
     /**
     * Default setting for SQLITE_MAX_COLUMN is 2000.
     * We can set it at compile time to as large as 32767
@@ -327,8 +328,6 @@ private:
     struct SharedBlockHeader {
         /* Offset of the lowest unused byte in the block. */
         uint32_t unusedOffset;
-        /* Offset of the first row group. */
-        uint32_t firstRowGroupOffset;
         /* Row numbers of the row group block. */
         uint32_t rowNums;
         /* Column numbers of the row group block. */
@@ -339,11 +338,11 @@ private:
         uint32_t lastPos_;
         /* current position of the current block. */
         uint32_t blockPos_;
+        uint32_t groupOffset[GROUP_NUM];
     };
 
     struct RowGroupHeader {
-        uint32_t rowOffsets[ROW_OFFSETS_NUM];
-        uint32_t nextGroupOffset;
+        uint32_t rowOffsets[ROW_NUM_IN_A_GROUP];
     };
 
     SharedBlockHeader *mHeader;
@@ -352,30 +351,21 @@ private:
      * Allocate a portion of the block. Returns the offset of the allocation.
      * Returns 0 if there isn't enough space.
      */
-    uint32_t Alloc(size_t size, bool aligned = false);
+    inline uint32_t Alloc(size_t size);
 
-    uint32_t *GetRowOffset(uint32_t row);
+    inline uint32_t *AllocRowOffset();
 
-    uint32_t *AllocRowOffset();
-
-    int PutBlobOrString(uint32_t row, uint32_t column, const void *value, size_t size, int32_t type);
+    inline int PutBlobOrString(uint32_t row, uint32_t column, const void *value, size_t size, int32_t type);
 
     static int CreateSharedBlock(const std::string &name, size_t size, sptr<Ashmem> ashmem,
         SharedBlock *&outSharedBlock);
 
-    uint32_t OffsetFromPtr(void *ptr);
-
-    void *OffsetToPtr(uint32_t offset, uint32_t bufferSize = 0);
-
-    /**
-     * Convert utf8 string to utf16.
-     */
-    static std::u16string ToUtf16(std::string str);
-
-    /**
-     * Convert utf16 string to utf8.
-     */
-    static std::string ToUtf8(std::u16string str16);
+    inline void *OffsetToPtr(uint32_t offset, uint32_t bufferSize = 0) {
+        if (offset + bufferSize > mSize) {
+            return nullptr;
+        }
+        return mData + offset;
+    }
 };
 } // namespace AppDataFwk
 } // namespace OHOS

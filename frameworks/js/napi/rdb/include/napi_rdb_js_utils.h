@@ -23,12 +23,15 @@ namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
 using Asset = OHOS::NativeRdb::AssetValue;
 using RowEntity = OHOS::NativeRdb::RowEntity;
+using ValueObject = OHOS::NativeRdb::ValueObject;
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, Asset &output);
 template<>
 napi_value Convert2JSValue(napi_env env, const Asset &value);
 template<>
 napi_value Convert2JSValue(napi_env env, const RowEntity &value);
+template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, ValueObject &valueObject);
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
 #endif // RDB_JSKIT_NAPI_RDB_JS_UTILS_H

@@ -120,22 +120,17 @@ void FillSharedBlockOpt(SharedBlockInfo *info)
         return;
     }
     int retryCount = 0;
-    bool gotException = false;
-    while (!gotException) {
+    while (true) {
         int err = sqlite3_step(info->statement);
-        if (err == SQLITE_DONE) {
-            break;
-        } else if (err == SQLITE_LOCKED || err == SQLITE_BUSY) {
+        if (err == SQLITE_LOCKED || err == SQLITE_BUSY) {
             LOG_WARN("Database locked, retrying");
-            if (retryCount > RETRY_TIME) {
-                gotException = true;
-            } else {
+            if (retryCount <= RETRY_TIME) {
                 usleep(SLEEP_TIME);
                 retryCount++;
+                continue;
             }
-        } else {
-            gotException = true;
         }
+        break;
     }
     info->totalRows = serializer.GetTotalRows();
     info->startPos = serializer.GetStartPos();

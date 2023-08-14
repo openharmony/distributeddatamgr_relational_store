@@ -79,9 +79,9 @@ std::string SqliteSqlBuilder::BuildUpdateString(const ValuesBucket &values, cons
 /**
  * Build a query SQL string using the given condition for SQLite.
  */
-int SqliteSqlBuilder::BuildQueryString(bool distinct, const std::string &table, const std::vector<std::string> &columns,
-    const std::string &where, const std::string &groupBy, const std::string &index, const std::string &orderBy,
-    const std::string &limit, const std::string &offset, std::string &outSql)
+int SqliteSqlBuilder::BuildQueryString(bool distinct, const std::string &table,
+    const std::vector<std::string> &columns, const std::string &whereClause, const std::string &groupBy,
+    const std::string &indexName, const std::string &orderBy, const int &limit, const int &offset, std::string &outSql)
 {
     if (table.empty()) {
         return E_EMPTY_TABLE_NAME;
@@ -97,10 +97,8 @@ int SqliteSqlBuilder::BuildQueryString(bool distinct, const std::string &table, 
     } else {
         sql.append("* ");
     }
-    int climit = std::stoi(limit);
-    int coffset = std::stoi(offset);
     sql.append("FROM ").append(table).append(
-        BuildSqlStringFromPredicates(index, where, groupBy, orderBy, climit, coffset));
+        BuildSqlStringFromPredicates(indexName, whereClause, groupBy, orderBy, limit, offset));
     outSql = sql;
 
     return E_OK;
@@ -137,7 +135,7 @@ std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const std::string &in
     return sqlString;
 }
 
-std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const AbsRdbPredicates &predicates)
+std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const AbsPredicates &predicates)
 {
     std::string limitStr =
         (predicates.GetLimit() == AbsPredicates::INIT_LIMIT_VALUE) ? "" : std::to_string(predicates.GetLimit());
@@ -210,11 +208,11 @@ std::string SqliteSqlBuilder::BuildQueryString(
     std::string groupStr = predicates.GetGroup();
     std::string indexStr = predicates.GetIndex();
     std::string orderStr = predicates.GetOrder();
-    std::string limitStr = std::to_string(predicates.GetLimit());
-    std::string offsetStr = std::to_string(predicates.GetOffset());
+    int limit = predicates.GetLimit();
+    int offset = predicates.GetOffset();
     std::string sqlStr;
     BuildQueryString(
-        distinct, tableNameStr, columns, whereClauseStr, groupStr, indexStr, orderStr, limitStr, offsetStr, sqlStr);
+        distinct, tableNameStr, columns, whereClauseStr, groupStr, indexStr, orderStr, limit, offset, sqlStr);
     return sqlStr;
 }
 
