@@ -232,6 +232,8 @@ RdbStoreProxy *RdbStoreProxy::GetNativeInstance(napi_env env, napi_value self)
 void ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<RdbStoreContext> context)
 {
     RdbStoreProxy *obj = RdbStoreProxy::GetNativeInstance(env, self);
+    RDB_NAPI_ASSERT_FROMV9(
+        env, obj, std::make_shared<ParamTypeError>("RdbStore", "not nullptr."), APIVERSION_V9);
     context->apiversion = obj->apiversion;
     context->boundObj = obj;
     LOG_DEBUG("ParserThis RdbStoreProxy is v%{public}d", obj->apiversion);
