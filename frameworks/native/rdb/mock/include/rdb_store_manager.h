@@ -35,6 +35,7 @@ public:
         int &errCode, int version, RdbOpenCallback &openCallback);
     void Clear();
     bool Remove(const std::string &path);
+    bool Delete(const std::string &path);
     int SetSecurityLabel(const RdbStoreConfig &config);
 
 private:

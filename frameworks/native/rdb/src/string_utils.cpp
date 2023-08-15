@@ -44,6 +44,22 @@ std::string StringUtils::SurroundWithFunction(const std::string &function, const
     return builder;
 }
 
+std::vector<std::string> StringUtils::Split(const std::string &str, const std::string &delim)
+{
+    std::vector<std::string> res;
+    size_t pos = 0;
+    while (pos < str.size()) {
+        size_t found = str.find(delim, pos);
+        if (found == std::string::npos) {
+            res.push_back(str.substr(pos));
+            break;
+        }
+        res.push_back(str.substr(pos, found - pos));
+        pos = found + delim.size();
+    }
+    return res;
+}
+
 StringUtils::StringUtils() {}
 StringUtils::~StringUtils() {}
 } // namespace NativeRdb
