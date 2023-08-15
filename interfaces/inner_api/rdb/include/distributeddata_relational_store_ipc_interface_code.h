@@ -75,6 +75,7 @@ enum class RdbServiceInterfaceCode {
     RDB_SERVICE_CMD_UNSUBSCRIBE,
     RDB_SERVICE_CMD_REMOTE_QUERY,
     RDB_SERVICE_CMD_GET_SCHEMA,
+    RDB_SERVICE_CMD_DELETE,
     RDB_SERVICE_CMD_MAX
 };
 } // namespace RelationalStore

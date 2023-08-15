@@ -60,6 +60,8 @@ public:
     void ImportObservers(Observers & observers);
 
     int32_t GetSchema(const RdbSyncerParam &param) override;
+
+    int32_t Delete(const RdbSyncerParam &param) override;
 private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
     using PrimaryFields = RdbStoreObserver::PrimaryFields;

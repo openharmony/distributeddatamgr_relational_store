@@ -16,9 +16,7 @@
 #include "rdb_helper.h"
 
 #include "logger.h"
-#include "rdb_common.h"
 #include "rdb_errno.h"
-#include "rdb_store_impl.h"
 #include "rdb_store_manager.h"
 #include "rdb_trace.h"
 #include "sqlite_global_config.h"
@@ -53,14 +51,13 @@ static void DeleteRdbKeyFiles(const std::string &dbFileName)
 #endif
 }
 
-
 int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (dbFileName.empty()) {
         return E_EMPTY_FILE_NAME;
     }
-    RdbStoreManager::GetInstance().Remove(dbFileName); // maybe need to return here
+    RdbStoreManager::GetInstance().Delete(dbFileName); // maybe need to return here
     if (access(dbFileName.c_str(), F_OK) != 0) {
         return E_OK; // not not exist
     }

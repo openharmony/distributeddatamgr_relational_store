@@ -1329,9 +1329,15 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
         LOG_ERROR("Fail to set distributed tables, error=%{public}d", errorCode);
         return errorCode;
     }
-    if (type == DistributedRdb::DISTRIBUTED_CLOUD && distributedConfig.autoSync) {
+    if (type != DistributedRdb::DISTRIBUTED_CLOUD || !distributedConfig.autoSync) {
+        return E_OK;
+    }
+    {
         std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
         cloudTables_.insert(tables.begin(), tables.end());
+    }
+    for (auto &table : tables) {
+        DoCloudSync(table);
     }
     return E_OK;
 }

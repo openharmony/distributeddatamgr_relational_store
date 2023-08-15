@@ -69,8 +69,10 @@ void RdbServiceProxy::OnSyncComplete(uint32_t seqNum, Details &&result)
 
 void RdbServiceProxy::OnDataChange(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo)
 {
-    LOG_DEBUG("Data change, origin:%{public}d, dataType:%{public}d storeName:%{public}s", origin.origin,
-        origin.dataType, SqliteUtils::Anonymous(origin.store).c_str());
+    LOG_DEBUG("store:%{public}s data change from :%{public}s, dataType:%{public}d, origin:%{public}d.",
+        SqliteUtils::Anonymous(origin.store).c_str(),
+        origin.id.empty() ? "empty" : SqliteUtils::Anonymous(*origin.id.begin()).c_str(),
+        origin.dataType, origin.origin);
     auto name = RemoveSuffix(origin.store);
     observers_.ComputeIfPresent(name,
         [&origin, &primaries, info = std::move(changeInfo)](const auto &key, const std::list<ObserverParam> &value)
@@ -350,6 +352,17 @@ int32_t RdbServiceProxy::GetSchema(const RdbSyncerParam &param)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_GET_SCHEMA), reply, param);
+    if (status != RDB_OK) {
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
+            SqliteUtils::Anonymous(param.storeName_).c_str());
+    }
+    return status;
+}
+
+int32_t RdbServiceProxy::Delete(const RdbSyncerParam &param)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_DELETE), reply, param);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
             SqliteUtils::Anonymous(param.storeName_).c_str());
