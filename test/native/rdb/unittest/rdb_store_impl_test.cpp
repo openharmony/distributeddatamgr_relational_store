@@ -23,6 +23,7 @@
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_store_impl.h"
+#include "sqlite_connection.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -84,7 +85,7 @@ void RdbStoreImplTest::TearDown(void) {}
  * @tc.desc: Normal testCase for GetModifyTime, get timestamp by id
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_001, TestSize.Level4)
+HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_001, TestSize.Level2)
 {
     RdbStoreImplTest::store->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
         "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
@@ -110,10 +111,11 @@ HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_001, TestSize.Level4)
 
 /* *
  * @tc.name: GetModifyTimeByRowIdTest_002
- * @tc.desc: Abnormal testCase for GetModifyTime, get timestamp by id ,if resultSet is empty
+ * @tc.desc: Abnormal testCase for GetModifyTime, get timestamp by id,
+ *           resultSet is empty or table name is not exist
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_002, TestSize.Level4)
+HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_002, TestSize.Level2)
 {
     RdbStoreImplTest::store->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
         "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
@@ -126,9 +128,15 @@ HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_002, TestSize.Level4)
     EXPECT_EQ(E_OK, errorCode);
     EXPECT_EQ(1, rowId);
 
+    // resultSet is empty
     std::vector<RdbStore::PRIKey> PKey = {1};
     auto result = RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
     int size = result.size();
+    EXPECT_EQ(0, size);
+
+    // table name is  not exist , resultSet is null
+    result = RdbStoreImplTest::store->GetModifyTime("test", "ROWID", PKey);
+    size = result.size();
     EXPECT_EQ(0, size);
 
     RdbStoreImplTest::store->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
@@ -136,15 +144,39 @@ HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_002, TestSize.Level4)
 
 /* *
  * @tc.name: GetModifyTime_001
- * @tc.desc: Abnormal testCase for GetModifyTime, return error if table name is empty
+ * @tc.desc: Abnormal testCase for GetModifyTime, tablename columnName, keys is empty,
+ *           and resultSet is null or empty
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, GetModifyTime_001, TestSize.Level4)
+HWTEST_F(RdbStoreImplTest, GetModifyTime_001, TestSize.Level2)
 {
+    RdbStoreImplTest::store->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
+        "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+
+    // table name is ""
     std::vector<RdbStore::PRIKey> PKey = {1};
-    std::map<RdbStore::PRIKey, RdbStore::Date> result = RdbStoreImplTest::store->GetModifyTime("", "ROWID", PKey);
+    std::map<RdbStore::PRIKey, RdbStore::Date> result = RdbStoreImplTest::store->GetModifyTime("", "data_key", PKey);
     int size = result.size();
     EXPECT_EQ(0, size);
+
+    // columnName is ""
+    result = RdbStoreImplTest::store->GetModifyTime("test", "", PKey);
+    size = result.size();
+    EXPECT_EQ(0, size);
+
+    // keys is empty
+    std::vector<RdbStore::PRIKey> emptyPRIKey;
+    result = RdbStoreImplTest::store->GetModifyTime("test", "data_key", emptyPRIKey);
+    size = result.size();
+    EXPECT_EQ(0, size);
+
+    // table name is  not exist , resultSet is null
+    result = RdbStoreImplTest::store->GetModifyTime("test", "data_key", PKey);
+    size = result.size();
+    EXPECT_EQ(0, size);
+
+    RdbStoreImplTest::store->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
 }
 
 /* *
@@ -152,7 +184,7 @@ HWTEST_F(RdbStoreImplTest, GetModifyTime_001, TestSize.Level4)
  * @tc.desc: Abnormal testCase for GetModifyTime, get timestamp by data3 ,if resultSet is empty
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, GetModifyTime_002, TestSize.Level4)
+HWTEST_F(RdbStoreImplTest, GetModifyTime_002, TestSize.Level2)
 {
     RdbStoreImplTest::store->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
         "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, hash_key INTEGER, "
@@ -171,7 +203,7 @@ HWTEST_F(RdbStoreImplTest, GetModifyTime_002, TestSize.Level4)
  * @tc.desc: Abnormal testCase for BatchInsert, if initialBatchValues is empty
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, Rdb_BatchInsertTest_001, TestSize.Level4)
+HWTEST_F(RdbStoreImplTest, Rdb_BatchInsertTest_001, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
     int64_t insertNum = 1;
@@ -185,7 +217,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_BatchInsertTest_001, TestSize.Level4)
  * @tc.desc: Abnormal testCase for Query, if table name is empty
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_001, TestSize.Level4)
+HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_001, TestSize.Level2)
 {
     int errCode = E_OK;
     RdbStoreImplTest::store->Query(errCode, true, "", {}, "",
@@ -198,7 +230,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_001, TestSize.Level4)
  * @tc.desc: Normal testCase for Query, get * form test
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_002, TestSize.Level4)
+HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_002, TestSize.Level2)
 {
     store->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
                       "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
@@ -215,7 +247,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_002, TestSize.Level4)
  * @tc.desc: Abnormal testCase for RemoteQuery, GetRdbService failed if rdbstoreconfig bundlename_ empty
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, Rdb_RemoteQueryTest_001, TestSize.Level4)
+HWTEST_F(RdbStoreImplTest, Rdb_RemoteQueryTest_001, TestSize.Level2)
 {
     int errCode = E_OK;
     AbsRdbPredicates predicate("test");
@@ -223,4 +255,27 @@ HWTEST_F(RdbStoreImplTest, Rdb_RemoteQueryTest_001, TestSize.Level4)
     auto ret = RdbStoreImplTest::store->RemoteQuery("", predicate, {}, errCode);
     EXPECT_EQ(E_INVALID_ARGS, errCode);
     EXPECT_EQ(nullptr, ret);
+}
+
+/* *
+ * @tc.name: Rdb_SqlitConnectionOpenTest_001
+ * @tc.desc: Abnormal testCase for SetPageSize, return ok if open db again and set same page size
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionOpenTest_001, TestSize.Level4)
+{
+    const std::string DATABASE_NAME = RDB_TEST_PATH + "SqlitConnectionOpenTest.db";
+    int errCode = E_OK;
+    RdbStoreConfig config(DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetPageSize(1024);
+    SqliteConnection* connection = SqliteConnection::Open(config, true, errCode);
+    EXPECT_NE(nullptr, connection);
+    int64_t value = 0;
+    errCode = connection->ExecuteGetLong(value, "PRAGMA page_size");
+    EXPECT_EQ(E_OK, errCode);
+    EXPECT_EQ(1024, value);
+
+    auto tmp = SqliteConnection::Open(config, true, errCode);
+    EXPECT_NE(nullptr, tmp);
 }
