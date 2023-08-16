@@ -25,9 +25,8 @@ public:
     static int SetSecurityLabel(const RdbStoreConfig &config);
 
 private:
-    static std::string GetSecurityLevelValue(SecurityLevel securityLevel);
-    static int SetFileSecurityLevel(const std::string &filePath, const std::string &securityLevel);
-    static std::string GetFileSecurityLevel(const std::string &filePath);
+    inline static std::string GetSecurityLevelValue(SecurityLevel securityLevel);
+    inline static std::string GetFileSecurityLevel(const std::string &filePath);
 };
 } // namespace NativeRdb
 } // namespace OHOS
