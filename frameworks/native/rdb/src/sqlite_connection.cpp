@@ -842,6 +842,7 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     }
 
     if (!ResetStatement(&sharedBlockInfo)) {
+        LOG_ERROR("ExecuteForSharedBlock:ResetStatement Failed.");
         return E_ERROR;
     }
     rowNum = static_cast<int>(GetCombinedData(sharedBlockInfo.startPos, sharedBlockInfo.totalRows));
