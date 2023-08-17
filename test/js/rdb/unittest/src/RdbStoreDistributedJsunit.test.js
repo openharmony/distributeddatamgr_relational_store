@@ -20,6 +20,11 @@ const TAG = "[RDB_JSKITS_TEST_Distributed]"
 const STORE_NAME = "distributed_rdb.db"
 var rdbStore = undefined;
 
+function storeObserver(devices) {
+    console.info(TAG + devices + " dataChange");
+    expect(devices).assertEqual(null)
+}
+
 describe('rdbStoreDistributedTest', function () {
     beforeAll(async function (done) {
         console.info(TAG + 'beforeAll')
@@ -89,7 +94,6 @@ describe('rdbStoreDistributedTest', function () {
         try {
             await rdbStore.setDistributedTables([])
             console.log(TAG + "set none to be distributed table success");
-            expect(rdbStore).assertEqual(rdbStore)
         } catch (err) {
             console.log(TAG + "set none to be distributed table failed");
             expect(null).assertFail();
@@ -108,7 +112,6 @@ describe('rdbStoreDistributedTest', function () {
         try {
             await rdbStore.setDistributedTables(['employee'])
             console.log(TAG + "set employee to be distributed table success");
-            expect(rdbStore).assertEqual(rdbStore)
         } catch (err) {
             console.log(TAG + "set employee to be distributed table failed");
             expect(null).assertFail();
@@ -127,7 +130,6 @@ describe('rdbStoreDistributedTest', function () {
         try {
             await rdbStore.setDistributedTables(['employee', 'product'])
             console.log(TAG + "set employee and product to be distributed table success");
-            expect(rdbStore).assertEqual(rdbStore)
         } catch (err) {
             console.log(TAG + "set employee and product to be distributed table failed");
             expect(null).assertFail();
@@ -285,34 +287,43 @@ describe('rdbStoreDistributedTest', function () {
     /**
      * @tc.name sync test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_011
-     * @tc.desc sync test
+     * @tc.desc normal testcase for synchronization operation of interface 'inDevices'
      */
-    it('testRdbStoreDistributed0011', 0, async function (done) {
+    it('testRdbStoreDistributed0011', 0, async function () {
         console.log(TAG + "************* testRdbStoreDistributed0011 start *************");
         let predicates = new dataRdb.RdbPredicates("employee")
         predicates = predicates.inDevices(["12345678abcd"]);
-        rdbStore.sync(dataRdb.SyncMode.SYNC_MODE_PUSH, predicates);
-        console.log(TAG + "sync push success");
-        expect(rdbStore).assertEqual(rdbStore);
-        rdbStore.sync(dataRdb.SyncMode.SYNC_MODE_PULL, predicates);
-        console.log(TAG + "sync pull success");
-        expect(rdbStore).assertEqual(rdbStore);
-        done();
+        try {
+            rdbStore.sync(dataRdb.SyncMode.SYNC_MODE_PUSH, predicates);
+            console.log(TAG + "sync push success"); 
+        } catch (err) {
+            console.log(TAG + "sync push" + err);
+            expect().assertFalse();
+        }
+        try {
+            rdbStore.sync(dataRdb.SyncMode.SYNC_MODE_PULL, predicates);
+            console.log(TAG + "sync pull success");
+        } catch (err) {
+            console.log(TAG + "sync push" + err);
+            expect().assertFalse();
+        }
         console.log(TAG + "************* testRdbStoreDistributed0011 end *************");
     })
 
     /**
      * @tc.name subscribe test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_012
-     * @tc.desc subscribe test
+     * @tc.desc normal testcase for subscription data changes of interface 'on'
      */
     it('testRdbStoreDistributed0012', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDistributed0012 start *************");
-        rdbStore.on("dataChange", dataRdb.SubscribeType.SUBSCRIBE_TYPE_REMOTE, (device) => {
-            console.log(TAG + device + " dataChange");
-        });
-        console.log(TAG + "on dataChange success");
-        expect(rdbStore).assertEqual(rdbStore);
+        try {
+            rdbStore.on("dataChange", dataRdb.SubscribeType.SUBSCRIBE_TYPE_REMOTE, storeObserver);
+            console.log(TAG + "on dataChange success");
+        } catch (err) {
+            console.log(TAG + "on dataChange" + err);
+            expect().assertFalse();
+        }
         done()
         console.log(TAG + "************* testRdbStoreDistributed0012 end *************");
     })
@@ -320,15 +331,17 @@ describe('rdbStoreDistributedTest', function () {
     /**
      * @tc.name subscribe test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_013
-     * @tc.desc subscribe test
+     * @tc.desc normal testcase for unsubscribe data changes of interface 'off'
      */
     it('testRdbStoreDistributed0013', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDistributed0013 start *************");
-        rdbStore.off("dataChange", dataRdb.SubscribeType.SUBSCRIBE_TYPE_REMOTE, (device) => {
-            console.log(TAG + device + " dataChange");
-        });
-        console.log(TAG + "off dataChange success");
-        expect(rdbStore).assertEqual(rdbStore);
+        try {
+            rdbStore.off("dataChange", data_Rdb.SubscribeType.SUBSCRIBE_TYPE_REMOTE, storeObserver);
+            console.log(TAG + "off dataChange success");
+        } catch (err) {
+            console.log(TAG + "off dataChange" + err);
+            expect().assertFalse();
+        }
         done()
         console.log(TAG + "************* testRdbStoreDistributed0013 end *************");
     })
