@@ -289,7 +289,7 @@ describe('rdbStoreDistributedTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_011
      * @tc.desc normal testcase for synchronization operation of interface 'inDevices'
      */
-    it('testRdbStoreDistributed0011', 0, async function (done) {
+    it('testRdbStoreDistributed0011', 0, async function () {
         console.log(TAG + "************* testRdbStoreDistributed0011 start *************");
         let predicates = new dataRdb.RdbPredicates("employee")
         predicates = predicates.inDevices(["12345678abcd"]);
@@ -298,16 +298,15 @@ describe('rdbStoreDistributedTest', function () {
             console.log(TAG + "sync push success"); 
         } catch (err) {
             console.log(TAG + "sync push" + err);
-            expect(err !== null).assertFalse();
+            expect().assertFalse();
         }
         try {
             rdbStore.sync(dataRdb.SyncMode.SYNC_MODE_PULL, predicates);
             console.log(TAG + "sync pull success");
         } catch (err) {
             console.log(TAG + "sync push" + err);
-            expect(err !== null).assertFalse();
+            expect().assertFalse();
         }
-        done();
         console.log(TAG + "************* testRdbStoreDistributed0011 end *************");
     })
 
@@ -323,7 +322,7 @@ describe('rdbStoreDistributedTest', function () {
             console.log(TAG + "on dataChange success");
         } catch (err) {
             console.log(TAG + "on dataChange" + err);
-            expect(err !== null).assertFalse();
+            expect().assertFalse();
         }
         done()
         console.log(TAG + "************* testRdbStoreDistributed0012 end *************");
@@ -341,7 +340,7 @@ describe('rdbStoreDistributedTest', function () {
             console.log(TAG + "off dataChange success");
         } catch (err) {
             console.log(TAG + "off dataChange" + err);
-            expect(err !== null).assertFalse();
+            expect().assertFalse();
         }
         done()
         console.log(TAG + "************* testRdbStoreDistributed0013 end *************");
