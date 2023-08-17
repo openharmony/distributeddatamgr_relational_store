@@ -32,7 +32,7 @@ const BASE_COUNT = 1000; // loop times
 const SPECIAL_BASE_COUNT = 300;
 const BASE_LINE_TABLE = 1800; // callback tablet base line
 const BASE_LINE_PHONE = 15000; // callback phone base line
-const BASE_LINE = (deviceInfo.deviceType == "tablet" || deviceType == "2in1") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
+const BASE_LINE = (deviceInfo.deviceType == "tablet" || deviceInfo.deviceType == "2in1") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
 
 describe('rdbStoreOthersCallbackPerf', function () {
   beforeAll(async function () {
