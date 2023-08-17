@@ -168,8 +168,6 @@ public:
 
 private:
     int InnerOpen();
-    int InnerInsert(int64_t &outRowId, const std::string &table, ValuesBucket values,
-        ConflictResolution conflictResolution);
     int CheckAttach(const std::string &sql);
     int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
     int FreeTransaction(SqliteConnection *connection, const std::string &sql);
@@ -178,13 +176,13 @@ private:
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
-    void SetAssetStatusWhileInsert(ValueObject &val);
+    void SetAssetStatusWhileInsert(const ValueObject &val);
     void DoCloudSync(const std::string &table);
     int InnerBackup(const std::string databasePath,
         const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>());
     std::map<PRIKey, Date> GetModifyTimeByRowId(
         const std::string &logTable, std::vector<PRIKey> &keys);
-    std::string GetSqlArgs(size_t size);
+    inline std::string GetSqlArgs(size_t size);
     Uri GetUri(const std::string &event);
     int SubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
     int SubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
