@@ -22,14 +22,6 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
-int SecurityPolicy::SetFileSecurityLevel(const std::string &filePath, const std::string &securityLevel)
-{
-    bool result = FileManagement::ModuleSecurityLabel::SecurityLabel::SetSecurityLabel(filePath, securityLevel);
-    LOG_INFO("Set database securityLabel:%{public}s, result:%{public}d.", securityLevel.c_str(), result);
-    return result ? E_OK : E_ERROR;
-}
-
 std::string SecurityPolicy::GetSecurityLevelValue(SecurityLevel securityLevel)
 {
     switch (securityLevel) {
@@ -56,11 +48,16 @@ int SecurityPolicy::SetSecurityLabel(const RdbStoreConfig &config)
     if (config.GetStorageMode() != StorageMode::MODE_MEMORY && config.GetSecurityLevel() != SecurityLevel::LAST) {
         std::string currentLevel = GetFileSecurityLevel(config.GetPath());
         std::string toSetLevel = GetSecurityLevelValue(config.GetSecurityLevel());
-        LOG_INFO("Security level current is %{public}s to %{public}s.", currentLevel.c_str(), toSetLevel.c_str());
+        int errCode = E_OK;
         if (currentLevel.empty()) {
-            return SetFileSecurityLevel(config.GetPath(), toSetLevel);
+            errCode = FileManagement::ModuleSecurityLabel::SecurityLabel::SetSecurityLabel(config.GetPath(),
+                toSetLevel) ? E_OK : E_ERROR;
+        } else {
+            errCode = currentLevel == toSetLevel ? E_OK : E_ERROR;
         }
-        return currentLevel == toSetLevel ? E_OK : E_ERROR;
+        LOG_INFO("Set security level from %{public}s to %{public}s, result:%{public}d.", currentLevel.c_str(),
+            toSetLevel.c_str(), errCode);
+        return errCode;
     }
     return E_OK;
 }

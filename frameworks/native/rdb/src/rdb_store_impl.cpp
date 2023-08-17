@@ -197,6 +197,7 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTimeByRowId(
     }
     return result;
 }
+#endif
 
 std::string RdbStoreImpl::GetSqlArgs(size_t size)
 {
@@ -206,7 +207,6 @@ std::string RdbStoreImpl::GetSqlArgs(size_t size)
     }
     return args;
 }
-#endif
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
     : rdbStoreConfig(config), connectionPool(nullptr), isOpen(true), path(config.GetPath()), orgPath(config.GetPath()),
@@ -258,7 +258,7 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
     }
     // prepare batch data & sql
     std::vector<std::pair<std::string, std::vector<ValueObject>>> vecVectorObj;
-    for (auto iter = initialBatchValues.begin(); iter != initialBatchValues.end(); iter++) {
+    for (auto iter = initialBatchValues.begin(); iter != initialBatchValues.end(); ++iter) {
         auto values = (*iter).GetAll();
         vecVectorObj.push_back(GetInsertParams(values, table));
     }
@@ -292,7 +292,7 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
     }
 
     // batch insert the values
-    for (auto iter = vecVectorObj.begin(); iter != vecVectorObj.end(); iter++) {
+    for (auto iter = vecVectorObj.begin(); iter != vecVectorObj.end(); ++iter) {
         outInsertNum++;
         errCode = connection->ExecuteSql(iter->first, iter->second);
         if (errCode != E_OK) {
@@ -311,24 +311,29 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
 std::pair<std::string, std::vector<ValueObject>> RdbStoreImpl::GetInsertParams(
     std::map<std::string, ValueObject> &valuesMap, const std::string &table)
 {
-    std::stringstream sql;
+    std::string sql;
     std::vector<ValueObject> bindArgs;
-    sql << "INSERT INTO " << table << '(';
+    sql.append("INSERT INTO ").append(table).append("(");
+    size_t bindArgsSize = valuesMap.size();
+    if (bindArgsSize == 0) {
+        sql.append(") VALUES ()");
+        return std::make_pair(sql, bindArgs);
+    }
+
+    bindArgs.reserve(bindArgsSize);
+    auto valueIter = valuesMap.begin();
+    sql.append(valueIter->first);
+    bindArgs.push_back(valueIter->second);
+    ++valueIter;
     // prepare batch values & sql.columnName
-    for (auto valueIter = valuesMap.begin(); valueIter != valuesMap.end(); valueIter++) {
-        sql << ((valueIter == valuesMap.begin()) ? "" : ",");
-        sql << valueIter->first;
+    for (; valueIter != valuesMap.end(); ++valueIter) {
+        sql.append(",").append(valueIter->first);
         bindArgs.push_back(valueIter->second);
     }
+    sql.append(") VALUES (").append(GetSqlArgs(bindArgsSize)).append(")");
     // prepare sql.value
-    sql << ") VALUES (";
-    for (size_t i = 0; i < valuesMap.size(); i++) {
-        sql << ((i == 0) ? "?" : ",?");
-    }
-    sql << ')';
-
     // put sql & vec<value> into map<sql, args>
-    return std::make_pair(sql.str(), bindArgs);
+    return std::make_pair(sql, bindArgs);
 }
 
 int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)
@@ -339,17 +344,11 @@ int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const Val
 int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
     const ValuesBucket &initialValues, ConflictResolution conflictResolution)
 {
-    return InnerInsert(outRowId, table, initialValues, conflictResolution);
-}
-
-int RdbStoreImpl::InnerInsert(int64_t &outRowId, const std::string &table,
-    ValuesBucket values, ConflictResolution conflictResolution)
-{
     if (table.empty()) {
         return E_EMPTY_TABLE_NAME;
     }
 
-    if (values.IsEmpty()) {
+    if (initialValues.IsEmpty()) {
         return E_EMPTY_VALUES_BUCKET;
     }
 
@@ -359,14 +358,14 @@ int RdbStoreImpl::InnerInsert(int64_t &outRowId, const std::string &table,
         return errCode;
     }
 
-    std::stringstream sql;
-    sql << "INSERT" << conflictClause << " INTO " << table << '(';
-
+    std::string sql;
+    sql.append("INSERT").append(conflictClause).append(" INTO ").append(table).append("(");
+    size_t bindArgsSize = initialValues.values_.size();
     std::vector<ValueObject> bindArgs;
+    bindArgs.reserve(bindArgsSize);
     const char *split = "";
-    for (auto &[key, val] : values.values_) {
-        sql << split;
-        sql << key;               // columnName
+    for (const auto &[key, val] : initialValues.values_) {
+        sql.append(split).append(key);
         if (val.GetType() == ValueObject::TYPE_ASSETS &&
             conflictResolution == ConflictResolution::ON_CONFLICT_REPLACE) {
             return E_INVALID_ARGS;
@@ -378,18 +377,18 @@ int RdbStoreImpl::InnerInsert(int64_t &outRowId, const std::string &table,
         split = ",";
     }
 
-    sql << ") VALUES (";
-    for (size_t i = 0; i < bindArgs.size(); i++) {
-        sql << ((i == 0) ? "?" : ",?");
+    sql.append(") VALUES (");
+    if (bindArgsSize > 0) {
+        sql.append(GetSqlArgs(bindArgsSize));
     }
-    sql << ')';
 
+    sql.append(")");
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
     if (connection == nullptr) {
         return E_CON_OVER_LIMIT;
     }
 
-    errCode = connection->ExecuteForLastInsertedRowId(outRowId, sql.str(), bindArgs);
+    errCode = connection->ExecuteForLastInsertedRowId(outRowId, sql, bindArgs);
     connectionPool->ReleaseConnection(connection);
     if (errCode == E_OK) {
         DoCloudSync(table);
@@ -397,7 +396,7 @@ int RdbStoreImpl::InnerInsert(int64_t &outRowId, const std::string &table,
     return errCode;
 }
 
-void RdbStoreImpl::SetAssetStatusWhileInsert(ValueObject &val)
+void RdbStoreImpl::SetAssetStatusWhileInsert(const ValueObject &val)
 {
     if (val.GetType() == ValueObject::TYPE_ASSET) {
         auto *asset = Traits::get_if<ValueObject::Asset>(&val.value);
@@ -466,24 +465,25 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
         return errCode;
     }
 
-    std::stringstream sql;
-    sql << "UPDATE" << conflictClause << " " << table << " SET ";
-
+    std::string sql;
+    sql.append("UPDATE").append(conflictClause).append(" ").append(table).append(" SET ");
     std::vector<ValueObject> tmpBindArgs;
+    size_t tmpBindSize = values.values_.size() + bindArgs.size();
+    tmpBindArgs.reserve(tmpBindSize);
     const char *split = "";
     for (auto &[key, val] : values.values_) {
-        sql << split;
-        if (val.GetType() == ValueObject::TYPE_ASSETS) {
-            sql << key << "=merge_assets(" << key << ", ?)"; // columnName
+        sql.append(split);
+        if (val.GetType() != ValueObject::TYPE_ASSETS) {
+            sql.append(key).append("=?"); // columnName
         } else {
-            sql << key << "=?"; // columnName
+            sql.append(key).append("=merge_assets(").append(key).append(", ?)"); // columnName
         }
         tmpBindArgs.push_back(val);  // columnValue
         split = ",";
     }
 
     if (!whereClause.empty()) {
-        sql << " WHERE " << whereClause;
+        sql.append(" WHERE ").append(whereClause);
     }
 
     tmpBindArgs.insert(tmpBindArgs.end(), bindArgs.begin(), bindArgs.end());
@@ -493,7 +493,7 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
         return E_CON_OVER_LIMIT;
     }
 
-    errCode = connection->ExecuteForChangedRowCount(changedRows, sql.str(), tmpBindArgs);
+    errCode = connection->ExecuteForChangedRowCount(changedRows, sql, tmpBindArgs);
     connectionPool->ReleaseConnection(connection);
     if (errCode == E_OK) {
         DoCloudSync(table);
@@ -523,10 +523,10 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
         return E_EMPTY_TABLE_NAME;
     }
 
-    std::stringstream sql;
-    sql << "DELETE FROM " << table;
+    std::string sql;
+    sql.append("DELETE FROM ").append(table);
     if (!whereClause.empty()) {
-        sql << " WHERE " << whereClause;
+        sql.append(" WHERE ").append(whereClause);
     }
 
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
@@ -534,7 +534,7 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
         return E_CON_OVER_LIMIT;
     }
 
-    int errCode = connection->ExecuteForChangedRowCount(deletedRows, sql.str(), bindArgs);
+    int errCode = connection->ExecuteForChangedRowCount(deletedRows, sql, bindArgs);
     connectionPool->ReleaseConnection(connection);
     if (errCode == E_OK) {
         DoCloudSync(table);
@@ -1204,9 +1204,6 @@ std::string RdbStoreImpl::GetName()
 void RdbStoreImpl::DoCloudSync(const std::string &table)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    if (pool_ == nullptr) {
-        return;
-    }
     {
         std::shared_lock<decltype(rwMutex_)> lock(rwMutex_);
         if (cloudTables_.empty() || (!table.empty() && cloudTables_.find(table) == cloudTables_.end())) {
@@ -1227,6 +1224,9 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
         if (!empty) {
             return;
         }
+    }
+    if (pool_ == nullptr) {
+        return;
     }
     auto interval =
         std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::milliseconds(INTERVAL));
