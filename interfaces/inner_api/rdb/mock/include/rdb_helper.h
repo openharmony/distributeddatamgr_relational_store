@@ -35,7 +35,6 @@ public:
 private:
     static int ProcessOpenCallback(
         RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
-    static void InitSecurityManager(const RdbStoreConfig &config);
     static std::mutex mutex_;
     static std::map<std::string, std::shared_ptr<RdbStore>> storeCache_;
 };

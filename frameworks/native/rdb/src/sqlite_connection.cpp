@@ -705,6 +705,8 @@ int SqliteConnection::ManageKey(const SqliteConfig &config)
     if (!config.IsEncrypt()) {
         return E_OK;
     }
+
+    RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
     bool isKeyFileExists =
         RdbSecurityManager::GetInstance().CheckKeyDataFileExists(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
     if (!isKeyFileExists) {
