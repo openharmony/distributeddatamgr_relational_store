@@ -32,6 +32,7 @@ SqliteConfig::SqliteConfig(const RdbStoreConfig &config)
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     isEncrypt = config.IsEncrypt();
     isCreateNecessary = config.IsCreateNecessary();
+    bundleName = config.GetBundleName();
 #endif
 }
 
