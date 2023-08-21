@@ -17,6 +17,7 @@
 
 #include "logger.h"
 #include "napi_rdb_trace.h"
+#include "rdb_errno.h"
 
 using namespace OHOS::Rdb;
 using namespace OHOS::AppDataMgrJsKit;
@@ -30,7 +31,8 @@ void Context::SetAction(
     size_t argc = MAX_INPUT_COUNT;
     napi_value self = nullptr;
     napi_value argv[MAX_INPUT_COUNT] = { nullptr };
-    NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
+    void *data = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, &data));
 
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, argv[argc - 1], &valueType);
@@ -39,6 +41,10 @@ void Context::SetAction(
         NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, argv[argc - 1], 1, &callback_));
         argc = argc - 1;
     }
+    if (data) {
+        isAsync_ = *reinterpret_cast<bool *>(data);
+    }
+
     // int -->input_(env, argc, argv, self)
     input(env, argc, argv, self);
 
@@ -105,6 +111,11 @@ void AsyncCall::SetBusinessError(napi_env env, std::shared_ptr<Error> error, nap
 
 napi_value AsyncCall::Call(napi_env env, std::shared_ptr<Context> context)
 {
+    return context->isAsync_ ? Async(env, context) : Sync(env, context);
+}
+
+napi_value AsyncCall::Async(napi_env env, std::shared_ptr<Context> context)
+{
     napi_value promise = nullptr;
     if (context->callback_ == nullptr) {
         napi_create_promise(env, &context->defer_, &promise);
@@ -122,6 +133,13 @@ napi_value AsyncCall::Call(napi_env env, std::shared_ptr<Context> context)
     return promise;
 }
 
+napi_value AsyncCall::Sync(napi_env env, std::shared_ptr<Context> context)
+{
+    OnExecute(env, reinterpret_cast<void *>(context.get()));
+    OnComplete(env, reinterpret_cast<void *>(context.get()));
+    return context->result_;
+}
+
 void AsyncCall::OnExecute(napi_env env, void *data)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -132,25 +150,35 @@ void AsyncCall::OnExecute(napi_env env, void *data)
     context->exec_ = nullptr;
 }
 
-void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
+void AsyncCall::OnComplete(napi_env env, void *data)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     Context *context = reinterpret_cast<Context *>(data);
     if (context->execCode_ != NativeRdb::E_OK) {
         context->SetError(std::make_shared<InnerError>(context->execCode_));
     }
-    napi_value output = nullptr;
     // if async execute status is not napi_ok then un-execute out function
     if ((context->error == nullptr) && context->output_) {
-        context->output_(env, output);
+        context->output_(env, context->result_);
     }
     context->output_ = nullptr;
+}
+
+void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    OnComplete(env, data);
+    OnReturn(env, status, data);
+}
+
+void AsyncCall::OnReturn(napi_env env, napi_status status, void *data)
+{
+    Context *context = reinterpret_cast<Context *>(data);
     napi_value result[ARG_BUTT] = { 0 };
     // if out function status is ok then async renturn output data, else return error.
     if (context->error == nullptr) {
         napi_get_undefined(env, &result[ARG_ERROR]);
-        if (output != nullptr) {
-            result[ARG_DATA] = output;
+        if (context->result_ != nullptr) {
+            result[ARG_DATA] = context->result_;
         } else {
             napi_get_undefined(env, &result[ARG_DATA]);
         }
