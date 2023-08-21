@@ -183,7 +183,7 @@ void RdbStoreConfig::SetReadOnly(bool readOnly)
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 int RdbStoreConfig::SetDistributedType(DistributedType type)
 {
-    if (type < DistributedType::RDB_DEVICE_COLLABORATION || type >= DistributedType::RDB_DISTRIBUTED_TYPE_MAX) {
+    if (type != DistributedType::RDB_DEVICE_COLLABORATION) {
         LOG_ERROR("type is invalid");
         return E_ERROR;
     }
