@@ -298,14 +298,14 @@ describe('rdbStoreDistributedTest', function () {
             console.log(TAG + "sync push success"); 
         } catch (err) {
             console.log(TAG + "sync push" + err);
-            expect().assertFalse();
+            expect().assertFail();
         }
         try {
             rdbStore.sync(dataRdb.SyncMode.SYNC_MODE_PULL, predicates);
             console.log(TAG + "sync pull success");
         } catch (err) {
             console.log(TAG + "sync push" + err);
-            expect().assertFalse();
+            expect().assertFail();
         }
         console.log(TAG + "************* testRdbStoreDistributed0011 end *************");
     })
@@ -315,16 +315,15 @@ describe('rdbStoreDistributedTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_012
      * @tc.desc normal testcase for subscription data changes of interface 'on'
      */
-    it('testRdbStoreDistributed0012', 0, async function (done) {
+    it('testRdbStoreDistributed0012', 0, async function () {
         console.log(TAG + "************* testRdbStoreDistributed0012 start *************");
         try {
             rdbStore.on("dataChange", dataRdb.SubscribeType.SUBSCRIBE_TYPE_REMOTE, storeObserver);
             console.log(TAG + "on dataChange success");
         } catch (err) {
             console.log(TAG + "on dataChange" + err);
-            expect().assertFalse();
+            expect().assertFail();
         }
-        done()
         console.log(TAG + "************* testRdbStoreDistributed0012 end *************");
     })
 
@@ -333,16 +332,15 @@ describe('rdbStoreDistributedTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_013
      * @tc.desc normal testcase for unsubscribe data changes of interface 'off'
      */
-    it('testRdbStoreDistributed0013', 0, async function (done) {
+    it('testRdbStoreDistributed0013', 0, async function () {
         console.log(TAG + "************* testRdbStoreDistributed0013 start *************");
         try {
-            rdbStore.off("dataChange", data_Rdb.SubscribeType.SUBSCRIBE_TYPE_REMOTE, storeObserver);
+            rdbStore.off("dataChange", dataRdb.SubscribeType.SUBSCRIBE_TYPE_REMOTE, storeObserver);
             console.log(TAG + "off dataChange success");
         } catch (err) {
             console.log(TAG + "off dataChange" + err);
-            expect().assertFalse();
+            expect().assertFail();
         }
-        done()
         console.log(TAG + "************* testRdbStoreDistributed0013 end *************");
     })
     console.log(TAG + "*************Unit Test End*************");
