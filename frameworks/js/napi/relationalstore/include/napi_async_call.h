@@ -30,6 +30,10 @@ namespace RelationalStoreJsKit {
 using InputAction = std::function<void(napi_env, size_t, napi_value *, napi_value)>;
 using OutputAction = std::function<void(napi_env, napi_value &)>;
 using ExecuteAction = std::function<int()>;
+static bool async = true;
+static bool sync = !async;
+#define ASYNC &async
+#define SYNC &sync
 
 class Context {
 public:
@@ -39,6 +43,7 @@ public:
     virtual ~Context();
 
     napi_env env_ = nullptr;
+    bool isAsync_ = true;
     void *boundObj = nullptr;
     std::shared_ptr<Error> error;
 
@@ -50,6 +55,7 @@ public:
     int execCode_ = OK;
     OutputAction output_ = nullptr;
     ExecuteAction exec_ = nullptr;
+    napi_value result_ = nullptr;
     std::shared_ptr<Context> keep_;
 };
 
@@ -60,8 +66,12 @@ public:
 private:
     enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
     static void OnExecute(napi_env env, void *data);
+    static void OnComplete(napi_env env, void *data);
+    static void OnReturn(napi_env env, napi_status status, void *data);
     static void OnComplete(napi_env env, napi_status status, void *data);
     static void SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError);
+    static napi_value Async(napi_env env, std::shared_ptr<Context> context);
+    static napi_value Sync(napi_env env, std::shared_ptr<Context> context);
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
