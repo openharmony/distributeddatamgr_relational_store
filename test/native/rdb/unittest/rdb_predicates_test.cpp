@@ -928,6 +928,12 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThanOrEqualTo_006, TestSize.Leve
     predicates1.GreaterThanOrEqualTo("timeValue", std::to_string(calendarTime).c_str());
     std::shared_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes6));
+
+    // Abnormal testCase of RdbPredicates for GreaterThanOrEqualTo if field is empty
+    predicates1.Clear();
+    predicates1.GreaterThanOrEqualTo("", "1");
+    std::shared_ptr<ResultSet> allDataTypes7 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    EXPECT_EQ(3, ResultSize(allDataTypes7));
 }
 
 /* *

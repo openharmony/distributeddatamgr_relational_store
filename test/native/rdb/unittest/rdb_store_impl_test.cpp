@@ -160,6 +160,11 @@ HWTEST_F(RdbStoreImplTest, GetModifyTime_001, TestSize.Level2)
     int size = result.size();
     EXPECT_EQ(0, size);
 
+    // table name is not exist , query resultSet is null
+    result = RdbStoreImplTest::store->GetModifyTime("test", "data_key", PKey);
+    size = result.size();
+    EXPECT_EQ(0, size);
+
     // columnName is ""
     result = RdbStoreImplTest::store->GetModifyTime("test", "", PKey);
     size = result.size();
@@ -171,17 +176,12 @@ HWTEST_F(RdbStoreImplTest, GetModifyTime_001, TestSize.Level2)
     size = result.size();
     EXPECT_EQ(0, size);
 
-    // table name is  not exist , resultSet is null
-    result = RdbStoreImplTest::store->GetModifyTime("test", "data_key", PKey);
-    size = result.size();
-    EXPECT_EQ(0, size);
-
     RdbStoreImplTest::store->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
 }
 
 /* *
  * @tc.name: GetModifyTime_002
- * @tc.desc: Abnormal testCase for GetModifyTime, get timestamp by data3 ,if resultSet is empty
+ * @tc.desc: Abnormal testCase for GetModifyTime, get timestamp by data3 ,if query resultSet is empty
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplTest, GetModifyTime_002, TestSize.Level2)

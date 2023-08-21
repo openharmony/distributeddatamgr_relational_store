@@ -215,19 +215,6 @@ int SqliteStatement::GetColumnCount(int &count) const
     return E_OK;
 }
 
-/**
- * Obtains the number that the statement has.
- */
-int SqliteStatement::GetNumParameters(int &numParams) const
-{
-    if (stmtHandle == nullptr) {
-        LOG_ERROR("invalid statement.");
-        return E_INVALID_STATEMENT;
-    }
-    numParams = numParameters;
-    return E_OK;
-}
-
 int SqliteStatement::GetColumnName(int index, std::string &columnName) const
 {
     int ret = IsValid(index);
