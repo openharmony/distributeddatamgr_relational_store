@@ -233,7 +233,7 @@ napi_value Convert2JSValue(napi_env env, const Date &date)
 }
 
 template<>
-std::string ToString(const PRIKey &key)  //// 字符串类型转换
+std::string ToString(const PRIKey &key)
 {
     auto strVal = std::get_if<std::string>(&key);
     if (strVal != nullptr) {
