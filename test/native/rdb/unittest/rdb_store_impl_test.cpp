@@ -258,6 +258,17 @@ HWTEST_F(RdbStoreImplTest, Rdb_RemoteQueryTest_001, TestSize.Level2)
 }
 
 /* *
+ * @tc.name: Rdb_RollbackTest_001
+ * @tc.desc: Abnormal testCase for Rollback
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_RollbackTest_001, TestSize.Level2)
+{
+    int ret = RdbStoreImplTest::store->RollBack();
+    EXPECT_EQ(OHOS::NativeRdb::E_NO_TRANSACTION_IN_SESSION, ret);
+}
+
+/* *
  * @tc.name: Rdb_SqlitConnectionOpenTest_001
  * @tc.desc: Abnormal testCase for SetPageSize, return ok if open db again and set same page size
  * @tc.type: FUNC
