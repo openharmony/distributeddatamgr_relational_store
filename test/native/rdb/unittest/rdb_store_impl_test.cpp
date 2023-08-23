@@ -290,3 +290,76 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionOpenTest_001, TestSize.Level4)
     auto tmp = SqliteConnection::Open(config, true, errCode);
     EXPECT_NE(nullptr, tmp);
 }
+
+#ifdef RDB_SUPPORT_ICU
+/* *
+ * @tc.name: Rdb_SqlitConnectionPoolTest_001
+ * @tc.desc: Abnormal testCase for ConfigLocale
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_001, TestSize.Level2)
+{
+    const std::string DATABASE_NAME = RDB_TEST_PATH + "SqlitConnectionOpenTest.db";
+    int errCode = E_OK;
+    RdbStoreConfig config(DATABASE_NAME);
+    config.SetReadConSize(1);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    SqliteConnectionPool* connectionPool = SqliteConnectionPool::Create(config, errCode);
+    EXPECT_NE(nullptr, connectionPool);
+    EXPECT_EQ(E_OK, errCode);
+
+    // error condition does not affect the current program
+    errCode = connectionPool->ConfigLocale("AbnormalTest");
+    EXPECT_EQ(E_OK, errCode);
+
+    // connecting database
+    auto connection = connectionPool->AcquireConnection(true);
+    EXPECT_NE(nullptr, connection);
+    errCode = connectionPool->ConfigLocale("AbnormalTest");
+    EXPECT_EQ(OHOS::NativeRdb::E_NO_ROW_IN_QUERY, errCode);
+    connectionPool->ReleaseConnection(connection);
+
+    delete connectionPool;
+}
+#endif
+
+/* *
+ * @tc.name: Rdb_SqlitConnectionPoolTest_002
+ * @tc.desc: Abnormal testCase for AcquireConnection/AcquireTransaction
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_002, TestSize.Level2)
+{
+    const std::string DATABASE_NAME = RDB_TEST_PATH + "SqlitConnectionOpenTest.db";
+    int errCode = E_OK;
+    RdbStoreConfig config(DATABASE_NAME);
+    config.SetReadConSize(1);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    SqliteConnectionPool* connectionPool = SqliteConnectionPool::Create(config, errCode);
+    EXPECT_NE(nullptr, connectionPool);
+    EXPECT_EQ(E_OK, errCode);
+
+    // repeat AcquireReadConnection without release
+    auto connection = connectionPool->AcquireConnection(true);
+    EXPECT_NE(nullptr, connection);
+    connection = connectionPool->AcquireConnection(true);
+    EXPECT_EQ(nullptr, connection);
+    connectionPool->ReleaseConnection(connection);
+
+    // repeat AcquireWriteConnection without release
+    connection = connectionPool->AcquireConnection(false);
+    EXPECT_NE(nullptr, connection);
+    connection = connectionPool->AcquireConnection(false);
+    EXPECT_EQ(nullptr, connection);
+    connectionPool->ReleaseConnection(connection);
+
+    // repeat AcquireTransaction without release
+    errCode = connectionPool->AcquireTransaction();
+    EXPECT_EQ(E_OK, errCode);
+    errCode = connectionPool->AcquireTransaction();
+    EXPECT_NE(E_OK, errCode);
+    connectionPool->ReleaseTransaction();
+
+    delete connectionPool;
+}
+
