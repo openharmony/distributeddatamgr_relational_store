@@ -337,6 +337,106 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
+     * @tc.name rdb insert test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0008
+     * @tc.desc rdb insert test
+     */
+    it('testRdbStoreInsert0008', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreInsert0008 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        {
+            const valueBucket = {
+                "id": 1,
+                "name": "zhangsan",
+                "age": null,
+                "salary": undefined,
+                "blobType": u8,
+            }
+            await rdbStore.insert("test", valueBucket);
+        }
+
+        {
+            const valueBucket = {
+                "id": 2,
+                "name": "lisi",
+                "age": 19,
+                "salary": 200.5,
+                "blobType": u8,
+            }
+            await rdbStore.insert("test", valueBucket);
+        }
+        let predicates = new data_relationalStore.RdbPredicates("test");
+        let resultSet = await rdbStore.query(predicates);
+        try {
+            done()
+            expect(true).assertEqual(resultSet.goToFirstRow());
+            expect(true).assertEqual(resultSet.isColumnNull(resultSet.getColumnIndex("age")));
+            expect(true).assertEqual(resultSet.isColumnNull(resultSet.getColumnIndex("salary")));
+        } catch (err) {
+            console.log("query error" + err);
+        }
+
+        {
+            const valueBucket = {
+                "age": null,
+                "salary": undefined,
+            }
+            predicates.equalTo("name", "lisi")
+            await rdbStore.update(valueBucket, predicates)
+        }
+
+        predicates.clear();
+        resultSet = await rdbStore.query(predicates);
+        try {
+            done();
+            expect(true).assertEqual(resultSet.goToFirstRow());
+            expect(true).assertEqual(resultSet.goToNextRow());
+            expect(true).assertEqual(resultSet.isColumnNull(resultSet.getColumnIndex("age")));
+            expect(200.5).assertEqual(resultSet.getDouble(resultSet.getColumnIndex("salary")));
+        } catch (err) {
+            console.log("query error" + err);
+        }
+
+        resultSet.close()
+        resultSet = null
+        console.log(TAG + "************* testRdbStoreInsert0008 end  *************");
+    })
+
+    /**
+     * @tc.name rdb insert test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0009
+     * @tc.desc rdb insert test
+     */
+    it('testRdbStoreInsert0009', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreInsert0009 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        {
+            const valueBucket = {
+                "name": "zhangsan",
+                "age": new Date(),
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            try {
+                let insertPromise = rdbStore.insert("test", valueBucket)
+                insertPromise.then(async (ret) => {
+                    done();
+                    expect(null).assertFail()
+                }).catch((err) => {
+                    done();
+                    expect(null).assertFail()
+                })
+            } catch (err) {
+                done();
+                console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+                expect("401").assertEqual(err.code)
+            }
+        }
+        console.log(TAG + "************* testRdbStoreInsert0009 end  *************");
+    })
+
+
+    /**
      * @tc.name rdb inserttWithConflictResolution test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0001
      * @tc.desc rdb insertWithConflictResolution test

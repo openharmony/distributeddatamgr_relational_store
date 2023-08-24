@@ -459,7 +459,7 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
         int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
         if (ret == napi_ok) {
             context->valuesBucket.Put(keyStr, std::move(valueObject));
-        } else {
+        } else if (ret != napi_generic_failure) {
             std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>(
                 "The value type of " + keyStr, "valid.");
             RDB_CHECK_RETURN_CALL_RESULT(false, context->SetError(paramError));

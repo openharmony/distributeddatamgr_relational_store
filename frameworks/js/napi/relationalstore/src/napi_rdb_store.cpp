@@ -455,10 +455,9 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
         napi_value value;
         napi_get_property(env, arg, key, &value);
         ValueObject valueObject;
-        int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
         if (ret == napi_ok) {
             context->valuesBucket.Put(keyStr, valueObject);
-        } else {
+        } else if (ret != napi_generic_failure) {
             CHECK_RETURN_SET(false, std::make_shared<ParamError>("The value type of " + keyStr, "valid."));
         }
     }
