@@ -211,17 +211,6 @@ void SqliteConnectionPool::ReleaseReadConnection(SqliteConnection *connection)
     readCondition.notify_one();
 }
 
-bool SqliteConnectionPool::IsOverLength(const std::vector<uint8_t> &newKey)
-{
-    if (newKey.empty()) {
-        return false;
-    }
-
-    std::stringstream ss;
-    copy(newKey.begin(), newKey.end(), std::ostream_iterator<uint8_t>(ss, ""));
-    return ss.str().length() > LIMITATION;
-}
-
 int SqliteConnectionPool::InnerReOpenReadConnections()
 {
     int errCode = E_OK;

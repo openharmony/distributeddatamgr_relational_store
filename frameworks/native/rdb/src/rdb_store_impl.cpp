@@ -878,33 +878,10 @@ int RdbStoreImpl::BeginExecuteSql(const std::string &sql, SqliteConnection **con
     return E_OK;
 }
 bool RdbStoreImpl::IsHoldingConnection()
-
 {
     return connectionPool != nullptr;
 }
 
-int RdbStoreImpl::GiveConnectionTemporarily(int64_t milliseconds)
-{
-    SqliteConnection *connection = connectionPool->AcquireConnection(false);
-    if (connection == nullptr) {
-        return E_CON_OVER_LIMIT;
-    }
-
-    if (connection->IsInTransaction()) {
-        return E_STORE_SESSION_NOT_GIVE_CONNECTION_TEMPORARILY;
-    }
-    int errCode = BeginTransaction();
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
-    errCode = RollBack();
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    return errCode;
-}
 
 /**
  * Attaches a database.

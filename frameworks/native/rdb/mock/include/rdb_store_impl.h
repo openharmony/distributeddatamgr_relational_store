@@ -80,7 +80,6 @@ public:
     bool IsReadOnly() const override;
     bool IsMemoryRdb() const override;
     bool IsHoldingConnection() override;
-    int GiveConnectionTemporarily(int64_t milliseconds);
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
 #endif
