@@ -244,17 +244,34 @@ HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_002, TestSize.Level2)
 
 /* *
  * @tc.name: Rdb_RemoteQueryTest_001
- * @tc.desc: Abnormal testCase for RemoteQuery, GetRdbService failed if rdbstoreconfig bundlename_ empty
+ * @tc.desc: Abnormal testCase for RemoteQuery
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplTest, Rdb_RemoteQueryTest_001, TestSize.Level2)
 {
     int errCode = E_OK;
-    AbsRdbPredicates predicate("test");
-    predicate.EqualTo("id", 1);
-    auto ret = RdbStoreImplTest::store->RemoteQuery("", predicate, {}, errCode);
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", 1);
+
+    // GetRdbService failed if rdbstoreconfig bundlename_ empty
+    auto ret = RdbStoreImplTest::store->RemoteQuery("", predicates, {}, errCode);
     EXPECT_EQ(E_INVALID_ARGS, errCode);
     EXPECT_EQ(nullptr, ret);
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetName("RdbStore_impl_test.db");
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+
+    // GetRdbService succeeded if configuration file has already been configured
+    ret = RdbStoreImplTest::store->RemoteQuery("", predicates, {}, errCode);
+    EXPECT_NE(E_OK, errCode);
+    EXPECT_EQ(nullptr, ret);
+
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
 }
 
 /* *
