@@ -18,6 +18,7 @@
 
 #include "data_ability_predicates.h"
 #include "refbase.h"
+#include "predicates_utils.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -396,4 +397,28 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_015, TestSize.Level1)
 
     OHOS::sptr<DataAbilityPredicates> dataAbilityPredicatesRead = parcel.ReadParcelable<DataAbilityPredicates>();
     EXPECT_EQ(nullptr, dataAbilityPredicatesRead);
+}
+
+/* *
+ * @tc.name: DataAbilityPredicates_016
+ * @tc.desc: test SetAttributes
+ * @tc.type: FUNC
+ * @tc.require: AR000FKD4F
+ */
+HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_016, TestSize.Level1)
+{
+    OHOS::NativeRdb::AbsPredicates predicates;
+    bool isDistinct = true;
+    std::string index = "test";
+    std::string group = "test";
+    std::string order = "";
+    int limit = 1;
+    int offset = 0;
+    PredicatesUtils::SetAttributes(&predicates, isDistinct, index, group, order, limit, offset);
+    EXPECT_EQ(isDistinct, predicates.IsDistinct());
+    EXPECT_EQ(index, predicates.GetIndex());
+    EXPECT_EQ(group, predicates.GetGroup());
+    EXPECT_EQ(order, predicates.GetOrder());
+    EXPECT_EQ(limit, predicates.GetLimit());
+    EXPECT_EQ(offset, predicates.GetOffset());
 }
