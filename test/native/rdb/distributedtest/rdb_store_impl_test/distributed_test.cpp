@@ -186,20 +186,20 @@ HWTEST_F(DistributedTest, ResultSetProxy001, TestSize.Level1)
     errCode = resultSet->GetBlob(1, blob);
     EXPECT_NE(E_OK, errCode);
 
-    std::string GetStringvalue;
-    errCode = resultSet->GetString(1, GetStringvalue);
+    std::string getStringvalue;
+    errCode = resultSet->GetString(1, getStringvalue);
     EXPECT_NE(E_OK, errCode);
 
-    int GetIntvalue;
-    errCode = resultSet->GetInt(1, GetIntvalue);
+    int getIntvalue;
+    errCode = resultSet->GetInt(1, getIntvalue);
     EXPECT_NE(E_OK, errCode);
 
-    int64_t GetLongvalue;
-    errCode = resultSet->GetLong(1, GetLongvalue);
+    int64_t getLongvalue;
+    errCode = resultSet->GetLong(1, getLongvalue);
     EXPECT_NE(E_OK, errCode);
 
-    double GetDoublevalue;
-    errCode = resultSet->GetDouble(1, GetDoublevalue);
+    double getDoublevalue;
+    errCode = resultSet->GetDouble(1, getDoublevalue);
     EXPECT_NE(E_OK, errCode);
 
     bool isNull;
