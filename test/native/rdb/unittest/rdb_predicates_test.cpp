@@ -692,8 +692,7 @@ void RdbStorePredicateTest::BasicDataTypeTest(RdbPredicates predicates1)
     EXPECT_EQ(3, valueInt);
 
     predicates1.Clear();
-    std::vector<uint8_t> blob = {1, 2, 3};
-    predicates1.EqualTo("blobValue", blob);
+    predicates1.EqualTo("blobValue", std::vector<uint8_t>{1, 2, 3});
     std::shared_ptr<ResultSet> allDataTypes9 = RdbStorePredicateTest::store->Query(predicates1, columns);
     int count = 0;
     allDataTypes9->GetRowCount(count);
@@ -929,6 +928,12 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThanOrEqualTo_006, TestSize.Leve
     predicates1.GreaterThanOrEqualTo("timeValue", std::to_string(calendarTime).c_str());
     std::shared_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes6));
+
+    // Abnormal testCase of RdbPredicates for GreaterThanOrEqualTo if field is empty
+    predicates1.Clear();
+    predicates1.GreaterThanOrEqualTo("", "1");
+    std::shared_ptr<ResultSet> allDataTypes7 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    EXPECT_EQ(3, ResultSize(allDataTypes7));
 }
 
 /* *
@@ -1686,6 +1691,35 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetDistributedPredicates_027, TestSize.
 }
 
 /* *
+ * @tc.name: RdbStore_NotInMethod_028
+ * @tc.desc: Abnormal testCase of RdbPredicates for notIn method
+ * @tc.type: FUNC
+ * @tc.require: AR000FKD4F
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_NotInMethod_028, TestSize.Level1)
+{
+    std::vector<std::string> columns;
+    std::vector<ValueObject> arg;
+    int count = 0;
+
+    // RdbPredicates field is empty
+    RdbPredicates rdbPredicates1("AllDataType");
+    rdbPredicates1.NotIn("", arg);
+    std::shared_ptr<ResultSet> resultSet1 = RdbStorePredicateTest::store->Query(rdbPredicates1, columns);
+    resultSet1->GetRowCount(count);
+    EXPECT_EQ(3, count);
+    resultSet1->Close();
+
+    // RdbPredicates values is empty
+    RdbPredicates rdbPredicates2("AllDataType");
+    rdbPredicates2.NotIn("integerValue", arg);
+    std::shared_ptr<ResultSet> resultSet2 = RdbStorePredicateTest::store->Query(rdbPredicates2, columns);
+    resultSet2->GetRowCount(count);
+    EXPECT_EQ(3, count);
+    resultSet2->Close();
+}
+
+/* *
  * @tc.name: RdbStore_EndWrap_001
  * @tc.desc: Abnormal testCase of RdbPredicates for EndWrap, fail to add ')'
  * @tc.type: FUNC
@@ -1958,6 +1992,23 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_OrderByDesc_001, TestSize.Level1)
 }
 
 /* *
+ * @tc.name: RdbStore_OrderByDesc_002
+ * @tc.desc: Normal testCase of RdbPredicates for OrderByDesc
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_OrderByDesc_002, TestSize.Level2)
+{
+    RdbPredicates predicates("AllDataType");
+    predicates.OrderByDesc("id");
+    predicates.OrderByDesc("integerValue");
+
+    std::vector<std::string> columns;
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(3, ResultSize(allDataTypes));
+    allDataTypes->Close();
+}
+
+/* *
  * @tc.name: RdbStore_OrderByAsc_001
  * @tc.desc: Abnormal testCase of RdbPredicates for OrderByAsc, if field is ''
  * @tc.type: FUNC
@@ -1966,6 +2017,23 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_OrderByAsc_001, TestSize.Level1)
 {
     RdbPredicates predicates("AllDataType");
     predicates.OrderByAsc("");
+
+    std::vector<std::string> columns;
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(3, ResultSize(allDataTypes));
+    allDataTypes->Close();
+}
+
+/* *
+ * @tc.name: RdbStore_OrderByAsc_002
+ * @tc.desc: Normal testCase of RdbPredicates for OrderByAsc
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_OrderByAsc_002, TestSize.Level2)
+{
+    RdbPredicates predicates("AllDataType");
+    predicates.OrderByAsc("id");
+    predicates.OrderByAsc("integerValue");
 
     std::vector<std::string> columns;
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
@@ -2058,6 +2126,22 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GroupBy_002, TestSize.Level1)
     std::vector<std::string> columns;
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes));
+    allDataTypes->Close();
+}
+
+/* *
+ * @tc.name: RdbStore_GroupBy_003
+ * @tc.desc: Abnormal testCase of RdbPredicates for GroupBy, if fields is invalid
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_GroupBy_003, TestSize.Level1)
+{
+    RdbPredicates predicates("AllDataType");
+    predicates.GroupBy({""});
+
+    std::vector<std::string> columns;
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
 

@@ -125,7 +125,6 @@ public:
     bool IsReadOnly() const override;
     bool IsMemoryRdb() const override;
     bool IsHoldingConnection() override;
-    int GiveConnectionTemporarily(int64_t milliseconds);
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
 #endif
@@ -208,7 +207,7 @@ private:
     std::shared_ptr<ExecutorPool> pool_;
 
     mutable std::shared_mutex rwMutex_;
-    static inline constexpr uint32_t INTERVAL = 500;
+    static inline constexpr uint32_t INTERVAL = 200;
     static constexpr const char *ROW_ID = "ROWID";
     std::set<std::string> cloudTables_;
 

@@ -169,6 +169,53 @@ HWTEST_F(RdbAttachTest, RdbStore_Attach_002, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
 }
 
+
+/* *
+ * @tc.name: RdbStore_Attach_003
+ * @tc.desc: Abnormal testCase for Attach
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbAttachTest, RdbStore_Attach_003, TestSize.Level2)
+{
+    const std::string alias = "attached";
+    std::vector<uint8_t> destEncryptKey;
+    RdbStoreConfig config(RdbAttachTest::MAIN_DATABASE_NAME);
+    MainOpenCallback helper;
+    int errCode = E_OK;
+
+    // journal mode is wal
+    std::shared_ptr<RdbStore> store1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(nullptr, store1);
+    EXPECT_EQ(E_OK, errCode);
+
+    int ret = store1->Attach(alias, RdbAttachTest::ATTACHED_DATABASE_NAME, destEncryptKey);
+    EXPECT_EQ(E_NOT_SUPPORTED_ATTACH_IN_WAL_MODE, ret);
+    RdbHelper::DeleteRdbStore(RdbAttachTest::MAIN_DATABASE_NAME);
+
+    // journal mode is TRUNCATE
+    // destEncryptKey is empty and isEncrypt_ is false
+    config.SetJournalMode(JournalMode::MODE_TRUNCATE);
+    std::shared_ptr<RdbStore> store2 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(nullptr, store2);
+    EXPECT_EQ(E_OK, errCode);
+    ret = store2->Attach(alias, RdbAttachTest::ATTACHED_DATABASE_NAME, destEncryptKey);
+    EXPECT_EQ(E_OK, ret);
+
+    // destEncryptKey is not empty and isEncrypt_ is false
+    destEncryptKey = {1};
+    ret = store2->Attach(alias, RdbAttachTest::ATTACHED_DATABASE_NAME, destEncryptKey);
+    EXPECT_NE(E_OK, ret);
+    RdbHelper::DeleteRdbStore(RdbAttachTest::MAIN_DATABASE_NAME);
+
+    // destEncryptKey is not empty and isEncrypt_ is true
+    config.SetEncryptStatus(true);
+    std::shared_ptr<RdbStore> store3 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(nullptr, store3);
+    EXPECT_EQ(E_OK, errCode);
+    ret = store3->Attach(alias, RdbAttachTest::ATTACHED_DATABASE_NAME, destEncryptKey);
+    EXPECT_NE(E_OK, ret);
+}
+
 void RdbAttachTest::QueryCheck1(std::shared_ptr<RdbStore> &store) const
 {
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1");
