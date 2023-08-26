@@ -33,8 +33,6 @@ public:
     ~SqliteConnection();
     bool IsWriteConnection() const;
     int Prepare(const std::string &sql, bool &outIsReadOnly);
-    int PrepareAndGetInfo(const std::string &sql, bool &outIsReadOnly, int &numParameters,
-        std::vector<std::string> &columnNames);
     int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteForChangedRowCount(int &changedRows, const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteForLastInsertedRowId(int64_t &outRowId, const std::string &sql,

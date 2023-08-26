@@ -105,9 +105,6 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     }
 
     stepStatement = std::make_shared<SqliteStatement>();
-    if (stepStatement == nullptr) {
-        return E_STEP_STATEMENT_NOT_INIT;
-    }
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
     if (!isDbFileExist && (!config.IsCreateNecessary())) {
@@ -507,38 +504,6 @@ int SqliteConnection::Prepare(const std::string &sql, bool &outIsReadOnly)
     return E_OK;
 }
 
-int SqliteConnection::PrepareAndGetInfo(const std::string &sql, bool &outIsReadOnly, int &numParameters,
-    std::vector<std::string> &columnNames)
-{
-    int errCode = statement.Prepare(dbHandle, sql);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    errCode = statement.GetColumnCount(numParameters);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    int columnCount;
-    errCode = statement.GetColumnCount(columnCount);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    for (int i = 0; i < columnCount; i++) {
-        std::string name;
-        statement.GetColumnName(i, name);
-        columnNames.push_back(name);
-    }
-    outIsReadOnly = statement.IsReadOnly();
-
-    errCode = statement.GetNumParameters(numParameters);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    return E_OK;
-}
 
 int SqliteConnection::PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {

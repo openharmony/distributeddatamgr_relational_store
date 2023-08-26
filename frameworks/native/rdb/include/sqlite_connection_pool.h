@@ -55,7 +55,6 @@ private:
     SqliteConnection *AcquireReadConnection();
     void ReleaseReadConnection(SqliteConnection *connection);
     void CloseAllConnections();
-    bool IsOverLength(const std::vector<uint8_t> &newKey);
     int InnerReOpenReadConnections();
 
     RdbStoreConfig config;
