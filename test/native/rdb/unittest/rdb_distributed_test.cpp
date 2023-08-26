@@ -198,3 +198,70 @@ HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_003, TestSize.Level2)
     EXPECT_EQ("", rdbStore->ObtainDistributedTableName("123456", "employee", errCode));
     EXPECT_EQ(-1, errCode);
 }
+
+/**
+ * @tc.name: RdbStore_Distributed_Test_004
+ * @tc.desc: Abnormal testCase of SetDistributedTables
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_Test_004, TestSize.Level2)
+{
+    int errCode;
+    std::vector<std::string> tables;
+    OHOS::DistributedRdb::DistributedConfig distributedConfig;
+
+    // if tabels empty, return ok
+    errCode = rdbStore->SetDistributedTables(tables, 1, distributedConfig);
+    EXPECT_EQ(E_OK, errCode);
+
+    // if tabels not empty, IPC_SEND failed
+    tables.push_back("employee");
+    errCode = rdbStore->SetDistributedTables(tables, 1, distributedConfig);
+    EXPECT_NE(E_OK, errCode);
+
+    std::string path = RdbStoreDistributedTest::DRDB_PATH + "test.db";
+    RdbStoreConfig config(path);
+    TestOpenCallback callback;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, callback, errCode);
+    EXPECT_NE(nullptr, store);
+
+    // if tabels not empty, bundleName empty
+    errCode = store->SetDistributedTables(tables, 1, distributedConfig);
+    EXPECT_EQ(E_INVALID_ARGS, errCode);
+
+    RdbHelper::DeleteRdbStore(path);
+}
+
+/**
+ * @tc.name: RdbStore_Distributed_Test_005
+ * @tc.desc: Normal testCase of Sync
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_Test_005, TestSize.Level2)
+{
+    int errCode;
+    OHOS::DistributedRdb::SyncOption option = { OHOS::DistributedRdb::TIME_FIRST, false };
+    AbsRdbPredicates predicate("employee");
+    std::vector<std::string> tables;
+
+    // get rdb service succeeded, if configuration file has already been configured
+    errCode = rdbStore->Sync(option, predicate, nullptr);
+    EXPECT_EQ(E_OK, errCode);
+
+    errCode = rdbStore->Sync(option, tables, nullptr);
+    EXPECT_EQ(E_OK, errCode);
+
+    std::string path = RdbStoreDistributedTest::DRDB_PATH + "test.db";
+    RdbStoreConfig config(path);
+    TestOpenCallback callback;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, callback, errCode);
+    EXPECT_NE(nullptr, store);
+
+    // get rdb service failed, if not configured
+    errCode = store->Sync(option, predicate, nullptr);
+    EXPECT_EQ(E_INVALID_ARGS, errCode);
+    errCode = store->Sync(option, tables, nullptr);
+    EXPECT_EQ(E_INVALID_ARGS, errCode);
+
+    RdbHelper::DeleteRdbStore(path);
+}
