@@ -244,17 +244,34 @@ HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_002, TestSize.Level2)
 
 /* *
  * @tc.name: Rdb_RemoteQueryTest_001
- * @tc.desc: Abnormal testCase for RemoteQuery, GetRdbService failed if rdbstoreconfig bundlename_ empty
+ * @tc.desc: Abnormal testCase for RemoteQuery
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplTest, Rdb_RemoteQueryTest_001, TestSize.Level2)
 {
     int errCode = E_OK;
-    AbsRdbPredicates predicate("test");
-    predicate.EqualTo("id", 1);
-    auto ret = RdbStoreImplTest::store->RemoteQuery("", predicate, {}, errCode);
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", 1);
+
+    // GetRdbService failed if rdbstoreconfig bundlename_ empty
+    auto ret = RdbStoreImplTest::store->RemoteQuery("", predicates, {}, errCode);
     EXPECT_EQ(E_INVALID_ARGS, errCode);
     EXPECT_EQ(nullptr, ret);
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetName("RdbStore_impl_test.db");
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+
+    // GetRdbService succeeded if configuration file has already been configured
+    ret = RdbStoreImplTest::store->RemoteQuery("", predicates, {}, errCode);
+    EXPECT_NE(E_OK, errCode);
+    EXPECT_EQ(nullptr, ret);
+
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
 }
 
 /* *
@@ -269,11 +286,64 @@ HWTEST_F(RdbStoreImplTest, Rdb_RollbackTest_001, TestSize.Level2)
 }
 
 /* *
- * @tc.name: Rdb_SqlitConnectionOpenTest_001
- * @tc.desc: Abnormal testCase for SetPageSize, return ok if open db again and set same page size
+ * @tc.name: Rdb_CommitTest_001
+ * @tc.desc: Abnormal testCase for Commit,if not use BeginTransaction
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionOpenTest_001, TestSize.Level4)
+HWTEST_F(RdbStoreImplTest, Rdb_CommitTest_001, TestSize.Level2)
+{
+    int ret = RdbStoreImplTest::store->Commit();
+    EXPECT_EQ(E_OK, ret);
+}
+
+/* *
+ * @tc.name: Rdb_BackupTest_001
+ * @tc.desc: Abnormal testCase for Backup
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_BackupTest_001, TestSize.Level2)
+{
+    int errCode = E_OK;
+    std::string databasePath = RDB_TEST_PATH + "test.db";
+    std::vector<uint8_t> destEncryptKey;
+    // isEncrypt_ is false, and destEncryptKey is emtpy
+    errCode = RdbStoreImplTest::store->Backup(databasePath, destEncryptKey);
+    EXPECT_EQ(E_OK, errCode);
+    RdbHelper::DeleteRdbStore(databasePath);
+
+    // isEncrypt_ is false, and destEncryptKey is not emtpy
+    destEncryptKey.push_back(1);
+    errCode = RdbStoreImplTest::store->Backup(databasePath, destEncryptKey);
+    EXPECT_EQ(E_OK, errCode);
+    RdbHelper::DeleteRdbStore(DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(databasePath);
+
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+
+    // isEncrypt_ is true, and destEncryptKey is not emtpy
+    errCode = RdbStoreImplTest::store->Backup(databasePath, destEncryptKey);
+    EXPECT_EQ(E_OK, errCode);
+    RdbHelper::DeleteRdbStore(databasePath);
+
+    // isEncrypt_ is true, and destEncryptKey is not emtpy
+    destEncryptKey.pop_back();
+    errCode = RdbStoreImplTest::store->Backup(databasePath, destEncryptKey);
+    EXPECT_EQ(E_OK, errCode);
+    RdbHelper::DeleteRdbStore(databasePath);
+    RdbHelper::DeleteRdbStore(DATABASE_NAME);
+}
+
+/* *
+ * @tc.name: Rdb_SqlitConnectionTest_001
+ * @tc.desc: Abnormal testCase for SetPageSize,
+ *           return ok if open db again and set same page size
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionTest_001, TestSize.Level2)
 {
     const std::string DATABASE_NAME = RDB_TEST_PATH + "SqlitConnectionOpenTest.db";
     int errCode = E_OK;
@@ -304,12 +374,17 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_001, TestSize.Level2)
     RdbStoreConfig config(DATABASE_NAME);
     config.SetReadConSize(1);
     config.SetStorageMode(StorageMode::MODE_DISK);
-    SqliteConnectionPool* connectionPool = SqliteConnectionPool::Create(config, errCode);
-    EXPECT_NE(nullptr, connectionPool);
+
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(E_OK, errCode);
 
     // error condition does not affect the current program
-    errCode = connectionPool->ConfigLocale("AbnormalTest");
+    errCode = store->ConfigLocale("AbnormalTest");
+    EXPECT_EQ(E_OK, errCode);
+
+    SqliteConnectionPool* connectionPool = SqliteConnectionPool::Create(config, errCode);
+    EXPECT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
 
     // connecting database
@@ -317,8 +392,9 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_001, TestSize.Level2)
     EXPECT_NE(nullptr, connection);
     errCode = connectionPool->ConfigLocale("AbnormalTest");
     EXPECT_EQ(OHOS::NativeRdb::E_NO_ROW_IN_QUERY, errCode);
-    connectionPool->ReleaseConnection(connection);
 
+    RdbHelper::DeleteRdbStore(DATABASE_NAME);
+    connectionPool->ReleaseConnection(connection);
     delete connectionPool;
 }
 #endif
@@ -330,7 +406,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_001, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_002, TestSize.Level2)
 {
-    const std::string DATABASE_NAME = RDB_TEST_PATH + "SqlitConnectionOpenTest.db";
+    const std::string DATABASE_NAME = RDB_TEST_PATH + "SqlitConnectionTest.db";
     int errCode = E_OK;
     RdbStoreConfig config(DATABASE_NAME);
     config.SetReadConSize(1);
@@ -363,3 +439,48 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_002, TestSize.Level2)
     delete connectionPool;
 }
 
+
+/* *
+ * @tc.name: Rdb_SqlitConnectionPoolTest_003
+ * @tc.desc: Abnormal testCase for ChangeDbFileForRestore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_0023, TestSize.Level2)
+{
+    const std::string DATABASE_NAME = RDB_TEST_PATH + "SqlitConnectionTest.db";
+    int errCode = E_OK;
+    RdbStoreConfig config(DATABASE_NAME);
+    config.SetReadConSize(1);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    SqliteConnectionPool* connectionPool = SqliteConnectionPool::Create(config, errCode);
+    EXPECT_NE(nullptr, connectionPool);
+    EXPECT_EQ(E_OK, errCode);
+
+
+    const std::string newPath = DATABASE_NAME;
+    const std::string backupPath = DATABASE_NAME;
+    const std::vector<uint8_t> newKey;
+
+    // newPath == currentPath, writeConnectionUsed == true
+    auto connection = connectionPool->AcquireConnection(false);
+    errCode = connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey);
+    EXPECT_EQ(E_ERROR, errCode);
+    connectionPool->ReleaseConnection(connection);
+
+    // newPath == currentPath, idleReadConnectionCount != readConnectionCount
+    connection = connectionPool->AcquireConnection(true);
+    errCode = connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey);
+    EXPECT_EQ(E_ERROR, errCode);
+    connectionPool->ReleaseConnection(connection);
+
+
+    // newPath == currentPath
+    errCode = connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey);
+    EXPECT_NE(E_OK, errCode);
+    // newPath != currentPath
+    const std::string newPath2 = RDB_TEST_PATH + "tmp.db";
+    errCode = connectionPool->ChangeDbFileForRestore(newPath2, backupPath, newKey);
+    EXPECT_EQ(E_ERROR, errCode);
+
+    delete connectionPool;
+}
