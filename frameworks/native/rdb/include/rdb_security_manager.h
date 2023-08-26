@@ -78,6 +78,7 @@ public:
     static RdbSecurityManager &GetInstance();
     void Init(const std::string &bundleName, const std::string &path);
     void UpdateKeyFile();
+    bool CheckKeyDataFileExists(RdbSecurityManager::KeyFileType keyFile);
 
 private:
     RdbSecurityManager();
@@ -90,7 +91,6 @@ private:
     std::vector<uint8_t> GenerateRootKeyAlias();
     bool InitPath(const std::string &path);
     void ParsePath(const std::string &path);
-    bool CheckKeyDataFileExists(RdbSecurityManager::KeyFileType keyFile);
     std::vector<uint8_t> GenerateRandomNum(int32_t len);
     bool SaveSecretKeyToFile(RdbSecurityManager::KeyFileType keyFile);
     bool SaveSecretKeyToDisk(const std::string &path, RdbSecretKeyData &keyData);
