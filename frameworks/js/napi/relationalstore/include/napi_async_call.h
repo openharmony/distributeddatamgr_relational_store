@@ -30,8 +30,8 @@ namespace RelationalStoreJsKit {
 using InputAction = std::function<void(napi_env, size_t, napi_value *, napi_value)>;
 using OutputAction = std::function<void(napi_env, napi_value &)>;
 using ExecuteAction = std::function<int()>;
-static bool async = true;
-static bool sync = !async;
+extern bool async;
+extern bool sync;
 #define ASYNC &async
 #define SYNC &sync
 
