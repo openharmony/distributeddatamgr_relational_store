@@ -567,7 +567,6 @@ bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSe
 
 RdbPassword RdbSecurityManager::GetRdbPassword(KeyFileType keyFile)
 {
-    LOG_INFO("GetRdbPassword Begin.");
     if (!CheckKeyDataFileExists(keyFile)) {
         if (!SaveSecretKeyToFile(keyFile)) {
             LOG_ERROR("Failed to save key.");
