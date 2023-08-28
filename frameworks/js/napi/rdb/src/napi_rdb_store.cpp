@@ -165,7 +165,7 @@ napi_value RdbStoreProxy::InnerInitialize(napi_env env, napi_callback_info info,
     napi_status status = napi_wrap(env, self, proxy, finalize, nullptr, nullptr);
     if (status != napi_ok) {
         LOG_ERROR("RdbStoreProxy::Initialize napi_wrap failed! code:%{public}d!", status);
-        finalize(env, proxy, nullptr);
+        delete proxy;
         return nullptr;
     }
     return self;
@@ -758,7 +758,7 @@ int ParseBindArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbS
     if (arrLen == 0) {
         return OK;
     }
-    for (size_t i = 0; i < arrLen; ++i) {
+    for (uint32_t i = 0; i < arrLen; ++i) {
         napi_value element;
         napi_get_element(env, arg, i, &element);
 
