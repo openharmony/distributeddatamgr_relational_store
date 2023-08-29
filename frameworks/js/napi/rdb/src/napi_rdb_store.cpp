@@ -437,7 +437,9 @@ int ParseSql(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreC
 int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     napi_value keys = 0;
-    napi_get_property_names(env, arg, &keys);
+    napi_get_all_property_names(env, arg, napi_key_own_only,
+        static_cast<napi_key_filter>(napi_key_enumerable | napi_key_skip_symbols),
+        napi_key_numbers_to_strings, &keys);
     uint32_t arrLen = 0;
     napi_status status = napi_get_array_length(env, keys, &arrLen);
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("values", "a ValuesBucket.");
