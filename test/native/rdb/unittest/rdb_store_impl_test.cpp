@@ -267,7 +267,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_RemoteQueryTest_001, TestSize.Level2)
     EXPECT_EQ(E_OK, errCode);
 
     // GetRdbService succeeded if configuration file has already been configured
-    ret = RdbStoreImplTest::store->RemoteQuery("", predicates, {}, errCode);
+    ret = store->RemoteQuery("", predicates, {}, errCode);
     EXPECT_NE(E_OK, errCode);
     EXPECT_EQ(nullptr, ret);
 
@@ -325,13 +325,13 @@ HWTEST_F(RdbStoreImplTest, Rdb_BackupTest_001, TestSize.Level2)
     EXPECT_EQ(E_OK, errCode);
 
     // isEncrypt_ is true, and destEncryptKey is not emtpy
-    errCode = RdbStoreImplTest::store->Backup(databasePath, destEncryptKey);
+    errCode = store->Backup(databasePath, destEncryptKey);
     EXPECT_EQ(E_OK, errCode);
     RdbHelper::DeleteRdbStore(databasePath);
 
     // isEncrypt_ is true, and destEncryptKey is not emtpy
     destEncryptKey.pop_back();
-    errCode = RdbStoreImplTest::store->Backup(databasePath, destEncryptKey);
+    errCode = store->Backup(databasePath, destEncryptKey);
     EXPECT_EQ(E_OK, errCode);
     RdbHelper::DeleteRdbStore(databasePath);
     RdbHelper::DeleteRdbStore(DATABASE_NAME);
