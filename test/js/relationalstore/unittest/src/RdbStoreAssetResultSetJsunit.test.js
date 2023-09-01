@@ -374,7 +374,7 @@ describe('rdbAssetResultSetTest', function () {
             expect(null).assertFail();
             done();
         } catch (e) {
-            expect(e.code == 14800000).assertTrue()
+            expect(e.code == 401).assertTrue()
             done();
         }
     })
@@ -403,7 +403,7 @@ describe('rdbAssetResultSetTest', function () {
             expect(null).assertFail();
             done();
         } catch (e) {
-            expect(e.code == 14800000).assertTrue()
+            expect(e.code == 401).assertTrue()
             done();
         }
     })
