@@ -223,7 +223,6 @@ describe('rdbEncryptTest', function () {
             await rdbStore1.executeSql(CREATE_TABLE_TEST, null)
             let predicates1 = new data_rdb.RdbPredicates("test")
             let resultSet1 = await rdbStore1.query(predicates1)
-            expect().assertFail()
             expect(3).assertEqual(resultSet1.rowCount)
             console.info(`resultSet2 rowCount: ${resultSet1.rowCount}`);
             console.info(`CreatRdbStore2 successfully`);
