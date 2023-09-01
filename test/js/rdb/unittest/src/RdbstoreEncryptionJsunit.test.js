@@ -26,6 +26,10 @@ const STORE_CONFIG_ENCRYPT = {
     name: "Encrypt.db",
     encrypt: true,
 }
+const STORE_CONFIG_ENCRYPT2 = {
+    name: "Encrypt2.db",
+    encrypt: true,
+}
 const STORE_CONFIG_UNENCRYPT = {
     name: "Unencrypt.db",
     encrypt: false,
@@ -182,7 +186,7 @@ describe('rdbEncryptTest', function () {
     /**
      * @tc.name RDB dncrypt test
      * @tc.number SUB_DDM_RelationalStore_JS_RdbEncryptTest_0050
-     * @tc.desc RDB creat new db encrypt function test
+     * @tc.desc Scenario testcase of RDB creat new encrypt file
      */
     it('RdbEncryptTest_0050', 0, async function () {
         await console.info(TAG + "************* RdbEncryptTest_0050 start *************")
@@ -190,7 +194,8 @@ describe('rdbEncryptTest', function () {
         let rdbStore1;
         let rdbStore2;
         try {
-            rdbStore1 = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT1);
+            rdbStore1 = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT);
+            expect().assertFail()
         } catch (err) {
             console.info(`CreatRdbStore1 failed, error code: ${err.code}, err message: ${err.message}`);
         }
@@ -199,15 +204,17 @@ describe('rdbEncryptTest', function () {
             await rdbStore1.executeSql(CREATE_TABLE_TEST, null)
             let predicates1 = new data_rdb.RdbPredicates("test")
             let resultSet1 = await rdbStore1.query(predicates1)
+            expect().assertFail()
             expect(3).assertEqual(resultSet1.rowCount)
-            console.info(`resultSet11 rowCount: ${resultSet1.rowCount}`);
-            console.info(`CreatRdbStore11 successfully`);
+            console.info(`resultSet1 rowCount: ${resultSet1.rowCount}`);
+            console.info(`CreatRdbStore1 successfully`);
         } catch (err) {
-            console.info(`query11 failed, error code: ${err.code}, err message: ${err.message}`);
+            console.info(`query1 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
         try {
             rdbStore2 = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT2)
+            expect().assertFail()
         } catch (err) {
             console.info(`CreatRdbStore2 failed, error code: ${err.code}, err message: ${err.message}`);
         }
@@ -216,22 +223,24 @@ describe('rdbEncryptTest', function () {
             await rdbStore1.executeSql(CREATE_TABLE_TEST, null)
             let predicates1 = new data_rdb.RdbPredicates("test")
             let resultSet1 = await rdbStore1.query(predicates1)
+            expect().assertFail()
             expect(3).assertEqual(resultSet1.rowCount)
-            console.info(`resultSet12 rowCount: ${resultSet1.rowCount}`);
-            console.info(`CreatRdbStore12 successfully`);
+            console.info(`resultSet2 rowCount: ${resultSet1.rowCount}`);
+            console.info(`CreatRdbStore2 successfully`);
         } catch (err) {
-            console.info(`query12 failed, error code: ${err.code}, err message: ${err.message}`);
+            console.info(`query2 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
         try {
             await rdbStore2.executeSql(CREATE_TABLE_TEST, null)
             let predicates2 = new data_rdb.RdbPredicates("test")
             let resultSet2 = await rdbStore2.query(predicates2)
+            expect().assertFail()
             expect(3).assertEqual(resultSet2.rowCount)
-            console.info(`resultSet22 rowCount: ${resultSet2.rowCount}`);
-            console.info(`CreatRdbStore22 successfully`);
+            console.info(`resultSet3 rowCount: ${resultSet2.rowCount}`);
+            console.info(`CreatRdbStore3 successfully`);
         } catch (err) {
-            console.info(`query22 failed, error code: ${err.code}, err message: ${err.message}`);
+            console.info(`query3 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
         console.info(TAG + "************* RdbEncryptTest_0050 end *************")
