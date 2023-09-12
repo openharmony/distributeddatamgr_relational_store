@@ -102,6 +102,27 @@ void RdbNativeStoreTest::SetUp(void)
                             "data3 FLOAT, data4 BLOB, data5 TEXT);";
     int errCode = OH_Rdb_Execute(storeTestRdbStore_, createTableSql);
     EXPECT_EQ(errCode, 0);
+    
+    OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    valueBucket->putInt64(valueBucket, "id", 1);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    valueBucket->putReal(valueBucket, "data3", 100.1);
+    uint8_t arr[] = { 1, 2, 3, 4, 5 };
+    int len = sizeof(arr) / sizeof(arr[0]);
+    valueBucket->putBlob(valueBucket, "data4", arr, len);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
+    errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
+    EXPECT_EQ(errCode, 1);
+
+    char querySql[] = "SELECT * FROM store_test";
+    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
+
+    int rowCount = 0;
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 1);
+    cursor->destroy(cursor);
+    valueBucket->destroy(valueBucket);
 }
 
 void RdbNativeStoreTest::TearDown(void)
@@ -123,25 +144,13 @@ void CloudSyncCallback(Rdb_ProgressDetails *progressDetails)
 }
 /**
  * @tc.name: RDB_Native_store_test_001
- * @tc.desc: Normal testCase of store for Insert、Update、Query.
+ * @tc.desc: Normal testCase of store for Update、Query.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_001, TestSize.Level1)
 {
     int errCode = 0;
-    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->putInt64(valueBucket, "id", 1);
-    valueBucket->putText(valueBucket, "data1", "zhangSan");
-    valueBucket->putInt64(valueBucket, "data2", 12800);
-    valueBucket->putReal(valueBucket, "data3", 100.1);
-    uint8_t arr[] = { 1, 2, 3, 4, 5 };
-    int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->putBlob(valueBucket, "data4", arr, len);
-    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
-    errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
-    EXPECT_EQ(errCode, 1);
-
-    valueBucket->clear(valueBucket);
+    OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     valueBucket->putText(valueBucket, "data1", "liSi");
     valueBucket->putInt64(valueBucket, "data2", 13800);
     valueBucket->putReal(valueBucket, "data3", 200.1);
@@ -204,19 +213,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_001, TestSize.Level1)
 HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_002, TestSize.Level1)
 {
     int errCode = 0;
-    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->putInt64(valueBucket, "id", 1);
-    valueBucket->putText(valueBucket, "data1", "zhangSan");
-    valueBucket->putInt64(valueBucket, "data2", 12800);
-    valueBucket->putReal(valueBucket, "data3", 100.1);
-    uint8_t arr[] = { 1, 2, 3, 4, 5 };
-    int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->putBlob(valueBucket, "data4", arr, len);
-    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
-    errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
-    EXPECT_EQ(errCode, 1);
-
-    valueBucket->clear(valueBucket);
+    OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     valueBucket->putInt64(valueBucket, "id", 2);
     valueBucket->putText(valueBucket, "data1", "liSi");
     valueBucket->putInt64(valueBucket, "data2", 13800);
@@ -282,19 +279,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_003, TestSize.Level1)
     OH_Rdb_BeginTransaction(storeTestRdbStore_);
 
     int errCode = 0;
-    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->putInt64(valueBucket, "id", 1);
-    valueBucket->putText(valueBucket, "data1", "zhangSan");
-    valueBucket->putInt64(valueBucket, "data2", 12800);
-    valueBucket->putReal(valueBucket, "data3", 100.1);
-    uint8_t arr[] = { 1, 2, 3, 4, 5 };
-    int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->putBlob(valueBucket, "data4", arr, len);
-    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
-    errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
-    EXPECT_EQ(errCode, 1);
-
-    valueBucket->clear(valueBucket);
+    OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     valueBucket->putInt64(valueBucket, "id", 2);
     valueBucket->putText(valueBucket, "data1", "liSi");
     valueBucket->putInt64(valueBucket, "data2", 13800);
@@ -326,19 +311,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_004, TestSize.Level1)
     OH_Rdb_BeginTransaction(storeTestRdbStore_);
 
     int errCode = 0;
-    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->putInt64(valueBucket, "id", 1);
-    valueBucket->putText(valueBucket, "data1", "zhangSan");
-    valueBucket->putInt64(valueBucket, "data2", 12800);
-    valueBucket->putReal(valueBucket, "data3", 100.1);
-    uint8_t arr[] = { 1, 2, 3, 4, 5 };
-    int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->putBlob(valueBucket, "data4", arr, len);
-    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
-    errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
-    EXPECT_EQ(errCode, 1);
-
-    valueBucket->clear(valueBucket);
+    OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     valueBucket->putInt64(valueBucket, "id", 2);
     valueBucket->putText(valueBucket, "data1", "liSi");
     valueBucket->putInt64(valueBucket, "data2", 13800);
@@ -354,7 +327,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_004, TestSize.Level1)
 
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
-    EXPECT_EQ(rowCount, 0);
+    EXPECT_EQ(rowCount, 1);     // 回退至函数之前的状态
 
     valueBucket->destroy(valueBucket);
     cursor->destroy(cursor);
@@ -367,28 +340,13 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_004, TestSize.Level1)
  */
 HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_005, TestSize.Level1)
 {
-    int errCode = 0;
-    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+    OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     valueBucket->putText(valueBucket, "data1", "zhangSan");
     valueBucket->putInt64(valueBucket, "data2", 12800);
     valueBucket->putReal(valueBucket, "data3", 100.1);
-    uint8_t arr[] = { 1, 2, 3, 4, 5 };
-    int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->putBlob(valueBucket, "data4", arr, len);
-    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
-    errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
-    EXPECT_EQ(errCode, 1);
-
-    char querySql[] = "SELECT * FROM store_test";
-    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
-
-    int rowCount = 0;
-    cursor->getRowCount(cursor, &rowCount);
-    EXPECT_EQ(rowCount, 1);
-    cursor->destroy(cursor);
 
     std::string backupPath1 = RDB_TEST_PATH + std::string("a.db");
-    errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath1.c_str());
+    int errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath1.c_str());
     EXPECT_EQ(errCode, 0);
 
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
@@ -411,7 +369,9 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_005, TestSize.Level1)
 
     errCode = OH_Rdb_Restore(storeTestRdbStore_, backupPath1.c_str());
     EXPECT_EQ(errCode, 0);
-    cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
+    char querySql[] = "SELECT * FROM store_test";
+    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
+    int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
     cursor->destroy(cursor);
@@ -449,17 +409,6 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_005, TestSize.Level1)
 HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_006, TestSize.Level1)
 {
     int errCode = 0;
-    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->putText(valueBucket, "data1", "zhangSan");
-    valueBucket->putInt64(valueBucket, "data2", 12800);
-    valueBucket->putReal(valueBucket, "data3", 100.1);
-    uint8_t arr[] = { 1, 2, 3, 4, 5 };
-    int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->putBlob(valueBucket, "data4", arr, len);
-    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
-    errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
-    EXPECT_EQ(errCode, 1);
-
     char querySql[] = "SELECT * FROM store_test";
     OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
 
@@ -481,15 +430,37 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_006, TestSize.Level1)
     std::string restorePath = "error.db";
     errCode = OH_Rdb_Restore(storeTestRdbStore_, restorePath.c_str());
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_FILE_PATH);
+}
+
+
+/**
+ * @tc.name: RDB_Native_store_test_007
+ * @tc.desc: Normal testCase of store for Backup、Restore.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_007, TestSize.Level1)
+{
+    int errCode = 0;
+    OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    valueBucket->putReal(valueBucket, "data3", 100.1);
+    uint8_t arr[] = {1, 2, 3, 4, 5};
+    int len = sizeof(arr) / sizeof(arr[0]);
+    valueBucket->putBlob(valueBucket, "data4", arr, len);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
 
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
     EXPECT_EQ(errCode, 2);
-    backupPath = " ";
+    std::string backupPath = " ";
     errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath.c_str());
     EXPECT_EQ(errCode, 0);
     errCode = OH_Rdb_Restore(storeTestRdbStore_, backupPath.c_str());
     EXPECT_EQ(errCode, 0);
-    cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
+    char querySql[] = "SELECT * FROM store_test";
+    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
+
+    int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
     cursor->destroy(cursor);
@@ -506,7 +477,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_006, TestSize.Level1)
     errCode = OH_Rdb_Backup(storeTestRdbStore_, backupPath.c_str());
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_FILE_PATH);
 
-    restorePath = RDB_TEST_PATH;
+    std::string restorePath = RDB_TEST_PATH;
     errCode = OH_Rdb_Restore(storeTestRdbStore_, restorePath.c_str());
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_FILE_PATH);
 
@@ -514,11 +485,11 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_006, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_007
+ * @tc.name: RDB_Native_store_test_008
  * @tc.desc: Normal testCase of store for GetVersion、SetVersion.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_007, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_008, TestSize.Level1)
 {
     int errCode = 0;
     int version = 0;
@@ -534,26 +505,14 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_007, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_008
+ * @tc.name: RDB_Native_store_test_009
  * @tc.desc: Normal testCase of store for Insert with wrong table name or table is NULL.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_008, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_009, TestSize.Level1)
 {
     int errCode = 0;
-    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->putInt64(valueBucket, "id", 1);
-    valueBucket->putText(valueBucket, "data1", "zhangSan");
-    valueBucket->putInt64(valueBucket, "data2", 12800);
-    valueBucket->putReal(valueBucket, "data3", 100.1);
-    uint8_t arr[] = { 1, 2, 3, 4, 5 };
-    int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->putBlob(valueBucket, "data4", arr, len);
-    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
-    errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
-    EXPECT_EQ(errCode, 1);
-
-    valueBucket->clear(valueBucket);
+    OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     valueBucket->putInt64(valueBucket, "id", 2);
     valueBucket->putText(valueBucket, "data1", "liSi");
     valueBucket->putInt64(valueBucket, "data2", 13800);
@@ -584,26 +543,14 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_008, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_009
+ * @tc.name: RDB_Native_store_test_0010
  * @tc.desc: Normal testCase of store for Update with wrong table or table is NULL.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_009, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_0010, TestSize.Level1)
 {
     int errCode = 0;
-    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->putInt64(valueBucket, "id", 1);
-    valueBucket->putText(valueBucket, "data1", "zhangSan");
-    valueBucket->putInt64(valueBucket, "data2", 12800);
-    valueBucket->putReal(valueBucket, "data3", 100.1);
-    uint8_t arr[] = { 1, 2, 3, 4, 5 };
-    int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->putBlob(valueBucket, "data4", arr, len);
-    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
-    errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
-    EXPECT_EQ(errCode, 1);
-
-    valueBucket->clear(valueBucket);
+    OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     valueBucket->putText(valueBucket, "data1", "liSi");
     valueBucket->putInt64(valueBucket, "data2", 13800);
     valueBucket->putReal(valueBucket, "data3", 200.1);
@@ -667,38 +614,23 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_009, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_010
+ * @tc.name: RDB_Native_store_test_011
  * @tc.desc: Normal testCase of store for querysql is NULL.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_010, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_011, TestSize.Level1)
 {
-    int errCode = 0;
-    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-    valueBucket->putInt64(valueBucket, "id", 1);
-    valueBucket->putText(valueBucket, "data1", "zhangSan");
-    valueBucket->putInt64(valueBucket, "data2", 12800);
-    valueBucket->putReal(valueBucket, "data3", 100.1);
-    uint8_t arr[] = { 1, 2, 3, 4, 5 };
-    int len = sizeof(arr) / sizeof(arr[0]);
-    valueBucket->putBlob(valueBucket, "data4", arr, len);
-    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
-    errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
-    EXPECT_EQ(errCode, 1);
-
     char *querySql = NULL;
     OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
     EXPECT_EQ(cursor, NULL);
-
-    valueBucket->destroy(valueBucket);
 }
 
 /**
- * @tc.name: RDB_Native_store_test_011
+ * @tc.name: RDB_Native_store_test_012
  * @tc.desc: Normal testCase of RelationalValuesBucket for anomalous branch.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_011, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_012, TestSize.Level1)
 {
     OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
     uint8_t arr[] = { 1, 2, 3, 4, 5 };
@@ -718,11 +650,11 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_011, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_012
- * @tc.desc: Normal testCase of store for CloudSync.
+ * @tc.name: RDB_Native_store_test_013
+ * @tc.desc: Normal testCase of store for anomalous branch.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_012, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_013, TestSize.Level1)
 {
     EXPECT_NE(storeTestRdbStore_, nullptr);
     constexpr int TABLE_COUNT = 1;
@@ -748,7 +680,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_012, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_013
+ * @tc.name: RDB_Native_store_test_014
  * @tc.desc: Abnormal testCase of store for SetDistributedTables.
  * @tc.type: FUNC
  */
@@ -769,7 +701,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_013, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_014
+ * @tc.name: RDB_Native_store_test_015
  * @tc.desc: Normal testCase of store for CloudSync.
  * @tc.type: FUNC
  */
@@ -794,7 +726,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_014, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_015
+ * @tc.name: RDB_Native_store_test_016
  * @tc.desc: Abnormal testCase of store for CloudSync.
  * @tc.type: FUNC
  */
@@ -813,7 +745,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_015, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_016
+ * @tc.name: RDB_Native_store_test_017
  * @tc.desc: Normal testCase for GetModifyTime.
  * @tc.type: FUNC
  */
@@ -857,7 +789,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_016, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_017
+ * @tc.name: RDB_Native_store_test_018
  * @tc.desc: Abnormal testCase for GetModifyTime, tablename columnName, keys is empty,
  *           and resultSet is null or empty
  * @tc.type: FUNC
@@ -910,4 +842,111 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_017, TestSize.Level1)
     char dropLogTableSql[] = "DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log";
     errCode = OH_Rdb_Execute(storeTestRdbStore_, dropLogTableSql);
     EXPECT_EQ(errCode, RDB_OK);
+
+}
+
+
+
+/**
+ * @tc.name: RDB_Native_store_test_014
+ * @tc.desc: Normal testCase of store for anomalous branch.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_014, TestSize.Level1)
+{
+    int errCode = 0;
+    OH_Rdb_Config config;
+    config.dataBaseDir = RDB_TEST_PATH;
+    config.storeName = "rdb_store_error.db";
+    config.bundleName = nullptr;
+    config.moduleName = "";
+    config.securityLevel = OH_Rdb_SecurityLevel::S1;
+    config.isEncrypt = false;
+    config.selfSize = 0;
+
+    config.selfSize = sizeof(OH_Rdb_Config);
+    auto store = OH_Rdb_GetOrOpen(&config, &errCode);
+    EXPECT_NE(store, nullptr);
+
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
+    auto cursor = OH_Rdb_Query(nullptr, predicates, NULL, 0);
+    EXPECT_EQ(cursor, nullptr);
+    cursor = OH_Rdb_Query(store, nullptr, NULL, 0);
+    EXPECT_EQ(cursor, nullptr);
+
+    char querySql[] = "SELECT * FROM store_test";
+    cursor = OH_Rdb_ExecuteQuery(nullptr, querySql);
+    EXPECT_EQ(cursor, nullptr);
+    cursor = OH_Rdb_ExecuteQuery(store, nullptr);
+    EXPECT_EQ(cursor, nullptr);
+
+    errCode = OH_Rdb_BeginTransaction(nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_RollBack(nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_Commit(nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    char backupDir[] = "backup.db";
+    errCode = OH_Rdb_Backup(nullptr, backupDir);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_Backup(store, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    errCode = OH_Rdb_Restore(nullptr, backupDir);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_Restore(store, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    config.dataBaseDir = RDB_TEST_PATH;
+    config.storeName = "rdb_store_error.db";
+    OH_Rdb_CloseStore(store);
+    OH_Rdb_DeleteStore(&config);
+}
+
+
+/**
+ * @tc.name: RDB_Native_store_test_015
+ * @tc.desc: Normal testCase of store for anomalous branch.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_015, TestSize.Level1)
+{
+    int errCode = 0;
+    OH_Rdb_Config config;
+    config.dataBaseDir = RDB_TEST_PATH;
+    config.storeName = "rdb_store_error.db";
+    config.bundleName = nullptr;
+    config.moduleName = "";
+    config.securityLevel = OH_Rdb_SecurityLevel::S1;
+    config.isEncrypt = false;
+    config.selfSize = 0;
+
+    config.selfSize = sizeof(OH_Rdb_Config);
+    auto store = OH_Rdb_GetOrOpen(&config, &errCode);
+    EXPECT_NE(store, nullptr);
+
+    int version = 1;
+    errCode = OH_Rdb_SetVersion(nullptr, version);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_GetVersion(nullptr, &version);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_GetVersion(store, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    errCode = OH_Rdb_CloseStore(nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_DeleteStore(nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    config.dataBaseDir = nullptr;
+    errCode = OH_Rdb_DeleteStore(&config);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    config.dataBaseDir = RDB_TEST_PATH;
+    config.storeName = nullptr;
+    errCode = OH_Rdb_DeleteStore(&config);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    config.storeName = "rdb_store_error.db";
+    OH_Rdb_CloseStore(store);
+    OH_Rdb_DeleteStore(&config);
 }
