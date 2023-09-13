@@ -405,8 +405,26 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_005, TestSize.Level1)
     errCode = cursor->getText(cursor, 0, data1Value, 0);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
+    predicates->destroy(predicates);
+    cursor->destroy(cursor);
+}
+
+/**
+ * @tc.name: RDB_Native_cursor_test_006
+ * @tc.desc: Normal testCase of cursor for anomalous branch.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_006, TestSize.Level1)
+{
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
+
+    const char *columnNames[] = {"data1", "data2", "data3", "data4"};
+    int len = sizeof(columnNames) / sizeof(columnNames[0]);
+    OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, columnNames, len);
+    EXPECT_NE(cursor, NULL);
+
     int64_t data2Value;
-    errCode = cursor->getInt64(nullptr, 1, &data2Value);
+    int errCode = cursor->getInt64(nullptr, 1, &data2Value);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     errCode = cursor->getInt64(cursor, 1, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
@@ -417,6 +435,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_005, TestSize.Level1)
     errCode = cursor->getReal(cursor, 2, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
+    size_t size = 0;
     unsigned char data4Value[size];
     errCode = cursor->getBlob(nullptr, 3, data4Value, size);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
