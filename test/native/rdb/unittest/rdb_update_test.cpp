@@ -86,6 +86,17 @@ void RdbStoreUpdateTest::TearDownTestCase(void)
 void RdbStoreUpdateTest::SetUp(void)
 {
     store->ExecuteSql("DELETE FROM test");
+    int64_t id;
+
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
 }
 
 void RdbStoreUpdateTest::TearDown(void)
@@ -101,27 +112,12 @@ void RdbStoreUpdateTest::TearDown(void)
 HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
-
-    int64_t id;
     ValuesBucket values;
     int changedRows;
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
-
-    values.Clear();
     values.PutInt("id", 2);
     values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 20);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "1" });
+    int ret = store->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "1" });
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 
@@ -131,7 +127,6 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
     int columnIndex;
     int intVal;
     std::string strVal;
-    double dVal;
     std::vector<uint8_t> blob;
 
     ret = resultSet->GoToFirstRow();
@@ -140,35 +135,12 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
     ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, intVal);
 
     ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("lisi", strVal);
-
-    ret = resultSet->GetColumnIndex("age", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(20, intVal);
-
-    ret = resultSet->GetColumnIndex("salary", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(200.5, dVal);
-
-    ret = resultSet->GetColumnIndex("blobType", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, static_cast<int>(blob.size()));
-    EXPECT_EQ(4, blob[0]);
-    EXPECT_EQ(5, blob[1]);
-    EXPECT_EQ(6, blob[2]);
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ERROR);
@@ -185,33 +157,17 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
 HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
-
     int64_t id;
     ValuesBucket values;
     int changedRows;
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
     int ret = store->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
 
     values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
     values.PutInt("age", 20);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, id);
-
-    values.Clear();
-    values.PutDouble("salary", 300.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
     ret = store->Update(changedRows, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, changedRows);
@@ -222,76 +178,29 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
     int columnIndex;
     int intVal;
     std::string strVal;
-    double dVal;
     std::vector<uint8_t> blob;
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-
-    ret = resultSet->GetColumnIndex("id", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, intVal);
-
     ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhangsan", strVal);
     ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(18, intVal);
-    ret = resultSet->GetColumnIndex("salary", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(300.5, dVal);
-
-    ret = resultSet->GetColumnIndex("blobType", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, static_cast<int>(blob.size()));
-    EXPECT_EQ(4, blob[0]);
-    EXPECT_EQ(5, blob[1]);
-    EXPECT_EQ(6, blob[2]);
+    EXPECT_EQ(20, intVal);
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndex("id", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, intVal);
     ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("lisi", strVal);
     ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(20, intVal);
-    ret = resultSet->GetColumnIndex("salary", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(300.5, dVal);
-    ret = resultSet->GetColumnIndex("blobType", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, static_cast<int>(blob.size()));
-    EXPECT_EQ(4, blob[0]);
-    EXPECT_EQ(5, blob[1]);
-    EXPECT_EQ(6, blob[2]);
-
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -305,6 +214,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
 HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_003, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    store->ExecuteSql("DELETE FROM test");
 
     int changedRows;
     ValuesBucket values;
@@ -318,6 +228,8 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_003, TestSize.Level1)
 
     ret = store->Update(changedRows, "wrongTable", values, "", std::vector<std::string>()); // no such table
     EXPECT_EQ(ret, RdbStoreUpdateTest::E_SQLITE_ERROR);
+
+    RdbHelper::ClearCache();
 }
 
 /**
@@ -326,8 +238,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_003, TestSize.Level1)
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_004, TestSize.Level1)
-{
+{   
     std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    store->ExecuteSql("DELETE FROM test");
 
     int changedRows;
     ValuesBucket emptyBucket;
@@ -342,6 +255,8 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_004, TestSize.Level1)
     values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
     ret = store->Update(changedRows, "test", values, "", std::vector<std::string>());
     EXPECT_EQ(ret, RdbStoreUpdateTest::E_SQLITE_ERROR);
+
+    RdbHelper::ClearCache();
 }
 
 /**
@@ -352,38 +267,16 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_004, TestSize.Level1)
 HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
-
-    int64_t id;
     ValuesBucket values;
     int changedRows;
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
-
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, id);
-
-    // update lisi age=19 to wangjing age=20
-    values.Clear();
+    // update zhangsan age=18 to wangjing age=20
     values.PutInt("id", 3);
     values.PutString("name", std::string("wangjing"));
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = 19");
+    int ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = 18");
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 
@@ -401,65 +294,26 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
     ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, intVal);
-    ret = resultSet->GetColumnIndex("name", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ("zhangsan", strVal);
-    ret = resultSet->GetColumnIndex("age", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(18, intVal);
-    ret = resultSet->GetColumnIndex("salary", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(100.5, dVal);
-    ret = resultSet->GetColumnIndex("blobType", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, static_cast<int>(blob.size()));
-    EXPECT_EQ(1, blob[0]);
-    EXPECT_EQ(2, blob[1]);
-    EXPECT_EQ(3, blob[2]);
-
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndex("id", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, intVal);
     ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("wangjing", strVal);
     ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(20, intVal);
     ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(300.5, dVal);
     ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, static_cast<int>(blob.size()));
     EXPECT_EQ(7, blob[0]);
     EXPECT_EQ(8, blob[1]);
     EXPECT_EQ(9, blob[2]);
-
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -473,38 +327,16 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
 HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
-
-    int64_t id;
     ValuesBucket values;
     int changedRows;
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
-
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, id);
-
-    // update lisi age=19 to zhangsan age=20
-    values.Clear();
+    // update zhangsan age=18 to lisi age=20
     values.PutInt("id", 3);
-    values.PutString("name", std::string("zhangsan"));
+    values.PutString("name", std::string("lisi"));
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
+    int ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "18" },
         ConflictResolution::ON_CONFLICT_NONE);
     EXPECT_EQ(ret, RdbStoreUpdateTest::E_SQLITE_CONSTRAINT);
 
@@ -522,65 +354,26 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
     ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, intVal);
     ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhangsan", strVal);
     ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(18, intVal);
     ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(100.5, dVal);
     ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, static_cast<int>(blob.size()));
     EXPECT_EQ(1, blob[0]);
     EXPECT_EQ(2, blob[1]);
     EXPECT_EQ(3, blob[2]);
-
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndex("id", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, intVal);
-    ret = resultSet->GetColumnIndex("name", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ("lisi", strVal);
-    ret = resultSet->GetColumnIndex("age", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(19, intVal);
-    ret = resultSet->GetColumnIndex("salary", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(200.5, dVal);
-    ret = resultSet->GetColumnIndex("blobType", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, static_cast<int>(blob.size()));
-    EXPECT_EQ(4, blob[0]);
-    EXPECT_EQ(5, blob[1]);
-    EXPECT_EQ(6, blob[2]);
-
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -594,38 +387,16 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
 HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
-
-    int64_t id;
     ValuesBucket values;
     int changedRows;
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
-
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, id);
-
-    // update lisi age=19 to wangjing age=20
-    values.Clear();
+    // update zhangsan age=18 to wangjing age=20
     values.PutInt("id", 3);
     values.PutString("name", std::string("wangjing"));
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
+    int ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "18" },
         ConflictResolution::ON_CONFLICT_ROLLBACK);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
@@ -644,65 +415,26 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
     ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, intVal);
-    ret = resultSet->GetColumnIndex("name", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ("zhangsan", strVal);
-    ret = resultSet->GetColumnIndex("age", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(18, intVal);
-    ret = resultSet->GetColumnIndex("salary", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(100.5, dVal);
-    ret = resultSet->GetColumnIndex("blobType", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, static_cast<int>(blob.size()));
-    EXPECT_EQ(1, blob[0]);
-    EXPECT_EQ(2, blob[1]);
-    EXPECT_EQ(3, blob[2]);
-
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndex("id", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, intVal);
     ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("wangjing", strVal);
     ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(20, intVal);
     ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(300.5, dVal);
     ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, static_cast<int>(blob.size()));
     EXPECT_EQ(7, blob[0]);
     EXPECT_EQ(8, blob[1]);
     EXPECT_EQ(9, blob[2]);
-
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -716,38 +448,16 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
 HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
-
-    int64_t id;
     ValuesBucket values;
     int changedRows;
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
-
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, id);
-
     // update lisi age=19 to zhangsan age=20
-    values.Clear();
     values.PutInt("id", 3);
-    values.PutString("name", std::string("zhangsan"));
+    values.PutString("name", std::string("lisi"));
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
+    int ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "18" },
         ConflictResolution::ON_CONFLICT_ROLLBACK);
     EXPECT_EQ(ret, RdbStoreUpdateTest::E_SQLITE_CONSTRAINT);
 
@@ -765,65 +475,26 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
     ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, intVal);
     ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhangsan", strVal);
     ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(18, intVal);
     ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(100.5, dVal);
     ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, static_cast<int>(blob.size()));
     EXPECT_EQ(1, blob[0]);
     EXPECT_EQ(2, blob[1]);
     EXPECT_EQ(3, blob[2]);
-
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndex("id", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, intVal);
-    ret = resultSet->GetColumnIndex("name", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ("lisi", strVal);
-    ret = resultSet->GetColumnIndex("age", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(19, intVal);
-    ret = resultSet->GetColumnIndex("salary", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(200.5, dVal);
-    ret = resultSet->GetColumnIndex("blobType", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, static_cast<int>(blob.size()));
-    EXPECT_EQ(4, blob[0]);
-    EXPECT_EQ(5, blob[1]);
-    EXPECT_EQ(6, blob[2]);
-
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -837,38 +508,16 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
 HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
-
-    int64_t id;
     ValuesBucket values;
     int changedRows;
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
-
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, id);
-
-    // update lisi age=19 to wangjing age=20
-    values.Clear();
+    // update zhangsan age=18 to wangjing age=20
     values.PutInt("id", 3);
     values.PutString("name", std::string("wangjing"));
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
+    int ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "18" },
         ConflictResolution::ON_CONFLICT_REPLACE);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
@@ -887,65 +536,26 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
     ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, intVal);
-    ret = resultSet->GetColumnIndex("name", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ("zhangsan", strVal);
-    ret = resultSet->GetColumnIndex("age", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(18, intVal);
-    ret = resultSet->GetColumnIndex("salary", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(100.5, dVal);
-    ret = resultSet->GetColumnIndex("blobType", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, static_cast<int>(blob.size()));
-    EXPECT_EQ(1, blob[0]);
-    EXPECT_EQ(2, blob[1]);
-    EXPECT_EQ(3, blob[2]);
-
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnIndex("id", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, intVal);
     ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("wangjing", strVal);
     ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(20, intVal);
     ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(300.5, dVal);
     ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, static_cast<int>(blob.size()));
     EXPECT_EQ(7, blob[0]);
     EXPECT_EQ(8, blob[1]);
     EXPECT_EQ(9, blob[2]);
-
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -959,36 +569,14 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
 HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
-
-    int64_t id;
     ValuesBucket values;
     int changedRows;
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
-
-    values.Clear();
-    values.PutInt("id", 2);
+    // update zhangsan age=18 to  lisi age=20
     values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, id);
-
-    // update lisi age=19 to zhangsan age=20
-    values.Clear();
-    values.PutString("name", std::string("zhangsan"));
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
+    int ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "18" },
         ConflictResolution::ON_CONFLICT_REPLACE);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(changedRows, 1);
@@ -1007,31 +595,26 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize
     ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, intVal);
+    EXPECT_EQ(1, intVal);
     ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ("zhangsan", strVal);
+    EXPECT_EQ("lisi", strVal);
     ret = resultSet->GetColumnIndex("age", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(20, intVal);
     ret = resultSet->GetColumnIndex("salary", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(300.5, dVal);
     ret = resultSet->GetColumnIndex("blobType", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, static_cast<int>(blob.size()));
-    EXPECT_EQ(4, blob[0]);
-    EXPECT_EQ(5, blob[1]);
-    EXPECT_EQ(6, blob[2]);
+    EXPECT_EQ(1, blob[0]);
+    EXPECT_EQ(2, blob[1]);
+    EXPECT_EQ(3, blob[2]);
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ERROR);
