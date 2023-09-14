@@ -18,7 +18,7 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 ##############################fuzztest##########################################
 ohos_fuzztest("RdbImplFuzzTest") {
-  module_out_path = "relational_store/nativerdb"
+  module_out_path = "relational_store/relational_store"
 
   include_dirs = [
     "${relational_store_native_path}/rdb/include",
