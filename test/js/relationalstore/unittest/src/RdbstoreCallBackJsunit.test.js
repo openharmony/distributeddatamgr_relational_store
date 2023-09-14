@@ -18,8 +18,8 @@ import data_relationalStore from '@ohos.data.relationalStore';
 import ability_featureAbility from '@ohos.ability.featureAbility';
 
 const TAG = "[RELATIONAL_STORE_CALLBACK_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test ("
-                          "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" +
+                          "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                           "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)";
 
 const STORE_CONFIG = {
