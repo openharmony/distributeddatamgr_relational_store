@@ -89,6 +89,40 @@ void RdbTransactionTest::TearDown(void)
 {
 }
 
+
+ValuesBucket ConfigDataOne()
+{
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    return values;
+}
+
+ValuesBucket ConfigDataTwo()
+{
+    ValuesBucket values;
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    values.PutDouble("salary", 200.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    return values;
+}
+
+ValuesBucket ConfigDataThree()
+{
+    ValuesBucket values;
+    values.PutInt("id", 3);
+    values.PutString("name", std::string("wangyjing"));
+    values.PutInt("age", 20);
+    values.PutDouble("salary", 300.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
+    return values;
+}
+
 /**
  * @tc.name: RdbStore_Transaction_001
  * @tc.desc: test RdbStore BaseTransaction
@@ -99,37 +133,18 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_001, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
 
     int64_t id;
-    ValuesBucket values;
 
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
-
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataOne());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataTwo());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
-    values.Clear();
-    values.PutInt("id", 3);
-    values.PutString("name", std::string("wangyjing"));
-    values.PutInt("age", 20);
-    values.PutDouble("salary", 300.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataThree());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -157,37 +172,19 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_002, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
 
     int64_t id;
-    ValuesBucket values;
 
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataOne());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataTwo());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
-    values.Clear();
-    values.PutInt("id", 3);
-    values.PutString("name", std::string("wangyjing"));
-    values.PutInt("age", 20);
-    values.PutDouble("salary", 300.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataThree());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -228,32 +225,15 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_003, TestSize.Level1)
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataOne());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataTwo());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
-    values.Clear();
-    values.PutInt("id", 3);
-    values.PutString("name", std::string("wangyjing"));
-    values.PutInt("age", 20);
-    values.PutDouble("salary", 300.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataThree());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -282,7 +262,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_003, TestSize.Level1)
  * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)
+HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)// yangsen
 {
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
 
@@ -292,36 +272,19 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataOne());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
     ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataTwo());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
     ret = store->Commit(); // not commit
     EXPECT_EQ(ret, E_OK);
 
-    values.Clear();
-    values.PutInt("id", 3);
-    values.PutString("name", std::string("wangyjing"));
-    values.PutInt("age", 20);
-    values.PutDouble("salary", 300.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataThree());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -351,7 +314,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)
  * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)
+HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)// yangsen
 {
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
 
@@ -361,24 +324,13 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataOne());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
     ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataTwo());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
     ret = store->Commit();
@@ -386,13 +338,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)
     ret = store->Commit(); // commit
     EXPECT_EQ(ret, E_OK);
 
-    values.Clear();
-    values.PutInt("id", 3);
-    values.PutString("name", std::string("wangyjing"));
-    values.PutInt("age", 20);
-    values.PutDouble("salary", 300.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->Insert(id, "test", values);
+ret = store->Insert(id, "test", ConfigDataThree());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -419,7 +365,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)
  * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_003, TestSize.Level1)
+HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_003, TestSize.Level1)// yangsen
 {
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
 
@@ -429,36 +375,19 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_003, TestSize.Level1)
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataOne());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
     ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataTwo());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
     ret = store->Commit(); // not commit
     EXPECT_EQ(ret, E_OK);
 
-    values.Clear();
-    values.PutInt("id", 3);
-    values.PutString("name", std::string("wangyjing"));
-    values.PutInt("age", 20);
-    values.PutDouble("salary", 300.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataThree());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -488,7 +417,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_003, TestSize.Level1)
  * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_004, TestSize.Level1)
+HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_004, TestSize.Level1) // yangsen
 {
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
 
@@ -498,36 +427,19 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_004, TestSize.Level1)
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataOne());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
     ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataTwo());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
     ret = store->Commit(); // commit
     EXPECT_EQ(ret, E_OK);
 
-    values.Clear();
-    values.PutInt("id", 3);
-    values.PutString("name", std::string("wangyjing"));
-    values.PutInt("age", 20);
-    values.PutDouble("salary", 300.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", ConfigDataThree());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -631,7 +543,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_002, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issue-I6BAX0
  */
-HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
+HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1) // yangsen
 {
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
     store->ExecuteSql("delete from test");
