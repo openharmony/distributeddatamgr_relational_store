@@ -1418,8 +1418,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep010, TestSize.Level1)
     EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(-1, position);
     bool bResultSet = true;
-    iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsStarted(bResultSet));
     EXPECT_EQ(bResultSet, false);
 
     bResultSet = true;
