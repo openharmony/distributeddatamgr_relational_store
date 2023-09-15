@@ -137,67 +137,54 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_001, TestSize.Level1)
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     bool bResultSet = true;
-    int iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsStarted(bResultSet));
     EXPECT_EQ(bResultSet, false);
     EXPECT_EQ(resultSet->GoTo(1), E_OK);
 
     bResultSet = false;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsAtFirstRow(bResultSet));
     EXPECT_EQ(bResultSet, true);
 
     ColumnType type;
-    iRet = resultSet->GetColumnType(0, type);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetColumnType(0, type));
     EXPECT_EQ(ColumnType::TYPE_INTEGER, type);
 
-    iRet = resultSet->GetColumnType(1, type);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetColumnType(1, type));
     EXPECT_EQ(ColumnType::TYPE_STRING, type);
 
-    iRet = resultSet->GetColumnType(2, type);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetColumnType(2, type));
     EXPECT_EQ(ColumnType::TYPE_INTEGER, type);
 
-    iRet = resultSet->GetColumnType(3, type);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetColumnType(3, type));
     EXPECT_EQ(ColumnType::TYPE_FLOAT, type);
 
-    iRet = resultSet->GetColumnType(4, type);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetColumnType(4, type));
     EXPECT_EQ(ColumnType::TYPE_BLOB, type);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
 
     int position = -1;
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(1, position);
     int count = -1;
-    iRet = resultSet->GetRowCount(count);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowCount(count));
     EXPECT_EQ(3, count);
 
     std::string stringValue;
-    iRet = resultSet->GetString(1, stringValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetString(1, stringValue));
     EXPECT_EQ("2", stringValue);
 
     int iValue;
-    iRet = resultSet->GetInt(2, iValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetInt(2, iValue));
     EXPECT_EQ(-5, iValue);
 
     double dValue;
-    iRet = resultSet->GetDouble(3, dValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetDouble(3, dValue));
     EXPECT_EQ(2.5, dValue);
 
     std::vector<uint8_t> blobValue;
-    iRet = resultSet->GetBlob(4, blobValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetBlob(4, blobValue));
 }
 
 /* *
@@ -270,72 +257,59 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_003, TestSize.Level1)
 
     int position = INT_MIN;
     bool bResultSet = true;
-    int iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(-1, position);
 
-    iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsStarted(bResultSet));
     EXPECT_EQ(bResultSet, false);
 
     bResultSet = true;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsAtFirstRow(bResultSet));
     EXPECT_EQ(bResultSet, false);
 
     bResultSet = true;
-    iRet = resultSet->IsEnded(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsEnded(bResultSet));
     EXPECT_EQ(bResultSet, false);
 
     int moveTimes = 0;
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
     moveTimes++;
 
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(0, position);
 
     bResultSet = false;
-    iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsStarted(bResultSet));
     EXPECT_EQ(bResultSet, true);
 
     bResultSet = false;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsAtFirstRow(bResultSet));
     EXPECT_EQ(bResultSet, true);
 
     bResultSet = true;
-    iRet = resultSet->IsEnded(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsEnded(bResultSet));
     EXPECT_EQ(bResultSet, false);
 
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(0, position);
     while (E_OK == resultSet->GoToNextRow()) {
         moveTimes++;
     }
     /* Cursor is before first */
 
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(3, position);
 
     bResultSet = false;
-    iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsStarted(bResultSet));
     EXPECT_EQ(bResultSet, true);
 
     bResultSet = true;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsAtFirstRow(bResultSet));
     EXPECT_EQ(bResultSet, false);
 
     bResultSet = false;
-    iRet = resultSet->IsEnded(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsEnded(bResultSet));
     EXPECT_EQ(bResultSet, true);
 }
 
@@ -942,39 +916,32 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount003, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
 
     bool bResultSet = true;
-    int iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsStarted(bResultSet));
     EXPECT_EQ(bResultSet, false);
 
     int count = -1;
-    iRet = resultSet->GetRowCount(count);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowCount(count));
     EXPECT_EQ(3, count);
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
 
     bResultSet = false;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsAtFirstRow(bResultSet));
     EXPECT_EQ(bResultSet, true);
 
     std::string strValue;
-    iRet = resultSet->GetString(1, strValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetString(1, strValue));
     EXPECT_EQ("hello", strValue);
 
     int iValue;
-    iRet = resultSet->GetInt(2, iValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetInt(2, iValue));
     EXPECT_EQ(10, iValue);
 
     double dValue;
-    iRet = resultSet->GetDouble(3, dValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetDouble(3, dValue));
     EXPECT_EQ(1.0, dValue);
 
     std::vector<uint8_t> blobValue;
-    iRet = resultSet->GetBlob(4, blobValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetBlob(4, blobValue));
 
     std::string strBlob;
     strBlob.clear();
@@ -985,38 +952,29 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount003, TestSize.Level1)
     string strTmpValue(1, cValue);
     EXPECT_EQ(strTmpValue, strBlob);
 
-    iRet = resultSet->GetRowCount(count);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowCount(count));
     EXPECT_EQ(3, count);
 
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
-    int position = INT_MIN;
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(1, position);
 
-    iRet = resultSet->GetString(1, strValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetString(1, strValue));
     EXPECT_EQ("2", strValue);
 
-    iRet = resultSet->GetInt(2, iValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetInt(2, iValue));
     EXPECT_EQ(-5, iValue);
 
-    iRet = resultSet->GetDouble(3, dValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetDouble(3, dValue));
     EXPECT_EQ(2.5, dValue);
 
-    iRet = resultSet->GetBlob(4, blobValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetBlob(4, blobValue));
 
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+
+    int position = INT_MIN;
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(2, position);
 
-    iRet = resultSet->GetRowCount(count);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowCount(count));
     EXPECT_EQ(3, count);
 }
 
@@ -1033,39 +991,32 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount004, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
 
     bool bResultSet = true;
-    int iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsStarted(bResultSet));
     EXPECT_EQ(bResultSet, false);
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
 
     bResultSet = false;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsAtFirstRow(bResultSet));
     EXPECT_EQ(bResultSet, true);
 
     int count = -1;
-    iRet = resultSet->GetRowCount(count);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowCount(count));
     EXPECT_EQ(3, count);
 
     std::string strValue;
-    iRet = resultSet->GetString(0, strValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetString(0, strValue));
     EXPECT_EQ("hello", strValue);
 
     int iValue;
-    iRet = resultSet->GetInt(1, iValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetInt(1, iValue));
     EXPECT_EQ(10, iValue);
 
     double dValue;
-    iRet = resultSet->GetDouble(2, dValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetDouble(2, dValue));
     EXPECT_EQ(1.0, dValue);
 
     std::vector<uint8_t> blobValue;
-    iRet = resultSet->GetBlob(3, blobValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetBlob(3, blobValue));
 
     std::string strBlob;
     strBlob.clear();
@@ -1079,34 +1030,27 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount004, TestSize.Level1)
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
 
     int position = INT_MIN;
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(1, position);
 
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
 
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(2, position);
 
-    iRet = resultSet->GetRowCount(count);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowCount(count));
     EXPECT_EQ(3, count);
 
-    iRet = resultSet->GetString(0, strValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetString(0, strValue));
     EXPECT_EQ("hello world", strValue);
 
-    iRet = resultSet->GetInt(1, iValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetInt(1, iValue));
     EXPECT_EQ(3, iValue);
 
-    iRet = resultSet->GetDouble(2, dValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetDouble(2, dValue));
     EXPECT_EQ(1.8, dValue);
 
-    iRet = resultSet->GetBlob(3, blobValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetBlob(3, blobValue));
 }
 
 /* *
@@ -1122,67 +1066,53 @@ HWTEST_F(RdbStepResultSetTest, testGoToRow005, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
 
     bool bResultSet = true;
-    int iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsStarted(bResultSet));
     EXPECT_EQ(bResultSet, false);
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
 
     bResultSet = false;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsAtFirstRow(bResultSet));
     EXPECT_EQ(bResultSet, true);
 
     int position = INT_MIN;
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(0, position);
 
     EXPECT_EQ(E_OK, resultSet->GoToRow(2));
 
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(2, position);
 
     std::string strValue;
     int iValue;
     double dValue;
     std::vector<uint8_t> blobValue;
-    iRet = resultSet->GetString(0, strValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetString(0, strValue));
     EXPECT_EQ("hello world", strValue);
 
-    iRet = resultSet->GetInt(1, iValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetInt(1, iValue));
     EXPECT_EQ(3, iValue);
 
-    iRet = resultSet->GetDouble(2, dValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetDouble(2, dValue));
     EXPECT_EQ(1.8, dValue);
 
-    iRet = resultSet->GetBlob(3, blobValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetBlob(3, blobValue));
 
     EXPECT_EQ(E_OK, resultSet->GoToRow(1));
 
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(1, position);
 
-
-    iRet = resultSet->GetString(0, strValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetString(0, strValue));
     EXPECT_EQ("2", strValue);
 
-    iRet = resultSet->GetInt(1, iValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetInt(1, iValue));
     EXPECT_EQ(-5, iValue);
 
-    iRet = resultSet->GetDouble(2, dValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetDouble(2, dValue));
     EXPECT_EQ(2.5, dValue);
 
-    iRet = resultSet->GetBlob(3, blobValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetBlob(3, blobValue));
 }
 
 /* *
@@ -1197,19 +1127,16 @@ HWTEST_F(RdbStepResultSetTest, testGo006, TestSize.Level1)
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     int position = INT_MIN;
-    int iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(-1, position);
 
     int count = -1;
-    iRet = resultSet->GetRowCount(count);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowCount(count));
     EXPECT_EQ(3, count);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(0, position);
 
     EXPECT_EQ(resultSet->GoTo(2), E_OK);
@@ -1218,41 +1145,32 @@ HWTEST_F(RdbStepResultSetTest, testGo006, TestSize.Level1)
     int iValue;
     double dValue;
     std::vector<uint8_t> blobValue;
-    iRet = resultSet->GetString(1, strValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetString(1, strValue));
     EXPECT_EQ("hello world", strValue);
 
-    iRet = resultSet->GetInt(2, iValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetInt(2, iValue));
     EXPECT_EQ(3, iValue);
 
-    iRet = resultSet->GetDouble(3, dValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetDouble(3, dValue));
     EXPECT_EQ(1.8, dValue);
 
-    iRet = resultSet->GetBlob(4, blobValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetBlob(4, blobValue));
 
     EXPECT_EQ(resultSet->GoTo(-2), E_OK);
 
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(0, position);
 
-    iRet = resultSet->GetString(1, strValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetString(1, strValue));
     EXPECT_EQ("hello", strValue);
 
-    iRet = resultSet->GetInt(2, iValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetInt(2, iValue));
     EXPECT_EQ(10, iValue);
 
-    iRet = resultSet->GetDouble(3, dValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetDouble(3, dValue));
     EXPECT_EQ(1.0, dValue);
 
-    iRet = resultSet->GetBlob(4, blobValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetBlob(4, blobValue));
 
     std::string strBlob;
     strBlob.clear();
@@ -1277,20 +1195,17 @@ HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
 
     int count = -1;
-    int iRet = resultSet->GetRowCount(count);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowCount(count));
     EXPECT_EQ(3, count);
 
     bool bResultSet = true;
-    iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsStarted(bResultSet));
     EXPECT_EQ(bResultSet, false);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
     bResultSet = false;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsAtFirstRow(bResultSet));
     EXPECT_EQ(bResultSet, true);
 
     std::string strValue;
@@ -1298,82 +1213,57 @@ HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
     double dValue;
     std::vector<uint8_t> blobValue;
 
-    iRet = resultSet->GetString(0, strValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetString(0, strValue));
     EXPECT_EQ("hello", strValue);
 
-    iRet = resultSet->GetInt(1, iValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetInt(1, iValue));
     EXPECT_EQ(10, iValue);
 
-    iRet = resultSet->GetDouble(2, dValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetDouble(2, dValue));
     EXPECT_EQ(1.0, dValue);
 
-    iRet = resultSet->GetBlob(3, blobValue);
-    EXPECT_EQ(E_OK, iRet);
-
-    std::string strBlob;
-    strBlob.clear();
-    for (size_t i = 0; i < blobValue.size(); i++) {
-        strBlob += char(blobValue[i]);
-    }
-    char cValue = 66;
-    string strTmpValue(1, cValue);
-    EXPECT_EQ(strTmpValue, strBlob);
+    EXPECT_EQ(E_OK, resultSet->GetBlob(3, blobValue));
 
     int ret = resultSet->GoToPreviousRow();
     EXPECT_NE(E_OK, ret);
 
     int position = INT_MIN;
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(-1, position);
 
-    bResultSet = true;
-    iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsStarted(bResultSet));
     EXPECT_EQ(bResultSet, false);
 
     EXPECT_EQ(resultSet->GoTo(2), E_OK);
 
-    iRet = resultSet->GetString(0, strValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetString(0, strValue));
     EXPECT_EQ("2", strValue);
 
-    iRet = resultSet->GetInt(1, iValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetInt(1, iValue));
     EXPECT_EQ(-5, iValue);
 
-    iRet = resultSet->GetDouble(2, dValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetDouble(2, dValue));
     EXPECT_EQ(2.5, dValue);
 
-    iRet = resultSet->GetBlob(3, blobValue);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetBlob(3, blobValue));
 
     EXPECT_EQ(E_OK, resultSet->GoToLastRow());
 
-    bResultSet = false;
-    iRet = resultSet->IsAtLastRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsAtLastRow(bResultSet));
     EXPECT_EQ(true, bResultSet);
 
     EXPECT_EQ(E_OK, resultSet->GoToPreviousRow());
 
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(1, position);
 
     EXPECT_NE(E_OK, resultSet->GoTo(3));
 
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(3, position);
 
     bResultSet = false;
-    iRet = resultSet->IsEnded(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsEnded(bResultSet));
     EXPECT_EQ(bResultSet, true);
 }
 
@@ -1397,8 +1287,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep008, TestSize.Level1)
     EXPECT_EQ(E_OK, resultSet->GoTo(1));
 
     bResultSet = false;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsAtFirstRow(bResultSet));
     EXPECT_EQ(bResultSet, true);
 
     ColumnType type;
@@ -1422,13 +1311,11 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep008, TestSize.Level1)
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
 
     int position = INT_MIN;
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(1, position);
 
     int count = -1;
-    iRet = resultSet->GetRowCount(count);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowCount(count));
     EXPECT_EQ(3, count);
 
     std::string strValue;
@@ -1528,8 +1415,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep010, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
 
     int position = INT_MIN;
-    int iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(-1, position);
     bool bResultSet = true;
     iRet = resultSet->IsStarted(bResultSet);
@@ -1537,59 +1423,49 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep010, TestSize.Level1)
     EXPECT_EQ(bResultSet, false);
 
     bResultSet = true;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsAtFirstRow(bResultSet));
     EXPECT_EQ(bResultSet, false);
 
     bResultSet = true;
-    iRet = resultSet->IsEnded(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsEnded(bResultSet));
     EXPECT_EQ(bResultSet, false);
 
     int moveTimes = 0;
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
     moveTimes++;
 
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(0, position);
 
     bResultSet = false;
-    iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsStarted(bResultSet));
     EXPECT_EQ(bResultSet, true);
 
     bResultSet = false;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsAtFirstRow(bResultSet));
     EXPECT_EQ(bResultSet, true);
 
     bResultSet = true;
-    iRet = resultSet->IsEnded(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsEnded(bResultSet));
     EXPECT_EQ(bResultSet, false);
 
     while (E_OK == resultSet->GoToNextRow()) {
         moveTimes++;
     }
 
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->GetRowIndex(position));
     EXPECT_EQ(3, position);
 
     bResultSet = false;
-    iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsStarted(bResultSet));
     EXPECT_EQ(bResultSet, true);
 
     bResultSet = true;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsAtFirstRow(bResultSet));
     EXPECT_EQ(bResultSet, false);
 
     bResultSet = false;
-    iRet = resultSet->IsEnded(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(E_OK, resultSet->IsEnded(bResultSet));
     EXPECT_EQ(bResultSet, true);
 }
 

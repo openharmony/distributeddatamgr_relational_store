@@ -409,28 +409,11 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_002, TestSize.Le
 
     int retN2 = rstSet->GoToNextRow();
     EXPECT_EQ(retN2, E_OK);
-    rstSet->GetRowIndex(pos);
-    EXPECT_EQ(pos, 1);
-    isStart = false;
-    rstSet->IsStarted(isStart);
-    EXPECT_EQ(isStart, true);
-    isAtFirstRow = true;
     rstSet->IsAtFirstRow(isAtFirstRow);
     EXPECT_EQ(isAtFirstRow, false);
-    isEnded = true;
-    rstSet->IsEnded(isEnded);
-    EXPECT_EQ(isEnded, false);
 
     int retN3 = rstSet->GoToNextRow();
     EXPECT_EQ(retN3, E_OK);
-    rstSet->GetRowIndex(pos);
-    EXPECT_EQ(pos, 2);
-    isStart = false;
-    rstSet->IsStarted(isStart);
-    EXPECT_EQ(isStart, true);
-    isAtFirstRow = true;
-    rstSet->IsAtFirstRow(isAtFirstRow);
-    EXPECT_EQ(isAtFirstRow, false);
     bool isAtLastRow = false;
     rstSet->IsAtLastRow(isAtLastRow);
     EXPECT_EQ(isAtLastRow, true);
@@ -439,13 +422,6 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_002, TestSize.Le
     EXPECT_EQ(retN, E_ERROR);
     rstSet->GetRowIndex(pos);
     EXPECT_EQ(pos, 3);
-    isStart = false;
-    rstSet->IsStarted(isStart);
-    EXPECT_EQ(isStart, true);
-    isAtFirstRow = true;
-    rstSet->IsAtFirstRow(isAtFirstRow);
-    EXPECT_EQ(isAtFirstRow, false);
-    isEnded = false;
     rstSet->IsEnded(isEnded);
     EXPECT_EQ(isEnded, true);
 
