@@ -187,7 +187,6 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_003, TestSize.Level
     EXPECT_EQ(rowCount, 2);
 
     cursor->goToNextRow(cursor);
-
     int columnCount = 0;
     cursor->getColumnCount(cursor, &columnCount);
     EXPECT_EQ(columnCount, 6);
@@ -220,28 +219,8 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_003, TestSize.Level
     EXPECT_EQ(strcmp(data5Value_1, "ABCDEFGH"), 0);
 
     cursor->goToNextRow(cursor);
-
     cursor->getInt64(cursor, 0, &id);
     EXPECT_EQ(id, 3);
-
-    // cursor->getSize(cursor, 1, &size);
-    // char data1Value_1[size + 1];
-    // cursor->getText(cursor, 1, data1Value_1, size + 1);
-    // EXPECT_EQ(strcmp(data1Value_1, "wangWu"), 0);
-
-    // cursor->getInt64(cursor, 2, &data2Value);
-    // EXPECT_EQ(data2Value, 14800);
-
-    // cursor->getReal(cursor, 3, &data3Value);
-    // EXPECT_EQ(data3Value, 300.1);
-
-    // cursor->isNull(cursor, 4, &isNull);
-    // EXPECT_EQ(isNull, true);
-
-    // cursor->getSize(cursor, 5, &size);
-    // char data5Value_2[size + 1];
-    // cursor->getText(cursor, 5, data5Value_2, size + 1);
-    // EXPECT_EQ(strcmp(data5Value_2, "ABCDEFGHI"), 0);
 
     valueObject->destroy(valueObject);
     predicates->destroy(predicates);
