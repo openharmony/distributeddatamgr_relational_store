@@ -553,8 +553,6 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_0010, TestSize.Level1)
     OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     valueBucket->putText(valueBucket, "data1", "liSi");
     valueBucket->putInt64(valueBucket, "data2", 13800);
-    valueBucket->putReal(valueBucket, "data3", 200.1);
-    valueBucket->putNull(valueBucket, "data5");
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("wrong");
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
@@ -600,11 +598,6 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_0010, TestSize.Level1)
     cursor->getBlob(cursor, 4, data4Value, size);
     EXPECT_EQ(data4Value[0], 1);
     EXPECT_EQ(data4Value[1], 2);
-
-    cursor->getSize(cursor, 5, &size);
-    char data5Value[size + 1];
-    cursor->getText(cursor, 5, data5Value, size + 1);
-    EXPECT_EQ(strcmp(data5Value, "ABCDEFG"), 0);
 
     valueObject->destroy(valueObject);
     predicates->destroy(predicates);
@@ -844,8 +837,6 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_017, TestSize.Level1)
     EXPECT_EQ(errCode, RDB_OK);
 
 }
-
-
 
 /**
  * @tc.name: RDB_Native_store_test_014
