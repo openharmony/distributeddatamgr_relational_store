@@ -70,6 +70,20 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_wal_limit_test.cpp",
   ]
 
+  sources += [
+    "../../../frameworks/native/rdb/src/base_transaction.cpp",
+    "../../../frameworks/native/rdb/src/raw_data_parser.cpp",
+    "../../../frameworks/native/rdb/src/rdb_security_manager.cpp",
+    "../../../frameworks/native/rdb/src/sqlite_connection.cpp",
+    "../../../frameworks/native/rdb/src/sqlite_connection_pool.cpp",
+    "../../../frameworks/native/rdb/src/sqlite_global_config.cpp",
+    "../../../frameworks/native/rdb/src/sqlite_shared_result_set.cpp",
+    "../../../frameworks/native/rdb/src/sqlite_sql_builder.cpp",
+    "../../../frameworks/native/rdb/src/sqlite_statement.cpp",
+    "../../../frameworks/native/rdb/src/sqlite_utils.cpp",
+    "../../../frameworks/native/rdb/src/string_utils.cpp",
+  ]
+
   configs = [ ":module_private_config" ]
 
   external_deps = [
@@ -79,10 +93,11 @@ ohos_unittest("NativeRdbTest") {
     "hilog:libhilog",
     "huks:libhukssdk",
     "ipc:ipc_core",
+    "kv_store:distributeddb",
   ]
 
   deps = [
-    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb_static",
+    "${relational_store_innerapi_path}/rdb:native_rdb",
     "//third_party/googletest:gtest_main",
     "//third_party/icu/icu4c:shared_icui18n",
     "//third_party/icu/icu4c:shared_icuuc",
