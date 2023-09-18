@@ -38,6 +38,8 @@ public:
     void GenerateDefaultTable();
     void GenerateAssetsTable();
     void GenerateTimeoutTable();
+    void CheckGoToNextRow(std::shared_ptr<ResultSet> &rstSet, int &pos, bool &isStart, bool & isAtFirstRow,
+        bool &isEnded, bool &isAtLastRow);
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
@@ -173,6 +175,17 @@ void RdbSqliteSharedResultSetTest::GenerateTimeoutTable()
     values.Put("data6", ValueObject(assets));
     store->Insert(id, "test", values);
 }
+
+void RdbSqliteSharedResultSetTest::CheckGoToNextRow(std::shared_ptr<ResultSet> &rstSet, int &pos, bool &isStart,
+    bool & isAtFirstRow, bool &isEnded, bool &isAtLastRow)
+{
+    rstSet->GetRowIndex(pos);
+    rstSet->IsStarted(isStart);
+    rstSet->IsAtFirstRow(isAtFirstRow);
+    rstSet->IsEnded(isEnded);
+    rstSet->IsAtLastRow(isAtLastRow);
+}
+
 
 /* *
  * @tc.name: Sqlite_Shared_Result_Set_Asset_Timeout
@@ -377,57 +390,59 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_001, TestSize.Le
 HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_002, TestSize.Level1)
 {
     GenerateDefaultTable();
-    std::vector<std::string> selectionArgs;
     std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
     int pos = -2;
-    rstSet->GetRowIndex(pos);
-    EXPECT_EQ(pos, -1);
     bool isStart = true;
-    rstSet->IsStarted(isStart);
-    EXPECT_EQ(isStart, false);
     bool isAtFirstRow = true;
-    rstSet->IsAtFirstRow(isAtFirstRow);
-    EXPECT_EQ(isAtFirstRow, false);
     bool isEnded = true;
-    rstSet->IsEnded(isEnded);
-    EXPECT_EQ(isEnded, false);
-
-    int retN1 = rstSet->GoToNextRow();
-    EXPECT_EQ(retN1, E_OK);
-    rstSet->GetRowIndex(pos);
-    EXPECT_EQ(pos, 0);
-    rstSet->IsStarted(isStart);
-    EXPECT_EQ(isStart, true);
-    rstSet->IsAtFirstRow(isAtFirstRow);
-    EXPECT_EQ(isAtFirstRow, true);
-    isEnded = true;
-    rstSet->IsEnded(isEnded);
-    EXPECT_EQ(isEnded, false);
-
-    int retN2 = rstSet->GoToNextRow();
-    EXPECT_EQ(retN2, E_OK);
-    rstSet->IsAtFirstRow(isAtFirstRow);
-    EXPECT_EQ(isAtFirstRow, false);
-
-    int retN3 = rstSet->GoToNextRow();
-    EXPECT_EQ(retN3, E_OK);
     bool isAtLastRow = false;
-    rstSet->IsAtLastRow(isAtLastRow);
-    EXPECT_EQ(isAtLastRow, true);
+    CheckGoToNextRow(rstSet, pos, isStart, isAtFirstRow, isEnded, isAtLastRow);
+    EXPECT_EQ(pos, -1);
+    EXPECT_EQ(isStart, false);
+    EXPECT_EQ(isAtFirstRow, false);
+    EXPECT_EQ(isEnded, false);
 
-    int retN = rstSet->GoToNextRow();
-    EXPECT_EQ(retN, E_ERROR);
-    rstSet->GetRowIndex(pos);
+    isEnded = true;
+    EXPECT_EQ(rstSet->GoToNextRow(), E_OK);
+    CheckGoToNextRow(rstSet, pos, isStart, isAtFirstRow, isEnded, isAtLastRow);
+    EXPECT_EQ(pos, 0);
+    EXPECT_EQ(isStart, true);
+    EXPECT_EQ(isAtFirstRow, true);
+    EXPECT_EQ(isEnded, false);
+
+    isStart = false;
+    isEnded = true;
+    EXPECT_EQ(rstSet->GoToNextRow(), E_OK);
+    CheckGoToNextRow(rstSet, pos, isStart, isAtFirstRow, isEnded, isAtLastRow);
+    EXPECT_EQ(pos, 1);
+    EXPECT_EQ(isStart, true);
+    EXPECT_EQ(isAtFirstRow, false);
+    EXPECT_EQ(isEnded, false);
+
+    isStart = false;
+    isAtFirstRow = true;
+    EXPECT_EQ(rstSet->GoToNextRow(), E_OK);
+    CheckGoToNextRow(rstSet, pos, isStart, isAtFirstRow, isEnded, isAtLastRow);
+    EXPECT_EQ(pos, 2);
+    EXPECT_EQ(isStart, true);
+    EXPECT_EQ(isAtFirstRow, false);
+    EXPECT_EQ(isAtLastRow, true);
+    
+    isStart = false;
+    isAtFirstRow = true;
+    isEnded = false;
+    EXPECT_EQ(rstSet->GoToNextRow(), E_ERROR);
+    CheckGoToNextRow(rstSet, pos, isStart, isAtFirstRow, isEnded, isAtLastRow);
     EXPECT_EQ(pos, 3);
-    rstSet->IsEnded(isEnded);
+    EXPECT_EQ(isStart, true);
+    EXPECT_EQ(isAtFirstRow, false);
     EXPECT_EQ(isEnded, true);
 
     rstSet->Close();
-    bool isClosedFlag = rstSet->IsClosed();
-    EXPECT_EQ(isClosedFlag, true);
+    EXPECT_EQ(rstSet->IsClosed(), true);
 }
 
 /* *
