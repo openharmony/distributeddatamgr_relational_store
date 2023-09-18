@@ -853,7 +853,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_027, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    std::vector<std::shared_ptr<ResultSet>> resultSet1;
+    std::vector<std::shared_ptr<ResultSet>> resultSet;
     for(int i = 1; i <= 10; ++i) {
         resultSet[i]= store->QueryByStep("SELECT * FROM test");
         EXPECT_NE(resultSet[i], nullptr);
