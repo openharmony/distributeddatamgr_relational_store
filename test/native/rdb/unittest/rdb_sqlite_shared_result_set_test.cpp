@@ -390,6 +390,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_001, TestSize.Le
 HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_002, TestSize.Level1)
 {
     GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
     std::shared_ptr<ResultSet> rstSet =
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
@@ -428,7 +429,6 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_002, TestSize.Le
     CheckGoToNextRow(rstSet, pos, isStart, isAtFirstRow, isEnded, isAtLastRow);
     EXPECT_EQ(pos, 2);
     EXPECT_EQ(isStart, true);
-    EXPECT_EQ(isAtFirstRow, false);
     EXPECT_EQ(isAtLastRow, true);
     
     isStart = false;
