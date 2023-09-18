@@ -831,7 +831,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_027, TestSize.Level1)
     const std::string dbPath = RDB_TEST_PATH + "config_test.db";
     RdbStoreConfig config(dbPath);
 
-    static constexpr int readConSize = 5;
+    static constexpr int readConSize = 10;
     config.SetReadConSize(readConSize);
     int retReadConSize = config.GetReadConSize();
     EXPECT_EQ(readConSize, retReadConSize);
@@ -853,27 +853,15 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_027, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    std::shared_ptr<ResultSet> resultSet1 = store->QueryByStep("SELECT * FROM test");
-    EXPECT_NE(resultSet1, nullptr);
-    EXPECT_EQ(E_OK, resultSet1->GoToFirstRow());
-    std::shared_ptr<ResultSet> resultSet2 = store->QueryByStep("SELECT * FROM test");
-    EXPECT_NE(resultSet2, nullptr);
-    EXPECT_EQ(E_OK, resultSet2->GoToFirstRow());
-    std::shared_ptr<ResultSet> resultSet3 = store->QueryByStep("SELECT * FROM test");
-    EXPECT_NE(resultSet3, nullptr);
-    EXPECT_EQ(E_OK, resultSet3->GoToFirstRow());
-    std::shared_ptr<ResultSet> resultSet4 = store->QueryByStep("SELECT * FROM test");
-    EXPECT_NE(resultSet4, nullptr);
-    EXPECT_EQ(E_OK, resultSet4->GoToFirstRow());
-    std::shared_ptr<ResultSet> resultSet5 = store->QueryByStep("SELECT * FROM test");
-    EXPECT_NE(resultSet5, nullptr);
-    EXPECT_EQ(E_OK, resultSet5->GoToFirstRow());
-
-    EXPECT_EQ(E_OK, resultSet1->Close());
-    EXPECT_EQ(E_OK, resultSet2->Close());
-    EXPECT_EQ(E_OK, resultSet3->Close());
-    EXPECT_EQ(E_OK, resultSet4->Close());
-    EXPECT_EQ(E_OK, resultSet5->Close());
+    std::vector<std::shared_ptr<ResultSet>> resultSet1;
+    for(int i = 1; i <= 10; ++i) {
+        resultSet[i]= store->QueryByStep("SELECT * FROM test");
+        EXPECT_NE(resultSet[i], nullptr);
+        EXPECT_EQ(E_OK, resultSet[i]->GoToFirstRow());
+    }
+    for(int i = 1; i <= 10; ++i) {
+        EXPECT_EQ(E_OK, resultSet[i]->Close());
+    }
 }
 
 /**
