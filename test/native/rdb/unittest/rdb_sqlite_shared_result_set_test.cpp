@@ -186,7 +186,6 @@ void RdbSqliteSharedResultSetTest::CheckGoToNextRow(std::shared_ptr<ResultSet> &
     rstSet->IsAtLastRow(isAtLastRow);
 }
 
-
 /* *
  * @tc.name: Sqlite_Shared_Result_Set_Asset_Timeout
  * @tc.desc: normal testcase of SqliteSharedResultSet for move
