@@ -51,9 +51,11 @@ describe('rdbStoreDeleteTest', function () {
 
     console.log(TAG + "*************Unit Test Begin*************");
     /**
-     * @tc.name rdb delete test
+     * @tc.name Normal test case of delete, if predicates not configure
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0010
-     * @tc.desc rdb delete test
+     * @tc.desc 1.Create Array
+     *		2.Insert data
+     *		3.Execute delete
      */
     it('testRdbStoreDelete0001', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDelete0001 start *************");
@@ -101,9 +103,12 @@ describe('rdbStoreDeleteTest', function () {
     })
 
     /**
-     * @tc.name rdb delete test
+     * @tc.name Normal test case of delete
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0020
-     * @tc.desc rdb delete test
+     * @tc.desc 1.Create Array
+     * 		2.Insert data
+     * 		3.Configure predicates
+     * 		4.Execute delete
      */
     it('testRdbStoreDelete0002', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDelete0002 start *************");
@@ -152,9 +157,13 @@ describe('rdbStoreDeleteTest', function () {
     })
 
     /**
-     * @tc.name rdb delete test
+     * @tc.name Normal test case of using database
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0030
-     * @tc.desc rdb delete test
+     * @tc.desc 1.Create Array
+     * 		2.Insert data
+     * 		3.Query data
+     * 		4.Execute delete
+     * 		5.Query data
      */
     it('testRdbStoreDelete0003', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDelete0003 start *************");
@@ -208,9 +217,12 @@ describe('rdbStoreDeleteTest', function () {
     })
 
     /**
-     * @tc.name rdb delete test
+     * @tc.name Normal test case of delete, if param is id
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0040
-     * @tc.desc rdb delete test
+     * @tc.desc 1.Create Array
+     * 		2.Insert data
+     * 		3.Configure predicates as id
+     * 		4.Execute delete
      */
     it('testRdbStoreDelete0004', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDelete0004 start *************");
@@ -258,9 +270,12 @@ describe('rdbStoreDeleteTest', function () {
     })
 
     /**
-     * @tc.name rdb delete test
+     * @tc.name Normal test case of delete, if param is not unique
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0050
-     * @tc.desc rdb delete test
+     * @tc.desc 1.Create Array
+     *		2.Insert data
+     *		3.Configure predicates
+     *		4.Execute delete
      */
     it('testRdbStoreDelete0005', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDelete0005 start *************");
@@ -309,9 +324,10 @@ describe('rdbStoreDeleteTest', function () {
     })
 
     /**
-     * @tc.name rdb delete test
+     * @tc.name Abnormal test case of delete, if param is null
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0060
-     * @tc.desc rdb delete test
+     * @tc.desc 1.Configure predicates as null
+     * 		2.Execute delete
      */
     it('testRdbStoreDelete0006', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDelete0006 start *************");
@@ -335,9 +351,10 @@ describe('rdbStoreDeleteTest', function () {
     })
 
     /**
-     * @tc.name rdb delete test
+     * @tc.name Abnormal test case of delete, if param uses system API
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0060
-     * @tc.desc rdb delete test
+     * @tc.desc 1.Configure predicates as system API
+     * 		2.Execute delete
      */
     it('testRdbStoreDelete0007', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDelete0007 start *************");
