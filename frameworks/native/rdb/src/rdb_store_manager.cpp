@@ -167,6 +167,7 @@ bool RdbStoreManager::Delete(const std::string &path)
     if (!tokens.empty()) {
         DistributedRdb::RdbSyncerParam param;
         param.storeName_ = *tokens.rbegin();
+        std::lock_guard<std::mutex> lock(mutex_);
         param.bundleName_ = bundleName_;
         auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
         if (err == E_OK && service != nullptr) {
