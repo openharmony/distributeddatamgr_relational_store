@@ -22,6 +22,7 @@
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "sqlite_errno.h"
+#include "sqlite_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -417,13 +418,13 @@ int SqliteStatement::GetColumn(int index, ValueObject &value) const
     int size = sqlite3_column_bytes(stmtHandle, index);
     auto blob = static_cast<const uint8_t *>(sqlite3_column_blob(stmtHandle, index));
     std::string declType = decl;
-    if (declType == ValueObject::DeclType<Asset>()) {
+    if (SqliteUtils::StrToUpper(declType) == ValueObject::DeclType<Asset>()) {
         Asset asset;
         RawDataParser::ParserRawData(blob, size, asset);
         value = std::move(asset);
         return E_OK;
     }
-    if (declType == ValueObject::DeclType<Assets>()) {
+    if (SqliteUtils::StrToUpper(declType) == ValueObject::DeclType<Assets>()) {
         Assets assets;
         RawDataParser::ParserRawData(blob, size, assets);
         value = std::move(assets);
