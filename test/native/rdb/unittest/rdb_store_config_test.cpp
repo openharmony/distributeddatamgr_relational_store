@@ -853,14 +853,15 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_027, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    std::vector<std::shared_ptr<ResultSet>> resultSet;
-    for (int i = 0; i < 10; ++i) {
-        resultSet.push_back(store->QueryByStep("SELECT * FROM test"));
-        EXPECT_NE(resultSet[i], nullptr);
-        EXPECT_EQ(E_OK, resultSet[i]->GoToFirstRow());
+    std::vector<std::shared_ptr<ResultSet>> resultSets;
+    for (int i = 0; i < readConSize; ++i) {
+        auto resultSet = store->QueryByStep("SELECT * FROM test");
+        EXPECT_NE(resultSet, nullptr);
+        EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+        resultSets.push_back(resultSet);
     }
-    for (int i = 0; i < 10; ++i) {
-        EXPECT_EQ(E_OK, resultSet[i]->Close());
+    for(const auto &resultSet: resultSets) {
+        EXPECT_EQ(E_OK, resultSet->Close());
     }
 }
 
