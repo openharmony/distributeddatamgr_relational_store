@@ -235,7 +235,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_003, TestSize.Level1)
  * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)// yangsen
+HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
 
@@ -286,7 +286,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)// 
  * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)// yangsen
+HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
 
@@ -336,7 +336,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)// 
  * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_003, TestSize.Level1)// yangsen
+HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_003, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
 
@@ -387,7 +387,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_003, TestSize.Level1)// 
  * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_004, TestSize.Level1) // yangsen
+HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_004, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
 
@@ -512,7 +512,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_002, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issue-I6BAX0
  */
-HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1) // yangsen
+HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
     store->ExecuteSql("delete from test");
