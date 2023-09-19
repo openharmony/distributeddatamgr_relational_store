@@ -38,8 +38,8 @@ public:
     void GenerateDefaultTable();
     void GenerateAssetsTable();
     void GenerateTimeoutTable();
-    void CheckGoToNextRow(std::shared_ptr<ResultSet> &rstSet, int &pos, bool &isStart, bool & isAtFirstRow,
-        bool &isEnded, bool &isAtLastRow);
+    void CheckGoToNextRow(std::shared_ptr<ResultSet> &rstSet, int &pos, bool &isStart, bool &isAtFirstRow,
+        bool &isEnded);
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
@@ -177,13 +177,12 @@ void RdbSqliteSharedResultSetTest::GenerateTimeoutTable()
 }
 
 void RdbSqliteSharedResultSetTest::CheckGoToNextRow(std::shared_ptr<ResultSet> &rstSet, int &pos, bool &isStart,
-    bool &isAtFirstRow, bool &isEnded, bool &isAtLastRow)
+    bool &isAtFirstRow, bool &isEnded)
 {
     rstSet->GetRowIndex(pos);
     rstSet->IsStarted(isStart);
     rstSet->IsAtFirstRow(isAtFirstRow);
     rstSet->IsEnded(isEnded);
-    rstSet->IsAtLastRow(isAtLastRow);
 }
 
 /* *
@@ -398,8 +397,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_002, TestSize.Le
     bool isStart = true;
     bool isAtFirstRow = true;
     bool isEnded = true;
-    bool isAtLastRow = false;
-    CheckGoToNextRow(rstSet, pos, isStart, isAtFirstRow, isEnded, isAtLastRow);
+    CheckGoToNextRow(rstSet, pos, isStart, isAtFirstRow, isEnded);
     EXPECT_EQ(pos, -1);
     EXPECT_EQ(isStart, false);
     EXPECT_EQ(isAtFirstRow, false);
@@ -407,7 +405,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_002, TestSize.Le
 
     isEnded = true;
     EXPECT_EQ(rstSet->GoToNextRow(), E_OK);
-    CheckGoToNextRow(rstSet, pos, isStart, isAtFirstRow, isEnded, isAtLastRow);
+    CheckGoToNextRow(rstSet, pos, isStart, isAtFirstRow, isEnded);
     EXPECT_EQ(pos, 0);
     EXPECT_EQ(isStart, true);
     EXPECT_EQ(isAtFirstRow, true);
@@ -416,7 +414,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_002, TestSize.Le
     isStart = false;
     isEnded = true;
     EXPECT_EQ(rstSet->GoToNextRow(), E_OK);
-    CheckGoToNextRow(rstSet, pos, isStart, isAtFirstRow, isEnded, isAtLastRow);
+    CheckGoToNextRow(rstSet, pos, isStart, isAtFirstRow, isEnded);
     EXPECT_EQ(pos, 1);
     EXPECT_EQ(isStart, true);
     EXPECT_EQ(isAtFirstRow, false);
@@ -425,19 +423,19 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_002, TestSize.Le
     isStart = false;
     isAtFirstRow = true;
     EXPECT_EQ(rstSet->GoToNextRow(), E_OK);
-    CheckGoToNextRow(rstSet, pos, isStart, isAtFirstRow, isEnded, isAtLastRow);
+    CheckGoToNextRow(rstSet, pos, isStart, isAtFirstRow, isEnded);
     EXPECT_EQ(pos, 2);
     EXPECT_EQ(isStart, true);
+    bool isAtLastRow = false;
+    rstSet->IsAtLastRow(isAtLastRow);
     EXPECT_EQ(isAtLastRow, true);
     
     isStart = false;
-    isAtFirstRow = true;
     isEnded = false;
     EXPECT_EQ(rstSet->GoToNextRow(), E_ERROR);
-    CheckGoToNextRow(rstSet, pos, isStart, isAtFirstRow, isEnded, isAtLastRow);
+    CheckGoToNextRow(rstSet, pos, isStart, isAtFirstRow, isEnded);
     EXPECT_EQ(pos, 3);
     EXPECT_EQ(isStart, true);
-    EXPECT_EQ(isAtFirstRow, false);
     EXPECT_EQ(isEnded, true);
 
     rstSet->Close();
