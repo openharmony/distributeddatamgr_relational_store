@@ -103,7 +103,7 @@ describe('rdbStoreDeleteTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0020
-     * @tc.name Normal test case of delete "name" is "zhangsan"
+     * @tc.name Normal test case of delete, "name" is "zhangsan"
      * @tc.desc 1.Insert data
      * 		2.Configure predicates ("name": "zhangsan")
      * 		3.Execute delete
@@ -156,7 +156,7 @@ describe('rdbStoreDeleteTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0030
-     * @tc.name Normal test case of query and delete "age" is 28
+     * @tc.name Normal test case of query and delete, "age" is 28
      * @tc.desc 1.Insert data
      * 		2.Query data ("age", 28)
      * 		3.Execute delete ("age", 28)
@@ -267,7 +267,7 @@ describe('rdbStoreDeleteTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0050
-     * @tc.name Normal test case of delete "name" is "lisi"
+     * @tc.name Normal test case of delete, "name" is "lisi"
      * @tc.desc 1.Insert data
      *		2.Configure predicates ("name", "lisi")
      *		3.Execute delete
