@@ -51,11 +51,10 @@ describe('rdbStoreDeleteTest', function () {
 
     console.log(TAG + "*************Unit Test Begin*************");
     /**
-     * @tc.name Normal test case of delete, if predicates not configure
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0010
-     * @tc.desc 1.Create Array
-     *		2.Insert data
-     *		3.Execute delete
+     * @tc.name Normal test case of delete
+     * @tc.desc 1.Insert data
+     *		2.Execute delete
      */
     it('testRdbStoreDelete0001', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDelete0001 start *************");
@@ -103,12 +102,11 @@ describe('rdbStoreDeleteTest', function () {
     })
 
     /**
-     * @tc.name Normal test case of delete
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0020
-     * @tc.desc 1.Create Array
-     * 		2.Insert data
-     * 		3.Configure predicates
-     * 		4.Execute delete
+     * @tc.name Normal test case of delete "name" is "zhangsan"
+     * @tc.desc 1.Insert data
+     * 		2.Configure predicates ("name": "zhangsan")
+     * 		3.Execute delete
      */
     it('testRdbStoreDelete0002', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDelete0002 start *************");
@@ -157,13 +155,12 @@ describe('rdbStoreDeleteTest', function () {
     })
 
     /**
-     * @tc.name Normal test case of using database
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0030
-     * @tc.desc 1.Create Array
-     * 		2.Insert data
-     * 		3.Query data
-     * 		4.Execute delete
-     * 		5.Query data
+     * @tc.name Normal test case of query and delete "age" is 28
+     * @tc.desc 1.Insert data
+     * 		2.Query data ("age", 28)
+     * 		3.Execute delete ("age", 28)
+     * 		4.Query data ("age", 28)
      */
     it('testRdbStoreDelete0003', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDelete0003 start *************");
@@ -217,12 +214,11 @@ describe('rdbStoreDeleteTest', function () {
     })
 
     /**
-     * @tc.name Normal test case of delete, if param is id
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0040
-     * @tc.desc 1.Create Array
-     * 		2.Insert data
-     * 		3.Configure predicates as id
-     * 		4.Execute delete
+     * @tc.name Abnormal test case of delete, if column is invalid
+     * @tc.desc 1.Insert data
+     * 		2.Configure predicates ("aaa id", 1)
+     * 		3.Execute delete
      */
     it('testRdbStoreDelete0004', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDelete0004 start *************");
@@ -270,12 +266,11 @@ describe('rdbStoreDeleteTest', function () {
     })
 
     /**
-     * @tc.name Normal test case of delete, if param is not unique
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0050
-     * @tc.desc 1.Create Array
-     *		2.Insert data
-     *		3.Configure predicates
-     *		4.Execute delete
+     * @tc.name Normal test case of delete "name" is "lisi"
+     * @tc.desc 1.Insert data
+     *		2.Configure predicates ("name", "lisi")
+     *		3.Execute delete
      */
     it('testRdbStoreDelete0005', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDelete0005 start *************");
@@ -324,9 +319,9 @@ describe('rdbStoreDeleteTest', function () {
     })
 
     /**
-     * @tc.name Abnormal test case of delete, if param is null
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0060
-     * @tc.desc 1.Configure predicates as null
+     * @tc.name Abnormal test case of delete, if TABLE "name" is ""
+     * @tc.desc 1.Configure predicates ("name", "")
      * 		2.Execute delete
      */
     it('testRdbStoreDelete0006', 0, async function (done) {
@@ -351,9 +346,9 @@ describe('rdbStoreDeleteTest', function () {
     })
 
     /**
-     * @tc.name Abnormal test case of delete, if param uses system API
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0060
-     * @tc.desc 1.Configure predicates as system API
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0070
+     * @tc.name Abnormal test case of delete, if non system application calls
+     * @tc.desc 1.Configure predicates (Calling system application)
      * 		2.Execute delete
      */
     it('testRdbStoreDelete0007', 0, async function (done) {
