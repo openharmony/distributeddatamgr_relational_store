@@ -860,7 +860,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_027, TestSize.Level1)
         EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
         resultSets.push_back(resultSet);
     }
-    for(const auto &resultSet: resultSets) {
+    for (const auto &resultSet: resultSets) {
         EXPECT_EQ(E_OK, resultSet->Close());
     }
 }
