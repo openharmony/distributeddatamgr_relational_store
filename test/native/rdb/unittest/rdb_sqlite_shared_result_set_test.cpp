@@ -177,7 +177,7 @@ void RdbSqliteSharedResultSetTest::GenerateTimeoutTable()
 }
 
 void RdbSqliteSharedResultSetTest::CheckGoToNextRow(std::shared_ptr<ResultSet> &rstSet, int &pos, bool &isStart,
-    bool & isAtFirstRow, bool &isEnded, bool &isAtLastRow)
+    bool &isAtFirstRow, bool &isEnded, bool &isAtLastRow)
 {
     rstSet->GetRowIndex(pos);
     rstSet->IsStarted(isStart);
