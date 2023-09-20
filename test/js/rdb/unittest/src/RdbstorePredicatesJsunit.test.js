@@ -453,7 +453,7 @@ describe('rdbPredicatesTest', function () {
     })
 
     /**
-     * @tc.number   SUB_DDM_AppDataFWK_JSRDB_Predicates_0222
+     * @tc.number   SUB_DDM_AppDataFWK_JSRDB_Predicates_0028
      * @tc.name     predicates not equalTo test
      * @tc.desc     1.predicates not equalTo normal test
      *              2.predicates not equalTo abnormal test
@@ -1362,7 +1362,7 @@ describe('rdbPredicatesTest', function () {
         let predicates4 = new dataRdb.RdbPredicates("AllDataType");
         predicates4.between("longValue", 0, Number.NaN);
         let result4 = await rdbStore.query(predicates4);
-        expect(0).assertEqual(result4.rowCount);    //[shenjiahao] 结果有问题
+        expect(0).assertEqual(result4.rowCount);
         result4.close();
         result4 = null
 
@@ -1462,7 +1462,7 @@ describe('rdbPredicatesTest', function () {
 
 
     /**
-     * @tc.number   testNotBetween0004
+     * @tc.number   testNotBetween0005
      * @tc.name     test long value with notBetween.
      * @tc.desc     1.predicates between abnormal "Number.NaN" test
      *              2.predicates between abnormal "Number.NaN" test
