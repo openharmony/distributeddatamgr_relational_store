@@ -45,7 +45,7 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::
         LOG_ERROR("NewInstance GetConstructor is nullptr!");
         return nullptr;
     }
-    napi_value instance;
+    napi_value instance = nullptr;
     napi_status status = napi_new_instance(env, cons, 0, nullptr, &instance);
     if (status != napi_ok) {
         LOG_ERROR("NewInstance napi_new_instance failed! code:%{public}d!", status);
@@ -75,7 +75,7 @@ std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 
 napi_value ResultSetProxy::GetConstructor(napi_env env)
 {
-    napi_value cons;
+    napi_value cons = nullptr;
     if (ctorRef_ != nullptr) {
         NAPI_CALL(env, napi_get_reference_value(env, ctorRef_, &cons));
         return cons;

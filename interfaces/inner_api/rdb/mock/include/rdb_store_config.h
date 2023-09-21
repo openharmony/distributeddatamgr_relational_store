@@ -138,6 +138,8 @@ public:
     void SetScalarFunction(const std::string &functionName, int argc, ScalarFunction function);
     void SetDataGroupId(const std::string &dataGroupId);
     std::string GetDataGroupId() const;
+    void SetCustomDir(const std::string &customDir);
+    std::string GetCustomDir() const;
     std::map<std::string, ScalarFunctionInfo> GetScalarFunctions() const;
 
     bool operator==(const RdbStoreConfig &config) const
@@ -169,7 +171,7 @@ public:
                && this->syncMode == config.syncMode && this->databaseFileType == config.databaseFileType
                && this->isEncrypt_ == config.isEncrypt_ && this->securityLevel == config.securityLevel
                && this->journalSize == config.journalSize && this->pageSize == config.pageSize
-               && this->readConSize_ == config.readConSize_;
+               && this->readConSize_ == config.readConSize_ && this->customDir_ == config.customDir_;
     }
 
 private:
@@ -199,6 +201,7 @@ private:
     int readConSize_ = 4;
     std::string encryptAlgo;
     std::string dataGroupId_;
+    std::string customDir_;
 
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
 };

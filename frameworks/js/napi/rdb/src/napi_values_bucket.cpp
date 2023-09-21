@@ -26,7 +26,7 @@ using namespace OHOS::NativeRdb;
 __attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_RdbJsKit_ValuesBucketProxy_NewInstance(
     napi_env env, ValuesBucket &valuesBucket)
 {
-    napi_value ret;
+    napi_value ret = nullptr;
     NAPI_CALL(env, napi_create_object(env, &ret));
     for (auto &[key, value]: valuesBucket.values_) {
         napi_value jsValue = JSUtils::Convert2JSValue(env, value.value);
@@ -44,7 +44,7 @@ __attribute__((visibility("default"))) ValuesBucket *NAPI_OHOS_Data_RdbJsKit_Val
         LOG_ERROR("ValuesBucket new failed, valuesBucket is nullptr");
         return nullptr;
     }
-    napi_value keys = 0;
+    napi_value keys = nullptr;
     napi_get_property_names(env, arg, &keys);
     uint32_t arrLen = 0;
     napi_status status = napi_get_array_length(env, keys, &arrLen);
@@ -53,10 +53,10 @@ __attribute__((visibility("default"))) ValuesBucket *NAPI_OHOS_Data_RdbJsKit_Val
         return valuesBucket;
     }
     for (size_t i = 0; i < arrLen; ++i) {
-        napi_value key;
+        napi_value key = nullptr;
         napi_get_element(env, keys, i, &key);
         std::string keyStr = JSUtils::Convert2String(env, key);
-        napi_value value;
+        napi_value value = nullptr;
         napi_get_property(env, arg, key, &value);
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, value, &valueType);
