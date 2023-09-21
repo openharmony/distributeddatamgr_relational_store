@@ -89,14 +89,29 @@ void RdbTransactionTest::TearDown(void)
 {
 }
 
-ValuesBucket InsertRowData(int id, string name, int age, duble salary, std::vector<int> blobType)
+struct RowData
+{
+    int id;
+    string name;
+    int age;
+    double salary;
+    std::vector<uint8_t> blobType;
+};
+
+std::map<int, RowData> rowDataMap;
+
+rowDataMap[0] = {1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }};
+rowDataMap[1] = {2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }};
+rowDataMap[2] = {3, "wangyjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }};
+
+ValuesBucket InsertRowData(const RowData rowData)
 {
     ValuesBucket value;
-    value.PutInt("id", id);
-    value.PutString("name", name);
-    value.PutInt("age", age);
-    value.PutDouble("salary", salary);
-    value.PutBlob("blobType", blobType);
+    value.PutInt("id", rowData.id);
+    value.PutString("name", rowData.name);
+    value.PutInt("age", rowData.age);
+    value.PutDouble("salary", rowData.salary);
+    value.PutBlob("blobType", rowData.blobType);
     return value;
 }
 
@@ -112,15 +127,16 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_001, TestSize.Level1)
     int64_t id;
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
-    ret = store->Insert(id, "test", InsertRowData(1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }));
+
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", InsertRowData(2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
-    ret = store->Insert(id, "test", InsertRowData(3, "wangyjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -151,15 +167,15 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_002, TestSize.Level1)
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", InsertRowData(1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", InsertRowData(2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
-    ret = store->Insert(id, "test", InsertRowData(3, "wangyjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -198,15 +214,15 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_003, TestSize.Level1)
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", InsertRowData(1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", InsertRowData(2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
-    ret = store->Insert(id, "test", InsertRowData(3, "wangyjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -240,23 +256,22 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
 
     int64_t id;
-
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", InsertRowData(1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
     ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
-    ret = store->Insert(id, "test", InsertRowData(2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
     ret = store->Commit(); // not commit
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", InsertRowData(3, "wangyjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -291,17 +306,16 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
 
     int64_t id;
-
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", InsertRowData(1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
     ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
-    ret = store->Insert(id, "test", InsertRowData(2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
     ret = store->Commit();
@@ -309,7 +323,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)
     ret = store->Commit(); // commit
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", InsertRowData(3, "wangyjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -341,23 +355,22 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_003, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
 
     int64_t id;
-
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", InsertRowData(1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
     ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
-    ret = store->Insert(id, "test", InsertRowData(2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
     ret = store->Commit(); // not commit
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", InsertRowData(3, "wangyjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -392,23 +405,22 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_004, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbTransactionTest::store;
 
     int64_t id;
-
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", InsertRowData(1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
     ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
-    ret = store->Insert(id, "test", InsertRowData(2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
     ret = store->Commit(); // commit
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", InsertRowData(3, "wangyjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }));
+    ret = store->Insert(id, "test", InsertRowData(rowDataMap[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -524,7 +536,8 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
     std::vector<uint8_t> blob = { 1, 2, 3 };
     std::vector<ValuesBucket> valuesBuckets;
     for (int i = 0; i < 100; i++) {
-        ValuesBucket values = InsertRowData(id + i, name, age + i, salary + i, blob);
+        RowData rowData = {id + i, name, age + i, salary + i, blob};
+        ValuesBucket values = InsertRowData(rowData);
         valuesBuckets.push_back(std::move(values));
     }
 
@@ -540,7 +553,8 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
 
     valuesBuckets.clear();
     for (int i = 50; i < 100; i++) {
-        ValuesBucket values = InsertRowData(id + i, name, age + i, salary + i, blob);
+        RowData rowData = {id + i, name, age + i, salary + i, blob};
+        ValuesBucket values = InsertRowData(rowData);
         valuesBuckets.push_back(std::move(values));
     }
 
