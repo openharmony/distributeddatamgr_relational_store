@@ -30,12 +30,12 @@ napi_value CreateRdbPredicates(napi_env env, napi_callback_info info)
 {
     size_t argc = 2;
     napi_value args[2] = { 0 };
-    napi_value thiz;
+    napi_value thiz = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
     NAPI_ASSERT(env, argc == 2, "DataAbilityJsKit::CreateRdbPredicates Invalid argvs!");
 
     LOG_DEBUG("DataAbilityJsKit::CreateRdbPredicates argc is %{public}zu", argc);
-    napi_valuetype valueType;
+    napi_valuetype valueType = napi_undefined;
     NAPI_CALL(env, napi_typeof(env, args[0], &valueType));
     NAPI_ASSERT(env, valueType == napi_string, "Table name should be a string.");
     std::string tableName = JSUtils::Convert2String(env, args[0]);

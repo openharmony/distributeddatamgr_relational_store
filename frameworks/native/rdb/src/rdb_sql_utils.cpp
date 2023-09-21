@@ -34,20 +34,58 @@
 
 namespace OHOS {
 namespace NativeRdb {
+int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
+{
+    std::string tempDirectory = databaseDir;
+    std::vector<std::string> directories;
+
+    size_t pos = tempDirectory.find('/');
+    while (pos != std::string::npos) {
+        std::string directory = tempDirectory.substr(0, pos);
+        directories.push_back(directory);
+        tempDirectory = tempDirectory.substr(pos + 1);
+        pos = tempDirectory.find('/');
+    }
+    directories.push_back(tempDirectory);
+
+    std::string databaseDirectory;
+    for (const std::string& directory : directories) {
+        databaseDirectory = databaseDirectory + "/" + directory;
+        if (access(databaseDirectory.c_str(), F_OK) != 0) {
+            if (MKDIR(databaseDirectory.c_str())) {
+                return E_CREATE_FOLDER_FAIL;
+            }
+        }
+    }
+    return E_OK;
+}
+
+/**
+ * @brief get custom data base path.
+ */
+std::pair<std::string, int> RdbSqlUtils::GetDefaultDatabasePath(const std::string &baseDir, const std::string &name,
+    const std::string &customDir)
+{
+    int errorCode = E_OK;
+    if (customDir.empty()) {
+        return std::make_pair(GetDefaultDatabasePath(baseDir, name, errorCode), errorCode);
+    }
+
+    std::string databaseDir;
+    databaseDir.append(baseDir).append("/rdb/").append(customDir);
+
+    errorCode = CreateDirectory(databaseDir);
+    return std::make_pair(databaseDir.append("/").append(name), errorCode);
+}
 
 /**
  * Get and Check default path.
  */
 std::string RdbSqlUtils::GetDefaultDatabasePath(const std::string &baseDir, const std::string &name, int &errorCode)
 {
-    errorCode = E_OK;
-    std::string databasePath = baseDir + "/rdb";
-    if (access(databasePath.c_str(), F_OK) != 0) {
-        if (MKDIR(databasePath.c_str())) {
-            errorCode = E_CREATE_FOLDER_FAIL;
-        }
-    }
-    return databasePath.append("/").append(name);
+    std::string databaseDir = baseDir + "/rdb";
+    errorCode = CreateDirectory(databaseDir);
+    return databaseDir.append("/").append(name);
 }
 
 std::string RdbSqlUtils::BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
