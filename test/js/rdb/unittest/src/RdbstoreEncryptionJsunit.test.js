@@ -193,15 +193,16 @@ describe('rdbEncryptTest', function () {
         context = ability_featureAbility.getContext()
         let rdbStore1;
         let rdbStore2;
+        // create database 'rdbstore1'
         try {
-            rdbStore1 = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
+            rdbStore1 = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT);
         } catch (err) {
             expect().assertFail()
             console.info(`CreatRdbStore1 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
+        // query encrypt file in 'rdbstore1'
         try {
-            await rdbStore1.executeSql(CREATE_TABLE_TEST, null)
             let predicates1 = new data_rdb.RdbPredicates("test")
             let resultSet1 = await rdbStore1.query(predicates1)
             expect(3).assertEqual(resultSet1.rowCount)
@@ -210,14 +211,17 @@ describe('rdbEncryptTest', function () {
             console.info(`query1 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
+        // create a new database 'rdbStore2',encrypt file changed
         try {
-            rdbStore2 = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT2)
+            rdbStore2 = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT2)
         } catch (err) {
             expect().assertFail()
-            console.info(`CreateRdbStore2 failed, error code: ${err.code}, err message: ${err.message}`);
+            console.info(`CreatRdbStore2 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
+        // query new encrupt file in 'rdbStore1'
         try {
+            await rdbStore1.executeSql(CREATE_TABLE_TEST, null)
             let predicates1 = new data_rdb.RdbPredicates("test")
             let resultSet1 = await rdbStore1.query(predicates1)
             expect().assertFail()
@@ -226,6 +230,7 @@ describe('rdbEncryptTest', function () {
             console.info(`query2 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
+        // query new encrupt file in 'rdbStore2'
         try {
             await rdbStore2.executeSql(CREATE_TABLE_TEST, null)
             let predicates2 = new data_rdb.RdbPredicates("test")
@@ -236,6 +241,6 @@ describe('rdbEncryptTest', function () {
             console.info(`query3 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
-        console.info(TAG + "************* RdbEncryptTest_0050 end *************")
+        console.info(TAG + "************* RdbEncryptTest_0060 end *************")
     })
 })
