@@ -50,9 +50,11 @@ describe('rdbStoreUpdateTest', function () {
     })
 
     /**
-     * @tc.name resultSet Update test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0001
-     * @tc.desc resultSet Update test
+     * @tc.name Normal test case of update
+     * @tc.desc 1.Insert data
+     *          2.Update data
+     *          3.Query data
      */
     it('testRdbStoreUpdate0001', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdate0001 start *************");
@@ -115,9 +117,15 @@ describe('rdbStoreUpdateTest', function () {
     })
 
     /**
-     * @tc.name resultSet Update test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0002
-     * @tc.desc resultSet Update test
+     * @tc.name Abnormal test case of update, if TABLE name or Bucket is empty and column nonexist
+     * @tc.desc 1.Create value
+     *          2.Configure predicates (TABLE name: "")
+     *          3.Execute update
+     *          4.Configure predicates (emptyBucket)
+     *          5.Execute update
+     *          6.Configure predicates (column: "aaa")
+     *          7.Execute update
      */
     it('testRdbStoreUpdate0002', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdate0002 start *************");
@@ -158,9 +166,13 @@ describe('rdbStoreUpdateTest', function () {
     })
 
     /**
-     * @tc.name resultSet Update test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0003
-     * @tc.desc resultSet Update test
+     * @tc.name Abnormal test case of update, if TABLE name or Column not exist
+     * @tc.desc 1.Create value
+     *          2.Configure predicates (TABLE name: "wrongTable")
+     *          3.Execute update
+     *          4.Configure predicates (column: "wrongColumn")
+     *          5.Execute update
      */
     it('testRdbStoreUpdate0003', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdate0003 start *************");
@@ -192,9 +204,13 @@ describe('rdbStoreUpdateTest', function () {
     })
 
     /**
-     * @tc.name resultSet Update test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0004
-     * @tc.desc resultSet Update test
+     * @tc.name Abnormal test case of update, if column is not exist
+     * @tc.desc 1.Create value
+     *          2.Configure predicates (column: "aaa")
+     *          3.Execute update
+     *          4.Configure predicates (column: "null")
+     *          5.Execute update
      */
     it('testRdbStoreUpdate0004', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdate0004 start *************");
@@ -229,9 +245,12 @@ describe('rdbStoreUpdateTest', function () {
     })
 
     /**
-     * @tc.name resultSet Update Extra long character test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0005
-     * @tc.desc resultSet Update Extra long character test
+     * @tc.name Normal test case of update long string plus special characters
+     * @tc.desc 1.Insert data
+     *          2.Create value
+     *          3.Update data
+     *          4.Query data
      */
     it('testRdbStoreUpdate0005', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdate0005 start *************");
@@ -282,9 +301,12 @@ describe('rdbStoreUpdateTest', function () {
     })
 
     /**
-     * @tc.name resultSet Update Extra long character test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0006
-     * @tc.desc resultSet Update Extra long character test
+     * @tc.name Normal test case of update Chinese plus long string
+     * @tc.desc 1.Insert data
+     *          2.Create value
+     *          3.Update data
+     *          4.Query data
      */
     it('testRdbStoreUpdate0006', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdate0006 start *************");
@@ -334,9 +356,12 @@ describe('rdbStoreUpdateTest', function () {
     })
 
     /**
-     * @tc.name resultSet Update Extra long character test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0007
-     * @tc.desc resultSet Update Extra long character test
+     * @tc.name Normal test case of update Chinese mix long string
+     * @tc.desc 1.Insert data
+     *          2.Create value
+     *          3.Update data
+     *          4.Query data
      */
     it('testRdbStoreUpdate0007', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdate0007 start *************");
@@ -386,9 +411,10 @@ describe('rdbStoreUpdateTest', function () {
     })
 
     /**
-     * @tc.name rdb update test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0008
-     * @tc.desc rdb update test
+     * @tc.name Abnormal test case of update, if param uses system API
+     * @tc.desc 1.Create value as system API
+     *          2.Execute update
      */
     it('testRdbStoreUpdate0008', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdate0008 start *************");
@@ -410,9 +436,12 @@ describe('rdbStoreUpdateTest', function () {
     })
 
     /**
-     * @tc.name resultSet Update test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateWithConflictResolution_0001
-     * @tc.desc resultSet Update test
+     * @tc.name Normal test case of update
+     * @tc.desc 1.Insert data
+     *          2.Create value
+     *          3.Execute update
+     *          4.Query data
      */
     it('testRdbStoreUpdateWithConflictResolution0001', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0001 start *************");
@@ -509,9 +538,12 @@ describe('rdbStoreUpdateTest', function () {
     })
 
     /**
-     * @tc.name resultSet Update test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateWithConflictResolution_0002
-     * @tc.desc resultSet Update test
+     * @tc.name Abnormal test case of update with ConflictResolution, if conflict is none
+     * @tc.desc 1.Insert data
+     *          2.Create value
+     *          3.Execute update with ConflictResolution (conflict: ON_CONFLICT_NONE)
+     *          4.Query data
      */
     it('testRdbStoreUpdateWithConflictResolution0002', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0002 start *************");
@@ -609,9 +641,12 @@ describe('rdbStoreUpdateTest', function () {
     })
 
     /**
-     * @tc.name resultSet Update test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateWithConflictResolution_0003
-     * @tc.desc resultSet Update test
+     * @tc.name Normal test case of update with ConflictResolution
+     * @tc.desc 1.Insert data
+     *          2.Create value
+     *          3.Execute update with ConflictResolution (conflict: ON_CONFLICT_ROLLBACK)
+     *          4.Query data
      */
     it('testRdbStoreUpdateWithConflictResolution0003', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0003 start *************");
@@ -707,9 +742,14 @@ describe('rdbStoreUpdateTest', function () {
     })
 
     /**
-     * @tc.name resultSet Update test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateWithConflictResolution_0004
-     * @tc.desc resultSet Update test
+     * @tc.name Abnormal test case of update with ConflictResolution, if conflict is ON_CONFLICT_ROLLBACK
+     * @tc.desc 1.Insert data
+     *          2.Create value
+     *          3.Begin Transaction
+     *          4.Insert data
+     *          5.Update data with ConflictResolution
+     *          6.Query data
      */
     it('testRdbStoreUpdateWithConflictResolution0004', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0004 start *************");
@@ -823,9 +863,12 @@ describe('rdbStoreUpdateTest', function () {
     })
 
     /**
-     * @tc.name resultSet Update test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateWithConflictResolution_0005
-     * @tc.desc resultSet Update test
+     * @tc.name Normal test case of insert with ConflictResolution
+     * @tc.desc 1.Insert data
+     *          2.Create value
+     *          3.Execute update with ConflictResolution (conflict: ON_CONFLICT_REPLACE)
+     *          4.Query data
      */
     it('testRdbStoreUpdateWithConflictResolution0005', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0005 start *************");
@@ -920,6 +963,14 @@ describe('rdbStoreUpdateTest', function () {
         console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0005 end   *************");
     })
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateWithConflictResolution_0006
+     * @tc.name Normal test case of update partial data with ConflictResolution
+     * @tc.desc 1.Insert data
+     *          2.Create partial value
+     *          3.Execute update with REPLACE Conflict
+     *          4.Query data
+     */
     it('testRdbStoreUpdateWithConflictResolution0006', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0006 start *************");
         try {
@@ -995,9 +1046,11 @@ describe('rdbStoreUpdateTest', function () {
     })
 
     /**
-     * @tc.name resultSet Update test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateWithConflictResolution_0007
-     * @tc.desc resultSet Update test
+     * @tc.name Abnormal test case of update, if param is not exist
+     * @tc.desc 1.Create value
+     *          2.Configure predicates
+     *          3.Execute update
      */
     it('testRdbStoreUpdateWithConflictResolution0007', 0, async function () {
         console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0007 start *************");
