@@ -54,9 +54,10 @@ describe('rdbStoreInsertTest', function () {
     console.log(TAG + "*************Unit Test Begin*************");
 
     /**
-     * @tc.name rdb insert test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0001
-     * @tc.desc rdb insert test
+     * @tc.name Normal test case of insert
+     * @tc.desc 1.Insert data
+     *          2.Query data
      */
     it('testRdbStoreInsert0001', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0001 start *************");
@@ -119,9 +120,10 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
-     * @tc.name rdb insert test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0002
-     * @tc.desc rdb insert test
+     * @tc.name Abnormal test case of insert, if TABLE name is wrong
+     * @tc.desc 1.Create value
+     *          2.Execute insert (with wrong table)
      */
     it('testRdbStoreInsert0002', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0002 start *************");
@@ -147,9 +149,10 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
-     * @tc.name rdb insert test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0003
-     * @tc.desc rdb insert test
+     * @tc.name Abnormal test case of insert, if TABLE name is null
+     * @tc.desc 1.Create value
+     *          2.Execute insert (with null table)
      */
     it('testRdbStoreInsert0003', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0003 start *************");
@@ -182,9 +185,11 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
-     * @tc.name rdb insert Extra long character test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0004
-     * @tc.desc rdb insert Extra long character test
+     * @tc.name Normal test case of insert (long string plus special characters)
+     * @tc.desc 1.Insert data
+     *          2.Configure predicates
+     *          3.Query data
      */
     it('testRdbStoreInsert0004', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0004 start *************");
@@ -216,9 +221,11 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
-     * @tc.name rdb insert Extra long character test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0005
-     * @tc.desc rdb insert Extra long character test
+     * @tc.name Normal test case of insert (Chinese plus long string)
+     * @tc.desc 1.Insert data
+     *          2.Configure predicates
+     *          3.Query data
      */
     it('testRdbStoreInsert0005', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0005 start *************");
@@ -250,9 +257,11 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
-     * @tc.name rdb insert Extra long character test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0006
-     * @tc.desc rdb insert Extra long character test
+     * @tc.name Normal test case of insert (Chinese mix long string)
+     * @tc.desc 1.Insert data
+     *          2.Configure predicates
+     *          3.Query data
      */
     it('testRdbStoreInsert0006', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0006 start *************");
@@ -284,9 +293,11 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
-     * @tc.name rdb insert test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0007
-     * @tc.desc rdb insert test
+     * @tc.name Normal test case of insert (extremum)
+     * @tc.desc 1.Insert data
+     *          2.Configure predicates
+     *          3.Query data
      */
     it('testRdbStoreInsert0007', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0007 start *************");
@@ -337,9 +348,13 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
-     * @tc.name rdb insert test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0008
-     * @tc.desc rdb insert test
+     * @tc.name Normal test case of update
+     * @tc.desc 1.Insert data
+     *          2.Configure predicates as TABLE name
+     *          3.Query data
+     *          4.Update "lisi"
+     *          5.Query data
      */
     it('testRdbStoreInsert0008', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0008 start *************");
@@ -403,9 +418,10 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
-     * @tc.name rdb insert test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0009
-     * @tc.desc rdb insert test
+     * @tc.name Abnormal test case of insert, if param type error
+     * @tc.desc 1.Create value ("age": new Date())
+     *          2.Execute insert
      */
     it('testRdbStoreInsert0009', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0009 start *************");
@@ -437,9 +453,10 @@ describe('rdbStoreInsertTest', function () {
 
 
     /**
-     * @tc.name rdb inserttWithConflictResolution test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0001
-     * @tc.desc rdb insertWithConflictResolution test
+     * @tc.name Abnormal test case of insert, if primary key not unique
+     * @tc.desc 1.Insert data
+     *          2.Insert data (duplicate "id")
      */
     it('InsertWithConflictResolution0001', 0, async function (done) {
         console.log(TAG + "************* InsertWithConflictResolution0001 start *************");
@@ -484,9 +501,14 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
-     * @tc.name rdb inserttWithConflictResolution test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0002
-     * @tc.desc rdb insertWithConflictResolution test
+     * @tc.name Abnormal test case of insert with ConflictResolution, if primary key not unique
+     * @tc.desc 1.Insert data with ConflictResolution
+     *          2.Create value (duplicate "id")
+     *          3.Begin Transaction
+     *          4.Insert data
+     *          5.Insert data with ConflictResolution (duplicate "id")
+     *          6.Query data
      */
     it('InsertWithConflictResolution0002', 0, async function (done) {
         console.log(TAG + "************* InsertWithConflictResolution0002 start *************");
@@ -542,9 +564,12 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
-     * @tc.name rdb inserttWithConflictResolution test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0003
-     * @tc.desc rdb insertWithConflictResolution test
+     * @tc.name Normal test case of insert with ConflictResolution
+     * @tc.desc 1.Insert data with ConflictResolution
+     *          2.Insert data with ConflictResolution (duplicate "id")
+     *          3.Configure predicates ("name" is "zhangsan")
+     *          4.Query data
      */
     it('InsertWithConflictResolution0003', 0, async function (done) {
         console.log(TAG + "************* InsertWithConflictResolution0003 start *************");
@@ -590,9 +615,12 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
-     * @tc.name rdb inserttWithConflictResolution test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0004
-     * @tc.desc rdb insertWithConflictResolution test
+     * @tc.name Normal test case of insert with ConflictResolution
+     * @tc.desc 1.Insert data with ConflictResolution
+     *          2.Query data ("name" is "zhangsan")
+     *          3.Insert data with ConflictResolution (duplicate "id")
+     *          4.Query data 
      */
     it('InsertWithConflictResolution0004', 0, async function (done) {
         console.log(TAG + "************* InsertWithConflictResolution0004 start *************");
@@ -661,9 +689,10 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
-     * @tc.name rdb inserttWithConflictResolution test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0005
-     * @tc.desc rdb insertWithConflictResolution test
+     * @tc.name Abnormal test case of insert, if conflict param type error
+     * @tc.desc 1.Create value
+     *          2.Execute insert (conflict param is 6)
      */
     it('InsertWithConflictResolution0005', 0, async function (done) {
         console.log(TAG + "************* InsertWithConflictResolution0005 start *************");
@@ -690,10 +719,13 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
-     * @tc.name: rdb batchInsert test
-     * @tc.number: SUB_DDM_AppDataFWK_JSRDB_batchInsert_0001
-     * @tc.desc: rdb batchInsert test
-     * @tc.require: issueI5GZGX
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_batchInsert_0001
+     * @tc.name Normal test case of batchInsert
+     * @tc.require:这个该怎么写
+     * @tc.desc 1.Create valueBucket
+     *          2.Execute push
+     *          3.BatchInsert data
+     *          4.Query data
      */
     it('testRdbStorebatchInsert001', 0, async function () {
         console.log(TAG + "************* testRdbStorebatchInsert001 start *************");
