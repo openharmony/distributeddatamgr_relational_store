@@ -721,7 +721,6 @@ describe('rdbStoreInsertTest', function () {
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_batchInsert_0001
      * @tc.name Normal test case of batchInsert
-     * @tc.require:这个该怎么写
      * @tc.desc 1.Create valueBucket
      *          2.Execute push
      *          3.BatchInsert data
