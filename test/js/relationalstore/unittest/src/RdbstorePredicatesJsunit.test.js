@@ -274,6 +274,34 @@ describe('rdbPredicatesTest', function () {
     })
 
     /**
+     * @tc.number   SUB_DDM_AppDataFWK_JSRDB_Predicates_0018
+     * @tc.name     predicates equalTo test
+     * @tc.desc     1.equalTo normal test
+     *              2.equalTo abnormal test
+     */
+    it('testEqualTo0009', 0, async function (done) {
+        console.log(TAG + "************* testEqualTo0009 start *************");
+
+        let predicates1 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates1.equalTo('1', 1);
+        let result1 = await rdbStore.query(predicates1);
+        expect(true).assertEqual(result1.goToFirstRow());
+        expect(3).assertEqual(result1.rowCount)
+        result1.close()
+        result1 = null
+
+        let predicates2 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates2.equalTo('1', Number.NaN);
+        let result2 = await rdbStore.query(predicates2);
+        expect(0).assertEqual(result2.rowCount)
+        result2.close()
+        result2 = null
+
+        done();
+        console.log(TAG + "************* testEqualTo0009 end   *************");
+    })
+
+    /**
      * @tc.name predicates notEqualTo normal test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0020
      * @tc.desc predicates notEqualTo normal test
@@ -425,6 +453,34 @@ describe('rdbPredicatesTest', function () {
         done();
         console.log(TAG + "************* testNotEqualTo0008 end *************");
     })
+
+     /**
+     * @tc.number   SUB_DDM_AppDataFWK_JSRDB_Predicates_0028
+     * @tc.name     predicates not equalTo test
+     * @tc.desc     1.predicates not equalTo normal test
+     *              2.predicates not equalTo abnormal test
+     */
+    it('testNotEqualTo0009', 0, async function (done) {
+        console.log(TAG + "************* testNotEqualTo0009 start *************");
+
+        let predicates1 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates1.notEqualTo('1', 1);
+        let result1 = await rdbStore.query(predicates1);
+        expect(0).assertEqual(result1.rowCount)
+        result1.close()
+        result1 = null
+
+        let predicates2 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates2.notEqualTo('1', Number.NaN);
+        let result2 = await rdbStore.query(predicates2);
+        expect(0).assertEqual(result2.rowCount)
+        result2.close()
+        result2 = null
+
+        done();
+        console.log(TAG + "************* testNotEqualTo0009 end   *************");
+    })
+
 
     /**
      * @tc.name predicates isNull normal test
@@ -713,6 +769,58 @@ describe('rdbPredicatesTest', function () {
         done();
         console.log(TAG + "************* testGreaterThan0008 end *************");
     })
+
+    /**
+     * @tc.number   SUB_DDM_AppDataFWK_JSRDB_Predicates_0058
+     * @tc.name     predicates greaterThan abnormal test
+     * @tc.desc     1.predicates greaterThan abnormal "Number.NaN" test
+     *              2.predicates greaterThan abnormal "Number.NEGATIVE_INFINITY" test
+     *              3.predicates greaterThan abnormal "Number.POSITIVE_INFINITY" test
+     *              4.predicates greaterThan abnormal "Number.MIN_SAFE_INTEGER" test
+     *              5.predicates greaterThan abnormal "Number.MAX_SAFE_INTEGER" test
+     */
+    it('testGreaterThan0009', 0, async function (done) {
+        console.log(TAG + "************* testGreaterThan0009 start *************");
+
+        let predicates1 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates1.greaterThan("longValue", Number.NaN);
+        let result1 = await rdbStore.query(predicates1);
+        expect(0).assertEqual(result1.rowCount);
+        result1.close()
+        result1 = null
+
+        let predicates2 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates2.greaterThan("longValue", Number.NEGATIVE_INFINITY);
+        let result2 = await rdbStore.query(predicates2);
+        expect(3).assertEqual(result2.rowCount);
+        result2.close()
+        result2 = null
+
+        let predicates3 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates3.greaterThan("longValue", Number.POSITIVE_INFINITY);
+        let result3 = await rdbStore.query(predicates3);
+        expect(0).assertEqual(result3.rowCount);
+        result3.close()
+        result3 = null
+
+        let predicates4 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates4.greaterThan("longValue", Number.MIN_SAFE_INTEGER);
+        let result4 = await rdbStore.query(predicates4);
+        expect(2).assertEqual(result4.rowCount);
+        result4.close()
+        result4 = null
+
+        let predicates5 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates5.greaterThan("longValue", Number.MAX_SAFE_INTEGER);
+        let result5 = await rdbStore.query(predicates5);
+        expect(1).assertEqual(result5.rowCount);
+        result5.close()
+        result5 = null
+
+        done();
+        console.log(TAG + "************* testGreaterThan0009 end *************");
+    })
+
 
     /**
      * @tc.name predicates greaterThanOrEqualTo normal test
@@ -1019,6 +1127,57 @@ describe('rdbPredicatesTest', function () {
     })
 
     /**
+     * @tc.number   SUB_DDM_AppDataFWK_JSRDB_Predicates_0084
+     * @tc.name     predicates lessThanOrEqualTo abnormal test
+     * @tc.desc     1.predicates lessThanOrEqualTo abnormal "Number.NaN" test
+     *              2.predicates lessThanOrEqualTo abnormal "Number.NEGATIVE_INFINITY" test
+     *              3.predicates lessThanOrEqualTo abnormal "Number.POSITIVE_INFINITY" test
+     *              4.predicates lessThanOrEqualTo abnormal "Number.MAX_VALUE" test
+     *              5.predicates lessThanOrEqualTo abnormal "Number.MIN_VALUE" test
+     */
+    it('testLessThanOrEqualTo0005', 0, async function (done) {
+        console.log(TAG + "************* testLessThanOrEqualTo0005 start *************");
+
+        let predicates1 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates1.lessThanOrEqualTo("longValue", Number.NaN);
+        let result1 = await rdbStore.query(predicates1);
+        expect(0).assertEqual(result1.rowCount);
+        result1.close()
+        result1 = null
+
+        let predicates2 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates2.lessThanOrEqualTo("longValue", Number.NEGATIVE_INFINITY);
+        let result2 = await rdbStore.query(predicates2);
+        expect(0).assertEqual(result2.rowCount);
+        result2.close()
+        result2 = null
+
+        let predicates3 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates3.lessThanOrEqualTo("longValue", Number.POSITIVE_INFINITY);
+        let result3 = await rdbStore.query(predicates3);
+        expect(3).assertEqual(result3.rowCount);
+        result3.close()
+        result3 = null
+
+        let predicates4 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates4.lessThanOrEqualTo("longValue", Number.MAX_VALUE);
+        let result4 = await rdbStore.query(predicates4);
+        expect(3).assertEqual(result4.rowCount);
+        result4.close()
+        result4 = null
+
+        let predicates5 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates5.lessThanOrEqualTo("longValue", Number.MIN_VALUE);
+        let result5 = await rdbStore.query(predicates5);
+        expect(1).assertEqual(result5.rowCount);
+        result5.close()
+        result5 = null
+
+        done();
+        console.log(TAG + "************* testLessThanOrEqualTo0005 end *************");
+    })
+
+    /**
      * @tc.name predicates between normal test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0090
      * @tc.desc predicates between normal test
@@ -1171,6 +1330,65 @@ describe('rdbPredicatesTest', function () {
     })
 
     /**
+     * @tc.number   SUB_DDM_AppDataFWK_JSRDB_Predicates_0098
+     * @tc.name     predicates between abnormal test
+     * @tc.desc     1.predicates between abnormal "Number.POSITIVE_INFINITY" test
+     *              2.predicates between abnormal "Number.NEGATIVE_INFINITY" test
+     *              3.predicates between abnormal "Number.NaN" test
+     *              4.predicates between abnormal "Number.NaN" test
+     *              5.predicates between abnormal "Number.MIN_VALUE" test
+     *              6.predicates between abnormal "Number.MAX_VALUE" test
+     */
+    it('testBetween0009', 0, async function (done) {
+        console.log(TAG + "************* testBetween0009 start *************");
+
+        let predicates1 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates1.between("longValue", 0, Number.POSITIVE_INFINITY);
+        let result1 = await rdbStore.query(predicates1);
+        expect(2).assertEqual(result1.rowCount);
+        result1.close();
+        result1 = null
+
+        let predicates2 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates2.between("longValue", Number.NEGATIVE_INFINITY, 0);
+        let result2 = await rdbStore.query(predicates2);
+        expect(1).assertEqual(result2.rowCount);
+        result2.close();
+        result2 = null
+
+        let predicates3 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates3.between("longValue", Number.NaN, 0);
+        let result3 = await rdbStore.query(predicates3);
+        expect(0).assertEqual(result3.rowCount);
+        result3.close();
+        result3 = null
+
+        let predicates4 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates4.between("longValue", 0, Number.NaN);
+        let result4 = await rdbStore.query(predicates4);
+        expect(0).assertEqual(result4.rowCount);
+        result4.close();
+        result4 = null
+
+        let predicates5 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates5.between("longValue", Number.MIN_VALUE, 0);
+        let result5 = await rdbStore.query(predicates5);
+        expect(0).assertEqual(result5.rowCount);
+        result5.close();
+        result5 = null
+
+        let predicates6 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates6.between("longValue", 0, Number.MAX_VALUE);
+        let result6 = await rdbStore.query(predicates6);
+        expect(2).assertEqual(result6.rowCount);
+        result6.close();
+        result6 = null
+
+        done();
+        console.log(TAG + "************* testBetween0009 end *************");
+    })
+
+    /**
      * @tc.name testNotBetween0001
      * @tc.number I4JWCV
      * @tc.desc test string value with notBetween.
@@ -1244,6 +1462,60 @@ describe('rdbPredicatesTest', function () {
 
         done();
         console.log(TAG + "************* testNotBetween0004 end *************");
+    })
+
+    /**
+     * @tc.number   testNotBetween0005
+     * @tc.name     test long value with notBetween.
+     * @tc.desc     1.predicates between abnormal "Number.NaN" test
+     *              2.predicates between abnormal "Number.NaN" test
+     *              3.predicates between abnormal "Number.MIN_VALUE" test
+     *              4.predicates between abnormal "Number.MAX_VALUE" test
+     *              5.predicates between abnormal "Number.NEGATIVE_INFINITY" test
+     *              6.predicates between abnormal "Number.POSITIVE_INFINITY" test
+     */
+    it('testNotBetween0005', 0, async function (done) {
+        console.log(TAG + "************* testNotBetween0005 start *************");
+
+        let predicates1 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates1.notBetween("longValue", 0, Number.NaN);
+        let result = await rdbStore.query(predicates1);
+        expect(1).assertEqual(result.rowCount);
+        result.close();
+
+        let predicates2 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates2.notBetween("longValue", Number.NaN, 0);
+        result = await rdbStore.query(predicates2);
+        expect(2).assertEqual(result.rowCount);
+        result.close();
+
+        let predicates3 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates3.notBetween("longValue", Number.MIN_VALUE, 0);
+        result = await rdbStore.query(predicates3);
+        expect(3).assertEqual(result.rowCount);
+        result.close();
+
+        let predicates4 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates4.notBetween("longValue", 0, Number.MAX_VALUE);
+        result = await rdbStore.query(predicates4);
+        expect(1).assertEqual(result.rowCount);
+        result.close();
+
+        let predicates5 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates5.notBetween("longValue", Number.NEGATIVE_INFINITY, 0);
+        result = await rdbStore.query(predicates5);
+        expect(2).assertEqual(result.rowCount);
+        result.close();
+
+        let predicates6 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates6.notBetween("longValue", 0, Number.POSITIVE_INFINITY);
+        result = await rdbStore.query(predicates6);
+        expect(1).assertEqual(result.rowCount);
+        result.close();
+        result = null
+
+        done();
+        console.log(TAG + "************* testNotBetween0005 end *************");
     })
 
     /**
@@ -1426,6 +1698,33 @@ describe('rdbPredicatesTest', function () {
         result = null
         done();
         console.log(TAG + "************* testContains0004 end *************");
+    })
+
+    /**
+     * @tc.number   SUB_DDM_AppDataFWK_JSRDB_Predicates_0104
+     * @tc.name     predicates contains abnormal test
+     * @tc.desc     1.predicates contains abnormal "null" test
+     *              2.predicates contains abnormal "undefined" test
+     */
+    it('testContains0005', 0, async function (done) {
+        console.log(TAG + "************* testContains0005 start *************");
+
+        let predicates1 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates1.contains("characterValue", null);
+        let result1 = await rdbStore.query(predicates1);
+        expect(3).assertEqual(result1.rowCount);
+        result1.close()
+        result1 = null
+
+        let predicates2 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates2.contains("characterValue", undefined);
+        let result2 = await rdbStore.query(predicates2);
+        expect(3).assertEqual(result2.rowCount);
+        result2.close()
+        result2 = null
+
+        done();
+        console.log(TAG + "************* testContains0005 end *************");
     })
 
     /**
@@ -1630,6 +1929,33 @@ describe('rdbPredicatesTest', function () {
         result = null
         done();
         console.log(TAG + "************* testLike0004 end *************");
+    })
+
+    /**
+     * @tc.number   SUB_DDM_AppDataFWK_JSRDB_Predicates_0134
+     * @tc.name     predicates like abnormal test
+     * @tc.desc     1.predicates like abnormal "null" test
+     *              2.predicates like abnormal "undefined" test
+     */
+     it('testLike0005', 0, async function (done) {
+        console.log(TAG + "************* testLike0005 start *************");
+
+        let predicates1 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates1.like("characterValue", null);
+        let result1 = await rdbStore.query(predicates1);
+        expect(3).assertEqual(result1.rowCount);
+        result1.close()
+        result1 = null
+
+        let predicates2 = new data_relationalStore.RdbPredicates("AllDataType");
+        predicates2.like("characterValue", undefined);
+        let result2 = await rdbStore.query(predicates2);
+        expect(3).assertEqual(result2.rowCount);
+        result2.close()
+        result2 = null
+
+        done();
+        console.log(TAG + "************* testLike0005 end *************");
     })
 
     /**
