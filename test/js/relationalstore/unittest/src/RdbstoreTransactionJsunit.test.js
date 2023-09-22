@@ -55,8 +55,8 @@ describe('rdbStoreTransactionTest', function () {
     console.log(TAG + "*************Unit Test Begin*************");
 
     /**
-     * @tc.name rdb transaction insert test
      * @tc.number testRdbTransactionInsert0001
+     * @tc.name rdb transaction insert test
      * @tc.desc rdb transaction insert & commit, the result comes out is 3 items;
      */
     it('testRdbTransactionInsert0001', 0, async function (done) {
@@ -89,8 +89,8 @@ describe('rdbStoreTransactionTest', function () {
     })
 
     /**
+     * @tc.number testRdbTransactionInsert0002
      * @tc.name rdb transaction insert test
-     * @tc.number testRdbTransactionInsert0001
      * @tc.desc rdb transaction insert & commit, the result comes out is 3 items;
      */
     it('testRdbTransactionInsert0002', 0, async function (done) {
@@ -139,8 +139,8 @@ describe('rdbStoreTransactionTest', function () {
 
 
     /**
+     * @tc.number testRdbTransactionInsert0003
      * @tc.name rdb transaction insert test
-     * @tc.number testRdbTransactionInsert0002
      * @tc.desc while using transaction to insert values, querying the db,
      *     the result comes out is 0;
      */
@@ -187,8 +187,8 @@ describe('rdbStoreTransactionTest', function () {
     })
 
     /**
-     * @tc.name rdb insert test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
+     * @tc.name rdb insert test
      * @tc.desc the classical transaction scenario, when we insert or commit the value,
      *     db returns an exception, we need to catch exception and rollback.
      */
@@ -221,8 +221,8 @@ describe('rdbStoreTransactionTest', function () {
     })
 
     /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0020
      * @tc.name rdb insert test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
      * @tc.desc the classical transaction scenario, when we insert or commit the value,
      *     db returns an exception, we need to catch exception and rollback.
      */
