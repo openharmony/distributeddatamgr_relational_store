@@ -89,8 +89,7 @@ void RdbTransactionTest::TearDown(void)
 {
 }
 
-struct RowData
-{
+struct RowData {
     int id;
     string name;
     int age;
@@ -98,13 +97,13 @@ struct RowData
     std::vector<uint8_t> blobType;
 };
 
-std::map<int, RowData> rowDataMap;
+RowData rowData[3] = {
+    {1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }},
+    {2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }},
+    {3, "wangyjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }}
+};
 
-rowDataMap[0] = {1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }};
-rowDataMap[1] = {2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }};
-rowDataMap[2] = {3, "wangyjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }};
-
-ValuesBucket InsertRowData(const RowData rowData)
+ValuesBucket InsertRowData(const RowData &rowData)
 {
     ValuesBucket value;
     value.PutInt("id", rowData.id);
@@ -536,8 +535,8 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
     std::vector<uint8_t> blob = { 1, 2, 3 };
     std::vector<ValuesBucket> valuesBuckets;
     for (int i = 0; i < 100; i++) {
-        RowData rowData = {id + i, name, age + i, salary + i, blob};
-        ValuesBucket values = InsertRowData(rowData);
+        RowData rowData1 = {id + i, name, age + i, salary + i, blob};
+        ValuesBucket values = InsertRowData(rowData1);
         valuesBuckets.push_back(std::move(values));
     }
 
@@ -553,8 +552,8 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
 
     valuesBuckets.clear();
     for (int i = 50; i < 100; i++) {
-        RowData rowData = {id + i, name, age + i, salary + i, blob};
-        ValuesBucket values = InsertRowData(rowData);
+        RowData rowData2 = {id + i, name, age + i, salary + i, blob};
+        ValuesBucket values = InsertRowData(rowData2);
         valuesBuckets.push_back(std::move(values));
     }
 
