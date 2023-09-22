@@ -50,9 +50,11 @@ describe('rdbStoreExcuteSqlTest', function () {
     })
 
     /**
-     * @tc.name resultSet ExcuteSql normal test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExcuteSql_0010
-     * @tc.desc resultSet ExcuteSql normal test
+     * @tc.name Normal test case of ExcuteSql
+     * @tc.desc 1.Insert data
+     *          2.ExecuteSql(delete age = "18" & "20")
+     *          3.QuerySql
      */
     it('ExcuteSqlTest0001', 0, async function (done) {
         console.log(TAG + "************* ExcuteSqlTest0001 start *************");
@@ -102,9 +104,11 @@ describe('rdbStoreExcuteSqlTest', function () {
     })
 
     /**
-     * @tc.name resultSet ExcuteSql normal test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExcuteSql_0020
-     * @tc.desc resultSet ExcuteSql normal test
+     * @tc.name Normal test case of ExcuteSql
+     * @tc.desc 1.Insert data
+     *          2.ExecuteSql(delete name = "lisi")
+     *          3.QuerySql
      */
     it('ExcuteSqlTest0002', 0, async function (done) {
         console.log(TAG + "************* ExcuteSqlTest0002 start *************");
@@ -153,9 +157,12 @@ describe('rdbStoreExcuteSqlTest', function () {
     })
 
     /**
-     * @tc.name resultSet ExcuteSql normal test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExcuteSql_0030
-     * @tc.desc resultSet ExcuteSql normal test
+     * @tc.name Normal test case of ExcuteSql, delete long string
+     * @tc.desc 1.Insert data (param is long string)
+     *          2.Query data
+     *          3.ExecuteSql (delete data)
+     *          4.Query data
      */
     it('ExcuteSqlTest0003', 0, async function (done) {
         console.log(TAG + "************* ExcuteSqlTest0003 start *************");
@@ -237,9 +244,10 @@ describe('rdbStoreExcuteSqlTest', function () {
     })
 
     /**
-     * @tc.name resultSet ExcuteSql normal test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExcuteSql_0040
-     * @tc.desc resultSet ExcuteSql normal test
+     * @tc.name Normal test case of ExcuteSql, drop table
+     * @tc.desc 1.Insert data
+     *          2.ExecuteSql (drop table)
      */
     it('ExcuteSqlTest0004', 0, async function (done) {
         console.log(TAG + "************* ExcuteSqlTest0004 start *************");
