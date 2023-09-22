@@ -121,9 +121,9 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0002
-     * @tc.name Abnormal test case of insert, if TABLE name is invalid
+     * @tc.name Abnormal test case of insert, if TABLE name is wrong
      * @tc.desc 1.Create value
-     *          2.Execute insert (with invalid table)
+     *          2.Execute insert (with wrong table)
      */
     it('testRdbStoreInsert0002', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0002 start *************");
@@ -186,7 +186,7 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0004
-     * @tc.name Normal test case of insert (long string plus special characters)
+     * @tc.name Normal test case of insert (long string and special characters)
      * @tc.desc 1.Insert data
      *          2.Configure predicates
      *          3.Query data
@@ -222,7 +222,7 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0005
-     * @tc.name Normal test case of insert (Chinese plus long string)
+     * @tc.name Normal test case of insert (Chinese and long string)
      * @tc.desc 1.Insert data
      *          2.Configure predicates
      *          3.Query data
@@ -258,7 +258,7 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0006
-     * @tc.name Normal test case of insert (Chinese mix long string)
+     * @tc.name Normal test case of insert (Chinese and long string)
      * @tc.desc 1.Insert data
      *          2.Configure predicates
      *          3.Query data
@@ -294,7 +294,7 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0007
-     * @tc.name Normal test case of insert (extremum)
+     * @tc.name Normal test case of insert boundary value
      * @tc.desc 1.Insert data
      *          2.Configure predicates
      *          3.Query data
@@ -349,11 +349,11 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0008
-     * @tc.name Normal test case of update
+     * @tc.name Normal test case of insert null value
      * @tc.desc 1.Insert data
-     *          2.Configure predicates as TABLE name
-     *          3.Query data
-     *          4.Update "lisi"
+     *          2.Query data
+     *          3.Create value
+     *          4.Execute update
      *          5.Query data
      */
     it('testRdbStoreInsert0008', 0, async function (done) {
@@ -419,7 +419,7 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0009
-     * @tc.name Abnormal test case of insert, if param type error
+     * @tc.name Abnormal test case of insert, if value invalid
      * @tc.desc 1.Create value ("age": new Date())
      *          2.Execute insert
      */
@@ -454,9 +454,9 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0001
-     * @tc.name Abnormal test case of insert, if primary key not unique
+     * @tc.name Abnormal test case of insert, if primary key conflict
      * @tc.desc 1.Insert data
-     *          2.Insert data (duplicate "id")
+     *          2.Insert data (conflict "id")
      */
     it('InsertWithConflictResolution0001', 0, async function (done) {
         console.log(TAG + "************* InsertWithConflictResolution0001 start *************");
@@ -502,12 +502,12 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0002
-     * @tc.name Abnormal test case of insert with ConflictResolution, if primary key not unique
-     * @tc.desc 1.Insert data with ConflictResolution
-     *          2.Create value (duplicate "id")
+     * @tc.name Abnormal test case of insert with ON_CONFLICT_ROLLBACK, if primary key conflict
+     * @tc.desc 1.Insert data with ON_CONFLICT_ROLLBACK
+     *          2.Create value (conflict "id")
      *          3.Begin Transaction
      *          4.Insert data
-     *          5.Insert data with ConflictResolution (duplicate "id")
+     *          5.Insert data with ON_CONFLICT_ROLLBACK (conflict "id")
      *          6.Query data
      */
     it('InsertWithConflictResolution0002', 0, async function (done) {
@@ -565,9 +565,9 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0003
-     * @tc.name Normal test case of insert with ConflictResolution
-     * @tc.desc 1.Insert data with ConflictResolution
-     *          2.Insert data with ConflictResolution (duplicate "id")
+     * @tc.name Normal test case of insert with ON_CONFLICT_IGNORE, if primary key conflict
+     * @tc.desc 1.Insert data with ON_CONFLICT_IGNORE
+     *          2.Insert data with ON_CONFLICT_IGNORE (conflict "id")
      *          3.Configure predicates ("name" is "zhangsan")
      *          4.Query data
      */
@@ -616,10 +616,10 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0004
-     * @tc.name Normal test case of insert with ConflictResolution
-     * @tc.desc 1.Insert data with ConflictResolution
+     * @tc.name Normal test case of insert with ON_CONFLICT_REPLACE, if primary key conflict
+     * @tc.desc 1.Insert data with ON_CONFLICT_REPLACE
      *          2.Query data ("name" is "zhangsan")
-     *          3.Insert data with ConflictResolution (duplicate "id")
+     *          3.Insert data with ON_CONFLICT_REPLACE (conflict "id")
      *          4.Query data 
      */
     it('InsertWithConflictResolution0004', 0, async function (done) {
@@ -690,9 +690,9 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0005
-     * @tc.name Abnormal test case of insert, if conflict param type error
+     * @tc.name Abnormal test case of insert, if param conflict is invalid
      * @tc.desc 1.Create value
-     *          2.Execute insert (conflict param is 6)
+     *          2.Execute insert (param conflict is 6)
      */
     it('InsertWithConflictResolution0005', 0, async function (done) {
         console.log(TAG + "************* InsertWithConflictResolution0005 start *************");
