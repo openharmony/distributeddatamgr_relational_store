@@ -121,9 +121,9 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0002
-     * @tc.name Abnormal test case of insert, if TABLE name is wrong
+     * @tc.name Abnormal test case of insert, if TABLE name is invalid
      * @tc.desc 1.Create value
-     *          2.Execute insert (with wrong table)
+     *          2.Execute insert (with invalid table)
      */
     it('testRdbStoreInsert0002', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0002 start *************");
