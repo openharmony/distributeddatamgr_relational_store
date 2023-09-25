@@ -19,6 +19,7 @@
 #include "oh_values_bucket.h"
 #include "relational_store_error_code.h"
 #include "relational_values_bucket.h"
+#include "relational_asset.h"
 #include "value_object.h"
 #include "securec.h"
 
@@ -119,3 +120,32 @@ int RelationalValuesBucket::PutValueObject(OH_VBucket *bucket, const char *field
 }
 } // namespace RdbNdk
 } // namespace OHOS
+int OH_VBucket_PutAsset(OH_VBucket *bucket, const char *field, OH_Asset *value)
+{
+    auto asset = OHOS::RdbNdk::RelationalAsset::GetSelf(value);
+    auto self = OHOS::RdbNdk::RelationalValuesBucket::GetSelf(bucket);
+    if (self == nullptr || field == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    self->Get().Put(field, OHOS::NativeRdb::ValueObject(asset->Get()));
+    self->capability++;
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_VBucket_PutAssets(OH_VBucket *bucket, const char *field, OH_Asset *value, uint32_t count)
+{
+    auto self = OHOS::RdbNdk::RelationalValuesBucket::GetSelf(bucket);
+    if (self == nullptr || field == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    std::vector<OHOS::NativeRdb::AssetValue> assets;
+    for (int i = 0; i < count; i++) {
+        auto asset = OHOS::RdbNdk::RelationalAsset::GetSelf(value);
+        value += sizeof(OH_Asset);
+        assets.emplace_back(asset->Get());
+    }
+    self->Get().Put(field, OHOS::NativeRdb::ValueObject(assets));
+    self->capability++;
+
+    return OH_Rdb_ErrCode::RDB_OK;
+}

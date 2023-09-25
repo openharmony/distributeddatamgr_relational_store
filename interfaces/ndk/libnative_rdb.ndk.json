@@ -17,5 +17,12 @@
 	{"name":"OH_Rdb_Backup" },
 	{"name":"OH_Rdb_Restore"},
 	{"name":"OH_Rdb_GetVersion"},
-	{"name":"OH_Rdb_SetVersion"}
+	{"name":"OH_Rdb_SetVersion"},
+	{"name":"OH_Rdb_SetDistributedTables"},
+	{"name":"OH_Rdb_FindModifyTime"},
+	{"name":"OH_Rdb_Subscribe"},
+	{"name":"OH_Rdb_Unsubscribe"},
+	{"name":"OH_Rdb_CloudSync"},
+	{"name":"OH_VBucket_PutAsset"},
+	{"name":"OH_VBucket_PutAssets"}
 ]

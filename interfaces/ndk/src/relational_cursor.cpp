@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "relational_cursor.h"
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -20,9 +22,9 @@
 
 #include "logger.h"
 #include "oh_cursor.h"
-#include "relational_cursor.h"
-#include "relational_store_error_code.h"
 #include "rdb_errno.h"
+#include "relational_asset.h"
+#include "relational_store_error_code.h"
 #include "securec.h"
 
 namespace OHOS {
@@ -159,6 +161,54 @@ int RelationalCursor::GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned c
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
+void ConvertAsset(OH_Asset *value, NativeRdb::AssetValue *asset)
+{
+    value->name[0] = asset->name.c_str()[0];
+    value->uri[0] = asset->uri.c_str()[0];
+    value->path[0] = asset->path.c_str()[0];
+    value->createTime = (int64_t)asset->createTime.c_str();
+    value->modifyTime = (int64_t)asset->modifyTime.c_str();
+    value->size = (size_t)asset->size.c_str();
+    value->status = (int32_t)asset->status;
+}
+
+int RelationalCursor::GetAsset(OH_Cursor *cursor, int32_t columnIndex, int assetClassId, OH_Asset *value)
+{
+    auto self = GetSelf(cursor);
+    if (self == nullptr || value == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    NativeRdb::AssetValue *asset;
+    auto errCode = self->resultSet_->GetAsset(columnIndex, *asset);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        return errCode;
+    }
+    ConvertAsset(value, asset);
+    return errCode;
+}
+
+int RelationalCursor::GetAssets(OH_Cursor *cursor, int32_t columnIndex, int assetClassId, OH_Asset *value,
+    uint32_t *length)
+{
+    auto self = GetSelf(cursor);
+    if (self == nullptr || value == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    std::vector<NativeRdb::AssetValue> assets;
+    auto errCode = self->resultSet_->GetAssets(columnIndex, assets);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        return errCode;
+    }
+    length = reinterpret_cast<uint32_t *>(assets.size());
+    auto it = assets.begin();
+    for (int i = 0; i < *length; ++i) {
+        ConvertAsset(value, it.base());
+        value += sizeof(OH_Asset);
+        it++;
+    }
+    return errCode;
+}
+
 int RelationalCursor::IsNull(OH_Cursor *cursor, int32_t columnIndex, bool *isNull)
 {
     auto self = GetSelf(cursor);
@@ -200,6 +250,8 @@ RelationalCursor::RelationalCursor(std::shared_ptr<OHOS::NativeRdb::ResultSet> r
     getBlob = GetBlob;
     isNull = IsNull;
     destroy = Destroy;
+    getAsset = GetAsset;
+    getAssets = GetAssets;
 }
 
 RelationalCursor *RelationalCursor::GetSelf(OH_Cursor *cursor)
