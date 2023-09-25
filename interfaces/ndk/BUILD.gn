@@ -34,6 +34,7 @@ ohos_ndk_library("libnative_rdb_ndk") {
   ndk_description_file = "./libnative_rdb.ndk.json"
   min_compact_version = "10"
   system_capability_headers = [
+    "$ndk_headers_out_dir/database/rdb/oh_asset.h",
     "$ndk_headers_out_dir/database/rdb/oh_cursor.h",
     "$ndk_headers_out_dir/database/rdb/oh_predicates.h",
     "$ndk_headers_out_dir/database/rdb/oh_value_object.h",
