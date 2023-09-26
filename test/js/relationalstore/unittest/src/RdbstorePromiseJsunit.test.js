@@ -215,7 +215,7 @@ describe('rdbStorePromiseTest', function () {
     /**
      * @tc.number testRdbStorePromiseTest0006
      * @tc.name Abnormal test case of getRdbStore, if configure dataGroupId in FA mode
-     * @tc.desc 1.configure dataGroupId in FA mode
+     * @tc.desc 1.Configure dataGroupId in FA mode
      *          2.Execute getRdbStore
      */
     it('testRdbStorePromiseTest0006', 0, async function (done) {
