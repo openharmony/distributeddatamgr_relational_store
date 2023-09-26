@@ -38,6 +38,7 @@
  */
 
 #include <cstdint>
+#include "oh_asset.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -139,6 +140,30 @@ typedef struct OH_VBucket {
     int (*destroy)(OH_VBucket *bucket);
 } OH_VBucket;
 
+/**
+ * @brief Put the {@link OH_Asset} * value to this {@link OH_VBucket} object for the given column name.
+ *
+ * @param bucket Represents a pointer to an {@link OH_VBucket} instance.
+ * @param field Indicates the name of the column.
+ * @param value Indicates the const {@link OH_Asset} * value.
+ * @return Returns the status code of the execution.
+ * @see OH_VBucket.
+ * @since 11
+ */
+int OH_VBucket_PutAsset(OH_VBucket *bucket, const char *field, OH_Asset *value);
+
+/**
+ * @brief Put the const uint8_t * value to this {@link OH_VBucket} object for the given column name.
+ *
+ * @param bucket Represents a pointer to an {@link OH_VBucket} instance.
+ * @param field Indicates the name of the column.
+ * @param value Indicates the const uint8_t * value.
+ * @param count Indicates the count of value.
+ * @return Returns the status code of the execution.
+ * @see OH_VBucket.
+ * @since 11
+ */
+int OH_VBucket_PutAssets(OH_VBucket *bucket, const char *field, OH_Asset *value, uint32_t count);
 #ifdef __cplusplus
 };
 #endif
