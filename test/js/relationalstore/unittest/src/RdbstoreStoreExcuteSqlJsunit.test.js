@@ -53,7 +53,7 @@ describe('rdbStoreExcuteSqlTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExcuteSql_0010
      * @tc.name Normal test case of ExcuteSql
      * @tc.desc 1.Insert data
-     *          2.ExecuteSql(delete age = "18" & "20")
+     *          2.ExecuteSql(delete age = "18" OR "20")
      *          3.QuerySql
      */
     it('ExcuteSqlTest0001', 0, async function (done) {
@@ -158,10 +158,10 @@ describe('rdbStoreExcuteSqlTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExcuteSql_0030
-     * @tc.name Normal test case of ExcuteSql, delete long string
+     * @tc.name Normal test case of ExcuteSql
      * @tc.desc 1.Insert data (param is long string)
      *          2.Query data
-     *          3.ExecuteSql (delete data)
+     *          3.ExecuteSql (delete age = 19 AND name = nameStr)
      *          4.Query data
      */
     it('ExcuteSqlTest0003', 0, async function (done) {
