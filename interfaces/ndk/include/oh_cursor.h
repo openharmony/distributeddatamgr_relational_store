@@ -40,6 +40,7 @@
 #include <cstdint>
 #include <stddef.h>
 #include <stdbool.h>
+#include "oh_asset.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -70,6 +71,18 @@ typedef enum OH_ColumnType {
      * Indicates the column type is BLOB.
      */
     TYPE_BLOB,
+    /**
+     * Indicates the column type is {@link OH_Asset}.
+     *
+     * @since 11
+     */
+    TYPE_ASSET,
+    /**
+     * Indicates the column type is array of {@link OH_Asset}.
+     *
+     * @since 11
+     */
+    TYPE_ASSETS
 } OH_ColumnType;
 
 /**
@@ -245,6 +258,35 @@ typedef struct OH_Cursor {
      * @since 10
      */
     int (*destroy)(OH_Cursor *cursor);
+
+    /**
+     * @brief Function pointer. Obtains the value of the requested column as an {@link OH_Asset} instance.
+     *
+     * @param cursor Represents a pointer to an {@link OH_Cursor} instance.
+     * @param columnIndex Indicates the zero-based column index.
+     * @param assetClassId Indicates the id used to uniquely identify the OH_Asset struct.
+     * @param value This parameter is the output parameter,
+     * and the value of the requested column as an {@link OH_Asset} instance is written to this variable.
+     * @return Returns the status code of the execution.
+     * @see OH_Cursor.
+     * @since 11
+     */
+    int (*getAsset)(OH_Cursor *cursor, int32_t columnIndex, int assetClassId, OH_Asset *value);
+
+    /**
+     * @brief Function pointer. Obtains the value of the requested column as an {@link OH_Asset} instance.
+     *
+     * @param cursor Represents a pointer to an {@link OH_Cursor} instance.
+     * @param columnIndex Indicates the zero-based column index.
+     * @param assetClassId Indicates the id used to uniquely identify the OH_Asset struct.
+     * @param value This parameter is the output parameter,
+     * and the value of the requested column as an {@link OH_Asset} instance is written to this variable.
+     * @param length Indicates the length of the value.
+     * @return Returns the status code of the execution.
+     * @see OH_Cursor.
+     * @since 11
+     */
+    int (*getAssets)(OH_Cursor *cursor, int32_t columnIndex, int assetClassId, OH_Asset *value, uint32_t *length);
 } OH_Cursor;
 
 #ifdef __cplusplus

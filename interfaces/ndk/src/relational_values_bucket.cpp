@@ -120,6 +120,7 @@ int RelationalValuesBucket::PutValueObject(OH_VBucket *bucket, const char *field
 }
 } // namespace RdbNdk
 } // namespace OHOS
+
 int OH_VBucket_PutAsset(OH_VBucket *bucket, const char *field, OH_Asset *value)
 {
     auto asset = OHOS::RdbNdk::RelationalAsset::GetSelf(value);
