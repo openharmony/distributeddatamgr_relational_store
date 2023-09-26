@@ -55,9 +55,12 @@ describe('rdbStoreTransactionTest', function () {
     console.log(TAG + "*************Unit Test Begin*************");
 
     /**
-     * @tc.name rdb transaction insert test
      * @tc.number testRdbTransactionInsert0001
-     * @tc.desc rdb transaction insert & commit, the result comes out is 3 items;
+     * @tc.name Normal test case of transactions, insert a row of data
+     * @tc.desc 1.Execute beginTransaction
+     *          2.Insert data
+     *          3.Execute commit
+     *          4.Query data
      */
     it('testRdbTransactionInsert0001', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0001 start *************");
@@ -89,9 +92,12 @@ describe('rdbStoreTransactionTest', function () {
     })
 
     /**
-     * @tc.name rdb transaction insert test
-     * @tc.number testRdbTransactionInsert0001
-     * @tc.desc rdb transaction insert & commit, the result comes out is 3 items;
+     * @tc.number testRdbTransactionInsert0002
+     * @tc.name Normal test case of transaction, insert three rows of data
+     * @tc.desc 1.Execute beginTransaction
+     *          2.Insert data
+     *          3.Execute commit
+     *          4.Query data
      */
     it('testRdbTransactionInsert0002', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0002 start *************");
@@ -139,10 +145,13 @@ describe('rdbStoreTransactionTest', function () {
 
 
     /**
-     * @tc.name rdb transaction insert test
-     * @tc.number testRdbTransactionInsert0002
-     * @tc.desc while using transaction to insert values, querying the db,
-     *     the result comes out is 0;
+     * @tc.number testRdbTransactionInsert0003
+     * @tc.name Normal test case of transaction, query data before commit
+     * @tc.desc 1.Execute beginTransaction
+     *          2.Insert data
+     *          3.Query data (expect 0 row)
+     *          4.Insert data
+     *          5.Execute commit
      */
     it('testRdbTransactionInsert0003', 0, async function (done) {
         console.log(TAG + "************* testRdbTransactionInsert0003 start *************");
@@ -187,10 +196,12 @@ describe('rdbStoreTransactionTest', function () {
     })
 
     /**
-     * @tc.name rdb insert test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
-     * @tc.desc the classical transaction scenario, when we insert or commit the value,
-     *     db returns an exception, we need to catch exception and rollback.
+     * @tc.number testRdbTransactionInsert0004
+     * @tc.name Abnormal test case of transaction insert, if catch exception then rollback
+     * @tc.desc 1.Execute beginTransaction
+     *          2.Insert data (primary key conflict)
+     *          3.Execute rollBack
+     *          4.Query data
      */
     it('testRdbTransactionRollBack0001', 0, async function (done) {
         console.log(TAG + "************* testRdbTransactionRollBack0001 start *************");
@@ -221,10 +232,16 @@ describe('rdbStoreTransactionTest', function () {
     })
 
     /**
-     * @tc.name rdb insert test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
-     * @tc.desc the classical transaction scenario, when we insert or commit the value,
-     *     db returns an exception, we need to catch exception and rollback.
+     * @tc.number testRdbTransactionInsert0005
+     * @tc.name Normal test case of transaction, begin transactions within a transaction
+     * @tc.desc 1.Execute beginTransaction
+     *          2.Insert data
+     *          3.Execute beginTransaction
+     *          4.Insert data
+     *          5.Execute rollBack
+     *          6.Insert data
+     *          7.Execute commit
+     *          8.Query data
      */
     it('testRdbTransactionMulti0003', 0, async function (done) {
         console.log(TAG + "************* testRdbTransactionMulti0003 start *************");
