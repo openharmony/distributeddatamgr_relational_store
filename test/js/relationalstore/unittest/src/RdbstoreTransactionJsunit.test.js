@@ -56,7 +56,7 @@ describe('rdbStoreTransactionTest', function () {
 
     /**
      * @tc.number testRdbTransactionInsert0001
-     * @tc.name Normal test case of transaction insert
+     * @tc.name Normal test case of transactions, insert a row of data
      * @tc.desc 1.Execute beginTransaction
      *          2.Insert data
      *          3.Execute commit
@@ -93,9 +93,9 @@ describe('rdbStoreTransactionTest', function () {
 
     /**
      * @tc.number testRdbTransactionInsert0002
-     * @tc.name Normal test case of transaction insert
+     * @tc.name Normal test case of transaction, insert three rows of data
      * @tc.desc 1.Execute beginTransaction
-     *          2.Insert data (3 rows)
+     *          2.Insert data
      *          3.Execute commit
      *          4.Query data
      */
@@ -146,10 +146,10 @@ describe('rdbStoreTransactionTest', function () {
 
     /**
      * @tc.number testRdbTransactionInsert0003
-     * @tc.name Normal test case of transaction insert
+     * @tc.name Normal test case of transaction, query data before commit
      * @tc.desc 1.Execute beginTransaction
-     *          2.Insert data (2 rows)
-     *          3.Query data
+     *          2.Insert data
+     *          3.Query data (expect 0 row)
      *          4.Insert data
      *          5.Execute commit
      */
@@ -196,7 +196,7 @@ describe('rdbStoreTransactionTest', function () {
     })
 
     /**
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
+     * @tc.number testRdbTransactionInsert0004
      * @tc.name Abnormal test case of transaction insert, if catch exception then rollback
      * @tc.desc 1.Execute beginTransaction
      *          2.Insert data (primary key conflict)
@@ -232,8 +232,8 @@ describe('rdbStoreTransactionTest', function () {
     })
 
     /**
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0020
-     * @tc.name Abnormal test case of transaction insert, if catch exception then rollback
+     * @tc.number testRdbTransactionInsert0005
+     * @tc.name Normal test case of transaction, begin transactions within a transaction
      * @tc.desc 1.Execute beginTransaction
      *          2.Insert data
      *          3.Execute beginTransaction
@@ -242,7 +242,6 @@ describe('rdbStoreTransactionTest', function () {
      *          6.Insert data
      *          7.Execute commit
      *          8.Query data
-     *          9.Execute rollBack
      */
     it('testRdbTransactionMulti0003', 0, async function (done) {
         console.log(TAG + "************* testRdbTransactionMulti0003 start *************");
