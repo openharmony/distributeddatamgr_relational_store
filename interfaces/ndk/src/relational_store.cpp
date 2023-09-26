@@ -286,7 +286,8 @@ int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint3
     const OH_Rdb_DistributedConfig *config)
 {
     auto rdbStore = GetRelationalStore(store);
-    if (rdbStore == nullptr) {
+    if (rdbStore == nullptr || type != OH_Rdb_DistributedType::DISTRIBUTED_CLOUD ||
+        config->version != DISTRIBUTED_CONFIG_VERSION) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     std::vector<std::string> tableNames;
@@ -329,7 +330,7 @@ OH_Cursor *OH_Rdb_FindModifyTime(OH_Rdb_Store *store, const char *tableName, con
     std::vector<ValueObject> objects = selfObjects->Get();
     std::vector<OHOS::NativeRdb::RdbStore::PRIKey> keys;
     keys.reserve(objects.size());
-    for (const auto& object : objects) {
+    for (const auto &object : objects) {
         keys.push_back(TransformToPK(object));
     }
     auto results = rdbStore->GetStore()->GetModifyTimeCursor(tableName, columnName, keys);
@@ -372,11 +373,12 @@ int RelationalStore::DoSubscribe(SubscribeMode mode, OH_Rdb_SubscribeCallback *o
     return subscribeResult;
 }
 
-int OH_Rdb_Subscribe(OH_Rdb_Store *store, int type, OH_Rdb_SubscribeCallback *observer)
+int OH_Rdb_Subscribe(OH_Rdb_Store *store, OH_Rdb_SubscribeType type, OH_Rdb_SubscribeCallback *observer)
 {
     auto rdbStore = GetRelationalStore(store);
     auto rdbMode = GetSubscribeType(type);
-    if (rdbStore == nullptr || type == SubscribeMode::SUBSCRIBE_MODE_MAX || observer == nullptr) {
+    if (rdbStore == nullptr || type < SUBSCRIBE_TYPE_CLOUD || type > SUBSCRIBE_TYPE_CLOUD_DETAILS ||
+        observer == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     return rdbStore->DoSubscribe(rdbMode, observer);
@@ -406,11 +408,11 @@ int RelationalStore::DoUnsubscribe(SubscribeMode mode, OH_Rdb_SubscribeCallback 
     return subscribeResult;
 }
 
-int OH_Rdb_Unsubscribe(OH_Rdb_Store *store, int type, OH_Rdb_SubscribeCallback *observer)
+int OH_Rdb_Unsubscribe(OH_Rdb_Store *store, OH_Rdb_SubscribeType type, OH_Rdb_SubscribeCallback *observer)
 {
     auto rdbStore = GetRelationalStore(store);
     auto rdbMode = GetSubscribeType(type);
-    if (rdbStore == nullptr || type == SubscribeMode::SUBSCRIBE_MODE_MAX) {
+    if (rdbStore == nullptr || type < SUBSCRIBE_TYPE_CLOUD || type > SUBSCRIBE_TYPE_CLOUD_DETAILS) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     return rdbStore->DoUnsubscribe(rdbMode, observer);
@@ -507,6 +509,9 @@ int OH_Rdb_CloudSync(OH_Rdb_Store *store, OH_SyncMode mode, const char *tables[]
     OH_Rdb_SyncCallback *progress)
 {
     auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr || mode < SYNC_MODE_TIME_FIRST || mode > SYNC_MODE_CLOUD_FIRST || progress == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
     SyncOption syncOption{ .mode = NDKStoreObserver::TransformMode(mode), .isBlock = false };
     std::vector<std::string> tableNames;
     for (int i = 0; i < count; ++i) {

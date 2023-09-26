@@ -165,7 +165,10 @@ public:
     std::map<PRIKey, Date> GetModifyTime(
         const std::string &table, const std::string &columnName, std::vector<PRIKey> &keys) override;
 
-private:
+    std::shared_ptr<ResultSet> GetModifyTimeCursor(const std::string &table, const std::string &columnName,
+        std::vector<PRIKey> &keys) override;
+
+        private:
     int InnerOpen();
     int CheckAttach(const std::string &sql);
     int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
@@ -192,6 +195,15 @@ private:
     int UnSubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
     int UnSubscribeLocalSharedAll(const SubscribeOption& option);
     int UnSubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
+    std::shared_ptr<ResultSet> GetModifyTimeResultSet(const std::string &table, const std::string &columnName,
+        std::vector<PRIKey> &keys);
+    std::pair<std::string, std::vector<ValueObject>> GenerateSqlAndArgs(const std::string &table,
+        const std::string &columnName, std::vector<PRIKey> &keys);
+    std::pair<std::string, std::vector<ValueObject>> GenerateSqlAndArgsPK(const std::string &table,
+        const std::string &columnName, std::vector<PRIKey> &keys);
+    std::pair<std::string, std::vector<ValueObject>> GenerateSqlAndArgsRowId(const std::string &table,
+        std::vector<PRIKey> &keys);
+    void GenerateTempTable(std::map<PRIKey, std::vector<uint8_t>> &keyMap);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;

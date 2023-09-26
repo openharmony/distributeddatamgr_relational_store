@@ -111,22 +111,33 @@ void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
     }
 }
 
-std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
-    const std::string &table, const std::string &columnName, std::vector<PRIKey> &keys)
+std::shared_ptr<ResultSet> RdbStoreImpl::GetModifyTimeCursor(const std::string &table, const std::string &columnName,
+    std::vector<PRIKey> &keys)
 {
-    if (table.empty() || columnName.empty() || keys.empty()) {
-        LOG_ERROR("invalid para.");
-        return {};
-    }
+    return GetModifyTimeResultSet(table, columnName, keys);
+}
 
-    auto logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
+std::shared_ptr<ResultSet> RdbStoreImpl::GetModifyTimeResultSet(const std::string &table,
+    const std::string &columnName, std::vector<PRIKey> &keys)
+{
+    auto pair = GenerateSqlAndArgs(table, columnName, keys);
+    return QueryByStep(pair.first, pair.second);
+}
+
+std::pair<std::string, std::vector<ValueObject>> RdbStoreImpl::GenerateSqlAndArgs(const std::string &table,
+    const std::string &columnName, std::vector<PRIKey> &keys)
+{
     if (SqliteUtils::StrToUpper(columnName) == ROW_ID) {
-        return GetModifyTimeByRowId(logTable, keys);
+        return GenerateSqlAndArgsRowId(table, keys);
     }
-    std::vector<ValueObject> hashKeys;
-    hashKeys.reserve(keys.size());
-    std::map<std::vector<uint8_t>, PRIKey> keyMap;
+    return GenerateSqlAndArgsPK(table, columnName, keys);
+}
+
+std::pair<std::string, std::vector<ValueObject>> RdbStoreImpl::GenerateSqlAndArgsPK(const std::string &table,
+    const std::string &columnName, std::vector<PRIKey> &keys)
+{
     std::map<std::string, DistributedDB::Type> tmp;
+    std::map<PRIKey, std::vector<uint8_t>> keyMap;
     for (const auto &key : keys) {
         DistributedDB::Type value;
         RawDataParser::Convert(key, value);
@@ -136,40 +147,54 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
             LOG_DEBUG("hash key fail");
             continue;
         }
-        hashKeys.emplace_back(ValueObject(hashKey));
-        keyMap[hashKey] = key;
+        keyMap.emplace(key, hashKey);
     }
 
+    GenerateTempTable(keyMap);
     std::string sql;
-    sql.append("select hash_key, timestamp/10000 from ");
-    sql.append(logTable);
-    sql.append(" where hash_key in (");
-    sql.append(GetSqlArgs(hashKeys.size()));
-    sql.append(")");
-    auto resultSet = QueryByStep(sql, hashKeys);
-    int count = 0;
-    if (resultSet == nullptr || resultSet->GetRowCount(count) != E_OK || count <= 0) {
-        LOG_ERROR("get resultSet err.");
-        return {};
-    }
-    std::map<PRIKey, Date> result;
-    for (int i = 0; i < count; i++) {
-        resultSet->GoToRow(i);
-        std::vector<uint8_t> hashKey;
-        int64_t timeStamp;
-        resultSet->GetBlob(0, hashKey);
-        resultSet->GetLong(1, timeStamp);
-        result[keyMap[hashKey]] = Date(timeStamp);
-    }
-    return result;
+    sql.append("select tempKeyMap.original_kay, ");
+    sql.append(table);
+    sql.append(".timestamp/10000 from ");
+    sql.append(table);
+    sql.append(" inner join tempKeyMap where tempKeyMap.hashKey=");
+    sql.append(table);
+    sql.append(".hashKey");
+
+    return { sql, std::vector<ValueObject>() };
 }
 
-std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTimeByRowId(
-    const std::string &logTable, std::vector<PRIKey> &keys)
+void RdbStoreImpl::GenerateTempTable(std::map<PRIKey, std::vector<uint8_t>> &keyMap)
+{
+    auto tempSql = "CREATE TABLE IF NOT EXISTS tempKeyMap (original_key text PRIMARY KEY, hash_key blob );";
+    ExecuteSql(tempSql);
+    std::vector<ValuesBucket> initialBatchValues;
+    for (const auto &pair : keyMap) {
+        ValuesBucket valuesBucket;
+        std::string ret;
+        std::visit(
+            [&ret](const auto &val) {
+                if constexpr (std::is_convertible_v<decltype(val), std::string>) {
+                    ret = val;
+                } else if constexpr (std::is_convertible_v<decltype(val), int64_t> ||
+                                     std::is_convertible_v<decltype(val), double>) {
+                    ret = std::to_string(val);
+                }
+            },
+            pair.first);
+        valuesBucket.PutString("original_key", ret);
+        valuesBucket.PutBlob("hash_key", pair.second);
+        initialBatchValues.emplace_back(valuesBucket);
+    }
+    int64_t num;
+    BatchInsert(num, "tempKeyMap", initialBatchValues);
+}
+
+std::pair<std::string, std::vector<ValueObject>> RdbStoreImpl::GenerateSqlAndArgsRowId(const std::string &table,
+    std::vector<PRIKey> &keys)
 {
     std::string sql;
     sql.append("select data_key, timestamp/10000 from ");
-    sql.append(logTable);
+    sql.append(table);
     sql.append(" where data_key in (");
     sql.append(GetSqlArgs(keys.size()));
     sql.append(")");
@@ -180,7 +205,53 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTimeByRowId(
         RawDataParser::Convert(key, value);
         args.emplace_back(ValueObject(value));
     }
-    auto resultSet = QueryByStep(sql, args);
+    return { sql, args };
+}
+
+std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(const std::string &table,
+    const std::string &columnName, std::vector<PRIKey> &keys)
+{
+    constexpr int const PRIKEY_INT_INDEX = 2;
+    constexpr int const PRIKEY_DOUBLE_INDEX = 3;
+    if (table.empty() || columnName.empty() || keys.empty()) {
+        LOG_ERROR("invalid para.");
+        return {};
+    }
+
+    auto logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
+    if (SqliteUtils::StrToUpper(columnName) == ROW_ID) {
+        return GetModifyTimeByRowId(logTable, keys);
+    }
+    auto resultSet = GetModifyTimeResultSet(logTable, columnName, keys);
+    int count = 0;
+    if (resultSet == nullptr || resultSet->GetRowCount(count) != E_OK || count <= 0) {
+        LOG_ERROR("get resultSet err.");
+        return {};
+    }
+    std::map<PRIKey, Date> result;
+    for (int i = 0; i < count; i++) {
+        resultSet->GoToRow(i);
+        std::vector<uint8_t> hashKey;
+        int64_t timeStamp;
+        std::string temp;
+        resultSet->GetString(0, temp);
+        auto type = keys.begin()->index();
+        PRIKey key;
+        if (type == PRIKEY_INT_INDEX) {
+            key = std::stoi(temp);
+        } else if (type == PRIKEY_DOUBLE_INDEX) {
+            key = std::stod(temp);
+        }
+        resultSet->GetLong(1, timeStamp);
+        result[key] = Date(timeStamp);
+    }
+    return result;
+}
+
+std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTable,
+    std::vector<PRIKey> &keys)
+{
+    auto resultSet = GetModifyTimeResultSet(logTable, ROW_ID, keys);
     int count = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(count) != E_OK || count <= 0) {
         LOG_ERROR("get resultSet err.");
