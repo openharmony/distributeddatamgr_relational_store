@@ -949,18 +949,18 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_016, TestSize.Level1)
     OH_Cursor *cursor;
     cursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "rdbstoreimpltest_integer", "ROWID", values);
 
-    int *rowCount;
-    errCode = cursor->getRowCount(cursor, rowCount);
+    int rowCount;
+    errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(errCode, RDB_OK);
-    EXPECT_EQ(*rowCount, 1);
+    EXPECT_EQ(rowCount, 1);
 
     errCode = cursor->goToNextRow(cursor);
     EXPECT_EQ(errCode, RDB_OK);
 
-    int64_t *time;
-    errCode = cursor->getInt64(cursor, 1, time);
+    int64_t time;
+    errCode = cursor->getInt64(cursor, 1, &time);
     EXPECT_EQ(errCode, RDB_OK);
-    EXPECT_EQ(*time, 100000);
+    EXPECT_EQ(time, 100000);
 
     cursor->destroy(cursor);
     char dropLogTableSql[] = "DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log";
@@ -992,18 +992,18 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_017, TestSize.Level1)
     OH_Cursor *cursor;
     cursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "rdbstoreimpltest_integer", "data_key", values);
 
-    int *rowCount;
-    errCode = cursor->getRowCount(cursor, rowCount);
+    int rowCount;
+    errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(errCode, RDB_OK);
-    EXPECT_EQ(*rowCount, 1);
+    EXPECT_EQ(rowCount, 1);
 
     errCode = cursor->goToNextRow(cursor);
     EXPECT_EQ(errCode, RDB_OK);
 
-    int64_t *time;
-    errCode = cursor->getInt64(cursor, 1, time);
+    int64_t time;
+    errCode = cursor->getInt64(cursor, 1, &time);
     EXPECT_EQ(errCode, RDB_OK);
-    EXPECT_EQ(*time, 100000);
+    EXPECT_EQ(time, 100000);
 
     cursor->destroy(cursor);
     char dropLogTableSql[] = "DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log";
@@ -1034,16 +1034,16 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
     int64_t keys[] = { 2 };
     values->putInt64(values, keys, 1);
     OH_Cursor *nullCursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "rdbstoreimpltest_integer", "ROWID", values);
-    int *rowCount;
-    errCode = nullCursor->getRowCount(nullCursor, rowCount);
+    int rowCount;
+    errCode = nullCursor->getRowCount(nullCursor, &rowCount);
     EXPECT_EQ(errCode, RDB_OK);
-    EXPECT_EQ(*rowCount, 0);
+    EXPECT_EQ(rowCount, 0);
     nullCursor->destroy(nullCursor);
 
     OH_Cursor *modifyTimeCursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "rdbstoreimpltest_integer", "ROWID", values);
-    errCode = modifyTimeCursor->getRowCount(modifyTimeCursor, rowCount);
+    errCode = modifyTimeCursor->getRowCount(modifyTimeCursor, &rowCount);
     EXPECT_EQ(errCode, RDB_OK);
-    EXPECT_EQ(*rowCount, 0);
+    EXPECT_EQ(rowCount, 0);
     modifyTimeCursor->destroy(modifyTimeCursor);
 
     char dropLogTableSql[] = "DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log";

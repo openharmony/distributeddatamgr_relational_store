@@ -303,17 +303,17 @@ int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint3
 OHOS::NativeRdb::RdbStore::PRIKey TransformToPK(const ValueObject &valueObject)
 {
     OHOS::NativeRdb::RdbStore::PRIKey priKey;
-    auto stringValue = OHOS::Traits::get_if<std::string>(&valueObject.value);
+    auto stringValue = std::get_if<std::string>(&valueObject.value);
     if (stringValue != nullptr && !(*stringValue).empty()) {
         priKey = stringValue->c_str();
         return priKey;
     }
-    auto intValue = OHOS::Traits::get_if<int64_t>(&valueObject.value);
+    auto intValue = std::get_if<int64_t>(&valueObject.value);
     if (intValue != nullptr) {
         priKey = *intValue;
         return priKey;
     }
-    auto doubleValue = OHOS::Traits::get_if<double>(&valueObject.value);
+    auto doubleValue = std::get_if<double>(&valueObject.value);
     if (doubleValue != nullptr) {
         priKey = *doubleValue;
         return priKey;
@@ -427,16 +427,16 @@ NDKStoreObserver::NDKChangeInfo::NDKChangeInfo(const NDKStoreObserver::Origin &o
 }
 
 NDKStoreObserver::NDKStoreObserver(OH_Rdb_Store *store, OH_Rdb_SubscribeCallback *callback, int mode)
-    : store_(store), callback_(callback), mode_(mode)
+    : store_(store), mode_(mode), callback_(callback)
 {
 }
 
 void NDKStoreObserver::OnChange(const std::vector<std::string> &devices)
 {
     if (mode_ == OH_Rdb_SubscribeType::SUBSCRIBE_TYPE_CLOUD) {
-        RelationalPredicatesObjects *objects;
-        std::copy(devices.begin(), devices.end(), objects->Get().begin());
-        (*callback_->cloudObserver)(store_, objects, devices.size());
+        RelationalPredicatesObjects objects;
+        std::copy(devices.begin(), devices.end(), objects.Get().begin());
+        (*callback_->cloudObserver)(store_, &objects, devices.size());
     }
 }
 
@@ -471,17 +471,17 @@ void NDKStoreObserver::TransformData(OH_Rdb_KeyInfo &keyInfo, std::vector<Primar
     auto it = primaryKey.begin();
     if (keyInfo.type == TYPE_REAL) {
         for (int i = 0; i < keyInfo.count; ++i) {
-            keyData[i].doubleData = *OHOS::Traits::get_if<double>(it.base());
+            keyData[i].doubleData = *std::get_if<double>(it.base());
             it++;
         }
     } else if (keyInfo.type == TYPE_INT64) {
         for (int i = 0; i < keyInfo.count; ++i) {
-            keyData[i].intData = *OHOS::Traits::get_if<int64_t>(it.base());
+            keyData[i].intData = *std::get_if<int64_t>(it.base());
             it++;
         }
     } else if (keyInfo.type == TYPE_TEXT) {
         for (int i = 0; i < keyInfo.count; ++i) {
-            keyData[i].textData = (*OHOS::Traits::get_if<std::string>(it.base())).c_str();
+            keyData[i].textData = (*std::get_if<std::string>(it.base())).c_str();
             it++;
         }
     }
