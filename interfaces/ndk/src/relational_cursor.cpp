@@ -163,6 +163,7 @@ int RelationalCursor::GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned c
 
 void ConvertAsset(OH_Asset *value, NativeRdb::AssetValue *asset)
 {
+    value->version = DISTRIBUTED_ASSET_VERSION;
     value->name[0] = asset->name.c_str()[0];
     value->uri[0] = asset->uri.c_str()[0];
     value->path[0] = asset->path.c_str()[0];
@@ -175,15 +176,15 @@ void ConvertAsset(OH_Asset *value, NativeRdb::AssetValue *asset)
 int RelationalCursor::GetAsset(OH_Cursor *cursor, int32_t columnIndex, int assetClassId, OH_Asset *value)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || value == nullptr) {
+    if (self == nullptr || value == nullptr || assetClassId != DISTRIBUTED_ASSET_VERSION) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    NativeRdb::AssetValue *asset;
-    auto errCode = self->resultSet_->GetAsset(columnIndex, *asset);
+    NativeRdb::AssetValue asset;
+    auto errCode = self->resultSet_->GetAsset(columnIndex, asset);
     if (errCode != OHOS::NativeRdb::E_OK) {
         return errCode;
     }
-    ConvertAsset(value, asset);
+    ConvertAsset(value, &asset);
     return errCode;
 }
 
