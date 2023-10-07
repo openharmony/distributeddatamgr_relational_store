@@ -31,8 +31,6 @@ class RdbStoreUpdateTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    static void InsertFirstData();
-    static void InsertSecondData();
     static void ExpectValue(const std::shared_ptr<OHOS::NativeRdb::ResultSet> &resultSet,
         int id = -1, string name = "", int age =  -1, double salary = -1, std::vector<uint8_t> blobtype = {});
     void SetUp();
@@ -97,30 +95,28 @@ void RdbStoreUpdateTest::TearDown(void)
     RdbHelper::ClearCache();
 }
 
-void RdbStoreUpdateTest::InsertFirstData(){
-    ValuesBucket values;
-    int64_t id;
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
-}
+struct TestData {
+    int id;
+    std::string name;
+    int age;
+    double salary;
+    std::vector<uint8_t> blobType;
+};
 
-void RdbStoreUpdateTest::InsertSecondData(){
-    ValuesBucket values;
-    int64_t id;
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    int ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, id);
+TestData Data[2] = {
+    {1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }},
+    {2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }},
+};
+
+ValuesBucket SetValue(const TestData &testData)
+{
+    ValuesBucket value;
+    value.PutInt("id", testData.id);
+    value.PutString("name", testData.name);
+    value.PutInt("age", testData.age);
+    value.PutDouble("salary", testData.salary);
+    value.PutBlob("blobType", testData.blobType);
+    return value;
 }
 
 /**
@@ -134,8 +130,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
 
     ValuesBucket values;
     int changedRows;
+    int64_t id;
 
-    RdbStoreUpdateTest::InsertFirstData();
+    int ret = store->Insert(id, "test", SetValue(Data[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
 
     values.Clear();
     values.PutInt("id", 2);
@@ -143,7 +142,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
     values.PutInt("age", 20);
     values.PutDouble("salary", 200.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    int ret = store->Update(changedRows, "test", values, "id = ?",
+    ret = store->Update(changedRows, "test", values, "id = ?",
                 std::vector<std::string>{ "1" });
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
@@ -175,14 +174,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
     ValuesBucket values;
     int changedRows;
 
-    RdbStoreUpdateTest::InsertFirstData();
+    int ret = store->Insert(id, "test", SetValue(Data[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
 
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", SetValue(Data[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -269,9 +265,15 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
 
     ValuesBucket values;
     int changedRows;
+    int64_t id;
 
-    RdbStoreUpdateTest::InsertFirstData();
-    RdbStoreUpdateTest::InsertSecondData();
+    int ret = store->Insert(id, "test", SetValue(Data[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->Insert(id, "test", SetValue(Data[1]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
 
     // update lisi age=19 to wangjing age=20
     values.PutInt("id", 3);
@@ -279,7 +281,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    int ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = 19");
+    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = 19");
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 
@@ -312,9 +314,15 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
 
     ValuesBucket values;
     int changedRows;
+    int64_t id;
 
-    RdbStoreUpdateTest::InsertFirstData();
-    RdbStoreUpdateTest::InsertSecondData();
+    int ret = store->Insert(id, "test", SetValue(Data[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->Insert(id, "test", SetValue(Data[1]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
 
     // update lisi age=19 to zhangsan age=20
     values.PutInt("id", 3);
@@ -322,7 +330,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    int ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?",
+    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?",
         std::vector<std::string>{ "19" }, ConflictResolution::ON_CONFLICT_NONE);
     EXPECT_EQ(ret, RdbStoreUpdateTest::E_SQLITE_CONSTRAINT);
 
@@ -355,9 +363,15 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
 
     ValuesBucket values;
     int changedRows;
+    int64_t id;
 
-    RdbStoreUpdateTest::InsertFirstData();
-    RdbStoreUpdateTest::InsertSecondData();
+    int ret = store->Insert(id, "test", SetValue(Data[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->Insert(id, "test", SetValue(Data[1]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
 
     // update lisi age=19 to wangjing age=20
     values.PutInt("id", 3);
@@ -365,7 +379,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    int ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?",
+    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?",
         std::vector<std::string>{ "19" }, ConflictResolution::ON_CONFLICT_ROLLBACK);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
@@ -399,16 +413,23 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
 
     ValuesBucket values;
     int changedRows;
+    int64_t id;
 
-    RdbStoreUpdateTest::InsertFirstData();
-    RdbStoreUpdateTest::InsertSecondData();
+    int ret = store->Insert(id, "test", SetValue(Data[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->Insert(id, "test", SetValue(Data[1]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
     // update lisi age=19 to zhangsan age=20
     values.PutInt("id", 3);
     values.PutString("name", std::string("zhangsan"));
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    int ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?",
+    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?",
         std::vector<std::string>{ "19" }, ConflictResolution::ON_CONFLICT_ROLLBACK);
     EXPECT_EQ(ret, RdbStoreUpdateTest::E_SQLITE_CONSTRAINT);
 
@@ -441,9 +462,15 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
 
     ValuesBucket values;
     int changedRows;
+    int64_t id;
 
-    RdbStoreUpdateTest::InsertFirstData();
-    RdbStoreUpdateTest::InsertSecondData();
+    int ret = store->Insert(id, "test", SetValue(Data[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->Insert(id, "test", SetValue(Data[1]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
 
     // update lisi age=19 to wangjing age=20
     values.PutInt("id", 3);
@@ -451,7 +478,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    int ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?",
+    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?",
         std::vector<std::string>{ "19" }, ConflictResolution::ON_CONFLICT_REPLACE);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
@@ -485,15 +512,21 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize
 
     ValuesBucket values;
     int changedRows;
+    int64_t id;
 
-    RdbStoreUpdateTest::InsertFirstData();
-    RdbStoreUpdateTest::InsertSecondData();
+    int ret = store->Insert(id, "test", SetValue(Data[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->Insert(id, "test", SetValue(Data[1]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
 
     // update lisi age=19 to zhangsan age=20
     values.PutString("name", std::string("zhangsan"));
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
-    int ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?",
+    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?",
         std::vector<std::string>{ "19" }, ConflictResolution::ON_CONFLICT_REPLACE);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(changedRows, 1);
@@ -580,8 +613,8 @@ void RdbStoreUpdateTest::ExpectValue(const std::shared_ptr<OHOS::NativeRdb::Resu
         ret = resultSet->GetBlob(columnIndex, blob);
         EXPECT_EQ(ret, E_OK);
         EXPECT_EQ(blobtype.size(), static_cast<int>(blob.size()));
-        EXPECT_EQ(blobtype[0], blob[0]);
-        EXPECT_EQ(blobtype[1], blob[1]);
-        EXPECT_EQ(blobtype[2], blob[2]);
+        for(int i = 0; i < blobtype.size(); i++){
+            EXPECT_EQ(blobtype[i], blob[i]);
+        }
     }
 }
