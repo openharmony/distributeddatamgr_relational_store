@@ -35,7 +35,7 @@ public:
     void TearDown();
     void GenerateDefaultTable();
     void GenerateDefaultEmptyTable();
-    void GetColumnType(std::shared_ptr<ResultSet> resultSet, int columnIndex, ColumnType &type);
+    void CheckColumnType(std::shared_ptr<ResultSet> resultSet, int columnIndex, ColumnType type);
     void CheckGoToNextRow(std::shared_ptr<ResultSet> resultSet, int &pos, bool &isStart, bool &isAtFirstRow,
         bool &isEnded);
     void GetStringValue(std::shared_ptr<ResultSet> resultSet, int columnIndex, std::string &strValue);
@@ -131,10 +131,12 @@ void RdbStepResultSetTest::GenerateDefaultEmptyTable()
     store->ExecuteSql(createTableSql);
 }
 
-void RdbStepResultSetTest::GetColumnType(std::shared_ptr<ResultSet> resultSet, int columnIndex, ColumnType &type)
+void RdbStepResultSetTest::CheckColumnType(std::shared_ptr<ResultSet> resultSet, int columnIndex, ColumnType type)
 {
-    int iRet = resultSet->GetColumnType(columnIndex, type);
+    ColumnType columnType;
+    int iRet = resultSet->GetColumnType(columnIndex, columnType);
     EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(columnType, type);
 }
 
 void RdbStepResultSetTest::CheckGoToNextRow(std::shared_ptr<ResultSet> resultSet, int &position, bool &isStart,
@@ -213,21 +215,15 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_001, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
 
-    ColumnType type;
-    GetColumnType(resultSet, 0, type);
-    EXPECT_EQ(ColumnType::TYPE_INTEGER, type);
+    CheckColumnType(resultSet, 0, ColumnType::TYPE_INTEGER);
 
-    GetColumnType(resultSet, 1, type);
-    EXPECT_EQ(ColumnType::TYPE_STRING, type);
+    CheckColumnType(resultSet, 1, ColumnType::TYPE_STRING);
 
-    GetColumnType(resultSet, 2, type);
-    EXPECT_EQ(ColumnType::TYPE_INTEGER, type);
+    CheckColumnType(resultSet, 2, ColumnType::TYPE_INTEGER);
 
-    GetColumnType(resultSet, 3, type);
-    EXPECT_EQ(ColumnType::TYPE_FLOAT, type);
+    CheckColumnType(resultSet, 3, ColumnType::TYPE_FLOAT);
 
-    GetColumnType(resultSet, 4, type);
-    EXPECT_EQ(ColumnType::TYPE_BLOB, type);
+    CheckColumnType(resultSet, 4, ColumnType::TYPE_BLOB);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
@@ -1368,18 +1364,13 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep009, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
 
-    ColumnType type;
-    GetColumnType(resultSet, 0, type);
-    EXPECT_EQ(ColumnType::TYPE_STRING, type);
+    CheckColumnType(resultSet, 0, ColumnType::TYPE_STRING);
 
-    GetColumnType(resultSet, 1, type);
-    EXPECT_EQ(ColumnType::TYPE_INTEGER, type);
+    CheckColumnType(resultSet, 1, ColumnType::TYPE_INTEGER);
 
-    GetColumnType(resultSet, 2, type);
-    EXPECT_EQ(ColumnType::TYPE_FLOAT, type);
+    CheckColumnType(resultSet, 2, ColumnType::TYPE_FLOAT);
 
-    GetColumnType(resultSet, 3, type);
-    EXPECT_EQ(ColumnType::TYPE_BLOB, type);
+    CheckColumnType(resultSet, 3, ColumnType::TYPE_BLOB);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
