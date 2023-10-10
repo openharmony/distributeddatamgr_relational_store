@@ -38,8 +38,8 @@ public:
     void GenerateDefaultTable();
     void GenerateAssetsTable();
     void GenerateTimeoutTable();
-    void GetResultSetCheckValues(std::shared_ptr<ResultSet> &rstSet, int &pos, bool &isStart, bool &isAtFirstRow,
-        bool &isEnded);
+    void CheckResultSetAttribute(std::shared_ptr<ResultSet> rstSet, int pos, bool isStart, bool isAtFirstRow,
+        bool isEnded);
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
@@ -176,13 +176,26 @@ void RdbSqliteSharedResultSetTest::GenerateTimeoutTable()
     store->Insert(id, "test", values);
 }
 
-void RdbSqliteSharedResultSetTest::GetResultSetCheckValues(std::shared_ptr<ResultSet> &rstSet, int &pos, bool &isStart,
-    bool &isAtFirstRow, bool &isEnded)
+void RdbSqliteSharedResultSetTest::CheckResultSetAttribute(std::shared_ptr<ResultSet> rstSet, int pos, bool isStart,
+    bool isAtFirstRow, bool isEnded)
 {
-    rstSet->GetRowIndex(pos);
-    rstSet->IsStarted(isStart);
-    rstSet->IsAtFirstRow(isAtFirstRow);
-    rstSet->IsEnded(isEnded);
+    int position = -1;
+    int iRet = rstSet->GetRowIndex(position);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(pos, position);
+
+    bool bResultSet;
+    iRet = rstSet->IsStarted(bResultSet);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(isStart, bResultSet);
+
+    iRet = rstSet->IsAtFirstRow(bResultSet);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(isAtFirstRow, bResultSet);
+
+    iRet = rstSet->IsEnded(bResultSet);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(isEnded, bResultSet);
 }
 
 /* *
@@ -393,50 +406,22 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_002, TestSize.Le
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
-    int pos = -2;
-    bool isStart = true;
-    bool isAtFirstRow = true;
-    bool isEnded = true;
-    GetResultSetCheckValues(rstSet, pos, isStart, isAtFirstRow, isEnded);
-    EXPECT_EQ(pos, -1);
-    EXPECT_EQ(isStart, false);
-    EXPECT_EQ(isAtFirstRow, false);
-    EXPECT_EQ(isEnded, false);
+    CheckResultSetAttribute(rstSet, -1, false, false, false);
 
-    isEnded = true;
     EXPECT_EQ(rstSet->GoToNextRow(), E_OK);
-    GetResultSetCheckValues(rstSet, pos, isStart, isAtFirstRow, isEnded);
-    EXPECT_EQ(pos, 0);
-    EXPECT_EQ(isStart, true);
-    EXPECT_EQ(isAtFirstRow, true);
-    EXPECT_EQ(isEnded, false);
+    CheckResultSetAttribute(rstSet, 0, true, true, false);
 
-    isStart = false;
-    isEnded = true;
     EXPECT_EQ(rstSet->GoToNextRow(), E_OK);
-    GetResultSetCheckValues(rstSet, pos, isStart, isAtFirstRow, isEnded);
-    EXPECT_EQ(pos, 1);
-    EXPECT_EQ(isStart, true);
-    EXPECT_EQ(isAtFirstRow, false);
-    EXPECT_EQ(isEnded, false);
+    CheckResultSetAttribute(rstSet, 1, true, false, false);
 
-    isStart = false;
-    isAtFirstRow = true;
     EXPECT_EQ(rstSet->GoToNextRow(), E_OK);
-    GetResultSetCheckValues(rstSet, pos, isStart, isAtFirstRow, isEnded);
-    EXPECT_EQ(pos, 2);
-    EXPECT_EQ(isStart, true);
+    CheckResultSetAttribute(rstSet, 2, true, false, false);
     bool isAtLastRow = false;
     rstSet->IsAtLastRow(isAtLastRow);
     EXPECT_EQ(isAtLastRow, true);
     
-    isStart = false;
-    isEnded = false;
     EXPECT_EQ(rstSet->GoToNextRow(), E_ERROR);
-    GetResultSetCheckValues(rstSet, pos, isStart, isAtFirstRow, isEnded);
-    EXPECT_EQ(pos, 3);
-    EXPECT_EQ(isStart, true);
-    EXPECT_EQ(isEnded, true);
+    CheckResultSetAttribute(rstSet, 3, true, false, true);
 
     rstSet->Close();
     EXPECT_EQ(rstSet->IsClosed(), true);
