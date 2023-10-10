@@ -45,6 +45,8 @@ public:
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string &sql,
         const std::vector<ValueObject> &args) const;
+    std::shared_ptr<SqliteStatement> StepQueryPrepare(int &errCode, const std::string &sql,
+        const std::vector<ValueObject> &args) const;
     int DesFinalize();
     int EndStepQuery();
     void SetInTransaction(bool transaction);
@@ -83,14 +85,14 @@ private:
     int SetCustomFunctions(const RdbStoreConfig &config);
     int SetCustomScalarFunction(const std::string &functionName, int argc, ScalarFunction *function);
 
-    sqlite3 *dbHandle;
-    bool isWriteConnection;
-    bool isReadOnly;
-    SqliteStatement statement;
-    std::shared_ptr<SqliteStatement> stepStatement;
-    std::string filePath;
-    int openFlags;
-    std::mutex rdbMutex;
+    sqlite3 *dbHandle_;
+    bool isWriteConnection_;
+    bool isReadOnly_;
+    SqliteStatement statement_;
+    std::shared_ptr<SqliteStatement> stepStatement_;
+    std::string filePath_;
+    int openFlags_;
+    std::mutex rdbMutex_;
     bool inTransaction_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
 
