@@ -173,7 +173,7 @@ void RdbStepResultSetTest::GetDoubleValue(std::shared_ptr<ResultSet> resultSet, 
     EXPECT_EQ(E_OK, iRet);
 }
 
-void RdbStepResultSetTest::GetBlobValue(std::shared_ptr<ResultSet> resultSet, int columnIndex, 
+void RdbStepResultSetTest::GetBlobValue(std::shared_ptr<ResultSet> resultSet, int columnIndex,
     std::vector<uint8_t> blobValue)
 {
     int iRet = resultSet->GetBlob(columnIndex, blobValue);
