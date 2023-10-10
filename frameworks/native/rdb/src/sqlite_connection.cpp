@@ -68,9 +68,9 @@ SqliteConnection *SqliteConnection::Open(const RdbStoreConfig &config, bool isWr
     return connection;
 }
 
-SqliteConnection::SqliteConnection(bool isWriteConnection_)
+SqliteConnection::SqliteConnection(bool isWriteConnection)
     : dbHandle_(nullptr),
-      isWriteConnection_(isWriteConnection_),
+      isWriteConnection_(isWriteConnection),
       isReadOnly_(false),
       statement_(),
       stepStatement_(nullptr),
