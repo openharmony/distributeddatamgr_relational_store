@@ -53,9 +53,9 @@ using RdbKeyFile = RdbSecurityManager::KeyFileType;
 #endif
 #endif
 
-SqliteConnection *SqliteConnection::Open(const RdbStoreConfig &config, bool isWriteConnection_, int &errCode)
+SqliteConnection *SqliteConnection::Open(const RdbStoreConfig &config, bool isWriteConnection, int &errCode)
 {
-    auto connection = new (std::nothrow) SqliteConnection(isWriteConnection_);
+    auto connection = new (std::nothrow) SqliteConnection(isWriteConnection);
     if (connection == nullptr) {
         LOG_ERROR("SqliteConnection::Open new failed, connection is nullptr");
         return nullptr;
