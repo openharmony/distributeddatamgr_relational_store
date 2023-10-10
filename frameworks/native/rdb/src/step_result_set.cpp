@@ -56,14 +56,14 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
     }
 
     int errCode = PrepareStep();
-    if (errCode) {
+    if (errCode != E_OK) {
         LOG_ERROR("PrepareStep ret %{public}d", errCode);
         return errCode;
     }
 
     int columnCount = 0;
     errCode = sqliteStatement_->GetColumnCount(columnCount);
-    if (errCode) {
+    if (errCode != E_OK) {
         LOG_ERROR("GetColumnCount ret %{public}d", errCode);
         return errCode;
     }
@@ -72,7 +72,7 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
     for (int i = 0; i < columnCount; i++) {
         std::string columnName;
         errCode = sqliteStatement_->GetColumnName(i, columnName);
-        if (errCode) {
+        if (errCode != E_OK) {
             columnNames.clear();
             LOG_ERROR("GetColumnName ret %{public}d", errCode);
             return errCode;
@@ -95,11 +95,11 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
     int sqliteType;
-    if (sqliteStatement_ == nulptr) {
+    if (sqliteStatement_ == nullptr) {
        return E_CON_OVER_LIMIT;
     }
     int errCode = sqliteStatement_->GetColumnType(columnIndex, sqliteType);
-    if (errCode) {
+    if (errCode != E_OK) {
         LOG_ERROR("GetColumnType ret %{public}d", errCode);
         return errCode;
     }
@@ -148,10 +148,6 @@ int StepResultSet::GetRowCount(int &count)
  */
 int StepResultSet::GoToRow(int position)
 {
-    if (sqliteStatement_ == nullptr) {
-        LOG_ERROR("Failed as too many connections");
-        return E_CON_OVER_LIMIT;
-    }
     // If the moved position is less than zero, reset the result and return an error
     if (position < 0) {
         LOG_DEBUG("position %{public}d.", position);
@@ -167,7 +163,7 @@ int StepResultSet::GoToRow(int position)
     }
     while (position != rowPos_) {
         int errCode = GoToNextRow();
-        if (errCode) {
+        if (errCode != E_OK) {
             LOG_ERROR("GoToNextRow ret %{public}d", errCode);
             return errCode;
         }
@@ -187,7 +183,7 @@ int StepResultSet::GoToNextRow()
     }
 
     int errCode = PrepareStep();
-    if (errCode) {
+    if (errCode != E_OK) {
         LOG_ERROR("PrepareStep ret %{public}d", errCode);
         return errCode;
     }
