@@ -189,7 +189,6 @@ void RdbStepResultSetTest::GetBlobValue(std::shared_ptr<ResultSet> resultSet, in
         string strTmpValue(1, cValue);
         EXPECT_EQ(strTmpValue, strBlob);
     }
-    
 }
 
 /* *
