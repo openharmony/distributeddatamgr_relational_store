@@ -186,15 +186,15 @@ void RdbStepResultSetTest::CheckResultSetData(
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(resultSetData.strValue, strValue);
 
-    iRet = resultSet->GetInt(row++, iValue);
+    iRet = resultSet->GetInt(++row, iValue);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(resultSetData.iValue, iValue);
 
-    iRet = resultSet->GetDouble(row++, dValue);
+    iRet = resultSet->GetDouble(++row, dValue);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(resultSetData.dValue, dValue);
 
-    iRet = resultSet->GetBlob(row++, blobValue);
+    iRet = resultSet->GetBlob(++row, blobValue);
     EXPECT_EQ(E_OK, iRet);
 }
 
@@ -356,7 +356,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_004, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(0, position);
 
-    CheckResultSetAttribute(resultSet, 0, false, false, true);
+    CheckResultSetAttribute(resultSet, 0, false, false, false);
 }
 
 /* *
@@ -373,7 +373,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_005, TestSize.Level1)
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
-    bool bResultSet = false;
     CheckResultSetAttribute(resultSet, 0, false, false, true);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
@@ -382,7 +381,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_005, TestSize.Level1)
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
-    bResultSet = false;
+    bool bResultSet = false;
     int iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
@@ -407,13 +406,12 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_006, TestSize.Level1)
 
     EXPECT_NE(E_OK, resultSet->GoToFirstRow());
 
-    bool bResultSet = false;
-    CheckResultSetAttribute(resultSet, 0, false, false, true);
+    CheckResultSetAttribute(resultSet, 0, false, false, false);
 
     EXPECT_NE(E_OK, resultSet->GoToNextRow());
     EXPECT_NE(E_OK, resultSet->GoToFirstRow());
 
-    bResultSet = false;
+    bool bResultSet = false;
     int iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
