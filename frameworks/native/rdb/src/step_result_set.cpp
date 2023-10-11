@@ -96,7 +96,7 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
     }
     int sqliteType;
     if (sqliteStatement_ == nullptr) {
-       return E_CON_OVER_LIMIT;
+        return E_CON_OVER_LIMIT;
     }
     int errCode = sqliteStatement_->GetColumnType(columnIndex, sqliteType);
     if (errCode != E_OK) {
@@ -270,9 +270,7 @@ int StepResultSet::FinishStep()
     if (sqliteStatement_ == nullptr) {
         return E_OK;
     }
-
     rowPos_ = INIT_POS;
-
     return E_OK;
 }
 
