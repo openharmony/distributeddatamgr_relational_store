@@ -1707,24 +1707,28 @@ describe('rdbPredicatesTest', function () {
      *              2.predicates contains abnormal "undefined" test
      */
     it('testContains0005', 0, async function (done) {
-        console.log(TAG + "************* testContains0005 start *************");
+        console.info(TAG, `************* testContains0005 start *************`);
+        try {
+            let predicates = new data_relationalStore.RdbPredicates("AllDataType");
+            predicates.contains("characterValue", null);
+            expect(null).assertFail();
+            done();
+        } catch (err) {
+            console.error(TAG, `predicates.contains failed: err code=${err.code}, message=${err.message}`);
+            expect("401").assertEqual(err.code);
+        }
 
-        let predicates1 = new data_relationalStore.RdbPredicates("AllDataType");
-        predicates1.contains("characterValue", null);
-        let result1 = await rdbStore.query(predicates1);
-        expect(3).assertEqual(result1.rowCount);
-        result1.close()
-        result1 = null
-
-        let predicates2 = new data_relationalStore.RdbPredicates("AllDataType");
-        predicates2.contains("characterValue", undefined);
-        let result2 = await rdbStore.query(predicates2);
-        expect(3).assertEqual(result2.rowCount);
-        result2.close()
-        result2 = null
-
-        done();
-        console.log(TAG + "************* testContains0005 end *************");
+        try {
+            let predicates = new data_relationalStore.RdbPredicates("AllDataType");
+            predicates.contains("characterValue", undefined);
+            expect(null).assertFail();
+            done();
+        } catch (err) {
+            console.error(TAG, `predicates.contains failed: err code=${err.code}, message=${err.message}`);
+            expect("401").assertEqual(err.code);
+            done();
+        }
+        console.info(TAG, `************* testContains0005 end *************`);
     })
 
     /**
@@ -1937,25 +1941,29 @@ describe('rdbPredicatesTest', function () {
      * @tc.desc     1.predicates like abnormal "null" test
      *              2.predicates like abnormal "undefined" test
      */
-     it('testLike0005', 0, async function (done) {
-        console.log(TAG + "************* testLike0005 start *************");
+    it('testLike0005', 0, async function (done) {
+        console.info(TAG, `************* testLike0005 start *************`);
+        try {
+            let predicates = new data_relationalStore.RdbPredicates("AllDataType");
+            predicates.like("characterValue", null);
+            expect(null).assertFail();
+            done();
+        } catch (err) {
+            console.error(TAG, `predicates.like failed: err code=${err.code}, message=${err.message}`);
+            expect("401").assertEqual(err.code);
+        }
 
-        let predicates1 = new data_relationalStore.RdbPredicates("AllDataType");
-        predicates1.like("characterValue", null);
-        let result1 = await rdbStore.query(predicates1);
-        expect(3).assertEqual(result1.rowCount);
-        result1.close()
-        result1 = null
-
-        let predicates2 = new data_relationalStore.RdbPredicates("AllDataType");
-        predicates2.like("characterValue", undefined);
-        let result2 = await rdbStore.query(predicates2);
-        expect(3).assertEqual(result2.rowCount);
-        result2.close()
-        result2 = null
-
-        done();
-        console.log(TAG + "************* testLike0005 end *************");
+        try {
+            let predicates = new data_relationalStore.RdbPredicates("AllDataType");
+            predicates.like("characterValue", undefined);
+            expect(null).assertEqual();
+            done();
+        } catch (err) {
+            console.error(TAG, `predicates.like failed: err code=${err.code}, message=${err.message}`);
+            expect("401").assertEqual(err.code);
+            done();
+        }
+        console.info(TAG, `************* testLike0005 end *************`);
     })
 
     /**
