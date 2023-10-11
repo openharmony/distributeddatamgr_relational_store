@@ -184,18 +184,20 @@ void RdbSqliteSharedResultSetTest::CheckResultSetAttribute(std::shared_ptr<Resul
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(pos, position);
 
-    bool bResultSet;
+    bool bResultSet = isStart;
     iRet = rstSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(isStart, bResultSet);
+    EXPECT_EQ(!isStart, bResultSet);
 
+    bResultSet = isAtFirstRow;
     iRet = rstSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(isAtFirstRow, bResultSet);
+    EXPECT_EQ(!isAtFirstRow, bResultSet);
 
+    bResultSet = isEnded;
     iRet = rstSet->IsEnded(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(isEnded, bResultSet);
+    EXPECT_EQ(!isEnded, bResultSet);
 }
 
 /* *
@@ -406,22 +408,22 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_002, TestSize.Le
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
-    CheckResultSetAttribute(rstSet, -1, false, false, false);
+    CheckResultSetAttribute(rstSet, -1, true, true, true);
 
     EXPECT_EQ(rstSet->GoToNextRow(), E_OK);
-    CheckResultSetAttribute(rstSet, 0, true, true, false);
+    CheckResultSetAttribute(rstSet, 0, false, false, true);
 
     EXPECT_EQ(rstSet->GoToNextRow(), E_OK);
-    CheckResultSetAttribute(rstSet, 1, true, false, false);
+    CheckResultSetAttribute(rstSet, 1, false, true, true);
 
     EXPECT_EQ(rstSet->GoToNextRow(), E_OK);
-    CheckResultSetAttribute(rstSet, 2, true, false, false);
+    CheckResultSetAttribute(rstSet, 2, false, true, true);
     bool isAtLastRow = false;
     rstSet->IsAtLastRow(isAtLastRow);
     EXPECT_EQ(isAtLastRow, true);
     
     EXPECT_EQ(rstSet->GoToNextRow(), E_ERROR);
-    CheckResultSetAttribute(rstSet, 3, true, false, true);
+    CheckResultSetAttribute(rstSet, 3, false, true, false);
 
     rstSet->Close();
     EXPECT_EQ(rstSet->IsClosed(), true);

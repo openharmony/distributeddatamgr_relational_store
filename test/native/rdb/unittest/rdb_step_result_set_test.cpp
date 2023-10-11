@@ -27,6 +27,18 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
+struct ResultSetData {
+    std::string strValue;
+    int iValue;
+    double dValue;
+};
+
+ResultSetData g_resultSetData[3] = {
+    {"2", -5, 2.5},
+    {"hello", 10, 1.0},
+    {"hello world", 3, 1.8}
+};
+
 class RdbStepResultSetTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -38,10 +50,8 @@ public:
     void CheckColumnType(std::shared_ptr<ResultSet> resultSet, int columnIndex, ColumnType type);
     void CheckResultSetAttribute(std::shared_ptr<ResultSet> resultSet, int pos, bool isStart, bool isAtFirstRow,
         bool isEnded);
-    void CheckStringValue(std::shared_ptr<ResultSet> resultSet, int columnIndex, std::string strValue);
-    void CheckIntValue(std::shared_ptr<ResultSet> resultSet, int columnIndex, int iValue);
-    void CheckDoubleValue(std::shared_ptr<ResultSet> resultSet, int columnIndex, double dValue);
-    void CheckBlobValue(std::shared_ptr<ResultSet> resultSet, int columnIndex, std::vector<uint8_t> blobValue);
+    void CheckResultSetData(bool isZeroStart, std::shared_ptr<ResultSet> resultSet, ResultSetData &rowData,
+        std::vector<uint8_t> &blobValue);
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
@@ -147,60 +157,45 @@ void RdbStepResultSetTest::CheckResultSetAttribute(std::shared_ptr<ResultSet> re
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(pos, position);
 
-    bool bResultSet;
+    bool bResultSet = isStart;
     iRet = resultSet->IsStarted(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(isStart, bResultSet);
+    EXPECT_EQ(!isStart, bResultSet);
 
+    bResultSet = isAtFirstRow;
     iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(isAtFirstRow, bResultSet);
+    EXPECT_EQ(!isAtFirstRow, bResultSet);
 
+    bResultSet = isEnded;
     iRet = resultSet->IsEnded(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(isEnded, bResultSet);
+    EXPECT_EQ(!isEnded, bResultSet);
 }
 
-void RdbStepResultSetTest::CheckStringValue(std::shared_ptr<ResultSet> resultSet, int columnIndex, std::string strValue)
+void RdbStepResultSetTest::CheckResultSetData(
+    bool isZeroStart, std::shared_ptr<ResultSet> resultSet, ResultSetData &resultSetData,
+    std::vector<uint8_t> &blobValue)
 {
-    std::string stringValue;
-    int iRet = resultSet->GetString(columnIndex, stringValue);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(stringValue, strValue);
-}
+    std::string strValue;
+    int iValue;
+    double dValue;
+    int row = isZeroStart ? 0 : 1;
 
-void RdbStepResultSetTest::CheckIntValue(std::shared_ptr<ResultSet> resultSet, int columnIndex, int iValue)
-{
-    int intValue;
-    int iRet = resultSet->GetInt(columnIndex, intValue);
+    int iRet = resultSet->GetString(row, strValue);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(intValue, iValue);
-}
+    EXPECT_EQ(resultSetData.strValue, strValue);
 
-void RdbStepResultSetTest::CheckDoubleValue(std::shared_ptr<ResultSet> resultSet, int columnIndex, double dValue)
-{
-    double doubleValue;
-    int iRet = resultSet->GetDouble(columnIndex, doubleValue);
+    iRet = resultSet->GetInt(row++, iValue);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(doubleValue, dValue);
-}
+    EXPECT_EQ(resultSetData.iValue, iValue);
 
-void RdbStepResultSetTest::CheckBlobValue(std::shared_ptr<ResultSet> resultSet, int columnIndex,
-    std::vector<uint8_t> blobValue)
-{
-    int iRet = resultSet->GetBlob(columnIndex, blobValue);
+    iRet = resultSet->GetDouble(row++, dValue);
     EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(resultSetData.dValue, dValue);
 
-    if (blobValue.size() > 0) {
-        std::string strBlob;
-        strBlob.clear();
-        for (size_t i = 0; i < blobValue.size(); i++) {
-            strBlob += char(blobValue[i]);
-        }
-        char cValue = 66;
-        string strTmpValue(1, cValue);
-        EXPECT_EQ(strTmpValue, strBlob);
-    }
+    iRet = resultSet->GetBlob(row++, blobValue);
+    EXPECT_EQ(E_OK, iRet);
 }
 
 /* *
@@ -248,24 +243,8 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_001, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(3, count);
 
-    std::string stringValue;
-    iRet = resultSet->GetString(1, stringValue);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ("2", stringValue);
-
-    int iValue;
-    iRet = resultSet->GetInt(2, iValue);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(-5, iValue);
-
-    double dValue;
-    iRet = resultSet->GetDouble(3, dValue);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(2.5, dValue);
-
     std::vector<uint8_t> blobValue;
-    iRet = resultSet->GetBlob(4, blobValue);
-    EXPECT_EQ(E_OK, iRet);
+    CheckResultSetData(false, resultSet, g_resultSetData[0], blobValue);
 }
 
 /* *
@@ -336,13 +315,13 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_003, TestSize.Level1)
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
-    CheckResultSetAttribute(resultSet, -1, false, false, false);
+    CheckResultSetAttribute(resultSet, -1, true, true, true);
 
     int moveTimes = 0;
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
     moveTimes++;
 
-    CheckResultSetAttribute(resultSet, 0, true, true, false);
+    CheckResultSetAttribute(resultSet, 0, false, false, true);
 
     int position = INT_MIN;
     int iRet = resultSet->GetRowIndex(position);
@@ -353,7 +332,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_003, TestSize.Level1)
     }
     /* Cursor is before first */
 
-    CheckResultSetAttribute(resultSet, 3, true, false, true);
+    CheckResultSetAttribute(resultSet, 3, false, true, false);
 }
 
 /* *
@@ -368,36 +347,16 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_004, TestSize.Level1)
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
-    int position = INT_MIN;
-    bool bResultSet = true;
-    int iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(-1, position);
-
-    iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, false);
-
-    bResultSet = true;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, false);
+    CheckResultSetAttribute(resultSet, -1, true, true, true);
 
     EXPECT_NE(E_OK, resultSet->GoToNextRow());
 
-    iRet = resultSet->GetRowIndex(position);
+    int position = INT_MIN;
+    int iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(0, position);
 
-    bResultSet = false;
-    iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, true);
-
-    bResultSet = false;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, true);
+    CheckResultSetAttribute(resultSet, 0, false, false, true);
 }
 
 /* *
@@ -414,41 +373,17 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_005, TestSize.Level1)
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
-    int position = INT_MIN;
     bool bResultSet = false;
-    int iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(0, position);
-
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, true);
-
-    bResultSet = false;
-    iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, true);
+    CheckResultSetAttribute(resultSet, 0, false, false, true);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(0, position);
-
-    bResultSet = false;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, true);
-
-    bResultSet = false;
-    iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, true);
+    CheckResultSetAttribute(resultSet, 0, false, false, true);
 
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
     bResultSet = false;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
+    int iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
 
@@ -472,26 +407,14 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_006, TestSize.Level1)
 
     EXPECT_NE(E_OK, resultSet->GoToFirstRow());
 
-    int position = INT_MIN;
     bool bResultSet = false;
-    int iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(0, position);
-
-    iRet = resultSet->IsAtFirstRow(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, true);
-
-    bResultSet = false;
-    iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, true);
+    CheckResultSetAttribute(resultSet, 0, false, false, true);
 
     EXPECT_NE(E_OK, resultSet->GoToNextRow());
     EXPECT_NE(E_OK, resultSet->GoToFirstRow());
 
     bResultSet = false;
-    iRet = resultSet->IsAtFirstRow(bResultSet);
+    int iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(bResultSet, true);
 
@@ -754,7 +677,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_012, TestSize.Level1)
     iRet = resultSet->GetBlob(0, blobValue);
     EXPECT_EQ(E_OK, iRet);
 
-    string strBlob;
+    string strBlob = "";
     for (size_t i = 0; i < blobValue.size(); i++) {
         strBlob += char(blobValue[i]);
     }
@@ -807,25 +730,15 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_013, TestSize.Level1)
     EXPECT_NE(E_OK, iRet);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
-    iRet = resultSet->GetColumnType(0, type);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(ColumnType::TYPE_INTEGER, type);
+    CheckColumnType(resultSet, 0, ColumnType::TYPE_INTEGER);
 
-    iRet = resultSet->GetColumnType(1, type);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(ColumnType::TYPE_STRING, type);
+    CheckColumnType(resultSet, 1, ColumnType::TYPE_STRING);
 
-    iRet = resultSet->GetColumnType(2, type);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(ColumnType::TYPE_INTEGER, type);
-
-    iRet = resultSet->GetColumnType(3, type);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(ColumnType::TYPE_FLOAT, type);
-
-    iRet = resultSet->GetColumnType(4, type);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(ColumnType::TYPE_BLOB, type);
+    CheckColumnType(resultSet, 2, ColumnType::TYPE_INTEGER);
+    
+    CheckColumnType(resultSet, 3, ColumnType::TYPE_FLOAT);
+    
+    CheckColumnType(resultSet, 4, ColumnType::TYPE_BLOB);
 
     int columnCount = 0;
     iRet = resultSet->GetColumnCount(columnCount);
@@ -973,14 +886,16 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount003, TestSize.Level1)
     EXPECT_EQ(E_OK, resultSet->IsAtFirstRow(bResultSet));
     EXPECT_EQ(bResultSet, true);
 
-    CheckStringValue(resultSet, 1, "hello");
-
-    CheckIntValue(resultSet, 2, 10);
-
-    CheckDoubleValue(resultSet, 3, 1.0);
-
     std::vector<uint8_t> blobValue;
-    CheckBlobValue(resultSet, 4, blobValue);
+    CheckResultSetData(false, resultSet, g_resultSetData[1], blobValue);
+
+    std::string strBlob = "";
+    for (size_t i = 0; i < blobValue.size(); i++) {
+        strBlob += char(blobValue[i]);
+    }
+    char cValue = 66;
+    string strTmpValue(1, cValue);
+    EXPECT_EQ(strTmpValue, strBlob);
 
     iRet = resultSet->GetRowCount(count);
     EXPECT_EQ(E_OK, iRet);
@@ -992,13 +907,7 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount003, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(1, position);
 
-    CheckStringValue(resultSet, 1, "2");
-
-    CheckIntValue(resultSet, 2, -5);
-
-    CheckDoubleValue(resultSet, 3, 2.5);
-
-    CheckBlobValue(resultSet, 4, blobValue);
+    CheckResultSetData(false, resultSet, g_resultSetData[0], blobValue);
 
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
     iRet = resultSet->GetRowIndex(position);
@@ -1038,14 +947,8 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount004, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(3, count);
 
-    CheckStringValue(resultSet, 0, "hello");
-
-    CheckIntValue(resultSet, 1, 10);
-
-    CheckDoubleValue(resultSet, 2, 1.0);
-
     std::vector<uint8_t> blobValue;
-    CheckBlobValue(resultSet, 3, blobValue);
+    CheckResultSetData(true, resultSet, g_resultSetData[1], blobValue);
 
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
 
@@ -1064,13 +967,7 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount004, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(3, count);
 
-    CheckStringValue(resultSet, 0, "hello world");
-
-    CheckIntValue(resultSet, 1, 3);
-
-    CheckDoubleValue(resultSet, 2, 1.8);
-
-    CheckBlobValue(resultSet, 3, blobValue);
+    CheckResultSetData(true, resultSet, g_resultSetData[2], blobValue);
 }
 
 /* *
@@ -1108,13 +1005,7 @@ HWTEST_F(RdbStepResultSetTest, testGoToRow005, TestSize.Level1)
     EXPECT_EQ(2, position);
 
     std::vector<uint8_t> blobValue;
-    CheckStringValue(resultSet, 0, "hello world");
-
-    CheckIntValue(resultSet, 1, 3);
-
-    CheckDoubleValue(resultSet, 2, 1.8);
-
-    CheckBlobValue(resultSet, 3, blobValue);
+    CheckResultSetData(true, resultSet, g_resultSetData[2], blobValue);
 
     EXPECT_EQ(E_OK, resultSet->GoToRow(1));
 
@@ -1122,13 +1013,7 @@ HWTEST_F(RdbStepResultSetTest, testGoToRow005, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(1, position);
 
-    CheckStringValue(resultSet, 0, "2");
-
-    CheckIntValue(resultSet, 1, -5);
-
-    CheckDoubleValue(resultSet, 2, 2.5);
-
-    CheckBlobValue(resultSet, 3, blobValue);
+    CheckResultSetData(true, resultSet, g_resultSetData[0], blobValue);
 }
 
 /* *
@@ -1161,13 +1046,7 @@ HWTEST_F(RdbStepResultSetTest, testGo006, TestSize.Level1)
     EXPECT_EQ(resultSet->GoTo(2), E_OK);
 
     std::vector<uint8_t> blobValue;
-    CheckStringValue(resultSet, 1, "hello world");
-
-    CheckIntValue(resultSet, 2, 3);
-
-    CheckDoubleValue(resultSet, 3, 1.8);
-
-    CheckBlobValue(resultSet, 4, blobValue);
+    CheckResultSetData(false, resultSet, g_resultSetData[2], blobValue);
 
     EXPECT_EQ(resultSet->GoTo(-2), E_OK);
 
@@ -1175,13 +1054,7 @@ HWTEST_F(RdbStepResultSetTest, testGo006, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(0, position);
 
-    CheckStringValue(resultSet, 1, "hello");
-
-    CheckIntValue(resultSet, 2, 10);
-
-    CheckDoubleValue(resultSet, 3, 1.0);
-
-    CheckBlobValue(resultSet, 4, blobValue);
+    CheckResultSetData(false, resultSet, g_resultSetData[1], blobValue);
 }
 
 /* *
@@ -1214,55 +1087,28 @@ HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
     EXPECT_EQ(bResultSet, true);
 
     std::vector<uint8_t> blobValue;
+    CheckResultSetData(true, resultSet, g_resultSetData[1], blobValue);
 
-    CheckStringValue(resultSet, 0, "hello");
-
-    CheckIntValue(resultSet, 1, 10);
-
-    CheckDoubleValue(resultSet, 2, 1.0);
-
-    CheckBlobValue(resultSet, 3, blobValue);
+    std::string strBlob = "";
+    for (size_t i = 0; i < blobValue.size(); i++) {
+        strBlob += char(blobValue[i]);
+    }
+    char cValue = 66;
+    string strTmpValue(1, cValue);
+    EXPECT_EQ(strTmpValue, strBlob);
 
     int ret = resultSet->GoToPreviousRow();
     EXPECT_NE(E_OK, ret);
 
-    int position = INT_MIN;
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(-1, position);
-
-    bResultSet = true;
-    iRet = resultSet->IsStarted(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, false);
+    CheckResultSetAttribute(resultSet, -1, true, true, true);
 
     EXPECT_EQ(resultSet->GoTo(2), E_OK);
 
-    CheckStringValue(resultSet, 0, "2");
-
-    CheckIntValue(resultSet, 1, -5);
-
-    CheckDoubleValue(resultSet, 2, 2.5);
-
-    CheckBlobValue(resultSet, 3, blobValue);
-}
-
-/* *
- * @tc.name: testGoToPrevious008
- * @tc.desc: normal testcase of StepResultSet for go
- * @tc.type: FUNC
- * @tc.require: AR000FKD4F
- */
-HWTEST_F(RdbStepResultSetTest, testGoToPrevious008, TestSize.Level1)
-{
-    GenerateDefaultTable();
-    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
-    EXPECT_NE(resultSet, nullptr);
+    CheckResultSetData(true, resultSet, g_resultSetData[0], blobValue);
 
     EXPECT_EQ(E_OK, resultSet->GoToLastRow());
 
-    bool bResultSet = false;
-    int iRet = resultSet->IsAtLastRow(bResultSet);
+    iRet  = resultSet->IsAtLastRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(true, bResultSet);
 
@@ -1275,23 +1121,16 @@ HWTEST_F(RdbStepResultSetTest, testGoToPrevious008, TestSize.Level1)
 
     EXPECT_NE(E_OK, resultSet->GoTo(3));
 
-    iRet = resultSet->GetRowIndex(position);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(3, position);
-
-    bResultSet = false;
-    iRet = resultSet->IsEnded(bResultSet);
-    EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, true);
+    CheckResultSetAttribute(resultSet, 3, false, true, false);
 }
 
 /* *
- * @tc.name: testSqlStep009
+ * @tc.name: testSqlStep008
  * @tc.desc: normal testcase of SqlStep for go
  * @tc.type: FUNC
  * @tc.require: AR000FKD4F
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep009, TestSize.Level1)
+HWTEST_F(RdbStepResultSetTest, testSqlStep008, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
@@ -1331,23 +1170,16 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep009, TestSize.Level1)
     EXPECT_EQ(3, count);
 
     std::vector<uint8_t> blobValue;
-
-    CheckStringValue(resultSet, 0, "2");
-
-    CheckIntValue(resultSet, 1, -5);
-
-    CheckDoubleValue(resultSet, 2, 2.5);
-
-    CheckBlobValue(resultSet, 3, blobValue);;
+    CheckResultSetData(true, resultSet, g_resultSetData[0], blobValue);
 }
 
 /* *
- * @tc.name: testSqlStep010
+ * @tc.name: testSqlStep009
  * @tc.desc: normal testcase of SqlStep for go
  * @tc.type: FUNC
  * @tc.require: AR000FKD4F
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep010, TestSize.Level1)
+HWTEST_F(RdbStepResultSetTest, testSqlStep009, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
@@ -1405,39 +1237,39 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep010, TestSize.Level1)
 }
 
 /* *
- * @tc.name: testSqlStep011
+ * @tc.name: testSqlStep010
  * @tc.desc: normal testcase of SqlStep for go
  * @tc.type: FUNC
  * @tc.require: AR000FKD4F
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep011, TestSize.Level1)
+HWTEST_F(RdbStepResultSetTest, testSqlStep010, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
-    CheckResultSetAttribute(resultSet, -1, false, false, false);
+    CheckResultSetAttribute(resultSet, -1, true, true, true);
 
     int moveTimes = 0;
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
     moveTimes++;
 
-    CheckResultSetAttribute(resultSet, 0, true, true, false);
+    CheckResultSetAttribute(resultSet, 0, false, false, true);
 
     while (E_OK == resultSet->GoToNextRow()) {
         moveTimes++;
     }
 
-    CheckResultSetAttribute(resultSet, 3, true, false, true);
+    CheckResultSetAttribute(resultSet, 3, false, true, false);
 }
 
 /* *
- * @tc.name: testSqlStep012
+ * @tc.name: testSqlStep011
  * @tc.desc: normal testcase of SqlStep for GetString()
  * @tc.type: FUNC
  * @tc.require: NA
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep012, TestSize.Level1)
+HWTEST_F(RdbStepResultSetTest, testSqlStep011, TestSize.Level1)
 {
     GenerateDefaultEmptyTable();
 
@@ -1468,11 +1300,11 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep012, TestSize.Level1)
 }
 
 /* *
- * @tc.name: testSqlStep013
+ * @tc.name: testSqlStep012
  * @tc.desc: Normal testcase of SqlStep for constructor std::vector<ValueObject>
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep013, TestSize.Level1)
+HWTEST_F(RdbStepResultSetTest, testSqlStep012, TestSize.Level1)
 {
     GenerateDefaultEmptyTable();
 
@@ -1501,11 +1333,11 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep013, TestSize.Level1)
 }
 
 /* *
- * @tc.name: testSqlStep014
+ * @tc.name: testSqlStep013
  * @tc.desc: Abnormal testcase of SqlStep, if close resultSet before query
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep014, TestSize.Level1)
+HWTEST_F(RdbStepResultSetTest, testSqlStep013, TestSize.Level1)
 {
     GenerateDefaultTable();
 
@@ -1545,11 +1377,11 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep014, TestSize.Level1)
 }
 
 /* *
- * @tc.name: testSqlStep015
+ * @tc.name: testSqlStep014
  * @tc.desc: Abnormal testcase of SqlStep for GoToRow, if connection counts over limit
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep015, TestSize.Level1)
+HWTEST_F(RdbStepResultSetTest, testSqlStep014, TestSize.Level1)
 {
     GenerateDefaultTable();
 
@@ -1578,11 +1410,11 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep015, TestSize.Level1)
 }
 
 /* *
- * @tc.name: testSqlStep016
+ * @tc.name: testSqlStep015
  * @tc.desc: Abnormal testcase of SqlStep for QueryByStep, if sql is inValid
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep016, TestSize.Level1)
+HWTEST_F(RdbStepResultSetTest, testSqlStep015, TestSize.Level1)
 {
     GenerateDefaultTable();
 
@@ -1596,11 +1428,11 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep016, TestSize.Level1)
 }
 
 /* *
- * @tc.name: testSqlStep017
+ * @tc.name: testSqlStep016
  * @tc.desc: Abnormal testcase of SqlStep for GetSize, if rowPos is inValid
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep017, TestSize.Level1)
+HWTEST_F(RdbStepResultSetTest, testSqlStep016, TestSize.Level1)
 {
     GenerateDefaultTable();
 
@@ -1615,11 +1447,11 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep017, TestSize.Level1)
 }
 
 /* *
- * @tc.name: testSqlStep018
+ * @tc.name: testSqlStep017
  * @tc.desc: Abnormal testcase for build query string
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep018, TestSize.Level1)
+HWTEST_F(RdbStepResultSetTest, testSqlStep017, TestSize.Level1)
 {
     std::vector<std::string> columns = {"data1", "data2"};
 
