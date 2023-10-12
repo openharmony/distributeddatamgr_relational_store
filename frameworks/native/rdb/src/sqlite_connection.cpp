@@ -680,10 +680,10 @@ std::shared_ptr<SqliteStatement> SqliteConnection::BeginStepQuery(int &errCode, 
     return stepStatement;
 }
 
-std::shared_ptr<SqliteStatement> SqliteConnection::StepQueryPrepare(int &errCode, const std::string &sql) const
+std::shared_ptr<SqliteStatement> SqliteConnection::CreateStatement(const std::string &sql) const
 {
     sqlite3_stmt *stmt = nullptr;
-    errCode = sqlite3_prepare_v2(dbHandle, sql.c_str(), sql.length(), &stmt, nullptr);
+    int errCode = sqlite3_prepare_v2(dbHandle, sql.c_str(), sql.length(), &stmt, nullptr);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("prepare_v2 ret is %{public}d", errCode);
         if (stmt != nullptr) {

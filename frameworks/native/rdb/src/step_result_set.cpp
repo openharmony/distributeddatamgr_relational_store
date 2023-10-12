@@ -250,14 +250,13 @@ int StepResultSet::PrepareStep()
         LOG_ERROR("connectionPool AcquireConnection failed!");
         return E_CON_OVER_LIMIT;
     }
-    int errCode;
-    sqliteStatement = connection->StepQueryPrepare(errCode, sql);
+    sqliteStatement = connection->CreateStatement(sql);
     connectionPool_->ReleaseConnection(connection);
     if (sqliteStatement == nullptr) {
-        LOG_ERROR("StepQueryPrepare ret is %{public}d", errCode);
-        return errCode;
+        LOG_ERROR("Connection create statement failed!");
+        return E_STATEMENT_NOT_PREPARED;
     }
-    errCode = sqliteStatement->BindArguments(args_);
+    int errCode = sqliteStatement->BindArguments(args_);
     if (errCode != E_OK) {
         LOG_ERROR("BindArguments ret is %{public}d", errCode);
         return errCode;
