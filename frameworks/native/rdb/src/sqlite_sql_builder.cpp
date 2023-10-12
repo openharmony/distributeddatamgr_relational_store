@@ -187,15 +187,15 @@ void SqliteSqlBuilder::AppendClause(std::string &builder, const std::string &nam
 /**
  * Add the names that are non-null in columns to s, separating them with commas.
  */
-void SqliteSqlBuilder::AppendColumns(std::string &builder, const std::vector<std::string> &columns,
-    const std::string &table, const std::string &logTable)
+void SqliteSqlBuilder::AppendColumns(
+    std::string &builder, const std::vector<std::string> &columns, const std::string &table)
 {
     for (size_t i = 0; i < columns.size(); i++) {
         const auto &col = columns[i];
         if (col.empty()) {
             continue;
         }
-        if (i > 0) {
+        if (i > 0 && !(columns[i - 1].empty())) {
             builder.append(", ");
         }
         if (!table.empty()) {
@@ -203,11 +203,9 @@ void SqliteSqlBuilder::AppendColumns(std::string &builder, const std::vector<std
         }
         builder.append(col);
     }
-    if (!logTable.empty()) {
-        builder.append(", CASE WHEN ").append(logTable).append(".")
-            .append("status = 0 THEN true ELSE false END AS deleted_flag");
+    if (table.empty()) {
+        builder += ' ';
     }
-    builder += ' ';
 }
 
 std::string SqliteSqlBuilder::BuildQueryString(
@@ -246,10 +244,12 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(
         sql.append("DISTINCT ");
     }
     if (!columns.empty()) {
-        AppendColumns(sql, columns, table, logTable);
+        AppendColumns(sql, columns);
     } else {
-        sql.append(table + ".* ");
+        sql.append(table + ".*");
     }
+    sql.append(", CASE WHEN ").append(logTable).append(".")
+        .append("status = 0 THEN true ELSE false END AS deleted_flag ");
     sql.append("FROM ").append(table);
     AppendClause(sql, " INDEXED BY ", predicates.GetIndex());
     sql.append(" INNER JOIN  ").append(logTable).append(" ON ").append(table)
