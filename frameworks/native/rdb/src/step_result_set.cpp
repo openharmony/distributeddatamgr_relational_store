@@ -251,13 +251,17 @@ int StepResultSet::PrepareStep()
         return E_CON_OVER_LIMIT;
     }
     int errCode;
-    sqliteStatement = connection->StepQueryPrepare(errCode, sql, args_);
+    sqliteStatement = connection->StepQueryPrepare(errCode, sql);
     connectionPool_->ReleaseConnection(connection);
     if (sqliteStatement == nullptr) {
         LOG_ERROR("StepQueryPrepare ret is %{public}d", errCode);
         return errCode;
     }
-
+    errCode = sqliteStatement->BindArguments(args_);
+    if (errCode != E_OK) {
+        LOG_ERROR("BindArguments ret is %{public}d", errCode);
+        return errCode;
+    }
     return E_OK;
 }
 
