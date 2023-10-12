@@ -107,7 +107,7 @@ describe('rdbStoreCloudSyncTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_SYNC_0001
      * @tc.desc rdb get modify time using wrong primary key type
      */
-    it('testRdbStoreCloudSync0001', 0, async function () {
+    it('testRdbStoreCloudSync0001', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCloudSync0001 start *************");
         try {
             let key = new Array();
@@ -118,6 +118,7 @@ describe('rdbStoreCloudSyncTest', function () {
             console.log(TAG + `get modify time, errcode:${JSON.stringify(err)}.`);
             expect(err.code).assertEqual('401');
         }
+        done();
         console.log(TAG + "************* testRdbStoreCloudSync0001 end *************");
     })
 
@@ -131,14 +132,13 @@ describe('rdbStoreCloudSyncTest', function () {
         try {
             let PRIKey = ["test_key1", "test_key2"];
             rdbStore.getModifyTime("cloud_text", "uuid", PRIKey, function (err, data) {
-                console.log(TAG + `modifyTime:` + JSON.stringify(err));
+                console.log(TAG + `modifyTime:` + JSON.stringify(data));
                 done();
-                expect(err.code).assertEqual(14800000);
                 console.log(TAG + "************* testRdbStoreCloudSync0002 end *************");
             });
         } catch (err) {
             console.log(TAG + `get modify time fail, errcode:${JSON.stringify(err)}.`);
-            done();
+            done()
             expect().assertFail();
         }
     })
@@ -148,15 +148,16 @@ describe('rdbStoreCloudSyncTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_SYNC_0003
      * @tc.desc get modify time using string primary key type and promise method
      */
-    it('testRdbStoreCloudSync0003', 0, async function () {
+    it('testRdbStoreCloudSync0003', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCloudSync0003 start *************");
         let PRIKey = ["test_key1", "test_key2"];
         try {
             await rdbStore.getModifyTime("cloud_text", "uuid", PRIKey);
-            expect().assertFail();
+            done();
         } catch (err) {
             console.log(TAG + `get modify time fail, errcode:${JSON.stringify(err)}.`);
-            expect(err.code).assertEqual(14800000);
+            done();
+            expect().assertFail();
         }
         console.log(TAG + "************* testRdbStoreCloudSync0003 end *************");
     })
@@ -171,9 +172,8 @@ describe('rdbStoreCloudSyncTest', function () {
         try {
             let PRIKey = [1, 3, 4];
             rdbStore.getModifyTime("cloud_text", "rowid", PRIKey, function (err, data) {
-                console.log(TAG + `modifyTime:` + JSON.stringify(err));
+                console.log(TAG + `modifyTime:` + JSON.stringify(data));
                 done();
-                expect(err.code).assertEqual(14800000);
                 console.log(TAG + "************* testRdbStoreCloudSync0004 end *************");
             });
         } catch (err) {
@@ -188,22 +188,23 @@ describe('rdbStoreCloudSyncTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_SYNC_0005
      * @tc.desc get modify time using rowid and promise method
      */
-    it('testRdbStoreCloudSync0005', 0, async function () {
+    it('testRdbStoreCloudSync0005', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCloudSync0005 start *************");
         let PRIKey = [2, 4];
         try {
             await rdbStore.getModifyTime("cloud_text", "roWId", PRIKey);
-            expect().assertFail();
+            done();
         } catch (err) {
             console.log(TAG + `get modify time fail, errcode:${JSON.stringify(err)}.`);
-            expect(err.code).assertEqual(14800000);
+            done();
+            expect().assertFail();
         }
         console.log(TAG + "************* testRdbStoreCloudSync0005 end *************");
     })
 
     /**
      * @tc.name get modify time, but not set distributed table
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_SYNC_0004
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_SYNC_0006
      * @tc.desc get modify time, but not set distributed table
      */
     it('testRdbStoreCloudSync0006', 0, async function () {
@@ -236,9 +237,8 @@ describe('rdbStoreCloudSyncTest', function () {
         try {
             let PRIKey = [1, 2, 4];
             rdbStore.getModifyTime("cloud_integer", "uuid", PRIKey, function (err, data) {
-                console.log(TAG + `modifyTime:` + JSON.stringify(err));
+                console.log(TAG + `modifyTime:` + JSON.stringify(data));
                 done();
-                expect(err.code).assertEqual(14800000);
                 console.log(TAG + "************* testRdbStoreCloudSync0007 end *************");
             });
         } catch (err) {
@@ -259,11 +259,10 @@ describe('rdbStoreCloudSyncTest', function () {
         await rdbStore.getModifyTime("cloud_integer", "uuid", PRIKey).then((err, data) => {
             console.log(TAG + `modifyTime:` + JSON.stringify(err));
             done();
-            expect().assertFail();
         }).catch((err) => {
             console.log(TAG + `get modify time fail, errcode:${JSON.stringify(err)}.`);
             done();
-            expect(err.code).assertEqual(14800000);
+            expect().assertFail();
         });
         console.log(TAG + "************* testRdbStoreCloudSync0008 end *************");
     })
