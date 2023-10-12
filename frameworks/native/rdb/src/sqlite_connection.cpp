@@ -680,10 +680,8 @@ std::shared_ptr<SqliteStatement> SqliteConnection::BeginStepQuery(int &errCode, 
     return stepStatement;
 }
 
-std::shared_ptr<SqliteStatement> SqliteConnection::StepQueryPrepare(int &errCode, const std::string &sql,
-    const std::vector<ValueObject> &args) const
+std::shared_ptr<SqliteStatement> SqliteConnection::StepQueryPrepare(int &errCode, const std::string &sql) const
 {
-    std::shared_ptr<SqliteStatement> sqliteStatement = std::make_shared<SqliteStatement>();
     sqlite3_stmt *stmt = nullptr;
     errCode = sqlite3_prepare_v2(dbHandle, sql.c_str(), sql.length(), &stmt, nullptr);
     if (errCode != SQLITE_OK) {
@@ -693,16 +691,7 @@ std::shared_ptr<SqliteStatement> SqliteConnection::StepQueryPrepare(int &errCode
         }
         return nullptr;
     }
-    errCode = sqliteStatement->PrepareForStepResult(stmt, sql);
-    if (errCode != E_OK) {
-        LOG_ERROR("Prepare ret is %{public}d", errCode);
-        return nullptr;
-    }
-    errCode = sqliteStatement->BindArguments(args);
-    if (errCode != E_OK) {
-        LOG_ERROR("BindArguments ret is %{public}d", errCode);
-        return nullptr;
-    }
+    std::shared_ptr<SqliteStatement> sqliteStatement = std::make_shared<SqliteStatement>(stmt);
     return sqliteStatement;
 }
 

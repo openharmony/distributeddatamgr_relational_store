@@ -33,6 +33,14 @@ const int SET_DATA_PRECISION = 15;
 SqliteStatement::SqliteStatement() : sql(""), stmtHandle(nullptr), readOnly(false), columnCount(0), numParameters(0)
 {
 }
+
+SqliteStatement::SqliteStatement(sqlite3_stmt *stmt) : stmtHandle(stmt)
+{
+    readOnly = (sqlite3_stmt_readonly(stmtHandle) != 0) ? true : false;
+    columnCount = sqlite3_column_count(stmtHandle);
+    numParameters = sqlite3_bind_parameter_count(stmtHandle);
+}
+
 SqliteStatement::~SqliteStatement()
 {
     Finalize();
@@ -54,16 +62,6 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
         return SQLiteError::ErrNo(errCode);
     }
     Finalize(); // finalize the old
-    sql = newSql;
-    stmtHandle = stmt;
-    readOnly = (sqlite3_stmt_readonly(stmtHandle) != 0) ? true : false;
-    columnCount = sqlite3_column_count(stmtHandle);
-    numParameters = sqlite3_bind_parameter_count(stmtHandle);
-    return E_OK;
-}
-
-int SqliteStatement::PrepareForStepResult(sqlite3_stmt *stmt, const std::string &newSql)
-{
     sql = newSql;
     stmtHandle = stmt;
     readOnly = (sqlite3_stmt_readonly(stmtHandle) != 0) ? true : false;
