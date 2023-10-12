@@ -247,7 +247,7 @@ int StepResultSet::PrepareStep()
 
     SqliteConnection *connection = connectionPool_->AcquireConnection(true);
     if (connection == nullptr) {
-        LOG_ERROR("connectionPool AcquireConnection failed!");
+        LOG_ERROR("Get connection failed!");
         return E_CON_OVER_LIMIT;
     }
     sqliteStatement = connection->CreateStatement(sql);
@@ -258,7 +258,9 @@ int StepResultSet::PrepareStep()
     }
     int errCode = sqliteStatement->BindArguments(args_);
     if (errCode != E_OK) {
-        LOG_ERROR("BindArguments ret is %{public}d", errCode);
+        LOG_ERROR("Bind arg faild! Ret is %{public}d", errCode);
+        sqliteStatement->ResetStatementAndClearBindings();
+        sqliteStatement = nullptr;
         return errCode;
     }
     return E_OK;
@@ -269,13 +271,12 @@ int StepResultSet::PrepareStep()
  */
 int StepResultSet::FinishStep()
 {
-    rowPos_ = INIT_POS;
-    if (sqliteStatement == nullptr) {
-        return E_OK;
+    
+    if (sqliteStatement != nullptr) {
+        sqliteStatement->ResetStatementAndClearBindings();
+        sqliteStatement = nullptr;
     }
-
-    sqliteStatement->ResetStatementAndClearBindings();
-    sqliteStatement = nullptr;
+    rowPos_ = INIT_POS;
     return E_OK;
 }
 
