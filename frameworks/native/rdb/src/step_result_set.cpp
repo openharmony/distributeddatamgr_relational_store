@@ -227,13 +227,7 @@ int StepResultSet::Close()
         return E_OK;
     }
     isClosed = true;
-    int errCode = FinishStep();
-
-    if (sqliteStatement_ != nullptr) {
-        sqliteStatement_->ResetStatementAndClearBindings();
-        sqliteStatement_ = nullptr;
-    }
-    return errCode;
+    return FinishStep();
 }
 
 /**
@@ -250,12 +244,16 @@ int StepResultSet::PrepareStep()
         return E_EXECUTE_IN_STEP_QUERY;
     }
 
-    int errCode;
     SqliteConnection *connection = connectionPool_->AcquireConnection(true);
+    if (connection == nullptr) {
+        LOG_ERROR("connectionPool_ AcquireConnection failed!");
+        return E_CON_OVER_LIMIT;
+    }
+    int errCode;
     sqliteStatement_ = connection->StepQueryPrepare(errCode, sql_, args_);
     connectionPool_->ReleaseConnection(connection);
     if (sqliteStatement_ == nullptr) {
-        LOG_ERROR("BeginStepQuery ret is %{public}d", errCode);
+        LOG_ERROR("StepQueryPrepare ret is %{public}d", errCode);
         return errCode;
     }
 
@@ -270,6 +268,8 @@ int StepResultSet::FinishStep()
     if (sqliteStatement_ == nullptr) {
         return E_OK;
     }
+    sqliteStatement_->ResetStatementAndClearBindings();
+    sqliteStatement_ = nullptr;
     rowPos_ = INIT_POS;
     return E_OK;
 }
@@ -279,10 +279,7 @@ int StepResultSet::FinishStep()
  */
 void StepResultSet::Reset()
 {
-    if (sqliteStatement_ != nullptr) {
-        sqlite3_reset(sqliteStatement_->GetSql3Stmt());
-    }
-    rowPos_ = INIT_POS;
+    FinishStep();
     isAfterLast_ = false;
 }
 

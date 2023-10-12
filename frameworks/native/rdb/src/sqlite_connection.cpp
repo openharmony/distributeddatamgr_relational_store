@@ -671,10 +671,12 @@ std::shared_ptr<SqliteStatement> SqliteConnection::BeginStepQuery(int &errCode, 
 {
     errCode = stepStatement_->Prepare(dbHandle_, sql);
     if (errCode != E_OK) {
+        LOG_ERROR("stepStatement_ Prepare failed!");
         return nullptr;
     }
     errCode = stepStatement_->BindArguments(args);
     if (errCode != E_OK) {
+        LOG_ERROR("stepStatement_ BindArguments failed!");
         return nullptr;
     }
     return stepStatement_;
@@ -686,10 +688,12 @@ std::shared_ptr<SqliteStatement> SqliteConnection::StepQueryPrepare(int &errCode
     std::shared_ptr<SqliteStatement> sqliteStatement = std::make_shared<SqliteStatement>();
     errCode = sqliteStatement->Prepare(dbHandle_, sql);
     if (errCode != E_OK) {
+        LOG_ERROR("sqliteStatement Prepare failed! sqliteStatement is nullptr");
         return nullptr;
     }
     errCode = sqliteStatement->BindArguments(args);
     if (errCode != E_OK) {
+        LOG_ERROR("sqliteStatement BindArguments failed!");
         return nullptr;
     }
     return sqliteStatement;
