@@ -271,7 +271,6 @@ int StepResultSet::PrepareStep()
  */
 int StepResultSet::FinishStep()
 {
-    
     if (sqliteStatement != nullptr) {
         sqliteStatement->ResetStatementAndClearBindings();
         sqliteStatement = nullptr;
