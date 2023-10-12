@@ -31,8 +31,8 @@ using namespace OHOS::Rdb;
 
 StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, SqliteConnectionPool *connectionPool,
     const std::string &sql, const std::vector<ValueObject> &selectionArgs)
-    : rdb_(rdb), connectionPool_(connectionPool), sql_(sql), args_(std::move(selectionArgs)), isAfterLast_(false),
-      rowCount_(INIT_POS), sqliteStatement_(nullptr)
+    : rdb(rdb), connectionPool_(connectionPool), sql(sql), args_(std::move(selectionArgs)), isAfterLast(false),
+      rowCount(INIT_POS), sqliteStatement(nullptr)
 {
     PrepareStep();
 }
@@ -40,7 +40,7 @@ StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, SqliteConnection
 StepResultSet::~StepResultSet()
 {
     Close();
-    rdb_.reset();
+    rdb.reset();
 }
 
 int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
@@ -56,14 +56,14 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
     }
 
     int errCode = PrepareStep();
-    if (errCode != E_OK) {
+    if (errCode) {
         LOG_ERROR("PrepareStep ret %{public}d", errCode);
         return errCode;
     }
 
     int columnCount = 0;
-    errCode = sqliteStatement_->GetColumnCount(columnCount);
-    if (errCode != E_OK) {
+    errCode = sqliteStatement->GetColumnCount(columnCount);
+    if (errCode) {
         LOG_ERROR("GetColumnCount ret %{public}d", errCode);
         return errCode;
     }
@@ -71,8 +71,8 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
     columnNames.clear();
     for (int i = 0; i < columnCount; i++) {
         std::string columnName;
-        errCode = sqliteStatement_->GetColumnName(i, columnName);
-        if (errCode != E_OK) {
+        errCode = sqliteStatement->GetColumnName(i, columnName);
+        if (errCode) {
             columnNames.clear();
             LOG_ERROR("GetColumnName ret %{public}d", errCode);
             return errCode;
@@ -94,12 +94,13 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
         LOG_ERROR("query not executed.");
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
-    int sqliteType;
-    if (sqliteStatement_ == nullptr) {
+    if (sqliteStatement == nullptr) {
+        LOG_ERROR("sqliteStatement init failed!");
         return E_CON_OVER_LIMIT;
     }
-    int errCode = sqliteStatement_->GetColumnType(columnIndex, sqliteType);
-    if (errCode != E_OK) {
+    int sqliteType;
+    int errCode = sqliteStatement->GetColumnType(columnIndex, sqliteType);
+    if (errCode) {
         LOG_ERROR("GetColumnType ret %{public}d", errCode);
         return errCode;
     }
@@ -126,8 +127,8 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 
 int StepResultSet::GetRowCount(int &count)
 {
-    if (rowCount_ != INIT_POS) {
-        count = rowCount_;
+    if (rowCount != INIT_POS) {
+        count = rowCount;
         return E_OK;
     }
     int oldPosition = 0;
@@ -136,7 +137,7 @@ int StepResultSet::GetRowCount(int &count)
 
     while (GoToNextRow() == E_OK) {
     }
-    count = rowCount_;
+    count = rowCount;
     // Reset the start position of the query result
     GoToRow(oldPosition);
 
@@ -163,7 +164,7 @@ int StepResultSet::GoToRow(int position)
     }
     while (position != rowPos_) {
         int errCode = GoToNextRow();
-        if (errCode != E_OK) {
+        if (errCode) {
             LOG_ERROR("GoToNextRow ret %{public}d", errCode);
             return errCode;
         }
@@ -183,13 +184,13 @@ int StepResultSet::GoToNextRow()
     }
 
     int errCode = PrepareStep();
-    if (errCode != E_OK) {
+    if (errCode) {
         LOG_ERROR("PrepareStep ret %{public}d", errCode);
         return errCode;
     }
 
     int retryCount = 0;
-    errCode = sqliteStatement_->Step();
+    errCode = sqliteStatement->Step();
 
     while (errCode == SQLITE_LOCKED || errCode == SQLITE_BUSY) {
         // The table is locked, retry
@@ -199,7 +200,7 @@ int StepResultSet::GoToNextRow()
         } else {
             // Sleep to give the thread holding the lock a chance to finish
             usleep(STEP_QUERY_RETRY_INTERVAL);
-            errCode = sqliteStatement_->Step();
+            errCode = sqliteStatement->Step();
             retryCount++;
         }
     }
@@ -208,15 +209,15 @@ int StepResultSet::GoToNextRow()
         rowPos_++;
         return E_OK;
     } else if (errCode == SQLITE_DONE) {
-        isAfterLast_ = true;
-        rowCount_ = rowPos_ + 1;
+        isAfterLast = true;
+        rowCount = rowPos_ + 1;
         FinishStep();
-        rowPos_ = rowCount_;
+        rowPos_ = rowCount;
         return E_STEP_RESULT_IS_AFTER_LAST;
     } else {
         LOG_ERROR("step ret is %{public}d", errCode);
         FinishStep();
-        rowPos_ = rowCount_;
+        rowPos_ = rowCount;
         return SQLiteError::ErrNo(errCode);
     }
 }
@@ -235,24 +236,24 @@ int StepResultSet::Close()
  */
 int StepResultSet::PrepareStep()
 {
-    if (sqliteStatement_ != nullptr) {
+    if (sqliteStatement != nullptr) {
         return E_OK;
     }
 
-    if (SqliteUtils::GetSqlStatementType(sql_) != SqliteUtils::STATEMENT_SELECT) {
+    if (SqliteUtils::GetSqlStatementType(sql) != SqliteUtils::STATEMENT_SELECT) {
         LOG_ERROR("not a select sql!");
         return E_EXECUTE_IN_STEP_QUERY;
     }
 
     SqliteConnection *connection = connectionPool_->AcquireConnection(true);
     if (connection == nullptr) {
-        LOG_ERROR("connectionPool_ AcquireConnection failed!");
+        LOG_ERROR("connectionPool AcquireConnection failed!");
         return E_CON_OVER_LIMIT;
     }
     int errCode;
-    sqliteStatement_ = connection->StepQueryPrepare(errCode, sql_, args_);
+    sqliteStatement = connection->StepQueryPrepare(errCode, sql, args_);
     connectionPool_->ReleaseConnection(connection);
-    if (sqliteStatement_ == nullptr) {
+    if (sqliteStatement == nullptr) {
         LOG_ERROR("StepQueryPrepare ret is %{public}d", errCode);
         return errCode;
     }
@@ -265,12 +266,13 @@ int StepResultSet::PrepareStep()
  */
 int StepResultSet::FinishStep()
 {
-    if (sqliteStatement_ == nullptr) {
+    rowPos_ = INIT_POS;
+    if (sqliteStatement == nullptr) {
         return E_OK;
     }
-    sqliteStatement_->ResetStatementAndClearBindings();
-    sqliteStatement_ = nullptr;
-    rowPos_ = INIT_POS;
+
+    sqliteStatement->ResetStatementAndClearBindings();
+    sqliteStatement = nullptr;
     return E_OK;
 }
 
@@ -280,7 +282,7 @@ int StepResultSet::FinishStep()
 void StepResultSet::Reset()
 {
     FinishStep();
-    isAfterLast_ = false;
+    isAfterLast = false;
 }
 
 
@@ -289,7 +291,7 @@ void StepResultSet::Reset()
  */
 int StepResultSet::IsEnded(bool &result)
 {
-    result = isAfterLast_;
+    result = isAfterLast;
     return E_OK;
 }
 
@@ -321,7 +323,7 @@ int StepResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
 
-    return sqliteStatement_->GetColumnBlob(columnIndex, blob);
+    return sqliteStatement->GetColumnBlob(columnIndex, blob);
 }
 
 int StepResultSet::GetString(int columnIndex, std::string &value)
@@ -334,7 +336,7 @@ int StepResultSet::GetString(int columnIndex, std::string &value)
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
 
-    int errCode = sqliteStatement_->GetColumnString(columnIndex, value);
+    int errCode = sqliteStatement->GetColumnString(columnIndex, value);
     if (errCode != E_OK) {
         LOG_ERROR("ret is %{public}d", errCode);
         return errCode;
@@ -352,7 +354,7 @@ int StepResultSet::GetInt(int columnIndex, int &value)
     }
 
     int64_t columnValue;
-    int errCode = sqliteStatement_->GetColumnLong(columnIndex, columnValue);
+    int errCode = sqliteStatement->GetColumnLong(columnIndex, columnValue);
     if (errCode != E_OK) {
         LOG_ERROR("ret is %{public}d", errCode);
         return errCode;
@@ -369,7 +371,7 @@ int StepResultSet::GetLong(int columnIndex, int64_t &value)
     if (rowPos_ == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
-    int errCode = sqliteStatement_->GetColumnLong(columnIndex, value);
+    int errCode = sqliteStatement->GetColumnLong(columnIndex, value);
     if (errCode != E_OK) {
         LOG_ERROR("ret is %{public}d", errCode);
         return errCode;
@@ -385,7 +387,7 @@ int StepResultSet::GetDouble(int columnIndex, double &value)
     if (rowPos_ == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
-    int errCode = sqliteStatement_->GetColumnDouble(columnIndex, value);
+    int errCode = sqliteStatement->GetColumnDouble(columnIndex, value);
     if (errCode != E_OK) {
         LOG_ERROR("ret is %{public}d", errCode);
         return errCode;
@@ -417,7 +419,7 @@ int StepResultSet::GetModifyTime(std::string &modifyTime)
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
     auto index = std::find(columnNames_.begin(), columnNames_.end(), "modifyTime");
-    int errCode = sqliteStatement_->GetColumnString(index - columnNames_.begin(), modifyTime);
+    int errCode = sqliteStatement->GetColumnString(index - columnNames_.begin(), modifyTime);
     if (errCode != E_OK) {
         LOG_ERROR("ret is %{public}d", errCode);
         return errCode;
@@ -432,7 +434,7 @@ int StepResultSet::GetSize(int columnIndex, size_t &size)
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
 
-    return sqliteStatement_->GetSize(columnIndex, size);
+    return sqliteStatement->GetSize(columnIndex, size);
 }
 
 int StepResultSet::IsColumnNull(int columnIndex, bool &isNull)
@@ -478,7 +480,7 @@ std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t in
     }
 
     ValueObject value;
-    auto ret = sqliteStatement_->GetColumn(col, value);
+    auto ret = sqliteStatement->GetColumn(col, value);
     if (index < ValueObject::TYPE_MAX && value.value.index() != index) {
         return { E_INVALID_COLUMN_TYPE, ValueObject() };
     }

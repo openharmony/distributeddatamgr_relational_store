@@ -79,14 +79,14 @@ private:
     int SetCustomFunctions(const RdbStoreConfig &config);
     int SetCustomScalarFunction(const std::string &functionName, int argc, ScalarFunction *function);
 
-    sqlite3 *dbHandle_;
-    bool isWriteConnection_;
-    bool isReadOnly_;
-    SqliteStatement statement_;
-    std::shared_ptr<SqliteStatement> stepStatement_;
-    std::string filePath_;
-    int openFlags_;
-    std::mutex rdbMutex_;
+    sqlite3 *dbHandle;
+    bool isWriteConnection;
+    bool isReadOnly;
+    SqliteStatement statement;
+    std::shared_ptr<SqliteStatement> stepStatement;
+    std::string filePath;
+    int openFlags;
+    std::mutex rdbMutex;
     bool inTransaction_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
 
