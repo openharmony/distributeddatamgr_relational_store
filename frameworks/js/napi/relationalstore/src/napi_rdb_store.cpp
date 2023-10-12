@@ -1203,6 +1203,30 @@ napi_value RdbStoreProxy::GetModifyTime(napi_env env, napi_callback_info info)
     return AsyncCall::Call(env, context);
 }
 
+napi_value RdbStoreProxy::Clean(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbStoreProxy::Clean start");
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN_SET_E(argc == 1, std::make_shared<ParamNumError>("1 - 2"));
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+        CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
+    };
+    auto exec = [context]() -> int {
+        LOG_DEBUG("RdbStoreProxy::Clean Async");
+        auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        return obj->rdbStore_->Clean(context->tableName);
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_status status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return AsyncCall::Call(env, context);
+}
+
 napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
 {
     napi_valuetype type;

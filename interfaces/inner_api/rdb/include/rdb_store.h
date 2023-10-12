@@ -490,6 +490,13 @@ public:
      */
     virtual std::map<PRIKey, Date> GetModifyTime(
         const std::string &table, const std::string &columnName, std::vector<PRIKey> &keys) = 0;
+
+    /**
+     * @brief Clean the retain data deleted in cloud.
+     *
+     * @param table Indicates the specified table.
+     */
+    virtual int Clean(const std::string &table) = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif
