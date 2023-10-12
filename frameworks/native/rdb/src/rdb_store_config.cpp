@@ -398,4 +398,14 @@ std::string RdbStoreConfig::GetDataGroupId() const
 {
     return dataGroupId_;
 }
+
+void RdbStoreConfig::SetRetainData(bool retainData)
+{
+    retainData_ = retainData;
+}
+
+bool RdbStoreConfig::GetRetainData() const
+{
+    return retainData_;
+}
 } // namespace OHOS::NativeRdb

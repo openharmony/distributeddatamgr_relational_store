@@ -27,7 +27,11 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
+static std::map<int32_t, int32_t> ORIGIN_TO_FLAG = {
+    { static_cast<int>(AbsPredicates::Origin::LOCAL), 2 },
+    { static_cast<int>(AbsPredicates::Origin::CLOUD), 0 },
+    { static_cast<int>(AbsPredicates::Origin::REMOTE), 0 }
+};
 AbsPredicates::AbsPredicates()
 {
     Initial();
@@ -55,13 +59,24 @@ AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const ValueObjec
     if (!CheckParameter("equalTo", field, { value })) {
         return this;
     }
+    std::string newField = ChangeField(field);
+    ValueObject valObj = value;
+    if (field == ORIGIN_FIELD) {
+        newField = LOG_ORIGIN_FIELD;
+        int location = 0;
+        valObj.GetInt(location);
+        if (location < 0 || location > Origin::REMOTE) {
+            return this;
+        }
+        valObj = ValueObject(ORIGIN_TO_FLAG[location]);
+    }
     if (isNeedAnd) {
         whereClause += "AND ";
     } else {
         isNeedAnd = true;
     }
-    whereClause += field + " = ? ";
-    bindArgs.push_back(value);
+    whereClause += newField + " = ? ";
+    bindArgs.push_back(valObj);
     return this;
 }
 
@@ -73,8 +88,9 @@ AbsPredicates *AbsPredicates::NotEqualTo(const std::string &field, const ValueOb
     if (!CheckParameter("notEqualTo", field, { value })) {
         return this;
     }
+    std::string newField = ChangeField(field);
     CheckIsNeedAnd();
-    whereClause += field + " <> ? ";
+    whereClause += newField + " <> ? ";
     bindArgs.push_back(value);
     return this;
 }
@@ -223,8 +239,9 @@ AbsPredicates *AbsPredicates::Between(const std::string &field, const ValueObjec
     if (!CheckParameter("between", field, { low, high })) {
         return this;
     }
+    std::string newField = ChangeField(field);
     CheckIsNeedAnd();
-    whereClause += field + " BETWEEN ? AND ? ";
+    whereClause += newField + " BETWEEN ? AND ? ";
     bindArgs.push_back(low);
     bindArgs.push_back(high);
     return this;
@@ -238,8 +255,9 @@ AbsPredicates *AbsPredicates::NotBetween(const std::string &field, const ValueOb
     if (!CheckParameter("notBetween", field, { low, high })) {
         return this;
     }
+    std::string newField = ChangeField(field);
     CheckIsNeedAnd();
-    whereClause += field + " NOT BETWEEN ? AND ? ";
+    whereClause += newField + " NOT BETWEEN ? AND ? ";
     bindArgs.push_back(low);
     bindArgs.push_back(high);
     return this;
@@ -253,8 +271,9 @@ AbsPredicates *AbsPredicates::GreaterThan(const std::string &field, const ValueO
     if (!CheckParameter("greaterThan", field, { value })) {
         return this;
     }
+    std::string newField = ChangeField(field);
     CheckIsNeedAnd();
-    whereClause += field + " > ? ";
+    whereClause += newField + " > ? ";
     bindArgs.push_back(value);
     return this;
 }
@@ -267,8 +286,9 @@ AbsPredicates *AbsPredicates::LessThan(const std::string &field, const ValueObje
     if (!CheckParameter("lessThan", field, { value })) {
         return this;
     }
+    std::string newField = ChangeField(field);
     CheckIsNeedAnd();
-    whereClause += field + " < ? ";
+    whereClause += newField + " < ? ";
     bindArgs.push_back(value);
     return this;
 }
@@ -281,8 +301,9 @@ AbsPredicates *AbsPredicates::GreaterThanOrEqualTo(const std::string &field, con
     if (!CheckParameter("greaterThanOrEqualTo", field, { value })) {
         return this;
     }
+    std::string newField = ChangeField(field);
     CheckIsNeedAnd();
-    whereClause += field + " >= ? ";
+    whereClause += newField + " >= ? ";
     bindArgs.push_back(value);
     return this;
 }
@@ -295,8 +316,9 @@ AbsPredicates *AbsPredicates::LessThanOrEqualTo(const std::string &field, const 
     if (!CheckParameter("greaterThanOrEqualTo", field, { value })) {
         return this;
     }
+    std::string newField = ChangeField(field);
     CheckIsNeedAnd();
-    whereClause += field + " <= ? ";
+    whereClause += newField + " <= ? ";
     bindArgs.push_back(value);
     return this;
 }
@@ -597,6 +619,11 @@ bool AbsPredicates::IsDistinct() const
 bool AbsPredicates::IsSorted() const
 {
     return isSorted;
+}
+
+bool AbsPredicates::HasCursorField() const
+{
+    return isCursorField;
 }
 
 std::string AbsPredicates::GetGroup() const

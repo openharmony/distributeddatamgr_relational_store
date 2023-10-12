@@ -197,6 +197,19 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTimeByRowId(
     }
     return result;
 }
+
+int RdbStoreImpl::Clean(const std::string &table)
+{
+    if (table.empty()) {
+        return E_INVALID_ARGS;
+    }
+    auto logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
+    std::string sql = "DELETE FROM ";
+    sql.append(table).append(" WHERE ROWID IN (SELECT data_key FROM ");
+    sql.append(logTable).append(" WHERE flag = 2 OR flag = 0)");
+    return ExecuteSql(table);
+}
+
 #endif
 
 std::string RdbStoreImpl::GetSqlArgs(size_t size)
@@ -547,7 +560,15 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
+    std::string logTable;
+    std::string sql;
+    if (predicates.HasCursorField()) {
+        std::string table = predicates.GetJoinClause();
+        logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
+        sql = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable);
+    } else {
+        sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
+    }
     return QuerySql(sql, predicates.GetBindArgs());
 }
 

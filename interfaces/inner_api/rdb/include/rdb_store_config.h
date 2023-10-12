@@ -453,6 +453,16 @@ public:
     std::string GetDataGroupId() const;
 
     /**
+     * @brief Sets the retainData for the object.
+     */
+    void SetRetainData(bool retainData);
+
+    /**
+     * @brief Obtains the retainData in this {@code StoreConfig} object.
+     */
+    bool GetRetainData() const;
+
+    /**
      * @brief Overload the line number operator.
      */
     bool operator==(const RdbStoreConfig &config) const
@@ -514,6 +524,7 @@ private:
     bool isCreateNecessary_;
 
     bool autoCheck;
+    bool retainData_ = false;
     int journalSize;
     int pageSize;
     int readConSize_ = 4;

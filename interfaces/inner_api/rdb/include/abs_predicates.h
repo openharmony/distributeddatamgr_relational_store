@@ -38,6 +38,12 @@ public:
         CROSS
     };
 
+    enum Origin {
+        LOCAL = 0,
+        CLOUD,
+        REMOTE,
+    };
+
     API_EXPORT std::string GetStatement() const;
     API_EXPORT std::string GetWhereClause() const;
     API_EXPORT void SetWhereClause(const std::string &whereClause);
@@ -56,6 +62,7 @@ public:
     API_EXPORT std::string GetIndex() const;
     API_EXPORT bool IsNeedAnd() const;
     API_EXPORT bool IsSorted() const;
+    API_EXPORT bool HasCursorField() const;
 
 public:
     API_EXPORT virtual void Clear();
@@ -95,6 +102,11 @@ public:
     API_EXPORT virtual AbsPredicates *NotIn(const std::string &field, const std::vector<std::string> &values);
     API_EXPORT virtual AbsPredicates *NotIn(const std::string &field, const std::vector<ValueObject> &values);
 private:
+    static constexpr const char *CURSOR_FIELD = "#_cursor";
+    static constexpr const char *ORIGIN_FIELD = "#_origin";
+    static constexpr const char *LOG_CURSOR_FIELD = "#cursor";
+    static constexpr const char *LOG_ORIGIN_FIELD = "#flag";
+
     std::string whereClause;
     std::vector<ValueObject> bindArgs;
     std::string order;
@@ -105,10 +117,18 @@ private:
     bool distinct;
     bool isNeedAnd;
     bool isSorted;
+    bool isCursorField = false;
 
     void Initial();
     bool CheckParameter(
         const std::string &methodName, const std::string &field, const std::initializer_list<ValueObject> &args) const;
+    inline std::string ChangeField(const std::string &field)
+    {
+        if (!isCursorField) {
+            isCursorField = (field == CURSOR_FIELD);
+        }
+        return field == CURSOR_FIELD ? LOG_CURSOR_FIELD : field;
+    }
     std::string RemoveQuotes(const std::string &source) const;
     void CheckIsNeedAnd();
     void AppendWhereClauseWithInOrNotIn(const std::string &methodName, const std::string &field,
