@@ -691,8 +691,7 @@ std::shared_ptr<SqliteStatement> SqliteConnection::StepQueryPrepare(int &errCode
         }
         return nullptr;
     }
-    std::shared_ptr<SqliteStatement> sqliteStatement = std::make_shared<SqliteStatement>(stmt);
-    return sqliteStatement;
+    return std::make_shared<SqliteStatement>(stmt);
 }
 
 int SqliteConnection::DesFinalize()
