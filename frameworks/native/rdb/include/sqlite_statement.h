@@ -28,6 +28,7 @@ public:
     SqliteStatement();
     ~SqliteStatement();
     int Prepare(sqlite3 *dbHandle, const std::string &sql);
+    int PrepareForStepResult(sqlite3_stmt *stmt, const std::string &newSql);
     int Finalize();
     int BindArguments(const std::vector<ValueObject> &bindArgs) const;
     int ResetStatementAndClearBindings() const;

@@ -62,6 +62,16 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
     return E_OK;
 }
 
+int SqliteStatement::PrepareForStepResult(sqlite3_stmt *stmt, const std::string &newSql)
+{
+    sql = newSql;
+    stmtHandle = stmt;
+    readOnly = (sqlite3_stmt_readonly(stmtHandle) != 0) ? true : false;
+    columnCount = sqlite3_column_count(stmtHandle);
+    numParameters = sqlite3_bind_parameter_count(stmtHandle);
+    return E_OK;
+}
+
 int SqliteStatement::Finalize()
 {
     if (stmtHandle == nullptr) {

@@ -62,15 +62,15 @@ private:
     void Reset();
     int FinishStep();
     int PrepareStep();
-    std::shared_ptr<RdbStoreImpl> rdb_;
+    std::shared_ptr<RdbStoreImpl> rdb;
     SqliteConnectionPool *connectionPool_;
-    std::string sql_;
+    std::string sql;
     std::vector<ValueObject> args_;
     // Whether reach the end of this result set or not
-    bool isAfterLast_;
+    bool isAfterLast;
     // The value indicates the row count of the result set
-    int rowCount_;
-    std::shared_ptr<SqliteStatement> sqliteStatement_;
+    int rowCount;
+    std::shared_ptr<SqliteStatement> sqliteStatement;
     static const int INIT_POS = -1;
     // Max times of retrying step query
     static const int STEP_QUERY_RETRY_MAX_TIMES = 50;
