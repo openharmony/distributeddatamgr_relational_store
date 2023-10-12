@@ -26,7 +26,7 @@ namespace NativeRdb {
 class SqliteStatement {
 public:
     SqliteStatement();
-    explict SqliteStatement(sqlite3_stmt *stmt);
+    explicit SqliteStatement(sqlite3_stmt *stmt);
     ~SqliteStatement();
     int Prepare(sqlite3 *dbHandle, const std::string &sql);
     int Finalize();
