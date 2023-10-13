@@ -84,7 +84,7 @@ void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
 #endif
     };
 
-    napi_value cons;
+    napi_value cons = nullptr;
     NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "RdbPredicates", NAPI_AUTO_LENGTH, New, nullptr,
                                    sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons));
     NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, cons, 1, &constructor_));
@@ -92,7 +92,7 @@ void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
 
     SetGlobalNamedProperty(env, "RdbPredicatesConstructor", cons);
 
-    napi_value consV9;
+    napi_value consV9 = nullptr;
     NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "RdbPredicatesV9", NAPI_AUTO_LENGTH, NewV9, nullptr,
                                    sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &consV9));
     NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, consV9, 1, &constructor_));
@@ -113,17 +113,17 @@ napi_value RdbPredicatesProxy::NewV9(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::InnerNew(napi_env env, napi_callback_info info, int version)
 {
-    napi_value new_target;
+    napi_value new_target = nullptr;
     NAPI_CALL(env, napi_get_new_target(env, info, &new_target));
     bool is_constructor = (new_target != nullptr);
 
     size_t argc = 1;
     napi_value args[1] = { 0 };
-    napi_value thiz;
+    napi_value thiz = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
 
     if (is_constructor) {
-        napi_valuetype valueType;
+        napi_valuetype valueType = napi_undefined;
         NAPI_CALL(env, napi_typeof(env, args[0], &valueType));
         RDB_NAPI_ASSERT_FROMV9(
             env, valueType == napi_string, std::make_shared<ParamTypeError>("name", "a non empty string."), version);
@@ -147,17 +147,17 @@ napi_value RdbPredicatesProxy::InnerNew(napi_env env, napi_callback_info info, i
     argc = 1;
     napi_value argv[1] = { args[0] };
 
-    napi_value cons;
+    napi_value cons = nullptr;
     NAPI_CALL(env, napi_get_reference_value(env, constructor_, &cons));
 
-    napi_value output;
+    napi_value output = nullptr;
     NAPI_CALL(env, napi_new_instance(env, cons, argc, argv, &output));
     return output;
 }
 
 napi_value RdbPredicatesProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbPredicates> value, int version)
 {
-    napi_value cons;
+    napi_value cons = nullptr;
     napi_status status = napi_get_reference_value(env, constructor_, &cons);
     if (status != napi_ok) {
         LOG_ERROR("RdbPredicatesProxy::NewInstance get constructor failed! napi_status:%{public}d!", status);
@@ -203,7 +203,7 @@ RdbPredicatesProxy::RdbPredicatesProxy(std::string &tableName)
 std::shared_ptr<NativeRdb::RdbPredicates> RdbPredicatesProxy::GetNativePredicates(napi_env env, napi_callback_info info)
 {
     RdbPredicatesProxy *predicatesProxy = nullptr;
-    napi_value thiz;
+    napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
     return predicatesProxy->predicates_;
@@ -765,7 +765,7 @@ napi_value RdbPredicatesProxy::GetJoinCount(napi_env env, napi_callback_info inf
 
 napi_value RdbPredicatesProxy::SetJoinCount(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     int32_t joinCount = 0;
     RdbPredicatesProxy *predicatesProxy = ParseInt32FieldByName(env, info, thiz, joinCount, "joinCount");
     RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr && predicatesProxy->predicates_ != nullptr,

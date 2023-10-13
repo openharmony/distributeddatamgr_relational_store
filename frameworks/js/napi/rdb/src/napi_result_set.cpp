@@ -67,7 +67,7 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::
         LOG_ERROR("NewInstance GetConstructor is nullptr!");
         return nullptr;
     }
-    napi_value instance;
+    napi_value instance = nullptr;
     napi_status status = napi_new_instance(env, cons, 0, nullptr, &instance);
     if (status != napi_ok) {
         LOG_ERROR("NewInstance napi_new_instance failed! code:%{public}d!", status);
@@ -113,7 +113,7 @@ std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 
 napi_value ResultSetProxy::GetConstructor(napi_env env, int version)
 {
-    napi_value cons;
+    napi_value cons = nullptr;
     if (version > APIVERSION_8 && ctorRefV9_ != nullptr) {
         NAPI_CALL(env, napi_get_reference_value(env, ctorRefV9_, &cons));
         return cons;
@@ -575,7 +575,7 @@ napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
     int errCode = resultSetProxy->resultSet_->IsColumnNull(columnIndex, result);
     int version = resultSetProxy->apiversion;
     RDB_NAPI_ASSERT_FROMV9(env, errCode == E_OK, std::make_shared<ResultGetError>(), version);
-    napi_value output;
+    napi_value output = nullptr;
     napi_get_boolean(env, result, &output);
     return output;
 }
@@ -587,14 +587,14 @@ napi_value ResultSetProxy::IsClosed(napi_env env, napi_callback_info info)
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy && resultSetProxy->resultSet_, "resultSetProxy or resultSet_ is nullptr");
 
     int result = resultSetProxy->resultSet_->IsClosed();
-    napi_value output;
+    napi_value output = nullptr;
     napi_get_boolean(env, result, &output);
     return output;
 }
 
 napi_value ResultSetProxy::GetSharedBlockName(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr));
 
     ResultSetProxy *proxy;
@@ -607,7 +607,7 @@ napi_value ResultSetProxy::GetSharedBlockName(napi_env env, napi_callback_info i
 
 napi_value ResultSetProxy::GetSharedBlockAshmemFd(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr));
 
     ResultSetProxy *proxy;

@@ -75,7 +75,7 @@ void UvQueue::AsyncCall(UvCallback callback, ArgsGenerator genArgs)
             }
             napi_value global = nullptr;
             napi_get_global(entry->env, &global);
-            napi_value result;
+            napi_value result = nullptr;
             napi_status status = napi_call_function(entry->env, global, method, argc, argv, &result);
             if (status != napi_ok) {
                 LOG_ERROR("notify data change failed status:%{public}d.", status);

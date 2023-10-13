@@ -46,7 +46,7 @@ public:
     OpenCallback(napi_env env, napi_value jsObj) : env_(env)
     {
         napi_create_reference(env, jsObj, 1, &ref_);
-        napi_value property;
+        napi_value property = nullptr;
         napi_get_named_property(env_, jsObj, "onOpen", &property);
         napi_create_reference(env, property, 1, &onOpen_);
         napi_get_named_property(env_, jsObj, "onCreate", &property);
@@ -105,13 +105,13 @@ public:
     {
         LOG_DEBUG("OnCreate Callback");
         callbacks_.emplace_back([this]() -> int {
-            napi_value self;
+            napi_value self = nullptr;
             napi_status status = napi_get_reference_value(env_, ref_, &self);
             if (status != napi_ok) {
                 LOG_ERROR("OnCreate get self reference failed, code:%{public}d", status);
                 return E_ERROR;
             }
-            napi_value method;
+            napi_value method = nullptr;
             status = napi_get_reference_value(env_, onCreate_, &method);
             if (status != napi_ok) {
                 LOG_ERROR("OnCreate get method reference failed, code:%{public}d", status);
@@ -132,13 +132,13 @@ public:
     {
         LOG_DEBUG("OnUpgrade Callback");
         callbacks_.emplace_back([this, oldVersion, newVersion]() -> int {
-            napi_value self;
+            napi_value self = nullptr;
             napi_status status = napi_get_reference_value(env_, ref_, &self);
             if (status != napi_ok) {
                 LOG_ERROR("OnUpgrade get self reference failed, code:%{public}d", status);
                 return E_ERROR;
             }
-            napi_value method;
+            napi_value method = nullptr;
             status = napi_get_reference_value(env_, onUpgrade_, &method);
             if (status != napi_ok) {
                 LOG_ERROR("OnUpgrade get method reference failed, code:%{public}d", status);
@@ -147,7 +147,7 @@ public:
             napi_value result[JSUtils::ASYNC_RST_SIZE] = { 0 };
             napi_get_undefined(env_, &result[0]);
             napi_create_object(env_, &result[1]);
-            napi_value version;
+            napi_value version = nullptr;
             napi_create_int32(env_, newVersion, &version);
             napi_set_named_property(env_, result[1], "currentVersion", version);
             napi_create_int32(env_, oldVersion, &version);
@@ -167,13 +167,13 @@ public:
     {
         LOG_DEBUG("OnDowngrade Callback");
         callbacks_.emplace_back([this, oldVersion, newVersion]() -> int {
-            napi_value self;
+            napi_value self = nullptr;
             napi_status status = napi_get_reference_value(env_, ref_, &self);
             if (status != napi_ok) {
                 LOG_ERROR("OnDowngrade get self reference failed, code:%{public}d", status);
                 return E_ERROR;
             }
-            napi_value method;
+            napi_value method = nullptr;
             status = napi_get_reference_value(env_, onDowngrade_, &method);
             if (status != napi_ok) {
                 LOG_ERROR("OnDowngrade get method reference failed, code:%{public}d", status);
@@ -182,7 +182,7 @@ public:
             napi_value result[JSUtils::ASYNC_RST_SIZE] = { 0 };
             napi_get_undefined(env_, &result[0]);
             napi_create_object(env_, &result[1]);
-            napi_value version;
+            napi_value version = nullptr;
             napi_create_int32(env_, newVersion, &version);
             napi_set_named_property(env_, result[1], "currentVersion", version);
             napi_create_int32(env_, oldVersion, &version);
@@ -202,13 +202,13 @@ public:
     {
         LOG_DEBUG("OnOpen Callback");
         callbacks_.emplace_back([this]() -> int {
-            napi_value self;
+            napi_value self = nullptr;
             napi_status status = napi_get_reference_value(env_, ref_, &self);
             if (status != napi_ok) {
                 LOG_ERROR("OnOpen get self reference failed, code:%{public}d", status);
                 return E_ERROR;
             }
-            napi_value method;
+            napi_value method = nullptr;
             status = napi_get_reference_value(env_, onOpen_, &method);
             if (status != napi_ok) {
                 LOG_ERROR("OnOpen get method reference failed, code:%{public}d", status);
@@ -275,7 +275,7 @@ int ParseContext(const napi_env &env, const napi_value &object, std::shared_ptr<
 
 int ParseDatabaseName(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
-    napi_value value;
+    napi_value value = nullptr;
     napi_get_named_property(env, object, "name", &value);
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("config", "a StoreConfig.");
     RDB_CHECK_RETURN_CALL_RESULT(value != nullptr, context->SetError(paramError));

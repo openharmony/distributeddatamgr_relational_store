@@ -69,7 +69,7 @@ void NapiUvQueue::CallFunction(NapiArgsGenerator genArgs)
             napi_get_reference_value(queue->env_, queue->callback_, &callback);
             napi_value global = nullptr;
             napi_get_global(queue->env_, &global);
-            napi_value result;
+            napi_value result = nullptr;
             napi_status status = napi_call_function(queue->env_, global, callback, argc, argv, &result);
             if (status != napi_ok) {
                 LOG_ERROR("napi_call_function failed, status=%{public}d", status);
