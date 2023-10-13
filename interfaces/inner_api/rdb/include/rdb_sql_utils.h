@@ -22,9 +22,21 @@ namespace NativeRdb {
 class API_EXPORT RdbSqlUtils {
 public:
     /**
+     * @brief create data base directory.
+     */
+    static int CreateDirectory(const std::string &databaseDir);
+
+    /**
+     * @brief get custom data base path.
+     */
+    static std::pair<std::string, int> GetDefaultDatabasePath(const std::string &baseDir,
+        const std::string &name, const std::string &customDir = "");
+
+    /**
      * @brief get default data base path.
      */
     static std::string GetDefaultDatabasePath(const std::string &baseDir, const std::string &name, int &errorCode);
+
     /**
      * @brief build query sql string.
      */

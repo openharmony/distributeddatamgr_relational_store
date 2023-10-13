@@ -398,4 +398,14 @@ std::string RdbStoreConfig::GetDataGroupId() const
 {
     return dataGroupId_;
 }
+
+void RdbStoreConfig::SetCustomDir(const std::string &customDir)
+{
+    customDir_ = customDir;
+}
+
+std::string RdbStoreConfig::GetCustomDir() const
+{
+    return customDir_;
+}
 } // namespace OHOS::NativeRdb

@@ -51,7 +51,7 @@ struct HelperRdbContext : public Context {
 
 int ParseContext(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_typeof(env, object, &type);
     CHECK_RETURN_SET(type == napi_object, std::make_shared<ParamError>("context", "object."));
     auto abilityContext = JSAbility::GetContext(env, object);
@@ -88,10 +88,9 @@ int ParseContextProperty(const napi_env &env, std::shared_ptr<HelperRdbContext> 
     return OK;
 }
 
-int ParseDatabaseDir(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
+int ParseDatabaseName(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
-    int errorCode = E_OK;
-    napi_value value;
+    napi_value value = nullptr;
     napi_get_named_property(env, object, "name", &value);
     CHECK_RETURN_SET(value != nullptr, std::make_shared<ParamError>("config", "a StoreConfig."));
     std::string databaseName = JSUtils::Convert2String(env, value);
@@ -100,17 +99,37 @@ int ParseDatabaseDir(const napi_env &env, const napi_value &object, std::shared_
         CHECK_RETURN_SET(false, std::make_shared<ParamError>("StoreConfig.name", "a file name without path"));
     }
     context->config.SetName(databaseName);
+    return OK;
+}
 
-    std::string databaseDir;
+int ParseDatabasePath(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
+{
+    int errorCode = E_OK;
+
+    std::string defaultDir;
     if (context->config.GetDataGroupId().empty()) {
-        databaseDir = context->abilitycontext->GetDatabaseDir();
+        defaultDir = context->abilitycontext->GetDatabaseDir();
     } else {
-        errorCode = context->abilitycontext->GetSystemDatabaseDir(context->config.GetDataGroupId(), databaseDir);
+        errorCode = context->abilitycontext->GetSystemDatabaseDir(context->config.GetDataGroupId(), defaultDir);
         CHECK_RETURN_SET((errorCode == E_OK), std::make_shared<InnerError>(E_DATA_GROUP_ID_INVALID));
     }
 
-    std::string realPath = RdbSqlUtils::GetDefaultDatabasePath(databaseDir, databaseName, errorCode);
-    CHECK_RETURN_SET(errorCode == E_OK, std::make_shared<ParamError>("config", "a StoreConfig."));
+    bool hasProp = false;
+    std::string customDir;
+    napi_status status = napi_has_named_property(env, object, "customDir", &hasProp);
+    if (status == napi_ok && hasProp) {
+        napi_value value = nullptr;
+        napi_get_named_property(env, object, "customDir", &value);
+        CHECK_RETURN_SET(value != nullptr, std::make_shared<ParamError>("config", "a StoreConfig."));
+        JSUtils::Convert2Value(env, value, customDir);
+        context->config.SetCustomDir(customDir);
+    }
+
+    auto [realPath, errCode] = RdbSqlUtils::GetDefaultDatabasePath(defaultDir, context->config.GetName(), customDir);
+    // customDir length is limited to 1024 bytes
+    CHECK_RETURN_SET(errCode == E_OK && realPath.length() <= 1024,
+        std::make_shared<ParamError>("config", "a StoreConfig."));
+
     context->config.SetPath(std::move(realPath));
     return OK;
 }
@@ -162,7 +181,8 @@ int ParseStoreConfig(const napi_env &env, const napi_value &object, std::shared_
     CHECK_RETURN_CORE(OK == ParseSecurityLevel(env, object, context), RDB_REVT_NOTHING, ERR);
     CHECK_RETURN_CORE(OK == ParseDataGroupId(env, object, context), RDB_REVT_NOTHING, ERR);
     CHECK_RETURN_CORE(OK == ParseContextProperty(env, context), RDB_REVT_NOTHING, ERR);
-    CHECK_RETURN_CORE(OK == ParseDatabaseDir(env, object, context), RDB_REVT_NOTHING, ERR);
+    CHECK_RETURN_CORE(OK == ParseDatabaseName(env, object, context), RDB_REVT_NOTHING, ERR);
+    CHECK_RETURN_CORE(OK == ParseDatabasePath(env, object, context), RDB_REVT_NOTHING, ERR);
     return OK;
 }
 
@@ -176,10 +196,11 @@ int ParsePath(const napi_env env, const napi_value arg, std::shared_ptr<HelperRd
 
     CHECK_RETURN_SET(context->abilitycontext != nullptr,
         std::make_shared<ParamError>("abilitycontext", "abilitycontext is nullptr"));
-    std::string databaseDir = context->abilitycontext->GetDatabaseDir();
+    std::string defaultDir = context->abilitycontext->GetDatabaseDir();
+
     int errorCode = E_OK;
-    std::string realPath = RdbSqlUtils::GetDefaultDatabasePath(databaseDir, path, errorCode);
-    CHECK_RETURN_SET(errorCode == E_OK, std::make_shared<ParamError>("path", "access"));
+    std::string realPath = RdbSqlUtils::GetDefaultDatabasePath(defaultDir, path, errorCode);
+    CHECK_RETURN_SET(errorCode == E_OK, std::make_shared<ParamError>("config", "a StoreConfig."));
 
     context->config.SetPath(realPath);
     return OK;
@@ -190,7 +211,7 @@ bool IsNapiString(napi_env env, size_t argc, napi_value *argv, size_t arg)
     if (arg >= argc) {
         return false;
     }
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     NAPI_CALL_BASE(env, napi_typeof(env, argv[arg], &type), false);
     return type == napi_string;
 }

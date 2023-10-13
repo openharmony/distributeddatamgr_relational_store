@@ -74,7 +74,7 @@ void DataAbilityPredicatesProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER("isSorted", IsSorted),
     };
 
-    napi_value cons;
+    napi_value cons = nullptr;
     NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "DataAbilityPredicates", NAPI_AUTO_LENGTH, New, nullptr,
                                    sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons));
 
@@ -85,11 +85,11 @@ void DataAbilityPredicatesProxy::Init(napi_env env, napi_value exports)
 
 napi_value DataAbilityPredicatesProxy::New(napi_env env, napi_callback_info info)
 {
-    napi_value new_target;
+    napi_value new_target = nullptr;
     NAPI_CALL(env, napi_get_new_target(env, info, &new_target));
     bool is_constructor = (new_target != nullptr);
 
-    napi_value thiz;
+    napi_value thiz = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr));
 
     if (is_constructor) {
@@ -107,10 +107,10 @@ napi_value DataAbilityPredicatesProxy::New(napi_env env, napi_callback_info info
         return thiz;
     }
 
-    napi_value cons;
+    napi_value cons = nullptr;
     NAPI_CALL(env, napi_get_reference_value(env, constructor_, &cons));
 
-    napi_value output;
+    napi_value output = nullptr;
     NAPI_CALL(env, napi_new_instance(env, cons, 0, nullptr, &output));
 
     return output;
@@ -119,7 +119,7 @@ napi_value DataAbilityPredicatesProxy::New(napi_env env, napi_callback_info info
 napi_value DataAbilityPredicatesProxy::NewInstance(
     napi_env env, std::shared_ptr<NativeRdb::DataAbilityPredicates> value)
 {
-    napi_value cons;
+    napi_value cons = nullptr;
     napi_status status = napi_get_reference_value(env, constructor_, &cons);
     if (status != napi_ok) {
         LOG_ERROR("DataAbilityPredicatesProxy get constructor failed! napi_status:%{public}d!", status);
@@ -177,7 +177,7 @@ std::shared_ptr<NativeRdb::DataAbilityPredicates> DataAbilityPredicatesProxy::Ge
     napi_env env, napi_callback_info info)
 {
     DataAbilityPredicatesProxy *predicatesProxy = nullptr;
-    napi_value thiz;
+    napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
     return predicatesProxy->predicates_;
@@ -185,7 +185,7 @@ std::shared_ptr<NativeRdb::DataAbilityPredicates> DataAbilityPredicatesProxy::Ge
 
 napi_value DataAbilityPredicatesProxy::EqualTo(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -202,7 +202,7 @@ napi_value DataAbilityPredicatesProxy::EqualTo(napi_env env, napi_callback_info 
 
 napi_value DataAbilityPredicatesProxy::NotEqualTo(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -219,7 +219,7 @@ napi_value DataAbilityPredicatesProxy::NotEqualTo(napi_env env, napi_callback_in
 
 napi_value DataAbilityPredicatesProxy::BeginWrap(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     auto nativePredicates = GetNativePredicates(env, info);
     RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
@@ -229,7 +229,7 @@ napi_value DataAbilityPredicatesProxy::BeginWrap(napi_env env, napi_callback_inf
 
 napi_value DataAbilityPredicatesProxy::EndWrap(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     auto nativePredicates = GetNativePredicates(env, info);
     RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
@@ -239,7 +239,7 @@ napi_value DataAbilityPredicatesProxy::EndWrap(napi_env env, napi_callback_info 
 
 napi_value DataAbilityPredicatesProxy::Or(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     auto nativePredicates = GetNativePredicates(env, info);
     RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
@@ -249,7 +249,7 @@ napi_value DataAbilityPredicatesProxy::Or(napi_env env, napi_callback_info info)
 
 napi_value DataAbilityPredicatesProxy::And(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     auto nativePredicates = GetNativePredicates(env, info);
     RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
@@ -259,7 +259,7 @@ napi_value DataAbilityPredicatesProxy::And(napi_env env, napi_callback_info info
 
 napi_value DataAbilityPredicatesProxy::Contains(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -276,7 +276,7 @@ napi_value DataAbilityPredicatesProxy::Contains(napi_env env, napi_callback_info
 
 napi_value DataAbilityPredicatesProxy::BeginsWith(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -293,7 +293,7 @@ napi_value DataAbilityPredicatesProxy::BeginsWith(napi_env env, napi_callback_in
 
 napi_value DataAbilityPredicatesProxy::EndsWith(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -310,7 +310,7 @@ napi_value DataAbilityPredicatesProxy::EndsWith(napi_env env, napi_callback_info
 
 napi_value DataAbilityPredicatesProxy::IsNull(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -325,7 +325,7 @@ napi_value DataAbilityPredicatesProxy::IsNull(napi_env env, napi_callback_info i
 
 napi_value DataAbilityPredicatesProxy::IsNotNull(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -340,7 +340,7 @@ napi_value DataAbilityPredicatesProxy::IsNotNull(napi_env env, napi_callback_inf
 
 napi_value DataAbilityPredicatesProxy::Like(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -357,7 +357,7 @@ napi_value DataAbilityPredicatesProxy::Like(napi_env env, napi_callback_info inf
 
 napi_value DataAbilityPredicatesProxy::Glob(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -374,7 +374,7 @@ napi_value DataAbilityPredicatesProxy::Glob(napi_env env, napi_callback_info inf
 
 napi_value DataAbilityPredicatesProxy::Between(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 3;
     // 3 represents the number of parameters
     napi_value args[3] = { 0 };
@@ -397,7 +397,7 @@ napi_value DataAbilityPredicatesProxy::Between(napi_env env, napi_callback_info 
 
 napi_value DataAbilityPredicatesProxy::NotBetween(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 3;
     // 3 represents the number of parameters
     napi_value args[3] = { 0 };
@@ -420,7 +420,7 @@ napi_value DataAbilityPredicatesProxy::NotBetween(napi_env env, napi_callback_in
 
 napi_value DataAbilityPredicatesProxy::GreaterThan(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -437,7 +437,7 @@ napi_value DataAbilityPredicatesProxy::GreaterThan(napi_env env, napi_callback_i
 
 napi_value DataAbilityPredicatesProxy::LessThan(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -454,7 +454,7 @@ napi_value DataAbilityPredicatesProxy::LessThan(napi_env env, napi_callback_info
 
 napi_value DataAbilityPredicatesProxy::GreaterThanOrEqualTo(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -471,7 +471,7 @@ napi_value DataAbilityPredicatesProxy::GreaterThanOrEqualTo(napi_env env, napi_c
 
 napi_value DataAbilityPredicatesProxy::LessThanOrEqualTo(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -488,7 +488,7 @@ napi_value DataAbilityPredicatesProxy::LessThanOrEqualTo(napi_env env, napi_call
 
 napi_value DataAbilityPredicatesProxy::OrderByAsc(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -505,7 +505,7 @@ napi_value DataAbilityPredicatesProxy::OrderByAsc(napi_env env, napi_callback_in
 
 napi_value DataAbilityPredicatesProxy::OrderByDesc(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -522,7 +522,7 @@ napi_value DataAbilityPredicatesProxy::OrderByDesc(napi_env env, napi_callback_i
 
 napi_value DataAbilityPredicatesProxy::Distinct(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     auto nativePredicates = GetNativePredicates(env, info);
     RDB_CHECK_RETURN_NULLPTR(nativePredicates != nullptr, "GetNativePredicates return nullptr");
@@ -532,7 +532,7 @@ napi_value DataAbilityPredicatesProxy::Distinct(napi_env env, napi_callback_info
 
 napi_value DataAbilityPredicatesProxy::Limit(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -549,7 +549,7 @@ napi_value DataAbilityPredicatesProxy::Limit(napi_env env, napi_callback_info in
 
 napi_value DataAbilityPredicatesProxy::Offset(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -566,7 +566,7 @@ napi_value DataAbilityPredicatesProxy::Offset(napi_env env, napi_callback_info i
 
 napi_value DataAbilityPredicatesProxy::GroupBy(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -583,7 +583,7 @@ napi_value DataAbilityPredicatesProxy::GroupBy(napi_env env, napi_callback_info 
 
 napi_value DataAbilityPredicatesProxy::IndexedBy(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -600,7 +600,7 @@ napi_value DataAbilityPredicatesProxy::IndexedBy(napi_env env, napi_callback_inf
 
 napi_value DataAbilityPredicatesProxy::In(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -620,7 +620,7 @@ napi_value DataAbilityPredicatesProxy::In(napi_env env, napi_callback_info info)
 
 napi_value DataAbilityPredicatesProxy::NotIn(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -673,7 +673,7 @@ napi_value DataAbilityPredicatesProxy::GetWhereClause(napi_env env, napi_callbac
 
 napi_value DataAbilityPredicatesProxy::SetWhereClause(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -699,7 +699,7 @@ napi_value DataAbilityPredicatesProxy::GetWhereArgs(napi_env env, napi_callback_
 
 napi_value DataAbilityPredicatesProxy::SetWhereArgs(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -725,7 +725,7 @@ napi_value DataAbilityPredicatesProxy::GetOrder(napi_env env, napi_callback_info
 
 napi_value DataAbilityPredicatesProxy::SetOrder(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);

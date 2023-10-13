@@ -199,7 +199,7 @@ void AsyncCall::OnReturn(napi_env env, napi_status status, void *data)
         // callback
         napi_value callback = nullptr;
         napi_get_reference_value(env, context->callback_, &callback);
-        napi_value returnValue;
+        napi_value returnValue = nullptr;
         napi_call_function(env, nullptr, callback, ARG_BUTT, result, &returnValue);
     }
     context->keep_.reset();
