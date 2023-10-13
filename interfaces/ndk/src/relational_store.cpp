@@ -27,7 +27,6 @@
 #include "relational_store_impl.h"
 #include "relational_values_bucket.h"
 #include "sqlite_global_config.h"
-#include "traits.h"
 
 using namespace OHOS::RdbNdk;
 using namespace OHOS::DistributedRdb;
@@ -98,6 +97,7 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
     OHOS::NativeRdb::RdbStoreConfig rdbStoreConfig(realPath);
     rdbStoreConfig.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel(config->securityLevel));
     rdbStoreConfig.SetEncryptStatus(config->isEncrypt);
+    rdbStoreConfig.SetArea(config->area);
     if (config->bundleName != nullptr) {
         rdbStoreConfig.SetBundleName(config->bundleName);
     }
@@ -284,11 +284,11 @@ int OH_Rdb_SetVersion(OH_Rdb_Store *store, int version)
     return rdbStore->GetStore()->SetVersion(version);
 }
 
-int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint32_t count, OH_Rdb_DistributedType type,
-    const OH_Rdb_DistributedConfig *config)
+int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint32_t count, Rdb_DistributedType type,
+    const Rdb_DistributedConfig *config)
 {
     auto rdbStore = GetRelationalStore(store);
-    if (rdbStore == nullptr || type != OH_Rdb_DistributedType::DISTRIBUTED_CLOUD ||
+    if (rdbStore == nullptr || type != Rdb_DistributedType::DISTRIBUTED_CLOUD ||
         config->version != DISTRIBUTED_CONFIG_VERSION) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
@@ -298,8 +298,10 @@ int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint3
         tableNames.emplace_back(tables[i]);
     }
     auto distributedConfig = DistributedConfig{ .autoSync = config->isAutoSync };
-    return rdbStore->GetStore()->SetDistributedTables(tableNames, type, distributedConfig);
+    return rdbStore->GetStore()->SetDistributedTables(tableNames, DistributedTableType::DISTRIBUTED_CLOUD,
+        distributedConfig);
 }
+
 OHOS::NativeRdb::RdbStore::PRIKey TransformToPK(const ValueObject &valueObject)
 {
     OHOS::NativeRdb::RdbStore::PRIKey priKey;
@@ -342,21 +344,22 @@ OH_Cursor *OH_Rdb_FindModifyTime(OH_Rdb_Store *store, const char *tableName, con
     return new (std::nothrow) RelationalCursor(std::move(results));
 }
 
-SubscribeMode GetSubscribeType(int type)
+SubscribeMode GetSubscribeType(Rdb_SubscribeType type)
 {
     switch (type) {
-        case OH_Rdb_SubscribeType::SUBSCRIBE_TYPE_CLOUD:
+        case Rdb_SubscribeType::SUBSCRIBE_TYPE_CLOUD:
             return SubscribeMode::CLOUD;
-        case OH_Rdb_SubscribeType::SUBSCRIBE_TYPE_CLOUD_DETAILS:
+        case Rdb_SubscribeType::SUBSCRIBE_TYPE_CLOUD_DETAILS:
             return SubscribeMode::CLOUD_DETAIL;
         default:
             return SubscribeMode::SUBSCRIBE_MODE_MAX;
     }
 }
-int RelationalStore::DoSubscribe(SubscribeMode mode, OH_Rdb_SubscribeCallback *observer)
+
+int RelationalStore::DoSubscribe(Rdb_SubscribeType &type, Rdb_SubscribeCallback *observer)
 {
     std::lock_guard<decltype(mutex_)> lockGuard(mutex_);
-    auto result = std::any_of(observers_[mode].begin(), observers_[mode].end(),
+    auto result = std::any_of(observers_[type].begin(), observers_[type].end(),
         [observer](const std::shared_ptr<NDKStoreObserver> &element) {
             return element->Get() == observer;
         });
@@ -364,60 +367,60 @@ int RelationalStore::DoSubscribe(SubscribeMode mode, OH_Rdb_SubscribeCallback *o
         LOG_INFO("duplicate subscribe");
         return OH_Rdb_ErrCode::RDB_OK;
     }
-    auto subscribeOption = SubscribeOption{ .mode = mode, .event = "data_change" };
-    auto ndkObserver = std::make_shared<NDKStoreObserver>(this, observer, mode);
+    auto rdbMode = GetSubscribeType(type);
+    auto subscribeOption = SubscribeOption{ .mode = rdbMode, .event = "data_change" };
+    auto ndkObserver = std::make_shared<NDKStoreObserver>(this, observer, type);
     auto subscribeResult = store_->Subscribe(subscribeOption, ndkObserver.get());
     if (subscribeResult != OHOS::NativeRdb::E_OK) {
         LOG_ERROR("subscribe failed");
         return subscribeResult;
     }
-    observers_[mode].emplace_back(ndkObserver);
+    observers_[type].emplace_back(ndkObserver);
     return subscribeResult;
 }
 
-int OH_Rdb_Subscribe(OH_Rdb_Store *store, OH_Rdb_SubscribeType type, OH_Rdb_SubscribeCallback *observer)
+int OH_Rdb_Subscribe(OH_Rdb_Store *store, Rdb_SubscribeType type, Rdb_SubscribeCallback *observer)
 {
     auto rdbStore = GetRelationalStore(store);
-    auto rdbMode = GetSubscribeType(type);
     if (rdbStore == nullptr || type < SUBSCRIBE_TYPE_CLOUD || type > SUBSCRIBE_TYPE_CLOUD_DETAILS ||
         observer == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return rdbStore->DoSubscribe(rdbMode, observer);
+    return rdbStore->DoSubscribe(type, observer);
 }
 
-int RelationalStore::DoUnsubscribe(SubscribeMode mode, OH_Rdb_SubscribeCallback *observer)
+int RelationalStore::DoUnsubscribe(Rdb_SubscribeType &type, Rdb_SubscribeCallback *observer)
 {
     std::lock_guard<decltype(mutex_)> lockGuard(mutex_);
-    auto subscribeResult = OHOS::NativeRdb::E_OK;
-    auto subscribeOption = SubscribeOption{ .mode = mode, .event = "data_change" };
-    for (auto it = observers_[mode].begin(); it != observers_[mode].end();) {
+    auto unsubscribeResult = OHOS::NativeRdb::E_OK;
+    auto rdbMode = GetSubscribeType(type);
+    auto subscribeOption = SubscribeOption{ .mode = rdbMode, .event = "data_change" };
+    for (auto it = observers_[type].begin(); it != observers_[type].end();) {
         if (*it == nullptr) {
-            it = observers_[mode].erase(it);
+            it = observers_[type].erase(it);
             continue;
         }
         if ((*it)->Get() != observer) {
             ++it;
             continue;
         }
-        subscribeResult = store_->UnSubscribe(subscribeOption, it->get());
-        if (subscribeResult != OHOS::NativeRdb::E_OK) {
-            LOG_ERROR("subscribe failed, mode is %{public}d", mode);
-            return subscribeResult;
+        unsubscribeResult = store_->UnSubscribe(subscribeOption, it->get());
+        if (unsubscribeResult != OHOS::NativeRdb::E_OK) {
+            LOG_ERROR("subscribe failed, mode is %{public}d", type);
+            return unsubscribeResult;
         }
-        it = observers_[mode].erase(it);
+        it = observers_[type].erase(it);
     }
-    return subscribeResult;
+    return unsubscribeResult;
 }
 
-int OH_Rdb_Unsubscribe(OH_Rdb_Store *store, OH_Rdb_SubscribeType type, OH_Rdb_SubscribeCallback *observer)
+int OH_Rdb_Unsubscribe(OH_Rdb_Store *store, Rdb_SubscribeType type, Rdb_SubscribeCallback *observer)
 {
     auto rdbStore = GetRelationalStore(store);
-    auto rdbMode = GetSubscribeType(type);
     if (rdbStore == nullptr || type < SUBSCRIBE_TYPE_CLOUD || type > SUBSCRIBE_TYPE_CLOUD_DETAILS) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return rdbStore->DoUnsubscribe(rdbMode, observer);
+    return rdbStore->DoUnsubscribe(type, observer);
 }
 
 NDKStoreObserver::NDKChangeInfo::NDKChangeInfo(const NDKStoreObserver::Origin &origin, ChangeInfo ::iterator info)
@@ -426,14 +429,14 @@ NDKStoreObserver::NDKChangeInfo::NDKChangeInfo(const NDKStoreObserver::Origin &o
 {
 }
 
-NDKStoreObserver::NDKStoreObserver(OH_Rdb_Store *store, OH_Rdb_SubscribeCallback *callback, int mode)
+NDKStoreObserver::NDKStoreObserver(OH_Rdb_Store *store, Rdb_SubscribeCallback *callback, int mode)
     : store_(store), mode_(mode), callback_(callback)
 {
 }
 
 void NDKStoreObserver::OnChange(const std::vector<std::string> &devices)
 {
-    if (mode_ == OH_Rdb_SubscribeType::SUBSCRIBE_TYPE_CLOUD) {
+    if (mode_ == Rdb_SubscribeType::SUBSCRIBE_TYPE_CLOUD) {
         RelationalPredicatesObjects objects;
         std::copy(devices.begin(), devices.end(), objects.Get().begin());
         (*callback_->cloudObserver)(store_, &objects, devices.size());
@@ -443,12 +446,12 @@ void NDKStoreObserver::OnChange(const std::vector<std::string> &devices)
 void NDKStoreObserver::OnChange(const Origin &origin, const RdbStoreObserver::PrimaryFields &fields,
     RdbStoreObserver::ChangeInfo &&changeInfo)
 {
-    if (mode_ == OH_Rdb_SubscribeType::SUBSCRIBE_TYPE_CLOUD_DETAILS) {
-        std::vector<OH_Rdb_ChangeInfo> changeInfos;
+    if (mode_ == Rdb_SubscribeType::SUBSCRIBE_TYPE_CLOUD_DETAILS) {
+        std::vector<Rdb_ChangeInfo> changeInfos;
         for (auto &info : changeInfo) {
-            OH_Rdb_ChangeInfo rdbChangeInfo;
+            Rdb_ChangeInfo rdbChangeInfo;
             rdbChangeInfo.tableName = info.first.c_str();
-            rdbChangeInfo.ChangeType = (OH_Rdb_ChangeType)origin.dataType;
+            rdbChangeInfo.ChangeType = (Rdb_ChangeType)origin.dataType;
             TransformData(rdbChangeInfo.inserted, info.second[CHG_TYPE_INSERT]);
             TransformData(rdbChangeInfo.updated, info.second[CHG_TYPE_UPDATE]);
             TransformData(rdbChangeInfo.deleted, info.second[CHG_TYPE_DELETE]);
@@ -460,14 +463,14 @@ void NDKStoreObserver::OnChange(const Origin &origin, const RdbStoreObserver::Pr
 
 void NDKStoreObserver::OnChange() {}
 
-void NDKStoreObserver::TransformData(OH_Rdb_KeyInfo &keyInfo, std::vector<PrimaryKey> &primaryKey)
+void NDKStoreObserver::TransformData(Rdb_KeyInfo &keyInfo, std::vector<PrimaryKey> &primaryKey)
 {
     keyInfo.count = (int)primaryKey.size();
     keyInfo.type = (OH_ColumnType)primaryKey.begin()->index();
     if (keyInfo.type == TYPE_NULL || keyInfo.type > TYPE_TEXT) {
         return;
     }
-    union OH_Rdb_KeyInfo::OH_Rdb_KeyData keyData[keyInfo.count];
+    union Rdb_KeyInfo::Rdb_KeyData keyData[keyInfo.count];
     auto it = primaryKey.begin();
     if (keyInfo.type == TYPE_REAL) {
         for (int i = 0; i < keyInfo.count; ++i) {
@@ -488,7 +491,7 @@ void NDKStoreObserver::TransformData(OH_Rdb_KeyInfo &keyInfo, std::vector<Primar
     keyInfo.data = keyData;
 }
 
-SyncMode NDKStoreObserver::TransformMode(OH_SyncMode &mode)
+SyncMode NDKStoreObserver::TransformMode(Rdb_SyncMode &mode)
 {
     switch (mode) {
         case SYNC_MODE_TIME_FIRST:
@@ -502,12 +505,12 @@ SyncMode NDKStoreObserver::TransformMode(OH_SyncMode &mode)
     }
 }
 
-OH_Rdb_SubscribeCallback *NDKStoreObserver::Get()
+Rdb_SubscribeCallback *NDKStoreObserver::Get()
 {
     return callback_;
 }
 
-int OH_Rdb_CloudSync(OH_Rdb_Store *store, OH_SyncMode mode, const char *tables[], uint32_t count,
+int OH_Rdb_CloudSync(OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[], uint32_t count,
     OH_Rdb_SyncCallback *progress)
 {
     auto rdbStore = GetRelationalStore(store);
@@ -521,34 +524,34 @@ int OH_Rdb_CloudSync(OH_Rdb_Store *store, OH_SyncMode mode, const char *tables[]
     }
     auto callback = [&progress](Details &&details) {
         auto tableDetails = details.begin()->second;
-        OH_ProgressDetails progressDetails{ .version = DISTRIBUTED_PROGRESS_DETAIL_VERSION,
-            .schedule = (OH_Rdb_Progress)tableDetails.progress,
-            .code = (OH_Rdb_ProgressCode)tableDetails.code,
+        Rdb_ProgressDetails progressDetails{ .version = DISTRIBUTED_PROGRESS_DETAIL_VERSION,
+            .schedule = (Rdb_Progress)tableDetails.progress,
+            .code = (Rdb_ProgressCode)tableDetails.code,
             .tableLength = (int32_t)tableDetails.details.size() };
-        OH_TableDetails ohTableDetails[progressDetails.tableLength];
+        Rdb_TableDetails rdbTableDetails[progressDetails.tableLength];
         int index = 0;
         for (const auto &detail : tableDetails.details) {
-            OH_TableDetails tableDetail{ .version = DISTRIBUTED_TABLE_DETAILS_VERSION,
+            Rdb_TableDetails tableDetail{ .version = DISTRIBUTED_TABLE_DETAILS_VERSION,
                 .table = detail.first.c_str(),
                 .upload =
-                    OH_Statistic{
+                    Rdb_Statistic{
                         .version = DISTRIBUTED_STATISTIC_VERSION,
                         .total = (int)detail.second.upload.total,
                         .successful = (int)detail.second.upload.success,
                         .failed = (int)detail.second.upload.failed,
                         .remained = (int)detail.second.upload.untreated,
                     },
-                .download = OH_Statistic{
+                .download = Rdb_Statistic{
                     .version = DISTRIBUTED_STATISTIC_VERSION,
                     .total = (int)detail.second.download.total,
                     .successful = (int)detail.second.download.success,
                     .failed = (int)detail.second.download.failed,
                     .remained = (int)detail.second.download.untreated,
                 } };
-            ohTableDetails[index] = tableDetail;
+            rdbTableDetails[index] = tableDetail;
             index++;
         }
-        progressDetails.tableDetails = ohTableDetails;
+        progressDetails.tableDetails = rdbTableDetails;
         (*progress)(&progressDetails);
     };
     return rdbStore->GetStore()->Sync(syncOption, tableNames, callback);

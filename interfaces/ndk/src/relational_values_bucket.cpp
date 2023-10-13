@@ -13,15 +13,16 @@
  * limitations under the License.
  */
 
+#include "relational_values_bucket.h"
+
 #include <map>
 
 #include "logger.h"
 #include "oh_values_bucket.h"
-#include "relational_store_error_code.h"
-#include "relational_values_bucket.h"
 #include "relational_asset.h"
-#include "value_object.h"
+#include "relational_store_error_code.h"
 #include "securec.h"
+#include "value_object.h"
 
 namespace OHOS {
 namespace RdbNdk {
@@ -121,11 +122,13 @@ int RelationalValuesBucket::PutValueObject(OH_VBucket *bucket, const char *field
 } // namespace RdbNdk
 } // namespace OHOS
 
+using namespace OHOS::RdbNdk;
+using namespace OHOS::NativeRdb;
 int OH_VBucket_PutAsset(OH_VBucket *bucket, const char *field, OH_Asset *value)
 {
-    auto asset = OHOS::RdbNdk::RelationalAsset::GetSelf(value);
-    auto self = OHOS::RdbNdk::RelationalValuesBucket::GetSelf(bucket);
-    if (self == nullptr || field == nullptr) {
+    auto self = RelationalValuesBucket::GetSelf(bucket);
+    auto asset = RelationalAsset::GetSelf(value);
+    if (self == nullptr || field == nullptr || asset == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     self->Get().Put(field, OHOS::NativeRdb::ValueObject(asset->Get()));
@@ -133,19 +136,21 @@ int OH_VBucket_PutAsset(OH_VBucket *bucket, const char *field, OH_Asset *value)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int OH_VBucket_PutAssets(OH_VBucket *bucket, const char *field, OH_Asset *value, uint32_t count)
+int OH_VBucket_PutAssets(OH_VBucket *bucket, const char *field, OH_Asset **value, uint32_t count)
 {
-    auto self = OHOS::RdbNdk::RelationalValuesBucket::GetSelf(bucket);
+    auto self = RelationalValuesBucket::GetSelf(bucket);
     if (self == nullptr || field == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    std::vector<OHOS::NativeRdb::AssetValue> assets;
+    std::vector<AssetValue> assets;
     for (int i = 0; i < count; i++) {
-        auto asset = OHOS::RdbNdk::RelationalAsset::GetSelf(value);
-        value += sizeof(OH_Asset);
+        auto asset = RelationalAsset::GetSelf(value[i]);
+        if (asset == nullptr) {
+            return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+        }
         assets.emplace_back(asset->Get());
     }
-    self->Get().Put(field, OHOS::NativeRdb::ValueObject(assets));
+    self->Get().Put(field, ValueObject(assets));
     self->capability++;
 
     return OH_Rdb_ErrCode::RDB_OK;
