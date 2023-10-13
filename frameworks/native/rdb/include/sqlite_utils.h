@@ -35,6 +35,7 @@ public:
     static const int STATEMENT_DDL;
     static const int STATEMENT_OTHER;
     static const int CONFLICT_CLAUSE_COUNT = 6;
+    static constexpr const char* REP = "#_";
 
     static int GetSqlStatementType(const std::string &sql);
     static bool IsSqlReadOnly(int sqlType);

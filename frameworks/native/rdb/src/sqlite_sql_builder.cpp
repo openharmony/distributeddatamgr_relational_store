@@ -244,10 +244,11 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(
         sql.append("DISTINCT ");
     }
     if (!columns.empty()) {
-        AppendColumns(sql, columns);
+        AppendColumns(sql, columns, table);
     } else {
         sql.append(table + ".*");
     }
+    sql.append(", " + logTable + ".cursor");
     sql.append(", CASE WHEN ").append(logTable).append(".")
         .append("status = 0 THEN true ELSE false END AS deleted_flag ");
     sql.append("FROM ").append(table);
@@ -255,7 +256,7 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(
     sql.append(" INNER JOIN  ").append(logTable).append(" ON ").append(table)
         .append(" .ROWID = ").append(logTable).append(" .data_key");
     auto whereClause = predicates.GetWhereClause();
-    SqliteUtils::Replace(whereClause, "#", logTable + ".");
+    SqliteUtils::Replace(whereClause, SqliteUtils::REP, logTable + ".");
     AppendClause(sql, " WHERE ", whereClause);
     AppendClause(sql, " GROUP BY ", predicates.GetGroup(), table);
     AppendClause(sql, " ORDER BY ", predicates.GetOrder(), table);
