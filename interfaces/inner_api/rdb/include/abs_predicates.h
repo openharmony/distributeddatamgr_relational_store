@@ -102,10 +102,8 @@ public:
     API_EXPORT virtual AbsPredicates *NotIn(const std::string &field, const std::vector<std::string> &values);
     API_EXPORT virtual AbsPredicates *NotIn(const std::string &field, const std::vector<ValueObject> &values);
 private:
-    static constexpr const char *CURSOR_FIELD = "#_cursor";
     static constexpr const char *ORIGIN_FIELD = "#_origin";
-    static constexpr const char *LOG_CURSOR_FIELD = "#cursor";
-    static constexpr const char *LOG_ORIGIN_FIELD = "#flag";
+    static constexpr const char *LOG_ORIGIN_FIELD = "#_flag";
 
     std::string whereClause;
     std::vector<ValueObject> bindArgs;
@@ -117,17 +115,17 @@ private:
     bool distinct;
     bool isNeedAnd;
     bool isSorted;
-    bool isCursorField = false;
+    bool hasCursorField = false;
 
     void Initial();
     bool CheckParameter(
         const std::string &methodName, const std::string &field, const std::initializer_list<ValueObject> &args) const;
-    inline std::string ChangeField(const std::string &field)
+    inline void CheckField(const std::string &field)
     {
-        if (!isCursorField) {
-            isCursorField = (field == CURSOR_FIELD);
+        if (hasCursorField || (field.find("#_") == std::string::npos)) {
+            return;
         }
-        return field == CURSOR_FIELD ? LOG_CURSOR_FIELD : field;
+        hasCursorField = true;
     }
     std::string RemoveQuotes(const std::string &source) const;
     void CheckIsNeedAnd();

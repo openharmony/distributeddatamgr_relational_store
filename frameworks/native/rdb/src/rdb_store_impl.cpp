@@ -73,6 +73,7 @@ int RdbStoreImpl::InnerOpen()
     syncerParam_.level_ = static_cast<int32_t>(rdbStoreConfig.GetSecurityLevel());
     syncerParam_.type_ = rdbStoreConfig.GetDistributedType();
     syncerParam_.isEncrypt_ = rdbStoreConfig.IsEncrypt();
+    syncerParam_.isRetain_ = rdbStoreConfig.GetRetainData();
     syncerParam_.password_ = {};
     GetSchema(rdbStoreConfig);
 #endif
