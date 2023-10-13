@@ -161,22 +161,10 @@ int RelationalCursor::GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned c
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-void ConvertAsset(OH_Asset *value, NativeRdb::AssetValue *asset)
-{
-    value->version = DISTRIBUTED_ASSET_VERSION;
-    value->name[0] = asset->name.c_str()[0];
-    value->uri[0] = asset->uri.c_str()[0];
-    value->path[0] = asset->path.c_str()[0];
-    value->createTime = (int64_t)asset->createTime.c_str();
-    value->modifyTime = (int64_t)asset->modifyTime.c_str();
-    value->size = (size_t)asset->size.c_str();
-    value->status = (int32_t)asset->status;
-}
-
-int RelationalCursor::GetAsset(OH_Cursor *cursor, int32_t columnIndex, int assetClassId, OH_Asset *value)
+int RelationalCursor::GetAsset(OH_Cursor *cursor, int32_t columnIndex, OH_Asset *value)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || value == nullptr || assetClassId != DISTRIBUTED_ASSET_VERSION) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     NativeRdb::AssetValue asset;
@@ -184,15 +172,14 @@ int RelationalCursor::GetAsset(OH_Cursor *cursor, int32_t columnIndex, int asset
     if (errCode != OHOS::NativeRdb::E_OK) {
         return errCode;
     }
-    ConvertAsset(value, &asset);
+    value = new (std::nothrow) RelationalAsset(asset);
     return errCode;
 }
 
-int RelationalCursor::GetAssets(OH_Cursor *cursor, int32_t columnIndex, int assetClassId, OH_Asset *value,
-    uint32_t *length)
+int RelationalCursor::GetAssets(OH_Cursor *cursor, int32_t columnIndex, OH_Asset **value, uint32_t *length)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || value == nullptr) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     std::vector<NativeRdb::AssetValue> assets;
@@ -201,11 +188,11 @@ int RelationalCursor::GetAssets(OH_Cursor *cursor, int32_t columnIndex, int asse
         return errCode;
     }
     length = reinterpret_cast<uint32_t *>(assets.size());
+
+    value = new OH_Asset *[*length];
     auto it = assets.begin();
-    for (int i = 0; i < *length; ++i) {
-        ConvertAsset(value, it.base());
-        value += sizeof(OH_Asset);
-        it++;
+    for (int i = 0; i < *length; ++i, ++it) {
+        value[i] = new RelationalAsset(*it);
     }
     return errCode;
 }

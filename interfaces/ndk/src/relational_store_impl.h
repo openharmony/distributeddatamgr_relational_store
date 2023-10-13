@@ -37,7 +37,7 @@ public:
         std::vector<PrimaryKey> updated;
         std::vector<PrimaryKey> deleted;
     };
-    explicit NDKStoreObserver(OH_Rdb_Store *store, OH_Rdb_SubscribeCallback *callback, int mode);
+    explicit NDKStoreObserver(OH_Rdb_Store *store, Rdb_SubscribeCallback *callback, int mode);
     ~NDKStoreObserver() noexcept override = default;
 
     void OnChange(const std::vector<std::string>& devices) override;
@@ -46,14 +46,14 @@ public:
 
     void OnChange() override;
 
-    static OHOS::DistributedRdb::SyncMode TransformMode(OH_SyncMode &mode);
+    static OHOS::DistributedRdb::SyncMode TransformMode(Rdb_SyncMode&mode);
 
-    OH_Rdb_SubscribeCallback *Get();
+    Rdb_SubscribeCallback *Get();
 private:
-    static void TransformData(OH_Rdb_KeyInfo &keyInfo, std::vector<RdbStoreObserver::PrimaryKey> &primaryKey);
+    static void TransformData(Rdb_KeyInfo &keyInfo, std::vector<RdbStoreObserver::PrimaryKey> &primaryKey);
     OH_Rdb_Store *store_;
-    int mode_ = OH_Rdb_SubscribeType::SUBSCRIBE_TYPE_CLOUD;
-    OH_Rdb_SubscribeCallback *callback_;
+    int mode_ = Rdb_SubscribeType::SUBSCRIBE_TYPE_CLOUD;
+    Rdb_SubscribeCallback *callback_;
 };
 
 class RelationalStore : public OH_Rdb_Store {
@@ -64,8 +64,8 @@ public:
         return store_;
     }
 
-    int DoSubscribe(OHOS::DistributedRdb::SubscribeMode mode, OH_Rdb_SubscribeCallback *observer);
-    int DoUnsubscribe(OHOS::DistributedRdb::SubscribeMode mode, OH_Rdb_SubscribeCallback *observer);
+    int DoSubscribe(Rdb_SubscribeType &type, Rdb_SubscribeCallback *observer);
+    int DoUnsubscribe(Rdb_SubscribeType &type, Rdb_SubscribeCallback *observer);
 private:
     static constexpr int const OBSERVER_SIZE = 2;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> store_;

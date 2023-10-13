@@ -264,21 +264,19 @@ typedef struct OH_Cursor {
      *
      * @param cursor Represents a pointer to an {@link OH_Cursor} instance.
      * @param columnIndex Indicates the zero-based column index.
-     * @param assetClassId Indicates the id used to uniquely identify the OH_Asset struct.
      * @param value This parameter is the output parameter,
      * and the value of the requested column as an {@link OH_Asset} instance is written to this variable.
      * @return Returns the status code of the execution.
      * @see OH_Cursor.
      * @since 11
      */
-    int (*getAsset)(OH_Cursor *cursor, int32_t columnIndex, int assetClassId, OH_Asset *value);
+    int (*getAsset)(OH_Cursor *cursor, int32_t columnIndex, OH_Asset *value);
 
     /**
      * @brief Function pointer. Obtains the value of the requested column as an {@link OH_Asset} instance.
      *
      * @param cursor Represents a pointer to an {@link OH_Cursor} instance.
      * @param columnIndex Indicates the zero-based column index.
-     * @param assetClassId Indicates the id used to uniquely identify the OH_Asset struct.
      * @param value This parameter is the output parameter,
      * and the value of the requested column as an {@link OH_Asset} instance is written to this variable.
      * @param length Indicates the length of the value.
@@ -286,7 +284,7 @@ typedef struct OH_Cursor {
      * @see OH_Cursor.
      * @since 11
      */
-    int (*getAssets)(OH_Cursor *cursor, int32_t columnIndex, int assetClassId, OH_Asset *value, uint32_t *length);
+    int (*getAssets)(OH_Cursor *cursor, int32_t columnIndex, OH_Asset **value, uint32_t *length);
 } OH_Cursor;
 
 #ifdef __cplusplus
