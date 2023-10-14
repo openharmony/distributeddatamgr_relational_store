@@ -69,7 +69,7 @@ std::string JSUtils::Convert2String(napi_env env, napi_value jsStr)
 
 int32_t JSUtils::Convert2ValueExt(napi_env env, napi_value jsValue, uint32_t &output)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_status status = napi_typeof(env, jsValue, &type);
     if (status != napi_ok || type != napi_number) {
         LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
@@ -86,7 +86,7 @@ int32_t JSUtils::Convert2ValueExt(napi_env env, napi_value jsValue, uint32_t &ou
 
 int32_t JSUtils::Convert2ValueExt(napi_env env, napi_value jsValue, int32_t &output)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_status status = napi_typeof(env, jsValue, &type);
     if (status != napi_ok || type != napi_number) {
         LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
@@ -103,7 +103,7 @@ int32_t JSUtils::Convert2ValueExt(napi_env env, napi_value jsValue, int32_t &out
 
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, bool &output)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_status status = napi_typeof(env, jsValue, &type);
     if (status != napi_ok || type != napi_boolean) {
         LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
@@ -122,7 +122,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, bool &output)
 
 int32_t JSUtils::Convert2ValueExt(napi_env env, napi_value jsValue, int64_t &output)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_status status = napi_typeof(env, jsValue, &type);
     if (status != napi_ok || type != napi_number) {
         LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
@@ -139,7 +139,7 @@ int32_t JSUtils::Convert2ValueExt(napi_env env, napi_value jsValue, int64_t &out
 
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, double &output)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_status status = napi_typeof(env, jsValue, &type);
     if (status != napi_ok || type != napi_number) {
         LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
@@ -163,7 +163,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, int64_t &output
 
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &output)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_status status = napi_typeof(env, jsValue, &type);
     if (status != napi_ok || type != napi_string) {
         LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
@@ -218,7 +218,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<uin
 
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::monostate &value)
 {
-    napi_value tempValue;
+    napi_value tempValue = nullptr;
     napi_get_null(env, &tempValue);
     bool equal = false;
     napi_strict_equals(env, jsValue, tempValue, &equal);
@@ -290,7 +290,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
 
 napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<std::string> &value)
 {
-    napi_value jsValue;
+    napi_value jsValue = nullptr;
     napi_status status = napi_create_array_with_length(env, value.size(), &jsValue);
     if (status != napi_ok) {
         return nullptr;
@@ -304,7 +304,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<std::string>
 
 napi_value JSUtils::Convert2JSValue(napi_env env, const std::string &value)
 {
-    napi_value jsValue;
+    napi_value jsValue = nullptr;
     if (napi_create_string_utf8(env, value.c_str(), value.size(), &jsValue) != napi_ok) {
         return nullptr;
     }
@@ -313,7 +313,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::string &value)
 
 napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<uint8_t> &value)
 {
-    napi_value jsValue;
+    napi_value jsValue = nullptr;
     void *native = nullptr;
     napi_value buffer = nullptr;
     napi_status status = napi_create_arraybuffer(env, value.size(), &native, &buffer);
@@ -332,7 +332,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<uint8_t> &va
 
 napi_value JSUtils::Convert2JSValue(napi_env env, int32_t value)
 {
-    napi_value jsValue;
+    napi_value jsValue = nullptr;
     napi_status status = napi_create_int32(env, value, &jsValue);
     if (status != napi_ok) {
         return nullptr;
@@ -342,7 +342,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, int32_t value)
 
 napi_value JSUtils::Convert2JSValue(napi_env env, uint32_t value)
 {
-    napi_value jsValue;
+    napi_value jsValue = nullptr;
     napi_status status = napi_create_uint32(env, value, &jsValue);
     if (status != napi_ok) {
         return nullptr;
@@ -352,7 +352,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, uint32_t value)
 
 napi_value JSUtils::Convert2JSValue(napi_env env, int64_t value)
 {
-    napi_value jsValue;
+    napi_value jsValue = nullptr;
     napi_status status = napi_create_int64(env, value, &jsValue);
     if (status != napi_ok) {
         return nullptr;
@@ -362,7 +362,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, int64_t value)
 
 napi_value JSUtils::Convert2JSValue(napi_env env, double value)
 {
-    napi_value jsValue;
+    napi_value jsValue = nullptr;
     napi_status status = napi_create_double(env, value, &jsValue);
     if (status != napi_ok) {
         return nullptr;
@@ -372,7 +372,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, double value)
 
 napi_value JSUtils::Convert2JSValue(napi_env env, bool value)
 {
-    napi_value jsValue;
+    napi_value jsValue = nullptr;
     napi_status status = napi_get_boolean(env, value, &jsValue);
     if (status != napi_ok) {
         return nullptr;
@@ -382,7 +382,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, bool value)
 
 napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<std::string, int> &value)
 {
-    napi_value jsValue;
+    napi_value jsValue = nullptr;
     napi_status status = napi_create_array_with_length(env, value.size(), &jsValue);
     if (status != napi_ok) {
         return nullptr;
@@ -390,7 +390,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<std::string, in
 
     int index = 0;
     for (const auto &[device, result] : value) {
-        napi_value jsElement;
+        napi_value jsElement = nullptr;
         status = napi_create_array_with_length(env, SYNC_RESULT_ELEMENT_NUM, &jsElement);
         if (status != napi_ok) {
             return nullptr;

@@ -40,6 +40,7 @@ struct RdbSyncerParam {
     std::string bundleName_;
     std::string hapName_;
     std::string storeName_;
+    std::string customDir_;
     int32_t area_ = 0;
     int32_t level_ = 0;
     int32_t type_ = RDB_DEVICE_COLLABORATION;

@@ -33,7 +33,7 @@ using namespace NativeRdb;
 template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_status status = napi_typeof(env, jsValue, &type);
     bool isArray;
     napi_status status_array = napi_is_array(env, jsValue, &isArray);
@@ -62,7 +62,7 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, DistributedRdb::DistributedConfig &output)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_status status = napi_typeof(env, input, &type);
     if (status != napi_ok || type != napi_object) {
         LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
@@ -89,7 +89,7 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, ValueObject &valueObject
 template<>
 napi_value Convert2JSValue(napi_env env, const Asset &value)
 {
-    napi_value object;
+    napi_value object = nullptr;
     NAPI_CALL_RETURN_ERR(napi_create_object(env, &object), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, name), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, uri), object);
@@ -104,7 +104,7 @@ napi_value Convert2JSValue(napi_env env, const Asset &value)
 template<>
 napi_value Convert2JSValue(napi_env env, const RowEntity &rowEntity)
 {
-    napi_value ret;
+    napi_value ret = nullptr;
     NAPI_CALL(env, napi_create_object(env, &ret));
     auto &values = rowEntity.Get();
     for (auto const &[key, object] : values) {
@@ -123,7 +123,7 @@ napi_value Convert2JSValue(napi_env env, const ValueObject &valueObject)
 template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &statistic)
 {
-    napi_value jsValue;
+    napi_value jsValue = nullptr;
     napi_status status = napi_create_object(env, &jsValue);
     if (status != napi_ok) {
         return nullptr;
@@ -144,7 +144,7 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &statis
 template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetail &tableDetail)
 {
-    napi_value jsValue;
+    napi_value jsValue = nullptr;
     napi_status status = napi_create_object(env, &jsValue);
     if (status != napi_ok) {
         return nullptr;
@@ -159,7 +159,7 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetail &tabl
 template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetails &tableDetails)
 {
-    napi_value jsValue;
+    napi_value jsValue = nullptr;
     napi_status status = napi_create_array_with_length(env, tableDetails.size(), &jsValue);
     if (status != napi_ok) {
         return nullptr;
@@ -167,7 +167,7 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetails &tab
 
     int index = 0;
     for (const auto &[device, result] : tableDetails) {
-        napi_value jsElement;
+        napi_value jsElement = nullptr;
         status = napi_create_array_with_length(env, 2, &jsElement);
         if (status != napi_ok) {
             return nullptr;
@@ -182,7 +182,7 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetails &tab
 template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::ProgressDetail &progressDetail)
 {
-    napi_value jsValue;
+    napi_value jsValue = nullptr;
     napi_status status = napi_create_object(env, &jsValue);
     if (status != napi_ok) {
         return nullptr;
@@ -208,7 +208,7 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::Details &details)
 template<>
 napi_value Convert2JSValue(napi_env env, const JSChangeInfo &value)
 {
-    napi_value object;
+    napi_value object = nullptr;
     auto status = napi_create_object(env, &object);
     if (status != napi_ok) {
         return nullptr;
@@ -224,7 +224,7 @@ napi_value Convert2JSValue(napi_env env, const JSChangeInfo &value)
 template<>
 napi_value Convert2JSValue(napi_env env, const Date &date)
 {
-    napi_value jsValue;
+    napi_value jsValue = nullptr;
     napi_status status = napi_create_date(env, date, &jsValue);
     if (status != napi_ok) {
         return nullptr;

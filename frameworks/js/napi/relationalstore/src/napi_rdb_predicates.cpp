@@ -76,7 +76,7 @@ void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("inAllDevices", InAllDevices),
     };
 
-    napi_value cons;
+    napi_value cons = nullptr;
     NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "RdbPredicates", NAPI_AUTO_LENGTH, New, nullptr,
                                    sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons));
     NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, cons, 1, &constructor_));
@@ -88,17 +88,17 @@ void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
 napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbPredicatesProxy::New begin.");
-    napi_value new_target;
+    napi_value new_target = nullptr;
     NAPI_CALL(env, napi_get_new_target(env, info, &new_target));
     bool is_constructor = (new_target != nullptr);
 
     size_t argc = 1;
     napi_value args[1] = { 0 };
-    napi_value thiz;
+    napi_value thiz = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
 
     if (is_constructor) {
-        napi_valuetype valueType;
+        napi_valuetype valueType = napi_undefined;
         NAPI_CALL(env, napi_typeof(env, args[0], &valueType));
         RDB_NAPI_ASSERT(env, valueType == napi_string, std::make_shared<ParamError>("name", "not empty"));
         std::string tableName = JSUtils::Convert2String(env, args[0]);
@@ -120,10 +120,10 @@ napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
     argc = 1;
     napi_value argv[1] = { args[0] };
 
-    napi_value cons;
+    napi_value cons = nullptr;
     NAPI_CALL(env, napi_get_reference_value(env, constructor_, &cons));
 
-    napi_value output;
+    napi_value output = nullptr;
     NAPI_CALL(env, napi_new_instance(env, cons, argc, argv, &output));
     LOG_DEBUG("RdbPredicatesProxy::New end");
     return output;
@@ -132,7 +132,7 @@ napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
 napi_value RdbPredicatesProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbPredicates> value)
 {
     LOG_DEBUG("RdbPredicatesProxy::NewInstance begin.");
-    napi_value cons;
+    napi_value cons = nullptr;
     napi_status status = napi_get_reference_value(env, constructor_, &cons);
     if (status != napi_ok) {
         LOG_ERROR("RdbPredicatesProxy::NewInstance get constructor failed! napi_status:%{public}d!", status);
@@ -177,7 +177,7 @@ RdbPredicatesProxy::RdbPredicatesProxy(std::string &tableName)
 RdbPredicatesProxy *RdbPredicatesProxy::GetNativePredicates(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbPredicatesProxy::GetNativePredicates begin.");
-    napi_value thiz;
+    napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
 
     RdbPredicatesProxy *proxy = nullptr;
@@ -274,7 +274,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValue(napi_env env, napi_ca
 
     field = JSUtils::Convert2String(env, args[0]);
     RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamError>("field", "not empty"));
-    
+
     int32_t ret = JSUtils::Convert2Value(env, args[1], value);
     RDB_NAPI_ASSERT(env, ret == napi_ok, std::make_shared<ParamError>("value", "a " + valueType + " array."));
 
@@ -315,10 +315,10 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldLowAndHigh(
 
     field = JSUtils::Convert2String(env, args[0]);
     RDB_NAPI_ASSERT(env, !field.empty(), std::make_shared<ParamError>("field", "not empty"));
-    
+
     int32_t ret = JSUtils::Convert2Value(env, args[1], low);
     RDB_NAPI_ASSERT(env, ret == napi_ok, std::make_shared<ParamError>("low", "a valueType."));
-        
+
     ret = JSUtils::Convert2Value(env, args[2], high);
     RDB_NAPI_ASSERT(env, ret == napi_ok, std::make_shared<ParamError>("high", "a valueType."));
 

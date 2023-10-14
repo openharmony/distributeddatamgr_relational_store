@@ -121,7 +121,7 @@ bool IsNapiTypeString(napi_env env, size_t argc, napi_value *argv, size_t arg)
     if (arg >= argc) {
         return false;
     }
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     NAPI_CALL_BASE(env, napi_typeof(env, argv[arg], &type), false);
     return type == napi_string;
 }
@@ -182,7 +182,7 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
 
 napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
 {
-    napi_value self;
+    napi_value self = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, NULL, NULL, &self, nullptr));
     auto finalize = [](napi_env env, void *data, void *hint) {
         RdbStoreProxy *proxy = reinterpret_cast<RdbStoreProxy *>(data);
@@ -207,7 +207,7 @@ napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::R
         LOG_ERROR("value is nullptr ? %{public}d", (value == nullptr));
         return nullptr;
     }
-    napi_value cons;
+    napi_value cons = nullptr;
     napi_status status = napi_get_reference_value(env, constructor_, &cons);
     if (status != napi_ok) {
         LOG_ERROR("RdbStoreProxy::NewInstance get constructor failed! code:%{public}d!", status);
@@ -389,7 +389,7 @@ int ParseSrcName(const napi_env env, const napi_value arg, std::shared_ptr<RdbSt
 
 int ParseColumns(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_typeof(env, arg, &type);
     if (type == napi_undefined || type == napi_null) {
         return OK;
@@ -416,7 +416,7 @@ int ParsePath(const napi_env env, const napi_value arg, std::shared_ptr<RdbStore
 int ParseBindArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->bindArgs.clear();
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_typeof(env, arg, &type);
     if (type == napi_undefined || type == napi_null) {
         return OK;
@@ -429,7 +429,7 @@ int ParseBindArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbS
     status = napi_get_array_length(env, arg, &arrLen);
     CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("values", "not empty."));
     for (size_t i = 0; i < arrLen; ++i) {
-        napi_value element;
+        napi_value element = nullptr;
         napi_get_element(env, arg, i, &element);
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, element, valueObject.value);
@@ -448,7 +448,7 @@ int ParseSql(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreC
 
 int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
-    napi_value keys = 0;
+    napi_value keys = nullptr;
     napi_get_all_property_names(env, arg, napi_key_own_only,
         static_cast<napi_key_filter>(napi_key_enumerable | napi_key_skip_symbols),
         napi_key_numbers_to_strings, &keys);
@@ -457,11 +457,11 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
     CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("values", "a ValuesBucket."));
 
     for (size_t i = 0; i < arrLen; ++i) {
-        napi_value key;
+        napi_value key = nullptr;
         status = napi_get_element(env, keys, i, &key);
         CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("values", "a ValuesBucket."));
         std::string keyStr = JSUtils::Convert2String(env, key);
-        napi_value value;
+        napi_value value = nullptr;
         napi_get_property(env, arg, key, &value);
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
@@ -989,7 +989,7 @@ napi_value RdbStoreProxy::GetVersion(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::SetVersion(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -1229,7 +1229,7 @@ napi_value RdbStoreProxy::Clean(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
     napi_get_value_int32(env, argv[0], &mode);
     bool valid = (mode >= 0 && mode < SubscribeMode::SUBSCRIBE_MODE_MAX);
@@ -1288,7 +1288,7 @@ napi_value RdbStoreProxy::OnLocal(napi_env env, const DistributedRdb::SubscribeO
 
 napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_typeof(env, argv[0], &type);
     RDB_NAPI_ASSERT(env, type == napi_number, std::make_shared<ParamError>("type", "SubscribeType"));
 
@@ -1378,7 +1378,7 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
     auto proxy = GetNativeInstance(env, self);
     RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
 
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_typeof(env, argv[1], &type);
     if (type == napi_number) {
         std::string event = JSUtils::Convert2String(env, argv[0]);
@@ -1420,7 +1420,7 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
     auto proxy = GetNativeInstance(env, self);
     RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
 
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_typeof(env, argv[1], &type);
     if (type == napi_number) {
         std::string event = JSUtils::Convert2String(env, argv[0]);

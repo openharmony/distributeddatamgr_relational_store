@@ -69,6 +69,7 @@ int RdbStoreImpl::InnerOpen()
     syncerParam_.bundleName_ = rdbStoreConfig.GetBundleName();
     syncerParam_.hapName_ = rdbStoreConfig.GetModuleName();
     syncerParam_.storeName_ = rdbStoreConfig.GetName();
+    syncerParam_.customDir_ = rdbStoreConfig.GetCustomDir();
     syncerParam_.area_ = rdbStoreConfig.GetArea();
     syncerParam_.level_ = static_cast<int32_t>(rdbStoreConfig.GetSecurityLevel());
     syncerParam_.type_ = rdbStoreConfig.GetDistributedType();

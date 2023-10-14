@@ -26,7 +26,7 @@ using namespace NativeRdb;
 template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_status status = napi_typeof(env, jsValue, &type);
     if (status != napi_ok || type != napi_object) {
         LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
@@ -47,7 +47,7 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
 template<>
 napi_value Convert2JSValue(napi_env env, const Asset &value)
 {
-    napi_value object;
+    napi_value object = nullptr;
     NAPI_CALL_BASE(env, napi_create_object(env, &object), object);
     NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, version), object);
     NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, name), object);
@@ -62,7 +62,7 @@ napi_value Convert2JSValue(napi_env env, const Asset &value)
 template<>
 napi_value Convert2JSValue(napi_env env, const RowEntity &rowEntity)
 {
-    napi_value ret;
+    napi_value ret = nullptr;
     NAPI_CALL(env, napi_create_object(env, &ret));
     auto &values = rowEntity.Get();
     for (auto const &[key, object] : values) {

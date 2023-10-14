@@ -28,9 +28,9 @@ namespace CloudData {
 using Status = OHOS::CloudData::CloudService::Status;
 
 struct JsErrorCode {
-    int32_t status;
-    int32_t jsCode;
-    const char *message;
+    int32_t status = 0;
+    int32_t jsCode = -1;
+    const char *message = nullptr;
 };
 
 const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode);
