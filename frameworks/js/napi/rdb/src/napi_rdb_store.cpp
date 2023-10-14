@@ -151,7 +151,7 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
 
 napi_value RdbStoreProxy::InnerInitialize(napi_env env, napi_callback_info info, int version)
 {
-    napi_value self;
+    napi_value self = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, NULL, NULL, &self, nullptr));
     auto finalize = [](napi_env env, void *data, void *hint) {
         RdbStoreProxy *proxy = reinterpret_cast<RdbStoreProxy *>(data);
@@ -187,7 +187,7 @@ napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<OHOS::Native
         LOG_ERROR("RdbStoreProxy::NewInstance get native rdb is null.");
         return nullptr;
     }
-    napi_value cons;
+    napi_value cons = nullptr;
     napi_status status;
     if (version > APIVERSION_8) {
         status = napi_get_reference_value(env, constructorV9_, &cons);
@@ -268,9 +268,9 @@ int ParseTablesName(const napi_env env, const napi_value arg, std::shared_ptr<Rd
     RDB_CHECK_RETURN_CALL_RESULT(arrLen >= 0, context->SetError(paramError));
 
     for (uint32_t i = 0; i < arrLen; ++i) {
-        napi_value element;
+        napi_value element = nullptr;
         napi_get_element(env, arg, i, &element);
-        napi_valuetype type;
+        napi_valuetype type = napi_undefined;
         napi_typeof(env, element, &type);
         if (type == napi_string) {
             std::string table = JSUtils::Convert2String(env, element);
@@ -357,7 +357,7 @@ int ParseSrcName(const napi_env env, const napi_value arg, std::shared_ptr<RdbSt
 
 int ParseColumns(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_typeof(env, arg, &type);
     if (type == napi_undefined || type == napi_null) {
         return OK;
@@ -400,7 +400,7 @@ int ParsePath(const napi_env env, const napi_value arg, std::shared_ptr<RdbStore
 
 int ParseWhereArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_typeof(env, arg, &type);
     if (type == napi_undefined || type == napi_null) {
         return OK;
@@ -413,7 +413,7 @@ int ParseWhereArgs(const napi_env env, const napi_value arg, std::shared_ptr<Rdb
 
 int ParseSelectionArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_typeof(env, arg, &type);
     if (type == napi_undefined || type == napi_null) {
         return OK;
@@ -436,7 +436,7 @@ int ParseSql(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreC
 
 int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
-    napi_value keys = 0;
+    napi_value keys = nullptr;
     napi_get_all_property_names(env, arg, napi_key_own_only,
         static_cast<napi_key_filter>(napi_key_enumerable | napi_key_skip_symbols),
         napi_key_numbers_to_strings, &keys);
@@ -446,7 +446,7 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
     RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok, context->SetError(paramError));
 
     for (size_t i = 0; i < arrLen; ++i) {
-        napi_value key;
+        napi_value key = nullptr;
         status = napi_get_element(env, keys, i, &key);
         if (status != napi_ok) {
             LOG_DEBUG("ValuesBucket get_element errr");
@@ -454,7 +454,7 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
         RDB_CHECK_RETURN_CALL_RESULT(status == napi_ok, context->SetError(paramError));
 
         std::string keyStr = JSUtils::Convert2String(env, key);
-        napi_value value;
+        napi_value value = nullptr;
         napi_get_property(env, arg, key, &value);
 
         ValueObject valueObject;
@@ -505,7 +505,7 @@ bool IsNapiString(napi_env env, napi_callback_info info)
     if (argc < MIN_ARGC) {
         return false;
     }
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_typeof(env, args[0], &type);
     if (type == napi_string) {
         return true;
@@ -763,7 +763,7 @@ int ParseBindArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbS
         return OK;
     }
     for (uint32_t i = 0; i < arrLen; ++i) {
-        napi_value element;
+        napi_value element = nullptr;
         napi_get_element(env, arg, i, &element);
 
         ValueObject valueObject;
@@ -1064,7 +1064,7 @@ napi_value RdbStoreProxy::GetVersion(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::SetVersion(napi_env env, napi_callback_info info)
 {
-    napi_value thiz;
+    napi_value thiz = nullptr;
     size_t argc = 1;
     napi_value args[1] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
@@ -1187,7 +1187,7 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
 
 void RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *argv)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_typeof(env, argv[0], &type);
     if (type != napi_number) {
         LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: first argument is not number");
@@ -1228,7 +1228,7 @@ void RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *arg
 
 void RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *argv)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_typeof(env, argv[0], &type);
     if (type != napi_number) {
         LOG_ERROR("RdbStoreProxy::OffDataChangeEvent: first argument is not number");

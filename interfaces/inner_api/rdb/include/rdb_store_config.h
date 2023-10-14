@@ -463,6 +463,16 @@ public:
     bool GetRetainData() const;
 
     /**
+     * @brief Sets the customDir directory for the object.
+     */
+    void SetCustomDir(const std::string &customDir);
+
+    /**
+     * @brief Obtains the customDir directory in this {@code StoreConfig} object.
+     */
+    std::string GetCustomDir() const;
+
+    /**
      * @brief Overload the line number operator.
      */
     bool operator==(const RdbStoreConfig &config) const
@@ -494,7 +504,7 @@ public:
                && this->syncMode == config.syncMode && this->databaseFileType == config.databaseFileType
                && this->isEncrypt_ == config.isEncrypt_ && this->securityLevel == config.securityLevel
                && this->journalSize == config.journalSize && this->pageSize == config.pageSize
-               && this->readConSize_ == config.readConSize_;
+               && this->readConSize_ == config.readConSize_ && this->customDir_ == config.customDir_;
     }
 
 private:
@@ -530,6 +540,7 @@ private:
     int readConSize_ = 4;
     std::string encryptAlgo;
     std::string dataGroupId_;
+    std::string customDir_;
 
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
 };

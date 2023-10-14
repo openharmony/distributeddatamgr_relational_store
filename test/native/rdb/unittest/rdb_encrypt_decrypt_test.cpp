@@ -276,35 +276,16 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_06, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_Encrypt_Decrypt_Test_007
- * @tc.desc: test GetRdbPassword when KeyFileType isNot PUB_KEY_FILE
- * @tc.type: FUNC
- */
-HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_07, TestSize.Level1)
-{
-    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
-    config.SetEncryptStatus(true);
-    config.SetBundleName("com.example.TestEncrypt7");
-    EncryptTestOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    auto key = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE_NEW_KEY);
-    RdbPassword password = {};
-    EXPECT_NE(key, password);
-}
-
-/**
- * @tc.name: RdbStore_Encrypt_Decrypt_Test_008
  * @tc.desc: test RemoveSuffix when pos == std::string::npos
  * @tc.type: FUNC
  */
-HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_08, TestSize.Level1)
+HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_07, TestSize.Level1)
 {
     std::string path = RDB_TEST_PATH + "test";
     RdbHelper::DeleteRdbStore(path);
     RdbStoreConfig config(path);
     config.SetEncryptStatus(true);
-    config.SetBundleName("com.example.TestEncrypt8");
+    config.SetBundleName("com.example.TestEncrypt7");
     EncryptTestOpenCallback helper;
     int errCode;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -315,11 +296,11 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_08, TestSize.Level1)
 }
 
 /**
- * @tc.name: RdbStore_Encrypt_Decrypt_Test_009
+ * @tc.name: RdbStore_Encrypt_Decrypt_Test_008
  * @tc.desc: test RdbStore Get Encrypt Store without SetBundleName
  * @tc.type: FUNC
  */
-HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_009, TestSize.Level1)
+HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_008, TestSize.Level1)
 {
     RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
     config.SetEncryptStatus(true);
