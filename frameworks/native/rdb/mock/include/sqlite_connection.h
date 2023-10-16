@@ -43,7 +43,6 @@ public:
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string &sql,
         const std::vector<ValueObject> &args) const;
-    std::shared_ptr<SqliteStatement> CreateStatement(const std::string &sql) const;
     int DesFinalize();
     int EndStepQuery();
     void SetInTransaction(bool transaction);
@@ -77,6 +76,8 @@ private:
     static void MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Asset &newAsset);
     int SetCustomFunctions(const RdbStoreConfig &config);
     int SetCustomScalarFunction(const std::string &functionName, int argc, ScalarFunction *function);
+
+    friend class SqliteStatement;
 
     sqlite3 *dbHandle;
     bool isWriteConnection;
