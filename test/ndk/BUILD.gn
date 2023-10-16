@@ -33,6 +33,7 @@ ohos_unittest("NativeRdbNdkTest") {
   module_out_path = module_output_path
 
   sources = [
+    "${relational_store_base_path}/interfaces/ndk/src/relational_asset.cpp",
     "${relational_store_base_path}/interfaces/ndk/src/relational_cursor.cpp",
     "${relational_store_base_path}/interfaces/ndk/src/relational_predicates.cpp",
     "${relational_store_base_path}/interfaces/ndk/src/relational_predicates_objects.cpp",

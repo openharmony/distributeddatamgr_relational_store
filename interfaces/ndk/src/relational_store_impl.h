@@ -19,8 +19,8 @@
 #include <list>
 #include <memory>
 
-#include "rdb_store.h"
 #include "oh_predicates.h"
+#include "rdb_store.h"
 #include "relational_store.h"
 
 namespace OHOS {
@@ -40,15 +40,17 @@ public:
     explicit NDKStoreObserver(OH_Rdb_Store *store, Rdb_SubscribeCallback *callback, int mode);
     ~NDKStoreObserver() noexcept override = default;
 
-    void OnChange(const std::vector<std::string>& devices) override;
+    void OnChange(const std::vector<std::string> &devices) override;
 
-    void OnChange(const OHOS::DistributedRdb::Origin &origin, const PrimaryFields &fields, ChangeInfo &&changeInfo) override;
+    void OnChange(const OHOS::DistributedRdb::Origin &origin, const PrimaryFields &fields,
+        ChangeInfo &&changeInfo) override;
 
     void OnChange() override;
 
-    static OHOS::DistributedRdb::SyncMode TransformMode(Rdb_SyncMode&mode);
+    static OHOS::DistributedRdb::SyncMode TransformMode(Rdb_SyncMode &mode);
 
     Rdb_SubscribeCallback *Get();
+
 private:
     static void TransformData(Rdb_KeyInfo &keyInfo, std::vector<RdbStoreObserver::PrimaryKey> &primaryKey);
     OH_Rdb_Store *store_;
@@ -66,6 +68,7 @@ public:
 
     int DoSubscribe(Rdb_SubscribeType &type, Rdb_SubscribeCallback *observer);
     int DoUnsubscribe(Rdb_SubscribeType &type, Rdb_SubscribeCallback *observer);
+
 private:
     static constexpr int const OBSERVER_SIZE = 2;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> store_;

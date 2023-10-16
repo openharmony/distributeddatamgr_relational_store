@@ -38,7 +38,7 @@
  */
 
 #include <cstdint>
-#include "asset.h"
+#include "data_asset.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

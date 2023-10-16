@@ -168,7 +168,7 @@ public:
     std::shared_ptr<ResultSet> GetModifyTimeCursor(const std::string &table, const std::string &columnName,
         std::vector<PRIKey> &keys) override;
 
-        private:
+private:
     int InnerOpen();
     int CheckAttach(const std::string &sql);
     int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);

@@ -490,6 +490,18 @@ public:
      */
     virtual std::map<PRIKey, Date> GetModifyTime(
         const std::string &table, const std::string &columnName, std::vector<PRIKey> &keys) = 0;
+
+    /**
+     * @brief Get the the specified column modify time.
+     *
+     * @param table Indicates the specified table.
+     * @param columnName Indicates the column.
+     * @param PRIKey Indicates the primary key.
+     *
+     * @return Returns the specified column modify time in a resultSet.
+     */
+    virtual std::shared_ptr<ResultSet> GetModifyTimeCursor(const std::string &table, const std::string &columnName,
+        std::vector<PRIKey> &keys) = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif

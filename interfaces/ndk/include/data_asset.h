@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ASSET_H
-#define ASSET_H
+#ifndef DATA_ASSET_H
+#define DATA_ASSET_H
 /**
  * @addtogroup RDB
  * @{
@@ -314,4 +314,4 @@ int OH_Data_Asset_DestroyMultiple(Data_Asset **assets, uint32_t count);
 #ifdef __cplusplus
 };
 #endif
-#endif //ASSET_H
+#endif //DATA_ASSET_H
