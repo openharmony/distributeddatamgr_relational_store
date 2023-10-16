@@ -23,6 +23,7 @@
 #include "rdb_errno.h"
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
+#include "sqlite_connection.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -44,6 +45,21 @@ SqliteStatement::SqliteStatement(sqlite3_stmt *stmt) : stmtHandle(stmt)
 SqliteStatement::~SqliteStatement()
 {
     Finalize();
+}
+
+std::shared_ptr<SqliteStatement> SqliteStatement::CreateStatement(
+    SqliteConnection *connection, const std::string &sql)
+{
+    sqlite3_stmt *stmt = nullptr;
+    int errCode = sqlite3_prepare_v2(connection->dbHandle, sql.c_str(), sql.length(), &stmt, nullptr);
+    if (errCode != SQLITE_OK) {
+        LOG_ERROR("prepare_v2 ret is %{public}d", errCode);
+        if (stmt != nullptr) {
+            sqlite3_finalize(stmt);
+        }
+        return nullptr;
+    }
+    return std::make_shared<SqliteStatement>(stmt);
 }
 
 int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)

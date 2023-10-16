@@ -247,15 +247,16 @@ int StepResultSet::PrepareStep()
 
     SqliteConnection *connection = connectionPool_->AcquireConnection(true);
     if (connection == nullptr) {
-        LOG_ERROR("Get connection failed!");
+        LOG_ERROR("connectionPool_ AcquireConnection failed!");
         return E_CON_OVER_LIMIT;
     }
-    sqliteStatement = connection->CreateStatement(sql);
+    sqliteStatement = SqliteStatement::CreateStatement(connection, sql);
     connectionPool_->ReleaseConnection(connection);
     if (sqliteStatement == nullptr) {
         LOG_ERROR("Connection create statement failed!");
         return E_STATEMENT_NOT_PREPARED;
     }
+
     int errCode = sqliteStatement->BindArguments(args_);
     if (errCode != E_OK) {
         LOG_ERROR("Bind arg faild! Ret is %{public}d", errCode);
