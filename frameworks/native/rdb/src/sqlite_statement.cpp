@@ -35,13 +35,6 @@ SqliteStatement::SqliteStatement() : sql(""), stmtHandle(nullptr), readOnly(fals
 {
 }
 
-SqliteStatement::SqliteStatement(sqlite3_stmt *stmt) : stmtHandle(stmt)
-{
-    readOnly = (sqlite3_stmt_readonly(stmtHandle) != 0) ? true : false;
-    columnCount = sqlite3_column_count(stmtHandle);
-    numParameters = sqlite3_bind_parameter_count(stmtHandle);
-}
-
 SqliteStatement::~SqliteStatement()
 {
     Finalize();
@@ -59,7 +52,12 @@ std::shared_ptr<SqliteStatement> SqliteStatement::CreateStatement(
         }
         return nullptr;
     }
-    return std::make_shared<SqliteStatement>(stmt);
+    std::shared_ptr<SqliteStatement> sqliteStatement = std::make_shared<SqliteStatement>();
+    sqliteStatement->stmtHandle = stmt;
+    sqliteStatement->readOnly = (sqlite3_stmt_readonly(stmt) != 0) ? true : false;
+    sqliteStatement->columnCount = sqlite3_column_count(stmt);
+    sqliteStatement->numParameters = sqlite3_bind_parameter_count(stmt);
+    return sqliteStatement;
 }
 
 int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)

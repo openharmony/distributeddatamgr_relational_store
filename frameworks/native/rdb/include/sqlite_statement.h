@@ -28,7 +28,6 @@ class SqliteConnection;
 class SqliteStatement {
 public:
     SqliteStatement();
-    explicit SqliteStatement(sqlite3_stmt *stmt);
     ~SqliteStatement();
     static std::shared_ptr<SqliteStatement> CreateStatement(SqliteConnection *connection, const std::string &sql);
     int Prepare(sqlite3 *dbHandle, const std::string &sql);
