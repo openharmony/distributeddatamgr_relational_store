@@ -40,7 +40,7 @@
 #include <cstdint>
 #include <stddef.h>
 #include <stdbool.h>
-#include "oh_asset.h"
+#include "asset.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -72,13 +72,13 @@ typedef enum OH_ColumnType {
      */
     TYPE_BLOB,
     /**
-     * Indicates the column type is {@link OH_Asset}.
+     * Indicates the column type is {@link Data_Asset}.
      *
      * @since 11
      */
     TYPE_ASSET,
     /**
-     * Indicates the column type is array of {@link OH_Asset}.
+     * Indicates the column type is array of {@link Data_Asset}.
      *
      * @since 11
      */
@@ -260,31 +260,31 @@ typedef struct OH_Cursor {
     int (*destroy)(OH_Cursor *cursor);
 
     /**
-     * @brief Function pointer. Obtains the value of the requested column as an {@link OH_Asset} instance.
+     * @brief Function pointer. Obtains the value of the requested column as an {@link Data_Asset} instance.
      *
      * @param cursor Represents a pointer to an {@link OH_Cursor} instance.
      * @param columnIndex Indicates the zero-based column index.
      * @param value This parameter is the output parameter,
-     * and the value of the requested column as an {@link OH_Asset} instance is written to this variable.
+     * and the value of the requested column as an {@link Data_Asset} instance is written to this variable.
      * @return Returns the status code of the execution.
      * @see OH_Cursor.
      * @since 11
      */
-    int (*getAsset)(OH_Cursor *cursor, int32_t columnIndex, OH_Asset *value);
+    int (*getAsset)(OH_Cursor *cursor, int32_t columnIndex, Data_Asset *value);
 
     /**
-     * @brief Function pointer. Obtains the value of the requested column as an {@link OH_Asset} instance.
+     * @brief Function pointer. Obtains the value of the requested column as an {@link Data_Asset} instance.
      *
      * @param cursor Represents a pointer to an {@link OH_Cursor} instance.
      * @param columnIndex Indicates the zero-based column index.
      * @param value This parameter is the output parameter,
-     * and the value of the requested column as an {@link OH_Asset} instance is written to this variable.
+     * and the value of the requested column as an {@link Data_Asset} instance is written to this variable.
      * @param length Indicates the length of the value.
      * @return Returns the status code of the execution.
      * @see OH_Cursor.
      * @since 11
      */
-    int (*getAssets)(OH_Cursor *cursor, int32_t columnIndex, OH_Asset **value, uint32_t *length);
+    int (*getAssets)(OH_Cursor *cursor, int32_t columnIndex, Data_Asset **value, uint32_t *length);
 } OH_Cursor;
 
 #ifdef __cplusplus

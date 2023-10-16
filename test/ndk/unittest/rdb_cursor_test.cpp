@@ -14,10 +14,10 @@
  */
 
 #include <gtest/gtest.h>
-
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+
 #include "common.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
@@ -33,19 +33,23 @@ public:
     void TearDown();
     static void InitRdbConfig()
     {
-        config_.dataBaseDir = RDB_TEST_PATH;
+        //        config_.dataBaseDir = RDB_TEST_PATH;
+        config_.dataBaseDir = "/data/test/";
         config_.storeName = "rdb_cursor_test.db";
         config_.bundleName = "";
         config_.moduleName = "";
         config_.securityLevel = OH_Rdb_SecurityLevel::S1;
         config_.isEncrypt = false;
+        config_.area = Rdb_SecurityArea::RDB_SECURITY_AREA_EL1;
         config_.selfSize = sizeof(OH_Rdb_Config);
     }
+    static void CreateAssetTable();
+    static void SetAsset(Data_Asset *asset, int index);
     static OH_Rdb_Config config_;
 };
 
 OH_Rdb_Store *cursorTestRdbStore_;
-OH_Rdb_Config RdbNativeCursorTest::config_ = {0};
+OH_Rdb_Config RdbNativeCursorTest::config_ = { 0 };
 void RdbNativeCursorTest::SetUpTestCase(void)
 {
     InitRdbConfig();
@@ -63,7 +67,7 @@ void RdbNativeCursorTest::SetUpTestCase(void)
     valueBucket->putText(valueBucket, "data1", "zhangSan");
     valueBucket->putInt64(valueBucket, "data2", 12800);
     valueBucket->putReal(valueBucket, "data3", 100.1);
-    uint8_t arr[] = {1, 2, 3, 4, 5};
+    uint8_t arr[] = { 1, 2, 3, 4, 5 };
     int len = sizeof(arr) / sizeof(arr[0]);
     valueBucket->putBlob(valueBucket, "data4", arr, len);
     valueBucket->putText(valueBucket, "data5", "ABCDEFG");
@@ -89,6 +93,7 @@ void RdbNativeCursorTest::SetUpTestCase(void)
     EXPECT_EQ(errCode, 3);
 
     valueBucket->destroy(valueBucket);
+    CreateAssetTable();
 }
 
 void RdbNativeCursorTest::TearDownTestCase(void)
@@ -98,12 +103,90 @@ void RdbNativeCursorTest::TearDownTestCase(void)
     OH_Rdb_DeleteStore(&config_);
 }
 
-void RdbNativeCursorTest::SetUp(void)
+void RdbNativeCursorTest::SetUp(void) {}
+
+void RdbNativeCursorTest::TearDown(void) {}
+
+void RdbNativeCursorTest::CreateAssetTable()
 {
+    char createTableSql[] = "CREATE TABLE IF NOT EXISTS asset_table (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 "
+                            "ASSET, data2 ASSETS);";
+    int errCode = OH_Rdb_Execute(cursorTestRdbStore_, createTableSql);
+    EXPECT_EQ(errCode, RDB_OK);
+    char table[] = "asset_table";
+    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+    Data_Asset *asset1 = OH_Data_Asset_CreateOne();
+    SetAsset(asset1, 1);
+    Data_Asset *asset2 = OH_Data_Asset_CreateOne();
+    SetAsset(asset2, 2);
+    Data_Asset *asset3 = OH_Data_Asset_CreateOne();
+    SetAsset(asset3, 3);
+
+    valueBucket->putInt64(valueBucket, "id", 1);
+    OH_VBucket_PutAsset(valueBucket, "data1", asset1);
+    Data_Asset **assets1 = OH_Data_Asset_CreateMultiple(2);
+    assets1[0] = asset1;
+    assets1[1] = asset2;
+    errCode = OH_VBucket_PutAssets(valueBucket, "data2", assets1, 2);
+    EXPECT_EQ(errCode, RDB_OK);
+    errCode = OH_Rdb_Insert(cursorTestRdbStore_, table, valueBucket);
+    EXPECT_EQ(errCode, 1);
+
+    valueBucket->clear(valueBucket);
+    valueBucket->putInt64(valueBucket, "id", 2);
+    OH_VBucket_PutAsset(valueBucket, "data1", asset2);
+    Data_Asset **assets2 = OH_Data_Asset_CreateMultiple(2);
+    assets1[0] = asset1;
+    assets1[1] = asset3;
+    errCode = OH_VBucket_PutAssets(valueBucket, "data2", assets1, 2);
+    EXPECT_EQ(errCode, RDB_OK);
+    errCode = OH_Rdb_Insert(cursorTestRdbStore_, table, valueBucket);
+    EXPECT_EQ(errCode, 2);
+
+    valueBucket->clear(valueBucket);
+    valueBucket->putInt64(valueBucket, "id", 3);
+    OH_VBucket_PutAsset(valueBucket, "data1", asset3);
+    Data_Asset **assets3 = OH_Data_Asset_CreateMultiple(2);
+    assets1[0] = asset2;
+    assets1[1] = asset3;
+    OH_VBucket_PutAssets(valueBucket, "data2", assets1, 2);
+    EXPECT_EQ(errCode, RDB_OK);
+    errCode = OH_Rdb_Insert(cursorTestRdbStore_, table, valueBucket);
+    EXPECT_EQ(errCode, 3);
+
+    OH_Data_Asset_DestroyMultiple(assets1, 2);
+    OH_Data_Asset_DestroyMultiple(assets2, 2);
+    OH_Data_Asset_DestroyMultiple(assets3, 2);
+    OH_Data_Asset_DestroyOne(asset1);
+    OH_Data_Asset_DestroyOne(asset2);
+    OH_Data_Asset_DestroyOne(asset3);
+    valueBucket->destroy(valueBucket);
 }
 
-void RdbNativeCursorTest::TearDown(void)
+void RdbNativeCursorTest::SetAsset(Data_Asset *asset, int index)
 {
+    std::string indexString = std::to_string(index);
+    std::string name;
+    name.append("name").append(indexString);
+    int errcode = OH_Data_Asset_SetName(asset, name.c_str());
+    EXPECT_EQ(errcode, RDB_OK);
+    std::string uri;
+    name.append("uri").append(indexString);
+    errcode = OH_Data_Asset_SetUri(asset, uri.c_str());
+    EXPECT_EQ(errcode, RDB_OK);
+    std::string path;
+    name.append("path").append(indexString);
+    errcode = OH_Data_Asset_SetPath(asset, path.c_str());
+    EXPECT_EQ(errcode, RDB_OK);
+    errcode = OH_Data_Asset_SetCreateTime(asset, 1);
+    EXPECT_EQ(errcode, RDB_OK);
+    errcode = OH_Data_Asset_SetModifyTime(asset, 1);
+    EXPECT_EQ(errcode, RDB_OK);
+    errcode = OH_Data_Asset_SetSize(asset, 1);
+    EXPECT_EQ(errcode, RDB_OK);
+    errcode = OH_Data_Asset_SetStatus(asset, Data_AssetStatus::ASSET_NORMAL);
+    Data_AssetStatus status;
+    EXPECT_EQ(errcode, RDB_OK);
 }
 
 /**
@@ -239,7 +322,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_004, TestSize.Level1)
 {
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
 
-    const char *columnNames[] = {"data1", "data2", "data3", "data4"};
+    const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, columnNames, len);
     EXPECT_NE(cursor, NULL);
@@ -304,7 +387,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_005, TestSize.Level1)
 {
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
 
-    const char *columnNames[] = {"data1", "data2", "data3", "data4"};
+    const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, columnNames, len);
     EXPECT_NE(cursor, NULL);
@@ -369,4 +452,74 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_005, TestSize.Level1)
 
     predicates->destroy(predicates);
     cursor->destroy(cursor);
+}
+/**
+ * @tc.name: RDB_Native_cursor_test_005
+ * @tc.desc: Normal testCase of cursor for anomalous branch.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_006, TestSize.Level1)
+{
+    int errCode = 0;
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("asset_table");
+
+    OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, NULL, 0);
+    EXPECT_NE(cursor, NULL);
+    cursor->goToNextRow(cursor);
+
+    OH_ColumnType type;
+    errCode = cursor->getColumnType(cursor, 0, &type);
+    EXPECT_EQ(type, OH_ColumnType::TYPE_INT64);
+
+    errCode = cursor->getColumnType(cursor, 1, &type);
+    EXPECT_EQ(type, OH_ColumnType::TYPE_ASSET);
+
+    errCode = cursor->getColumnType(cursor, 2, &type);
+    EXPECT_EQ(type, OH_ColumnType::TYPE_ASSETS);
+}
+
+/**
+ * @tc.name: RDB_Native_cursor_test_005
+ * @tc.desc: Normal testCase of cursor for anomalous branch.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_007, TestSize.Level1)
+{
+    int errCode = 0;
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("asset_table");
+
+    OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, NULL, 0);
+    EXPECT_NE(cursor, NULL);
+    cursor->goToNextRow(cursor);
+
+    OH_ColumnType type;
+    errCode = cursor->getColumnType(cursor, 0, &type);
+    EXPECT_EQ(type, OH_ColumnType::TYPE_INT64);
+    int64_t id;
+    errCode = cursor->getInt64(cursor, 0, &id);
+    EXPECT_EQ(id, 1);
+
+    errCode = cursor->getColumnType(cursor, 1, &type);
+    EXPECT_EQ(type, OH_ColumnType::TYPE_ASSET);
+    Data_Asset *asset;
+    errCode = cursor->getAsset(cursor, 1, asset);
+    EXPECT_NE(asset, NULL);
+    char name[10] = "";
+    size_t nameLength;
+    errCode = OH_Data_Asset_GetName(asset, name, &nameLength);
+    EXPECT_EQ(strcmp(name, "name1"), 0);
+    OH_Data_Asset_DestroyOne(asset);
+
+    errCode = cursor->getColumnType(cursor, 2, &type);
+    EXPECT_EQ(type, OH_ColumnType::TYPE_ASSETS);
+    Data_Asset **assets;
+    uint32_t assetCount;
+    errCode = cursor->getAssets(cursor, 2, assets, &assetCount);
+    EXPECT_NE(assets, NULL);
+    EXPECT_EQ(assetCount, 2);
+    Data_Asset *asset1 = assets[1];
+    EXPECT_NE(asset1, NULL);
+    errCode = OH_Data_Asset_GetName(asset1, name, &nameLength);
+    EXPECT_EQ(strcmp(name, "name2"), 0);
+    OH_Data_Asset_DestroyMultiple(assets, assetCount);
 }

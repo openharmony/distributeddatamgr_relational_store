@@ -20,7 +20,7 @@
 namespace OHOS::RdbNdk {
 RelationalAsset::RelationalAsset(AssetValue &asset) : asset_(std::move(asset)) {}
 
-RelationalAsset *RelationalAsset::GetSelf(OH_Asset *asset)
+RelationalAsset *RelationalAsset::GetSelf(Data_Asset *asset)
 {
     if (asset == nullptr) {
         LOG_ERROR("Parameters set error:asset is NULL ? %{public}d", (asset == nullptr));
@@ -36,7 +36,7 @@ AssetValue &RelationalAsset::Get()
 } // namespace OHOS::RdbNdk
 
 using namespace OHOS::RdbNdk;
-int OH_Asset_SetName(OH_Asset *asset, char *name, size_t length)
+int OH_Data_Asset_SetName(Data_Asset *asset, const char *name)
 {
     auto rdbAsset = RelationalAsset::GetSelf(asset);
     if (rdbAsset == nullptr || name == nullptr) {
@@ -47,7 +47,7 @@ int OH_Asset_SetName(OH_Asset *asset, char *name, size_t length)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int OH_Asset_SetUri(OH_Asset *asset, char *uri, size_t length)
+int OH_Data_Asset_SetUri(Data_Asset *asset, const char *uri)
 {
     auto rdbAsset = RelationalAsset::GetSelf(asset);
     if (rdbAsset == nullptr || uri == nullptr) {
@@ -58,7 +58,7 @@ int OH_Asset_SetUri(OH_Asset *asset, char *uri, size_t length)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int OH_Asset_SetPath(OH_Asset *asset, char *path, size_t length)
+int OH_Data_Asset_SetPath(Data_Asset *asset, const char *path)
 {
     auto rdbAsset = RelationalAsset::GetSelf(asset);
     if (rdbAsset == nullptr || path == nullptr) {
@@ -69,7 +69,7 @@ int OH_Asset_SetPath(OH_Asset *asset, char *path, size_t length)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int OH_Asset_SetCreateTime(OH_Asset *asset, int64_t createTime)
+int OH_Data_Asset_SetCreateTime(Data_Asset *asset, int64_t createTime)
 {
     auto rdbAsset = RelationalAsset::GetSelf(asset);
     if (rdbAsset == nullptr) {
@@ -80,7 +80,7 @@ int OH_Asset_SetCreateTime(OH_Asset *asset, int64_t createTime)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int OH_Asset_SetModifyTime(OH_Asset *asset, int64_t modifyTime)
+int OH_Data_Asset_SetModifyTime(Data_Asset *asset, int64_t modifyTime)
 {
     auto rdbAsset = RelationalAsset::GetSelf(asset);
     if (rdbAsset == nullptr) {
@@ -91,7 +91,7 @@ int OH_Asset_SetModifyTime(OH_Asset *asset, int64_t modifyTime)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int OH_Asset_SetSize(OH_Asset *asset, size_t size)
+int OH_Data_Asset_SetSize(Data_Asset *asset, size_t size)
 {
     auto rdbAsset = RelationalAsset::GetSelf(asset);
     if (rdbAsset == nullptr) {
@@ -102,7 +102,7 @@ int OH_Asset_SetSize(OH_Asset *asset, size_t size)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int OH_Asset_SetStatus(OH_Asset *asset, OH_AssetStatus status)
+int OH_Data_Asset_SetStatus(Data_Asset *asset, Data_AssetStatus status)
 {
     auto rdbAsset = RelationalAsset::GetSelf(asset);
     if (rdbAsset == nullptr) {
@@ -113,7 +113,7 @@ int OH_Asset_SetStatus(OH_Asset *asset, OH_AssetStatus status)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int OH_Asset_GetName(OH_Asset *asset, char *name, size_t *length)
+int OH_Data_Asset_GetName(Data_Asset *asset, char *name, size_t *length)
 {
     auto rdbAsset = RelationalAsset::GetSelf(asset);
     if (rdbAsset == nullptr) {
@@ -129,7 +129,7 @@ int OH_Asset_GetName(OH_Asset *asset, char *name, size_t *length)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int OH_Asset_GetUri(OH_Asset *asset, char *name, size_t *length)
+int OH_Data_Asset_GetUri(Data_Asset *asset, char *uri, size_t *length)
 {
     auto rdbAsset = RelationalAsset::GetSelf(asset);
     if (rdbAsset == nullptr) {
@@ -137,7 +137,7 @@ int OH_Asset_GetUri(OH_Asset *asset, char *name, size_t *length)
     }
     auto innerAsset = rdbAsset->Get();
     *length = innerAsset.path.size();
-    errno_t result = memcpy_s(name, *length + 1, innerAsset.uri.c_str(), *length + 1);
+    errno_t result = memcpy_s(uri, *length + 1, innerAsset.uri.c_str(), *length + 1);
     if (result != EOK) {
         LOG_ERROR("memcpy_s failed, result is %{public}d", result);
         return OH_Rdb_ErrCode::RDB_ERR;
@@ -145,7 +145,7 @@ int OH_Asset_GetUri(OH_Asset *asset, char *name, size_t *length)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int OH_Asset_GetPath(OH_Asset *asset, char *name, size_t *length)
+int OH_Data_Asset_GetPath(Data_Asset *asset, char *path, size_t *length)
 {
     auto rdbAsset = RelationalAsset::GetSelf(asset);
     if (rdbAsset == nullptr) {
@@ -153,14 +153,14 @@ int OH_Asset_GetPath(OH_Asset *asset, char *name, size_t *length)
     }
     auto innerAsset = rdbAsset->Get();
     *length = innerAsset.path.size();
-    errno_t result = memcpy_s(name, *length + 1, innerAsset.path.c_str(), *length + 1);
+    errno_t result = memcpy_s(path, *length + 1, innerAsset.path.c_str(), *length + 1);
     if (result != EOK) {
         LOG_ERROR("memcpy_s failed, result is %{public}d", result);
         return OH_Rdb_ErrCode::RDB_ERR;
     }
     return OH_Rdb_ErrCode::RDB_OK;
 }
-int OH_Asset_GetCreateTime(OH_Asset *asset, int64_t *createTime)
+int OH_Data_Asset_GetCreateTime(Data_Asset *asset, int64_t *createTime)
 {
     auto rdbAsset = RelationalAsset::GetSelf(asset);
     if (rdbAsset == nullptr) {
@@ -171,7 +171,7 @@ int OH_Asset_GetCreateTime(OH_Asset *asset, int64_t *createTime)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int OH_Asset_GetModifyTime(OH_Asset *asset, int64_t *modifyTime)
+int OH_Data_Asset_GetModifyTime(Data_Asset *asset, int64_t *modifyTime)
 {
     auto rdbAsset = RelationalAsset::GetSelf(asset);
     if (rdbAsset == nullptr) {
@@ -182,7 +182,7 @@ int OH_Asset_GetModifyTime(OH_Asset *asset, int64_t *modifyTime)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int OH_Asset_GetSize(OH_Asset *asset, size_t *size)
+int OH_Data_Asset_GetSize(Data_Asset *asset, size_t *size)
 {
     auto rdbAsset = RelationalAsset::GetSelf(asset);
     if (rdbAsset == nullptr) {
@@ -193,23 +193,23 @@ int OH_Asset_GetSize(OH_Asset *asset, size_t *size)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int OH_Asset_GetStatus(OH_Asset *asset, OH_AssetStatus *status)
+int OH_Data_Asset_GetStatus(Data_Asset *asset, Data_AssetStatus *status)
 {
     auto rdbAsset = RelationalAsset::GetSelf(asset);
     if (rdbAsset == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     auto innerAsset = rdbAsset->Get();
-    status = reinterpret_cast<OH_AssetStatus *>(innerAsset.status);
+    status = reinterpret_cast<Data_AssetStatus *>(innerAsset.status);
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-OH_Asset *OH_Asset_CreateOne()
+Data_Asset *OH_Data_Asset_CreateOne()
 {
     return new (std::nothrow) RelationalAsset();
 }
 
-int OH_Asset_DestroyOne(OH_Asset *asset)
+int OH_Data_Asset_DestroyOne(Data_Asset *asset)
 {
     auto self = RelationalAsset::GetSelf(asset);
     if (self == nullptr) {
@@ -219,16 +219,16 @@ int OH_Asset_DestroyOne(OH_Asset *asset)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-OH_Asset **OH_Asset_CreateMultiple(uint32_t count)
+Data_Asset **OH_Data_Asset_CreateMultiple(uint32_t count)
 {
-    auto assets = new OH_Asset *[count];
+    auto assets = new Data_Asset *[count];
     for (int i = 0; i < count; ++i) {
         assets[i] = new RelationalAsset();
     }
     return assets;
 }
 
-int OH_Asset_DestroyMultiple(OH_Asset **assets, uint32_t count)
+int OH_Data_Asset_DestroyMultiple(Data_Asset **assets, uint32_t count)
 {
     for (int i = 0; i < count; ++i) {
         auto self = RelationalAsset::GetSelf(assets[i]);
