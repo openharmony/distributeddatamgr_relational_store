@@ -40,7 +40,7 @@
 #include <cstdint>
 #include <stddef.h>
 #include <stdbool.h>
-#include "asset.h"
+#include "data_asset.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

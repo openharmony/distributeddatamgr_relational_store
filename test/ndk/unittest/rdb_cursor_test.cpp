@@ -178,11 +178,11 @@ void RdbNativeCursorTest::SetAsset(Data_Asset *asset, int index)
     name.append("path").append(indexString);
     errcode = OH_Data_Asset_SetPath(asset, path.c_str());
     EXPECT_EQ(errcode, RDB_OK);
-    errcode = OH_Data_Asset_SetCreateTime(asset, 1);
+    errcode = OH_Data_Asset_SetCreateTime(asset, index);
     EXPECT_EQ(errcode, RDB_OK);
-    errcode = OH_Data_Asset_SetModifyTime(asset, 1);
+    errcode = OH_Data_Asset_SetModifyTime(asset, index);
     EXPECT_EQ(errcode, RDB_OK);
-    errcode = OH_Data_Asset_SetSize(asset, 1);
+    errcode = OH_Data_Asset_SetSize(asset, index);
     EXPECT_EQ(errcode, RDB_OK);
     errcode = OH_Data_Asset_SetStatus(asset, Data_AssetStatus::ASSET_NORMAL);
     Data_AssetStatus status;
@@ -453,6 +453,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_005, TestSize.Level1)
     predicates->destroy(predicates);
     cursor->destroy(cursor);
 }
+
 /**
  * @tc.name: RDB_Native_cursor_test_005
  * @tc.desc: Normal testCase of cursor for anomalous branch.
@@ -476,6 +477,9 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_006, TestSize.Level1)
 
     errCode = cursor->getColumnType(cursor, 2, &type);
     EXPECT_EQ(type, OH_ColumnType::TYPE_ASSETS);
+
+    predicates->destroy(predicates);
+    cursor->destroy(cursor);
 }
 
 /**
@@ -505,10 +509,61 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_007, TestSize.Level1)
     errCode = cursor->getAsset(cursor, 1, asset);
     EXPECT_NE(asset, NULL);
     char name[10] = "";
-    size_t nameLength;
+    size_t nameLength = 0;
     errCode = OH_Data_Asset_GetName(asset, name, &nameLength);
     EXPECT_EQ(strcmp(name, "name1"), 0);
+
+    char uri[10] = "";
+    size_t uriLength = 0;
+    errCode = OH_Data_Asset_GetUri(asset, uri, &uriLength);
+    EXPECT_EQ(strcmp(uri, "uri1"), 0);
+
+    char path[10] = "";
+    size_t pathLength = 0;
+    errCode = OH_Data_Asset_GetPath(asset, path, &pathLength);
+    EXPECT_EQ(strcmp(path, "path1"), 0);
+
+    int64_t createTime = 0;
+    errCode = OH_Data_Asset_GetCreateTime(asset, &createTime);
+    EXPECT_EQ(createTime, 1);
+
+    int64_t modifyTime = 0;
+    errCode = OH_Data_Asset_GetModifyTime(asset, &modifyTime);
+    EXPECT_EQ(modifyTime, 1);
+
+    size_t size = 0;
+    errCode = OH_Data_Asset_GetSize(asset, &size);
+    EXPECT_EQ(size, 1);
+
+    Data_AssetStatus status = Data_AssetStatus::ASSET_NULL;
+    errCode = OH_Data_Asset_GetStatus(asset, &status);
+    EXPECT_EQ(status, ASSET_INSERT);
+
+    predicates->destroy(predicates);
     OH_Data_Asset_DestroyOne(asset);
+    cursor->destroy(cursor);
+}
+
+/**
+ * @tc.name: RDB_Native_cursor_test_008
+ * @tc.desc: Normal testCase of cursor for getAssets.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_008, TestSize.Level1)
+{
+    int errCode = 0;
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("asset_table");
+
+    OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, NULL, 0);
+    EXPECT_NE(cursor, NULL);
+    cursor->goToNextRow(cursor);
+
+    OH_ColumnType type;
+    errCode = cursor->getColumnType(cursor, 0, &type);
+    EXPECT_EQ(type, OH_ColumnType::TYPE_INT64);
+    int64_t id;
+    errCode = cursor->getInt64(cursor, 0, &id);
+    EXPECT_EQ(id, 1);
 
     errCode = cursor->getColumnType(cursor, 2, &type);
     EXPECT_EQ(type, OH_ColumnType::TYPE_ASSETS);
@@ -517,9 +572,41 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_007, TestSize.Level1)
     errCode = cursor->getAssets(cursor, 2, assets, &assetCount);
     EXPECT_NE(assets, NULL);
     EXPECT_EQ(assetCount, 2);
-    Data_Asset *asset1 = assets[1];
-    EXPECT_NE(asset1, NULL);
-    errCode = OH_Data_Asset_GetName(asset1, name, &nameLength);
+    Data_Asset *asset = assets[1];
+    EXPECT_NE(asset, NULL);
+
+    char name[10] = "";
+    size_t nameLength = 0;
+    errCode = OH_Data_Asset_GetName(asset, name, &nameLength);
     EXPECT_EQ(strcmp(name, "name2"), 0);
+
+    char uri[10] = "";
+    size_t uriLength = 0;
+    errCode = OH_Data_Asset_GetUri(asset, uri, &uriLength);
+    EXPECT_EQ(strcmp(uri, "uri2"), 0);
+
+    char path[10] = "";
+    size_t pathLength = 0;
+    errCode = OH_Data_Asset_GetPath(asset, path, &pathLength);
+    EXPECT_EQ(strcmp(path, "path2"), 0);
+
+    int64_t createTime = 0;
+    errCode = OH_Data_Asset_GetCreateTime(asset, &createTime);
+    EXPECT_EQ(createTime, 2);
+
+    int64_t modifyTime = 0;
+    errCode = OH_Data_Asset_GetModifyTime(asset, &modifyTime);
+    EXPECT_EQ(modifyTime, 2);
+
+    size_t size = 0;
+    errCode = OH_Data_Asset_GetSize(asset, &size);
+    EXPECT_EQ(size, 2);
+
+    Data_AssetStatus status = Data_AssetStatus::ASSET_NULL;
+    errCode = OH_Data_Asset_GetStatus(asset, &status);
+    EXPECT_EQ(status, ASSET_INSERT);
+
+    predicates->destroy(predicates);
     OH_Data_Asset_DestroyMultiple(assets, assetCount);
+    cursor->destroy(cursor);
 }

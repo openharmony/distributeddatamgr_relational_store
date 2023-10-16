@@ -488,7 +488,7 @@ typedef struct Rdb_KeyInfo {
          * Indicates const char * type of the data.
          */
         const char *text;
-    } * data;
+    } *data;
 } Rdb_KeyInfo;
 
 /**
