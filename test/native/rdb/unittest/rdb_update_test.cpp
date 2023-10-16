@@ -27,25 +27,14 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
-struct TestData {
-    int id = -1;
-    std::string name = "";
-    int age = -1;
-    double salary = -1;
-    std::vector<uint8_t> blobType = std::vector<uint8_t>{};
-};
-
-TestData g_data[2] = {
-    {1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }},
-    {2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }},
-};
+extern RowData g_rowData[3];
 
 class RdbStoreUpdateTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     static void ExpectValue(const std::shared_ptr<OHOS::NativeRdb::ResultSet> &resultSet,
-        const TestData &expect);
+        const RowData &expect);
     void SetUp();
     void TearDown();
 
@@ -108,16 +97,7 @@ void RdbStoreUpdateTest::TearDown(void)
     RdbHelper::ClearCache();
 }
 
-ValuesBucket SetValue(const TestData &testData)
-{
-    ValuesBucket value;
-    value.PutInt("id", testData.id);
-    value.PutString("name", testData.name);
-    value.PutInt("age", testData.age);
-    value.PutDouble("salary", testData.salary);
-    value.PutBlob("blobType", testData.blobType);
-    return value;
-}
+extern ValuesBucket SetRowData(const RowData &rowData);
 
 /**
  * @tc.name: RdbStore_Update_001
@@ -132,7 +112,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", SetValue(g_data[0]));
+    int ret = store->Insert(id, "test", SetRowData(g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
@@ -152,7 +132,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
 
     ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, TestData{2, "lisi", 20, 200.5, std::vector<uint8_t>{ 4, 5, 6 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{2, "lisi", 20, 200.5, std::vector<uint8_t>{ 4, 5, 6 }});
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ERROR);
@@ -174,11 +154,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
     ValuesBucket values;
     int changedRows;
 
-    int ret = store->Insert(id, "test", SetValue(g_data[0]));
+    int ret = store->Insert(id, "test", SetRowData(g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", SetValue(g_data[1]));
+    ret = store->Insert(id, "test", SetRowData(g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -194,11 +174,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, TestData{1, "zhangsan", 18, 300.5, std::vector<uint8_t>{ 4, 5, 6 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{1, "zhangsan", 18, 300.5, std::vector<uint8_t>{ 4, 5, 6 }});
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, TestData{2, "lisi", 19, 300.5, std::vector<uint8_t>{ 4, 5, 6 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{2, "lisi", 19, 300.5, std::vector<uint8_t>{ 4, 5, 6 }});
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ERROR);
@@ -267,11 +247,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", SetValue(g_data[0]));
+    int ret = store->Insert(id, "test", SetRowData(g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", SetValue(g_data[1]));
+    ret = store->Insert(id, "test", SetRowData(g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -290,11 +270,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, TestData{1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }});
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, TestData{3, "wangjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{3, "wangjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }});
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ERROR);
@@ -316,11 +296,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", SetValue(g_data[0]));
+    int ret = store->Insert(id, "test", SetRowData(g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", SetValue(g_data[1]));
+    ret = store->Insert(id, "test", SetRowData(g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -339,11 +319,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, TestData{1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }});
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, TestData{2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }});
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ERROR);
@@ -365,11 +345,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", SetValue(g_data[0]));
+    int ret = store->Insert(id, "test", SetRowData(g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", SetValue(g_data[1]));
+    ret = store->Insert(id, "test", SetRowData(g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -389,11 +369,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, TestData{1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }});
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, TestData{3, "wangjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{3, "wangjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }});
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ERROR);
@@ -415,11 +395,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", SetValue(g_data[0]));
+    int ret = store->Insert(id, "test", SetRowData(g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", SetValue(g_data[1]));
+    ret = store->Insert(id, "test", SetRowData(g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -438,11 +418,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, TestData{1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }});
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, TestData{2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }});
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ERROR);
@@ -464,11 +444,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", SetValue(g_data[0]));
+    int ret = store->Insert(id, "test", SetRowData(g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", SetValue(g_data[1]));
+    ret = store->Insert(id, "test", SetRowData(g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -488,11 +468,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, TestData{1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }});
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, TestData{3, "wangjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{3, "wangjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }});
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ERROR);
@@ -514,11 +494,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", SetValue(g_data[0]));
+    int ret = store->Insert(id, "test", SetRowData(g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", SetValue(g_data[1]));
+    ret = store->Insert(id, "test", SetRowData(g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -537,7 +517,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
 
-    RdbStoreUpdateTest::ExpectValue(resultSet, TestData{2, "zhangsan", 20, 300.5, std::vector<uint8_t>{ 4, 5, 6 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{2, "zhangsan", 20, 300.5, std::vector<uint8_t>{ 4, 5, 6 }});
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ERROR);
@@ -569,7 +549,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateSqlBuilder_001, TestSize.Level1)
 }
 
 void RdbStoreUpdateTest::ExpectValue(const std::shared_ptr<OHOS::NativeRdb::ResultSet> &resultSet,
-    const TestData &expect)
+    const RowData &expect)
 {
     EXPECT_NE(nullptr, resultSet);
     int columnIndex;
