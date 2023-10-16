@@ -52,7 +52,7 @@ public:
 private:
     static void TransformData(Rdb_KeyInfo &keyInfo, std::vector<RdbStoreObserver::PrimaryKey> &primaryKey);
     OH_Rdb_Store *store_;
-    int mode_ = Rdb_SubscribeType::SUBSCRIBE_TYPE_CLOUD;
+    int mode_ = Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD;
     Rdb_SubscribeCallback *callback_;
 };
 

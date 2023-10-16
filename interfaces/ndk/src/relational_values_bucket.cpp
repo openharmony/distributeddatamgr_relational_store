@@ -124,7 +124,7 @@ int RelationalValuesBucket::PutValueObject(OH_VBucket *bucket, const char *field
 
 using namespace OHOS::RdbNdk;
 using namespace OHOS::NativeRdb;
-int OH_VBucket_PutAsset(OH_VBucket *bucket, const char *field, OH_Asset *value)
+int OH_VBucket_PutAsset(OH_VBucket *bucket, const char *field, Data_Asset *value)
 {
     auto self = RelationalValuesBucket::GetSelf(bucket);
     auto asset = RelationalAsset::GetSelf(value);
@@ -136,7 +136,7 @@ int OH_VBucket_PutAsset(OH_VBucket *bucket, const char *field, OH_Asset *value)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int OH_VBucket_PutAssets(OH_VBucket *bucket, const char *field, OH_Asset **value, uint32_t count)
+int OH_VBucket_PutAssets(OH_VBucket *bucket, const char *field, Data_Asset **value, uint32_t count)
 {
     auto self = RelationalValuesBucket::GetSelf(bucket);
     if (self == nullptr || field == nullptr) {

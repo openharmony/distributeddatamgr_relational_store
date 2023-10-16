@@ -75,24 +75,24 @@ typedef enum OH_Rdb_SecurityLevel {
  *
  * @since 11
  */
-typedef enum OH_Rdb_SecurityArea {
+typedef enum Rdb_SecurityArea {
     /**
      * @brief Security Area 1.
      */
-    OH_SecurityArea_EL1 = 1,
+    RDB_SECURITY_AREA_EL1 = 1,
     /**
      * @brief Security Area 2.
      */
-    OH_SecurityArea_EL2,
+    RDB_SECURITY_AREA_EL2,
     /**
      * @brief Security Area 3.
      */
-    OH_SecurityArea_EL3,
+    RDB_SECURITY_AREA_EL3,
     /**
      * @brief Security Area 4.
      */
-    OH_SecurityArea_EL4,
-} OH_Rdb_SecurityArea;
+    RDB_SECURITY_AREA_EL4,
+} Rdb_SecurityArea;
 
 /**
  * @brief Manages relational database configurations.
@@ -130,11 +130,11 @@ typedef struct {
      */
     int securityLevel;
     /**
-     * Indicates the security area {@link OH_Rdb_SecurityArea} of the database.
+     * Indicates the security area {@link Rdb_SecurityArea} of the database.
      *
      * @since 11
      */
-    OH_Rdb_SecurityArea area;
+    int area;
 } OH_Rdb_Config;
 #pragma pack()
 
@@ -382,7 +382,7 @@ typedef enum Rdb_DistributedType {
     /**
      * @brief Indicates the table is distributed among the devices.
      */
-    DISTRIBUTED_CLOUD
+    RDB_DISTRIBUTED_CLOUD
 } Rdb_DistributedType;
 
 /**
@@ -447,11 +447,11 @@ typedef enum Rdb_ChangeType {
     /**
      * @brief Means the change type is data change.
      */
-    DATA_CHANGE,
+    RDB_DATA_CHANGE,
     /**
      * @brief Means the change type is asset change.
      */
-    ASSET_CHANGE
+    RDB_ASSET_CHANGE
 } Rdb_ChangeType;
 
 /**
@@ -466,9 +466,9 @@ typedef struct Rdb_KeyInfo {
     int count;
 
     /**
-     * Indicates data type of the key.
+     * Indicates data type {@link OH_ColumnType} of the key.
      */
-    OH_ColumnType type;
+    int type;
 
     /**
      * Indicates the data of the key info.
@@ -477,18 +477,18 @@ typedef struct Rdb_KeyInfo {
         /**
          * Indicates uint64_t type of the data.
          */
-        uint64_t intData;
+        uint64_t integer;
 
         /**
          * Indicates double type of the data.
          */
-        double doubleData;
+        double real;
 
         /**
          * Indicates const char * type of the data.
          */
-        const char *textData;
-    } *data;
+        const char *text;
+    } * data;
 } Rdb_KeyInfo;
 
 /**
@@ -497,6 +497,7 @@ typedef struct Rdb_KeyInfo {
  * @since 11
  */
 #define DISTRIBUTED_CHANGE_INFO_VERSION 1
+
 /**
  * @brief Describes the notify info of data change.
  *
@@ -516,7 +517,7 @@ typedef struct Rdb_ChangeInfo {
     /**
      * The {@link Rdb_ChangeType} of changed table.
      */
-    Rdb_ChangeType ChangeType;
+    int ChangeType;
 
     /**
      * The {@link Rdb_KeyInfo} of inserted rows.
@@ -543,12 +544,12 @@ typedef enum Rdb_SubscribeType {
     /**
      * @brief Subscription to cloud data changes.
      */
-    SUBSCRIBE_TYPE_CLOUD,
+    RDB_SUBSCRIBE_TYPE_CLOUD,
 
     /**
      * @brief Subscription to cloud data change details.
      */
-    SUBSCRIBE_TYPE_CLOUD_DETAILS,
+    RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS,
 } Rdb_SubscribeType;
 
 /**
@@ -560,7 +561,7 @@ typedef enum Rdb_SubscribeType {
  * @see OH_Rdb_Store.
  * @since 11
  */
-typedef void (*OH_Rdb_CloudObserver)(OH_Rdb_Store *store, OH_VObject *values, uint32_t count);
+typedef void (*OH_Rdb_BriefObserver)(OH_Rdb_Store *store, OH_VObject *values, uint32_t count);
 
 /**
  * @brief The callback function of cloud data change details event.
@@ -571,7 +572,7 @@ typedef void (*OH_Rdb_CloudObserver)(OH_Rdb_Store *store, OH_VObject *values, ui
  * @see OH_Rdb_Store.
  * @since 11
  */
-typedef void (*OH_Rdb_CloudDetailsObserver)(OH_Rdb_Store *store, Rdb_ChangeInfo *changeInfo, uint32_t count);
+typedef void (*OH_Rdb_DetailsObserver)(OH_Rdb_Store *store, Rdb_ChangeInfo *changeInfo, uint32_t count);
 
 /**
  * @brief Indicates the callback functions.
@@ -582,11 +583,11 @@ typedef union Rdb_SubscribeCallback {
     /**
      * The callback function of cloud data change details event.
      */
-    OH_Rdb_CloudDetailsObserver *cloudDetailsObserver;
+    OH_Rdb_DetailsObserver *detailsObserver;
     /**
      * The callback function of cloud data change event.
      */
-    OH_Rdb_CloudObserver *cloudObserver;
+    OH_Rdb_BriefObserver *briefObserver;
 } Rdb_SubscribeCallback;
 
 /**
@@ -623,34 +624,23 @@ typedef enum Rdb_SyncMode {
      * @brief Indicates that data is synchronized from the end with the closest modification time
      * to the end with a more distant modification time.
      */
-    SYNC_MODE_TIME_FIRST,
+    RDB_SYNC_MODE_TIME_FIRST,
     /**
      * @brief Indicates that data is synchronized from local to cloud.
      */
-    SYNC_MODE_NATIVE_FIRST,
+    RDB_SYNC_MODE_NATIVE_FIRST,
     /**
      * @brief Indicates that data is synchronized from cloud to local.
      */
-    SYNC_MODE_CLOUD_FIRST
+    RDB_SYNC_MODE_CLOUD_FIRST
 } Rdb_SyncMode;
 
-/**
- * @brief Indicates version of {@link Rdb_Statistic}
- *
- * @since 11
- */
-#define DISTRIBUTED_STATISTIC_VERSION 1
 /**
  * @brief Describes the statistic of the cloud sync process.
  *
  * @since 11
  */
 typedef struct Rdb_Statistic {
-    /**
-     * The version used to uniquely identify the Rdb_Statistic struct.
-     */
-    int version;
-
     /**
      * Describes the total number of data to sync.
      */
@@ -673,22 +663,11 @@ typedef struct Rdb_Statistic {
 } Rdb_Statistic;
 
 /**
- * @brief Indicates version of {@link Rdb_TableDetails}
- *
- * @since 11
- */
-#define DISTRIBUTED_TABLE_DETAILS_VERSION 1
-/**
  * @brief Describes the {@link Rdb_Statistic} details of the table.
  *
  * @since 11
  */
 typedef struct Rdb_TableDetails {
-    /**
-     * The version used to uniquely identify the Rdb_TableDetails struct.
-     */
-    int version;
-
     /**
      * Indicates the name of changed table.
      */
@@ -714,17 +693,17 @@ typedef enum Rdb_Progress {
     /**
      * @brief Means the sync process begin.
      */
-    SYNC_BEGIN,
+    RDB_SYNC_BEGIN,
 
     /**
      * @brief Means the sync process is in progress
      */
-    SYNC_IN_PROGRESS,
+    RDB_SYNC_IN_PROGRESS,
 
     /**
      * @brief Means the sync process is finished
      */
-    SYNC_FINISH
+    RDB_SYNC_FINISH
 } Rdb_Progress;
 
 /**
@@ -736,37 +715,37 @@ typedef enum Rdb_ProgressCode {
     /**
      * @brief Means the status of progress is success.
      */
-    SUCCESS,
+    RDB_SUCCESS,
 
     /**
      * @brief Means the progress meets unknown error.
      */
-    UNKNOWN_ERROR,
+    RDB_UNKNOWN_ERROR,
 
     /**
      * @brief Means the progress meets network error.
      */
-    NETWORK_ERROR,
+    RDB_NETWORK_ERROR,
 
     /**
      * @brief Means cloud is disabled.
      */
-    CLOUD_DISABLED,
+    RDB_CLOUD_DISABLED,
 
     /**
      * @brief Means the progress is locked by others.
      */
-    LOCKED_BY_OTHERS,
+    RDB_LOCKED_BY_OTHERS,
 
     /**
      * @brief Means the record exceeds the limit.
      */
-    RECORD_LIMIT_EXCEEDED,
+    RDB_RECORD_LIMIT_EXCEEDED,
 
     /**
      * Means the cloud has no space for the asset.
      */
-    NO_SPACE_FOR_ASSET
+    RDB_NO_SPACE_FOR_ASSET
 } Rdb_ProgressCode;
 
 /**
@@ -775,6 +754,7 @@ typedef enum Rdb_ProgressCode {
  * @since 11
  */
 #define DISTRIBUTED_PROGRESS_DETAIL_VERSION 1
+
 /**
  * @brief Describes detail of the cloud sync progress.
  *
@@ -789,23 +769,29 @@ typedef struct Rdb_ProgressDetails {
     /**
      * Describes the status of data sync progress. Defined in {@link Rdb_Progress}.
      */
-    Rdb_Progress schedule;
+    int schedule;
 
     /**
      * Describes the code of data sync progress. Defined in {@link Rdb_ProgressCode}.
      */
-    Rdb_ProgressCode code;
+    int code;
 
     /**
      * Describes the length of changed tables in data sync progress.
      */
     int32_t tableLength;
-
-    /**
-     * The statistic details of the tables.
-     */
-    Rdb_TableDetails *tableDetails;
 } Rdb_ProgressDetails;
+
+/**
+ * @brief Get table details from progress details.
+ *
+ * @param progress Represents a pointer to an {@link Rdb_ProgressDetails} instance.
+ * @param version Indicates the version of current {@link Rdb_ProgressDetails}.
+ * @see OH_Rdb_Store.
+ * @since 11
+ */
+Rdb_TableDetails *OH_Rdb_GetTableDetails(Rdb_ProgressDetails *progress,
+    int32_t version = DISTRIBUTED_PROGRESS_DETAIL_VERSION);
 
 /**
  * @brief The callback function of sync.

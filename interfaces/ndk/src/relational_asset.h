@@ -16,17 +16,17 @@
 #define RELATIONAL_ASSET_IMPL_H
 
 #include "asset_value.h"
-#include "oh_asset.h"
-struct OH_Asset{};
+#include "asset.h"
+struct Data_Asset {};
 namespace OHOS::RdbNdk {
 using AssetValue = OHOS::NativeRdb::AssetValue;
-class RelationalAsset : public OH_Asset {
+class RelationalAsset : public Data_Asset {
 public:
     RelationalAsset() = default;
     explicit RelationalAsset(AssetValue &asset);
-    static RelationalAsset *GetSelf(OH_Asset *asset);
+    static RelationalAsset *GetSelf(Data_Asset *asset);
     AssetValue &Get();
-    void ConvertAsset(OH_Asset *value, NativeRdb::AssetValue *asset) {}
+    void ConvertAsset(Data_Asset *value, NativeRdb::AssetValue *asset) {}
 
 private:
     AssetValue asset_;

@@ -161,7 +161,7 @@ int RelationalCursor::GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned c
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int RelationalCursor::GetAsset(OH_Cursor *cursor, int32_t columnIndex, OH_Asset *value)
+int RelationalCursor::GetAsset(OH_Cursor *cursor, int32_t columnIndex, Data_Asset *value)
 {
     auto self = GetSelf(cursor);
     if (self == nullptr) {
@@ -176,7 +176,7 @@ int RelationalCursor::GetAsset(OH_Cursor *cursor, int32_t columnIndex, OH_Asset 
     return errCode;
 }
 
-int RelationalCursor::GetAssets(OH_Cursor *cursor, int32_t columnIndex, OH_Asset **value, uint32_t *length)
+int RelationalCursor::GetAssets(OH_Cursor *cursor, int32_t columnIndex, Data_Asset **value, uint32_t *length)
 {
     auto self = GetSelf(cursor);
     if (self == nullptr) {
@@ -189,7 +189,7 @@ int RelationalCursor::GetAssets(OH_Cursor *cursor, int32_t columnIndex, OH_Asset
     }
     length = reinterpret_cast<uint32_t *>(assets.size());
 
-    value = new OH_Asset *[*length];
+    value = new Data_Asset *[*length];
     auto it = assets.begin();
     for (int i = 0; i < *length; ++i, ++it) {
         value[i] = new RelationalAsset(*it);

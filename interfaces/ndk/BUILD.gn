@@ -27,14 +27,19 @@ ohos_ndk_headers("native_rdb_ndk_header") {
   ]
 }
 
+ohos_ndk_headers("data_ndk_header") {
+  dest_dir = "$ndk_headers_out_dir/database/data/"
+  sources = [ "./include/asset.h" ]
+}
+
 ohos_ndk_library("libnative_rdb_ndk") {
   output_name = "native_rdb_ndk"
   system_capability =
       "SystemCapability.DistributedDataManager.RelationalStore.Core"
   ndk_description_file = "./libnative_rdb.ndk.json"
-  min_compact_version = "10"
+  min_compact_version = "11"
   system_capability_headers = [
-    "$ndk_headers_out_dir/database/rdb/oh_asset.h",
+    "$ndk_headers_out_dir/database/data/oh_asset.h",
     "$ndk_headers_out_dir/database/rdb/oh_cursor.h",
     "$ndk_headers_out_dir/database/rdb/oh_predicates.h",
     "$ndk_headers_out_dir/database/rdb/oh_value_object.h",
