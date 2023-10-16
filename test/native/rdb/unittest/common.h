@@ -26,4 +26,12 @@ static const std::string RDB_TEST_PATH = "/data/test/";
 } // namespace NativeRdb
 } // namespace OHOS
 
+struct RowData {
+    int id;
+    std::string name;
+    int age;
+    double salary;
+    std::vector<uint8_t> blobType;
+};
+
 #endif
