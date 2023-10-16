@@ -26,6 +26,10 @@ const STORE_CONFIG_ENCRYPT = {
     name: "Encrypt.db",
     encrypt: true,
 }
+const STORE_CONFIG_ENCRYPT2 = {
+    name: "Encrypt2.db",
+    encrypt: true,
+}
 const STORE_CONFIG_UNENCRYPT = {
     name: "Unencrypt.db",
     encrypt: false,
@@ -127,9 +131,9 @@ describe('rdbEncryptTest', function () {
 
 
     /**
-     * @tc.name RDB Encrypt test
+     * @tc.name RDB encrypt test
      * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0030
-     * @tc.desc RDB Encrypt function test
+     * @tc.desc RDB encrypt function test
      */
     it('RdbEncryptTest_0030', 0, async function () {
         await console.log(TAG + "************* RdbEncryptTest_0030 start *************")
@@ -159,13 +163,14 @@ describe('rdbEncryptTest', function () {
     })
 
     /**
-     * @tc.name RDB Encrypt test
+     * @tc.name RDB encrypt test
      * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0040
-     * @tc.desc RDB Encrypt function test
+     * @tc.desc RDB encrypt function test
      */
     it('RdbEncryptTest_0040', 0, async function () {
         await console.log(TAG + "************* RdbEncryptTest_0040 start *************")
         context = ability_featureAbility.getContext()
+        
         await CreateRdbStore(context, STORE_CONFIG_ENCRYPT)
         try {
             await CreateRdbStore(context, STORE_CONFIG_WRONG)
@@ -177,4 +182,65 @@ describe('rdbEncryptTest', function () {
         await console.log(TAG + "************* RdbEncryptTest_0040 end *************")
     })
     console.log(TAG + "*************Unit Test End*************")
+
+    /**
+     * @tc.name RDB dncrypt test
+     * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0050
+     * @tc.desc Scenario testcase of RDB creat new encrypt file
+     */
+    it('RdbEncryptTest_0050', 0, async function () {
+        await console.info(TAG + "************* RdbEncryptTest_0050 start *************")
+        context = ability_featureAbility.getContext()
+        let rdbStore1;
+        let rdbStore2;
+        // create 'rdbstore1'
+        try {
+            rdbStore1 = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
+        } catch (err) {
+            expect().assertFail()
+            console.info(`CreatRdbStore1 failed, error code: ${err.code}, err message: ${err.message}`);
+        }
+
+        // query 'rdbstore1'
+        try {
+            let predicates1 = new data_rdb.RdbPredicates("test")
+            let resultSet1 = await rdbStore1.query(predicates1)
+            expect(3).assertEqual(resultSet1.rowCount)
+        } catch (err) {
+            expect().assertFail()
+            console.info(`First query rdbstore1 failed, error code: ${err.code}, err message: ${err.message}`);
+        }
+
+        // create 'rdbStore2'
+        try {
+            rdbStore2 = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT2)
+        } catch (err) {
+            expect().assertFail()
+            console.info(`CreatRdbStore2 failed, error code: ${err.code}, err message: ${err.message}`);
+        }
+
+        // create table and query 'rdbStore1'
+        try {
+            await rdbStore1.executeSql(CREATE_TABLE_TEST, null)
+            let predicates1 = new data_rdb.RdbPredicates("test")
+            let resultSet1 = await rdbStore1.query(predicates1)
+            expect().assertFail()
+            expect(3).assertEqual(resultSet1.rowCount)
+        } catch (err) {
+            console.info(`Second query rdbstore1 failed, error code: ${err.code}, err message: ${err.message}`);
+        }
+
+        // create table and query 'rdbStore2'
+        try {
+            await rdbStore2.executeSql(CREATE_TABLE_TEST, null)
+            let predicates2 = new data_rdb.RdbPredicates("test")
+            let resultSet2 = await rdbStore2.query(predicates2)
+            expect(3).assertEqual(resultSet2.rowCount)
+        } catch (err) {
+            expect().assertFail()
+            console.info(`Query rdbstore2 failed, error code: ${err.code}, err message: ${err.message}`);
+        }
+
+        console.info(TAG + "************* RdbEncryptTest_0060 end *************")
+    })
 })
