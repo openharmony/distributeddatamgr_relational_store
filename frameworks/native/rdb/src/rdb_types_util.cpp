@@ -19,25 +19,25 @@ template<>
 bool Marshalling(const SyncerParam &input, MessageParcel &data)
 {
     return ITypesUtil::Marshal(data, input.bundleName_, input.hapName_, input.storeName_, input.area_,
-        input.level_, input.type_, input.isAutoSync_, input.isEncrypt_, input.password_, input.customDir_);
+        input.level_, input.type_, input.isEncrypt_, input.password_, input.customDir_);
 }
 template<>
 bool Unmarshalling(SyncerParam &output, MessageParcel &data)
 {
     return ITypesUtil::Unmarshal(data, output.bundleName_, output.hapName_, output.storeName_, output.area_,
-        output.level_, output.type_, output.isAutoSync_, output.isEncrypt_, output.password_, output.customDir_);
+        output.level_, output.type_, output.isEncrypt_, output.password_, output.customDir_);
 }
 
 template<>
 bool Marshalling(const Option &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(data, input.mode, input.seqNum, input.isAsync);
+    return ITypesUtil::Marshal(data, input.mode, input.seqNum, input.isAsync, input.isAutoSync);
 }
 
 template<>
 bool Unmarshalling(Option &output, MessageParcel &data)
 {
-    return ITypesUtil::Unmarshal(data, output.mode, output.seqNum, output.isAsync);
+    return ITypesUtil::Unmarshal(data, output.mode, output.seqNum, output.isAsync, output.isAutoSync);
 }
 
 template<>

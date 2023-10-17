@@ -32,7 +32,6 @@ public:
         SubscribeOption subscribeOption{ SubscribeMode::REMOTE };
     };
     using Observers = ConcurrentMap<std::string, std::list<ObserverParam>>;
-
     explicit RdbServiceProxy(const sptr<IRemoteObject>& object);
 
     std::string ObtainDistributedTableName(const std::string& device, const std::string& table) override;
@@ -52,6 +51,13 @@ public:
 
     int32_t UnSubscribe(const RdbSyncerParam& param, const SubscribeOption& option,
                         RdbStoreObserver *observer) override;
+
+    int32_t RegisterAutoSyncCallback(
+        const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer) override;
+
+    int32_t UnRegisterAutoSyncCallback(
+        const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer) override;
+
     int32_t RemoteQuery(const RdbSyncerParam& param, const std::string& device, const std::string& sql,
                         const std::vector<std::string>& selectionArgs, sptr<IRemoteObject>& resultSet) override;
 
@@ -65,6 +71,8 @@ public:
 private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
     using PrimaryFields = RdbStoreObserver::PrimaryFields;
+    using SyncCallbacks = ConcurrentMap<uint32_t, AsyncDetail>;
+    using SyncObservers = ConcurrentMap<std::string, std::list<std::shared_ptr<DetailProgressObserver>>>;
     std::pair<int32_t, Details> DoSync(const RdbSyncerParam &param, const Option &option,
         const PredicatesMemo &predicates);
 
@@ -79,19 +87,25 @@ private:
     int32_t DoSubscribe(const RdbSyncerParam& param, const SubscribeOption &option);
 
     int32_t DoUnSubscribe(const RdbSyncerParam& param);
+	
+    int32_t DoRegister(const RdbSyncerParam &param);
+	
+    int32_t DoUnRegister(const RdbSyncerParam &param);
 
     uint32_t GetSeqNum();
 
     void OnSyncComplete(uint32_t seqNum, Details &&result);
 
+    void OnSyncComplete(const std::string &storeName, Details &&result);
+
     void OnDataChange(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo);
 
-    std::string RemoveSuffix(const std::string& name);
+    static std::string RemoveSuffix(const std::string& name);
 
     std::atomic<uint32_t> seqNum_ {};
-
-    ConcurrentMap<uint32_t, AsyncDetail> syncCallbacks_;
     Observers observers_;
+    SyncCallbacks syncCallbacks_;
+    SyncObservers syncObservers_;
     sptr<RdbNotifierStub> notifier_;
 
     sptr<IRemoteObject> remote_;
