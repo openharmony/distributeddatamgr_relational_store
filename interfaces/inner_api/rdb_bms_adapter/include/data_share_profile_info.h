@@ -59,7 +59,6 @@ private:
         bool isCompressed);
     static std::string ReadProfile(const std::string &resPath);
     static bool IsFileExisted(const std::string &filePath);
-    static std::mutex infosMutex_;
 };
 } // namespace OHOS::RdbBMSAdapter
 #endif // RDB_BMS_ADAPTER_PROFILE_INFO_H
