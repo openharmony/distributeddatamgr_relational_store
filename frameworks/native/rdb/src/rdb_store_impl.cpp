@@ -1609,13 +1609,13 @@ int RdbStoreImpl::RegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserve
     return service->RegisterAutoSyncCallback(syncerParam_, observer);
 }
 
-int RdbStoreImpl::UnRegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer)
+int RdbStoreImpl::UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer)
 {
     auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         return errCode;
     }
-    return service->UnRegisterAutoSyncCallback(syncerParam_, observer);
+    return service->UnregisterAutoSyncCallback(syncerParam_, observer);
 }
 #endif
 } // namespace OHOS::NativeRdb

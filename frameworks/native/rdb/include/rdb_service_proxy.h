@@ -55,7 +55,7 @@ public:
     int32_t RegisterAutoSyncCallback(
         const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer) override;
 
-    int32_t UnRegisterAutoSyncCallback(
+    int32_t UnregisterAutoSyncCallback(
         const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer) override;
 
     int32_t RemoteQuery(const RdbSyncerParam& param, const std::string& device, const std::string& sql,
