@@ -41,6 +41,7 @@ public:
 private:
     int ProcessOpenCallback(RdbStore &rdbStore,
         const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
+    std::string bundleName_;
     std::mutex mutex_;
     std::map<std::string, std::weak_ptr<RdbStoreImpl>> storeCache_;
 };
