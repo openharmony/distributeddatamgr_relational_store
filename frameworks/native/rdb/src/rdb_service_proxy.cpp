@@ -218,9 +218,11 @@ int32_t RdbServiceProxy::Subscribe(const RdbSyncerParam &param, const SubscribeO
         LOG_ERROR("subscribe mode invalid");
         return RDB_ERROR;
     }
+    if (DoSubscribe(param, option) != RDB_OK) {
+        return RDB_ERROR;
+    }
     auto name = RemoveSuffix(param.storeName_);
-    int32_t status = RDB_OK;
-    observers_.Compute(name, [this, &param, observer, &option, &status](const auto &key, std::list<ObserverParam> &value) {
+    observers_.Compute(name, [observer, &param, &option](const auto &key, std::list<ObserverParam> &value) {
         for (const auto &element : value) {
             if (element.observer == observer) {
                 LOG_ERROR("duplicate observer, storeName:%{public}s", SqliteUtils::Anonymous(key).c_str());
@@ -228,13 +230,9 @@ int32_t RdbServiceProxy::Subscribe(const RdbSyncerParam &param, const SubscribeO
             }
         }
         value.push_back({ observer, param.bundleName_, option });
-        if (value.size() == 1 && DoSubscribe(param, option) != RDB_OK) {
-            status = RDB_ERROR;
-            value.clear();
-        }
-        return !value.empty();
+        return true;
     });
-    return status;
+    return RDB_OK;
 }
 
 int32_t RdbServiceProxy::DoSubscribe(const RdbSyncerParam &param, const SubscribeOption &option)
@@ -256,29 +254,19 @@ int32_t RdbServiceProxy::UnSubscribe(const RdbSyncerParam &param, const Subscrib
         LOG_ERROR("observer is null");
         return RDB_ERROR;
     }
+    if (DoUnSubscribe(param) != RDB_OK) {
+        return RDB_ERROR;
+    }
     auto name = RemoveSuffix(param.storeName_);
-    int32_t status = RDB_OK;
-    observers_.ComputeIfPresent(
-        name, [this, &param, observer, &status](const auto &key, std::list<ObserverParam> &value) {
-            LOG_INFO("before remove size=%{public}d", static_cast<int>(value.size()));
-            bool removed = false;
-            ObserverParam observerParam;
-            value.remove_if([observer, &removed, &observerParam](const ObserverParam &param) {
-                if (param.observer == observer) {
-                    removed = true;
-                    observerParam = param;
-                    return true;
-                }
-                return false;
-            });
-            LOG_INFO("after  remove size=%{public}d", static_cast<int>(value.size()));
-            if (removed && value.empty() && DoUnSubscribe(param) != RDB_OK) {
-                value.push_back(std::move(observerParam));
-                status = RDB_ERROR;
-            }
-            return !value.empty();
+    observers_.ComputeIfPresent(name, [observer](const auto &key, std::list<ObserverParam> &value) {
+        LOG_INFO("before remove size=%{public}d", static_cast<int>(value.size()));
+        value.remove_if([observer](const ObserverParam &param) {
+            return param.observer == observer;
         });
-    return status;
+        LOG_INFO("after  remove size=%{public}d", static_cast<int>(value.size()));
+        return !(value.empty());
+    });
+    return RDB_OK;
 }
 
 int32_t RdbServiceProxy::DoUnSubscribe(const RdbSyncerParam &param)
@@ -363,18 +351,16 @@ int32_t RdbServiceProxy::RegisterAutoSyncCallback(
         return RDB_ERROR;
     }
     int32_t status = RDB_OK;
-    syncObservers_.Compute(param.storeName_, [this, &param, &status, observer](const auto &storeName,
-                                                 std::list<std::shared_ptr<DetailProgressObserver>> &observers) {
+    syncObservers_.Compute(param.storeName_, [this, &param, &status, observer](const auto &store, auto &observers) {
         for (const auto &element : observers) {
             if (element.get() == observer.get()) {
-                LOG_ERROR("duplicate observer, storeName:%{public}s", SqliteUtils::Anonymous(storeName).c_str());
+                LOG_ERROR("duplicate observer, storeName:%{public}s", SqliteUtils::Anonymous(store).c_str());
                 return true;
             }
         }
-        observers.push_back(observer);
-        if (observers.size() == 1 && DoRegister(param) != RDB_OK) {
-            observers.clear();
-            status = RDB_ERROR;
+        status = DoRegister(param);
+        if (status == RDB_OK) {
+            observers.push_back(observer);
         }
         return !observers.empty();
     });
@@ -384,8 +370,8 @@ int32_t RdbServiceProxy::RegisterAutoSyncCallback(
 int32_t RdbServiceProxy::DoRegister(const RdbSyncerParam &param)
 {
     MessageParcel reply;
-    int32_t status =
-        IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_REGISTER_DETAIL_PROGRESS), reply, param);
+    int32_t status = IPC_SEND(
+        static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_REGISTER_AUTOSYNC_PROGRESS_OBSERVER), reply, param);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
             SqliteUtils::Anonymous(param.storeName_).c_str());
@@ -404,17 +390,15 @@ int32_t RdbServiceProxy::UnRegisterAutoSyncCallback(
     int32_t status = RDB_OK;
     syncObservers_.ComputeIfPresent(param.storeName_, [this, &param, &status, observer](const auto &storeName,
                                                  std::list<std::shared_ptr<DetailProgressObserver>> &observers) {
-        bool removed = false;
-        observers.remove_if([observer, &removed](const auto &obs) {
-            if (obs.get() == observer.get()) {
-                removed = true;
-                return true;
+        for (auto it = observers.begin(); it != observers.end();) {
+            if (it->get() != observer.get()) {
+                ++it;
+                continue;
             }
-            return false;
-        });
-        if (observers.size() == 1 && DoUnRegister(param) != RDB_OK) {
-            observers.push_back(observer);
-            status = RDB_ERROR;
+            status = DoUnRegister(param);
+            if (status == RDB_OK) {
+                it = observers.erase(it);
+            }
         }
         return !observers.empty();
     });
@@ -424,8 +408,8 @@ int32_t RdbServiceProxy::UnRegisterAutoSyncCallback(
 int32_t RdbServiceProxy::DoUnRegister(const RdbSyncerParam &param)
 {
     MessageParcel reply;
-    int32_t status =
-        IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_UNREGISTER_DETAIL_PROGRESS), reply, param);
+    int32_t status = IPC_SEND(
+        static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_UNREGISTER_AUTOSYNC_PROGRESS_OBSERVER), reply, param);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
             SqliteUtils::Anonymous(param.storeName_).c_str());
