@@ -163,7 +163,7 @@ public:
 
     int RegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) override;
 
-    int UnRegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) override;
+    int UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) override;
 
     int Notify(const std::string &event) override;
 

@@ -351,7 +351,8 @@ int32_t RdbServiceProxy::RegisterAutoSyncCallback(
         return RDB_ERROR;
     }
     int32_t status = RDB_OK;
-    syncObservers_.Compute(param.storeName_, [this, &param, &status, observer](const auto &store, auto &observers) {
+    auto name = RemoveSuffix(param.storeName_);
+    syncObservers_.Compute(name, [this, &param, &status, observer](const auto &store, auto &observers) {
         for (const auto &element : observers) {
             if (element.get() == observer.get()) {
                 LOG_ERROR("duplicate observer, storeName:%{public}s", SqliteUtils::Anonymous(store).c_str());
@@ -379,7 +380,7 @@ int32_t RdbServiceProxy::DoRegister(const RdbSyncerParam &param)
     return status;
 }
 
-int32_t RdbServiceProxy::UnRegisterAutoSyncCallback(
+int32_t RdbServiceProxy::UnregisterAutoSyncCallback(
     const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer)
 {
     if (observer == nullptr || param.storeName_.empty()) {
@@ -388,8 +389,8 @@ int32_t RdbServiceProxy::UnRegisterAutoSyncCallback(
         return RDB_ERROR;
     }
     int32_t status = RDB_OK;
-    syncObservers_.ComputeIfPresent(param.storeName_, [this, &param, &status, observer](const auto &storeName,
-                                                 std::list<std::shared_ptr<DetailProgressObserver>> &observers) {
+    auto name = RemoveSuffix(param.storeName_);
+    syncObservers_.ComputeIfPresent(name, [this, &param, &status, observer](const auto &storeName, auto &observers) {
         for (auto it = observers.begin(); it != observers.end();) {
             if (it->get() != observer.get()) {
                 ++it;

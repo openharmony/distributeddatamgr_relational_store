@@ -487,7 +487,7 @@ public:
     /**
      * @brief UnRegister message for auto sync operation.
      */
-    virtual int UnRegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) = 0;
+    virtual int UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) = 0;
 
     /**
      * @brief When SubscribeMode is LOCAL or LOCALSHARED, this function needs to be called to trigger callback.

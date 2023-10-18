@@ -54,7 +54,7 @@ public:
     virtual int32_t RegisterAutoSyncCallback(
         const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer) = 0;
 
-    virtual int32_t UnRegisterAutoSyncCallback(
+    virtual int32_t UnregisterAutoSyncCallback(
         const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer) = 0;
 
     virtual int32_t RemoteQuery(const RdbSyncerParam &param, const std::string &device, const std::string &sql,
