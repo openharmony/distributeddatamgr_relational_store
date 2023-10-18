@@ -58,7 +58,7 @@ std::map<std::string, RdbStoreProxy::EventHandle> RdbStoreProxy::onEventHandlers
 
 std::map<std::string, RdbStoreProxy::EventHandle> RdbStoreProxy::offEventHandlers_ = {
     { "dataChange", RdbStoreProxy::OffRemote },
-    { "syncComplete", RdbStoreProxy::UnRegisteredSyncCallback }
+    { "autoSyncProgress", RdbStoreProxy::UnRegisteredSyncCallback }
 };
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 struct PredicatesProxy {
@@ -1225,9 +1225,10 @@ napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv, 
     RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
 
     std::lock_guard<std::mutex> lockGuard(proxy->mutex_);
-    bool result = std::any_of(proxy->observers_[mode].begin(), proxy->observers_[mode].end(), [argv](const auto &observer) {
-        return *observer == argv[1];
-    });
+    bool result = std::any_of(proxy->observers_[mode].begin(), proxy->observers_[mode].end(),
+        [argv](const auto &observer) {
+            return *observer == argv[1];
+        });
     if (result) {
         LOG_INFO("duplicate subscribe");
         return nullptr;
@@ -1404,8 +1405,8 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
     status = JSUtils::Convert2Value(env, argv[0], event);
     RDB_NAPI_ASSERT(
         env, status == napi_ok && !event.empty(), std::make_shared<ParamError>("event", "a not empty string."));
-    auto handle = onEventHandlers_.find(event);
-    if (handle != onEventHandlers_.end()) {
+    auto handle = offEventHandlers_.find(event);
+    if (handle != offEventHandlers_.end()) {
         return handle->second(env, argc - 1, argv + 1, proxy);
     }
 
