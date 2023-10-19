@@ -222,5 +222,13 @@ public:
 
 struct DropOption {
 };
+
+struct Field {
+    static constexpr const char *CURSOR_FIELD = "#_cursor";
+    static constexpr const char *ORIGIN_FIELD = "#_origin";
+    static constexpr const char *DELETED_FLAG_FIELD = "deleted_flag";
+    static constexpr const char *OWNER_FIELD = "owner";
+    static constexpr const char *PRIVILEGE_FIELD = "privilege";
+};
 } // namespace OHOS::DistributedRdb
 #endif

@@ -21,17 +21,14 @@
 
 #include "logger.h"
 #include "rdb_trace.h"
+#include "rdb_types.h"
 #include "sqlite_sql_builder.h"
 #include "string_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-static std::map<int32_t, int32_t> ORIGIN_TO_FLAG = {
-    { static_cast<int>(AbsPredicates::Origin::LOCAL), 2 },
-    { static_cast<int>(AbsPredicates::Origin::CLOUD), 0 },
-    { static_cast<int>(AbsPredicates::Origin::REMOTE), 0 }
-};
+static int32_t FLAG[AbsPredicates::Origin::BUTT] = { 2, 0, 0 };
 AbsPredicates::AbsPredicates()
 {
     Initial();
@@ -62,14 +59,14 @@ AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const ValueObjec
     CheckField(field);
     ValueObject valObj = value;
     std::string newField = field;
-    if (newField == ORIGIN_FIELD) {
+    if (newField == DistributedRdb::Field::ORIGIN_FIELD) {
         newField = LOG_ORIGIN_FIELD;
         int location = 0;
         valObj.GetInt(location);
         if (location < 0 || location > Origin::REMOTE) {
             return this;
         }
-        valObj = ValueObject(ORIGIN_TO_FLAG[location]);
+        valObj = ValueObject(FLAG[location]);
     }
     if (isNeedAnd) {
         whereClause += "AND ";
@@ -333,6 +330,7 @@ AbsPredicates *AbsPredicates::OrderByAsc(const std::string &field)
     if (!CheckParameter("orderByAsc", field, {})) {
         return this;
     }
+    CheckField(field);
     if (isSorted) {
         order += ',';
     }
@@ -350,6 +348,7 @@ AbsPredicates *AbsPredicates::OrderByDesc(const std::string &field)
     if (!CheckParameter("orderByDesc", field, {})) {
         return this;
     }
+    CheckField(field);
     if (isSorted) {
         order += ',';
     }

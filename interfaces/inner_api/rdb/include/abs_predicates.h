@@ -42,6 +42,7 @@ public:
         LOCAL = 0,
         CLOUD,
         REMOTE,
+        BUTT
     };
 
     API_EXPORT std::string GetStatement() const;
@@ -102,7 +103,6 @@ public:
     API_EXPORT virtual AbsPredicates *NotIn(const std::string &field, const std::vector<std::string> &values);
     API_EXPORT virtual AbsPredicates *NotIn(const std::string &field, const std::vector<ValueObject> &values);
 private:
-    static constexpr const char *ORIGIN_FIELD = "#_origin";
     static constexpr const char *LOG_ORIGIN_FIELD = "#_flag";
 
     std::string whereClause;

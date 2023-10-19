@@ -259,12 +259,9 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(
     SqliteUtils::Replace(whereClause, SqliteUtils::REP, logTable + ".");
     AppendClause(sql, " WHERE ", whereClause);
     AppendClause(sql, " GROUP BY ", predicates.GetGroup(), table);
-    AppendClause(sql, " ORDER BY ", predicates.GetOrder(), table);
-    if (predicates.GetOrder().empty()) {
-        AppendClause(sql, " ORDER BY ", "cursor", logTable);
-    } else {
-        sql.append(", ").append(logTable).append(".cursor");
-    }
+    auto order = predicates.GetOrder();
+    SqliteUtils::Replace(order, SqliteUtils::REP, logTable + ".");
+    AppendClause(sql, " ORDER BY ", order);
     int limit = predicates.GetLimit();
     auto limitClause = (limit == AbsPredicates::INIT_LIMIT_VALUE) ? "" : std::to_string(limit);
     int offset = predicates.GetOffset();
