@@ -172,7 +172,7 @@ int RelationalCursor::GetAsset(OH_Cursor *cursor, int32_t columnIndex, Data_Asse
     if (errCode != OHOS::NativeRdb::E_OK) {
         return errCode;
     }
-    value = new (std::nothrow) RelationalAsset(asset);
+    value = new Data_Asset{ .cid = DATA_ASSET_V0, .asset_ = asset };
     return errCode;
 }
 
@@ -187,12 +187,12 @@ int RelationalCursor::GetAssets(OH_Cursor *cursor, int32_t columnIndex, Data_Ass
     if (errCode != OHOS::NativeRdb::E_OK) {
         return errCode;
     }
-    length = reinterpret_cast<uint32_t *>(assets.size());
+    *length = assets.size();
 
     value = new Data_Asset *[*length];
     auto it = assets.begin();
     for (int i = 0; i < *length; ++i, ++it) {
-        value[i] = new RelationalAsset(*it);
+        value[i] = new Data_Asset{ .cid = DATA_ASSET_V0, .asset_ = *it };
     }
     return errCode;
 }

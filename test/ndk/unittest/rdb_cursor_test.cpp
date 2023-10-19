@@ -185,7 +185,6 @@ void RdbNativeCursorTest::SetAsset(Data_Asset *asset, int index)
     errcode = OH_Data_Asset_SetSize(asset, index);
     EXPECT_EQ(errcode, RDB_OK);
     errcode = OH_Data_Asset_SetStatus(asset, Data_AssetStatus::ASSET_NORMAL);
-    Data_AssetStatus status;
     EXPECT_EQ(errcode, RDB_OK);
 }
 
@@ -505,7 +504,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_007, TestSize.Level1)
 
     errCode = cursor->getColumnType(cursor, 1, &type);
     EXPECT_EQ(type, OH_ColumnType::TYPE_ASSET);
-    Data_Asset *asset;
+    Data_Asset *asset = NULL;
     errCode = cursor->getAsset(cursor, 1, asset);
     EXPECT_NE(asset, NULL);
     char name[10] = "";
@@ -567,7 +566,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_008, TestSize.Level1)
 
     errCode = cursor->getColumnType(cursor, 2, &type);
     EXPECT_EQ(type, OH_ColumnType::TYPE_ASSETS);
-    Data_Asset **assets;
+    Data_Asset **assets = NULL;
     uint32_t assetCount;
     errCode = cursor->getAssets(cursor, 2, assets, &assetCount);
     EXPECT_NE(assets, NULL);

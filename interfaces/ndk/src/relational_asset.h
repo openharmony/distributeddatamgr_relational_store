@@ -17,19 +17,11 @@
 
 #include "asset_value.h"
 #include "data_asset.h"
-struct Data_Asset {};
-namespace OHOS::RdbNdk {
 using AssetValue = OHOS::NativeRdb::AssetValue;
-class RelationalAsset : public Data_Asset {
-public:
-    RelationalAsset() = default;
-    explicit RelationalAsset(AssetValue &asset);
-    static RelationalAsset *GetSelf(Data_Asset *asset);
-    AssetValue &Get();
-
-private:
+constexpr const int32_t DATA_ASSET_V0 = 10002451;
+struct Data_Asset {
+    int32_t cid = DATA_ASSET_V0;
     AssetValue asset_;
 };
-} // namespace OHOS::RdbNdk
 
 #endif // RELATIONAL_ASSET_IMPL_H
