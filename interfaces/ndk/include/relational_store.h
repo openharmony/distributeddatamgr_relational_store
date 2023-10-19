@@ -415,8 +415,9 @@ typedef struct Rdb_DistributedConfig {
  * @param count Indicates the count of tables you want to set.
  * @param type Indicates the distributed type {@link Rdb_DistributedType}.
  * @param config Indicates the distributed config of the tables. For details, see {@link Rdb_DistributedConfig}.
- * @return Returns the status code of the execution.
+ * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Store.
+ * @see Rdb_DistributedConfig.
  * @since 11
  */
 int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint32_t count, Rdb_DistributedType type,
@@ -431,8 +432,10 @@ int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint3
  * If the table has no primary key , please pass in "rowid".
  * @param values Indicates the primary keys of the rows to check.
  * If the table has no primary key , please pass in the row-ids of the rows to check.
- * @return Returns the status code of the execution.
+ * @return If the operation is successful, a pointer to the instance of the @link OH_Cursor} structure is returned.
+ * There are two columns, "data_key" and "timestamp". Otherwise NULL is returned.
  * @see OH_Rdb_Store.
+ * @see OH_VObject.
  * @since 11
  */
 OH_Cursor *OH_Rdb_FindModifyTime(OH_Rdb_Store *store, const char *tableName, const char *columnName,
@@ -555,24 +558,24 @@ typedef enum Rdb_SubscribeType {
 /**
  * @brief The callback function of cloud data change event.
  *
- * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param context Represents the context of data observer.
  * @param values Indicates the cloud accounts that changed.
  * @param count The count of changed cloud accounts.
- * @see OH_Rdb_Store.
+ * @see OH_VObject.
  * @since 11
  */
-typedef void (*OH_Rdb_BriefObserver)(OH_Rdb_Store *store, OH_VObject *values, uint32_t count);
+typedef void (*Rdb_BriefObserver)(void *context, OH_VObject *values, uint32_t count);
 
 /**
  * @brief The callback function of cloud data change details event.
  *
- * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param context Represents the context of data observer.
  * @param changeInfo Indicates the {@link Rdb_ChangeInfo} of changed tables.
  * @param count The count of changed tables.
- * @see OH_Rdb_Store.
+ * @see Rdb_ChangeInfo.
  * @since 11
  */
-typedef void (*OH_Rdb_DetailsObserver)(OH_Rdb_Store *store, Rdb_ChangeInfo *changeInfo, uint32_t count);
+typedef void (*Rdb_DetailsObserver)(void *context, Rdb_ChangeInfo *changeInfo, uint32_t count);
 
 /**
  * @brief Indicates the callback functions.
@@ -583,12 +586,30 @@ typedef union Rdb_SubscribeCallback {
     /**
      * The callback function of cloud data change details event.
      */
-    OH_Rdb_DetailsObserver *detailsObserver;
+    Rdb_DetailsObserver *detailsObserver;
+
     /**
      * The callback function of cloud data change event.
      */
-    OH_Rdb_BriefObserver *briefObserver;
+    Rdb_BriefObserver *briefObserver;
 } Rdb_SubscribeCallback;
+
+/**
+ * @brief Indicates the observer of data.
+ *
+ * @since 11
+ */
+typedef struct Rdb_DataObserver {
+    /**
+     * The context of data observer.
+     */
+    void *context;
+
+    /**
+     * The context of data observer.
+     */
+    Rdb_SubscribeCallback *callback;
+} Rdb_DataObserver;
 
 /**
  * @brief Registers an observer for the database.
@@ -596,23 +617,27 @@ typedef union Rdb_SubscribeCallback {
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @param type Indicates the subscription type, which is defined in {@link Rdb_SubscribeType}.
- * @param observer The observer of change events in the database.
+ * @param observer The {@link Rdb_DataObserver} of change events in the database.
+ * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Store.
+ * @see Rdb_DataObserver.
  * @since 11
  */
-int OH_Rdb_Subscribe(OH_Rdb_Store *store, Rdb_SubscribeType type, Rdb_SubscribeCallback *observer);
+int OH_Rdb_Subscribe(OH_Rdb_Store *store, Rdb_SubscribeType type, Rdb_DataObserver *observer);
 
 /**
  * @brief Remove specified observer of specified type from the database.
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @param type Indicates the subscription type, which is defined in {@link Rdb_SubscribeType}.
- * @param observer The observer of change events in the database.
+ * @param observer The {@link Rdb_DataObserver} of change events in the database.
  * If this is nullptr, remove all observers of the type.
+ * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Store.
+ * @see Rdb_DataObserver.
  * @since 11
  */
-int OH_Rdb_Unsubscribe(OH_Rdb_Store *store, Rdb_SubscribeType type, Rdb_SubscribeCallback *observer);
+int OH_Rdb_Unsubscribe(OH_Rdb_Store *store, Rdb_SubscribeType type, Rdb_DataObserver *observer);
 
 /**
  * @brief Indicates the database synchronization mode.
@@ -787,33 +812,38 @@ typedef struct Rdb_ProgressDetails {
  *
  * @param progress Represents a pointer to an {@link Rdb_ProgressDetails} instance.
  * @param version Indicates the version of current {@link Rdb_ProgressDetails}.
- * @see OH_Rdb_Store.
+ * @return If the operation is successful, a pointer to the instance of the @link Rdb_TableDetails} structure is returned.
+ * Otherwise NULL is returned.
+ * @see Rdb_ProgressDetails
+ * @see Rdb_TableDetails
  * @since 11
  */
-Rdb_TableDetails *OH_Rdb_GetTableDetails(Rdb_ProgressDetails *progress,
-    int32_t version = DISTRIBUTED_PROGRESS_DETAIL_VERSION);
+Rdb_TableDetails *OH_Rdb_GetTableDetails(Rdb_ProgressDetails *progress, int32_t version);
 
 /**
  * @brief The callback function of sync.
  *
  * @param progressDetails The details of the sync progress.
- * @see OH_Rdb_Store.
+ * @see Rdb_ProgressDetails.
  * @since 11
  */
-typedef void (*OH_Rdb_SyncCallback)(Rdb_ProgressDetails *progressDetails);
+typedef void (*Rdb_SyncCallback)(Rdb_ProgressDetails *progressDetails);
 
 /**
  * @brief Sync data to cloud.
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param mode Represents the {@link Rdb_SyncMode} of sync progress.
  * @param tables Indicates the names of tables to sync.
  * @param count The count of tables to sync. If value equals 0, sync all tables of the store.
- * @param progress The callback function of cloud sync.
+ * @param callback The {@link Rdb_SyncCallback} of cloud sync progress.
+ * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Store.
+ * @see Rdb_SyncCallback.
  * @since 11
  */
 int OH_Rdb_CloudSync(OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[], uint32_t count,
-    OH_Rdb_SyncCallback *progress);
+    Rdb_SyncCallback *callback);
 #ifdef __cplusplus
 };
 #endif

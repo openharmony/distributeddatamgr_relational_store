@@ -37,7 +37,7 @@ public:
     void TearDown();
     static void InitRdbConfig()
     {
-        config_.dataBaseDir = "/data/service/el1/public/database/com.example.distributed/";
+        config_.dataBaseDir = "/data/service/el1/app/database/com.example.distributed/";
         config_.storeName = "rdb_store_test.db";
         config_.bundleName = "com.example.distributed";
         config_.moduleName = "";
@@ -122,6 +122,8 @@ void CloudSyncCallback(Rdb_ProgressDetails *progressDetails)
     EXPECT_EQ(progressDetails->schedule, Rdb_Progress::RDB_SYNC_FINISH);
     EXPECT_EQ(progressDetails->code, Rdb_ProgressCode::RDB_CLOUD_DISABLED);
     EXPECT_EQ(progressDetails->tableLength, 0);
+    Rdb_TableDetails *tableDetails = OH_Rdb_GetTableDetails(progressDetails, DISTRIBUTED_PROGRESS_DETAIL_VERSION);
+    free(tableDetails);
 }
 /**
  * @tc.name: RDB_Native_store_test_001
@@ -735,7 +737,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_013, TestSize.Level1)
     int errcode = OH_Rdb_SetDistributedTables(storeTestRdbStore_, table, TABLE_COUNT,
         Rdb_DistributedType::RDB_DISTRIBUTED_CLOUD, &config);
     EXPECT_EQ(errcode, RDB_OK);
-    OH_Rdb_SyncCallback callback = CloudSyncCallback;
+    Rdb_SyncCallback callback = CloudSyncCallback;
     auto errorCode =
         OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, &callback);
     EXPECT_EQ(errorCode, RDB_OK);
@@ -785,8 +787,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_CloudSyncValid, TestSize.Leve
     constexpr int TABLE_COUNT = 1;
     const char *table[TABLE_COUNT];
     table[0] = "test";
-    OH_Rdb_SyncCallback callback = CloudSyncCallback;
-
+    Rdb_SyncCallback callback = CloudSyncCallback;
     auto errorCode =
         OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, &callback);
     EXPECT_EQ(errorCode, RDB_OK);
@@ -811,7 +812,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_CloudSyncInvalid2, TestSize.L
     constexpr int TABLE_COUNT = 1;
     const char *table[TABLE_COUNT];
     table[0] = "test";
-    OH_Rdb_SyncCallback callback = CloudSyncCallback;
+    Rdb_SyncCallback callback = CloudSyncCallback;
     auto errorCode =
         OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, nullptr);
     EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
@@ -828,7 +829,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_014, TestSize.Level1)
 {
     EXPECT_NE(storeTestRdbStore_, nullptr);
     Rdb_SubscribeType type = RDB_SUBSCRIBE_TYPE_CLOUD;
-    Rdb_SubscribeCallback *observer = nullptr;
+    Rdb_DataObserver *observer = nullptr;
     int errCode = OH_Rdb_Subscribe(storeTestRdbStore_, type, observer);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
 
@@ -844,8 +845,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_014, TestSize.Level1)
 HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_015, TestSize.Level1)
 {
     EXPECT_NE(storeTestRdbStore_, nullptr);
-    Rdb_SubscribeCallback observer;
-    observer.briefObserver = (OH_Rdb_BriefObserver *)SubscribeCloudCallback;
+    Rdb_DataObserver observer = { .callback = (Rdb_SubscribeCallback *)((Rdb_BriefObserver *)SubscribeCloudCallback) };
     int errCode = OH_Rdb_Subscribe(storeTestRdbStore_, Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD, &observer);
     EXPECT_EQ(errCode, RDB_OK);
     errCode = OH_Rdb_Unsubscribe(storeTestRdbStore_, Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD, &observer);
@@ -860,11 +860,10 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_015, TestSize.Level1)
 HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_016, TestSize.Level1)
 {
     EXPECT_NE(storeTestRdbStore_, nullptr);
-    Rdb_SubscribeCallback *callback = nullptr;
-    int errcode = OH_Rdb_Subscribe(storeTestRdbStore_, Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS, callback);
+    int errcode = OH_Rdb_Subscribe(storeTestRdbStore_, Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS, nullptr);
     EXPECT_EQ(errcode, RDB_E_INVALID_ARGS);
 
-    errcode = OH_Rdb_Unsubscribe(storeTestRdbStore_, Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS, callback);
+    errcode = OH_Rdb_Unsubscribe(storeTestRdbStore_, Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS, nullptr);
     EXPECT_EQ(errcode, RDB_OK);
 }
 
@@ -878,11 +877,12 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_017, TestSize.Level1)
 {
     EXPECT_NE(storeTestRdbStore_, nullptr);
     Rdb_SubscribeCallback callback;
-    callback.detailsObserver = (OH_Rdb_DetailsObserver *)SubscribeCLoudDetailsCallback;
-    int errcode = OH_Rdb_Subscribe(storeTestRdbStore_, Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS, &callback);
+    callback.detailsObserver = (Rdb_DetailsObserver *)SubscribeCLoudDetailsCallback;
+    Rdb_DataObserver observer = { .callback = (Rdb_SubscribeCallback *)&callback };
+    int errcode = OH_Rdb_Subscribe(storeTestRdbStore_, Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS, &observer);
     EXPECT_EQ(errcode, RDB_OK);
 
-    errcode = OH_Rdb_Unsubscribe(storeTestRdbStore_, Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS, &callback);
+    errcode = OH_Rdb_Unsubscribe(storeTestRdbStore_, Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS, &observer);
     EXPECT_EQ(errcode, RDB_OK);
 }
 
@@ -901,7 +901,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
     EXPECT_EQ(errCode, RDB_OK);
     OH_VBucket *bucket = OH_Rdb_CreateValuesBucket();
     bucket->putInt64(bucket, "data_key", 2);
-    bucket->putInt64(bucket, "timestamp",1000000000);
+    bucket->putInt64(bucket, "timestamp", 1000000000);
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", bucket);
     EXPECT_EQ(errCode, 1);
 
@@ -911,7 +911,8 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
 
     // resultSet is empty
     OH_Cursor *cursor;
-    cursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", "ROWID", values);
+    cursor =
+        OH_Rdb_FindModifyTime(storeTestRdbStore_, "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", "ROWID", values);
     int rowCount;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(errCode, RDB_OK);
@@ -930,7 +931,6 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
     EXPECT_EQ(errCode, RDB_OK);
 }
 
-
 /**
  * @tc.name: RDB_Native_store_test_020
  * @tc.desc: Abnormal testCase for GetModifyTime, tablename columnName, keys is empty,
@@ -946,7 +946,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_019, TestSize.Level1)
     EXPECT_EQ(errCode, RDB_OK);
     OH_VBucket *bucket = OH_Rdb_CreateValuesBucket();
     bucket->putInt64(bucket, "data_key", 1);
-    bucket->putInt64(bucket, "timestamp",1000000000);
+    bucket->putInt64(bucket, "timestamp", 1000000000);
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", bucket);
     EXPECT_EQ(errCode, 1);
 
@@ -979,7 +979,8 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_019, TestSize.Level1)
     // keys is empty
     cursor->destroy(cursor);
     OH_VObject *emptyValues = OH_Rdb_CreateValueObject();
-    cursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", "data_key", emptyValues);
+    cursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", "data_key",
+        emptyValues);
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(errCode, RDB_OK);
     EXPECT_EQ(rowCount, RDB_ERR);
@@ -1004,7 +1005,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_020, TestSize.Level1)
     EXPECT_EQ(errCode, RDB_OK);
     OH_VBucket *bucket = OH_Rdb_CreateValuesBucket();
     bucket->putInt64(bucket, "data_key", 1);
-    bucket->putInt64(bucket, "timestamp",1000000000);
+    bucket->putInt64(bucket, "timestamp", 1000000000);
     errCode = OH_Rdb_Insert(storeTestRdbStore_, "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", bucket);
     EXPECT_EQ(errCode, 1);
 
@@ -1012,7 +1013,8 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_020, TestSize.Level1)
     int64_t keys[] = { 1 };
     values->putInt64(values, keys, 1);
     OH_Cursor *cursor;
-    cursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", "data3", values);
+    cursor =
+        OH_Rdb_FindModifyTime(storeTestRdbStore_, "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", "data3", values);
 
     int rowCount;
     errCode = cursor->getRowCount(cursor, &rowCount);

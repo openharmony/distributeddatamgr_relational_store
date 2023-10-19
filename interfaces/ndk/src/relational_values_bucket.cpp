@@ -127,11 +127,10 @@ using namespace OHOS::NativeRdb;
 int OH_VBucket_PutAsset(OH_VBucket *bucket, const char *field, Data_Asset *value)
 {
     auto self = RelationalValuesBucket::GetSelf(bucket);
-    auto asset = RelationalAsset::GetSelf(value);
-    if (self == nullptr || field == nullptr || asset == nullptr) {
+    if (self == nullptr || field == nullptr || value == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    self->Get().Put(field, OHOS::NativeRdb::ValueObject(asset->Get()));
+    self->Get().Put(field, OHOS::NativeRdb::ValueObject(value->asset_));
     self->capability++;
     return OH_Rdb_ErrCode::RDB_OK;
 }
@@ -144,11 +143,10 @@ int OH_VBucket_PutAssets(OH_VBucket *bucket, const char *field, Data_Asset **val
     }
     std::vector<AssetValue> assets;
     for (int i = 0; i < count; i++) {
-        auto asset = RelationalAsset::GetSelf(value[i]);
-        if (asset == nullptr) {
+        if (value[i] == nullptr) {
             return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
         }
-        assets.emplace_back(asset->Get());
+        assets.emplace_back(value[i]->asset_);
     }
     self->Get().Put(field, ValueObject(assets));
     self->capability++;
