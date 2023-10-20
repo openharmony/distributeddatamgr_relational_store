@@ -1219,7 +1219,7 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
             return;
         }
         SyncOption syncOption = { DistributedRdb::TIME_FIRST, false };
-        Sync(syncOption, { ptr->begin(), ptr->end() }, nullptr);
+        Sync(syncOption, std::vector<std::string>(ptr->begin(), ptr->end()), AsyncDetail());
     });
 #endif
 }
@@ -1369,7 +1369,7 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
     return E_OK;
 }
 
-int RdbStoreImpl::Sync(const SyncOption &option, const std::vector<std::string> &tables,
+int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predicate,
                        const AsyncDetail &async)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -1381,7 +1381,7 @@ int RdbStoreImpl::Sync(const SyncOption &option, const std::vector<std::string> 
     DistributedRdb::RdbService::Option rdbOption;
     rdbOption.mode = option.mode;
     rdbOption.isAsync = !option.isBlock;
-    errCode = service->Sync(syncerParam_, rdbOption, AbsRdbPredicates(tables).GetDistributedPredicates(), async);
+    errCode = service->Sync(syncerParam_, rdbOption, predicate.GetDistributedPredicates(), async);
     if (errCode != E_OK) {
         LOG_ERROR("Sync is failed, err is %{public}d.", errCode);
         return errCode;
