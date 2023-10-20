@@ -523,5 +523,15 @@ napi_value JSUtils::GetClass(napi_env env, const std::string &spaceName, const s
     hasProp = false; // no constructor.
     return constructor;
 }
+
+bool JSUtils::Equal(napi_env env, napi_ref ref, napi_value value)
+{
+    napi_value callback = nullptr;
+    napi_get_reference_value(env, ref, &callback);
+
+    bool isEquals = false;
+    napi_strict_equals(env, value, callback, &isEquals);
+    return isEquals;
+}
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
