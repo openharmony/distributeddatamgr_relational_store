@@ -1135,6 +1135,10 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
         if (isArray) {
             CHECK_RETURN(OK == ParseTablesName(env, argv[index], context));
             index++;
+        } else if (OK == ParsePredicates(env, argv[index], context)){
+            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+            CHECK_RETURN_SET_E(obj != nullptr && obj->IsSystemAppCalled(), std::make_shared<NonSystemError>());
+            index++;
         }
         CHECK_RETURN(OK == ParseCloudSyncCallback(env, argv[index++], context));
         CHECK_RETURN_SET_E(index == argc - 1 || index == argc, std::make_shared<ParamNumError>("2 - 4"));
@@ -1149,17 +1153,21 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
         option.mode = static_cast<DistributedRdb::SyncMode>(context->syncMode);
         option.isBlock = false;
         CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
-        context->execCode_ = obj->rdbStore_->Sync(option, context->tablesNames,
-            [queue = obj->queue_, callback = context->asyncHolder](const Details &details) {
-                if (queue == nullptr || callback == nullptr) {
-                    return;
-                }
-                bool repeat = !details.empty() && details.begin()->second.progress != DistributedRdb::SYNC_FINISH;
-                queue->AsyncCall({ callback, repeat }, [details](napi_env env, int &argc, napi_value *argv) -> void {
-                    argc = 1;
-                    argv[0] = details.empty() ? nullptr : JSUtils::Convert2JSValue(env, details.begin()->second);
-                });
+        auto aysnc = [queue = obj->queue_, callback = context->asyncHolder](const Details &details) {
+            if (queue == nullptr || callback == nullptr) {
+                return;
+            }
+            bool repeat = !details.empty() && details.begin()->second.progress != DistributedRdb::SYNC_FINISH;
+            queue->AsyncCall({ callback, repeat }, [details](napi_env env, int &argc, napi_value *argv) -> void {
+                argc = 1;
+                argv[0] = details.empty() ? nullptr : JSUtils::Convert2JSValue(env, details.begin()->second);
             });
+        };
+        if(context->rdbPredicates == nullptr){
+            context->execCode_ = obj->rdbStore_->Sync(option, context->tablesNames, aysnc);
+        }else{
+            context->execCode_ = obj->rdbStore_->Sync(option, *(context->rdbPredicates), aysnc);
+        }
         return OK;
     };
     auto output = [context](napi_env env, napi_value &result) {
