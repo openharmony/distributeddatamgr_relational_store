@@ -119,27 +119,30 @@ RdbStore::ModifyTime::ModifyTime(std::shared_ptr<ResultSet> result, std::map<std
 
 RdbStore::ModifyTime::operator std::map<PRIKey, Date>()
 {
+    if (result_ == nullptr) {
+        return {};
+    }
     int count = 0;
-    result_->GetRowCount(count);
+    if (result_->GetRowCount(count) != E_OK || count <= 0) {
+        LOG_ERROR("get resultSet err.");
+        return {};
+    }
     std::map<PRIKey, Date> result;
-    if (isFromRowId_) {
-        for (int i = 0; i < count; i++) {
-            result_->GoToRow(i);
-            int64_t timeStamp;
-            int rowID;
-            result_->GetInt(0, rowID);
-            result_->GetLong(1, timeStamp);
-            result[rowID] = Date(timeStamp);
-        }
-    } else {
-        for (int i = 0; i < count; i++) {
-            result_->GoToRow(i);
-            int64_t timeStamp;
+    for (int i = 0; i < count; i++) {
+        result_->GoToRow(i);
+        int64_t timeStamp = 0;
+        result_->GetLong(1, timeStamp);
+        PRIKey index = 0;
+        if (isFromRowId_) {
+            int rowid = 0;
+            result_->GetInt(0, rowid);
+            index = rowid;
+        } else {
             std::vector<uint8_t> hashKey;
             result_->GetBlob(0, hashKey);
-            result_->GetLong(1, timeStamp);
-            result[hash_[hashKey]] = Date(timeStamp);
+            index = hash_[hashKey];
         }
+        result[index] = Date(timeStamp);
     }
     return result;
 }
@@ -151,7 +154,8 @@ RdbStore::ModifyTime::operator std::shared_ptr<ResultSet>()
 
 RdbStore::PRIKey RdbStore::ModifyTime::GetOriginKey(const std::vector<uint8_t> &hash)
 {
-    return hash_[hash];
+    auto it = hash_.find(hash);
+    return it != hash_.end() ? it->second : std::monostate();
 }
 
 RdbStore::ModifyTime RdbStoreImpl::GetModifyTime(const std::string &table, const std::string &columnName,

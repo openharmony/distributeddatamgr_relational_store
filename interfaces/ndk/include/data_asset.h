@@ -28,7 +28,7 @@
  */
 
 /**
- * @file oh_asset.h
+ * @file data_asset.h
  *
  * @brief Provides the data type of asset.
  * @library libnative_rdb_ndk.z.so
@@ -314,4 +314,4 @@ int OH_Data_Asset_DestroyMultiple(Data_Asset **assets, uint32_t count);
 #ifdef __cplusplus
 };
 #endif
-#endif //DATA_ASSET_H
+#endif // DATA_ASSET_H

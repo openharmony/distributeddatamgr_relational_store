@@ -16,6 +16,7 @@
 #include "relational_store.h"
 
 #include "logger.h"
+#include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_predicates.h"
@@ -27,7 +28,6 @@
 #include "relational_store_impl.h"
 #include "relational_values_bucket.h"
 #include "sqlite_global_config.h"
-#include "raw_data_parser.h"
 
 using namespace OHOS::RdbNdk;
 using namespace OHOS::DistributedRdb;
@@ -35,6 +35,8 @@ constexpr int RDB_STORE_CID = 1234560; // The class id used to uniquely identify
 constexpr int RDB_DISTRIBUTED_CONFIG_V0 = 1;
 constexpr int RDB_PROGRESS_DETAILS_V0 = 1;
 constexpr int RDB_TABLE_DETAILS_V0 = 1;
+constexpr int RDB_CONFIG_SIZE_V0 = 41;
+constexpr int RDB_CONFIG_SIZE_V1 = 45;
 OH_VObject *OH_Rdb_CreateValueObject()
 {
     return new (std::nothrow) RelationalPredicatesObjects();
@@ -58,15 +60,18 @@ OHOS::RdbNdk::RelationalStore::RelationalStore(std::shared_ptr<OHOS::NativeRdb::
     id = RDB_STORE_CID;
 }
 
-SubscribeMode RelationalStore::GetSubscribeType(Rdb_SubscribeType &type)
+
+SyncMode NDKUtils::TransformMode(Rdb_SyncMode &mode)
 {
-    switch (type) {
-        case Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD:
-            return SubscribeMode::CLOUD;
-        case Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS:
-            return SubscribeMode::CLOUD_DETAIL;
+    switch (mode) {
+        case RDB_SYNC_MODE_TIME_FIRST:
+            return TIME_FIRST;
+        case RDB_SYNC_MODE_NATIVE_FIRST:
+            return NATIVE_FIRST;
+        case RDB_SYNC_MODE_CLOUD_FIRST:
+            return CLOUD_FIRST;
         default:
-            return SubscribeMode::SUBSCRIBE_MODE_MAX;
+            return static_cast<SyncMode>(-1);
     }
 }
 
@@ -113,7 +118,9 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
     OHOS::NativeRdb::RdbStoreConfig rdbStoreConfig(realPath);
     rdbStoreConfig.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel(config->securityLevel));
     rdbStoreConfig.SetEncryptStatus(config->isEncrypt);
-    rdbStoreConfig.SetArea(config->area);
+    if (config->selfSize > RDB_CONFIG_SIZE_V0) {
+        rdbStoreConfig.SetArea(config->area);
+    }
     if (config->bundleName != nullptr) {
         rdbStoreConfig.SetBundleName(config->bundleName);
     }
@@ -324,14 +331,12 @@ int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint3
     if (ret.first < 0) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    auto distributedConfig = ret.second;
     std::vector<std::string> tableNames;
     tableNames.reserve(count);
-    for (int i = 0; i < count; i++) {
+    for (uint32_t i = 0; i < count; i++) {
         tableNames.emplace_back(tables[i]);
     }
-    return rdbStore->GetStore()->SetDistributedTables(tableNames, DistributedTableType::DISTRIBUTED_CLOUD,
-        distributedConfig);
+    return rdbStore->GetStore()->SetDistributedTables(tableNames, DistributedTableType::DISTRIBUTED_CLOUD, ret.second);
 }
 
 OH_Cursor *OH_Rdb_FindModifyTime(OH_Rdb_Store *store, const char *tableName, const char *columnName, OH_VObject *values)
@@ -353,152 +358,54 @@ OH_Cursor *OH_Rdb_FindModifyTime(OH_Rdb_Store *store, const char *tableName, con
     return new (std::nothrow) RelationalCursor(std::move(results));
 }
 
-int OH_Rdb_Subscribe(OH_Rdb_Store *store, Rdb_SubscribeType type, Rdb_DataObserver *observer)
-{
-    auto rdbStore = GetRelationalStore(store);
-    if (rdbStore == nullptr || type < RDB_SUBSCRIBE_TYPE_CLOUD || type > RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS ||
-        observer->callback->briefObserver == nullptr || observer->callback->detailsObserver == nullptr) {
-        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
-    }
-    auto subscribeOption = SubscribeOption{ .mode = RelationalStore::GetSubscribeType(type), .event = "data_change" };
-    auto ndkObserver = NDKStoreObserver(store, observer, type);
-    auto subscribeResult = rdbStore->GetStore()->Subscribe(subscribeOption, &ndkObserver);
-    if (subscribeResult != OHOS::NativeRdb::E_OK) {
-        LOG_ERROR("subscribe failed");
-    }
-    return (OH_Rdb_ErrCode)subscribeResult;
-}
-
-int OH_Rdb_Unsubscribe(OH_Rdb_Store *store, Rdb_SubscribeType type, Rdb_DataObserver *observer)
-{
-    auto rdbStore = GetRelationalStore(store);
-    if (rdbStore == nullptr || type < RDB_SUBSCRIBE_TYPE_CLOUD || type > RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS) {
-        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
-    }
-    auto subscribeOption = SubscribeOption{ .mode = RelationalStore::GetSubscribeType(type), .event = "data_change" };
-    auto ndkObserver = NDKStoreObserver(store, observer, type);
-    auto unsubscribeResult = rdbStore->GetStore()->UnSubscribe(subscribeOption, &ndkObserver);
-    if (unsubscribeResult != OHOS::NativeRdb::E_OK) {
-        LOG_ERROR("subscribe failed, mode is %{public}d", type);
-    }
-    return (OH_Rdb_ErrCode)unsubscribeResult;
-}
-
-NDKStoreObserver::NDKChangeInfo::NDKChangeInfo(const NDKStoreObserver::Origin &origin, ChangeInfo ::iterator info)
-    : table(info->first), type(origin.dataType), inserted(std::move(info->second[CHG_TYPE_INSERT])),
-      updated(std::move(info->second[CHG_TYPE_UPDATE])), deleted(std::move(info->second[CHG_TYPE_DELETE]))
-{
-}
-
-NDKStoreObserver::NDKStoreObserver(OH_Rdb_Store *store, Rdb_DataObserver *callback, int mode)
-    : store_(store), mode_(mode), observer_(callback)
-{
-}
-
-void NDKStoreObserver::OnChange(const std::vector<std::string> &devices)
-{
-    if (mode_ == Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD) {
-        RelationalPredicatesObjects objects;
-        std::copy(devices.begin(), devices.end(), objects.Get().begin());
-        (*observer_->callback->briefObserver)(observer_->context, &objects, devices.size());
-    }
-}
-
-void NDKStoreObserver::OnChange(const Origin &origin, const RdbStoreObserver::PrimaryFields &fields,
-    RdbStoreObserver::ChangeInfo &&changeInfo)
-{
-    if (mode_ == Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS) {
-        std::vector<Rdb_ChangeInfo> changeInfos;
-        for (auto &info : changeInfo) {
-            Rdb_ChangeInfo rdbChangeInfo;
-            rdbChangeInfo.tableName = info.first.c_str();
-            rdbChangeInfo.ChangeType = (Rdb_ChangeType)origin.dataType;
-            TransformData(rdbChangeInfo.inserted, info.second[CHG_TYPE_INSERT]);
-            TransformData(rdbChangeInfo.updated, info.second[CHG_TYPE_UPDATE]);
-            TransformData(rdbChangeInfo.deleted, info.second[CHG_TYPE_DELETE]);
-            changeInfos.emplace_back(rdbChangeInfo);
-        }
-        (*observer_->callback->detailsObserver)(observer_->context, changeInfos.data(), changeInfos.size());
-    }
-}
-
-void NDKStoreObserver::OnChange() {}
-
-void NDKStoreObserver::TransformData(Rdb_KeyInfo &keyInfo, std::vector<PrimaryKey> &primaryKey)
-{
-    keyInfo.count = (int)primaryKey.size();
-    keyInfo.type = (OH_ColumnType)primaryKey.begin()->index();
-    if (keyInfo.type == TYPE_NULL || keyInfo.type > TYPE_TEXT) {
-        return;
-    }
-    union Rdb_KeyInfo::Rdb_KeyData keyData[keyInfo.count];
-    auto it = primaryKey.begin();
-    if (keyInfo.type == TYPE_REAL) {
-        for (int i = 0; i < keyInfo.count; ++i) {
-            keyData[i].real = *std::get_if<double>(it.base());
-            it++;
-        }
-    } else if (keyInfo.type == TYPE_INT64) {
-        for (int i = 0; i < keyInfo.count; ++i) {
-            keyData[i].integer = *std::get_if<int64_t>(it.base());
-            it++;
-        }
-    } else if (keyInfo.type == TYPE_TEXT) {
-        for (int i = 0; i < keyInfo.count; ++i) {
-            keyData[i].text = (*std::get_if<std::string>(it.base())).c_str();
-            it++;
-        }
-    }
-    keyInfo.data = keyData;
-}
-
-SyncMode NDKStoreObserver::TransformMode(Rdb_SyncMode &mode)
-{
-    switch (mode) {
-        case RDB_SYNC_MODE_TIME_FIRST:
-            return TIME_FIRST;
-        case RDB_SYNC_MODE_NATIVE_FIRST:
-            return NATIVE_FIRST;
-        case RDB_SYNC_MODE_CLOUD_FIRST:
-            return CLOUD_FIRST;
-        default:
-            return static_cast<SyncMode>(-1);
-    }
-}
-
-struct RelationalTableDetails : public Rdb_TableDetails {
+struct RelationalTableDetailsV0 : public Rdb_TableDetails {
 };
 
 struct RelationalProgressDetails : public Rdb_ProgressDetails {
     TableDetails tableDetails_;
+    Rdb_TableDetails *details_ = nullptr;
+    int curVersion_ = -1;
     explicit RelationalProgressDetails(const ProgressDetail &detail);
-    Rdb_TableDetails *GetTableDetails(int version);
+    Rdb_TableDetails *GetTableDetails(int paraVersion);
+    void DestroyTableDetails();
 };
+
+void RelationalProgressDetails::DestroyTableDetails()
+{
+    if (details_ != nullptr) {
+        free(details_);
+    }
+}
 
 RelationalProgressDetails::RelationalProgressDetails(const ProgressDetail &detail) : Rdb_ProgressDetails()
 {
-    version = RDB_TABLE_DETAILS_V0;
+    version = RDB_PROGRESS_DETAILS_V0;
     schedule = detail.progress;
     code = detail.code;
     tableLength = (int32_t)detail.details.size();
     tableDetails_ = detail.details;
 }
 
-Rdb_TableDetails *RelationalProgressDetails::GetTableDetails(int version)
+Rdb_TableDetails *RelationalProgressDetails::GetTableDetails(int paraVersion)
 {
-    switch (version) {
+    if (curVersion_ == paraVersion)
+    {
+        return details_;
+    }
+    DestroyTableDetails();
+    switch (paraVersion) {
         case RDB_TABLE_DETAILS_V0: {
-            auto *ret = (Rdb_TableDetails *)malloc(sizeof(Rdb_TableDetails) * (tableLength + 1));
+            details_ = (Rdb_TableDetails *)malloc(sizeof(RelationalTableDetailsV0) * (tableLength + 1));
             int index = 0;
             for (const auto &pair : tableDetails_) {
-                ret[index].table = pair.first.c_str();
-                ret[index].upload = Rdb_Statistic{
+                details_[index].table = pair.first.c_str();
+                details_[index].upload = Rdb_Statistic{
                     .total = (int)pair.second.upload.total,
                     .successful = (int)pair.second.upload.success,
                     .failed = (int)pair.second.upload.failed,
                     .remained = (int)pair.second.upload.untreated,
                 };
-                ret[index].download = Rdb_Statistic{
+                details_[index].download = Rdb_Statistic{
                     .total = (int)pair.second.download.total,
                     .successful = (int)pair.second.download.success,
                     .failed = (int)pair.second.download.failed,
@@ -506,6 +413,8 @@ Rdb_TableDetails *RelationalProgressDetails::GetTableDetails(int version)
                 };
                 index++;
             }
+            curVersion_ = paraVersion;
+            return details_;
         }
         default:
             return nullptr;
@@ -539,14 +448,15 @@ int OH_Rdb_CloudSync(OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[
         callback == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    SyncOption syncOption{ .mode = NDKStoreObserver::TransformMode(mode), .isBlock = false };
+    SyncOption syncOption{ .mode = NDKUtils::TransformMode(mode), .isBlock = false };
     std::vector<std::string> tableNames;
-    for (int i = 0; i < count; ++i) {
+    for (uint32_t i = 0; i < count; ++i) {
         tableNames.emplace_back(tables[i]);
     }
     auto progressCallback = [&callback](Details &&details) {
         RelationalProgressDetails progressDetails = RelationalProgressDetails(details.begin()->second);
         (*callback)(&progressDetails);
+        progressDetails.DestroyTableDetails();
     };
     return rdbStore->GetStore()->Sync(syncOption, tableNames, progressCallback);
 }
