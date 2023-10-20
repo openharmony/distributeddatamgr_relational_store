@@ -42,7 +42,8 @@ public:
 #endif
     int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
         const std::vector<uint8_t> &newKey);
-    std::stack<BaseTransaction> &getTransactionStack();
+    std::stack<BaseTransaction> &GetTransactionStack();
+    std::mutex &GetTransactionStackMutex();
     int AcquireTransaction();
     void ReleaseTransaction();
 
@@ -72,6 +73,7 @@ private:
     const static int LIMITATION = 1024;
 
     std::stack<BaseTransaction> transactionStack;
+    std::mutex transactionStackMutex;
     std::condition_variable transCondition;
     std::mutex transMutex;
     bool transactionUsed;
