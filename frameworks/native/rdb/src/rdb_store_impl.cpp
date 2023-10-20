@@ -1369,7 +1369,7 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
     DistributedRdb::RdbService::Option rdbOption;
     rdbOption.mode = option.mode;
     rdbOption.isAsync = !option.isBlock;
-    return InnerSync(rdbOption, AbsRdbPredicates(tables).GetDistributedPredicates(), async);
+    return InnerSync(rdbOption, predicate.GetDistributedPredicates(), async);
 }
 
 int RdbStoreImpl::InnerSync(const DistributedRdb::RdbService::Option &option,
