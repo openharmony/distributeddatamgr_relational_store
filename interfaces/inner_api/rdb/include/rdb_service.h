@@ -34,6 +34,7 @@ public:
         int32_t mode;
         uint32_t seqNum = 0;
         bool isAsync = false;
+        bool isAutoSync = false;
     };
 
     virtual std::string ObtainDistributedTableName(const std::string &device, const std::string &table) = 0;
@@ -49,6 +50,12 @@ public:
 
     virtual int32_t UnSubscribe(const RdbSyncerParam &param, const SubscribeOption &option,
         RdbStoreObserver *observer) = 0;
+
+    virtual int32_t RegisterAutoSyncCallback(
+        const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer) = 0;
+
+    virtual int32_t UnregisterAutoSyncCallback(
+        const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer) = 0;
 
     virtual int32_t RemoteQuery(const RdbSyncerParam &param, const std::string &device, const std::string &sql,
         const std::vector<std::string> &selectionArgs, sptr<IRemoteObject> &resultSet) = 0;

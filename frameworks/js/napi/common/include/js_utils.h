@@ -70,6 +70,8 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, bo
 
 bool IsNull(napi_env env, napi_value value);
 
+bool Equal(napi_env env, napi_ref ref, napi_value value);
+
 template<typename T>
 int32_t Convert2Value(napi_env env, napi_value jsValue, T &output);
 

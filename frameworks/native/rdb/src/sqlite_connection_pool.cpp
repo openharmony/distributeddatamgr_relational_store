@@ -311,9 +311,14 @@ int SqliteConnectionPool::ChangeDbFileForRestore(const std::string newPath, cons
     return Init();
 }
 
-std::stack<BaseTransaction> &SqliteConnectionPool::getTransactionStack()
+std::stack<BaseTransaction> &SqliteConnectionPool::GetTransactionStack()
 {
     return transactionStack;
+}
+
+std::mutex &SqliteConnectionPool::GetTransactionStackMutex()
+{
+    return transactionStackMutex;
 }
 } // namespace NativeRdb
 } // namespace OHOS
