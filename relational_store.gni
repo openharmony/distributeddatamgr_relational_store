@@ -47,3 +47,5 @@ kvstore_interface_path = "//foundation/distributeddatamgr/kv_store/interfaces/in
 
 distributedfile_path =
     "//foundation/filemanagement/file_api/interfaces/kits/js/src"
+
+sdk_c_path = "//interface/sdk_c/distributeddatamgr"

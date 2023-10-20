@@ -33,8 +33,7 @@ public:
     void TearDown();
     static void InitRdbConfig()
     {
-        //        config_.dataBaseDir = RDB_TEST_PATH;
-        config_.dataBaseDir = "/data/test/";
+        config_.dataBaseDir = RDB_TEST_PATH;
         config_.storeName = "rdb_cursor_test.db";
         config_.bundleName = "";
         config_.moduleName = "";

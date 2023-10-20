@@ -489,9 +489,9 @@ public:
         PRIKey GetOriginKey(const std::vector<uint8_t>& hash);
 
     private:
-        bool isFromRowId_;
         std::shared_ptr<ResultSet> result_;
         std::map<std::vector<uint8_t>, PRIKey> hash_;
+        bool isFromRowId_{ false };
     };
     /**
      * @brief Get the the specified column modify time.

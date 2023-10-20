@@ -95,9 +95,9 @@ int OH_Data_Asset_GetName(Data_Asset *asset, char *name, size_t *length)
             (asset == nullptr), (nameLength >= *length));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    errno_t result = memcpy_s(name, *length, asset->asset_.name.c_str(), asset->asset_.name.length() + 1);
+    errno_t result = strcpy_s(name, *length, asset->asset_.name.c_str());
     if (result != EOK) {
-        LOG_ERROR("memcpy_s failed, result is %{public}d", result);
+        LOG_ERROR("strcpy_s failed, result is %{public}d", result);
         return OH_Rdb_ErrCode::RDB_ERR;
     }
     *length = nameLength;
@@ -112,9 +112,9 @@ int OH_Data_Asset_GetUri(Data_Asset *asset, char *uri, size_t *length)
             (asset == nullptr), (uriLength >= *length));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    errno_t result = memcpy_s(uri, *length, asset->asset_.uri.c_str(), *length + 1);
+    errno_t result = strcpy_s(uri, *length, asset->asset_.uri.c_str());
     if (result != EOK) {
-        LOG_ERROR("memcpy_s failed, result is %{public}d", result);
+        LOG_ERROR("strcpy_s failed, result is %{public}d", result);
         return OH_Rdb_ErrCode::RDB_ERR;
     }
     *length = uriLength;
@@ -129,9 +129,9 @@ int OH_Data_Asset_GetPath(Data_Asset *asset, char *path, size_t *length)
             (asset == nullptr), (pathLength >= *length));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    errno_t result = memcpy_s(path, *length, asset->asset_.path.c_str(), *length + 1);
+    errno_t result = strcpy_s(path, *length, asset->asset_.path.c_str());
     if (result != EOK) {
-        LOG_ERROR("memcpy_s failed, result is %{public}d", result);
+        LOG_ERROR("strcpy_s failed, result is %{public}d", result);
         return OH_Rdb_ErrCode::RDB_ERR;
     }
     *length = pathLength;

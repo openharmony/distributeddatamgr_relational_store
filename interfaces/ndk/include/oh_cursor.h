@@ -70,19 +70,7 @@ typedef enum OH_ColumnType {
     /**
      * Indicates the column type is BLOB.
      */
-    TYPE_BLOB,
-    /**
-     * Indicates the column type is {@link Data_Asset}.
-     *
-     * @since 11
-     */
-    TYPE_ASSET,
-    /**
-     * Indicates the column type is array of {@link Data_Asset}.
-     *
-     * @since 11
-     */
-    TYPE_ASSETS
+    TYPE_BLOB
 } OH_ColumnType;
 
 /**

@@ -25,36 +25,6 @@
 
 namespace OHOS {
 namespace RdbNdk {
-class NDKStoreObserver : public OHOS::DistributedRdb::RdbStoreObserver {
-public:
-    using Origin = DistributedRdb::Origin;
-    using RdbStoreObserver = OHOS::DistributedRdb::RdbStoreObserver;
-    struct NDKChangeInfo {
-        NDKChangeInfo(const Origin &origin, ChangeInfo::iterator info);
-        std::string table;
-        int32_t type; //datachange or asset change
-        std::vector<PrimaryKey> inserted;
-        std::vector<PrimaryKey> updated;
-        std::vector<PrimaryKey> deleted;
-    };
-    explicit NDKStoreObserver(OH_Rdb_Store *store, Rdb_DataObserver *callback, int mode);
-    ~NDKStoreObserver() noexcept override = default;
-
-    void OnChange(const std::vector<std::string> &devices) override;
-
-    void OnChange(const OHOS::DistributedRdb::Origin &origin, const PrimaryFields &fields,
-        ChangeInfo &&changeInfo) override;
-
-    void OnChange() override;
-
-    static OHOS::DistributedRdb::SyncMode TransformMode(Rdb_SyncMode &mode);
-
-private:
-    static void TransformData(Rdb_KeyInfo &keyInfo, std::vector<RdbStoreObserver::PrimaryKey> &primaryKey);
-    OH_Rdb_Store *store_;
-    int mode_ = Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD;
-    Rdb_DataObserver *observer_;
-};
 
 class RelationalStore : public OH_Rdb_Store {
 public:
@@ -64,9 +34,13 @@ public:
         return store_;
     }
 
-    static OHOS::DistributedRdb::SubscribeMode GetSubscribeType(Rdb_SubscribeType &type);
 private:
     std::shared_ptr<OHOS::NativeRdb::RdbStore> store_;
+};
+
+class NDKUtils {
+public:
+    static OHOS::DistributedRdb::SyncMode TransformMode(Rdb_SyncMode &mode);
 };
 } // namespace RdbNdk
 } // namespace OHOS
