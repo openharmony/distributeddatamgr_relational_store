@@ -44,7 +44,6 @@ struct RdbSyncerParam {
     int32_t area_ = 0;
     int32_t level_ = 0;
     int32_t type_ = RDB_DEVICE_COLLABORATION;
-    bool isAutoSync_ = false;
     bool isEncrypt_ = false;
     std::vector<uint8_t> password_;
     ~RdbSyncerParam()
@@ -161,6 +160,13 @@ struct Date {
         return static_cast<double>(date);
     }
     int64_t date;
+};
+
+class DetailProgressObserver {
+public:
+    virtual ~DetailProgressObserver() {};
+
+    virtual void ProgressNotification(const Details& details) = 0;
 };
 
 enum SubscribeMode {
