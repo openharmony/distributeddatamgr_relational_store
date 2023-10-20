@@ -23,7 +23,6 @@
 #include "rdb_errno.h"
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
-#include "sqlite_connection.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -34,30 +33,9 @@ const int SET_DATA_PRECISION = 15;
 SqliteStatement::SqliteStatement() : sql(""), stmtHandle(nullptr), readOnly(false), columnCount(0), numParameters(0)
 {
 }
-
 SqliteStatement::~SqliteStatement()
 {
     Finalize();
-}
-
-std::shared_ptr<SqliteStatement> SqliteStatement::CreateStatement(
-    SqliteConnection *connection, const std::string &sql)
-{
-    sqlite3_stmt *stmt = nullptr;
-    int errCode = sqlite3_prepare_v2(connection->dbHandle, sql.c_str(), sql.length(), &stmt, nullptr);
-    if (errCode != SQLITE_OK) {
-        LOG_ERROR("prepare_v2 ret is %{public}d", errCode);
-        if (stmt != nullptr) {
-            sqlite3_finalize(stmt);
-        }
-        return nullptr;
-    }
-    std::shared_ptr<SqliteStatement> sqliteStatement = std::make_shared<SqliteStatement>();
-    sqliteStatement->stmtHandle = stmt;
-    sqliteStatement->readOnly = (sqlite3_stmt_readonly(stmt) != 0) ? true : false;
-    sqliteStatement->columnCount = sqlite3_column_count(stmt);
-    sqliteStatement->numParameters = sqlite3_bind_parameter_count(stmt);
-    return sqliteStatement;
 }
 
 int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)

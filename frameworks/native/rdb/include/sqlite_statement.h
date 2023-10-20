@@ -23,13 +23,10 @@
 
 namespace OHOS {
 namespace NativeRdb {
-class SqliteConnection;
-
 class SqliteStatement {
 public:
     SqliteStatement();
     ~SqliteStatement();
-    static std::shared_ptr<SqliteStatement> CreateStatement(SqliteConnection *connection, const std::string &sql);
     int Prepare(sqlite3 *dbHandle, const std::string &sql);
     int Finalize();
     int BindArguments(const std::vector<ValueObject> &bindArgs) const;

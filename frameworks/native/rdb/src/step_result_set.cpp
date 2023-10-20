@@ -32,9 +32,8 @@ using namespace OHOS::Rdb;
 StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, SqliteConnectionPool *connectionPool,
     const std::string &sql, const std::vector<ValueObject> &selectionArgs)
     : rdb(rdb), connectionPool_(connectionPool), sql(sql), args_(std::move(selectionArgs)), isAfterLast(false),
-      rowCount(INIT_POS), sqliteStatement(nullptr)
+      rowCount(INIT_POS), sqliteStatement(nullptr), connection_(connectionPool_->AcquireConnection(true))
 {
-    PrepareStep();
 }
 
 StepResultSet::~StepResultSet()
@@ -94,10 +93,6 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
         LOG_ERROR("query not executed.");
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
-    if (sqliteStatement == nullptr) {
-        LOG_ERROR("sqliteStatement init failed!");
-        return E_CON_OVER_LIMIT;
-    }
     int sqliteType;
     int errCode = sqliteStatement->GetColumnType(columnIndex, sqliteType);
     if (errCode) {
@@ -149,6 +144,10 @@ int StepResultSet::GetRowCount(int &count)
  */
 int StepResultSet::GoToRow(int position)
 {
+    if (connection_ == nullptr) {
+        LOG_ERROR("Failed as too many connections");
+        return E_CON_OVER_LIMIT;
+    }
     // If the moved position is less than zero, reset the result and return an error
     if (position < 0) {
         LOG_DEBUG("position %{public}d.", position);
@@ -228,7 +227,11 @@ int StepResultSet::Close()
         return E_OK;
     }
     isClosed = true;
-    return FinishStep();
+    int errCode = FinishStep();
+
+    connectionPool_->ReleaseConnection(connection_);
+    connection_ = nullptr;
+    return errCode;
 }
 
 /**
@@ -240,30 +243,24 @@ int StepResultSet::PrepareStep()
         return E_OK;
     }
 
+    if (connection_ == nullptr) {
+        LOG_ERROR("too many connections");
+        return E_CON_OVER_LIMIT;
+    }
+
     if (SqliteUtils::GetSqlStatementType(sql) != SqliteUtils::STATEMENT_SELECT) {
         LOG_ERROR("not a select sql!");
         return E_EXECUTE_IN_STEP_QUERY;
     }
 
-    SqliteConnection *connection = connectionPool_->AcquireConnection(true);
-    if (connection == nullptr) {
-        LOG_ERROR("connectionPool_ AcquireConnection failed!");
-        return E_CON_OVER_LIMIT;
-    }
-    sqliteStatement = SqliteStatement::CreateStatement(connection, sql);
-    connectionPool_->ReleaseConnection(connection);
+    int errCode;
+    sqliteStatement = connection_->BeginStepQuery(errCode, sql, args_);
     if (sqliteStatement == nullptr) {
-        LOG_ERROR("Connection create statement failed!");
-        return E_STATEMENT_NOT_PREPARED;
-    }
-
-    int errCode = sqliteStatement->BindArguments(args_);
-    if (errCode != E_OK) {
-        LOG_ERROR("Bind arg faild! Ret is %{public}d", errCode);
-        sqliteStatement->ResetStatementAndClearBindings();
-        sqliteStatement = nullptr;
+        connection_->EndStepQuery();
+        LOG_ERROR("BeginStepQuery ret is %{public}d", errCode);
         return errCode;
     }
+
     return E_OK;
 }
 
@@ -272,12 +269,21 @@ int StepResultSet::PrepareStep()
  */
 int StepResultSet::FinishStep()
 {
-    if (sqliteStatement != nullptr) {
-        sqliteStatement->ResetStatementAndClearBindings();
-        sqliteStatement = nullptr;
+    if (sqliteStatement == nullptr) {
+        return E_OK;
     }
+
+    sqliteStatement = nullptr;
     rowPos_ = INIT_POS;
-    return E_OK;
+    if (connection_ == nullptr) {
+        return E_OK;
+    }
+
+    int errCode = connection_->EndStepQuery();
+    if (errCode != E_OK) {
+        LOG_ERROR("ret is %d", errCode);
+    }
+    return errCode;
 }
 
 /**
@@ -285,7 +291,10 @@ int StepResultSet::FinishStep()
  */
 void StepResultSet::Reset()
 {
-    FinishStep();
+    if (sqliteStatement != nullptr) {
+        sqlite3_reset(sqliteStatement->GetSql3Stmt());
+    }
+    rowPos_ = INIT_POS;
     isAfterLast = false;
 }
 
