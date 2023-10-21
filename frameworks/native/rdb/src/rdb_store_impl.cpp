@@ -1347,11 +1347,7 @@ std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, 
 
 int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &callback)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    DistributedRdb::RdbService::Option rdbOption;
-    rdbOption.mode = option.mode;
-    rdbOption.isAsync = !option.isBlock;
-    return InnerSync(rdbOption, predicate.GetDistributedPredicates(), [callback](Details &&details) {
+    return Sync(option, predicate, [callback](Details &&details) {
         Briefs briefs;
         for (auto &[key, value] : details) {
             briefs.insert_or_assign(key, value.code);
@@ -1362,14 +1358,18 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
     });
 }
 
-int RdbStoreImpl::Sync(const SyncOption &option, const std::vector<std::string> &tables,
-                       const AsyncDetail &async)
+int RdbStoreImpl::Sync(const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async)
+{
+    return Sync(option, AbsRdbPredicates(tables), async);
+}
+
+int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncDetail &async)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     DistributedRdb::RdbService::Option rdbOption;
     rdbOption.mode = option.mode;
     rdbOption.isAsync = !option.isBlock;
-    return InnerSync(rdbOption, AbsRdbPredicates(tables).GetDistributedPredicates(), async);
+    return InnerSync(rdbOption, predicate.GetDistributedPredicates(), async);
 }
 
 int RdbStoreImpl::InnerSync(const DistributedRdb::RdbService::Option &option,

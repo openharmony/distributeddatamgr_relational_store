@@ -245,10 +245,13 @@ HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_Test_005, TestSize.Level2
     std::vector<std::string> tables;
 
     // get rdb service succeeded, if configuration file has already been configured
-    errCode = rdbStore->Sync(option, predicate, nullptr);
+    errCode = rdbStore->Sync(option, predicate, OHOS::DistributedRdb::AsyncBrief());
     EXPECT_EQ(E_OK, errCode);
 
-    errCode = rdbStore->Sync(option, tables, nullptr);
+    errCode = rdbStore->Sync(option, tables, OHOS::DistributedRdb::AsyncDetail());
+    EXPECT_EQ(E_OK, errCode);
+
+    errCode = rdbStore->Sync(option, predicate, OHOS::DistributedRdb::AsyncDetail());
     EXPECT_EQ(E_OK, errCode);
 
     std::string path = RdbStoreDistributedTest::DRDB_PATH + "test.db";
@@ -258,7 +261,7 @@ HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_Test_005, TestSize.Level2
     EXPECT_NE(nullptr, store);
 
     // get rdb service failed, if not configured
-    errCode = store->Sync(option, predicate, nullptr);
+    errCode = store->Sync(option, predicate, OHOS::DistributedRdb::AsyncBrief());
     EXPECT_EQ(E_INVALID_ARGS, errCode);
     errCode = store->Sync(option, tables, nullptr);
     EXPECT_EQ(E_INVALID_ARGS, errCode);
