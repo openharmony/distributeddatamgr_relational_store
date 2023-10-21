@@ -45,7 +45,7 @@ RdbStoreManager &RdbStoreManager::GetInstance()
 
 RdbStoreManager::~RdbStoreManager()
 {
-    LOG_ERROR("Start");
+    LOG_INFO("Start");
     Clear();
 }
 
@@ -58,6 +58,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
 {
     std::string path = config.GetPath();
     std::lock_guard<std::mutex> lock(mutex_); // TOD this lock should only work on storeCache_, add one more lock for connectionpool
+    bundleName_ = config.GetBundleName();
     if (storeCache_.find(path) != storeCache_.end()) {
         std::shared_ptr<RdbStoreImpl> rdbStore = storeCache_[path].lock();
         if (rdbStore != nullptr && rdbStore->GetConfig() == config) {
@@ -166,6 +167,8 @@ bool RdbStoreManager::Delete(const std::string &path)
     if (!tokens.empty()) {
         DistributedRdb::RdbSyncerParam param;
         param.storeName_ = *tokens.rbegin();
+        std::lock_guard<std::mutex> lock(mutex_);
+        param.bundleName_ = bundleName_;
         auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
         if (err == E_OK && service != nullptr) {
             err = service->Delete(param);

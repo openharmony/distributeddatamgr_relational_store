@@ -985,7 +985,8 @@ int RdbStoreImpl::SetVersion(int version)
 int RdbStoreImpl::BeginTransaction()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    BaseTransaction transaction(connectionPool->getTransactionStack().size());
+    std::lock_guard<std::mutex> lockGuard(connectionPool->GetTransactionStackMutex());
+    BaseTransaction transaction(connectionPool->GetTransactionStack().size());
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
     if (connection == nullptr) {
         return E_CON_OVER_LIMIT;
@@ -999,7 +1000,7 @@ int RdbStoreImpl::BeginTransaction()
     }
 
     connection->SetInTransaction(true);
-    connectionPool->getTransactionStack().push(transaction);
+    connectionPool->GetTransactionStack().push(transaction);
     return E_OK;
 }
 
@@ -1009,13 +1010,14 @@ int RdbStoreImpl::BeginTransaction()
 int RdbStoreImpl::RollBack()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (connectionPool->getTransactionStack().empty()) {
+    std::lock_guard<std::mutex> lockGuard(connectionPool->GetTransactionStackMutex());
+    if (connectionPool->GetTransactionStack().empty()) {
         return E_NO_TRANSACTION_IN_SESSION;
     }
-    BaseTransaction transaction = connectionPool->getTransactionStack().top();
-    connectionPool->getTransactionStack().pop();
-    if (transaction.GetType() != TransType::ROLLBACK_SELF && !connectionPool->getTransactionStack().empty()) {
-        connectionPool->getTransactionStack().top().SetChildFailure(true);
+    BaseTransaction transaction = connectionPool->GetTransactionStack().top();
+    connectionPool->GetTransactionStack().pop();
+    if (transaction.GetType() != TransType::ROLLBACK_SELF && !connectionPool->GetTransactionStack().empty()) {
+        connectionPool->GetTransactionStack().top().SetChildFailure(true);
     }
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
     if (connection == nullptr) {
@@ -1024,7 +1026,7 @@ int RdbStoreImpl::RollBack()
 
     int errCode = connection->ExecuteSql(transaction.GetRollbackStr());
     connectionPool->ReleaseConnection(connection);
-    if (connectionPool->getTransactionStack().empty()) {
+    if (connectionPool->GetTransactionStack().empty()) {
         connection->SetInTransaction(false);
     }
     if (errCode != E_OK) {
@@ -1041,13 +1043,14 @@ int RdbStoreImpl::Commit()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     LOG_DEBUG("Enter Commit.");
-    if (connectionPool->getTransactionStack().empty()) {
+    std::lock_guard<std::mutex> lockGuard(connectionPool->GetTransactionStackMutex());
+    if (connectionPool->GetTransactionStack().empty()) {
         return E_OK;
     }
-    BaseTransaction transaction = connectionPool->getTransactionStack().top();
+    BaseTransaction transaction = connectionPool->GetTransactionStack().top();
     std::string sqlStr = transaction.GetCommitStr();
     if (sqlStr.size() <= 1) {
-        connectionPool->getTransactionStack().pop();
+        connectionPool->GetTransactionStack().pop();
         return E_OK;
     }
 
@@ -1059,7 +1062,7 @@ int RdbStoreImpl::Commit()
     int errCode = connection->ExecuteSql(sqlStr);
     connectionPool->ReleaseConnection(connection);
     connection->SetInTransaction(false);
-    connectionPool->getTransactionStack().pop();
+    connectionPool->GetTransactionStack().pop();
     if (errCode != E_OK) {
         LOG_ERROR("Commit Failed.");
     }
@@ -1240,8 +1243,9 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
         if (ptr == nullptr) {
             return;
         }
-        SyncOption syncOption = { DistributedRdb::TIME_FIRST, false };
-        Sync(syncOption, { ptr->begin(), ptr->end() }, nullptr);
+        DistributedRdb::RdbService::Option option = { DistributedRdb::TIME_FIRST, 0, true, true };
+        InnerSync(option,
+            AbsRdbPredicates(std::vector<std::string>(ptr->begin(), ptr->end())).GetDistributedPredicates(), nullptr);
     });
 #endif
 }
@@ -1366,44 +1370,39 @@ std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, 
 int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &callback)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
-    if (errCode != E_OK) {
-        LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
-        return errCode;
-    }
     DistributedRdb::RdbService::Option rdbOption;
     rdbOption.mode = option.mode;
     rdbOption.isAsync = !option.isBlock;
-    errCode =
-        service->Sync(syncerParam_, rdbOption, predicate.GetDistributedPredicates(), [callback](Details &&details) {
-            Briefs briefs;
-            for (auto &[key, value] : details) {
-                briefs.insert_or_assign(key, value.code);
-            }
-            if (callback != nullptr) {
-                callback(briefs);
-            }
-        });
-    if (errCode != E_OK) {
-        LOG_ERROR("Sync is failed, err is %{public}d.", errCode);
-        return errCode;
-    }
-    return E_OK;
+    return InnerSync(rdbOption, predicate.GetDistributedPredicates(), [callback](Details &&details) {
+        Briefs briefs;
+        for (auto &[key, value] : details) {
+            briefs.insert_or_assign(key, value.code);
+        }
+        if (callback != nullptr) {
+            callback(briefs);
+        }
+    });
 }
 
 int RdbStoreImpl::Sync(const SyncOption &option, const std::vector<std::string> &tables,
                        const AsyncDetail &async)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    DistributedRdb::RdbService::Option rdbOption;
+    rdbOption.mode = option.mode;
+    rdbOption.isAsync = !option.isBlock;
+    return InnerSync(rdbOption, AbsRdbPredicates(tables).GetDistributedPredicates(), async);
+}
+
+int RdbStoreImpl::InnerSync(const DistributedRdb::RdbService::Option &option,
+    const DistributedRdb::PredicatesMemo &predicates, const RdbStore::AsyncDetail &async)
+{
     auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
         return errCode;
     }
-    DistributedRdb::RdbService::Option rdbOption;
-    rdbOption.mode = option.mode;
-    rdbOption.isAsync = !option.isBlock;
-    errCode = service->Sync(syncerParam_, rdbOption, AbsRdbPredicates(tables).GetDistributedPredicates(), async);
+    errCode = service->Sync(syncerParam_, option, predicates, async);
     if (errCode != E_OK) {
         LOG_ERROR("Sync is failed, err is %{public}d.", errCode);
         return errCode;
@@ -1624,6 +1623,24 @@ int RdbStoreImpl::Notify(const std::string &event)
         }
     }
     return E_OK;
+}
+
+int RdbStoreImpl::RegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer)
+{
+    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    return service->RegisterAutoSyncCallback(syncerParam_, observer);
+}
+
+int RdbStoreImpl::UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer)
+{
+    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    return service->UnregisterAutoSyncCallback(syncerParam_, observer);
 }
 #endif
 } // namespace OHOS::NativeRdb

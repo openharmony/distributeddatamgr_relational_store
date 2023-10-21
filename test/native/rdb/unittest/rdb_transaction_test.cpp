@@ -97,13 +97,13 @@ struct RowData {
     std::vector<uint8_t> blobType;
 };
 
-RowData g_rowData[3] = {
+static RowData g_rowData[3] = {
     {1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }},
     {2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }},
     {3, "wangyjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }}
 };
 
-ValuesBucket InsertRowData(const RowData &rowData)
+static ValuesBucket InsertRowData(const RowData &rowData)
 {
     ValuesBucket value;
     value.PutInt("id", rowData.id);

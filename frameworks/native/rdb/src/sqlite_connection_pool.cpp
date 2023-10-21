@@ -33,7 +33,7 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-constexpr std::chrono::seconds WAIT_CONNECT_TIMEOUT(2);
+constexpr std::chrono::seconds WAIT_CONNECT_TIMEOUT(1);
 
 SqliteConnectionPool *SqliteConnectionPool::Create(const RdbStoreConfig &storeConfig, int &errCode)
 {
@@ -311,9 +311,14 @@ int SqliteConnectionPool::ChangeDbFileForRestore(const std::string newPath, cons
     return Init();
 }
 
-std::stack<BaseTransaction> &SqliteConnectionPool::getTransactionStack()
+std::stack<BaseTransaction> &SqliteConnectionPool::GetTransactionStack()
 {
     return transactionStack;
+}
+
+std::mutex &SqliteConnectionPool::GetTransactionStackMutex()
+{
+    return transactionStackMutex;
 }
 } // namespace NativeRdb
 } // namespace OHOS

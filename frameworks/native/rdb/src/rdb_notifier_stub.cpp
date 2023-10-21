@@ -23,8 +23,10 @@
 namespace OHOS::DistributedRdb {
 using namespace OHOS::Rdb;
 
-RdbNotifierStub::RdbNotifierStub(const SyncCompleteHandler &completeNotifier, const DataChangeHandler &changeNotifier)
-    : IRemoteStub<RdbNotifierStubBroker>(), completeNotifier_(completeNotifier), changeNotifier_(changeNotifier)
+RdbNotifierStub::RdbNotifierStub(const SyncCompleteHandler &completeNotifier,
+    const AutoSyncCompleteHandler &autoSyncCompleteHandler, const DataChangeHandler &changeNotifier)
+    : IRemoteStub<RdbNotifierStubBroker>(), completeNotifier_(completeNotifier),
+      autoSyncCompleteHandler_(autoSyncCompleteHandler), changeNotifier_(changeNotifier)
 {
     LOG_INFO("construct");
 }
@@ -79,6 +81,13 @@ int32_t RdbNotifierStub::OnComplete(uint32_t seqNum, Details &&result)
     return RDB_OK;
 }
 
+int32_t RdbNotifierStub::OnComplete(const std::string &storeName, Details &&result)
+{
+    if (autoSyncCompleteHandler_) {
+        autoSyncCompleteHandler_(storeName, std::move(result));
+    }
+    return RDB_OK;
+}
 
 int32_t RdbNotifierStub::OnChange(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo)
 {
@@ -98,5 +107,16 @@ int32_t RdbNotifierStub::OnChangeInner(MessageParcel &data, MessageParcel &reply
         return RDB_ERROR;
     }
     return OnChange(origin, primaries, std::move(changeInfo));
+}
+
+int32_t RdbNotifierStub::OnAutoSyncCompleteInner(MessageParcel &data, MessageParcel &reply)
+{
+    std::string storeName;
+    Details result;
+    if (!ITypesUtil::Unmarshal(data, storeName, result)) {
+        LOG_ERROR("read sync result failed");
+        return RDB_ERROR;
+    }
+    return OnComplete(storeName, std::move(result));
 }
 } // namespace OHOS::DistributedRdb
