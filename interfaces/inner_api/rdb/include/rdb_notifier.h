@@ -23,6 +23,7 @@ public:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
     using PrimaryFields = std::map<std::string, std::string>;
     virtual int32_t OnComplete(uint32_t seqNum, Details &&result) = 0;
+    virtual int32_t OnComplete(const std::string& storeName, Details &&result) = 0;
 
     virtual int32_t OnChange(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo) = 0;
 };

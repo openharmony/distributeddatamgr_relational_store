@@ -71,6 +71,11 @@ public:
     using PRIKey = RdbStoreObserver::PrimaryKey;
 
     /**
+     * @brief Use RdbSyncObserver replace DistributedRdb::RdbSyncObserver namespace.
+     */
+    using DetailProgressObserver = DistributedRdb::DetailProgressObserver;
+
+    /**
      * @brief Use Date replace DistributedRdb::Date namespace.
      */
     using Date = DistributedRdb::Date;
@@ -473,6 +478,16 @@ public:
      * @brief UnSubscribe to event changes.
      */
     virtual int UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
+
+    /**
+     * @brief Register message for auto sync operation.
+     */
+    virtual int RegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) = 0;
+
+    /**
+     * @brief UnRegister message for auto sync operation.
+     */
+    virtual int UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) = 0;
 
     /**
      * @brief When SubscribeMode is LOCAL or LOCALSHARED, this function needs to be called to trigger callback.

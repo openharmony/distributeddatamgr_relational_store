@@ -25,6 +25,7 @@
 
 #include "dataobs_mgr_client.h"
 #include "data_ability_observer_stub.h"
+#include "rdb_service.h"
 #include "rdb_store.h"
 #include "rdb_store_config.h"
 #include "refbase.h"
@@ -160,6 +161,10 @@ public:
 
     int UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;
 
+    int RegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) override;
+
+    int UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) override;
+
     int Notify(const std::string &event) override;
 
     std::map<PRIKey, Date> GetModifyTime(
@@ -178,6 +183,8 @@ private:
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void SetAssetStatusWhileInsert(const ValueObject &val);
     void DoCloudSync(const std::string &table);
+    int InnerSync(const DistributedRdb::RdbService::Option &option, const DistributedRdb::PredicatesMemo &predicates,
+        const AsyncDetail &async);
     int InnerBackup(const std::string databasePath,
         const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>());
     std::map<PRIKey, Date> GetModifyTimeByRowId(

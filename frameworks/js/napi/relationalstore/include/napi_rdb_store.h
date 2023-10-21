@@ -77,8 +77,7 @@ private:
     static napi_value OffEvent(napi_env env, napi_callback_info info);
     static napi_value Notify(napi_env env, napi_callback_info info);
 
-    static constexpr int MIN_ON_EVENT_ARG_NUM = 2;
-    static constexpr int MAX_ON_EVENT_ARG_NUM = 5;
+    static constexpr int EVENT_HANDLE_NUM = 2;
 
     napi_value OnRemote(napi_env env, size_t argc, napi_value *argv);
     napi_value OnLocal(napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback);
@@ -90,12 +89,43 @@ private:
     napi_value UnRegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option,
         std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> &observers, napi_value callback);
 
-    std::mutex mutex_;
+    class SyncObserver
+        : public DistributedRdb::DetailProgressObserver, public std::enable_shared_from_this<SyncObserver> {
+    public:
+        SyncObserver(napi_env env, napi_value callback, std::shared_ptr<AppDataMgrJsKit::UvQueue> uvQueue);
+        virtual ~SyncObserver();
+        bool operator==(napi_value value);
+        void ProgressNotification(const DistributedRdb::Details &details) override;
+
+    private:
+        napi_env env_ = nullptr;
+        napi_ref callback_ = nullptr;
+        std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_ = nullptr;
+    };
+
+    napi_value RegisterSyncCallback(napi_env env, size_t argc, napi_value *argv);
+    napi_value UnregisterSyncCallback(napi_env env, size_t argc, napi_value *argv);
+
+    using EventHandle = napi_value (RdbStoreProxy::*)(napi_env, size_t, napi_value *);
+    struct HandleInfo {
+        std::string_view event;
+        EventHandle handle;
+    };
+    static constexpr HandleInfo onEventHandlers_[EVENT_HANDLE_NUM] = {
+        { "dataChange", &RdbStoreProxy::OnRemote },
+        { "autoSyncProgress", &RdbStoreProxy::RegisterSyncCallback }
+    };
+    static constexpr HandleInfo offEventHandlers_[EVENT_HANDLE_NUM] = {
+        { "dataChange", &RdbStoreProxy::OffRemote },
+        { "autoSyncProgress", &RdbStoreProxy::UnregisterSyncCallback }
+    };
+
     bool isSystemAppCalled_ = false;
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
     std::list<std::shared_ptr<NapiRdbStoreObserver>> observers_[DistributedRdb::SUBSCRIBE_MODE_MAX];
     std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localObservers_;
     std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localSharedObservers_;
+    std::list<std::shared_ptr<SyncObserver>> syncObservers_;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

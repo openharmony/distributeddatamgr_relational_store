@@ -125,8 +125,7 @@ std::vector<std::string> DataShareProfileInfo::GetResProfileByMetadata(
 
 std::shared_ptr<ResourceManager> DataShareProfileInfo::InitResMgr(const std::string &resourcePath)
 {
-    std::lock_guard<std::mutex> lock(infosMutex_);
-    static std::shared_ptr<ResourceManager> resMgr(CreateResourceManager());
+    std::shared_ptr<ResourceManager> resMgr(CreateResourceManager());
     if (resMgr == nullptr) {
         return nullptr;
     }

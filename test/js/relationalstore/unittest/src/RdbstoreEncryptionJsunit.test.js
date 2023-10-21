@@ -27,6 +27,11 @@ const STORE_CONFIG_ENCRYPT = {
     encrypt: true,
     securityLevel: data_relationalStore.SecurityLevel.S1,
 }
+const STORE_CONFIG_ENCRYPT2 = {
+    name: "Encrypt2.db",
+    encrypt: true,
+    securityLevel: data_relationalStore.SecurityLevel.S1,
+}
 const STORE_CONFIG_UNENCRYPT = {
     name: "Unencrypt.db",
     encrypt: false,
@@ -223,4 +228,65 @@ describe('rdbEncryptTest', function () {
         console.log(TAG + "************* RdbEncryptTest_0050 end *************")
     })
     console.log(TAG + "*************Unit Test End*************")
+
+        /**
+     * @tc.name RDB dncrypt test
+     * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0060
+     * @tc.desc Scenario testcase of RDB creat new encrypt file
+     */
+    it('RdbEncryptTest_0060', 0, async function () {
+        await console.info(TAG + "************* RdbEncryptTest_0060 start *************")
+        context = ability_featureAbility.getContext()
+        let rdbStore1;
+        let rdbStore2;
+        // create 'rdbstore1'
+        try {
+            rdbStore1 = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT);
+        } catch (err) {
+            expect().assertFail()
+            console.info(`CreatRdbStore1 failed, error code: ${err.code}, err message: ${err.message}`);
+        }
+
+        // query 'rdbstore1'
+        try {
+            let predicates1 = new data_rdb.RdbPredicates("test")
+            let resultSet1 = await rdbStore1.query(predicates1)
+            expect(3).assertEqual(resultSet1.rowCount)
+        } catch (err) {
+            expect().assertFail()
+            console.info(`First query rdbstore1 failed, error code: ${err.code}, err message: ${err.message}`);
+        }
+
+        // create 'rdbStore2'
+        try {
+            rdbStore2 = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT2)
+        } catch (err) {
+            expect().assertFail()
+            console.info(`CreatRdbStore2 failed, error code: ${err.code}, err message: ${err.message}`);
+        }
+
+        // create table and query 'rdbStore1'
+        try {
+            await rdbStore1.executeSql(CREATE_TABLE_TEST, null)
+            let predicates1 = new data_rdb.RdbPredicates("test")
+            let resultSet1 = await rdbStore1.query(predicates1)
+            expect().assertFail()
+            expect(3).assertEqual(resultSet1.rowCount)
+        } catch (err) {
+            console.info(`Second query rdbstore1 failed, error code: ${err.code}, err message: ${err.message}`);
+        }
+
+        // create table and query 'rdbStore2'
+        try {
+            await rdbStore2.executeSql(CREATE_TABLE_TEST, null)
+            let predicates2 = new data_rdb.RdbPredicates("test")
+            let resultSet2 = await rdbStore2.query(predicates2)
+            expect(3).assertEqual(resultSet2.rowCount)
+        } catch (err) {
+            expect().assertFail()
+            console.info(`Query rdbstore2 failed, error code: ${err.code}, err message: ${err.message}`);
+        }
+
+        console.info(TAG + "************* RdbEncryptTest_0060 end *************")
+    })
 })
