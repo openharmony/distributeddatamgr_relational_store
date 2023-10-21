@@ -114,7 +114,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 #endif
     isReadOnly = !isWriteConnection || config.IsReadOnly();
     int openFileFlags = config.IsReadOnly() ? SQLITE_OPEN_READONLY : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
-    int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle, openFileFlags, nullptr);
+    int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle, openFileFlags | SQLITE_OPEN_FULLMUTEX, nullptr);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("SqliteConnection InnerOpen fail to open database err = %{public}d", errCode);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
