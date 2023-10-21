@@ -58,10 +58,13 @@ int RdbStoreImplTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int
     return E_OK;
 }
 
-void RdbStoreImplTest::SetUpTestCase(void)
+void RdbStoreImplTest::SetUpTestCase(void) {}
+
+void RdbStoreImplTest::TearDownTestCase(void) {}
+
+void RdbStoreImplTest::SetUp(void)
 {
     int errCode = E_OK;
-    RdbHelper::DeleteRdbStore(DATABASE_NAME);
     RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
     RdbStoreImplTestOpenCallback helper;
     RdbStoreImplTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -69,16 +72,12 @@ void RdbStoreImplTest::SetUpTestCase(void)
     EXPECT_EQ(errCode, E_OK);
 }
 
-void RdbStoreImplTest::TearDownTestCase(void)
+void RdbStoreImplTest::TearDown(void)
 {
     RdbHelper::ClearCache();
-    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+    int errCode = RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+    EXPECT_EQ(E_OK, errCode);
 }
-
-void RdbStoreImplTest::SetUp(void) {}
-
-void RdbStoreImplTest::TearDown(void) {}
-
 
 /* *
  * @tc.name: GetModifyTimeByRowIdTest_001
@@ -238,7 +237,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_002, TestSize.Level2)
     RdbStoreImplTest::store->Query(errCode, true, "test", {},
         "", std::vector<ValueObject> {}, "", "", "", 1, 0);
     EXPECT_EQ(E_OK, errCode);
-    
+
     store->ExecuteSql("DROP TABLE IF EXISTS test");
 }
 
