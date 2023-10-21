@@ -28,6 +28,8 @@
 #include "relational_store_impl.h"
 #include "relational_values_bucket.h"
 #include "sqlite_global_config.h"
+#include "sys/stat.h"
+#include "unistd.h"
 
 using namespace OHOS::RdbNdk;
 using namespace OHOS::DistributedRdb;
@@ -102,7 +104,7 @@ RelationalStore *GetRelationalStore(OH_Rdb_Store *store)
 
 OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
 {
-    if (config == nullptr || config->selfSize != sizeof(OH_Rdb_Config) || errCode == nullptr) {
+    if (config == nullptr || config->selfSize > RDB_CONFIG_SIZE_V1 || errCode == nullptr) {
         LOG_ERROR("Parameters set error:config is NULL ? %{public}d and config size is %{public}zu or "
                   "errCode is NULL ? %{public}d ",
             (config == nullptr), sizeof(OH_Rdb_Config), (errCode == nullptr));
@@ -372,9 +374,7 @@ struct RelationalProgressDetails : public Rdb_ProgressDetails {
 
 void RelationalProgressDetails::DestroyTableDetails()
 {
-    if (details_ != nullptr) {
-        free(details_);
-    }
+    delete[] details_;
 }
 
 RelationalProgressDetails::RelationalProgressDetails(const ProgressDetail &detail) : Rdb_ProgressDetails()
@@ -388,14 +388,13 @@ RelationalProgressDetails::RelationalProgressDetails(const ProgressDetail &detai
 
 Rdb_TableDetails *RelationalProgressDetails::GetTableDetails(int paraVersion)
 {
-    if (curVersion_ == paraVersion)
-    {
+    if (curVersion_ == paraVersion) {
         return details_;
     }
     DestroyTableDetails();
     switch (paraVersion) {
         case RDB_TABLE_DETAILS_V0: {
-            details_ = (Rdb_TableDetails *)malloc(sizeof(RelationalTableDetailsV0) * (tableLength + 1));
+            details_ = new RelationalTableDetailsV0[tableLength + 1];
             int index = 0;
             for (const auto &pair : tableDetails_) {
                 details_[index].table = pair.first.c_str();

@@ -20,8 +20,6 @@
 	{"name":"OH_Rdb_SetVersion"},
 	{"name":"OH_Rdb_SetDistributedTables"},
 	{"name":"OH_Rdb_FindModifyTime"},
-	{"name":"OH_Rdb_Subscribe"},
-	{"name":"OH_Rdb_Unsubscribe"},
 	{"name":"OH_Rdb_GetTableDetails"},
 	{"name":"OH_Rdb_CloudSync"},
 	{"name":"OH_VBucket_PutAsset"},

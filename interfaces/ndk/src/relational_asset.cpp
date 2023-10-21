@@ -17,7 +17,10 @@
 #include "logger.h"
 #include "relational_store_error_code.h"
 #include "securec.h"
+#include <stdlib.h>
+
 using namespace OHOS::RdbNdk;
+constexpr int ASSET_TRANSFORM_BASE = 10;
 int OH_Data_Asset_SetName(Data_Asset *asset, const char *name)
 {
     if (asset == nullptr || name == nullptr) {
@@ -143,8 +146,12 @@ int OH_Data_Asset_GetCreateTime(Data_Asset *asset, int64_t *createTime)
     if (asset == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-
-    *createTime = std::stoll(asset->asset_.createTime);
+    char *endPtr;
+    *createTime = strtol(asset->asset_.createTime.c_str(), &endPtr, ASSET_TRANSFORM_BASE);
+    if (*endPtr != '\0') {
+        LOG_ERROR("GetCreateTime failed");
+        return OH_Rdb_ErrCode::RDB_ERR;
+    }
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
@@ -153,7 +160,12 @@ int OH_Data_Asset_GetModifyTime(Data_Asset *asset, int64_t *modifyTime)
     if (asset == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    *modifyTime = std::stoll(asset->asset_.modifyTime);
+    char *endPtr;
+    *modifyTime = strtol(asset->asset_.modifyTime.c_str(), &endPtr, ASSET_TRANSFORM_BASE);
+    if (*endPtr != '\0') {
+        LOG_ERROR("GetModifyTime failed");
+        return OH_Rdb_ErrCode::RDB_ERR;
+    }
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
@@ -162,7 +174,12 @@ int OH_Data_Asset_GetSize(Data_Asset *asset, size_t *size)
     if (asset == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    *size = std::stoll(asset->asset_.size);
+    char *endPtr;
+    *size = strtol(asset->asset_.size.c_str(), &endPtr, ASSET_TRANSFORM_BASE);
+    if (*endPtr != '\0') {
+        LOG_ERROR("GetModifyTime failed");
+        return OH_Rdb_ErrCode::RDB_ERR;
+    }
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
@@ -183,6 +200,7 @@ Data_Asset *OH_Data_Asset_CreateOne()
 int OH_Data_Asset_DestroyOne(Data_Asset *asset)
 {
     delete asset;
+    asset = nullptr;
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
@@ -201,5 +219,6 @@ int OH_Data_Asset_DestroyMultiple(Data_Asset **assets, uint32_t count)
         delete assets[i];
     }
     delete[] assets;
+    assets = nullptr;
     return OH_Rdb_ErrCode::RDB_OK;
 }
