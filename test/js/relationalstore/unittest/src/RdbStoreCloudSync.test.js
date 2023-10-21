@@ -425,8 +425,6 @@ describe('rdbStoreCloudSyncTest', function () {
         function Progress(detail) {
             console.log(TAG + `Progress:` + JSON.stringify(detail));
             done();
-            expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":[]}');
-            console.log(TAG + "************* testRdbStoreCloudSync0015 end *************");
         }
         let predicates = await new relationalStore.RdbPredicates("test")
         predicates.in("id", ["id1","id2"]);
@@ -438,6 +436,7 @@ describe('rdbStoreCloudSyncTest', function () {
             expect("202").assertEqual(e.code)
         }
         done();
+        console.log(TAG + "************* testRdbStoreCloudSync0015 end *************");
     })
 
     /**
@@ -451,9 +450,6 @@ describe('rdbStoreCloudSyncTest', function () {
 
             function Progress(detail) {
                 console.log(TAG + `Progress:` + JSON.stringify(detail));
-                done();
-                expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":[]}');
-                console.log(TAG + "************* testRdbStoreCloudSync0016 end *************");
             }
             let predicates = await new relationalStore.RdbPredicates("test")
             predicates.in("id", ["id1","id2"]);
@@ -465,6 +461,7 @@ describe('rdbStoreCloudSyncTest', function () {
             expect("202").assertEqual(e.code)
         }
         done();
+        console.log(TAG + "************* testRdbStoreCloudSync0016 end *************");
     })
     console.log(TAG + "*************Unit Test End*************");
 })

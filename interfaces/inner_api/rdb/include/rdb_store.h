@@ -467,7 +467,15 @@ public:
      * @param predicate Indicates the AbsRdbPredicates {@link AbsRdbPredicates} object.
      */
     virtual int Sync(
-        const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncDetail &async) = 0;
+        const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async) = 0;
+
+    /**
+     * @brief Sync data between devices or cloud.
+     *
+     * @param device Indicates the remote device.
+     * @param predicate Indicates the AbsRdbPredicates {@link AbsRdbPredicates} object.
+     */
+    virtual int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncDetail &async) = 0;
 
     /**
      * @brief Subscribe to event changes.

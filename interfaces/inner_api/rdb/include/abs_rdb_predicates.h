@@ -42,7 +42,7 @@ public:
      *
      * @param tableName Indicates the table name of the database.
      */
-    API_EXPORT AbsRdbPredicates(const std::vector<std::string> &tables);
+    API_EXPORT explicit AbsRdbPredicates(const std::vector<std::string> &tables);
 
     /**
      * @brief Destructor.
