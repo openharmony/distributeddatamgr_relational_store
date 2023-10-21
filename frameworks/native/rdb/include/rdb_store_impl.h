@@ -157,6 +157,8 @@ public:
 
     int Sync(const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async) override;
 
+    int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncDetail &async) override;
+
     int Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;
 
     int UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;

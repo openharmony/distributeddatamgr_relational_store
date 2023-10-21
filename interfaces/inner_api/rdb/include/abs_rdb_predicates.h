@@ -124,6 +124,34 @@ public:
     API_EXPORT AbsRdbPredicates* Or() override;
 
     /**
+     * @brief Adds an left bracket condition to the remote AbsRdbPredicates.
+     *
+     * This method is similar to left bracket of the SQL statement.
+     */
+    API_EXPORT AbsPredicates *BeginWrap() override;
+
+    /**
+     * @brief Adds an right bracket condition to the remote AbsRdbPredicates.
+     *
+     * This method is similar to right bracket of the SQL statement.
+     */
+    API_EXPORT virtual AbsPredicates *EndWrap() override;
+
+    /**
+     * @brief Adds an In condition to the remote AbsRdbPredicates.
+     *
+     * This method is similar to In of the SQL statement.
+     */
+    API_EXPORT virtual AbsPredicates *In(const std::string &field, const std::vector<ValueObject> &values) override;
+
+    /**
+     * @brief Adds an In condition to the remote AbsRdbPredicates.
+     *
+     * This method is similar to In of the SQL statement.
+     */
+    API_EXPORT virtual AbsPredicates *In(const std::string &field, const std::vector<std::string> &values) override;
+
+    /**
      * @brief Restricts the ascending order of the return list. When there are several orders,
      * the one close to the head has the highest priority.
      *
