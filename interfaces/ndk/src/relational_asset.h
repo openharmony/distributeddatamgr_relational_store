@@ -18,7 +18,7 @@
 #include "asset_value.h"
 #include "data_asset.h"
 using AssetValue = OHOS::NativeRdb::AssetValue;
-constexpr const int32_t DATA_ASSET_V0 = 10002451;
+constexpr int32_t DATA_ASSET_V0 = 10002451;
 struct Data_Asset {
     int32_t cid = DATA_ASSET_V0;
     AssetValue asset_;

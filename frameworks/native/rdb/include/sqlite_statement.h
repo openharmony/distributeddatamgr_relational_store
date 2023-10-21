@@ -48,6 +48,8 @@ public:
         return stmtHandle;
     }
 
+    static constexpr int COLUMN_TYPE_ASSET = 1000;
+    static constexpr int COLUMN_TYPE_ASSETS = 1001;
 private:
     using Asset = ValueObject::Asset;
     using Assets = ValueObject::Assets;

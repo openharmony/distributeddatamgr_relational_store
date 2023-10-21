@@ -240,12 +240,23 @@ int SqliteStatement::GetColumnType(int index, int &columnType) const
     }
 
     int type = sqlite3_column_type(stmtHandle, index);
+    auto declType = SqliteUtils::StrToUpper(std::string(sqlite3_column_decltype(stmtHandle, index)));
     switch (type) {
         case SQLITE_INTEGER:
         case SQLITE_FLOAT:
-        case SQLITE_BLOB:
         case SQLITE_NULL:
         case SQLITE_TEXT:
+            columnType = type;
+            return E_OK;
+        case SQLITE_BLOB:
+            if (declType == ValueObject::DeclType<ValueObject::Asset>()) {
+                columnType = COLUMN_TYPE_ASSET;
+                return E_OK;
+            }
+            if (declType == ValueObject::DeclType<ValueObject::Assets>()) {
+                columnType = COLUMN_TYPE_ASSETS;
+                return E_OK;
+            }
             columnType = type;
             return E_OK;
         default:

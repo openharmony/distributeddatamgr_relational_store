@@ -109,56 +109,42 @@ void RdbNativeCursorTest::TearDown(void) {}
 void RdbNativeCursorTest::CreateAssetTable()
 {
     char createTableSql[] = "CREATE TABLE IF NOT EXISTS asset_table (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 "
-                            "ASSET, data2 ASSETS);";
+                            "asset, data2 assets );";
     int errCode = OH_Rdb_Execute(cursorTestRdbStore_, createTableSql);
     EXPECT_EQ(errCode, RDB_OK);
     char table[] = "asset_table";
+    int assetsCount = 2;
+    int curRow = 1;
     OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
     Data_Asset *asset1 = OH_Data_Asset_CreateOne();
     SetAsset(asset1, 1);
     Data_Asset *asset2 = OH_Data_Asset_CreateOne();
     SetAsset(asset2, 2);
-    Data_Asset *asset3 = OH_Data_Asset_CreateOne();
-    SetAsset(asset3, 3);
 
-    valueBucket->putInt64(valueBucket, "id", 1);
+    valueBucket->putInt64(valueBucket, "id", curRow);
     OH_VBucket_PutAsset(valueBucket, "data1", asset1);
-    Data_Asset **assets1 = OH_Data_Asset_CreateMultiple(2);
-    assets1[0] = asset1;
-    assets1[1] = asset2;
-    errCode = OH_VBucket_PutAssets(valueBucket, "data2", assets1, 2);
-    EXPECT_EQ(errCode, RDB_OK);
-    errCode = OH_Rdb_Insert(cursorTestRdbStore_, table, valueBucket);
-    EXPECT_EQ(errCode, 1);
+    Data_Asset **assets1 = OH_Data_Asset_CreateMultiple(assetsCount);
+    SetAsset(assets1[0], 1);
+    SetAsset(assets1[1], 2);
+    errCode = OH_VBucket_PutAssets(valueBucket, "data2", assets1, assetsCount);
+    int rowID = OH_Rdb_Insert(cursorTestRdbStore_, table, valueBucket);
+    EXPECT_EQ(rowID, curRow);
+    curRow++;
 
     valueBucket->clear(valueBucket);
-    valueBucket->putInt64(valueBucket, "id", 2);
+    valueBucket->putInt64(valueBucket, "id", curRow);
     OH_VBucket_PutAsset(valueBucket, "data1", asset2);
-    Data_Asset **assets2 = OH_Data_Asset_CreateMultiple(2);
-    assets1[0] = asset1;
-    assets1[1] = asset3;
-    errCode = OH_VBucket_PutAssets(valueBucket, "data2", assets1, 2);
-    EXPECT_EQ(errCode, RDB_OK);
-    errCode = OH_Rdb_Insert(cursorTestRdbStore_, table, valueBucket);
-    EXPECT_EQ(errCode, 2);
+    Data_Asset **assets2 = OH_Data_Asset_CreateMultiple(assetsCount);
+    SetAsset(assets2[0], 1);
+    SetAsset(assets2[1], 3);
+    errCode = OH_VBucket_PutAssets(valueBucket, "data2", assets2, assetsCount);
+    rowID = OH_Rdb_Insert(cursorTestRdbStore_, table, valueBucket);
+    EXPECT_EQ(rowID, curRow);
 
-    valueBucket->clear(valueBucket);
-    valueBucket->putInt64(valueBucket, "id", 3);
-    OH_VBucket_PutAsset(valueBucket, "data1", asset3);
-    Data_Asset **assets3 = OH_Data_Asset_CreateMultiple(2);
-    assets1[0] = asset2;
-    assets1[1] = asset3;
-    OH_VBucket_PutAssets(valueBucket, "data2", assets1, 2);
-    EXPECT_EQ(errCode, RDB_OK);
-    errCode = OH_Rdb_Insert(cursorTestRdbStore_, table, valueBucket);
-    EXPECT_EQ(errCode, 3);
-
-    OH_Data_Asset_DestroyMultiple(assets1, 2);
-    OH_Data_Asset_DestroyMultiple(assets2, 2);
-    OH_Data_Asset_DestroyMultiple(assets3, 2);
+    OH_Data_Asset_DestroyMultiple(assets1, assetsCount);
+    OH_Data_Asset_DestroyMultiple(assets2, assetsCount);
     OH_Data_Asset_DestroyOne(asset1);
     OH_Data_Asset_DestroyOne(asset2);
-    OH_Data_Asset_DestroyOne(asset3);
     valueBucket->destroy(valueBucket);
 }
 
@@ -170,11 +156,11 @@ void RdbNativeCursorTest::SetAsset(Data_Asset *asset, int index)
     int errcode = OH_Data_Asset_SetName(asset, name.c_str());
     EXPECT_EQ(errcode, RDB_OK);
     std::string uri;
-    name.append("uri").append(indexString);
+    uri.append("uri").append(indexString);
     errcode = OH_Data_Asset_SetUri(asset, uri.c_str());
     EXPECT_EQ(errcode, RDB_OK);
     std::string path;
-    name.append("path").append(indexString);
+    path.append("path").append(indexString);
     errcode = OH_Data_Asset_SetPath(asset, path.c_str());
     EXPECT_EQ(errcode, RDB_OK);
     errcode = OH_Data_Asset_SetCreateTime(asset, index);
@@ -503,21 +489,21 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_007, TestSize.Level1)
 
     errCode = cursor->getColumnType(cursor, 1, &type);
     EXPECT_EQ(type, OH_ColumnType::TYPE_ASSET);
-    Data_Asset *asset = NULL;
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
     errCode = cursor->getAsset(cursor, 1, asset);
-    EXPECT_NE(asset, NULL);
+    EXPECT_NE(asset, nullptr);
     char name[10] = "";
-    size_t nameLength = 0;
+    size_t nameLength = 10;
     errCode = OH_Data_Asset_GetName(asset, name, &nameLength);
     EXPECT_EQ(strcmp(name, "name1"), 0);
 
     char uri[10] = "";
-    size_t uriLength = 0;
+    size_t uriLength = 10;
     errCode = OH_Data_Asset_GetUri(asset, uri, &uriLength);
     EXPECT_EQ(strcmp(uri, "uri1"), 0);
 
     char path[10] = "";
-    size_t pathLength = 0;
+    size_t pathLength = 10;
     errCode = OH_Data_Asset_GetPath(asset, path, &pathLength);
     EXPECT_EQ(strcmp(path, "path1"), 0);
 
@@ -565,26 +551,27 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_008, TestSize.Level1)
 
     errCode = cursor->getColumnType(cursor, 2, &type);
     EXPECT_EQ(type, OH_ColumnType::TYPE_ASSETS);
-    Data_Asset **assets = NULL;
-    uint32_t assetCount;
+    uint32_t assetCount = 0;
+    errCode = cursor->getAssets(cursor, 2, nullptr, &assetCount);
+    EXPECT_EQ(assetCount, 2);
+    Data_Asset **assets = OH_Data_Asset_CreateMultiple(assetCount);
     errCode = cursor->getAssets(cursor, 2, assets, &assetCount);
-    EXPECT_NE(assets, NULL);
     EXPECT_EQ(assetCount, 2);
     Data_Asset *asset = assets[1];
     EXPECT_NE(asset, NULL);
 
     char name[10] = "";
-    size_t nameLength = 0;
+    size_t nameLength = 10;
     errCode = OH_Data_Asset_GetName(asset, name, &nameLength);
     EXPECT_EQ(strcmp(name, "name2"), 0);
 
     char uri[10] = "";
-    size_t uriLength = 0;
+    size_t uriLength = 10;
     errCode = OH_Data_Asset_GetUri(asset, uri, &uriLength);
     EXPECT_EQ(strcmp(uri, "uri2"), 0);
 
     char path[10] = "";
-    size_t pathLength = 0;
+    size_t pathLength = 10;
     errCode = OH_Data_Asset_GetPath(asset, path, &pathLength);
     EXPECT_EQ(strcmp(path, "path2"), 0);
 
