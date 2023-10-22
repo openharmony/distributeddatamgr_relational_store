@@ -21,12 +21,12 @@ config("module_private_config") {
 
   include_dirs = [
     "${kvstore_path}/common",
+    "${relational_store_base_path}/interfaces/ndk/include",
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_innerapi_path}/appdatafwk/include",
     "${relational_store_base_path}/interfaces/ndk/src",
     "${relational_store_common_path}/include",
     "${relational_store_native_path}/rdb/include",
-    "${sdk_c_path}/relational_store/include",
   ]
 }
 

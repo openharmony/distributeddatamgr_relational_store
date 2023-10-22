@@ -841,6 +841,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_016, TestSize.Level1)
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(errCode, RDB_OK);
     EXPECT_EQ(rowCount, 1);
+    cursor->goToNextRow(cursor);
     int64_t key = 0;
     cursor->getInt64(cursor, 0, &key);
     EXPECT_EQ(key, 1);
