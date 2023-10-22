@@ -95,6 +95,9 @@ void RdbNativePredicatesTest::SetUpTestCase(void)
 
 void RdbNativePredicatesTest::TearDownTestCase(void)
 {
+    char dropTableSql[] = "DROP TABLE IF EXISTS test";
+    int errCode = OH_Rdb_Execute(predicatesTestRdbStore_, dropTableSql);
+    EXPECT_EQ(errCode, 0);
     delete predicatesTestRdbStore_;
     predicatesTestRdbStore_ = NULL;
     OH_Rdb_DeleteStore(&config_);

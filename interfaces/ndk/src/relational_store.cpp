@@ -13,21 +13,32 @@
  * limitations under the License.
  */
 
+#include "relational_store.h"
+
 #include "logger.h"
+#include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_predicates.h"
 #include "rdb_sql_utils.h"
 #include "relational_cursor.h"
-#include "relational_store_error_code.h"
 #include "relational_predicates.h"
-#include "relational_store_impl.h"
 #include "relational_predicates_objects.h"
+#include "relational_store_error_code.h"
+#include "relational_store_impl.h"
 #include "relational_values_bucket.h"
 #include "sqlite_global_config.h"
+#include "sys/stat.h"
+#include "unistd.h"
 
 using namespace OHOS::RdbNdk;
+using namespace OHOS::DistributedRdb;
 constexpr int RDB_STORE_CID = 1234560; // The class id used to uniquely identify the OH_Rdb_Store class.
+constexpr int RDB_DISTRIBUTED_CONFIG_V0 = 1;
+constexpr int RDB_PROGRESS_DETAILS_V0 = 1;
+constexpr int RDB_TABLE_DETAILS_V0 = 1;
+constexpr int RDB_CONFIG_SIZE_V0 = 41;
+constexpr int RDB_CONFIG_SIZE_V1 = 45;
 OH_VObject *OH_Rdb_CreateValueObject()
 {
     return new (std::nothrow) RelationalPredicatesObjects();
@@ -49,6 +60,21 @@ OH_Predicates *OH_Rdb_CreatePredicates(const char *table)
 OHOS::RdbNdk::RelationalStore::RelationalStore(std::shared_ptr<OHOS::NativeRdb::RdbStore> store) : store_(store)
 {
     id = RDB_STORE_CID;
+}
+
+
+SyncMode NDKUtils::TransformMode(Rdb_SyncMode &mode)
+{
+    switch (mode) {
+        case RDB_SYNC_MODE_TIME_FIRST:
+            return TIME_FIRST;
+        case RDB_SYNC_MODE_NATIVE_FIRST:
+            return NATIVE_FIRST;
+        case RDB_SYNC_MODE_CLOUD_FIRST:
+            return CLOUD_FIRST;
+        default:
+            return static_cast<SyncMode>(-1);
+    }
 }
 
 class MainOpenCallback : public OHOS::NativeRdb::RdbOpenCallback {
@@ -78,15 +104,15 @@ RelationalStore *GetRelationalStore(OH_Rdb_Store *store)
 
 OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
 {
-    if (config == nullptr || config->selfSize != sizeof(OH_Rdb_Config) || errCode == nullptr) {
+    if (config == nullptr || config->selfSize > RDB_CONFIG_SIZE_V1 || errCode == nullptr) {
         LOG_ERROR("Parameters set error:config is NULL ? %{public}d and config size is %{public}zu or "
                   "errCode is NULL ? %{public}d ",
             (config == nullptr), sizeof(OH_Rdb_Config), (errCode == nullptr));
         return nullptr;
     }
 
-    std::string realPath = OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(config->dataBaseDir,
-        config->storeName, *errCode);
+    std::string realPath =
+        OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(config->dataBaseDir, config->storeName, *errCode);
     if (*errCode != 0) {
         LOG_ERROR("Get database path failed, ret %{public}d ", *errCode);
         return nullptr;
@@ -94,6 +120,9 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
     OHOS::NativeRdb::RdbStoreConfig rdbStoreConfig(realPath);
     rdbStoreConfig.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel(config->securityLevel));
     rdbStoreConfig.SetEncryptStatus(config->isEncrypt);
+    if (config->selfSize > RDB_CONFIG_SIZE_V0) {
+        rdbStoreConfig.SetArea(config->area);
+    }
     if (config->bundleName != nullptr) {
         rdbStoreConfig.SetBundleName(config->bundleName);
     }
@@ -126,8 +155,8 @@ int OH_Rdb_DeleteStore(const OH_Rdb_Config *config)
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     int errCode = OHOS::NativeRdb::E_OK;
-    std::string realPath = OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(config->dataBaseDir,
-        config->storeName, errCode);
+    std::string realPath =
+        OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(config->dataBaseDir, config->storeName, errCode);
     if (errCode != OHOS::NativeRdb::E_OK) {
         return errCode;
     }
@@ -278,4 +307,155 @@ int OH_Rdb_SetVersion(OH_Rdb_Store *store, int version)
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     return rdbStore->GetStore()->SetVersion(version);
+}
+
+std::pair<int32_t, DistributedConfig> Convert(const Rdb_DistributedConfig *config)
+{
+    if (config->version < RDB_DISTRIBUTED_CONFIG_V0) {
+        return { -1, {} };
+    }
+    switch (config->version) {
+        case RDB_DISTRIBUTED_CONFIG_V0:
+            return { 0, DistributedConfig{ .autoSync = config->isAutoSync } };
+        default:
+            return { -1, {} };
+    }
+}
+
+int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint32_t count, Rdb_DistributedType type,
+    const Rdb_DistributedConfig *config)
+{
+    auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr || type != Rdb_DistributedType::RDB_DISTRIBUTED_CLOUD) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    auto ret = Convert(config);
+    if (ret.first < 0) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    std::vector<std::string> tableNames;
+    tableNames.reserve(count);
+    for (uint32_t i = 0; i < count; i++) {
+        tableNames.emplace_back(tables[i]);
+    }
+    return rdbStore->GetStore()->SetDistributedTables(tableNames, DistributedTableType::DISTRIBUTED_CLOUD, ret.second);
+}
+
+OH_Cursor *OH_Rdb_FindModifyTime(OH_Rdb_Store *store, const char *tableName, const char *columnName, OH_VObject *values)
+{
+    auto rdbStore = GetRelationalStore(store);
+    auto selfObjects = RelationalPredicatesObjects::GetSelf(values);
+    if (rdbStore == nullptr || selfObjects == nullptr || tableName == nullptr) {
+        return nullptr;
+    }
+    std::vector<ValueObject> objects = selfObjects->Get();
+    std::vector<OHOS::NativeRdb::RdbStore::PRIKey> keys;
+    keys.reserve(objects.size());
+    for (const auto &object : objects) {
+        OHOS::NativeRdb::RdbStore::PRIKey priKey;
+        OHOS::NativeRdb::RawDataParser::Convert(object.value, priKey);
+        keys.push_back(priKey);
+    }
+    auto results = rdbStore->GetStore()->GetModifyTime(tableName, columnName, keys);
+    return new (std::nothrow) RelationalCursor(std::move(results));
+}
+
+struct RelationalTableDetailsV0 : public Rdb_TableDetails {
+};
+
+struct RelationalProgressDetails : public Rdb_ProgressDetails {
+    TableDetails tableDetails_;
+    Rdb_TableDetails *details_ = nullptr;
+    int curVersion_ = -1;
+    explicit RelationalProgressDetails(const ProgressDetail &detail);
+    Rdb_TableDetails *GetTableDetails(int paraVersion);
+    void DestroyTableDetails();
+};
+
+void RelationalProgressDetails::DestroyTableDetails()
+{
+    delete[] details_;
+}
+
+RelationalProgressDetails::RelationalProgressDetails(const ProgressDetail &detail) : Rdb_ProgressDetails()
+{
+    version = RDB_PROGRESS_DETAILS_V0;
+    schedule = detail.progress;
+    code = detail.code;
+    tableLength = (int32_t)detail.details.size();
+    tableDetails_ = detail.details;
+}
+
+Rdb_TableDetails *RelationalProgressDetails::GetTableDetails(int paraVersion)
+{
+    if (curVersion_ == paraVersion) {
+        return details_;
+    }
+    DestroyTableDetails();
+    switch (paraVersion) {
+        case RDB_TABLE_DETAILS_V0: {
+            details_ = new RelationalTableDetailsV0[tableLength + 1];
+            int index = 0;
+            for (const auto &pair : tableDetails_) {
+                details_[index].table = pair.first.c_str();
+                details_[index].upload = Rdb_Statistic{
+                    .total = (int)pair.second.upload.total,
+                    .successful = (int)pair.second.upload.success,
+                    .failed = (int)pair.second.upload.failed,
+                    .remained = (int)pair.second.upload.untreated,
+                };
+                details_[index].download = Rdb_Statistic{
+                    .total = (int)pair.second.download.total,
+                    .successful = (int)pair.second.download.success,
+                    .failed = (int)pair.second.download.failed,
+                    .remained = (int)pair.second.download.untreated,
+                };
+                index++;
+            }
+            curVersion_ = paraVersion;
+            return details_;
+        }
+        default:
+            return nullptr;
+    }
+}
+
+std::pair<int, RelationalProgressDetails *> GetDetails(Rdb_ProgressDetails *progress, int32_t version)
+{
+    switch (version) {
+        case RDB_PROGRESS_DETAILS_V0:
+            return { 0, (RelationalProgressDetails *)progress };
+        default:
+            return { -1, {} };
+    }
+}
+
+Rdb_TableDetails *OH_Rdb_GetTableDetails(Rdb_ProgressDetails *progress, int32_t version)
+{
+    auto pair = GetDetails(progress, version);
+    if (pair.first == -1) {
+        return nullptr;
+    }
+    return pair.second->GetTableDetails(version);
+}
+
+int OH_Rdb_CloudSync(OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[], uint32_t count,
+    Rdb_SyncCallback *callback)
+{
+    auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr || mode < RDB_SYNC_MODE_TIME_FIRST || mode > RDB_SYNC_MODE_CLOUD_FIRST ||
+        callback == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    SyncOption syncOption{ .mode = NDKUtils::TransformMode(mode), .isBlock = false };
+    std::vector<std::string> tableNames;
+    for (uint32_t i = 0; i < count; ++i) {
+        tableNames.emplace_back(tables[i]);
+    }
+    auto progressCallback = [&callback](Details &&details) {
+        RelationalProgressDetails progressDetails = RelationalProgressDetails(details.begin()->second);
+        (*callback)(&progressDetails);
+        progressDetails.DestroyTableDetails();
+    };
+    return rdbStore->GetStore()->Sync(syncOption, tableNames, progressCallback);
 }
