@@ -71,6 +71,30 @@ typedef enum OH_Rdb_SecurityLevel {
 } OH_Rdb_SecurityLevel;
 
 /**
+ * @brief Describe the security area of the database.
+ *
+ * @since 11
+ */
+typedef enum Rdb_SecurityArea {
+    /**
+     * @brief Security Area 1.
+     */
+    RDB_SECURITY_AREA_EL1 = 1,
+    /**
+     * @brief Security Area 2.
+     */
+    RDB_SECURITY_AREA_EL2,
+    /**
+     * @brief Security Area 3.
+     */
+    RDB_SECURITY_AREA_EL3,
+    /**
+     * @brief Security Area 4.
+     */
+    RDB_SECURITY_AREA_EL4,
+} Rdb_SecurityArea;
+
+/**
  * @brief Manages relational database configurations.
  *
  * @since 10
@@ -105,6 +129,12 @@ typedef struct {
      * Indicates the security level {@link OH_Rdb_SecurityLevel} of the database.
      */
     int securityLevel;
+    /**
+     * Indicates the security area {@link Rdb_SecurityArea} of the database.
+     *
+     * @since 11
+     */
+    int area;
 } OH_Rdb_Config;
 #pragma pack()
 
@@ -343,6 +373,394 @@ int OH_Rdb_GetVersion(OH_Rdb_Store *store, int *version);
  */
 int OH_Rdb_SetVersion(OH_Rdb_Store *store, int version);
 
+/**
+ * @brief Describes the distribution type of the tables.
+ *
+ * @since 11
+ */
+typedef enum Rdb_DistributedType {
+    /**
+     * @brief Indicates the table is distributed among the devices.
+     */
+    RDB_DISTRIBUTED_CLOUD
+} Rdb_DistributedType;
+
+/**
+ * @brief Indicates version of {@link Rdb_DistributedConfig}
+ *
+ * @since 11
+ */
+#define DISTRIBUTED_CONFIG_VERSION 1
+/**
+ * @brief Manages the distributed configuration of the table.
+ *
+ * @since 11
+ */
+typedef struct Rdb_DistributedConfig {
+    /**
+     * The version used to uniquely identify the Rdb_DistributedConfig struct.
+     */
+    int version;
+    /**
+     * Specifies whether the table auto syncs.
+     */
+    bool isAutoSync;
+} Rdb_DistributedConfig;
+
+/**
+ * @brief Set table to be distributed table.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param tables Indicates the table names you want to set.
+ * @param count Indicates the count of tables you want to set.
+ * @param type Indicates the distributed type {@link Rdb_DistributedType}.
+ * @param config Indicates the distributed config of the tables. For details, see {@link Rdb_DistributedConfig}.
+ * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
+ * @see OH_Rdb_Store.
+ * @see Rdb_DistributedConfig.
+ * @since 11
+ */
+int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint32_t count, Rdb_DistributedType type,
+    const Rdb_DistributedConfig *config);
+
+/**
+ * @brief Set table to be distributed table.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param tableName Indicates the name of the table to check.
+ * @param columnName Indicates the name of the column corresponding to the primary key.
+ * If the table has no primary key , please pass in "rowid".
+ * @param values Indicates the primary keys of the rows to check.
+ * If the table has no primary key , please pass in the row-ids of the rows to check.
+ * @return If the operation is successful, a pointer to the instance of the @link OH_Cursor} structure is returned.
+ * There are two columns, "data_key" and "timestamp". Otherwise NULL is returned.
+ * @see OH_Rdb_Store.
+ * @see OH_VObject.
+ * @see OH_Cursor.
+ * @since 11
+ */
+OH_Cursor *OH_Rdb_FindModifyTime(OH_Rdb_Store *store, const char *tableName, const char *columnName,
+    OH_VObject *values);
+
+/**
+ * @brief Describes the change type.
+ *
+ * @since 11
+ */
+typedef enum Rdb_ChangeType {
+    /**
+     * @brief Means the change type is data change.
+     */
+    RDB_DATA_CHANGE,
+    /**
+     * @brief Means the change type is asset change.
+     */
+    RDB_ASSET_CHANGE
+} Rdb_ChangeType;
+
+/**
+ * @brief Describes the primary keys or row-ids of changed rows.
+ *
+ * @since 11
+ */
+typedef struct Rdb_KeyInfo {
+    /**
+     * Indicates the count of the primary keys or row-ids.
+     */
+    int count;
+
+    /**
+     * Indicates data type {@link OH_ColumnType} of the key.
+     */
+    int type;
+
+    /**
+     * Indicates the data of the key info.
+     */
+    union Rdb_KeyData {
+        /**
+         * Indicates uint64_t type of the data.
+         */
+        uint64_t integer;
+
+        /**
+         * Indicates double type of the data.
+         */
+        double real;
+
+        /**
+         * Indicates const char * type of the data.
+         */
+        const char *text;
+    } *data;
+} Rdb_KeyInfo;
+
+/**
+ * @brief Indicates version of {@link Rdb_ChangeInfo}
+ *
+ * @since 11
+ */
+#define DISTRIBUTED_CHANGE_INFO_VERSION 1
+
+/**
+ * @brief Describes the notify info of data change.
+ *
+ * @since 11
+ */
+typedef struct Rdb_ChangeInfo {
+    /**
+     * The version used to uniquely identify the Rdb_ChangeInfo struct.
+     */
+    int version;
+
+    /**
+     * The name of changed table.
+     */
+    const char *tableName;
+
+    /**
+     * The {@link Rdb_ChangeType} of changed table.
+     */
+    int ChangeType;
+
+    /**
+     * The {@link Rdb_KeyInfo} of inserted rows.
+     */
+    Rdb_KeyInfo inserted;
+
+    /**
+     * The {@link Rdb_KeyInfo} of updated rows.
+     */
+    Rdb_KeyInfo updated;
+
+    /**
+     * The {@link Rdb_KeyInfo} of deleted rows.
+     */
+    Rdb_KeyInfo deleted;
+} Rdb_ChangeInfo;
+
+/**
+ * @brief Indicates the subscribe type.
+ *
+ * @since 11
+ */
+typedef enum Rdb_SubscribeType {
+    /**
+     * @brief Subscription to cloud data changes.
+     */
+    RDB_SUBSCRIBE_TYPE_CLOUD,
+
+    /**
+     * @brief Subscription to cloud data change details.
+     */
+    RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS,
+} Rdb_SubscribeType;
+
+/**
+ * @brief Indicates the database synchronization mode.
+ *
+ * @since 11
+ */
+typedef enum Rdb_SyncMode {
+    /**
+     * @brief Indicates that data is synchronized from the end with the closest modification time
+     * to the end with a more distant modification time.
+     */
+    RDB_SYNC_MODE_TIME_FIRST,
+    /**
+     * @brief Indicates that data is synchronized from local to cloud.
+     */
+    RDB_SYNC_MODE_NATIVE_FIRST,
+    /**
+     * @brief Indicates that data is synchronized from cloud to local.
+     */
+    RDB_SYNC_MODE_CLOUD_FIRST
+} Rdb_SyncMode;
+
+/**
+ * @brief Describes the statistic of the cloud sync process.
+ *
+ * @since 11
+ */
+typedef struct Rdb_Statistic {
+    /**
+     * Describes the total number of data to sync.
+     */
+    int total;
+
+    /**
+     * Describes the number of successfully synced data.
+     */
+    int successful;
+
+    /**
+     * Describes the number of data failed to sync.
+     */
+    int failed;
+
+    /**
+     * Describes the number of data remained to sync.
+     */
+    int remained;
+} Rdb_Statistic;
+
+/**
+ * @brief Describes the {@link Rdb_Statistic} details of the table.
+ *
+ * @since 11
+ */
+typedef struct Rdb_TableDetails {
+    /**
+     * Indicates the name of changed table.
+     */
+    const char *table;
+
+    /**
+     * Describes the {@link Rdb_Statistic} details of the upload process.
+     */
+    Rdb_Statistic upload;
+
+    /**
+     * Describes the {@link Rdb_Statistic} details of the download process.
+     */
+    Rdb_Statistic download;
+} Rdb_TableDetails;
+
+/**
+ * The cloud sync progress
+ *
+ * @since 11
+ */
+typedef enum Rdb_Progress {
+    /**
+     * @brief Means the sync process begin.
+     */
+    RDB_SYNC_BEGIN,
+
+    /**
+     * @brief Means the sync process is in progress
+     */
+    RDB_SYNC_IN_PROGRESS,
+
+    /**
+     * @brief Means the sync process is finished
+     */
+    RDB_SYNC_FINISH
+} Rdb_Progress;
+
+/**
+   * Describes the status of cloud sync progress.
+   *
+   * @since 11
+   */
+typedef enum Rdb_ProgressCode {
+    /**
+     * @brief Means the status of progress is success.
+     */
+    RDB_SUCCESS,
+
+    /**
+     * @brief Means the progress meets unknown error.
+     */
+    RDB_UNKNOWN_ERROR,
+
+    /**
+     * @brief Means the progress meets network error.
+     */
+    RDB_NETWORK_ERROR,
+
+    /**
+     * @brief Means cloud is disabled.
+     */
+    RDB_CLOUD_DISABLED,
+
+    /**
+     * @brief Means the progress is locked by others.
+     */
+    RDB_LOCKED_BY_OTHERS,
+
+    /**
+     * @brief Means the record exceeds the limit.
+     */
+    RDB_RECORD_LIMIT_EXCEEDED,
+
+    /**
+     * Means the cloud has no space for the asset.
+     */
+    RDB_NO_SPACE_FOR_ASSET
+} Rdb_ProgressCode;
+
+/**
+ * @brief Indicates version of {@link Rdb_ProgressDetails}
+ *
+ * @since 11
+ */
+#define DISTRIBUTED_PROGRESS_DETAIL_VERSION 1
+
+/**
+ * @brief Describes detail of the cloud sync progress.
+ *
+ * @since 11
+ */
+typedef struct Rdb_ProgressDetails {
+    /**
+     * The version used to uniquely identify the Rdb_ProgressDetails struct.
+     */
+    int version;
+
+    /**
+     * Describes the status of data sync progress. Defined in {@link Rdb_Progress}.
+     */
+    int schedule;
+
+    /**
+     * Describes the code of data sync progress. Defined in {@link Rdb_ProgressCode}.
+     */
+    int code;
+
+    /**
+     * Describes the length of changed tables in data sync progress.
+     */
+    int32_t tableLength;
+} Rdb_ProgressDetails;
+
+/**
+ * @brief Get table details from progress details.
+ *
+ * @param progress Represents a pointer to an {@link Rdb_ProgressDetails} instance.
+ * @param version Indicates the version of current {@link Rdb_ProgressDetails}.
+ * @return If the operation is successful, a pointer to the instance of the @link Rdb_TableDetails} structure is returned.
+ * Otherwise NULL is returned.
+ * @see Rdb_ProgressDetails
+ * @see Rdb_TableDetails
+ * @since 11
+ */
+Rdb_TableDetails *OH_Rdb_GetTableDetails(Rdb_ProgressDetails *progress, int32_t version);
+
+/**
+ * @brief The callback function of sync.
+ *
+ * @param progressDetails The details of the sync progress.
+ * @see Rdb_ProgressDetails.
+ * @since 11
+ */
+typedef void (*Rdb_SyncCallback)(Rdb_ProgressDetails *progressDetails);
+
+/**
+ * @brief Sync data to cloud.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param mode Represents the {@link Rdb_SyncMode} of sync progress.
+ * @param tables Indicates the names of tables to sync.
+ * @param count The count of tables to sync. If value equals 0, sync all tables of the store.
+ * @param callback The {@link Rdb_SyncCallback} of cloud sync progress.
+ * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
+ * @see OH_Rdb_Store.
+ * @see Rdb_SyncCallback.
+ * @since 11
+ */
+int OH_Rdb_CloudSync(OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[], uint32_t count,
+    Rdb_SyncCallback *callback);
 #ifdef __cplusplus
 };
 #endif
