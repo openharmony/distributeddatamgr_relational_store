@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "relational_cursor.h"
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -20,9 +22,9 @@
 
 #include "logger.h"
 #include "oh_cursor.h"
-#include "relational_cursor.h"
-#include "relational_store_error_code.h"
 #include "rdb_errno.h"
+#include "relational_asset.h"
+#include "relational_store_error_code.h"
 #include "securec.h"
 
 namespace OHOS {
@@ -30,7 +32,7 @@ namespace RdbNdk {
 int RelationalCursor::GetColumnCount(OH_Cursor *cursor, int *count)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || count == nullptr) {
+    if (self == nullptr || count == nullptr || self->resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     return self->resultSet_->GetColumnCount(*count);
@@ -39,7 +41,7 @@ int RelationalCursor::GetColumnCount(OH_Cursor *cursor, int *count)
 int RelationalCursor::GetColumnType(OH_Cursor *cursor, int32_t columnIndex, OH_ColumnType *columnType)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || columnType == nullptr || columnIndex < 0) {
+    if (self == nullptr || columnType == nullptr || columnIndex < 0 || self->resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     OHOS::NativeRdb::ColumnType type;
@@ -51,7 +53,7 @@ int RelationalCursor::GetColumnType(OH_Cursor *cursor, int32_t columnIndex, OH_C
 int RelationalCursor::GetColumnIndex(OH_Cursor *cursor, const char *name, int *columnIndex)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || name == nullptr || columnIndex == nullptr) {
+    if (self == nullptr || name == nullptr || columnIndex == nullptr || self->resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     return self->resultSet_->GetColumnIndex(name, *columnIndex);
@@ -60,7 +62,7 @@ int RelationalCursor::GetColumnIndex(OH_Cursor *cursor, const char *name, int *c
 int RelationalCursor::GetColumnName(OH_Cursor *cursor, int32_t columnIndex, char *name, int length)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || name == nullptr || length <= 0) {
+    if (self == nullptr || name == nullptr || length <= 0 || self->resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     std::string str;
@@ -79,7 +81,7 @@ int RelationalCursor::GetColumnName(OH_Cursor *cursor, int32_t columnIndex, char
 int RelationalCursor::GetRowCount(OH_Cursor *cursor, int *count)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || count == nullptr) {
+    if (self == nullptr || count == nullptr || self->resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     return self->resultSet_->GetRowCount(*count);
@@ -88,7 +90,7 @@ int RelationalCursor::GetRowCount(OH_Cursor *cursor, int *count)
 int RelationalCursor::GoToNextRow(OH_Cursor *cursor)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr) {
+    if (self == nullptr || self->resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     return self->resultSet_->GoToNextRow();
@@ -97,7 +99,7 @@ int RelationalCursor::GoToNextRow(OH_Cursor *cursor)
 int RelationalCursor::GetSize(OH_Cursor *cursor, int32_t columnIndex, size_t *size)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || size == nullptr) {
+    if (self == nullptr || size == nullptr || self->resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     return self->resultSet_->GetSize(columnIndex, *size);
@@ -106,7 +108,7 @@ int RelationalCursor::GetSize(OH_Cursor *cursor, int32_t columnIndex, size_t *si
 int RelationalCursor::GetText(OH_Cursor *cursor, int32_t columnIndex, char *value, int length)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || value == nullptr || length <= 0) {
+    if (self == nullptr || value == nullptr || length <= 0 || self->resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     std::string str;
@@ -125,7 +127,7 @@ int RelationalCursor::GetText(OH_Cursor *cursor, int32_t columnIndex, char *valu
 int RelationalCursor::GetInt64(OH_Cursor *cursor, int32_t columnIndex, int64_t *value)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || value == nullptr) {
+    if (self == nullptr || value == nullptr || self->resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     return self->resultSet_->GetLong(columnIndex, *value);
@@ -134,7 +136,7 @@ int RelationalCursor::GetInt64(OH_Cursor *cursor, int32_t columnIndex, int64_t *
 int RelationalCursor::GetReal(OH_Cursor *cursor, int32_t columnIndex, double *value)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || value == nullptr) {
+    if (self == nullptr || value == nullptr || self->resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     return self->resultSet_->GetDouble(columnIndex, *value);
@@ -143,7 +145,7 @@ int RelationalCursor::GetReal(OH_Cursor *cursor, int32_t columnIndex, double *va
 int RelationalCursor::GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned char *value, int length)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || value == nullptr || length <= 0) {
+    if (self == nullptr || value == nullptr || length <= 0 || self->resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     std::vector<uint8_t> vec;
@@ -159,10 +161,56 @@ int RelationalCursor::GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned c
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
+int RelationalCursor::GetAsset(OH_Cursor *cursor, int32_t columnIndex, Data_Asset *value)
+{
+    auto self = GetSelf(cursor);
+    if (self == nullptr || self->resultSet_ == nullptr || value == nullptr || value->cid != DATA_ASSET_V0 ||
+        columnIndex < 0) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    NativeRdb::AssetValue asset;
+    auto errCode = self->resultSet_->GetAsset(columnIndex, asset);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        return errCode;
+    }
+    value->cid = DATA_ASSET_V0;
+    value->asset_ = asset;
+    return errCode;
+}
+
+int RelationalCursor::GetAssets(OH_Cursor *cursor, int32_t columnIndex, Data_Asset **value, uint32_t *length)
+{
+    auto self = GetSelf(cursor);
+    if (self == nullptr || self->resultSet_ == nullptr || length == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    std::vector<NativeRdb::AssetValue> assets;
+    auto errCode = self->resultSet_->GetAssets(columnIndex, assets);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        return errCode;
+    }
+    uint32_t inputLength = *length;
+    *length = assets.size();
+    if (value == nullptr) {
+        return OH_Rdb_ErrCode::RDB_OK;
+    }
+    if (*length != inputLength) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    for (int i = 0; i < *length; ++i) {
+        if (value[i] == nullptr) {
+            return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+        }
+        value[i]->cid = DATA_ASSET_V0;
+        value[i]->asset_ = assets[i];
+    }
+    return errCode;
+}
+
 int RelationalCursor::IsNull(OH_Cursor *cursor, int32_t columnIndex, bool *isNull)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || isNull == nullptr) {
+    if (self == nullptr || isNull == nullptr || self->resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     return self->resultSet_->IsColumnNull(columnIndex, *isNull);
@@ -171,7 +219,7 @@ int RelationalCursor::IsNull(OH_Cursor *cursor, int32_t columnIndex, bool *isNul
 int RelationalCursor::Destroy(OH_Cursor *cursor)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr) {
+    if (self == nullptr || self->resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     int errCode = self->resultSet_->Close();
@@ -200,6 +248,8 @@ RelationalCursor::RelationalCursor(std::shared_ptr<OHOS::NativeRdb::ResultSet> r
     getBlob = GetBlob;
     isNull = IsNull;
     destroy = Destroy;
+    getAsset = GetAsset;
+    getAssets = GetAssets;
 }
 
 RelationalCursor *RelationalCursor::GetSelf(OH_Cursor *cursor)

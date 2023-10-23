@@ -20,6 +20,7 @@ config("module_private_config") {
   visibility = [ ":*" ]
 
   include_dirs = [
+    "${kvstore_path}/common",
     "${relational_store_base_path}/interfaces/ndk/include",
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_innerapi_path}/appdatafwk/include",
@@ -33,6 +34,7 @@ ohos_unittest("NativeRdbNdkTest") {
   module_out_path = module_output_path
 
   sources = [
+    "${relational_store_base_path}/interfaces/ndk/src/relational_asset.cpp",
     "${relational_store_base_path}/interfaces/ndk/src/relational_cursor.cpp",
     "${relational_store_base_path}/interfaces/ndk/src/relational_predicates.cpp",
     "${relational_store_base_path}/interfaces/ndk/src/relational_predicates_objects.cpp",
@@ -46,6 +48,8 @@ ohos_unittest("NativeRdbNdkTest") {
   configs = [ ":module_private_config" ]
 
   external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtoken_setproc",
     "c_utils:utils",
     "hilog:libhilog",
   ]

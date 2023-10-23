@@ -127,6 +127,9 @@ enum RdbPredicateOperator {
     OR,
     ORDER_BY,
     LIMIT,
+    BEGIN_GROUP,
+    END_GROUP,
+    IN,
     OPERATOR_MAX
 };
 
