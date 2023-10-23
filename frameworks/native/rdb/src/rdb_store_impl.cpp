@@ -113,8 +113,55 @@ void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
     }
 }
 
-std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
-    const std::string &table, const std::string &columnName, std::vector<PRIKey> &keys)
+RdbStore::ModifyTime::ModifyTime(std::shared_ptr<ResultSet> result, std::map<std::vector<uint8_t>, PRIKey> hashKeys,
+    bool isFromRowId)
+    : result_(std::move(result)), hash_(std::move(hashKeys)), isFromRowId_(isFromRowId)
+{
+}
+
+RdbStore::ModifyTime::operator std::map<PRIKey, Date>()
+{
+    if (result_ == nullptr) {
+        return {};
+    }
+    int count = 0;
+    if (result_->GetRowCount(count) != E_OK || count <= 0) {
+        LOG_ERROR("get resultSet err.");
+        return {};
+    }
+    std::map<PRIKey, Date> result;
+    for (int i = 0; i < count; i++) {
+        result_->GoToRow(i);
+        int64_t timeStamp = 0;
+        result_->GetLong(1, timeStamp);
+        PRIKey index = 0;
+        if (isFromRowId_) {
+            int rowid = 0;
+            result_->GetInt(0, rowid);
+            index = rowid;
+        } else {
+            std::vector<uint8_t> hashKey;
+            result_->GetBlob(0, hashKey);
+            index = hash_[hashKey];
+        }
+        result[index] = Date(timeStamp);
+    }
+    return result;
+}
+
+RdbStore::ModifyTime::operator std::shared_ptr<ResultSet>()
+{
+    return result_;
+}
+
+RdbStore::PRIKey RdbStore::ModifyTime::GetOriginKey(const std::vector<uint8_t> &hash)
+{
+    auto it = hash_.find(hash);
+    return it != hash_.end() ? it->second : std::monostate();
+}
+
+RdbStore::ModifyTime RdbStoreImpl::GetModifyTime(const std::string &table, const std::string &columnName,
+    std::vector<PRIKey> &keys)
 {
     if (table.empty() || columnName.empty() || keys.empty()) {
         LOG_ERROR("invalid para.");
@@ -154,20 +201,10 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTime(
         LOG_ERROR("get resultSet err.");
         return {};
     }
-    std::map<PRIKey, Date> result;
-    for (int i = 0; i < count; i++) {
-        resultSet->GoToRow(i);
-        std::vector<uint8_t> hashKey;
-        int64_t timeStamp;
-        resultSet->GetBlob(0, hashKey);
-        resultSet->GetLong(1, timeStamp);
-        result[keyMap[hashKey]] = Date(timeStamp);
-    }
-    return result;
+    return { resultSet, keyMap, false };
 }
 
-std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTimeByRowId(
-    const std::string &logTable, std::vector<PRIKey> &keys)
+RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTable, std::vector<PRIKey> &keys)
 {
     std::string sql;
     sql.append("select data_key, timestamp/10000 from ");
@@ -188,16 +225,7 @@ std::map<RdbStore::PRIKey, RdbStore::Date> RdbStoreImpl::GetModifyTimeByRowId(
         LOG_ERROR("get resultSet err.");
         return {};
     }
-    std::map<PRIKey, Date> result;
-    for (int i = 0; i < count; i++) {
-        resultSet->GoToRow(i);
-        int rowId;
-        int64_t timeStamp;
-        resultSet->GetInt(0, rowId);
-        resultSet->GetLong(1, timeStamp);
-        result[rowId] = Date(timeStamp);
-    }
-    return result;
+    return { resultSet, {}, true };
 }
 
 int RdbStoreImpl::Clean(const std::string &table)
@@ -1369,11 +1397,7 @@ std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, 
 
 int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &callback)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    DistributedRdb::RdbService::Option rdbOption;
-    rdbOption.mode = option.mode;
-    rdbOption.isAsync = !option.isBlock;
-    return InnerSync(rdbOption, predicate.GetDistributedPredicates(), [callback](Details &&details) {
+    return Sync(option, predicate, [callback](Details &&details) {
         Briefs briefs;
         for (auto &[key, value] : details) {
             briefs.insert_or_assign(key, value.code);
@@ -1384,14 +1408,18 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
     });
 }
 
-int RdbStoreImpl::Sync(const SyncOption &option, const std::vector<std::string> &tables,
-                       const AsyncDetail &async)
+int RdbStoreImpl::Sync(const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async)
+{
+    return Sync(option, AbsRdbPredicates(tables), async);
+}
+
+int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncDetail &async)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     DistributedRdb::RdbService::Option rdbOption;
     rdbOption.mode = option.mode;
     rdbOption.isAsync = !option.isBlock;
-    return InnerSync(rdbOption, AbsRdbPredicates(tables).GetDistributedPredicates(), async);
+    return InnerSync(rdbOption, predicate.GetDistributedPredicates(), async);
 }
 
 int RdbStoreImpl::InnerSync(const DistributedRdb::RdbService::Option &option,

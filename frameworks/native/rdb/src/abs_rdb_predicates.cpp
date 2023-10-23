@@ -218,4 +218,37 @@ AbsRdbPredicates* AbsRdbPredicates::OrderByDesc(const std::string &field)
     predicates_.AddOperation(DistributedRdb::ORDER_BY, field, isAsc);
     return (AbsRdbPredicates *)AbsPredicates::OrderByDesc(field);
 }
+
+AbsPredicates *AbsRdbPredicates::BeginWrap()
+{
+    predicates_.AddOperation(DistributedRdb::BEGIN_GROUP, {}, "");
+    return (AbsRdbPredicates *)AbsPredicates::BeginWrap();
+}
+
+AbsPredicates *AbsRdbPredicates::EndWrap()
+{
+    predicates_.AddOperation(DistributedRdb::END_GROUP, {}, "");
+    return (AbsRdbPredicates *)AbsPredicates::EndWrap();
+}
+
+AbsPredicates *AbsRdbPredicates::In(const std::string &field, const std::vector<ValueObject> &values)
+{
+    std::vector<std::string> vals;
+    vals.reserve(values.size());
+    for (const auto &value : values) {
+        auto val = std::get_if<std::string>(&value.value);
+        if (val == nullptr) {
+            return (AbsRdbPredicates *)AbsPredicates::In(field, values);
+        }
+        vals.emplace_back(std::move(*val));
+    }
+    predicates_.AddOperation(DistributedRdb::IN, field, vals);
+    return (AbsRdbPredicates *)AbsPredicates::In(field, values);
+}
+
+AbsPredicates *AbsRdbPredicates::In(const std::string &field, const std::vector<std::string> &values)
+{
+    predicates_.AddOperation(DistributedRdb::IN, field, values);
+    return (AbsRdbPredicates *)AbsPredicates::In(field, values);
+}
 } // namespace OHOS::NativeRdb
