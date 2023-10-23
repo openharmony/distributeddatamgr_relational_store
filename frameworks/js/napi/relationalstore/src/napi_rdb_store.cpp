@@ -1276,8 +1276,10 @@ napi_value RdbStoreProxy::Clean(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::Clean Async");
         CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
-        return obj->rdbStore_->Clean(context->tableName, context->cursor);
+//        return obj->rdbStore_->Clean(context->tableName, context->cursor);
+        return 0;
     };
+
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
