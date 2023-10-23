@@ -228,7 +228,7 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTa
     return { resultSet, {}, true };
 }
 
-int RdbStoreImpl::Clean(const std::string &table)
+int RdbStoreImpl::Clean(const std::string &table, int64_t cursor)
 {
     if (table.empty()) {
         return E_INVALID_ARGS;

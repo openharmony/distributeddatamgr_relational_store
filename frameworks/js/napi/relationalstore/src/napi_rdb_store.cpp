@@ -80,6 +80,7 @@ struct RdbStoreContext : public Context {
     int32_t enumArg;
     int32_t distributedType;
     int32_t syncMode;
+    int64_t cursor = -1;
     DistributedRdb::DistributedConfig distributedConfig;
     napi_ref asyncHolder = nullptr;
     NativeRdb::ConflictResolution conflictResolution;
@@ -286,6 +287,15 @@ int ParseTableName(const napi_env env, const napi_value arg, std::shared_ptr<Rdb
 {
     context->tableName = JSUtils::Convert2String(env, arg);
     CHECK_RETURN_SET(!context->tableName.empty(), std::make_shared<ParamError>("table", "not empty"));
+    return OK;
+}
+
+int ParseCursor(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
+{
+    double cursor = -1;
+    auto status = JSUtils::Convert2Value(env, arg, cursor);
+    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("cursor", "not number"));
+    context->cursor = static_cast<int64_t>(cursor);
     return OK;
 }
 
@@ -1256,14 +1266,17 @@ napi_value RdbStoreProxy::Clean(napi_env env, napi_callback_info info)
     LOG_DEBUG("RdbStoreProxy::Clean start");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc == 1, std::make_shared<ParamNumError>("1 - 2"));
+        CHECK_RETURN_SET_E(argc >= 1, std::make_shared<ParamNumError>("1 - 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
+        if (argc == 2) {
+            CHECK_RETURN(OK == ParseCursor(env, argv[1], context));
+        }
     };
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::Clean Async");
-        auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        return obj->rdbStore_->Clean(context->tableName);
+        CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
+        return obj->rdbStore_->Clean(context->tableName, context->cursor);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
