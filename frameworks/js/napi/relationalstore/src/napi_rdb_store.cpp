@@ -1275,6 +1275,7 @@ napi_value RdbStoreProxy::Clean(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::Clean Async");
+        auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
 //        return obj->rdbStore_->Clean(context->tableName, context->cursor);
         return 0;
