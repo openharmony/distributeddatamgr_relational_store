@@ -126,8 +126,8 @@ int ParseDatabasePath(const napi_env &env, const napi_value &object, std::shared
     }
 
     auto [realPath, errCode] = RdbSqlUtils::GetDefaultDatabasePath(defaultDir, context->config.GetName(), customDir);
-    // customDir length is limited to 1024 bytes
-    CHECK_RETURN_SET(errCode == E_OK && realPath.length() <= 1024,
+    // customDir length is limited to 128 bytes
+    CHECK_RETURN_SET(errCode == E_OK && realPath.length() <= 128,
         std::make_shared<ParamError>("config", "a StoreConfig."));
 
     context->config.SetPath(std::move(realPath));
