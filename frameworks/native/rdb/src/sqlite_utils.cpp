@@ -101,7 +101,7 @@ void SqliteUtils::Replace(std::string &src, const std::string &rep, const std::s
     size_t pos = 0;
     while ((pos = src.find(rep, pos)) != std::string::npos) {
         src.replace(pos, rep.length(), dst);
-        pos += rep.length();
+        pos += dst.length();
     }
 }
 

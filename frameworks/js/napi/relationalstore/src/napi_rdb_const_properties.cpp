@@ -115,6 +115,18 @@ static napi_value ExportProgressCode(napi_env env)
     return progressCode;
 }
 
+static napi_value ExportOrigin(napi_env env)
+{
+    napi_value origin = nullptr;
+    napi_create_object(env, &origin);
+
+    SET_NAPI_PROPERTY(origin, "LOCAL", NativeRdb::AbsPredicates::Origin::LOCAL);
+    SET_NAPI_PROPERTY(origin, "CLOUD", NativeRdb::AbsPredicates::Origin::CLOUD);
+    SET_NAPI_PROPERTY(origin, "REMOTE", NativeRdb::AbsPredicates::Origin::REMOTE);
+    napi_object_freeze(env, origin);
+    return origin;
+}
+
 static napi_value ExportDistributedType(napi_env env)
 {
     napi_value distributedType = nullptr;
@@ -182,6 +194,7 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("DistributedType", ExportDistributedType(env)),
         DECLARE_NAPI_PROPERTY("AssetStatus", ExportAssetStatus(env)),
         DECLARE_NAPI_PROPERTY("ChangeType", ExportChangeType(env)),
+        DECLARE_NAPI_PROPERTY("Origin", ExportOrigin(env)),
     };
 
     size_t count = sizeof(properties) / sizeof(properties[0]);
