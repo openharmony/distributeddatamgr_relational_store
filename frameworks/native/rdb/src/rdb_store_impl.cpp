@@ -236,7 +236,12 @@ int RdbStoreImpl::Clean(const std::string &table, int64_t cursor)
     auto logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
     std::string sql = "DELETE FROM ";
     sql.append(table).append(" WHERE ROWID IN (SELECT data_key FROM ");
-    sql.append(logTable).append(" WHERE flag = 2 OR flag = 0)");
+    sql.append(logTable).append(" WHERE flag & 0x8 = 0x8");
+    if (cursor > 0) {
+        sql.append(" AND cursor <= ").append(std::to_string(cursor));
+    }
+    sql.append(")");
+    return ExecuteSql(table);
     return ExecuteSql(table);
 }
 
