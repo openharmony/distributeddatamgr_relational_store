@@ -27,8 +27,6 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
-extern RowData g_rowData[3];
-
 class RdbStoreUpdateTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -97,8 +95,6 @@ void RdbStoreUpdateTest::TearDown(void)
     RdbHelper::ClearCache();
 }
 
-extern ValuesBucket SetRowData(const RowData &rowData);
-
 /**
  * @tc.name: RdbStore_Update_001
  * @tc.desc: test RdbStore update, select id and update one row
@@ -112,7 +108,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", SetRowData(g_rowData[0]));
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
@@ -154,11 +150,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
     ValuesBucket values;
     int changedRows;
 
-    int ret = store->Insert(id, "test", SetRowData(g_rowData[0]));
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", SetRowData(g_rowData[1]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -247,11 +243,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", SetRowData(g_rowData[0]));
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", SetRowData(g_rowData[1]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -296,11 +292,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", SetRowData(g_rowData[0]));
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", SetRowData(g_rowData[1]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -345,11 +341,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", SetRowData(g_rowData[0]));
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", SetRowData(g_rowData[1]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -395,11 +391,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", SetRowData(g_rowData[0]));
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", SetRowData(g_rowData[1]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -444,11 +440,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", SetRowData(g_rowData[0]));
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", SetRowData(g_rowData[1]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -494,11 +490,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", SetRowData(g_rowData[0]));
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", SetRowData(g_rowData[1]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 

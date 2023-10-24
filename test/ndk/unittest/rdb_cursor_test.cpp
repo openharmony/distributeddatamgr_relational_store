@@ -458,11 +458,11 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_006, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_cursor_test_005
+ * @tc.name: RDB_Native_cursor_test_007
  * @tc.desc: Normal testCase of cursor for anomalous branch.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_006, TestSize.Level1)
+HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_007, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("asset_table");
@@ -486,11 +486,11 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_006, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_cursor_test_005
+ * @tc.name: RDB_Native_cursor_test_008
  * @tc.desc: Normal testCase of cursor for anomalous branch.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_007, TestSize.Level1)
+HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_008, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("asset_table");
@@ -548,11 +548,11 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_007, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_cursor_test_008
+ * @tc.name: RDB_Native_cursor_test_009
  * @tc.desc: Normal testCase of cursor for getAssets.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_008, TestSize.Level1)
+HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_009, TestSize.Level1)
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("asset_table");
