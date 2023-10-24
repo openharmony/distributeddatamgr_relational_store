@@ -644,7 +644,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_012, TestSize.Level1)
 
 /**
  * @tc.name: RDB_Native_store_test_013
- * @tc.desc: Normal testCase of store for anomalous branch.
+ * @tc.desc: Normal testCase of store for CloudSync.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_013, TestSize.Level1)
@@ -677,7 +677,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_013, TestSize.Level1)
  * @tc.desc: Abnormal testCase of store for SetDistributedTables.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_013, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_014, TestSize.Level1)
 {
     EXPECT_NE(storeTestRdbStore_, nullptr);
     Rdb_DistributedConfig config{ .version = 0, .isAutoSync = true };
@@ -698,7 +698,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_013, TestSize.Level1)
  * @tc.desc: Normal testCase of store for CloudSync.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_014, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_015, TestSize.Level1)
 {
     EXPECT_NE(storeTestRdbStore_, nullptr);
     constexpr int TABLE_COUNT = 1;
@@ -723,7 +723,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_014, TestSize.Level1)
  * @tc.desc: Abnormal testCase of store for CloudSync.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_015, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_016, TestSize.Level1)
 {
     EXPECT_NE(storeTestRdbStore_, nullptr);
     constexpr int TABLE_COUNT = 1;
@@ -742,7 +742,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_015, TestSize.Level1)
  * @tc.desc: Normal testCase for GetModifyTime.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_016, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_017, TestSize.Level1)
 {
     char createLogTableSql[] = "CREATE TABLE if not exists naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
                                "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
@@ -787,7 +787,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_016, TestSize.Level1)
  *           and resultSet is null or empty
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_017, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
 {
     char createLogTableSql[] = "CREATE TABLE if not exists naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
                                "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
@@ -835,109 +835,4 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_017, TestSize.Level1)
     char dropLogTableSql[] = "DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log";
     errCode = OH_Rdb_Execute(storeTestRdbStore_, dropLogTableSql);
     EXPECT_EQ(errCode, RDB_OK);
-
-}
-
-/**
- * @tc.name: RDB_Native_store_test_014
- * @tc.desc: Normal testCase of store for anomalous branch.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_014, TestSize.Level1)
-{
-    int errCode = 0;
-    OH_Rdb_Config config;
-    config.dataBaseDir = RDB_TEST_PATH;
-    config.storeName = "rdb_store_error.db";
-    config.bundleName = nullptr;
-    config.moduleName = "";
-    config.securityLevel = OH_Rdb_SecurityLevel::S1;
-    config.isEncrypt = false;
-    config.selfSize = 0;
-
-    config.selfSize = sizeof(OH_Rdb_Config);
-    auto store = OH_Rdb_GetOrOpen(&config, &errCode);
-    EXPECT_NE(store, nullptr);
-
-    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    auto cursor = OH_Rdb_Query(nullptr, predicates, NULL, 0);
-    EXPECT_EQ(cursor, nullptr);
-    cursor = OH_Rdb_Query(store, nullptr, NULL, 0);
-    EXPECT_EQ(cursor, nullptr);
-
-    char querySql[] = "SELECT * FROM store_test";
-    cursor = OH_Rdb_ExecuteQuery(nullptr, querySql);
-    EXPECT_EQ(cursor, nullptr);
-    cursor = OH_Rdb_ExecuteQuery(store, nullptr);
-    EXPECT_EQ(cursor, nullptr);
-
-    errCode = OH_Rdb_BeginTransaction(nullptr);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    errCode = OH_Rdb_RollBack(nullptr);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    errCode = OH_Rdb_Commit(nullptr);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-
-    char backupDir[] = "backup.db";
-    errCode = OH_Rdb_Backup(nullptr, backupDir);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    errCode = OH_Rdb_Backup(store, nullptr);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-
-    errCode = OH_Rdb_Restore(nullptr, backupDir);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    errCode = OH_Rdb_Restore(store, nullptr);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-
-    config.dataBaseDir = RDB_TEST_PATH;
-    config.storeName = "rdb_store_error.db";
-    OH_Rdb_CloseStore(store);
-    OH_Rdb_DeleteStore(&config);
-}
-
-
-/**
- * @tc.name: RDB_Native_store_test_015
- * @tc.desc: Normal testCase of store for anomalous branch.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_015, TestSize.Level1)
-{
-    int errCode = 0;
-    OH_Rdb_Config config;
-    config.dataBaseDir = RDB_TEST_PATH;
-    config.storeName = "rdb_store_error.db";
-    config.bundleName = nullptr;
-    config.moduleName = "";
-    config.securityLevel = OH_Rdb_SecurityLevel::S1;
-    config.isEncrypt = false;
-    config.selfSize = 0;
-
-    config.selfSize = sizeof(OH_Rdb_Config);
-    auto store = OH_Rdb_GetOrOpen(&config, &errCode);
-    EXPECT_NE(store, nullptr);
-
-    int version = 1;
-    errCode = OH_Rdb_SetVersion(nullptr, version);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    errCode = OH_Rdb_GetVersion(nullptr, &version);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    errCode = OH_Rdb_GetVersion(store, nullptr);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-
-    errCode = OH_Rdb_CloseStore(nullptr);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    errCode = OH_Rdb_DeleteStore(nullptr);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    config.dataBaseDir = nullptr;
-    errCode = OH_Rdb_DeleteStore(&config);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    config.dataBaseDir = RDB_TEST_PATH;
-    config.storeName = nullptr;
-    errCode = OH_Rdb_DeleteStore(&config);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-
-    config.storeName = "rdb_store_error.db";
-    OH_Rdb_CloseStore(store);
-    OH_Rdb_DeleteStore(&config);
 }
