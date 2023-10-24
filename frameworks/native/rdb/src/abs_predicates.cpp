@@ -28,7 +28,7 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-static int32_t FLAG[AbsPredicates::Origin::BUTT] = { 2, 0, 0 };
+static std::string FLAG[AbsPredicates::Origin::BUTT] = { "0x02", "0x0", "0x0" };
 AbsPredicates::AbsPredicates()
 {
     Initial();
@@ -59,22 +59,28 @@ AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const ValueObjec
     CheckField(field);
     ValueObject valObj = value;
     std::string newField = field;
+    std::string flagVal;
     if (newField == DistributedRdb::Field::ORIGIN_FIELD) {
         newField = LOG_ORIGIN_FIELD;
-        int location = 0;
-        valObj.GetInt(location);
+        double location = 0;
+        valObj.GetDouble(location);
         if (location < 0 || location > Origin::REMOTE) {
             return this;
         }
-        valObj = ValueObject(FLAG[location]);
+        flagVal = FLAG[static_cast<int>(location)];
+        valObj = ValueObject(flagVal);
     }
     if (isNeedAnd) {
         whereClause += "AND ";
     } else {
         isNeedAnd = true;
     }
-    whereClause += newField + " = ? ";
-    bindArgs.push_back(valObj);
+    if (flagVal.empty()) {
+        whereClause += newField + " = ? ";
+        bindArgs.push_back(valObj);
+    } else {
+        whereClause += "(" + newField + " & 0x02 = " + flagVal + ")";
+    }
     return this;
 }
 

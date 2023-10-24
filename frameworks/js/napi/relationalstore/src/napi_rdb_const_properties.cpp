@@ -47,6 +47,16 @@ static napi_status SetNamedProperty(napi_env env, napi_value& obj, const std::st
     return status;
 }
 
+static napi_status SetNamedProperty(napi_env env, napi_value& obj, const std::string& name, const std::string &value)
+{
+    napi_value property = nullptr;
+    napi_status status = napi_create_string_utf8(env, value.c_str(), value.size(), &property);
+    if (status != napi_ok) {
+        return status;
+    }
+    return napi_set_named_property(env, obj, name.c_str(), property);
+}
+
 static napi_value ExportSyncMode(napi_env env)
 {
     napi_value syncMode = nullptr;
@@ -127,6 +137,20 @@ static napi_value ExportOrigin(napi_env env)
     return origin;
 }
 
+static napi_value ExportField(napi_env env)
+{
+    napi_value field = nullptr;
+    napi_create_object(env, &field);
+
+    SetNamedProperty(env, field, "CURSOR_FIELD", DistributedRdb::Field::CURSOR_FIELD);
+    SetNamedProperty(env, field, "ORIGIN_FIELD", DistributedRdb::Field::ORIGIN_FIELD);
+    SetNamedProperty(env, field, "DELETED_FLAG_FIELD", DistributedRdb::Field::DELETED_FLAG_FIELD);
+    SetNamedProperty(env, field, "OWNER_FIELD", DistributedRdb::Field::OWNER_FIELD);
+    SetNamedProperty(env, field, "PRIVILEGE_FIELD", DistributedRdb::Field::PRIVILEGE_FIELD);
+    napi_object_freeze(env, field);
+    return field;
+}
+
 static napi_value ExportDistributedType(napi_env env)
 {
     napi_value distributedType = nullptr;
@@ -195,6 +219,7 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("AssetStatus", ExportAssetStatus(env)),
         DECLARE_NAPI_PROPERTY("ChangeType", ExportChangeType(env)),
         DECLARE_NAPI_PROPERTY("Origin", ExportOrigin(env)),
+        DECLARE_NAPI_PROPERTY("Field", ExportField(env)),
     };
 
     size_t count = sizeof(properties) / sizeof(properties[0]);
