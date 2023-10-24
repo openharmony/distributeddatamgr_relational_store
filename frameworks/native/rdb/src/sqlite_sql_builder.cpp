@@ -250,7 +250,7 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(
     }
     sql.append(", " + logTable + ".cursor");
     sql.append(", CASE WHEN ").append(logTable).append(".")
-        .append("status = 0 THEN true ELSE false END AS deleted_flag ");
+        .append("flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag ");
     sql.append("FROM ").append(table);
     AppendClause(sql, " INDEXED BY ", predicates.GetIndex());
     sql.append(" INNER JOIN  ").append(logTable).append(" ON ").append(table)
