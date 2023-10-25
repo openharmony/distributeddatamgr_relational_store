@@ -228,20 +228,18 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTa
     return { resultSet, {}, true };
 }
 
-int RdbStoreImpl::Clean(const std::string &table, int64_t cursor)
+int RdbStoreImpl::Clean(const std::string &table, uint64_t cursor)
 {
     if (table.empty()) {
         return E_INVALID_ARGS;
     }
-    auto logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
-    std::string sql = "DELETE FROM ";
-    sql.append(table).append(" WHERE ROWID IN (SELECT data_key FROM ");
-    sql.append(logTable).append(" WHERE flag & 0x8 = 0x8");
-    if (cursor > 0) {
-        sql.append(" AND cursor <= ").append(std::to_string(cursor));
+    SqliteConnection *connection = connectionPool->AcquireConnection(false);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
     }
-    sql.append(")");
-    return ExecuteSql(sql);
+    int errCode = connection->Clean(table, cursor);
+    connectionPool->ReleaseConnection(connection);
+    return errCode;
 }
 
 #endif

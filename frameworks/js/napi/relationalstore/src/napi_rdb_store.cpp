@@ -80,7 +80,7 @@ struct RdbStoreContext : public Context {
     int32_t enumArg;
     int32_t distributedType;
     int32_t syncMode;
-    int64_t cursor = -1;
+    uint64_t cursor = UINT64_MAX;
     DistributedRdb::DistributedConfig distributedConfig;
     napi_ref asyncHolder = nullptr;
     NativeRdb::ConflictResolution conflictResolution;
@@ -295,7 +295,7 @@ int ParseCursor(const napi_env env, const napi_value arg, std::shared_ptr<RdbSto
     double cursor = -1;
     auto status = JSUtils::Convert2Value(env, arg, cursor);
     CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("cursor", "not number"));
-    context->cursor = static_cast<int64_t>(cursor);
+    context->cursor = static_cast<uint64_t>(cursor);
     return OK;
 }
 
