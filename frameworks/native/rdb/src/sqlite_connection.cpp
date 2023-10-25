@@ -28,6 +28,7 @@
 #include "file_ex.h"
 #include "logger.h"
 #include "rdb_errno.h"
+#include "relational_store_client.h"
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
@@ -697,6 +698,16 @@ int SqliteConnection::DesFinalize()
         sqlite3_db_release_memory(dbHandle);
     }
     return errCode;
+}
+
+int SqliteConnection::Clean(const std::string &table, uint64_t cursor)
+{
+    if (table.empty()) {
+        return E_ERROR;
+    }
+    uint64_t tmpCursor = cursor == UINT64_MAX ? 0 : cursor;
+    auto status = DistributedDB::DropLogicDeletedData(dbHandle, table, tmpCursor);
+    return status == DBStatus::OK ? E_OK : E_ERROR;
 }
 
 int SqliteConnection::EndStepQuery()

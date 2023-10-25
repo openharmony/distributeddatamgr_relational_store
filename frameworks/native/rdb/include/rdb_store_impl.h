@@ -172,7 +172,7 @@ public:
     ModifyTime GetModifyTime(const std::string& table, const std::string& columnName,
         std::vector<PRIKey>& keys) override;
 
-    int Clean(const std::string &table, int64_t cursor = -1);
+    int Clean(const std::string &table, uint64_t cursor = UINT64_MAX);
 
 private:
     int InnerOpen();

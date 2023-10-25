@@ -533,7 +533,7 @@ public:
      *
      * @param table Indicates the specified table.
      */
-    virtual int Clean(const std::string &table, int64_t cursor = -1) = 0;
+    virtual int Clean(const std::string &table, uint64_t cursor = UINT64_MAX) = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif
