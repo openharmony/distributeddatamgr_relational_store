@@ -616,7 +616,7 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool disti
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::string sql;
     errCode = SqliteSqlBuilder::BuildQueryString(
-        distinct, table, columns, whereClause, groupBy, indexName, orderBy, limit, offset, sql);
+        distinct, table, "", columns, whereClause, groupBy, indexName, orderBy, limit, offset, sql);
     if (errCode != E_OK) {
         return nullptr;
     }
