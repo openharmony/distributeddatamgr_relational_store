@@ -110,7 +110,7 @@ void AbsRdbPredicates::SetJoinConditions(const std::vector<std::string> &joinCon
  */
 std::string AbsRdbPredicates::GetJoinClause() const
 {
-    return tableName_;
+    return "";
 }
 
 /**

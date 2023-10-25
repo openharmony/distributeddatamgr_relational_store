@@ -397,7 +397,7 @@ HWTEST_F(RdbStorePredicateJoinBTest, RdbStore_CrossJoinB_001, TestSize.Level1)
     EXPECT_EQ(joinTypes, predicates.GetJoinTypes());
     EXPECT_EQ("dept", predicates.GetJoinTableNames()[0]);
     EXPECT_EQ("ON(emp.deptId = dept.id)", predicates.GetJoinConditions()[0]);
-    EXPECT_EQ("emp CROSS JOIN dept ON(emp.deptId = dept.id)", predicates.GetJoinClause());
+    EXPECT_EQ("CROSS JOIN dept ON(emp.deptId = dept.id)", predicates.GetJoinClause());
 
     std::vector<std::string> columns;
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinBTest::store->Query(predicates, columns);
