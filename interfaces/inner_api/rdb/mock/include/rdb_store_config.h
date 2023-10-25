@@ -121,6 +121,8 @@ public:
     std::string GetWritePermission() const;
     void SetWritePermission(const std::string& permission);
     void SetCreateNecessary(bool isCreateNecessary);
+    void SetRetainData(bool retainData);
+    bool GetRetainData() const;
 
     static std::string GetJournalModeValue(JournalMode journalMode);
     static std::string GetSyncModeValue(SyncMode syncMode);
@@ -187,6 +189,7 @@ private:
     std::string bundleName_;
     std::string moduleName_;
 
+    bool retainData_ = false;
     bool isEncrypt_ = false;
     std::vector<uint8_t> encryptKey_;
     SecurityLevel securityLevel = SecurityLevel::LAST;
