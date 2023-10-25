@@ -242,7 +242,6 @@ int RdbStoreImpl::Clean(const std::string &table, int64_t cursor)
     }
     sql.append(")");
     return ExecuteSql(table);
-    return ExecuteSql(table);
 }
 
 #endif
