@@ -472,8 +472,8 @@ describe('rdbStoreCloudSyncTest', function () {
         console.log(TAG + "************* testRdbStoreCloudSync0017 start *************");
         try {
 
-            function Progress(detail) {
-                console.log(TAG + `Progress:` + JSON.stringify(detail));
+            function predict(detail) {
+                console.log(TAG + `predict:` + JSON.stringify(detail));
             }
             let predicates = await new relationalStore.RdbPredicates("test")
             predicates.in("id", ["id1","id2"]);
