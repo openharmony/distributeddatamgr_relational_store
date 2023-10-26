@@ -25,6 +25,7 @@ ohos_shared_library("clouddata") {
   sources = [
     "${cloud_data_napi_path}/src/entry_point.cpp",
     "${cloud_data_napi_path}/src/js_config.cpp",
+    "${cloud_data_napi_path}/src/js_config_util.cpp",
     "${cloud_data_napi_path}/src/js_const_properties.cpp",
     "${cloud_data_napi_path}/src/js_error_utils.cpp",
     "${cloud_data_napi_path}/src/napi_queue.cpp",
