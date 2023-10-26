@@ -122,8 +122,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0010
-     * @tc.name Normal test case of predicates equalTo
-     * @tc.desc 1.Configure predicetes
+     * @tc.name Normal test case of predicates, test "equalTo" for boolean value
+     * @tc.desc 1.Execute equalTo("boolType", true)
      *          2.Query data
      */
     it('testEqualTo0001', 0, async function (done) {
@@ -142,8 +142,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0011
-     * @tc.name Normal test case of predicates equalTo, add "or" condition
-     * @tc.desc 1.Configure predicates
+     * @tc.name Normal test case of predicates, test "or"
+     * @tc.desc 1.Execute equalTo().or().equalTo()
      *          2.Query data
      */
     it('testEqualTo0002', 0, async function (done) {
@@ -162,9 +162,9 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0012
-     * @tc.name Normal test case of predicates equalTo
-     * @tc.desc 1.Configure predicates
-     *          2.Query data (three query results)
+     * @tc.name Normal test case of predicates, test "equalTo" for string value
+     * @tc.desc 1.Execute equalTo("stringValue", "ABCDEFGHIJKLMN")
+     *          2.Query data
      */
     it('testEqualTo0003', 0, async function (done) {
         console.log(TAG + "************* testEqualTo0003 start *************");
@@ -182,8 +182,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0013
-     * @tc.name Normal test case of predicates equalTo
-     * @tc.desc 1.Configure predicates (boundary value of doubleValue)
+     * @tc.name Normal test case of predicates, test "equalTo" for boundary value of doubleValue
+     * @tc.desc 1.Execute equalTo("doubleValue", DOUBLE_MAX)
      *          2.Query data
      */
     it('testEqualTo0004', 0, async function (done) {
@@ -202,8 +202,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0014
-     * @tc.name Normal test case of predicates equalTo
-     * @tc.desc 1.Configure predicates (boundary value of shortValue)
+     * @tc.name Normal test case of predicates, test "equalTo" for boundary value of shortValue
+     * @tc.desc 1.Execute equalTo("shortValue", -32768.0)
      *          2.Query data
      */
     it('testEqualTo0005', 0, async function (done) {
@@ -222,8 +222,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0015
-     * @tc.name Normal test case of predicates equalTo
-     * @tc.desc 1.Configure predicates ("integerValue", 1)
+     * @tc.name Normal test case of predicates, test "equalTo" for integer value
+     * @tc.desc 1.Execute equalTo("integerValue", 1)
      *          2.Query data
      *          3.Execute getLong
      */
@@ -243,8 +243,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0016
-     * @tc.name Normal test case of predicates equalTo
-     * @tc.desc 1.Configure predicates ("longValue", 1)
+     * @tc.name Normal test case of predicates, test "equalTo" for long value
+     * @tc.desc 1.Execute equalTo("longValue", 1)
      *          2.Query data
      *          3.Execute getLong
      */
@@ -264,8 +264,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0017
-     * @tc.name Normal test case of predicates equalTo
-     * @tc.desc 1.Configure predicates ("floatValue", -0.123)
+     * @tc.name Normal test case of predicates, test "equalTo" for float type
+     * @tc.desc 1.Execute equalTo("floatValue", -0.123)
      *          2.Query data
      *          3.Execute getLong
      */
@@ -286,10 +286,10 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0018
-     * @tc.name Normal test case of predicates equalTo
-     * @tc.desc 1.Configure predicates ('1', 1)
+     * @tc.name Normal test case of predicates, test "equalTo" for true param
+     * @tc.desc 1.Execute equalTo('1', 1)
      *          2.Query data
-     *          3.Configure predicates ('1', Number.NaN)
+     *          3.Execute equalTo('1', Number.NaN)
      *          4.Query data
      */
     it('testEqualTo0009', 0, async function (done) {
@@ -316,8 +316,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0020
-     * @tc.name Normal test case of predicates notEqualTo
-     * @tc.desc 1.Configure predicates ("booleanValue", true)
+     * @tc.name Normal test case of predicates, test "notEqualTo" for boolean value
+     * @tc.desc 1.Execute notEqualTo("boolType", true)
      *          2.Query data
      */
     it('testNotEqualTo0001', 0, async function (done) {
@@ -336,9 +336,9 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0021
-     * @tc.name Normal test case of predicates notEqualTo
-     * @tc.desc 1.Configure predicates ("byteValue", -128)
-     *          2.Configure predicates ("byteValue", 1)
+     * @tc.name Normal test case of predicates, test "notEqualTo" for byte value
+     * @tc.desc 1.Execute notEqualTo("byteValue", -128)
+     *          2.Execute notEqualTo("byteValue", 1)
      *          3.Query data
      */
     it('testNotEqualTo0002', 0, async function (done) {
@@ -358,8 +358,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0022
-     * @tc.name Normal test case of predicates notEqualTo
-     * @tc.desc 1.Configure predicates ("stringValue", "ABCDEFGHIJKLMN")
+     * @tc.name Normal test case of predicates, test "notEqualTo" for string value
+     * @tc.desc 1.Execute notEqualTo("stringValue", "ABCDEFGHIJKLMN")
      *          2.Query data
      */
     it('testNotEqualTo0003', 0, async function (done) {
@@ -378,8 +378,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0023
-     * @tc.name Normal test case of predicates notEqualTo
-     * @tc.desc 1.Configure predicates ("doubleValue", DOUBLE_MAX)
+     * @tc.name Normal test case of predicates, test "notEqualTo" for double value
+     * @tc.desc 1.Execute notEqualTo ("doubleValue", DOUBLE_MAX)
      *          2.Query data
      */
     it('testNotEqualTo0004', 0, async function (done) {
@@ -398,8 +398,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0024
-     * @tc.name Normal test case of predicates notEqualTo
-     * @tc.desc 1.Configure predicates ("shortValue", -32768)
+     * @tc.name Normal test case of predicates, test "notEqualTo" for boundary value of shortValue
+     * @tc.desc 1.Execute notEqualTo ("shortValue", -32768)
      *          2.Query data
      */
     it('testNotEqualTo0005', 0, async function (done) {
@@ -418,8 +418,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0025
-     * @tc.name Normal test case of predicates notEqualTo
-     * @tc.desc 1.Configure predicates ("integerValue", 1)
+     * @tc.name Normal test case of predicates, test "notEqualTo" for integer value
+     * @tc.desc 1.Execute notEqualTo ("integerValue", 1)
      *          2.Query data
      */
     it('testNotEqualTo0006', 0, async function (done) {
@@ -438,8 +438,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0026
-     * @tc.name Normal test case of predicates notEqualTo
-     * @tc.desc 1.Configure predicates ("longValue", 1)
+     * @tc.name Normal test case of predicates, test "notEqualTo" for long value
+     * @tc.desc 1.Execute notEqualTo ("longValue", 1)
      *          2.Query data
      */
     it('testNotEqualTo0007', 0, async function (done) {
@@ -458,8 +458,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0027
-     * @tc.name Normal test case of predicates notEqualTo
-     * @tc.desc 1.Configure predicates ("floatValue", -0.123)
+     * @tc.name Normal test case of predicates, test "notEqualTo" for float value
+     * @tc.desc 1.Execute notEqualTo ("floatValue", -0.123)
      *          2.Query data
      */
     it('testNotEqualTo0008', 0, async function (done) {
@@ -478,10 +478,10 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0028
-     * @tc.name Normal test case of predicates notEqualTo
-     * @tc.desc 1.Configure predicates ('1', 1)
+     * @tc.name Normal test case of predicates, test "notEqualTo" for true field
+     * @tc.desc 1.Execute notEqualTo ('1', 1)
      *          2.Query data
-     *          3.Configure predicates ('1', Number.NaN)
+     *          3.Execute notEqualTo ('1', Number.NaN)
      *          4.Query data
      */
     it('testNotEqualTo0009', 0, async function (done) {
@@ -508,8 +508,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0030
-     * @tc.name Normal test case of predicates isNull
-     * @tc.desc 1.Configure predicates ("primLongValue")
+     * @tc.name Normal test case of predicates, test "isNull" for primLong value
+     * @tc.desc 1.Execute isNull ("primLongValue")
      *          2.Query data
      */
     it('testIsNull0001', 0, async function (done) {
@@ -526,8 +526,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0031
-     * @tc.name Normal test case of predicates isNull
-     * @tc.desc 1.Configure predicates ("longValue")
+     * @tc.name Normal test case of predicates, test "isNull" for long value
+     * @tc.desc 1.Execute isNull ("longValue")
      *          2.Query data
      */
     it('testIsNull0002', 0, async function (done) {
@@ -544,8 +544,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0032
-     * @tc.name Normal test case of predicates isNull
-     * @tc.desc 1.Configure predicates ("stringValue")
+     * @tc.name Normal test case of predicates, test "isNull" for string value
+     * @tc.desc 1.Execute isNull ("stringValue")
      *          2.Query data
      */
     it('testIsNull0003', 0, async function (done) {
@@ -562,8 +562,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0033
-     * @tc.name Normal test case of predicates isNull
-     * @tc.desc 1.Configure predicates as invalid field ("stringValueX")
+     * @tc.name Abnormal test case of predicates, test "isNull" for invalid param
+     * @tc.desc 1.Execute isNull ("stringValueX")
      *          2.Query data
      */
     it('testIsNull0004', 0, async function (done) {
@@ -580,8 +580,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0040
-     * @tc.name Normal test case of predicates isNotNull
-     * @tc.desc 1.Configure predicates ("primLongValue")
+     * @tc.name Normal test case of predicates, test "isNotNull" for primlong value
+     * @tc.desc 1.Execute isNotNull ("primLongValue")
      *          2.Query data
      */
     it('testIsNotNull0001', 0, async function (done) {
@@ -598,8 +598,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0041
-     * @tc.name Normal test case of predicates isNotNull
-     * @tc.desc 1.Configure predicates ("longValue")
+     * @tc.name Normal test case of predicates, test "isNotNull" for long value
+     * @tc.desc 1.Execute isNotNull ("longValue")
      *          2.Query data
      */
     it('testIsNotNull0002', 0, async function (done) {
@@ -616,8 +616,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0042
-     * @tc.name Normal test case of predicates isNotNull
-     * @tc.desc 1.Configure predicates ("stringValue")
+     * @tc.name Normal test case of predicates, test "isNotNull" for string value
+     * @tc.desc 1.Execute isNotNull ("stringValue")
      *          2.Query data
      */
     it('testIsNotNull0003', 0, async function (done) {
@@ -634,8 +634,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0043
-     * @tc.name Normal test case of predicates isNotNull
-     * @tc.desc 1.Configure predicates as invalid field ("stringValueX")
+     * @tc.name Abnormal test case of predicates, test "isNotNull" for invalid param
+     * @tc.desc 1.Execute isNotNull ("stringValueX")
      *          2.Query data
      */
     it('testIsNotNull0004', 0, async function (done) {
@@ -652,8 +652,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0050
-     * @tc.name Normal test case of predicates greaterThan
-     * @tc.desc 1.Configure predicates ("stringValue", "ABC")
+     * @tc.name Normal test case of predicates, test "greaterThan" for string value
+     * @tc.desc 1.Execute greaterThan ("stringValue", "ABC")
      *          2.Query data
      */
     it('testGreaterThan0001', 0, async function (done) {
@@ -672,8 +672,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0051
-     * @tc.name Normal test case of predicates greaterThan
-     * @tc.desc 1.Configure predicates ("doubleValue", 0.0)
+     * @tc.name Normal test case of predicates, test "greaterThan" for double value
+     * @tc.desc 1.Execute greaterThan ("doubleValue", 0.0)
      *          2.Query data
      */
     it('testGreaterThan0002', 0, async function (done) {
@@ -692,8 +692,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0052
-     * @tc.name Normal test case of predicates greaterThan
-     * @tc.desc 1.Configure predicates ("integerValue", 1)
+     * @tc.name Normal test case of predicates, test "greaterThan" for integer value
+     * @tc.desc 1.Execute greaterThan ("integerValue", 1)
      *          2.Query data
      */
     it('testGreaterThan0003', 0, async function (done) {
@@ -712,8 +712,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0053
-     * @tc.name Normal test case of predicates greaterThan
-     * @tc.desc 1.Configure predicates ("longValue", 1)
+     * @tc.name Normal test case of predicates, test "greaterThan" for long value
+     * @tc.desc 1.Execute greaterThan ("longValue", 1)
      *          2.Query data
      */
     it('testGreaterThan0004', 0, async function (done) {
@@ -732,8 +732,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0054
-     * @tc.name Normal test case of predicates greaterThan
-     * @tc.desc 1.Configure predicates ("stringValue", "ZZZ")
+     * @tc.name Normal test case of predicates, test "greaterThan" for string value
+     * @tc.desc 1.Execute greaterThan ("stringValue", "ZZZ")
      *          2.Query data
      */
     it('testGreaterThan0005', 0, async function (done) {
@@ -752,8 +752,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0055
-     * @tc.name Normal test case of predicates greaterThan
-     * @tc.desc 1.Configure predicates ("doubleValue", 999.0)
+     * @tc.name Normal test case of predicates, test "greaterThan" for double value
+     * @tc.desc 1.Execute greaterThan ("doubleValue", 999.0)
      *          2.Query data
      */
     it('testGreaterThan0006', 0, async function (done) {
@@ -772,8 +772,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0056
-     * @tc.name Normal test case of predicates greaterThan
-     * @tc.desc 1.Configure predicates ("integerValue", -999)
+     * @tc.name Normal test case of predicates, test "greaterThan" for integer value
+     * @tc.desc 1.Execute greaterThan ("integerValue", -999)
      *          2.Query data
      */
     it('testGreaterThan0007', 0, async function (done) {
@@ -792,8 +792,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0057
-     * @tc.name Normal test case of predicates greaterThan
-     * @tc.desc 1.Configure predicates ("longValue", -999)
+     * @tc.name Normal test case of predicates, test "greaterThan" for long value
+     * @tc.desc 1.Execute greaterThan ("longValue", -999)
      *          2.Query data
      */
     it('testGreaterThan0008', 0, async function (done) {
@@ -812,12 +812,12 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0058
-     * @tc.name Normal test case of predicates greaterThan
-     * @tc.desc 1.Configure predicates ("longValue", Number.NaN)
-     *          2.Configure predicates ("longValue", Number.NEGATIVE_INFINITY)
-     *          3.Configure predicates ("longValue", Number.POSITIVE_INFINITY)
-     *          4.Configure predicates ("longValue", Number.MIN_SAFE_INTEGER)
-     *          5.Configure predicates ("longValue", Number.MAX_SAFE_INTEGER)
+     * @tc.name Normal test case of predicates, test "greaterThan" for boundary value of longValue
+     * @tc.desc 1.Execute greaterThan ("longValue", Number.NaN)
+     *          2.Execute greaterThan ("longValue", Number.NEGATIVE_INFINITY)
+     *          3.Execute greaterThan ("longValue", Number.POSITIVE_INFINITY)
+     *          4.Execute greaterThan ("longValue", Number.MIN_SAFE_INTEGER)
+     *          5.Execute greaterThan ("longValue", Number.MAX_SAFE_INTEGER)
      */
     it('testGreaterThan0009', 0, async function (done) {
         console.log(TAG + "************* testGreaterThan0009 start *************");
@@ -864,8 +864,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0060
-     * @tc.name Normal test case of predicates greaterThanOrEqualTo
-     * @tc.desc 1.Configure predicates ("stringValue", "ABC")
+     * @tc.name Normal test case of predicates, test "greaterThanOrEqualTo" for string value
+     * @tc.desc 1.Execute greaterThanOrEqualTo ("stringValue", "ABC")
      *          2.Query data
      */
     it('testGreaterThanOrEqualTo0001', 0, async function (done) {
@@ -884,8 +884,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0061
-     * @tc.name Normal test case of predicates greaterThanOrEqualTo
-     * @tc.desc 1.Configure predicates ("doubleValue", 0.0)
+     * @tc.name Normal test case of predicates, test "greaterThanOrEqualTo" for double value
+     * @tc.desc 1.Execute greaterThanOrEqualTo ("doubleValue", 0.0)
      *          2.Query data
      */
     it('testGreaterThanOrEqualTo0002', 0, async function (done) {
@@ -904,8 +904,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0062
-     * @tc.name Normal test case of predicates greaterThanOrEqualTo
-     * @tc.desc 1.Configure predicates ("integerValue", 1)
+     * @tc.name Normal test case of predicates, test "greaterThanOrEqualTo" for integer value
+     * @tc.desc 1.Execute greaterThanOrEqualTo ("integerValue", 1)
      *          2.Query data
      */
     it('testGreaterThanOrEqualTo0003', 0, async function (done) {
@@ -924,8 +924,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0063
-     * @tc.name Normal test case of predicates greaterThanOrEqualTo
-     * @tc.desc 1.Configure predicates ("longValue", 1)
+     * @tc.name Normal test case of predicates, test "greaterThanOrEqualTo" for long value
+     * @tc.desc 1.Execute greaterThanOrEqualTo ("longValue", 1)
      *          2.Query data
      */
     it('testGreaterThanOrEqualTo0004', 0, async function (done) {
@@ -944,8 +944,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0070
-     * @tc.name Normal test case of predicates lessThan
-     * @tc.desc 1.Configure predicates ("stringValue", "ABD")
+     * @tc.name Normal test case of predicates, test "lessThan" for string value
+     * @tc.desc 1.Execute lessThan ("stringValue", "ABD")
      *          2.Query data
      */
     it('testLessThan0001', 0, async function (done) {
@@ -964,8 +964,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0071
-     * @tc.name Normal test case of predicates lessThan
-     * @tc.desc 1.Configure predicates ("doubleValue", 0.0)
+     * @tc.name Normal test case of predicates, test "lessThan" for double value
+     * @tc.desc 1.Execute lessThan ("doubleValue", 0.0)
      *          2.Query data
      */
     it('testLessThan0002', 0, async function (done) {
@@ -984,8 +984,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0072
-     * @tc.name Normal test case of predicates lessThan
-     * @tc.desc 1.Configure predicates ("integerValue", 1)
+     * @tc.name Normal test case of predicates, test "lessThan" for integer value
+     * @tc.desc 1.Execute lessThan ("integerValue", 1)
      *          2.Query data
      */
     it('testLessThan0003', 0, async function (done) {
@@ -1004,8 +1004,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0073
-     * @tc.name Normal test case of predicates lessThan
-     * @tc.desc 1.Configure predicates ("longValue", 1)
+     * @tc.name Normal test case of predicates, test "lessThan" for long value
+     * @tc.desc 1.Execute lessThan ("longValue", 1)
      *          2.Query data
      */
     it('testLessThan0004', 0, async function (done) {
@@ -1024,8 +1024,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0074
-     * @tc.name Normal test case of predicates lessThan
-     * @tc.desc 1.Configure predicates ("stringValue", "ABD")
+     * @tc.name Normal test case of predicates, test "lessThan" for string value
+     * @tc.desc 1.Execute lessThan ("stringValue", "ABD")
      *          2.Query data
      */
     it('testLessThan0005', 0, async function (done) {
@@ -1044,8 +1044,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0075
-     * @tc.name Normal test case of predicates lessThan
-     * @tc.desc 1.Configure predicates ("doubleValue", 1.0)
+     * @tc.name Normal test case of predicates, test "lessThan" for double value
+     * @tc.desc 1.Execute lessThan ("doubleValue", 1.0)
      *          2.Query data
      */
     it('testLessThan0006', 0, async function (done) {
@@ -1064,8 +1064,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0076
-     * @tc.name Normal test case of predicates lessThan
-     * @tc.desc 1.Configure predicates ("integerValue", -2147483648)
+     * @tc.name Normal test case of predicates, test "lessThan" for boundary value of integerValue
+     * @tc.desc 1.Execute lessThan ("integerValue", -2147483648)
      *          2.Query data
      */
     it('testLessThan0007', 0, async function (done) {
@@ -1084,8 +1084,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0077
-     * @tc.name Normal test case of predicates lessThan
-     * @tc.desc 1.Configure predicates ("longValue", -9223372036854775808)
+     * @tc.name Normal test case of predicates, test "lessThan" for boundary value of longValue
+     * @tc.desc 1.Execute lessThan ("longValue", -9223372036854775808)
      *          2.Query data
      */
     it('testLessThan0008', 0, async function (done) {
@@ -1104,8 +1104,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0080
-     * @tc.name Normal test case of predicates lessThanOrEqualTo
-     * @tc.desc 1.Configure predicates ("stringValue", "ABD")
+     * @tc.name Normal test case of predicates, test "lessThanOrEqualTo" for string value
+     * @tc.desc 1.Execute lessThanOrEqualTo ("stringValue", "ABD")
      *          2.Query data
      */
     it('testLessThanOrEqualTo0001', 0, async function (done) {
@@ -1124,8 +1124,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0081
-     * @tc.name Normal test case of predicates lessThanOrEqualTo
-     * @tc.desc 1.Configure predicates ("doubleValue", 0.0)
+     * @tc.name Normal test case of predicates, test "lessThanOrEqualTo" for double value
+     * @tc.desc 1.Execute lessThanOrEqualTo ("doubleValue", 0.0)
      *          2.Query data
      */
     it('testLessThanOrEqualTo0002', 0, async function (done) {
@@ -1144,8 +1144,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0082
-     * @tc.name Normal test case of predicates lessThanOrEqualTo
-     * @tc.desc 1.Configure predicates ("integerValue", 1)
+     * @tc.name Normal test case of predicates, test "lessThanOrEqualTo" for integer value
+     * @tc.desc 1.Execute lessThanOrEqualTo ("integerValue", 1)
      *          2.Query data
      */
     it('testLessThanOrEqualTo0003', 0, async function (done) {
@@ -1164,8 +1164,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0083
-     * @tc.name Normal test case of predicates lessThanOrEqualTo
-     * @tc.desc 1.Configure predicates ("longValue", 1)
+     * @tc.name Normal test case of predicates, test "lessThanOrEqualTo" for long value
+     * @tc.desc 1.Execute lessThanOrEqualTo ("longValue", 1)
      *          2.Query data
      */
     it('testLessThanOrEqualTo0004', 0, async function (done) {
@@ -1184,12 +1184,12 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0084
-     * @tc.name Normal test case of predicates lessThanOrEqualTo
-     * @tc.desc 1.Configure predicates ("longValue", Number.NaN)
-     *          2.Configure predicates ("longValue", Number.NEGATIVE_INFINITY)
-     *          3.Configure predicates ("longValue", Number.POSITIVE_INFINITY)
-     *          4.Configure predicates ("longValue", Number.MAX_VALUE)
-     *          5.Configure predicates ("longValue", Number.MIN_VALUE)
+     * @tc.name Normal test case of predicates, test "lessThanOrEqualTo" for boundary value of longValue
+     * @tc.desc 1.Execute lessThanOrEqualTo ("longValue", Number.NaN)
+     *          2.Execute lessThanOrEqualTo ("longValue", Number.NEGATIVE_INFINITY)
+     *          3.Execute lessThanOrEqualTo ("longValue", Number.POSITIVE_INFINITY)
+     *          4.Execute lessThanOrEqualTo ("longValue", Number.MAX_VALUE)
+     *          5.Execute lessThanOrEqualTo ("longValue", Number.MIN_VALUE)
      */
     it('testLessThanOrEqualTo0005', 0, async function (done) {
         console.log(TAG + "************* testLessThanOrEqualTo0005 start *************");
@@ -1235,8 +1235,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0090
-     * @tc.name Normal test case of predicates between
-     * @tc.desc 1.Configure predicates ("stringValue", "ABB", "ABD")
+     * @tc.name Normal test case of predicates, test "between" for string value
+     * @tc.desc 1.Execute between ("stringValue", "ABB", "ABD")
      *          2.Query data
      */
     it('testBetween0001', 0, async function (done) {
@@ -1255,8 +1255,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0091
-     * @tc.name Normal test case of predicates between
-     * @tc.desc 1.Configure predicates ("doubleValue", 0.0, DOUBLE_MAX)
+     * @tc.name Normal test case of predicates, test "between" for double value
+     * @tc.desc 1.Execute between ("doubleValue", 0.0, DOUBLE_MAX)
      *          2.Query data
      */
     it('testBetween0002', 0, async function (done) {
@@ -1275,8 +1275,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0092
-     * @tc.name Normal test case of predicates between
-     * @tc.desc 1.Configure predicates ("integerValue", 0, 1)
+     * @tc.name Normal test case of predicates, test "between" for integer value
+     * @tc.desc 1.Execute between ("integerValue", 0, 1)
      *          2.Query data
      */
     it('testBetween0003', 0, async function (done) {
@@ -1295,8 +1295,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0093
-     * @tc.name Normal test case of predicates between
-     * @tc.desc 1.Configure predicates ("longValue", 0, 2)
+     * @tc.name Normal test case of predicates, test "between" for long value
+     * @tc.desc 1.Execute between ("longValue", 0, 2)
      *          2.Query data
      */
     it('testBetween0004', 0, async function (done) {
@@ -1315,8 +1315,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0094
-     * @tc.name Normal test case of predicates between
-     * @tc.desc 1.Configure predicates ("stringValue", "ABB", "ABB")
+     * @tc.name Normal test case of predicates, test "between" for string value
+     * @tc.desc 1.Execute between ("stringValue", "ABB", "ABB")
      *          2.Query data
      */
     it('testBetween0005', 0, async function (done) {
@@ -1335,8 +1335,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0095
-     * @tc.name Normal test case of predicates between
-     * @tc.desc 1.Configure predicates ("doubleValue", DOUBLE_MAX, DOUBLE_MAX)
+     * @tc.name Normal test case of predicates, test "between" for boundary value of doubleValue
+     * @tc.desc 1.Execute between ("doubleValue", DOUBLE_MAX, DOUBLE_MAX)
      *          2.Query data
      */
     it('testBetween0006', 0, async function (done) {
@@ -1355,8 +1355,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0096
-     * @tc.name Normal test case of predicates between
-     * @tc.desc 1.Configure predicates ("integerValue", 1, 0)
+     * @tc.name Normal test case of predicates, test "between" for integer value
+     * @tc.desc 1.Execute between ("integerValue", 1, 0)
      *          2.Query data
      */
     it('testBetween0007', 0, async function (done) {
@@ -1375,8 +1375,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0097
-     * @tc.name Normal test case of predicates between
-     * @tc.desc 1.Configure predicates ("longValue", 2, -1)
+     * @tc.name Normal test case of predicates, test "between" for long value
+     * @tc.desc 1.Execute between ("longValue", 2, -1)
      *          2.Query data
      */
     it('testBetween0008', 0, async function (done) {
@@ -1395,12 +1395,12 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0098
-     * @tc.name  Normal test case of predicates between
-     * @tc.desc 1.Configure predicates ("longValue", 0, Number.POSITIVE_INFINITY)
-     *          2.Configure predicates ("longValue", Number.NEGATIVE_INFINITY, 0)
-     *          3.Configure predicates ("longValue", Number.NaN, 0)
-     *          4.Configure predicates ("longValue", 0, Number.NaN)
-     *          5.Configure predicates ("longValue", Number.MIN_VALUE, 0)
+     * @tc.name  Normal test case of predicates, test "between" for boundary value of longValue
+     * @tc.desc 1.Execute between ("longValue", 0, Number.POSITIVE_INFINITY)
+     *          2.Execute between ("longValue", Number.NEGATIVE_INFINITY, 0)
+     *          3.Execute between ("longValue", Number.NaN, 0)
+     *          4.Execute between ("longValue", 0, Number.NaN)
+     *          5.Execute between ("longValue", Number.MIN_VALUE, 0)
      */
     it('testBetween0009', 0, async function (done) {
         console.log(TAG + "************* testBetween0009 start *************");
@@ -1453,8 +1453,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0100
-     * @tc.name Normal test case of predicates notBetween
-     * @tc.desc 1.Configure predicates ("stringValue", "ABB", "ABD")
+     * @tc.name Normal test case of predicates, test "notBetween" for string value
+     * @tc.desc 1.Execute notBetween ("stringValue", "ABB", "ABD")
      *          2.Query data
      */
     it('testNotBetween0001', 0, async function (done) {
@@ -1473,8 +1473,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0101
-     * @tc.name Normal test case of predicates notBetween
-     * @tc.desc 1.Configure predicates ("doubleValue", 0.0, DOUBLE_MAX)
+     * @tc.name Normal test case of predicates, test "notBetween" for double value
+     * @tc.desc 1.Execute notBetween ("doubleValue", 0.0, DOUBLE_MAX)
      *          2.Query data
      */
     it('testNotBetween0002', 0, async function (done) {
@@ -1493,8 +1493,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0102
-     * @tc.name Normal test case of predicates notBetween
-     * @tc.desc 1.Configure predicates ("integerValue", 0, 1)
+     * @tc.name Normal test case of predicates, test "notBetween" for integer value
+     * @tc.desc 1.Execute notBetween ("integerValue", 0, 1)
      *          2.Query data
      */
     it('testNotBetween0003', 0, async function (done) {
@@ -1513,8 +1513,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0103
-     * @tc.name Normal test case of predicates notBetween
-     * @tc.desc 1.Configure predicates ("longValue", 0, 2)
+     * @tc.name Normal test case of predicates, test "notBetween" for long value
+     * @tc.desc 1.Execute notBetween ("longValue", 0, 2)
      *          2.Query data
      */
     it('testNotBetween0004', 0, async function (done) {
@@ -1533,13 +1533,13 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0104
-     * @tc.name Normal test case of predicates notBetween
-     * @tc.desc 1.Configure predicates ("longValue", 0, Number.NaN)
-     *          2.Configure predicates ("longValue", Number.NaN, 0)
-     *          3.Configure predicates ("longValue", Number.MIN_VALUE, 0)
-     *          4.Configure predicates ("longValue", 0, Number.MAX_VALUE)
-     *          5.Configure predicates ("longValue", Number.NEGATIVE_INFINITY, 0)
-     *          6.Configure predicates ("longValue", 0, Number.POSITIVE_INFINITY)
+     * @tc.name Normal test case of predicates, test "notBetween" for boundary value of longValue
+     * @tc.desc 1.Execute notBetween ("longValue", 0, Number.NaN)
+     *          2.Execute notBetween ("longValue", Number.NaN, 0)
+     *          3.Execute notBetween ("longValue", Number.MIN_VALUE, 0)
+     *          4.Execute notBetween ("longValue", 0, Number.MAX_VALUE)
+     *          5.Execute notBetween ("longValue", Number.NEGATIVE_INFINITY, 0)
+     *          6.Execute notBetween ("longValue", 0, Number.POSITIVE_INFINITY)
      */
     it('testNotBetween0005', 0, async function (done) {
         console.log(TAG + "************* testNotBetween0005 start *************");
@@ -1587,8 +1587,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0110
-     * @tc.name Normal test case of predicates glob
-     * @tc.desc 1.Configure predicates ("stringValue", "ABC*")
+     * @tc.name Normal test case of predicates, test "glob" for string value
+     * @tc.desc 1.Execute glob ("stringValue", "ABC*")
      *          2.Query data
      */
     it('testGlob0001', 0, async function (done) {
@@ -1607,8 +1607,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0111
-     * @tc.name Normal test case of predicates glob
-     * @tc.desc 1.Configure predicates ("stringValue", "*LMN")
+     * @tc.name Normal test case of predicates, test "glob" for string value
+     * @tc.desc 1.Execute glob ("stringValue", "*LMN")
      *          2.Query data
      */
     it('testGlob0002', 0, async function (done) {
@@ -1627,8 +1627,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0112
-     * @tc.name Normal test case of predicates glob
-     * @tc.desc 1.Configure predicates ("stringValue", "ABCDEFGHIJKLM?")
+     * @tc.name Normal test case of predicates, test "glob" for string value
+     * @tc.desc 1.Execute glob ("stringValue", "ABCDEFGHIJKLM?")
      *          2.Query data
      */
     it('testGlob0003', 0, async function (done) {
@@ -1647,8 +1647,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0113
-     * @tc.name Normal test case of predicates glob
-     * @tc.desc 1.Configure predicates ("stringValue", "?BCDEFGHIJKLMN")
+     * @tc.name Normal test case of predicates, test "glob" for string value
+     * @tc.desc 1.Execute glob ("stringValue", "?BCDEFGHIJKLMN")
      *          2.Query data
      */
     it('testGlob0004', 0, async function (done) {
@@ -1667,8 +1667,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0114
-     * @tc.name Normal test case of predicates glob
-     * @tc.desc 1.Configure predicates ("stringValue", "*FGHI*")
+     * @tc.name Normal test case of predicates, test "glob" for string value
+     * @tc.desc 1.Execute glob ("stringValue", "*FGHI*")
      *          2.Query data
      */
     it('testGlob0005', 0, async function (done) {
@@ -1687,8 +1687,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0115
-     * @tc.name Normal test case of predicates glob
-     * @tc.desc 1.Configure predicates ("stringValue", "?BCDEFGHIJKLM?")
+     * @tc.name Normal test case of predicates, test "glob" for string value
+     * @tc.desc 1.Execute glob ("stringValue", "?BCDEFGHIJKLM?")
      *          2.Query data
      */
     it('testGlob0006', 0, async function (done) {
@@ -1707,8 +1707,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0120
-     * @tc.name Normal test case of predicates contains
-     * @tc.desc 1.Configure predicates ("stringValue", "DEF")
+     * @tc.name Normal test case of predicates, test "contains" for string value
+     * @tc.desc 1.Execute contains ("stringValue", "DEF")
      *          2.Query data
      */
     it('testContains0001', 0, async function (done) {
@@ -1725,8 +1725,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0121
-     * @tc.name Normal test case of predicates contains
-     * @tc.desc 1.Configure predicates ("stringValue", "DEFX")
+     * @tc.name Normal test case of predicates, test "contains" for string value
+     * @tc.desc 1.Execute contains ("stringValue", "DEFX")
      *          2.Query data
      */
     it('testContains0002', 0, async function (done) {
@@ -1743,8 +1743,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0122
-     * @tc.name Normal test case of predicates contains
-     * @tc.desc 1.Configure predicates ("characterValue", "中")
+     * @tc.name Normal test case of predicates, test "contains" for  Chinese character value
+     * @tc.desc 1.Execute contains ("characterValue", "中")
      *          2.Query data
      */
     it('testContains0003', 0, async function (done) {
@@ -1761,8 +1761,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0123
-     * @tc.name Normal test case of predicates contains
-     * @tc.desc 1.Configure predicates ("characterValue", "#")
+     * @tc.name Normal test case of predicates, test "contains" for character value
+     * @tc.desc 1.Execute contains ("characterValue", "#")
      *          2.Query data
      */
     it('testContains0004', 0, async function (done) {
@@ -1779,10 +1779,10 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0124
-     * @tc.name Abnormal test case of predicates contains
-     * @tc.desc 1.Configure predicates ("characterValue", null)
+     * @tc.name Abnormal test case of predicates, test "contains" for character value
+     * @tc.desc 1.Execute contains ("characterValue", null)
      *          2.Query data
-     *          3.Configure predicates ("characterValue", undefined)
+     *          3.Execute contains ("characterValue", undefined)
      *          4.Query data
      */
     it('testContains0005', 0, async function (done) {
@@ -1812,8 +1812,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0130
-     * @tc.name Normal test case of predicates beginsWith
-     * @tc.desc 1.Configure predicates ("stringValue", "ABC")
+     * @tc.name Normal test case of predicates, test "beginsWith" for character value
+     * @tc.desc 1.Execute beginsWith ("stringValue", "ABC")
      *          2.Query data
      */
     it('testBeginsWith0001', 0, async function (done) {
@@ -1830,8 +1830,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0131
-     * @tc.name Normal test case of predicates beginsWith
-     * @tc.desc 1.Configure predicates ("stringValue", "ABCX")
+     * @tc.name Normal test case of predicates, test "beginsWith" for character value
+     * @tc.desc 1.Execute beginsWith ("stringValue", "ABCX")
      *          2.Query data
      */
     it('testBeginsWith0002', 0, async function (done) {
@@ -1848,8 +1848,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0132
-     * @tc.name Normal test case of predicates beginsWith
-     * @tc.desc 1.Configure predicates ("characterValue", "中")
+     * @tc.name Normal test case of predicates, test "beginsWith" for Chinese character value
+     * @tc.desc 1.Execute beginsWith ("characterValue", "中")
      *          2.Query data
      */
     it('testBeginsWith0003', 0, async function (done) {
@@ -1866,8 +1866,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0133
-     * @tc.name Normal test case of predicates beginsWith
-     * @tc.desc 1.Configure predicates ("characterValue", "#")
+     * @tc.name Normal test case of predicates, test "beginsWith" for character value
+     * @tc.desc 1.Execute beginsWith ("characterValue", "#")
      *          2.Query data
      */
     it('testBeginsWith0004', 0, async function (done) {
@@ -1884,8 +1884,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0140
-     * @tc.name Normal test case of predicates endsWith
-     * @tc.desc 1.Configure predicates ("stringValue", "LMN")
+     * @tc.name Normal test case of predicates, test "endsWith" for string value
+     * @tc.desc 1.Execute endsWith ("stringValue", "LMN")
      *          2.Query data
      */
     it('testEndsWith0001', 0, async function (done) {
@@ -1902,8 +1902,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0141
-     * @tc.name Normal test case of predicates endsWith
-     * @tc.desc 1.Configure predicates ("stringValue", "LMNX")
+     * @tc.name Normal test case of predicates, test "endsWith" for string value
+     * @tc.desc 1.Execute endsWith ("stringValue", "LMNX")
      *          2.Query data
      */
     it('testEndsWith0002', 0, async function (done) {
@@ -1920,8 +1920,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0142
-     * @tc.name Normal test case of predicates endsWith
-     * @tc.desc 1.Configure predicates ("characterValue", "中")
+     * @tc.name Normal test case of predicates, test "endsWith" for Chinese character value
+     * @tc.desc 1.Execute endsWith ("characterValue", "中")
      *          2.Query data
      */
     it('testEndsWith0003', 0, async function (done) {
@@ -1938,8 +1938,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0143
-     * @tc.name Normal test case of predicates endsWith
-     * @tc.desc 1.Configure predicates ("characterValue", "#")
+     * @tc.name Normal test case of predicates, test "endsWith" for character value
+     * @tc.desc 1.Execute endsWith ("characterValue", "#")
      *          2.Query data
      */
     it('testEndsWith0004', 0, async function (done) {
@@ -1956,8 +1956,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0150
-     * @tc.name Normal test case of predicates like
-     * @tc.desc 1.Configure predicates ("stringValue", "%LMN%")
+     * @tc.name Normal test case of predicates, test "like" for string value
+     * @tc.desc 1.Execute like ("stringValue", "%LMN%")
      *          2.Query data
      */
     it('testLike0001', 0, async function (done) {
@@ -1974,8 +1974,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0151
-     * @tc.name Normal test case of predicates like
-     * @tc.desc 1.Configure predicates ("stringValue", "%LMNX%")
+     * @tc.name Normal test case of predicates, test "like" for string value
+     * @tc.desc 1.Execute like ("stringValue", "%LMNX%")
      *          2.Query data
      */
     it('testLike0002', 0, async function (done) {
@@ -1992,8 +1992,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0152
-     * @tc.name Normal test case of predicates like
-     * @tc.desc 1.Configure predicates ("characterValue", "%中%")
+     * @tc.name Normal test case of predicates, test "like" for Chinese character value
+     * @tc.desc 1.Execute like ("characterValue", "%中%")
      *          2.Query data
      */
     it('testLike0003', 0, async function (done) {
@@ -2010,8 +2010,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0153
-     * @tc.name Normal test case of predicates like
-     * @tc.desc 1.Configure predicates ("characterValue", "%#%")
+     * @tc.name Normal test case of predicates, test "like" for character value
+     * @tc.desc 1.Execute like ("characterValue", "%#%")
      *          2.Query data
      */
     it('testLike0004', 0, async function (done) {
@@ -2028,10 +2028,10 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0154
-     * @tc.name Abnormal test case of predicates like
-     * @tc.desc 1.Configure predicates ("characterValue", null)
+     * @tc.name Abnormal test case of predicates, test "like" for character value
+     * @tc.desc 1.Execute like ("characterValue", null)
      *          2.Query data
-     *          3.Configure predicates ("characterValue", undefined)
+     *          3.Execute like ("characterValue", undefined)
      *          4.Query data
      */
     it('testLike0005', 0, async function (done) {
@@ -2061,8 +2061,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0160
-     * @tc.name Normal test case of predicates beginWrap
-     * @tc.desc 1.Configure predicates (wrap two integerValue)
+     * @tc.name Normal test case of predicates, test "beginWrap"
+     * @tc.desc 1.Execute equalTo().beginWrap().equalTo().or().equalTo().endWrap()
      *          2.Query data
      */
     it('testBeginWrap0001', 0, async function (done) {
@@ -2086,8 +2086,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0161
-     * @tc.name Normal test case of predicates beginWrap
-     * @tc.desc 1.Configure predicates (wrap null haracterValue) 
+     * @tc.name Normal test case of predicates, test "beginWrap"
+     * @tc.desc 1.Execute equalTo().beginWrap().equalTo().endWrap()
      *          2.Query data
      */
     it('testBeginWrap0002', 0, async function (done) {
@@ -2109,8 +2109,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0162
-     * @tc.name Normal test case of predicates beginWrap
-     * @tc.desc 1.Configure predicates (wrap Chinese characterValue)
+     * @tc.name Normal test case of predicates, test "beginWrap"
+     * @tc.desc 1.Execute equalTo().beginWrap().equalTo().endWrap()
      *          2.Query data
      */
     it('testBeginWrap0003', 0, async function (done) {
@@ -2131,8 +2131,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0163
-     * @tc.name Normal test case of predicates beginWrap
-     * @tc.desc 1.Configure predicates (without beginWrap)
+     * @tc.name Abnormal test case of predicates, test "beginWrap" without "beginWrap"
+     * @tc.desc 1.Execute equalTo().equalTo().endWrap()
      *          2.Query data
      */
     it('testBeginWrap0004', 0, async function (done) {
@@ -2153,8 +2153,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0164
-     * @tc.name Normal test case of predicates beginWrap
-     * @tc.desc 1.Configure predicates (without endWrap)
+     * @tc.name Abnormal test case of predicates, test "beginWrap" without "endWrap"
+     * @tc.desc 1.Execute equalTo().beginWrap().equalTo()
      *          2.Query data
      */
     it('testBeginWrap0005', 0, async function (done) {
@@ -2175,8 +2175,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0170
-     * @tc.name Normal test case of predicates and
-     * @tc.desc 1.Configure predicates (string and integer)
+     * @tc.name Normal test case of predicates, test "and"
+     * @tc.desc 1.Execute equalTo().and().equalTo()
      *          2.Query data
      */
     it('testAnd0001', 0, async function (done) {
@@ -2197,8 +2197,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0171
-     * @tc.name Normal test case of predicates and
-     * @tc.desc 1.Configure predicates
+     * @tc.name Normal test case of predicates, test "and"
+     * @tc.desc 1.Execute equalTo().beginWrap().equalTo().or().equalTo().endWrap()
      *          2.Query data
      */
     it('testAnd0002', 0, async function (done) {
@@ -2222,8 +2222,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0172
-     * @tc.name Abnormal test case of predicates and
-     * @tc.desc 1.Configure predicates 
+     * @tc.name Abnormal test case of predicates, test "and"
+     * @tc.desc 1.Execute equalTo().or().and().equalTo()
      *          2.Query data
      */
     it('testAnd0003', 0, async function (done) {
@@ -2239,8 +2239,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0180
-     * @tc.name Normal test case of predicates orderByAsc
-     * @tc.desc 1.Configure predicates
+     * @tc.name Normal test case of predicates, test "orderByAsc" for integer value
+     * @tc.desc 1.Execute orderByAsc ("integerValue")
      *          2.Query data
      */
     it('testOrder0001', 0, async function (done) {
@@ -2265,8 +2265,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0181
-     * @tc.name Normal test case of predicates orderByDesc
-     * @tc.desc 1.Configure predicates
+     * @tc.name Normal test case of predicates, test "orderByDesc" for integer value
+     * @tc.desc 1.Execute orderByDesc ("integerValue")
      *          2.Query data
      */
     it('testOrder0002', 0, async function (done) {
@@ -2291,8 +2291,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0182
-     * @tc.name Abnormal test case of predicates orderByDesc
-     * @tc.desc 1.Configure predicates (invalid param)
+     * @tc.name Abnormal test case of predicates, test "orderByDesc" for invalid param
+     * @tc.desc 1.Execute orderByDesc ("integerValueX")
      *          2.Query data
      */
     it('testOrder0003', 0, async function (done) {
@@ -2311,8 +2311,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0183
-     * @tc.name Normal test case of predicates orderByAsc
-     * @tc.desc 1.Configure predicates (invalid param)
+     * @tc.name Abnormal test case of predicates, test "orderByAsc" for invalid param
+     * @tc.desc 1.Execute orderByAsc ("integerValueX")
      *          2.Query data
      */
     it('testOrder0004', 0, async function (done) {
@@ -2331,8 +2331,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0190
-     * @tc.name Normal test case of predicates limitAs
-     * @tc.desc 1.Configure predicates (limitAs, 1)
+     * @tc.name Normal test case of predicates, test "limitAs" '1'
+     * @tc.desc 1.Execute limitAs
      *          2.Query data
      */
     it('testLimit0001', 0, async function (done) {
@@ -2349,8 +2349,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0191
-     * @tc.name Normal test case of predicates limitAs
-     * @tc.desc 1.Configure predicates (limitAs, 3)
+     * @tc.name Normal test case of predicates, test "limitAs" '3'
+     * @tc.desc 1.Execute limitAs
      *          2.Query data
      */
     it('testLimit0002', 0, async function (done) {
@@ -2367,8 +2367,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0192
-     * @tc.name Normal test case of predicates limitAs
-     * @tc.desc 1.Configure predicates (limitAs, 100)
+     * @tc.name Normal test case of predicates, test "limitAs" "100"
+     * @tc.desc 1.Execute limitAs
      *          2.Query data
      */
     it('testLimit0003', 0, async function (done) {
@@ -2385,8 +2385,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0193
-     * @tc.name Normal test case of predicates limitAs
-     * @tc.desc 1.Configure predicates (Chinese, limitAs, 1)
+     * @tc.name Normal test case of predicates, test "limitAs" for Chinese value
+     * @tc.desc 1.Execute limitAs
      *          2.Query data
      */
     it('testLimit0004', 0, async function (done) {
@@ -2403,8 +2403,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0194
-     * @tc.name Normal test case of predicates limitAs
-     * @tc.desc 1.Configure predicates (limitAs, 0)
+     * @tc.name Normal test case of predicates, test "limitAs" '0'
+     * @tc.desc 1.Execute limitAs
      *          2.Query data
      */
     it('testLimit0005', 0, async function (done) {
@@ -2421,8 +2421,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0195
-     * @tc.name Normal test case of predicates limitAs
-     * @tc.desc 1.Configure predicates (limitAs, -1)
+     * @tc.name Normal test case of predicates, test "limitAs" "-1"
+     * @tc.desc 1.Execute limitAs
      *          2.Query data
      */
     it('testLimit0006', 0, async function (done) {
@@ -2439,14 +2439,13 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0196
-     * @tc.name Normal test case of predicates limitAs
-     * @tc.desc 1.Configure predicates (AllDataType, limitAs, -1)
-     *          2.Configure predicates (limitAs(1, 1))
-     *          3.Configure predicates (limitAs(0, -1))
-     *          4.Configure predicates (like, stringValue)
-     *          5.Configure predicates (orderByAsc, id)
-     *          6.Configure predicates (limitAs(-1, -1))
-     *          7.Query data
+     * @tc.name Normal test case of predicates, test "limitAs"
+     * @tc.desc 1.Execute limitAs (-1)
+     *          2.Execute limitAs (1, 1))
+     *          3.Execute limitAs (0, -1)
+     *          4.Execute like ("stringValue", "ABCDEFGHIJKLMN")
+     *          5.Execute orderByAsc ("id")
+     *          6.Execute limitAs (-1, -1)
      */
     it('testLimit0007', 0, async function (done) {
         console.log(TAG + "************* testLimit0007 start *************");
@@ -2485,8 +2484,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0200
-     * @tc.name Normal test case of predicates offsetAs
-     * @tc.desc 1.Configure predicates (offsetAs, 1)
+     * @tc.name Normal test case of predicates, test "offsetAs" '1'
+     * @tc.desc 1.Execute offsetAs
      *          2.Query data
      */
     it('testOffset0001', 0, async function (done) {
@@ -2503,8 +2502,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0201
-     * @tc.name Normal test case of predicates offsetAs
-     * @tc.desc 1.Configure predicates (offsetAs, 0)
+     * @tc.name Normal test case of predicates, test "offsetAs" '0'
+     * @tc.desc 1.Execute offsetAs
      *          2.Query data
      */
     it('testOffset0002', 0, async function (done) {
@@ -2521,8 +2520,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0202
-     * @tc.name Normal test case of predicates offsetAs
-     * @tc.desc 1.Configure predicates (offsetAs, 5)
+     * @tc.name Normal test case of predicates, test "offsetAs" '5'
+     * @tc.desc 1.Execute offsetAs
      *          2.Query data
      */
     it('testOffset0003', 0, async function (done) {
@@ -2539,8 +2538,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0203
-     * @tc.name Normal test case of predicates offsetAs
-     * @tc.desc 1.Configure predicates (offsetAs, -1)
+     * @tc.name Normal test case of predicates, test "offsetAs" "-1"
+     * @tc.desc 1.Execute offsetAs
      *          2.Query data
      */
     it('testOffset0004', 0, async function (done) {
@@ -2557,8 +2556,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0210
-     * @tc.name Normal test case of predicates in
-     * @tc.desc 1.Configure predicates (MIN_VALUE)
+     * @tc.name Normal test case of predicates, test "in" for boundary value of doubleValue
+     * @tc.desc 1.Execute in ("doubleValue", Number.MIN_VALUE.toString())
      *          2.Query data
      */
     it('testIn0001', 0, async function (done) {
@@ -2575,8 +2574,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0211
-     * @tc.name Normal test case of predicates in
-     * @tc.desc 1.Configure predicates ("1.0")
+     * @tc.name Normal test case of predicates, test "in" for doubleValue
+     * @tc.desc 1.Execute in ("doubleValue", "1.0")
      *          2.Query data
      */
     it('testIn0002', 0, async function (done) {
@@ -2593,8 +2592,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0212
-     * @tc.name Normal test case of predicates in
-     * @tc.desc 1.Configure predicates (DOUBLE_MAX)
+     * @tc.name Normal test case of predicates, test "in" for boundary value of doubleValue
+     * @tc.desc 1.Execute in ("doubleValue", DOUBLE_MAX.toString())
      *          2.Query data
      */
     it('testIn0003', 0, async function (done) {
@@ -2611,8 +2610,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0213
-     * @tc.desc Normal test case of predicates in
-     * @tc.desc 1.Configure predicates (MIN_VALUE, "1.0", DOUBLE_MAX)
+     * @tc.desc Normal test case of predicates, test "in" for boundary value of doubleValue
+     * @tc.desc 1.Execute in ("doubleValue", Number.MIN_VALUE.toString(), "1.0", DOUBLE_MAX.toString())
      *          2.Query data
      */
     it('testIn0004', 0, async function (done) {
@@ -2629,8 +2628,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0220
-     * @tc.name Normal test case of predicates notIn
-     * @tc.desc 1.Configure predicates (1, -2147483648)
+     * @tc.name Normal test case of predicates, test "notIn" for boundary value of integerValue
+     * @tc.desc 1.Execute notIn ("integerValue", [1, -2147483648])
      *          2.Query data
      */
     it('testNotIn0001', 0, async function (done) {
@@ -2647,8 +2646,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0221
-     * @tc.name Normal test case of predicates notIn
-     * @tc.desc 1.Configure predicates (1, 2147483647)
+     * @tc.name Normal test case of predicates, test "notIn" for boundary value of integerValue
+     * @tc.desc 1.Execute notIn ("integerValue", [1, 2147483647])
      *          2.Query data
      */
     it('testNotIn0002', 0, async function (done) {
@@ -2665,8 +2664,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0222
-     * @tc.name Normal test case of predicates notIn
-     * @tc.desc 1.Configure predicates (-2147483648, 2147483647)
+     * @tc.name Normal test case of predicates, test "notIn" for boundary value of integerValue
+     * @tc.desc 1.Execute notIn ("integerValue", [-2147483648, 2147483647])
      *          2.Query data
      */
     it('testNotIn0003', 0, async function (done) {
@@ -2683,8 +2682,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0230
-     * @tc.name Normal test case of predicates
-     * @tc.desc 1.Configure predicates
+     * @tc.name Normal test case of predicates, test "RdbPredicates"
+     * @tc.desc 1.Execute RdbPredicates ("AllDataType")
      *          2.Query data
      */
     it('testCreate0001', 0, async function (done) {
@@ -2699,8 +2698,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0231
-     * @tc.name Abnormal test case of predicates
-     * @tc.desc 1.Configure predicates (creat new table)
+     * @tc.name Abnormal test case of predicates, test "RdbPredicates" for creat new table
+     * @tc.desc 1.Execute RdbPredicates ("test")
      *          2.Query data
      */
     it('testCreate0002', 0, async function (done) {
@@ -2715,8 +2714,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0240
-     * @tc.name Normal test case of predicates groupBy
-     * @tc.desc 1.Configure predicates ("characterValue")
+     * @tc.name Normal test case of predicates, test "groupBy" for character value
+     * @tc.desc 1.Execute groupBy (["characterValue"])
      *          2.Query data
      */
     it('testGroupBy0001', 0, async function (done) {
@@ -2733,8 +2732,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0241
-     * @tc.name Abnormal test case of predicates groupBy
-     * @tc.desc 1.Configure predicates (invalid param)
+     * @tc.name Abnormal test case of predicates, test "groupBy" for invalid param
+     * @tc.desc 1.Execute groupBy (["characterValueX"])
      *          2.Query data
      */
     it('testGroupBy0002', 0, async function (done) {
@@ -2751,8 +2750,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0250
-     * @tc.name Abnormal test case of predicates indexedBy
-     * @tc.desc 1.Configure predicates
+     * @tc.name Abnormal test case of predicates, test "indexedBy" for character value
+     * @tc.desc 1.Execute indexedBy ("characterValue")
      *          2.Query data
      */
     it('testIndexedBy0001', 0, async function (done) {
@@ -2770,8 +2769,8 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0251
-     * @tc.name Normal test case of predicates indexedBy
-     * @tc.desc 1.Configure predicates
+     * @tc.name Abnormal test case of predicates, test "indexedBy" for invalid param
+     * @tc.desc 1.Execute indexedBy (["characterValueX"])
      *          2.Query data
      */
     it('testIndexedBy0002', 0, async function (done) {
