@@ -22,6 +22,7 @@
 #include "cloud_service.h"
 #include "js_error_utils.h"
 #include "js_utils.h"
+#include "js_config_util.h"
 #include "logger.h"
 #include "napi_queue.h"
 
@@ -253,18 +254,25 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
     struct ChangeAppSwitchContext : public ContextBase {
         std::string accountId;
         std::string bundleName;
+        ExtraData extInfo;
     };
     auto ctxt = std::make_shared<ChangeAppSwitchContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
         // required 2 arguments :: <accountId> <bundleName>
-        ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
-        // 0 is the index of argument accountId, 1 is the index of argument bundleName
-        int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
-        status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
+        ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
+        if(argc < 2) {
+            int status = JSUtils::Convert2Value(env, argv[0], ctxt->extInfo);
+            ASSERT_BUSINESS_ERR(
+                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of extInfo must be Extradata.");
+        } else {
+            // 0 is the index of argument accountId, 1 is the index of argument bundleName
+            int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
+            ASSERT_BUSINESS_ERR(
+                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
+            status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
+            ASSERT_BUSINESS_ERR(
+                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
+        }
     });
 
     ASSERT_NULL(!ctxt->isThrowError, "NotifyDataChange exit");
@@ -280,9 +288,14 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
                                : napi_generic_failure;
             return;
         }
-        int32_t cStatus = proxy->NotifyDataChange(ctxt->accountId, ctxt->bundleName);
-        LOG_DEBUG("NotifyDataChange return %{public}d", cStatus);
-        ctxt->status = (GenerateNapiError(cStatus, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+        int32_t status ;
+        if(ctxt->accountId.empty() || ctxt->bundleName.empty()) {
+            status = proxy->NotifyChange(ctxt->extInfo.eventId, ctxt->extInfo.extraData);
+        } else {
+            status = proxy->NotifyDataChange(ctxt->accountId, ctxt->bundleName);
+        }
+        LOG_DEBUG("NotifyDataChange return %{public}d", status);
+        ctxt->status = (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
                            ? napi_ok
                            : napi_generic_failure;
     };
