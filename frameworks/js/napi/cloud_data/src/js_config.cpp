@@ -260,7 +260,7 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
         // required 2 arguments :: <accountId> <bundleName>
         ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
-        if(argc < 2) {
+        if (argc < 2) {
             int status = JSUtils::Convert2Value(env, argv[0], ctxt->extInfo);
             ASSERT_BUSINESS_ERR(
                 ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of extInfo must be Extradata.");
@@ -289,7 +289,7 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
             return;
         }
         int32_t status ;
-        if(ctxt->accountId.empty() || ctxt->bundleName.empty()) {
+        if (ctxt->accountId.empty() || ctxt->bundleName.empty()) {
             status = proxy->NotifyChange(ctxt->extInfo.eventId, ctxt->extInfo.extraData);
         } else {
             status = proxy->NotifyDataChange(ctxt->accountId, ctxt->bundleName);
