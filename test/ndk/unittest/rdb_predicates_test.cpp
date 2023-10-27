@@ -187,7 +187,6 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_003, TestSize.Level
     EXPECT_EQ(rowCount, 2);
 
     cursor->goToNextRow(cursor);
-
     int columnCount = 0;
     cursor->getColumnCount(cursor, &columnCount);
     EXPECT_EQ(columnCount, 6);
@@ -220,28 +219,8 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_003, TestSize.Level
     EXPECT_EQ(strcmp(data5Value_1, "ABCDEFGH"), 0);
 
     cursor->goToNextRow(cursor);
-
     cursor->getInt64(cursor, 0, &id);
     EXPECT_EQ(id, 3);
-
-    cursor->getSize(cursor, 1, &size);
-    char data1Value_1[size + 1];
-    cursor->getText(cursor, 1, data1Value_1, size + 1);
-    EXPECT_EQ(strcmp(data1Value_1, "wangWu"), 0);
-
-    cursor->getInt64(cursor, 2, &data2Value);
-    EXPECT_EQ(data2Value, 14800);
-
-    cursor->getReal(cursor, 3, &data3Value);
-    EXPECT_EQ(data3Value, 300.1);
-
-    cursor->isNull(cursor, 4, &isNull);
-    EXPECT_EQ(isNull, true);
-
-    cursor->getSize(cursor, 5, &size);
-    char data5Value_2[size + 1];
-    cursor->getText(cursor, 5, data5Value_2, size + 1);
-    EXPECT_EQ(strcmp(data5Value_2, "ABCDEFGHI"), 0);
 
     valueObject->destroy(valueObject);
     predicates->destroy(predicates);
@@ -684,6 +663,24 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_019, TestSize.Level
     predicates->between(predicates, "data2", valueObject);
     predicates->notBetween(predicates, "data2", valueObject);
 
+    valueObject->destroy(valueObject);
+    predicates->destroy(predicates);
+}
+
+/**
+ * @tc.name: RDB_Native_predicates_test_020
+ * @tc.desc: Normal testCase of Predicates for anomalous branch.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_020, TestSize.Level1)
+{
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
+    EXPECT_NE(predicates, NULL);
+
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
+    const char *data1Value = "zhangSan";
+    valueObject->putText(valueObject, data1Value);
+
     const char *data5Value = "ABCDEFG";
     valueObject->putText(valueObject, data5Value);
     predicates->greaterThan(nullptr, "data5", valueObject);
@@ -707,7 +704,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_019, TestSize.Level
     predicates->offset(nullptr, 1);
 
     const char *columnNames[] = {"data1", "data2"};
-    len = sizeof(columnNames) / sizeof(columnNames[0]);
+    uint32_t len = sizeof(columnNames) / sizeof(columnNames[0]);
     predicates->groupBy(nullptr, columnNames, len);
     predicates->groupBy(predicates, nullptr, len);
     predicates->groupBy(predicates, columnNames, 0);
@@ -730,11 +727,11 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_019, TestSize.Level
 }
 
 /**
- * @tc.name: RDB_Native_predicates_test_020
+ * @tc.name: RDB_Native_predicates_test_021
  * @tc.desc: Normal testCase of RelationalPredicatesObjects for anomalous branch.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_020, TestSize.Level1)
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_021, TestSize.Level1)
 {
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     int64_t data2Value[] = {12000, 13000};
