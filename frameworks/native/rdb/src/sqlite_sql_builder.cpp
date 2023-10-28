@@ -235,7 +235,7 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(
     const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, const std::string &logTable)
 {
     std::string sql;
-    std::string table = predicates.GetJoinClause();
+    std::string table = predicates.GetTableName();
     if (table.empty() || logTable.empty()) {
         return sql;
     }

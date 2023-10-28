@@ -594,7 +594,7 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::string sql;
     if (predicates.HasCursorField()) {
-        std::string table = predicates.GetJoinClause();
+        std::string table = predicates.GetTableName();
         std::string logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
         sql = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable);
     } else {
