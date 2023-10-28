@@ -44,7 +44,7 @@ const STORE_CONFIG3 = {
 const STORE_CONFIG4 = {
     name: "RdbCustomDir4.db",
     securityLevel: data_relationalStore.SecurityLevel.S1,
-    customDir: "custom".repeat(1000),
+    customDir: "custom".repeat(30), // customDir length exceeds 128 bytes
 };
 
 const asset1 = {
@@ -415,7 +415,7 @@ describe('rdbStoreCustomTest', function () {
 
     /**
      * @tc.number testRdbStoreCustomDirTest00010
-     * @tc.name AbNormal test case of getRdbStore, if customDir length exceeds 1024 bytes
+     * @tc.name AbNormal test case of getRdbStore, if customDir length exceeds 128 bytes
      * @tc.desc 1.Configure customDir
      *          2.Execute getRdbStore
      */
@@ -431,6 +431,5 @@ describe('rdbStoreCustomTest', function () {
         }
         console.info(TAG, "************* testRdbStoreCustomDirTest00010 end *************")
     })
-
     console.info(TAG, "*************Unit Test End*************");
 })

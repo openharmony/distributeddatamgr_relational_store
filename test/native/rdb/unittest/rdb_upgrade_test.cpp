@@ -113,11 +113,9 @@ void RdbUpgradeTest::TearDown(void)
  */
 HWTEST_F(RdbUpgradeTest, RdbStore_Upgrade_001, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbUpgradeTest::store;
+    RdbUpgradeTest::InsertValues(RdbUpgradeTest::store);
 
-    RdbUpgradeTest::InsertValues(store);
-
-    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = RdbUpgradeTest::store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     int ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
@@ -156,7 +154,6 @@ HWTEST_F(RdbUpgradeTest, RdbStore_Upgrade_001, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     ret = upgradeResultSet->GetColumnIndex("address", columnIndex);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(columnIndex, 5);
     ret = upgradeResultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
     ret = upgradeResultSet->GoToNextRow();

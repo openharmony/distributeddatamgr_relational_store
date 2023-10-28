@@ -40,7 +40,7 @@ std::string SqliteSqlBuilder::BuildDeleteString(const std::string &tableName, co
 {
     std::string sql;
     sql.append("Delete ").append("FROM ").append(tableName).append(
-        BuildSqlStringFromPredicates(index, whereClause, group, order, limit, offset));
+        BuildSqlStringFromPredicates(index, "", whereClause, group, order, limit, offset));
     return sql;
 }
 
@@ -72,14 +72,14 @@ std::string SqliteSqlBuilder::BuildUpdateString(const ValuesBucket &values, cons
             bindArgs.push_back(ValueObject(whereArgs[i]));
         }
     }
-    sql.append(BuildSqlStringFromPredicates(index, whereClause, group, order, limit, offset));
+    sql.append(BuildSqlStringFromPredicates(index, "", whereClause, group, order, limit, offset));
     return sql;
 }
 
 /**
  * Build a query SQL string using the given condition for SQLite.
  */
-int SqliteSqlBuilder::BuildQueryString(bool distinct, const std::string &table,
+int SqliteSqlBuilder::BuildQueryString(bool distinct, const std::string &table, const std::string &joinClause,
     const std::vector<std::string> &columns, const std::string &whereClause, const std::string &groupBy,
     const std::string &indexName, const std::string &orderBy, const int &limit, const int &offset, std::string &outSql)
 {
@@ -98,7 +98,7 @@ int SqliteSqlBuilder::BuildQueryString(bool distinct, const std::string &table,
         sql.append("* ");
     }
     sql.append("FROM ").append(table).append(
-        BuildSqlStringFromPredicates(indexName, whereClause, groupBy, orderBy, limit, offset));
+        BuildSqlStringFromPredicates(indexName, joinClause, whereClause, groupBy, orderBy, limit, offset));
     outSql = sql;
 
     return E_OK;
@@ -113,12 +113,12 @@ std::string SqliteSqlBuilder::BuildCountString(const std::string &tableName, con
     std::string sql;
     sql.append("SELECT COUNT(*) FROM ")
         .append(tableName)
-        .append(BuildSqlStringFromPredicates(index, whereClause, group, order, limit, offset));
+        .append(BuildSqlStringFromPredicates(index, "", whereClause, group, order, limit, offset));
     return sql;
 }
 
-std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const std::string &index, const std::string &whereClause,
-    const std::string &group, const std::string &order, int limit, int offset)
+std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const std::string &index, const std::string &joinClause,
+    const std::string &whereClause, const std::string &group, const std::string &order, int limit, int offset)
 {
     std::string sqlString;
 
@@ -126,6 +126,7 @@ std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const std::string &in
     std::string offsetStr = (offset == AbsPredicates::INIT_OFFSET_VALUE) ? "" : std::to_string(offset);
 
     AppendClause(sqlString, " INDEXED BY ", index);
+    AppendClause(sqlString, " ", joinClause);
     AppendClause(sqlString, " WHERE ", whereClause);
     AppendClause(sqlString, " GROUP BY ", group);
     AppendClause(sqlString, " ORDER BY ", order);
@@ -203,7 +204,8 @@ std::string SqliteSqlBuilder::BuildQueryString(
     const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
     bool distinct = predicates.IsDistinct();
-    std::string tableNameStr = predicates.GetJoinClause();
+    std::string tableName = predicates.GetTableName();
+    std::string joinClauseStr = predicates.GetJoinClause();
     std::string whereClauseStr = predicates.GetWhereClause();
     std::string groupStr = predicates.GetGroup();
     std::string indexStr = predicates.GetIndex();
@@ -211,8 +213,8 @@ std::string SqliteSqlBuilder::BuildQueryString(
     int limit = predicates.GetLimit();
     int offset = predicates.GetOffset();
     std::string sqlStr;
-    BuildQueryString(
-        distinct, tableNameStr, columns, whereClauseStr, groupStr, indexStr, orderStr, limit, offset, sqlStr);
+    BuildQueryString(distinct, tableName, joinClauseStr, columns, whereClauseStr,
+        groupStr, indexStr, orderStr, limit, offset, sqlStr);
     return sqlStr;
 }
 

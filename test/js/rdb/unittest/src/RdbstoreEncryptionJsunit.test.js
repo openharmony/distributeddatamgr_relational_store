@@ -16,12 +16,12 @@ import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from '
 import data_rdb from '@ohos.data.rdb'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
-
 const TAG = "[RDB_JSKITS_TEST]"
-const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-    + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)"
+const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" +
+                          "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                          "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)"
 
-var context
+let context = null;
 const STORE_CONFIG_ENCRYPT = {
     name: "Encrypt.db",
     encrypt: true,
@@ -170,7 +170,7 @@ describe('rdbEncryptTest', function () {
     it('RdbEncryptTest_0040', 0, async function () {
         await console.log(TAG + "************* RdbEncryptTest_0040 start *************")
         context = ability_featureAbility.getContext()
-        
+
         await CreateRdbStore(context, STORE_CONFIG_ENCRYPT)
         try {
             await CreateRdbStore(context, STORE_CONFIG_WRONG)
@@ -181,12 +181,14 @@ describe('rdbEncryptTest', function () {
 
         await console.log(TAG + "************* RdbEncryptTest_0040 end *************")
     })
-    console.log(TAG + "*************Unit Test End*************")
 
     /**
-     * @tc.name RDB dncrypt test
+     * @tc.name Scenario testcase of RDB, get correct encrypt file when open database
      * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0050
-     * @tc.desc Scenario testcase of RDB creat new encrypt file
+     * @tc.desc 1. create db1 and insert data
+     *          2. query db1
+     *          3. create db2 and create table in db1
+     *          4. query db1 and db2
      */
     it('RdbEncryptTest_0050', 0, async function () {
         await console.info(TAG + "************* RdbEncryptTest_0050 start *************")
@@ -198,7 +200,7 @@ describe('rdbEncryptTest', function () {
             rdbStore1 = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
         } catch (err) {
             expect().assertFail()
-            console.info(`CreatRdbStore1 failed, error code: ${err.code}, err message: ${err.message}`);
+            console.error(`CreatRdbStore1 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
         // query 'rdbstore1'
@@ -208,7 +210,7 @@ describe('rdbEncryptTest', function () {
             expect(3).assertEqual(resultSet1.rowCount)
         } catch (err) {
             expect().assertFail()
-            console.info(`First query rdbstore1 failed, error code: ${err.code}, err message: ${err.message}`);
+            console.error(`First query rdbstore1 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
         // create 'rdbStore2'
@@ -216,7 +218,7 @@ describe('rdbEncryptTest', function () {
             rdbStore2 = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT2)
         } catch (err) {
             expect().assertFail()
-            console.info(`CreatRdbStore2 failed, error code: ${err.code}, err message: ${err.message}`);
+            console.error(`CreatRdbStore2 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
         // create table and query 'rdbStore1'
@@ -224,10 +226,10 @@ describe('rdbEncryptTest', function () {
             await rdbStore1.executeSql(CREATE_TABLE_TEST, null)
             let predicates1 = new data_rdb.RdbPredicates("test")
             let resultSet1 = await rdbStore1.query(predicates1)
-            expect().assertFail()
             expect(3).assertEqual(resultSet1.rowCount)
         } catch (err) {
-            console.info(`Second query rdbstore1 failed, error code: ${err.code}, err message: ${err.message}`);
+            expect().assertFail()
+            console.error(`Second query rdbstore1 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
         // create table and query 'rdbStore2'
@@ -238,9 +240,9 @@ describe('rdbEncryptTest', function () {
             expect(3).assertEqual(resultSet2.rowCount)
         } catch (err) {
             expect().assertFail()
-            console.info(`Query rdbstore2 failed, error code: ${err.code}, err message: ${err.message}`);
+            console.error(`Query rdbstore2 failed, error code: ${err.code}, err message: ${err.message}`);
         }
-
         console.info(TAG + "************* RdbEncryptTest_0060 end *************")
     })
+    console.log(TAG + "*************Unit Test End*************")
 })

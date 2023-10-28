@@ -29,10 +29,7 @@ RdbPredicates::RdbPredicates(const std::string &tableName) : AbsRdbPredicates(ta
 
 std::string RdbPredicates::GetJoinClause() const
 {
-    if (!joinTableNames.empty()) {
-        return ProcessJoins();
-    }
-    return GetTableName();
+    return joinTableNames.empty() ? "" : ProcessJoins();
 }
 
 /**
@@ -120,10 +117,13 @@ RdbPredicates *RdbPredicates::On(const std::vector<std::string> &clauses)
 
 std::string RdbPredicates::ProcessJoins() const
 {
-    std::string builder = GetTableName();
+    std::string builder;
     size_t size = joinTableNames.size();
     for (size_t i = 0; i < size; i++) {
-        builder = builder + " " + joinTypes[i] + " " + joinTableNames[i];
+        if (i != 0) {
+            builder = builder + " ";
+        }
+        builder = builder + joinTypes[i] + " " + joinTableNames[i];
         if (joinConditions[i] != "") {
             builder = builder + " " + joinConditions[i];
         }

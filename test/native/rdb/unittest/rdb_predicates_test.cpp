@@ -1461,7 +1461,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ClearMethod_022, TestSize.Level1)
     EXPECT_EQ(0, predicates1.GetJoinCount());
     EXPECT_EQ(true, predicates1.GetJoinConditions().empty());
     EXPECT_EQ(true, predicates1.GetJoinTypes().empty());
-    EXPECT_EQ("AllDataType", predicates1.GetJoinClause());
+    EXPECT_EQ("", predicates1.GetJoinClause());
     EXPECT_EQ(true, predicates1.GetOrder().empty());
     EXPECT_EQ(false, predicates1.IsDistinct());
 }
@@ -1624,7 +1624,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
     EXPECT_EQ(0, predicates1.GetJoinCount());
     EXPECT_EQ(true, predicates1.GetJoinConditions().empty());
     EXPECT_EQ(true, predicates1.GetJoinTypes().empty());
-    EXPECT_EQ("AllDataType", predicates1.GetJoinClause());
+    EXPECT_EQ("", predicates1.GetJoinClause());
     EXPECT_EQ(true, predicates1.GetOrder().empty());
     EXPECT_EQ(false, predicates1.IsDistinct());
 }
