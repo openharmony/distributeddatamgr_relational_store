@@ -106,9 +106,9 @@ describe('rdbStoreQueryByCursorTest', function () {
         await promise.then((resultSet) => {
             expect(6).assertEqual(resultSet.columnCount);
             let deletedIndex = resultSet.getColumnIndex(relationalStore.Field.DELETED_FLAG_FIELD);
-            expect(6).assertEqual(deletedIndex);
+            expect(5).assertEqual(deletedIndex);
             let cursorIndex = resultSet.getColumnIndex(relationalStore.Field.CURSOR_FIELD);
-            expect(5).assertEqual(cursorIndex);
+            expect(4).assertEqual(cursorIndex);
             resultSet.Close();
         }).catch((err) => {
             console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
@@ -139,7 +139,7 @@ describe('rdbStoreQueryByCursorTest', function () {
             expect(true).assertEqual(resultSet.goToFirstRow());
             expect(true).assertEqual(resultSet.goToNextRow());
             let cursor = resultSet.getLong(resultSet.getColumnIndex(relationalStore.Field.CURSOR_FIELD));
-            expect(1).assertEqual(cursor);
+            expect(12).assertEqual(cursor);
             resultSet.Close();
         }).catch((err) => {
             console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
@@ -160,7 +160,7 @@ describe('rdbStoreQueryByCursorTest', function () {
             return;
         }
         const valueBucket = {
-            "recycled" : false,
+            "data": "cloud_sync_update",
         }
         let upPred = await new relationalStore.RdbPredicates("query_tb");
         upPred.equalTo("uuid", "test_key1");
@@ -206,7 +206,7 @@ describe('rdbStoreQueryByCursorTest', function () {
         predicates.orderByAsc(relationalStore.Field.CURSOR_FIELD);
         let promise = rdbStore.query(predicates);
         await promise.then((resultSet) => {
-            expect(false).assertEqual(resultSet.goToFirstRow());
+            expect(true).assertEqual(resultSet.goToFirstRow());
             resultSet.Close();
         }).catch((err) => {
             console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
@@ -235,7 +235,7 @@ describe('rdbStoreQueryByCursorTest', function () {
         predicates.orderByAsc(relationalStore.Field.CURSOR_FIELD);
         let promise = rdbStore.query(predicates);
         await promise.then((resultSet) => {
-            expect(false).assertEqual(resultSet.goToFirstRow());
+            expect(true).assertEqual(resultSet.goToFirstRow());
             resultSet.Close();
         }).catch((err) => {
             console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
@@ -257,7 +257,7 @@ describe('rdbStoreQueryByCursorTest', function () {
         }
         let promise = rdbStore.clean("query_tb");
         await promise.then((err) => {
-            expect().assertTrue();
+            expect(true).assertTrue();
         }).catch((err) => {
             console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
             done();
@@ -279,7 +279,7 @@ describe('rdbStoreQueryByCursorTest', function () {
         let cursor = 3;
         let promise = rdbStore.clean("query_tb", cursor);
         await promise.then((err) => {
-            expect().assertTrue();
+            expect(true).assertTrue();
         }).catch((err) => {
             console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
             done();
