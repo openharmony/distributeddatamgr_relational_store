@@ -244,5 +244,48 @@ describe('rdbStoreQueryByCursorTest', function () {
         });
         done();
     })
+
+    /**
+     * @tc.name clean retain data
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_QUERY_WITH_CURSOR_0006
+     * @tc.desc clean retain data.
+     */
+    it('testRdbStoreCleanRetainData', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreCleanRetainData start *************");
+        if (rdbStore == undefined) {
+            return;
+        }
+        let promise = rdbStore.clean("query_tb");
+        await promise.then((err) => {
+            expect().assertTrue();
+        }).catch((err) => {
+            console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
+            done();
+            expect().assertFail();
+        });
+        done();
+    })
+
+    /**
+     * @tc.name clean retain data with specified cursor.
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_QUERY_WITH_CURSOR_0007
+     * @tc.desc clean retain data with specified cursor.
+     */
+    it('testRdbStoreCleanRetainDataWithSpecifiedCursor', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreCleanRetainDataWithSpecifiedCursor start *************");
+        if (rdbStore == undefined) {
+            return;
+        }
+        let cursor = 3;
+        let promise = rdbStore.clean("query_tb", cursor);
+        await promise.then((err) => {
+            expect().assertTrue();
+        }).catch((err) => {
+            console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
+            done();
+            expect().assertFail();
+        });
+        done();
+    })
     console.log(TAG + "*************Unit Test End*************");
 })
