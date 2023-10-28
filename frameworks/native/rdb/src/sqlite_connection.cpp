@@ -932,11 +932,11 @@ void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Ass
     using Status = ValueObject::Asset::Status;
     auto status = static_cast<int32_t>(oldAsset.status);
     switch (status) {
-        case Status::STATUS_UNKNOWN:
-        case Status::STATUS_NORMAL:
-        case Status::STATUS_ABNORMAL:
-        case Status::STATUS_INSERT:
-        case Status::STATUS_UPDATE:
+        case Status::STATUS_UNKNOWN:         // fallthrough
+        case Status::STATUS_NORMAL:          // fallthrough
+        case Status::STATUS_ABNORMAL:        // fallthrough
+        case Status::STATUS_INSERT:          // fallthrough
+        case Status::STATUS_UPDATE:          // fallthrough
             if (oldAsset.modifyTime != newAsset.modifyTime || oldAsset.size != newAsset.size ||
                 oldAsset.uri != newAsset.uri || oldAsset.path != newAsset.path) {
                 oldAsset.version = newAsset.version;

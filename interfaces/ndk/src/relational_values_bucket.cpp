@@ -142,7 +142,7 @@ int OH_VBucket_PutAssets(OH_VBucket *bucket, const char *field, Data_Asset **val
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     std::vector<AssetValue> assets;
-    for (int i = 0; i < count; i++) {
+    for (uint32_t i = 0; i < count; i++) {
         if (value[i] == nullptr) {
             return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
         }
