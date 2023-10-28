@@ -13,14 +13,16 @@
  * limitations under the License.
  */
 
+#include "relational_values_bucket.h"
+
 #include <map>
 
 #include "logger.h"
 #include "oh_values_bucket.h"
+#include "relational_asset.h"
 #include "relational_store_error_code.h"
-#include "relational_values_bucket.h"
-#include "value_object.h"
 #include "securec.h"
+#include "value_object.h"
 
 namespace OHOS {
 namespace RdbNdk {
@@ -119,3 +121,35 @@ int RelationalValuesBucket::PutValueObject(OH_VBucket *bucket, const char *field
 }
 } // namespace RdbNdk
 } // namespace OHOS
+
+using namespace OHOS::RdbNdk;
+using namespace OHOS::NativeRdb;
+int OH_VBucket_PutAsset(OH_VBucket *bucket, const char *field, Data_Asset *value)
+{
+    auto self = RelationalValuesBucket::GetSelf(bucket);
+    if (self == nullptr || field == nullptr || value == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    self->Get().Put(field, OHOS::NativeRdb::ValueObject(value->asset_));
+    self->capability++;
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_VBucket_PutAssets(OH_VBucket *bucket, const char *field, Data_Asset **value, uint32_t count)
+{
+    auto self = RelationalValuesBucket::GetSelf(bucket);
+    if (self == nullptr || field == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    std::vector<AssetValue> assets;
+    for (int i = 0; i < count; i++) {
+        if (value[i] == nullptr) {
+            return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+        }
+        assets.emplace_back(value[i]->asset_);
+    }
+    self->Get().Put(field, ValueObject(assets));
+    self->capability++;
+
+    return OH_Rdb_ErrCode::RDB_OK;
+}

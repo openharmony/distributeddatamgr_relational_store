@@ -13,32 +13,28 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_RDB_TEST_COMMON_H
-#define NATIVE_RDB_TEST_COMMON_H
 
+#include "common.h"
 #include <string>
-#include "values_bucket.h"
 
 namespace OHOS {
 namespace NativeRdb {
 
-static const std::string RDB_TEST_PATH = "/data/test/";
-struct RowData {
-    int id;
-    std::string name;
-    int age;
-    double salary;
-    std::vector<uint8_t> blobType;
+ValuesBucket UTUtils::SetRowData(const RowData &rowData)
+{
+    ValuesBucket value;
+    value.PutInt("id", rowData.id);
+    value.PutString("name", rowData.name);
+    value.PutInt("age", rowData.age);
+    value.PutDouble("salary", rowData.salary);
+    value.PutBlob("blobType", rowData.blobType);
+    return value;
+}
+
+const RowData UTUtils::g_rowData[3] = {
+    {1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }},
+    {2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }},
+    {3, "wangyjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }}
 };
-
-class UTUtils {
-public:
-    static ValuesBucket SetRowData(const RowData &rowData);
-
-    static const RowData g_rowData[3];
-};
-
-} // namespace NativeRdb
-} // namespace OHOS
-
-#endif
+}
+}

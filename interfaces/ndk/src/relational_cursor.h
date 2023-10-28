@@ -38,6 +38,8 @@ private:
     static int GetInt64(OH_Cursor *cursor, int32_t columnIndex, int64_t *value);
     static int GetReal(OH_Cursor *cursor, int32_t columnIndex, double *value);
     static int GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned char *value, int length);
+    static int GetAsset(OH_Cursor *cursor, int32_t columnIndex, Data_Asset *value);
+    static int GetAssets(OH_Cursor *cursor, int32_t columnIndex, Data_Asset **value, uint32_t *length);
     static int IsNull(OH_Cursor *cursor, int32_t columnIndex, bool *isNull);
     static int Destroy(OH_Cursor *cursor);
     static RelationalCursor *GetSelf(OH_Cursor *cursor);

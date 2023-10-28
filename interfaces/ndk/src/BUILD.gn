@@ -17,10 +17,12 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 ohos_shared_library("native_rdb_ndk") {
   include_dirs = [
     "../include",
+    "${kvstore_path}/common",
     "${relational_store_common_path}/include",
     "${relational_store_native_path}/rdb/include",
   ]
   sources = [
+    "relational_asset.cpp",
     "relational_cursor.cpp",
     "relational_predicates.cpp",
     "relational_predicates_objects.cpp",

@@ -169,8 +169,8 @@ public:
 
     int Notify(const std::string &event) override;
 
-    std::map<PRIKey, Date> GetModifyTime(
-        const std::string &table, const std::string &columnName, std::vector<PRIKey> &keys) override;
+    ModifyTime GetModifyTime(const std::string& table, const std::string& columnName,
+        std::vector<PRIKey>& keys) override;
 
 private:
     int InnerOpen();
@@ -188,8 +188,7 @@ private:
         const AsyncDetail &async);
     int InnerBackup(const std::string databasePath,
         const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>());
-    std::map<PRIKey, Date> GetModifyTimeByRowId(
-        const std::string &logTable, std::vector<PRIKey> &keys);
+    ModifyTime GetModifyTimeByRowId(const std::string& logTable, std::vector<PRIKey>& keys);
     inline std::string GetSqlArgs(size_t size);
     Uri GetUri(const std::string &event);
     int SubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);

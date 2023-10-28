@@ -16,14 +16,16 @@
 #ifndef RELATIONAL_STORE_IMPL_H
 #define RELATIONAL_STORE_IMPL_H
 
+#include <list>
 #include <memory>
 
-#include "rdb_store.h"
 #include "oh_predicates.h"
+#include "rdb_store.h"
 #include "relational_store.h"
 
 namespace OHOS {
 namespace RdbNdk {
+
 class RelationalStore : public OH_Rdb_Store {
 public:
     explicit RelationalStore(std::shared_ptr<OHOS::NativeRdb::RdbStore> store);
@@ -34,6 +36,11 @@ public:
 
 private:
     std::shared_ptr<OHOS::NativeRdb::RdbStore> store_;
+};
+
+class NDKUtils {
+public:
+    static OHOS::DistributedRdb::SyncMode TransformMode(Rdb_SyncMode &mode);
 };
 } // namespace RdbNdk
 } // namespace OHOS

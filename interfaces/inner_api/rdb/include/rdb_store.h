@@ -502,6 +502,20 @@ public:
      */
     virtual int Notify(const std::string &event) = 0;
 
+    class ModifyTime {
+    public:
+        ModifyTime() = default;
+        ModifyTime(std::shared_ptr<ResultSet> result, std::map<std::vector<uint8_t>, PRIKey> hashKeys,
+            bool isFromRowId);
+        operator std::map<PRIKey, Date>();
+        operator std::shared_ptr<ResultSet>();
+        PRIKey GetOriginKey(const std::vector<uint8_t>& hash);
+
+    private:
+        std::shared_ptr<ResultSet> result_;
+        std::map<std::vector<uint8_t>, PRIKey> hash_;
+        bool isFromRowId_{ false };
+    };
     /**
      * @brief Get the the specified column modify time.
      *
@@ -511,8 +525,8 @@ public:
      *
      * @return Returns the specified column modify time.
      */
-    virtual std::map<PRIKey, Date> GetModifyTime(
-        const std::string &table, const std::string &columnName, std::vector<PRIKey> &keys) = 0;
+    virtual ModifyTime GetModifyTime(const std::string& table, const std::string& columnName,
+        std::vector<PRIKey>& keys) = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif
