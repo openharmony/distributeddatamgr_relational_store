@@ -92,10 +92,13 @@ int OH_Data_Asset_SetStatus(Data_Asset *asset, Data_AssetStatus status)
 
 int OH_Data_Asset_GetName(Data_Asset *asset, char *name, size_t *length)
 {
-    size_t nameLength = 0;
-    if (asset == nullptr || (nameLength = asset->asset_.name.size()) >= *length) {
-        LOG_ERROR("Asset get name error: asset is NULL ? %{public}d and length is too small ? %{public}d.",
-            (asset == nullptr), (nameLength >= *length));
+    if (asset == nullptr) {
+        LOG_ERROR("Asset get name error: asset is NULL ? %{public}d.", (asset == nullptr));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    size_t nameLength = asset->asset_.name.size();
+    if (nameLength >= *length) {
+        LOG_ERROR("Asset get name error: length is too small ? %{public}d.", (nameLength >= *length));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     errno_t result = strcpy_s(name, *length, asset->asset_.name.c_str());
@@ -109,12 +112,16 @@ int OH_Data_Asset_GetName(Data_Asset *asset, char *name, size_t *length)
 
 int OH_Data_Asset_GetUri(Data_Asset *asset, char *uri, size_t *length)
 {
-    size_t uriLength = 0;
-    if (asset == nullptr || (uriLength = asset->asset_.uri.size()) >= *length) {
-        LOG_ERROR("Asset get uri error: asset is NULL ? %{public}d and length is too small ? %{public}d.",
-            (asset == nullptr), (uriLength >= *length));
+    if (asset == nullptr) {
+        LOG_ERROR("Asset get uri error: asset is NULL ? %{public}d.", (asset == nullptr));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
+    size_t uriLength = asset->asset_.uri.size();
+    if (uriLength >= *length) {
+        LOG_ERROR("Asset get uri error: length is too small ? %{public}d.", (uriLength >= *length));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+
     errno_t result = strcpy_s(uri, *length, asset->asset_.uri.c_str());
     if (result != EOK) {
         LOG_ERROR("strcpy_s failed, result is %{public}d", result);
@@ -126,10 +133,13 @@ int OH_Data_Asset_GetUri(Data_Asset *asset, char *uri, size_t *length)
 
 int OH_Data_Asset_GetPath(Data_Asset *asset, char *path, size_t *length)
 {
-    size_t pathLength = 0;
-    if (asset == nullptr || (pathLength = asset->asset_.path.size()) >= *length) {
-        LOG_ERROR("Asset get path error: asset is NULL ? %{public}d and length is too small ? %{public}d.",
-            (asset == nullptr), (pathLength >= *length));
+    if (asset == nullptr) {
+        LOG_ERROR("Asset get path error: asset is NULL ? %{public}d.", (asset == nullptr));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    size_t pathLength = asset->asset_.path.size();
+    if (pathLength >= *length) {
+        LOG_ERROR("Asset get path error: length is too small ? %{public}d.", (pathLength >= *length));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     errno_t result = strcpy_s(path, *length, asset->asset_.path.c_str());
@@ -207,7 +217,7 @@ int OH_Data_Asset_DestroyOne(Data_Asset *asset)
 Data_Asset **OH_Data_Asset_CreateMultiple(uint32_t count)
 {
     auto assets = new Data_Asset *[count];
-    for (int i = 0; i < count; ++i) {
+    for (uint32_t i = 0; i < count; ++i) {
         assets[i] = new Data_Asset();
     }
     return assets;
@@ -215,7 +225,7 @@ Data_Asset **OH_Data_Asset_CreateMultiple(uint32_t count)
 
 int OH_Data_Asset_DestroyMultiple(Data_Asset **assets, uint32_t count)
 {
-    for (int i = 0; i < count; ++i) {
+    for (uint32_t i = 0; i < count; ++i) {
         delete assets[i];
     }
     delete[] assets;
