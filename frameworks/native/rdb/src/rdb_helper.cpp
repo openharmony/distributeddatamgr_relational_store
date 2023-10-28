@@ -57,10 +57,10 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
     if (dbFileName.empty()) {
         return E_EMPTY_FILE_NAME;
     }
-    RdbStoreManager::GetInstance().Delete(dbFileName); // maybe need to return here
     if (access(dbFileName.c_str(), F_OK) != 0) {
         return E_OK; // not not exist
     }
+    RdbStoreManager::GetInstance().Delete(dbFileName);
     int result = remove(dbFileName.c_str());
     if (result != 0) {
         LOG_ERROR("RdbHelper DeleteRdbStore failed to delete the db file err = %{public}d", errno);
