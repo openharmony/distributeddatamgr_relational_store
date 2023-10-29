@@ -253,8 +253,8 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(
         .append("flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag ");
     sql.append("FROM ").append(table);
     AppendClause(sql, " INDEXED BY ", predicates.GetIndex());
-    sql.append(" INNER JOIN  ").append(logTable).append(" ON ").append(table)
-        .append(" .ROWID = ").append(logTable).append(" .data_key");
+    sql.append(" INNER JOIN ").append(logTable).append(" ON ").append(table)
+        .append(".ROWID = ").append(logTable).append(".data_key");
     auto whereClause = predicates.GetWhereClause();
     SqliteUtils::Replace(whereClause, SqliteUtils::REP, logTable + ".");
     AppendClause(sql, " WHERE ", whereClause);
