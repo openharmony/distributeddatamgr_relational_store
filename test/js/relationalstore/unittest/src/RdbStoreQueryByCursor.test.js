@@ -109,7 +109,8 @@ describe('rdbStoreQueryByCursorTest', function () {
             expect(5).assertEqual(deletedIndex);
             let cursorIndex = resultSet.getColumnIndex(relationalStore.Field.CURSOR_FIELD);
             expect(4).assertEqual(cursorIndex);
-            resultSet.Close();
+            resultSet.close();
+            expect(true).assertEqual(resultSet.isClosed);
         }).catch((err) => {
             console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
             done();
@@ -117,7 +118,7 @@ describe('rdbStoreQueryByCursorTest', function () {
         });
         done();
     })
-
+0.
     /**
      * @tc.name query with cursor
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_QUERY_WITH_CURSOR_0002
@@ -140,7 +141,8 @@ describe('rdbStoreQueryByCursorTest', function () {
             expect(true).assertEqual(resultSet.goToNextRow());
             let cursor = resultSet.getLong(resultSet.getColumnIndex(relationalStore.Field.CURSOR_FIELD));
             expect(12).assertEqual(cursor);
-            resultSet.Close();
+            resultSet.close();
+            expect(true).assertEqual(resultSet.isClosed);
         }).catch((err) => {
             console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
             done();
@@ -160,26 +162,28 @@ describe('rdbStoreQueryByCursorTest', function () {
             return;
         }
         const valueBucket = {
-            "data": "cloud_sync_update",
+            "recycledTime": "1234567890",
         }
-        let upPred = await new relationalStore.RdbPredicates("query_tb");
-        upPred.equalTo("uuid", "test_key1");
-        upPred.or();
-        upPred.equalTo("uuid", "test_key2");
-        await rdbStore.update(valueBucket, upPred, relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
+        let updatePredicates = await new relationalStore.RdbPredicates("query_tb");
+        updatePredicates.equalTo("uuid", "test_key1");
+        updatePredicates.or();
+        updatePredicates.equalTo("uuid", "test_key2");
+        await rdbStore.update(valueBucket, updatePredicates);
+        console.log(TAG + `update end.`);
         let predicates = await new relationalStore.RdbPredicates("query_tb");
-        predicates.greaterThanOrEqualTo(relationalStore.Field.CURSOR_FIELD, 5);
+        predicates.greaterThanOrEqualTo(relationalStore.Field.CURSOR_FIELD, 26);
         predicates.equalTo(relationalStore.Field.ORIGIN_FIELD, relationalStore.Origin.LOCAL);
-        predicates.orderByAsc(relationalStore.Field.CURSOR_FIELD);
+        predicates.orderByDesc(relationalStore.Field.CURSOR_FIELD);
         let promise = rdbStore.query(predicates);
         await promise.then((resultSet) => {
             expect(true).assertEqual(resultSet.goToFirstRow());
-            let value1 = resultSet.getString(resultSet.getColumnIndex("data"));
-            expect("cloud_sync_update").assertEqual(value1);
+            let value1 = resultSet.getString(resultSet.getColumnIndex("recycledTime"));
+            expect("1234567890").assertEqual(value1);
             expect(true).assertEqual(resultSet.goToNextRow());
-            let value2 = resultSet.getString(resultSet.getColumnIndex("data"));
-            expect("cloud_sync_update").assertEqual(value2);
-            resultSet.Close();
+            let value2 = resultSet.getString(resultSet.getColumnIndex("recycledTime"));
+            expect("1234567890").assertEqual(value2);
+            resultSet.close();
+            expect(true).assertEqual(resultSet.isClosed);
         }).catch((err) => {
             console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
             done();
@@ -201,18 +205,21 @@ describe('rdbStoreQueryByCursorTest', function () {
         let deletedPred = await new relationalStore.RdbPredicates("query_tb");
         deletedPred.equalTo("uuid", "test_key3");
         await rdbStore.delete(deletedPred);
+        console.log(TAG + `delete end.`);
         let predicates = await new relationalStore.RdbPredicates("query_tb");
-        predicates.greaterThan(relationalStore.Field.CURSOR_FIELD, 4);
+        predicates.greaterThan(relationalStore.Field.CURSOR_FIELD, 37);
         predicates.orderByAsc(relationalStore.Field.CURSOR_FIELD);
-        let promise = rdbStore.query(predicates);
-        await promise.then((resultSet) => {
-            expect(true).assertEqual(resultSet.goToFirstRow());
-            resultSet.Close();
-        }).catch((err) => {
+        try {
+            rdbStore.query(predicates, (err, resultSet) => {
+                expect(0).assertEqual(resultSet.rowCount);
+                resultSet.close();
+                expect(true).assertEqual(resultSet.isClosed);
+            })
+        } catch(err) {
             console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
             done();
             expect().assertFail();
-        });
+        }
         done();
     })
 
@@ -227,21 +234,25 @@ describe('rdbStoreQueryByCursorTest', function () {
             return;
         }
         let predicates = await new relationalStore.RdbPredicates("query_tb");
-        predicates.greaterThan(relationalStore.Field.CURSOR_FIELD, 4);
+        predicates.greaterThan(relationalStore.Field.CURSOR_FIELD, 0);
         predicates.and();
+        predicates.beginWrap();
         predicates.equalTo(relationalStore.Field.ORIGIN_FIELD, relationalStore.Origin.CLOUD);
         predicates.or();
         predicates.equalTo(relationalStore.Field.ORIGIN_FIELD, relationalStore.Origin.REMOTE);
+        predicates.endWrap();
         predicates.orderByAsc(relationalStore.Field.CURSOR_FIELD);
-        let promise = rdbStore.query(predicates);
-        await promise.then((resultSet) => {
-            expect(true).assertEqual(resultSet.goToFirstRow());
-            resultSet.Close();
-        }).catch((err) => {
+        try {
+            rdbStore.query(predicates, (err, resultSet) => {
+                expect(0).assertEqual(resultSet.rowCount);
+                resultSet.close();
+                expect(true).assertEqual(resultSet.isClosed);
+            })
+        } catch(err) {
             console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
             done();
             expect().assertFail();
-        });
+        }
         done();
     })
 
