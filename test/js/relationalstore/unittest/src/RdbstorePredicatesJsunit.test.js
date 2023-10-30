@@ -2792,7 +2792,7 @@ describe('rdbPredicatesTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0260
-     * @tc.name Abnormal test case of predicates, call system application
+     * @tc.name Abnormal test case of predicates, call system api
      * @tc.desc 1.Configure predicates
      *          2.Query data
      */
