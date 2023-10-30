@@ -77,7 +77,7 @@ AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const ValueObjec
     }
     if (flagVal.empty()) {
         whereClause += newField + " = ? ";
-        bindArgs.push_back(valObj);
+        bindArgs.push_back(std::move(valObj));
     } else {
         whereClause += "(" + newField + " & 0x02 = " + flagVal + ")";
     }

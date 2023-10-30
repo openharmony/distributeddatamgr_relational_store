@@ -54,6 +54,9 @@ static napi_status SetNamedProperty(napi_env env, napi_value& obj, const std::st
     if (status != napi_ok) {
         return status;
     }
+    if (property == nullptr) {
+        return napi_invalid_arg;
+    }
     return napi_set_named_property(env, obj, name.c_str(), property);
 }
 
