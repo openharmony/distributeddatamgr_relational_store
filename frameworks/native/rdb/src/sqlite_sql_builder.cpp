@@ -266,7 +266,7 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(
     auto limitClause = (limit == AbsPredicates::INIT_LIMIT_VALUE) ? "" : std::to_string(limit);
     int offset = predicates.GetOffset();
     auto offsetClause = (offset == AbsPredicates::INIT_OFFSET_VALUE) ? "" : std::to_string(offset);
-    AppendClause(sql, " LIMIT ",limitClause);
+    AppendClause(sql, " LIMIT ", limitClause);
     AppendClause(sql, " OFFSET ", offsetClause);
     return sql;
 }
