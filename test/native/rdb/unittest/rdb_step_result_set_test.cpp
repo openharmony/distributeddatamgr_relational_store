@@ -26,7 +26,8 @@
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
-
+namespace OHOS {
+namespace NativeRdb {
 struct ResultSetData {
     std::string strValue;
     int iValue;
@@ -34,11 +35,6 @@ struct ResultSetData {
     std::vector<uint8_t> blobValue;
 };
 
-ResultSetData g_resultSetData[3] = {
-    {"2", -5, 2.5, std::vector<uint8_t>{}},
-    {"hello", 10, 1.0, std::vector<uint8_t>{ 66 }},
-    {"hello world", 3, 1.8, std::vector<uint8_t>{}}
-};
 
 class RdbStepResultSetTest : public testing::Test {
 public:
@@ -55,10 +51,16 @@ public:
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
+    static ResultSetData g_resultSetData[3];
 };
 
 const std::string RdbStepResultSetTest::DATABASE_NAME = RDB_TEST_PATH + "stepResultSet_test.db";
 std::shared_ptr<RdbStore> RdbStepResultSetTest::store = nullptr;
+ResultSetData RdbStepResultSetTest::g_resultSetData[3] = {
+    {"2", -5, 2.5, std::vector<uint8_t>{}},
+    {"hello", 10, 1.0, std::vector<uint8_t>{ 66 }},
+    {"hello world", 3, 1.8, std::vector<uint8_t>{}}
+};
 
 class RdbStepResultSetOpenCallback : public RdbOpenCallback {
 public:
@@ -1437,3 +1439,5 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep017, TestSize.Level1)
     int errCode = SqliteSqlBuilder::BuildQueryString(false, "", "", columns, "", "", "", "", 0, 0, outSql);
     EXPECT_EQ(E_EMPTY_TABLE_NAME, errCode);
 }
+} // namespace NativeRdb
+} // namespace OHOS
