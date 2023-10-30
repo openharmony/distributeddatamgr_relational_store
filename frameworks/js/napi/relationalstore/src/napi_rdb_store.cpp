@@ -293,9 +293,9 @@ int ParseTableName(const napi_env env, const napi_value arg, std::shared_ptr<Rdb
 
 int ParseCursor(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
-    double cursor = -1;
+    double cursor = 0;
     auto status = JSUtils::Convert2Value(env, arg, cursor);
-    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("cursor", "not number"));
+    CHECK_RETURN_SET(status == napi_ok && cursor > 0, std::make_shared<ParamError>("cursor", "not invalid number"));
     context->cursor = static_cast<uint64_t>(cursor);
     return OK;
 }
