@@ -47,12 +47,22 @@ public:
     }
     static OH_Rdb_Config config_;
     static void MockHap(void);
-protected:
-    static constexpr int SLEEP_TIME = 2;
 };
+
+void CloudSyncCallback(Rdb_ProgressDetails *progressDetails)
+{
+    EXPECT_NE(progressDetails, nullptr);
+    EXPECT_EQ(progressDetails->version, DISTRIBUTED_PROGRESS_DETAIL_VERSION);
+    EXPECT_EQ(progressDetails->schedule, Rdb_Progress::RDB_SYNC_FINISH);
+    EXPECT_EQ(progressDetails->code, Rdb_ProgressCode::RDB_CLOUD_DISABLED);
+    EXPECT_EQ(progressDetails->tableLength, 0);
+    Rdb_TableDetails *tableDetails = OH_Rdb_GetTableDetails(progressDetails, DISTRIBUTED_PROGRESS_DETAIL_VERSION);
+    EXPECT_NE(tableDetails, nullptr);
+}
 
 OH_Rdb_Store *storeTestRdbStore_;
 OH_Rdb_Config RdbNativeStoreTest::config_ = { 0 };
+Rdb_SyncCallback callback_ = CloudSyncCallback;
 
 void RdbNativeStoreTest::MockHap(void)
 {
@@ -134,16 +144,6 @@ void RdbNativeStoreTest::TearDown(void)
     EXPECT_EQ(errCode, 0);
 }
 
-void CloudSyncCallback(Rdb_ProgressDetails *progressDetails)
-{
-    EXPECT_NE(progressDetails, nullptr);
-    EXPECT_EQ(progressDetails->version, DISTRIBUTED_PROGRESS_DETAIL_VERSION);
-    EXPECT_EQ(progressDetails->schedule, Rdb_Progress::RDB_SYNC_FINISH);
-    EXPECT_EQ(progressDetails->code, Rdb_ProgressCode::RDB_CLOUD_DISABLED);
-    EXPECT_EQ(progressDetails->tableLength, 0);
-    Rdb_TableDetails *tableDetails = OH_Rdb_GetTableDetails(progressDetails, DISTRIBUTED_PROGRESS_DETAIL_VERSION);
-    EXPECT_NE(tableDetails, nullptr);
-}
 /**
  * @tc.name: RDB_Native_store_test_001
  * @tc.desc: Normal testCase of store for Update、Query.
@@ -656,11 +656,9 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_013, TestSize.Level1)
     const char *table[TABLE_COUNT];
     table[0] = "store_test";
     EXPECT_EQ(table[0], "store_test");
-    Rdb_SyncCallback callback = CloudSyncCallback;
     auto errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, &callback);
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, &callback_);
     EXPECT_EQ(errorCode, RDB_OK);
-    sleep(SLEEP_TIME);
 }
 
 /**
@@ -675,11 +673,9 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_014, TestSize.Level1)
     const char *table[TABLE_COUNT];
     table[0] = "store_test";
     EXPECT_EQ(table[0], "store_test");
-    Rdb_SyncCallback callback = CloudSyncCallback;
     auto errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, &callback);
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, &callback_);
     EXPECT_EQ(errorCode, RDB_OK);
-    sleep(SLEEP_TIME);
 }
 
 /**
@@ -694,11 +690,9 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_015, TestSize.Level1)
     const char *table[TABLE_COUNT];
     table[0] = "store_test";
     EXPECT_EQ(table[0], "store_test");
-    Rdb_SyncCallback callback = CloudSyncCallback;
     auto errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_NATIVE_FIRST, table, TABLE_COUNT, &callback);
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_NATIVE_FIRST, table, TABLE_COUNT, &callback_);
     EXPECT_EQ(errorCode, RDB_OK);
-    sleep(SLEEP_TIME);
 }
 
 /**
