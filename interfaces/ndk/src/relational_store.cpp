@@ -452,9 +452,13 @@ int OH_Rdb_CloudSync(OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[
     for (uint32_t i = 0; i < count; ++i) {
         tableNames.emplace_back(tables[i]);
     }
-    auto progressCallback = [&callback](Details &&details) {
+    auto progressCallback = [cb = *callback](Details &&details) {
+        if (details.empty()) {
+            LOG_ERROR("CloudSync has no details");
+            return;
+        }
         RelationalProgressDetails progressDetails = RelationalProgressDetails(details.begin()->second);
-        (*callback)(&progressDetails);
+        cb(&progressDetails);
         progressDetails.DestroyTableDetails();
     };
     return rdbStore->GetStore()->Sync(syncOption, tableNames, progressCallback);
