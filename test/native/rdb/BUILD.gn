@@ -29,6 +29,10 @@ config("module_private_config") {
     "${common_tool_path}/",
   ]
 
+  defines = [
+    "RELATIONAL_STORE",
+  ]
+
   if (relational_store_rdb_support_icu) {
     include_dirs += [
       "//third_party/icu/icu4c/source/i18n",

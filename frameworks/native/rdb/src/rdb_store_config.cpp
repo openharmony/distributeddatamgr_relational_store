@@ -408,4 +408,14 @@ std::string RdbStoreConfig::GetCustomDir() const
 {
     return customDir_;
 }
+
+bool RdbStoreConfig::IsSearchable() const
+{
+    return isSearchable_;
+}
+
+void RdbStoreConfig::SetIsSearchable(bool isSearchable)
+{
+    isSearchable_ = isSearchable;
+}
 } // namespace OHOS::NativeRdb
