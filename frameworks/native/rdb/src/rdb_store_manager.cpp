@@ -170,7 +170,7 @@ bool RdbStoreManager::Delete(const std::string &path)
         param.storeName_ = *tokens.rbegin();
         std::lock_guard<std::mutex> lock(mutex_);
         param.bundleName_ = bundleName_;
-        TaskExecutor::GetInstance().GetExecutor()->Execute([param](){
+        TaskExecutor::GetInstance().GetExecutor()->Execute([param]() {
             auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
             if (err != E_OK || service == nullptr) {
                 LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);
