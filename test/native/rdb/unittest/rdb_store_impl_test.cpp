@@ -24,7 +24,6 @@
 #include "rdb_open_callback.h"
 #include "rdb_store_impl.h"
 #include "sqlite_connection.h"
-#include "relational_store_client.h"
 #include "relational_store_manager.h"
 #include "relational_store_delegate.h"
 

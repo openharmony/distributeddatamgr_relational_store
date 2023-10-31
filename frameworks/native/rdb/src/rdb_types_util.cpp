@@ -168,23 +168,23 @@ bool Unmarshalling(Origin &output, MessageParcel &data)
 }
 
 template<>
-bool Marshalling(const ClientChangedData &input, MessageParcel &data)
+bool Marshalling(const RdbChangedData &input, MessageParcel &data)
 {
     return Marshal(data, input.tableData);
 }
 template<>
-bool Unmarshalling(ClientChangedData &output, MessageParcel &data)
+bool Unmarshalling(RdbChangedData &output, MessageParcel &data)
 {
     return Unmarshal(data, output.tableData);
 }
 
 template<>
-bool Marshalling(const ChangeProperties &input, MessageParcel &data)
+bool Marshalling(const RdbProperties &input, MessageParcel &data)
 {
     return Marshal(data, input.isTrackedDataChange);
 }
 template<>
-bool Unmarshalling(ChangeProperties &output, MessageParcel &data)
+bool Unmarshalling(RdbProperties &output, MessageParcel &data)
 {
     return Unmarshal(data, output.isTrackedDataChange);
 }

@@ -47,6 +47,7 @@
 #include "runtime_config.h"
 #include "sqlite_shared_result_set.h"
 #include "sqlite_connection.h"
+#include "relational_store_client.h"
 #endif
 
 #ifdef WINDOWS_PLATFORM
@@ -77,11 +78,12 @@ int RdbStoreImpl::InnerOpen()
     syncerParam_.isEncrypt_ = rdbStoreConfig.IsEncrypt();
     syncerParam_.password_ = {};
     GetSchema(rdbStoreConfig);
-#endif
+
     errCode = RegisterCallBackObserver();
     if (errCode != E_OK) {
         LOG_ERROR("RegisterCallBackObserver is failed, err is %{public}d.", errCode);
     }
+#endif
     return E_OK;
 }
 
@@ -1662,7 +1664,13 @@ int RdbStoreImpl::RegisterCallBackObserver()
             return E_CON_OVER_LIMIT;
         }
         auto callBack = [this](ClientChangedData &clientChangedData) {
-            int errCode = NotifyDataChange(clientChangedData);
+            DistributedRdb::RdbClientChangedData rdbChangedData;
+            for (const auto& entry : clientChangedData.tableData) {
+                DistributedRdb::RdbChangeProperties rdbProperties;
+                rdbProperties.isTrackedDataChange = entry.second.isTrackedDataChange;
+                rdbChangedData.tableData[entry.first] = rdbProperties;
+            }
+            int errCode = NotifyDataChange(rdbChangedData);
             if (errCode != E_OK) {
                 LOG_ERROR("NotifyDataChange is failed, err is %{public}d.", errCode);
             }
@@ -1674,11 +1682,10 @@ int RdbStoreImpl::RegisterCallBackObserver()
     return E_OK;
 }
 
-int RdbStoreImpl::NotifyDataChange(ClientChangedData &clientChangedData)
+int RdbStoreImpl::NotifyDataChange(DistributedRdb::RdbClientChangedData &clientChangedData)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
-    if (errCode != E_OK) {
+    if (errCode != E_OK || service == nullptr) {
         LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
         return errCode;
     }

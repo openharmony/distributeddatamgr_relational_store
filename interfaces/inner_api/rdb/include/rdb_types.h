@@ -228,5 +228,13 @@ public:
 
 struct DropOption {
 };
+
+struct RdbChangeProperties {
+    bool isTrackedDataChange = false;
+};
+
+struct RdbClientChangedData {
+    std::map<std::string, RdbChangeProperties> tableData;
+};
 } // namespace OHOS::DistributedRdb
 #endif

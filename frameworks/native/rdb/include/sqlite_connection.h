@@ -25,8 +25,8 @@
 #include "sqlite_statement.h"
 #include "value_object.h"
 #include "shared_block.h"
-#include "relational_store_client.h"
 
+typedef struct ClientChangedData ClientChangedData;
 namespace OHOS {
 namespace NativeRdb {
 

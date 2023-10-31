@@ -39,6 +39,7 @@
 #include "relational/relational_store_sqlite_ext.h"
 #include "share_block.h"
 #include "shared_block_serializer_info.h"
+#include "relational_store_client.h"
 #endif
 
 namespace OHOS {
@@ -830,6 +831,18 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     errCode = statement.ResetStatementAndClearBindings();
     return errCode;
 }
+
+int SqliteConnection::RegisterCallBackObserver(const ChangeFunction &clientChangedData)
+{
+    if (isWriteConnection && clientChangedData != nullptr) {
+        int32_t status = RegisterClientObserver(dbHandle, clientChangedData);
+        if (status != E_OK) {
+            LOG_ERROR("RegisterClientObserver error, status:%{public}d", status);
+        }
+        return status;
+    }
+    return E_OK;
+}
 #endif
 
 void SqliteConnection::SetInTransaction(bool transaction)
@@ -954,18 +967,6 @@ void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Ass
         default:
             return;
     }
-}
-
-int SqliteConnection::RegisterCallBackObserver(const ChangeFunction &clientChangedData)
-{
-    if (isWriteConnection && clientChangedData != nullptr) {
-        int32_t status = RegisterClientObserver(dbHandle, clientChangedData);
-        if (status != OHOS::DistributedRdb::RdbStatus::RDB_OK) {
-            LOG_ERROR("RegisterClientObserver error, status:%{public}d", status);
-        }
-        return status;
-    }
-    return OHOS::DistributedRdb::RdbStatus::RDB_OK;
 }
 } // namespace NativeRdb
 } // namespace OHOS

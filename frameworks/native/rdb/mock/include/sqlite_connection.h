@@ -25,8 +25,14 @@
 #include "sqlite_statement.h"
 #include "value_object.h"
 
+typedef struct ClientChangedData ClientChangedData;
 namespace OHOS {
 namespace NativeRdb {
+/**
+ * @brief Use ChangeFunction replace std::function<void(OHOS::DistributedRdb::ClientChangedData &clientChangedData)>.
+ */
+using ChangeFunction = std::function<void(ClientChangedData &clientChangedData)>;
+
 class SqliteConnection {
 public:
     static SqliteConnection *Open(const RdbStoreConfig &config, bool isWriteConnection, int &errCode);
@@ -51,6 +57,8 @@ public:
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
 #endif
+
+    int RegisterCallBackObserver(const ChangeFunction &clientChangedData);
 
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
