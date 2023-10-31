@@ -141,6 +141,8 @@ public:
     void SetCustomDir(const std::string &customDir);
     std::string GetCustomDir() const;
     std::map<std::string, ScalarFunctionInfo> GetScalarFunctions() const;
+    bool IsSearchable() const;
+    void SetIsSearchable(bool searchable);
 
     bool operator==(const RdbStoreConfig &config) const
     {
@@ -204,6 +206,7 @@ private:
     std::string customDir_;
 
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
+    bool isSearchable_ = false;
 };
 } // namespace OHOS::NativeRdb
 

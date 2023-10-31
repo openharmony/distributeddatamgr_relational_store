@@ -201,7 +201,7 @@ private:
     int UnSubscribeLocalSharedAll(const SubscribeOption& option);
     int UnSubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
     int RegisterCallBackObserver();
-    int NotifyDataChange(ClientChangedData &clientChangedData);
+    int NotifyDataChange(DistributedRdb::RdbClientChangedData &clientChangedData);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;

@@ -74,6 +74,7 @@ ohos_distributedtest("DistributedTestAgent") {
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "kv_store:distributeddb",
   ]
 
   deps = [

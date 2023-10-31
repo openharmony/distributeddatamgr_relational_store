@@ -22,7 +22,6 @@
 #include "rdb_types.h"
 #include "rdb_notifier.h"
 #include "distributeddata_relational_store_ipc_interface_code.h"
-#include "relational_store_client.h"
 
 namespace OHOS {
 template <typename T>
@@ -70,7 +69,7 @@ public:
 
     inline static constexpr const char *SERVICE_NAME = "relational_store";
 
-    virtual int32_t NotifyDataChange(const RdbSyncerParam &param, const ClientChangedData &clientChangedData) = 0;
+    virtual int32_t NotifyDataChange(const RdbSyncerParam &param, const RdbClientChangedData &clientChangedData) = 0;
 };
 }
 } // namespace OHOS::DistributedRdb
