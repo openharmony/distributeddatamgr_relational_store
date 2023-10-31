@@ -166,4 +166,26 @@ bool Unmarshalling(Origin &output, MessageParcel &data)
 {
     return Unmarshal(data, output.origin, output.dataType, output.id, output.store);
 }
+
+template<>
+bool Marshalling(const ClientChangedData &input, MessageParcel &data)
+{
+    return Marshal(data, input.tableData);
+}
+template<>
+bool Unmarshalling(ClientChangedData &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.tableData);
+}
+
+template<>
+bool Marshalling(const ChangeProperties &input, MessageParcel &data)
+{
+    return Marshal(data, input.isTrackedDataChange);
+}
+template<>
+bool Unmarshalling(ChangeProperties &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.isTrackedDataChange);
+}
 }

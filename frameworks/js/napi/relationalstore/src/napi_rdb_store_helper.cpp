@@ -72,6 +72,21 @@ int ParseIsEncrypt(const napi_env &env, const napi_value &object, std::shared_pt
     return OK;
 }
 
+int ParseIsSearchable(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
+{
+    napi_value value = nullptr;
+    napi_status status = napi_get_named_property(env, object, "isSearchable", &value);
+    if (status == napi_ok && value != nullptr) {
+        bool isSearchable = false;
+        auto status = JSUtils::Convert2Value(env, value, isSearchable);
+        if (status != napi_ok) {
+            return napi_invalid_arg;
+        }
+        context->config.SetIsSearchable(isSearchable);
+    }
+    return OK;
+}
+
 int ParseContextProperty(const napi_env &env, std::shared_ptr<HelperRdbContext> context)
 {
     context->config.SetModuleName(context->abilitycontext->GetModuleName());
@@ -183,6 +198,7 @@ int ParseStoreConfig(const napi_env &env, const napi_value &object, std::shared_
     CHECK_RETURN_CORE(OK == ParseContextProperty(env, context), RDB_REVT_NOTHING, ERR);
     CHECK_RETURN_CORE(OK == ParseDatabaseName(env, object, context), RDB_REVT_NOTHING, ERR);
     CHECK_RETURN_CORE(OK == ParseDatabasePath(env, object, context), RDB_REVT_NOTHING, ERR);
+    CHECK_RETURN_CORE(OK == ParseIsSearchable(env, object, context), RDB_REVT_NOTHING, ERR);
     return OK;
 }
 

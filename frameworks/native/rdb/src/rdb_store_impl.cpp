@@ -46,6 +46,7 @@
 #include "result_set_proxy.h"
 #include "runtime_config.h"
 #include "sqlite_shared_result_set.h"
+#include "sqlite_connection.h"
 #endif
 
 #ifdef WINDOWS_PLATFORM
@@ -77,6 +78,10 @@ int RdbStoreImpl::InnerOpen()
     syncerParam_.password_ = {};
     GetSchema(rdbStoreConfig);
 #endif
+    errCode = RegisterCallBackObserver();
+    if (errCode != E_OK) {
+        LOG_ERROR("RegisterCallBackObserver is failed, err is %{public}d.", errCode);
+    }
     return E_OK;
 }
 
@@ -1647,6 +1652,37 @@ int RdbStoreImpl::UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObser
         return errCode;
     }
     return service->UnregisterAutoSyncCallback(syncerParam_, observer);
+}
+
+int RdbStoreImpl::RegisterCallBackObserver()
+{
+    if (rdbStoreConfig.IsSearchable()) {
+        SqliteConnection *connection = connectionPool->AcquireConnection(false);
+        if (connection == nullptr) {
+            return E_CON_OVER_LIMIT;
+        }
+        auto callBack = [this](ClientChangedData &clientChangedData) {
+            int errCode = NotifyDataChange(clientChangedData);
+            if (errCode != E_OK) {
+                LOG_ERROR("NotifyDataChange is failed, err is %{public}d.", errCode);
+            }
+        };
+        int code = connection->RegisterCallBackObserver(callBack);
+        connectionPool->ReleaseConnection(connection);
+        return code;
+    }
+    return E_OK;
+}
+
+int RdbStoreImpl::NotifyDataChange(ClientChangedData &clientChangedData)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK) {
+        LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
+        return errCode;
+    }
+    return service->NotifyDataChange(syncerParam_, clientChangedData);
 }
 #endif
 } // namespace OHOS::NativeRdb

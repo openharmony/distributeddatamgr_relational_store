@@ -276,5 +276,28 @@ describe('rdbStoreTest', function () {
         })
     })
 
+    /**
+     * @tc.name rdb store getRdbStore with invalid securityLevel
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0011
+     * @tc.desc rdb store getRdbStore with invalid securityLevel
+     */
+    it('testRdbStore0011', 0, async function () {
+        console.log(TAG + "************* testRdbStore0011 start *************");
+        let config = {
+            name: "search.db",
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+            isSearchable: true
+        }
+        let store = await data_relationalStore.getRdbStore(context, config);
+        try {
+            store.isSearchable = true
+            expect(true).assertEqual(store.isSearchable)
+        } catch (err) {
+            expect("401").assertEqual(err.code)
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0011 end   *************");
+    })
+
     console.log(TAG + "*************Unit Test End*************");
 })

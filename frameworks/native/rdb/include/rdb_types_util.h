@@ -22,6 +22,7 @@
 #include "rdb_visibility.h"
 #include "value_object.h"
 #include "values_bucket.h"
+#include "relational_store_client.h"
 
 namespace OHOS::ITypesUtil {
 using SubOption = DistributedRdb::SubscribeOption;
@@ -40,6 +41,7 @@ using Origin = DistributedRdb::Origin;
 using ChangeInfo = Observer::ChangeInfo;
 using PrimaryKey = Observer::PrimaryKey;
 using PrimaryKeys = std::vector<PrimaryKey>[Observer::CHG_TYPE_BUTT];
+using ChangeProperties = DistributedDB::ChangeProperties;
 template<>
 API_EXPORT bool Marshalling(const SyncerParam &input, MessageParcel &data);
 template<>
@@ -96,5 +98,13 @@ template<>
 API_EXPORT bool Marshalling(const Origin &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(Origin &output, MessageParcel &data);
+template<>
+API_EXPORT bool Marshalling(const ClientChangedData &input, MessageParcel &data);
+template<>
+API_EXPORT bool Unmarshalling(ClientChangedData &output, MessageParcel &data);
+template<>
+API_EXPORT bool Marshalling(const ChangeProperties &input, MessageParcel &data);
+template<>
+API_EXPORT bool Unmarshalling(ChangeProperties &output, MessageParcel &data);
 }
 #endif // DISTRIBUTED_RDB_RDB_TYPES_UTIL_H

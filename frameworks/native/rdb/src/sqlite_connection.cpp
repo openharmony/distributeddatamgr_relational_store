@@ -955,5 +955,17 @@ void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Ass
             return;
     }
 }
+
+int SqliteConnection::RegisterCallBackObserver(const ChangeFunction &clientChangedData)
+{
+    if (isWriteConnection && clientChangedData != nullptr) {
+        int32_t status = RegisterClientObserver(dbHandle, clientChangedData);
+        if (status != OHOS::DistributedRdb::RdbStatus::RDB_OK) {
+            LOG_ERROR("RegisterClientObserver error, status:%{public}d", status);
+        }
+        return status;
+    }
+    return OHOS::DistributedRdb::RdbStatus::RDB_OK;
+}
 } // namespace NativeRdb
 } // namespace OHOS

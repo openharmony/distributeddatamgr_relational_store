@@ -25,9 +25,15 @@
 #include "sqlite_statement.h"
 #include "value_object.h"
 #include "shared_block.h"
+#include "relational_store_client.h"
 
 namespace OHOS {
 namespace NativeRdb {
+
+/**
+ * @brief Use ChangeFunction replace std::function<void(OHOS::DistributedRdb::ClientChangedData &clientChangedData)>.
+ */
+using ChangeFunction = std::function<void(ClientChangedData &clientChangedData)>;
 
 class SqliteConnection {
 public:
@@ -55,6 +61,7 @@ public:
 #endif
     int ExecuteForSharedBlock(int &rowNum, std::string sql, const std::vector<ValueObject> &bindArgs,
         AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows);
+    int RegisterCallBackObserver(const ChangeFunction &clientChangedData);
 
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
