@@ -49,20 +49,8 @@ public:
     static void MockHap(void);
 };
 
-void CloudSyncCallback(Rdb_ProgressDetails *progressDetails)
-{
-    EXPECT_NE(progressDetails, nullptr);
-    EXPECT_EQ(progressDetails->version, DISTRIBUTED_PROGRESS_DETAIL_VERSION);
-    EXPECT_EQ(progressDetails->schedule, Rdb_Progress::RDB_SYNC_FINISH);
-    EXPECT_EQ(progressDetails->code, Rdb_ProgressCode::RDB_CLOUD_DISABLED);
-    EXPECT_EQ(progressDetails->tableLength, 0);
-    Rdb_TableDetails *tableDetails = OH_Rdb_GetTableDetails(progressDetails, DISTRIBUTED_PROGRESS_DETAIL_VERSION);
-    EXPECT_NE(tableDetails, nullptr);
-}
-
 OH_Rdb_Store *storeTestRdbStore_;
 OH_Rdb_Config RdbNativeStoreTest::config_ = { 0 };
-Rdb_SyncCallback callback_ = CloudSyncCallback;
 
 void RdbNativeStoreTest::MockHap(void)
 {
@@ -144,6 +132,16 @@ void RdbNativeStoreTest::TearDown(void)
     EXPECT_EQ(errCode, 0);
 }
 
+void CloudSyncCallback(Rdb_ProgressDetails *progressDetails)
+{
+    EXPECT_NE(progressDetails, nullptr);
+    EXPECT_EQ(progressDetails->version, DISTRIBUTED_PROGRESS_DETAIL_VERSION);
+    EXPECT_EQ(progressDetails->schedule, Rdb_Progress::RDB_SYNC_FINISH);
+    EXPECT_EQ(progressDetails->code, Rdb_ProgressCode::RDB_CLOUD_DISABLED);
+    EXPECT_EQ(progressDetails->tableLength, 0);
+    Rdb_TableDetails *tableDetails = OH_Rdb_GetTableDetails(progressDetails, DISTRIBUTED_PROGRESS_DETAIL_VERSION);
+    EXPECT_NE(tableDetails, nullptr);
+}
 /**
  * @tc.name: RDB_Native_store_test_001
  * @tc.desc: Normal testCase of store for Update、Query.
@@ -656,51 +654,30 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_013, TestSize.Level1)
     const char *table[TABLE_COUNT];
     table[0] = "store_test";
     EXPECT_EQ(table[0], "store_test");
+    Rdb_SyncCallback callback = CloudSyncCallback;
     auto errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, &callback_);
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, &callback);
     EXPECT_EQ(errorCode, RDB_OK);
+
+    errorCode =
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, &callback);
+    EXPECT_EQ(errorCode, RDB_OK);
+
+    errorCode =
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_NATIVE_FIRST, table, TABLE_COUNT, &callback);
+    EXPECT_EQ(errorCode, RDB_OK);
+
+    errorCode =
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_NATIVE_FIRST, table, TABLE_COUNT, nullptr);
+    EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
 }
 
 /**
  * @tc.name: RDB_Native_store_test_014
- * @tc.desc: Normal testCase of store for CloudSync.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_014, TestSize.Level1)
-{
-    EXPECT_NE(storeTestRdbStore_, nullptr);
-    constexpr int TABLE_COUNT = 1;
-    const char *table[TABLE_COUNT];
-    table[0] = "store_test";
-    EXPECT_EQ(table[0], "store_test");
-    auto errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, &callback_);
-    EXPECT_EQ(errorCode, RDB_OK);
-}
-
-/**
- * @tc.name: RDB_Native_store_test_015
- * @tc.desc: Normal testCase of store for CloudSync.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_015, TestSize.Level1)
-{
-    EXPECT_NE(storeTestRdbStore_, nullptr);
-    constexpr int TABLE_COUNT = 1;
-    const char *table[TABLE_COUNT];
-    table[0] = "store_test";
-    EXPECT_EQ(table[0], "store_test");
-    auto errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_NATIVE_FIRST, table, TABLE_COUNT, &callback_);
-    EXPECT_EQ(errorCode, RDB_OK);
-}
-
-/**
- * @tc.name: RDB_Native_store_test_016
  * @tc.desc: Abnormal testCase of store for SetDistributedTables.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_016, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_014, TestSize.Level1)
 {
     EXPECT_NE(storeTestRdbStore_, nullptr);
     Rdb_DistributedConfig config{ .version = 0, .isAutoSync = true };
@@ -717,11 +694,36 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_016, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_017
+ * @tc.name: RDB_Native_store_test_015
+ * @tc.desc: Normal testCase of store for CloudSync.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_015, TestSize.Level1)
+{
+    EXPECT_NE(storeTestRdbStore_, nullptr);
+    constexpr int TABLE_COUNT = 1;
+    const char *table[TABLE_COUNT];
+    table[0] = "store_test";
+    Rdb_SyncCallback callback = CloudSyncCallback;
+    auto errorCode =
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, &callback);
+    EXPECT_EQ(errorCode, RDB_OK);
+
+    errorCode =
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, &callback);
+    EXPECT_EQ(errorCode, RDB_OK);
+
+    errorCode =
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_NATIVE_FIRST, table, TABLE_COUNT, &callback);
+    EXPECT_EQ(errorCode, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_016
  * @tc.desc: Abnormal testCase of store for CloudSync.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_017, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_016, TestSize.Level1)
 {
     EXPECT_NE(storeTestRdbStore_, nullptr);
     constexpr int TABLE_COUNT = 1;
@@ -731,17 +733,16 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_017, TestSize.Level1)
     auto errorCode =
         OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, nullptr);
     EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
-
     errorCode = OH_Rdb_CloudSync(nullptr, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, &callback);
     EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
 }
 
 /**
- * @tc.name: RDB_Native_store_test_018
+ * @tc.name: RDB_Native_store_test_017
  * @tc.desc: Normal testCase for GetModifyTime.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_017, TestSize.Level1)
 {
     char createLogTableSql[] = "CREATE TABLE if not exists naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
                                "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
@@ -781,12 +782,12 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_019
+ * @tc.name: RDB_Native_store_test_018
  * @tc.desc: Abnormal testCase for GetModifyTime, tablename columnName, keys is empty,
  *           and resultSet is null or empty
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_019, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
 {
     char createLogTableSql[] = "CREATE TABLE if not exists naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
                                "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
