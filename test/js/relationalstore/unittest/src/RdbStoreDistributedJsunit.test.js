@@ -450,11 +450,12 @@ describe('rdbStoreDistributedTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_021
      * @tc.desc normal testcase for autoSyncProgress of interface 'on'
      */
-    it('testRdbStoreDistributed0021', 0, async function () {
+    it('testRdbStoreDistributed0021', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDistributed0021 start *************");
         try {
             rdbStore.on("autoSyncProgress", function (detail) {
                 console.log(TAG + `Progress:` + JSON.stringify(detail));
+                done()
             });
             console.log(TAG + "on autoSyncProgress success");
         } catch (err) {
@@ -469,11 +470,12 @@ describe('rdbStoreDistributedTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_022
      * @tc.desc normal testcase for autoSyncProgress of interface 'off'
      */
-    it('testRdbStoreDistributed0022', 0, async function () {
+    it('testRdbStoreDistributed0022', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDistributed0022 start *************");
         try {
             rdbStore.off("autoSyncProgress", function (detail) {
                 console.log(TAG + `Progress:` + JSON.stringify(detail));
+                done();
             });
             console.log(TAG + "off autoSyncProgress success");
         } catch (err) {
