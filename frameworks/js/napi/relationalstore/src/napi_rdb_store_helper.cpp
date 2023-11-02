@@ -82,7 +82,7 @@ int ParseIsSearchable(const napi_env &env, const napi_value &object, std::shared
         if (status != napi_ok) {
             return napi_invalid_arg;
         }
-        context->config.SetIsSearchable(isSearchable);
+        context->config.SetSearchable(isSearchable);
     }
     return OK;
 }

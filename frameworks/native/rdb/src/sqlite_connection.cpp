@@ -115,7 +115,8 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 #endif
     isReadOnly = !isWriteConnection || config.IsReadOnly();
     int openFileFlags = config.IsReadOnly() ?
-        (SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX) : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
+        (SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX) :
+        (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
     int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle, openFileFlags, nullptr);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("SqliteConnection InnerOpen fail to open database err = %{public}d", errCode);
@@ -832,7 +833,7 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     return errCode;
 }
 
-int SqliteConnection::RegisterCallBackObserver(const ChangeFunction &clientChangedData)
+int SqliteConnection::RegisterCallBackObserver(const DataChangeCallback &clientChangedData)
 {
     if (isWriteConnection && clientChangedData != nullptr) {
         int32_t status = RegisterClientObserver(dbHandle, clientChangedData);

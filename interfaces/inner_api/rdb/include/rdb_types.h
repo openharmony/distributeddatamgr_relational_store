@@ -233,7 +233,7 @@ struct RdbChangeProperties {
     bool isTrackedDataChange = false;
 };
 
-struct RdbClientChangedData {
+struct RdbChangedData {
     std::map<std::string, RdbChangeProperties> tableData;
 };
 } // namespace OHOS::DistributedRdb

@@ -142,7 +142,7 @@ public:
     std::string GetCustomDir() const;
     std::map<std::string, ScalarFunctionInfo> GetScalarFunctions() const;
     bool IsSearchable() const;
-    void SetIsSearchable(bool searchable);
+    void SetSearchable(bool searchable);
 
     bool operator==(const RdbStoreConfig &config) const
     {

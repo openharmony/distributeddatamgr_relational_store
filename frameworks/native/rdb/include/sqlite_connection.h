@@ -31,9 +31,9 @@ namespace OHOS {
 namespace NativeRdb {
 
 /**
- * @brief Use ChangeFunction replace std::function<void(OHOS::DistributedRdb::ClientChangedData &clientChangedData)>.
+ * @brief Use DataChangeCallback replace std::function<void(ClientChangedData &clientChangedData)>.
  */
-using ChangeFunction = std::function<void(ClientChangedData &clientChangedData)>;
+using DataChangeCallback = std::function<void(ClientChangedData &clientChangedData)>;
 
 class SqliteConnection {
 public:
@@ -61,7 +61,7 @@ public:
 #endif
     int ExecuteForSharedBlock(int &rowNum, std::string sql, const std::vector<ValueObject> &bindArgs,
         AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows);
-    int RegisterCallBackObserver(const ChangeFunction &clientChangedData);
+    int RegisterCallBackObserver(const DataChangeCallback &clientChangedData);
 
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
