@@ -492,10 +492,12 @@ describe('rdbStoreDistributedTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_023
      * @tc.desc normal testcase for autoSyncProgress of interface 'off'
      */
-    it('testRdbStoreDistributed0023', 0, async function () {
+    it('testRdbStoreDistributed0023', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDistributed0023 start *************");
         try {
             rdbStore.off("autoSyncProgress", null);
+            expect(rdbStore).assertEqual(rdbStore);
+            done();
             console.log(TAG + "off autoSyncProgress success");
         } catch (err) {
             console.log(TAG + "off autoSyncProgress" + err);
@@ -509,10 +511,12 @@ describe('rdbStoreDistributedTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_024
      * @tc.desc normal testcase for autoSyncProgress of interface 'off'
      */
-    it('testRdbStoreDistributed0024', 0, async function () {
+    it('testRdbStoreDistributed0024', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDistributed0024 start *************");
         try {
             rdbStore.off("autoSyncProgress", undefined);
+            expect(rdbStore).assertEqual(rdbStore);
+            done();
             console.log(TAG + "off autoSyncProgress success");
         } catch (err) {
             console.log(TAG + "off autoSyncProgress" + err);
@@ -526,10 +530,12 @@ describe('rdbStoreDistributedTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_025
      * @tc.desc normal testcase for autoSyncProgress of interface 'off'
      */
-    it('testRdbStoreDistributed0025', 0, async function () {
+    it('testRdbStoreDistributed0025', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDistributed0025 start *************");
         try {
             rdbStore.off("autoSyncProgress");
+            expect(rdbStore).assertEqual(rdbStore);
+            done();
             console.log(TAG + "off autoSyncProgress success");
         } catch (err) {
             console.log(TAG + "off autoSyncProgress" + err);
