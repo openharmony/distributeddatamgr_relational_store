@@ -502,9 +502,9 @@ public:
      */
     bool IsSearchable() const;
     /**
-     * @brief Sets whether the database isSearchable necessary.
+     * @brief Sets whether the database Searchable necessary.
      */
-    void SetIsSearchable(bool searchable);
+    void SetSearchable(bool searchable);
 
 private:
     void ClearEncryptKey();

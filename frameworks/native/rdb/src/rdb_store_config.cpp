@@ -414,7 +414,7 @@ bool RdbStoreConfig::IsSearchable() const
     return isSearchable_;
 }
 
-void RdbStoreConfig::SetIsSearchable(bool isSearchable)
+void RdbStoreConfig::SetSearchable(bool isSearchable)
 {
     isSearchable_ = isSearchable;
 }

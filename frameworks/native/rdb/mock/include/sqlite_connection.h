@@ -29,9 +29,9 @@ typedef struct ClientChangedData ClientChangedData;
 namespace OHOS {
 namespace NativeRdb {
 /**
- * @brief Use ChangeFunction replace std::function<void(OHOS::DistributedRdb::ClientChangedData &clientChangedData)>.
+ * @brief Use DataChangeCallback replace std::function<void(ClientChangedData &clientChangedData)>.
  */
-using ChangeFunction = std::function<void(ClientChangedData &clientChangedData)>;
+using DataChangeCallback = std::function<void(ClientChangedData &clientChangedData)>;
 
 class SqliteConnection {
 public:
@@ -58,7 +58,7 @@ public:
     int ConfigLocale(const std::string localeStr);
 #endif
 
-    int RegisterCallBackObserver(const ChangeFunction &clientChangedData);
+    int RegisterCallBackObserver(const DataChangeCallback &clientChangedData);
 
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";

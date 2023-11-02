@@ -40,7 +40,7 @@ using Origin = DistributedRdb::Origin;
 using ChangeInfo = Observer::ChangeInfo;
 using PrimaryKey = Observer::PrimaryKey;
 using PrimaryKeys = std::vector<PrimaryKey>[Observer::CHG_TYPE_BUTT];
-using RdbChangedData = DistributedRdb::RdbClientChangedData;
+using RdbChangedData = DistributedRdb::RdbChangedData;
 using RdbProperties = DistributedRdb::RdbChangeProperties;
 template<>
 API_EXPORT bool Marshalling(const SyncerParam &input, MessageParcel &data);

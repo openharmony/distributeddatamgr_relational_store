@@ -23,6 +23,7 @@
 #include "rdb_store_impl.h"
 #include "rdb_trace.h"
 #include "sqlite_global_config.h"
+#include "task_executor.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -169,12 +170,18 @@ bool RdbStoreManager::Delete(const std::string &path)
         param.storeName_ = *tokens.rbegin();
         std::lock_guard<std::mutex> lock(mutex_);
         param.bundleName_ = bundleName_;
-        auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
-        if (err == E_OK && service != nullptr) {
+        TaskExecutor::GetInstance().GetExecutor()->Execute([param]() {
+            auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+            if (err != E_OK || service == nullptr) {
+                LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);
+                return;
+            }
             err = service->Delete(param);
-        }
-        LOG_DEBUG("service delete store, storeName:%{public}s, err = %{public}d",
-            SqliteUtils::Anonymous(param.storeName_).c_str(), err);
+            if (err != E_OK) {
+                LOG_ERROR("service delete store, storeName:%{public}s, err = %{public}d",
+                    SqliteUtils::Anonymous(param.storeName_).c_str(), err);
+            }
+        });
     }
 #endif
     return Remove(path);

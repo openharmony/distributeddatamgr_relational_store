@@ -508,7 +508,7 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_002, TestSize.Level2)
     config.SetReadOnly(false);
     config.SetPageSize(1024);
     config.SetBundleName("callback.test2");
-    config.SetIsSearchable(true);
+    config.SetSearchable(true);
     config.SetStorageMode(StorageMode::MODE_DISK);
     // register callback
     RdbStoreImplTestOpenCallback helper;
@@ -549,7 +549,7 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_003, TestSize.Level2)
     config.SetReadOnly(false);
     config.SetPageSize(1024);
     config.SetBundleName("callback.test3");
-    config.SetIsSearchable(true);
+    config.SetSearchable(true);
     config.SetStorageMode(StorageMode::MODE_DISK);
 
     RdbStoreImplTestOpenCallback helper;

@@ -69,7 +69,7 @@ public:
 
     inline static constexpr const char *SERVICE_NAME = "relational_store";
 
-    virtual int32_t NotifyDataChange(const RdbSyncerParam &param, const RdbClientChangedData &clientChangedData) = 0;
+    virtual int32_t NotifyDataChange(const RdbSyncerParam &param, const RdbChangedData &rdbChangedData) = 0;
 };
 }
 } // namespace OHOS::DistributedRdb
