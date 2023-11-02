@@ -455,6 +455,7 @@ describe('rdbStoreDistributedTest', function () {
         try {
             rdbStore.on("autoSyncProgress", function (detail) {
                 console.log(TAG + `Progress:` + JSON.stringify(detail));
+                expect(rdbStore).assertEqual(rdbStore);
                 done()
             });
             console.log(TAG + "on autoSyncProgress success");
@@ -475,6 +476,8 @@ describe('rdbStoreDistributedTest', function () {
         try {
             rdbStore.off("autoSyncProgress", function (detail) {
                 console.log(TAG + `Progress:` + JSON.stringify(detail));
+                const a = 1;
+                expect(rdbStore).assertEqual(rdbStore);
                 done();
             });
             console.log(TAG + "off autoSyncProgress success");
