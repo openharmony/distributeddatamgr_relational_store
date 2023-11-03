@@ -198,7 +198,7 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("sync", Sync),
         DECLARE_NAPI_FUNCTION("cloudSync", CloudSync),
         DECLARE_NAPI_FUNCTION("getModifyTime", GetModifyTime),
-        DECLARE_NAPI_FUNCTION("clean", Clean),
+        DECLARE_NAPI_FUNCTION("cleanDirtyData", CleanDirtyData),
         DECLARE_NAPI_FUNCTION("on", OnEvent),
         DECLARE_NAPI_FUNCTION("off", OffEvent),
         DECLARE_NAPI_FUNCTION("emit", Notify),
@@ -1262,7 +1262,7 @@ napi_value RdbStoreProxy::GetModifyTime(napi_env env, napi_callback_info info)
     return AsyncCall::Call(env, context);
 }
 
-napi_value RdbStoreProxy::Clean(napi_env env, napi_callback_info info)
+napi_value RdbStoreProxy::CleanDirtyData(napi_env env, napi_callback_info info)
 {
     LOG_DEBUG("RdbStoreProxy::Clean start");
     auto context = std::make_shared<RdbStoreContext>();
@@ -1275,10 +1275,10 @@ napi_value RdbStoreProxy::Clean(napi_env env, napi_callback_info info)
         }
     };
     auto exec = [context]() -> int {
-        LOG_DEBUG("RdbStoreProxy::Clean Async");
+        LOG_DEBUG("RdbStoreProxy::CleanDirtyData Async");
         auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
-        return obj->rdbStore_->Clean(context->tableName, context->cursor);
+        return obj->rdbStore_->CleanDirtyData(context->tableName, context->cursor);
     };
 
     auto output = [context](napi_env env, napi_value &result) {

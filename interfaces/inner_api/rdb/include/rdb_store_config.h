@@ -453,14 +453,14 @@ public:
     std::string GetDataGroupId() const;
 
     /**
-     * @brief Sets the retainData for the object.
+     * @brief Sets the autoCleanDirtyData for the object.
      */
-    void SetRetainData(bool retainData);
+    void SetAutoClean(bool isAutoClean);
 
     /**
-     * @brief Obtains the retainData in this {@code StoreConfig} object.
+     * @brief Obtains the autoCleanDirtyData in this {@code StoreConfig} object.
      */
-    bool GetRetainData() const;
+    bool GetAutoClean() const;
 
     /**
      * @brief Sets the customDir directory for the object.
@@ -534,7 +534,7 @@ private:
     bool isCreateNecessary_;
 
     bool autoCheck;
-    bool retainData_ = false;
+    bool isAutoClean_ = false;
     int journalSize;
     int pageSize;
     int readConSize_ = 4;
