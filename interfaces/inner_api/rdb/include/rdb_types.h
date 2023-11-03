@@ -45,7 +45,7 @@ struct RdbSyncerParam {
     int32_t level_ = 0;
     int32_t type_ = RDB_DEVICE_COLLABORATION;
     bool isEncrypt_ = false;
-    bool isRetain_ = false;
+    bool isAutoClean_ = false;
     std::vector<uint8_t> password_;
     ~RdbSyncerParam()
     {
@@ -235,9 +235,9 @@ struct DropOption {
 struct Field {
     static constexpr const char *CURSOR_FIELD = "#_cursor";
     static constexpr const char *ORIGIN_FIELD = "#_origin";
-    static constexpr const char *DELETED_FLAG_FIELD = "deleted_flag";
-    static constexpr const char *OWNER_FIELD = "owner";
-    static constexpr const char *PRIVILEGE_FIELD = "privilege";
+    static constexpr const char *DELETED_FLAG_FIELD = "#_deleted_flag";
+    static constexpr const char *OWNER_FIELD = "#_cloud_owner";
+    static constexpr const char *PRIVILEGE_FIELD = "#_cloud_privilege";
 };
 } // namespace OHOS::DistributedRdb
 #endif

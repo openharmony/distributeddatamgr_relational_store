@@ -63,7 +63,7 @@ public:
     API_EXPORT std::string GetIndex() const;
     API_EXPORT bool IsNeedAnd() const;
     API_EXPORT bool IsSorted() const;
-    API_EXPORT bool HasCursorField() const;
+    API_EXPORT bool HasSpecificField() const;
 
 public:
     API_EXPORT virtual void Clear();
@@ -115,17 +115,14 @@ private:
     bool distinct;
     bool isNeedAnd;
     bool isSorted;
-    bool hasCursorField = false;
+    bool hasSpecificField = false;
 
     void Initial();
     bool CheckParameter(
         const std::string &methodName, const std::string &field, const std::initializer_list<ValueObject> &args) const;
-    inline void CheckField(const std::string &field)
+    inline void IsSpecificField(const std::string &field)
     {
-        if (hasCursorField || (field.find("#_") == std::string::npos)) {
-            return;
-        }
-        hasCursorField = true;
+        hasSpecificField = hasSpecificField || (field.find("#_") != std::string::npos);
     }
     std::string RemoveQuotes(const std::string &source) const;
     void CheckIsNeedAnd();

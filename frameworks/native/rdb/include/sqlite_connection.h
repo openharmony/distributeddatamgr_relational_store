@@ -50,7 +50,7 @@ public:
     void SetInTransaction(bool transaction);
     bool IsInTransaction();
     int LimitWalSize();
-    int Clean(const std::string &table, uint64_t cursor);
+    int CleanDirtyData(const std::string &table, uint64_t cursor);
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
 #endif

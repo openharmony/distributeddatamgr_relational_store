@@ -700,7 +700,7 @@ int SqliteConnection::DesFinalize()
     return errCode;
 }
 
-int SqliteConnection::Clean(const std::string &table, uint64_t cursor)
+int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
     if (table.empty()) {
         return E_ERROR;

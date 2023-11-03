@@ -175,18 +175,18 @@ int ParseDataGroupId(const napi_env &env, const napi_value &object, std::shared_
     return OK;
 }
 
-int ParseRetainData(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
+int ParseAutoCleanDirtyData(const napi_env &env, const napi_value &object, std::shared_ptr<HelperRdbContext> context)
 {
     bool hasProp = false;
-    napi_status status = napi_has_named_property(env, object, "retainData", &hasProp);
+    napi_status status = napi_has_named_property(env, object, "autoCleanDirtyData", &hasProp);
     if (status == napi_ok && hasProp) {
         napi_value value = nullptr;
-        status = napi_get_named_property(env, object, "retainData", &value);
-        CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("config", "with retainData."));
-        bool retain = false;
-        JSUtils::Convert2Value(env, value, retain);
+        status = napi_get_named_property(env, object, "autoCleanDirtyData", &value);
+        CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("config", "with autoCleanDirtyData."));
+        bool isAutoClean = false;
+        JSUtils::Convert2Value(env, value, isAutoClean);
         CHECK_RETURN_SET(context->abilitycontext->IsStageMode(), std::make_shared<InnerError>(E_NOT_STAGE_MODE));
-        context->config.SetRetainData(retain);
+        context->config.SetAutoClean(isAutoClean);
     }
     return OK;
 }
@@ -196,7 +196,7 @@ int ParseStoreConfig(const napi_env &env, const napi_value &object, std::shared_
     CHECK_RETURN_CORE(OK == ParseIsEncrypt(env, object, context), RDB_REVT_NOTHING, ERR);
     CHECK_RETURN_CORE(OK == ParseSecurityLevel(env, object, context), RDB_REVT_NOTHING, ERR);
     CHECK_RETURN_CORE(OK == ParseDataGroupId(env, object, context), RDB_REVT_NOTHING, ERR);
-    CHECK_RETURN_CORE(OK == ParseRetainData(env, object, context), RDB_REVT_NOTHING, ERR);
+    CHECK_RETURN_CORE(OK == ParseAutoCleanDirtyData(env, object, context), RDB_REVT_NOTHING, ERR);
     CHECK_RETURN_CORE(OK == ParseContextProperty(env, context), RDB_REVT_NOTHING, ERR);
     CHECK_RETURN_CORE(OK == ParseDatabaseName(env, object, context), RDB_REVT_NOTHING, ERR);
     CHECK_RETURN_CORE(OK == ParseDatabasePath(env, object, context), RDB_REVT_NOTHING, ERR);

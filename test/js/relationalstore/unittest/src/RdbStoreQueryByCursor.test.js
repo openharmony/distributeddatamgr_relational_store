@@ -266,7 +266,7 @@ describe('rdbStoreQueryByCursorTest', function () {
         if (rdbStore == undefined) {
             return;
         }
-        let promise = rdbStore.clean("query_tb");
+        let promise = rdbStore.cleanDirtyData("query_tb");
         await promise.then((err) => {
             expect(true).assertTrue();
         }).catch((err) => {
@@ -288,7 +288,7 @@ describe('rdbStoreQueryByCursorTest', function () {
             return;
         }
         let cursor = 3;
-        let promise = rdbStore.clean("query_tb", cursor);
+        let promise = rdbStore.cleanDirtyData("query_tb", cursor);
         await promise.then((err) => {
             expect(true).assertTrue();
         }).catch((err) => {
