@@ -702,12 +702,17 @@ int SqliteConnection::DesFinalize()
 
 int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     if (table.empty()) {
         return E_ERROR;
     }
     uint64_t tmpCursor = cursor == UINT64_MAX ? 0 : cursor;
     auto status = DropLogicDeletedData(dbHandle, table, tmpCursor);
-    return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
+    if (status != DistributedDB::DBStatus::OK) {
+        return E_ERROR;
+    }
+#endif
+    return E_OK;
 }
 
 int SqliteConnection::EndStepQuery()
