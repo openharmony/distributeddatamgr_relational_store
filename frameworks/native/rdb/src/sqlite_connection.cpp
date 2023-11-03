@@ -28,7 +28,6 @@
 #include "file_ex.h"
 #include "logger.h"
 #include "rdb_errno.h"
-#include "relational_store_client.h"
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
@@ -38,6 +37,7 @@
 #include "directory_ex.h"
 #include "rdb_security_manager.h"
 #include "relational/relational_store_sqlite_ext.h"
+#include "relational_store_client.h"
 #include "share_block.h"
 #include "shared_block_serializer_info.h"
 #endif
