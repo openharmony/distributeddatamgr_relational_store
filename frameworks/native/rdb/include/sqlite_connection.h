@@ -55,6 +55,7 @@ public:
 #endif
     int ExecuteForSharedBlock(int &rowNum, std::string sql, const std::vector<ValueObject> &bindArgs,
         AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows);
+    int CleanDirtyData(const std::string &table, uint64_t cursor);
 
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";

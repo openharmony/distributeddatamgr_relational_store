@@ -22,6 +22,7 @@
 #include "rdb_errno.h"
 #include "rdb_trace.h"
 #include "result_set.h"
+#include "sqlite_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -336,7 +337,7 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
         LOG_ERROR("Failed to GetAllColumnNames, ret is %{public}d", ret);
         return ret;
     }
-
+    SqliteUtils::Replace(columnNameLower, SqliteUtils::REP, "");
     columnIndex = 0;
     for (const auto& name : columnNames) {
         std::string lowerName = name;

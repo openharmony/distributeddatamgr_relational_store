@@ -38,6 +38,13 @@ public:
         CROSS
     };
 
+    enum Origin {
+        LOCAL = 0,
+        CLOUD,
+        REMOTE,
+        BUTT
+    };
+
     API_EXPORT std::string GetStatement() const;
     API_EXPORT std::string GetWhereClause() const;
     API_EXPORT void SetWhereClause(const std::string &whereClause);
@@ -56,6 +63,7 @@ public:
     API_EXPORT std::string GetIndex() const;
     API_EXPORT bool IsNeedAnd() const;
     API_EXPORT bool IsSorted() const;
+    API_EXPORT bool HasSpecificField() const;
 
 public:
     API_EXPORT virtual void Clear();
@@ -95,6 +103,8 @@ public:
     API_EXPORT virtual AbsPredicates *NotIn(const std::string &field, const std::vector<std::string> &values);
     API_EXPORT virtual AbsPredicates *NotIn(const std::string &field, const std::vector<ValueObject> &values);
 private:
+    static constexpr const char *LOG_ORIGIN_FIELD = "#_flag";
+
     std::string whereClause;
     std::vector<ValueObject> bindArgs;
     std::string order;
@@ -105,10 +115,15 @@ private:
     bool distinct;
     bool isNeedAnd;
     bool isSorted;
+    bool hasSpecificField = false;
 
     void Initial();
     bool CheckParameter(
         const std::string &methodName, const std::string &field, const std::initializer_list<ValueObject> &args) const;
+    inline bool IsSpecificField(const std::string &field)
+    {
+        return field.find("#_") != std::string::npos;
+    }
     std::string RemoveQuotes(const std::string &source) const;
     void CheckIsNeedAnd();
     void AppendWhereClauseWithInOrNotIn(const std::string &methodName, const std::string &field,
