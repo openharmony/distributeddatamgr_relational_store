@@ -16,19 +16,19 @@
 #include "napi_rdb_const_properties.h"
 #include "rdb_common.h"
 #include "rdb_store.h"
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "js_utils.h"
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_store_config.h"
 #include "rdb_types.h"
 
 using OHOS::DistributedRdb::SyncMode;
 using OHOS::DistributedRdb::SubscribeMode;
-using OHOS::DistributedRdb::DistributedTableType;
-using OHOS::DistributedRdb::ProgressCode;
 
 #endif
 using OHOS::NativeRdb::SecurityLevel;
 using OHOS::NativeRdb::ConflictResolution;
+using OHOS::DistributedRdb::ProgressCode;
+using OHOS::DistributedRdb::DistributedTableType;
 
 #define SET_NAPI_PROPERTY(object, prop, value)                         \
     napi_set_named_property((env), (object), (prop), AppDataMgrJsKit::JSUtils::Convert2JSValue((env), (value)))
