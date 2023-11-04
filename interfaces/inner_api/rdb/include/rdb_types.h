@@ -77,7 +77,7 @@ struct DistributedConfig {
 };
 
 enum Progress {
-    SYNC_BEGIN,
+    SYNC_BEGIN = 0,
     SYNC_IN_PROGRESS,
     SYNC_FINISH,
 };
