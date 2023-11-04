@@ -35,12 +35,14 @@ public:
     static const int STATEMENT_DDL;
     static const int STATEMENT_OTHER;
     static const int CONFLICT_CLAUSE_COUNT = 6;
+    static constexpr const char* REP = "#_";
 
     static int GetSqlStatementType(const std::string &sql);
     static bool IsSqlReadOnly(int sqlType);
     static bool IsSpecial(int sqlType);
     static int GetConflictClause(int conflictResolution, std::string &conflictClause);
     static std::string StrToUpper(std::string s);
+    static void Replace(std::string &src, const std::string &rep, const std::string &dst);
     static bool DeleteFile(const std::string path);
     static int RenameFile(const std::string srcFile, const std::string destFile);
     static std::string Anonymous(const std::string &srcFile);

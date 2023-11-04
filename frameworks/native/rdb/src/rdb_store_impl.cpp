@@ -74,6 +74,7 @@ int RdbStoreImpl::InnerOpen()
     syncerParam_.level_ = static_cast<int32_t>(rdbStoreConfig.GetSecurityLevel());
     syncerParam_.type_ = rdbStoreConfig.GetDistributedType();
     syncerParam_.isEncrypt_ = rdbStoreConfig.IsEncrypt();
+    syncerParam_.isAutoClean_ = rdbStoreConfig.GetAutoClean();
     syncerParam_.password_ = {};
     GetSchema(rdbStoreConfig);
 #endif
@@ -226,6 +227,21 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTa
     }
     return { resultSet, {}, true };
 }
+
+int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
+{
+    if (table.empty()) {
+        return E_INVALID_ARGS;
+    }
+    SqliteConnection *connection = connectionPool->AcquireConnection(false);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+    int errCode = connection->CleanDirtyData(table, cursor);
+    connectionPool->ReleaseConnection(connection);
+    return errCode;
+}
+
 #endif
 
 std::string RdbStoreImpl::GetSqlArgs(size_t size)
@@ -576,7 +592,14 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
+    std::string sql;
+    if (predicates.HasSpecificField()) {
+        std::string table = predicates.GetTableName();
+        std::string logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
+        sql = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable);
+    } else {
+        sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
+    }
     return QuerySql(sql, predicates.GetBindArgs());
 }
 

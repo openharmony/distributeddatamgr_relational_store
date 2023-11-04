@@ -47,10 +47,14 @@ public:
     static std::string BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
     static std::string BuildCountString(const AbsRdbPredicates &predicates);
     static std::string BuildSqlStringFromPredicates(const AbsPredicates &predicates);
+    static std::string BuildCursorQueryString(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, const std::string &logTable);
 
 private:
-    static void AppendClause(std::string &builder, const std::string &name, const std::string &clause);
-    static void AppendColumns(std::string &builder, const std::vector<std::string> &columns);
+    static void AppendClause(std::string &builder, const std::string &name,
+        const std::string &clause, const std::string &table = "");
+    static void AppendColumns(
+        std::string &builder, const std::vector<std::string> &columns, const std::string &table = "");
 };
 } // namespace NativeRdb
 } // namespace OHOS

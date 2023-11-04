@@ -37,6 +37,7 @@
 #include "directory_ex.h"
 #include "rdb_security_manager.h"
 #include "relational/relational_store_sqlite_ext.h"
+#include "relational_store_client.h"
 #include "share_block.h"
 #include "shared_block_serializer_info.h"
 #endif
@@ -830,6 +831,16 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     rowNum = static_cast<int>(GetCombinedData(sharedBlockInfo.startPos, sharedBlockInfo.totalRows));
     errCode = statement.ResetStatementAndClearBindings();
     return errCode;
+}
+
+int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
+{
+    if (table.empty()) {
+        return E_ERROR;
+    }
+    uint64_t tmpCursor = cursor == UINT64_MAX ? 0 : cursor;
+    auto status = DropLogicDeletedData(dbHandle, table, tmpCursor);
+    return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
 }
 #endif
 

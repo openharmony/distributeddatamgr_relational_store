@@ -22,6 +22,7 @@
 #include "rdb_errno.h"
 #include "rdb_trace.h"
 #include "string_utils.h"
+#include "sqlite_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -171,33 +172,41 @@ std::string SqliteSqlBuilder::BuildSqlStringFromPredicatesNoWhere(const std::str
     return sqlString;
 }
 
-void SqliteSqlBuilder::AppendClause(std::string &builder, const std::string &name, const std::string &clause)
+void SqliteSqlBuilder::AppendClause(std::string &builder, const std::string &name,
+    const std::string &clause, const std::string &table)
 {
     if (clause.empty()) {
         return;
     }
     builder.append(name);
+    if (!table.empty()) {
+        builder.append(table).append(".");
+    }
     builder.append(clause);
 }
 
 /**
  * Add the names that are non-null in columns to s, separating them with commas.
  */
-void SqliteSqlBuilder::AppendColumns(std::string &builder, const std::vector<std::string> &columns)
+void SqliteSqlBuilder::AppendColumns(
+    std::string &builder, const std::vector<std::string> &columns, const std::string &table)
 {
-    size_t length = columns.size();
-    for (size_t i = 0; i < length; i++) {
-        std::string column = columns[i];
-
-        if (column.size() != 0) {
-            if (i > 0) {
-                builder.append(", ");
-            }
-            builder.append(column);
+    for (size_t i = 0; i < columns.size(); i++) {
+        const auto &col = columns[i];
+        if (col.empty()) {
+            continue;
         }
+        if (i > 0 && !(columns[i - 1].empty())) {
+            builder.append(", ");
+        }
+        if (!table.empty()) {
+            builder.append(table).append(".");
+        }
+        builder.append(col);
     }
-
-    builder += ' ';
+    if (table.empty()) {
+        builder += ' ';
+    }
 }
 
 std::string SqliteSqlBuilder::BuildQueryString(
@@ -222,6 +231,46 @@ std::string SqliteSqlBuilder::BuildCountString(const AbsRdbPredicates &predicate
 {
     std::string tableName = predicates.GetTableName();
     return "SELECT COUNT(*) FROM " + tableName + BuildSqlStringFromPredicates(predicates);
+}
+
+std::string SqliteSqlBuilder::BuildCursorQueryString(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, const std::string &logTable)
+{
+    std::string sql;
+    std::string table = predicates.GetTableName();
+    if (table.empty() || logTable.empty()) {
+        return sql;
+    }
+    sql.append("SELECT ");
+    if (predicates.IsDistinct()) {
+        sql.append("DISTINCT ");
+    }
+    if (!columns.empty()) {
+        AppendColumns(sql, columns, table);
+    } else {
+        sql.append(table + ".*");
+    }
+    sql.append(", " + logTable + ".cursor");
+    sql.append(", CASE WHEN ").append(logTable).append(".")
+        .append("flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag ");
+    sql.append("FROM ").append(table);
+    AppendClause(sql, " INDEXED BY ", predicates.GetIndex());
+    sql.append(" INNER JOIN ").append(logTable).append(" ON ").append(table)
+        .append(".ROWID = ").append(logTable).append(".data_key");
+    auto whereClause = predicates.GetWhereClause();
+    SqliteUtils::Replace(whereClause, SqliteUtils::REP, logTable + ".");
+    AppendClause(sql, " WHERE ", whereClause);
+    AppendClause(sql, " GROUP BY ", predicates.GetGroup(), table);
+    auto order = predicates.GetOrder();
+    SqliteUtils::Replace(order, SqliteUtils::REP, logTable + ".");
+    AppendClause(sql, " ORDER BY ", order);
+    int limit = predicates.GetLimit();
+    auto limitClause = (limit == AbsPredicates::INIT_LIMIT_VALUE) ? "" : std::to_string(limit);
+    int offset = predicates.GetOffset();
+    auto offsetClause = (offset == AbsPredicates::INIT_OFFSET_VALUE) ? "" : std::to_string(offset);
+    AppendClause(sql, " LIMIT ", limitClause);
+    AppendClause(sql, " OFFSET ", offsetClause);
+    return sql;
 }
 } // namespace NativeRdb
 } // namespace OHOS
