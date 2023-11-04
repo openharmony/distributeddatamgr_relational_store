@@ -120,9 +120,9 @@ private:
     void Initial();
     bool CheckParameter(
         const std::string &methodName, const std::string &field, const std::initializer_list<ValueObject> &args) const;
-    inline void IsSpecificField(const std::string &field)
+    inline bool IsSpecificField(const std::string &field)
     {
-        hasSpecificField = hasSpecificField || (field.find("#_") != std::string::npos);
+        return field.find("#_") != std::string::npos;
     }
     std::string RemoveQuotes(const std::string &source) const;
     void CheckIsNeedAnd();
