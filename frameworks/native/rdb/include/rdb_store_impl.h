@@ -172,6 +172,8 @@ public:
     ModifyTime GetModifyTime(const std::string& table, const std::string& columnName,
         std::vector<PRIKey>& keys) override;
 
+    int CleanDirtyData(const std::string &table, uint64_t cursor = UINT64_MAX) override;
+
 private:
     int InnerOpen();
     int CheckAttach(const std::string &sql);

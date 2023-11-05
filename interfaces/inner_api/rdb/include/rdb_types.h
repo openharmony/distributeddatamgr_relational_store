@@ -43,6 +43,7 @@ struct RdbSyncerParam {
     int32_t level_ = 0;
     int32_t type_ = RDB_DEVICE_COLLABORATION;
     bool isEncrypt_ = false;
+    bool isAutoClean_ = false;
     std::vector<uint8_t> password_;
     ~RdbSyncerParam()
     {
@@ -74,7 +75,7 @@ struct DistributedConfig {
 };
 
 enum Progress {
-    SYNC_BEGIN,
+    SYNC_BEGIN = 0,
     SYNC_IN_PROGRESS,
     SYNC_FINISH,
 };
@@ -227,6 +228,14 @@ public:
 };
 
 struct DropOption {
+};
+
+struct Field {
+    static constexpr const char *CURSOR_FIELD = "#_cursor";
+    static constexpr const char *ORIGIN_FIELD = "#_origin";
+    static constexpr const char *DELETED_FLAG_FIELD = "#_deleted_flag";
+    static constexpr const char *OWNER_FIELD = "#_cloud_owner";
+    static constexpr const char *PRIVILEGE_FIELD = "#_cloud_privilege";
 };
 
 struct RdbChangeProperties {

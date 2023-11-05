@@ -453,6 +453,16 @@ public:
     std::string GetDataGroupId() const;
 
     /**
+     * @brief Sets the autoCleanDirtyData for the object.
+     */
+    void SetAutoClean(bool isAutoClean);
+
+    /**
+     * @brief Obtains the autoCleanDirtyData in this {@code StoreConfig} object.
+     */
+    bool GetAutoClean() const;
+
+    /**
      * @brief Sets the customDir directory for the object.
      */
     void SetCustomDir(const std::string &customDir);
@@ -533,6 +543,7 @@ private:
     bool isCreateNecessary_;
 
     bool autoCheck;
+    bool isAutoClean_ = false;
     int journalSize;
     int pageSize;
     int readConSize_ = 4;

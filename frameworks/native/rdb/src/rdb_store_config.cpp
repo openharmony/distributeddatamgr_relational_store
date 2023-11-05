@@ -399,6 +399,16 @@ std::string RdbStoreConfig::GetDataGroupId() const
     return dataGroupId_;
 }
 
+void RdbStoreConfig::SetAutoClean(bool isAutoClean)
+{
+    isAutoClean_ = isAutoClean;
+}
+
+bool RdbStoreConfig::GetAutoClean() const
+{
+    return isAutoClean_;
+}
+
 void RdbStoreConfig::SetCustomDir(const std::string &customDir)
 {
     customDir_ = customDir;
