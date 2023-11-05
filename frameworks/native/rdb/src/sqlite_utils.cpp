@@ -93,6 +93,18 @@ std::string SqliteUtils::StrToUpper(std::string s)
     return s;
 }
 
+void SqliteUtils::Replace(std::string &src, const std::string &rep, const std::string &dst)
+{
+    if (src.empty() || rep.empty()) {
+        return;
+    }
+    size_t pos = 0;
+    while ((pos = src.find(rep, pos)) != std::string::npos) {
+        src.replace(pos, rep.length(), dst);
+        pos += dst.length();
+    }
+}
+
 bool SqliteUtils::IsSqlReadOnly(int sqlType)
 {
     return (sqlType == STATEMENT_SELECT) ? true : false;

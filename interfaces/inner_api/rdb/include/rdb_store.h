@@ -527,6 +527,16 @@ public:
      */
     virtual ModifyTime GetModifyTime(const std::string& table, const std::string& columnName,
         std::vector<PRIKey>& keys) = 0;
+
+    /**
+     * @brief Cleans dirty data deleted in the cloud.
+     *
+     * If a cursor is specified, data with a cursor smaller than the specified cursor will be cleaned up.
+     * otherwise clean all.
+     *
+     * @param table Indicates the specified table.
+     */
+    virtual int CleanDirtyData(const std::string &table, uint64_t cursor = UINT64_MAX) = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif

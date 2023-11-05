@@ -21,13 +21,14 @@
 
 #include "logger.h"
 #include "rdb_trace.h"
+#include "rdb_types.h"
 #include "sqlite_sql_builder.h"
 #include "string_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
+static constexpr const char* FLAG[AbsPredicates::Origin::BUTT] = { "0x02", "0x0", "0x0" };
 AbsPredicates::AbsPredicates()
 {
     Initial();
@@ -55,13 +56,31 @@ AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const ValueObjec
     if (!CheckParameter("equalTo", field, { value })) {
         return this;
     }
+    hasSpecificField = hasSpecificField || IsSpecificField(field);
+    ValueObject valObj = value;
+    std::string newField = field;
+    std::string flagVal;
+    if (newField == DistributedRdb::Field::ORIGIN_FIELD) {
+        newField = LOG_ORIGIN_FIELD;
+        double location = 0;
+        valObj.GetDouble(location);
+        if (location < 0 || location > Origin::REMOTE) {
+            return this;
+        }
+        flagVal = FLAG[static_cast<int>(location)];
+        valObj = ValueObject(flagVal);
+    }
     if (isNeedAnd) {
         whereClause += "AND ";
     } else {
         isNeedAnd = true;
     }
-    whereClause += field + " = ? ";
-    bindArgs.push_back(value);
+    if (flagVal.empty()) {
+        whereClause += newField + " = ? ";
+        bindArgs.push_back(std::move(valObj));
+    } else {
+        whereClause += "(" + newField + " & 0x02 = " + flagVal + ")";
+    }
     return this;
 }
 
@@ -73,6 +92,7 @@ AbsPredicates *AbsPredicates::NotEqualTo(const std::string &field, const ValueOb
     if (!CheckParameter("notEqualTo", field, { value })) {
         return this;
     }
+    hasSpecificField = hasSpecificField || IsSpecificField(field);
     CheckIsNeedAnd();
     whereClause += field + " <> ? ";
     bindArgs.push_back(value);
@@ -223,6 +243,7 @@ AbsPredicates *AbsPredicates::Between(const std::string &field, const ValueObjec
     if (!CheckParameter("between", field, { low, high })) {
         return this;
     }
+    hasSpecificField = hasSpecificField || IsSpecificField(field);
     CheckIsNeedAnd();
     whereClause += field + " BETWEEN ? AND ? ";
     bindArgs.push_back(low);
@@ -238,6 +259,7 @@ AbsPredicates *AbsPredicates::NotBetween(const std::string &field, const ValueOb
     if (!CheckParameter("notBetween", field, { low, high })) {
         return this;
     }
+    hasSpecificField = hasSpecificField || IsSpecificField(field);
     CheckIsNeedAnd();
     whereClause += field + " NOT BETWEEN ? AND ? ";
     bindArgs.push_back(low);
@@ -253,6 +275,7 @@ AbsPredicates *AbsPredicates::GreaterThan(const std::string &field, const ValueO
     if (!CheckParameter("greaterThan", field, { value })) {
         return this;
     }
+    hasSpecificField = hasSpecificField || IsSpecificField(field);
     CheckIsNeedAnd();
     whereClause += field + " > ? ";
     bindArgs.push_back(value);
@@ -267,6 +290,7 @@ AbsPredicates *AbsPredicates::LessThan(const std::string &field, const ValueObje
     if (!CheckParameter("lessThan", field, { value })) {
         return this;
     }
+    hasSpecificField = hasSpecificField || IsSpecificField(field);
     CheckIsNeedAnd();
     whereClause += field + " < ? ";
     bindArgs.push_back(value);
@@ -281,6 +305,7 @@ AbsPredicates *AbsPredicates::GreaterThanOrEqualTo(const std::string &field, con
     if (!CheckParameter("greaterThanOrEqualTo", field, { value })) {
         return this;
     }
+    hasSpecificField = hasSpecificField || IsSpecificField(field);
     CheckIsNeedAnd();
     whereClause += field + " >= ? ";
     bindArgs.push_back(value);
@@ -295,6 +320,7 @@ AbsPredicates *AbsPredicates::LessThanOrEqualTo(const std::string &field, const 
     if (!CheckParameter("greaterThanOrEqualTo", field, { value })) {
         return this;
     }
+    hasSpecificField = hasSpecificField || IsSpecificField(field);
     CheckIsNeedAnd();
     whereClause += field + " <= ? ";
     bindArgs.push_back(value);
@@ -310,6 +336,7 @@ AbsPredicates *AbsPredicates::OrderByAsc(const std::string &field)
     if (!CheckParameter("orderByAsc", field, {})) {
         return this;
     }
+    hasSpecificField = hasSpecificField || IsSpecificField(field);
     if (isSorted) {
         order += ',';
     }
@@ -327,6 +354,7 @@ AbsPredicates *AbsPredicates::OrderByDesc(const std::string &field)
     if (!CheckParameter("orderByDesc", field, {})) {
         return this;
     }
+    hasSpecificField = hasSpecificField || IsSpecificField(field);
     if (isSorted) {
         order += ',';
     }
@@ -597,6 +625,11 @@ bool AbsPredicates::IsDistinct() const
 bool AbsPredicates::IsSorted() const
 {
     return isSorted;
+}
+
+bool AbsPredicates::HasSpecificField() const
+{
+    return hasSpecificField;
 }
 
 std::string AbsPredicates::GetGroup() const
