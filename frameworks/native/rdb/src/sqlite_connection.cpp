@@ -40,6 +40,7 @@
 #include "relational_store_client.h"
 #include "share_block.h"
 #include "shared_block_serializer_info.h"
+#include "relational_store_client.h"
 #endif
 
 namespace OHOS {
@@ -841,6 +842,18 @@ int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
     uint64_t tmpCursor = cursor == UINT64_MAX ? 0 : cursor;
     auto status = DropLogicDeletedData(dbHandle, table, tmpCursor);
     return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
+}
+
+int SqliteConnection::RegisterCallBackObserver(const DataChangeCallback &clientChangedData)
+{
+    if (isWriteConnection && clientChangedData != nullptr) {
+        int32_t status = RegisterClientObserver(dbHandle, clientChangedData);
+        if (status != E_OK) {
+            LOG_ERROR("RegisterClientObserver error, status:%{public}d", status);
+        }
+        return status;
+    }
+    return E_OK;
 }
 #endif
 

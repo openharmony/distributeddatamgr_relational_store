@@ -46,6 +46,8 @@
 #include "result_set_proxy.h"
 #include "runtime_config.h"
 #include "sqlite_shared_result_set.h"
+#include "sqlite_connection.h"
+#include "relational_store_client.h"
 #endif
 
 #ifdef WINDOWS_PLATFORM
@@ -77,6 +79,11 @@ int RdbStoreImpl::InnerOpen()
     syncerParam_.isAutoClean_ = rdbStoreConfig.GetAutoClean();
     syncerParam_.password_ = {};
     GetSchema(rdbStoreConfig);
+
+    errCode = RegisterDataChangeCallback();
+    if (errCode != E_OK) {
+        LOG_ERROR("RegisterCallBackObserver is failed, err is %{public}d.", errCode);
+    }
 #endif
     return E_OK;
 }
@@ -1670,6 +1677,42 @@ int RdbStoreImpl::UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObser
         return errCode;
     }
     return service->UnregisterAutoSyncCallback(syncerParam_, observer);
+}
+
+int RdbStoreImpl::RegisterDataChangeCallback()
+{
+    if (!rdbStoreConfig.IsSearchable()) {
+        return E_OK;
+    }
+    auto callBack = [this](ClientChangedData &clientChangedData) {
+        DistributedRdb::RdbChangedData rdbChangedData;
+        for (const auto& entry : clientChangedData.tableData) {
+            DistributedRdb::RdbChangeProperties rdbProperties;
+            rdbProperties.isTrackedDataChange = entry.second.isTrackedDataChange;
+            rdbChangedData.tableData[entry.first] = rdbProperties;
+        }
+        int errCode = NotifyDataChange(rdbChangedData);
+        if (errCode != E_OK) {
+            LOG_ERROR("NotifyDataChange is failed, err is %{public}d.", errCode);
+        }
+    };
+    SqliteConnection *connection = connectionPool->AcquireConnection(false);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+    int code = connection->RegisterCallBackObserver(callBack);
+    connectionPool->ReleaseConnection(connection);
+    return code;
+}
+
+int RdbStoreImpl::NotifyDataChange(DistributedRdb::RdbChangedData &rdbChangedData)
+{
+    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK || service == nullptr) {
+        LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
+        return errCode;
+    }
+    return service->NotifyDataChange(syncerParam_, rdbChangedData);
 }
 #endif
 } // namespace OHOS::NativeRdb

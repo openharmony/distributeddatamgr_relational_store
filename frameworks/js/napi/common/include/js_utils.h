@@ -216,7 +216,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<K, V> &value)
 template<typename... Types>
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::variant<Types...> &value)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_status status = napi_typeof(env, jsValue, &type);
     if (status != napi_ok) {
         return napi_invalid_arg;

@@ -68,6 +68,8 @@ public:
     int32_t GetSchema(const RdbSyncerParam &param) override;
 
     int32_t Delete(const RdbSyncerParam &param) override;
+
+    int32_t NotifyDataChange(const RdbSyncerParam& param, const RdbChangedData &clientChangedData) override;
 private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
     using PrimaryFields = RdbStoreObserver::PrimaryFields;

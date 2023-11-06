@@ -461,4 +461,17 @@ void RdbServiceProxy::OnSyncComplete(const std::string &storeName, Details &&res
         return true;
     });
 }
+
+int32_t RdbServiceProxy::NotifyDataChange(const RdbSyncerParam &param, const RdbChangedData &rdbChangedData)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_NOTIFY_DATA_CHANGE),
+        reply, param, rdbChangedData);
+    if (status != RDB_OK) {
+        LOG_ERROR("RdbServiceProxy NotifyDataChange fail, status:%{public}d, "
+                  "bundleName:%{public}s, storeName:%{public}s",
+            status, param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
+    }
+    return status;
+}
 } // namespace OHOS::DistributedRdb
