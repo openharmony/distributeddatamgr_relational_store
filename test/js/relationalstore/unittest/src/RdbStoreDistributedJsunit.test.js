@@ -456,11 +456,12 @@ describe('rdbStoreDistributedTest', function () {
             rdbStore.on("autoSyncProgress", function (detail) {
                 console.log(TAG + `Progress:` + JSON.stringify(detail));
             });
-            expect(rdbStore).assertEqual(rdbStore);
             done();
+            expect(rdbStore).assertEqual(rdbStore);
             console.log(TAG + "on autoSyncProgress success");
         } catch (err) {
             console.log(TAG + "on autoSyncProgress" + err);
+            done();
             expect().assertFail();
         }
         console.log(TAG + "************* testRdbStoreDistributed0021 end *************");
@@ -477,11 +478,12 @@ describe('rdbStoreDistributedTest', function () {
             rdbStore.off("autoSyncProgress", function (detail) {
                 console.log(TAG + `Progress:` + JSON.stringify(detail));
             });
-            expect(rdbStore).assertEqual(rdbStore);
             done();
+            expect(rdbStore).assertEqual(rdbStore);
             console.log(TAG + "off autoSyncProgress success");
         } catch (err) {
             console.log(TAG + "off autoSyncProgress" + err);
+            done();
             expect().assertFail();
         }
         console.log(TAG + "************* testRdbStoreDistributed0022 end *************");
@@ -496,11 +498,12 @@ describe('rdbStoreDistributedTest', function () {
         console.log(TAG + "************* testRdbStoreDistributed0023 start *************");
         try {
             rdbStore.off("autoSyncProgress", null);
-            expect(rdbStore).assertEqual(rdbStore);
             done();
+            expect(rdbStore).assertEqual(rdbStore);
             console.log(TAG + "off autoSyncProgress success");
         } catch (err) {
             console.log(TAG + "off autoSyncProgress" + err);
+            done();
             expect().assertFail();
         }
         console.log(TAG + "************* testRdbStoreDistributed0023 end *************");
@@ -515,11 +518,12 @@ describe('rdbStoreDistributedTest', function () {
         console.log(TAG + "************* testRdbStoreDistributed0024 start *************");
         try {
             rdbStore.off("autoSyncProgress", undefined);
-            expect(rdbStore).assertEqual(rdbStore);
             done();
+            expect(rdbStore).assertEqual(rdbStore);
             console.log(TAG + "off autoSyncProgress success");
         } catch (err) {
             console.log(TAG + "off autoSyncProgress" + err);
+            done();
             expect().assertFail();
         }
         console.log(TAG + "************* testRdbStoreDistributed0024 end *************");
@@ -534,11 +538,12 @@ describe('rdbStoreDistributedTest', function () {
         console.log(TAG + "************* testRdbStoreDistributed0025 start *************");
         try {
             rdbStore.off("autoSyncProgress");
-            expect(rdbStore).assertEqual(rdbStore);
             done();
+            expect(rdbStore).assertEqual(rdbStore);
             console.log(TAG + "off autoSyncProgress success");
         } catch (err) {
             console.log(TAG + "off autoSyncProgress" + err);
+            done();
             expect().assertFail();
         }
         console.log(TAG + "************* testRdbStoreDistributed0025 end *************");
