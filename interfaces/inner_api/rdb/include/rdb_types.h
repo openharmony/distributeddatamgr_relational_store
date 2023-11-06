@@ -237,5 +237,13 @@ struct Field {
     static constexpr const char *OWNER_FIELD = "#_cloud_owner";
     static constexpr const char *PRIVILEGE_FIELD = "#_cloud_privilege";
 };
+
+struct RdbChangeProperties {
+    bool isTrackedDataChange = false;
+};
+
+struct RdbChangedData {
+    std::map<std::string, RdbChangeProperties> tableData;
+};
 } // namespace OHOS::DistributedRdb
 #endif

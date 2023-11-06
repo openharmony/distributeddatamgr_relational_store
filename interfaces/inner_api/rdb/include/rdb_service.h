@@ -68,6 +68,8 @@ public:
     virtual int32_t Delete(const RdbSyncerParam &param) = 0;
 
     inline static constexpr const char *SERVICE_NAME = "relational_store";
+
+    virtual int32_t NotifyDataChange(const RdbSyncerParam &param, const RdbChangedData &rdbChangedData) = 0;
 };
 }
 } // namespace OHOS::DistributedRdb

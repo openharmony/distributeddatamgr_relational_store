@@ -24,6 +24,8 @@
 #include "rdb_open_callback.h"
 #include "rdb_store_impl.h"
 #include "sqlite_connection.h"
+#include "relational_store_manager.h"
+#include "relational_store_delegate.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -483,4 +485,104 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_0023, TestSize.Level2)
     EXPECT_EQ(E_ERROR, errCode);
 
     delete connectionPool;
+}
+
+HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_001, TestSize.Level2)
+{
+    const std::string DATABASE_NAME = RDB_TEST_PATH + "SqlitConnectionOpenTest.db";
+    int errCode = E_OK;
+    RdbStoreConfig config(DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetPageSize(1024);
+    SqliteConnection* connection = SqliteConnection::Open(config, true, errCode);
+    EXPECT_NE(nullptr, connection);
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(nullptr, store);
+}
+
+HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_002, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetPageSize(1024);
+    config.SetBundleName("callback.test2");
+    config.SetSearchable(true);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    // register callback
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(nullptr, store);
+    store->ExecuteSql("DROP TABLE IF EXISTS test_callback_t2;");
+    store->ExecuteSql("CREATE TABLE if not exists test_callback_t2 "
+    "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+    "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+    // set TrackerTable
+    DistributedDB::TrackerSchema tracker;
+    tracker.tableName = "test_callback_t2";
+    tracker.extendColName = "";
+    tracker.trackerColNames = {"id", "timestamp"};
+    DistributedDB::RelationalStoreManager rStoreManager("test_app", "test_user_id", 0);
+    DistributedDB::RelationalStoreDelegate::Option option;
+    DistributedDB::RelationalStoreDelegate *g_delegate = nullptr;
+    EXPECT_EQ(RdbStoreImplTest::DATABASE_NAME, "/data/test/stepResultSet_impl_test.db");
+    int status = rStoreManager.OpenStore(RdbStoreImplTest::DATABASE_NAME, "test_callback_t2", option, g_delegate);
+    EXPECT_EQ(E_OK, status);
+    int setStatus = g_delegate->SetTrackerTable(tracker);
+    EXPECT_EQ(E_OK, setStatus);
+
+    int64_t rowId;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutInt("data_key", ValueObject(1));
+    valuesBucket.PutInt("timestamp", ValueObject(1000000000));
+    int errorCode = store->Insert(rowId, "test_callback_t2", valuesBucket);
+    EXPECT_EQ(E_OK, errorCode);
+    EXPECT_EQ(1, rowId);
+    store->ExecuteSql("DROP TABLE IF EXISTS test_callback_t2;");
+}
+
+HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_003, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetPageSize(1024);
+    config.SetBundleName("callback.test3");
+    config.SetSearchable(true);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+
+    store->ExecuteSql("DROP TABLE IF EXISTS test_callback_t3;");
+
+    store->ExecuteSql("CREATE TABLE if not exists test_callback_t3 "
+    "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+    "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+    // set TrackerTable
+    DistributedDB::TrackerSchema tracker;
+    tracker.tableName = "test_callback_t3";
+    tracker.extendColName = "";
+    tracker.trackerColNames = {"id", "timestamp"};
+    DistributedDB::RelationalStoreManager rStoreManager("test_app", "test_user_id", 0);
+    DistributedDB::RelationalStoreDelegate::Option option;
+    DistributedDB::RelationalStoreDelegate *g_delegate = nullptr;
+    EXPECT_EQ(RdbStoreImplTest::DATABASE_NAME, "/data/test/stepResultSet_impl_test.db");
+    int status = rStoreManager.OpenStore(RdbStoreImplTest::DATABASE_NAME, "test_callback_t3", option, g_delegate);
+    EXPECT_EQ(E_OK, status);
+    int setStatus = g_delegate->SetTrackerTable(tracker);
+    EXPECT_EQ(E_OK, setStatus);
+
+    int64_t rowId;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutInt("data_key", ValueObject(1));
+    valuesBucket.PutInt("timestamp", ValueObject(1000000000));
+    int errorCode = store->Insert(rowId, "test_callback_t3", valuesBucket);
+    EXPECT_EQ(E_OK, errorCode);
+    EXPECT_EQ(1, rowId);
+    errorCode = store->ExecuteSql("UPDATE test_callback_t3 SET timestamp = 100 WHERE id = 1;");
+    EXPECT_EQ(E_OK, errorCode);
+
+    store->ExecuteSql("DROP TABLE IF EXISTS test_callback_t3;");
 }

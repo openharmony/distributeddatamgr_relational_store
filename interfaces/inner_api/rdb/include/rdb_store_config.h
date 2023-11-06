@@ -507,6 +507,15 @@ public:
                && this->readConSize_ == config.readConSize_ && this->customDir_ == config.customDir_;
     }
 
+    /**
+     * @brief Checks whether the database isSearchable necessary.
+     */
+    bool IsSearchable() const;
+    /**
+     * @brief Sets whether the database Searchable necessary.
+     */
+    void SetSearchable(bool searchable);
+
 private:
     void ClearEncryptKey();
 
@@ -543,6 +552,7 @@ private:
     std::string customDir_;
 
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
+    bool isSearchable_ = false;
 };
 } // namespace OHOS::NativeRdb
 

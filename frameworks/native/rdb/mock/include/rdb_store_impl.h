@@ -113,6 +113,8 @@ private:
     int InnerBackup(const std::string databasePath,
         const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>());
     inline std::string GetSqlArgs(size_t size);
+    int RegisterDataChangeCallback();
+    int NotifyDataChange(DistributedRdb::RdbChangedData &rdbChangedData);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;
