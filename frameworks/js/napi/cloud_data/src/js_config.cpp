@@ -254,6 +254,7 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
     struct ChangeAppSwitchContext : public ContextBase {
         std::string accountId;
         std::string bundleName;
+        int32_t userId = CloudService::INVALID_USER_ID;
         ExtraData extInfo;
     };
     auto ctxt = std::make_shared<ChangeAppSwitchContext>();
@@ -265,13 +266,23 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
             ASSERT_BUSINESS_ERR(
                 ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of extInfo must be Extradata.");
         } else {
-            // 0 is the index of argument accountId, 1 is the index of argument bundleName
-            int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
-            ASSERT_BUSINESS_ERR(
-                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
-            status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
-            ASSERT_BUSINESS_ERR(
-                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
+            napi_valuetype type = napi_undefined;
+            if (napi_typeof(env, argv[1], &type)==napi_ok && type== napi_number) {
+                int status = JSUtils::Convert2Value(env, argv[0], ctxt->extInfo);
+                ASSERT_BUSINESS_ERR(
+                    ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of extInfo must be Extradata.");
+                status = JSUtils::Convert2ValueExt(env, argv[1], ctxt->userId);
+                ASSERT_BUSINESS_ERR(
+                    ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of extInfo must be int32_t.");
+            } else {
+                // 0 is the index of argument accountId, 1 is the index of argument bundleName
+                int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
+                ASSERT_BUSINESS_ERR(
+                    ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
+                status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
+                ASSERT_BUSINESS_ERR(
+                    ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
+            }
         }
     });
 
@@ -290,7 +301,7 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
         }
         int32_t status ;
         if (ctxt->accountId.empty() || ctxt->bundleName.empty()) {
-            status = proxy->NotifyChange(ctxt->extInfo.eventId, ctxt->extInfo.extraData);
+            status = proxy->NotifyChange(ctxt->extInfo.eventId, ctxt->extInfo.extraData, ctxt->userId);
         } else {
             status = proxy->NotifyDataChange(ctxt->accountId, ctxt->bundleName);
         }

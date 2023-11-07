@@ -20,7 +20,7 @@ namespace JSUtils {
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, OHOS::CloudData::JsConfig::ExtraData &output)
 {
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     napi_status status = napi_typeof(env, input, &type);
     if (status != napi_ok || type != napi_object) {
         return napi_invalid_arg;

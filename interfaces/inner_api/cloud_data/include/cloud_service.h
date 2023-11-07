@@ -57,13 +57,15 @@ public:
         CLOUD_CONFIG_PERMISSION_DENIED
     };
 
+    static const int INVALID_USER_ID= -1;
+
     virtual ~CloudService() = default;
     virtual int32_t EnableCloud(const std::string &id, const std::map<std::string, int32_t> &switches) = 0;
     virtual int32_t DisableCloud(const std::string &id) = 0;
     virtual int32_t ChangeAppSwitch(const std::string &id, const std::string &bundleName, int32_t appSwitch) = 0;
     virtual int32_t Clean(const std::string &id, const std::map<std::string, int32_t> &actions) = 0;
     virtual int32_t NotifyDataChange(const std::string &id, const std::string &bundleName) = 0;
-    virtual int32_t NotifyChange(const std::string &eventId, const std::string &extraData) = 0;
+    virtual int32_t NotifyChange(const std::string &eventId, const std::string &extraData, int32_t userId) = 0;
 
     inline static constexpr const char *SERVICE_NAME = "cloud";
 };
