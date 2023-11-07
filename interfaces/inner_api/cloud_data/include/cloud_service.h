@@ -57,7 +57,7 @@ public:
         CLOUD_CONFIG_PERMISSION_DENIED
     };
 
-    static const int INVALID_USER_ID= -1;
+    static const int INVALID_USER_ID = -1;
 
     virtual ~CloudService() = default;
     virtual int32_t EnableCloud(const std::string &id, const std::map<std::string, int32_t> &switches) = 0;
