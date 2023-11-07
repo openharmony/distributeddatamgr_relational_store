@@ -251,12 +251,6 @@ napi_value JsConfig::Clean(napi_env env, napi_callback_info info)
  */
 napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
 {
-    struct ChangeAppSwitchContext : public ContextBase {
-        std::string accountId;
-        std::string bundleName;
-        int32_t userId = CloudService::INVALID_USER_ID;
-        ExtraData extInfo;
-    };
     auto ctxt = std::make_shared<ChangeAppSwitchContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
         // required 2 arguments :: <accountId> <bundleName>
