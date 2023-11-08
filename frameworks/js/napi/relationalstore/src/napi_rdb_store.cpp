@@ -109,6 +109,7 @@ RdbStoreProxy::RdbStoreProxy()
 RdbStoreProxy::~RdbStoreProxy()
 {
     LOG_DEBUG("RdbStoreProxy destructor");
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     if (rdbStore_ == nullptr) {
         return;
     }
@@ -139,6 +140,7 @@ RdbStoreProxy::~RdbStoreProxy()
     for (const auto &obs : syncObservers_) {
         rdbStore_->UnregisterAutoSyncCallback(obs);
     }
+#endif
 }
 
 bool RdbStoreProxy::IsSystemAppCalled()
