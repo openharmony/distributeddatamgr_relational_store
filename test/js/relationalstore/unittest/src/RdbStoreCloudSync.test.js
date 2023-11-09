@@ -426,22 +426,22 @@ describe('rdbStoreCloudSyncTest', function () {
             console.log(TAG + `Progress:` + JSON.stringify(detail));
             done();
         }
-        let predicates = await new relationalStore.RdbPredicates("test")
+        let predicates = new relationalStore.RdbPredicates("test")
         predicates.in("id", ["id1","id2"]);
         try {
             await rdbStore.cloudSync(relationalStore.SyncMode.SYNC_MODE_CLOUD_FIRST, predicates, Progress)
         } catch (err) {
             console.log(TAG + `cloud sync fail, errcode:${JSON.stringify(err)}.`);
+            done();
             expect("202").assertEqual(err.code)
         }
-        done();
         console.log(TAG + "************* testRdbStoreCloudSync0015 end *************");
     })
 
     /**
-     * @tc.name cloud sync with RdbPredicates, SyncMode is SYNC_MODE_CLOUD_FIRST and promise method
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_SYNC_0015
-     * @tc.desc cloud sync with RdbPredicates, SyncMode is SYNC_MODE_CLOUD_FIRST and promise method
+     * @tc.name cloud sync with RdbPredicates, SyncMode is SYNC_MODE_CLOUD_FIRST and callback method
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_SYNC_0016
+     * @tc.desc cloud sync with RdbPredicates, SyncMode is SYNC_MODE_CLOUD_FIRST and callback method
      */
     it('testRdbStoreCloudSync0016', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreCloudSync0016 start *************");
@@ -450,17 +450,43 @@ describe('rdbStoreCloudSyncTest', function () {
             function Progress(detail) {
                 console.log(TAG + `Progress:` + JSON.stringify(detail));
             }
-            let predicates = await new relationalStore.RdbPredicates("test")
+            let predicates = new relationalStore.RdbPredicates("test")
             predicates.in("id", ["id1","id2"]);
             rdbStore.cloudSync(relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, predicates, Progress, () => {
+                done();
                 expect(false).assertTrue()
             });
         } catch (err) {
             console.log(TAG + `cloud sync fail, errcode:${JSON.stringify(err)}.`);
+            done();
             expect("202").assertEqual(err.code)
         }
-        done();
         console.log(TAG + "************* testRdbStoreCloudSync0016 end *************");
     })
+
+    /**
+     * @tc.name cloud sync with exception parameter, SyncMode is SYNC_MODE_CLOUD_FIRST and callback method
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_SYNC_0017
+     * @tc.desc cloud sync with exception parameter, SyncMode is SYNC_MODE_CLOUD_FIRST and callback method
+     */
+    it('testRdbStoreCloudSync0017', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreCloudSync0017 start *************");
+        try {
+
+            function Progress(detail) {
+                console.log(TAG + `Progress:` + JSON.stringify(detail));
+            }
+            rdbStore.cloudSync(relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, 1410, Progress, () => {
+                done();
+                expect(false).assertTrue()
+            });
+        } catch (err) {
+            console.log(TAG + `cloud sync fail, errcode:${JSON.stringify(err)}.`);
+            done();
+            expect(err.code).assertEqual('401');
+        }
+        console.log(TAG + "************* testRdbStoreCloudSync0017 end *************");
+    })
+
     console.log(TAG + "*************Unit Test End*************");
 })
