@@ -450,15 +450,18 @@ describe('rdbStoreDistributedTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_021
      * @tc.desc normal testcase for autoSyncProgress of interface 'on'
      */
-    it('testRdbStoreDistributed0021', 0, async function () {
+    it('testRdbStoreDistributed0021', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDistributed0021 start *************");
         try {
             rdbStore.on("autoSyncProgress", function (detail) {
                 console.log(TAG + `Progress:` + JSON.stringify(detail));
             });
+            done();
+            expect(rdbStore).assertEqual(rdbStore);
             console.log(TAG + "on autoSyncProgress success");
         } catch (err) {
             console.log(TAG + "on autoSyncProgress" + err);
+            done();
             expect().assertFail();
         }
         console.log(TAG + "************* testRdbStoreDistributed0021 end *************");
@@ -469,15 +472,18 @@ describe('rdbStoreDistributedTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_022
      * @tc.desc normal testcase for autoSyncProgress of interface 'off'
      */
-    it('testRdbStoreDistributed0022', 0, async function () {
+    it('testRdbStoreDistributed0022', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDistributed0022 start *************");
         try {
             rdbStore.off("autoSyncProgress", function (detail) {
                 console.log(TAG + `Progress:` + JSON.stringify(detail));
             });
+            done();
+            expect(rdbStore).assertEqual(rdbStore);
             console.log(TAG + "off autoSyncProgress success");
         } catch (err) {
             console.log(TAG + "off autoSyncProgress" + err);
+            done();
             expect().assertFail();
         }
         console.log(TAG + "************* testRdbStoreDistributed0022 end *************");
@@ -488,13 +494,16 @@ describe('rdbStoreDistributedTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_023
      * @tc.desc normal testcase for autoSyncProgress of interface 'off'
      */
-    it('testRdbStoreDistributed0023', 0, async function () {
+    it('testRdbStoreDistributed0023', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDistributed0023 start *************");
         try {
             rdbStore.off("autoSyncProgress", null);
+            done();
+            expect(rdbStore).assertEqual(rdbStore);
             console.log(TAG + "off autoSyncProgress success");
         } catch (err) {
             console.log(TAG + "off autoSyncProgress" + err);
+            done();
             expect().assertFail();
         }
         console.log(TAG + "************* testRdbStoreDistributed0023 end *************");
@@ -505,13 +514,16 @@ describe('rdbStoreDistributedTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_024
      * @tc.desc normal testcase for autoSyncProgress of interface 'off'
      */
-    it('testRdbStoreDistributed0024', 0, async function () {
+    it('testRdbStoreDistributed0024', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDistributed0024 start *************");
         try {
             rdbStore.off("autoSyncProgress", undefined);
+            done();
+            expect(rdbStore).assertEqual(rdbStore);
             console.log(TAG + "off autoSyncProgress success");
         } catch (err) {
             console.log(TAG + "off autoSyncProgress" + err);
+            done();
             expect().assertFail();
         }
         console.log(TAG + "************* testRdbStoreDistributed0024 end *************");
@@ -522,13 +534,16 @@ describe('rdbStoreDistributedTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_025
      * @tc.desc normal testcase for autoSyncProgress of interface 'off'
      */
-    it('testRdbStoreDistributed0025', 0, async function () {
+    it('testRdbStoreDistributed0025', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDistributed0025 start *************");
         try {
             rdbStore.off("autoSyncProgress");
+            done();
+            expect(rdbStore).assertEqual(rdbStore);
             console.log(TAG + "off autoSyncProgress success");
         } catch (err) {
             console.log(TAG + "off autoSyncProgress" + err);
+            done();
             expect().assertFail();
         }
         console.log(TAG + "************* testRdbStoreDistributed0025 end *************");
