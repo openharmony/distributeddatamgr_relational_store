@@ -33,6 +33,13 @@ config("rdb_data_ability_adapter_public_config") {
 }
 
 ohos_shared_library("rdb_data_ability_adapter") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [
     "${relational_store_native_path}/rdb_data_ability_adapter/src/rdb_data_ability_utils.cpp",
     "${relational_store_native_path}/rdb_data_ability_adapter/src/result_set_utils.cpp",

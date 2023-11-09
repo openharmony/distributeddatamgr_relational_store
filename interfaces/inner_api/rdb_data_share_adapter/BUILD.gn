@@ -38,6 +38,13 @@ config("rdb_data_share_adapter_public_config") {
 }
 
 ohos_shared_library("rdb_data_share_adapter") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [
     "${relational_store_native_path}/rdb_data_share_adapter/src/rdb_result_set_bridge.cpp",
     "${relational_store_native_path}/rdb_data_share_adapter/src/rdb_utils.cpp",
