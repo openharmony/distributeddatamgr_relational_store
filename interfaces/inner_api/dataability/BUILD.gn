@@ -36,6 +36,13 @@ config("native_dataability_public_config") {
 }
 
 ohos_shared_library("native_dataability") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   part_name = "relational_store"
   sources = [
     "${relational_store_native_path}/dataability/src/data_ability_predicates.cpp",

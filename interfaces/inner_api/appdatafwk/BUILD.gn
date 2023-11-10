@@ -70,6 +70,15 @@ if (is_android || is_ios) {
   }
 } else {
   ohos_shared_library("relational_common_base") {
+    if (is_ohos) {
+      branch_protector_ret = "pac_ret"
+      sanitize = {
+        cfi = true
+        cfi_cross_dso = true
+        debug = false
+      }
+    }
+
     sources =
         [ "${relational_store_native_path}/appdatafwk/src/serializable.cpp" ]
 
@@ -96,6 +105,13 @@ if (is_android || is_ios) {
 }
 
 ohos_shared_library("native_appdatafwk") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources =
       [ "${relational_store_native_path}/appdatafwk/src/shared_block.cpp" ]
 
