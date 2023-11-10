@@ -63,6 +63,15 @@ ohos_shared_library("napi_rdb") {
       "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
     ]
   } else {
+    if (is_ohos) {
+      branch_protector_ret = "pac_ret"
+      sanitize = {
+        cfi = true
+        cfi_cross_dso = true
+        debug = false
+      }
+    }
+
     include_dirs = [
       "include",
       "${datashare_path}/common/include/",
@@ -130,6 +139,15 @@ ohos_shared_library("rdb") {
       "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
     ]
   } else {
+    if (is_ohos) {
+      branch_protector_ret = "pac_ret"
+      sanitize = {
+        cfi = true
+        cfi_cross_dso = true
+        debug = false
+      }
+    }
+
     include_dirs = [
       "include",
       "${datashare_path}/common/include/",
