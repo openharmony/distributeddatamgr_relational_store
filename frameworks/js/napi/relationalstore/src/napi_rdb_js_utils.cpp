@@ -97,7 +97,8 @@ napi_value Convert2JSValue(napi_env env, const Asset &value)
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, modifyTime), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, size), object);
     NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, path), object);
-    NAPI_CALL_RETURN_ERR(ADD_JS_PROPERTY(env, object, value, status), object);
+    auto outputStatus = value.status & ~0xF0000000;
+    NAPI_CALL_RETURN_ERR(napi_set_named_property(env, object, "status", Convert2JSValue(env, outputStatus)), object);
     return object;
 }
 
