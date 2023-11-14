@@ -45,6 +45,13 @@ public:
     static std::shared_ptr<SubObserver> observer_;
 };
 
+class TestDetailProgressObserver : public DetailProgressObserver {
+public:
+    virtual ~TestDetailProgressObserver() {}
+
+    virtual void ProgressNotification(const Details& details) override {}
+};
+
 const std::string RdbStoreSubTest::MAIN_DATABASE_NAME = RDB_TEST_PATH + "subscribe.db";
 std::shared_ptr<RdbStore> RdbStoreSubTest::store = nullptr;
 std::shared_ptr<SubObserver> RdbStoreSubTest::observer_ = nullptr;
@@ -190,4 +197,28 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocal, TestSize.Level1)
     int count;
     resultSet->GetRowCount(count);
     EXPECT_EQ(1, count);
+}
+
+/**
+* @tc.name: RdbStore_RegisterAutoSyncCallback_001
+* @tc.desc: Test RegisterAutoSyncCallback
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbStoreSubTest, RdbStore_RegisterAutoSyncCallback_001, TestSize.Level1)
+{
+    EXPECT_NE(store, nullptr) << "store is null";
+    auto status = store->RegisterAutoSyncCallback(std::make_shared<TestDetailProgressObserver>());
+    EXPECT_EQ(status, E_OK);
+}
+
+/**
+* @tc.name: RdbStore_UnregisterAutoSyncCallback_001
+* @tc.desc: Test UnregisterAutoSyncCallback
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbStoreSubTest, RdbStore_UnregisterAutoSyncCallback_001, TestSize.Level1)
+{
+    EXPECT_NE(store, nullptr) << "store is null";
+    auto status = store->UnregisterAutoSyncCallback(std::make_shared<TestDetailProgressObserver>());
+    EXPECT_EQ(status, E_OK);
 }
