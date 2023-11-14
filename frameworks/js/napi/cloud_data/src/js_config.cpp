@@ -246,17 +246,20 @@ napi_value JsConfig::Clean(napi_env env, napi_callback_info info)
  * [JS API Prototype]
  * [AsyncCallback]
  *      notifyDataChange(accountId: string, bundleName: string, callback: AsyncCallback<void>): void;
+ *      notifyDataChange(extInfo: ExtraData, callback: AsyncCallback<void>): void;
+ *      notifyDataChange(extInfo: ExtraData, userId: number,callback: AsyncCallback<void>): void;
  * [Promise]
  *      notifyDataChange(accountId: string, bundleName: string): Promise<void>;
+ *      notifyDataChange(extInfo: ExtraData, userId?: number): Promise<void>;
  */
+struct ChangeAppSwitchContext : public ContextBase {
+    std::string accountId;
+    std::string bundleName;
+    int32_t userId = CloudService::INVALID_USER_ID;
+    OHOS::CloudData::JsConfig::ExtraData extInfo;
+};
 napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
 {
-    struct ChangeAppSwitchContext : public ContextBase {
-        std::string accountId;
-        std::string bundleName;
-        int32_t userId = CloudService::INVALID_USER_ID;
-        ExtraData extInfo;
-    };
     auto ctxt = std::make_shared<ChangeAppSwitchContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
         napi_valuetype type = napi_undefined;
