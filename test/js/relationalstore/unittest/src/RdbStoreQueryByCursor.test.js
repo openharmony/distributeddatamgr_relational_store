@@ -338,6 +338,7 @@ describe('rdbStoreQueryByCursorTest', function () {
             return;
         }
         try {
+            let cursor = 100;
             rdbStore.cleanDirtyData("query_tb", cursor, (err) => {
                 if (err) {
                     console.error(TAG, "clean dirty data failed, err: code=" + err.code + " message=" + err.message);
