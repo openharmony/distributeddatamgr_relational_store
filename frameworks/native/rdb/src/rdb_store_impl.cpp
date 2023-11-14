@@ -610,6 +610,18 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     return QuerySql(sql, predicates.GetBindArgs());
 }
 
+std::pair<int32_t, std::shared_ptr<ResultSet>> RdbStoreImpl::QuerySharingResource(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
+{
+    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK) {
+        return { errCode, nullptr };
+    }
+    auto [status, resultSet] =
+        service->QuerySharingResource(syncerParam_, predicates.GetDistributedPredicates(), columns);
+    return { status, std::make_shared<ResultSetProxy>(resultSet) };
+}
+
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
     const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
