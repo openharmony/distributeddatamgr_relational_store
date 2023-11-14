@@ -25,11 +25,11 @@ int32_t Convert2Value(napi_env env, napi_value input, OHOS::CloudData::JsConfig:
     if (status != napi_ok || type != napi_object) {
         return napi_invalid_arg;
     }
-    int32_t result = Convert2Value(env, GetNamedProperty(env, input, "eventId"), output.eventId);
+    int32_t result = GET_PROPERTY(env, input, output, eventId);
     if (result != napi_ok) {
         return napi_invalid_arg;
     }
-    return Convert2Value(env, GetNamedProperty(env, input, "extraData"), output.extraData);
+    return GET_PROPERTY(env, input, output, extraData);
 }
 } // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit

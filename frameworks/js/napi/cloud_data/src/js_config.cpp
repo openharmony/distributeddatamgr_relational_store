@@ -251,31 +251,31 @@ napi_value JsConfig::Clean(napi_env env, napi_callback_info info)
  */
 napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
 {
+    struct ChangeAppSwitchContext : public ContextBase {
+        std::string accountId;
+        std::string bundleName;
+        int32_t userId = CloudService::INVALID_USER_ID;
+        ExtraData extInfo;
+    };
     auto ctxt = std::make_shared<ChangeAppSwitchContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
-        // required 2 arguments :: <accountId> <bundleName>
-        ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
-        if (argc < 2) {
-            int status = JSUtils::Convert2Value(env, argv[0], ctxt->extInfo);
-            ASSERT_BUSINESS_ERR(
-                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of extInfo must be Extradata.");
+        napi_valuetype type = napi_undefined;
+        if (napi_typeof(env, argv[0], &type) == napi_ok && type == napi_string && argc > 1) {
+            // 0 is the index of argument accountId, 1 is the index of argument bundleName
+            int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                "The type of accountId must be string.");
+            status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                "The type of bundleName must be string.");
         } else {
-            napi_valuetype type = napi_undefined;
-            if (napi_typeof(env, argv[1], &type)==napi_ok && type== napi_number) {
-                int status = JSUtils::Convert2Value(env, argv[0], ctxt->extInfo);
-                ASSERT_BUSINESS_ERR(
-                    ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of extInfo must be Extradata.");
+            int status = JSUtils::Convert2Value(env, argv[0], ctxt->extInfo);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                "The type of extInfo must be Extradata.");
+            if (argc > 1) {
                 status = JSUtils::Convert2ValueExt(env, argv[1], ctxt->userId);
-                ASSERT_BUSINESS_ERR(
-                    ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of extInfo must be int32_t.");
-            } else {
-                // 0 is the index of argument accountId, 1 is the index of argument bundleName
-                int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
-                ASSERT_BUSINESS_ERR(
-                    ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
-                status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
-                ASSERT_BUSINESS_ERR(
-                    ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
+                ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                    "The type of user must be number.");
             }
         }
     });

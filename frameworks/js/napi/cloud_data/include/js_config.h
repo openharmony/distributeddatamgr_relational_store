@@ -18,7 +18,6 @@
 
 #include "cloud_manager.h"
 #include "js_const_properties.h"
-#include "napi_queue.h"
 
 namespace OHOS::CloudData {
 class JsConfig {
@@ -37,13 +36,6 @@ public:
     struct ExtraData {
         std::string eventId;
         std::string extraData;
-    };
-
-    struct ChangeAppSwitchContext : public ContextBase {
-        std::string accountId;
-        std::string bundleName;
-        int32_t userId = CloudService::INVALID_USER_ID;
-        ExtraData extInfo;
     };
 
     static inline bool ValidSubscribeType(int32_t type)
