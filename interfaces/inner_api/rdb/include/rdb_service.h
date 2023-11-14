@@ -64,12 +64,15 @@ public:
 
     virtual int32_t GetSchema(const RdbSyncerParam &param) = 0;
 
-    //only use param.storeName_
+    // only use param.storeName_
     virtual int32_t Delete(const RdbSyncerParam &param) = 0;
 
-    inline static constexpr const char *SERVICE_NAME = "relational_store";
+    virtual std::pair<int32_t, sptr<IRemoteObject>> QuerySharingResource(
+        const RdbSyncerParam &param, const PredicatesMemo &predicates, const std::vector<std::string> &columns) = 0;
 
     virtual int32_t NotifyDataChange(const RdbSyncerParam &param, const RdbChangedData &rdbChangedData) = 0;
+
+    inline static constexpr const char *SERVICE_NAME = "relational_store";
 };
 }
 } // namespace OHOS::DistributedRdb

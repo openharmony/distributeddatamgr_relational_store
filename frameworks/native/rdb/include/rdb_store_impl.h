@@ -141,6 +141,8 @@ public:
         const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
     std::shared_ptr<AbsSharedResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
+    std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
     int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;

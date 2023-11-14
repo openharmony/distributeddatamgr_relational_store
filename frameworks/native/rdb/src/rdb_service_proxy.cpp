@@ -342,6 +342,21 @@ int32_t RdbServiceProxy::Delete(const RdbSyncerParam &param)
     return status;
 }
 
+std::pair<int32_t, sptr<IRemoteObject>> RdbServiceProxy::QuerySharingResource(const RdbSyncerParam& param,
+    const PredicatesMemo &predicates, const std::vector<std::string> &columns)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_QUERY_SHARING_RESOURCE), reply,
+        param, predicates, columns);
+    sptr<IRemoteObject> remote = reply.ReadRemoteObject();
+
+//    if (status != RDB_OK || remote == nullptr) {
+//        LOG_ERROR("status:%{public}d, remote object is null:%{public}d", status, remote == nullptr);
+//        return { status, nullptr };
+//    }
+    return { status, remote };
+}
+
 int32_t RdbServiceProxy::RegisterAutoSyncCallback(
     const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer)
 {
