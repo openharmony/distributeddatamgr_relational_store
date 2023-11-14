@@ -44,6 +44,7 @@ describe('rdbStoreQueryByCursorTest', function () {
             }
             await rdbStore.setDistributedTables(
                 ["query_tb"], relationalStore.DistributedType.DISTRIBUTED_CLOUD, setConfig);
+            console.log(TAG + "set distributed tables success");
         } catch (err) {
             console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
             expect().assertFail()
@@ -309,15 +310,20 @@ describe('rdbStoreQueryByCursorTest', function () {
         if (rdbStore == undefined) {
             return;
         }
-        let cursor = 3;
-        let promise = rdbStore.cleanDirtyData();
-        await promise.then((err) => {
-            expect().assertFail();
-        }).catch((err) => {
-            console.log(TAG + `clean dirty data fail, errcode:${JSON.stringify(err)}.`);
-            expect(true).assertTrue();
-            done();
-        });
+        try {
+            let cursor = 3;
+            let promise = rdbStore.cleanDirtyData();
+            await promise.then((err) => {
+                expect().assertFail();
+            }).catch((err) => {
+                console.log(TAG + `clean dirty data fail, errcode:${JSON.stringify(err)}.`);
+                expect(true).assertTrue();
+                done();
+            });
+        } catch (err) {
+            console.error("clean dirty data, err: code=" + err.code + " message=" + err.message)
+            expect(true).assertTrue()
+        }
         done();
     })
 
