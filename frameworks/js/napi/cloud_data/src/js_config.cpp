@@ -294,7 +294,7 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
                 state = CloudService::NOT_SUPPORT;
             }
             ctxt->status = (GenerateNapiError(state, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
-                               ? napi_ok : napi_generic_failure;
+                ? napi_ok : napi_generic_failure;
             return;
         }
         int32_t status ;
@@ -305,7 +305,7 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
         }
         LOG_DEBUG("NotifyDataChange return %{public}d", status);
         ctxt->status = (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
-                           ? napi_ok : napi_generic_failure;
+            ? napi_ok : napi_generic_failure;
     };
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute);
 }
