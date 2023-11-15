@@ -214,7 +214,7 @@ HWTEST_F(RdbStoreSubTest, RdbStore_RegisterAutoSyncCallback_001, TestSize.Level1
 /**
 * @tc.name: RdbStore_UnregisterAutoSyncCallback_001
 * @tc.desc: Test UnregisterAutoSyncCallback
-* @tc.type: FUNC 
+* @tc.type: FUNC
 */
 HWTEST_F(RdbStoreSubTest, RdbStore_UnregisterAutoSyncCallback_001, TestSize.Level1)
 {
