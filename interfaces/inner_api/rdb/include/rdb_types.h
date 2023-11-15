@@ -43,7 +43,7 @@ struct RdbSyncerParam {
     int32_t level_ = 0;
     int32_t type_ = RDB_DEVICE_COLLABORATION;
     bool isEncrypt_ = false;
-    bool isAutoClean_ = false;
+    bool isAutoClean_ = true;
     std::vector<uint8_t> password_;
     ~RdbSyncerParam()
     {
