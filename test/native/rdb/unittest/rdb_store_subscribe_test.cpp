@@ -48,7 +48,7 @@ public:
 class TestDetailProgressObserver : public DetailProgressObserver {
 public:
     virtual ~TestDetailProgressObserver() {}
-    virtual void ProgressNotification(const Details& details) override {};
+    void ProgressNotification(const Details& details) override {};
 };
 
 const std::string RdbStoreSubTest::MAIN_DATABASE_NAME = RDB_TEST_PATH + "subscribe.db";
