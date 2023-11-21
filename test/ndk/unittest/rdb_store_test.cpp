@@ -665,15 +665,15 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_013, TestSize.Level1)
     EXPECT_EQ(table[0], "store_test");
     Rdb_SyncCallback callback = CloudSyncCallback;
     auto errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, &callback);
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, callback);
     EXPECT_EQ(errorCode, RDB_OK);
 
     errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, &callback);
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, callback);
     EXPECT_EQ(errorCode, RDB_OK);
 
     errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_NATIVE_FIRST, table, TABLE_COUNT, &callback);
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_NATIVE_FIRST, table, TABLE_COUNT, callback);
     EXPECT_EQ(errorCode, RDB_OK);
 
     errorCode =
@@ -715,15 +715,15 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_015, TestSize.Level1)
     table[0] = "store_test";
     Rdb_SyncCallback callback = CloudSyncCallback;
     auto errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, &callback);
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, callback);
     EXPECT_EQ(errorCode, RDB_OK);
 
     errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, &callback);
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, callback);
     EXPECT_EQ(errorCode, RDB_OK);
 
     errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_NATIVE_FIRST, table, TABLE_COUNT, &callback);
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_NATIVE_FIRST, table, TABLE_COUNT, callback);
     EXPECT_EQ(errorCode, RDB_OK);
 }
 
@@ -742,7 +742,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_016, TestSize.Level1)
     auto errorCode =
         OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, nullptr);
     EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
-    errorCode = OH_Rdb_CloudSync(nullptr, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, &callback);
+    errorCode = OH_Rdb_CloudSync(nullptr, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, callback);
     EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
 }
 
@@ -854,10 +854,10 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
 HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
 {
     EXPECT_NE(storeTestRdbStore_, nullptr);
-    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(storeTestRdbStore_, &observer), RDB_OK);
-    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(storeTestRdbStore_, &observer), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(storeTestRdbStore_, observer), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(storeTestRdbStore_, observer), RDB_OK);
     EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(storeTestRdbStore_, nullptr), RDB_E_INVALID_ARGS);
-    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(nullptr, &observer), RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(nullptr, observer), RDB_E_INVALID_ARGS);
 }
 
 /**
@@ -868,8 +868,8 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
 HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_019, TestSize.Level1)
 {
     EXPECT_NE(storeTestRdbStore_, nullptr);
-    EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(storeTestRdbStore_, &observer), RDB_OK);
-    EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(storeTestRdbStore_, &observer), RDB_OK);
+    EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(storeTestRdbStore_, observer), RDB_OK);
+    EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(storeTestRdbStore_, observer), RDB_OK);
     EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(storeTestRdbStore_, nullptr), RDB_OK);
-    EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(nullptr, &observer), RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(nullptr, observer), RDB_E_INVALID_ARGS);
 }
