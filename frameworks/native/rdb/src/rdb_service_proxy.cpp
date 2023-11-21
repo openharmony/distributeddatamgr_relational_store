@@ -342,19 +342,19 @@ int32_t RdbServiceProxy::Delete(const RdbSyncerParam &param)
     return status;
 }
 
-std::pair<int32_t, sptr<IRemoteObject>> RdbServiceProxy::QuerySharingResource(const RdbSyncerParam& param,
-    const PredicatesMemo &predicates, const std::vector<std::string> &columns)
+std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> RdbServiceProxy::QuerySharingResource(
+    const RdbSyncerParam &param, const PredicatesMemo &predicates, const std::vector<std::string> &columns)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_QUERY_SHARING_RESOURCE), reply,
         param, predicates, columns);
-    sptr<IRemoteObject> remote = reply.ReadRemoteObject();
-
-//    if (status != RDB_OK || remote == nullptr) {
-//        LOG_ERROR("status:%{public}d, remote object is null:%{public}d", status, remote == nullptr);
-//        return { status, nullptr };
-//    }
-    return { status, remote };
+    std::vector<NativeRdb::ValuesBucket> valueBuckets;
+    bool success = ITypesUtil::Unmarshal(reply, valueBuckets);
+    if (status != RDB_OK || !success) {
+        LOG_ERROR("status:%{public}d, valueBuckets size:%{public}zu", status, valueBuckets.size());
+        return { RDB_ERROR, {} };
+    }
+    return { RDB_OK, valueBuckets };
 }
 
 int32_t RdbServiceProxy::RegisterAutoSyncCallback(

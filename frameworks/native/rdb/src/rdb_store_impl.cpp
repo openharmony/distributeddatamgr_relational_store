@@ -21,6 +21,7 @@
 #include <sstream>
 
 #include "logger.h"
+#include "cache_result_set.h"
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"
 #include "rdb_store.h"
@@ -617,9 +618,9 @@ std::pair<int32_t, std::shared_ptr<ResultSet>> RdbStoreImpl::QuerySharingResourc
     if (errCode != E_OK) {
         return { errCode, nullptr };
     }
-    auto [status, resultSet] =
+    auto [status, valueBuckets] =
         service->QuerySharingResource(syncerParam_, predicates.GetDistributedPredicates(), columns);
-    return { status, std::make_shared<ResultSetProxy>(resultSet) };
+    return { status, std::make_shared<CacheResultSet>(std::move(valueBuckets)) };
 }
 
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(

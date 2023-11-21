@@ -22,6 +22,7 @@
 #include "rdb_types.h"
 #include "rdb_notifier.h"
 #include "distributeddata_relational_store_ipc_interface_code.h"
+#include "values_bucket.h"
 
 namespace OHOS {
 template <typename T>
@@ -67,7 +68,7 @@ public:
     // only use param.storeName_
     virtual int32_t Delete(const RdbSyncerParam &param) = 0;
 
-    virtual std::pair<int32_t, sptr<IRemoteObject>> QuerySharingResource(
+    virtual std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> QuerySharingResource(
         const RdbSyncerParam &param, const PredicatesMemo &predicates, const std::vector<std::string> &columns) = 0;
 
     virtual int32_t NotifyDataChange(const RdbSyncerParam &param, const RdbChangedData &rdbChangedData) = 0;
