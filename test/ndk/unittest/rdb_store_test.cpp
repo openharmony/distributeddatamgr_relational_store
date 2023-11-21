@@ -847,29 +847,29 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_018
- * @tc.desc: testCase for OH_Rdb_SubscribeAutoSyncProgress test.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
-{
-    EXPECT_NE(storeTestRdbStore_, nullptr);
-    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(storeTestRdbStore_, observer), RDB_OK);
-    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(storeTestRdbStore_, observer), RDB_OK);
-    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(storeTestRdbStore_, nullptr), RDB_E_INVALID_ARGS);
-    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(nullptr, observer), RDB_E_INVALID_ARGS);
-}
-
-/**
  * @tc.name: RDB_Native_store_test_019
- * @tc.desc: testCase for OH_Rdb_UnsubscribeAutoSyncProgress test.
+ * @tc.desc: testCase for OH_Rdb_SubscribeAutoSyncProgress test.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_019, TestSize.Level1)
 {
     EXPECT_NE(storeTestRdbStore_, nullptr);
-    EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(storeTestRdbStore_, observer), RDB_OK);
-    EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(storeTestRdbStore_, observer), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(storeTestRdbStore_, &observer), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(storeTestRdbStore_, &observer), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(storeTestRdbStore_, nullptr), RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(nullptr, &observer), RDB_E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_020
+ * @tc.desc: testCase for OH_Rdb_UnsubscribeAutoSyncProgress test.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_020, TestSize.Level1)
+{
+    EXPECT_NE(storeTestRdbStore_, nullptr);
+    EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(storeTestRdbStore_, &observer), RDB_OK);
+    EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(storeTestRdbStore_, &observer), RDB_OK);
     EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(storeTestRdbStore_, nullptr), RDB_OK);
-    EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(nullptr, observer), RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(nullptr, &observer), RDB_E_INVALID_ARGS);
 }

@@ -802,7 +802,7 @@ int OH_Rdb_CloudSync(OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[
 * @see Rdb_SyncObserver.
 * @since 11
 */
-int OH_Rdb_SubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_SyncObserver observer);
+int OH_Rdb_SubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_SyncObserver *observer);
 
 /**
 * @brief Unsubscribes from the automatic synchronziation progress of an RDB store.
@@ -815,7 +815,7 @@ int OH_Rdb_SubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_SyncObserver obser
 * @see Rdb_SyncObserver.
 * @since 11
 */
-int OH_Rdb_UnsubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_SyncObserver observer);
+int OH_Rdb_UnsubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_SyncObserver *observer);
 #ifdef __cplusplus
 };
 #endif
