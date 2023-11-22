@@ -62,7 +62,7 @@ OHOS::RdbNdk::RelationalStore::RelationalStore(std::shared_ptr<OHOS::NativeRdb::
     id = RDB_STORE_CID;
 }
 
-int RelationalStore::SubscribeAutoSyncProgress(Rdb_SyncObserver *callback)
+int RelationalStore::SubscribeAutoSyncProgress(Rdb_ProgressObserver *callback)
 {
     std::lock_guard<decltype(mutex_)> lock(mutex_) ;
     bool result = std::any_of(callbacks_.begin(), callbacks_.end(), [callback](const auto &observer) {
@@ -82,7 +82,7 @@ int RelationalStore::SubscribeAutoSyncProgress(Rdb_SyncObserver *callback)
     return NativeRdb::E_OK;
 }
 
-int RelationalStore::UnsubscribeAutoSyncProgress(Rdb_SyncObserver *callback)
+int RelationalStore::UnsubscribeAutoSyncProgress(Rdb_ProgressObserver *callback)
 {
     std::lock_guard<decltype(mutex_)> lock(mutex_) ;
     for (auto it = callbacks_.begin(); it != callbacks_.end();) {
@@ -513,7 +513,7 @@ int OH_Rdb_CloudSync(OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[
     return rdbStore->GetStore()->Sync(syncOption, tableNames, progressCallback);
 }
 
-int OH_Rdb_SubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_SyncObserver *callback)
+int OH_Rdb_SubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_ProgressObserver *callback)
 {
     auto rdbStore = GetRelationalStore(store);
     if (rdbStore == nullptr || callback == nullptr) {
@@ -522,7 +522,7 @@ int OH_Rdb_SubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_SyncObserver *call
     return rdbStore->SubscribeAutoSyncProgress(callback);
 }
 
-int OH_Rdb_UnsubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_SyncObserver *callback)
+int OH_Rdb_UnsubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_ProgressObserver *callback)
 {
     auto rdbStore = GetRelationalStore(store);
     if (rdbStore == nullptr) {
@@ -531,7 +531,7 @@ int OH_Rdb_UnsubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_SyncObserver *ca
     return rdbStore->UnsubscribeAutoSyncProgress(callback);
 }
 
-NDKDetailProgressObserver::NDKDetailProgressObserver(Rdb_SyncObserver *callback):callback_(callback)
+NDKDetailProgressObserver::NDKDetailProgressObserver(Rdb_ProgressObserver *callback):callback_(callback)
 {
 }
 
@@ -545,7 +545,7 @@ void NDKDetailProgressObserver::ProgressNotification(const Details &details)
     progressDetails.DestroyTableDetails();
 }
 
-bool NDKDetailProgressObserver::operator==(Rdb_SyncObserver *callback)
+bool NDKDetailProgressObserver::operator==(Rdb_ProgressObserver *callback)
 {
     return callback == callback_;
 }

@@ -148,8 +148,8 @@ void CloudSyncCallback(Rdb_ProgressDetails *progressDetails)
     CloudSyncObserverCallback(nullptr, progressDetails);
 }
 
-Rdb_SyncObserverCallback callback = CloudSyncObserverCallback;
-Rdb_SyncObserver observer = { nullptr, &callback };
+Rdb_ProgressCallback callback = CloudSyncObserverCallback;
+Rdb_ProgressObserver observer = { nullptr, callback };
 
 /**
  * @tc.name: RDB_Native_store_test_001

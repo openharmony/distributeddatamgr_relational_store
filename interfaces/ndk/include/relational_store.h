@@ -753,7 +753,7 @@ typedef void (*Rdb_SyncCallback)(Rdb_ProgressDetails *progressDetails);
 * @see Rdb_ProgressDetails.
 * @since 11
 */
-typedef void (*Rdb_SyncObserverCallback)(void *context, Rdb_ProgressDetails *progressDetails);
+typedef void (*Rdb_ProgressCallback)(void *context, Rdb_ProgressDetails *progressDetails);
 
 /**
  * @brief The observer of sync.
@@ -769,10 +769,10 @@ typedef struct Rdb_SyncObserver {
     void *context;
 
     /**
-    * The callback function of sync observer.
+    * The callback function of progress observer.
     */
-    Rdb_SyncObserverCallback *callback;
-} Rdb_SyncObserver;
+    Rdb_ProgressCallback callback;
+} Rdb_ProgressObserver;
 
 /**
  * @brief Sync data to cloud.
@@ -802,7 +802,7 @@ int OH_Rdb_CloudSync(OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[
 * @see Rdb_SyncObserver.
 * @since 11
 */
-int OH_Rdb_SubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_SyncObserver *observer);
+int OH_Rdb_SubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_ProgressObserver *observer);
 
 /**
 * @brief Unsubscribes from the automatic synchronziation progress of an RDB store.
@@ -815,7 +815,7 @@ int OH_Rdb_SubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_SyncObserver *obse
 * @see Rdb_SyncObserver.
 * @since 11
 */
-int OH_Rdb_UnsubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_SyncObserver *observer);
+int OH_Rdb_UnsubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_ProgressObserver *observer);
 #ifdef __cplusplus
 };
 #endif
