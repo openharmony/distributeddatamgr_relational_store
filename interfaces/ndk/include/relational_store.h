@@ -762,7 +762,7 @@ typedef void (*Rdb_ProgressCallback)(void *context, Rdb_ProgressDetails *progres
  * @see Rdb_ProgressDetails.
  * @since 11
  */
-typedef struct Rdb_SyncObserver {
+typedef struct Rdb_ProgressObserver {
     /**
     * The context of sync observer.
     */
