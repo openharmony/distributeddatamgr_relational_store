@@ -44,6 +44,9 @@ private:
  */
 class API_EXPORT ResultSet : public RemoteResultSet {
 public:
+    struct JsProxy {
+        std::shared_ptr<ResultSet> resultSet_;
+    };
     /**
      * @brief Destructor.
      */

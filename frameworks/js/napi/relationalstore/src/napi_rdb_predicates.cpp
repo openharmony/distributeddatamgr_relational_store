@@ -170,8 +170,8 @@ RdbPredicatesProxy::~RdbPredicatesProxy()
 }
 
 RdbPredicatesProxy::RdbPredicatesProxy(std::string &tableName)
-    : predicates_(std::make_shared<NativeRdb::RdbPredicates>(tableName))
 {
+    predicates_ = std::make_shared<NativeRdb::RdbPredicates>(tableName);
 }
 
 RdbPredicatesProxy *RdbPredicatesProxy::GetNativePredicates(napi_env env, napi_callback_info info)

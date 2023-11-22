@@ -252,6 +252,7 @@ struct Field {
     static constexpr const char *DELETED_FLAG_FIELD = "#_deleted_flag";
     static constexpr const char *OWNER_FIELD = "#_cloud_owner";
     static constexpr const char *PRIVILEGE_FIELD = "#_cloud_privilege";
+    static constexpr const char *SHARING_RESOURCE_FIELD = "#_sharing_resource_field";
 };
 
 struct RdbChangeProperties {
