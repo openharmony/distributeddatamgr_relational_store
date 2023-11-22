@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
-class RdbPredicatesProxy {
+class RdbPredicatesProxy : public NativeRdb::RdbPredicates::JsProxy {
 public:
     static void Init(napi_env env, napi_value exports);
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbPredicates> value);
@@ -102,8 +102,6 @@ private:
     static napi_value GetBindArgs(napi_env env, napi_callback_info info);
     static napi_value InDevices(napi_env env, napi_callback_info info);
     static napi_value InAllDevices(napi_env env, napi_callback_info info);
-
-    std::shared_ptr<NativeRdb::RdbPredicates> predicates_;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

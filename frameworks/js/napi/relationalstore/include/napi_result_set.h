@@ -28,7 +28,7 @@
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
-class ResultSetProxy final : public DataShare::ResultSetBridge::Creator {
+class ResultSetProxy final : public DataShare::ResultSetBridge::Creator, public NativeRdb::ResultSet::JsProxy {
 public:
     ResultSetProxy() = default;
     ~ResultSetProxy();
@@ -74,8 +74,6 @@ private:
     static napi_value IsColumnNull(napi_env env, napi_callback_info info);
     static napi_value GetRow(napi_env env, napi_callback_info info);
     static napi_value IsClosed(napi_env env, napi_callback_info info);
-
-    std::shared_ptr<NativeRdb::ResultSet> resultSet_;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

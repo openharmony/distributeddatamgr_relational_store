@@ -101,4 +101,18 @@ int32_t CloudServiceProxy::NotifyDataChange(const std::string &id, const std::st
     }
     return static_cast<Status>(status);
 }
+
+std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> CloudServiceProxy::AllocResourceAndShare(
+    const std::string &storeId, const DistributedRdb::PredicatesMemo &predicates,
+    const std::vector<std::string> &columns, const std::vector<Participant> &participants)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_ALLOC_RESOURCE_AND_SHARE, reply, storeId, predicates, columns, participants);
+    if (status != SUCCESS) {
+        LOG_ERROR("status:0x%{public}x invitationCode:%{public}.6s", status, storeId.c_str());
+    }
+    std::vector<NativeRdb::ValuesBucket> valueBuckets;
+    ITypesUtil::Unmarshal(reply, valueBuckets);
+    return { static_cast<Status>(status), valueBuckets };
+}
 } // namespace OHOS::CloudData

@@ -18,13 +18,12 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <vector>
+#include "cloud_types.h"
+#include "common_types.h"
+#include "rdb_types.h"
+#include "values_bucket.h"
 namespace OHOS {
-namespace DistributedRdb {
-struct PredicatesMemo;
-}
-namespace NativeRdb {
-class ValuesBucket;
-}
 namespace CloudData {
 class CloudService {
 public:

@@ -475,7 +475,7 @@ napi_value JSUtils::DefineClass(napi_env env, const std::string &spaceName, cons
     if (hasProp) {
         napi_get_named_property(env, root, propName.c_str(), &constructor);
         if (constructor != nullptr) {
-            LOG_DEBUG("got data.cloudData.%{public}s as constructor", propName.c_str());
+            LOG_DEBUG("got %{public}s from %{public}s", propName.c_str(), featureSpace->spaceName);
             return constructor;
         }
         hasProp = false; // no constructor.
@@ -487,7 +487,7 @@ napi_value JSUtils::DefineClass(napi_env env, const std::string &spaceName, cons
 
     if (!hasProp) {
         napi_set_named_property(env, root, propName.c_str(), constructor);
-        LOG_DEBUG("save constructor to data.cloudData.%{public}s", propName.c_str());
+        LOG_DEBUG("save %{public}s to %{public}s", propName.c_str(), featureSpace->spaceName);
     }
     return constructor;
 }
@@ -517,7 +517,7 @@ napi_value JSUtils::GetClass(napi_env env, const std::string &spaceName, const s
     }
     napi_get_named_property(env, root, propName.c_str(), &constructor);
     if (constructor != nullptr) {
-        LOG_DEBUG("got data.cloudData.%{public}s as constructor", propName.c_str());
+        LOG_DEBUG("got %{public}s from %{public}s", propName.c_str(), featureSpace->spaceName);
         return constructor;
     }
     hasProp = false; // no constructor.

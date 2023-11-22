@@ -25,6 +25,9 @@ namespace NativeRdb {
  */
 class API_EXPORT RdbPredicates : public AbsRdbPredicates {
 public:
+    struct JsProxy {
+        std::shared_ptr<RdbPredicates> predicates_;
+    };
     /**
      * @brief Constructor.
      *
