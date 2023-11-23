@@ -176,6 +176,12 @@ HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_003, TestSize.Level2)
     resultPtr->GetRowCount(count);
     EXPECT_EQ(1, count);
 
+    RdbStore::ModifyTime result = 
+        RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
+    RdbStore::PRIKey key = result.GetOriginKey(std::vector<uint8_t>{});
+    RdbStore::PRIKey monostate = std::monostate();
+    EXPECT_EQ(monostate, key);
+
     RdbStoreImplTest::store->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
 }
 
