@@ -60,6 +60,27 @@ napi_value JSUtils::GetNamedProperty(napi_env env, napi_value object, const char
     return jsItem;
 }
 
+std::pair<int32_t , napi_value> JSUtils::GetOptionalNamedProperty(napi_env env, napi_value input, const char *name)
+{
+    bool hasProp = false;
+    napi_status status = napi_has_named_property(env, input, name, &hasProp);
+    if (status != napi_ok) {
+        return std::make_pair(napi_generic_failure, nullptr);
+    }
+    if (!hasProp) {
+        return std::make_pair(napi_ok, nullptr);;
+    }
+    napi_value inner = nullptr;
+    status = napi_get_named_property(env, input, name, &inner);
+    if (status != napi_ok || inner == nullptr) {
+        return std::make_pair(napi_generic_failure, nullptr);
+    }
+    if (JSUtils::IsNull(env, inner)) {
+        return std::make_pair(napi_ok, nullptr);
+    }
+    return std::make_pair(napi_ok, inner);
+}
+
 std::string JSUtils::Convert2String(napi_env env, napi_value jsStr)
 {
     std::string value = ""; // TD: need to check everywhere in use whether empty is work well.

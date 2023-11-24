@@ -16,6 +16,7 @@
 #include "js_const_properties.h"
 
 #include "cloud_service.h"
+#include "cloud_types.h"
 #include "napi_queue.h"
 
 using namespace OHOS::Rdb;
@@ -42,11 +43,70 @@ static napi_value ExportAction(napi_env env)
     return action;
 }
 
+static napi_value ExportRole(napi_env env)
+{
+    napi_value role = nullptr;
+    napi_create_object(env, &role);
+    SetNamedProperty(env, role, "ROLE_INVITER", Role::ROLE_INVITER);
+    SetNamedProperty(env, role, "ROLE_INVITEE", Role::ROLE_INVITEE);
+    napi_object_freeze(env, role);
+    return role;
+}
+
+static napi_value ExportShareStatus(napi_env env)
+{
+    napi_value status = nullptr;
+    napi_create_object(env, &status);
+    SetNamedProperty(env, status, "STATUS_UNKNOWN", Confirmation::CFM_UNKNOWN);
+    SetNamedProperty(env, status, "STATUS_ACCEPTED", Confirmation::CFM_ACCEPTED);
+    SetNamedProperty(env, status, "STATUS_REJECTED", Confirmation::CFM_REJECTED);
+    SetNamedProperty(env, status, "STATUS_SUSPENDED", Confirmation::CFM_SUSPENDED);
+    napi_object_freeze(env, status);
+    return status;
+}
+
+static napi_value ExportShareCode(napi_env env)
+{
+    napi_value code = nullptr;
+    napi_create_object(env, &code);
+    SetNamedProperty(env, code, "SUCCESS", SharingCode::SUCCESS);
+    SetNamedProperty(env, code, "REPEATED_REQUEST", SharingCode::REPEATED_REQUEST);
+    SetNamedProperty(env, code, "NOT_INVITER", SharingCode::NOT_INVITER);
+    SetNamedProperty(env, code, "NOT_INVITER_OR_INVITEE", SharingCode::NOT_INVITER_OR_INVITEE);
+    SetNamedProperty(env, code, "OVER_QUOTA", SharingCode::OVER_QUOTA);
+    SetNamedProperty(env, code, "TOO_MANY_PARTICIPANTS", SharingCode::TOO_MANY_PARTICIPANTS);
+    SetNamedProperty(env, code, "INVALID_ARGS", SharingCode::INVALID_ARGS);
+    SetNamedProperty(env, code, "NETWORK_ERROR", SharingCode::NETWORK_ERROR);
+    SetNamedProperty(env, code, "CLOUD_DISABLED", SharingCode::CLOUD_DISABLED);
+    SetNamedProperty(env, code, "SERVER_ERROR", SharingCode::SERVER_ERROR);
+    SetNamedProperty(env, code, "INNER_ERROR", SharingCode::INNER_ERROR);
+    SetNamedProperty(env, code, "INVALID_INVITATION", SharingCode::INVALID_INVITATION);
+    SetNamedProperty(env, code, "RATE_LIMIT", SharingCode::RATE_LIMIT);
+    SetNamedProperty(env, code, "CUSTOM_ERROR", SharingCode::CUSTOM_ERROR);
+    napi_object_freeze(env, code);
+    return code;
+}
+
 napi_status InitConstProperties(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
         DECLARE_NAPI_PROPERTY("Action", ExportAction(env)),
         DECLARE_NAPI_PROPERTY("ClearAction", ExportAction(env)),
+    };
+    size_t count = sizeof(properties) / sizeof(properties[0]);
+
+    return napi_define_properties(env, exports, count, properties);
+}
+
+napi_status InitSharingConstProperties(napi_env env, napi_value exports)
+{
+    if (exports == nullptr) {
+        return napi_generic_failure;
+    }
+     const napi_property_descriptor properties[] = {
+        DECLARE_NAPI_PROPERTY("Role", ExportRole(env)),
+        DECLARE_NAPI_PROPERTY("Status", ExportShareStatus(env)),
+        DECLARE_NAPI_PROPERTY("SharingCode", ExportShareCode(env)),
     };
     size_t count = sizeof(properties) / sizeof(properties[0]);
 
