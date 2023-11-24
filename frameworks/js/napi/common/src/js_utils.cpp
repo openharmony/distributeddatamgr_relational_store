@@ -473,8 +473,9 @@ napi_value JSUtils::DefineClass(napi_env env, const std::string &spaceName, cons
     if (!featureSpace.has_value() || !featureSpace->isComponent) {
         return nullptr;
     }
-    if (GetClass(env, spaceName, className)) {
-        return GetClass(env, spaceName, className);
+    auto constructor = GetClass(env, spaceName, className);
+    if (constructor != nullptr) {
+        return constructor;
     }
     auto rootPropName = std::string(featureSpace->nameBase64);
     napi_value root = nullptr;
@@ -490,7 +491,6 @@ napi_value JSUtils::DefineClass(napi_env env, const std::string &spaceName, cons
     }
 
     std::string propName = "constructor_of_" + className;
-    napi_value constructor = nullptr;
     bool hasProp = false;
     napi_has_named_property(env, root, propName.c_str(), &hasProp);
     if (hasProp) {

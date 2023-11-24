@@ -109,7 +109,7 @@ std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> CloudServiceProxy::Allo
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_ALLOC_RESOURCE_AND_SHARE, reply, storeId, predicates, columns, participants);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x invitationCode:%{public}.6s", status, storeId.c_str());
+        LOG_ERROR("status:0x%{public}x storeName:%{public}.6s", status, storeId.c_str());
     }
     std::vector<NativeRdb::ValuesBucket> valueBuckets;
     ITypesUtil::Unmarshal(reply, valueBuckets);

@@ -16,11 +16,14 @@
 #include "js_cloud_utils.h"
 #include "logger.h"
 
-#define NAPI_CALL_RETURN_ERR(call, ret)    \
-    do {                                   \
-        if ((call) != napi_ok) {           \
-            return ret;                    \
-        }                                  \
+#define NAPI_CALL_RETURN_ERR(call, ret)  \
+    ASSERT_RETURN((call) != napi_ok, ret)
+
+#define ASSERT_RETURN(call, ret) \
+    do {                         \
+        if (!(call)) {           \
+            return ret;          \
+        }                        \
     } while (0)
 
 namespace OHOS::AppDataMgrJsKit {
@@ -78,7 +81,7 @@ int32_t Convert2Value(napi_env env, napi_value input, std::shared_ptr<RdbPredica
     }
     NativeRdb::RdbPredicates::JsProxy *jsProxy = nullptr;
     status = napi_unwrap(env, input, reinterpret_cast<void **>(&jsProxy));
-    NAPI_CALL_RETURN_ERR(status==napi_ok && jsProxy != nullptr && jsProxy->predicates_ != nullptr, napi_invalid_arg);
+    ASSERT_RETURN(status == napi_ok && jsProxy != nullptr && jsProxy->predicates_ != nullptr, napi_invalid_arg);
     output = jsProxy->predicates_;
     return napi_ok;
 }
