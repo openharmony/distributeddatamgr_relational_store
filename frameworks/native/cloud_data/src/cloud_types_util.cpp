@@ -96,18 +96,6 @@ bool Unmarshalling(SharingCode &output, MessageParcel &data)
 }
 
 template<>
-bool Marshalling(const CommonTypes::TsString &input, MessageParcel &data)
-{
-    return data.WriteString(input.value);
-}
-
-template<>
-bool Unmarshalling(CommonTypes::TsString &output, MessageParcel &data)
-{
-    return data.ReadString(output.value);
-}
-
-template<>
 bool Marshalling(const Asset &input, MessageParcel &data)
 {
     return Marshal(data, input.version, input.name, input.size, input.modifyTime, input.uri);

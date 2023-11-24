@@ -17,7 +17,6 @@
 
 #include "js_utils.h"
 #include "cloud_types.h"
-#include "common_types.h"
 #include "rdb_predicates.h"
 #include "result_set.h"
 
@@ -42,9 +41,6 @@ napi_value Convert2JSValue(napi_env env, const Participant &value);
 
 template<>
 napi_value Convert2JSValue(napi_env env, const Privilege &value);
-
-template<>
-napi_value Convert2JSValue(napi_env env, const CommonTypes::TsString &value);
 
 template<>
 napi_value Convert2JSValue(napi_env env, const std::shared_ptr<ResultSet> &value);

@@ -125,11 +125,6 @@ napi_value Convert2JSValue(napi_env env, const Privilege &value)
 }
 
 template<>
-napi_value Convert2JSValue(napi_env env, const CommonTypes::TsString &value)
-{
-    return JSUtils::Convert2JSValue(env, value.value);
-}
-template<>
 napi_value Convert2JSValue(napi_env env, const std::shared_ptr<ResultSet> &value)
 {
     auto constructor = JSUtils::GetClass(env, "ohos.data.relationalStore", "ResultSet");
