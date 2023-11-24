@@ -35,18 +35,17 @@ namespace OHOS {
 namespace RelationalStoreJsKit {
 using Asset = AssetValue;
 using Assets = std::vector<Asset>;
-static napi_ref __thread ctorRef_ = nullptr;
 static const int E_OK = 0;
 
 napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet)
 {
-    napi_value cons = GetConstructor(env);
+    napi_value cons = JSUtils::GetClass(env, "ohos.data.relationalStore", "ResultSet");
     if (cons == nullptr) {
-        LOG_ERROR("NewInstance GetConstructor is nullptr!");
+        LOG_ERROR("Constructor of ResultSet is nullptr!");
         return nullptr;
     }
     napi_value instance = nullptr;
-    napi_status status = napi_new_instance(env, cons, 0, nullptr, &instance);
+    auto status = napi_new_instance(env, cons, 0, nullptr, &instance);
     if (status != napi_ok) {
         LOG_ERROR("NewInstance napi_new_instance failed! code:%{public}d!", status);
         return nullptr;
@@ -72,54 +71,6 @@ std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
     return std::make_shared<RdbDataShareAdapter::RdbResultSetBridge>(std::move(resultSet_));
 }
 #endif
-
-napi_value ResultSetProxy::GetConstructor(napi_env env)
-{
-    napi_value cons = nullptr;
-    if (ctorRef_ != nullptr) {
-        NAPI_CALL(env, napi_get_reference_value(env, ctorRef_, &cons));
-        return cons;
-    }
-
-    LOG_INFO("GetConstructor result set constructor");
-    napi_property_descriptor clzDes[] = {
-        DECLARE_NAPI_FUNCTION("goToRow", GoToRow),
-        DECLARE_NAPI_FUNCTION("getLong", GetLong),
-        DECLARE_NAPI_FUNCTION("getColumnType", GetColumnType),
-        DECLARE_NAPI_FUNCTION("goTo", GoTo),
-        DECLARE_NAPI_FUNCTION("getColumnIndex", GetColumnIndex),
-        DECLARE_NAPI_FUNCTION("getColumnName", GetColumnName),
-        DECLARE_NAPI_FUNCTION("close", Close),
-        DECLARE_NAPI_FUNCTION("goToFirstRow", GoToFirstRow),
-        DECLARE_NAPI_FUNCTION("goToLastRow", GoToLastRow),
-        DECLARE_NAPI_FUNCTION("goToNextRow", GoToNextRow),
-        DECLARE_NAPI_FUNCTION("goToPreviousRow", GoToPreviousRow),
-        DECLARE_NAPI_FUNCTION("getInt", GetInt),
-        DECLARE_NAPI_FUNCTION("getBlob", GetBlob),
-        DECLARE_NAPI_FUNCTION("getAsset", GetAsset),
-        DECLARE_NAPI_FUNCTION("getAssets", GetAssets),
-        DECLARE_NAPI_FUNCTION("getString", GetString),
-        DECLARE_NAPI_FUNCTION("getDouble", GetDouble),
-        DECLARE_NAPI_FUNCTION("isColumnNull", IsColumnNull),
-        DECLARE_NAPI_FUNCTION("getRow", GetRow),
-
-        DECLARE_NAPI_GETTER("columnNames", GetAllColumnNames),
-        DECLARE_NAPI_GETTER("columnCount", GetColumnCount),
-        DECLARE_NAPI_GETTER("isEnded", IsEnded),
-        DECLARE_NAPI_GETTER("isStarted", IsBegin),
-        DECLARE_NAPI_GETTER("isClosed", IsClosed),
-        DECLARE_NAPI_GETTER("rowCount", GetRowCount),
-        DECLARE_NAPI_GETTER("rowIndex", GetRowIndex),
-        DECLARE_NAPI_GETTER("isAtFirstRow", IsAtFirstRow),
-        DECLARE_NAPI_GETTER("isAtLastRow", IsAtLastRow),
-    };
-
-    NAPI_CALL(env, napi_define_class(env, "ResultSet", NAPI_AUTO_LENGTH, Initialize, nullptr,
-                       sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
-    NAPI_CALL(env, napi_create_reference(env, cons, 1, &ctorRef_));
-    return cons;
-}
-
 napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
 {
     napi_value self = nullptr;
@@ -572,6 +523,50 @@ napi_value ResultSetProxy::IsClosed(napi_env env, napi_callback_info info)
     bool result = resultSetProxy->resultSet_->IsClosed();
 
     return JSUtils::Convert2JSValue(env, result);
+}
+
+void ResultSetProxy::Init(napi_env env, napi_value exports)
+{
+    LOG_INFO("ResultSetProxy::Init");
+    auto lambda = []() -> std::vector<napi_property_descriptor> {
+        std::vector<napi_property_descriptor> properties = {
+            DECLARE_NAPI_FUNCTION("goToRow", GoToRow),
+            DECLARE_NAPI_FUNCTION("getLong", GetLong),
+            DECLARE_NAPI_FUNCTION("getColumnType", GetColumnType),
+            DECLARE_NAPI_FUNCTION("goTo", GoTo),
+            DECLARE_NAPI_FUNCTION("getColumnIndex", GetColumnIndex),
+            DECLARE_NAPI_FUNCTION("getColumnName", GetColumnName),
+            DECLARE_NAPI_FUNCTION("close", Close),
+            DECLARE_NAPI_FUNCTION("goToFirstRow", GoToFirstRow),
+            DECLARE_NAPI_FUNCTION("goToLastRow", GoToLastRow),
+            DECLARE_NAPI_FUNCTION("goToNextRow", GoToNextRow),
+            DECLARE_NAPI_FUNCTION("goToPreviousRow", GoToPreviousRow),
+            DECLARE_NAPI_FUNCTION("getInt", GetInt),
+            DECLARE_NAPI_FUNCTION("getBlob", GetBlob),
+            DECLARE_NAPI_FUNCTION("getAsset", GetAsset),
+            DECLARE_NAPI_FUNCTION("getAssets", GetAssets),
+            DECLARE_NAPI_FUNCTION("getString", GetString),
+            DECLARE_NAPI_FUNCTION("getDouble", GetDouble),
+            DECLARE_NAPI_FUNCTION("isColumnNull", IsColumnNull),
+            DECLARE_NAPI_FUNCTION("getRow", GetRow),
+
+            DECLARE_NAPI_GETTER("columnNames", GetAllColumnNames),
+            DECLARE_NAPI_GETTER("columnCount", GetColumnCount),
+            DECLARE_NAPI_GETTER("isEnded", IsEnded),
+            DECLARE_NAPI_GETTER("isStarted", IsBegin),
+            DECLARE_NAPI_GETTER("isClosed", IsClosed),
+            DECLARE_NAPI_GETTER("rowCount", GetRowCount),
+            DECLARE_NAPI_GETTER("rowIndex", GetRowIndex),
+            DECLARE_NAPI_GETTER("isAtFirstRow", IsAtFirstRow),
+            DECLARE_NAPI_GETTER("isAtLastRow", IsAtLastRow),
+        };
+        return properties;
+    };
+
+    auto jsCtor = JSUtils::DefineClass(env, "ohos.data.relationalStore", "ResultSet", lambda, Initialize);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, exports, "ResultSet", jsCtor));
+
+    LOG_DEBUG("ResultSetProxy::Init end");
 }
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
