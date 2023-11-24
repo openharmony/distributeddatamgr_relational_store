@@ -263,9 +263,9 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
     auto ctxt = std::make_shared<ChangeAppSwitchContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
         // required 2 arguments :: <accountId> <bundleName>
-        ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
+        ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         napi_valuetype type = napi_undefined;
-        if (napi_typeof(env, argv[0], &type) == napi_ok && type == napi_string && argc > 1) {
+        if (napi_typeof(env, argv[1], &type) == napi_ok && type == napi_string && argc > 1) {
             // 0 is the index of argument accountId, 1 is the index of argument bundleName
             int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
             ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
