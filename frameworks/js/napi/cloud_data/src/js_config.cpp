@@ -256,7 +256,7 @@ struct ChangeAppSwitchContext : public ContextBase {
     std::string accountId;
     std::string bundleName;
     int32_t userId = CloudService::INVALID_USER_ID;
-    int32_t notifyStatus = OHOS::CloudData::JsConfig::ODL_NOTIFY_INTERFACE;
+    bool notifyStatus = false;
     OHOS::CloudData::JsConfig::ExtraData extInfo;
 };
 napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
@@ -266,7 +266,7 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
         // required 2 arguments :: <accountId> <bundleName>
         ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         napi_valuetype type = napi_undefined;
-        if (napi_typeof(env, argv[0], &type) == napi_ok && type != napi_object) {
+        if (argc > 1 && napi_typeof(env, argv[0], &type) == napi_ok && type != napi_object) {
             // 0 is the index of argument accountId, 1 is the index of argument bundleName
             int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
             ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
@@ -274,7 +274,6 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
             status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
             ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
                 "The type of bundleName must be string.");
-            ctxt->notifyStatus = ODL_NOTIFY_INTERFACE;
         } else {
             int status = JSUtils::Convert2Value(env, argv[0], ctxt->extInfo);
             ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
@@ -284,7 +283,7 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
                 ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
                     "The type of user must be number.");
             }
-            ctxt->notifyStatus = NEW_NOTIFY_INTERFACE;
+            ctxt->notifyStatus = true;
         }
     });
 
@@ -301,7 +300,7 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
             return;
         }
         int32_t status ;
-        if (ctxt->notifyStatus == NEW_NOTIFY_INTERFACE) {
+        if (ctxt->notifyStatus == true) {
             status = proxy->NotifyDataChange(ctxt->extInfo.eventId, ctxt->extInfo.extraData, ctxt->userId);
         } else {
             status = proxy->NotifyDataChange(ctxt->accountId, ctxt->bundleName);
