@@ -30,7 +30,7 @@ public:
     int32_t ChangeAppSwitch(const std::string &id, const std::string &bundleName, int32_t appSwitch) override;
     int32_t Clean(const std::string &id, const std::map<std::string, int32_t> &actions) override;
     int32_t NotifyDataChange(const std::string &id, const std::string &bundleName) override;
-    int32_t NotifyChange(const std::string &eventId, const std::string &extraData, int32_t userId) override;
+    int32_t NotifyDataChange(const std::string &eventId, const std::string &extraData, int32_t userId) override;
 
 private:
     sptr<IRemoteObject> remote_;
