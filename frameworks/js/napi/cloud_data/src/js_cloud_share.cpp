@@ -93,7 +93,7 @@ napi_value AllocResourceAndShare(napi_env env, napi_callback_info info)
     };
     auto output = [env, ctxt](napi_value& result) {
         result = JSUtils::Convert2JSValue(env, ctxt->resultSet);
-        ASSERT_VALUE(ctxt,  result != nullptr, napi_generic_failure, "output failed");
+        ASSERT_VALUE(ctxt, result != nullptr, napi_generic_failure, "output failed");
     };
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute, output);
 }

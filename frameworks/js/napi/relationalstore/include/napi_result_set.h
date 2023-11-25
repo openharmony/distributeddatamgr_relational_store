@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "asset_value.h"
+#include "js_proxy.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -28,7 +29,7 @@
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
-class ResultSetProxy final : public DataShare::ResultSetBridge::Creator, public NativeRdb::ResultSet::JsProxy {
+class ResultSetProxy final : public JSProxy::JSEntity<NativeRdb::ResultSet, DataShare::ResultSetBridge> {
 public:
     ResultSetProxy() = default;
     ~ResultSetProxy();
