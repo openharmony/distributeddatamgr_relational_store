@@ -33,11 +33,6 @@ public:
         CLEAR_CLOUD_DATA_AND_INFO = 1,
     };
 
-    enum {
-        ODL_NOTIFY_INTERFACE = 0,
-        NEW_NOTIFY_INTERFACE = 1
-    };
-
     struct ExtraData {
         std::string eventId;
         std::string extraData;
