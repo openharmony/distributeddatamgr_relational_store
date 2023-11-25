@@ -77,6 +77,7 @@ int RdbStoreImpl::InnerOpen()
     syncerParam_.type_ = rdbStoreConfig.GetDistributedType();
     syncerParam_.isEncrypt_ = rdbStoreConfig.IsEncrypt();
     syncerParam_.isAutoClean_ = rdbStoreConfig.GetAutoClean();
+    syncerParam_.isSearchable_ = rdbStoreConfig.IsSearchable();
     syncerParam_.password_ = {};
     GetSchema(rdbStoreConfig);
 
