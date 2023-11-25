@@ -71,8 +71,15 @@ enum DistributedTableType {
     DISTRIBUTED_CLOUD
 };
 
+struct Reference {
+    std::string sourceTable;
+    std::string targetTable;
+    std::map<std::string, std::string> refFields;
+};
+
 struct DistributedConfig {
     bool autoSync = true;
+    std::vector<Reference> references = {};
 };
 
 enum Progress {

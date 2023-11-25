@@ -40,7 +40,8 @@ public:
     virtual std::string ObtainDistributedTableName(const std::string &device, const std::string &table) = 0;
 
     virtual int32_t SetDistributedTables(
-        const RdbSyncerParam &param, const std::vector<std::string> &tables, int32_t type = DISTRIBUTED_DEVICE) = 0;
+        const RdbSyncerParam &param, const std::vector<std::string> &tables,
+        const std::vector<Reference> &references, int32_t type = DISTRIBUTED_DEVICE) = 0;
 
     virtual int32_t Sync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
         const AsyncDetail &async) = 0;

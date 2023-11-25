@@ -36,6 +36,12 @@ template<>
 int32_t Convert2Value(napi_env env, napi_value input, Asset &output);
 
 template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, DistributedRdb::Reference &output);
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, DistributedRdb::DistributedConfig &output);
+
+template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, ValueObject &valueObject);
 
 template<>
