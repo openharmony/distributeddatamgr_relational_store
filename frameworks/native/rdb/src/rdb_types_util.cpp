@@ -190,4 +190,15 @@ bool Unmarshalling(RdbProperties &output, MessageParcel &data)
 {
     return Unmarshal(data, output.isTrackedDataChange);
 }
+
+template<>
+bool Marshalling(const Reference &input, MessageParcel &data)
+{
+    return Marshal(data, input.sourceTable, input.targetTable, input.refFields);
+}
+template<>
+bool Unmarshalling(Reference &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.sourceTable, output.targetTable, output.refFields);
+}
 }
