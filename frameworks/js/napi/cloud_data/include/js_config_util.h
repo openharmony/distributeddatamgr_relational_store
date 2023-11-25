@@ -20,9 +20,10 @@
 #include "js_utils.h"
 
 namespace OHOS::AppDataMgrJsKit {
+using ExtraData = OHOS::CloudData::JsConfig::ExtraData;
 namespace JSUtils {
 template<>
-int32_t Convert2Value(napi_env env, napi_value input, OHOS::CloudData::JsConfig::ExtraData &output);
+int32_t Convert2Value(napi_env env, napi_value input, ExtraData &output);
 } // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
 #endif // LDBPROJ_JS_CONFIG_UTIL_H

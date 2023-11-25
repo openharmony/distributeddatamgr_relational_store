@@ -102,10 +102,10 @@ int32_t CloudServiceProxy::NotifyDataChange(const std::string &id, const std::st
     return static_cast<Status>(status);
 }
 
-int32_t CloudServiceProxy::NotifyChange(const std::string &eventId, const std::string &extraData, int32_t userId)
+int32_t CloudServiceProxy::NotifyDataChange(const std::string &eventId, const std::string &extraData, int32_t userId)
 {
     MessageParcel reply;
-    int32_t status = IPC_SEND(TRANS_NOTIFY_CHANGE, reply, eventId, extraData, userId);
+    int32_t status = IPC_SEND(TRANS_NOTIFY_DATA_CHANGE_EXT, reply, eventId, extraData, userId);
     if (status != SUCCESS) {
         LOG_ERROR("status:0x%{public}x eventId:%{public}.6s extraData:%{public}.6s", status, eventId.c_str(),
             extraData.c_str());
