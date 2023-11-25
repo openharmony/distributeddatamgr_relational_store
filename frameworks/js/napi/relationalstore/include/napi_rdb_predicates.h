@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "js_proxy.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -26,7 +27,7 @@
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
-class RdbPredicatesProxy : public NativeRdb::RdbPredicates::JsProxy {
+class RdbPredicatesProxy : public JSProxy::JSProxy<NativeRdb::RdbPredicates> {
 public:
     static void Init(napi_env env, napi_value exports);
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbPredicates> value);

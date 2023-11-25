@@ -57,18 +57,18 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::
         LOG_ERROR("NewInstance native instance is nullptr! code:%{public}d!", status);
         return instance;
     }
-    *proxy = std::move(resultSet);
+    proxy->SetInstance(std::move(resultSet));
     return instance;
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 {
-    if (resultSet_ == nullptr) {
+    if (GetInstance() == nullptr) {
         LOG_ERROR("resultSet is null");
         return nullptr;
     }
-    return std::make_shared<RdbDataShareAdapter::RdbResultSetBridge>(std::move(resultSet_));
+    return std::make_shared<RdbDataShareAdapter::RdbResultSetBridge>(GetInstance());
 }
 #endif
 napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
@@ -100,18 +100,18 @@ ResultSetProxy::~ResultSetProxy()
 
 ResultSetProxy::ResultSetProxy(std::shared_ptr<ResultSet> resultSet)
 {
-    if (resultSet_ == resultSet) {
+    if (GetInstance() == resultSet) {
         return;
     }
-    resultSet_ = std::move(resultSet);
+    SetInstance(std::move(resultSet));
 }
 
 ResultSetProxy &ResultSetProxy::operator=(std::shared_ptr<ResultSet> resultSet)
 {
-    if (resultSet_ == resultSet) {
+    if (GetInstance() == resultSet) {
         return *this;
     }
-    resultSet_ = std::move(resultSet);
+    SetInstance(std::move(resultSet));
     return *this;
 }
 
@@ -122,7 +122,7 @@ ResultSetProxy *ResultSetProxy::GetInnerResultSet(napi_env env, napi_callback_in
 
     ResultSetProxy *proxy = nullptr;
     napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, proxy && proxy->resultSet_, std::make_shared<InnerError>(E_RESULT_GOTO_ERROR));
+    RDB_NAPI_ASSERT(env, proxy && proxy->GetInstance(), std::make_shared<InnerError>(E_RESULT_GOTO_ERROR));
     return proxy;
 }
 
@@ -141,7 +141,7 @@ ResultSetProxy *ResultSetProxy::ParseInt32FieldByName(
 
     ResultSetProxy *proxy = nullptr;
     napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, proxy && proxy->resultSet_, std::make_shared<ParamError>("resultSet", "not null"));
+    RDB_NAPI_ASSERT(env, proxy && proxy->GetInstance(), std::make_shared<ParamError>("resultSet", "not null"));
     return proxy;
 }
 
@@ -159,17 +159,17 @@ ResultSetProxy *ResultSetProxy::ParseFieldByName(
 
     ResultSetProxy *proxy = nullptr;
     napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, proxy && proxy->resultSet_, std::make_shared<ParamError>("resultSet", "not null"));
+    RDB_NAPI_ASSERT(env, proxy && proxy->GetInstance(), std::make_shared<ParamError>("resultSet", "not null"));
     return proxy;
 }
 
 napi_value ResultSetProxy::GetAllColumnNames(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     std::vector<std::string> colNames;
-    int errCode = resultSetProxy->resultSet_->GetAllColumnNames(colNames);
+    int errCode = resultSetProxy->GetInstance()->GetAllColumnNames(colNames);
     if (errCode != E_OK) {
         LOG_ERROR("GetAllColumnNames failed code:%{public}d", errCode);
     }
@@ -180,10 +180,10 @@ napi_value ResultSetProxy::GetAllColumnNames(napi_env env, napi_callback_info in
 napi_value ResultSetProxy::GetColumnCount(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     int32_t count = 0;
-    int errCode = resultSetProxy->resultSet_->GetColumnCount(count);
+    int errCode = resultSetProxy->GetInstance()->GetColumnCount(count);
     if (errCode != E_OK) {
         LOG_ERROR("GetColumnCount failed code:%{public}d", errCode);
     }
@@ -195,10 +195,10 @@ napi_value ResultSetProxy::GetColumnType(napi_env env, napi_callback_info info)
 {
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     ColumnType columnType;
-    int errCode = resultSetProxy->resultSet_->GetColumnType(columnIndex, columnType);
+    int errCode = resultSetProxy->GetInstance()->GetColumnType(columnIndex, columnType);
     if (errCode != E_OK) {
         LOG_ERROR("GetColumnType failed code:%{public}d", errCode);
     }
@@ -209,10 +209,10 @@ napi_value ResultSetProxy::GetColumnType(napi_env env, napi_callback_info info)
 napi_value ResultSetProxy::GetRowCount(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     int32_t result;
-    int errCode = resultSetProxy->resultSet_->GetRowCount(result);
+    int errCode = resultSetProxy->GetInstance()->GetRowCount(result);
     if (errCode != E_OK) {
         LOG_ERROR("GetRowCount failed code:%{public}d", errCode);
     }
@@ -223,10 +223,10 @@ napi_value ResultSetProxy::GetRowCount(napi_env env, napi_callback_info info)
 napi_value ResultSetProxy::GetRowIndex(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     int32_t result;
-    int errCode = resultSetProxy->resultSet_->GetRowIndex(result);
+    int errCode = resultSetProxy->GetInstance()->GetRowIndex(result);
     if (errCode != E_OK) {
         LOG_ERROR("GetRowIndex failed code:%{public}d", errCode);
     }
@@ -237,10 +237,10 @@ napi_value ResultSetProxy::GetRowIndex(napi_env env, napi_callback_info info)
 napi_value ResultSetProxy::IsEnded(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     bool result = false;
-    int errCode = resultSetProxy->resultSet_->IsEnded(result);
+    int errCode = resultSetProxy->GetInstance()->IsEnded(result);
     if (errCode != E_OK) {
         LOG_ERROR("IsEnded failed code:%{public}d", errCode);
     }
@@ -251,10 +251,10 @@ napi_value ResultSetProxy::IsEnded(napi_env env, napi_callback_info info)
 napi_value ResultSetProxy::IsBegin(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     bool result = false;
-    int errCode = resultSetProxy->resultSet_->IsStarted(result);
+    int errCode = resultSetProxy->GetInstance()->IsStarted(result);
     if (errCode != E_OK) {
         LOG_ERROR("IsBegin failed code:%{public}d", errCode);
     }
@@ -265,10 +265,10 @@ napi_value ResultSetProxy::IsBegin(napi_env env, napi_callback_info info)
 napi_value ResultSetProxy::IsAtFirstRow(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     bool result = false;
-    int errCode = resultSetProxy->resultSet_->IsAtFirstRow(result);
+    int errCode = resultSetProxy->GetInstance()->IsAtFirstRow(result);
     if (errCode != E_OK) {
         LOG_ERROR("IsAtFirstRow failed code:%{public}d", errCode);
     }
@@ -279,10 +279,10 @@ napi_value ResultSetProxy::IsAtFirstRow(napi_env env, napi_callback_info info)
 napi_value ResultSetProxy::IsAtLastRow(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     bool result = false;
-    int errCode = resultSetProxy->resultSet_->IsAtLastRow(result);
+    int errCode = resultSetProxy->GetInstance()->IsAtLastRow(result);
     if (errCode != E_OK) {
         LOG_ERROR("IsAtLastRow failed code:%{public}d", errCode);
     }
@@ -293,9 +293,9 @@ napi_value ResultSetProxy::IsAtLastRow(napi_env env, napi_callback_info info)
 napi_value ResultSetProxy::Close(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
-    int errCode = resultSetProxy->resultSet_->Close();
+    int errCode = resultSetProxy->GetInstance()->Close();
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
 
     napi_value result = nullptr;
@@ -307,9 +307,9 @@ napi_value ResultSetProxy::GoToRow(napi_env env, napi_callback_info info)
 {
     int32_t position;
     auto resultSetProxy = ParseInt32FieldByName(env, info, position, "position");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
-    int errCode = resultSetProxy->resultSet_->GoToRow(position);
+    int errCode = resultSetProxy->GetInstance()->GoToRow(position);
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
@@ -317,45 +317,45 @@ napi_value ResultSetProxy::GoTo(napi_env env, napi_callback_info info)
 {
     int32_t offset;
     auto resultSetProxy = ParseInt32FieldByName(env, info, offset, "offset");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
-    int errCode = resultSetProxy->resultSet_->GoTo(offset);
+    int errCode = resultSetProxy->GetInstance()->GoTo(offset);
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
 napi_value ResultSetProxy::GoToFirstRow(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
-    int errCode = resultSetProxy->resultSet_->GoToFirstRow();
+    int errCode = resultSetProxy->GetInstance()->GoToFirstRow();
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
 napi_value ResultSetProxy::GoToLastRow(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
-    int errCode = resultSetProxy->resultSet_->GoToLastRow();
+    int errCode = resultSetProxy->GetInstance()->GoToLastRow();
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
 napi_value ResultSetProxy::GoToNextRow(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
-    int errCode = resultSetProxy->resultSet_->GoToNextRow();
+    int errCode = resultSetProxy->GetInstance()->GoToNextRow();
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
 napi_value ResultSetProxy::GoToPreviousRow(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
-    int errCode = resultSetProxy->resultSet_->GoToPreviousRow();
+    int errCode = resultSetProxy->GetInstance()->GoToPreviousRow();
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
@@ -363,10 +363,10 @@ napi_value ResultSetProxy::GetInt(napi_env env, napi_callback_info info)
 {
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     int32_t result;
-    int errCode = resultSetProxy->resultSet_->GetInt(columnIndex, result);
+    int errCode = resultSetProxy->GetInstance()->GetInt(columnIndex, result);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);
@@ -376,10 +376,10 @@ napi_value ResultSetProxy::GetLong(napi_env env, napi_callback_info info)
 {
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     int64_t result;
-    int errCode = resultSetProxy->resultSet_->GetLong(columnIndex, result);
+    int errCode = resultSetProxy->GetInstance()->GetLong(columnIndex, result);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);
@@ -390,10 +390,10 @@ napi_value ResultSetProxy::GetBlob(napi_env env, napi_callback_info info)
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     std::vector<uint8_t> result;
-    int errCode = resultSetProxy->resultSet_->GetBlob(columnIndex, result);
+    int errCode = resultSetProxy->GetInstance()->GetBlob(columnIndex, result);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);
@@ -404,10 +404,10 @@ napi_value ResultSetProxy::GetAsset(napi_env env, napi_callback_info info)
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     Asset result;
-    int errCode = resultSetProxy->resultSet_->GetAsset(columnIndex, result);
+    int errCode = resultSetProxy->GetInstance()->GetAsset(columnIndex, result);
     if (errCode == E_NULL_OBJECT) {
         LOG_DEBUG("getAsset col %{public}d is null ", columnIndex);
         return JSUtils::Convert2JSValue(env, std::monostate());
@@ -422,10 +422,10 @@ napi_value ResultSetProxy::GetAssets(napi_env env, napi_callback_info info)
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     Assets result;
-    int errCode = resultSetProxy->resultSet_->GetAssets(columnIndex, result);
+    int errCode = resultSetProxy->GetInstance()->GetAssets(columnIndex, result);
     if (errCode == E_NULL_OBJECT) {
         LOG_DEBUG("getAssets col %{public}d is null ", columnIndex);
         return JSUtils::Convert2JSValue(env, std::monostate());
@@ -440,10 +440,10 @@ napi_value ResultSetProxy::GetString(napi_env env, napi_callback_info info)
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     std::string result;
-    int errCode = resultSetProxy->resultSet_->GetString(columnIndex, result);
+    int errCode = resultSetProxy->GetInstance()->GetString(columnIndex, result);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);
@@ -453,10 +453,10 @@ napi_value ResultSetProxy::GetDouble(napi_env env, napi_callback_info info)
 {
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     double result = 0.0;
-    int errCode = resultSetProxy->resultSet_->GetDouble(columnIndex, result);
+    int errCode = resultSetProxy->GetInstance()->GetDouble(columnIndex, result);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);
@@ -466,10 +466,10 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
 {
     std::string input;
     auto resultSetProxy = ParseFieldByName(env, info, input, "columnName");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     int32_t result = -1;
-    int errCode = resultSetProxy->resultSet_->GetColumnIndex(input, result);
+    int errCode = resultSetProxy->GetInstance()->GetColumnIndex(input, result);
     if (errCode != E_OK) {
         LOG_ERROR("IsAtLastRow failed code:%{public}d", errCode);
     }
@@ -481,10 +481,10 @@ napi_value ResultSetProxy::GetColumnName(napi_env env, napi_callback_info info)
 {
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     std::string result;
-    int errCode = resultSetProxy->resultSet_->GetColumnName(columnIndex, result);
+    int errCode = resultSetProxy->GetInstance()->GetColumnName(columnIndex, result);
     if (errCode != E_OK) {
         LOG_ERROR("IsAtLastRow failed code:%{public}d", errCode);
     }
@@ -496,10 +496,10 @@ napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
 {
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     bool result = false;
-    int errCode = resultSetProxy->resultSet_->IsColumnNull(columnIndex, result);
+    int errCode = resultSetProxy->GetInstance()->IsColumnNull(columnIndex, result);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);
@@ -508,10 +508,10 @@ napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
 napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     RowEntity rowEntity;
-    int errCode = resultSetProxy->resultSet_->GetRow(rowEntity);
+    int errCode = resultSetProxy->GetInstance()->GetRow(rowEntity);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     return JSUtils::Convert2JSValue(env, rowEntity);
 }
@@ -519,8 +519,8 @@ napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
 napi_value ResultSetProxy::IsClosed(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
-    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->resultSet_);
-    bool result = resultSetProxy->resultSet_->IsClosed();
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
+    bool result = resultSetProxy->GetInstance()->IsClosed();
 
     return JSUtils::Convert2JSValue(env, result);
 }

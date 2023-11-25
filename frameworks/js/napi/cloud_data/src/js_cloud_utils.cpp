@@ -14,6 +14,9 @@
  */
 
 #include "js_cloud_utils.h"
+#include "js_proxy.h"
+#include "result_set.h"
+#include "result_set_bridge.h"
 #include "logger.h"
 
 #define NAPI_CALL_RETURN_ERR(call, ret)  \
@@ -79,10 +82,10 @@ int32_t Convert2Value(napi_env env, napi_value input, std::shared_ptr<RdbPredica
         LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
         return napi_invalid_arg;
     }
-    NativeRdb::RdbPredicates::JsProxy *jsProxy = nullptr;
+    JSProxy::JSProxy<NativeRdb::RdbPredicates> *jsProxy = nullptr;
     status = napi_unwrap(env, input, reinterpret_cast<void **>(&jsProxy));
-    ASSERT_RETURN(status == napi_ok && jsProxy != nullptr && jsProxy->predicates_ != nullptr, napi_invalid_arg);
-    output = jsProxy->predicates_;
+    ASSERT_RETURN(status == napi_ok && jsProxy != nullptr && jsProxy->GetInstance() != nullptr, napi_invalid_arg);
+    output = jsProxy->GetInstance();
     return napi_ok;
 }
 
@@ -138,15 +141,16 @@ napi_value Convert2JSValue(napi_env env, const std::shared_ptr<ResultSet> &value
     napi_value instance = nullptr;
     napi_status status = napi_new_instance(env, constructor, 0, nullptr, &instance);
     if (status != napi_ok) {
-        LOG_ERROR("NewInstance ResultSet failed! code:%{public}d!", status);
+        LOG_ERROR("NewInstance ResultSet failed! status:%{public}d!", status);
         return nullptr;
     }
-    NativeRdb::ResultSet::JsProxy *proxy = nullptr;
+    JSProxy::JSEntity<NativeRdb::ResultSet, DataShare::ResultSetBridge> *proxy = nullptr;
     status = napi_unwrap(env, instance, reinterpret_cast<void **>(&proxy));
-    if (proxy == nullptr) {
-        LOG_ERROR("napi_unwrap failed! code:%{public}d!", status);
+    if (status != napi_ok || proxy == nullptr) {
+        LOG_ERROR("napi_unwrap failed! status:%{public}d!", status);
+        return nullptr;
     }
-    proxy->resultSet_ = value;
+    proxy->SetInstance(value);
     return instance;
 }
 }; // namespace JSUtils
