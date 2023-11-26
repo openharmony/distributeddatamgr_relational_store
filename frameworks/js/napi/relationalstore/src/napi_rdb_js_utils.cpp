@@ -60,6 +60,22 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
 }
 
 template<>
+int32_t Convert2Value(napi_env env, napi_value input, DistributedRdb::Reference &output)
+{
+    napi_valuetype type = napi_undefined;
+    napi_status status = napi_typeof(env, input, &type);
+    if (status != napi_ok || type != napi_object) {
+        LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
+        return napi_invalid_arg;
+    }
+
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, input, output, sourceTable), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, input, output, targetTable), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, input, output, refFields), napi_invalid_arg);
+    return napi_ok;
+}
+
+template<>
 int32_t Convert2Value(napi_env env, napi_value input, DistributedRdb::DistributedConfig &output)
 {
     napi_valuetype type = napi_undefined;
@@ -69,11 +85,13 @@ int32_t Convert2Value(napi_env env, napi_value input, DistributedRdb::Distribute
         return napi_invalid_arg;
     }
 
-    auto ret = Convert2Value(env, GetNamedProperty(env, input, "autoSync"), output.autoSync);
-    if (ret != napi_ok) {
-        return napi_invalid_arg;
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, input, output, autoSync), napi_invalid_arg);
+    bool exist = false;
+    status = napi_has_named_property(env, input, "references", &exist);
+    if (status == napi_ok && exist) {
+        NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, input, output, references), napi_invalid_arg);
     }
-    return ret;
+    return napi_ok;
 }
 
 template<>
