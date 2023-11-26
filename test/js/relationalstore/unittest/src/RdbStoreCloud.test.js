@@ -402,46 +402,5 @@ describe('rdbStoreCloud', function () {
         }
     })
 
-    /**
-     * @tc.name normal parameter of querySharingResource with callback
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_0014
-     * @tc.desc test the normal parameter of querySharingResource
-     */
-    it('testRdbStoreCloud0014', 0, async function (done) {
-        console.log(TAG + "************* testRdbStoreCloud0014 start *************");
-        try {
-            let predicates = new relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-
-            let resultSet = await rdbStore.querySharingResource(predicates);
-            expect(resultSet != undefined).assertTrue();
-            done()
-        } catch (err) {
-            console.log(TAG + `querySharingResource failed, errcode:${JSON.stringify(err)}.`);
-            expect().assertFail();
-            done()
-        }
-    })
-
-    /**
-     * @tc.name normal parameter of querySharingResource with callback
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_0015
-     * @tc.desc test the normal parameter of querySharingResource
-     */
-    it('testRdbStoreCloud0015', 0, async function (done) {
-        console.log(TAG + "************* testRdbStoreCloud0015 start *************");
-        try {
-            let predicates = new relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-            let resultSet = await rdbStore.querySharingResource(predicates, ['id', 'name']);
-            expect(resultSet != undefined).assertTrue();
-            done()
-        } catch (err) {
-            console.log(TAG + `querySharingResource, errcode:${JSON.stringify(err)}.`);
-            expect().assertFail();
-            done()
-        }
-    })
-
     console.log(TAG + "*************Unit Test End*************");
 })

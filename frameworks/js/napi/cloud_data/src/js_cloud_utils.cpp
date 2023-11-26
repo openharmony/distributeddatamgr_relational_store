@@ -65,7 +65,7 @@ int32_t Convert2Value(napi_env env, napi_value input, Privilege &output)
         LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
         return napi_invalid_arg;
     }
-    NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "writeable", output.writeable), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "writable", output.writable), napi_invalid_arg);
     NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "readable", output.readable), napi_invalid_arg);
     NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "creatable", output.creatable), napi_invalid_arg);
     NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "deletable", output.deletable), napi_invalid_arg);
@@ -122,7 +122,7 @@ napi_value Convert2JSValue(napi_env env, const Privilege &value)
         return nullptr;
     }
 
-    napi_set_named_property(env, jsValue, "writeable", Convert2JSValue(env, value.writeable));
+    napi_set_named_property(env, jsValue, "writable", Convert2JSValue(env, value.writable));
     napi_set_named_property(env, jsValue, "readable", Convert2JSValue(env, value.readable));
     napi_set_named_property(env, jsValue, "creatable", Convert2JSValue(env, value.creatable));
     napi_set_named_property(env, jsValue, "deletable", Convert2JSValue(env, value.deletable));

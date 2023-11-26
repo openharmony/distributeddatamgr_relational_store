@@ -71,7 +71,6 @@ napi_value AllocResourceAndShare(napi_env env, napi_callback_info info)
         }
     });
     ASSERT_NULL(!ctxt->isThrowError, "AllocResourceAndShare exit");
-
     auto execute = [env, ctxt]() {
         auto [status, proxy] = CloudManager::GetInstance().GetCloudService();
         if (proxy == nullptr) {

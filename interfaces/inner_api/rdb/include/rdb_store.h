@@ -340,7 +340,10 @@ public:
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
      */
     virtual std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) = 0;
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
+    {
+        return { E_NOT_SUPPORT, nullptr };
+    }
 
     /**
      * @brief Queries data in the database based on specified conditions.

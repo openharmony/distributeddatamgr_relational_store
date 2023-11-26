@@ -103,7 +103,7 @@ napi_status InitSharingConstProperties(napi_env env, napi_value exports)
     if (exports == nullptr) {
         return napi_generic_failure;
     }
-     const napi_property_descriptor properties[] = {
+    const napi_property_descriptor properties[] = {
         DECLARE_NAPI_PROPERTY("Role", ExportRole(env)),
         DECLARE_NAPI_PROPERTY("Status", ExportShareStatus(env)),
         DECLARE_NAPI_PROPERTY("SharingCode", ExportShareCode(env)),
