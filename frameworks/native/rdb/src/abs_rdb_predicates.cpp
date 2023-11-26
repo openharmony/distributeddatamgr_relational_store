@@ -288,37 +288,6 @@ AbsRdbPredicates *AbsRdbPredicates::Glob(const std::string &field, const std::st
     predicates_.AddOperation(DistributedRdb::GLOB, field, value);
     return (AbsRdbPredicates *)AbsPredicates::Glob(field, value);
 }
-AbsRdbPredicates *AbsRdbPredicates::Between(const std::string &field, const ValueObject &low, const ValueObject &high)
-{
-    predicates_.AddOperation(DistributedRdb::BETWEEN, field, std::vector<std::string>{ low, high });
-    return (AbsRdbPredicates *)AbsPredicates::Between(field, low, high);
-}
-AbsRdbPredicates *AbsRdbPredicates::NotBetween(
-    const std::string &field, const ValueObject &low, const ValueObject &high)
-{
-    predicates_.AddOperation(DistributedRdb::NOT_BETWEEN, field, std::vector<std::string>{ low, high });
-    return (AbsRdbPredicates *)AbsPredicates::NotBetween(field, low, high);
-}
-AbsRdbPredicates *AbsRdbPredicates::GreaterThan(const std::string &field, const ValueObject &value)
-{
-    predicates_.AddOperation(DistributedRdb::GREATER_THAN, field, value);
-    return (AbsRdbPredicates *)AbsPredicates::GreaterThan(field, value);
-}
-AbsRdbPredicates *AbsRdbPredicates::LessThan(const std::string &field, const ValueObject &value)
-{
-    predicates_.AddOperation(DistributedRdb::LESS_THAN, field, value);
-    return (AbsRdbPredicates *)AbsPredicates::LessThan(field, value);
-}
-AbsRdbPredicates *AbsRdbPredicates::GreaterThanOrEqualTo(const std::string &field, const ValueObject &value)
-{
-    predicates_.AddOperation(DistributedRdb::GREATER_THAN_OR_EQUAL, field, value);
-    return (AbsRdbPredicates *)AbsPredicates::GreaterThanOrEqualTo(field, value);
-}
-AbsRdbPredicates *AbsRdbPredicates::LessThanOrEqualTo(const std::string &field, const ValueObject &value)
-{
-    predicates_.AddOperation(DistributedRdb::LESS_THAN_OR_EQUAL, field, value);
-    return (AbsRdbPredicates *)AbsPredicates::LessThanOrEqualTo(field, value);
-}
 AbsRdbPredicates *AbsRdbPredicates::Distinct()
 {
     predicates_.AddOperation(DistributedRdb::DISTINCT, "", "");
