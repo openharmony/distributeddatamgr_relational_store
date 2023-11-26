@@ -33,6 +33,11 @@ public:
         CLEAR_CLOUD_DATA_AND_INFO = 1,
     };
 
+    struct ExtraData {
+        std::string eventId;
+        std::string extraData;
+    };
+
     static inline bool ValidSubscribeType(int32_t type)
     {
         return (CLEAR_CLOUD_INFO <= type) && (type <= CLEAR_CLOUD_DATA_AND_INFO);
