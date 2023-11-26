@@ -152,6 +152,83 @@ public:
     API_EXPORT virtual AbsPredicates *In(const std::string &field, const std::vector<std::string> &values) override;
 
     /**
+     * @brief Adds an Contains condition to the remote AbsRdbPredicates.
+     *
+     * This method indicates that the expected field contains value.
+     */
+    API_EXPORT AbsRdbPredicates *Contains(const std::string &field, const std::string &value) override;
+
+    /**
+     * @brief Adds an BeginsWith condition to the remote AbsRdbPredicates.
+     *
+     * This method indicates that the expected field begin with value.
+     */
+    API_EXPORT AbsRdbPredicates *BeginsWith(const std::string &field, const std::string &value) override;
+
+    /**
+     * @brief Adds an EndsWith condition to the remote AbsRdbPredicates.
+     *
+     * This method indicates that the expected field end with value.
+     */
+    API_EXPORT AbsRdbPredicates *EndsWith(const std::string &field, const std::string &value) override;
+
+    /**
+     * @brief Adds an IsNull condition to the remote AbsRdbPredicates.
+     *
+     * This method indicates that the expected field is null.
+     */
+    API_EXPORT AbsRdbPredicates *IsNull(const std::string &field) override;
+
+    /**
+     * @brief Adds an IsNotNull condition to the remote AbsRdbPredicates.
+     *
+     * This method indicates that the expected field is not null.
+     */
+    API_EXPORT AbsRdbPredicates *IsNotNull(const std::string &field) override;
+
+    /**
+     * @brief Adds an Like condition to the remote AbsRdbPredicates.
+     *
+     * This method is similar to Like of the SQL statement.
+     */
+    API_EXPORT AbsRdbPredicates *Like(const std::string &field, const std::string &value) override;
+
+    /**
+     * @brief Adds an Glob condition to the remote AbsRdbPredicates.
+     *
+     * This method is similar to glob of the SQL statement.
+     */
+    API_EXPORT AbsRdbPredicates *Glob(const std::string &field, const std::string &value) override;
+
+    /**
+     * @brief Adds an Distinct condition to the remote AbsRdbPredicates.
+     *
+     * This method is similar to distinct of the SQL statement.
+     */
+    API_EXPORT AbsRdbPredicates *Distinct() override;
+
+    /**
+     * @brief Adds an IndexedBy condition to the remote AbsRdbPredicates.
+     *
+     * This method is similar to indexed by of the SQL statement.
+     */
+    API_EXPORT AbsRdbPredicates *IndexedBy(const std::string &indexName) override;
+
+    /**
+     * @brief Adds an NotIn condition to the remote AbsRdbPredicates.
+     *
+     * This method is similar to not in of the SQL statement.
+     */
+    API_EXPORT AbsRdbPredicates *NotIn(const std::string &field, const std::vector<std::string> &values) override;
+
+    /**
+     * @brief Adds an NotIn condition to the remote AbsRdbPredicates.
+     *
+     * This method is similar to not in of the SQL statement.
+     */
+    API_EXPORT AbsRdbPredicates *NotIn(const std::string &field, const std::vector<ValueObject> &values) override;
+
+    /**
      * @brief Restricts the ascending order of the return list. When there are several orders,
      * the one close to the head has the highest priority.
      *

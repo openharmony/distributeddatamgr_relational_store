@@ -21,6 +21,7 @@
 #include <sstream>
 
 #include "logger.h"
+#include "cache_result_set.h"
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"
 #include "rdb_store.h"
@@ -617,6 +618,18 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
         sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
     }
     return QuerySql(sql, predicates.GetBindArgs());
+}
+
+std::pair<int32_t, std::shared_ptr<ResultSet>> RdbStoreImpl::QuerySharingResource(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
+{
+    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK) {
+        return { errCode, nullptr };
+    }
+    auto [status, valueBuckets] =
+        service->QuerySharingResource(syncerParam_, predicates.GetDistributedPredicates(), columns);
+    return { status, std::make_shared<CacheResultSet>(std::move(valueBuckets)) };
 }
 
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(

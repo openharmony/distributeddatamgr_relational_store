@@ -31,6 +31,8 @@ ohos_shared_library("clouddata") {
 
   sources = [
     "${cloud_data_napi_path}/src/entry_point.cpp",
+    "${cloud_data_napi_path}/src/js_cloud_share.cpp",
+    "${cloud_data_napi_path}/src/js_cloud_utils.cpp",
     "${cloud_data_napi_path}/src/js_config.cpp",
     "${cloud_data_napi_path}/src/js_config_util.cpp",
     "${cloud_data_napi_path}/src/js_const_properties.cpp",
@@ -38,6 +40,7 @@ ohos_shared_library("clouddata") {
     "${cloud_data_napi_path}/src/napi_queue.cpp",
     "${cloud_data_native_path}/src/cloud_manager.cpp",
     "${cloud_data_native_path}/src/cloud_service_proxy.cpp",
+    "${cloud_data_native_path}/src/cloud_types_util.cpp",
     "${relational_store_napi_path}/common/src/js_utils.cpp",
   ]
 
@@ -45,6 +48,7 @@ ohos_shared_library("clouddata") {
     "include",
     "${relational_store_js_common_path}/include",
     "${cloud_data_native_path}/include",
+    "${datashare_path}/provider/include",
     "${kvstore_path}/common",
     "${relational_store_common_path}/include",
     "${relational_store_innerapi_path}/rdb/include",
@@ -52,6 +56,8 @@ ohos_shared_library("clouddata") {
     "${relational_store_napi_path}/cloud_data/include",
     "${relational_store_napi_path}/common/include",
   ]
+
+  deps = [ "${relational_store_innerapi_path}/rdb:native_rdb" ]
 
   external_deps = [
     "ability_runtime:abilitykit_native",

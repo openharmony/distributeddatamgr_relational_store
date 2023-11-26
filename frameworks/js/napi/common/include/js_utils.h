@@ -54,6 +54,7 @@ struct JsFeatureSpace {
 #endif
 
 napi_value GetNamedProperty(napi_env env, napi_value object, const char *name);
+std::pair<int32_t, napi_value> GetOptionalNamedProperty(napi_env env, napi_value input, const char *name);
 
 int32_t Convert2ValueExt(napi_env env, napi_value jsValue, uint32_t &output);
 int32_t Convert2ValueExt(napi_env env, napi_value jsValue, int32_t &output);
@@ -74,6 +75,9 @@ bool Equal(napi_env env, napi_ref ref, napi_value value);
 
 template<typename T>
 int32_t Convert2Value(napi_env env, napi_value jsValue, T &output);
+
+template<typename T>
+int32_t Convert2ValueExt(napi_env env,  napi_value jsValue, T &output);
 
 template<typename T>
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::vector<T> &value);
@@ -121,6 +125,22 @@ napi_value Convert2JSValue(napi_env env, const std::variant<Types...> &value);
 
 template<typename T>
 std::string ToString(const T &key);
+
+template <typename T>
+int32_t GetOptionalValue(napi_env env, napi_value in, const char *name, T& out)
+{
+    auto [status, value] = GetOptionalNamedProperty(env, in, name);
+    if (status != napi_ok) {
+        return status;
+    }
+    if (value == nullptr) {
+        return napi_ok;
+    }
+    if (std::is_same_v<T, int32_t>) {
+        return JSUtils::Convert2ValueExt(env, value, out);
+    }
+    return JSUtils::Convert2Value(env, value, out);
+}
 
 template<typename K>
 std::enable_if_t<!std::is_same_v<K, std::string>, std::string> ConvertMapKey(const K &key)

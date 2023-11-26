@@ -32,6 +32,9 @@ public:
     int32_t NotifyDataChange(const std::string &id, const std::string &bundleName) override;
     int32_t NotifyDataChange(const std::string &eventId, const std::string &extraData, int32_t userId) override;
 
+    std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> AllocResourceAndShare(const std::string& storeId,
+        const DistributedRdb::PredicatesMemo& predicates, const std::vector<std::string>& columns,
+        const std::vector<Participant>& participants) override;
 private:
     sptr<IRemoteObject> remote_;
 };
