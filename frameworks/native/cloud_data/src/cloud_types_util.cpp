@@ -32,14 +32,14 @@ bool Unmarshalling(Participant &output, MessageParcel &data)
 template<>
 bool Marshalling(const Privilege &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(data, input.writeable, input.readable,
+    return ITypesUtil::Marshal(data, input.writable, input.readable,
         input.creatable, input.deletable, input.shareable);
 }
 
 template<>
 bool Unmarshalling(Privilege &output, MessageParcel &data)
 {
-    return ITypesUtil::Unmarshal(data, output.writeable, output.readable,
+    return ITypesUtil::Unmarshal(data, output.writable, output.readable,
         output.creatable, output.deletable, output.shareable);
 }
 

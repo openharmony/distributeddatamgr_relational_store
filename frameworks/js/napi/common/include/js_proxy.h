@@ -29,26 +29,25 @@ protected:
 template<typename T>
 class JSProxy {
 public:
-   void SetInstance(std::shared_ptr<T> instance)
-   {
-       instance_ = std::move(instance);
-   }
-   std::shared_ptr<T> GetInstance() const
-   {
-       return instance_;
-   }
+    void SetInstance(std::shared_ptr<T> instance)
+    {
+        instance_ = std::move(instance);
+    }
+    std::shared_ptr<T> GetInstance() const
+    {
+        return instance_;
+    }
 
 protected:
-   JSProxy() = default;
-   ~JSProxy() = default;
+    JSProxy() = default;
+    ~JSProxy() = default;
+
 private:
-   std::shared_ptr<T> instance_;
+    std::shared_ptr<T> instance_;
 };
 
 template<typename T, typename U = T>
-class JSEntity
-   : public JSCreator<U>
-   , public JSProxy<T> {
+class JSEntity : public JSCreator<U>, public JSProxy<T> {
 protected:
    JSEntity() = default;
    ~JSEntity() = default;

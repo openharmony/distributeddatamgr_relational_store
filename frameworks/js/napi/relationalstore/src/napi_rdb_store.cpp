@@ -1539,7 +1539,7 @@ napi_value RdbStoreProxy::QuerySharingResource(napi_env env, napi_callback_info 
         auto status = E_ERROR;
         std::tie(status, context->resultSet) =
             obj->rdbStore_->QuerySharingResource(*(context->rdbPredicates), context->columns);
-        LOG_DEBUG("RdbStoreProxy::QuerySharingResource resultSet is nullptr ? %{public}d, status:%{public}d",
+        LOG_DEBUG("RdbStoreProxy::QuerySharingResource resultSet is nullptr:%{public}d, status:%{public}d",
             context->resultSet == nullptr, status);
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };

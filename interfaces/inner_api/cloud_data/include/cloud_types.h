@@ -36,7 +36,7 @@ enum Confirmation : int32_t {
 };
 
 struct Privilege {
-    bool writeable = false;
+    bool writable = false;
     bool readable = false;
     bool creatable = false;
     bool deletable = false;
