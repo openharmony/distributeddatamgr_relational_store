@@ -41,7 +41,7 @@ public:
     int32_t InitNotifier(const RdbSyncerParam &param, sptr<IRemoteObject> notifier) override;
 
     int32_t SetDistributedTables(const RdbSyncerParam &param, const std::vector<std::string> &tables,
-        int32_t type = DISTRIBUTED_DEVICE) override;
+        const std::vector<Reference> &references, int32_t type = DISTRIBUTED_DEVICE) override;
 
     int32_t Sync(const RdbSyncerParam& param, const Option& option,
                  const PredicatesMemo& predicates, const AsyncDetail &async) override;

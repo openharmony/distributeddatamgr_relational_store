@@ -78,6 +78,9 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, T &output);
 template<typename T>
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::vector<T> &value);
 
+template<typename T>
+int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, T> &value);
+
 template<typename... Types>
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::variant<Types...> &value);
 
@@ -190,6 +193,45 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<T> 
             return napi_invalid_arg;
         }
         value.push_back(std::move(item));
+    }
+    return napi_ok;
+}
+
+template<typename T>
+int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, T> &value)
+{
+    napi_value jsMapList = nullptr;
+    uint32_t jsCount = 0;
+    napi_status status = napi_get_property_names(env, jsValue, &jsMapList);
+    if (status != napi_ok) {
+        return napi_invalid_arg;
+    }
+    status = napi_get_array_length(env, jsMapList, &jsCount);
+    if (status != napi_ok || jsCount <= 0) {
+        return napi_invalid_arg;
+    }
+    napi_value jsKey = nullptr;
+    napi_value jsVal = nullptr;
+    for (uint32_t index = 0; index < jsCount; index++) {
+        status = napi_get_element(env, jsMapList, index, &jsKey);
+        if (status != napi_ok) {
+            return napi_invalid_arg;
+        }
+        std::string key;
+        int ret = Convert2Value(env, jsKey, key);
+        if (status != napi_ok) {
+            return napi_invalid_arg;
+        }
+        status = napi_get_property(env, jsValue, jsKey, &jsVal);
+        if (status != napi_ok || jsVal == nullptr) {
+            return napi_invalid_arg;
+        }
+        T val;
+        ret = Convert2Value(env, jsVal, val);
+        if (status != napi_ok) {
+            return napi_invalid_arg;
+        }
+        value.insert(std::pair<std::string, T>(key, val));
     }
     return napi_ok;
 }
