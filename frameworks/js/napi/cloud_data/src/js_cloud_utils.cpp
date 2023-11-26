@@ -20,7 +20,7 @@
 #include "logger.h"
 
 #define NAPI_CALL_RETURN_ERR(call, ret)  \
-    ASSERT_RETURN((call) != napi_ok, ret)
+    ASSERT_RETURN((call) == napi_ok, ret)
 
 #define ASSERT_RETURN(call, ret) \
     do {                         \
@@ -32,6 +32,22 @@
 namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
 using namespace OHOS::Rdb;
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value input, ExtraData &output)
+{
+    napi_valuetype type = napi_undefined;
+    napi_status status = napi_typeof(env, input, &type);
+    if (status != napi_ok || type != napi_object) {
+        return napi_invalid_arg;
+    }
+    int32_t result = GET_PROPERTY(env, input, output, eventId);
+    if (result != napi_ok) {
+        return napi_invalid_arg;
+    }
+    return GET_PROPERTY(env, input, output, extraData);
+}
+
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, Participant &output)
 {
@@ -46,9 +62,9 @@ int32_t Convert2Value(napi_env env, napi_value input, Participant &output)
     if (output.role < CloudData::Role::ROLE_INVITER || output.role > CloudData::Role::ROLE_INVITEE) {
         return napi_invalid_arg;
     }
-    NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "status", output.status), napi_invalid_arg);
-    if (output.status < CloudData::Confirmation::CFM_UNKNOWN ||
-        output.status > CloudData::Confirmation::CFM_SUSPENDED) {
+    NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "state", output.state), napi_invalid_arg);
+    if (output.state < CloudData::Confirmation::CFM_UNKNOWN ||
+        output.state > CloudData::Confirmation::CFM_SUSPENDED) {
         return napi_invalid_arg;
     }
     NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "privilege", output.privilege), napi_invalid_arg);
@@ -99,7 +115,7 @@ napi_value Convert2JSValue(napi_env env, const Participant &value)
     }
     napi_value identity = Convert2JSValue(env, value.identity);
     napi_value role = Convert2JSValue(env, value.role);
-    napi_value sharingStatus = Convert2JSValue(env, value.status);
+    napi_value sharingState = Convert2JSValue(env, value.state);
     napi_value privilege = Convert2JSValue(env, value.privilege);
     if (privilege == nullptr) {
         return nullptr;
@@ -107,7 +123,7 @@ napi_value Convert2JSValue(napi_env env, const Participant &value)
     napi_value attachInfo = Convert2JSValue(env, value.attachInfo);
     napi_set_named_property(env, jsValue, "identity", identity);
     napi_set_named_property(env, jsValue, "role", role);
-    napi_set_named_property(env, jsValue, "status", sharingStatus);
+    napi_set_named_property(env, jsValue, "state", sharingState);
     napi_set_named_property(env, jsValue, "privilege", privilege);
     napi_set_named_property(env, jsValue, "attachInfo", attachInfo);
     return jsValue;
@@ -152,6 +168,24 @@ napi_value Convert2JSValue(napi_env env, const std::shared_ptr<ResultSet> &value
     }
     proxy->SetInstance(value);
     return instance;
+}
+
+template<>
+napi_value Convert2JSValue(napi_env env, const std::pair<int32_t, std::string> &value)
+{
+    napi_value jsValue;
+    napi_status status = napi_create_object(env, &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    napi_value code = Convert2JSValue(env, value.first);
+    napi_value description = Convert2JSValue(env, value.second);
+    napi_value val;
+    napi_get_undefined(env, &val);
+    napi_set_named_property(env, jsValue, "code", code);
+    napi_set_named_property(env, jsValue, "description", description);
+    napi_set_named_property(env, jsValue, "value", val);
+    return jsValue;
 }
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit

@@ -20,13 +20,14 @@ template<>
 bool Marshalling(const Participant &input, MessageParcel &data)
 {
     return ITypesUtil::Marshal(
-        data, input.identity, input.role, input.status, input.privilege, input.attachInfo);
+        data, input.identity, input.role, input.state, input.privilege, input.attachInfo);
 }
+
 template<>
 bool Unmarshalling(Participant &output, MessageParcel &data)
 {
     return ITypesUtil::Unmarshal(
-        data, output.identity, output.role, output.status, output.privilege, output.attachInfo);
+        data, output.identity, output.role, output.state, output.privilege, output.attachInfo);
 }
 
 template<>
@@ -53,7 +54,7 @@ template<>
 bool Unmarshalling(Role &output, MessageParcel &data)
 {
     int32_t result;
-    if (!data.ReadInt32(result) || result <=  Role::ROLE_NIL || result >=  Role::ROLE_BUTT) {
+    if (!data.ReadInt32(result) || result <= Role::ROLE_NIL || result >= Role::ROLE_BUTT) {
         return false;
     }
     output = static_cast<Role>(result);
@@ -91,7 +92,7 @@ bool Unmarshalling(SharingCode &output, MessageParcel &data)
     if (!data.ReadInt32(result) || result < SharingCode::SUCCESS) {
         return false;
     }
-    output = static_cast< SharingCode>(result);
+    output = static_cast<SharingCode>(result);
     return true;
 }
 
