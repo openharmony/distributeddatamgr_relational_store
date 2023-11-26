@@ -139,7 +139,10 @@ if (is_ohos && !build_ohos_sdk) {
     ]
 
     public_configs = [ ":native_rdb_public_config" ]
-    innerapi_tags = [ "platformsdk" ]
+    innerapi_tags = [
+      "platformsdk",
+      "sasdk",
+    ]
     subsystem_name = "distributeddatamgr"
   }
 

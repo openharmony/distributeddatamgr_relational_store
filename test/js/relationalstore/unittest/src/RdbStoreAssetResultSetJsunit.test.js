@@ -112,6 +112,20 @@ describe('rdbAssetResultSetTest', function () {
         console.log(TAG + "createTest data end");
     }
 
+    async function batchInsertTable() {
+        console.log(TAG + "batchInsertTable start");
+        const assets = [asset1, asset2, asset3];
+        let valuesBucket = {
+            "data1": asset1,
+            "data2": asset2,
+            "data3": assets,
+        }
+        let array = new Array();
+        array.push(valuesBucket);
+        await rdbStore.batchInsert("test", array)
+        console.log(TAG + "batchInsertTable end");
+    }
+
     async function createStatusTest() {
         console.log(TAG + "createStatusTest data start");
         let valuesBucket = {
@@ -120,6 +134,60 @@ describe('rdbAssetResultSetTest', function () {
         await rdbStore.insert("test", valuesBucket)
         console.log(TAG + "createStatusTest data end");
     }
+
+    /**
+     * @tc.name resultSet getAsset normal test with batchInsert
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0010
+     * @tc.desc resultSet getAsset normal test
+     */
+        it('testGetAssetBatchInsert0001', 0, async function (done) {
+            await batchInsertTable();
+            console.log(TAG + "************* testGetAssetBatchInsert0001 start *************");
+            let predicates = await new data_relationalStore.RdbPredicates("test")
+            let resultSet = await rdbStore.query(predicates)
+            try {
+                expect(true).assertEqual(resultSet.goToFirstRow())
+                const id = resultSet.getLong(resultSet.getColumnIndex("id"))
+                const data1 = resultSet.getAsset(resultSet.getColumnIndex("data1"))
+                console.log(TAG + "id=" + id + ", data1=" + data1);
+                expect("name1").assertEqual(data1.name);
+                expect("uri1").assertEqual(data1.uri);
+                expect("createTime1").assertEqual(data1.createTime);
+                expect("modifyTime1").assertEqual(data1.modifyTime);
+                expect("size1").assertEqual(data1.size);
+                expect("path1").assertEqual(data1.path);
+                expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(data1.status);
+
+                const data2 = resultSet.getAsset(resultSet.getColumnIndex("data2"))
+                console.log(TAG + "id=" + id + ", data2=" + data2);
+                expect("name2").assertEqual(data2.name);
+                expect("uri2").assertEqual(data2.uri);
+                expect("createTime2").assertEqual(data2.createTime);
+                expect("modifyTime2").assertEqual(data2.modifyTime);
+                expect("size2").assertEqual(data2.size);
+                expect("path2").assertEqual(data2.path);
+                expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(data2.status);
+
+                const data3 = resultSet.getAssets(resultSet.getColumnIndex("data3"))
+                console.log(TAG + "id=" + id + ", data3=" + data3);
+                const second = data3[1];
+                expect("name2").assertEqual(second.name);
+                expect("uri2").assertEqual(second.uri);
+                expect("createTime2").assertEqual(second.createTime);
+                expect("modifyTime2").assertEqual(second.modifyTime);
+                expect("size2").assertEqual(second.size);
+                expect("path2").assertEqual(second.path);
+                expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(second.status);
+
+                resultSet.close();
+                expect(true).assertEqual(resultSet.isClosed)
+            } catch (e) {
+                expect(null).assertFail();
+            }
+            resultSet = null
+            done();
+            console.log(TAG + "************* testGetAssetBatchInsert0001 end *************");
+        })
 
     /**
      * @tc.name resultSet getAsset normal test
