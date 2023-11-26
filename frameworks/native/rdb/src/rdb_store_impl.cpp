@@ -376,11 +376,19 @@ std::pair<std::string, std::vector<ValueObject>> RdbStoreImpl::GetInsertParams(
     bindArgs.reserve(bindArgsSize);
     auto valueIter = valuesMap.begin();
     sql.append(valueIter->first);
+    if (valueIter->second.GetType() == ValueObject::TYPE_ASSET ||
+        valueIter->second.GetType() == ValueObject::TYPE_ASSETS) {
+        SetAssetStatus(valueIter->second, AssetValue::STATUS_INSERT);
+    }
     bindArgs.push_back(valueIter->second);
     ++valueIter;
     // prepare batch values & sql.columnName
     for (; valueIter != valuesMap.end(); ++valueIter) {
         sql.append(",").append(valueIter->first);
+        if (valueIter->second.GetType() == ValueObject::TYPE_ASSET ||
+            valueIter->second.GetType() == ValueObject::TYPE_ASSETS) {
+            SetAssetStatus(valueIter->second, AssetValue::STATUS_INSERT);
+        }
         bindArgs.push_back(valueIter->second);
     }
     sql.append(") VALUES (").append(GetSqlArgs(bindArgsSize)).append(")");
@@ -424,7 +432,7 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
             return E_INVALID_ARGS;
         }
         if (val.GetType() == ValueObject::TYPE_ASSET || val.GetType() == ValueObject::TYPE_ASSETS) {
-            SetAssetStatusWhileInsert(val);
+            SetAssetStatus(val, AssetValue::STATUS_INSERT);
         }
         bindArgs.push_back(val);  // columnValue
         split = ",";
@@ -449,19 +457,19 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
     return errCode;
 }
 
-void RdbStoreImpl::SetAssetStatusWhileInsert(const ValueObject &val)
+void RdbStoreImpl::SetAssetStatus(const ValueObject &val, int32_t status)
 {
     if (val.GetType() == ValueObject::TYPE_ASSET) {
         auto *asset = Traits::get_if<ValueObject::Asset>(&val.value);
         if (asset != nullptr) {
-            asset->status = AssetValue::STATUS_INSERT;
+            asset->status = static_cast<AssetValue::Status>(status);
         }
     }
     if (val.GetType() == ValueObject::TYPE_ASSETS) {
         auto *assets = Traits::get_if<ValueObject::Assets>(&val.value);
         if (assets != nullptr) {
             for (auto &asset : *assets) {
-                asset.status = AssetValue::STATUS_INSERT;
+                asset.status = static_cast<AssetValue::Status>(status);
             }
         }
     }
