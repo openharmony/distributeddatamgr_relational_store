@@ -21,5 +21,6 @@
 
 namespace OHOS::CloudData {
 napi_status InitConstProperties(napi_env env, napi_value exports);
+napi_status InitSharingConstProperties(napi_env env, napi_value exports);
 } // namespace OHOS::CloudData
 #endif //LDBPROJ_JS_CONST_PROPERTIES_H

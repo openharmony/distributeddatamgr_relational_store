@@ -18,7 +18,12 @@
 #include <cstdint>
 #include <map>
 #include <string>
-namespace OHOS::CloudData {
+#include <vector>
+#include "cloud_types.h"
+#include "rdb_types.h"
+#include "values_bucket.h"
+namespace OHOS {
+namespace CloudData {
 class CloudService {
 public:
     enum TransId : int32_t {
@@ -29,6 +34,7 @@ public:
         TRANS_CLEAN,
         TRANS_NOTIFY_DATA_CHANGE,
         TRANS_NOTIFY_DATA_CHANGE_EXT,
+        TRANS_ALLOC_RESOURCE_AND_SHARE,
         TRANS_BUTT,
     };
     enum Action : int32_t {
@@ -67,7 +73,11 @@ public:
     virtual int32_t NotifyDataChange(const std::string &id, const std::string &bundleName) = 0;
     virtual int32_t NotifyDataChange(const std::string &eventId, const std::string &extraData, int32_t userId) = 0;
 
+    virtual std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> AllocResourceAndShare(const std::string &storeId,
+        const DistributedRdb::PredicatesMemo &predicates, const std::vector<std::string> &columns,
+        const std::vector<Participant> &participants) = 0;
     inline static constexpr const char *SERVICE_NAME = "cloud";
 };
-} // namespace OHOS::CloudData
+} // namespace CloudData
+} // namespace OHOS
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_SERVICE_H
