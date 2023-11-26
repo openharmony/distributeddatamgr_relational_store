@@ -19,6 +19,7 @@
 #include "cloud_types.h"
 #include "rdb_predicates.h"
 #include "result_set.h"
+#include "js_config.h"
 
 namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
@@ -26,6 +27,10 @@ using Participant = OHOS::CloudData::Participant;
 using Privilege = OHOS::CloudData::Privilege;
 using RdbPredicates = OHOS::NativeRdb::RdbPredicates;
 using ResultSet = OHOS::NativeRdb::ResultSet;
+using ExtraData = OHOS::CloudData::JsConfig::ExtraData;
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value input, ExtraData &output);
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, Participant &output);
@@ -44,6 +49,10 @@ napi_value Convert2JSValue(napi_env env, const Privilege &value);
 
 template<>
 napi_value Convert2JSValue(napi_env env, const std::shared_ptr<ResultSet> &value);
+
+template<>
+napi_value Convert2JSValue(napi_env env, const std::pair<int32_t, std::string> &value);
+
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
 #endif // CLOUD_DATA_JS_CLOUD_SHARE_H

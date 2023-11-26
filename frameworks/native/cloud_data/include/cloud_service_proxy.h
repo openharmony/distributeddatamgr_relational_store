@@ -34,7 +34,19 @@ public:
 
     std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> AllocResourceAndShare(const std::string& storeId,
         const DistributedRdb::PredicatesMemo& predicates, const std::vector<std::string>& columns,
-        const std::vector<Participant>& participants) override;
+        const Participants& participants) override;
+    int32_t Share(const std::string &sharingRes, const Participants &participants, Results &results) override;
+    int32_t Unshare(const std::string &sharingRes, const Participants &participants, Results &results) override;
+    int32_t Exit(const std::string &sharingRes, std::pair<int32_t, std::string> &result) override;
+    int32_t ChangePrivilege(
+        const std::string &sharingRes, const Participants &participants, Results &results) override;
+    int32_t Query(const std::string &sharingRes, QueryResults &results) override;
+    int32_t QueryByInvitation(const std::string &invitation, QueryResults &results) override;
+    int32_t ConfirmInvitation(const std::string &invitation,
+        int32_t confirmation, std::tuple<int32_t, std::string, std::string> &result) override;
+    int32_t ChangeConfirmation(const std::string &sharingRes,
+        int32_t confirmation, std::pair<int32_t, std::string> &result) override;
+
 private:
     sptr<IRemoteObject> remote_;
 };
