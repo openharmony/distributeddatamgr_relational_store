@@ -53,16 +53,16 @@ static napi_value ExportRole(napi_env env)
     return role;
 }
 
-static napi_value ExportShareStatus(napi_env env)
+static napi_value ExportShareState(napi_env env)
 {
-    napi_value status = nullptr;
-    napi_create_object(env, &status);
-    SetNamedProperty(env, status, "STATUS_UNKNOWN", Confirmation::CFM_UNKNOWN);
-    SetNamedProperty(env, status, "STATUS_ACCEPTED", Confirmation::CFM_ACCEPTED);
-    SetNamedProperty(env, status, "STATUS_REJECTED", Confirmation::CFM_REJECTED);
-    SetNamedProperty(env, status, "STATUS_SUSPENDED", Confirmation::CFM_SUSPENDED);
-    napi_object_freeze(env, status);
-    return status;
+    napi_value state = nullptr;
+    napi_create_object(env, &state);
+    SetNamedProperty(env, state, "STATE_UNKNOWN", Confirmation::CFM_UNKNOWN);
+    SetNamedProperty(env, state, "STATE_ACCEPTED", Confirmation::CFM_ACCEPTED);
+    SetNamedProperty(env, state, "STATE_REJECTED", Confirmation::CFM_REJECTED);
+    SetNamedProperty(env, state, "STATE_SUSPENDED", Confirmation::CFM_SUSPENDED);
+    napi_object_freeze(env, state);
+    return state;
 }
 
 static napi_value ExportShareCode(napi_env env)
@@ -105,7 +105,7 @@ napi_status InitSharingConstProperties(napi_env env, napi_value exports)
     }
     const napi_property_descriptor properties[] = {
         DECLARE_NAPI_PROPERTY("Role", ExportRole(env)),
-        DECLARE_NAPI_PROPERTY("Status", ExportShareStatus(env)),
+        DECLARE_NAPI_PROPERTY("State", ExportShareState(env)),
         DECLARE_NAPI_PROPERTY("SharingCode", ExportShareCode(env)),
     };
     size_t count = sizeof(properties) / sizeof(properties[0]);

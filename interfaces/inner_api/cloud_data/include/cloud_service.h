@@ -35,6 +35,14 @@ public:
         TRANS_NOTIFY_DATA_CHANGE,
         TRANS_NOTIFY_DATA_CHANGE_EXT,
         TRANS_ALLOC_RESOURCE_AND_SHARE,
+        TRANS_SHARE,
+        TRANS_UNSHARE,
+        TRANS_EXIT,
+        TRANS_CHANGE_PRIVILEGE,
+        TRANS_QUERY,
+        TRANS_QUERY_BY_INVITATION,
+        TRANS_CONFIRM_INVITATION,
+        TRANS_CHANGE_CONFIRMATION,
         TRANS_BUTT,
     };
     enum Action : int32_t {
@@ -75,7 +83,19 @@ public:
 
     virtual std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> AllocResourceAndShare(const std::string &storeId,
         const DistributedRdb::PredicatesMemo &predicates, const std::vector<std::string> &columns,
-        const std::vector<Participant> &participants) = 0;
+        const Participants &participants) = 0;
+    virtual int32_t Share(const std::string &sharingRes, const Participants &participants, Results &results) = 0;
+    virtual int32_t Unshare(const std::string &sharingRes, const Participants &participants, Results &results) = 0;
+    virtual int32_t Exit(const std::string &sharingRes, std::pair<int32_t, std::string> &result) = 0;
+    virtual int32_t ChangePrivilege(
+        const std::string &sharingRes, const Participants &participants, Results &results) = 0;
+    virtual int32_t Query(const std::string &sharingRes, QueryResults &results) = 0;
+    virtual int32_t QueryByInvitation(const std::string &invitation, QueryResults &results) = 0;
+    virtual int32_t ConfirmInvitation(const std::string &invitation, int32_t confirmation,
+        std::tuple<int32_t, std::string, std::string> &result) = 0;
+    virtual int32_t ChangeConfirmation(const std::string &sharingRes,
+        int32_t confirmation, std::pair<int32_t, std::string> &result) = 0;
+
     inline static constexpr const char *SERVICE_NAME = "cloud";
 };
 } // namespace CloudData
