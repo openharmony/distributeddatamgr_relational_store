@@ -120,6 +120,9 @@ napi_value Convert2JSValue(napi_env env, const std::vector<T> &value);
 template<typename K, typename V>
 napi_value Convert2JSValue(napi_env env, const std::map<K, V> &value);
 
+template<typename T>
+napi_value Convert2JSValue(napi_env env, const std::tuple<int32_t, std::string, T> &value);
+
 template<typename... Types>
 napi_value Convert2JSValue(napi_env env, const std::variant<Types...> &value);
 
@@ -272,6 +275,26 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<K, V> &value)
             return nullptr;
         }
     }
+    return jsValue;
+}
+
+template<typename T>
+napi_value JSUtils::Convert2JSValue(napi_env env, const std::tuple<int32_t, std::string, T> &value)
+{
+    napi_value jsValue;
+    napi_status status = napi_create_object(env, &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    napi_value code = Convert2JSValue(env, std::get<0>(value));
+    napi_value description = Convert2JSValue(env, std::get<1>(value));
+    napi_value val = Convert2JSValue(env, std::get<2>(value));
+    if (description == nullptr || val == nullptr) {
+        return nullptr;
+    }
+    napi_set_named_property(env, jsValue, "code", code);
+    napi_set_named_property(env, jsValue, "description", description);
+    napi_set_named_property(env, jsValue, "value", val);
     return jsValue;
 }
 

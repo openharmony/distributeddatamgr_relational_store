@@ -22,7 +22,7 @@
 #include "cloud_service.h"
 #include "js_error_utils.h"
 #include "js_utils.h"
-#include "js_config_util.h"
+#include "js_cloud_utils.h"
 #include "logger.h"
 #include "napi_queue.h"
 

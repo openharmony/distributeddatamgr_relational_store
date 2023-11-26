@@ -46,10 +46,14 @@ struct Privilege {
 struct Participant {
     std::string identity;
     int32_t role = Role::ROLE_NIL;
-    int32_t status = Confirmation::CFM_NIL;
+    int32_t state = Confirmation::CFM_NIL;
     Privilege privilege;
     std::string attachInfo;
 };
+
+using Participants = std::vector<Participant>;
+using Results = std::tuple<int32_t, std::string, std::vector<std::pair<int32_t, std::string>>>;
+using QueryResults = std::tuple<int32_t, std::string, Participants>;
 
 /**
  * Enumerates the error code of sharing invitation.
