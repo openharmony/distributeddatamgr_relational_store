@@ -200,7 +200,6 @@ int ParseAutoCleanDirtyData(const napi_env &env, const napi_value &object, std::
         CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("config", "with autoCleanDirtyData."));
         bool isAutoClean = true;
         JSUtils::Convert2Value(env, value, isAutoClean);
-        CHECK_RETURN_SET(context->abilitycontext->IsStageMode(), std::make_shared<InnerError>(E_NOT_STAGE_MODE));
         context->config.SetAutoClean(isAutoClean);
     }
     return OK;
