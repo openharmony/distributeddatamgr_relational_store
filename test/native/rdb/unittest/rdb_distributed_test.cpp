@@ -24,9 +24,12 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+// #include "rdb_manager_impl.h"
+#include "rdb_types.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
+//using namespace OHOS::DistributedRdb;
 
 static std::shared_ptr<RdbStore> rdbStore;
 
@@ -45,6 +48,7 @@ public:
     static const  std::string DRDB_PATH;
 };
 
+// std::shared_ptr<RdbStore> RdbStoreDistributedTestrdbStore =nullptr; 
 const std::string RdbStoreDistributedTest::DRDB_NAME = "distributed_rdb.db";
 const std::string RdbStoreDistributedTest::DRDB_PATH = "/data/test/";
 
@@ -268,3 +272,31 @@ HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_Test_005, TestSize.Level2
 
     RdbHelper::DeleteRdbStore(path);
 }
+
+// /**
+//  * @tc.name: RdbStore_Distributed_Test_006
+//  * @tc.desc: Normal testCase of Sync
+//  * @tc.type: FUNC
+//  */
+// HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_Test_006, TestSize.Level2)
+// {
+//     OHOS::DistributedRdb::RdbSyncerParam param;
+//     // syncerParam_.bundleName_ = rdbStoreConfig.GetBundleName();
+//     // syncerParam_.hapName_ = rdbStoreConfig.GetModuleName();
+//     // syncerParam_.storeName_ = rdbStoreConfig.GetName();
+//     // syncerParam_.customDir_ = rdbStoreConfig.GetCustomDir();
+//     // syncerParam_.area_ = rdbStoreConfig.GetArea();
+//     // syncerParam_.level_ = static_cast<int32_t>(rdbStoreConfig.GetSecurityLevel());
+//     // syncerParam_.type_ = rdbStoreConfig.GetDistributedType();
+//     // syncerParam_.isEncrypt_ = rdbStoreConfig.IsEncrypt();
+//     // syncerParam_.isAutoClean_ = rdbStoreConfig.GetAutoClean();
+//     // syncerParam_.isSearchable_ = rdbStoreConfig.IsSearchable();
+//     // syncerParam_.password_ = {};
+
+//     OHOS::DistributedRdb::RdbManagerImpl& rdbManagerImpl = OHOS::DistributedRdb::RdbManagerImpl::GetInstance();
+//     auto [err, service] = rdbManagerImpl.GetRdbService(param);
+//     EXPECT_NE(E_OK, err);
+//     EXPECT_EQ(nullptr, service);
+
+//     rdbManagerImpl.OnRemoteDied();
+// }

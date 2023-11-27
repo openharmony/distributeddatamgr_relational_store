@@ -309,3 +309,35 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_008, TestSize.Level1)
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
 }
+
+/**
+ * @tc.name: RdbStore_RdbPassword_001
+ * @tc.desc: test RdbStore RdbPassword class
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptTest, RdbStore_RdbPassword_001, TestSize.Level2)
+{
+    RdbPassword password1;
+    RdbPassword password2;
+    int errCode = E_OK;
+    
+    uint8_t inputData[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};
+    std::ostringstream ss;
+    std::copy(inputData, inputData+sizeof(inputData), std::ostream_iterator<int>(ss));
+
+    // if size_t > 128
+    errCode = password1.SetValue(inputData, 256);
+    EXPECT_EQ(E_ERROR, errCode);
+
+    // if inputData is nullptr
+    errCode = password1.SetValue(nullptr, sizeof(inputData));
+    EXPECT_EQ(E_ERROR, errCode);
+
+
+    errCode = password1.SetValue(inputData, sizeof(inputData));
+    EXPECT_EQ(E_OK, errCode);
+    errCode = password2.SetValue(inputData, sizeof(inputData));
+    EXPECT_EQ(E_OK, errCode);
+
+    EXPECT_EQ(true, password1 == password2);
+}

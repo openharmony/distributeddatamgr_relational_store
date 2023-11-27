@@ -23,6 +23,7 @@
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "sqlite_sql_builder.h"
+#include "result_set_proxy.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -1439,5 +1440,90 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep017, TestSize.Level1)
     int errCode = SqliteSqlBuilder::BuildQueryString(false, "", "", columns, "", "", "", "", 0, 0, outSql);
     EXPECT_EQ(E_EMPTY_TABLE_NAME, errCode);
 }
+
+/* *
+ * @tc.name: testSqlStep018
+ * @tc.desc: Abnormal testcase for build query string
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, testSqlStep018, TestSize.Level1)
+{
+
+    AbsRdbPredicates predicates("test");
+    std::vector<std::string> columns;
+    std::string logTable = "naturalbase_rdb_aux_test_log";
+    std::string sqlstr = "";
+
+    // logtable is empty && tableName is not empty
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, "");
+    EXPECT_EQ("", sqlstr.c_str());
+
+    // logtable is empty && tableName is empty
+    predicates.Clear();
+    std::string tableName = predicates.GetTableName();
+    EXPECT_EQ("", tableName.c_str());
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, "");
+    EXPECT_EQ("", sqlstr.c_str());
+    
+    // logtable is not empty && tableName is empty
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable);
+    EXPECT_EQ("", sqlstr.c_str());
+
+    // Distinct is false, clumns is empty
+    AbsRdbPredicates predicate("test");
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicate, columns, logTable);
+    EXPECT_EQ("SELECT test.*, naturalbase_rdb_aux_test_log.cursor, CASE WHEN \
+    naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag FROM test", sqlstr.c_str());
+    
+    // Distinct is true, clumns is not empty
+    predicate.Distinct();
+    columns.push_back("name");
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicate, columns, logTable);
+    EXPECT_EQ("SELECT test.*, naturalbase_rdb_aux_test_log.cursor, CASE WHEN \
+    naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag FROM test", sqlstr.c_str());
+}
+
+/**
+ * @tc.name: ResultSetProxy001
+ * @tc.desc: Abnormal testcase of distributed ResultSetProxy, if resultSet is Empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, ResultSetProxy001, TestSize.Level1)
+{
+    int errCode = 0;
+    std::shared_ptr<OHOS::NativeRdb::ResultSetProxy> resultSet;
+    ColumnType columnType;
+    errCode = resultSet->GetColumnType(1, columnType);
+    EXPECT_NE(E_OK, errCode);
+
+    std::string columnName;
+    errCode = resultSet->GetColumnName(1, columnName);
+    EXPECT_NE(E_OK, errCode);
+
+    std::vector<uint8_t> blob;
+    errCode = resultSet->GetBlob(1, blob);
+    EXPECT_NE(E_OK, errCode);
+
+    std::string getStringvalue;
+    errCode = resultSet->GetString(1, getStringvalue);
+    EXPECT_NE(E_OK, errCode);
+
+    int getIntvalue;
+    errCode = resultSet->GetInt(1, getIntvalue);
+    EXPECT_NE(E_OK, errCode);
+
+    int64_t getLongvalue;
+    errCode = resultSet->GetLong(1, getLongvalue);
+    EXPECT_NE(E_OK, errCode);
+
+    double getDoublevalue;
+    errCode = resultSet->GetDouble(1, getDoublevalue);
+    EXPECT_NE(E_OK, errCode);
+
+    bool isNull;
+    errCode = resultSet->IsColumnNull(1, isNull);
+    EXPECT_NE(E_OK, errCode);
+}
+
 } // namespace NativeRdb
 } // namespace OHOS
