@@ -6,7 +6,7 @@ export var cloudExtension;
 !function(e) {
     let t;
     !function(e) {
-        e[e.ConnectShareCenter = 0] = "ConnectShareCenter";
+        e[e.ConnectShareCenter = 0] = "ConnectShareCenter"
     }(t = e.CloudService_Function || (e.CloudService_Function = {}));
     let a;
     !function(e) {
@@ -17,7 +17,7 @@ export var cloudExtension;
         e[e.QueryParticipants = 4] = "QueryParticipants";
         e[e.QueryParticipantsByInvitation = 5] = "QueryParticipantsByInvitation";
         e[e.ConfirmInvitation = 6] = "ConfirmInvitation";
-        e[e.ChangeConfirmation = 7] = "ChangeConfirmation";
+        e[e.ChangeConfirmation = 7] = "ChangeConfirmation"
     }(a = e.ShareCenter_Function || (e.ShareCenter_Function = {}));
 
     class r extends rpc.RemoteObject {
@@ -34,7 +34,7 @@ export var cloudExtension;
                 let e = a.readInt();
                 let t = a.readInt();
                 let n = this.unMarshallingString(a.readRawData(t));
-                let i = await this.cloudService.ConnectShareCenter(e, n);
+                let i = await this.cloudService.connectShareCenter(e, n);
                 null == i && console.error(`${TAG}, sharingCenter is null`);
                 r.writeRemoteObject(i);
                 return !0
@@ -61,8 +61,8 @@ export var cloudExtension;
             console.info(`${TAG} shareCenter constructor`)
         }
 
-        async onRemoteMessageRequest(e, a, r, n) {
-            console.info(`${TAG}, onRemoteRequest called, code = ${e}`);
+        async onRemoteMessageRequest(e, t, r, n) {
+            console.info(`${TAG}, onRemoteRequest called, code = = ${e}`);
             if (void 0 === this.shareCenter) return !1;
             n.setWaitTime(1500);
             switch(e) {
@@ -140,7 +140,7 @@ export var cloudExtension;
                     let L = t.readInt();
                     let V = t.readInt();
                     let X = this.unMarshallingString(t.readRawData(V));
-                    let Y= t.readInt();
+                    let Y = t.readInt();
                     let Z = this.unMarshallingString(t.readRawData(Y));
                     let ee = t.readInt();
                     let te = await this.shareCenter.changeConfirmation(L, X, Z, ee);
@@ -154,7 +154,7 @@ export var cloudExtension;
         }
 
         unMarshallingParticipants(e) {
-            let  t = [];
+            let t = [];
             let a = e.readInt();
             console.info(`${TAG}, query fields length = ${a}`);
             for (let r = 0; r < a; r++) t.push(this.unMarshallingParticipant(e));
@@ -162,7 +162,7 @@ export var cloudExtension;
         }
 
         unMarshallingParticipant(e) {
-            let  t = e.readInt();
+            let t = e.readInt();
             let a;
             a = {
                 identity: this.unMarshallingString(e.readRawData(t)),
@@ -222,7 +222,7 @@ export var cloudExtension;
             e.writeBoolean(t.readable);
             e.writeBoolean(t.creatable);
             e.writeBoolean(t.deletable);
-            e.writeBoolean(t.shareable);
+            e.writeBoolean(t.shareable)
         }
 
         unMarshallingString(e) {

@@ -21,7 +21,7 @@
 extern const char _binary_cloud_extension_abc_start[];
 extern const char _binary_cloud_extension_abc_end[];
 
-extern "C" __attribute__((visibility("default"))) void NAPI_data_cloudExtension_GetABCCode(const char **buf, int buflen)
+extern "C" __attribute__((visibility("default"))) void NAPI_data_cloudExtension_GetABCCode(const char **buf, int *buflen)
 {
     if (buf != nullptr) {
         *buf = _binary_cloud_extension_abc_start;
