@@ -1165,7 +1165,7 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
 InputAction GetCloudSyncInput(std::shared_ptr<RdbStoreContext> context)
 {
     return [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        // The number of parameters should be between 2 and 4
+        // The number of parameters should be in range (1, 5)
         CHECK_RETURN_SET_E(argc > 1 && argc < 5, std::make_shared<ParamNumError>("2 - 4"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseCloudSyncModeArg(env, argv[0], context));
@@ -1451,6 +1451,7 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
     status = JSUtils::Convert2Value(env, argv[1], valueBool);
     RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("interProcess", "a boolean."));
     napi_valuetype type = napi_undefined;
+    // 'argv[2]' is observer function
     napi_typeof(env, argv[2], &type);
     RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
     SubscribeOption option;
@@ -1489,8 +1490,8 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
 
     // 'argc == 3' represents determine whether the value of variable 'argc' is equal to '3'
     if (argc == 3) {
-        // 'argv[2]' represents a callback function
         napi_valuetype type = napi_undefined;
+        // 'argv[2]' represents a callback function
         napi_typeof(env, argv[2], &type);
         RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
     }
