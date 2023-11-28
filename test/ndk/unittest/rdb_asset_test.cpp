@@ -90,12 +90,12 @@ HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_001, TestSize.Level1)
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     std::string name;
     name.append("name");
-    int errcode = OH_Data_Asset_SetName(nullptr, nullptr);
-    EXPECT_EQ(errcode, RDB_E_INVALID_ARGS);
-    errcode = OH_Data_Asset_SetName(asset, nullptr);
-    EXPECT_EQ(errcode, RDB_E_INVALID_ARGS);
-    errcode = OH_Data_Asset_SetName(nullptr, name.c_str());
-    EXPECT_EQ(errcode, RDB_E_INVALID_ARGS);
+    int errCode = OH_Data_Asset_SetName(nullptr, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Data_Asset_SetName(asset, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Data_Asset_SetName(nullptr, name.c_str());
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
 }
 
 /**
@@ -108,12 +108,12 @@ HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_002, TestSize.Level1)
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     std::string uri;
     uri.append("uri");
-    int errcode = OH_Data_Asset_SetUri(nullptr, nullptr);
-    EXPECT_EQ(errcode, RDB_E_INVALID_ARGS);
-    errcode = OH_Data_Asset_SetUri(asset, nullptr);
-    EXPECT_EQ(errcode, RDB_E_INVALID_ARGS);
-    errcode = OH_Data_Asset_SetUri(nullptr, uri.c_str());
-    EXPECT_EQ(errcode, RDB_E_INVALID_ARGS);
+    int errCode = OH_Data_Asset_SetUri(nullptr, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Data_Asset_SetUri(asset, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Data_Asset_SetUri(nullptr, uri.c_str());
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
 }
 
 /**
@@ -126,10 +126,150 @@ HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_003, TestSize.Level1)
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     std::string path;
     path.append("path");
-    int errcode = OH_Data_Asset_SetPath(nullptr, nullptr);
-    EXPECT_EQ(errcode, RDB_E_INVALID_ARGS);
-    errcode = OH_Data_Asset_SetPath(asset, nullptr);
-    EXPECT_EQ(errcode, RDB_E_INVALID_ARGS);
-    errcode = OH_Data_Asset_SetPath(nullptr, path.c_str());
-    EXPECT_EQ(errcode, RDB_E_INVALID_ARGS);
+    int errCode = OH_Data_Asset_SetPath(nullptr, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Data_Asset_SetPath(asset, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Data_Asset_SetPath(nullptr, path.c_str());
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_asset_test_004
+ * @tc.desc: Abnormal testCase of asset for setCreateTime, setModifyTime, setSize, setStatus.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_004, TestSize.Level1)
+{
+    int errCode = OH_Data_Asset_SetCreateTime(nullptr, 1);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Data_Asset_SetModifyTime(nullptr, 1);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Data_Asset_SetSize(nullptr, 1);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Data_Asset_SetStatus(nullptr, Data_AssetStatus::ASSET_NORMAL);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_asset_test_005
+ * @tc.desc: Abnormal testCase of asset for getName.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_005, TestSize.Level1)
+{
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    std::string name1;
+    name1.append("name");
+    int errCode = OH_Data_Asset_SetName(asset, name1.c_str());
+    EXPECT_EQ(errCode, RDB_OK);
+    char name[10] = "";
+    size_t nameLength = 10;
+    errCode = OH_Data_Asset_GetName(nullptr, name, &nameLength);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+
+    std::string name2;
+    name2.append("0123456789");
+    errCode = OH_Data_Asset_SetName(asset, name2.c_str());
+    EXPECT_EQ(errCode, RDB_OK);
+    errCode = OH_Data_Asset_GetName(asset, name, &nameLength);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_asset_test_006
+ * @tc.desc: Abnormal testCase of asset for getUri.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_006, TestSize.Level1)
+{
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    std::string uri1;
+    uri1.append("uri");
+    int errCode = OH_Data_Asset_SetUri(asset, uri1.c_str());
+    EXPECT_EQ(errCode, RDB_OK);
+    char uri[10] = "";
+    size_t uriLength = 10;
+    errCode = OH_Data_Asset_GetUri(nullptr, uri, &uriLength);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+
+    std::string uri2;
+    uri2.append("0123456789");
+    errCode = OH_Data_Asset_SetUri(asset, uri2.c_str());
+    EXPECT_EQ(errCode, RDB_OK);
+    errCode = OH_Data_Asset_GetUri(asset, uri, &uriLength);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_asset_test_007
+ * @tc.desc: Abnormal testCase of asset for getPath.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_007, TestSize.Level1)
+{
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    std::string path1;
+    path1.append("path");
+    int errCode = OH_Data_Asset_SetPath(asset, path1.c_str());
+    EXPECT_EQ(errCode, RDB_OK);
+    char path[10] = "";
+    size_t pathLength = 10;
+    errCode = OH_Data_Asset_GetPath(nullptr, path, &pathLength);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+
+    std::string path2;
+    path2.append("0123456789");
+    errCode = OH_Data_Asset_SetPath(asset, path2.c_str());
+    EXPECT_EQ(errCode, RDB_OK);
+    errCode = OH_Data_Asset_GetPath(asset, path, &pathLength);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_asset_test_008
+ * @tc.desc: Abnormal testCase of asset for getCreatTime.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_008, TestSize.Level1)
+{
+    int64_t createTime = 0;
+    int errCode = OH_Data_Asset_GetCreateTime(nullptr, &createTime);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_asset_test_009
+ * @tc.desc: Abnormal testCase of asset for getModifyTime.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_009, TestSize.Level1)
+{
+    int64_t modifyTime = 0;
+    int errCode = OH_Data_Asset_GetModifyTime(nullptr, &modifyTime);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_asset_test_0010
+ * @tc.desc: Abnormal testCase of asset for getSize.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_0010, TestSize.Level1)
+{
+    size_t size = 0;
+    int errCode = OH_Data_Asset_GetSize(nullptr, &size);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_asset_test_0011
+ * @tc.desc: Abnormal testCase of asset for getStatus.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_0011, TestSize.Level1)
+{
+    Data_AssetStatus status = Data_AssetStatus::ASSET_NORMAL;
+    int errCode = OH_Data_Asset_GetStatus(nullptr, &status);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
 }
