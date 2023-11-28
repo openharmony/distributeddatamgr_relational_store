@@ -17,7 +17,7 @@
 #include "logger.h"
 #include "relational_store_error_code.h"
 #include "securec.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace OHOS::RdbNdk;
 constexpr int ASSET_TRANSFORM_BASE = 10;
