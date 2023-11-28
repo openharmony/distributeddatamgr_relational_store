@@ -33,12 +33,7 @@
 
 using namespace OHOS::RdbNdk;
 using namespace OHOS::DistributedRdb;
-constexpr int RDB_STORE_CID = 1234560; // The class id used to uniquely identify the OH_Rdb_Store class.
-constexpr int RDB_DISTRIBUTED_CONFIG_V0 = 1;
-constexpr int RDB_PROGRESS_DETAILS_V0 = 1;
-constexpr int RDB_TABLE_DETAILS_V0 = 1;
-constexpr int RDB_CONFIG_SIZE_V0 = 41;
-constexpr int RDB_CONFIG_SIZE_V1 = 45;
+
 OH_VObject *OH_Rdb_CreateValueObject()
 {
     return new (std::nothrow) RelationalPredicatesObjects();
@@ -59,7 +54,7 @@ OH_Predicates *OH_Rdb_CreatePredicates(const char *table)
 
 OHOS::RdbNdk::RelationalStore::RelationalStore(std::shared_ptr<OHOS::NativeRdb::RdbStore> store) : store_(store)
 {
-    id = RDB_STORE_CID;
+    id = OHOS::RdbNdk::RDB_STORE_CID;
 }
 
 
@@ -95,7 +90,7 @@ int MainOpenCallback::OnUpgrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVers
 
 RelationalStore *GetRelationalStore(OH_Rdb_Store *store)
 {
-    if (store == nullptr || store->id != RDB_STORE_CID) {
+    if (store == nullptr || store->id != OHOS::RdbNdk::RDB_STORE_CID) {
         LOG_ERROR("store is invalid. is null %{public}d", (store == nullptr));
         return nullptr;
     }
@@ -104,7 +99,7 @@ RelationalStore *GetRelationalStore(OH_Rdb_Store *store)
 
 OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
 {
-    if (config == nullptr || config->selfSize > RDB_CONFIG_SIZE_V1 || errCode == nullptr) {
+    if (config == nullptr || config->selfSize > OHOS::RdbNdk::RDB_CONFIG_SIZE_V1 || errCode == nullptr) {
         LOG_ERROR("Parameters set error:config is NULL ? %{public}d and config size is %{public}zu or "
                   "errCode is NULL ? %{public}d ",
             (config == nullptr), sizeof(OH_Rdb_Config), (errCode == nullptr));
@@ -120,7 +115,7 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
     OHOS::NativeRdb::RdbStoreConfig rdbStoreConfig(realPath);
     rdbStoreConfig.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel(config->securityLevel));
     rdbStoreConfig.SetEncryptStatus(config->isEncrypt);
-    if (config->selfSize > RDB_CONFIG_SIZE_V0) {
+    if (config->selfSize > OHOS::RdbNdk::RDB_CONFIG_SIZE_V0) {
         rdbStoreConfig.SetArea(config->area);
     }
     if (config->bundleName != nullptr) {
@@ -311,11 +306,11 @@ int OH_Rdb_SetVersion(OH_Rdb_Store *store, int version)
 
 std::pair<int32_t, DistributedConfig> Convert(const Rdb_DistributedConfig *config)
 {
-    if (config->version < RDB_DISTRIBUTED_CONFIG_V0) {
+    if (config->version < OHOS::RdbNdk::RDB_DISTRIBUTED_CONFIG_V0) {
         return { -1, {} };
     }
     switch (config->version) {
-        case RDB_DISTRIBUTED_CONFIG_V0:
+        case OHOS::RdbNdk::RDB_DISTRIBUTED_CONFIG_V0:
             return { 0, DistributedConfig{ .autoSync = config->isAutoSync } };
         default:
             return { -1, {} };
@@ -379,7 +374,7 @@ void RelationalProgressDetails::DestroyTableDetails()
 
 RelationalProgressDetails::RelationalProgressDetails(const ProgressDetail &detail) : Rdb_ProgressDetails()
 {
-    version = RDB_PROGRESS_DETAILS_V0;
+    version = OHOS::RdbNdk::RDB_PROGRESS_DETAILS_V0;
     schedule = detail.progress;
     code = detail.code;
     tableLength = (int32_t)detail.details.size();
@@ -393,7 +388,7 @@ Rdb_TableDetails *RelationalProgressDetails::GetTableDetails(int paraVersion)
     }
     DestroyTableDetails();
     switch (paraVersion) {
-        case RDB_TABLE_DETAILS_V0: {
+        case OHOS::RdbNdk::RDB_TABLE_DETAILS_V0: {
             details_ = new RelationalTableDetailsV0[tableLength + 1];
             int index = 0;
             for (const auto &pair : tableDetails_) {
@@ -423,7 +418,7 @@ Rdb_TableDetails *RelationalProgressDetails::GetTableDetails(int paraVersion)
 std::pair<int, RelationalProgressDetails *> GetDetails(Rdb_ProgressDetails *progress, int32_t version)
 {
     switch (version) {
-        case RDB_PROGRESS_DETAILS_V0:
+        case OHOS::RdbNdk::RDB_PROGRESS_DETAILS_V0:
             return { 0, (RelationalProgressDetails *)progress };
         default:
             return { -1, {} };

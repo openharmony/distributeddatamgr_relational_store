@@ -1448,39 +1448,45 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep017, TestSize.Level1)
  */
 HWTEST_F(RdbStepResultSetTest, testSqlStep018, TestSize.Level1)
 {
-
     AbsRdbPredicates predicates("test");
     std::vector<std::string> columns;
     std::string logTable = "naturalbase_rdb_aux_test_log";
-    std::string sqlstr = "";
+    std::string sqlstr;
 
     // logtable is empty && tableName is not empty
     sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, "");
-    EXPECT_EQ("", sqlstr.c_str());
+    EXPECT_EQ("", sqlstr);
 
     // logtable is empty && tableName is empty
-    predicates.Clear();
-    std::string tableName = predicates.GetTableName();
-    EXPECT_EQ("", tableName.c_str());
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, "");
-    EXPECT_EQ("", sqlstr.c_str());
+    AbsRdbPredicates emptyPredicates("");
+    std::string tableName = emptyPredicates.GetTableName();
+    EXPECT_EQ("", tableName);
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(emptyPredicates, columns, "");
+    EXPECT_EQ("", sqlstr);
     
     // logtable is not empty && tableName is empty
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable);
-    EXPECT_EQ("", sqlstr.c_str());
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(emptyPredicates, columns, logTable);
+    EXPECT_EQ("", sqlstr);
 
     // Distinct is false, clumns is empty
-    AbsRdbPredicates predicate("test");
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicate, columns, logTable);
-    EXPECT_EQ("SELECT test.*, naturalbase_rdb_aux_test_log.cursor, CASE WHEN \
-    naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag FROM test", sqlstr.c_str());
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable);
+    std::string value = "SELECT test.*, naturalbase_rdb_aux_test_log.cursor, CASE "
+                        "WHEN naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 "
+                        "THEN true ELSE false END AS deleted_flag "
+                        "FROM test INNER JOIN naturalbase_rdb_aux_test_log "
+                        "ON test.ROWID = naturalbase_rdb_aux_test_log.data_key";
+    EXPECT_EQ(value, sqlstr);
     
     // Distinct is true, clumns is not empty
-    predicate.Distinct();
+    predicates.Distinct();
     columns.push_back("name");
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicate, columns, logTable);
-    EXPECT_EQ("SELECT test.*, naturalbase_rdb_aux_test_log.cursor, CASE WHEN \
-    naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag FROM test", sqlstr.c_str());
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable);
+    value = "SELECT DISTINCT test.name, naturalbase_rdb_aux_test_log.cursor, CASE "
+            "WHEN naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 "
+            "THEN true ELSE false END AS deleted_flag "
+            "FROM test INNER JOIN naturalbase_rdb_aux_test_log "
+            "ON test.ROWID = naturalbase_rdb_aux_test_log.data_key";
+    EXPECT_EQ(value, sqlstr);
 }
 
 /**

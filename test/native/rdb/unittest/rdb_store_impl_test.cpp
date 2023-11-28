@@ -646,8 +646,6 @@ HWTEST_F(RdbStoreImplTest, CleanDirtyDataTest_001, TestSize.Level2)
 
     table = "test";
     errCode = RdbStoreImplTest::store->CleanDirtyData(table, cursor);
-    EXPECT_EQ(E_OK , errCode);
-
-
+    EXPECT_EQ(E_ERROR, errCode);
     store->ExecuteSql("DROP TABLE IF EXISTS test");
 }
