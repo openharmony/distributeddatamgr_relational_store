@@ -59,12 +59,12 @@ int32_t Convert2Value(napi_env env, napi_value input, Participant &output)
     }
     NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, input, output, identity), napi_invalid_arg);
     NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "role", output.role), napi_invalid_arg);
-    if (output.role < CloudData::Role::ROLE_INVITER || output.role > CloudData::Role::ROLE_INVITEE) {
+    if (output.role < CloudData::Role::ROLE_NIL || output.role >= CloudData::Role::ROLE_BUTT) {
         return napi_invalid_arg;
     }
     NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "state", output.state), napi_invalid_arg);
-    if (output.state < CloudData::Confirmation::CFM_UNKNOWN ||
-        output.state > CloudData::Confirmation::CFM_SUSPENDED) {
+    if (output.state < CloudData::Confirmation::CFM_NIL ||
+        output.state >= CloudData::Confirmation::CFM_BUTT) {
         return napi_invalid_arg;
     }
     NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "privilege", output.privilege), napi_invalid_arg);
