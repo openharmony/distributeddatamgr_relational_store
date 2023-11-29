@@ -27,6 +27,7 @@ public:
     using Args = std::function<void(napi_env env, int& argc, napi_value* argv)>;
     using Result = std::function<void(napi_env env, size_t count, napi_value *values, bool exception)>;
     using Callbacker = std::function<napi_value(napi_env env)>;
+    enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
     struct UvCallback {
         napi_ref object_ = nullptr;
         napi_ref callback_ = nullptr;
@@ -58,7 +59,6 @@ public:
     void AsyncPromise(UvPromise promise, Args args = Args());
     void Execute(Task task);
 private:
-    enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
     static constexpr char RESOLVED[] = "resolved";
     static constexpr char REJECTED[] = "rejected";
     static constexpr size_t RESOLVED_SIZE =  sizeof(RESOLVED);
