@@ -38,6 +38,7 @@ ohos_shared_library("napi_rdb") {
   if (is_mingw || is_mac) {
     include_dirs = [
       "mock/include",
+      "${kvstore_path}/common",
       "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/mock/include",
       "${relational_store_napi_path}/rdb/mock/include",
@@ -75,6 +76,7 @@ ohos_shared_library("napi_rdb") {
     include_dirs = [
       "include",
       "${datashare_path}/common/include/",
+      "${kvstore_path}/common",
       "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/rdb/include",
