@@ -54,7 +54,7 @@ template<>
 bool Unmarshalling(Role &output, MessageParcel &data)
 {
     int32_t result;
-    if (!data.ReadInt32(result) || result <= Role::ROLE_NIL || result >= Role::ROLE_BUTT) {
+    if (!data.ReadInt32(result) || result < Role::ROLE_NIL || result >= Role::ROLE_BUTT) {
         return false;
     }
     output = static_cast<Role>(result);
@@ -71,7 +71,7 @@ template<>
 bool Unmarshalling(Confirmation &output, MessageParcel &data)
 {
     int32_t result;
-    if (!data.ReadInt32(result) || result <= Confirmation::CFM_NIL ||
+    if (!data.ReadInt32(result) || result < Confirmation::CFM_NIL ||
         result >= Confirmation::CFM_BUTT) {
         return false;
     }
