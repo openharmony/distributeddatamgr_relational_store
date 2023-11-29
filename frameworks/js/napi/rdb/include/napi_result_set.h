@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "abs_shared_result_set.h"
+#include "js_proxy.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -27,7 +28,7 @@
 
 namespace OHOS {
 namespace RdbJsKit {
-class ResultSetProxy final : public DataShare::ResultSetBridge::Creator {
+class ResultSetProxy final : public JSProxy::JSEntity<NativeRdb::ResultSet, DataShare::ResultSetBridge> {
 public:
     ResultSetProxy() = default;
     ~ResultSetProxy();
@@ -81,7 +82,6 @@ private:
     static napi_value GetSharedBlockName(napi_env env, napi_callback_info info);
     static napi_value GetSharedBlockAshmemFd(napi_env env, napi_callback_info info);
 
-    std::shared_ptr<NativeRdb::ResultSet> resultSet_;
     std::shared_ptr<NativeRdb::AbsSharedResultSet> sharedResultSet_;
 
     std::string sharedBlockName_;
