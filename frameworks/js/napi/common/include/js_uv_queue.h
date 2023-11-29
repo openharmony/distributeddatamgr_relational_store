@@ -23,17 +23,30 @@
 namespace OHOS::AppDataMgrJsKit {
 class UvQueue final {
 public:
-    using ArgsGenerator = std::function<void(napi_env env, int& argc, napi_value* argv)>;
-    using CallbackGetter = std::function<napi_value(napi_env env)>;
+    using Task = std::function<void()>;
+    using Args = std::function<void(napi_env env, int& argc, napi_value* argv)>;
+    using Result = std::function<void(napi_env env, size_t count, napi_value *values, bool exception)>;
+    using Callbacker = std::function<napi_value(napi_env env)>;
     struct UvCallback {
+        napi_ref object_ = nullptr;
         napi_ref callback_ = nullptr;
+        Callbacker getter_;
         bool repeat_ = false;
-        CallbackGetter getter_;
-        UvCallback(napi_ref callback, bool repeat = false) : callback_(callback), repeat_(repeat) {}
-        UvCallback(CallbackGetter getter) : getter_(std::move(getter)) {}
+        UvCallback(napi_ref callback, bool repeat = false) : callback_(callback), repeat_(repeat) { }
+        UvCallback(napi_ref object, napi_ref callback) : object_(object), callback_(callback) { }
+        UvCallback(Callbacker getter, napi_ref object = nullptr) : object_(object), getter_(std::move(getter)) { }
         bool IsNull()
         {
             return (callback_ == nullptr && getter_ == nullptr);
+        }
+    };
+
+    struct UvPromise {
+        napi_deferred defer_ = nullptr;
+        UvPromise(napi_deferred defer) : defer_(defer) { }
+        bool IsNull()
+        {
+            return (defer_ == nullptr);
         }
     };
 
@@ -41,20 +54,39 @@ public:
     ~UvQueue();
 
     napi_env GetEnv();
-    void AsyncCall(UvCallback callback, ArgsGenerator genArgs = ArgsGenerator());
+    void AsyncCall(UvCallback callback, Args args = Args(), Result result = Result());
+    void AsyncPromise(UvPromise promise, Args args = Args());
+    void Execute(Task task);
 private:
+    enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
+    static constexpr char RESOLVED[] = "resolved";
+    static constexpr char REJECTED[] = "rejected";
+    static constexpr size_t RESOLVED_SIZE =  sizeof(RESOLVED);
+    static constexpr size_t REJECTED_SIZE =  sizeof(REJECTED);
+
+    static napi_value Resolved(napi_env env, napi_callback_info info);
+    static napi_value Rejected(napi_env env, napi_callback_info info);
+    static napi_value Future(napi_env env, napi_callback_info info, bool exception);
+    static void DoWork(uv_work_t *work);
+    static void DoExecute(uv_work_t *work);
+    static void DoUvCallback(uv_work_t *work, int status);
+    static void DoUvPromise(uv_work_t *work, int status);
+
     struct UvEntry {
-        napi_env env;
-        napi_ref callback;
-        bool repeat = false;
-        CallbackGetter getter;
-        ArgsGenerator args;
-        ~UvEntry()
-        {
-            if (callback != nullptr && !repeat) {
-                napi_delete_reference(env, callback);
-            }
-        }
+        napi_env env_ = nullptr;
+        napi_ref object_ = nullptr;
+        napi_ref callback_ = nullptr;
+        napi_deferred defer_ = nullptr;
+        bool repeat_ = false;
+        Callbacker getter_;
+        Args args_;
+        Result result_;
+        ~UvEntry();
+        napi_value GetCallback();
+        napi_value GetObject();
+        void BindPromise(napi_value promise);
+        Result *StealResult();
+        int32_t GetArgv(napi_value *argv, int32_t max);
     };
     napi_env env_ = nullptr;
     uv_loop_s* loop_ = nullptr;
