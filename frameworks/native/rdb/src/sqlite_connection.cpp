@@ -40,7 +40,6 @@
 #include "relational_store_client.h"
 #include "share_block.h"
 #include "shared_block_serializer_info.h"
-#include "relational_store_client.h"
 #endif
 
 namespace OHOS {
