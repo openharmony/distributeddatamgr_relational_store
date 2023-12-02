@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "asset_value.h"
-#include "commontype_visibility.h"
+#include "visibility.h"
 namespace OHOS {
 namespace CommonType {
 /**

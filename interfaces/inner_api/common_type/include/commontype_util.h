@@ -17,7 +17,7 @@
 #define OHOS_COMMONTYPE_TYPES_UTIL_H
 
 #include "itypes_util.h"
-#include "commontype_visibility.h"
+#include "visibility.h"
 #include "value_object.h"
 #include "values_bucket.h"
 
