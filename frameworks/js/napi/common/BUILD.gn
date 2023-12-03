@@ -22,7 +22,7 @@ config("objectstore_config") {
 
   cflags = [ "-DHILOG_ENABLE" ]
 
-  include_dirs = [ "${commontype_path}/include" ]
+  include_dirs = [ "${relational_store_innerapi_path}/common_type/include" ]
 }
 
 config("objectstore_public_config") {
