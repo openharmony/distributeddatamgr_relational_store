@@ -15,7 +15,7 @@
 
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
-#include "asset_value.h"
+#include "common_asset_value.h"
 
 namespace OHOS::CommonType {
 static napi_status SetNamedProperty(napi_env env, napi_value &obj, const std::string &name,
@@ -54,13 +54,11 @@ static napi_value CommonTypeExport(napi_env env, napi_value exports)
 
     status = napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     if (status != napi_ok) {
-        // LOG_ERROR("CommonTypeExport failed: %{public}s", message);
         return nullptr;
     }
     return exports;
 }
 
-// storage module define
 static napi_module storageModule = {
     .nm_version = 1,
     .nm_flags = 0,
@@ -71,9 +69,7 @@ static napi_module storageModule = {
     .reserved = { 0 },
 };
 
-// distributeddataobject module register
 static __attribute__((constructor)) void RegisterModule()
 {
-    // LOG_ERROR("yltest run rdb RegisterModule");
     napi_module_register(&storageModule);
 }

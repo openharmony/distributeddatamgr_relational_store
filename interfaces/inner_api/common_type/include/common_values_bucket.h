@@ -19,13 +19,12 @@
 #include <map>
 #include <set>
 
-#include "value_object.h"
-
+#include "common_value_object.h"
 namespace OHOS {
 class Parcel;
 namespace CommonType {
 /**
- * The ValuesBucket class of RDB.
+ * The ValuesBucket class of CommonType.
  */
 class API_EXPORT ValuesBucket {
 public:
@@ -172,6 +171,6 @@ public:
     std::map<std::string, ValueObject> values_;
 };
 
-} // namespace NativeRdb
+} // namespace CommonType
 } // namespace OHOS
 #endif

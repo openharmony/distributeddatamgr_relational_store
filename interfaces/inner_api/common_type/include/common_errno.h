@@ -35,5 +35,4 @@ constexpr int E_BASE = 14800000;
 constexpr int E_INVALID_OBJECT_TYPE = (E_BASE + 20);
 } // namespace CommonType
 } // namespace OHOS
-
 #endif

@@ -18,8 +18,8 @@
 
 #include "itypes_util.h"
 #include "visibility.h"
-#include "value_object.h"
-#include "values_bucket.h"
+#include "common_value_object.h"
+#include "common_values_bucket.h"
 
 namespace OHOS::ITypesUtil {
 using ValueObject = CommonType::ValueObject;
@@ -38,4 +38,4 @@ API_EXPORT bool Marshalling(const Asset &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(Asset &output, MessageParcel &data);
 }
-#endif // DISTRIBUTED_RDB_RDB_TYPES_UTIL_H
+#endif // OHOS_COMMONTYPE_TYPES_UTIL_H

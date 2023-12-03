@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "values_bucket.h"
+#include "common_values_bucket.h"
 #include "itypes_util.h"
 
 namespace OHOS {
@@ -158,5 +158,5 @@ ValuesBucket ValuesBucket::Unmarshalling(Parcel &parcel)
     ITypesUtil::Unmarshal(*data, bucket.values_);
     return bucket;
 }
-} // namespace NativeRdb
+} // namespace CommonType
 } // namespace OHOS

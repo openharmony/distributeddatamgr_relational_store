@@ -13,10 +13,8 @@
  * limitations under the License.
  */
 
-#include "value_object.h"
-
-#include "commontype_errno.h"
-// #include "sqlite_utils.h"
+#include "common_value_object.h"
+#include "common_errno.h"
 
 namespace OHOS {
 namespace CommonType {
@@ -181,5 +179,5 @@ int ValueObject::Get(T &output) const
     output = static_cast<T>(*v);
     return E_OK;
 }
-} // namespace NativeRdb
+} // namespace CommonType
 } // namespace OHOS
