@@ -49,5 +49,3 @@ distributedfile_path =
     "//foundation/filemanagement/file_api/interfaces/kits/js/src"
 
 sdk_c_path = "//interface/sdk_c/distributeddatamgr"
-
-commontype_path = "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/common_type"
