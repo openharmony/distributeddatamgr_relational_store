@@ -18,7 +18,7 @@ config("common_type_config") {
 
   include_dirs = [
     "include",
-    "${kvstore_path}/common"
+    "${kvstore_path}/common",
   ]
 }
 
@@ -31,16 +31,16 @@ ohos_shared_library("common_type") {
   public_configs = [ ":common_type_config" ]
 
   sources = [
-    "src/value_object.cpp",
-    "src/values_bucket.cpp",
-    "src/commontype_util.cpp"
+    "src/common_type_util.cpp",
+    "src/common_value_object.cpp",
+    "src/common_values_bucket.cpp",
   ]
 
   external_deps = [
+    "c_utils:utils",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_single",
-    "c_utils:utils",
   ]
 
   innerapi_tags = [ "platformsdk" ]

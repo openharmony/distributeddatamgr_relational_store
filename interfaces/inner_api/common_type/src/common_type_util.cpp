@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "commontype_util.h"
+#include "common_type_util.h"
 namespace OHOS::ITypesUtil {
 template<>
 bool Marshalling(const ValueObject &input, MessageParcel &data)

@@ -22,11 +22,7 @@ config("objectstore_config") {
 
   cflags = [ "-DHILOG_ENABLE" ]
 
-  include_dirs = [
-    "${commontype_path}/include",
-    #"${relational_store_napi_path}/rdb/include",
-    #"${relational_store_innerapi_path}/rdb/include"
-  ]
+  include_dirs = [ "${commontype_path}/include" ]
 }
 
 config("objectstore_public_config") {
@@ -37,9 +33,7 @@ config("objectstore_public_config") {
 
 ohos_shared_library("commontype_napi") {
   part_name = "relational_store"
-  sources = [
-    "${relational_store_base_path}/frameworks/js/napi/common/src/js_common_type_init.cpp"
-  ]
+  sources = [ "${relational_store_base_path}/frameworks/js/napi/common/src/js_common_type_init.cpp" ]
 
   configs = [ ":objectstore_config" ]
 

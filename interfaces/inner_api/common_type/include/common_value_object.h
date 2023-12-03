@@ -20,12 +20,12 @@
 #include <variant>
 #include <vector>
 
-#include "asset_value.h"
+#include "common_asset_value.h"
 #include "visibility.h"
 namespace OHOS {
 namespace CommonType {
 /**
- * The ValueObject class of RDB.
+ * The ValueObject class of CommonType.
  */
 class API_EXPORT ValueObject {
 public:
@@ -378,6 +378,6 @@ private:
     };
 };
 using ValueObjectType = ValueObject::TypeId;
-} // namespace NativeRdb
+} // namespace CommonType
 } // namespace OHOS
 #endif
