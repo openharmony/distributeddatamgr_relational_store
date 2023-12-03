@@ -16,7 +16,7 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 group("build_module") {
   deps = [ ":commontype_napi" ]
 }
-commontype_path = "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/common_type"
+
 config("objectstore_config") {
   ldflags = [ "-Wl,--exclude-libs=ALL" ]
 
