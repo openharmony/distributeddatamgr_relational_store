@@ -44,7 +44,7 @@ CacheResultSet::~CacheResultSet()
 
 int CacheResultSet::GetRowCount(int &count)
 {
-    count = static_cast<int>(colNames_.size());
+    count = static_cast<int>(maxRow_);
     return E_OK;
 }
 
@@ -153,13 +153,13 @@ int CacheResultSet::GetRow(RowEntity &rowEntity)
 int CacheResultSet::GoToRow(int position)
 {
     std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
-    if (position > maxRow_) {
+    if (position >= maxRow_) {
         row_ = maxRow_;
-        return E_OK;
+        return E_ERROR;
     }
     if (position < 0) {
-        row_ = 0;
-        return E_OK;
+        row_ = -1;
+        return E_ERROR;
     }
     row_ = position;
     return E_OK;
@@ -245,7 +245,8 @@ int CacheResultSet::IsEnded(bool &result)
 
 int CacheResultSet::GetColumnCount(int &count)
 {
-    return static_cast<int>(colNames_.size());
+    count = maxCol_;
+    return E_OK;
 }
 
 int CacheResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex)

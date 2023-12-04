@@ -627,9 +627,9 @@ std::pair<int32_t, std::shared_ptr<ResultSet>> RdbStoreImpl::QuerySharingResourc
     if (errCode != E_OK) {
         return { errCode, nullptr };
     }
-    auto [status, valueBuckets] =
+    auto [status, resultSet] =
         service->QuerySharingResource(syncerParam_, predicates.GetDistributedPredicates(), columns);
-    return { status, std::make_shared<CacheResultSet>(std::move(valueBuckets)) };
+    return { status, std::make_shared<ResultSetProxy>(resultSet) };
 }
 
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(

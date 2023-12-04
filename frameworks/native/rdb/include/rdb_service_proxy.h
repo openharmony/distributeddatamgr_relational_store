@@ -71,7 +71,7 @@ public:
 
     int32_t NotifyDataChange(const RdbSyncerParam& param, const RdbChangedData &clientChangedData) override;
 
-    std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> QuerySharingResource(const RdbSyncerParam &param,
+    std::pair<int32_t, sptr<IRemoteObject>> QuerySharingResource(const RdbSyncerParam &param,
         const PredicatesMemo &predicates, const std::vector<std::string> &columns) override;
 private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
