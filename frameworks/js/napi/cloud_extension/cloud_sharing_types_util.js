@@ -31,8 +31,8 @@ export var cloudExtension;
             console.info(`${TAG}, onRemoteRequest called, code: ${e}`);
             i.setWaitTime(1e3);
             if (e === t.ConnectShareCenter) {
-                let e = a.readInt();
-                let t = a.readString();
+                let e = r.readInt();
+                let t = r.readString();
                 let i = await this.cloudService.connectShareCenter(e, t);
                 if (null == i) {
                     console.error(`${TAG}, sharingCenter is null`);
@@ -41,7 +41,7 @@ export var cloudExtension;
                 n.writeRemoteObject(i);
                 return !0;
             }
-            console.error(`${TAG}, invalid request code ${e}`);
+            console.error(`${TAG}, invalid request code: ${e}`);
             return !1;
         }
     }
@@ -56,9 +56,9 @@ export var cloudExtension;
         }
 
         async onRemoteMessageRequest(e, t, n, i) {
-            console.info(`${TAG}, onRemoteRequest called, code: ${e}`);
+            console.info(`${TAG}, shareCenter onRemoteRequest called, code: ${e}`);
             if (null == this.shareCenter) {
-                console.info(`${TAG} shareCenter undefined`);
+                console.info(`${TAG}, shareCenter undefined`);
                 return !1;
             }
             i.setWaitTime(1500);
@@ -84,7 +84,7 @@ export var cloudExtension;
                     let S = t.readString();
                     let w = t.readString();
                     let C = await this.shareCenter.exit(g, S, w);
-                    r.writeInt(C.code);
+                    n.writeInt(C.code);
                     C.description ? n.writeString(C.description) : n.writeString("");
                     return !0;
                 case r.ChangePrivilege:
@@ -150,7 +150,7 @@ export var cloudExtension;
             r = {
                 identity: t,
                 role: -1 == n ? void 0 : n,
-                state: -1 == i ? void 0 : n,
+                state: -1 == i ? void 0 : i,
                 privilege: this.unMarshallingPrivilege(e),
                 attachInfo: e.readString()
             };
@@ -201,7 +201,7 @@ export var cloudExtension;
                 e.writeBoolean(!1);
                 e.writeBoolean(!1);
                 e.writeBoolean(!1);
-                e.writeBoolean(!1)
+                e.writeBoolean(!1);
             }
             t.attachInfo ? e.writeString(t.attachInfo) : e.writeString("");
         }
