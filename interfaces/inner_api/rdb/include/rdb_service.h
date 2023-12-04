@@ -69,7 +69,7 @@ public:
     // only use param.storeName_
     virtual int32_t Delete(const RdbSyncerParam &param) = 0;
 
-    virtual std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> QuerySharingResource(
+    virtual std::pair<int32_t, sptr<IRemoteObject>> QuerySharingResource(
         const RdbSyncerParam &param, const PredicatesMemo &predicates, const std::vector<std::string> &columns) = 0;
 
     virtual int32_t NotifyDataChange(const RdbSyncerParam &param, const RdbChangedData &rdbChangedData) = 0;
