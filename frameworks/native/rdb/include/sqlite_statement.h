@@ -16,6 +16,7 @@
 #ifndef NATIVE_RDB_SQLITE_STATEMENT_H
 #define NATIVE_RDB_SQLITE_STATEMENT_H
 
+#include <memory>
 #include <vector>
 
 #include "sqlite3sym.h"
