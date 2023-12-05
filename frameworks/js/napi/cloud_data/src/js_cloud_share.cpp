@@ -245,7 +245,9 @@ napi_value Exit(napi_env env, napi_callback_info info)
  *         callback: AsyncCallback<Result<Array<Result<Participant>>>>): void;
  *
  * [Promise]
- *     changePrivilege(sharingRes: string, participants: Array<Participant>): Promise<Result<Array<Result<Participant>>>>;
+ *     changePrivilege(
+ *         sharingRes: string,
+ *         participants: Array<Participant>): Promise<Result<Array<Result<Participant>>>>;
  */
 napi_value ChangePrivilege(napi_env env, napi_callback_info info)
 {
