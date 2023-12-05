@@ -34,8 +34,8 @@ public:
     static void InitRdbConfig()
     {
         config_.dataBaseDir = RDB_TEST_PATH;
-        config_.storeName = "rdb_cursor_test.db";
-        config_.bundleName = "";
+        config_.storeName = "rdb_asset_test.db";
+        config_.bundleName = "com.example.distributed";
         config_.moduleName = "";
         config_.securityLevel = OH_Rdb_SecurityLevel::S1;
         config_.isEncrypt = false;
@@ -63,9 +63,10 @@ void RdbNativeAssetTest::TearDownTestCase(void)
     char dropTableSql[] = "DROP TABLE IF EXISTS asset_table";
     int errCode = OH_Rdb_Execute(assetTestRdbStore_, dropTableSql);
     EXPECT_EQ(errCode, 0);
-    delete assetTestRdbStore_;
-    assetTestRdbStore_ = NULL;
-    OH_Rdb_DeleteStore(&config_);
+    errCode = OH_Rdb_CloseStore(assetTestRdbStore_);
+    EXPECT_EQ(errCode, 0);
+    errCode = OH_Rdb_DeleteStore(&config_);
+    EXPECT_EQ(errCode, 0);
 }
 
 void RdbNativeAssetTest::SetUp(void) {}
@@ -81,11 +82,16 @@ void RdbNativeAssetTest::CreateAssetTable()
 }
 
 /**
- * @tc.name: RDB_Native_asset_test_001
- * @tc.desc: Abnormal testCase of asset for setName.
+ * @tc.number: RDB_Native_asset_test_001
+ * @tc.name: Abnormal testCase of asset for setName.
+ * @tc.desc: 1.Create asset
+ *           2.Excute SetName (nullptr, nullptr)
+ *           3.Excute SetName (asset, nullptr)
+ *           4.Excute SetName (nullptr, name.c_str())
+ *           5.Destroy asset
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_001, TestSize.Level1)
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_setName, TestSize.Level1)
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     std::string name = "name";
@@ -95,14 +101,20 @@ HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_001, TestSize.Level1)
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
     errCode = OH_Data_Asset_SetName(nullptr, name.c_str());
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    OH_Data_Asset_DestroyOne(asset);
 }
 
 /**
- * @tc.name: RDB_Native_asset_test_002
- * @tc.desc: Abnormal testCase of asset for setUri.
+ * @tc.number: RDB_Native_asset_test_002
+ * @tc.name: Abnormal testCase of asset for setUri.
+ * @tc.desc: 1.Create asset
+ *           2.Excute SetUri (nullptr, nullptr)
+ *           3.Excute SetUri (asset, nullptr)
+ *           4.Excute SetUri (nullptr, uri.c_str())
+ *           5.Destroy asset
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_002, TestSize.Level1)
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_setUri, TestSize.Level1)
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     std::string uri = "uri";
@@ -112,14 +124,20 @@ HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_002, TestSize.Level1)
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
     errCode = OH_Data_Asset_SetUri(nullptr, uri.c_str());
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    OH_Data_Asset_DestroyOne(asset);
 }
 
 /**
- * @tc.name: RDB_Native_asset_test_003
- * @tc.desc: Abnormal testCase of asset for setPath.
+ * @tc.number: RDB_Native_asset_test_003
+ * @tc.name: Abnormal testCase of asset for setPath.
+ * @tc.desc: 1.Create asset
+ *           2.Excute SetPath (nullptr, nullptr)
+ *           3.Excute SetPath (asset, nullptr)
+ *           4.Excute SetPath (nullptr, path.c_str())
+ *           5.Destroy asset
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_003, TestSize.Level1)
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_setPath, TestSize.Level1)
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     std::string path = "path";
@@ -129,14 +147,19 @@ HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_003, TestSize.Level1)
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
     errCode = OH_Data_Asset_SetPath(nullptr, path.c_str());
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    OH_Data_Asset_DestroyOne(asset);
 }
 
 /**
- * @tc.name: RDB_Native_asset_test_004
- * @tc.desc: Abnormal testCase of asset for setCreateTime, setModifyTime, setSize, setStatus.
+ * @tc.number: RDB_Native_asset_test_004
+ * @tc.name: Abnormal testCase of asset for setCreateTime, setModifyTime, setSize, setStatus.
+ * @tc.desc: 1.Excute SetCreateTime (nullptr, 1)
+ *           2.Excute SetModifyTime (nullptr, 1)
+ *           3.Excute SetSize (nullptr, 1)
+ *           4.Excute SetStatus (nullptr, Data_AssetStatus::ASSET_NORMAL)
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_004, TestSize.Level1)
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_for_setCreateTime_setModifyTime_setSize_setStatus, TestSize.Level1)
 {
     int errCode = OH_Data_Asset_SetCreateTime(nullptr, 1);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
@@ -149,11 +172,15 @@ HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_004, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_asset_test_005
- * @tc.desc: Abnormal testCase of asset for getName.
+ * @tc.number: RDB_Native_asset_test_005
+ * @tc.name: Abnormal testCase of asset for getName.
+ * @tc.desc: 1.Create asset
+ *           2.Excute GetName (asset == nullptr)
+ *           3.Excute GetName (nameLength >= *length)
+ *           4.Destroy asset
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_005, TestSize.Level1)
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getName, TestSize.Level1)
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     std::string name1 = "name";
@@ -169,14 +196,19 @@ HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_005, TestSize.Level1)
     EXPECT_EQ(errCode, RDB_OK);
     errCode = OH_Data_Asset_GetName(asset, name, &nameLength);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    OH_Data_Asset_DestroyOne(asset);
 }
 
 /**
- * @tc.name: RDB_Native_asset_test_006
- * @tc.desc: Abnormal testCase of asset for getUri.
+ * @tc.number: RDB_Native_asset_test_006
+ * @tc.name: Abnormal testCase of asset for getUri.
+ * @tc.desc: 1.Create asset
+ *           2.Excute GetUri (asset == nullptr)
+ *           3.Excute GetUri (uriLength >= *length)
+ *           4.Destroy asset
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_006, TestSize.Level1)
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getUri, TestSize.Level1)
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     std::string uri1 = "uri";
@@ -192,14 +224,19 @@ HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_006, TestSize.Level1)
     EXPECT_EQ(errCode, RDB_OK);
     errCode = OH_Data_Asset_GetUri(asset, uri, &uriLength);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    OH_Data_Asset_DestroyOne(asset);
 }
 
 /**
- * @tc.name: RDB_Native_asset_test_007
- * @tc.desc: Abnormal testCase of asset for getPath.
+ * @tc.number: RDB_Native_asset_test_007
+ * @tc.name: Abnormal testCase of asset for getPath.
+ * @tc.desc: 1.Create asset
+ *           2.Excute GetPath (asset == nullptr)
+ *           3.Excute GetPath (pathLength >= *length)
+ *           4.Destroy asset
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_007, TestSize.Level1)
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getPath, TestSize.Level1)
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     std::string path1 = "path";
@@ -215,14 +252,16 @@ HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_007, TestSize.Level1)
     EXPECT_EQ(errCode, RDB_OK);
     errCode = OH_Data_Asset_GetPath(asset, path, &pathLength);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    OH_Data_Asset_DestroyOne(asset);
 }
 
 /**
- * @tc.name: RDB_Native_asset_test_008
- * @tc.desc: Abnormal testCase of asset for getCreatTime.
+ * @tc.number: RDB_Native_asset_test_008
+ * @tc.name: Abnormal testCase of asset for getCreatTime.
+ * @tc.desc: Excute GetCreateTime (asset == nullptr)
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_008, TestSize.Level1)
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getCreatTime, TestSize.Level1)
 {
     int64_t createTime = 0;
     int errCode = OH_Data_Asset_GetCreateTime(nullptr, &createTime);
@@ -230,11 +269,12 @@ HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_008, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_asset_test_009
- * @tc.desc: Abnormal testCase of asset for getModifyTime.
+ * @tc.number: RDB_Native_asset_test_009
+ * @tc.name: Abnormal testCase of asset for getModifyTime.
+ * @tc.desc: Excute GetModifyTime (asset == nullptr)
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_009, TestSize.Level1)
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getModifyTime, TestSize.Level1)
 {
     int64_t modifyTime = 0;
     int errCode = OH_Data_Asset_GetModifyTime(nullptr, &modifyTime);
@@ -242,11 +282,12 @@ HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_009, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_asset_test_0010
- * @tc.desc: Abnormal testCase of asset for getSize.
+ * @tc.number: RDB_Native_asset_test_0010
+ * @tc.name: Abnormal testCase of asset for getSize.
+ * @tc.desc: Excute GetSize (asset == nullptr)
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_0010, TestSize.Level1)
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getSize, TestSize.Level1)
 {
     size_t size = 0;
     int errCode = OH_Data_Asset_GetSize(nullptr, &size);
@@ -254,11 +295,12 @@ HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_0010, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_asset_test_0011
- * @tc.desc: Abnormal testCase of asset for getStatus.
+ * @tc.number: RDB_Native_asset_test_0011
+ * @tc.name: Abnormal testCase of asset for getStatus.
+ * @tc.desc: Excute GetStatus (asset == nullptr)
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeAssetTest, RDB_Native_asset_test_0011, TestSize.Level1)
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getStatus, TestSize.Level1)
 {
     Data_AssetStatus status = Data_AssetStatus::ASSET_NORMAL;
     int errCode = OH_Data_Asset_GetStatus(nullptr, &status);
