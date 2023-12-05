@@ -59,12 +59,12 @@ int32_t Convert2Value(napi_env env, napi_value input, Participant &output)
     }
     NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, input, output, identity), napi_invalid_arg);
     NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "role", output.role), napi_invalid_arg);
-    if (output.role < CloudData::Role::ROLE_INVITER || output.role > CloudData::Role::ROLE_INVITEE) {
+    if (output.role < CloudData::Role::ROLE_NIL || output.role >= CloudData::Role::ROLE_BUTT) {
         return napi_invalid_arg;
     }
     NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "state", output.state), napi_invalid_arg);
-    if (output.state < CloudData::Confirmation::CFM_UNKNOWN ||
-        output.state > CloudData::Confirmation::CFM_SUSPENDED) {
+    if (output.state < CloudData::Confirmation::CFM_NIL ||
+        output.state >= CloudData::Confirmation::CFM_BUTT) {
         return napi_invalid_arg;
     }
     NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "privilege", output.privilege), napi_invalid_arg);
@@ -114,8 +114,18 @@ napi_value Convert2JSValue(napi_env env, const Participant &value)
         return nullptr;
     }
     napi_value identity = Convert2JSValue(env, value.identity);
-    napi_value role = Convert2JSValue(env, value.role);
-    napi_value sharingState = Convert2JSValue(env, value.state);
+    napi_value role = nullptr;
+    if (value.role == CloudData::Role::ROLE_NIL) {
+        napi_get_undefined(env, &role);
+    } else {
+        role = Convert2JSValue(env, value.role);
+    }
+    napi_value state = nullptr;
+    if (value.state == CloudData::Confirmation::CFM_NIL) {
+        napi_get_undefined(env, &state);
+    } else {
+        state = Convert2JSValue(env, value.state);
+    }
     napi_value privilege = Convert2JSValue(env, value.privilege);
     if (privilege == nullptr) {
         return nullptr;
@@ -123,7 +133,7 @@ napi_value Convert2JSValue(napi_env env, const Participant &value)
     napi_value attachInfo = Convert2JSValue(env, value.attachInfo);
     napi_set_named_property(env, jsValue, "identity", identity);
     napi_set_named_property(env, jsValue, "role", role);
-    napi_set_named_property(env, jsValue, "state", sharingState);
+    napi_set_named_property(env, jsValue, "state", state);
     napi_set_named_property(env, jsValue, "privilege", privilege);
     napi_set_named_property(env, jsValue, "attachInfo", attachInfo);
     return jsValue;
