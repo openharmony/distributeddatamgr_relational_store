@@ -21,7 +21,7 @@
 namespace OHOS {
 namespace NativeRdb {
 
-static constexpr const char *RDB_TEST_PATH = "/data/test/";
+static constexpr const char *RDB_TEST_PATH = "/data/storage/el2/database/entry/rdb/";
 
 } // namespace NativeRdb
 } // namespace OHOS
