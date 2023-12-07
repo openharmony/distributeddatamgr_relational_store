@@ -38,6 +38,7 @@
 #endif
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#include "delay_notify.h"
 #include "iresult_set.h"
 #include "raw_data_parser.h"
 #include "rdb_device_manager_adapter.h"
@@ -1701,11 +1702,37 @@ int RdbStoreImpl::UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObser
     return service->UnregisterAutoSyncCallback(syncerParam_, observer);
 }
 
+void RdbStoreImpl::InitDelayNotifier()
+{
+    if (delayNotifier_ == nullptr) {
+        delayNotifier_ = std::make_shared<DelayNotify>();
+    }
+    if (delayNotifier_ == nullptr) {
+        LOG_ERROR("Init delay notifier failed");
+        return;
+    }
+    if (pool_ == nullptr) {
+        pool_ = TaskExecutor::GetInstance().GetExecutor();
+    }
+    if (pool_ != nullptr) {
+        delayNotifier_->SetExecutorPool(pool_);
+    }
+    delayNotifier_->SetTask([param = syncerParam_](const DistributedRdb::RdbChangedData& rdbChangedData) -> int {
+        auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+        if (errCode != E_OK || service == nullptr) {
+            LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
+            return errCode;
+        }
+        return service->NotifyDataChange(param, rdbChangedData);
+    });
+}
+
 int RdbStoreImpl::RegisterDataChangeCallback()
 {
     if (!rdbStoreConfig.IsSearchable()) {
         return E_OK;
     }
+    InitDelayNotifier();
     auto callBack = [this](ClientChangedData &clientChangedData) {
         DistributedRdb::RdbChangedData rdbChangedData;
         for (const auto& entry : clientChangedData.tableData) {
@@ -1713,9 +1740,8 @@ int RdbStoreImpl::RegisterDataChangeCallback()
             rdbProperties.isTrackedDataChange = entry.second.isTrackedDataChange;
             rdbChangedData.tableData[entry.first] = rdbProperties;
         }
-        int errCode = NotifyDataChange(rdbChangedData);
-        if (errCode != E_OK) {
-            LOG_ERROR("NotifyDataChange is failed, err is %{public}d.", errCode);
+        if (delayNotifier_ != nullptr) {
+            delayNotifier_->UpdateNotify(rdbChangedData);
         }
     };
     SqliteConnection *connection = connectionPool->AcquireConnection(false);
@@ -1725,16 +1751,6 @@ int RdbStoreImpl::RegisterDataChangeCallback()
     int code = connection->RegisterCallBackObserver(callBack);
     connectionPool->ReleaseConnection(connection);
     return code;
-}
-
-int RdbStoreImpl::NotifyDataChange(DistributedRdb::RdbChangedData &rdbChangedData)
-{
-    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
-    if (errCode != E_OK || service == nullptr) {
-        LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
-        return errCode;
-    }
-    return service->NotifyDataChange(syncerParam_, rdbChangedData);
 }
 #endif
 } // namespace OHOS::NativeRdb
