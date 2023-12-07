@@ -51,6 +51,7 @@ OH_Rdb_Config RdbNativeAssetTest::config_ = { 0 };
 void RdbNativeAssetTest::SetUpTestCase(void)
 {
     InitRdbConfig();
+    //0770表示文件拥有者及其所在群组成员有对该文件读写的权限
     mkdir(config_.dataBaseDir, 0770);
     int errCode = 0;
     assetTestRdbStore_ = OH_Rdb_GetOrOpen(&config_, &errCode);
