@@ -2274,5 +2274,238 @@ describe('rdbResultSetTest', function () {
         console.log(TAG + "************* testBigData0014 end *************");
 
     })
+
+    /**
+     * @tc.name testQuerySharingResource001
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0234
+     * @tc.desc querySharingResource test
+     */
+    it('testQuerySharingResource001', 0, async function (done) {
+        console.log(TAG + "************* testQuerySharingResource001 start *************");
+        let predicates = new data_relationalStore.RdbPredicates("test");
+        predicates.equalTo("name", "wangwu");
+        try {
+            await rdbStore.querySharingResource(predicates, (err, resultSet) => {
+                if (err) {
+                    console.log(`Error occured, code is ${err.code},message is ${err.message}`);
+                    expect(null).assertFail();
+                    return;
+                }
+                expect(resultSet.rowCount).assertEqual(0);
+            })
+        } catch (e) {
+            expect(null).assertFail()
+        }
+        done();
+        console.log(TAG + "************* testQuerySharingResource001 end *************");
+    })
+    /**
+     * @tc.name testQuerySharingResource002
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0235
+     * @tc.desc querySharingResource test
+     */
+    it('testQuerySharingResource002', 0, async function (done) {
+        console.log(TAG + "************* testQuerySharingResource002 start *************");
+        try {
+            await rdbStore.querySharingResource(undefined, (resultSet) => {
+                expect(null).assertFail();
+            })
+        } catch (e) {
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+        console.log(TAG + "************* testQuerySharingResource002 end *************");
+    })
+
+    /**
+     * @tc.name testQuerySharingResource003
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0236
+     * @tc.desc querySharingResource test
+     */
+    it('testQuerySharingResource003', 0, async function (done) {
+        console.log(TAG + "************* testQuerySharingResource003 start *************");
+        try {
+            await rdbStore.querySharingResource(null, (resultSet) => {
+                expect(null).assertFail();
+            })
+        } catch (e) {
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+        console.log(TAG + "************* testQuerySharingResource003 end *************");
+    })
+
+    /**
+     * @tc.name testQuerySharingResource004
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0237
+     * @tc.desc querySharingResource test
+     */
+    it('testQuerySharingResource004', 0, async function (done) {
+        console.log(TAG + "************* testQuerySharingResource004 start *************");
+        let predicates = new data_relationalStore.RdbPredicates("test");
+        predicates.equalTo("name", "wangwu");
+        let columns = ["data1", "data2"]
+        try {
+            await rdbStore.querySharingResource(predicates, columns, (err, resultSet) => {
+                if (err) {
+                    globalThis.SetLog(`Error occured, code is ${err.code},message is ${err.message}`);
+                    expect(null).assertFail();
+                    return;
+                }
+                expect(resultSet.rowCount).assertEqual(0);
+            })
+        } catch (e) {
+            expect(null).assertFail()
+        }
+        done();
+        console.log(TAG + "************* testQuerySharingResource004 end *************");
+    })
+
+    /**
+     * @tc.name testQuerySharingResource005
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0238
+     * @tc.desc querySharingResource test
+     */
+    it('testQuerySharingResource005', 0, async function (done) {
+        console.log(TAG + "************* testQuerySharingResource005 start *************");
+        let columns = ["data1", "data2"]
+        try {
+            await rdbStore.querySharingResource(undefined, columns, (resultSet) => {
+                expect(null).assertFail();
+            })
+        } catch (e) {
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+        console.log(TAG + "************* testQuerySharingResource005 end *************");
+    })
+
+    /**
+     * @tc.name testQuerySharingResource006
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0239
+     * @tc.desc querySharingResource test
+     */
+    it('testQuerySharingResource006', 0, async function (done) {
+        console.log(TAG + "************* testQuerySharingResource006 start *************");
+        let predicates = new data_relationalStore.RdbPredicates("test");
+        predicates.equalTo("name", "wangwu");
+        try {
+            await rdbStore.querySharingResource(predicates, undefined, (resultSet) => {
+                expect(null).assertFail();
+            })
+        } catch (e) {
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+        console.log(TAG + "************* testQuerySharingResource006 end *************");
+    })
+
+    /**
+     * @tc.name testQuerySharingResource007
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0240
+     * @tc.desc querySharingResource test
+     */
+    it('testQuerySharingResource007', 0, async function (done) {
+        console.log(TAG + "************* testQuerySharingResource007 start *************");
+        let predicates = new data_relationalStore.RdbPredicates("test");
+        predicates.equalTo("name", "wangwu");
+        try {
+            await rdbStore.querySharingResource(predicates).then((resultSet) => {
+                expect(resultSet.rowCount).assertEqual(0);
+            }).catch((err) => {
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            expect(null).assertFail()
+        }
+        done();
+        console.log(TAG + "************* testQuerySharingResource007 end *************");
+    })
+
+    /**
+     * @tc.name testQuerySharingResource008
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0241
+     * @tc.desc querySharingResource test
+     */
+    it('testQuerySharingResource008', 0, async function (done) {
+        console.log(TAG + "************* testQuerySharingResource008 start *************");
+        try {
+            await rdbStore.querySharingResource(undefined).then((resultSet) => {
+                expect(null).assertFail();
+            }).catch((err) => {
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+        console.log(TAG + "************* testQuerySharingResource008 end *************");
+    })
+
+    /**
+     * @tc.name testQuerySharingResource009
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0242
+     * @tc.desc querySharingResource test
+     */
+    it('testQuerySharingResource009', 0, async function (done) {
+        console.log(TAG + "************* testQuerySharingResource009 start *************");
+        let predicates = new data_relationalStore.RdbPredicates("test");
+        predicates.equalTo("name", "wangwu");
+        let columns = ["data1", "data2"]
+        try {
+            await rdbStore.querySharingResource(predicates, columns).then((resultSet) => {
+                expect(resultSet.rowCount).assertEqual(0);
+            }).catch((err) => {
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            expect(null).assertFail()
+        }
+        done();
+        console.log(TAG + "************* testQuerySharingResource009 end *************");
+    })
+
+    /**
+     * @tc.name testQuerySharingResource010
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0243
+     * @tc.desc querySharingResource test
+     */
+    it('testQuerySharingResource010', 0, async function (done) {
+        console.log(TAG + "************* testQuerySharingResource010 start *************");
+        try {
+            let columns = ["data1", "data2"]
+            await rdbStore.querySharingResource(undefined, columns).then((resultSet) => {
+                expect(null).assertFail();
+            }).catch((err) => {
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+        console.log(TAG + "************* testQuerySharingResource010 end *************");
+    })
+
+    /**
+     * @tc.name testQuerySharingResource011
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0244
+     * @tc.desc querySharingResource test
+     */
+    it('testQuerySharingResource011', 0, async function (done) {
+        console.log(TAG + "************* testQuerySharingResource011 start *************");
+        let predicates = new data_relationalStore.RdbPredicates("test");
+        predicates.equalTo("name", "wangwu");
+        try {
+            await rdbStore.querySharingResource(predicates, undefined).then((resultSet) => {
+                expect(resultSet.rowCount).assertEqual(0);
+            }).catch((err) => {
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            expect(null).assertFail()
+        }
+        done();
+        console.log(TAG + "************* testQuerySharingResource011 end *************");
+    })
     console.log(TAG + "*************Unit Test End*************");
 })
