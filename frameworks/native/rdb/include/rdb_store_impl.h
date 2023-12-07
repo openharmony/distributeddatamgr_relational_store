@@ -37,6 +37,7 @@ class ExecutorPool;
 }
 
 namespace OHOS::NativeRdb {
+class DelayNotify;
 class RdbStoreLocalObserver {
 public:
     explicit RdbStoreLocalObserver(DistributedRdb::RdbStoreObserver *observer) : observer_(observer) {};
@@ -205,7 +206,7 @@ private:
     int UnSubscribeLocalSharedAll(const SubscribeOption& option);
     int UnSubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
     int RegisterDataChangeCallback();
-    int NotifyDataChange(DistributedRdb::RdbChangedData &rdbChangedData);
+    void InitDelayNotifier();
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;
@@ -219,6 +220,7 @@ private:
     DistributedRdb::RdbSyncerParam syncerParam_;
     bool isEncrypt_;
     std::shared_ptr<ExecutorPool> pool_;
+    std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
 
     mutable std::shared_mutex rwMutex_;
     static inline constexpr uint32_t INTERVAL = 200;
