@@ -21,6 +21,7 @@
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
+using Code = RemoteResultSet::Code;
 
 ResultSetProxy::ResultSetProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IResultSet>(impl)
 {
@@ -38,18 +39,20 @@ int ResultSetProxy::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
     MessageParcel data, reply;
     if (!data.WriteInterfaceToken(ResultSetProxy::GetDescriptor())) {
-        LOG_ERROR("Write descriptor failed, code is %{public}d.", CMD_GET_ALL_COLUMN_NAMES);
+        LOG_ERROR("Write descriptor failed, code is %{public}d.", Code::CMD_GET_ALL_COLUMN_NAMES);
         return E_ERROR;
     }
     MessageOption mo { MessageOption::TF_SYNC };
-    int32_t error = remote_->SendRequest(CMD_GET_ALL_COLUMN_NAMES, data, reply, mo);
+    int32_t error = remote_->SendRequest(Code::CMD_GET_ALL_COLUMN_NAMES, data, reply, mo);
     if (error != 0) {
-        LOG_ERROR("SendRequest failed, error is %{public}d, code is %{public}d.", error, CMD_GET_ALL_COLUMN_NAMES);
+        LOG_ERROR(
+            "SendRequest failed, error is %{public}d, code is %{public}d.", error, Code::CMD_GET_ALL_COLUMN_NAMES);
         return E_ERROR;
     }
     int status = reply.ReadInt32();
     if (status != E_OK) {
-        LOG_ERROR("Reply status error, status is %{public}d, code is %{public}d.", status, CMD_GET_ALL_COLUMN_NAMES);
+        LOG_ERROR(
+            "Reply status error, status is %{public}d, code is %{public}d.", status, Code::CMD_GET_ALL_COLUMN_NAMES);
         return status;
     }
     if (!reply.ReadStringVector(&columnNames)) {
@@ -61,13 +64,13 @@ int ResultSetProxy::GetAllColumnNames(std::vector<std::string> &columnNames)
 
 int ResultSetProxy::GetColumnCount(int &count)
 {
-    return SendRequestRetInt(CMD_GET_COLUMN_COUNT, count);
+    return SendRequestRetInt(Code::CMD_GET_COLUMN_COUNT, count);
 }
 
 int ResultSetProxy::GetColumnType(int columnIndex, ColumnType &columnType)
 {
     MessageParcel reply;
-    int status = SendRequestRetReply(CMD_GET_COLUMN_TYPE, columnIndex, reply);
+    int status = SendRequestRetReply(Code::CMD_GET_COLUMN_TYPE, columnIndex, reply);
     if (status != E_OK) {
         return status;
     }
@@ -79,22 +82,22 @@ int ResultSetProxy::GetColumnIndex(const std::string &columnName, int &columnInd
 {
     MessageParcel data, reply;
     if (!data.WriteInterfaceToken(ResultSetProxy::GetDescriptor())) {
-        LOG_ERROR("Write descriptor failed, code is %{public}d.", CMD_GET_COLUMN_INDEX);
+        LOG_ERROR("Write descriptor failed, code is %{public}d.", Code::CMD_GET_COLUMN_INDEX);
         return E_ERROR;
     }
     if (!reply.SetMaxCapacity(MAX_IPC_CAPACITY) || !data.WriteString(columnName)) {
-        LOG_ERROR("Set max capacity failed or write parcel failed, code is %{public}d.", CMD_GET_COLUMN_INDEX);
+        LOG_ERROR("Set max capacity failed or write parcel failed, code is %{public}d.", Code::CMD_GET_COLUMN_INDEX);
         return E_ERROR;
     }
     MessageOption mo { MessageOption::TF_SYNC };
-    int32_t error = remote_->SendRequest(CMD_GET_COLUMN_INDEX, data, reply, mo);
+    int32_t error = remote_->SendRequest(Code::CMD_GET_COLUMN_INDEX, data, reply, mo);
     if (error != 0) {
-        LOG_ERROR("SendRequest failed, error is %{public}d, code is %{public}d.", error, CMD_GET_COLUMN_INDEX);
+        LOG_ERROR("SendRequest failed, error is %{public}d, code is %{public}d.", error, Code::CMD_GET_COLUMN_INDEX);
         return E_ERROR;
     }
     int status = reply.ReadInt32();
     if (status != E_OK) {
-        LOG_ERROR("Reply status error, status is %{public}d, code is %{public}d.", status, CMD_GET_COLUMN_INDEX);
+        LOG_ERROR("Reply status error, status is %{public}d, code is %{public}d.", status, Code::CMD_GET_COLUMN_INDEX);
         return status;
     }
     columnIndex = reply.ReadInt32();
@@ -104,7 +107,7 @@ int ResultSetProxy::GetColumnIndex(const std::string &columnName, int &columnInd
 int ResultSetProxy::GetColumnName(int columnIndex, std::string &columnName)
 {
     MessageParcel reply;
-    int status = SendRequestRetReply(CMD_GET_COLUMN_NAME, columnIndex, reply);
+    int status = SendRequestRetReply(Code::CMD_GET_COLUMN_NAME, columnIndex, reply);
     if (status != E_OK) {
         return status;
     }
@@ -114,68 +117,68 @@ int ResultSetProxy::GetColumnName(int columnIndex, std::string &columnName)
 
 int ResultSetProxy::GetRowCount(int &count)
 {
-    return SendRequestRetInt(CMD_GET_ROW_COUNT, count);
+    return SendRequestRetInt(Code::CMD_GET_ROW_COUNT, count);
 }
 
 int ResultSetProxy::GetRowIndex(int &position) const
 {
-    return SendRequestRetInt(CMD_GET_ROW_INDEX, position);
+    return SendRequestRetInt(Code::CMD_GET_ROW_INDEX, position);
 }
 
 int ResultSetProxy::GoTo(int offset)
 {
-    return SendIntRequest(CMD_GO_TO, offset);
+    return SendIntRequest(Code::CMD_GO_TO, offset);
 }
 
 int ResultSetProxy::GoToRow(int position)
 {
-    return SendIntRequest(CMD_GO_TO_ROW, position);
+    return SendIntRequest(Code::CMD_GO_TO_ROW, position);
 }
 
 int ResultSetProxy::GoToFirstRow()
 {
-    return SendRequest(CMD_GO_TO_FIRST_ROW);
+    return SendRequest(Code::CMD_GO_TO_FIRST_ROW);
 }
 
 int ResultSetProxy::GoToLastRow()
 {
-    return SendRequest(CMD_GO_TO_LAST_ROW);
+    return SendRequest(Code::CMD_GO_TO_LAST_ROW);
 }
 
 int ResultSetProxy::GoToNextRow()
 {
-    return SendRequest(CMD_GO_TO_NEXT_ROW);
+    return SendRequest(Code::CMD_GO_TO_NEXT_ROW);
 }
 
 int ResultSetProxy::GoToPreviousRow()
 {
-    return SendRequest(CMD_GO_TO_PREV_ROW);
+    return SendRequest(Code::CMD_GO_TO_PREV_ROW);
 }
 
 int ResultSetProxy::IsEnded(bool &result)
 {
-    return SendRequestRetBool(CMD_IS_ENDED_ROW, result);
+    return SendRequestRetBool(Code::CMD_IS_ENDED_ROW, result);
 }
 
 int ResultSetProxy::IsStarted(bool &result) const
 {
-    return SendRequestRetBool(CMD_IS_STARTED_ROW, result);
+    return SendRequestRetBool(Code::CMD_IS_STARTED_ROW, result);
 }
 
 int ResultSetProxy::IsAtFirstRow(bool &result) const
 {
-    return SendRequestRetBool(CMD_IS_AT_FIRST_ROW, result);
+    return SendRequestRetBool(Code::CMD_IS_AT_FIRST_ROW, result);
 }
 
 int ResultSetProxy::IsAtLastRow(bool &result)
 {
-    return SendRequestRetBool(CMD_IS_AT_LAST_ROW, result);
+    return SendRequestRetBool(Code::CMD_IS_AT_LAST_ROW, result);
 }
 
 int ResultSetProxy::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
 {
     MessageParcel reply;
-    int status = SendRequestRetReply(CMD_GET_BLOB, columnIndex, reply);
+    int status = SendRequestRetReply(Code::CMD_GET_BLOB, columnIndex, reply);
     if (status != E_OK) {
         return status;
     }
@@ -189,7 +192,7 @@ int ResultSetProxy::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
 int ResultSetProxy::GetString(int columnIndex, std::string &value)
 {
     MessageParcel reply;
-    int status = SendRequestRetReply(CMD_GET_STRING, columnIndex, reply);
+    int status = SendRequestRetReply(Code::CMD_GET_STRING, columnIndex, reply);
     if (status != E_OK) {
         return status;
     }
@@ -200,7 +203,7 @@ int ResultSetProxy::GetString(int columnIndex, std::string &value)
 int ResultSetProxy::GetInt(int columnIndex, int &value)
 {
     MessageParcel reply;
-    int status = SendRequestRetReply(CMD_GET_INT, columnIndex, reply);
+    int status = SendRequestRetReply(Code::CMD_GET_INT, columnIndex, reply);
     if (status != E_OK) {
         return status;
     }
@@ -211,7 +214,7 @@ int ResultSetProxy::GetInt(int columnIndex, int &value)
 int ResultSetProxy::GetLong(int columnIndex, int64_t &value)
 {
     MessageParcel reply;
-    int status = SendRequestRetReply(CMD_GET_LONG, columnIndex, reply);
+    int status = SendRequestRetReply(Code::CMD_GET_LONG, columnIndex, reply);
     if (status != E_OK) {
         return status;
     }
@@ -222,7 +225,7 @@ int ResultSetProxy::GetLong(int columnIndex, int64_t &value)
 int ResultSetProxy::GetDouble(int columnIndex, double &value)
 {
     MessageParcel reply;
-    int status = SendRequestRetReply(CMD_GET_DOUBLE, columnIndex, reply);
+    int status = SendRequestRetReply(Code::CMD_GET_DOUBLE, columnIndex, reply);
     if (status != E_OK) {
         return status;
     }
@@ -238,7 +241,7 @@ int ResultSetProxy::GetSize(int columnIndex, size_t &size)
 int ResultSetProxy::IsColumnNull(int columnIndex, bool &isNull)
 {
     MessageParcel reply;
-    int status = SendRequestRetReply(CMD_IS_COLUMN_NULL, columnIndex, reply);
+    int status = SendRequestRetReply(Code::CMD_IS_COLUMN_NULL, columnIndex, reply);
     if (status != E_OK) {
         return status;
     }
@@ -246,7 +249,7 @@ int ResultSetProxy::IsColumnNull(int columnIndex, bool &isNull)
     return E_OK;
 }
 
-int ResultSetProxy::GetRow(RowEntity &rowEntity)
+int ResultSetProxy::GetRow(NativeRdb::RowEntity &rowEntity)
 {
     return E_NOT_SUPPORT;
 }
@@ -255,13 +258,13 @@ bool ResultSetProxy::IsClosed() const
 {
     MessageParcel data, reply;
     if (!data.WriteInterfaceToken(ResultSetProxy::GetDescriptor())) {
-        LOG_ERROR("Write descriptor failed, code is %{public}d.", CMD_IS_CLOSED);
+        LOG_ERROR("Write descriptor failed, code is %{public}d.", Code::CMD_IS_CLOSED);
         return false;
     }
     MessageOption mo { MessageOption::TF_SYNC };
-    int32_t error = remote_->SendRequest(CMD_IS_CLOSED, data, reply, mo);
+    int32_t error = remote_->SendRequest(Code::CMD_IS_CLOSED, data, reply, mo);
     if (error != 0) {
-        LOG_ERROR("SendRequest failed, error is %{public}d, code is %{public}d.", error, CMD_IS_CLOSED);
+        LOG_ERROR("SendRequest failed, error is %{public}d, code is %{public}d.", error, Code::CMD_IS_CLOSED);
         return false;
     }
     return reply.ReadBool();
@@ -269,7 +272,7 @@ bool ResultSetProxy::IsClosed() const
 
 int ResultSetProxy::Close()
 {
-    return SendRequest(CMD_CLOSE);
+    return SendRequest(Code::CMD_CLOSE);
 }
 
 int ResultSetProxy::SendRequest(uint32_t code)
