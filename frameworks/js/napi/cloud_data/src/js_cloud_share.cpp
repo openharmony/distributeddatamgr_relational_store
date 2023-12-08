@@ -58,13 +58,16 @@ napi_value AllocResourceAndShare(napi_env env, napi_callback_info info)
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->storeId);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK,
             Status::INVALID_ARGUMENT, "The type of storeId must be string.");
+        // 'argv[1]' represents a RdbPredicates parameter
         status = JSUtils::Convert2Value(env, argv[1], ctxt->predicates);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of predicates must be relationalStore.RdbPredicates");
+        // 'argv[2]' represents a Participants parameter
         status = JSUtils::Convert2Value(env, argv[2], ctxt->participants);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK,
             Status::INVALID_ARGUMENT, "The type of participants must be Array<Participant>.");
-        if (argc > 3) {
+        // 'argv[3]' represents an optional std::vector<std::string> parameter
+        if (argc > 3 && !JSUtils::IsNull(env, argv[3])) {
             status = JSUtils::Convert2Value(env, argv[3], ctxt->columns);
             ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK,
                 Status::INVALID_ARGUMENT, "The type of columns must be Array<string>.");
