@@ -627,9 +627,12 @@ std::pair<int32_t, std::shared_ptr<ResultSet>> RdbStoreImpl::QuerySharingResourc
     if (errCode != E_OK) {
         return { errCode, nullptr };
     }
-    auto [status, valueBuckets] =
+    auto [status, resultSet] =
         service->QuerySharingResource(syncerParam_, predicates.GetDistributedPredicates(), columns);
-    return { status, std::make_shared<CacheResultSet>(std::move(valueBuckets)) };
+    if (status != E_OK) {
+        return { status, nullptr };
+    }
+    return { status, resultSet };
 }
 
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
@@ -647,17 +650,14 @@ std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
     auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
-    errCode = err;
     if (err != E_OK) {
         LOG_ERROR("RdbStoreImpl::RemoteQuery get service failed");
+        errCode = err;
         return nullptr;
     }
-    sptr<IRemoteObject> remoteResultSet;
-    if (service->RemoteQuery(syncerParam_, device, sql, selectionArgs, remoteResultSet) != E_OK) {
-        LOG_ERROR("RdbStoreImpl::RemoteQuery service RemoteQuery failed");
-        return nullptr;
-    }
-    return std::make_shared<ResultSetProxy>(remoteResultSet);
+    auto [status, resultSet] = service->RemoteQuery(syncerParam_, device, sql, selectionArgs);
+    errCode = status;
+    return resultSet;
 }
 
 std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool distinct,

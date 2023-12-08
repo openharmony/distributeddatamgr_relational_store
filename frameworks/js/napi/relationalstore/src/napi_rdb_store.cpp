@@ -1524,14 +1524,12 @@ napi_value RdbStoreProxy::QuerySharingResource(napi_env env, napi_callback_info 
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc > 0 && argc < 4, std::make_shared<ParamNumError>("1 to 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
+        // 'argv[0]' represents a RdbPredicates parameter
         CHECK_RETURN(OK == ParsePredicates(env, argv[0], context));
-        if (argc >= 2) {
-            bool isArray = false;
-            napi_is_array(env, argv[1], &isArray);
-            if (isArray) {
-                CHECK_RETURN(OK == ParseColumns(env, argv[1], context));
-            }
-        }
+        // 'argv[1]' represents an optional std::vector<std::string> parameter
+        CHECK_RETURN(argc < 2 || JSUtils::IsNull(env, argv[1]) || OK == ParseColumns(env, argv[1], context));
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        CHECK_RETURN_SET_E(obj != nullptr && obj->IsSystemAppCalled(), std::make_shared<NonSystemError>());
     };
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::QuerySharingResource Async");
@@ -1542,7 +1540,7 @@ napi_value RdbStoreProxy::QuerySharingResource(napi_env env, napi_callback_info 
             obj->rdbStore_->QuerySharingResource(*(context->rdbPredicates), context->columns);
         LOG_DEBUG("RdbStoreProxy::QuerySharingResource resultSet is nullptr:%{public}d, status:%{public}d",
             context->resultSet == nullptr, status);
-        return (context->resultSet != nullptr) ? E_OK : E_ERROR;
+        return (status == E_OK && context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, context->resultSet);

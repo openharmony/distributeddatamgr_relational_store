@@ -19,15 +19,12 @@
 #include <memory>
 #include <string>
 
+#include "result_set.h"
 #include "rdb_types.h"
 #include "rdb_notifier.h"
 #include "distributeddata_relational_store_ipc_interface_code.h"
-#include "values_bucket.h"
 
 namespace OHOS {
-template <typename T>
-class sptr;
-class IRemoteObject;
 namespace DistributedRdb {
 class RdbService {
 public:
@@ -37,6 +34,7 @@ public:
         bool isAsync = false;
         bool isAutoSync = false;
     };
+    using ResultSet = NativeRdb::ResultSet;
 
     virtual std::string ObtainDistributedTableName(const std::string &device, const std::string &table) = 0;
 
@@ -59,8 +57,8 @@ public:
     virtual int32_t UnregisterAutoSyncCallback(
         const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer) = 0;
 
-    virtual int32_t RemoteQuery(const RdbSyncerParam &param, const std::string &device, const std::string &sql,
-        const std::vector<std::string> &selectionArgs, sptr<IRemoteObject> &resultSet) = 0;
+    virtual std::pair<int32_t, std::shared_ptr<ResultSet>> RemoteQuery(const RdbSyncerParam &param,
+        const std::string &device, const std::string &sql, const std::vector<std::string> &selectionArgs) = 0;
 
     virtual int32_t InitNotifier(const RdbSyncerParam &param, sptr<IRemoteObject> notifier) = 0;
 
@@ -69,7 +67,7 @@ public:
     // only use param.storeName_
     virtual int32_t Delete(const RdbSyncerParam &param) = 0;
 
-    virtual std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> QuerySharingResource(
+    virtual std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(
         const RdbSyncerParam &param, const PredicatesMemo &predicates, const std::vector<std::string> &columns) = 0;
 
     virtual int32_t NotifyDataChange(const RdbSyncerParam &param, const RdbChangedData &rdbChangedData) = 0;
