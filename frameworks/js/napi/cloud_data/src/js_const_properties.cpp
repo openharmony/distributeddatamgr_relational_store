@@ -21,6 +21,7 @@
 
 using namespace OHOS::Rdb;
 using Action = OHOS::CloudData::CloudService::Action;
+using JSUtils = OHOS::AppDataMgrJsKit::JSUtils;
 
 namespace OHOS::CloudData {
 static napi_status SetNamedProperty(napi_env env, napi_value &obj, const std::string &name, int32_t value)
@@ -92,6 +93,8 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
     const napi_property_descriptor properties[] = {
         DECLARE_NAPI_PROPERTY("Action", ExportAction(env)),
         DECLARE_NAPI_PROPERTY("ClearAction", ExportAction(env)),
+        DECLARE_NAPI_PROPERTY("DATA_CHANGE_EVENT_ID", JSUtils::Convert2JSValue(env,
+            std::string(CloudData::DATA_CHANGE_EVENT_ID))),
     };
     size_t count = sizeof(properties) / sizeof(properties[0]);
 
