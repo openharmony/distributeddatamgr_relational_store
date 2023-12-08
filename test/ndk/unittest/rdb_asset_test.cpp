@@ -95,12 +95,11 @@ void RdbNativeAssetTest::CreateAssetTable()
 HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_setName, TestSize.Level1)
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
-    std::string name = "name";
     int errCode = OH_Data_Asset_SetName(nullptr, nullptr);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
     errCode = OH_Data_Asset_SetName(asset, nullptr);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
-    errCode = OH_Data_Asset_SetName(nullptr, name.c_str());
+    errCode = OH_Data_Asset_SetName(nullptr, "name");
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
     OH_Data_Asset_DestroyOne(asset);
 }
@@ -118,12 +117,11 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_setName, TestSize.Le
 HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_setUri, TestSize.Level1)
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
-    std::string uri = "uri";
     int errCode = OH_Data_Asset_SetUri(nullptr, nullptr);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
     errCode = OH_Data_Asset_SetUri(asset, nullptr);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
-    errCode = OH_Data_Asset_SetUri(nullptr, uri.c_str());
+    errCode = OH_Data_Asset_SetUri(nullptr, "uri");
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
     OH_Data_Asset_DestroyOne(asset);
 }
@@ -141,12 +139,11 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_setUri, TestSize.Lev
 HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_setPath, TestSize.Level1)
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
-    std::string path = "path";
     int errCode = OH_Data_Asset_SetPath(nullptr, nullptr);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
     errCode = OH_Data_Asset_SetPath(asset, nullptr);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
-    errCode = OH_Data_Asset_SetPath(nullptr, path.c_str());
+    errCode = OH_Data_Asset_SetPath(nullptr, "path");
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
     OH_Data_Asset_DestroyOne(asset);
 }
@@ -184,16 +181,14 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_for_setCreateTime_setModifyTime_s
 HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getName, TestSize.Level1)
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
-    std::string name1 = "name";
-    int errCode = OH_Data_Asset_SetName(asset, name1.c_str());
+    int errCode = OH_Data_Asset_SetName(asset, "name");
     EXPECT_EQ(errCode, RDB_OK);
     char name[10] = "";
     size_t nameLength = 10;
     errCode = OH_Data_Asset_GetName(nullptr, name, &nameLength);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
 
-    std::string name2 = "0123456789";
-    errCode = OH_Data_Asset_SetName(asset, name2.c_str());
+    errCode = OH_Data_Asset_SetName(asset, "0123456789");
     EXPECT_EQ(errCode, RDB_OK);
     errCode = OH_Data_Asset_GetName(asset, name, &nameLength);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
@@ -212,16 +207,14 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getName, TestSize.Le
 HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getUri, TestSize.Level1)
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
-    std::string uri1 = "uri";
-    int errCode = OH_Data_Asset_SetUri(asset, uri1.c_str());
+    int errCode = OH_Data_Asset_SetUri(asset, "uri");
     EXPECT_EQ(errCode, RDB_OK);
     char uri[10] = "";
     size_t uriLength = 10;
     errCode = OH_Data_Asset_GetUri(nullptr, uri, &uriLength);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
 
-    std::string uri2 = "0123456789";
-    errCode = OH_Data_Asset_SetUri(asset, uri2.c_str());
+    errCode = OH_Data_Asset_SetUri(asset, "0123456789");
     EXPECT_EQ(errCode, RDB_OK);
     errCode = OH_Data_Asset_GetUri(asset, uri, &uriLength);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
@@ -240,16 +233,14 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getUri, TestSize.Lev
 HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getPath, TestSize.Level1)
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
-    std::string path1 = "path";
-    int errCode = OH_Data_Asset_SetPath(asset, path1.c_str());
+    int errCode = OH_Data_Asset_SetPath(asset, "path");
     EXPECT_EQ(errCode, RDB_OK);
     char path[10] = "";
     size_t pathLength = 10;
     errCode = OH_Data_Asset_GetPath(nullptr, path, &pathLength);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
 
-    std::string path2 = "0123456789";
-    errCode = OH_Data_Asset_SetPath(asset, path2.c_str());
+    errCode = OH_Data_Asset_SetPath(asset, "0123456789");
     EXPECT_EQ(errCode, RDB_OK);
     errCode = OH_Data_Asset_GetPath(asset, path, &pathLength);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
