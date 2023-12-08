@@ -144,10 +144,8 @@ HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_002, TestSize.Level2)
     RdbStoreImplTest::store->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
 }
 
-
-
 /* *
- * @tc.name: GetModifyTimeByRowIdTest_002
+ * @tc.name: GetModifyTimeByRowIdTest_003
  * @tc.desc: Abnormal testCase for GetModifyTime, get timestamp by id,
  *           resultSet is empty or table name is not exist
  * @tc.type: FUNC
@@ -166,17 +164,17 @@ HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_003, TestSize.Level2)
     EXPECT_EQ(1, rowId);
 
     std::vector<RdbStore::PRIKey> PKey = { 1 };
-    std::map<RdbStore::PRIKey, RdbStore::Date> resultMap = 
+    std::map<RdbStore::PRIKey, RdbStore::Date> resultMap =
         RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
     EXPECT_EQ(1, resultMap.size());
 
-    std::shared_ptr<ResultSet> resultPtr = 
+    std::shared_ptr<ResultSet> resultPtr =
         RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
     int count = 0;
     resultPtr->GetRowCount(count);
     EXPECT_EQ(1, count);
 
-    RdbStore::ModifyTime result = 
+    RdbStore::ModifyTime result =
         RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
     RdbStore::PRIKey key = result.GetOriginKey(std::vector<uint8_t>{});
     RdbStore::PRIKey monostate = std::monostate();
