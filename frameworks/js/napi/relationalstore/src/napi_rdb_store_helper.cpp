@@ -135,15 +135,23 @@ int ParseDatabasePath(const napi_env &env, const napi_value &object, std::shared
     if (status == napi_ok && hasProp) {
         napi_value value = nullptr;
         napi_get_named_property(env, object, "customDir", &value);
-        CHECK_RETURN_SET(value != nullptr, std::make_shared<ParamError>("config", "a StoreConfig."));
+        CHECK_RETURN_SET(value != nullptr, std::make_shared<ParamError>("customDir", "a valid value."));
         JSUtils::Convert2Value(env, value, customDir);
+
+        size_t pos = customDir.find_first_of('/');
+        // determine if the first character of customDir is '/'
+        CHECK_RETURN_SET(pos != 0, std::make_shared<ParamError>("customDir", "a relative directory."));
+        // customDir length is limited to 128 bytes
+        CHECK_RETURN_SET(customDir.length() <= 128,
+            std::make_shared<ParamError>("customDir length", "less than or equal to 128 bytes."));
+
         context->config.SetCustomDir(customDir);
     }
 
     auto [realPath, errCode] = RdbSqlUtils::GetDefaultDatabasePath(defaultDir, context->config.GetName(), customDir);
-    // customDir length is limited to 128 bytes
-    CHECK_RETURN_SET(errCode == E_OK && realPath.length() <= 128,
-        std::make_shared<ParamError>("config", "a StoreConfig."));
+    // realPath length is limited to 1024 bytes
+    CHECK_RETURN_SET(errCode == E_OK && realPath.length() <= 1024,
+        std::make_shared<ParamError>("database path", "a valid path."));
 
     context->config.SetPath(std::move(realPath));
     return OK;
