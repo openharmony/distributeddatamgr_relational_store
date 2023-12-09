@@ -895,7 +895,6 @@ int SqliteConnection::LimitWalSize()
 
 void SqliteConnection::MergeAssets(sqlite3_context *ctx, int argc, sqlite3_value **argv)
 {
-    LOG_DEBUG("merge assets begin");
     // 2 is the number of parameters
     if (ctx == nullptr || argc != 2 || argv == nullptr) {
         LOG_ERROR("Parameter does not meet restrictions.");
@@ -907,16 +906,13 @@ void SqliteConnection::MergeAssets(sqlite3_context *ctx, int argc, sqlite3_value
         int len = sqlite3_value_bytes(argv[0]);
         RawDataParser::ParserRawData(data, len, assets);
     }
-    LOG_DEBUG("merge assets get old assets");
     std::map<std::string, ValueObject::Asset> newAssets;
     data = static_cast<const uint8_t *>(sqlite3_value_blob(argv[1]));
     if (data != nullptr) {
         int len = sqlite3_value_bytes(argv[1]);
         RawDataParser::ParserRawData(data, len, newAssets);
     }
-    LOG_DEBUG("merge assets get new assets");
     CompAssets(assets, newAssets);
-    LOG_DEBUG("merge assets comp assets");
     auto blob = RawDataParser::PackageRawData(assets);
     sqlite3_result_blob(ctx, blob.data(), blob.size(), SQLITE_TRANSIENT);
 }

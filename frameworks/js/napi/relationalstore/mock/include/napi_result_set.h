@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "js_proxy.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -25,7 +26,7 @@
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
-class ResultSetProxy final {
+class ResultSetProxy final : public JSProxy::JSProxy<NativeRdb::ResultSet> {
 public:
     ResultSetProxy() = default;
     ~ResultSetProxy();
@@ -73,8 +74,6 @@ private:
 
     static napi_value GetSharedBlockName(napi_env env, napi_callback_info info);
     static napi_value GetSharedBlockAshmemFd(napi_env env, napi_callback_info info);
-
-    std::shared_ptr<NativeRdb::ResultSet> resultSet_;
 
     std::string sharedBlockName_;
     int32_t sharedBlockAshmemFd_ = -1;

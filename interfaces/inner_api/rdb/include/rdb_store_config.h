@@ -543,7 +543,7 @@ private:
     bool isCreateNecessary_;
 
     bool autoCheck;
-    bool isAutoClean_ = false;
+    bool isAutoClean_ = true;
     int journalSize;
     int pageSize;
     int readConSize_ = 4;

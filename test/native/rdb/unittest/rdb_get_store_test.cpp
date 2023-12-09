@@ -422,6 +422,23 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_00104, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RdbStore_GetStore_001
+ * @tc.desc: createRDB
+ * @tc.type: FUNC
+ * @tc.require: issue
+ * @tc.author: lcl
+ */
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_00106, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME_MINUS);
+    config.SetCustomDir("SetCustomDirTest/");
+    GetOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+}
+
+/**
  * @tc.name: RdbStore_GetStore_005
  * @tc.desc: createRDB
  * @tc.type: FUNC

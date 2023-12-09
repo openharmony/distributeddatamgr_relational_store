@@ -38,7 +38,8 @@
         "name": "relational_store",
         "subsystem": "distributeddatamgr",
         "syscap": [
-            "SystemCapability.DistributedDataManager.RelationalStore.Core"
+            "SystemCapability.DistributedDataManager.RelationalStore.Core",
+            "SystemCapability.DistributedDataManager.CommonType"
         ],
         "features": ["relational_store_rdb_support_icu"],
         "adapted_system_type": [
@@ -76,12 +77,15 @@
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_share_adapter:rdb_data_share_adapter",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_bms_adapter:rdb_bms_adapter",
+                "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/common_type:common_type",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/cloud_data:clouddata",
                 "//foundation/distributeddatamgr/relational_store/interfaces/ndk/src:native_rdb_ndk",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/dataability:dataability",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:rdb",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:napi_rdb",
-                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/relationalstore:relationalstore"
+                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/relationalstore:relationalstore",
+                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/cloud_extension:cloudextension",
+		"//foundation/distributeddatamgr/relational_store/frameworks/js/napi/common:commontype_napi"
             ],
             "inner_kits": [
                 {
@@ -166,6 +170,18 @@
                             "rdb_data_ability_utils.h"
                         ],
                         "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_ability_adapter/include"
+                    }
+                },
+                {
+                    "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/common_type:common_type",
+                    "header": {
+                        "header_files": [
+                            "common_value_object.h",
+                            "common_asset_value.h",
+                            "common_values_bucket.h",
+                            "common_errno.h"
+                        ],
+                        "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/common_type/include"
                     }
                 }
             ],

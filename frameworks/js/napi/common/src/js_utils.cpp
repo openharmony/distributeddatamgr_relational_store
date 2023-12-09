@@ -60,6 +60,27 @@ napi_value JSUtils::GetNamedProperty(napi_env env, napi_value object, const char
     return jsItem;
 }
 
+std::pair<int32_t , napi_value> JSUtils::GetOptionalNamedProperty(napi_env env, napi_value input, const char *name)
+{
+    bool hasProp = false;
+    napi_status status = napi_has_named_property(env, input, name, &hasProp);
+    if (status != napi_ok) {
+        return std::make_pair(napi_generic_failure, nullptr);
+    }
+    if (!hasProp) {
+        return std::make_pair(napi_ok, nullptr);
+    }
+    napi_value inner = nullptr;
+    status = napi_get_named_property(env, input, name, &inner);
+    if (status != napi_ok || inner == nullptr) {
+        return std::make_pair(napi_generic_failure, nullptr);
+    }
+    if (JSUtils::IsNull(env, inner)) {
+        return std::make_pair(napi_ok, nullptr);
+    }
+    return std::make_pair(napi_ok, inner);
+}
+
 std::string JSUtils::Convert2String(napi_env env, napi_value jsStr)
 {
     std::string value = ""; // TD: need to check everywhere in use whether empty is work well.
@@ -452,8 +473,9 @@ napi_value JSUtils::DefineClass(napi_env env, const std::string &spaceName, cons
     if (!featureSpace.has_value() || !featureSpace->isComponent) {
         return nullptr;
     }
-    if (GetClass(env, spaceName, className)) {
-        return GetClass(env, spaceName, className);
+    auto constructor = GetClass(env, spaceName, className);
+    if (constructor != nullptr) {
+        return constructor;
     }
     auto rootPropName = std::string(featureSpace->nameBase64);
     napi_value root = nullptr;
@@ -469,13 +491,12 @@ napi_value JSUtils::DefineClass(napi_env env, const std::string &spaceName, cons
     }
 
     std::string propName = "constructor_of_" + className;
-    napi_value constructor = nullptr;
     bool hasProp = false;
     napi_has_named_property(env, root, propName.c_str(), &hasProp);
     if (hasProp) {
         napi_get_named_property(env, root, propName.c_str(), &constructor);
         if (constructor != nullptr) {
-            LOG_DEBUG("got data.cloudData.%{public}s as constructor", propName.c_str());
+            LOG_DEBUG("got %{public}s from %{public}s", propName.c_str(), featureSpace->spaceName);
             return constructor;
         }
         hasProp = false; // no constructor.
@@ -487,7 +508,7 @@ napi_value JSUtils::DefineClass(napi_env env, const std::string &spaceName, cons
 
     if (!hasProp) {
         napi_set_named_property(env, root, propName.c_str(), constructor);
-        LOG_DEBUG("save constructor to data.cloudData.%{public}s", propName.c_str());
+        LOG_DEBUG("save %{public}s to %{public}s", propName.c_str(), featureSpace->spaceName);
     }
     return constructor;
 }
@@ -517,7 +538,7 @@ napi_value JSUtils::GetClass(napi_env env, const std::string &spaceName, const s
     }
     napi_get_named_property(env, root, propName.c_str(), &constructor);
     if (constructor != nullptr) {
-        LOG_DEBUG("got data.cloudData.%{public}s as constructor", propName.c_str());
+        LOG_DEBUG("got %{public}s from %{public}s", propName.c_str(), featureSpace->spaceName);
         return constructor;
     }
     hasProp = false; // no constructor.

@@ -20,6 +20,7 @@
 
 #include "logger.h"
 #include "sqlite3sym.h"
+#include "sqlite_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -58,6 +59,8 @@ void SqliteGlobalConfig::SqliteLogCallback(const void *data, int err, const char
         if (verboseLog) {
             LOG_INFO("SQLite Error(%{public}d) %{public}s ", err, msg);
         }
+    } else if (errType == SQLITE_WARNING) {
+        LOG_WARN("SQLite WARNING(%{public}d) %{public}s ", err, SqliteUtils::Anonymous(msg).c_str());
     } else {
         LOG_ERROR("SQLite Error(%{public}d) %{public}s", err, msg);
     }

@@ -141,6 +141,8 @@ public:
         const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
     std::shared_ptr<AbsSharedResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
+    std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
     int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
@@ -184,7 +186,7 @@ private:
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
-    void SetAssetStatusWhileInsert(const ValueObject &val);
+    void SetAssetStatus(const ValueObject &val, int32_t status);
     void DoCloudSync(const std::string &table);
     int InnerSync(const DistributedRdb::RdbService::Option &option, const DistributedRdb::PredicatesMemo &predicates,
         const AsyncDetail &async);
