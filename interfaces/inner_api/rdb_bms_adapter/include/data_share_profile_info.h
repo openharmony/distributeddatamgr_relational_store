@@ -37,6 +37,7 @@ struct API_EXPORT Config final : public Serializable {
 
 struct API_EXPORT ProfileInfo : public Serializable {
     std::vector<Config> tableConfig;
+    bool isSilentProxyEnable = true;
     bool Marshal(json &node) const override;
     bool Unmarshal(const json &node) override;
 };
@@ -44,18 +45,18 @@ struct API_EXPORT ProfileInfo : public Serializable {
 class API_EXPORT DataShareProfileInfo {
 public:
     static bool GetResConfigFile(
-        const AppExecFwk::ExtensionAbilityInfo &extensionInfo, std::vector<std::string> &profileInfos);
+        const AppExecFwk::ExtensionAbilityInfo &extensionInfo, std::string &profileInfos);
 
     static bool GetDataPropertiesFromProxyDatas(const OHOS::AppExecFwk::ProxyData &proxyData,
         const std::string &resourcePath, bool isCompressed, DataProperties &dataProperties);
 
 private:
     static std::shared_ptr<ResourceManager> InitResMgr(const std::string &resourcePath);
-    static std::vector<std::string> GetResProfileByMetadata(const std::vector<AppExecFwk::Metadata> &metadata,
+    static std::string GetResProfileByMetadata(const std::vector<AppExecFwk::Metadata> &metadata,
         const std::string &resourcePath, bool isCompressed);
-    static std::vector<std::string> GetResProfileByMetadata(const AppExecFwk::Metadata &metadata,
+    static std::string GetResProfileByMetadata(const AppExecFwk::Metadata &metadata,
         const std::string &resourcePath, bool isCompressed);
-    static std::vector<std::string> GetResFromResMgr(const std::string &resName, ResourceManager &resMgr,
+    static std::string GetResFromResMgr(const std::string &resName, ResourceManager &resMgr,
         bool isCompressed);
     static std::string ReadProfile(const std::string &resPath);
     static bool IsFileExisted(const std::string &filePath);
