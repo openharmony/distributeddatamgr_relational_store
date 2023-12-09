@@ -251,4 +251,70 @@ AbsPredicates *AbsRdbPredicates::In(const std::string &field, const std::vector<
     predicates_.AddOperation(DistributedRdb::IN, field, values);
     return (AbsRdbPredicates *)AbsPredicates::In(field, values);
 }
+
+AbsRdbPredicates *AbsRdbPredicates::Contains(const std::string &field, const std::string &value)
+{
+    predicates_.AddOperation(DistributedRdb::CONTAIN, field, value);
+    return (AbsRdbPredicates *)AbsPredicates::Contains(field, value);
+}
+
+AbsRdbPredicates *AbsRdbPredicates::BeginsWith(const std::string &field, const std::string &value)
+{
+    predicates_.AddOperation(DistributedRdb::BEGIN_WITH, field, value);
+    return (AbsRdbPredicates *)AbsPredicates::BeginsWith(field, value);
+}
+AbsRdbPredicates *AbsRdbPredicates::EndsWith(const std::string &field, const std::string &value)
+{
+    predicates_.AddOperation(DistributedRdb::END_WITH, field, value);
+    return (AbsRdbPredicates *)AbsPredicates::EndsWith(field, value);
+}
+AbsRdbPredicates *AbsRdbPredicates::IsNull(const std::string &field)
+{
+    predicates_.AddOperation(DistributedRdb::IS_NULL, field, "");
+    return (AbsRdbPredicates *)AbsPredicates::IsNull(field);
+}
+AbsRdbPredicates *AbsRdbPredicates::IsNotNull(const std::string &field)
+{
+    predicates_.AddOperation(DistributedRdb::IS_NOT_NULL, field, "");
+    return (AbsRdbPredicates *)AbsPredicates::IsNotNull(field);
+}
+AbsRdbPredicates *AbsRdbPredicates::Like(const std::string &field, const std::string &value)
+{
+    predicates_.AddOperation(DistributedRdb::LIKE, field, value);
+    return (AbsRdbPredicates *)AbsPredicates::Like(field, value);
+}
+AbsRdbPredicates *AbsRdbPredicates::Glob(const std::string &field, const std::string &value)
+{
+    predicates_.AddOperation(DistributedRdb::GLOB, field, value);
+    return (AbsRdbPredicates *)AbsPredicates::Glob(field, value);
+}
+AbsRdbPredicates *AbsRdbPredicates::Distinct()
+{
+    predicates_.AddOperation(DistributedRdb::DISTINCT, "", "");
+    return (AbsRdbPredicates *)AbsPredicates::Distinct();
+}
+AbsRdbPredicates *AbsRdbPredicates::IndexedBy(const std::string &indexName)
+{
+    predicates_.AddOperation(DistributedRdb::INDEXED_BY, indexName, "");
+    return (AbsRdbPredicates *)AbsPredicates::IndexedBy(indexName);
+}
+AbsRdbPredicates *AbsRdbPredicates::NotIn(const std::string &field, const std::vector<std::string> &values)
+{
+    predicates_.AddOperation(DistributedRdb::NOT_IN, field, values);
+    return (AbsRdbPredicates *)AbsPredicates::NotIn(field, values);
+}
+AbsRdbPredicates *AbsRdbPredicates::NotIn(const std::string &field, const std::vector<ValueObject> &values)
+{
+    std::vector<std::string> vals;
+    vals.reserve(values.size());
+    for (const auto &value : values) {
+        auto val = std::get_if<std::string>(&value.value);
+        if (val == nullptr) {
+            return (AbsRdbPredicates *)AbsPredicates::NotIn(field, values);
+        }
+        vals.emplace_back(std::move(*val));
+    }
+    predicates_.AddOperation(DistributedRdb::NOT_IN, field, vals);
+    return (AbsRdbPredicates *)AbsPredicates::NotIn(field, values);
+}
 } // namespace OHOS::NativeRdb

@@ -43,7 +43,8 @@ struct RdbSyncerParam {
     int32_t level_ = 0;
     int32_t type_ = RDB_DEVICE_COLLABORATION;
     bool isEncrypt_ = false;
-    bool isAutoClean_ = false;
+    bool isAutoClean_ = true;
+    bool isSearchable_ = false;
     std::vector<uint8_t> password_;
     ~RdbSyncerParam()
     {
@@ -70,8 +71,15 @@ enum DistributedTableType {
     DISTRIBUTED_CLOUD
 };
 
+struct Reference {
+    std::string sourceTable;
+    std::string targetTable;
+    std::map<std::string, std::string> refFields;
+};
+
 struct DistributedConfig {
     bool autoSync = true;
+    std::vector<Reference> references = {};
 };
 
 enum Progress {
@@ -128,6 +136,22 @@ enum RdbPredicateOperator {
     BEGIN_GROUP,
     END_GROUP,
     IN,
+    NOT_IN,
+    CONTAIN,
+    BEGIN_WITH,
+    END_WITH,
+    IS_NULL,
+    IS_NOT_NULL,
+    LIKE,
+    GLOB,
+    BETWEEN,
+    NOT_BETWEEN,
+    GREATER_THAN,
+    GREATER_THAN_OR_EQUAL,
+    LESS_THAN,
+    LESS_THAN_OR_EQUAL,
+    DISTINCT,
+    INDEXED_BY,
     OPERATOR_MAX
 };
 
@@ -236,6 +260,7 @@ struct Field {
     static constexpr const char *DELETED_FLAG_FIELD = "#_deleted_flag";
     static constexpr const char *OWNER_FIELD = "#_cloud_owner";
     static constexpr const char *PRIVILEGE_FIELD = "#_cloud_privilege";
+    static constexpr const char *SHARING_RESOURCE_FIELD = "#_sharing_resource_field";
 };
 
 struct RdbChangeProperties {

@@ -101,4 +101,126 @@ int32_t CloudServiceProxy::NotifyDataChange(const std::string &id, const std::st
     }
     return static_cast<Status>(status);
 }
+
+std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> CloudServiceProxy::AllocResourceAndShare(
+    const std::string &storeId, const DistributedRdb::PredicatesMemo &predicates,
+    const std::vector<std::string> &columns, const std::vector<Participant> &participants)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_ALLOC_RESOURCE_AND_SHARE, reply, storeId, predicates, columns, participants);
+    if (status != SUCCESS) {
+        LOG_ERROR("status:0x%{public}x storeName:%{public}.6s", status, storeId.c_str());
+    }
+    std::vector<NativeRdb::ValuesBucket> valueBuckets;
+    ITypesUtil::Unmarshal(reply, valueBuckets);
+    return { static_cast<Status>(status), valueBuckets };
+}
+
+int32_t CloudServiceProxy::NotifyDataChange(const std::string &eventId, const std::string &extraData, int32_t userId)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_NOTIFY_DATA_CHANGE_EXT, reply, eventId, extraData, userId);
+    if (status != SUCCESS) {
+        LOG_ERROR("status:0x%{public}x eventId:%{public}.6s extraData:%{public}.6s", status, eventId.c_str(),
+            extraData.c_str());
+    }
+    return static_cast<Status>(status);
+}
+
+int32_t CloudServiceProxy::Share(
+    const std::string &sharingRes, const Participants &participants, Results &results)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_SHARE, reply, sharingRes, participants);
+    if (status != SUCCESS) {
+        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s participants:%{public}zu",
+            status, sharingRes.c_str(), participants.size());
+    }
+    ITypesUtil::Unmarshal(reply, results);
+    return static_cast<Status>(status);
+}
+
+int32_t CloudServiceProxy::Unshare(
+    const std::string &sharingRes, const Participants &participants, Results &results)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_UNSHARE, reply, sharingRes, participants);
+    if (status != SUCCESS) {
+        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s participants:%{public}zu",
+            status, sharingRes.c_str(), participants.size());
+    }
+    ITypesUtil::Unmarshal(reply, results);
+    return static_cast<Status>(status);
+}
+
+int32_t CloudServiceProxy::Exit(const std::string &sharingRes, std::pair<int32_t, std::string> &result)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_EXIT, reply, sharingRes);
+    if (status != SUCCESS) {
+        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s", status, sharingRes.c_str());
+    }
+    ITypesUtil::Unmarshal(reply, result);
+    return static_cast<Status>(status);
+}
+
+int32_t CloudServiceProxy::ChangePrivilege(
+    const std::string &sharingRes, const Participants &participants, Results &results)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_CHANGE_PRIVILEGE, reply, sharingRes, participants);
+    if (status != SUCCESS) {
+        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s participants:%{public}zu",
+            status, sharingRes.c_str(), participants.size());
+    }
+    ITypesUtil::Unmarshal(reply, results);
+    return static_cast<Status>(status);
+}
+
+int32_t CloudServiceProxy::Query(const std::string &sharingRes, QueryResults &results)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_QUERY, reply, sharingRes);
+    if (status != SUCCESS) {
+        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s", status, sharingRes.c_str());
+    }
+    ITypesUtil::Unmarshal(reply, results);
+    return static_cast<Status>(status);
+}
+
+int32_t CloudServiceProxy::QueryByInvitation(
+    const std::string &invitation, QueryResults &results)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_QUERY_BY_INVITATION, reply, invitation);
+    if (status != SUCCESS) {
+        LOG_ERROR("status:0x%{public}x invitation:%{public}.6s", status, invitation.c_str());
+    }
+    ITypesUtil::Unmarshal(reply, results);
+    return static_cast<Status>(status);
+}
+
+int32_t CloudServiceProxy::ConfirmInvitation(const std::string &invitation,
+    int32_t confirmation, std::tuple<int32_t, std::string, std::string> &result)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_CONFIRM_INVITATION, reply, invitation, confirmation);
+    if (status != SUCCESS) {
+        LOG_ERROR("status:0x%{public}x invitation:%{public}.6s", status, invitation.c_str());
+    }
+    ITypesUtil::Unmarshal(reply, result);
+    return static_cast<Status>(status);
+}
+
+int32_t CloudServiceProxy::ChangeConfirmation(const std::string &sharingRes,
+    int32_t confirmation, std::pair<int32_t, std::string> &result)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_CHANGE_CONFIRMATION, reply, sharingRes, confirmation);
+    if (status != SUCCESS) {
+        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s", status, sharingRes.c_str());
+    }
+    ITypesUtil::Unmarshal(reply, result);
+    return static_cast<Status>(status);
+}
 } // namespace OHOS::CloudData

@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "asset_value.h"
+#include "js_proxy.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -28,14 +29,14 @@
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
-class ResultSetProxy final : public DataShare::ResultSetBridge::Creator {
+class ResultSetProxy final : public JSProxy::JSEntity<NativeRdb::ResultSet, DataShare::ResultSetBridge> {
 public:
     ResultSetProxy() = default;
     ~ResultSetProxy();
     ResultSetProxy(std::shared_ptr<NativeRdb::ResultSet> resultSet);
     ResultSetProxy &operator=(std::shared_ptr<NativeRdb::ResultSet> resultSet);
+    static void Init(napi_env env, napi_value exports);
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    static napi_value GetConstructor(napi_env env);
     std::shared_ptr<DataShare::ResultSetBridge> Create() override;
 
 private:
@@ -74,8 +75,6 @@ private:
     static napi_value IsColumnNull(napi_env env, napi_callback_info info);
     static napi_value GetRow(napi_env env, napi_callback_info info);
     static napi_value IsClosed(napi_env env, napi_callback_info info);
-
-    std::shared_ptr<NativeRdb::ResultSet> resultSet_;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

@@ -22,6 +22,7 @@
 #include "cloud_service.h"
 #include "js_error_utils.h"
 #include "js_utils.h"
+#include "js_cloud_utils.h"
 #include "logger.h"
 #include "napi_queue.h"
 
@@ -245,26 +246,45 @@ napi_value JsConfig::Clean(napi_env env, napi_callback_info info)
  * [JS API Prototype]
  * [AsyncCallback]
  *      notifyDataChange(accountId: string, bundleName: string, callback: AsyncCallback<void>): void;
+ *      notifyDataChange(extInfo: ExtraData, callback: AsyncCallback<void>): void;
+ *      notifyDataChange(extInfo: ExtraData, userId: number,callback: AsyncCallback<void>): void;
  * [Promise]
  *      notifyDataChange(accountId: string, bundleName: string): Promise<void>;
+ *      notifyDataChange(extInfo: ExtraData, userId?: number): Promise<void>;
  */
+struct ChangeAppSwitchContext : public ContextBase {
+    std::string accountId;
+    std::string bundleName;
+    int32_t userId = CloudService::INVALID_USER_ID;
+    bool notifyStatus = false;
+    OHOS::CloudData::JsConfig::ExtraData extInfo;
+};
 napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
 {
-    struct ChangeAppSwitchContext : public ContextBase {
-        std::string accountId;
-        std::string bundleName;
-    };
     auto ctxt = std::make_shared<ChangeAppSwitchContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
         // required 2 arguments :: <accountId> <bundleName>
-        ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
-        // 0 is the index of argument accountId, 1 is the index of argument bundleName
-        int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
-        status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
+        ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
+        napi_valuetype type = napi_undefined;
+        if (argc > 1 && napi_typeof(env, argv[0], &type) == napi_ok && type != napi_object) {
+            // 0 is the index of argument accountId, 1 is the index of argument bundleName
+            int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                "The type of accountId must be string.");
+            status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                "The type of bundleName must be string.");
+        } else {
+            int status = JSUtils::Convert2Value(env, argv[0], ctxt->extInfo);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                "The type of extInfo must be Extradata.");
+            if (argc > 1) {
+                status = JSUtils::Convert2ValueExt(env, argv[1], ctxt->userId);
+                ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                    "The type of user must be number.");
+            }
+            ctxt->notifyStatus = true;
+        }
     });
 
     ASSERT_NULL(!ctxt->isThrowError, "NotifyDataChange exit");
@@ -276,15 +296,18 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
                 state = CloudService::NOT_SUPPORT;
             }
             ctxt->status = (GenerateNapiError(state, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
-                               ? napi_ok
-                               : napi_generic_failure;
+                ? napi_ok : napi_generic_failure;
             return;
         }
-        int32_t cStatus = proxy->NotifyDataChange(ctxt->accountId, ctxt->bundleName);
-        LOG_DEBUG("NotifyDataChange return %{public}d", cStatus);
-        ctxt->status = (GenerateNapiError(cStatus, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
-                           ? napi_ok
-                           : napi_generic_failure;
+        int32_t status ;
+        if (ctxt->notifyStatus == true) {
+            status = proxy->NotifyDataChange(ctxt->extInfo.eventId, ctxt->extInfo.extraData, ctxt->userId);
+        } else {
+            status = proxy->NotifyDataChange(ctxt->accountId, ctxt->bundleName);
+        }
+        LOG_DEBUG("NotifyDataChange return %{public}d", status);
+        ctxt->status = (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+            ? napi_ok : napi_generic_failure;
     };
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute);
 }

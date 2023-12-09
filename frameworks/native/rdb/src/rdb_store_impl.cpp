@@ -21,6 +21,7 @@
 #include <sstream>
 
 #include "logger.h"
+#include "cache_result_set.h"
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"
 #include "rdb_store.h"
@@ -77,6 +78,7 @@ int RdbStoreImpl::InnerOpen()
     syncerParam_.type_ = rdbStoreConfig.GetDistributedType();
     syncerParam_.isEncrypt_ = rdbStoreConfig.IsEncrypt();
     syncerParam_.isAutoClean_ = rdbStoreConfig.GetAutoClean();
+    syncerParam_.isSearchable_ = rdbStoreConfig.IsSearchable();
     syncerParam_.password_ = {};
     GetSchema(rdbStoreConfig);
 
@@ -375,11 +377,19 @@ std::pair<std::string, std::vector<ValueObject>> RdbStoreImpl::GetInsertParams(
     bindArgs.reserve(bindArgsSize);
     auto valueIter = valuesMap.begin();
     sql.append(valueIter->first);
+    if (valueIter->second.GetType() == ValueObject::TYPE_ASSET ||
+        valueIter->second.GetType() == ValueObject::TYPE_ASSETS) {
+        SetAssetStatus(valueIter->second, AssetValue::STATUS_INSERT);
+    }
     bindArgs.push_back(valueIter->second);
     ++valueIter;
     // prepare batch values & sql.columnName
     for (; valueIter != valuesMap.end(); ++valueIter) {
         sql.append(",").append(valueIter->first);
+        if (valueIter->second.GetType() == ValueObject::TYPE_ASSET ||
+            valueIter->second.GetType() == ValueObject::TYPE_ASSETS) {
+            SetAssetStatus(valueIter->second, AssetValue::STATUS_INSERT);
+        }
         bindArgs.push_back(valueIter->second);
     }
     sql.append(") VALUES (").append(GetSqlArgs(bindArgsSize)).append(")");
@@ -423,7 +433,7 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
             return E_INVALID_ARGS;
         }
         if (val.GetType() == ValueObject::TYPE_ASSET || val.GetType() == ValueObject::TYPE_ASSETS) {
-            SetAssetStatusWhileInsert(val);
+            SetAssetStatus(val, AssetValue::STATUS_INSERT);
         }
         bindArgs.push_back(val);  // columnValue
         split = ",";
@@ -448,19 +458,19 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
     return errCode;
 }
 
-void RdbStoreImpl::SetAssetStatusWhileInsert(const ValueObject &val)
+void RdbStoreImpl::SetAssetStatus(const ValueObject &val, int32_t status)
 {
     if (val.GetType() == ValueObject::TYPE_ASSET) {
         auto *asset = Traits::get_if<ValueObject::Asset>(&val.value);
         if (asset != nullptr) {
-            asset->status = AssetValue::STATUS_INSERT;
+            asset->status = static_cast<AssetValue::Status>(status);
         }
     }
     if (val.GetType() == ValueObject::TYPE_ASSETS) {
         auto *assets = Traits::get_if<ValueObject::Assets>(&val.value);
         if (assets != nullptr) {
             for (auto &asset : *assets) {
-                asset.status = AssetValue::STATUS_INSERT;
+                asset.status = static_cast<AssetValue::Status>(status);
             }
         }
     }
@@ -610,6 +620,21 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     return QuerySql(sql, predicates.GetBindArgs());
 }
 
+std::pair<int32_t, std::shared_ptr<ResultSet>> RdbStoreImpl::QuerySharingResource(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
+{
+    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK) {
+        return { errCode, nullptr };
+    }
+    auto [status, resultSet] =
+        service->QuerySharingResource(syncerParam_, predicates.GetDistributedPredicates(), columns);
+    if (status != E_OK) {
+        return { status, nullptr };
+    }
+    return { status, resultSet };
+}
+
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
     const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
@@ -625,17 +650,14 @@ std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
     auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
-    errCode = err;
     if (err != E_OK) {
         LOG_ERROR("RdbStoreImpl::RemoteQuery get service failed");
+        errCode = err;
         return nullptr;
     }
-    sptr<IRemoteObject> remoteResultSet;
-    if (service->RemoteQuery(syncerParam_, device, sql, selectionArgs, remoteResultSet) != E_OK) {
-        LOG_ERROR("RdbStoreImpl::RemoteQuery service RemoteQuery failed");
-        return nullptr;
-    }
-    return std::make_shared<ResultSetProxy>(remoteResultSet);
+    auto [status, resultSet] = service->RemoteQuery(syncerParam_, device, sql, selectionArgs);
+    errCode = status;
+    return resultSet;
 }
 
 std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(int &errCode, bool distinct,
@@ -1364,7 +1386,7 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
     if (errCode != E_OK) {
         return errCode;
     }
-    int32_t errorCode = service->SetDistributedTables(syncerParam_, tables, type);
+    int32_t errorCode = service->SetDistributedTables(syncerParam_, tables, distributedConfig.references, type);
     if (errorCode != E_OK) {
         LOG_ERROR("Fail to set distributed tables, error=%{public}d", errorCode);
         return errorCode;
