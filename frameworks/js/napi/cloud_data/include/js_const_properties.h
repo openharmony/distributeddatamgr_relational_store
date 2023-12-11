@@ -18,7 +18,6 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "js_utils.h"
 
 namespace OHOS::CloudData {
 napi_status InitConstProperties(napi_env env, napi_value exports);

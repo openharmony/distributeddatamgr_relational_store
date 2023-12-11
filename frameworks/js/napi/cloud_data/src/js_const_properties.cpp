@@ -18,6 +18,7 @@
 #include "cloud_service.h"
 #include "cloud_types.h"
 #include "napi_queue.h"
+#include "js_utils.h"
 
 using namespace OHOS::Rdb;
 using Action = OHOS::CloudData::CloudService::Action;
