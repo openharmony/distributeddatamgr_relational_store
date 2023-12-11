@@ -55,7 +55,7 @@ using Participants = std::vector<Participant>;
 using Results = std::tuple<int32_t, std::string, std::vector<std::pair<int32_t, std::string>>>;
 using QueryResults = std::tuple<int32_t, std::string, Participants>;
 
-static constexpr const char *DATA_CHANGE_EVENT_ID = "cloud_data_change";
+constexpr const char *DATA_CHANGE_EVENT_ID = "cloud_data_change";
 
 /**
  * Enumerates the error code of sharing invitation.
