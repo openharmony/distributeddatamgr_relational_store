@@ -176,6 +176,7 @@ napi_value Unshare(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->participants.empty(),
             Status::INVALID_ARGUMENT, "The type of participants must be Array<Participant>.");
     });
+    ASSERT_NULL(!ctxt->isThrowError, "unShare exit");
     auto execute = [env, ctxt]() {
         auto [status, proxy] = CloudManager::GetInstance().GetCloudService();
         if (proxy == nullptr) {
@@ -219,6 +220,7 @@ napi_value Exit(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
             Status::INVALID_ARGUMENT, "The type of sharingRes must be string.");
     });
+    ASSERT_NULL(!ctxt->isThrowError, "exit exit");
     auto execute = [env, ctxt]() {
         auto [status, proxy] = CloudManager::GetInstance().GetCloudService();
         if (proxy == nullptr) {
@@ -269,6 +271,7 @@ napi_value ChangePrivilege(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->participants.empty(),
             Status::INVALID_ARGUMENT, "The type of participants must be Array<Participant>.");
     });
+    ASSERT_NULL(!ctxt->isThrowError, "changePrivilege exit");
     auto execute = [env, ctxt]() {
         auto [status, proxy] = CloudManager::GetInstance().GetCloudService();
         if (proxy == nullptr) {
@@ -312,6 +315,7 @@ napi_value Query(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
             Status::INVALID_ARGUMENT, "The type of sharingRes must be string.");
     });
+    ASSERT_NULL(!ctxt->isThrowError, "query exit");
     auto execute = [env, ctxt]() {
         auto [status, proxy] = CloudManager::GetInstance().GetCloudService();
         if (proxy == nullptr) {
@@ -356,6 +360,7 @@ napi_value QueryByInvitation(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->invitationCode.empty(),
             Status::INVALID_ARGUMENT, "The type of invitationCode must be string.");
     });
+    ASSERT_NULL(!ctxt->isThrowError, "queryByInvitation exit");
     auto execute = [env, ctxt]() {
         auto [status, proxy] = CloudManager::GetInstance().GetCloudService();
         if (proxy == nullptr) {
@@ -406,6 +411,7 @@ napi_value ConfirmInvitation(napi_env env, napi_callback_info info)
             Status::INVALID_ARGUMENT, "The type of status must be Status.");
         ctxt->confirmation = confirmation;
     });
+    ASSERT_NULL(!ctxt->isThrowError, "confirmInvitation exit");
     auto execute = [env, ctxt]() {
         auto [status, proxy] = CloudManager::GetInstance().GetCloudService();
         if (proxy == nullptr) {
@@ -456,6 +462,7 @@ napi_value ChangeConfirmation(napi_env env, napi_callback_info info)
             Status::INVALID_ARGUMENT, "The type of status must be Status.");
         ctxt->confirmation = confirmation;
     });
+    ASSERT_NULL(!ctxt->isThrowError, "changeConfirmation exit");
     auto execute = [env, ctxt]() {
         auto [status, proxy] = CloudManager::GetInstance().GetCloudService();
         if (proxy == nullptr) {
