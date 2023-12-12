@@ -170,18 +170,6 @@
                         ],
                         "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_ability_adapter/include"
                     }
-                },
-                {
-                    "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/common_type:common_type",
-                    "header": {
-                        "header_files": [
-                            "common_value_object.h",
-                            "common_asset_value.h",
-                            "common_values_bucket.h",
-                            "common_errno.h"
-                        ],
-                        "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/common_type/include"
-                    }
                 }
             ],
             "test": [
