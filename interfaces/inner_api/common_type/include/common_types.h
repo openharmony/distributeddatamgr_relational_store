@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_COMMONTYPE_ASSET_VALUE_H
-#define OHOS_COMMONTYPE_ASSET_VALUE_H
+#ifndef OHOS_COMMON_TYPES_H
+#define OHOS_COMMON_TYPES_H
+#include <map>
 #include <string>
+#include <variant>
 namespace OHOS::CommonType {
 struct AssetValue {
     enum Status : int32_t {
@@ -41,5 +43,10 @@ struct AssetValue {
     std::string hash;
     std::string path;
 };
+using Bytes = std::vector<uint8_t>;
+using Asset = AssetValue;
+using Assets = std::vector<AssetValue>;
+using Value = std::variant<std::monostate, int64_t, double, std::string, bool, Bytes, Asset, Assets>;
+using ValuesBucket = std::map<std::string, Value>;
 }
-#endif // OHOS_COMMONTYPE_H
+#endif // OHOS_COMMON_TYPES_H
