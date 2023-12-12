@@ -18,6 +18,7 @@
 #include "cloud_service.h"
 #include "cloud_types.h"
 #include "napi_queue.h"
+#include "js_utils.h"
 
 using namespace OHOS::Rdb;
 using Action = OHOS::CloudData::CloudService::Action;
@@ -92,6 +93,8 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
     const napi_property_descriptor properties[] = {
         DECLARE_NAPI_PROPERTY("Action", ExportAction(env)),
         DECLARE_NAPI_PROPERTY("ClearAction", ExportAction(env)),
+        DECLARE_NAPI_PROPERTY("DATA_CHANGE_EVENT_ID", AppDataMgrJsKit::JSUtils::Convert2JSValue(env,
+            std::string(CloudData::DATA_CHANGE_EVENT_ID))),
     };
     size_t count = sizeof(properties) / sizeof(properties[0]);
 
