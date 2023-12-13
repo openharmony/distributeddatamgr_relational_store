@@ -15,7 +15,7 @@
 
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
-#include "common_asset_value.h"
+#include "common_types.h"
 
 namespace OHOS::CommonType {
 static napi_status SetNamedProperty(napi_env env, napi_value &obj, const std::string &name,
