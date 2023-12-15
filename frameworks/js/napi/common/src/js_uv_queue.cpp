@@ -244,7 +244,7 @@ napi_value UvQueue::UvEntry::GetObject()
 
 void UvQueue::UvEntry::BindPromise(napi_value promise)
 {
-    if (promise == nullptr || result_) {
+    if (promise == nullptr || !result_) {
         return;
     }
 
