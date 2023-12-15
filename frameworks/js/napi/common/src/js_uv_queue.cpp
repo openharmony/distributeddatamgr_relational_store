@@ -48,7 +48,7 @@ void UvQueue::AsyncCall(UvCallback callback, Args args, Result result)
     auto entry = new (std::nothrow) UvEntry();
     if (entry == nullptr) {
         delete work;
-        LOG_ERROR("no memory for uv_work_t");
+        LOG_ERROR("no memory for UvEntry");
         return;
     }
     entry->env_ = env_;
@@ -76,7 +76,7 @@ void UvQueue::AsyncPromise(UvPromise promise, UvQueue::Args args)
     auto entry =  new (std::nothrow) UvEntry();
     if (entry == nullptr) {
         delete work;
-        LOG_ERROR("no memory for uv_work_t");
+        LOG_ERROR("no memory for UvEntry");
         return;
     }
     entry->env_ = env_;
@@ -100,7 +100,7 @@ void UvQueue::Execute(UvQueue::Task task)
     auto entry =  new (std::nothrow) Task();
     if (entry == nullptr) {
         delete work;
-        LOG_ERROR("no memory for uv_work_t");
+        LOG_ERROR("no memory for Task");
         return;
     }
     *entry = task;
@@ -256,7 +256,7 @@ void UvQueue::UvEntry::BindPromise(napi_value promise)
     }
 
     napi_value then = nullptr;
-    if (napi_get_named_property(env_, promise, "then", &then) != napi_ok) {
+    if (napi_get_named_property(env_, promise, "then", &then) != napi_ok || then == nullptr) {
         return;
     }
 
