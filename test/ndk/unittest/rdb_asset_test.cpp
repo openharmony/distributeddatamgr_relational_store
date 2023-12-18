@@ -86,9 +86,9 @@ void RdbNativeAssetTest::CreateAssetTable()
  * @tc.number: RDB_Native_asset_test_001
  * @tc.name: Abnormal testCase of asset for setName.
  * @tc.desc: 1.Create asset
- *           2.Excute SetName (nullptr, nullptr)
- *           3.Excute SetName (asset, nullptr)
- *           4.Excute SetName (nullptr, name.c_str())
+ *           2.Execute SetName (nullptr, nullptr)
+ *           3.Execute SetName (asset, nullptr)
+ *           4.Execute SetName (nullptr, name.c_str())
  *           5.Destroy asset
  * @tc.type: FUNC
  */
@@ -108,9 +108,9 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_setName, TestSize.Le
  * @tc.number: RDB_Native_asset_test_002
  * @tc.name: Abnormal testCase of asset for setUri.
  * @tc.desc: 1.Create asset
- *           2.Excute SetUri (nullptr, nullptr)
- *           3.Excute SetUri (asset, nullptr)
- *           4.Excute SetUri (nullptr, uri.c_str())
+ *           2.Execute SetUri (nullptr, nullptr)
+ *           3.Execute SetUri (asset, nullptr)
+ *           4.Execute SetUri (nullptr, uri.c_str())
  *           5.Destroy asset
  * @tc.type: FUNC
  */
@@ -130,9 +130,9 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_setUri, TestSize.Lev
  * @tc.number: RDB_Native_asset_test_003
  * @tc.name: Abnormal testCase of asset for setPath.
  * @tc.desc: 1.Create asset
- *           2.Excute SetPath (nullptr, nullptr)
- *           3.Excute SetPath (asset, nullptr)
- *           4.Excute SetPath (nullptr, path.c_str())
+ *           2.Execute SetPath (nullptr, nullptr)
+ *           3.Execute SetPath (asset, nullptr)
+ *           4.Execute SetPath (nullptr, path.c_str())
  *           5.Destroy asset
  * @tc.type: FUNC
  */
@@ -151,10 +151,10 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_setPath, TestSize.Le
 /**
  * @tc.number: RDB_Native_asset_test_004
  * @tc.name: Abnormal testCase of asset for setCreateTime, setModifyTime, setSize, setStatus.
- * @tc.desc: 1.Excute SetCreateTime (nullptr, 1)
- *           2.Excute SetModifyTime (nullptr, 1)
- *           3.Excute SetSize (nullptr, 1)
- *           4.Excute SetStatus (nullptr, Data_AssetStatus::ASSET_NORMAL)
+ * @tc.desc: 1.Execute SetCreateTime (nullptr, 1)
+ *           2.Execute SetModifyTime (nullptr, 1)
+ *           3.Execute SetSize (nullptr, 1)
+ *           4.Execute SetStatus (nullptr, Data_AssetStatus::ASSET_NORMAL)
  * @tc.type: FUNC
  */
 HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_for_setCreateTime_setModifyTime_setSize_setStatus, TestSize.Level1)
@@ -173,8 +173,8 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_for_setCreateTime_setModifyTime_s
  * @tc.number: RDB_Native_asset_test_005
  * @tc.name: Abnormal testCase of asset for getName.
  * @tc.desc: 1.Create asset
- *           2.Excute GetName (asset == nullptr)
- *           3.Excute GetName (nameLength >= *length)
+ *           2.Execute GetName (asset == nullptr)
+ *           3.Execute GetName (nameLength >= *length)
  *           4.Destroy asset
  * @tc.type: FUNC
  */
@@ -199,8 +199,8 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getName, TestSize.Le
  * @tc.number: RDB_Native_asset_test_006
  * @tc.name: Abnormal testCase of asset for getUri.
  * @tc.desc: 1.Create asset
- *           2.Excute GetUri (asset == nullptr)
- *           3.Excute GetUri (uriLength >= *length)
+ *           2.Execute GetUri (asset == nullptr)
+ *           3.Execute GetUri (uriLength >= *length)
  *           4.Destroy asset
  * @tc.type: FUNC
  */
@@ -225,8 +225,8 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getUri, TestSize.Lev
  * @tc.number: RDB_Native_asset_test_007
  * @tc.name: Abnormal testCase of asset for getPath.
  * @tc.desc: 1.Create asset
- *           2.Excute GetPath (asset == nullptr)
- *           3.Excute GetPath (pathLength >= *length)
+ *           2.Execute GetPath (asset == nullptr)
+ *           3.Execute GetPath (pathLength >= *length)
  *           4.Destroy asset
  * @tc.type: FUNC
  */
@@ -250,7 +250,7 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getPath, TestSize.Le
 /**
  * @tc.number: RDB_Native_asset_test_008
  * @tc.name: Abnormal testCase of asset for getCreatTime.
- * @tc.desc: Excute GetCreateTime (asset == nullptr)
+ * @tc.desc: Execute GetCreateTime (asset == nullptr)
  * @tc.type: FUNC
  */
 HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getCreatTime, TestSize.Level1)
@@ -263,7 +263,7 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getCreatTime, TestSi
 /**
  * @tc.number: RDB_Native_asset_test_009
  * @tc.name: Abnormal testCase of asset for getModifyTime.
- * @tc.desc: Excute GetModifyTime (asset == nullptr)
+ * @tc.desc: Execute GetModifyTime (asset == nullptr)
  * @tc.type: FUNC
  */
 HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getModifyTime, TestSize.Level1)
@@ -276,7 +276,7 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getModifyTime, TestS
 /**
  * @tc.number: RDB_Native_asset_test_0010
  * @tc.name: Abnormal testCase of asset for getSize.
- * @tc.desc: Excute GetSize (asset == nullptr)
+ * @tc.desc: Execute GetSize (asset == nullptr)
  * @tc.type: FUNC
  */
 HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getSize, TestSize.Level1)
@@ -289,7 +289,7 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getSize, TestSize.Le
 /**
  * @tc.number: RDB_Native_asset_test_0011
  * @tc.name: Abnormal testCase of asset for getStatus.
- * @tc.desc: Excute GetStatus (asset == nullptr)
+ * @tc.desc: Execute GetStatus (asset == nullptr)
  * @tc.type: FUNC
  */
 HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getStatus, TestSize.Level1)
