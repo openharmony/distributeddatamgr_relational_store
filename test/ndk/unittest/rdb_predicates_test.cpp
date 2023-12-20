@@ -36,7 +36,7 @@ public:
     {
         config_.dataBaseDir = RDB_TEST_PATH;
         config_.storeName = "rdb_predicates_test.db";
-        config_.bundleName = "";
+        config_.bundleName = "com.ohos.example.distributedndk";
         config_.moduleName = "";
         config_.securityLevel = OH_Rdb_SecurityLevel::S1;
         config_.isEncrypt = false;
