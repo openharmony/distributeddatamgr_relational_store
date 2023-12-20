@@ -625,3 +625,37 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_003, TestSize.Level2)
 
     store->ExecuteSql("DROP TABLE IF EXISTS test_callback_t3;");
 }
+
+/* *
+ * @tc.name: Rdb_QuerySharingResourceTest_001
+ * @tc.desc: QuerySharingResource testCase
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_001, TestSize.Level2)
+{
+    int errCode = E_OK;
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", 1);
+
+    // GetRdbService failed if rdbstoreconfig bundlename_ empty
+    auto ret = RdbStoreImplTest::store->QuerySharingResource(predicates, {});
+    EXPECT_EQ(E_INVALID_ARGS, errCode);
+    pair<int32_t, std::shared_ptr<ResultSet>> res1 = {E_INVALID_ARGS,nullptr};
+    EXPECT_EQ(res1, ret);
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetName("RdbStore_impl_test.db");
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+
+    // GetRdbService succeeded if configuration file has already been configured
+    ret = store->QuerySharingResource(predicates, {});
+    EXPECT_EQ(E_OK, errCode);
+    pair<int32_t, std::shared_ptr<ResultSet>> res2 = {E_INVALID_ARGS,nullptr};
+    EXPECT_EQ(res2, ret);
+
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+}
