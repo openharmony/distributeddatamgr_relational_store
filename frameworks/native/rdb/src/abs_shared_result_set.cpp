@@ -462,9 +462,10 @@ int AbsSharedResultSet::IsColumnNull(int columnIndex, bool &isNull)
 
 int AbsSharedResultSet::Close()
 {
-    if (!isClosed) {
+    if (!isClosed_) {
         AbsResultSet::Close();
         ClosedBlock();
+        auto name = std::move(sharedBlockName_);
     }
     return E_OK;
 }
