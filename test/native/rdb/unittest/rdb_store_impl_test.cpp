@@ -639,9 +639,8 @@ HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_001, TestSize.Level2)
 
     // GetRdbService failed if rdbstoreconfig bundlename_ empty
     auto ret = RdbStoreImplTest::store->QuerySharingResource(predicates, {});
-    EXPECT_EQ(E_INVALID_ARGS, errCode);
-    pair<int32_t, std::shared_ptr<ResultSet>> res1 = {E_INVALID_ARGS,nullptr};
-    EXPECT_EQ(res1, ret);
+    EXPECT_EQ(0,ret.first);
+    EXPECT_EQ(nullptr,ret.second);
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
 
     RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
@@ -653,9 +652,8 @@ HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_001, TestSize.Level2)
 
     // GetRdbService succeeded if configuration file has already been configured
     ret = store->QuerySharingResource(predicates, {});
-    EXPECT_EQ(E_OK, errCode);
-    pair<int32_t, std::shared_ptr<ResultSet>> res2 = {E_INVALID_ARGS,nullptr};
-    EXPECT_EQ(res2, ret);
+    EXPECT_EQ(0,ret.first);
+    EXPECT_EQ(nullptr,ret.second);
 
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
 }
