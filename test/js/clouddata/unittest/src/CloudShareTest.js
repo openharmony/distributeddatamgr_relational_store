@@ -106,22 +106,22 @@ describe('cloudSharingTest', function () {
     /**
      * @tc.number SUB_DDM_CLOUD_SHARE_0010
      * @tc.name allocResourceAndShareTest001
-     * @tc.desc Test Js Api allocResourceAndShare normal.
+     * @tc.desc Test Js Api allocResourceAndShare with invalid args.
      */
     it('allocResourceAndShareTest001', 0, async function (done) {
         console.log(TAG + "************* allocResourceAndShareTest001 start *************");
         try {
             let predicates = new data_relationalStore.RdbPredicates("employee");
             predicates.equalTo("id", 1);
-            cloudData.sharing.allocResourceAndShare("employee", predicates, participants, (err, resultSet) => {
+            cloudData.sharing.allocResourceAndShare(undefined, predicates, participants, (err, resultSet) => {
                 done()
-                expect(err != undefined).assertTrue();
-                console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-                expect(err.code == 202).assertTrue();
+                if (err) {
+                    console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
+                }
+                expect(null).assertFail();
             })
         } catch (err) {
-            console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-            expect(null).assertFail();
+            expect(err.code == 401).assertTrue();
         }
         done()
         console.log(TAG + "************* allocResourceAndShareTest001 end *************");
@@ -135,9 +135,7 @@ describe('cloudSharingTest', function () {
     it('allocResourceAndShareTest002', 0, async function (done) {
         console.log(TAG + "************* allocResourceAndShareTest002 start *************");
         try {
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-            cloudData.sharing.allocResourceAndShare(undefined, predicates, participants, (err, resultSet) => {
+            cloudData.sharing.allocResourceAndShare("employee", undefined, participants, (err, resultSet) => {
                 done()
                 if (err) {
                     console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
@@ -159,7 +157,10 @@ describe('cloudSharingTest', function () {
     it('allocResourceAndShareTest003', 0, async function (done) {
         console.log(TAG + "************* allocResourceAndShareTest003 start *************");
         try {
-            cloudData.sharing.allocResourceAndShare("employee", undefined, participants, (err, resultSet) => {
+            cloudData.sharing
+            let predicates = new data_relationalStore.RdbPredicates("employee");
+            predicates.equalTo("id", 1);
+            cloudData.sharing.allocResourceAndShare("employee", predicates, undefined, (err, resultSet) => {
                 done()
                 if (err) {
                     console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
@@ -181,18 +182,16 @@ describe('cloudSharingTest', function () {
     it('allocResourceAndShareTest004', 0, async function (done) {
         console.log(TAG + "************* allocResourceAndShareTest004 start *************");
         try {
-            cloudData.sharing
             let predicates = new data_relationalStore.RdbPredicates("employee");
             predicates.equalTo("id", 1);
-            cloudData.sharing.allocResourceAndShare("employee", predicates, undefined, (err, resultSet) => {
-                done()
-                if (err) {
-                    console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-                }
+            const columns = ["id", "name", "age"];
+            await cloudData.sharing.allocResourceAndShare(undefined, predicates, participants, columns).then((resultSet) => {
+                expect(null).assertFail();
+            }).catch((err) => {
                 expect(null).assertFail();
             })
         } catch (err) {
-            expect(err.code == 401).assertTrue();
+            expect(err.code == 401).assertTrue()
         }
         done()
         console.log(TAG + "************* allocResourceAndShareTest004 end *************");
@@ -201,23 +200,19 @@ describe('cloudSharingTest', function () {
     /**
      * @tc.number SUB_DDM_CLOUD_SHARE_0010
      * @tc.name allocResourceAndShareTest005
-     * @tc.desc Test Js Api allocResourceAndShare normal.
+     * @tc.desc Test Js Api allocResourceAndShare with invalid args.
      */
     it('allocResourceAndShareTest005', 0, async function (done) {
         console.log(TAG + "************* allocResourceAndShareTest005 start *************");
         try {
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
             const columns = ["id", "name", "age"];
-            cloudData.sharing.allocResourceAndShare("employee", predicates, participants, columns, (err, resultSet) => {
-                done()
-                expect(err != undefined).assertTrue();
-                console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-                expect(err.code == 202).assertTrue();
+            await cloudData.sharing.allocResourceAndShare("employee", undefined, participants, columns).then((resultSet) => {
+                expect(null).assertFail();
+            }).catch((err) => {
+                expect(null).assertFail();
             })
         } catch (err) {
-            console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-            expect(null).assertFail();
+            expect(err.code == 401).assertTrue()
         }
         done()
         console.log(TAG + "************* allocResourceAndShareTest005 end *************");
@@ -233,123 +228,6 @@ describe('cloudSharingTest', function () {
         try {
             let predicates = new data_relationalStore.RdbPredicates("employee");
             predicates.equalTo("id", 1);
-            cloudData.sharing.allocResourceAndShare("employee", predicates, participants, undefined, (err, resultSet) => {
-                done()
-                expect(err != undefined).assertTrue();
-                console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-                expect(err.code == 202).assertTrue();
-            })
-        } catch (err) {
-            expect(null).assertFail();
-        }
-        done()
-        console.log(TAG + "************* allocResourceAndShareTest006 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest007
-     * @tc.desc Test Js Api allocResourceAndShare normal.
-     */
-    it('allocResourceAndShareTest007', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest007 start *************");
-        try {
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-            const columns = ["id", "name", "age"];
-            await cloudData.sharing.allocResourceAndShare("employee", predicates, participants, columns).then((resultSet) => {
-                expect(null).assertFail();
-            }).catch((err) => {
-                console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-                expect(err.code == 202).assertTrue();
-            })
-        } catch (err) {
-            console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-            expect(null).assertFail();
-        }
-        done()
-        console.log(TAG + "************* allocResourceAndShareTest007 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest008
-     * @tc.desc Test Js Api allocResourceAndShare normal.
-     */
-    it('allocResourceAndShareTest008', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest008 start *************");
-        try {
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-            await cloudData.sharing.allocResourceAndShare("employee", predicates, participants).then((resultSet) => {
-                expect(null).assertFail();
-            }).catch((err) => {
-                expect(err != undefined).assertTrue();
-                console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-                expect(err.code == 202).assertTrue();
-            })
-        } catch (err) {
-            console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-            expect(null).assertFail();
-        }
-        done()
-        console.log(TAG + "************* allocResourceAndShareTest008 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest009
-     * @tc.desc Test Js Api allocResourceAndShare with invalid args.
-     */
-    it('allocResourceAndShareTest009', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest009 start *************");
-        try {
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-            const columns = ["id", "name", "age"];
-            await cloudData.sharing.allocResourceAndShare(undefined, predicates, participants, columns).then((resultSet) => {
-                expect(null).assertFail();
-            }).catch((err) => {
-                expect(null).assertFail();
-            })
-        } catch (err) {
-            expect(err.code == 401).assertTrue()
-        }
-        done()
-        console.log(TAG + "************* allocResourceAndShareTest009 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest010
-     * @tc.desc Test Js Api allocResourceAndShare with invalid args.
-     */
-    it('allocResourceAndShareTest010', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest010 start *************");
-        try {
-            const columns = ["id", "name", "age"];
-            await cloudData.sharing.allocResourceAndShare("employee", undefined, participants, columns).then((resultSet) => {
-                expect(null).assertFail();
-            }).catch((err) => {
-                expect(null).assertFail();
-            })
-        } catch (err) {
-            expect(err.code == 401).assertTrue()
-        }
-        done()
-        console.log(TAG + "************* allocResourceAndShareTest010 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest011
-     * @tc.desc Test Js Api allocResourceAndShare with invalid args.
-     */
-    it('allocResourceAndShareTest011', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest011 start *************");
-        try {
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
             const columns = ["id", "name", "age"];
             cloudData.sharing.allocResourceAndShare("employee", predicates, undefined, columns).then((resultSet) => {
                 expect(null).assertFail();
@@ -360,50 +238,27 @@ describe('cloudSharingTest', function () {
             expect(err.code == 401).assertTrue()
         }
         done();
-        console.log(TAG + "************* allocResourceAndShareTest011 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest012
-     * @tc.desc Test Js Api allocResourceAndShare with invalid args.
-     */
-    it('allocResourceAndShareTest012', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest012 start *************");
-        try {
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-            await cloudData.sharing.allocResourceAndShare("employee", predicates, participants, undefined).then((resultSet) => {
-                expect(null).assertFail();
-            }).catch((err) => {
-                expect(err != undefined).assertTrue();
-                console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-                expect(err.code == 202).assertTrue();
-            })
-        } catch (err) {
-            expect(err.code == 401).assertTrue()
-        }
-        done();
-        console.log(TAG + "************* allocResourceAndShareTest012 end *************");
+        console.log(TAG + "************* allocResourceAndShareTest006 end *************");
     })
 
     /**
      * @tc.number SUB_DDM_CLOUD_SHARE_0010
      * @tc.name shareTest001
-     * @tc.desc Test Js Api share normal.
+     * @tc.desc Test Js Api share with invalid args.
      */
     it("shareTest001", 0, async function (done) {
         console.log(TAG + "************* shareTest001 start *************");
         try {
-            cloudData.sharing.share(SHARING_RESOURCE, participants, ((err, result) => {
-                done();
-                expect(err != undefined).assertTrue();
-                expect(err.code == 202).assertTrue();
+            cloudData.sharing.share(undefined, participants, ((err, result) => {
+                if (err) {
+                    expect(null).assertFail();
+                }
+                expect(null).assertFail();
             }))
         } catch (err) {
-            expect(null).assertFail();
+            expect(err.code == 401).assertTrue();
         }
-        done()
+        done();
         console.log(TAG + "************* shareTest001 end *************");
     })
 
@@ -415,7 +270,7 @@ describe('cloudSharingTest', function () {
     it("shareTest002", 0, async function (done) {
         console.log(TAG + "************* shareTest002 start *************");
         try {
-            cloudData.sharing.share(undefined, participants, ((err, result) => {
+            cloudData.sharing.share(SHARING_RESOURCE, undefined, ((err, result) => {
                 if (err) {
                     expect(null).assertFail();
                 }
@@ -436,48 +291,6 @@ describe('cloudSharingTest', function () {
     it("shareTest003", 0, async function (done) {
         console.log(TAG + "************* shareTest003 start *************");
         try {
-            cloudData.sharing.share(SHARING_RESOURCE, undefined, ((err, result) => {
-                if (err) {
-                    expect(null).assertFail();
-                }
-                expect(null).assertFail();
-            }))
-        } catch (err) {
-            expect(err.code == 401).assertTrue();
-        }
-        done();
-        console.log(TAG + "************* shareTest003 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name shareTest004
-     * @tc.desc Test Js Api share normal.
-     */
-    it("shareTest004", 0, async function (done) {
-        console.log(TAG + "************* shareTest004 start *************");
-        try {
-            cloudData.sharing.share(SHARING_RESOURCE, participants).then(result => {
-                expect(null).assertFail();
-            }).catch(err => {
-                expect(err != undefined).assertTrue();
-                expect(err.code == 202).assertTrue();
-            })
-        } catch (err) {
-            expect(null).assertFail();
-        }
-        done()
-        console.log(TAG + "************* shareTest004 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name shareTest005
-     * @tc.desc Test Js Api share with invalid args.
-     */
-    it("shareTest005", 0, async function (done) {
-        console.log(TAG + "************* shareTest005 start *************");
-        try {
             cloudData.sharing.share(undefined, participants).then(result => {
                 expect(null).assertFail();
             }).catch(err => {
@@ -487,16 +300,16 @@ describe('cloudSharingTest', function () {
             expect(err.code == 401).assertTrue();
         }
         done()
-        console.log(TAG + "************* shareTest005 end *************");
+        console.log(TAG + "************* shareTest003 end *************");
     })
 
     /**
      * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name shareTest006
+     * @tc.name shareTest004
      * @tc.desc Test Js Api share with invalid args.
      */
-    it("shareTest006", 0, async function (done) {
-        console.log(TAG + "************* shareTest006 start *************");
+    it("shareTest004", 0, async function (done) {
+        console.log(TAG + "************* shareTest004 start *************");
         try {
             cloudData.sharing.share(SHARING_RESOURCE, undefined).then(result => {
                 expect(null).assertFail();
@@ -507,26 +320,27 @@ describe('cloudSharingTest', function () {
             expect(err.code == 401).assertTrue();
         }
         done()
-        console.log(TAG + "************* shareTest006 end *************");
+        console.log(TAG + "************* shareTest004 end *************");
     })
 
     /**
      * @tc.number SUB_DDM_CLOUD_SHARE_0010
      * @tc.name unshareTest001
-     * @tc.desc Test Js Api unshare normal.
+     * @tc.desc Test Js Api unshare with invalid args.
      */
     it("unshareTest001", 0, async function (done) {
         console.log(TAG + "************* unshareTest001 start *************");
         try {
-            cloudData.sharing.unshare(SHARING_RESOURCE, participants, ((err, result) => {
-                done();
-                expect(err != undefined).assertTrue();
-                expect(err.code == 202).assertTrue();
+            cloudData.sharing.unshare(undefined, participants, ((err, result) => {
+                if (err) {
+                    expect(null).assertFail();
+                }
+                expect(null).assertFail();
             }))
         } catch (err) {
-            expect(null).assertFail();
+            expect(err.code == 401).assertTrue();
         }
-        done()
+        done();
         console.log(TAG + "************* unshareTest001 end *************");
     })
 
@@ -538,7 +352,7 @@ describe('cloudSharingTest', function () {
     it("unshareTest002", 0, async function (done) {
         console.log(TAG + "************* unshareTest002 start *************");
         try {
-            cloudData.sharing.unshare(undefined, participants, ((err, result) => {
+            cloudData.sharing.unshare(SHARING_RESOURCE, undefined, ((err, result) => {
                 if (err) {
                     expect(null).assertFail();
                 }
@@ -559,48 +373,6 @@ describe('cloudSharingTest', function () {
     it("unshareTest003", 0, async function (done) {
         console.log(TAG + "************* unshareTest003 start *************");
         try {
-            cloudData.sharing.unshare(SHARING_RESOURCE, undefined, ((err, result) => {
-                if (err) {
-                    expect(null).assertFail();
-                }
-                expect(null).assertFail();
-            }))
-        } catch (err) {
-            expect(err.code == 401).assertTrue();
-        }
-        done();
-        console.log(TAG + "************* unshareTest003 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name unshareTest004
-     * @tc.desc Test Js Api unshare normal.
-     */
-    it("unshareTest004", 0, async function (done) {
-        console.log(TAG + "************* unshareTest004 start *************");
-        try {
-            cloudData.sharing.unshare(SHARING_RESOURCE, participants).then(result => {
-                expect(null).assertFail();
-            }).catch(err => {
-                expect(err != undefined).assertTrue();
-                expect(err.code == 202).assertTrue();
-            })
-        } catch (err) {
-            expect(null).assertFail();
-        }
-        done()
-        console.log(TAG + "************* unshareTest004 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name unshareTest005
-     * @tc.desc Test Js Api unshare with invalid args.
-     */
-    it("unshareTest005", 0, async function (done) {
-        console.log(TAG + "************* unshareTest005 start *************");
-        try {
             cloudData.sharing.unshare(undefined, participants).then(result => {
                 expect(null).assertFail();
             }).catch(err => {
@@ -610,16 +382,16 @@ describe('cloudSharingTest', function () {
             expect(err.code == 401).assertTrue();
         }
         done()
-        console.log(TAG + "************* unshareTest005 end *************");
+        console.log(TAG + "************* unshareTest003 end *************");
     })
 
     /**
      * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name unshareTest006
+     * @tc.name unshareTest004
      * @tc.desc Test Js Api unshare with invalid args.
      */
-    it("unshareTest006", 0, async function (done) {
-        console.log(TAG + "************* unshareTest006 start *************");
+    it("unshareTest004", 0, async function (done) {
+        console.log(TAG + "************* unshareTest004 start *************");
         try {
             cloudData.sharing.unshare(SHARING_RESOURCE, undefined).then(result => {
                 expect(null).assertFail();
@@ -630,24 +402,25 @@ describe('cloudSharingTest', function () {
             expect(err.code == 401).assertTrue();
         }
         done()
-        console.log(TAG + "************* unshareTest006 end *************");
+        console.log(TAG + "************* unshareTest004 end *************");
     })
 
     /**
      * @tc.number SUB_DDM_CLOUD_SHARE_0010
      * @tc.name exitTest001
-     * @tc.desc Test Js Api exit normal.
+     * @tc.desc Test Js Api exit with invalid args.
      */
     it("exitTest001", 0, async function (done) {
         console.log(TAG + "************* exitTest001 start *************");
         try {
-            cloudData.sharing.exit(SHARING_RESOURCE, ((err, result) => {
-                done();
-                expect(err != undefined).assertTrue();
-                expect(err.code == 202).assertTrue();
+            cloudData.sharing.exit(undefined, ((err, result) => {
+                if (err) {
+                    expect(null).assertFail();
+                }
+                expect(null).assertFail();
             }))
         } catch (err) {
-            expect(null).assertFail();
+            expect(err.code == 401).assertTrue();
         }
         done();
         console.log(TAG + "************* exitTest001 end *************");
@@ -661,48 +434,6 @@ describe('cloudSharingTest', function () {
     it("exitTest002", 0, async function (done) {
         console.log(TAG + "************* exitTest002 start *************");
         try {
-            cloudData.sharing.exit(undefined, ((err, result) => {
-                if (err) {
-                    expect(null).assertFail();
-                }
-                expect(null).assertFail();
-            }))
-        } catch (err) {
-            expect(err.code == 401).assertTrue();
-        }
-        done();
-        console.log(TAG + "************* exitTest002 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name exitTest003
-     * @tc.desc Test Js Api exit normal.
-     */
-    it("exitTest003", 0, async function (done) {
-        console.log(TAG + "************* exitTest003 start *************");
-        try {
-            cloudData.sharing.exit(SHARING_RESOURCE).then(result => {
-                expect(null).assertFail();
-            }).catch(err => {
-                expect(err != undefined).assertTrue();
-                expect(err.code == 202).assertTrue();
-            })
-        } catch (err) {
-            expect(null).assertFail();
-        }
-        done()
-        console.log(TAG + "************* exitTest003 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name exitTest004
-     * @tc.desc Test Js Api exit with invalid args.
-     */
-    it("exitTest004", 0, async function (done) {
-        console.log(TAG + "************* exitTest004 start *************");
-        try {
             cloudData.sharing.exit(undefined).then(result => {
                 expect(null).assertFail();
             }).catch(err => {
@@ -712,13 +443,13 @@ describe('cloudSharingTest', function () {
             expect(err.code == 401).assertTrue();
         }
         done()
-        console.log(TAG + "************* exitTest004 end *************");
+        console.log(TAG + "************* exitTest002 end *************");
     })
 
     /**
      * @tc.number SUB_DDM_CLOUD_SHARE_0010
      * @tc.name changePrivilegeTest001
-     * @tc.desc Test Js Api changePrivilege normal.
+     * @tc.desc Test Js Api changePrivilege with invalid args.
      */
     it("changePrivilegeTest001", 0, async function (done) {
         console.log(TAG + "************* changePrivilegeTest001 start *************");
@@ -728,13 +459,14 @@ describe('cloudSharingTest', function () {
             let changed2 = participants2;
             changed2.privilege = privilegeEnable;
             const changePart = [changed1, changed2];
-            cloudData.sharing.changePrivilege(SHARING_RESOURCE, changePart, ((err, result) => {
-                done();
-                expect(err != undefined).assertTrue();
-                expect(err.code == 202).assertTrue();
+            cloudData.sharing.changePrivilege(undefined, changePart, ((err, result) => {
+                if (err) {
+                    expect(null).assertFail();
+                }
+                expect(null).assertFail();
             }))
         } catch (err) {
-            expect(null).assertFail();
+            expect(err.code == 401).assertTrue();
         }
         done()
         console.log(TAG + "************* changePrivilegeTest001 end *************");
@@ -748,12 +480,7 @@ describe('cloudSharingTest', function () {
     it("changePrivilegeTest002", 0, async function (done) {
         console.log(TAG + "************* changePrivilegeTest002 start *************");
         try {
-            let changed1 = participants1;
-            changed1.privilege = privilegeDisable;
-            let changed2 = participants2;
-            changed2.privilege = privilegeEnable;
-            const changePart = [changed1, changed2];
-            cloudData.sharing.changePrivilege(undefined, changePart, ((err, result) => {
+            cloudData.sharing.changePrivilege(SHARING_RESOURCE, undefined, ((err, result) => {
                 if (err) {
                     expect(null).assertFail();
                 }
@@ -774,53 +501,6 @@ describe('cloudSharingTest', function () {
     it("changePrivilegeTest003", 0, async function (done) {
         console.log(TAG + "************* changePrivilegeTest003 start *************");
         try {
-            cloudData.sharing.changePrivilege(SHARING_RESOURCE, undefined, ((err, result) => {
-                if (err) {
-                    expect(null).assertFail();
-                }
-                expect(null).assertFail();
-            }))
-        } catch (err) {
-            expect(err.code == 401).assertTrue();
-        }
-        done()
-        console.log(TAG + "************* changePrivilegeTest003 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name changePrivilegeTest004
-     * @tc.desc Test Js Api changePrivilege normal.
-     */
-    it("changePrivilegeTest004", 0, async function (done) {
-        console.log(TAG + "************* changePrivilegeTest004 start *************");
-        try {
-            let changed1 = participants1;
-            changed1.privilege = privilegeDisable;
-            let changed2 = participants2;
-            changed2.privilege = privilegeEnable;
-            const changePart = [changed1, changed2];
-            cloudData.sharing.changePrivilege(SHARING_RESOURCE, changePart).then(result => {
-                expect(null).assertFail();
-            }).catch(err => {
-                expect(err != undefined).assertTrue();
-                expect(err.code == 202).assertTrue();
-            })
-        } catch (err) {
-            expect(null).assertFail();
-        }
-        done()
-        console.log(TAG + "************* changePrivilegeTest004 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name changePrivilegeTest005
-     * @tc.desc Test Js Api changePrivilege with invalid args.
-     */
-    it("changePrivilegeTest005", 0, async function (done) {
-        console.log(TAG + "************* changePrivilegeTest005 start *************");
-        try {
             let changed1 = participants1;
             changed1.privilege = privilegeDisable;
             let changed2 = participants2;
@@ -835,16 +515,16 @@ describe('cloudSharingTest', function () {
             expect(err.code == 401).assertTrue();
         }
         done()
-        console.log(TAG + "************* changePrivilegeTest005 end *************");
+        console.log(TAG + "************* changePrivilegeTest003 end *************");
     })
 
     /**
      * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name changePrivilegeTest006
+     * @tc.name changePrivilegeTest004
      * @tc.desc Test Js Api changePrivilege with invalid args.
      */
-    it("changePrivilegeTest006", 0, async function (done) {
-        console.log(TAG + "************* changePrivilegeTest006 start *************");
+    it("changePrivilegeTest004", 0, async function (done) {
+        console.log(TAG + "************* changePrivilegeTest004 start *************");
         try {
             cloudData.sharing.changePrivilege(SHARING_RESOURCE, undefined).then(result => {
                 expect(null).assertFail();
@@ -855,36 +535,16 @@ describe('cloudSharingTest', function () {
             expect(err.code == 401).assertTrue();
         }
         done()
-        console.log(TAG + "************* changePrivilegeTest006 end *************");
+        console.log(TAG + "************* changePrivilegeTest004 end *************");
     })
 
     /**
      * @tc.number SUB_DDM_CLOUD_SHARE_0010
      * @tc.name queryParticipantsTest001
-     * @tc.desc Test Js Api queryParticipants normal.
+     * @tc.desc Test Js Api queryParticipants with invalid args.
      */
     it("queryParticipantsTest001", 0, async function (done) {
         console.log(TAG + "************* queryParticipantsTest001 start *************");
-        try {
-            cloudData.sharing.queryParticipants(SHARING_RESOURCE, ((err, result) => {
-                done();
-                expect(err != undefined).assertTrue();
-                expect(err.code == 202).assertTrue();
-            }))
-        } catch (err) {
-            expect(null).assertFail();
-        }
-        done()
-        console.log(TAG + "************* queryParticipantsTest001 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name queryParticipantsTest002
-     * @tc.desc Test Js Api queryParticipants with invalid args.
-     */
-    it("queryParticipantsTest002", 0, async function (done) {
-        console.log(TAG + "************* queryParticipantsTest002 start *************");
         try {
             cloudData.sharing.queryParticipants(undefined, ((err, result) => {
                 if (err) {
@@ -896,38 +556,16 @@ describe('cloudSharingTest', function () {
             expect(err.code == 401).assertTrue();
         }
         done();
-        console.log(TAG + "************* queryParticipantsTest002 end *************");
+        console.log(TAG + "************* queryParticipantsTest001 end *************");
     })
 
     /**
      * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name queryParticipantsTest003
-     * @tc.desc Test Js Api queryParticipants normal.
-     */
-    it("queryParticipantsTest003", 0, async function (done) {
-        console.log(TAG + "************* queryParticipantsTest003 start *************");
-        try {
-            cloudData.sharing.queryParticipants(SHARING_RESOURCE).then(result => {
-                expect(null).assertFail();
-            }).catch(err => {
-                done();
-                expect(err != undefined).assertTrue();
-                expect(err.code == 202).assertTrue();
-            })
-        } catch (err) {
-            expect(null).assertFail();
-        }
-        done()
-        console.log(TAG + "************* queryParticipantsTest003 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name queryParticipantsTest004
+     * @tc.name queryParticipantsTest002
      * @tc.desc Test Js Api queryParticipants with invalid args.
      */
-    it("queryParticipantsTest004", 0, async function (done) {
-        console.log(TAG + "************* queryParticipantsTest004 start *************");
+    it("queryParticipantsTest002", 0, async function (done) {
+        console.log(TAG + "************* queryParticipantsTest002 start *************");
         try {
             cloudData.sharing.queryParticipants(undefined).then(result => {
                 expect(null).assertFail();
@@ -935,39 +573,19 @@ describe('cloudSharingTest', function () {
                 expect(null).assertFail();
             })
         } catch (err) {
-            expect(null).assertFail();
+            expect(err.code == 401).assertTrue();
         }
         done()
-        console.log(TAG + "************* queryParticipantsTest004 end *************");
+        console.log(TAG + "************* queryParticipantsTest002 end *************");
     })
 
     /**
      * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name queryParticipantsByInvitationTest001
-     * @tc.desc Test Js Api queryParticipantsByInvitation normal.
-     */
-    it("queryParticipantsByInvitationTest001", 0, async function (done) {
-        console.log(TAG + "************* queryParticipantsByInvitationTest001 start *************");
-        try {
-            cloudData.sharing.queryParticipantsByInvitation(INVITATION_CODE, ((err, result) => {
-                done();
-                expect(err != undefined).assertTrue();
-                expect(err.code == 202).assertTrue();
-            }))
-        } catch (err) {
-            expect(null).assertFail();
-        }
-        done()
-        console.log(TAG + "************* queryParticipantsByInvitationTest001 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name queryParticipantsByInvitationTest002
+     * @tc.name queryParticipantsByInvitationTest003
      * @tc.desc Test Js Api queryParticipantsByInvitation with invalid args.
      */
-    it("queryParticipantsByInvitationTest002", 0, async function (done) {
-        console.log(TAG + "************* queryParticipantsByInvitationTest002 start *************");
+    it("queryParticipantsByInvitationTest003", 0, async function (done) {
+        console.log(TAG + "************* queryParticipantsByInvitationTest003 start *************");
         try {
             cloudData.sharing.queryParticipantsByInvitation(undefined, ((err, result) => {
                 if (err) {
@@ -979,28 +597,6 @@ describe('cloudSharingTest', function () {
             expect(err.code == 401).assertTrue();
         }
         done();
-        console.log(TAG + "************* queryParticipantsByInvitationTest002 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name queryParticipantsByInvitationTest003
-     * @tc.desc Test Js Api queryParticipantsByInvitation normal.
-     */
-    it("queryParticipantsByInvitationTest003", 0, async function (done) {
-        console.log(TAG + "************* queryParticipantsByInvitationTest003 start *************");
-        try {
-            cloudData.sharing.queryParticipantsByInvitation(INVITATION_CODE).then(result => {
-                expect(null).assertFail();
-            }).catch(err => {
-                done();
-                expect(err != undefined).assertTrue();
-                expect(err.code == 202).assertTrue();
-            })
-        } catch (err) {
-            expect(null).assertFail();
-        }
-        done()
         console.log(TAG + "************* queryParticipantsByInvitationTest003 end *************");
     })
 
@@ -1018,7 +614,7 @@ describe('cloudSharingTest', function () {
                 expect(null).assertFail();
             })
         } catch (err) {
-            expect(null).assertFail();
+            expect(err.code == 401).assertTrue();
         }
         done()
         console.log(TAG + "************* queryParticipantsByInvitationTest004 end *************");
@@ -1027,18 +623,19 @@ describe('cloudSharingTest', function () {
     /**
      * @tc.number SUB_DDM_CLOUD_SHARE_0010
      * @tc.name confirmInvitationTest001
-     * @tc.desc Test Js Api confirmInvitation normal.
+     * @tc.desc Test Js Api confirmInvitation with invalid args.
      */
     it("confirmInvitationTest001", 0, async function (done) {
         console.log(TAG + "************* confirmInvitationTest001 start *************");
         try {
-            cloudData.sharing.confirmInvitation(INVITATION_CODE, cloudData.sharing.State.STATE_SUSPENDED, ((err, result) => {
-                done();
-                expect(err != undefined).assertTrue();
-                expect(err.code == 202).assertTrue();
+            cloudData.sharing.confirmInvitation(undefined, cloudData.sharing.State.STATE_SUSPENDED, ((err, result) => {
+                if (err) {
+                    expect(null).assertFail();
+                }
+                expect(null).assertFail();
             }))
         } catch (err) {
-            expect(null).assertFail();
+            expect(err.code == 401).assertTrue();
         }
         done()
         console.log(TAG + "************* confirmInvitationTest001 end *************");
@@ -1052,7 +649,7 @@ describe('cloudSharingTest', function () {
     it("confirmInvitationTest002", 0, async function (done) {
         console.log(TAG + "************* confirmInvitationTest002 start *************");
         try {
-            cloudData.sharing.confirmInvitation(undefined, cloudData.sharing.State.STATE_SUSPENDED, ((err, result) => {
+            cloudData.sharing.confirmInvitation(INVITATION_CODE, 100, ((err, result) => {
                 if (err) {
                     expect(null).assertFail();
                 }
@@ -1073,7 +670,7 @@ describe('cloudSharingTest', function () {
     it("confirmInvitationTest003", 0, async function (done) {
         console.log(TAG + "************* confirmInvitationTest003 start *************");
         try {
-            cloudData.sharing.confirmInvitation(INVITATION_CODE, 100, ((err, result) => {
+            cloudData.sharing.confirmInvitation(INVITATION_CODE, undefined, ((err, result) => {
                 if (err) {
                     expect(null).assertFail();
                 }
@@ -1094,12 +691,11 @@ describe('cloudSharingTest', function () {
     it("confirmInvitationTest004", 0, async function (done) {
         console.log(TAG + "************* confirmInvitationTest004 start *************");
         try {
-            cloudData.sharing.confirmInvitation(INVITATION_CODE, undefined, ((err, result) => {
-                if (err) {
-                    expect(null).assertFail();
-                }
+            cloudData.sharing.confirmInvitation(undefined, cloudData.sharing.State.STATE_SUSPENDED).then(result => {
                 expect(null).assertFail();
-            }))
+            }).catch(err => {
+                expect(null).assertFail();
+            })
         } catch (err) {
             expect(err.code == 401).assertTrue();
         }
@@ -1110,20 +706,18 @@ describe('cloudSharingTest', function () {
     /**
      * @tc.number SUB_DDM_CLOUD_SHARE_0010
      * @tc.name confirmInvitationTest005
-     * @tc.desc Test Js Api confirmInvitation normal.
+     * @tc.desc Test Js Api confirmInvitation with invalid args.
      */
     it("confirmInvitationTest005", 0, async function (done) {
         console.log(TAG + "************* confirmInvitationTest005 start *************");
         try {
-            cloudData.sharing.confirmInvitation(INVITATION_CODE, cloudData.sharing.State.STATE_SUSPENDED).then(result => {
+            cloudData.sharing.confirmInvitation(SHARING_RESOURCE, 100).then(result => {
                 expect(null).assertFail();
             }).catch(err => {
-                done();
-                expect(err != undefined).assertTrue();
-                expect(err.code == 202).assertTrue();
+                expect(null).assertFail();
             })
         } catch (err) {
-            expect(null).assertFail();
+            expect(err.code == 401).assertTrue();
         }
         done()
         console.log(TAG + "************* confirmInvitationTest005 end *************");
@@ -1137,7 +731,7 @@ describe('cloudSharingTest', function () {
     it("confirmInvitationTest006", 0, async function (done) {
         console.log(TAG + "************* confirmInvitationTest006 start *************");
         try {
-            cloudData.sharing.confirmInvitation(undefined, cloudData.sharing.State.STATE_SUSPENDED).then(result => {
+            cloudData.sharing.confirmInvitation(SHARING_RESOURCE, undefined).then(result => {
                 expect(null).assertFail();
             }).catch(err => {
                 expect(null).assertFail();
@@ -1151,59 +745,20 @@ describe('cloudSharingTest', function () {
 
     /**
      * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name confirmInvitationTest007
-     * @tc.desc Test Js Api confirmInvitation with invalid args.
-     */
-    it("confirmInvitationTest007", 0, async function (done) {
-        console.log(TAG + "************* confirmInvitationTest007 start *************");
-        try {
-            cloudData.sharing.confirmInvitation(SHARING_RESOURCE, 100).then(result => {
-                expect(null).assertFail();
-            }).catch(err => {
-                expect(null).assertFail();
-            })
-        } catch (err) {
-            expect(err.code == 401).assertTrue();
-        }
-        done()
-        console.log(TAG + "************* confirmInvitationTest007 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name confirmInvitationTest008
-     * @tc.desc Test Js Api confirmInvitation with invalid args.
-     */
-    it("confirmInvitationTest008", 0, async function (done) {
-        console.log(TAG + "************* confirmInvitationTest008 start *************");
-        try {
-            cloudData.sharing.confirmInvitation(SHARING_RESOURCE, undefined).then(result => {
-                expect(null).assertFail();
-            }).catch(err => {
-                expect(null).assertFail();
-            })
-        } catch (err) {
-            expect(err.code == 401).assertTrue();
-        }
-        done()
-        console.log(TAG + "************* confirmInvitationTest008 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
      * @tc.name changeConfirmationTest001
-     * @tc.desc Test Js Api changeConfirmation normal.
+     * @tc.desc Test Js Api changeConfirmation with invalid args.
      */
     it("changeConfirmationTest001", 0, async function (done) {
         console.log(TAG + "************* changeConfirmationTest001 start *************");
         try {
-            cloudData.sharing.changeConfirmation(SHARING_RESOURCE, cloudData.sharing.State.STATE_SUSPENDED, ((err, result) => {
-                done();
-                expect(err != undefined).assertTrue();
-                expect(err.code == 202).assertTrue();
+            cloudData.sharing.changeConfirmation(undefined, cloudData.sharing.State.STATE_SUSPENDED, ((err, result) => {
+                if (err) {
+                    expect(null).assertFail();
+                }
+                expect(null).assertFail();
             }))
         } catch (err) {
-            expect(null).assertFail();
+            expect(err.code == 401).assertTrue();
         }
         done()
         console.log(TAG + "************* changeConfirmationTest001 end *************");
@@ -1217,7 +772,7 @@ describe('cloudSharingTest', function () {
     it("changeConfirmationTest002", 0, async function (done) {
         console.log(TAG + "************* changeConfirmationTest002 start *************");
         try {
-            cloudData.sharing.changeConfirmation(undefined, cloudData.sharing.State.STATE_SUSPENDED, ((err, result) => {
+            cloudData.sharing.changeConfirmation(SHARING_RESOURCE, 100, ((err, result) => {
                 if (err) {
                     expect(null).assertFail();
                 }
@@ -1238,7 +793,7 @@ describe('cloudSharingTest', function () {
     it("changeConfirmationTest003", 0, async function (done) {
         console.log(TAG + "************* changeConfirmationTest003 start *************");
         try {
-            cloudData.sharing.changeConfirmation(SHARING_RESOURCE, 100, ((err, result) => {
+            cloudData.sharing.changeConfirmation(SHARING_RESOURCE, undefined, ((err, result) => {
                 if (err) {
                     expect(null).assertFail();
                 }
@@ -1259,12 +814,11 @@ describe('cloudSharingTest', function () {
     it("changeConfirmationTest004", 0, async function (done) {
         console.log(TAG + "************* changeConfirmationTest004 start *************");
         try {
-            cloudData.sharing.changeConfirmation(SHARING_RESOURCE, undefined, ((err, result) => {
-                if (err) {
-                    expect(null).assertFail();
-                }
+            cloudData.sharing.changeConfirmation(undefined, cloudData.sharing.State.STATE_SUSPENDED).then(result => {
                 expect(null).assertFail();
-            }))
+            }).catch(err => {
+                expect(null).assertFail();
+            })
         } catch (err) {
             expect(err.code == 401).assertTrue();
         }
@@ -1275,20 +829,18 @@ describe('cloudSharingTest', function () {
     /**
      * @tc.number SUB_DDM_CLOUD_SHARE_0010
      * @tc.name changeConfirmationTest005
-     * @tc.desc Test Js Api changeConfirmation normal.
+     * @tc.desc Test Js Api changeConfirmation with invalid args.
      */
     it("changeConfirmationTest005", 0, async function (done) {
         console.log(TAG + "************* changeConfirmationTest005 start *************");
         try {
-            cloudData.sharing.changeConfirmation(SHARING_RESOURCE, cloudData.sharing.State.STATE_SUSPENDED).then(result => {
+            cloudData.sharing.changeConfirmation(SHARING_RESOURCE, 100).then(result => {
                 expect(null).assertFail();
             }).catch(err => {
-                done();
-                expect(err != undefined).assertTrue();
-                expect(err.code == 202).assertTrue();
+                expect(null).assertFail();
             })
         } catch (err) {
-            expect(null).assertFail();
+            expect(err.code == 401).assertTrue();
         }
         done()
         console.log(TAG + "************* changeConfirmationTest005 end *************");
@@ -1302,46 +854,6 @@ describe('cloudSharingTest', function () {
     it("changeConfirmationTest006", 0, async function (done) {
         console.log(TAG + "************* changeConfirmationTest006 start *************");
         try {
-            cloudData.sharing.changeConfirmation(undefined, cloudData.sharing.State.STATE_SUSPENDED).then(result => {
-                expect(null).assertFail();
-            }).catch(err => {
-                expect(null).assertFail();
-            })
-        } catch (err) {
-            expect(err.code == 401).assertTrue();
-        }
-        done()
-        console.log(TAG + "************* changeConfirmationTest006 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name changeConfirmationTest007
-     * @tc.desc Test Js Api changeConfirmation with invalid args.
-     */
-    it("changeConfirmationTest007", 0, async function (done) {
-        console.log(TAG + "************* changeConfirmationTest007 start *************");
-        try {
-            cloudData.sharing.changeConfirmation(SHARING_RESOURCE, 100).then(result => {
-                expect(null).assertFail();
-            }).catch(err => {
-                expect(null).assertFail();
-            })
-        } catch (err) {
-            expect(err.code == 401).assertTrue();
-        }
-        done()
-        console.log(TAG + "************* changeConfirmationTest007 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name changeConfirmationTest008
-     * @tc.desc Test Js Api changeConfirmation with invalid args.
-     */
-    it("changeConfirmationTest008", 0, async function (done) {
-        console.log(TAG + "************* changeConfirmationTest008 start *************");
-        try {
             cloudData.sharing.changeConfirmation(SHARING_RESOURCE, undefined).then(result => {
                 expect(null).assertFail();
             }).catch(err => {
@@ -1351,6 +863,6 @@ describe('cloudSharingTest', function () {
             expect(err.code == 401).assertTrue();
         }
         done()
-        console.log(TAG + "************* changeConfirmationTest008 end *************");
+        console.log(TAG + "************* changeConfirmationTest006 end *************");
     })
 })
