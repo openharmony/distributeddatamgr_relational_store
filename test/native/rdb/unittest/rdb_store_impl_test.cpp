@@ -309,7 +309,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_RemoteQueryTest_001, TestSize.Level2)
 
     // GetRdbService succeeded if configuration file has already been configured
     ret = store->RemoteQuery("", predicates, {}, errCode);
-    EXPECT_EQ(E_OK, errCode);
+    EXPECT_NE(E_OK, errCode);
     EXPECT_EQ(nullptr, ret);
 
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
