@@ -17,9 +17,6 @@
 
 #include <rdb_errno.h>
 
-#include <algorithm>
-#include <memory>
-
 #include "logger.h"
 #include "rdb_sql_utils.h"
 #include "sqlite_utils.h"
@@ -30,8 +27,8 @@ using namespace OHOS::Rdb;
 
 SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<RdbStoreImpl> store, SqliteConnectionPool *connectionPool,
     std::string path, std::string sql, const std::vector<ValueObject> &bindArgs)
-    : AbsSharedResultSet(path), store_(store), connectionPool_(connectionPool), resultSetBlockCapacity(0),
-      isOnlyFillResultSetBlock(false), qrySql(sql), bindArgs_(std::move(bindArgs)), rowNum(NO_COUNT)
+    : AbsSharedResultSet(path), store_(store), connectionPool_(connectionPool), resultSetBlockCapacity_(0),
+      rowNum_(NO_COUNT), qrySql_(sql), bindArgs_(std::move(bindArgs)), isOnlyFillResultSetBlock_(false)
 {
 }
 
@@ -40,14 +37,14 @@ SqliteSharedResultSet::~SqliteSharedResultSet() {
 
 std::shared_ptr<SqliteStatement> SqliteSharedResultSet::PrepareStep(SqliteConnection* connection, int &errCode)
 {
-    if (SqliteUtils::GetSqlStatementType(qrySql) != SqliteUtils::STATEMENT_SELECT) {
+    if (SqliteUtils::GetSqlStatementType(qrySql_) != SqliteUtils::STATEMENT_SELECT) {
         LOG_ERROR("StoreSession BeginStepQuery fail : not select sql !");
         errCode = E_EXECUTE_IN_STEP_QUERY;
         return nullptr;
     }
 
     std::shared_ptr<SqliteStatement> sqliteStatement = connection->BeginStepQuery(errCode,
-        qrySql, bindArgs_);
+        qrySql_, bindArgs_);
     if (sqliteStatement == nullptr) {
         connection->EndStepQuery();
     }
@@ -62,7 +59,7 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
         return E_OK;
     }
 
-    if (isClosed) {
+    if (isClosed_) {
         return E_STEP_RESULT_CLOSED;
     }
 
@@ -108,23 +105,27 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
 
 int SqliteSharedResultSet::GetRowCount(int &count)
 {
-    if (rowNum != NO_COUNT) {
-        count = rowNum;
+    if (rowNum_ != NO_COUNT) {
+        count = rowNum_;
         return E_OK;
     }
 
-    if (isClosed) {
+    if (isClosed_) {
         return E_STEP_RESULT_CLOSED;
     }
 
     FillSharedBlock(0);
-    count = rowNum;
+    count = rowNum_;
     return E_OK;
 }
 
 int SqliteSharedResultSet::Close()
 {
     AbsSharedResultSet::Close();
+    store_.reset();
+    auto qrySql = std::move(qrySql_);
+    auto bindArgs = std::move(bindArgs_);
+    auto columnNames = std::move(columnNames_);
     return E_OK;
 }
 
@@ -135,7 +136,7 @@ bool SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
         return true;
     }
     if ((uint32_t)newPosition < GetBlock()->GetStartPos() || (uint32_t)newPosition >= GetBlock()->GetLastPos() ||
-        oldPosition == rowNum) {
+        oldPosition == rowNum_) {
         FillSharedBlock(newPosition);
     }
     return true;
@@ -160,19 +161,19 @@ void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
     if (sharedBlock == nullptr) {
         return;
     }
-    if (rowNum == NO_COUNT) {
-        connection->ExecuteForSharedBlock(rowNum, qrySql, bindArgs_, sharedBlock, requiredPos, requiredPos, true);
-        resultSetBlockCapacity = static_cast<int>(sharedBlock->GetRowNum());
-        if (resultSetBlockCapacity > 0) {
+    if (rowNum_ == NO_COUNT) {
+        connection->ExecuteForSharedBlock(rowNum_, qrySql_, bindArgs_, sharedBlock, requiredPos, requiredPos, true);
+        resultSetBlockCapacity_ = static_cast<int>(sharedBlock->GetRowNum());
+        if (resultSetBlockCapacity_ > 0) {
             sharedBlock->SetStartPos(requiredPos);
             sharedBlock->SetBlockPos(0);
-            sharedBlock->SetLastPos(requiredPos + resultSetBlockCapacity);
+            sharedBlock->SetLastPos(requiredPos + resultSetBlockCapacity_);
         }
     } else {
-        int blockRowNum = rowNum;
+        int blockRowNum = rowNum_;
         int startPos =
-            isOnlyFillResultSetBlock ? requiredPos : PickFillBlockStartPosition(requiredPos, resultSetBlockCapacity);
-        connection->ExecuteForSharedBlock(blockRowNum, qrySql, bindArgs_, sharedBlock, startPos, requiredPos, false);
+            isOnlyFillResultSetBlock_ ? requiredPos : PickFillBlockStartPosition(requiredPos, resultSetBlockCapacity_);
+        connection->ExecuteForSharedBlock(blockRowNum, qrySql_, bindArgs_, sharedBlock, startPos, requiredPos, false);
         int currentBlockCapacity = static_cast<int>(sharedBlock->GetRowNum());
         sharedBlock->SetStartPos((uint32_t)startPos);
         sharedBlock->SetBlockPos(requiredPos - startPos);
@@ -187,16 +188,16 @@ void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
 void SqliteSharedResultSet::SetBlock(AppDataFwk::SharedBlock *block)
 {
     AbsSharedResultSet::SetBlock(block);
-    rowNum = NO_COUNT;
+    rowNum_ = NO_COUNT;
 }
 
 /**
  * If isOnlyFillResultSetBlockInput is true, use the input requiredPos to fill the block, otherwise pick the value
- * from requirePos and resultSetBlockCapacity.
+ * from requirePos and resultSetBlockCapacity_.
  */
 void SqliteSharedResultSet::SetFillBlockForwardOnly(bool isOnlyFillResultSetBlockInput)
 {
-    isOnlyFillResultSetBlock = isOnlyFillResultSetBlockInput;
+    isOnlyFillResultSetBlock_ = isOnlyFillResultSetBlockInput;
 }
 
 void SqliteSharedResultSet::Finalize()
