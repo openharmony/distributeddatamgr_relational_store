@@ -841,11 +841,11 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_019
+ * @tc.name: Abnormal_RDB_OH_interface_test_019
  * @tc.desc: Abnormal testCase of store for OH interface.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_019, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_019, TestSize.Level1)
 {
     OH_Rdb_Config config;
     int errCode = E_OK;
@@ -860,11 +860,6 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_019, TestSize.Level1)
     config.selfSize = OHOS::RdbNdk::RDB_CONFIG_SIZE_V1 + 1;
     rdbStore = OH_Rdb_GetOrOpen(&config, nullptr);
     EXPECT_EQ(rdbStore, nullptr);
-
-    // config.selfSize = sizeof(OH_Rdb_Config);
-    // config.dataBaseDir = "/asdf";
-    // rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
-    // EXPECT_EQ(rdbStore, nullptr);
 
     config.dataBaseDir = RDB_TEST_PATH;
     config.storeName = "rdb_store_abnormal_test.db";
@@ -887,20 +882,15 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_019, TestSize.Level1)
     config.storeName = nullptr;
     errCode = OH_Rdb_DeleteStore(&config);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-
-    // config.storeName = "rdb_store_abnormal_test.db";
-    // config.dataBaseDir = "/adsf";
-    // errCode = OH_Rdb_DeleteStore(&config);
-    // EXPECT_NE(errCode, E_OK);
 }
 
 
 /**
- * @tc.name: RDB_Native_store_test_020
+ * @tc.name: Abnormal_RDB_OH_interface_test_020
  * @tc.desc: Abnormal testCase of store for OH interface.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_020, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_020, TestSize.Level1)
 {
     int errCode = E_OK;
 
@@ -911,7 +901,6 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_020, TestSize.Level1)
 
     errCode = OH_Rdb_Commit(nullptr);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
-
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("store_test");
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
