@@ -633,7 +633,6 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_003, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_001, TestSize.Level2)
 {
-    int errCode = E_OK;
     AbsRdbPredicates predicates("test");
     predicates.EqualTo("id", 1);
 
@@ -643,6 +642,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_001, TestSize.Level2)
     EXPECT_EQ(nullptr, ret.second);
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
 
+    int errCode = E_OK;
     RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
     config.SetName("RdbStore_impl_test.db");
     config.SetBundleName("com.example.distributed.rdb");
