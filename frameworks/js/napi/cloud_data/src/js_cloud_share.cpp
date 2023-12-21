@@ -88,8 +88,8 @@ napi_value AllocResourceAndShare(napi_env env, napi_callback_info info)
 
         auto [result, valueBuckets] = proxy->AllocResourceAndShare(
             ctxt->storeId, ctxt->predicates->GetDistributedPredicates(), ctxt->columns, ctxt->participants);
-        ctxt->resultSet = std::make_shared<CacheResultSet>(std::move(valueBuckets));
         LOG_DEBUG("AllocResourceAndShare result: %{public}d, size:%{public}zu", result, valueBuckets.size());
+        ctxt->resultSet = std::make_shared<CacheResultSet>(std::move(valueBuckets));
         ctxt->status =
             (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
