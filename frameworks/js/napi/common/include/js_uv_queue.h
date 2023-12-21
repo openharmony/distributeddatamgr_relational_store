@@ -24,7 +24,7 @@ namespace OHOS::AppDataMgrJsKit {
 class UvQueue final {
 public:
     using Task = std::function<void()>;
-    using Args = std::function<void(napi_env env, int& argc, napi_value* argv)>;
+    using Args = std::function<void(napi_env env, int &argc, napi_value *argv)>;
     using Result = std::function<void(napi_env env, size_t count, napi_value *values, bool exception)>;
     using Callbacker = std::function<napi_value(napi_env env)>;
     enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
@@ -58,11 +58,12 @@ public:
     void AsyncCall(UvCallback callback, Args args = Args(), Result result = Result());
     void AsyncPromise(UvPromise promise, Args args = Args());
     void Execute(Task task);
+
 private:
     static constexpr char RESOLVED[] = "resolved";
     static constexpr char REJECTED[] = "rejected";
-    static constexpr size_t RESOLVED_SIZE =  sizeof(RESOLVED);
-    static constexpr size_t REJECTED_SIZE =  sizeof(REJECTED);
+    static constexpr size_t RESOLVED_SIZE = sizeof(RESOLVED);
+    static constexpr size_t REJECTED_SIZE = sizeof(REJECTED);
 
     static napi_value Resolved(napi_env env, napi_callback_info info);
     static napi_value Rejected(napi_env env, napi_callback_info info);
@@ -89,7 +90,7 @@ private:
         int32_t GetArgv(napi_value *argv, int32_t max);
     };
     napi_env env_ = nullptr;
-    uv_loop_s* loop_ = nullptr;
+    uv_loop_s *loop_ = nullptr;
 };
 } // namespace OHOS::AppDataMgrJsKit
 #endif // DISTRIBUTEDDATAMGR_APPDATAMGR_UV_QUEUE_H

@@ -65,7 +65,7 @@ void UvQueue::AsyncCall(UvCallback callback, Args args, Result result)
 void UvQueue::AsyncPromise(UvPromise promise, UvQueue::Args args)
 {
     if (loop_ == nullptr || promise.IsNull()) {
-        LOG_ERROR("loop_ or callback is nullptr");
+        LOG_ERROR("loop_ or promise is nullptr");
         return;
     }
     uv_work_t *work = new (std::nothrow) uv_work_t;
@@ -73,7 +73,7 @@ void UvQueue::AsyncPromise(UvPromise promise, UvQueue::Args args)
         LOG_ERROR("no memory for uv_work_t");
         return;
     }
-    auto entry =  new (std::nothrow) UvEntry();
+    auto entry = new (std::nothrow) UvEntry();
     if (entry == nullptr) {
         delete work;
         LOG_ERROR("no memory for UvEntry");
@@ -97,7 +97,7 @@ void UvQueue::Execute(UvQueue::Task task)
         LOG_ERROR("no memory for uv_work_t");
         return;
     }
-    auto entry =  new (std::nothrow) Task();
+    auto entry = new (std::nothrow) Task();
     if (entry == nullptr) {
         delete work;
         LOG_ERROR("no memory for Task");
