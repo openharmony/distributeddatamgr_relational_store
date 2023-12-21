@@ -631,11 +631,10 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_003, TestSize.Level2)
  * @tc.desc: Abnormal testCase for CleanDirtyData
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, CleanDirtyDataTest_001, TestSize.Level2)
+HWTEST_F(RdbStoreImplTest, Abnormal_CleanDirtyDataTest_001, TestSize.Level2)
 {
     store->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
                       "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
-
     int errCode = E_OK;
 
     // tabel is empty

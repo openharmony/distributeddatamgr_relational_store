@@ -1494,7 +1494,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep018, TestSize.Level1)
  * @tc.desc: Abnormal testcase of distributed ResultSetProxy, if resultSet is Empty
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, ResultSetProxy001, TestSize.Level1)
+HWTEST_F(RdbStepResultSetTest, Abnormal_ResultSetProxy001, TestSize.Level1)
 {
     int errCode = 0;
     std::shared_ptr<OHOS::NativeRdb::ResultSetProxy> resultSet;
