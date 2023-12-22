@@ -636,24 +636,40 @@ HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_001, TestSize.Level2)
     AbsRdbPredicates predicates("test");
     predicates.EqualTo("id", 1);
 
-    // GetRdbService failed if rdbstoreconfig bundlename_ empty
-    auto ret = RdbStoreImplTest::store->QuerySharingResource(predicates, {});
-    EXPECT_EQ(OHOS::DistributedRdb::RdbStatus::RDB_OK, ret.first);
+    auto ret = store->QuerySharingResource(predicates, {});
+    EXPECT_EQ(E_OK, ret.first);
     EXPECT_EQ(nullptr, ret.second);
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+}
 
-    int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
-    config.SetName("RdbStore_impl_test.db");
-    config.SetBundleName("com.example.distributed.rdb");
-    RdbStoreImplTestOpenCallback helper;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(E_OK, errCode);
+/* *
+ * @tc.name: Rdb_QuerySharingResourceTest_002
+ * @tc.desc: QuerySharingResource testCase
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_002, TestSize.Level2)
+{
+    RdbStoreImplTest::store->ExecuteSql("CREATE TABLE test "
+                                        "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+                                        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+    int64_t rowId;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutInt("data_key", ValueObject(1));
+    valuesBucket.PutInt("timestamp", ValueObject(1000000000));
+    int errorCode = RdbStoreImplTest::store->Insert(rowId, "test", valuesBucket);
+    EXPECT_EQ(E_OK, errorCode);
+    EXPECT_EQ(1, rowId);
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("data_key", 1);
 
-    // GetRdbService succeeded if configuration file has already been configured
-    ret = store->QuerySharingResource(predicates, {});
-    EXPECT_EQ(OHOS::DistributedRdb::RdbStatus::RDB_OK, ret.first);
-    EXPECT_EQ(nullptr, ret.second);
-
+    auto ret = store->QuerySharingResource(predicates, {"id", "data_key"});
+    EXPECT_EQ(E_OK, ret.first);
+    ASSERT_NE(nullptr, ret.second);
+    int rowCount = 0;
+    EXPECT_EQ(ret.second->GetRowCount(rowCount), E_OK);
+    EXPECT_EQ(rowCount, 1);
+    int colCount = 0;
+    EXPECT_EQ(ret.second->GetColumnCount(colCount), E_OK);
+    EXPECT_EQ(colCount, 3);
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
 }
