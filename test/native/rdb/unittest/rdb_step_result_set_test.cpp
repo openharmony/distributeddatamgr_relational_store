@@ -1510,20 +1510,20 @@ HWTEST_F(RdbStepResultSetTest, Abnormal_ResultSetProxy001, TestSize.Level1)
     errCode = resultSet->GetBlob(1, blob);
     EXPECT_NE(E_OK, errCode);
 
-    std::string getStringvalue;
-    errCode = resultSet->GetString(1, getStringvalue);
+    std::string getStringValue;
+    errCode = resultSet->GetString(1, getStringValue);
     EXPECT_NE(E_OK, errCode);
 
-    int getIntvalue;
-    errCode = resultSet->GetInt(1, getIntvalue);
+    int getIntValue;
+    errCode = resultSet->GetInt(1, getIntValue);
     EXPECT_NE(E_OK, errCode);
 
-    int64_t getLongvalue;
-    errCode = resultSet->GetLong(1, getLongvalue);
+    int64_t getLongValue;
+    errCode = resultSet->GetLong(1, getLongValue);
     EXPECT_NE(E_OK, errCode);
 
-    double getDoublevalue;
-    errCode = resultSet->GetDouble(1, getDoublevalue);
+    double getDoubleValue;
+    errCode = resultSet->GetDouble(1, getDoubleValue);
     EXPECT_NE(E_OK, errCode);
 
     bool isNull;

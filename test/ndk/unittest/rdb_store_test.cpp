@@ -857,7 +857,7 @@ HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_019, TestSize.Level1
     rdbStore = OH_Rdb_GetOrOpen(&config, nullptr);
     EXPECT_EQ(rdbStore, nullptr);
 
-    config.selfSize = OHOS::RdbNdk::RDB_CONFIG_SIZE_V1 + 1;
+    config.selfSize = INT_MAX;
     rdbStore = OH_Rdb_GetOrOpen(&config, nullptr);
     EXPECT_EQ(rdbStore, nullptr);
 

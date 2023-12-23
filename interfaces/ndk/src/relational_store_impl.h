@@ -42,13 +42,6 @@ class NDKUtils {
 public:
     static OHOS::DistributedRdb::SyncMode TransformMode(Rdb_SyncMode &mode);
 };
-
-constexpr int RDB_STORE_CID = 1234560; // The class id used to uniquely identify the OH_Rdb_Store class.
-constexpr int RDB_DISTRIBUTED_CONFIG_V0 = 1;
-constexpr int RDB_PROGRESS_DETAILS_V0 = 1;
-constexpr int RDB_TABLE_DETAILS_V0 = 1;
-constexpr int RDB_CONFIG_SIZE_V0 = 41;
-constexpr int RDB_CONFIG_SIZE_V1 = 45;
 } // namespace RdbNdk
 } // namespace OHOS
 #endif // RELATIONAL_STORE_IMPL_H
