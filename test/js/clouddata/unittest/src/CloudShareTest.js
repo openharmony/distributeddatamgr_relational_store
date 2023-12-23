@@ -569,6 +569,8 @@ describe('cloudSharingTest', function () {
         try {
             cloudData.sharing.queryParticipants(undefined).then(result => {
                 expect(null).assertFail();
+
+
             }).catch(err => {
                 expect(null).assertFail();
             })
