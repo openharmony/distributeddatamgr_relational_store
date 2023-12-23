@@ -571,7 +571,7 @@ std::vector<std::string> AbsPredicates::GetWhereArgs() const
     for (auto &arg : this->bindArgs) {
         std::string temp;
         if (!arg.GetString(temp)) {
-            LOG_ERROR("No matching type, empty string instead.");
+            LOG_WARN("No matching type, empty string instead.");
         }
         whereArgs.push_back(temp);
     }
