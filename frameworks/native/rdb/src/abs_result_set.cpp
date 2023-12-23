@@ -346,7 +346,6 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
         columnIndex++;
     }
     columnIndex = -1;
-    LOG_WARN("columnName %{public}s is not in resultSet", columnName.c_str());
     return E_ERROR;
 }
 
