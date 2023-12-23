@@ -471,7 +471,7 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
     int32_t result = -1;
     int errCode = resultSetProxy->GetInstance()->GetColumnIndex(input, result);
     if (errCode != E_OK) {
-        LOG_ERROR("IsAtLastRow failed code:%{public}d", errCode);
+        LOG_ERROR("IsAtLastRow failed code:%{public}d columnName:%{public}d", errCode, result);
     }
 
     return JSUtils::Convert2JSValue(env, result);
