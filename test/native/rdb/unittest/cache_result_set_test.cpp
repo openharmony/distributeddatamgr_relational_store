@@ -227,7 +227,6 @@ HWTEST_F(CacheResultSetTest, GetAssetTest_001, TestSize.Level2)
     EXPECT_EQ(E_OK, cacheResultSet.GetColumnIndex("data", col));
     ValueObject::Asset valueOut = {};
     EXPECT_EQ(E_OK, cacheResultSet.GetAsset(col, valueOut));
-    //EXPECT_EQ(value, valueOut);
 
     EXPECT_EQ(E_OK, cacheResultSet.GetColumnIndex("id", col));
     EXPECT_NE(E_OK, cacheResultSet.GetAsset(col, valueOut));
