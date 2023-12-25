@@ -330,14 +330,24 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config)
         }
     }
 
+    errCode = ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ALGO);
+    if (errCode != E_OK) {
+        LOG_ERROR("set cipher algo failed, err = %{public}d", errCode);
+        return errCode;
+    }
+    errCode = ExecuteSql(GlobalExpr::CIPHER_KDF_ITER_NUMBER);
+    if (errCode != E_OK) {
+        LOG_ERROR("set number of iter to generate the key, err = %{public}d", errCode);
+        return errCode;
+    }
     errCode = ExecuteSql(GlobalExpr::CODEC_HMAC_ALGO);
     if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection set sha algo failed, err = %{public}d", errCode);
+        LOG_ERROR("set sha algo failed, err = %{public}d", errCode);
         return errCode;
     }
     errCode = ExecuteSql(GlobalExpr::CODEC_REKEY_HMAC_ALGO);
     if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection set rekey sha algo failed, err = %{public}d", errCode);
+        LOG_ERROR("set rekey sha algo failed, err = %{public}d", errCode);
         return errCode;
     }
 
