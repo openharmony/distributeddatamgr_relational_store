@@ -1523,43 +1523,164 @@ HWTEST_F(RdbStepResultSetTest, Abnormal_ResultSetProxy001, TestSize.Level1)
 }
 
 /**
- * @tc.name: ResultSetProxy002
- * @tc.desc: Abnormal testcase of distributed ResultSetProxy, if resultSet is Empty
+ * @tc.name: Normal_CacheResultSet002
+ * @tc.desc: Normal testcase of CacheResultSet
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, Abnormal_ResultSetProxy002, TestSize.Level1)
+HWTEST_F(RdbStepResultSetTest, Normal_CacheResultSet002, TestSize.Level1)
 {
-    // std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
-    // EXPECT_NE(resultSet, nullptr);
+    std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
+    OHOS::NativeRdb::ValuesBucket value1;
+    value1.PutInt("id", 1);
+    value1.PutString("name", std::string("zhangsan"));
+    value1.PutLong("age", 18);
+    value1.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    valueBuckets.push_back(value1);
 
-    std::vector<ValuesBucket> valueBuckets;
+    OHOS::NativeRdb::ValuesBucket value2;
+    value2.PutInt("id", 2);
+    value2.PutString("name", std::string("lisi"));
+    value2.PutLong("age", 19);
+    value2.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    valueBuckets.push_back(value2);
 
-    ValuesBucket values1;
+    std::shared_ptr<OHOS::NativeRdb::CacheResultSet> resultSet =
+        std::make_shared<CacheResultSet>(std::move(valueBuckets));
+    int errCode = 0, columnIndex = 0;
 
-    values1.PutInt("id", 1);
-    values1.PutString("name", std::string("zhangsan"));
-    values1.PutInt("age", 18);
-    values1.PutDouble("salary", 100.5);
-    values1.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int id;
+    errCode = resultSet->GetColumnIndex("id", columnIndex);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(E_OK, resultSet->GetInt(columnIndex, id));
+    EXPECT_EQ(id, 1);
 
-    valueBuckets.push_back(values);
-    ValuesBucket values2;
-    values2.PutInt("id", 2);
-    values2.PutString("name", std::string("zhangsan"));
-    values2.PutInt("age", 18);
-    values2.PutDouble("salary", 100.5);
-    values2.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    std::string name;
+    errCode = resultSet->GetColumnIndex("name", columnIndex);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(E_OK, resultSet->GetString(columnIndex, name));
+    EXPECT_EQ(name, "zhangsan");
 
-    auto cacheResultSet = CacheResultSet::CacheResultSet(&valueBuckets);
+    int64_t age;
+    errCode = resultSet->GetColumnIndex("age", columnIndex);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(E_OK, resultSet->GetLong(columnIndex, age));
+    EXPECT_EQ(age, 18);
 
     std::vector<uint8_t> blob;
-    int errCode = cacheResultSet.GetBlob(4, &blob);
-    EXPECT_EQ(E_OK, errCode);
+    errCode = resultSet->GetColumnIndex("blobType", columnIndex);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(E_OK, resultSet->GetBlob(columnIndex, blob));
     EXPECT_EQ(blob.size(), 3);
-
-    std::string name = "";
-    int errCode = GetString("2", name);
 }
 
+/**
+ * @tc.name: Abnormal_CacheResultSet003
+ * @tc.desc: Abnormal testcase of CacheResultSet, if CacheResultSet is Empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet003, TestSize.Level1)
+{
+    std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
+    // if valuebucket.size = 0
+    std::shared_ptr<OHOS::NativeRdb::CacheResultSet> resultSet =
+        std::make_shared<CacheResultSet>(std::move(valueBuckets));
+
+    int errCode = 0;
+    int columnIndex = 0;
+    // if columnName is not exist
+    errCode = resultSet->GetColumnIndex("empty", columnIndex);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex < 0
+    std::string columnName;
+    errCode = resultSet->GetColumnName(-1, columnName);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->GetColumnName(5, columnName);
+    EXPECT_NE(errCode, E_OK);
+
+    // if columnIndex < 0
+    ColumnType columnType;
+    errCode = resultSet->GetColumnType(-1, columnType);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->GetColumnType(5, columnType);
+    EXPECT_NE(errCode, E_OK);
+
+    // if columnIndex < 0
+    int id;
+    errCode = resultSet->GetInt(-1, id);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->GetInt(5, id);
+    EXPECT_NE(errCode, E_OK);
+
+    // if columnIndex < 0
+    std::string name;
+    errCode = resultSet->GetString(-1, name);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->GetString(5, name);
+    EXPECT_NE(errCode, E_OK);
+
+    // if columnIndex < 0
+    int64_t age;
+    errCode = resultSet->GetLong(-1, age);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->GetLong(5, age);
+    EXPECT_NE(errCode, E_OK);
+
+    // if columnIndex < 0
+    double value;
+    errCode = resultSet->GetDouble(-1, value);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->GetDouble(5, value);
+    EXPECT_NE(errCode, E_OK);
+}
+
+/**
+ * @tc.name: Abnormal_CacheResultSet004
+ * @tc.desc: Abnormal testcase of CacheResultSet, if CacheResultSet is Empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet004, TestSize.Level1)
+{
+     std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
+    std::shared_ptr<OHOS::NativeRdb::CacheResultSet> resultSet =
+        std::make_shared<CacheResultSet>(std::move(valueBuckets));
+    int errCode = 0;
+    // if columnIndex < 0
+    bool isNull;
+    errCode = resultSet->IsColumnNull(-1, isNull);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->IsColumnNull(5, isNull);
+    EXPECT_NE(errCode, E_OK);
+
+    // if columnIndex < 0
+    ValueObject::Asset asset;
+    errCode = resultSet->GetAsset(-1, asset);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->GetAsset(5, asset);
+    EXPECT_NE(errCode, E_OK);
+
+    // if columnIndex < 0
+    ValueObject::Assets assets;
+    errCode = resultSet->GetAssets(-1, assets);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->GetAssets(5, assets);
+    EXPECT_NE(errCode, E_OK);
+
+    // if columnIndex < 0
+    ValueObject valueobject;
+    errCode = resultSet->Get(-1, valueobject);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->Get(5, valueobject);
+    EXPECT_NE(errCode, E_OK);
+}
 } // namespace NativeRdb
 } // namespace OHOS
