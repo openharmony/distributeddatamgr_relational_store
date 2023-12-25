@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2021 Huawei Device Co., Ltd.
+* Copyright (c) 2023 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -88,7 +88,7 @@ HWTEST_F(CacheResultSetTest, GetAllColumnNamesTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GetBlobTest_001
- * @tc.desc: Normal testCase for CacheResultSet, get Blob of type from the list
+ * @tc.desc: Normal testCase for CacheResultSet, get blob of type from the list
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetBlobTest_001, TestSize.Level2)
@@ -115,7 +115,7 @@ HWTEST_F(CacheResultSetTest, GetBlobTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GetStringTest_001
- * @tc.desc: Normal testCase for CacheResultSet, get String of type from the list
+ * @tc.desc: Normal testCase for CacheResultSet, get string of type from the list
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetStringTest_001, TestSize.Level2)
@@ -139,7 +139,7 @@ HWTEST_F(CacheResultSetTest, GetStringTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GetIntTest_001
- * @tc.desc: Normal testCase for CacheResultSet, get Int of type from the list
+ * @tc.desc: Normal testCase for CacheResultSet, get int of type from the list
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetIntTest_001, TestSize.Level2)
@@ -162,7 +162,7 @@ HWTEST_F(CacheResultSetTest, GetIntTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GetLongTest_001
- * @tc.desc: Normal testCase for CacheResultSet, get Long of type from the list
+ * @tc.desc: Normal testCase for CacheResultSet, get long of type from the list
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetLongTest_001, TestSize.Level2)
@@ -185,7 +185,7 @@ HWTEST_F(CacheResultSetTest, GetLongTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GetDoubleTest_001
- * @tc.desc: Normal testCase for CacheResultSet, get Double of type from the list
+ * @tc.desc: Normal testCase for CacheResultSet, get double of type from the list
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetDoubleTest_001, TestSize.Level2)
@@ -208,7 +208,7 @@ HWTEST_F(CacheResultSetTest, GetDoubleTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GetAssetTest_001
- * @tc.desc: Normal testCase for CacheResultSet, get Asset of type from the list
+ * @tc.desc: Normal testCase for CacheResultSet, get asset of type from the list
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetAssetTest_001, TestSize.Level2)
@@ -234,7 +234,7 @@ HWTEST_F(CacheResultSetTest, GetAssetTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GetAssetsTest_001
- * @tc.desc: Normal testCase for CacheResultSet, get Assets of type from the list
+ * @tc.desc: Normal testCase for CacheResultSet, get assets of type from the list
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetAssetsTest_001, TestSize.Level2)
@@ -303,17 +303,17 @@ HWTEST_F(CacheResultSetTest, GetModifyTimeTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: IsColumnNullTest_001
- * @tc.desc: Normal testCase for CacheResultSet, is the column empty
+ * @tc.desc: Normal testCase for CacheResultSet, check if the column is empty
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, IsColumnNullTest_001, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
-    std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto& column : columnNames) {
-        valuesBucket.Put(column, "1");
-    }
+    valuesBucket.Put("id", 1);
+    valuesBucket.Put("data", "test");
+    valuesBucket.Put("field", "test");
+    valuesBucket.PutNull("null");
     valuesBuckets.push_back(std::move(valuesBucket));
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
 
@@ -322,6 +322,12 @@ HWTEST_F(CacheResultSetTest, IsColumnNullTest_001, TestSize.Level2)
     int ret = cacheResultSet.IsColumnNull(columnIndex, isNull);
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(false, isNull);
+
+    int columnIndexTwo = 3;
+    bool isNullTwo = false;
+    int rets = cacheResultSet.IsColumnNull(columnIndexTwo, isNullTwo);
+    EXPECT_EQ(E_OK, rets);
+    EXPECT_EQ(true, isNullTwo);
 }
 
 /* *
@@ -347,7 +353,7 @@ HWTEST_F(CacheResultSetTest, GetRowTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GoToRowTest_001
- * @tc.desc: Normal testCase for CacheResultSet, go to from the list
+ * @tc.desc: Normal testCase for CacheResultSet, go to row in the list
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GoToRowTest_001, TestSize.Level2)
@@ -412,7 +418,7 @@ HWTEST_F(CacheResultSetTest, GetRowIndexTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GoToTest_001
- * @tc.desc: Normal testCase for CacheResultSet, go to column from the list
+ * @tc.desc: Normal testCase for CacheResultSet, go to a specific line
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GoToTest_001, TestSize.Level2)
@@ -446,7 +452,7 @@ HWTEST_F(CacheResultSetTest, GoToTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GoToFirstRowTest_001
- * @tc.desc: Normal testCase for CacheResultSet, go to first row from the list
+ * @tc.desc: Normal testCase for CacheResultSet, get the first row of the list
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GoToFirstRowTest_001, TestSize.Level2)
@@ -468,7 +474,7 @@ HWTEST_F(CacheResultSetTest, GoToFirstRowTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GoToLastRowTest_001
- * @tc.desc: Normal testCase for CacheResultSet, go to last row from the list
+ * @tc.desc: Normal testCase for CacheResultSet, get the last row of the list
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GoToLastRowTest_001, TestSize.Level2)
@@ -490,7 +496,7 @@ HWTEST_F(CacheResultSetTest, GoToLastRowTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GoToNextRowTest_001
- * @tc.desc: Normal testCase for CacheResultSet, go to next row from the list
+ * @tc.desc: Normal testCase for CacheResultSet, get the next row of the list
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GoToNextRowTest_001, TestSize.Level2)
@@ -514,7 +520,7 @@ HWTEST_F(CacheResultSetTest, GoToNextRowTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GoToPreviousRowTest_001
- * @tc.desc: Normal testCase for CacheResultSet, go to previous row from the list
+ * @tc.desc: Normal testCase for CacheResultSet, get the previous row of the list
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GoToPreviousRowTest_001, TestSize.Level2)
@@ -537,7 +543,7 @@ HWTEST_F(CacheResultSetTest, GoToPreviousRowTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: IsAtFirstRowTest_001
- * @tc.desc: Normal testCase for CacheResultSet, is it the first row of the list
+ * @tc.desc: Normal testCase for CacheResultSet, is it on the first line
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, IsAtFirstRowTest_001, TestSize.Level2)
@@ -557,7 +563,7 @@ HWTEST_F(CacheResultSetTest, IsAtFirstRowTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: IsAtLastRowTest_001
- * @tc.desc: Normal testCase for CacheResultSet, Is it the list row of the list
+ * @tc.desc: Normal testCase for CacheResultSet, is it on the last line
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, IsAtLastRowTest_001, TestSize.Level2)
@@ -577,7 +583,7 @@ HWTEST_F(CacheResultSetTest, IsAtLastRowTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: IsStartedTest_001
- * @tc.desc: Normal testCase for CacheResultSet, is it the Started of the list
+ * @tc.desc: Normal testCase for CacheResultSet, is it at the starting
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, IsStartedTest_001, TestSize.Level2)
@@ -597,7 +603,7 @@ HWTEST_F(CacheResultSetTest, IsStartedTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: IsEndedTest_001
- * @tc.desc: Normal testCase for CacheResultSet, is it the end of the list
+ * @tc.desc: Normal testCase for CacheResultSet, is it at the end
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, IsEndedTest_001, TestSize.Level2)
@@ -719,7 +725,7 @@ HWTEST_F(CacheResultSetTest, CloseTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GetSizeTest_001
- * @tc.desc: Normal testCase for CacheResultSet, get timestamp by id
+ * @tc.desc: Normal testCase for CacheResultSet, get size
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetSizeTest_001, TestSize.Level2)
