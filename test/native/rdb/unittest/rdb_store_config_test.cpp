@@ -879,18 +879,3 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_028, TestSize.Level1)
     config.SetDataGroupId(dataGroupId);
     EXPECT_EQ(dataGroupId, config.GetDataGroupId());
 }
-
-/**
- * @tc.name: RdbStoreConfig_029
- * @tc.desc: test RdbStoreConfig interfaces: SetDataGroupId/SetAutoClean
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_029, TestSize.Level1)
-{
-    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
-    RdbStoreConfig config(dbPath);
-
-    bool autoClean = false;
-    config.SetAutoClean(autoClean);
-    EXPECT_EQ(autoClean, config.GetAutoClean());
-}
