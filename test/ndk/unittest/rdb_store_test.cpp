@@ -556,7 +556,6 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_009, TestSize.Level1)
  */
 HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_0010, TestSize.Level1)
 {
-    int errCode = 0;
     OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     valueBucket->putText(valueBucket, "data1", "liSi");
     valueBucket->putInt64(valueBucket, "data2", 13800);
@@ -566,7 +565,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_0010, TestSize.Level1)
     const char *data1Value = "zhangSan";
     valueObject->putText(valueObject, data1Value);
     predicates->equalTo(predicates, "data1", valueObject);
-    errCode = OH_Rdb_Update(storeTestRdbStore_, valueBucket, predicates);
+    int errCode = OH_Rdb_Update(storeTestRdbStore_, valueBucket, predicates);
     EXPECT_EQ(errCode, -1);
 
     char *table = NULL;
@@ -920,7 +919,7 @@ HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_019, TestSize.Level1
  */
 HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_020, TestSize.Level1)
 {
-    char createTableSql[] = "CREATE TABLE test_Execute (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER);";
+    char createTableSql[] = "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER);";
     int errCode = OH_Rdb_Execute(nullptr, createTableSql);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
     errCode = OH_Rdb_Execute(storeTestRdbStore_, nullptr);
