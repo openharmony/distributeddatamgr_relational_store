@@ -268,7 +268,7 @@ HWTEST_F(CacheResultSetTest, GetTest_001, TestSize.Level2)
     ValuesBucket valuesBucket;
     std::set<std::string> columnNames = { "id", "data", "field" };
     for (auto& column : columnNames) {
-        valuesBucket.Put(column, 1111.1111);
+        valuesBucket.Put(column, 10);
     }
     valuesBuckets.push_back(std::move(valuesBucket));
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
@@ -322,8 +322,8 @@ HWTEST_F(CacheResultSetTest, IsColumnNullTest_001, TestSize.Level2)
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(false, isNull);
 
-    int columnIndexTwo = 3;
-    int rets = cacheResultSet.IsColumnNull(columnIndexTwo, isNull);
+    columnIndex = 3;
+    int rets = cacheResultSet.IsColumnNull(columnIndex, isNull);
     EXPECT_EQ(E_OK, rets);
     EXPECT_EQ(true, isNull);
 }
@@ -368,6 +368,7 @@ HWTEST_F(CacheResultSetTest, GoToRowTest_001, TestSize.Level2)
     int position = 0;
     int ret = cacheResultSet.GoToRow(position);
     EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(0, position);
 }
 
 /* *
@@ -390,6 +391,7 @@ HWTEST_F(CacheResultSetTest, GetColumnTypeTest_001, TestSize.Level2)
     ColumnType columnType;
     int ret = cacheResultSet.GetColumnType(columnIndex, columnType);
     EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(ColumnType::TYPE_STRING, columnType);
 }
 
 /* *
@@ -532,6 +534,8 @@ HWTEST_F(CacheResultSetTest, GoToPreviousRowTest_001, TestSize.Level2)
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
 
     int offset = 1;
+    int position = 0;
+    cacheResultSet.GoToRow(position);
     cacheResultSet.GoTo(offset);
     int ret = cacheResultSet.GoToPreviousRow();
     EXPECT_EQ(E_OK, ret);
@@ -552,9 +556,10 @@ HWTEST_F(CacheResultSetTest, IsAtFirstRowTest_001, TestSize.Level2)
     valuesBuckets.push_back(std::move(valuesBucket));
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
 
-    bool result = true;
+    bool result = false;
     int ret = cacheResultSet.IsAtFirstRow(result);
     EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(true, result);
 }
 
 /* *
@@ -572,9 +577,10 @@ HWTEST_F(CacheResultSetTest, IsAtLastRowTest_001, TestSize.Level2)
     valuesBuckets.push_back(std::move(valuesBucket));
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
 
-    bool result = true;
+    bool result = false;
     int ret = cacheResultSet.IsAtLastRow(result);
     EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(true, result);
 }
 
 /* *
@@ -595,6 +601,7 @@ HWTEST_F(CacheResultSetTest, IsStartedTest_001, TestSize.Level2)
     bool result = true;
     int ret = cacheResultSet.IsStarted(result);
     EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(false, result);
 }
 
 /* *
@@ -615,6 +622,9 @@ HWTEST_F(CacheResultSetTest, IsEndedTest_001, TestSize.Level2)
     bool result = true;
     int ret = cacheResultSet.IsEnded(result);
     EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(false, result);
+
+
 }
 
 /* *
@@ -653,11 +663,15 @@ HWTEST_F(CacheResultSetTest, GetColumnIndexTest_001, TestSize.Level2)
     valuesBuckets.push_back(std::move(valuesBucket));
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
 
-    const std::string columnName = "data";
+    std::string columnName = "field";
     int columnIndex;
     int ret = cacheResultSet.GetColumnIndex(columnName, columnIndex);
     EXPECT_EQ(E_OK, ret);
-    EXPECT_EQ(0, columnIndex);
+    EXPECT_EQ(1, columnIndex);
+
+    columnName = "wang";
+    ret = cacheResultSet.GetColumnIndex(columnName, columnIndex);
+    EXPECT_NE(E_OK, ret);
 }
 
 /* *
@@ -669,16 +683,23 @@ HWTEST_F(CacheResultSetTest, GetColumnNameTest_001, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
-    valuesBucket.Put("id", 1);
-    valuesBucket.Put("data", "test");
-    valuesBucket.Put("field", "test");
+    std::vector<std::string> columnNames = { "id", "data", "field" };
+    for (auto& column : columnNames) {
+        valuesBucket.Put(column, "test");
+    }
     valuesBuckets.push_back(std::move(valuesBucket));
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
 
-    int columnIndex = 1;
+    int columnIndex  = 0;
     std::string columnName;
-    int ret = cacheResultSet.GetColumnName(columnIndex, columnName);
-    EXPECT_EQ(E_OK, ret);
+    std::vector<std::string> columnNamesTmp = {};
+    for (auto& column : columnNames) {
+        int ret = cacheResultSet.GetColumnName(columnIndex, columnName);
+        columnNamesTmp.push_back(column);
+        EXPECT_EQ(E_OK, ret);
+        columnIndex++;
+    }
+    EXPECT_EQ(columnNamesTmp, columnNames);
 }
 
 /* *
@@ -696,8 +717,7 @@ HWTEST_F(CacheResultSetTest, IsClosedTest_001, TestSize.Level2)
     valuesBuckets.push_back(std::move(valuesBucket));
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
 
-    int ret = cacheResultSet.IsClosed();
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(false, cacheResultSet.IsClosed());
 }
 
 /* *

@@ -265,7 +265,7 @@ int CacheResultSet::GetColumnName(int columnIndex, std::string &columnName)
     if (columnIndex < 0 || columnIndex >= maxCol_) {
         return E_INVALID_ARGS;
     }
-    columnName = columnName[columnIndex];
+    columnName = colNames_[columnIndex];
     return E_OK;
 }
 
