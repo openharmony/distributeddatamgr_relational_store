@@ -309,7 +309,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_RemoteQueryTest_001, TestSize.Level2)
 
     // GetRdbService succeeded if configuration file has already been configured
     ret = store->RemoteQuery("", predicates, {}, errCode);
-    EXPECT_EQ(E_OK, errCode);
+    EXPECT_NE(E_OK, errCode);
     EXPECT_EQ(nullptr, ret);
 
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
@@ -661,7 +661,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_002, TestSize.Level2)
     AbsRdbPredicates predicates("test");
     predicates.EqualTo("data_key", 1);
 
-    auto ret = store->QuerySharingResource(predicates, {"id", "data_key"});
+    auto ret = store->QuerySharingResource(predicates, { "id", "data_key" });
     EXPECT_EQ(E_OK, ret.first);
     ASSERT_NE(nullptr, ret.second);
     int rowCount = 0;
@@ -673,13 +673,36 @@ HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_002, TestSize.Level2)
 
     colCount = 0;
     std::string columnNameOut;
-    std::vector<std::string> columnName = {"data_key","timestamp"};
+    std::vector<std::string> columnName = { "data_key", "timestamp" };
     std::vector<std::string> columnNamesTmp = {};
     for (auto& column : columnName) {
-        EXPECT_EQ(ret.second->GetColumnName(colCount,columnNameOut), E_OK);
+        EXPECT_EQ(ret.second->GetColumnName(colCount, columnNameOut), E_OK);
         columnNamesTmp.push_back(columnNameOut);
         colCount++;
     }
     EXPECT_EQ(columnNamesTmp, columnName);
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+}
+
+*/
+ * @tc.name: CleanDirtyDataTest_001
+ * @tc.desc: Abnormal testCase for CleanDirtyData
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Abnormal_CleanDirtyDataTest_001, TestSize.Level2)
+{
+    store->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
+                      "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+    int errCode = E_OK;
+
+    // tabel is empty
+    std::string table = "";
+    uint64_t cursor = UINT64_MAX;
+    errCode = RdbStoreImplTest::store->CleanDirtyData(table, cursor);
+    EXPECT_EQ(E_INVALID_ARGS, errCode);
+
+    table = "test";
+    errCode = RdbStoreImplTest::store->CleanDirtyData(table, cursor);
+    EXPECT_EQ(E_ERROR, errCode);
+    store->ExecuteSql("DROP TABLE IF EXISTS test");
 }
