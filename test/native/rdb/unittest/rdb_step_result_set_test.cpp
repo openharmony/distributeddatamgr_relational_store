@@ -105,8 +105,8 @@ void RdbStepResultSetTest::TearDown(void)
 
 void RdbStepResultSetTest::GenerateDefaultTable()
 {
-    std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ")
-                                 + std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
+    std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ") +
+        std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
     store->ExecuteSql(createTableSql);
 
     std::string insertSql = "INSERT INTO test (data1, data2, data3, data4) VALUES (?, ?, ?, ?);";
@@ -134,8 +134,8 @@ void RdbStepResultSetTest::GenerateDefaultTable()
 
 void RdbStepResultSetTest::GenerateDefaultEmptyTable()
 {
-    std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ")
-                                 + std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
+    std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ") +
+        std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
     store->ExecuteSql(createTableSql);
 }
 
@@ -1646,7 +1646,7 @@ HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet003, TestSize.Level1)
  */
 HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet004, TestSize.Level1)
 {
-     std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
+    std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
     std::shared_ptr<OHOS::NativeRdb::CacheResultSet> resultSet =
         std::make_shared<CacheResultSet>(std::move(valueBuckets));
     int errCode = 0;
