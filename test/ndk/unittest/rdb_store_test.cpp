@@ -533,6 +533,10 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_009, TestSize.Level1)
     char *table = NULL;
     errCode = OH_Rdb_Insert(storeTestRdbStore_, table, valueBucket);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_Insert(nullptr, "wrong", valueBucket);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_Insert(storeTestRdbStore_, "wrong", nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     char querySql[] = "SELECT * FROM store_test";
     OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
@@ -569,6 +573,10 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_0010, TestSize.Level1)
     OH_Predicates *predicates1 = OH_Rdb_CreatePredicates(table);
     EXPECT_EQ(predicates1, NULL);
     errCode = OH_Rdb_Update(storeTestRdbStore_, valueBucket, predicates1);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_Update(nullptr, valueBucket, predicates);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_Update(storeTestRdbStore_, nullptr, predicates);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     OH_Predicates *predicates2 = OH_Rdb_CreatePredicates("store_test");
@@ -611,13 +619,22 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_0010, TestSize.Level1)
 
 /**
  * @tc.name: RDB_Native_store_test_011
- * @tc.desc: Normal testCase of store for querysql is NULL.
+ * @tc.desc: Abnormal testCase of store for Query.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_011, TestSize.Level1)
 {
     char *querySql = NULL;
+    // sql is nullptr
     OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
+    EXPECT_EQ(cursor, NULL);
+    // store is nullptr
+    cursor = OH_Rdb_ExecuteQuery(nullptr, querySql);
+    EXPECT_EQ(cursor, NULL);
+    
+    // store is nullptr
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("store_test");
+    cursor = OH_Rdb_Query(nullptr, predicates, NULL, 0);
     EXPECT_EQ(cursor, NULL);
 }
 
@@ -807,8 +824,19 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
     int64_t keys[] = { 1 };
     values->putInt64(values, keys, 1);
 
+    // store is nullptr
+    OH_Cursor* cursor = OH_Rdb_FindModifyTime(nullptr, "rdbstoreimpltest_integer", "data_key", values);
+    EXPECT_EQ(cursor, nullptr);
+
+    // tabel name is nullptr
+    cursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, nullptr, "data_key", values);
+    EXPECT_EQ(cursor, nullptr);
+
+    // key is nullptr
+    cursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "rdbstoreimpltest_integer", "data_key", nullptr);
+    EXPECT_EQ(cursor, nullptr);
+
     // table name is ""
-    OH_Cursor *cursor;
     cursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "", "data_key", values);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
@@ -892,11 +920,18 @@ HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_019, TestSize.Level1
  */
 HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_020, TestSize.Level1)
 {
-    int errCode = E_OK;
-
+    char createTableSql[] = "CREATE TABLE test_Execute (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER);";
+    int errCode = OH_Rdb_Execute(nullptr, createTableSql);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_Execute(storeTestRdbStore_, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    
     errCode = OH_Rdb_Backup(nullptr, RDB_TEST_PATH);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
     errCode = OH_Rdb_Backup(storeTestRdbStore_, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+
+    errCode = OH_Rdb_BeginTransaction(nullptr);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
 
     errCode = OH_Rdb_Commit(nullptr);
@@ -918,6 +953,15 @@ HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_020, TestSize.Level1
     errCode = OH_Rdb_Restore(nullptr, RDB_TEST_PATH);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
     errCode = OH_Rdb_Restore(storeTestRdbStore_, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+
+    int version = 2;
+    errCode = OH_Rdb_SetVersion(nullptr, version);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+
+    errCode = OH_Rdb_GetVersion(nullptr, &version);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_GetVersion(storeTestRdbStore_, nullptr);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
 
     errCode = OH_Rdb_CloseStore(nullptr);
