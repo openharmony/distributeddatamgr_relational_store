@@ -206,9 +206,10 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocal, TestSize.Level1)
 HWTEST_F(RdbStoreSubTest, RdbStore_RegisterAutoSyncCallbackAndRdbStore_UnregisterAutoSyncCallback_001, TestSize.Level1)
 {
     EXPECT_NE(store, nullptr) << "store is null";
-    auto status = store->RegisterAutoSyncCallback(std::make_shared<TestDetailProgressObserver>());
+    auto obs = std::make_shared<TestDetailProgressObserver>();
+    auto status = store->RegisterAutoSyncCallback(obs);
     EXPECT_EQ(status, E_OK);
 
-    status = store->UnregisterAutoSyncCallback(std::make_shared<TestDetailProgressObserver>());
+    status = store->UnregisterAutoSyncCallback(obs);
     EXPECT_EQ(status, E_OK);
 }
