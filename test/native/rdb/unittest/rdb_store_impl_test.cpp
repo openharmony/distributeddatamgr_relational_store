@@ -683,3 +683,4 @@ HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_002, TestSize.Level2)
     EXPECT_EQ(columnNamesTmp, columnName);
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
 }
+
