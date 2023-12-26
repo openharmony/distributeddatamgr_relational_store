@@ -18,12 +18,13 @@
 #include <climits>
 #include <string>
 
+#include "cache_result_set.h"
 #include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
-#include "sqlite_sql_builder.h"
 #include "result_set_proxy.h"
+#include "sqlite_sql_builder.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -36,7 +37,6 @@ struct ResultSetData {
     std::vector<uint8_t> blobValue;
 };
 
-
 class RdbStepResultSetTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -46,8 +46,8 @@ public:
     void GenerateDefaultTable();
     void GenerateDefaultEmptyTable();
     void CheckColumnType(std::shared_ptr<ResultSet> resultSet, int columnIndex, ColumnType type);
-    void CheckResultSetAttribute(std::shared_ptr<ResultSet> resultSet, int pos, bool isStart, bool isAtFirstRow,
-        bool isEnded);
+    void CheckResultSetAttribute(
+        std::shared_ptr<ResultSet> resultSet, int pos, bool isStart, bool isAtFirstRow, bool isEnded);
     void CheckResultSetData(int columnIndex, std::shared_ptr<ResultSet> resultSet, ResultSetData &rowData);
 
     static const std::string DATABASE_NAME;
@@ -57,11 +57,8 @@ public:
 
 const std::string RdbStepResultSetTest::DATABASE_NAME = RDB_TEST_PATH + "stepResultSet_test.db";
 std::shared_ptr<RdbStore> RdbStepResultSetTest::store = nullptr;
-ResultSetData RdbStepResultSetTest::g_resultSetData[3] = {
-    {"2", -5, 2.5, std::vector<uint8_t>{}},
-    {"hello", 10, 1.0, std::vector<uint8_t>{ 66 }},
-    {"hello world", 3, 1.8, std::vector<uint8_t>{}}
-};
+ResultSetData RdbStepResultSetTest::g_resultSetData[3] = { { "2", -5, 2.5, std::vector<uint8_t>{} },
+    { "hello", 10, 1.0, std::vector<uint8_t>{ 66 } }, { "hello world", 3, 1.8, std::vector<uint8_t>{} } };
 
 class RdbStepResultSetOpenCallback : public RdbOpenCallback {
 public:
@@ -108,8 +105,8 @@ void RdbStepResultSetTest::TearDown(void)
 
 void RdbStepResultSetTest::GenerateDefaultTable()
 {
-    std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ") +
-        std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
+    std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ")
+                                 + std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
     store->ExecuteSql(createTableSql);
 
     std::string insertSql = "INSERT INTO test (data1, data2, data3, data4) VALUES (?, ?, ?, ?);";
@@ -118,29 +115,27 @@ void RdbStepResultSetTest::GenerateDefaultTable()
     uint8_t uValue = 66;
     std::vector<uint8_t> typeBlob;
     typeBlob.push_back(uValue);
-    store->ExecuteSql(insertSql, std::vector<ValueObject> {
-            ValueObject(std::string("hello")), ValueObject((int)10),
-            ValueObject((double)1.0), ValueObject((std::vector<uint8_t>)typeBlob)
-        });
+    store->ExecuteSql(insertSql, std::vector<ValueObject>{ ValueObject(std::string("hello")), ValueObject((int)10),
+                                     ValueObject((double)1.0), ValueObject((std::vector<uint8_t>)typeBlob) });
 
     /* insert second entry data */
     typeBlob.clear();
-    store->ExecuteSql(insertSql, std::vector<ValueObject> {
-            ValueObject(std::string("2")), ValueObject((int)-5),
-            ValueObject((double)2.5), ValueObject() // set double value 2.5
-        });
+    store->ExecuteSql(insertSql, std::vector<ValueObject>{
+                                     ValueObject(std::string("2")), ValueObject((int)-5), ValueObject((double)2.5),
+                                     ValueObject() // set double value 2.5
+                                 });
 
     /* insert third entry data */
-    store->ExecuteSql(insertSql, std::vector<ValueObject> {
-            ValueObject(std::string("hello world")),
-            ValueObject((int)3), ValueObject((double)1.8), ValueObject() // set int value 3, double 1.8
-        });
+    store->ExecuteSql(insertSql, std::vector<ValueObject>{
+                                     ValueObject(std::string("hello world")), ValueObject((int)3),
+                                     ValueObject((double)1.8), ValueObject() // set int value 3, double 1.8
+                                 });
 }
 
 void RdbStepResultSetTest::GenerateDefaultEmptyTable()
 {
-    std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ") +
-        std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
+    std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ")
+                                 + std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
     store->ExecuteSql(createTableSql);
 }
 
@@ -152,8 +147,8 @@ void RdbStepResultSetTest::CheckColumnType(std::shared_ptr<ResultSet> resultSet,
     EXPECT_EQ(columnType, type);
 }
 
-void RdbStepResultSetTest::CheckResultSetAttribute(std::shared_ptr<ResultSet> resultSet, int pos, bool isStart,
-    bool isAtFirstRow, bool isEnded)
+void RdbStepResultSetTest::CheckResultSetAttribute(
+    std::shared_ptr<ResultSet> resultSet, int pos, bool isStart, bool isAtFirstRow, bool isEnded)
 {
     int position = -1;
     int iRet = resultSet->GetRowIndex(position);
@@ -686,7 +681,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_012, TestSize.Level1)
     }
     EXPECT_EQ("hello", strBlob);
 
-
     iRet = resultSet->GetBlob(1, blobValue);
     EXPECT_NE(E_OK, iRet);
 
@@ -715,7 +709,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_012, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
 }
 
-
 /* *
  * @tc.name: RdbStore_StepResultSet_013
  * @tc.desc: normal testcase of StepResultSet for getBlob
@@ -738,9 +731,9 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_013, TestSize.Level1)
     CheckColumnType(resultSet, 1, ColumnType::TYPE_STRING);
 
     CheckColumnType(resultSet, 2, ColumnType::TYPE_INTEGER);
-    
+
     CheckColumnType(resultSet, 3, ColumnType::TYPE_FLOAT);
-    
+
     CheckColumnType(resultSet, 4, ColumnType::TYPE_BLOB);
 
     int columnCount = 0;
@@ -1090,7 +1083,7 @@ HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
 
     EXPECT_EQ(E_OK, resultSet->GoToLastRow());
 
-    iRet  = resultSet->IsAtLastRow(bResultSet);
+    iRet = resultSet->IsAtLastRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(true, bResultSet);
 
@@ -1260,9 +1253,8 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep011, TestSize.Level1)
     uint8_t uValue = 66;
     std::vector<uint8_t> typeBlob;
     typeBlob.push_back(uValue);
-    store->ExecuteSql(
-        insertSql, std::vector<ValueObject> { ValueObject(std::string(arr, arrLen)), ValueObject((int)10),
-                       ValueObject((double)1.0), ValueObject((std::vector<uint8_t>)typeBlob) });
+    store->ExecuteSql(insertSql, std::vector<ValueObject>{ ValueObject(std::string(arr, arrLen)), ValueObject((int)10),
+                                     ValueObject((double)1.0), ValueObject((std::vector<uint8_t>)typeBlob) });
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
     EXPECT_NE(resultSet, nullptr);
 
@@ -1295,12 +1287,11 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep012, TestSize.Level1)
     uint8_t uValue = 66;
     std::vector<uint8_t> typeBlob;
     typeBlob.push_back(uValue);
-    store->ExecuteSql(
-        insertSql, std::vector<ValueObject> { ValueObject(std::string(arr, arrLen)), ValueObject((int)10),
-                                              ValueObject((double)1.0), ValueObject((std::vector<uint8_t>)typeBlob) });
+    store->ExecuteSql(insertSql, std::vector<ValueObject>{ ValueObject(std::string(arr, arrLen)), ValueObject((int)10),
+                                     ValueObject((double)1.0), ValueObject((std::vector<uint8_t>)typeBlob) });
 
-    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT ? FROM test",
-        std::vector<ValueObject> {ValueObject((std::string)"data1")});
+    std::shared_ptr<ResultSet> resultSet =
+        store->QueryByStep("SELECT ? FROM test", std::vector<ValueObject>{ ValueObject((std::string) "data1") });
     EXPECT_NE(resultSet, nullptr);
 
     int iRet = resultSet->GoToFirstRow();
@@ -1434,7 +1425,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep016, TestSize.Level1)
  */
 HWTEST_F(RdbStepResultSetTest, testSqlStep017, TestSize.Level1)
 {
-    std::vector<std::string> columns = {"data1", "data2"};
+    std::vector<std::string> columns = { "data1", "data2" };
 
     std::string outSql;
     int errCode = SqliteSqlBuilder::BuildQueryString(false, "", "", columns, "", "", "", "", 0, 0, outSql);
@@ -1463,7 +1454,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep018, TestSize.Level1)
     EXPECT_EQ("", tableName);
     sqlstr = SqliteSqlBuilder::BuildCursorQueryString(emptyPredicates, columns, "");
     EXPECT_EQ("", sqlstr);
-    
+
     // logtable is not empty && tableName is empty
     sqlstr = SqliteSqlBuilder::BuildCursorQueryString(emptyPredicates, columns, logTable);
     EXPECT_EQ("", sqlstr);
@@ -1476,7 +1467,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep018, TestSize.Level1)
                         "FROM test INNER JOIN naturalbase_rdb_aux_test_log "
                         "ON test.ROWID = naturalbase_rdb_aux_test_log.data_key";
     EXPECT_EQ(value, sqlstr);
-    
+
     // Distinct is true, clumns is not empty
     predicates.Distinct();
     columns.push_back("name");
@@ -1531,5 +1522,165 @@ HWTEST_F(RdbStepResultSetTest, Abnormal_ResultSetProxy001, TestSize.Level1)
     EXPECT_NE(E_OK, errCode);
 }
 
+/**
+ * @tc.name: Normal_CacheResultSet002
+ * @tc.desc: Normal testcase of CacheResultSet
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, Normal_CacheResultSet002, TestSize.Level1)
+{
+    std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
+    OHOS::NativeRdb::ValuesBucket value1;
+    value1.PutInt("id", 1);
+    value1.PutString("name", std::string("zhangsan"));
+    value1.PutLong("age", 18);
+    value1.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    valueBuckets.push_back(value1);
+
+    OHOS::NativeRdb::ValuesBucket value2;
+    value2.PutInt("id", 2);
+    value2.PutString("name", std::string("lisi"));
+    value2.PutLong("age", 19);
+    value2.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    valueBuckets.push_back(value2);
+
+    std::shared_ptr<OHOS::NativeRdb::CacheResultSet> resultSet =
+        std::make_shared<CacheResultSet>(std::move(valueBuckets));
+    int errCode = 0, columnIndex = 0;
+
+    int id;
+    errCode = resultSet->GetColumnIndex("id", columnIndex);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(E_OK, resultSet->GetInt(columnIndex, id));
+    EXPECT_EQ(id, 1);
+
+    std::string name;
+    errCode = resultSet->GetColumnIndex("name", columnIndex);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(E_OK, resultSet->GetString(columnIndex, name));
+    EXPECT_EQ(name, "zhangsan");
+
+    int64_t age;
+    errCode = resultSet->GetColumnIndex("age", columnIndex);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(E_OK, resultSet->GetLong(columnIndex, age));
+    EXPECT_EQ(age, 18);
+
+    std::vector<uint8_t> blob;
+    errCode = resultSet->GetColumnIndex("blobType", columnIndex);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(E_OK, resultSet->GetBlob(columnIndex, blob));
+    EXPECT_EQ(blob.size(), 3);
+}
+
+/**
+ * @tc.name: Abnormal_CacheResultSet003
+ * @tc.desc: Abnormal testcase of CacheResultSet, if CacheResultSet is Empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet003, TestSize.Level1)
+{
+    std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
+    // if valuebucket.size = 0
+    std::shared_ptr<OHOS::NativeRdb::CacheResultSet> resultSet =
+        std::make_shared<CacheResultSet>(std::move(valueBuckets));
+
+    int errCode = 0;
+    int columnIndex = 0;
+    // if columnName is not exist
+    errCode = resultSet->GetColumnIndex("empty", columnIndex);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex < 0
+    std::string columnName;
+    errCode = resultSet->GetColumnName(-1, columnName);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->GetColumnName(5, columnName);
+    EXPECT_NE(errCode, E_OK);
+
+    // if columnIndex < 0
+    ColumnType columnType;
+    errCode = resultSet->GetColumnType(-1, columnType);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->GetColumnType(5, columnType);
+    EXPECT_NE(errCode, E_OK);
+
+    // if columnIndex < 0
+    int id;
+    errCode = resultSet->GetInt(-1, id);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->GetInt(5, id);
+    EXPECT_NE(errCode, E_OK);
+
+    // if columnIndex < 0
+    std::string name;
+    errCode = resultSet->GetString(-1, name);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->GetString(5, name);
+    EXPECT_NE(errCode, E_OK);
+
+    // if columnIndex < 0
+    int64_t age;
+    errCode = resultSet->GetLong(-1, age);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->GetLong(5, age);
+    EXPECT_NE(errCode, E_OK);
+
+    // if columnIndex < 0
+    double value;
+    errCode = resultSet->GetDouble(-1, value);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->GetDouble(5, value);
+    EXPECT_NE(errCode, E_OK);
+}
+
+/**
+ * @tc.name: Abnormal_CacheResultSet004
+ * @tc.desc: Abnormal testcase of CacheResultSet, if CacheResultSet is Empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet004, TestSize.Level1)
+{
+     std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
+    std::shared_ptr<OHOS::NativeRdb::CacheResultSet> resultSet =
+        std::make_shared<CacheResultSet>(std::move(valueBuckets));
+    int errCode = 0;
+    // if columnIndex < 0
+    bool isNull;
+    errCode = resultSet->IsColumnNull(-1, isNull);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->IsColumnNull(5, isNull);
+    EXPECT_NE(errCode, E_OK);
+
+    // if columnIndex < 0
+    ValueObject::Asset asset;
+    errCode = resultSet->GetAsset(-1, asset);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->GetAsset(5, asset);
+    EXPECT_NE(errCode, E_OK);
+
+    // if columnIndex < 0
+    ValueObject::Assets assets;
+    errCode = resultSet->GetAssets(-1, assets);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->GetAssets(5, assets);
+    EXPECT_NE(errCode, E_OK);
+
+    // if columnIndex < 0
+    ValueObject valueobject;
+    errCode = resultSet->Get(-1, valueobject);
+    EXPECT_NE(errCode, E_OK);
+    // if columnIndex > colNames_.size
+    errCode = resultSet->Get(5, valueobject);
+    EXPECT_NE(errCode, E_OK);
+}
 } // namespace NativeRdb
 } // namespace OHOS
