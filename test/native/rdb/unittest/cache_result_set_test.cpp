@@ -131,7 +131,6 @@ HWTEST_F(CacheResultSetTest, GetStringTest_001, TestSize.Level2)
 
     int columnIndex = 0;
     std::string value;
-    std::vector<uint8_t> blob = {};
     int ret = cacheResultSet.GetString(columnIndex, value);
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ("test", value);
@@ -324,10 +323,9 @@ HWTEST_F(CacheResultSetTest, IsColumnNullTest_001, TestSize.Level2)
     EXPECT_EQ(false, isNull);
 
     int columnIndexTwo = 3;
-    bool isNullTwo = false;
-    int rets = cacheResultSet.IsColumnNull(columnIndexTwo, isNullTwo);
+    int rets = cacheResultSet.IsColumnNull(columnIndexTwo, isNull);
     EXPECT_EQ(E_OK, rets);
-    EXPECT_EQ(true, isNullTwo);
+    EXPECT_EQ(true, isNull);
 }
 
 /* *
@@ -534,8 +532,6 @@ HWTEST_F(CacheResultSetTest, GoToPreviousRowTest_001, TestSize.Level2)
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
 
     int offset = 1;
-    int position = 0;
-    cacheResultSet.GoToRow(position);
     cacheResultSet.GoTo(offset);
     int ret = cacheResultSet.GoToPreviousRow();
     EXPECT_EQ(E_OK, ret);
