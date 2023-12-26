@@ -670,14 +670,16 @@ HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_002, TestSize.Level2)
     int colCount = 0;
     EXPECT_EQ(ret.second->GetColumnCount(colCount), E_OK);
     EXPECT_EQ(colCount, 2);
-    std::string columnName;
 
     colCount = 0;
-    EXPECT_EQ(ret.second->GetColumnName(colCount,columnName), E_OK);
-    EXPECT_EQ(columnName, "data_key");
-    colCount = 1;
-    EXPECT_EQ(ret.second->GetColumnName(colCount,columnName), E_OK);
-    EXPECT_EQ(columnName, "timestamp");
-    colCount = 2;
+    std::string columnNameOut;
+    std::vector<std::string> columnName = {"data_key","timestamp"};
+    std::vector<std::string> columnNamesTmp = {};
+    for (auto& column : columnName) {
+        EXPECT_EQ(ret.second->GetColumnName(colCount,columnNameOut), E_OK);
+        columnNamesTmp.push_back(columnNameOut);
+        colCount++;
+    }
+    EXPECT_EQ(columnNamesTmp, columnName);
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
 }
