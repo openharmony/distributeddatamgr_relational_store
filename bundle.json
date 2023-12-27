@@ -65,7 +65,6 @@
                 "samgr"
             ],
             "third_party": [
-                "googletest",
                 "icu",
                 "sqlite"
             ]

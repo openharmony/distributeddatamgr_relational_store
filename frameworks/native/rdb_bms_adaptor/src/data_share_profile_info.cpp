@@ -53,64 +53,67 @@ bool Config::Unmarshal(const json &node)
 bool ProfileInfo::Marshal(json &node) const
 {
     SetValue(node[GET_NAME(tableConfig)], tableConfig);
+    SetValue(node[GET_NAME(isSilentProxyEnable)], isSilentProxyEnable);
     return true;
 }
 
 bool ProfileInfo::Unmarshal(const json &node)
 {
-    return GetValue(node, GET_NAME(tableConfig), tableConfig);
+    bool ret = GetValue(node, GET_NAME(tableConfig), tableConfig);
+    GetValue(node, GET_NAME(isSilentProxyEnable), isSilentProxyEnable);
+    return ret;
 }
 
 bool DataShareProfileInfo::GetResConfigFile(
-    const AppExecFwk::ExtensionAbilityInfo &extensionInfo, std::vector<std::string> &profileInfos)
+    const AppExecFwk::ExtensionAbilityInfo &extensionInfo, std::string &profileInfo)
 {
     bool isCompressed = !extensionInfo.hapPath.empty();
     std::string resourcePath = isCompressed ? extensionInfo.hapPath : extensionInfo.resourcePath;
-    profileInfos = GetResProfileByMetadata(extensionInfo.metadata, resourcePath, isCompressed);
-    if (profileInfos.empty()) {
+    std::string resProfile = GetResProfileByMetadata(extensionInfo.metadata, resourcePath, isCompressed);
+    if (resProfile.empty()) {
         return false;
     }
+    profileInfo = resProfile;
     return true;
 }
 
 bool DataShareProfileInfo::GetDataPropertiesFromProxyDatas(const OHOS::AppExecFwk::ProxyData &proxyData,
     const std::string &resourcePath, bool isCompressed, DataProperties &dataProperties)
 {
-    std::vector<std::string> infos;
-    infos = GetResProfileByMetadata(proxyData.metadata, resourcePath, isCompressed);
-    if (infos.empty()) {
+    std::string info = GetResProfileByMetadata(proxyData.metadata, resourcePath, isCompressed);
+    if (info.empty()) {
         return false;
     }
-    return dataProperties.Unmarshall(infos[0]);
+    return dataProperties.Unmarshall(info);
 }
 
-std::vector<std::string> DataShareProfileInfo::GetResProfileByMetadata(
+std::string DataShareProfileInfo::GetResProfileByMetadata(
     const AppExecFwk::Metadata &metadata, const std::string &resourcePath, bool isCompressed)
 {
-    std::vector<std::string> infos;
+    std::string info;
     if (metadata.name.empty() || resourcePath.empty()) {
-        return infos;
+        return info;
     }
     std::shared_ptr<ResourceManager> resMgr = InitResMgr(resourcePath);
     if (resMgr == nullptr) {
-        return infos;
+        return info;
     }
     if (metadata.name == "dataProperties") {
-        infos = GetResFromResMgr(metadata.resource, *resMgr, isCompressed);
+        info = GetResFromResMgr(metadata.resource, *resMgr, isCompressed);
     }
-    return infos;
+    return info;
 }
 
-std::vector<std::string> DataShareProfileInfo::GetResProfileByMetadata(
+std::string DataShareProfileInfo::GetResProfileByMetadata(
     const std::vector<AppExecFwk::Metadata> &metadata, const std::string &resourcePath, bool isCompressed)
 {
-    std::vector<std::string> profileInfos;
+    std::string profileInfo;
     if (metadata.empty() || resourcePath.empty()) {
-        return profileInfos;
+        return profileInfo;
     }
     std::shared_ptr<ResourceManager> resMgr = InitResMgr(resourcePath);
     if (resMgr == nullptr) {
-        return profileInfos;
+        return profileInfo;
     }
 
     auto it = std::find_if(metadata.begin(), metadata.end(), [](AppExecFwk::Metadata meta) {
@@ -120,7 +123,7 @@ std::vector<std::string> DataShareProfileInfo::GetResProfileByMetadata(
         return GetResFromResMgr((*it).resource, *resMgr, isCompressed);
     }
 
-    return profileInfos;
+    return profileInfo;
 }
 
 std::shared_ptr<ResourceManager> DataShareProfileInfo::InitResMgr(const std::string &resourcePath)
@@ -139,18 +142,18 @@ std::shared_ptr<ResourceManager> DataShareProfileInfo::InitResMgr(const std::str
     return resMgr;
 }
 
-std::vector<std::string> DataShareProfileInfo::GetResFromResMgr(
+std::string DataShareProfileInfo::GetResFromResMgr(
     const std::string &resName, ResourceManager &resMgr, bool isCompressed)
 {
-    std::vector<std::string> profileInfos;
+    std::string profileInfo;
     if (resName.empty()) {
-        return profileInfos;
+        return profileInfo;
     }
 
     size_t pos = resName.rfind(PROFILE_FILE_PREFIX);
     if ((pos == std::string::npos) || (pos == resName.length() - PROFILE_PREFIX_LEN)) {
         LOG_ERROR("res name invalid, resName is %{public}s", resName.c_str());
-        return profileInfos;
+        return profileInfo;
     }
     std::string profileName = resName.substr(pos + PROFILE_PREFIX_LEN);
     // hap is compressed status, get file content.
@@ -161,34 +164,32 @@ std::vector<std::string> DataShareProfileInfo::GetResFromResMgr(
         RState ret = resMgr.GetProfileDataByName(profileName.c_str(), len, fileContent);
         if (ret != SUCCESS || fileContent == nullptr) {
             LOG_ERROR("failed, ret is %{public}d, profileName is %{public}s", ret, profileName.c_str());
-            return profileInfos;
+            return profileInfo;
         }
         if (len == 0) {
             LOG_ERROR("fileContent is empty, profileName is %{public}s", profileName.c_str());
-            return profileInfos;
+            return profileInfo;
         }
         std::string rawData(fileContent.get(), fileContent.get() + len);
         if (!Config::IsJson(rawData)) {
             LOG_ERROR("rawData is not json, profileName is %{public}s", profileName.c_str());
-            return profileInfos;
+            return profileInfo;
         }
-        profileInfos.push_back(std::move(rawData));
-        return profileInfos;
+        return rawData;
     }
     // hap is decompressed status, get file path then read file.
     std::string resPath;
     RState ret = resMgr.GetProfileByName(profileName.c_str(), resPath);
     if (ret != SUCCESS) {
         LOG_ERROR("profileName not found, ret is %{public}d, profileName is %{public}s", ret, profileName.c_str());
-        return profileInfos;
+        return profileInfo;
     }
     std::string profile = ReadProfile(resPath);
     if (profile.empty()) {
         LOG_ERROR("Read profile failed, resPath is %{public}s", resPath.c_str());
-        return profileInfos;
+        return profileInfo;
     }
-    profileInfos.push_back(std::move(profile));
-    return profileInfos;
+    return profile;
 }
 
 bool DataShareProfileInfo::IsFileExisted(const std::string &filePath)

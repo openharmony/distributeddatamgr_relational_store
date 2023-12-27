@@ -15,9 +15,6 @@
 
 #include "abs_result_set.h"
 
-#include <algorithm>
-#include <string>
-
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_trace.h"
@@ -68,14 +65,14 @@ void RowEntity::Clear()
     indexs_.clear();
 }
 
-AbsResultSet::AbsResultSet() : rowPos_(INIT_POS), isClosed(false)
+AbsResultSet::AbsResultSet() : rowPos_(INIT_POS), isClosed_(false)
 {
 }
 
 AbsResultSet::~AbsResultSet()
 {
     rowPos_ = INIT_POS;
-    isClosed = false;
+    isClosed_ = false;
 }
 
 int AbsResultSet::GetRowCount(int &count)
@@ -349,7 +346,6 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
         columnIndex++;
     }
     columnIndex = -1;
-    LOG_WARN("columnName %{public}s is not in resultSet", columnName.c_str());
     return E_ERROR;
 }
 
@@ -373,12 +369,14 @@ int AbsResultSet::GetColumnName(int columnIndex, std::string &columnName)
 
 bool AbsResultSet::IsClosed() const
 {
-    return isClosed;
+    return isClosed_;
 }
 
 int AbsResultSet::Close()
 {
-    isClosed = true;
+    // clear columnMap_
+    auto map = std::move(columnMap_);
+    isClosed_ = true;
     return E_OK;
 }
 
