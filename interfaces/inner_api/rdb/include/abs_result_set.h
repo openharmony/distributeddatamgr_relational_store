@@ -307,19 +307,19 @@ public:
     API_EXPORT int Close() override;
 
 protected:
-    std::map<std::string, int> columnMap_;
-    int columnCount_ = -1;
     // The default position of the result set
     static const int INIT_POS = -1;
+
+    // Indicates whether the result set is closed
+    std::mutex columnMapLock_;
+    int columnCount_ = -1;
     /*
      * The value can be in the range [-1 ~ n], where -1 represents the start flag position and N represents the data end
      * flag position, and [0, n-1] represents the real data index.
      */
     int rowPos_;
-
-    // Indicates whether the result set is closed
-    bool isClosed;
-    std::mutex columnMapLock_;
+    std::map<std::string, int> columnMap_;
+    bool isClosed_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

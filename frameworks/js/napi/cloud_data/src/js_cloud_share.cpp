@@ -54,6 +54,7 @@ napi_value AllocResourceAndShare(napi_env env, napi_callback_info info)
     };
     auto ctxt = std::make_shared<AllocResAndShareContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
+        // allocResourceAndShare storeId, predicates, participants 3 required parameter， columns 1 Optional parameter
         ASSERT_BUSINESS_ERR(ctxt, argc >= 3, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->storeId);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK,
@@ -68,6 +69,7 @@ napi_value AllocResourceAndShare(napi_env env, napi_callback_info info)
             Status::INVALID_ARGUMENT, "The type of participants must be Array<Participant>.");
         // 'argv[3]' represents an optional std::vector<std::string> parameter
         if (argc > 3 && !JSUtils::IsNull(env, argv[3])) {
+            // 'argv[3]' represents the columns optional parameter
             status = JSUtils::Convert2Value(env, argv[3], ctxt->columns);
             ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK,
                 Status::INVALID_ARGUMENT, "The type of columns must be Array<string>.");
@@ -88,8 +90,8 @@ napi_value AllocResourceAndShare(napi_env env, napi_callback_info info)
 
         auto [result, valueBuckets] = proxy->AllocResourceAndShare(
             ctxt->storeId, ctxt->predicates->GetDistributedPredicates(), ctxt->columns, ctxt->participants);
-        ctxt->resultSet = std::make_shared<CacheResultSet>(std::move(valueBuckets));
         LOG_DEBUG("AllocResourceAndShare result: %{public}d, size:%{public}zu", result, valueBuckets.size());
+        ctxt->resultSet = std::make_shared<CacheResultSet>(std::move(valueBuckets));
         ctxt->status =
             (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
@@ -118,6 +120,7 @@ napi_value Share(napi_env env, napi_callback_info info)
     };
     auto ctxt = std::make_shared<ShareContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
+        // ShareContext have sharingRes, participants 2 required parameter
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->sharingRes);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
@@ -168,6 +171,7 @@ napi_value Unshare(napi_env env, napi_callback_info info)
     };
     auto ctxt = std::make_shared<UnshareContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
+        // ShareContext have sharingRes, participants 2 required parameter
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->sharingRes);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
@@ -263,6 +267,7 @@ napi_value ChangePrivilege(napi_env env, napi_callback_info info)
     };
     auto ctxt = std::make_shared<ChangePrivilegeContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
+        // ShareContext have sharingRes, participants 2 required parameter
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->sharingRes);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
@@ -400,6 +405,7 @@ napi_value ConfirmInvitation(napi_env env, napi_callback_info info)
     };
     auto ctxt = std::make_shared<ConfirmInvitationContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
+        // ShareContext have sharingRes, participants 2 required parameter
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->invitationCode);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->invitationCode.empty(),
@@ -451,6 +457,7 @@ napi_value ChangeConfirmation(napi_env env, napi_callback_info info)
     };
     auto ctxt = std::make_shared<ChangeConfirmationContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
+        // ShareContext have sharingRes, participants 2 required parameter
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->sharingRes);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),

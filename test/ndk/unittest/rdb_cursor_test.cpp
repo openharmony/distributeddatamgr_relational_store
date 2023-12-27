@@ -614,3 +614,113 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_009, TestSize.Level1)
     OH_Data_Asset_DestroyMultiple(assets, assetCount);
     cursor->destroy(cursor);
 }
+
+/**
+ * @tc.name: Abnormal_RDB_cursor_test_010
+ * @tc.desc: Abnormal testCase of cursor for OH_VBucket_PutAssets, OH_VBucket_PutAsset.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeCursorTest, Abnormal_cursor_PutAssets_test_010, TestSize.Level1)
+{
+    char table[] = "asset_table";
+    int assetsCount = 2;
+    int curRow = 3;
+    
+    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    SetAsset(asset, 1);
+
+    valueBucket->putInt64(valueBucket, "id", curRow);
+
+    int errCode = OH_Rdb_ErrCode::RDB_OK;
+    errCode = OH_VBucket_PutAsset(nullptr, "data1", asset);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_ErrCode::RDB_OK;
+    errCode = OH_VBucket_PutAsset(valueBucket, nullptr, asset);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_ErrCode::RDB_OK;
+    errCode = OH_VBucket_PutAsset(valueBucket, "data1", nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    OH_VBucket_PutAsset(valueBucket, "data1", asset);
+    Data_Asset **assets = OH_Data_Asset_CreateMultiple(assetsCount);
+    SetAsset(assets[0], 1);
+    SetAsset(assets[1], 2);
+
+    errCode = OH_Rdb_ErrCode::RDB_OK;
+    errCode = OH_VBucket_PutAssets(nullptr, "data2", assets, assetsCount);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_ErrCode::RDB_OK;
+    errCode = OH_VBucket_PutAssets(valueBucket, nullptr, assets, assetsCount);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    errCode = OH_VBucket_PutAssets(valueBucket, "data2", assets, assetsCount);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
+    int rowID = OH_Rdb_Insert(cursorTestRdbStore_, table, valueBucket);
+    EXPECT_EQ(rowID, curRow);
+
+    free(assets[1]);
+    assets[1] = nullptr;
+    errCode = OH_VBucket_PutAssets(valueBucket, nullptr, assets, assetsCount);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    OH_Data_Asset_DestroyMultiple(assets, assetsCount);
+    OH_Data_Asset_DestroyOne(asset);
+    valueBucket->destroy(valueBucket);
+}
+
+/**
+ * @tc.name: Abnormal_cursor_GetAssets_test_011
+ * @tc.desc: Abnormal testCase of cursor for getAssets, getAsset.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeCursorTest, Abnormal_cursor_GetAssets_test_011, TestSize.Level1)
+{
+    int errCode = 0;
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("asset_table");
+
+    OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, NULL, 0);
+    EXPECT_NE(cursor, NULL);
+    cursor->goToNextRow(cursor);
+
+    OH_ColumnType type;
+    errCode = cursor->getColumnType(cursor, 1, &type);
+    EXPECT_EQ(type, OH_ColumnType::TYPE_ASSET);
+    errCode = cursor->getColumnType(cursor, 2, &type);
+    EXPECT_EQ(type, OH_ColumnType::TYPE_ASSETS);
+
+    uint32_t assetCount = 0;
+    // if cursor is nullptr
+    errCode = cursor->getAssets(nullptr, 2, nullptr, &assetCount);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    // if cursor is empty
+    OH_Cursor emptyCursor;
+    errCode = cursor->getAssets(&emptyCursor, 2, nullptr, &assetCount);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    // if index is nullpry
+    errCode = cursor->getAssets(cursor, 2, nullptr, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    // if columnIndex < 0
+    errCode = cursor->getAssets(cursor, -1, nullptr, &assetCount);
+    EXPECT_NE(errCode, OH_Rdb_ErrCode::RDB_OK);
+
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    EXPECT_NE(asset, NULL);
+    // if cursor is nullptr
+    errCode = cursor->getAsset(nullptr, 1, asset);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    // if cursor is empry
+    errCode = cursor->getAsset(&emptyCursor, 1, asset);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    // if asset is nullptr
+    errCode = cursor->getAsset(cursor, 1, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    // if columnIndex is < 0
+    errCode = cursor->getAsset(cursor, -1, asset);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    predicates->destroy(predicates);
+    OH_Data_Asset_DestroyOne(asset);
+    cursor->destroy(cursor);
+}
