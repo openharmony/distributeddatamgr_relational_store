@@ -661,26 +661,30 @@ HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_002, TestSize.Level2)
     AbsRdbPredicates predicates("test");
     predicates.EqualTo("data_key", 1);
 
-    auto ret = store->QuerySharingResource(predicates, { "id", "data_key" });
-    EXPECT_EQ(E_OK, ret.first);
-    ASSERT_NE(nullptr, ret.second);
-    int rowCount = 0;
-    EXPECT_EQ(ret.second->GetRowCount(rowCount), E_OK);
-    EXPECT_EQ(rowCount, 1);
+    auto [status, resultSet] = store->QuerySharingResource(predicates, { "id", "data_key" });
+    EXPECT_EQ(E_OK, status);
+    ASSERT_NE(nullptr, resultSet);
     int colCount = 0;
-    EXPECT_EQ(ret.second->GetColumnCount(colCount), E_OK);
+    EXPECT_EQ(resultSet->GetColumnCount(colCount), E_OK);
     EXPECT_EQ(colCount, 2);
-
-    colCount = 0;
     std::string columnNameOut;
-    std::vector<std::string> columnName = { "data_key", "timestamp" };
-    std::vector<std::string> columnNamesTmp = {};
-    for (auto& column : columnName) {
-        EXPECT_EQ(ret.second->GetColumnName(colCount, columnNameOut), E_OK);
-        columnNamesTmp.push_back(columnNameOut);
-        colCount++;
-    }
-    EXPECT_EQ(columnNamesTmp, columnName);
+    std::set<std::string> columnNames = { "data_key", "timestamp" };
+    std::vector<std::string> columnNamesOut;
+    EXPECT_EQ(E_OK, resultSet->GetAllColumnNames(columnNamesOut));
+    EXPECT_EQ(std::set<std::string>(columnNamesOut.begin(), columnNamesOut.end()), columnNames);
+
+    int rowCount = 0;
+    EXPECT_EQ(resultSet->GetRowCount(rowCount), E_OK);
+    EXPECT_EQ(rowCount, 1);
+    RowEntity rowEntity;
+    EXPECT_EQ(E_OK, resultSet->GetRow(rowEntity));
+    auto value = rowEntity.Get("data_key");
+    int out;
+    EXPECT_EQ(E_OK, value.GetInt(out));
+    EXPECT_EQ(out, 1);
+
+    value = rowEntity.Get("timestamp");
+    EXPECT_EQ(E_OK, value.GetInt(out));
+    EXPECT_EQ(out, 1000000000);
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
 }
-
