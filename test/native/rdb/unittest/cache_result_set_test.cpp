@@ -700,7 +700,7 @@ HWTEST_F(CacheResultSetTest, GetColumnNameTest_001, TestSize.Level2)
 
     std::string columnName;
     std::vector<std::string> columnNamesTmp = {};
-    for(int i = 0; i < 3; i++){
+    for (int i = 0; i < 3; i++) {
         EXPECT_EQ(E_OK, cacheResultSet.GetColumnName(i, columnName));
         columnNamesTmp.push_back(columnName);
     }
