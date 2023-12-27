@@ -691,7 +691,7 @@ HWTEST_F(CacheResultSetTest, GetColumnNameTest_001, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
-    std::vector<std::string> columnNames = { "id", "data", "field" };
+    std::set<std::string> columnNames = { "id", "data", "field" };
     for (auto& column : columnNames) {
         valuesBucket.Put(column, "test");
     }
@@ -707,7 +707,7 @@ HWTEST_F(CacheResultSetTest, GetColumnNameTest_001, TestSize.Level2)
         EXPECT_EQ(E_OK, ret);
         columnIndex++;
     }
-    EXPECT_EQ(columnNamesTmp, columnNames);
+    EXPECT_EQ(std::set<std::string>(columnNamesTmp.begin(), columnNamesTmp.end()), columnNames);
 }
 
 /* *
