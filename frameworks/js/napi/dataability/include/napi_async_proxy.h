@@ -77,6 +77,7 @@ public:
         }
 
         delete asyncContext;
+        asyncContext = nullptr;
     }
 
     static void DefParserThis(const napi_env &env, const napi_value &self, T *context)

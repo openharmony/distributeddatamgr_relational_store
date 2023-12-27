@@ -41,7 +41,7 @@ SqliteStatement::~SqliteStatement()
 }
 
 std::shared_ptr<SqliteStatement> SqliteStatement::CreateStatement(
-    SqliteConnection *connection, const std::string &sql)
+    std::shared_ptr<SqliteConnection> connection, const std::string &sql)
 {
     sqlite3_stmt *stmt = nullptr;
     int errCode = sqlite3_prepare_v2(connection->dbHandle, sql.c_str(), sql.length(), &stmt, nullptr);

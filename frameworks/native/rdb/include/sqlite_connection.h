@@ -37,7 +37,7 @@ using DataChangeCallback = std::function<void(ClientChangedData &clientChangedDa
 
 class SqliteConnection {
 public:
-    static SqliteConnection *Open(const RdbStoreConfig &config, bool isWriteConnection, int &errCode);
+    static std::shared_ptr<SqliteConnection> Open(const RdbStoreConfig &config, bool isWriteConnection, int &errCode);
     ~SqliteConnection();
     bool IsWriteConnection() const;
     int Prepare(const std::string &sql, bool &outIsReadOnly);
