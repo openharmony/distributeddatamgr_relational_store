@@ -255,7 +255,7 @@ int StepResultSet::PrepareStep()
         return E_EXECUTE_IN_STEP_QUERY;
     }
 
-    SqliteConnection *connection = connectionPool_->AcquireConnection(true);
+    auto connection = connectionPool_->AcquireConnection(true);
     if (connection == nullptr) {
         LOG_ERROR("connectionPool_ AcquireConnection failed!");
         return E_CON_OVER_LIMIT;

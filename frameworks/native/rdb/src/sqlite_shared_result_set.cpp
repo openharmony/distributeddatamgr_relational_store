@@ -35,7 +35,8 @@ SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<RdbStoreImpl> store
 SqliteSharedResultSet::~SqliteSharedResultSet() {
 }
 
-std::shared_ptr<SqliteStatement> SqliteSharedResultSet::PrepareStep(SqliteConnection* connection, int &errCode)
+std::shared_ptr<SqliteStatement> SqliteSharedResultSet::PrepareStep(
+    std::shared_ptr<SqliteConnection> connection, int &errCode)
 {
     if (SqliteUtils::GetSqlStatementType(qrySql_) != SqliteUtils::STATEMENT_SELECT) {
         LOG_ERROR("StoreSession BeginStepQuery fail : not select sql !");
@@ -63,7 +64,7 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
         return E_STEP_RESULT_CLOSED;
     }
 
-    SqliteConnection *connection = connectionPool_->AcquireConnection(true);
+    auto connection = connectionPool_->AcquireConnection(true);
     if (connection == nullptr) {
         return E_CON_OVER_LIMIT;
     }
@@ -153,16 +154,24 @@ int SqliteSharedResultSet::PickFillBlockStartPosition(int resultSetPosition, int
 void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
 {
     ClearBlock();
-    SqliteConnection* connection = connectionPool_->AcquireConnection(true);
+    auto connection = connectionPool_->AcquireConnection(true);
     if (connection == nullptr) {
         return;
     }
     AppDataFwk::SharedBlock *sharedBlock = GetBlock();
     if (sharedBlock == nullptr) {
+        LOG_ERROR("FillSharedBlock GetBlock failed.");
+        connectionPool_->ReleaseConnection(connection);
         return;
     }
     if (rowNum_ == NO_COUNT) {
-        connection->ExecuteForSharedBlock(rowNum_, qrySql_, bindArgs_, sharedBlock, requiredPos, requiredPos, true);
+        auto errCode = connection->ExecuteForSharedBlock(rowNum_, qrySql_, bindArgs_,
+            sharedBlock, requiredPos, requiredPos, true);
+        if (errCode != E_OK) {
+            connectionPool_->ReleaseConnection(connection);
+            return;
+        }
+
         resultSetBlockCapacity_ = static_cast<int>(sharedBlock->GetRowNum());
         if (resultSetBlockCapacity_ > 0) {
             sharedBlock->SetStartPos(requiredPos);

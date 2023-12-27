@@ -17,6 +17,7 @@
 
 #include <cerrno>
 #include <memory>
+#include <new>
 #include <sqlite3sym.h>
 #include <sys/stat.h>
 #ifdef RDB_SUPPORT_ICU
@@ -54,16 +55,16 @@ using RdbKeyFile = RdbSecurityManager::KeyFileType;
 #endif
 #endif
 
-SqliteConnection *SqliteConnection::Open(const RdbStoreConfig &config, bool isWriteConnection, int &errCode)
+std::shared_ptr<SqliteConnection> SqliteConnection::Open(
+    const RdbStoreConfig &config, bool isWriteConnection, int &errCode)
 {
-    auto connection = new (std::nothrow) SqliteConnection(isWriteConnection);
+    std::shared_ptr<SqliteConnection> connection(new (std::nothrow) SqliteConnection(isWriteConnection));
     if (connection == nullptr) {
         LOG_ERROR("SqliteConnection::Open new failed, connection is nullptr");
         return nullptr;
     }
     errCode = connection->InnerOpen(config);
     if (errCode != E_OK) {
-        delete connection;
         return nullptr;
     }
     return connection;
