@@ -627,6 +627,69 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_003, TestSize.Level2)
 }
 
 /* *
+ * @tc.name: Rdb_QuerySharingResourceTest_001
+ * @tc.desc: QuerySharingResource testCase
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_001, TestSize.Level2)
+{
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", 1);
+
+    auto ret = store->QuerySharingResource(predicates, {});
+    EXPECT_EQ(E_OK, ret.first);
+    EXPECT_EQ(nullptr, ret.second);
+}
+
+/* *
+ * @tc.name: Rdb_QuerySharingResourceTest_002
+ * @tc.desc: QuerySharingResource testCase
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_002, TestSize.Level2)
+{
+    RdbStoreImplTest::store->ExecuteSql("CREATE TABLE test "
+                                        "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+                                        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+    int64_t rowId;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutInt("data_key", ValueObject(1));
+    valuesBucket.PutInt("timestamp", ValueObject(1000000000));
+    int errorCode = RdbStoreImplTest::store->Insert(rowId, "test", valuesBucket);
+    EXPECT_EQ(E_OK, errorCode);
+    EXPECT_EQ(1, rowId);
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("data_key", 1);
+
+    auto [status, resultSet] = store->QuerySharingResource(predicates, { "id", "data_key" });
+    EXPECT_EQ(E_OK, status);
+    ASSERT_NE(nullptr, resultSet);
+    int colCount = 0;
+    EXPECT_EQ(resultSet->GetColumnCount(colCount), E_OK);
+    EXPECT_EQ(colCount, 2);
+    std::string columnNameOut;
+    std::set<std::string> columnNames = { "data_key", "timestamp" };
+    std::vector<std::string> columnNamesOut;
+    EXPECT_EQ(E_OK, resultSet->GetAllColumnNames(columnNamesOut));
+    EXPECT_EQ(std::set<std::string>(columnNamesOut.begin(), columnNamesOut.end()), columnNames);
+
+    int rowCount = 0;
+    EXPECT_EQ(resultSet->GetRowCount(rowCount), E_OK);
+    EXPECT_EQ(rowCount, 1);
+    RowEntity rowEntity;
+    EXPECT_EQ(E_OK, resultSet->GetRow(rowEntity));
+    auto value = rowEntity.Get("data_key");
+    int out;
+    EXPECT_EQ(E_OK, value.GetInt(out));
+    EXPECT_EQ(out, 1);
+
+    value = rowEntity.Get("timestamp");
+    EXPECT_EQ(E_OK, value.GetInt(out));
+    EXPECT_EQ(out, 1000000000);
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+}
+
+/* *
  * @tc.name: CleanDirtyDataTest_001
  * @tc.desc: Abnormal testCase for CleanDirtyData
  * @tc.type: FUNC
