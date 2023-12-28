@@ -16,9 +16,9 @@ import("//build/ohos.gni")
 import("//foundation/arkui/ace_engine/ace_config.gni")
 
 es2abc_gen_abc("gen_cloud_extension_abc") {
-  src_js = rebase_path("cloud_sharing_types_util.js")
+  src_js = rebase_path("cloud_extension_stub.js")
   dst_file = rebase_path(target_out_dir + "/cloud_extension.abc")
-  in_puts = [ "cloud_sharing_types_util.js" ]
+  in_puts = [ "cloud_extension_stub.js" ]
   out_puts = [ target_out_dir + "/cloud_extension.abc" ]
   extra_args = [ "--module" ]
 }
