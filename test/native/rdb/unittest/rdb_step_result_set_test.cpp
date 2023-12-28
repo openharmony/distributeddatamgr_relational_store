@@ -1574,6 +1574,72 @@ HWTEST_F(RdbStepResultSetTest, Normal_CacheResultSet002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: Abnormal_CacheResultSet005
+ * @tc.desc: Abnormal testcase of CacheResultSet, if row_ == maxRow_ and
+ *           if position is illegal, and columName is not exist.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet005, TestSize.Level1)
+{
+    std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
+    OHOS::NativeRdb::ValuesBucket value1;
+    value1.PutInt("id", 1);
+    value1.PutString("name", std::string("zhangsan"));
+    value1.PutLong("age", 18);
+    value1.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    valueBuckets.push_back(value1);
+    std::shared_ptr<OHOS::NativeRdb::CacheResultSet> resultSet =
+        std::make_shared<CacheResultSet>(std::move(valueBuckets));
+    int errCode = 0, columnIndex = 0;
+
+    // if columnName is not exist
+    errCode = resultSet->GetColumnIndex("empty", columnIndex);
+    EXPECT_NE(errCode, E_OK);
+    // if position < 0
+    errCode = resultSet->GoToRow(-1);
+    EXPECT_NE(errCode, E_OK);
+    //if position > maxRow_
+    errCode = resultSet->GoToRow(3);
+    EXPECT_NE(errCode, E_OK);
+    // if row_ = maxRow_
+    int id;
+    errCode = resultSet->GetInt(1, id);
+    EXPECT_NE(errCode, E_OK);
+    // if row_ = maxRow_
+    std::string name;
+    errCode = resultSet->GetString(2, name);
+    EXPECT_NE(errCode, E_OK);
+    // if row_ = maxRow_
+    int64_t age;
+    errCode = resultSet->GetLong(3, age);
+    EXPECT_NE(errCode, E_OK);
+    // if row_ = maxRow_
+    std::vector<uint8_t> blob;
+    errCode = resultSet->GetBlob(4, blob);
+    EXPECT_NE(errCode, E_OK);
+    // if row_ = maxRow_
+    RowEntity rowEntity;
+    errCode = resultSet->GetRow(rowEntity);
+    EXPECT_EQ(errCode, E_ERROR);
+    // if row_ = maxRow_
+    bool IsNull;
+    errCode = resultSet->IsColumnNull(1, IsNull);
+    EXPECT_EQ(errCode, E_ERROR);
+    // if row_ = maxRow_
+    ValueObject::Asset asset;
+    errCode = resultSet->GetAsset(1, asset);
+    EXPECT_EQ(errCode, E_ERROR);
+    // if row_ = maxRow_
+    ValueObject::Assets assets;
+    errCode = resultSet->GetAssets(1, assets);
+    EXPECT_EQ(errCode, E_ERROR);
+    // if row_ = maxRow_
+    ValueObject value;
+    errCode = resultSet->Get(1, value);
+    EXPECT_EQ(errCode, E_ERROR);
+}
+
+/**
  * @tc.name: Abnormal_CacheResultSet003
  * @tc.desc: Abnormal testcase of CacheResultSet, if CacheResultSet is Empty
  * @tc.type: FUNC
