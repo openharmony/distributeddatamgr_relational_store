@@ -2276,297 +2276,99 @@ describe('rdbResultSetTest', function () {
     })
 
     /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest001
-     * @tc.desc Test Js Api allocResourceAndShare normal.
+     * @tc.name testQuerySharingResource001
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0235
+     * @tc.desc querySharingResource test
      */
-    it('allocResourceAndShareTest001', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest001 start *************");
+    it('testQuerySharingResource002', 0, async function (done) {
+        console.log(TAG + "************* testQuerySharingResource001 start *************");
         try {
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-            cloudData.sharing.allocResourceAndShare("employee", predicates, participants, (err, resultSet) => {
-                done()
-                expect(err != undefined).assertTrue();
-                console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-                expect(err.code == 202).assertTrue();
-            })
-        } catch (err) {
-            console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-            expect(null).assertFail();
-        }
-        done()
-        console.log(TAG + "************* allocResourceAndShareTest001 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest002
-     * @tc.desc Test Js Api allocResourceAndShare with invalid args.
-     */
-    it('allocResourceAndShareTest002', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest002 start *************");
-        try {
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-            cloudData.sharing.allocResourceAndShare(undefined, predicates, participants, (err, resultSet) => {
-                done()
-                if (err) {
-                    console.log(
-                        TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-                }
+            await rdbStore.querySharingResource(undefined, (resultSet) => {
                 expect(null).assertFail();
             })
-        } catch (err) {
-            expect(err.code == 401).assertTrue();
-        }
-        done()
-        console.log(TAG + "************* allocResourceAndShareTest002 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest003
-     * @tc.desc Test Js Api allocResourceAndShare with invalid args.
-     */
-    it('allocResourceAndShareTest003', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest003 start *************");
-        try {
-            cloudData.sharing.allocResourceAndShare("employee", undefined, participants, (err, resultSet) => {
-                done()
-                if (err) {
-                    console.log(
-                        TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-                }
-                expect(null).assertFail();
-            })
-        } catch (err) {
-            expect(err.code == 401).assertTrue();
-        }
-        done()
-        console.log(TAG + "************* allocResourceAndShareTest003 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest004
-     * @tc.desc Test Js Api allocResourceAndShare with invalid args.
-     */
-    it('allocResourceAndShareTest004', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest004 start *************");
-        try {
-            cloudData.sharing
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-            cloudData.sharing.allocResourceAndShare("employee", predicates, undefined, (err, resultSet) => {
-                done()
-                if (err) {
-                    console.log(
-                        TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-                }
-                expect(null).assertFail();
-            })
-        } catch (err) {
-            expect(err.code == 401).assertTrue();
-        }
-        done()
-        console.log(TAG + "************* allocResourceAndShareTest004 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest005
-     * @tc.desc Test Js Api allocResourceAndShare normal.
-     */
-    it('allocResourceAndShareTest005', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest005 start *************");
-        try {
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-            const columns = ["id", "name", "age"];
-            cloudData.sharing.allocResourceAndShare(
-                "employee", predicates, participants, columns, (err, resultSet) => {
-                done()
-                expect(err != undefined).assertTrue();
-                console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-                expect(err.code == 202).assertTrue();
-            })
-        } catch (err) {
-            console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-            expect(null).assertFail();
-        }
-        done()
-        console.log(TAG + "************* allocResourceAndShareTest005 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest006
-     * @tc.desc Test Js Api allocResourceAndShare with invalid args.
-     */
-    it('allocResourceAndShareTest006', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest006 start *************");
-        try {
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-            cloudData.sharing.allocResourceAndShare(
-                "employee", predicates, participants, undefined, (err, resultSet) => {
-                done()
-                expect(err != undefined).assertTrue();
-                console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-                expect(err.code == 202).assertTrue();
-            })
-        } catch (err) {
-            expect(null).assertFail();
-        }
-        done()
-        console.log(TAG + "************* allocResourceAndShareTest006 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest007
-     * @tc.desc Test Js Api allocResourceAndShare normal.
-     */
-    it('allocResourceAndShareTest007', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest007 start *************");
-        try {
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-            const columns = ["id", "name", "age"];
-            await cloudData.sharing.allocResourceAndShare(
-                "employee", predicates, participants, columns).then((resultSet) => {
-                expect(null).assertFail();
-            }).catch((err) => {
-                console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-                expect(err.code == 202).assertTrue();
-            })
-        } catch (err) {
-            console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-            expect(null).assertFail();
-        }
-        done()
-        console.log(TAG + "************* allocResourceAndShareTest007 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest008
-     * @tc.desc Test Js Api allocResourceAndShare normal.
-     */
-    it('allocResourceAndShareTest008', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest008 start *************");
-        try {
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-            await cloudData.sharing.allocResourceAndShare("employee", predicates, participants).then((resultSet) => {
-                expect(null).assertFail();
-            }).catch((err) => {
-                expect(err != undefined).assertTrue();
-                console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-                expect(err.code == 202).assertTrue();
-            })
-        } catch (err) {
-            console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-            expect(null).assertFail();
-        }
-        done()
-        console.log(TAG + "************* allocResourceAndShareTest008 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest009
-     * @tc.desc Test Js Api allocResourceAndShare with invalid args.
-     */
-    it('allocResourceAndShareTest009', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest009 start *************");
-        try {
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-            const columns = ["id", "name", "age"];
-            await cloudData.sharing.allocResourceAndShare(
-                undefined, predicates, participants, columns).then((resultSet) => {
-                expect(null).assertFail();
-            }).catch((err) => {
-                expect(null).assertFail();
-            })
-        } catch (err) {
-            expect(err.code == 401).assertTrue()
-        }
-        done()
-        console.log(TAG + "************* allocResourceAndShareTest009 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest010
-     * @tc.desc Test Js Api allocResourceAndShare with invalid args.
-     */
-    it('allocResourceAndShareTest010', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest010 start *************");
-        try {
-            const columns = ["id", "name", "age"];
-            await cloudData.sharing.allocResourceAndShare(
-                "employee", undefined, participants, columns).then((resultSet) => {
-                expect(null).assertFail();
-            }).catch((err) => {
-                expect(null).assertFail();
-            })
-        } catch (err) {
-            expect(err.code == 401).assertTrue()
-        }
-        done()
-        console.log(TAG + "************* allocResourceAndShareTest010 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest011
-     * @tc.desc Test Js Api allocResourceAndShare with invalid args.
-     */
-    it('allocResourceAndShareTest011', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest011 start *************");
-        try {
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-            const columns = ["id", "name", "age"];
-            cloudData.sharing.allocResourceAndShare(
-                "employee", predicates, undefined, columns).then((resultSet) => {
-                expect(null).assertFail();
-            }).catch((err) => {
-                expect(null).assertFail();
-            })
-        } catch (err) {
-            expect(err.code == 401).assertTrue()
+        } catch (e) {
+            expect(e.code == 401).assertTrue();
         }
         done();
-        console.log(TAG + "************* allocResourceAndShareTest011 end *************");
+        console.log(TAG + "************* testQuerySharingResource001 end *************");
     })
 
     /**
-     * @tc.number SUB_DDM_CLOUD_SHARE_0010
-     * @tc.name allocResourceAndShareTest012
-     * @tc.desc Test Js Api allocResourceAndShare with invalid args.
+     * @tc.name testQuerySharingResource002
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0236
+     * @tc.desc querySharingResource test
      */
-    it('allocResourceAndShareTest012', 0, async function (done) {
-        console.log(TAG + "************* allocResourceAndShareTest012 start *************");
+    it('testQuerySharingResource002', 0, async function (done) {
+        console.log(TAG + "************* testQuerySharingResource002 start *************");
         try {
-            let predicates = new data_relationalStore.RdbPredicates("employee");
-            predicates.equalTo("id", 1);
-            await cloudData.sharing.allocResourceAndShare(
-                "employee", predicates, participants, undefined).then((resultSet) => {
+            await rdbStore.querySharingResource(null, (resultSet) => {
                 expect(null).assertFail();
-            }).catch((err) => {
-                expect(err != undefined).assertTrue();
-                console.log(TAG + `allocate resource and share failed, errcode:${err.code}, message ${err.message}.`);
-                expect(err.code == 202).assertTrue();
             })
-        } catch (err) {
-            expect(err.code == 401).assertTrue()
+        } catch (e) {
+            expect(e.code == 401).assertTrue();
         }
         done();
-        console.log(TAG + "************* allocResourceAndShareTest012 end *************");
+        console.log(TAG + "************* testQuerySharingResource002 end *************");
+    })
+
+    /**
+     * @tc.name testQuerySharingResource003
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0238
+     * @tc.desc querySharingResource test
+     */
+    it('testQuerySharingResource003', 0, async function (done) {
+        console.log(TAG + "************* testQuerySharingResource003 start *************");
+        let columns = ["data1", "data2"]
+        try {
+            await rdbStore.querySharingResource(undefined, columns, (resultSet) => {
+                expect(null).assertFail();
+            })
+        } catch (e) {
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+        console.log(TAG + "************* testQuerySharingResource003 end *************");
+    })
+
+    /**
+     * @tc.name testQuerySharingResource004
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0241
+     * @tc.desc querySharingResource test
+     */
+    it('testQuerySharingResource004', 0, async function (done) {
+        console.log(TAG + "************* testQuerySharingResource004 start *************");
+        try {
+            await rdbStore.querySharingResource(undefined).then((resultSet) => {
+                expect(null).assertFail();
+            }).catch((err) => {
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+        console.log(TAG + "************* testQuerySharingResource004 end *************");
+    })
+
+    /**
+     * @tc.name testQuerySharingResource005
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0243
+     * @tc.desc querySharingResource test
+     */
+    it('testQuerySharingResource005', 0, async function (done) {
+        console.log(TAG + "************* testQuerySharingResource005 start *************");
+        try {
+            let columns = ["data1", "data2"]
+            await rdbStore.querySharingResource(undefined, columns).then((resultSet) => {
+                expect(null).assertFail();
+            }).catch((err) => {
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+        console.log(TAG + "************* testQuerySharingResource005 end *************");
     })
     console.log(TAG + "*************Unit Test End*************");
 })
