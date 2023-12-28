@@ -49,7 +49,7 @@ protected:
     void Finalize() override;
 
 private:
-    std::shared_ptr<SqliteStatement> PrepareStep(SqliteConnection* connection, int &errCode);
+    std::shared_ptr<SqliteStatement> PrepareStep(std::shared_ptr<SqliteConnection> connection, int &errCode);
     void FillSharedBlock(int requiredPos);
 private:
     // The specified value is -1 when there is no data

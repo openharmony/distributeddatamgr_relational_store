@@ -101,8 +101,8 @@ private:
     int CheckAttach(const std::string &sql);
     bool PathToRealPath(const std::string &path, std::string &realPath);
     std::string ExtractFilePath(const std::string &fileFullName);
-    int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
-    int FreeTransaction(SqliteConnection *connection, const std::string &sql);
+    int BeginExecuteSql(const std::string &sql, std::shared_ptr<SqliteConnection> &connection);
+    int FreeTransaction(std::shared_ptr<SqliteConnection> connection, const std::string &sql);
     std::pair<std::string, std::vector<ValueObject>> GetInsertParams(
         std::map<std::string, ValueObject> &valuesMap, const std::string &table);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
