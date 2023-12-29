@@ -356,7 +356,7 @@ export var cloudExtension;
                     u.writeInt(y2.code);
                     if (y2.code === 0) {
                         u.writeInt(y2.value.interval);
-                        u.writeInt(y2.value.sessionId);
+                        u.writeInt(y2.value.lockId);
                     }
                     return true;
                 case j.Heartbeat:
@@ -365,7 +365,7 @@ export var cloudExtension;
                     u.writeInt(a3.code);
                     if (a3.code === 0) {
                         u.writeInt(a3.value.interval);
-                        u.writeInt(a3.value.sessionId);
+                        u.writeInt(a3.value.lockId);
                     }
                     return true;
                 case j.Unlock:
