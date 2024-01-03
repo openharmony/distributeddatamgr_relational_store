@@ -633,12 +633,21 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_003, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_001, TestSize.Level2)
 {
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetBundleName("QuerySharingResourceTest1");
+
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
     AbsRdbPredicates predicates("test");
     predicates.EqualTo("id", 1);
 
     auto ret = store->QuerySharingResource(predicates, {});
     EXPECT_EQ(E_OK, ret.first);
     EXPECT_EQ(nullptr, ret.second);
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
 }
 
 /* *
@@ -648,14 +657,22 @@ HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_001, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_002, TestSize.Level2)
 {
-    RdbStoreImplTest::store->ExecuteSql("CREATE TABLE test "
-                                        "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
-                                        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetBundleName("QuerySharingResourceTest2");
+
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    store->ExecuteSql("CREATE TABLE test "
+        "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int64_t rowId;
     ValuesBucket valuesBucket;
     valuesBucket.PutInt("data_key", ValueObject(1));
     valuesBucket.PutInt("timestamp", ValueObject(1000000000));
-    int errorCode = RdbStoreImplTest::store->Insert(rowId, "test", valuesBucket);
+    int errorCode = store->Insert(rowId, "test", valuesBucket);
     EXPECT_EQ(E_OK, errorCode);
     EXPECT_EQ(1, rowId);
     AbsRdbPredicates predicates("test");
