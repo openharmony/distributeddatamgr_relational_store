@@ -244,6 +244,60 @@ describe('CloudConfigCallbackTest', function () {
     })
 
     /**
+     * @tc.name NotifyDataChangeInvalidArgsCallbackTest
+     * @tc.desc Test Js Api NotifyDataChange with invalid args
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('NotifyDataChangeInvalidArgsCallbackTest', 0, function (done) {
+        console.info('NotifyDataChangeInvalidArgsCallbackTest');
+        try {
+            cloudData.Config.notifyDataChange(null,  function(err) {
+                if (err == undefined) {
+                    expect(null).assertFail();
+                    console.info('NotifyDataChangeInvalidArgsCallbackTest notifyDataChange success');
+                    done();
+                    return;
+                }
+                console.error('NotifyDataChangeInvalidArgsCallbackTest notifyDataChange fail' + `, error code is ${err.code}, message is ${err.message}`);
+                expect(null).assertFail();
+                done();
+            });
+        } catch (e) {
+            console.error('NotifyDataChangeInvalidArgsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 401).assertTrue();
+            done();
+        }
+    })
+
+    /**
+     * @tc.name NotifyDataChangeInvalidArgsNumsCallbackTest
+     * @tc.desc Test Js Api NotifyDataChange which parameters number are less
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('NotifyDataChangeInvalidArgsNumsCallbackTest', 0, function (done) {
+        console.info('NotifyDataChangeInvalidArgsNumsCallbackTest');
+        try {
+            cloudData.Config.notifyDataChange(function (err) {
+                if (err == undefined) {
+                    expect(null).assertFail();
+                    console.info('NotifyChangeInvalidArgsNumsCallbackTest notifyDataChange success');
+                    done();
+                    return;
+                }
+                console.error('NotifyChangeInvalidArgsNumsCallbackTest notifyDataChange fail' + `, error code is ${err.code}, message is ${err.message}`);
+                expect(null).assertFail();
+                done();
+            });
+        } catch (e) {
+            console.error('NotifyChangeInvalidArgsNumsCallbackTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 401).assertTrue();
+            done();
+        }
+    })
+
+    /**
      * @tc.name ClearInvalidArgsNumsCallbackTest
      * @tc.desc Test Js Api Clear which parameters number are less
      * @tc.type: FUNC

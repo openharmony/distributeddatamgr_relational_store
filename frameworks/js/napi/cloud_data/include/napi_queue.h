@@ -61,15 +61,18 @@ private:
 };
 
 /* check condition related to argc/argv, return and logging. */
-#define ASSERT_ARGS(ctxt, condition, message)                    \
+#define ASSERT_VALUE(ctxt, condition, errCode, message)          \
     do {                                                         \
         if (!(condition)) {                                      \
-            (ctxt)->status = napi_invalid_arg;                   \
+            (ctxt)->status = errCode;                            \
             (ctxt)->error = std::string(message);                \
             LOG_ERROR("test (" #condition ") failed: " message); \
             return;                                              \
         }                                                        \
     } while (0)
+
+#define ASSERT_ARGS(ctxt, condition, message)                    \
+    ASSERT_VALUE(ctxt, condition, napi_invalid_arg, message)
 
 #define ASSERT_STATUS(ctxt, message)                                      \
     do {                                                                  \

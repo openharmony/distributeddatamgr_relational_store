@@ -41,7 +41,7 @@ SqliteStatement::~SqliteStatement()
 }
 
 std::shared_ptr<SqliteStatement> SqliteStatement::CreateStatement(
-    SqliteConnection *connection, const std::string &sql)
+    std::shared_ptr<SqliteConnection> connection, const std::string &sql)
 {
     sqlite3_stmt *stmt = nullptr;
     int errCode = sqlite3_prepare_v2(connection->dbHandle, sql.c_str(), sql.length(), &stmt, nullptr);
@@ -69,7 +69,6 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
     sqlite3_stmt *stmt = nullptr;
     int errCode = sqlite3_prepare_v2(dbHandle, newSql.c_str(), newSql.length(), &stmt, nullptr);
     if (errCode != SQLITE_OK) {
-        LOG_ERROR("prepare_v2 ret is %{public}d", errCode);
         if (stmt != nullptr) {
             sqlite3_finalize(stmt);
         }

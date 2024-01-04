@@ -54,7 +54,7 @@ public:
     /**
      * @brief The error CMD in the correct case.
      */
-    enum {
+    enum Code {
         /** Indicates the current CMD is CMD_GET_ALL_COLUMN_NAMES.*/
         CMD_GET_ALL_COLUMN_NAMES,
         /** Indicates the current CMD is CMD_GET_COLUMN_COUNT.*/

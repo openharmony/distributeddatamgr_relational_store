@@ -729,8 +729,8 @@ typedef struct Rdb_ProgressDetails {
  *
  * @param progress Represents a pointer to an {@link Rdb_ProgressDetails} instance.
  * @param version Indicates the version of current {@link Rdb_ProgressDetails}.
- * @return If the operation is successful, a pointer to the instance of the @link Rdb_TableDetails} structure is returned.
- * Otherwise NULL is returned.
+ * @return If the operation is successful, a pointer to the instance of the @link Rdb_TableDetails} structure is
+ * returned. Otherwise NULL is returned.
  * @see Rdb_ProgressDetails
  * @see Rdb_TableDetails
  * @since 11

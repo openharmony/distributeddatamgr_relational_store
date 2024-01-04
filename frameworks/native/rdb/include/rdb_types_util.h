@@ -42,6 +42,7 @@ using PrimaryKey = Observer::PrimaryKey;
 using PrimaryKeys = std::vector<PrimaryKey>[Observer::CHG_TYPE_BUTT];
 using RdbChangedData = DistributedRdb::RdbChangedData;
 using RdbProperties = DistributedRdb::RdbChangeProperties;
+using Reference = DistributedRdb::Reference;
 template<>
 API_EXPORT bool Marshalling(const SyncerParam &input, MessageParcel &data);
 template<>
@@ -106,5 +107,9 @@ template<>
 API_EXPORT bool Marshalling(const RdbProperties &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(RdbProperties &output, MessageParcel &data);
+template<>
+API_EXPORT bool Marshalling(const Reference &input, MessageParcel &data);
+template<>
+API_EXPORT bool Unmarshalling(Reference &output, MessageParcel &data);
 }
 #endif // DISTRIBUTED_RDB_RDB_TYPES_UTIL_H

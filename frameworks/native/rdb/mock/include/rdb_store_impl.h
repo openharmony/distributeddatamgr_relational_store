@@ -101,20 +101,19 @@ private:
     int CheckAttach(const std::string &sql);
     bool PathToRealPath(const std::string &path, std::string &realPath);
     std::string ExtractFilePath(const std::string &fileFullName);
-    int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
-    int FreeTransaction(SqliteConnection *connection, const std::string &sql);
+    int BeginExecuteSql(const std::string &sql, std::shared_ptr<SqliteConnection> &connection);
+    int FreeTransaction(std::shared_ptr<SqliteConnection> connection, const std::string &sql);
     std::pair<std::string, std::vector<ValueObject>> GetInsertParams(
         std::map<std::string, ValueObject> &valuesMap, const std::string &table);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
-    void SetAssetStatusWhileInsert(const ValueObject &val);
+    void SetAssetStatus(const ValueObject &val, int32_t status);
     void DoCloudSync(const std::string &table);
     int InnerBackup(const std::string databasePath,
         const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>());
     inline std::string GetSqlArgs(size_t size);
     int RegisterDataChangeCallback();
-    int NotifyDataChange(DistributedRdb::RdbChangedData &rdbChangedData);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;

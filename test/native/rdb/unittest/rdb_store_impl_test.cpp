@@ -145,6 +145,45 @@ HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_002, TestSize.Level2)
 }
 
 /* *
+ * @tc.name: GetModifyTimeByRowIdTest_003
+ * @tc.desc: Abnormal testCase for GetModifyTime, get timestamp by id,
+ *           resultSet is empty or table name is not exist
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_003, TestSize.Level2)
+{
+    RdbStoreImplTest::store->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
+                                        "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+                                        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+    int64_t rowId;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutInt("data_key", ValueObject(1));
+    int errorCode = RdbStoreImplTest::store->Insert(rowId,
+        "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", valuesBucket);
+    EXPECT_EQ(E_OK, errorCode);
+    EXPECT_EQ(1, rowId);
+
+    std::vector<RdbStore::PRIKey> PKey = { 1 };
+    std::map<RdbStore::PRIKey, RdbStore::Date> resultMap =
+        RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
+    EXPECT_EQ(1, resultMap.size());
+
+    std::shared_ptr<ResultSet> resultPtr =
+        RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
+    int count = 0;
+    resultPtr->GetRowCount(count);
+    EXPECT_EQ(1, count);
+
+    RdbStore::ModifyTime result =
+        RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
+    RdbStore::PRIKey key = result.GetOriginKey(std::vector<uint8_t>{});
+    RdbStore::PRIKey monostate = std::monostate();
+    EXPECT_EQ(monostate, key);
+
+    RdbStoreImplTest::store->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
+}
+
+/* *
  * @tc.name: GetModifyTime_001
  * @tc.desc: Abnormal testCase for GetModifyTime, tablename columnName, keys is empty,
  *           and resultSet is null or empty
@@ -270,7 +309,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_RemoteQueryTest_001, TestSize.Level2)
 
     // GetRdbService succeeded if configuration file has already been configured
     ret = store->RemoteQuery("", predicates, {}, errCode);
-    EXPECT_EQ(E_OK, errCode);
+    EXPECT_NE(E_OK, errCode);
     EXPECT_EQ(nullptr, ret);
 
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
@@ -352,7 +391,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionTest_001, TestSize.Level2)
     RdbStoreConfig config(DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetPageSize(1024);
-    SqliteConnection* connection = SqliteConnection::Open(config, true, errCode);
+    auto connection = SqliteConnection::Open(config, true, errCode);
     EXPECT_NE(nullptr, connection);
     int64_t value = 0;
     errCode = connection->ExecuteGetLong(value, "PRAGMA page_size");
@@ -494,7 +533,7 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_001, TestSize.Level2)
     RdbStoreConfig config(DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetPageSize(1024);
-    SqliteConnection* connection = SqliteConnection::Open(config, true, errCode);
+    auto connection = SqliteConnection::Open(config, true, errCode);
     EXPECT_NE(nullptr, connection);
     RdbStoreImplTestOpenCallback helper;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -585,4 +624,90 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_003, TestSize.Level2)
     EXPECT_EQ(E_OK, errorCode);
 
     store->ExecuteSql("DROP TABLE IF EXISTS test_callback_t3;");
+}
+
+/* *
+ * @tc.name: Rdb_QuerySharingResourceTest_001
+ * @tc.desc: QuerySharingResource testCase
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_001, TestSize.Level2)
+{
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", 1);
+
+    auto ret = store->QuerySharingResource(predicates, {});
+    EXPECT_EQ(E_OK, ret.first);
+    EXPECT_EQ(nullptr, ret.second);
+}
+
+/* *
+ * @tc.name: Rdb_QuerySharingResourceTest_002
+ * @tc.desc: QuerySharingResource testCase
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_002, TestSize.Level2)
+{
+    RdbStoreImplTest::store->ExecuteSql("CREATE TABLE test "
+                                        "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+                                        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+    int64_t rowId;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutInt("data_key", ValueObject(1));
+    valuesBucket.PutInt("timestamp", ValueObject(1000000000));
+    int errorCode = RdbStoreImplTest::store->Insert(rowId, "test", valuesBucket);
+    EXPECT_EQ(E_OK, errorCode);
+    EXPECT_EQ(1, rowId);
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("data_key", 1);
+
+    auto [status, resultSet] = store->QuerySharingResource(predicates, { "id", "data_key" });
+    EXPECT_EQ(E_OK, status);
+    ASSERT_NE(nullptr, resultSet);
+    int colCount = 0;
+    EXPECT_EQ(resultSet->GetColumnCount(colCount), E_OK);
+    EXPECT_EQ(colCount, 2);
+    std::string columnNameOut;
+    std::set<std::string> columnNames = { "data_key", "timestamp" };
+    std::vector<std::string> columnNamesOut;
+    EXPECT_EQ(E_OK, resultSet->GetAllColumnNames(columnNamesOut));
+    EXPECT_EQ(std::set<std::string>(columnNamesOut.begin(), columnNamesOut.end()), columnNames);
+
+    int rowCount = 0;
+    EXPECT_EQ(resultSet->GetRowCount(rowCount), E_OK);
+    EXPECT_EQ(rowCount, 1);
+    RowEntity rowEntity;
+    EXPECT_EQ(E_OK, resultSet->GetRow(rowEntity));
+    auto value = rowEntity.Get("data_key");
+    int out;
+    EXPECT_EQ(E_OK, value.GetInt(out));
+    EXPECT_EQ(out, 1);
+
+    value = rowEntity.Get("timestamp");
+    EXPECT_EQ(E_OK, value.GetInt(out));
+    EXPECT_EQ(out, 1000000000);
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+}
+
+/* *
+ * @tc.name: CleanDirtyDataTest_001
+ * @tc.desc: Abnormal testCase for CleanDirtyData
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Abnormal_CleanDirtyDataTest_001, TestSize.Level2)
+{
+    store->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
+                      "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+    int errCode = E_OK;
+
+    // tabel is empty
+    std::string table = "";
+    uint64_t cursor = UINT64_MAX;
+    errCode = RdbStoreImplTest::store->CleanDirtyData(table, cursor);
+    EXPECT_EQ(E_INVALID_ARGS, errCode);
+
+    table = "test";
+    errCode = RdbStoreImplTest::store->CleanDirtyData(table, cursor);
+    EXPECT_EQ(E_ERROR, errCode);
+    store->ExecuteSql("DROP TABLE IF EXISTS test");
 }

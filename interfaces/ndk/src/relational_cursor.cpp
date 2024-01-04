@@ -197,7 +197,7 @@ int RelationalCursor::GetAssets(OH_Cursor *cursor, int32_t columnIndex, Data_Ass
     if (*length != inputLength) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    for (int i = 0; i < *length; ++i) {
+    for (uint32_t i = 0; i < *length; ++i) {
         if (value[i] == nullptr) {
             return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
         }

@@ -41,7 +41,7 @@ public:
     int32_t InitNotifier(const RdbSyncerParam &param, sptr<IRemoteObject> notifier) override;
 
     int32_t SetDistributedTables(const RdbSyncerParam &param, const std::vector<std::string> &tables,
-        int32_t type = DISTRIBUTED_DEVICE) override;
+        const std::vector<Reference> &references, int32_t type = DISTRIBUTED_DEVICE) override;
 
     int32_t Sync(const RdbSyncerParam& param, const Option& option,
                  const PredicatesMemo& predicates, const AsyncDetail &async) override;
@@ -58,8 +58,8 @@ public:
     int32_t UnregisterAutoSyncCallback(
         const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer) override;
 
-    int32_t RemoteQuery(const RdbSyncerParam& param, const std::string& device, const std::string& sql,
-                        const std::vector<std::string>& selectionArgs, sptr<IRemoteObject>& resultSet) override;
+    std::pair<int32_t, std::shared_ptr<ResultSet>> RemoteQuery(const RdbSyncerParam &param, const std::string &device,
+        const std::string &sql, const std::vector<std::string> &selectionArgs) override;
 
     Observers ExportObservers();
 
@@ -70,6 +70,9 @@ public:
     int32_t Delete(const RdbSyncerParam &param) override;
 
     int32_t NotifyDataChange(const RdbSyncerParam& param, const RdbChangedData &clientChangedData) override;
+
+    std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(const RdbSyncerParam &param,
+        const PredicatesMemo &predicates, const std::vector<std::string> &columns) override;
 private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
     using PrimaryFields = RdbStoreObserver::PrimaryFields;

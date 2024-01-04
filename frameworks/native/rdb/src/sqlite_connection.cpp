@@ -17,6 +17,7 @@
 
 #include <cerrno>
 #include <memory>
+#include <new>
 #include <sqlite3sym.h>
 #include <sys/stat.h>
 #ifdef RDB_SUPPORT_ICU
@@ -40,7 +41,6 @@
 #include "relational_store_client.h"
 #include "share_block.h"
 #include "shared_block_serializer_info.h"
-#include "relational_store_client.h"
 #endif
 
 namespace OHOS {
@@ -55,16 +55,16 @@ using RdbKeyFile = RdbSecurityManager::KeyFileType;
 #endif
 #endif
 
-SqliteConnection *SqliteConnection::Open(const RdbStoreConfig &config, bool isWriteConnection, int &errCode)
+std::shared_ptr<SqliteConnection> SqliteConnection::Open(
+    const RdbStoreConfig &config, bool isWriteConnection, int &errCode)
 {
-    auto connection = new (std::nothrow) SqliteConnection(isWriteConnection);
+    std::shared_ptr<SqliteConnection> connection(new (std::nothrow) SqliteConnection(isWriteConnection));
     if (connection == nullptr) {
         LOG_ERROR("SqliteConnection::Open new failed, connection is nullptr");
         return nullptr;
     }
     errCode = connection->InnerOpen(config);
     if (errCode != E_OK) {
-        delete connection;
         return nullptr;
     }
     return connection;
@@ -331,14 +331,24 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config)
         }
     }
 
+    errCode = ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ALGO);
+    if (errCode != E_OK) {
+        LOG_ERROR("set cipher algo failed, err = %{public}d", errCode);
+        return errCode;
+    }
+    errCode = ExecuteSql(GlobalExpr::CIPHER_KDF_ITER_NUMBER);
+    if (errCode != E_OK) {
+        LOG_ERROR("set number of iter to generate the key, err = %{public}d", errCode);
+        return errCode;
+    }
     errCode = ExecuteSql(GlobalExpr::CODEC_HMAC_ALGO);
     if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection set sha algo failed, err = %{public}d", errCode);
+        LOG_ERROR("set sha algo failed, err = %{public}d", errCode);
         return errCode;
     }
     errCode = ExecuteSql(GlobalExpr::CODEC_REKEY_HMAC_ALGO);
     if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection set rekey sha algo failed, err = %{public}d", errCode);
+        LOG_ERROR("set rekey sha algo failed, err = %{public}d", errCode);
         return errCode;
     }
 
@@ -895,7 +905,6 @@ int SqliteConnection::LimitWalSize()
 
 void SqliteConnection::MergeAssets(sqlite3_context *ctx, int argc, sqlite3_value **argv)
 {
-    LOG_DEBUG("merge assets begin");
     // 2 is the number of parameters
     if (ctx == nullptr || argc != 2 || argv == nullptr) {
         LOG_ERROR("Parameter does not meet restrictions.");
@@ -907,16 +916,13 @@ void SqliteConnection::MergeAssets(sqlite3_context *ctx, int argc, sqlite3_value
         int len = sqlite3_value_bytes(argv[0]);
         RawDataParser::ParserRawData(data, len, assets);
     }
-    LOG_DEBUG("merge assets get old assets");
     std::map<std::string, ValueObject::Asset> newAssets;
     data = static_cast<const uint8_t *>(sqlite3_value_blob(argv[1]));
     if (data != nullptr) {
         int len = sqlite3_value_bytes(argv[1]);
         RawDataParser::ParserRawData(data, len, newAssets);
     }
-    LOG_DEBUG("merge assets get new assets");
     CompAssets(assets, newAssets);
-    LOG_DEBUG("merge assets comp assets");
     auto blob = RawDataParser::PackageRawData(assets);
     sqlite3_result_blob(ctx, blob.data(), blob.size(), SQLITE_TRANSIENT);
 }
