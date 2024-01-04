@@ -1,0 +1,48 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//arkcompiler/ets_frontend/es2panda/es2abc_config.gni")
+import("//build/ohos.gni")
+import("//foundation/arkui/ace_engine/ace_config.gni")
+
+es2abc_gen_abc("gen_cloud_extension_abc") {
+  src_js = rebase_path("cloud_extension_stub.js")
+  dst_file = rebase_path(target_out_dir + "/cloud_extension.abc")
+  in_puts = [ "cloud_extension_stub.js" ]
+  out_puts = [ target_out_dir + "/cloud_extension.abc" ]
+  extra_args = [ "--module" ]
+}
+
+gen_js_obj("cloud_extension_abc") {
+  input = get_label_info(":gen_cloud_extension_abc", "target_out_dir") +
+          "/cloud_extension.abc"
+  output = target_out_dir + "/cloud_extension_abc.o"
+  dep = ":gen_cloud_extension_abc"
+}
+
+ohos_shared_library("cloudextension") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  sources = [ "cloud_extension.cpp" ]
+
+  deps = [ ":cloud_extension_abc" ]
+
+  external_deps = [ "napi:ace_napi" ]
+
+  relative_install_dir = "module/data"
+  subsystem_name = "distributeddatamgr"
+  part_name = "relational_store"
+}

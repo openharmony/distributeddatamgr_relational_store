@@ -37,6 +37,7 @@ class ExecutorPool;
 }
 
 namespace OHOS::NativeRdb {
+class DelayNotify;
 class RdbStoreLocalObserver {
 public:
     explicit RdbStoreLocalObserver(DistributedRdb::RdbStoreObserver *observer) : observer_(observer) {};
@@ -141,6 +142,8 @@ public:
         const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
     std::shared_ptr<AbsSharedResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
+    std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
     int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
@@ -177,14 +180,14 @@ public:
 private:
     int InnerOpen();
     int CheckAttach(const std::string &sql);
-    int BeginExecuteSql(const std::string &sql, SqliteConnection **connection);
-    int FreeTransaction(SqliteConnection *connection, const std::string &sql);
+    int BeginExecuteSql(const std::string &sql, std::shared_ptr<SqliteConnection> &connection);
+    int FreeTransaction(std::shared_ptr<SqliteConnection> connection, const std::string &sql);
     std::pair<std::string, std::vector<ValueObject>> GetInsertParams(
         std::map<std::string, ValueObject> &valuesMap, const std::string &table);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
-    void SetAssetStatusWhileInsert(const ValueObject &val);
+    void SetAssetStatus(const ValueObject &val, int32_t status);
     void DoCloudSync(const std::string &table);
     int InnerSync(const DistributedRdb::RdbService::Option &option, const DistributedRdb::PredicatesMemo &predicates,
         const AsyncDetail &async);
@@ -203,7 +206,7 @@ private:
     int UnSubscribeLocalSharedAll(const SubscribeOption& option);
     int UnSubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
     int RegisterDataChangeCallback();
-    int NotifyDataChange(DistributedRdb::RdbChangedData &rdbChangedData);
+    void InitDelayNotifier();
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;
@@ -217,6 +220,7 @@ private:
     DistributedRdb::RdbSyncerParam syncerParam_;
     bool isEncrypt_;
     std::shared_ptr<ExecutorPool> pool_;
+    std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
 
     mutable std::shared_mutex rwMutex_;
     static inline constexpr uint32_t INTERVAL = 200;

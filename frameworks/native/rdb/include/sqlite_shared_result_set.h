@@ -49,25 +49,25 @@ protected:
     void Finalize() override;
 
 private:
-    std::shared_ptr<SqliteStatement> PrepareStep(SqliteConnection* connection, int &errCode);
+    std::shared_ptr<SqliteStatement> PrepareStep(std::shared_ptr<SqliteConnection> connection, int &errCode);
     void FillSharedBlock(int requiredPos);
 private:
     // The specified value is -1 when there is no data
     static const int NO_COUNT = -1;
     // The pick position of the shared block for search
     static const int PICK_POS = 3;
+
     std::shared_ptr<RdbStoreImpl> store_;
     SqliteConnectionPool *connectionPool_;
-    // The number of rows that can fit in the shared block, 0 if unknown
-    int resultSetBlockCapacity;
-    // Controls fetching of rows relative to requested position
-    bool isOnlyFillResultSetBlock;
-    std::string qrySql;
-    std::vector<ValueObject> bindArgs_;
+    int resultSetBlockCapacity_;
     // The number of rows in the cursor
-    int rowNum;
+    int rowNum_;
+    std::string qrySql_;
+    std::vector<ValueObject> bindArgs_;
     std::vector<std::string> columnNames_;
     std::mutex columnNamesLock_;
+    // Controls fetching of rows relative to requested position
+    bool isOnlyFillResultSetBlock_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

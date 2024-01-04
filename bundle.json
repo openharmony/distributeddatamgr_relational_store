@@ -38,7 +38,8 @@
         "name": "relational_store",
         "subsystem": "distributeddatamgr",
         "syscap": [
-            "SystemCapability.DistributedDataManager.RelationalStore.Core"
+            "SystemCapability.DistributedDataManager.RelationalStore.Core",
+            "SystemCapability.DistributedDataManager.CommonType"
         ],
         "features": ["relational_store_rdb_support_icu"],
         "adapted_system_type": [
@@ -64,7 +65,6 @@
                 "samgr"
             ],
             "third_party": [
-                "googletest",
                 "icu",
                 "sqlite"
             ]
@@ -81,7 +81,9 @@
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/dataability:dataability",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:rdb",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:napi_rdb",
-                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/relationalstore:relationalstore"
+                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/relationalstore:relationalstore",
+                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/cloud_extension:cloudextension",
+                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/common:commontype_napi"
             ],
             "inner_kits": [
                 {

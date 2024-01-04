@@ -17,6 +17,7 @@
 #define NATIVE_RDB_SQLITE_CONNECTION_POOL_H
 
 #include <condition_variable>
+#include <memory>
 #include <mutex>
 #include <vector>
 #include <sstream>
@@ -34,8 +35,8 @@ class SqliteConnectionPool {
 public:
     static SqliteConnectionPool *Create(const RdbStoreConfig &storeConfig, int &errCode);
     ~SqliteConnectionPool();
-    SqliteConnection *AcquireConnection(bool isReadOnly);
-    void ReleaseConnection(SqliteConnection *connection);
+    std::shared_ptr<SqliteConnection> AcquireConnection(bool isReadOnly);
+    void ReleaseConnection(std::shared_ptr<SqliteConnection> connection);
     int ReOpenAvailableReadConnections();
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
@@ -51,32 +52,32 @@ private:
     explicit SqliteConnectionPool(const RdbStoreConfig &storeConfig);
     int Init();
     void InitReadConnectionCount();
-    SqliteConnection *AcquireWriteConnection();
+    std::shared_ptr<SqliteConnection> AcquireWriteConnection();
     void ReleaseWriteConnection();
-    SqliteConnection *AcquireReadConnection();
-    void ReleaseReadConnection(SqliteConnection *connection);
+    std::shared_ptr<SqliteConnection> AcquireReadConnection();
+    void ReleaseReadConnection(std::shared_ptr<SqliteConnection> connection);
     void CloseAllConnections();
     int InnerReOpenReadConnections();
 
-    RdbStoreConfig config;
-    SqliteConnection *writeConnection;
-    std::mutex writeMutex;
-    std::condition_variable writeCondition;
-    bool writeConnectionUsed;
+    RdbStoreConfig config_;
+    std::shared_ptr<SqliteConnection> writeConnection_;
+    std::mutex writeMutex_;
+    std::condition_variable writeCondition_;
+    bool writeConnectionUsed_;
 
-    std::vector<SqliteConnection *> readConnections;
-    std::mutex readMutex;
-    std::mutex rdbMutex;
-    std::condition_variable readCondition;
-    int readConnectionCount;
-    int idleReadConnectionCount;
+    std::vector<std::shared_ptr<SqliteConnection>> readConnections_;
+    std::mutex readMutex_;
+    std::mutex rdbMutex_;
+    std::condition_variable readCondition_;
+    int readConnectionCount_;
+    int idleReadConnectionCount_;
     const static int LIMITATION = 1024;
 
-    std::stack<BaseTransaction> transactionStack;
-    std::mutex transactionStackMutex;
-    std::condition_variable transCondition;
-    std::mutex transMutex;
-    bool transactionUsed;
+    std::stack<BaseTransaction> transactionStack_;
+    std::mutex transactionStackMutex_;
+    std::condition_variable transCondition_;
+    std::mutex transMutex_;
+    bool transactionUsed_;
 };
 
 } // namespace NativeRdb

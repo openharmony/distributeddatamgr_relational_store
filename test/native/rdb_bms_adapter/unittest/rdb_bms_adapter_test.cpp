@@ -51,8 +51,8 @@ void RdbBMSAdapterTest::TearDown(void)
 HWTEST_F(RdbBMSAdapterTest, Rdb_BMS_Adapter_001, TestSize.Level1)
 {
     OHOS::AppExecFwk::ExtensionAbilityInfo extensionInfo;
-    std::vector<std::string> profileInfos;
-    auto ret = DataShareProfileInfo::GetResConfigFile(extensionInfo, profileInfos);
+    std::string profileInfo;
+    auto ret = DataShareProfileInfo::GetResConfigFile(extensionInfo, profileInfo);
     EXPECT_EQ(ret, false);
 }
 
@@ -91,11 +91,14 @@ HWTEST_F(RdbBMSAdapterTest, Rdb_BMS_Adapter_004, TestSize.Level1)
     config.writePermission = "writePermission";
     config.readPermission = "readPermission";
     profileInfo.tableConfig.emplace_back(config);
+    profileInfo.isSilentProxyEnable = false;
 
     auto jstr = to_string(profileInfo.Marshall());
     ProfileInfo profileInfo1;
     profileInfo1.Unmarshall(jstr);
     EXPECT_EQ(profileInfo.tableConfig.size(), profileInfo1.tableConfig.size());
+    EXPECT_EQ(profileInfo.isSilentProxyEnable, profileInfo1.isSilentProxyEnable);
+    EXPECT_EQ(profileInfo1.isSilentProxyEnable, false);
 }
 
 HWTEST_F(RdbBMSAdapterTest, Rdb_BMS_Adapter_005, TestSize.Level1)
@@ -127,4 +130,20 @@ HWTEST_F(RdbBMSAdapterTest, Rdb_BMS_Adapter_006, TestSize.Level1)
     auto jsonObject = OHOS::Serializable::ToJson(dataPropertiesStr);
     auto jsonStr = to_string(jsonObject);
     EXPECT_EQ(dataPropertiesStr, jsonStr);
+}
+
+HWTEST_F(RdbBMSAdapterTest, Rdb_BMS_Adapter_007, TestSize.Level1)
+{
+    ProfileInfo profileInfo;
+    Config config;
+    config.uri = "uri";
+    config.crossUserMode = 1;
+    config.writePermission = "writePermission";
+    config.readPermission = "readPermission";
+    profileInfo.tableConfig.emplace_back(config);
+
+    auto jstr = to_string(profileInfo.Marshall());
+    ProfileInfo profileInfo1;
+    profileInfo1.Unmarshall(jstr);
+    EXPECT_EQ(profileInfo1.isSilentProxyEnable, true);
 }

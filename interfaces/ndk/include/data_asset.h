@@ -275,7 +275,7 @@ int OH_Data_Asset_GetStatus(Data_Asset *asset, Data_AssetStatus *status);
  * @see Data_Asset.
  * @since 11
  */
-Data_Asset *OH_Data_Asset_CreateOne();
+Data_Asset *OH_Data_Asset_CreateOne(void);
 
 /**
  * @brief Destroy the {@link Data_Asset} object and reclaim the memory occupied by the object.

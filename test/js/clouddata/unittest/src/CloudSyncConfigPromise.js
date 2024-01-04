@@ -213,6 +213,52 @@ describe('CloudConfigPromiseTest', function () {
     })
 
     /**
+     * @tc.name NotifyDataChangeInvalidArgsTest
+     * @tc.desc Test Js Api NotifyDataChange with invalid args
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('NotifyDataChangeInvalidArgsTest', 0, async function (done) {
+        console.info('NotifyDataChangeInvalidArgsTest');
+        try {
+            await cloudData.Config.notifyDataChange(null).then(() => {
+                console.info('NotifyDataChangeInvalidArgsTest success');
+                expect(null).assertFail();
+            }).catch((error) => {
+                console.error('NotifyDataChangeInvalidArgsTest NotifyChange fail' + `, error code is ${error.code}, message is ${error.message}`);
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            console.error('NotifyDataChangeInvalidArgsTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+    })
+
+    /**
+     * @tc.name NotifyDataChangeInvalidArgsNumsTest
+     * @tc.desc Test Js Api NotifyChange which parameters number are less
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('NotifyDataChangeInvalidArgsNumsTest', 0, async function (done) {
+        console.info('NotifyDataChangeInvalidArgsNumsTest');
+        try {
+            await cloudData.Config.notifyDataChange().then(() => {
+                console.info('NotifyDataChangeInvalidArgsNumsTest success');
+                expect(null).assertFail();
+            }).catch((error) => {
+                console.error('NotifyDataChangeInvalidArgsNumsTest NotifyChange fail' + `, error code is ${error.code}, message is ${error.message}`);
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            console.error('NotifyDataChangeInvalidArgsNumsTest fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+    })
+
+    /**
      * @tc.name ClearInvalidArgsNumsTest
      * @tc.desc Test Js Api Clean which parameters number are less
      * @tc.type: FUNC

@@ -44,6 +44,7 @@ describe('rdbStoreQueryByCursorTest', function () {
             }
             await rdbStore.setDistributedTables(
                 ["query_tb"], relationalStore.DistributedType.DISTRIBUTED_CLOUD, setConfig);
+            console.log(TAG + "set distributed tables success");
         } catch (err) {
             console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
             expect().assertFail()
@@ -73,7 +74,7 @@ describe('rdbStoreQueryByCursorTest', function () {
     afterEach(async function () {
         console.info(TAG + 'afterEach');
         try {
-            let predicates = await new relationalStore.RdbPredicates("query_tb");
+            let predicates = new relationalStore.RdbPredicates("query_tb");
             predicates.equalTo("data", "cloud_sync_insert");
             await rdbStore.delete(predicates);
         } catch (err) {
@@ -97,7 +98,7 @@ describe('rdbStoreQueryByCursorTest', function () {
     it('testRdbStoreQueryAllColumnsWithCursor', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreQueryAllColumnsWithCursor start *************");
 
-        let predicates = await new relationalStore.RdbPredicates("query_tb");
+        let predicates = new relationalStore.RdbPredicates("query_tb");
         predicates.greaterThan(relationalStore.Field.CURSOR_FIELD, 0);
         if (rdbStore == undefined) {
             return;
@@ -127,7 +128,7 @@ describe('rdbStoreQueryByCursorTest', function () {
     it('testRdbStoreQuerySpecificColumnsWithCursor', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreQuerySpecificColumnsWithCursor start *************");
 
-        let predicates = await new relationalStore.RdbPredicates("query_tb");
+        let predicates = new relationalStore.RdbPredicates("query_tb");
         predicates.greaterThan(relationalStore.Field.CURSOR_FIELD, 0);
         predicates.orderByAsc(relationalStore.Field.CURSOR_FIELD);
         predicates.orderByAsc("data");
@@ -164,13 +165,13 @@ describe('rdbStoreQueryByCursorTest', function () {
         const valueBucket = {
             "recycledTime": "1234567890",
         }
-        let updatePredicates = await new relationalStore.RdbPredicates("query_tb");
+        let updatePredicates = new relationalStore.RdbPredicates("query_tb");
         updatePredicates.equalTo("uuid", "test_key1");
         updatePredicates.or();
         updatePredicates.equalTo("uuid", "test_key2");
         await rdbStore.update(valueBucket, updatePredicates);
         console.log(TAG + `update end.`);
-        let predicates = await new relationalStore.RdbPredicates("query_tb");
+        let predicates = new relationalStore.RdbPredicates("query_tb");
         predicates.greaterThanOrEqualTo(relationalStore.Field.CURSOR_FIELD, 26);
         predicates.equalTo(relationalStore.Field.ORIGIN_FIELD, relationalStore.Origin.LOCAL);
         predicates.orderByDesc(relationalStore.Field.CURSOR_FIELD);
@@ -202,11 +203,11 @@ describe('rdbStoreQueryByCursorTest', function () {
         if (rdbStore == undefined) {
             return;
         }
-        let deletedPred = await new relationalStore.RdbPredicates("query_tb");
+        let deletedPred = new relationalStore.RdbPredicates("query_tb");
         deletedPred.equalTo("uuid", "test_key3");
         await rdbStore.delete(deletedPred);
         console.log(TAG + `delete end.`);
-        let predicates = await new relationalStore.RdbPredicates("query_tb");
+        let predicates = new relationalStore.RdbPredicates("query_tb");
         predicates.greaterThan(relationalStore.Field.CURSOR_FIELD, 37);
         predicates.orderByAsc(relationalStore.Field.CURSOR_FIELD);
         try {
@@ -233,7 +234,7 @@ describe('rdbStoreQueryByCursorTest', function () {
         if (rdbStore == undefined) {
             return;
         }
-        let predicates = await new relationalStore.RdbPredicates("query_tb");
+        let predicates = new relationalStore.RdbPredicates("query_tb");
         predicates.greaterThan(relationalStore.Field.CURSOR_FIELD, 0);
         predicates.and();
         predicates.beginWrap();
@@ -257,12 +258,12 @@ describe('rdbStoreQueryByCursorTest', function () {
     })
 
     /**
-     * @tc.name clean retain data
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_QUERY_WITH_CURSOR_0006
-     * @tc.desc clean retain data.
+     * @tc.name clean dirty data
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLEAN_DIRTY_DATA_0001
+     * @tc.desc clean dirty data.
      */
-    it('testRdbStoreCleanRetainData', 0, async function (done) {
-        console.log(TAG + "************* testRdbStoreCleanRetainData start *************");
+    it('testRdbStoreCleanDirtyData', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreCleanDirtyData start *************");
         if (rdbStore == undefined) {
             return;
         }
@@ -270,7 +271,7 @@ describe('rdbStoreQueryByCursorTest', function () {
         await promise.then((err) => {
             expect(true).assertTrue();
         }).catch((err) => {
-            console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
+            console.log(TAG + `clean dirty data fail, errcode:${JSON.stringify(err)}.`);
             done();
             expect().assertFail();
         });
@@ -278,12 +279,12 @@ describe('rdbStoreQueryByCursorTest', function () {
     })
 
     /**
-     * @tc.name clean retain data with specified cursor.
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_QUERY_WITH_CURSOR_0007
-     * @tc.desc clean retain data with specified cursor.
+     * @tc.name clean dirty data with specified cursor.
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLEAN_DIRTY_DATA_0002
+     * @tc.desc clean dirty data with specified cursor.
      */
-    it('testRdbStoreCleanRetainDataWithSpecifiedCursor', 0, async function (done) {
-        console.log(TAG + "************* testRdbStoreCleanRetainDataWithSpecifiedCursor start *************");
+    it('testRdbStoreCleanDirtyDataWithSpecifiedCursor', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreCleanDirtyDataWithSpecifiedCursor start *************");
         if (rdbStore == undefined) {
             return;
         }
@@ -292,10 +293,63 @@ describe('rdbStoreQueryByCursorTest', function () {
         await promise.then((err) => {
             expect(true).assertTrue();
         }).catch((err) => {
-            console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
+            console.log(TAG + `clean dirty data fail, errcode:${JSON.stringify(err)}.`);
             done();
             expect().assertFail();
         });
+        done();
+    })
+
+    /**
+     * @tc.name clean dirty data with error param.
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLEAN_DIRTY_DATA_0003
+     * @tc.desc clean dirty data with specified cursor.
+     */
+    it('testRdbStoreCleanDirtyDataWithErrorParam', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreCleanDirtyDataWithErrorParam start *************");
+        if (rdbStore == undefined) {
+            return;
+        }
+        try {
+            let cursor = 3;
+            let promise = rdbStore.cleanDirtyData();
+            await promise.then((err) => {
+                expect().assertFail();
+            }).catch((err) => {
+                console.log(TAG + `clean dirty data fail, errcode:${JSON.stringify(err)}.`);
+                expect(true).assertTrue();
+                done();
+            });
+        } catch (err) {
+            console.error("clean dirty data, err: code=" + err.code + " message=" + err.message)
+            expect(true).assertTrue()
+        }
+        done();
+    })
+
+    /**
+     * @tc.name clean dirty data with specified cursor by callback method.
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLEAN_DIRTY_DATA_0004
+     * @tc.desc clean dirty data with specified cursor.
+     */
+    it('testRdbStoreCleanDirtyDataWithSpecifiedCursorCallback', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreCleanDirtyDataWithSpecifiedCursorCallback start *************");
+        if (rdbStore == undefined) {
+            return;
+        }
+        try {
+            let cursor = 100;
+            rdbStore.cleanDirtyData("query_tb", cursor, (err) => {
+                if (err) {
+                    console.error(TAG, "clean dirty data failed, err: code=" + err.code + " message=" + err.message);
+                    expect(false).assertTrue() ;
+                }
+                done();
+            })
+        } catch (err) {
+            console.error("clean dirty data, err: code=" + err.code + " message=" + err.message)
+            expect(false).assertTrue()
+        }
         done();
     })
     console.log(TAG + "*************Unit Test End*************");

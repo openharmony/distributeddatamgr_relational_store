@@ -16,14 +16,18 @@
 #include "js_config.h"
 #include "js_const_properties.h"
 #include "logger.h"
+#include "js_cloud_share.h"
 
 using namespace OHOS::CloudData;
 using namespace OHOS::Rdb;
 
 static napi_value Init(napi_env env, napi_value exports)
 {
+    auto sharingExport = InitCloudSharing(env, exports);
+    napi_status status = InitSharingConstProperties(env, sharingExport);
+    LOG_INFO("init Enumerate Constants %{public}d", status);
     exports = JsConfig::InitConfig(env, exports);
-    napi_status status = InitConstProperties(env, exports);
+    status = InitConstProperties(env, exports);
     LOG_INFO("init Enumerate Constants %{public}d", status);
     return exports;
 }
