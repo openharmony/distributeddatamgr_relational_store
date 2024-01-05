@@ -46,7 +46,7 @@ public:
    static constexpr char CODEC_HMAC_ALGO[] = "PRAGMA codec_hmac_algo=sha256";
    static constexpr char CODEC_REKEY_HMAC_ALGO[] = "PRAGMA codec_rekey_hmac_algo=sha256";
    static constexpr char CIPHER_DEFAULT_ALGO[] = "PRAGMA codec_cipher='aes-256-gcm'";
-   static constexpr char CIPHER_KDF_ITER_NUMBER[] = "PRAGMA codec_kdf_iter=5000";
+   static constexpr char CIPHER_KDF_ITER[] = "PRAGMA codec_kdf_iter=";
    static constexpr char CIPHER_DEFAULT_ATTACH_HMAC_ALGO[] = "PRAGMA cipher_default_attach_hmac_algo=sha256";
 };
 

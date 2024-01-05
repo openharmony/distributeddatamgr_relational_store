@@ -58,16 +58,18 @@ using RdbKeyFile = RdbSecurityManager::KeyFileType;
 std::shared_ptr<SqliteConnection> SqliteConnection::Open(
     const RdbStoreConfig &config, bool isWriteConnection, int &errCode)
 {
-    std::shared_ptr<SqliteConnection> connection(new (std::nothrow) SqliteConnection(isWriteConnection));
-    if (connection == nullptr) {
-        LOG_ERROR("SqliteConnection::Open new failed, connection is nullptr");
-        return nullptr;
+    for (size_t i = 0; i < ITERS_COUNT; i++) {
+        std::shared_ptr<SqliteConnection> connection(new (std::nothrow) SqliteConnection(isWriteConnection));
+        if (connection == nullptr) {
+            LOG_ERROR("SqliteConnection::Open new failed, connection is nullptr");
+            return nullptr;
+        }
+        errCode = connection->InnerOpen(config, i);
+        if (errCode == E_OK) {
+            return connection;
+        }
     }
-    errCode = connection->InnerOpen(config);
-    if (errCode != E_OK) {
-        return nullptr;
-    }
-    return connection;
+    return nullptr;
 }
 
 SqliteConnection::SqliteConnection(bool isWriteConnection)
@@ -98,7 +100,7 @@ int SqliteConnection::GetDbPath(const RdbStoreConfig &config, std::string &dbPat
     return E_OK;
 }
 
-int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
+int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
 {
     std::string dbPath;
     auto ret = GetDbPath(config, dbPath);
@@ -134,12 +136,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
         return SQLiteError::ErrNo(errCode);
     }
 
-    RegDefaultFunctions(dbHandle);
-    SetPersistWal();
-    SetBusyTimeout(DEFAULT_BUSY_TIMEOUT_MS);
-    LimitPermission(dbPath);
-
-    errCode = Config(config);
+    errCode = Configure(config, retry, dbPath);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -217,18 +214,38 @@ int SqliteConnection::SetCustomScalarFunction(const std::string &functionName, i
     return err;
 }
 
-int SqliteConnection::Config(const RdbStoreConfig &config)
+int SqliteConnection::Configure(const RdbStoreConfig &config, uint32_t retry, std::string &dbPath)
 {
+    if (retry >= ITERS_COUNT) {
+        return E_INVALID_ARGS;
+    }
+
     if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
         return E_OK;
     }
 
-    int errCode = SetPageSize(config);
+    auto errCode = RegDefaultFunctions(dbHandle);
     if (errCode != E_OK) {
         return errCode;
     }
 
-    errCode = SetEncryptKey(config);
+    SetBusyTimeout(DEFAULT_BUSY_TIMEOUT_MS);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    LimitPermission(dbPath);
+
+    errCode = SetPersistWal();
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    errCode = SetPageSize(config);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    
+    errCode = SetEncryptKey(config, ITERS[retry]);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -295,7 +312,70 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
     return errCode;
 }
 
-int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+int SqliteConnection::ExecuteEncryptSql(const RdbStoreConfig &config, uint32_t iter)
+{
+    int errCode = E_ERROR;
+    if (iter != NO_ITER) {
+        errCode = ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ALGO);
+        if (errCode != E_OK) {
+            LOG_ERROR("set cipher algo failed, err = %{public}d", errCode);
+            return errCode;
+        }
+        errCode = ExecuteSql(std::string(GlobalExpr::CIPHER_KDF_ITER) + std::to_string(iter));
+        if (errCode != E_OK) {
+            LOG_ERROR("set kdf iter number V1 failed, err = %{public}d", errCode);
+            return errCode;
+        }
+    }
+
+    errCode = ExecuteSql(GlobalExpr::CODEC_HMAC_ALGO);
+    if (errCode != E_OK) {
+        LOG_ERROR("set codec hmac algo failed, err = %{public}d", errCode);
+        return errCode;
+    }
+
+    errCode = ExecuteSql(GlobalExpr::CODEC_REKEY_HMAC_ALGO);
+    if (errCode != E_OK) {
+        LOG_ERROR("set rekey sha algo failed, err = %{public}d", errCode);
+        return errCode;
+    }
+
+    std::string version;
+    errCode = ExecuteGetString(version, GlobalExpr::PRAGMA_VERSION);
+    if (errCode != E_OK || version.empty()) {
+        LOG_ERROR("test failed, iter = %{public}d, err = %{public}d, name = %{public}s", iter, errCode,
+            config.GetName().c_str());
+        return errCode;
+    }
+
+    return errCode;
+}
+
+int SqliteConnection::ReSetKey()
+{
+    auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
+    if (!rdbPwd.IsValid()) {
+        RdbSecurityManager::GetInstance().DelRdbSecretDataFile(RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
+        LOG_ERROR("new key is not valid.");
+        return E_OK;
+    }
+
+    auto key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+    int errCode = sqlite3_rekey(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
+    key.assign(key.size(), 0);
+    if (errCode != SQLITE_OK) {
+        LOG_ERROR("ReKey failed, err = %{public}d", errCode);
+        RdbSecurityManager::GetInstance().DelRdbSecretDataFile(RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
+        return E_OK;
+    }
+
+    RdbSecurityManager::GetInstance().UpdateKeyFile();
+    return E_OK;
+}
+#endif
+
+int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     std::vector<uint8_t> key = config.GetEncryptKey();
@@ -313,8 +393,7 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config)
     int errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
     key.assign(key.size(), 0);
     if (errCode != SQLITE_OK) {
-        if (RdbSecurityManager::GetInstance().CheckKeyDataFileExists(RdbKeyFile::PUB_KEY_FILE_NEW_KEY))
-        {
+        if (RdbSecurityManager::GetInstance().CheckKeyDataFileExists(RdbKeyFile::PUB_KEY_FILE_NEW_KEY)) {
             auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
             key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
             errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
@@ -331,44 +410,14 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config)
         }
     }
 
-    errCode = ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ALGO);
+    errCode = ExecuteEncryptSql(config, iter);
     if (errCode != E_OK) {
-        LOG_ERROR("set cipher algo failed, err = %{public}d", errCode);
-        return errCode;
-    }
-    errCode = ExecuteSql(GlobalExpr::CIPHER_KDF_ITER_NUMBER);
-    if (errCode != E_OK) {
-        LOG_ERROR("set number of iter to generate the key, err = %{public}d", errCode);
-        return errCode;
-    }
-    errCode = ExecuteSql(GlobalExpr::CODEC_HMAC_ALGO);
-    if (errCode != E_OK) {
-        LOG_ERROR("set sha algo failed, err = %{public}d", errCode);
-        return errCode;
-    }
-    errCode = ExecuteSql(GlobalExpr::CODEC_REKEY_HMAC_ALGO);
-    if (errCode != E_OK) {
-        LOG_ERROR("set rekey sha algo failed, err = %{public}d", errCode);
+        LOG_ERROR("execute encrypt sql failed, err = %{public}d", errCode);
         return errCode;
     }
 
     if (isKeyExpired) {
-        auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
-        if (!rdbPwd.IsValid()) {
-            RdbSecurityManager::GetInstance().DelRdbSecretDataFile(RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
-            LOG_ERROR("new key is not valid.");
-            return E_OK;
-        }
-        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
-        errCode = sqlite3_rekey(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
-        key.assign(key.size(), 0);
-        if (errCode != SQLITE_OK) {
-            LOG_ERROR("ReKey failed, err = %{public}d", errCode);
-            RdbSecurityManager::GetInstance().DelRdbSecretDataFile(RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
-            return E_OK;
-        }
-
-        RdbSecurityManager::GetInstance().UpdateKeyFile();
+        ReSetKey();
     }
 #endif
     return E_OK;
