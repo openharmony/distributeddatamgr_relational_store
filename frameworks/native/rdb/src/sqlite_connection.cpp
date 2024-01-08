@@ -533,7 +533,6 @@ int SqliteConnection::Prepare(const std::string &sql, bool &outIsReadOnly)
     return E_OK;
 }
 
-
 int SqliteConnection::PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
     if (dbHandle == nullptr) {
@@ -541,12 +540,7 @@ int SqliteConnection::PrepareAndBind(const std::string &sql, const std::vector<V
         return E_INVALID_STATEMENT;
     }
 
-    int errCode = LimitWalSize();
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    errCode = statement.Prepare(dbHandle, sql);
+    int errCode = statement.Prepare(dbHandle, sql);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -890,6 +884,7 @@ int SqliteConnection::LimitWalSize()
 
     int errCode = sqlite3_wal_checkpoint_v2(dbHandle, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
     if (errCode != SQLITE_OK) {
+        LOG_WARN("sqlite3_wal_checkpoint_v2 failed %{public}d.", errCode);
         return E_WAL_SIZE_OVER_LIMIT;
     }
 

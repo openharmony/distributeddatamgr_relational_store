@@ -120,6 +120,7 @@ std::shared_ptr<SqliteConnection> SqliteConnectionPool::AcquireConnection(bool i
         return AcquireWriteConnection();
     }
 }
+
 void SqliteConnectionPool::ReleaseConnection(std::shared_ptr<SqliteConnection> connection)
 {
     if (connection == nullptr) {
@@ -127,6 +128,7 @@ void SqliteConnectionPool::ReleaseConnection(std::shared_ptr<SqliteConnection> c
     }
     connection->DesFinalize();
     if (connection == writeConnection_) {
+        connection->LimitWalSize();
         ReleaseWriteConnection();
     } else {
         ReleaseReadConnection(connection);
