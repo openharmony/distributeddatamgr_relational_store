@@ -107,7 +107,7 @@ int SharedBlockSetColumnNum(AppDataFwk::SharedBlock *sharedBlock, int columnNum)
 
 void FillSharedBlockOpt(SharedBlockInfo *info)
 {
-    SharedBlockSerializerInfo serializer(info->sharedBlock, info->statement, info->numColumns, info->startPos);
+    SharedBlockSerializerInfo serializer(info->sharedBlock, info->statement, info->columnNum, info->startPos);
     Sqlite3SharedBlockMethods sqliteSharedBlock = {
         1,          &serializer,   info->isCountAllRows, info->startPos, info->requiredPos, SeriAddRow,  SeriReset,
         SeriFinish, SeriPutString, SeriPutLong,          SeriPutDouble,  SeriPutBlob,       SeriPutNull, SeriPutOther

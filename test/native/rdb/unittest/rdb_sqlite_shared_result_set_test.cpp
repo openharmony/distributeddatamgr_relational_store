@@ -1397,3 +1397,103 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_032, TestSize.Le
     iRet = resultSet->GetRow(rowEntity);
     EXPECT_EQ(E_OK, iRet);
 }
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_033
+ * @tc.desc: Normal testcase of SqliteSharedResultSet for GoToNestRow when some rows are close to 2M in size
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_033, TestSize.Level1)
+{
+    constexpr int INSERT_NUM = 10;
+    std::vector<ValuesBucket> vbs;
+    vbs.reserve(10);
+    ValuesBucket vb;
+    for (int i = 0; i < INSERT_NUM; i++) {
+        vb.PutInt("id", i);
+        // this row must exclusive shared memory
+        if (i == 4) {
+            vb.PutString("data1", std::string(3 * 512 * 1024 + 5000, 'a'));
+        }
+        vb.PutString("data1", std::string(512 * 1024 - 2000, 'b'));
+        vbs.push_back(std::move(vb));
+    }
+    int64_t insertNum = 0;
+    EXPECT_EQ(E_OK, store->BatchInsert(insertNum, "test", vbs));
+    EXPECT_EQ(insertNum, INSERT_NUM);
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test ORDER BY id ASC", selectionArgs);
+    ASSERT_NE(resultSet, nullptr);
+    for (int i = 0; i < INSERT_NUM; i++) {
+        ASSERT_EQ(E_OK, resultSet->GoToRow(i)) << "Current position:" << i;
+        int position = -1;
+        ASSERT_EQ(E_OK, resultSet->GetRowIndex(position)) << "Current position:" << i;
+        EXPECT_EQ(position, i);
+        int count = -1;
+        ASSERT_EQ(E_OK, resultSet->GetRowCount(count)) << "Current position:" << i;
+        EXPECT_EQ(count, INSERT_NUM) << "Current position:" << i;
+        int columnIndex = 0;
+        EXPECT_EQ(E_OK, resultSet->GetColumnIndex("id", columnIndex)) << "Current position:" << i;
+        int id;
+        EXPECT_EQ(E_OK, resultSet->GetInt(columnIndex, id)) << "Current position:" << i;
+        EXPECT_EQ(id, i);
+
+        ASSERT_EQ(E_OK, resultSet->GetColumnIndex("data1", columnIndex)) << "Current position:" << i;
+        std::string value;
+        EXPECT_EQ(E_OK, resultSet->GetString(columnIndex, value)) << "Current position:" << i;
+        if (i == 4) {
+            EXPECT_EQ(value.size(), 3 * 512 * 1024 + 5000) << "Current position:" << i;
+        } else {
+            EXPECT_EQ(value.size(), 512 * 1024 - 2000) << "Current position:" << i;
+        }
+    }
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_034
+ * @tc.desc: Normal testcase of SqliteSharedResultSet for GoTo when moving back and forth
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_034, TestSize.Level1)
+{
+    constexpr int INSERT_NUM = 20;
+    std::vector<ValuesBucket> vbs;
+    vbs.reserve(10);
+    ValuesBucket vb;
+    for (int i = 0; i < INSERT_NUM; i++) {
+        vb.PutInt("id", i);
+        vb.PutString("data1", std::string(i * 100 * 1024, 'a'));
+        vbs.push_back(std::move(vb));
+    }
+    int64_t insertNum = 0;
+    EXPECT_EQ(E_OK, store->BatchInsert(insertNum, "test", vbs));
+    EXPECT_EQ(insertNum, INSERT_NUM);
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test ORDER BY id ASC", selectionArgs);
+    ASSERT_NE(resultSet, nullptr);
+    int position = -1;
+    int count = -1;
+    int columnIndex = 0;
+    int id;
+    int target = INSERT_NUM / 2;
+    std::string value;
+    ASSERT_EQ(E_OK, resultSet->GoToRow(target));
+    ASSERT_EQ(E_OK, resultSet->GetRowIndex(position));
+    ASSERT_EQ(target, position);
+    for (int i = 1; i < INSERT_NUM; i++) {
+        target = INSERT_NUM - position - i & 0x1;
+        ASSERT_EQ(E_OK, resultSet->GoToRow(target)) << "Current position:" << position << ", go to:" << target;
+        ASSERT_EQ(E_OK, resultSet->GetRowIndex(position));
+        ASSERT_EQ(target, position);
+        ASSERT_EQ(E_OK, resultSet->GetRowCount(count)) << "Current position:" << position;
+        EXPECT_EQ(count, INSERT_NUM) << "Current position:" << position;
+        EXPECT_EQ(E_OK, resultSet->GetColumnIndex("id", columnIndex)) << "Current position:" << position;
+        EXPECT_EQ(E_OK, resultSet->GetInt(columnIndex, id)) << "Current position:" << position;
+        EXPECT_EQ(id, position);
+        ASSERT_EQ(E_OK, resultSet->GetColumnIndex("data1", columnIndex)) << "Current position:" << i;
+        EXPECT_EQ(E_OK, resultSet->GetString(columnIndex, value)) << "Current position:" << i;
+        EXPECT_EQ(value.size(), position * 100 * 1024) << "Current position:" << i;
+    }
+}

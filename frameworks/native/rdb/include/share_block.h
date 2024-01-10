@@ -51,7 +51,6 @@ struct SharedBlockInfo {
     AppDataFwk::SharedBlock *sharedBlock;
     sqlite3_stmt *statement;
 
-    int numColumns;
     int startPos;
     int addedRows;
     int requiredPos;
@@ -64,7 +63,6 @@ struct SharedBlockInfo {
     SharedBlockInfo(SqliteConnectionS *connection, AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement)
         : connection(connection), sharedBlock(sharedBlock), statement(statement)
     {
-        numColumns = 0;
         startPos = 0;
         addedRows = 0;
         requiredPos = 0;
