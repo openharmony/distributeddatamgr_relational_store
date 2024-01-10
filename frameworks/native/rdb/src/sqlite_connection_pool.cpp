@@ -120,6 +120,7 @@ std::shared_ptr<SqliteConnection> SqliteConnectionPool::AcquireConnection(bool i
         return AcquireWriteConnection();
     }
 }
+
 void SqliteConnectionPool::ReleaseConnection(std::shared_ptr<SqliteConnection> connection)
 {
     if (connection == nullptr) {
