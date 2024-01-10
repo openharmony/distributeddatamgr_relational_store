@@ -128,7 +128,6 @@ void SqliteConnectionPool::ReleaseConnection(std::shared_ptr<SqliteConnection> c
     }
     connection->DesFinalize();
     if (connection == writeConnection_) {
-        connection->LimitWalSize();
         ReleaseWriteConnection();
     } else {
         ReleaseReadConnection(connection);

@@ -49,6 +49,8 @@ public:
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string &sql,
         const std::vector<ValueObject> &args) const;
+    int ExecuteEncryptSql(const RdbStoreConfig &config, uint32_t iter);
+    int ReSetKey();
     int DesFinalize();
     int EndStepQuery();
     void SetInTransaction(bool transaction);
@@ -63,11 +65,11 @@ public:
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     explicit SqliteConnection(bool isWriteConnection);
-    int InnerOpen(const RdbStoreConfig &config);
+    int InnerOpen(const RdbStoreConfig &config, uint32_t retry);
     int GetDbPath(const RdbStoreConfig &config, std::string &dbPath);
-    int Config(const RdbStoreConfig &config);
+    int Configure(const RdbStoreConfig &config, uint32_t retry, std::string &dbPath);
     int SetPageSize(const RdbStoreConfig &config);
-    int SetEncryptKey(const RdbStoreConfig &config);
+    int SetEncryptKey(const RdbStoreConfig &config, uint32_t iter);
     int SetJournalMode(const RdbStoreConfig &config);
     int SetJournalSizeLimit(const RdbStoreConfig &config);
     int SetAutoCheckpoint(const RdbStoreConfig &config);
@@ -99,6 +101,10 @@ private:
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
 
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
+    static constexpr uint32_t NO_ITER = 0;
+    static constexpr uint32_t ITER_V1 = 5000;
+    static constexpr uint32_t ITERS[] = {NO_ITER, ITER_V1};
+    static constexpr uint32_t ITERS_COUNT = sizeof(ITERS) / sizeof(ITERS[0]);
 };
 } // namespace NativeRdb
 } // namespace OHOS
