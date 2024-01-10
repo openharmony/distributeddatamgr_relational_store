@@ -36,12 +36,14 @@ void Context::SetAction(
     void *data = nullptr;
     NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, &data));
 
-    napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, argv[argc - 1], &valueType);
-    if (valueType == napi_function) {
-        LOG_DEBUG("asyncCall set callback");
-        NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, argv[argc - 1], 1, &callback_));
-        argc = argc - 1;
+    if (argc > 0) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[argc - 1], &valueType);
+        if (valueType == napi_function) {
+            LOG_DEBUG("asyncCall set callback");
+            NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, argv[argc - 1], 1, &callback_));
+            argc = argc - 1;
+        }
     }
     if (data) {
         isAsync_ = *reinterpret_cast<bool *>(data);
