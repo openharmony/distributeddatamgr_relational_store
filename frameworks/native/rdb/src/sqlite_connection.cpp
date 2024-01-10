@@ -796,19 +796,16 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
         LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
         return E_ERROR;
     }
-
     SqliteConnectionS connection(this->dbHandle, this->openFlags, this->filePath);
     int errCode = PrepareAndBind(sql, bindArgs);
     if (errCode != E_OK) {
         LOG_ERROR("PrepareAndBind sql and bindArgs error = %{public}d ", errCode);
         return errCode;
     }
-
     if (ClearSharedBlock(sharedBlock) == ERROR_STATUS) {
         LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
         return E_ERROR;
     }
-
     sqlite3_stmt *tempSqlite3St = statement.GetSql3Stmt();
     int columnNum = sqlite3_column_count(tempSqlite3St);
     if (SharedBlockSetColumnNum(sharedBlock, columnNum) == ERROR_STATUS) {
@@ -833,9 +830,11 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
         LOG_ERROR("ExecuteForSharedBlock:ResetStatement Failed.");
         return E_ERROR;
     }
+    sharedBlock->SetStartPos(sharedBlockInfo.startPos);
+    sharedBlock->SetBlockPos(requiredPos - sharedBlockInfo.startPos);
+    sharedBlock->SetLastPos(sharedBlockInfo.startPos + sharedBlock->GetRowNum());
     rowNum = static_cast<int>(GetCombinedData(sharedBlockInfo.startPos, sharedBlockInfo.totalRows));
-    errCode = statement.ResetStatementAndClearBindings();
-    return errCode;
+    return statement.ResetStatementAndClearBindings();
 }
 
 int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
