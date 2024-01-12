@@ -452,7 +452,7 @@ void RdbSecurityManager::Init(const std::string &bundleName, const std::string &
 
 bool RdbSecurityManager::CheckRootKeyExists()
 {
-    LOG_INFO("RDB checkRootKeyExist begin.");
+    LOG_DEBUG("RDB checkRootKeyExist begin.");
     struct HksBlob rootKeyName = { uint32_t(rootKeyAlias_.size()), rootKeyAlias_.data() };
     struct HksParamSet *params = nullptr;
     int32_t ret = HksInitParamSet(&params);
@@ -536,7 +536,7 @@ RdbPassword RdbSecurityManager::LoadSecretKeyFromFile(KeyFileType keyFile)
 
 bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSecretKeyData &keyData)
 {
-    LOG_INFO("LoadSecretKeyFromDisk begin.");
+    LOG_DEBUG("LoadSecretKeyFromDisk begin.");
     std::vector<char> content;
     {
         std::lock_guard<std::mutex> lock(mutex_);
