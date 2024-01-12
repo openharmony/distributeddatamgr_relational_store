@@ -1498,8 +1498,8 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
     SubscribeOption option;
     option.event = event;
     valueBool ? option.mode = SubscribeMode::LOCAL_SHARED : option.mode = SubscribeMode::LOCAL;
-    // 'argv[2]' represents a callback function
-    return proxy->OffLocal(env, option, argv[2]);
+    // 'argv[2]' represents a callback function, 'argc == 3' represents determine if 'argc' is equal to '3'
+    return proxy->OffLocal(env, option, argc == 3 ? argv[2] : nullptr);
 }
 
 napi_value RdbStoreProxy::Notify(napi_env env, napi_callback_info info)
