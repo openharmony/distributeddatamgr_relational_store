@@ -402,5 +402,20 @@ describe('rdbStoreCloud', function () {
         }
     })
 
+    /**
+     * @tc.name test field enum value
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_0014
+     * @tc.desc test the th field enum value,
+     */
+    it('testRdbFieldValue001', 0, async function (done) {
+        console.log(TAG + "************* testRdbFieldValue001 start *************");
+        expect(relationalStore.Field.OWNER_FIELD).assertEqual('#_cloud_owner');
+        expect(relationalStore.Field.PRIVILEGE_FIELD).assertEqual('#_cloud_privilege');
+        expect(relationalStore.Field.SHARING_RESOURCE_FIELD).assertEqual('#_sharing_resource_field');
+        expect(true).assertTrue();
+        done();
+        console.log(TAG + "************* testRdbFieldValue001 end *************");
+    })
+
     console.log(TAG + "*************Unit Test End*************");
 })
