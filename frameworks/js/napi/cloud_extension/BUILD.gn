@@ -31,12 +31,6 @@ gen_js_obj("cloud_extension_abc") {
 }
 
 ohos_shared_library("cloudextension") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
   sources = [ "cloud_extension.cpp" ]
 
   deps = [ ":cloud_extension_abc" ]
