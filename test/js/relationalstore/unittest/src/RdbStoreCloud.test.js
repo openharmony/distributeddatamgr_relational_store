@@ -412,6 +412,8 @@ describe('rdbStoreCloud', function () {
         expect(relationalStore.Field.OWNER_FIELD).assertEqual('#_cloud_owner');
         expect(relationalStore.Field.PRIVILEGE_FIELD).assertEqual('#_cloud_privilege');
         expect(relationalStore.Field.SHARING_RESOURCE_FIELD).assertEqual('#_sharing_resource_field');
+        expect(true).assertTrue();
+        done();
         console.log(TAG + "************* testRdbFieldValue001 end *************");
     })
 
