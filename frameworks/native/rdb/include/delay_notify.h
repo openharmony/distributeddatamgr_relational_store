@@ -29,7 +29,7 @@ public:
     void SetExecutorPool(std::shared_ptr<ExecutorPool> pool);
     void SetTask(Task task);
     void UpdateNotify(const DistributedRdb::RdbChangedData &changedData);
-
+    void SetAutoSyncInterval(uint32_t autoSyncInterval);
 private:
     static constexpr uint32_t FORCE_SYNC_INTERVAL = 100;
     static constexpr uint32_t AUTO_SYNC_INTERVAL = 50;
@@ -43,6 +43,8 @@ private:
     void StartTimer();
     void StopTimer();
     void ExecuteTask();
+    void RestoreDefaultSyncInterval();
+    uint32_t autoSyncInterval_ = AUTO_SYNC_INTERVAL;
 };
 }
 #endif // NATIVE_RDB_DELAY_NOTIFY_H
