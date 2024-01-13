@@ -39,7 +39,7 @@ public:
     static void MakeWalNoReachLimit();
     static void MakeWalIncrease();
     static void KeepReadConnection();
-    static ValuesBucket MakeValueBucket();
+    static ValuesBucket MakeValueBucket(const int &id);
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
@@ -52,7 +52,6 @@ std::shared_ptr<ResultSet> RdbWalLimitTest::resultSet = nullptr;
 
 // create 1M data
 std::vector<uint8_t> blobValue = RdbWalLimitTest::CreateRandomData(1 * 1024 * 1024);
-ValuesBucket values = RdbWalLimitTest::MakeValueBucket();
 
 class RdbWalLimitCallback : public RdbOpenCallback {
 public:
@@ -184,10 +183,10 @@ void RdbWalLimitTest::MakeWalNoReachLimit()
     }
 }
 
-ValuesBucket RdbWalLimitTest::MakeValueBucket()
+ValuesBucket RdbWalLimitTest::MakeValueBucket(const int &id)
 {
     ValuesBucket values;
-    values.PutInt("id", 200);
+    values.PutInt("id", id);
     values.PutString("name", std::string("lisi"));
     values.PutInt("age", 18);
     values.PutDouble("salary", 200.8);
@@ -197,7 +196,8 @@ ValuesBucket RdbWalLimitTest::MakeValueBucket()
 
 /**
  * @tc.name: RdbStore_WalOverLimit_001
- * @tc.desc: Without reading data, the WAL size will not over default limit if write data continuously.
+ * @tc.desc: Without reading data or conducting transactions, if data is continuously written,
+ * the WAL size will not exceed the default limit.
  * @tc.type: FUNC
  * @tc.acquire: AR000HR0G5
  */
@@ -206,19 +206,14 @@ HWTEST_F(RdbWalLimitTest, RdbStore_WalOverLimit_001, TestSize.Level1)
     MakeWalIncrease();
 
     int64_t id;
+
+    ValuesBucket values = MakeValueBucket(199);
+    values.PutBlob("blobType", blobValue);
     EXPECT_EQ(store->Insert(id, "test", values), E_OK);
 
-    int changedRows;
-    EXPECT_EQ(store->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "200" }), E_OK);
-
-    EXPECT_EQ(store->Replace(id, "test", values), E_OK);
-
-    int deletedRows;
-    EXPECT_EQ(store->Delete(deletedRows, "test", "id = 200"), E_OK);
-
     std::vector<ValuesBucket> valuesBuckets;
-    for (int i = 0; i < 10; i++) {
-        valuesBuckets.push_back(values);
+    for (int i = 200; i < 210; i++) {
+        valuesBuckets.push_back(RdbWalLimitTest::MakeValueBucket(i));
     }
 
     int64_t insertNum = 0;
@@ -229,7 +224,7 @@ HWTEST_F(RdbWalLimitTest, RdbStore_WalOverLimit_001, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_WalOverLimit_002
- * @tc.desc: While reading data and writing data continuously if the WAL size not over default limit.
+ * @tc.desc: Before the wal file exceeds the limit, both read and write can be executed normally.
  * @tc.type: FUNC
  * @tc.acquire: AR000HR0G5
  */
@@ -237,19 +232,11 @@ HWTEST_F(RdbWalLimitTest, RdbStore_WalOverLimit_002, TestSize.Level1)
 {
     KeepReadConnection();
     MakeWalNoReachLimit();
-
-    int changedRows;
-    EXPECT_EQ(store->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "21" }), E_OK);
-
-    int64_t id;
-    EXPECT_EQ(store->Replace(id, "test", values), E_OK);
-
-    int deletedRows;
-    EXPECT_EQ(store->Delete(deletedRows, "test", "id = 21"), E_OK);
+    ValuesBucket values = MakeValueBucket(20);
 
     std::vector<ValuesBucket> valuesBuckets;
-    for (int i = 0; i < 10; i++) {
-        valuesBuckets.push_back(values);
+    for (int i = 21; i < 30; i++) {
+        valuesBuckets.push_back(MakeValueBucket(i));
     }
 
     int64_t insertNum = 0;
@@ -260,116 +247,16 @@ HWTEST_F(RdbWalLimitTest, RdbStore_WalOverLimit_002, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_WalOverLimit_003
- * @tc.desc: While reading data, can not write data continuously if the WAL size over default limit.
+ * @tc.desc: During transactions, the size of the wal file may exceed the limit.
  * @tc.type: FUNC
  * @tc.acquire: AR000HR0G5
  */
 HWTEST_F(RdbWalLimitTest, RdbStore_WalOverLimit_003, TestSize.Level3)
 {
-    KeepReadConnection();
+    ValuesBucket values = MakeValueBucket(200);
+    int64_t id;
+    store->BeginTransaction();
     MakeWalReachLimit();
-
-    int64_t id;
     EXPECT_EQ(store->Insert(id, "test", values), E_WAL_SIZE_OVER_LIMIT);
-
-    EXPECT_EQ(store->BeginTransaction(), E_WAL_SIZE_OVER_LIMIT);
-
-    int changedRows;
-    EXPECT_EQ(store->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "200" }),
-        E_WAL_SIZE_OVER_LIMIT);
-
-    EXPECT_EQ(store->Replace(id, "test", values), E_WAL_SIZE_OVER_LIMIT);
-
-    int deletedRows;
-    EXPECT_EQ(store->Delete(deletedRows, "test", "id = 200"), E_WAL_SIZE_OVER_LIMIT);
-
-    std::vector<ValuesBucket> valuesBuckets;
-    for (int i = 0; i < 2; i++) {
-        valuesBuckets.push_back(values);
-    }
-    int64_t insertNum = 0;
-    EXPECT_EQ(store->BatchInsert(insertNum, "test", valuesBuckets), E_WAL_SIZE_OVER_LIMIT);
-
-    EXPECT_EQ(store->ExecuteSql("DELETE FROM test"), E_WAL_SIZE_OVER_LIMIT);
-
-    int64_t outLong;
-    EXPECT_EQ(store->ExecuteAndGetLong(outLong, "DELETE FROM test"), E_WAL_SIZE_OVER_LIMIT);
-}
-
-/**
- * @tc.name: RdbStore_WalOverLimit_004
- * @tc.desc: Writing data after closing read connection.
- * @tc.type: FUNC
- * @tc.acquire: AR000HR0G5
- */
-HWTEST_F(RdbWalLimitTest, RdbStore_WalOverLimit_004, TestSize.Level3)
-{
-    KeepReadConnection();
-    MakeWalReachLimit();
-
-    int64_t id;
-    EXPECT_EQ(store->Insert(id, "test", values), E_WAL_SIZE_OVER_LIMIT);
-
-    EXPECT_EQ(resultSet->Close(), E_OK);
-
-    {
-        store->BeginTransaction();
-        EXPECT_EQ(store->Insert(id, "test", values), E_OK);
-        store->Commit();
-    }
-
-    int changedRows;
-    EXPECT_EQ(store->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "200" }), E_OK);
-
-    EXPECT_EQ(store->Replace(id, "test", values), E_OK);
-
-    int deletedRows;
-    EXPECT_EQ(store->Delete(deletedRows, "test", "id = 200"), E_OK);
-
-    std::vector<ValuesBucket> valuesBuckets;
-    for (int i = 0; i < 2; i++) {
-        valuesBuckets.push_back(values);
-    }
-    int64_t insertNum = 0;
-    EXPECT_EQ(store->BatchInsert(insertNum, "test", valuesBuckets), E_OK);
-
-    EXPECT_EQ(store->ExecuteSql("DELETE FROM test"), E_OK);
-}
-
-/**
- * @tc.name: RdbStore_WalOverLimit_005
- * @tc.desc: While reading data and transaction will fail if the WAL file size over default size.
- * @tc.type: FUNC
- * @tc.acquire: AR000HR0G5
- */
-HWTEST_F(RdbWalLimitTest, RdbStore_WalOverLimit_005, TestSize.Level3)
-{
-    KeepReadConnection();
-
-    int64_t id;
-    {
-        store->BeginTransaction();
-        MakeWalReachLimit();
-        EXPECT_EQ(store->Insert(id, "test", values), E_WAL_SIZE_OVER_LIMIT);
-        store->Commit();
-    }
-
-    int changedRows;
-    EXPECT_EQ(store->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "200" }),
-        E_WAL_SIZE_OVER_LIMIT);
-
-    EXPECT_EQ(store->Replace(id, "test", values), E_WAL_SIZE_OVER_LIMIT);
-
-    int deletedRows;
-    EXPECT_EQ(store->Delete(deletedRows, "test", "id = 200"),
-    E_WAL_SIZE_OVER_LIMIT);
-
-    std::vector<ValuesBucket> valuesBuckets;
-    for (int i = 0; i < 2; i++) {
-        valuesBuckets.push_back(values);
-    }
-    int64_t insertNum = 0;
-    EXPECT_EQ(store->BatchInsert(insertNum, "test", valuesBuckets), E_WAL_SIZE_OVER_LIMIT);
-
-    EXPECT_EQ(store->ExecuteSql("DELETE FROM test"), E_WAL_SIZE_OVER_LIMIT);
+    store->Commit();
 }

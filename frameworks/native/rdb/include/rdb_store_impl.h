@@ -178,12 +178,15 @@ public:
     int CleanDirtyData(const std::string &table, uint64_t cursor = UINT64_MAX) override;
 
 private:
+    using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
     int InnerOpen();
     int CheckAttach(const std::string &sql);
     int BeginExecuteSql(const std::string &sql, std::shared_ptr<SqliteConnection> &connection);
     int FreeTransaction(std::shared_ptr<SqliteConnection> connection, const std::string &sql);
-    std::pair<std::string, std::vector<ValueObject>> GetInsertParams(
-        std::map<std::string, ValueObject> &valuesMap, const std::string &table);
+    ExecuteSqls GenerateSql(
+        const std::string &table, const std::vector<ValuesBucket> &initialBatchValues, int limitVariableNumber);
+    ExecuteSqls MakeExecuteSqls(
+        const std::string &sql, const std::vector<ValueObject> &args, int fieldSize, int limitVariableNumber);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
@@ -232,6 +235,8 @@ private:
     static constexpr char SCHEME_RDB[] = "rdb://";
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
     std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
+    static constexpr uint32_t EXPANSION = 2;
+    static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 20000;
 };
 } // namespace OHOS::NativeRdb
 #endif
