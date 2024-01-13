@@ -261,7 +261,6 @@ int SqliteStatement::GetColumnType(int index, int &columnType) const
     }
 
     int type = sqlite3_column_type(stmtHandle, index);
-    auto declType = SqliteUtils::StrToUpper(std::string(sqlite3_column_decltype(stmtHandle, index)));
     switch (type) {
         case SQLITE_INTEGER:
         case SQLITE_FLOAT:
@@ -269,7 +268,8 @@ int SqliteStatement::GetColumnType(int index, int &columnType) const
         case SQLITE_TEXT:
             columnType = type;
             return E_OK;
-        case SQLITE_BLOB:
+        case SQLITE_BLOB: {
+            auto declType = SqliteUtils::StrToUpper(std::string(sqlite3_column_decltype(stmtHandle, index)));
             if (declType == ValueObject::DeclType<ValueObject::Asset>()) {
                 columnType = COLUMN_TYPE_ASSET;
                 return E_OK;
@@ -280,6 +280,7 @@ int SqliteStatement::GetColumnType(int index, int &columnType) const
             }
             columnType = type;
             return E_OK;
+        }
         default:
             LOG_ERROR("invalid type %{public}d.", type);
             return E_ERROR;
