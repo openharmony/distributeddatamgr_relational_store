@@ -73,19 +73,19 @@ public:
         PUB_KEY_FILE_NEW_KEY
     };
 
-    RdbPassword GetRdbPassword(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFile);
+    RdbPassword GetRdbPassword(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFileType);
     void DelRdbSecretDataFile(const std::string &dbPath);
-    void DelRdbSecretDataFile(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFile);
+    void DelRdbSecretDataFile(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFileType);
     static RdbSecurityManager &GetInstance();
-    void Init(const std::string &bundleName);
+    int32_t Init(const std::string &bundleName);
     void UpdateKeyFile(const std::string &dbPath);
-    bool IsKeyFileExists(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFile);
+    bool IsKeyFileExists(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFileType);
 
 private:
     RdbSecurityManager();
     ~RdbSecurityManager();
 
-    int GenerateRootKey(std::vector<uint8_t> &rootKeyAlias);
+    int GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias);
     int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias);
     bool HasRootKey();
     std::vector<uint8_t> EncryptWorkKey(const std::vector<uint8_t> &key);
@@ -94,12 +94,12 @@ private:
     bool InitPath(const std::string &dbKeyDir);
     std::pair<std::string, std::string> ConcatenateKeyPath(const std::string &dbPath);
     std::vector<uint8_t> GenerateRandomNum(int32_t len);
-    bool SaveSecretKeyToFile(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFile);
+    bool SaveSecretKeyToFile(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFileType);
     bool SaveSecretKeyToDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
-    RdbPassword LoadSecretKeyFromFile(const std::string &dbPath, KeyFileType keyFile);
+    RdbPassword LoadSecretKeyFromFile(const std::string &dbPath, KeyFileType keyFileType);
     bool LoadSecretKeyFromDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
     static bool IsKeyExpired(const time_t &createTime) ;
-    std::string GetKeyPath(const std::string &dbPath, KeyFileType keyType);
+    std::string GetKeyPath(const std::string &dbPath, KeyFileType keyFileType);
     int32_t MallocAndCheckBlobData(struct HksBlob *blob, const uint32_t blobSize);
     int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet,
         const struct HksBlob *inData, struct HksBlob *outData);

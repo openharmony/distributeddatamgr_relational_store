@@ -97,7 +97,10 @@ void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
     std::vector<uint8_t> key = config.GetEncryptKey();
     RdbPassword rdbPwd;
     if (config.IsEncrypt()) {
-        RdbSecurityManager::GetInstance().Init(config.GetBundleName());
+        auto ret = RdbSecurityManager::GetInstance().Init(config.GetBundleName());
+        if (ret != E_OK) {
+            return;
+        }
         rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(config.GetPath(),
             RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
         key.assign(key.size(), 0);

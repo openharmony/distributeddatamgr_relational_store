@@ -380,8 +380,13 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     std::vector<uint8_t> key = config.GetEncryptKey();
     bool isKeyExpired = false;
+    int32_t errCode = E_OK;
     if (config.IsEncrypt()) {
-        RdbSecurityManager::GetInstance().Init(config.GetBundleName());
+        errCode = RdbSecurityManager::GetInstance().Init(config.GetBundleName());
+        if (errCode != E_OK) {
+            key.assign(key.size(), 0);
+            return errCode;
+        }
         auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(config.GetPath(), RdbKeyFile::PUB_KEY_FILE);
         key.assign(key.size(), 0);
         key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
@@ -390,7 +395,7 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
         return E_OK;
     }
 
-    int errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
+    errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
     key.assign(key.size(), 0);
     if (errCode != SQLITE_OK) {
         if (RdbSecurityManager::GetInstance().IsKeyFileExists(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY)) {
