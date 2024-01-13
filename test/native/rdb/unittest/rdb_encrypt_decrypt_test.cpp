@@ -38,11 +38,17 @@ public:
     void TearDown();
 
     static const std::string ENCRYPTED_DATABASE_NAME;
+    static const std::string ENCRYPTED_DATABASE_BACKUP_NAME;
+    static const std::string ENCRYPTED_DATABASE_NAME2;
+    static const std::string ENCRYPTED_DATABASE_BACKUP_NAME2;
     static const std::string UNENCRYPTED_DATABASE_NAME;
     static std::shared_ptr<RdbStore> testStore;
 };
 
 const std::string RdbEncryptTest::ENCRYPTED_DATABASE_NAME = RDB_TEST_PATH + "encrypted.db";
+const std::string RdbEncryptTest::ENCRYPTED_DATABASE_BACKUP_NAME = RDB_TEST_PATH + "encrypted_bak.db";
+const std::string RdbEncryptTest::ENCRYPTED_DATABASE_NAME2 = RDB_TEST_PATH + "encrypted2.db";
+const std::string RdbEncryptTest::ENCRYPTED_DATABASE_BACKUP_NAME2 = RDB_TEST_PATH + "encrypted2_bak.db";
 const std::string RdbEncryptTest::UNENCRYPTED_DATABASE_NAME = RDB_TEST_PATH + "unencrypted.db";
 
 std::shared_ptr<RdbStore> RdbEncryptTest::testStore = nullptr;
@@ -338,4 +344,40 @@ HWTEST_F(RdbEncryptTest, AbnomalRdbStore_RdbPassword_001, TestSize.Level2)
     EXPECT_EQ(E_OK, errCode);
 
     EXPECT_EQ(true, password1 == password2);
+}
+
+/**
+ * @tc.name: KeyFilePath_test_001, open different databases and obtain the corresponding key files
+ * @tc.desc: 1.create db1
+ *           2.create db2
+ *           3.create table in the db2
+ *           4.backup db1
+ *           5.restore db1
+ *
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptTest, KeyFilePath_test_001, TestSize.Level2)
+{
+    RdbStoreConfig config1(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config1.SetEncryptStatus(true);
+    config1.SetBundleName("com.example.TestEncrypt1");
+    EncryptTestOpenCallback helper1;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store1 = RdbHelper::GetRdbStore(config1, 1, helper1, errCode);
+    EXPECT_NE(nullptr, store1);
+    EXPECT_EQ(E_OK, errCode);
+
+    RdbStoreConfig config2(RdbEncryptTest::ENCRYPTED_DATABASE_NAME2);
+    config2.SetEncryptStatus(true);
+    config2.SetBundleName("com.example.TestEncrypt1");
+    EncryptTestOpenCallback helper2;
+    std::shared_ptr<RdbStore> store2 = RdbHelper::GetRdbStore(config2, 1, helper2, errCode);
+    EXPECT_NE(nullptr, store2);
+    EXPECT_EQ(E_OK, errCode);
+
+    EXPECT_EQ(E_OK, store1->Backup(RdbEncryptTest::ENCRYPTED_DATABASE_BACKUP_NAME));
+    EXPECT_EQ(E_OK, store1->Restore(RdbEncryptTest::ENCRYPTED_DATABASE_BACKUP_NAME));
+
+    EXPECT_EQ(E_OK, store2->Backup(RdbEncryptTest::ENCRYPTED_DATABASE_BACKUP_NAME2));
+    EXPECT_EQ(E_OK, store2->Restore(RdbEncryptTest::ENCRYPTED_DATABASE_BACKUP_NAME2));
 }
