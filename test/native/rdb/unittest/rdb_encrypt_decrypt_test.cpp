@@ -77,7 +77,6 @@ void RdbEncryptTest::SetUpTestCase(void)
 
 void RdbEncryptTest::TearDownTestCase(void)
 {
-
 }
 
 void RdbEncryptTest::SetUp(void)
