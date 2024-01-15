@@ -265,6 +265,7 @@ void UvQueue::UvEntry::BindPromise(napi_value promise)
     napi_create_function(env_, RESOLVED, RESOLVED_SIZE, Resolved, object, &argv[0]);
     napi_create_function(env_, REJECTED, REJECTED_SIZE, Rejected, object, &argv[1]);
     napi_value result = nullptr;
+    // Enter 2 parameters argv[0] and argv[1]
     napi_call_function(env_, promise, then, 2, argv, &result);
 }
 
