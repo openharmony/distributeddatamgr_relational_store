@@ -97,8 +97,12 @@ void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
     std::vector<uint8_t> key = config.GetEncryptKey();
     RdbPassword rdbPwd;
     if (config.IsEncrypt()) {
-        RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
-        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        auto ret = RdbSecurityManager::GetInstance().Init(config.GetBundleName());
+        if (ret != E_OK) {
+            return;
+        }
+        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(config.GetPath(),
+            RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
         key.assign(key.size(), 0);
         key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
     }
@@ -903,7 +907,8 @@ int RdbStoreImpl::InnerBackup(const std::string databasePath, const std::vector<
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     } else if (isEncrypt_) {
-        RdbPassword rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        RdbPassword rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(
+            rdbStoreConfig.GetPath(), RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
         std::vector<uint8_t> key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
         bindArgs.push_back(ValueObject(key));
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
@@ -1002,7 +1007,8 @@ int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     } else if (isEncrypt_) {
         RdbPassword rdbPwd =
-            RdbSecurityManager::GetInstance().GetRdbPassword(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+            RdbSecurityManager::GetInstance().GetRdbPassword(rdbStoreConfig.GetPath(),
+                RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
         std::vector<uint8_t> key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
         bindArgs.push_back(ValueObject(key));
         ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
