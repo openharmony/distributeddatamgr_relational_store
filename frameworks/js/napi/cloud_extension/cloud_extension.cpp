@@ -33,7 +33,7 @@ extern "C" __attribute__((visibility("default"))) void NAPI_data_cloudExtension_
     }
 }
 
-static extern "C" __attribute__((constructor)) void CloudExtensionRegisterModule(void)
+static __attribute__((constructor)) void CloudExtensionRegisterModule(void)
 {
     static napi_module cloudExtensionModule = {
         .nm_version = 1,
