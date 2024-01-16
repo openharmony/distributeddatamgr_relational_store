@@ -23,31 +23,31 @@ namespace NativeRdb {
 
 class GlobalExpr {
 public:
-   static constexpr bool CALLBACK_LOG_SWITCH = true;       /* Sqlite callback log switch */
-   static constexpr bool DB_AUTO_CHECK = false;       /* Sqlite callback log switch */
-   static constexpr int SOFT_HEAP_LIMIT = 8 * 1024 * 1024; /* 8MB */
-   static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
-   static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
-   static constexpr int DB_WAL_SIZE_LIMIT = 200 * 1024 * 1024; /* default wal file maximum size : 200M */
-   static constexpr int WAL_AUTO_CHECKPOINT = 100;  /* 100 pages */
-   static constexpr int APP_DEFAULT_UMASK = 0002;
-   static constexpr int SQLITE_MAX_COLUMN = 2000;
-   static constexpr char ATTACH_BACKUP_SQL[] = "ATTACH ? AS backup KEY ?";
-   static constexpr char ATTACH_SQL[] = "ATTACH ? AS ? KEY ?";
-   static constexpr char EXPORT_SQL[] = "SELECT export_database('backup')";
-   static constexpr char DETACH_BACKUP_SQL[] = "detach backup";
-   static constexpr char PRAGMA_JOUR_MODE_EXP[] = "PRAGMA journal_mode";
-   static constexpr char PRAGMA_VERSION[] = "PRAGMA user_version";
-   static constexpr char DEFAULT_JOURNAL_MODE[] = "WAL";
-   static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "DELETE";
-   static constexpr char WAL_SYNC_MODE[] = "FULL";
-   static constexpr char MEMORY_DB_PATH[] = ":memory:";
-   static constexpr char ENCRYPT_ALGO[] = "sha256";
-   static constexpr char CODEC_HMAC_ALGO[] = "PRAGMA codec_hmac_algo=sha256";
-   static constexpr char CODEC_REKEY_HMAC_ALGO[] = "PRAGMA codec_rekey_hmac_algo=sha256";
-   static constexpr char CIPHER_DEFAULT_ALGO[] = "PRAGMA codec_cipher='aes-256-gcm'";
-   static constexpr char CIPHER_KDF_ITER[] = "PRAGMA codec_kdf_iter=";
-   static constexpr char CIPHER_DEFAULT_ATTACH_HMAC_ALGO[] = "PRAGMA cipher_default_attach_hmac_algo=sha256";
+    static constexpr bool CALLBACK_LOG_SWITCH = true;       /* Sqlite callback log switch */
+    static constexpr bool DB_AUTO_CHECK = false;       /* Sqlite callback log switch */
+    static constexpr int SOFT_HEAP_LIMIT = 8 * 1024 * 1024; /* 8MB */
+    static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
+    static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
+    static constexpr int DB_WAL_SIZE_LIMIT = 200 * 1024 * 1024; /* default wal file maximum size : 200M */
+    static constexpr int WAL_AUTO_CHECKPOINT = 100;  /* 100 pages */
+    static constexpr int APP_DEFAULT_UMASK = 0002;
+    static constexpr int SQLITE_MAX_COLUMN = 2000;
+    static constexpr char ATTACH_BACKUP_SQL[] = "ATTACH ? AS backup KEY ?";
+    static constexpr char ATTACH_SQL[] = "ATTACH ? AS ? KEY ?";
+    static constexpr char EXPORT_SQL[] = "SELECT export_database('backup')";
+    static constexpr char DETACH_BACKUP_SQL[] = "detach backup";
+    static constexpr char PRAGMA_JOUR_MODE_EXP[] = "PRAGMA journal_mode";
+    static constexpr char PRAGMA_VERSION[] = "PRAGMA user_version";
+    static constexpr char DEFAULT_JOURNAL_MODE[] = "WAL";
+    static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "DELETE";
+    static constexpr char WAL_SYNC_MODE[] = "FULL";
+    static constexpr char MEMORY_DB_PATH[] = ":memory:";
+    static constexpr char ENCRYPT_ALGO[] = "sha256";
+    static constexpr char CODEC_HMAC_ALGO[] = "PRAGMA codec_hmac_algo=sha256";
+    static constexpr char CODEC_REKEY_HMAC_ALGO[] = "PRAGMA codec_rekey_hmac_algo=sha256";
+    static constexpr char CIPHER_DEFAULT_ALGO[] = "PRAGMA codec_cipher='aes-256-gcm'";
+    static constexpr char CIPHER_KDF_ITER[] = "PRAGMA codec_kdf_iter=";
+    static constexpr char CIPHER_DEFAULT_ATTACH_HMAC_ALGO[] = "PRAGMA cipher_default_attach_hmac_algo=sha256";
 };
 
 class SqliteGlobalConfig {

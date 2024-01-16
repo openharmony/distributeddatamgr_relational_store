@@ -52,7 +52,7 @@ public:
     std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string &sql,
         const std::vector<ValueObject> &args) const;
     int ExecuteEncryptSql(const RdbStoreConfig &config, uint32_t iter);
-    int ReSetKey();
+    int ReSetKey(const RdbStoreConfig &config);
     int DesFinalize();
     int EndStepQuery();
     void SetInTransaction(bool transaction);

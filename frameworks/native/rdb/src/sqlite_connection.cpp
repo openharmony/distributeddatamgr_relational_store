@@ -244,7 +244,7 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, uint32_t retry, st
     if (errCode != E_OK) {
         return errCode;
     }
-    
+
     errCode = SetEncryptKey(config, ITERS[retry]);
     if (errCode != E_OK) {
         return errCode;
@@ -352,11 +352,11 @@ int SqliteConnection::ExecuteEncryptSql(const RdbStoreConfig &config, uint32_t i
     return errCode;
 }
 
-int SqliteConnection::ReSetKey()
+int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
 {
-    auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
+    auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
     if (!rdbPwd.IsValid()) {
-        RdbSecurityManager::GetInstance().DelRdbSecretDataFile(RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
+        RdbSecurityManager::GetInstance().DelRdbSecretDataFile(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
         LOG_ERROR("new key is not valid.");
         return E_OK;
     }
@@ -366,11 +366,11 @@ int SqliteConnection::ReSetKey()
     key.assign(key.size(), 0);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("ReKey failed, err = %{public}d", errCode);
-        RdbSecurityManager::GetInstance().DelRdbSecretDataFile(RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
+        RdbSecurityManager::GetInstance().DelRdbSecretDataFile(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
         return E_OK;
     }
 
-    RdbSecurityManager::GetInstance().UpdateKeyFile();
+    RdbSecurityManager::GetInstance().UpdateKeyFile(config.GetPath());
     return E_OK;
 }
 #endif
@@ -380,9 +380,14 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     std::vector<uint8_t> key = config.GetEncryptKey();
     bool isKeyExpired = false;
+    int32_t errCode = E_OK;
     if (config.IsEncrypt()) {
-        RdbSecurityManager::GetInstance().Init(config.GetBundleName(), config.GetPath());
-        auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbKeyFile::PUB_KEY_FILE);
+        errCode = RdbSecurityManager::GetInstance().Init(config.GetBundleName());
+        if (errCode != E_OK) {
+            key.assign(key.size(), 0);
+            return errCode;
+        }
+        auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(config.GetPath(), RdbKeyFile::PUB_KEY_FILE);
         key.assign(key.size(), 0);
         key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
         isKeyExpired = rdbPwd.isKeyExpired;
@@ -390,11 +395,12 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
         return E_OK;
     }
 
-    int errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
+    errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
     key.assign(key.size(), 0);
     if (errCode != SQLITE_OK) {
-        if (RdbSecurityManager::GetInstance().CheckKeyDataFileExists(RdbKeyFile::PUB_KEY_FILE_NEW_KEY)) {
-            auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
+        if (RdbSecurityManager::GetInstance().IsKeyFileExists(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY)) {
+            auto rdbPwd =
+                RdbSecurityManager::GetInstance().GetRdbPassword(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
             key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
             errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
             key.assign(key.size(), 0);
@@ -402,7 +408,7 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
                 LOG_ERROR("SqliteConnection SetEncryptKey fail with new key, err = %{public}d", errCode);
                 return SQLiteError::ErrNo(errCode);
             }
-            RdbSecurityManager::GetInstance().UpdateKeyFile();
+            RdbSecurityManager::GetInstance().UpdateKeyFile(config.GetPath());
         }
         if (errCode != SQLITE_OK) {
             LOG_ERROR("SqliteConnection SetEncryptKey fail, err = %{public}d", errCode);
@@ -417,7 +423,7 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
     }
 
     if (isKeyExpired) {
-        ReSetKey();
+        ReSetKey(config);
     }
 #endif
     return E_OK;

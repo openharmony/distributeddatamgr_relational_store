@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <atomic>
 #include <chrono>
 #include <climits>
 #include <list>
@@ -72,32 +73,33 @@ public:
         PUB_KEY_FILE_NEW_KEY
     };
 
-    RdbPassword GetRdbPassword(KeyFileType keyFile);
-    void DelRdbSecretDataFile(const std::string &path);
-    void DelRdbSecretDataFile(RdbSecurityManager::KeyFileType keyFile);
+    RdbPassword GetRdbPassword(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFileType);
+    void DelRdbSecretDataFile(const std::string &dbPath);
+    void DelRdbSecretDataFile(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFileType);
     static RdbSecurityManager &GetInstance();
-    void Init(const std::string &bundleName, const std::string &path);
-    void UpdateKeyFile();
-    bool CheckKeyDataFileExists(RdbSecurityManager::KeyFileType keyFile);
+    int32_t Init(const std::string &bundleName);
+    void UpdateKeyFile(const std::string &dbPath);
+    bool IsKeyFileExists(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFileType);
 
 private:
     RdbSecurityManager();
     ~RdbSecurityManager();
 
-    int GenerateRootKey();
-    bool CheckRootKeyExists();
+    int GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias);
+    int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias);
+    bool HasRootKey();
     std::vector<uint8_t> EncryptWorkKey(const std::vector<uint8_t> &key);
     bool DecryptWorkKey(std::vector<uint8_t> &source, std::vector<uint8_t> &key);
-    std::vector<uint8_t> GenerateRootKeyAlias();
-    bool InitPath(const std::string &path);
-    void ParsePath(const std::string &path);
+    std::vector<uint8_t> GenerateRootKeyAlias(const std::string &bundleName);
+    bool InitPath(const std::string &dbKeyDir);
+    std::pair<std::string, std::string> ConcatenateKeyPath(const std::string &dbPath);
     std::vector<uint8_t> GenerateRandomNum(int32_t len);
-    bool SaveSecretKeyToFile(RdbSecurityManager::KeyFileType keyFile);
-    bool SaveSecretKeyToDisk(const std::string &path, RdbSecretKeyData &keyData);
-    RdbPassword LoadSecretKeyFromFile(KeyFileType keyFile);
+    bool SaveSecretKeyToFile(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFileType);
+    bool SaveSecretKeyToDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
+    RdbPassword LoadSecretKeyFromFile(const std::string &dbPath, KeyFileType keyFileType);
     bool LoadSecretKeyFromDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
     static bool IsKeyExpired(const time_t &createTime) ;
-    void GetKeyPath(KeyFileType keyType, std::string &keyPath);
+    std::string GetKeyPath(const std::string &dbPath, KeyFileType keyFileType);
     int32_t MallocAndCheckBlobData(struct HksBlob *blob, const uint32_t blobSize);
     int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet,
         const struct HksBlob *inData, struct HksBlob *outData);
@@ -117,37 +119,16 @@ private:
     static const uint8_t AEAD_LEN = 16;
     static constexpr int RDB_KEY_SIZE = 32;
 
-    std::string bundleName_;
-    std::string dbDir_;
-    std::string dbName_;
-    std::string dbKeyDir_;
-    std::string keyPath_;
-    std::string newKeyPath_;
-
     static constexpr int HOURS_PER_YEAR = (24 * 365);
     static constexpr uint8_t UNDISTRIBUTED = 0;
     static constexpr uint8_t DISTRIBUTED = 1;
 
     std::vector<uint8_t> rootKeyAlias_ {};
-    std::vector<uint8_t> nonce_ {};
-    std::vector<uint8_t> aad_ {};
+    std::vector<uint8_t> nonce_;
+    std::vector<uint8_t> aad_;
     std::mutex mutex_;
+    std::atomic<bool> hasRootKey_ = false;
 };
 
-template<typename T> std::vector<uint8_t> TransferTypeToByteArray(const T &t)
-{
-    return std::vector<uint8_t>(reinterpret_cast<uint8_t *>(const_cast<T *>(&t)),
-        reinterpret_cast<uint8_t *>(const_cast<T *>(&t)) + sizeof(T));
-}
-
-template<typename T> T TransferByteArrayToType(const std::vector<uint8_t> &blob)
-{
-    if (blob.size() != sizeof(T) || blob.size() == 0) {
-        constexpr int tSize = sizeof(T);
-        uint8_t tContent[tSize] = { 0 };
-        return *reinterpret_cast<T *>(tContent);
-    }
-    return *reinterpret_cast<T *>(const_cast<uint8_t *>(&blob[0]));
-}
 } // namespace OHOS::NativeRdb
 #endif
