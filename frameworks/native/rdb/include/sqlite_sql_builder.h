@@ -54,7 +54,7 @@ private:
     static void AppendClause(std::string &builder, const std::string &name,
         const std::string &clause, const std::string &table = "");
     static void AppendColumns(
-        std::string &builder, const std::vector<std::string> &columns, const std::string &table = "");
+        std::string &builder, const std::vector<std::string> &columns, const std::string &table = "", const std::string &logTable = "");
 };
 } // namespace NativeRdb
 } // namespace OHOS
