@@ -317,92 +317,128 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
         outInsertNum = 0;
         return E_OK;
     }
-    // prepare batch data & sql
-    std::vector<std::pair<std::string, std::vector<ValueObject>>> vecVectorObj;
-    for (auto iter = initialBatchValues.begin(); iter != initialBatchValues.end(); ++iter) {
-        auto values = (*iter).GetAll();
-        vecVectorObj.push_back(GetInsertParams(values, table));
-    }
-
-    // prepare BeginTransaction
-    int errCode = connectionPool->AcquireTransaction();
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
     auto connection = connectionPool->AcquireConnection(false);
     if (connection == nullptr) {
         return E_CON_OVER_LIMIT;
     }
-
-    if (connection->IsInTransaction()) {
-        connectionPool->ReleaseTransaction();
+    auto executeSqlArgs = GenerateSql(table, initialBatchValues, connection->GetMaxVariableNumber());
+    if (executeSqlArgs.empty()) {
         connectionPool->ReleaseConnection(connection);
-        LOG_ERROR("Transaction is in excuting.");
-        return E_TRANSACTION_IN_EXECUTE;
+        LOG_ERROR("empty, table=%{public}s, values:%{public}zu, max number:%{public}d.", table.c_str(),
+            initialBatchValues.size(), connection->GetMaxVariableNumber());
+        return E_INVALID_ARGS;
     }
-    BaseTransaction transaction(0);
-    connection->SetInTransaction(true);
-    errCode = connection->ExecuteSql(transaction.GetTransactionStr());
-    if (errCode != E_OK) {
-        LOG_ERROR("BeginTransaction with error code %{public}d.", errCode);
-        connection->SetInTransaction(false);
-        connectionPool->ReleaseConnection(connection);
-        connectionPool->ReleaseTransaction();
-        return errCode;
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    if (delayNotifier_ != nullptr) {
+        delayNotifier_->SetAutoSyncInterval(AUTO_SYNC_MAX_INTERVAL);
     }
-
-    // batch insert the values
-    for (auto iter = vecVectorObj.begin(); iter != vecVectorObj.end(); ++iter) {
-        outInsertNum++;
-        errCode = connection->ExecuteSql(iter->first, iter->second);
-        if (errCode != E_OK) {
-            LOG_ERROR("BatchInsert with error code %{public}d.", errCode);
-            outInsertNum = -1;
-            return FreeTransaction(connection, transaction.GetRollbackStr());
+#endif
+    for (const auto &[sql, bindArgs] : executeSqlArgs) {
+        for (const auto &args : bindArgs) {
+            auto errCode = connection->ExecuteSql(sql, args);
+            if (errCode != E_OK) {
+                outInsertNum = -1;
+                connectionPool->ReleaseConnection(connection);
+                LOG_ERROR("BatchInsert failed, errCode : %{public}d, bindArgs : %{public}zu,"
+                    "table : %{public}s, sql : %{public}s", errCode, bindArgs.size(), table.c_str(), sql.c_str());
+                return E_OK;
+            }
         }
     }
-    auto status = FreeTransaction(connection, transaction.GetCommitStr());
-    if (status == E_OK) {
-        DoCloudSync(table);
-    }
-    return status;
+    outInsertNum = initialBatchValues.size();
+    connectionPool->ReleaseConnection(connection);
+    DoCloudSync(table);
+    return E_OK;
 }
 
-std::pair<std::string, std::vector<ValueObject>> RdbStoreImpl::GetInsertParams(
-    std::map<std::string, ValueObject> &valuesMap, const std::string &table)
+RdbStoreImpl::ExecuteSqls RdbStoreImpl::GenerateSql(
+    const std::string &table, const std::vector<ValuesBucket> &initialBatchValues, int limitVariableNumber)
 {
-    std::string sql;
-    std::vector<ValueObject> bindArgs;
-    sql.append("INSERT INTO ").append(table).append("(");
-    size_t bindArgsSize = valuesMap.size();
-    if (bindArgsSize == 0) {
-        sql.append(") VALUES ()");
-        return std::make_pair(sql, bindArgs);
+    std::vector<std::vector<ValueObject>> values;
+    std::map<std::string, uint32_t> fields;
+    int32_t valuePosition = 0;
+    for (size_t row = 0; row < initialBatchValues.size(); row++) {
+        auto &vBucket = initialBatchValues[row];
+        if (values.max_size() == 0) {
+            values.reserve(vBucket.values_.size() * EXPANSION);
+        }
+        for (auto &[key, value] : vBucket.values_) {
+            if (value.GetType() == ValueObject::TYPE_ASSET ||
+                value.GetType() == ValueObject::TYPE_ASSETS) {
+                SetAssetStatus(value, AssetValue::STATUS_INSERT);
+            }
+            int32_t col = 0;
+            auto it = fields.find(key);
+            if (it == fields.end()) {
+                values.emplace_back(std::vector<ValueObject>(initialBatchValues.size()));
+                col = valuePosition;
+                fields.insert(std::pair{key, col});
+                valuePosition++;
+            } else {
+                col = it->second;
+            }
+            values[col][row] = value;
+        }
     }
 
-    bindArgs.reserve(bindArgsSize);
-    auto valueIter = valuesMap.begin();
-    sql.append(valueIter->first);
-    if (valueIter->second.GetType() == ValueObject::TYPE_ASSET ||
-        valueIter->second.GetType() == ValueObject::TYPE_ASSETS) {
-        SetAssetStatus(valueIter->second, AssetValue::STATUS_INSERT);
-    }
-    bindArgs.push_back(valueIter->second);
-    ++valueIter;
-    // prepare batch values & sql.columnName
-    for (; valueIter != valuesMap.end(); ++valueIter) {
-        sql.append(",").append(valueIter->first);
-        if (valueIter->second.GetType() == ValueObject::TYPE_ASSET ||
-            valueIter->second.GetType() == ValueObject::TYPE_ASSETS) {
-            SetAssetStatus(valueIter->second, AssetValue::STATUS_INSERT);
+    std::string sql = "INSERT OR REPLACE INTO " + table + " (";
+    std::vector<ValueObject> args(initialBatchValues.size() * values.size());
+    int32_t col = 0;
+    for (auto &[key, pos] : fields) {
+        for (size_t row = 0; row < initialBatchValues.size(); ++row) {
+            args[col + row * fields.size()] = std::move(values[pos][row]);
         }
-        bindArgs.push_back(valueIter->second);
+        col++;
+        sql.append(key).append(",");
     }
-    sql.append(") VALUES (").append(GetSqlArgs(bindArgsSize)).append(")");
-    // prepare sql.value
-    // put sql & vec<value> into map<sql, args>
-    return std::make_pair(sql, bindArgs);
+    sql.pop_back();
+    sql.append(") VALUES ");
+    return MakeExecuteSqls(sql, args, fields.size(), limitVariableNumber);
+}
+
+RdbStoreImpl::ExecuteSqls RdbStoreImpl::MakeExecuteSqls(
+    const std::string &sql, const std::vector<ValueObject> &args, int fieldSize, int limitVariableNumber)
+{
+    if (fieldSize == 0) {
+        return ExecuteSqls();
+    }
+    size_t rowNumbers = args.size() / fieldSize;
+    size_t maxRowNumbersOneTimes = limitVariableNumber / fieldSize;
+    size_t executeTimes = rowNumbers / maxRowNumbersOneTimes;
+    size_t remainingRows = rowNumbers % maxRowNumbersOneTimes;
+    LOG_DEBUG("rowNumbers %{public}zu, maxRowNumbersOneTimes %{public}zu, executeTimes %{public}zu,"
+        "remainingRows %{public}zu, fieldSize %{public}d, limitVariableNumber %{public}d",
+        rowNumbers, maxRowNumbersOneTimes, executeTimes, remainingRows, fieldSize, limitVariableNumber);
+    std::string singleRowSqlArgs = "(" + GetSqlArgs(fieldSize) + ")";
+    auto appendAgsSql = [&singleRowSqlArgs, &sql] (size_t rowNumber) {
+        std::string sqlStr = sql;
+        for (size_t i = 0; i < rowNumber; ++i) {
+            sqlStr.append(singleRowSqlArgs).append(",");
+        }
+        sqlStr.pop_back();
+        return sqlStr;
+    };
+    std::string executeSql;
+    ExecuteSqls executeSqls;
+    auto start = args.begin();
+    if (executeTimes != 0) {
+        executeSql = appendAgsSql(maxRowNumbersOneTimes);
+        std::vector<std::vector<ValueObject>> sqlArgs;
+        size_t maxVariableNumbers = maxRowNumbersOneTimes * fieldSize;
+        for (size_t i = 0; i < executeTimes; ++i) {
+            std::vector<ValueObject> bindValueArgs(start, start + maxVariableNumbers);
+            sqlArgs.emplace_back(std::move(bindValueArgs));
+            start += maxVariableNumbers;
+        }
+        executeSqls.emplace_back(std::make_pair(executeSql, std::move(sqlArgs)));
+    }
+
+    if (remainingRows != 0) {
+        executeSql = appendAgsSql(remainingRows);
+        std::vector<std::vector<ValueObject>> sqlArgs(1, std::vector<ValueObject>(start, args.end()));
+        executeSqls.emplace_back(std::make_pair(executeSql, std::move(sqlArgs)));
+    }
+    return executeSqls;
 }
 
 int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)

@@ -129,6 +129,7 @@ void SqliteConnectionPool::ReleaseConnection(std::shared_ptr<SqliteConnection> c
     connection->DesFinalize();
     if (connection == writeConnection_) {
         ReleaseWriteConnection();
+        connection->TryCheckPoint();
     } else {
         ReleaseReadConnection(connection);
     }
@@ -225,7 +226,6 @@ int SqliteConnectionPool::InnerReOpenReadConnections()
 
     return errCode;
 }
-
 
 int SqliteConnectionPool::ReOpenAvailableReadConnections()
 {

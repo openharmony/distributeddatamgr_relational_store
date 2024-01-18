@@ -68,16 +68,16 @@ void DelayNotify::StartTimer()
     if (pool_ == nullptr) {
         return;
     }
-    if (forceSyncTaskId_ == Executor::INVALID_TASK_ID) {
+    if (forceSyncTaskId_ == Executor::INVALID_TASK_ID && autoSyncInterval_ == AUTO_SYNC_INTERVAL) {
         forceSyncTaskId_ = pool_->Schedule(std::chrono::milliseconds(FORCE_SYNC_INTERVAL),
             [this]() { ExecuteTask(); });
     }
     if (delaySyncTaskId_ == Executor::INVALID_TASK_ID) {
-        delaySyncTaskId_ = pool_->Schedule(std::chrono::milliseconds(AUTO_SYNC_INTERVAL),
+        delaySyncTaskId_ = pool_->Schedule(std::chrono::milliseconds(autoSyncInterval_),
             [this]() { ExecuteTask(); });
     } else {
         delaySyncTaskId_ =
-            pool_->Reset(delaySyncTaskId_, std::chrono::milliseconds(AUTO_SYNC_INTERVAL));
+            pool_->Reset(delaySyncTaskId_, std::chrono::milliseconds(autoSyncInterval_));
     }
 }
 
@@ -95,6 +95,7 @@ void DelayNotify::ExecuteTask()
 {
     LOG_DEBUG("Notify data change.");
     std::lock_guard<std::mutex> lock(mutex_);
+    RestoreDefaultSyncInterval();
     StopTimer();
     if (task_ != nullptr && changedData_.tableData.size() > 0) {
         int errCode = task_(changedData_);
@@ -105,4 +106,15 @@ void DelayNotify::ExecuteTask()
     }
     changedData_.tableData.clear();
 }
+
+void DelayNotify::SetAutoSyncInterval(uint32_t interval)
+{
+    autoSyncInterval_ = interval;
+}
+
+void DelayNotify::RestoreDefaultSyncInterval()
+{
+    autoSyncInterval_ = AUTO_SYNC_INTERVAL;
+}
+
 }
