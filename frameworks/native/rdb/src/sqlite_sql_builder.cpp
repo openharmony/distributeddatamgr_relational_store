@@ -189,7 +189,7 @@ void SqliteSqlBuilder::AppendClause(std::string &builder, const std::string &nam
  * Add the names that are non-null in columns to s, separating them with commas.
  */
 void SqliteSqlBuilder::AppendColumns(
-    std::string &builder, const std::vector<std::string> &columns, const std::string &table)
+    std::string &builder, const std::vector<std::string> &columns, const std::string &table, const std::string &logTable)
 {
     for (size_t i = 0; i < columns.size(); i++) {
         const auto &col = columns[i];
@@ -200,7 +200,11 @@ void SqliteSqlBuilder::AppendColumns(
             builder.append(", ");
         }
         if (!table.empty()) {
-            builder.append(table).append(".");
+            if (col.find(SqliteUtils::REP) != std::string::npos && !logTable.empty()) {
+                builder.append(logTable).append(".");
+            } else {
+                builder.append(table).append(".");
+            }
         }
         builder.append(col);
     }
@@ -246,13 +250,16 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(
         sql.append("DISTINCT ");
     }
     if (!columns.empty()) {
-        AppendColumns(sql, columns, table);
+        AppendColumns(sql, columns, table, logTable);
+        SqliteUtils::Replace(sql, DistributedRdb::Field::SHARING_RESOURCE_FIELD, DistributedRdb::SHARING_RESOURCE);
     } else {
         sql.append(table + ".*");
     }
-    sql.append(", " + logTable + ".cursor");
-    sql.append(", CASE WHEN ").append(logTable).append(".")
-        .append("flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag ");
+    if (predicates.HasSpecificField()) {
+        sql.append(", " + logTable + ".cursor");
+        sql.append(", CASE WHEN ").append(logTable).append(".")
+            .append("flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag ");
+    }
     sql.append("FROM ").append(table);
     AppendClause(sql, " INDEXED BY ", predicates.GetIndex());
     sql.append(" INNER JOIN ").append(logTable).append(" ON ").append(table)
