@@ -15,11 +15,13 @@
 
 #include "sqlite_connection.h"
 
+#include <sqlite3sym.h>
+#include <sys/stat.h>
+
 #include <cerrno>
 #include <memory>
 #include <new>
-#include <sqlite3sym.h>
-#include <sys/stat.h>
+
 #ifdef RDB_SUPPORT_ICU
 #include <unicode/ucol.h>
 #endif
@@ -28,12 +30,11 @@
 
 #include "file_ex.h"
 #include "logger.h"
+#include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
-#include "raw_data_parser.h"
-
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "directory_ex.h"
 #include "rdb_security_manager.h"
@@ -135,8 +136,9 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
 #endif
         return SQLiteError::ErrNo(errCode);
     }
-
+    maxVariableNumber_ = sqlite3_limit(dbHandle, SQLITE_LIMIT_VARIABLE_NUMBER, -1);
     errCode = Configure(config, retry, dbPath);
+    isConfigured_ = true;
     if (errCode != E_OK) {
         return errCode;
     }
@@ -594,6 +596,7 @@ int SqliteConnection::PrepareAndBind(const std::string &sql, const std::vector<V
         LOG_ERROR("SqliteConnection dbHandle is nullptr");
         return E_INVALID_STATEMENT;
     }
+
     int errCode = LimitWalSize();
     if (errCode != E_OK) {
         return errCode;
@@ -929,30 +932,34 @@ bool SqliteConnection::IsInTransaction()
     return inTransaction_;
 }
 
+int SqliteConnection::TryCheckPoint()
+{
+    std::string walName = sqlite3_filename_wal(sqlite3_db_filename(dbHandle, "main"));
+    int fileSize = SqliteUtils::GetFileSize(walName);
+    if (fileSize <= GlobalExpr::DB_WAL_SIZE_LIMIT_MIN) {
+        return E_OK;
+    }
+    int errCode = sqlite3_wal_checkpoint_v2(dbHandle, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
+    if (errCode != SQLITE_OK) {
+        LOG_WARN("sqlite3_wal_checkpoint_v2 failed err %{public}d.", errCode);
+        return E_ERROR;
+    }
+    return E_OK;
+}
+
 int SqliteConnection::LimitWalSize()
 {
-    if (!isWriteConnection) {
+    if (!isConfigured_ || !isWriteConnection) {
         return E_OK;
     }
 
     std::string walName = sqlite3_filename_wal(sqlite3_db_filename(dbHandle, "main"));
-    if (SqliteUtils::GetFileSize(walName) <= GlobalExpr::DB_WAL_SIZE_LIMIT) {
-        return E_OK;
-    }
-
-    int errCode = sqlite3_wal_checkpoint_v2(dbHandle, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
-    if (errCode != SQLITE_OK) {
-        LOG_WARN("sqlite3_wal_checkpoint_v2 failed %{public}d.", errCode);
-        return E_WAL_SIZE_OVER_LIMIT;
-    }
-
     int fileSize = SqliteUtils::GetFileSize(walName);
-    if (fileSize > GlobalExpr::DB_WAL_SIZE_LIMIT) {
+    if (fileSize > GlobalExpr::DB_WAL_SIZE_LIMIT_MAX) {
         LOG_ERROR("the WAL file size over default limit, %{public}s size is %{public}d",
                   SqliteUtils::Anonymous(walName).c_str(), fileSize);
         return E_WAL_SIZE_OVER_LIMIT;
     }
-
     return E_OK;
 }
 
@@ -1038,6 +1045,11 @@ void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Ass
         default:
             return;
     }
+}
+
+int SqliteConnection::GetMaxVariableNumber()
+{
+    return maxVariableNumber_;
 }
 } // namespace NativeRdb
 } // namespace OHOS

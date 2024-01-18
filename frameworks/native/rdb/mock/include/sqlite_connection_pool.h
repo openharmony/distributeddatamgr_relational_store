@@ -27,7 +27,6 @@
 #include "rdb_store_config.h"
 #include "sqlite_connection.h"
 #include "base_transaction.h"
-
 namespace OHOS {
 namespace NativeRdb {
 class SqliteConnectionPool {

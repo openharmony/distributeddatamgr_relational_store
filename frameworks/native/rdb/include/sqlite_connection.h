@@ -57,6 +57,7 @@ public:
     int EndStepQuery();
     void SetInTransaction(bool transaction);
     bool IsInTransaction();
+    int TryCheckPoint();
     int LimitWalSize();
 #ifdef RDB_SUPPORT_ICU
     int ConfigLocale(const std::string localeStr);
@@ -65,7 +66,7 @@ public:
         AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows);
     int CleanDirtyData(const std::string &table, uint64_t cursor);
     int RegisterCallBackObserver(const DataChangeCallback &clientChangedData);
-
+    int GetMaxVariableNumber();
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     explicit SqliteConnection(bool isWriteConnection);
@@ -111,6 +112,9 @@ private:
     static constexpr uint32_t ITER_V1 = 5000;
     static constexpr uint32_t ITERS[] = {NO_ITER, ITER_V1};
     static constexpr uint32_t ITERS_COUNT = sizeof(ITERS) / sizeof(ITERS[0]);
+
+    bool isConfigured_ = false;
+    int maxVariableNumber_;
 };
 
 } // namespace NativeRdb
