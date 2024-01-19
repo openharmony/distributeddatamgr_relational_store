@@ -207,7 +207,7 @@ private:
     int UnSubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
-    bool RdbStoreImpl::ColHasSpecificField(const std::vector<std::string> &columns);
+    bool ColHasSpecificField(const std::vector<std::string> &columns);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;
