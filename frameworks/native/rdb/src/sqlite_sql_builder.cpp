@@ -189,7 +189,7 @@ void SqliteSqlBuilder::AppendClause(std::string &builder, const std::string &nam
  * Add the names that are non-null in columns to s, separating them with commas.
  */
 void SqliteSqlBuilder::AppendColumns(
-    std::string &builder, const std::vector<std::string> &columns, const std::string &table, const std::string &logTable)
+    std::string &builder, const std::vector<std::string> &columns, const std::string &table)
 {
     for (size_t i = 0; i < columns.size(); i++) {
         const auto &col = columns[i];
@@ -200,11 +200,7 @@ void SqliteSqlBuilder::AppendColumns(
             builder.append(", ");
         }
         if (!table.empty()) {
-            if (col.find(SqliteUtils::REP) != std::string::npos && !logTable.empty()) {
-                builder.append(logTable).append(".");
-            } else {
-                builder.append(table).append(".");
-            }
+            builder.append(table).append(".");
         }
         builder.append(col);
     }
@@ -237,8 +233,8 @@ std::string SqliteSqlBuilder::BuildCountString(const AbsRdbPredicates &predicate
     return "SELECT COUNT(*) FROM " + tableName + BuildSqlStringFromPredicates(predicates);
 }
 
-std::string SqliteSqlBuilder::BuildCursorQueryString(
-    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, const std::string &logTable)
+std::string SqliteSqlBuilder::BuildCursorQueryString(const AbsRdbPredicates &predicates,
+    const std::vector<std::string> &columns, const std::string &logTable,  const std::pair<bool,bool> &queryStatus)
 {
     std::string sql;
     std::string table = predicates.GetTableName();
@@ -250,17 +246,21 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(
         sql.append("DISTINCT ");
     }
     if (!columns.empty()) {
-        AppendColumns(sql, columns, table, logTable);
-        SqliteUtils::Replace(sql, DistributedRdb::Field::SHARING_RESOURCE_FIELD, DistributedRdb::SHARING_RESOURCE);
+        AppendColumns(sql, columns, table);
     } else {
         sql.append(table + ".*");
     }
-    if (predicates.HasSpecificField()) {
+   //columns have spacial field
+   if (queryStatus.first) {
+       SqliteUtils::Replace(sql, table+ "." +DistributedRdb::Field::SHARING_RESOURCE_FIELD, logTable + "." +DistributedRdb::SHARING_RESOURCE);
+   }
+   //predicates have spacial field
+   if (queryStatus.second) {
         sql.append(", " + logTable + ".cursor");
         sql.append(", CASE WHEN ").append(logTable).append(".")
-            .append("flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag ");
+           .append("flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag");
     }
-    sql.append("FROM ").append(table);
+   sql.append(" FROM ").append(table);
     AppendClause(sql, " INDEXED BY ", predicates.GetIndex());
     sql.append(" INNER JOIN ").append(logTable).append(" ON ").append(table)
         .append(".ROWID = ").append(logTable).append(".data_key");
