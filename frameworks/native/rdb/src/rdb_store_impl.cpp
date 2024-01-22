@@ -617,10 +617,11 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::string sql;
-    if (ColHasSpecificField(columns) || predicates.HasSpecificField()) {
+    std::pair<bool,bool> queryStatus = {ColHasSpecificField(columns),predicates.HasSpecificField()};
+    if (queryStatus.first || queryStatus.second) {
         std::string table = predicates.GetTableName();
         std::string logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
-        sql = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable);
+        sql = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
     } else {
         sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
     }
