@@ -323,6 +323,7 @@ public:
     int ResultSize(std::shared_ptr<ResultSet> &resultSet);
     void BasicDataTypeTest002(RdbPredicates predicates1);
     void CalendarTest002(RdbPredicates predicates1);
+    void SetJionList(RdbPredicates predicates1);
 };
 
 std::shared_ptr<RdbStore> RdbStorePredicateTest::store = nullptr;
@@ -1404,6 +1405,17 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ComplexPredicate_021, TestSize.Level1)
     EXPECT_EQ(1, ResultSize(allDataTypes1));
 }
 
+void RdbStorePredicateTest::SetJionList(RdbPredicates predicates1)
+{
+    std::vector<std::string> lists = { "ohos", "bazhahei", "zhaxidelie" };
+    predicates1.SetJoinTableNames(lists);
+    predicates1.SetJoinCount(1);
+    predicates1.SetJoinConditions(lists);
+    predicates1.SetJoinTypes(lists);
+    predicates1.SetOrder("ohos");
+    predicates1.Distinct();
+}
+
 /* *
  * @tc.name: RdbStore_ClearMethod_022
  * @tc.desc: Normal testCase of RdbPredicates for Clear Method
@@ -1435,13 +1447,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ClearMethod_022, TestSize.Level1)
     auto ret = find(agrs.begin(), agrs.end(), "ABCDEFGHIJKLMN");
     EXPECT_EQ(true, ret != agrs.end());
 
-    std::vector<std::string> lists = {"ohos", "bazhahei", "zhaxidelie"};
-    predicates1.SetJoinTableNames(lists);
-    predicates1.SetJoinCount(1);
-    predicates1.SetJoinConditions(lists);
-    predicates1.SetJoinTypes(lists);
-    predicates1.SetOrder("ohos");
-    predicates1.Distinct();
+    SetJionList(predicates1);
 
     agrs = predicates1.GetJoinTableNames();
     ret = find(agrs.begin(), agrs.end(), "zhaxidelie");
@@ -1598,13 +1604,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
     auto ret = find(args.begin(), args.end(), "ABCDEFGHIJKLMN");
     EXPECT_EQ(true, ret != args.end());
 
-    std::vector<std::string> lists = {"ohos", "bazhahei", "zhaxidelie"};
-    predicates1.SetJoinTableNames(lists);
-    predicates1.SetJoinCount(1);
-    predicates1.SetJoinConditions(lists);
-    predicates1.SetJoinTypes(lists);
-    predicates1.SetOrder("ohos");
-    predicates1.Distinct();
+    SetJionList(predicates1);
 
     args = predicates1.GetJoinTableNames();
     ret = find(args.begin(), args.end(), "zhaxidelie");
