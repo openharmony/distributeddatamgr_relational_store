@@ -96,35 +96,17 @@ HWTEST_F(RdbDeleteTest, RdbStore_Delete_001, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbDeleteTest::store;
 
     int64_t id;
-    ValuesBucket values;
     int deletedRows;
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = store->Insert(id, "test", values);
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 19);
-    values.PutDouble("salary", 200.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
-    values.Clear();
-    values.PutInt("id", 3);
-    values.PutString("name", std::string("wangyjing"));
-    values.PutInt("age", 20);
-    values.PutDouble("salary", 300.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->Insert(id, "test", values);
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
