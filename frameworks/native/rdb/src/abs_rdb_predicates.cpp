@@ -191,17 +191,13 @@ AbsRdbPredicates* AbsRdbPredicates::NotEqualTo(const std::string &field, const V
 
 AbsRdbPredicates* AbsRdbPredicates::And()
 {
-    std::string field;
-    std::string value;
-    predicates_.AddOperation(DistributedRdb::AND, field, value);
+    predicates_.AddOperation(DistributedRdb::AND, "", "");
     return (AbsRdbPredicates *)AbsPredicates::And();
 }
 
 AbsRdbPredicates* AbsRdbPredicates::Or()
 {
-    std::string field;
-    std::string value;
-    predicates_.AddOperation(DistributedRdb::OR, field, value);
+    predicates_.AddOperation(DistributedRdb::OR, "", "");
     return (AbsRdbPredicates *)AbsPredicates::Or();
 }
 
