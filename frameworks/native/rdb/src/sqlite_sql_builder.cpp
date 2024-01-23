@@ -250,11 +250,11 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(const AbsRdbPredicates &pre
     } else {
         sql.append(table + ".*");
     }
-   if (queryStatus.first) {
+    if (queryStatus.first) {
         SqliteUtils::Replace(sql, table + "." + DistributedRdb::Field::SHARING_RESOURCE_FIELD,
             logTable + "." + DistributedRdb::SHARING_RESOURCE);
-   }
-   if (queryStatus.second) {
+    }
+    if (queryStatus.second) {
        sql.append(", " + logTable + ".cursor");
        sql.append(", CASE WHEN ").append(logTable).append(".")
            .append("flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag");
