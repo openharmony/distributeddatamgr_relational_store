@@ -234,7 +234,7 @@ std::string SqliteSqlBuilder::BuildCountString(const AbsRdbPredicates &predicate
 }
 
 std::string SqliteSqlBuilder::BuildCursorQueryString(const AbsRdbPredicates &predicates,
-    const std::vector<std::string> &columns, const std::string &logTable,  const std::pair<bool,bool> &queryStatus)
+    const std::vector<std::string> &columns, const std::string &logTable,  const std::pair<bool, bool> &queryStatus)
 {
     std::string sql;
     std::string table = predicates.GetTableName();
@@ -250,17 +250,16 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(const AbsRdbPredicates &pre
     } else {
         sql.append(table + ".*");
     }
-   //columns have spacial field
    if (queryStatus.first) {
-       SqliteUtils::Replace(sql, table+ "." +DistributedRdb::Field::SHARING_RESOURCE_FIELD, logTable + "." +DistributedRdb::SHARING_RESOURCE);
+        SqliteUtils::Replace(sql, table + "." + DistributedRdb::Field::SHARING_RESOURCE_FIELD,
+            logTable + "." + DistributedRdb::SHARING_RESOURCE);
    }
-   //predicates have spacial field
    if (queryStatus.second) {
-        sql.append(", " + logTable + ".cursor");
-        sql.append(", CASE WHEN ").append(logTable).append(".")
+       sql.append(", " + logTable + ".cursor");
+       sql.append(", CASE WHEN ").append(logTable).append(".")
            .append("flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag");
     }
-   sql.append(" FROM ").append(table);
+    sql.append(" FROM ").append(table);
     AppendClause(sql, " INDEXED BY ", predicates.GetIndex());
     sql.append(" INNER JOIN ").append(logTable).append(" ON ").append(table)
         .append(".ROWID = ").append(logTable).append(".data_key");
