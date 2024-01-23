@@ -255,9 +255,9 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(const AbsRdbPredicates &pre
             logTable + "." + DistributedRdb::SHARING_RESOURCE);
     }
     if (queryStatus.second) {
-       sql.append(", " + logTable + ".cursor");
-       sql.append(", CASE WHEN ").append(logTable).append(".")
-           .append("flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag");
+        sql.append(", " + logTable + ".cursor");
+        sql.append(", CASE WHEN ").append(logTable).append(".")
+            .append("flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag");
     }
     sql.append(" FROM ").append(table);
     AppendClause(sql, " INDEXED BY ", predicates.GetIndex());
