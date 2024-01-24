@@ -901,11 +901,13 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_020, TestSize.Level1)
     EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(storeTestRdbStore_, &observer), RDB_OK);
     EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(storeTestRdbStore_, nullptr), RDB_OK);
     EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(nullptr, &observer), RDB_E_INVALID_ARGS);
- * @tc.name: Abnormal_RDB_OH_interface_test_019
+}
+
+ * @tc.name: Abnormal_RDB_OH_interface_test_021
  * @tc.desc: Abnormal testCase of store for OH interface.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_019, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_021, TestSize.Level1)
 {
     OH_Rdb_Config config;
     int errCode = E_OK;
@@ -946,11 +948,11 @@ HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_019, TestSize.Level1
 
 
 /**
- * @tc.name: Abnormal_RDB_OH_interface_test_021
+ * @tc.name: Abnormal_RDB_OH_interface_test_022
  * @tc.desc: Abnormal testCase of store for OH interface.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_020, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_022, TestSize.Level1)
 {
     char createTableSql[] = "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER);";
     int errCode = OH_Rdb_Execute(nullptr, createTableSql);
