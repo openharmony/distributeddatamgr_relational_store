@@ -788,7 +788,7 @@ typedef struct Rdb_ProgressObserver {
  * @since 11
  */
 int OH_Rdb_CloudSync(OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[], uint32_t count,
-    Rdb_SyncCallback observer);
+    Rdb_SyncCallback *observer);
 
 /**
 * @brief Subscribes to the automatic synchronization progress of an RDB store.
