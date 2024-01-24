@@ -903,6 +903,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_020, TestSize.Level1)
     EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(nullptr, &observer), RDB_E_INVALID_ARGS);
 }
 
+/**
  * @tc.name: Abnormal_RDB_OH_interface_test_021
  * @tc.desc: Abnormal testCase of store for OH interface.
  * @tc.type: FUNC
