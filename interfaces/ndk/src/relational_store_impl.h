@@ -27,12 +27,12 @@ namespace OHOS {
 namespace RdbNdk {
 class NDKDetailProgressObserver : public DistributedRdb::DetailProgressObserver {
 public:
-    explicit NDKDetailProgressObserver(Rdb_ProgressObserver *callback);
+    explicit NDKDetailProgressObserver(const Rdb_ProgressObserver *callback);
     void ProgressNotification(const DistributedRdb::Details &details);
-    bool operator==(Rdb_ProgressObserver *callback);
+    bool operator==(const Rdb_ProgressObserver *callback);
 
 private:
-    Rdb_ProgressObserver *callback_;
+    const Rdb_ProgressObserver *callback_;
 };
 
 class RelationalStore : public OH_Rdb_Store {
@@ -43,8 +43,8 @@ public:
     {
         return store_;
     }
-    int SubscribeAutoSyncProgress(Rdb_ProgressObserver *callback);
-    int UnsubscribeAutoSyncProgress(Rdb_ProgressObserver *callback);
+    int SubscribeAutoSyncProgress(const Rdb_ProgressObserver *callback);
+    int UnsubscribeAutoSyncProgress(const Rdb_ProgressObserver *callback);
 
 private:
     std::shared_ptr<OHOS::NativeRdb::RdbStore> store_;
