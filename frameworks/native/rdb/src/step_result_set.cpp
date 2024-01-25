@@ -29,10 +29,10 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb_, SqliteConnectionPool *connectionPool,
-    const std::string &sql_, const std::vector<ValueObject> &selectionArgs)
-    : rdb_(rdb_), sqliteStatement_(nullptr), args_(std::move(selectionArgs)), sql_(sql_),
-      connectionPool_(connectionPool), rowCount_(INIT_POS), isAfterLast_(false)
+StepResultSet::StepResultSet(std::shared_ptr<SqliteConnectionPool> connectionPool, const std::string& sql_,
+    const std::vector<ValueObject>& selectionArgs)
+    : sqliteStatement_(nullptr), args_(std::move(selectionArgs)), sql_(sql_),
+      connectionPool_(std::move(connectionPool)), rowCount_(INIT_POS), isAfterLast_(false)
 {
     PrepareStep();
 }
@@ -40,7 +40,6 @@ StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb_, SqliteConnectio
 StepResultSet::~StepResultSet()
 {
     Close();
-    rdb_.reset();
 }
 
 int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
@@ -233,9 +232,9 @@ int StepResultSet::Close()
     if (isClosed_) {
         return E_OK;
     }
-    rdb_.reset();
     auto args = std::move(args_);
-    sqliteStatement_.reset();
+    sqliteStatement_ = nullptr;
+    conn_ = nullptr;
     auto columnNames = std::move(columnNames_);
     isClosed_ = true;
     return FinishStep();
@@ -254,14 +253,18 @@ int StepResultSet::PrepareStep()
         LOG_ERROR("not a select sql_!");
         return E_EXECUTE_IN_STEP_QUERY;
     }
+    auto pool = connectionPool_.lock();
+    if (pool == nullptr) {
+        LOG_ERROR("not a select sql_!");
+        return E_STEP_RESULT_CLOSED;
+    }
 
-    auto connection = connectionPool_->AcquireConnection(true);
+    auto connection = pool->AcquireConnection(true);
     if (connection == nullptr) {
         LOG_ERROR("connectionPool_ AcquireConnection failed!");
         return E_CON_OVER_LIMIT;
     }
     sqliteStatement_ = SqliteStatement::CreateStatement(connection, sql_);
-    connectionPool_->ReleaseConnection(connection);
     if (sqliteStatement_ == nullptr) {
         LOG_ERROR("Connection create statement failed!");
         return E_STATEMENT_NOT_PREPARED;
@@ -274,6 +277,7 @@ int StepResultSet::PrepareStep()
         sqliteStatement_ = nullptr;
         return errCode;
     }
+    conn_ = connection;
     return E_OK;
 }
 
@@ -285,6 +289,7 @@ int StepResultSet::FinishStep()
     if (sqliteStatement_ != nullptr) {
         sqliteStatement_->ResetStatementAndClearBindings();
         sqliteStatement_ = nullptr;
+        conn_ = nullptr;
     }
     rowPos_ = INIT_POS;
     return E_OK;

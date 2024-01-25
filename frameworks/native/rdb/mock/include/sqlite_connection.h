@@ -57,9 +57,7 @@ public:
     bool IsInTransaction();
     int TryCheckPoint();
     int LimitWalSize();
-#ifdef RDB_SUPPORT_ICU
-    int ConfigLocale(const std::string localeStr);
-#endif
+    int ConfigLocale(const std::string &localeStr);
 
     int RegisterCallBackObserver(const DataChangeCallback &clientChangedData);
     int GetMaxVariableNumber();

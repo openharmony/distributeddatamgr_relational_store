@@ -33,7 +33,7 @@ public:
     RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
 #ifdef WINDOWS_PLATFORM
-    void Clear() override;
+    void Clear() override {};
 #endif
     const RdbStoreConfig &GetConfig();
     int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
@@ -80,9 +80,7 @@ public:
     bool IsReadOnly() const override;
     bool IsMemoryRdb() const override;
     bool IsHoldingConnection() override;
-#ifdef RDB_SUPPORT_ICU
-    int ConfigLocale(const std::string localeStr);
-#endif
+    int ConfigLocale(const std::string &localeStr);
     int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) override;
     std::string GetName();
     std::string GetOrgPath();
@@ -118,8 +116,8 @@ private:
     inline std::string GetSqlArgs(size_t size);
     int RegisterDataChangeCallback();
 
-    const RdbStoreConfig rdbStoreConfig;
-    SqliteConnectionPool *connectionPool;
+    const RdbStoreConfig config_;
+    std::shared_ptr<SqliteConnectionPool> connectionPool_;
     bool isOpen;
     std::string path;
     std::string orgPath;

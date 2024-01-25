@@ -1372,9 +1372,12 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep014, TestSize.Level1)
     std::shared_ptr<ResultSet> resultSet5 = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet2, nullptr);
 
-    EXPECT_EQ(E_OK, resultSet5->GoToRow(1));
+    EXPECT_EQ(E_CON_OVER_LIMIT, resultSet5->GoToRow(1));
 
     EXPECT_EQ(E_OK, resultSet1->Close());
+
+    EXPECT_EQ(E_OK, resultSet5->GoToRow(1));
+
     EXPECT_EQ(E_OK, resultSet2->Close());
     EXPECT_EQ(E_OK, resultSet3->Close());
     EXPECT_EQ(E_OK, resultSet4->Close());

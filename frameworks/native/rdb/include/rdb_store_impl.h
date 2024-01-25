@@ -70,7 +70,7 @@ private:
     DistributedRdb::RdbStoreObserver *observer_ = nullptr;
 };
 
-class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
+class RdbStoreImpl : public RdbStore {
 public:
     RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
@@ -127,9 +127,7 @@ public:
     bool IsReadOnly() const override;
     bool IsMemoryRdb() const override;
     bool IsHoldingConnection() override;
-#ifdef RDB_SUPPORT_ICU
-    int ConfigLocale(const std::string localeStr);
-#endif
+    int ConfigLocale(const std::string &localeStr);
     int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) override;
     void GetSchema(const RdbStoreConfig &config);
     std::string GetName();
@@ -211,8 +209,8 @@ private:
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
 
-    const RdbStoreConfig rdbStoreConfig;
-    SqliteConnectionPool *connectionPool;
+    const RdbStoreConfig config_;
+    std::shared_ptr<SqliteConnectionPool> connectionPool_;
     bool isOpen;
     std::string path;
     std::string orgPath;

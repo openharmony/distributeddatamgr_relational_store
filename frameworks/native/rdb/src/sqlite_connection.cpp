@@ -817,12 +817,14 @@ void LocalizedCollatorDestroy(UCollator *collator)
 {
     ucol_close(collator);
 }
+#endif
 
 /**
  * The database locale.
  */
-int SqliteConnection::ConfigLocale(const std::string localeStr)
+int SqliteConnection::ConfigLocale(const std::string& localeStr)
 {
+#ifdef RDB_SUPPORT_ICU
     std::unique_lock<std::mutex> lock(rdbMutex);
     UErrorCode status = U_ZERO_ERROR;
     UCollator *collator = ucol_open(localeStr.c_str(), &status);
@@ -842,10 +844,9 @@ int SqliteConnection::ConfigLocale(const std::string localeStr)
         LOG_ERROR("SCreate collator in sqlite3 failed.");
         return err;
     }
-
+#endif
     return E_OK;
 }
-#endif
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 /**
@@ -934,6 +935,10 @@ bool SqliteConnection::IsInTransaction()
 
 int SqliteConnection::TryCheckPoint()
 {
+    if (!isWriteConnection) {
+        return E_NOT_SUPPORT;
+    }
+
     std::string walName = sqlite3_filename_wal(sqlite3_db_filename(dbHandle, "main"));
     int fileSize = SqliteUtils::GetFileSize(walName);
     if (fileSize <= GlobalExpr::DB_WAL_SIZE_LIMIT_MIN) {
