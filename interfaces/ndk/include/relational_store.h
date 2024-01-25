@@ -747,6 +747,34 @@ Rdb_TableDetails *OH_Rdb_GetTableDetails(Rdb_ProgressDetails *progress, int32_t 
 typedef void (*Rdb_SyncCallback)(Rdb_ProgressDetails *progressDetails);
 
 /**
+* @brief The callback function of syncObserver.
+*
+* @param progressDetails The details of the sync progress.
+* @see Rdb_ProgressDetails.
+* @since 11
+*/
+typedef void (*Rdb_ProgressCallback)(void *context, Rdb_ProgressDetails *progressDetails);
+
+/**
+ * @brief The observer of sync.
+ *
+ * @param progressDetails The details of the sync progress.
+ * @see Rdb_ProgressDetails.
+ * @since 11
+ */
+typedef struct Rdb_ProgressObserver {
+    /**
+    * The context of sync observer.
+    */
+    void *context;
+
+    /**
+    * The callback function of progress observer.
+    */
+    Rdb_ProgressCallback callback;
+} Rdb_ProgressObserver;
+
+/**
  * @brief Sync data to cloud.
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
@@ -761,6 +789,33 @@ typedef void (*Rdb_SyncCallback)(Rdb_ProgressDetails *progressDetails);
  */
 int OH_Rdb_CloudSync(OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[], uint32_t count,
     Rdb_SyncCallback *callback);
+
+/**
+* @brief Subscribes to the automatic synchronization progress of an RDB store.
+* A callback will be invoked when there is a notification of the automatic synchronization progress.
+*
+* @param store Indicates the pointer to the target {@Link OH_Rdb_Store} instance.
+* @param observer The {@link Rdb_SyncObserver} for the automatic synchornizaiton progress
+* @param Indicates the callback invoked to return the automatic synchronization progress.
+* @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
+* @see OH_Rdb_Store.
+* @see Rdb_SyncObserver.
+* @since 11
+*/
+int OH_Rdb_SubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_ProgressObserver *observer);
+
+/**
+* @brief Unsubscribes from the automatic synchronziation progress of an RDB store.
+*
+* @param store Indicates the pointer to the target {@Link OH_Rdb_Store} instance.
+* @param observer Indicates the {@link Rdb_SyncObserver} callback for the automatic synchornizaiton progress.
+* If it is a null pointer, all callbacks for the automatic synchornizaiton progress will be unregistered.
+* @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
+* @see OH_Rdb_Store.
+* @see Rdb_SyncObserver.
+* @since 11
+*/
+int OH_Rdb_UnsubscribeAutoSyncProgress(OH_Rdb_Store *store, Rdb_ProgressObserver *observer);
 #ifdef __cplusplus
 };
 #endif
