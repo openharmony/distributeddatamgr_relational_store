@@ -52,11 +52,12 @@ void NapiUvQueue::CallFunction(NapiArgsGenerator genArgs)
     work->data = this;
     this->args = std::move(genArgs);
 
-    uv_queue_work(loop_, work, [](uv_work_t* work) {}, [](uv_work_t* work, int st) {
+    int ret = uv_queue_work(loop_, work, [](uv_work_t* work) {}, [](uv_work_t* work, int st) {
             auto queue = static_cast<NapiUvQueue*>(work->data);
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(queue->env_, &scope);
             if (scope == nullptr) {
+                delete work;
                 return;
             }
             int argc = 0;
@@ -77,5 +78,10 @@ void NapiUvQueue::CallFunction(NapiArgsGenerator genArgs)
             napi_close_handle_scope(queue->env_, scope);
             delete work;
         });
+    if (ret < 0) {
+        LOG_ERROR("uv_queue_work failed, errCode:%{public}d", ret);
+        delete static_cast<NapiUvQueue *>(work->data);
+        delete work;
+    }
 }
 } // namespace OHOS::RdbJsKit
