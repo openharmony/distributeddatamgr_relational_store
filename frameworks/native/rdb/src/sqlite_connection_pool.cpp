@@ -33,7 +33,8 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-constexpr std::chrono::seconds WAIT_CONNECT_TIMEOUT(1);
+constexpr std::chrono::seconds WRITE_CONNECT_TIMEOUT(2);
+constexpr std::chrono::seconds READ_CONNECT_TIMEOUT(1);
 
 SqliteConnectionPool *SqliteConnectionPool::Create(const RdbStoreConfig &storeConfig, int &errCode)
 {
@@ -138,7 +139,7 @@ void SqliteConnectionPool::ReleaseConnection(std::shared_ptr<SqliteConnection> c
 std::shared_ptr<SqliteConnection> SqliteConnectionPool::AcquireWriteConnection()
 {
     std::unique_lock<std::mutex> lock(writeMutex_);
-    if (writeCondition_.wait_for(lock, WAIT_CONNECT_TIMEOUT, [this] { return !writeConnectionUsed_; })) {
+    if (writeCondition_.wait_for(lock, WRITE_CONNECT_TIMEOUT, [this] { return !writeConnectionUsed_; })) {
         writeConnectionUsed_ = true;
         return writeConnection_;
     }
@@ -149,7 +150,7 @@ std::shared_ptr<SqliteConnection> SqliteConnectionPool::AcquireWriteConnection()
 int SqliteConnectionPool::AcquireTransaction()
 {
     std::unique_lock<std::mutex> lock(transMutex_);
-    if (transCondition_.wait_for(lock, WAIT_CONNECT_TIMEOUT, [this] { return !transactionUsed_; })) {
+    if (transCondition_.wait_for(lock, WRITE_CONNECT_TIMEOUT, [this] { return !transactionUsed_; })) {
         transactionUsed_ = true;
         return E_OK;
     }
@@ -182,7 +183,7 @@ void SqliteConnectionPool::ReleaseWriteConnection()
 std::shared_ptr<SqliteConnection> SqliteConnectionPool::AcquireReadConnection()
 {
     std::unique_lock<std::mutex> lock(readMutex_);
-    if (readCondition_.wait_for(lock, WAIT_CONNECT_TIMEOUT, [this] { return idleReadConnectionCount_ > 0; })) {
+    if (readCondition_.wait_for(lock, READ_CONNECT_TIMEOUT, [this] { return idleReadConnectionCount_ > 0; })) {
         auto connection = readConnections_.back();
         readConnections_.pop_back();
         idleReadConnectionCount_--;
