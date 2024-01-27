@@ -58,14 +58,16 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
     int &errCode, int version, RdbOpenCallback &openCallback)
 {
     std::string path = config.GetPath();
-    std::lock_guard<std::mutex> lock(mutex_); // TOD this lock should only work on storeCache_, add one more lock for connectionpool
+    // TOD this lock should only work on storeCache_, add one more lock for connectionpool
+    std::lock_guard<std::mutex> lock(mutex_);
     bundleName_ = config.GetBundleName();
     if (storeCache_.find(path) != storeCache_.end()) {
         std::shared_ptr<RdbStoreImpl> rdbStore = storeCache_[path].lock();
         if (rdbStore != nullptr && rdbStore->GetConfig() == config) {
             return rdbStore;
         }
-        storeCache_.erase(path); // TOD reconfigure store should be repeated this
+        // TOD reconfigure store should be repeated this
+        storeCache_.erase(path);
     }
 
     std::shared_ptr<RdbStoreImpl> rdbStore(new (std::nothrow) RdbStoreImpl(config, errCode),
