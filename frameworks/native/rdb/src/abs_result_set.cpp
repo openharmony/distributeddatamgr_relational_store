@@ -305,7 +305,7 @@ int AbsResultSet::GetColumnCount(int &count)
     std::vector<std::string> columnNames;
     int ret = GetAllColumnNames(columnNames);
     if (ret != E_OK) {
-        LOG_ERROR("Failed to GetAllColumnNames, ret is %{public}d", ret);
+        LOG_DEBUG("Failed to GetAllColumnNames, ret is %{public}d", ret);
         return ret;
     }
     columnCount_ = static_cast<int>(columnNames.size());
@@ -346,6 +346,7 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
         columnIndex++;
     }
     columnIndex = -1;
+    LOG_ERROR("GetColumnIndex failed");
     return E_ERROR;
 }
 
