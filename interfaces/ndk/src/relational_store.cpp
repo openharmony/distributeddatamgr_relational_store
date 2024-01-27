@@ -704,5 +704,3 @@ bool NDKStoreObserver::operator==(const Rdb_DataObserver *other)
     }
     return other->context == observer_->context && &(other->callback) == &(observer_->callback);
 }
-
-
