@@ -224,11 +224,13 @@ void RdbUtils::Glob(const DataShare::OperationItem &item, RdbPredicates &predica
 
 void RdbUtils::Between(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
+    // Convert data with index 2 to a string
     predicates.Between(item.GetSingle(0), ToString(item.singleParams[1]), ToString(item.singleParams[2]));
 }
 
 void RdbUtils::NotBetween(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
+    // Convert data with index 2 to a string
     predicates.NotBetween(item.GetSingle(0), ToString(item.singleParams[1]), ToString(item.singleParams[2]));
 }
 
