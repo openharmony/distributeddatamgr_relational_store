@@ -522,10 +522,13 @@ public:
         operator std::map<PRIKey, Date>();
         operator std::shared_ptr<ResultSet>();
         PRIKey GetOriginKey(const std::vector<uint8_t>& hash);
+        size_t GetMaxOriginKeySize();
+        bool NeedConvert() const;
 
     private:
         std::shared_ptr<ResultSet> result_;
         std::map<std::vector<uint8_t>, PRIKey> hash_;
+        size_t maxOriginKeySize_ = sizeof(int64_t);
         bool isFromRowId_{ false };
     };
     /**
