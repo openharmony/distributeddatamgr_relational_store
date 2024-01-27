@@ -415,3 +415,39 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_007, TestSize.Level1)
     allDataTypes->GetDouble(3, doubleVal);
     EXPECT_EQ(doubleVal, DBL_MAX);
 }
+
+/* *
+ * @tc.name: Rdb_DataShare_Adapter_008
+ * @tc.desc: normal testcase of query double
+ * @tc.type: test double for high accuracy
+ */
+HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_008, TestSize.Level1)
+{
+    std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 double,") +
+                                 std::string("data2 double, data3 TEXT);");
+    store->ExecuteSql(createTableSql);
+
+    ValuesBucket values;
+    int64_t id;
+    double data1 = 1.777777777777;
+    double data2 = 1.888888888888;
+    std::string data3 = "zh-has";
+    std::string tableName = "test";
+
+    values.PutDouble("data1", data1);
+    values.PutDouble("data2", data2);
+    values.PutString("data3", data3);
+    int ret = store->Insert(id, tableName, values);
+    EXPECT_EQ(ret, OHOS::NativeRdb::E_OK);
+    EXPECT_EQ(1, id);
+
+    OHOS::DataShare::DataSharePredicates predicates;
+    predicates.BeginWrap()->EqualTo("data1", data1)->And()
+        ->EqualTo("data2", data2)->And()->EqualTo("data3", data3)->EndWrap();
+    std::vector<std::string> columns;
+    auto allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, tableName), columns);
+    int rowCount;
+    int ok = allDataTypes->GetRowCount(rowCount);
+    EXPECT_EQ(ok, OHOS::NativeRdb::E_OK);
+    EXPECT_EQ(1, rowCount);
+}
