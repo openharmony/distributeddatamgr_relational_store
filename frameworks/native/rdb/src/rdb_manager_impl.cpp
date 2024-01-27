@@ -77,7 +77,6 @@ static void LinkToDeath(const sptr<IRemoteObject>& remote)
 
 RdbManagerImpl::RdbManagerImpl()
 {
-    LOG_INFO("construct");
 }
 
 RdbManagerImpl::~RdbManagerImpl()
@@ -170,7 +169,6 @@ void RdbManagerImpl::ResetServiceHandle()
 RdbStoreDataServiceProxy::RdbStoreDataServiceProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<DistributedRdb::IKvStoreDataService>(impl)
 {
-    LOG_INFO("init data service proxy.");
 }
 
 sptr<IRemoteObject> RdbStoreDataServiceProxy::GetFeatureInterface(const std::string &name)
