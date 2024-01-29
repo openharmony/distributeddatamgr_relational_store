@@ -781,7 +781,7 @@ void SqliteConnection::LimitPermission(const std::string &dbPath) const
         if ((st.st_mode & (S_IXUSR | S_IXGRP | S_IRWXO)) != 0) {
             int ret = chmod(dbPath.c_str(), st.st_mode & (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP));
             if (ret != 0) {
-                LOG_ERROR("SqliteConnection LimitPermission chmod fail, err = %{public}d", errno);
+                LOG_DEBUG("SqliteConnection LimitPermission chmod fail, err = %{public}d", errno);
             }
         }
     } else {
