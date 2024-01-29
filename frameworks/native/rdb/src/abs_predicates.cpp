@@ -53,7 +53,7 @@ bool AbsPredicates::IsNeedAnd() const
  */
 AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const ValueObject &value)
 {
-    if (!CheckParameter("equalTo", field, { value })) {
+    if (!CheckParameter("equalTo", field, {})) {
         return this;
     }
     hasSpecificField = hasSpecificField || IsSpecificField(field);
@@ -89,7 +89,7 @@ AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const ValueObjec
  */
 AbsPredicates *AbsPredicates::NotEqualTo(const std::string &field, const ValueObject &value)
 {
-    if (!CheckParameter("notEqualTo", field, { value })) {
+    if (!CheckParameter("notEqualTo", field, {})) {
         return this;
     }
     hasSpecificField = hasSpecificField || IsSpecificField(field);
