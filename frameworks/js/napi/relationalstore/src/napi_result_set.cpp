@@ -469,11 +469,7 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     int32_t result = -1;
-    int errCode = resultSetProxy->GetInstance()->GetColumnIndex(input, result);
-    if (errCode != E_OK) {
-        LOG_ERROR("IsAtLastRow failed code:%{public}d columnName:%{public}d", errCode, result);
-    }
-
+    resultSetProxy->GetInstance()->GetColumnIndex(input, result);
     return JSUtils::Convert2JSValue(env, result);
 }
 
@@ -527,7 +523,6 @@ napi_value ResultSetProxy::IsClosed(napi_env env, napi_callback_info info)
 
 void ResultSetProxy::Init(napi_env env, napi_value exports)
 {
-    LOG_INFO("ResultSetProxy::Init");
     auto lambda = []() -> std::vector<napi_property_descriptor> {
         std::vector<napi_property_descriptor> properties = {
             DECLARE_NAPI_FUNCTION("goToRow", GoToRow),
