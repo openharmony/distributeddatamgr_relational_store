@@ -293,6 +293,11 @@ static constexpr int E_GET_DATAOBSMGRCLIENT_FAIL = (E_BASE + 50);
  * @brief The error when the type of the distributed table does not match.
  */
 static constexpr int E_TYPE_MISMATCH = (E_BASE + 51);
+
+/**
+ * @brief The error when database or disk is full.
+ */
+static constexpr int E_DATABASE_FULL = (E_BASE + 52);
 } // namespace NativeRdb
 } // namespace OHOS
 
