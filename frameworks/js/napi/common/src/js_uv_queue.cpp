@@ -59,7 +59,12 @@ void UvQueue::AsyncCall(UvCallback callback, Args args, Result result)
     entry->args_ = std::move(args);
     entry->result_ = std::move(result);
     work->data = entry;
-    uv_queue_work(loop_, work, DoWork, DoUvCallback);
+    int ret = uv_queue_work(loop_, work, DoWork, DoUvCallback);
+    if (ret < 0) {
+        LOG_ERROR("uv_queue_work failed, errCode:%{public}d", ret);
+        delete entry;
+        delete work;
+    }
 }
 
 void UvQueue::AsyncPromise(UvPromise promise, UvQueue::Args args)
@@ -83,7 +88,12 @@ void UvQueue::AsyncPromise(UvPromise promise, UvQueue::Args args)
     entry->defer_ = promise.defer_;
     entry->args_ = std::move(args);
     work->data = entry;
-    uv_queue_work(loop_, work, DoWork, DoUvPromise);
+    int ret = uv_queue_work(loop_, work, DoWork, DoUvPromise);
+    if (ret < 0) {
+        LOG_ERROR("uv_queue_work failed, errCode:%{public}d", ret);
+        delete entry;
+        delete work;
+    }
 }
 
 void UvQueue::Execute(UvQueue::Task task)
@@ -105,7 +115,12 @@ void UvQueue::Execute(UvQueue::Task task)
     }
     *entry = task;
     work->data = entry;
-    uv_queue_work(loop_, work, DoExecute, [](uv_work_t *work, int status) { delete work; });
+    int ret = uv_queue_work(loop_, work, DoExecute, [](uv_work_t *work, int status) { delete work; });
+    if (ret < 0) {
+        LOG_ERROR("uv_queue_work failed, errCode:%{public}d", ret);
+        delete entry;
+        delete work;
+    }
 }
 
 napi_env UvQueue::GetEnv()
