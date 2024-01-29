@@ -12,16 +12,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef RELATIONAL_ASSET_IMPL_H
-#define RELATIONAL_ASSET_IMPL_H
 
-#include "asset_value.h"
-#include "data_asset.h"
-using AssetValue = OHOS::NativeRdb::AssetValue;
-constexpr int32_t DATA_ASSET_V0 = 10002451;
-struct Data_Asset {
-    int32_t cid = DATA_ASSET_V0;
-    AssetValue asset_;
-};
+#ifndef RELATIONAL_TYPES_V0_H
+#define RELATIONAL_TYPES_V0_H
+#ifndef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
+#define TABLE_DETAIL_V0 1
+typedef struct Statistic_V0 {
+    int total;
+    int successful;
+    int failed;
+    int remained;
+} Statistic_V0;
 
-#endif // RELATIONAL_ASSET_IMPL_H
+typedef struct TableDetails_V0 {
+    const char *table;
+    Statistic_V0 upload;
+    Statistic_V0 download;
+} TableDetails_V0;
+
+#define DISTRIBUTED_CONFIG_V0 1
+typedef struct DistributedConfig_V0 {
+    int version;
+    bool isAutoSync;
+} DistributedConfig_V0;
+#ifndef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif
+#endif // RELATIONAL_TYPES_V0_H
