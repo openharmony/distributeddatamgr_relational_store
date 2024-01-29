@@ -28,9 +28,7 @@ constexpr int ERR = -1;
 
 constexpr int E_PARAM_ERROR = 401;
 constexpr int E_NON_SYSTEM_APP_ERROR = 202;
-constexpr int E_INNER_ERROR = 14800000;
 constexpr int E_RESULT_GOTO_ERROR = 14800012;
-constexpr int E_RESULT_GET_ERROR = 14800013;
 constexpr int E_NOT_STAGE_MODE = 14801001;
 constexpr int E_DATA_GROUP_ID_INVALID = 14801002;
 
@@ -44,7 +42,8 @@ const static std::map<int, std::string> ERROR_MAPS = {
     { E_NOT_STAGE_MODE, "Only supported in stage mode." },
     { E_DATA_GROUP_ID_INVALID, "The data group id is invalid." },
     { NativeRdb::E_GET_DATAOBSMGRCLIENT_FAIL, "Failed to get DataObsMgrClient." },
-    { NativeRdb::E_TYPE_MISMATCH, "The type of the distributed table does not match"},
+    { NativeRdb::E_TYPE_MISMATCH, "The type of the distributed table does not match" },
+    { NativeRdb::E_DATABASE_FULL, "database or disk is full." }
 };
 
 #define RDB_REVT_NOTHING
@@ -106,8 +105,8 @@ public:
             code_ = code;
             msg_ = iter->second;
         } else {
-            code_ = E_INNER_ERROR;
-            msg_ = "Inner error. Inner code is " + std::to_string(code % E_INNER_ERROR);
+            code_ = NativeRdb::E_BASE;
+            msg_ = "Inner error. Inner code is " + std::to_string(code % NativeRdb::E_BASE);
         }
     }
 
