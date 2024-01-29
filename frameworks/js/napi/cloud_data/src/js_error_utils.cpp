@@ -64,7 +64,7 @@ Status GenerateNapiError(int32_t status, int32_t &errCode, std::string &errMessa
     return static_cast<Status>(status);
 }
 
-void ThrowNapiError(napi_env env, int32_t status, const std::string &errMessage, bool isParamsCheck)
+void ThrowNapiError(napi_env env, int32_t status, const std::string &errMessage)
 {
     LOG_DEBUG("ThrowNapiError message: %{public}s", errMessage.c_str());
     if (status == Status::SUCCESS) {
@@ -80,10 +80,8 @@ void ThrowNapiError(napi_env env, int32_t status, const std::string &errMessage,
     }
 
     std::string message(napiError.message);
-    if (isParamsCheck) {
-        napiError.jsCode = 401;
-        message += errMessage;
-    }
+
+    message += errMessage;
 
     std::string jsCode;
     if (napiError.jsCode == -1) {
