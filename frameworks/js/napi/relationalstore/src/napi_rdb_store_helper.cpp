@@ -319,7 +319,6 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
 
 napi_value InitRdbHelper(napi_env env, napi_value exports)
 {
-    LOG_INFO("RelationalStoreJsKit::InitRdbHelper begin");
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION_WITH_DATA("getRdbStore", GetRdbStore, ASYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("getRdbStoreSync", GetRdbStore, SYNC),
@@ -327,7 +326,6 @@ napi_value InitRdbHelper(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION_WITH_DATA("deleteRdbStoreSync", DeleteRdbStore, SYNC),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
-    LOG_INFO("RelationalStoreJsKit::InitRdbHelper end");
     return exports;
 }
 } // namespace RelationalStoreJsKit

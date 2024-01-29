@@ -236,7 +236,7 @@ private:
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
     std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
     static constexpr uint32_t EXPANSION = 2;
-    static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 20000;
+    static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 3000;
 };
 } // namespace OHOS::NativeRdb
 #endif

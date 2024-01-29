@@ -133,7 +133,7 @@ private:
     static void On(const OperationItem &item, RdbPredicates &predicates);
     RdbUtils();
     ~RdbUtils();
-    static std::string ToString(const DataSharePredicatesObject &predicatesObject);
+    static OHOS::NativeRdb::ValueObject ToValueObject(const DataSharePredicatesObject &predicatesObject);
     using OperateHandler = void (*)(const OperationItem &, RdbPredicates &);
     static constexpr OperateHandler HANDLERS[DataShare::LAST_TYPE] = {
         [DataShare::INVALID_OPERATION] = &RdbUtils::NoSupport,
