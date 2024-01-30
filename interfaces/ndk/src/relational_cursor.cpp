@@ -15,10 +15,7 @@
 
 #include "relational_cursor.h"
 
-#include <iostream>
-#include <sstream>
 #include <string>
-#include <utility>
 
 #include "logger.h"
 #include "oh_cursor.h"
@@ -32,205 +29,154 @@ namespace RdbNdk {
 int RelationalCursor::GetColumnCount(OH_Cursor *cursor, int *count)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || count == nullptr || self->resultSet_ == nullptr) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return self->resultSet_->GetColumnCount(*count);
+    return self->GetColumnCount(count);
 }
 
 int RelationalCursor::GetColumnType(OH_Cursor *cursor, int32_t columnIndex, OH_ColumnType *columnType)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || columnType == nullptr || columnIndex < 0 || self->resultSet_ == nullptr) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    OHOS::NativeRdb::ColumnType type;
-    int result = self->resultSet_->GetColumnType(columnIndex, type);
-    *columnType = static_cast<OH_ColumnType>(static_cast<int>(type));
-    return result;
+    return self->GetColumnType(columnIndex, columnType);
 }
 
 int RelationalCursor::GetColumnIndex(OH_Cursor *cursor, const char *name, int *columnIndex)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || name == nullptr || columnIndex == nullptr || self->resultSet_ == nullptr) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return self->resultSet_->GetColumnIndex(name, *columnIndex);
+    return self->GetColumnIndex(name, columnIndex);
 }
 
 int RelationalCursor::GetColumnName(OH_Cursor *cursor, int32_t columnIndex, char *name, int length)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || name == nullptr || length <= 0 || self->resultSet_ == nullptr) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    std::string str;
-    int errCode = self->resultSet_->GetColumnName(columnIndex, str);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        return errCode;
-    }
-    errno_t result = memcpy_s(name, length, str.c_str(), str.length());
-    if (result != EOK) {
-        LOG_ERROR("memcpy_s failed, result is %{public}d", result);
-        return OH_Rdb_ErrCode::RDB_ERR;
-    }
-    return OH_Rdb_ErrCode::RDB_OK;
+    return self->GetColumnName(columnIndex, name, length);
 }
 
 int RelationalCursor::GetRowCount(OH_Cursor *cursor, int *count)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || count == nullptr || self->resultSet_ == nullptr) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return self->resultSet_->GetRowCount(*count);
+    return self->GetRowCount(count);
 }
 
 int RelationalCursor::GoToNextRow(OH_Cursor *cursor)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || self->resultSet_ == nullptr) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return self->resultSet_->GoToNextRow();
+    return self->GoToNextRow();
 }
 
 int RelationalCursor::GetSize(OH_Cursor *cursor, int32_t columnIndex, size_t *size)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || size == nullptr || self->resultSet_ == nullptr) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return self->resultSet_->GetSize(columnIndex, *size);
+    return self->GetSize(columnIndex, size);
 }
 
 int RelationalCursor::GetText(OH_Cursor *cursor, int32_t columnIndex, char *value, int length)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || value == nullptr || length <= 0 || self->resultSet_ == nullptr) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    std::string str;
-    int errCode = self->resultSet_->GetString(columnIndex, str);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        return errCode;
-    }
-    errno_t result = memcpy_s(value, length, str.c_str(), str.length());
-    if (result != EOK) {
-        LOG_ERROR("memcpy_s failed, result is %{public}d", result);
-        return OH_Rdb_ErrCode::RDB_ERR;
-    }
-    return OH_Rdb_ErrCode::RDB_OK;
+    return self->GetText(columnIndex, value, length);
 }
 
 int RelationalCursor::GetInt64(OH_Cursor *cursor, int32_t columnIndex, int64_t *value)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || value == nullptr || self->resultSet_ == nullptr) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return self->resultSet_->GetLong(columnIndex, *value);
+    return self->GetInt64(columnIndex, value);
 }
 
 int RelationalCursor::GetReal(OH_Cursor *cursor, int32_t columnIndex, double *value)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || value == nullptr || self->resultSet_ == nullptr) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return self->resultSet_->GetDouble(columnIndex, *value);
+    return self->GetReal(columnIndex, value);
 }
 
 int RelationalCursor::GetBlob(OH_Cursor *cursor, int32_t columnIndex, unsigned char *value, int length)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || value == nullptr || length <= 0 || self->resultSet_ == nullptr) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    std::vector<uint8_t> vec;
-    int errCode = self->resultSet_->GetBlob(columnIndex, vec);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        return errCode;
-    }
-    errno_t result = memcpy_s(value, length, vec.data(), vec.size());
-    if (result != EOK) {
-        LOG_ERROR("memcpy_s failed, result is %{public}d", result);
-        return OH_Rdb_ErrCode::RDB_ERR;
-    }
-    return OH_Rdb_ErrCode::RDB_OK;
+    return self->GetBlob(columnIndex, value, length);
 }
 
 int RelationalCursor::GetAsset(OH_Cursor *cursor, int32_t columnIndex, Data_Asset *value)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || self->resultSet_ == nullptr || value == nullptr || value->cid != DATA_ASSET_V0 ||
-        columnIndex < 0) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    NativeRdb::AssetValue asset;
-    auto errCode = self->resultSet_->GetAsset(columnIndex, asset);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        return errCode;
-    }
-    value->cid = DATA_ASSET_V0;
-    value->asset_ = asset;
-    return errCode;
+    return self->GetAsset(columnIndex, value);
 }
 
 int RelationalCursor::GetAssets(OH_Cursor *cursor, int32_t columnIndex, Data_Asset **value, uint32_t *length)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || self->resultSet_ == nullptr || length == nullptr) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    std::vector<NativeRdb::AssetValue> assets;
-    auto errCode = self->resultSet_->GetAssets(columnIndex, assets);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        return errCode;
-    }
-    uint32_t inputLength = *length;
-    *length = assets.size();
-    if (value == nullptr) {
-        return OH_Rdb_ErrCode::RDB_OK;
-    }
-    if (*length != inputLength) {
-        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
-    }
-    for (uint32_t i = 0; i < *length; ++i) {
-        if (value[i] == nullptr) {
-            return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
-        }
-        value[i]->cid = DATA_ASSET_V0;
-        value[i]->asset_ = assets[i];
-    }
-    return errCode;
+    return self->GetAssets(columnIndex, value, length);
 }
 
 int RelationalCursor::IsNull(OH_Cursor *cursor, int32_t columnIndex, bool *isNull)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || isNull == nullptr || self->resultSet_ == nullptr) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return self->resultSet_->IsColumnNull(columnIndex, *isNull);
+    return self->IsNull(columnIndex, isNull);
+}
+
+
+int RelationalCursor::GetAssetsCount(OH_Cursor *cursor, int32_t columnIndex, uint32_t *count)
+{
+    auto self = GetSelf(cursor);
+    if (self == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return self->GetAssetsCount(columnIndex, count);
 }
 
 int RelationalCursor::Destroy(OH_Cursor *cursor)
 {
     auto self = GetSelf(cursor);
-    if (self == nullptr || self->resultSet_ == nullptr) {
+    if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    int errCode = self->resultSet_->Close();
-    if (errCode != OHOS::NativeRdb::E_OK) {
+    int errCode = self->Destroy();
+    if (errCode != NativeRdb::E_OK) {
         return errCode;
     }
     delete self;
     return errCode;
 }
 
-RelationalCursor::RelationalCursor(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
+RelationalCursor::RelationalCursor(std::shared_ptr<NativeRdb::ResultSet> resultSet)
     : resultSet_(std::move(resultSet))
 {
     id = RDB_CURSOR_CID;
@@ -250,15 +196,212 @@ RelationalCursor::RelationalCursor(std::shared_ptr<OHOS::NativeRdb::ResultSet> r
     destroy = Destroy;
     getAsset = GetAsset;
     getAssets = GetAssets;
+    getAssetsCount = GetAssetsCount;
 }
 
 RelationalCursor *RelationalCursor::GetSelf(OH_Cursor *cursor)
 {
-    if (cursor == nullptr || cursor->id != OHOS::RdbNdk::RDB_CURSOR_CID) {
+    if (cursor == nullptr || cursor->id != RdbNdk::RDB_CURSOR_CID) {
         LOG_ERROR("cursor invalid. is null %{public}d", (cursor == nullptr));
         return nullptr;
     }
-    return static_cast<OHOS::RdbNdk::RelationalCursor *>(cursor);
+    return static_cast<RdbNdk::RelationalCursor *>(cursor);
 }
+
+int RelationalCursor::GetColumnCount(int *count)
+{
+    if (count == nullptr || resultSet_ == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return resultSet_->GetColumnCount(*count);
+}
+
+int RelationalCursor::GetColumnType(int32_t columnIndex, OH_ColumnType *columnType)
+{
+    if (columnType == nullptr || columnIndex < 0 || resultSet_ == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    NativeRdb::ColumnType type;
+    int result = resultSet_->GetColumnType(columnIndex, type);
+    *columnType = static_cast<OH_ColumnType>(static_cast<int>(type));
+    return result;
+}
+
+int RelationalCursor::GetColumnIndex(const char *name, int *columnIndex)
+{
+    if (name == nullptr || columnIndex == nullptr || resultSet_ == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return resultSet_->GetColumnIndex(name, *columnIndex);
+}
+
+int RelationalCursor::GetColumnName(int32_t columnIndex, char *name, int length)
+{
+    if (name == nullptr || length <= 0 || resultSet_ == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    std::string str;
+    int errCode = resultSet_->GetColumnName(columnIndex, str);
+    if (errCode != NativeRdb::E_OK) {
+        return errCode;
+    }
+    errno_t result = strcpy_s(name, length, str.c_str());
+    if (result != EOK) {
+        LOG_ERROR("strcpy_s failed, result is %{public}d", result);
+        return OH_Rdb_ErrCode::RDB_ERR;
+    }
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int RelationalCursor::GetRowCount(int *count)
+{
+    if (count == nullptr || resultSet_ == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return resultSet_->GetRowCount(*count);
+}
+
+int RelationalCursor::GoToNextRow()
+{
+    if (resultSet_ == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return resultSet_->GoToNextRow();
+}
+
+int RelationalCursor::GetSize(int32_t columnIndex, size_t *size)
+{
+    if (size == nullptr || resultSet_ == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return resultSet_->GetSize(columnIndex, *size);
+}
+
+int RelationalCursor::GetText(int32_t columnIndex, char *value, int length)
+{
+    if (value == nullptr || length <= 0 || resultSet_ == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    std::string str;
+    int errCode = resultSet_->GetString(columnIndex, str);
+    if (errCode != NativeRdb::E_OK) {
+        return errCode;
+    }
+    errno_t result = strcpy_s(value, length, str.c_str());
+    if (result != EOK) {
+        LOG_ERROR("strcpy_s failed, result is %{public}d", result);
+        return OH_Rdb_ErrCode::RDB_ERR;
+    }
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int RelationalCursor::GetInt64(int32_t columnIndex, int64_t *value)
+{
+    if (value == nullptr || resultSet_ == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return resultSet_->GetLong(columnIndex, *value);
+}
+
+int RelationalCursor::GetReal(int32_t columnIndex, double *value)
+{
+    if (value == nullptr || resultSet_ == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return resultSet_->GetDouble(columnIndex, *value);
+}
+
+int RelationalCursor::GetBlob(int32_t columnIndex, unsigned char *value, int length)
+{
+    if (value == nullptr || length <= 0 || resultSet_ == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    std::vector<uint8_t> vec;
+    int errCode = resultSet_->GetBlob(columnIndex, vec);
+    if (errCode != NativeRdb::E_OK) {
+        return errCode;
+    }
+    errno_t result = memcpy_s(value, length, vec.data(), vec.size());
+    if (result != EOK) {
+        LOG_ERROR("memcpy_s failed, result is %{public}d", result);
+        return OH_Rdb_ErrCode::RDB_ERR;
+    }
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int RelationalCursor::GetAsset(int32_t columnIndex, Data_Asset *value)
+{
+    if (resultSet_ == nullptr || value == nullptr || columnIndex < 0 || value->cid != DATA_ASSET_V0) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    NativeRdb::AssetValue asset;
+    auto errCode = resultSet_->GetAsset(columnIndex, asset);
+    if (errCode != NativeRdb::E_OK) {
+        return errCode;
+    }
+    value->cid = DATA_ASSET_V0;
+    value->asset_ = asset;
+    return errCode;
+}
+
+int RelationalCursor::GetAssets(int32_t columnIndex, Data_Asset **value, uint32_t *length)
+{
+    if (resultSet_ == nullptr || length == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+
+    std::vector<NativeRdb::AssetValue> assets;
+    auto errCode = resultSet_->GetAssets(columnIndex, assets);
+    if (errCode != NativeRdb::E_OK) {
+        return errCode;
+    }
+    uint32_t inputLength = *length;
+    *length = assets.size();
+    if (value == nullptr) {
+        return OH_Rdb_ErrCode::RDB_OK;
+    }
+    if (*length != inputLength) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    for (int i = 0; i < *length; ++i) {
+        if (value[i] == nullptr || value[i]->cid != DATA_ASSET_V0) {
+            return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+        }
+        value[i]->cid = DATA_ASSET_V0;
+        value[i]->asset_ = assets[i];
+    }
+    return errCode;
+}
+
+int RelationalCursor::IsNull(int32_t columnIndex, bool *isNull)
+{
+    if (isNull == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return resultSet_->IsColumnNull(columnIndex, *isNull);
+}
+
+int RelationalCursor::Destroy()
+{
+    if (resultSet_ == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return resultSet_->Close();
+}
+
+int RelationalCursor::GetAssetsCount(int32_t columnIndex, uint32_t *count)
+{
+    if (count == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    std::vector<NativeRdb::AssetValue> assets;
+    auto errCode = resultSet_->GetAssets(columnIndex, assets);
+    if (errCode != NativeRdb::E_OK) {
+        return errCode;
+    }
+    *count = assets.size();
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
 } // namespace RdbNdk
 } // namespace OHOS
