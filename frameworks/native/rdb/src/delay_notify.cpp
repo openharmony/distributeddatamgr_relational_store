@@ -22,9 +22,6 @@ DelayNotify::~DelayNotify()
     if (pool_ == nullptr) {
         return;
     }
-    if (forceSyncTaskId_ != Executor::INVALID_TASK_ID) {
-        pool_->Remove(forceSyncTaskId_);
-    }
     if (delaySyncTaskId_ != Executor::INVALID_TASK_ID) {
         pool_->Remove(delaySyncTaskId_);
     }
@@ -68,10 +65,6 @@ void DelayNotify::StartTimer()
     if (pool_ == nullptr) {
         return;
     }
-    if (forceSyncTaskId_ == Executor::INVALID_TASK_ID && autoSyncInterval_ == AUTO_SYNC_INTERVAL) {
-        forceSyncTaskId_ = pool_->Schedule(std::chrono::milliseconds(FORCE_SYNC_INTERVAL),
-            [this]() { ExecuteTask(); });
-    }
     if (delaySyncTaskId_ == Executor::INVALID_TASK_ID) {
         delaySyncTaskId_ = pool_->Schedule(std::chrono::milliseconds(autoSyncInterval_),
             [this]() { ExecuteTask(); });
@@ -84,10 +77,8 @@ void DelayNotify::StartTimer()
 void DelayNotify::StopTimer()
 {
     if (pool_ != nullptr) {
-        pool_->Remove(forceSyncTaskId_);
         pool_->Remove(delaySyncTaskId_);
     }
-    forceSyncTaskId_ = Executor::INVALID_TASK_ID;
     delaySyncTaskId_ = Executor::INVALID_TASK_ID;
 }
 
