@@ -145,8 +145,6 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
     NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "RdbStoreV9", NAPI_AUTO_LENGTH, InitializeV9, nullptr,
                                    sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons));
     NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, cons, 1, &constructorV9_));
-
-    LOG_DEBUG("Init RdbStoreProxy end");
 }
 
 napi_value RdbStoreProxy::InnerInitialize(napi_env env, napi_callback_info info, int version)
