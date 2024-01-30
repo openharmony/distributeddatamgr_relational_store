@@ -83,8 +83,7 @@ napi_value AllocResourceAndShare(napi_env env, napi_callback_info info)
                 status = CloudService::NOT_SUPPORT;
             }
             ctxt->status = (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
-                               ? napi_ok
-                               : napi_generic_failure;
+                               ? napi_ok: napi_generic_failure;
             return;
         }
 
