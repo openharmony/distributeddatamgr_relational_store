@@ -131,15 +131,6 @@ RdbStore::ModifyTime::ModifyTime(std::shared_ptr<ResultSet> result, std::map<std
     bool isFromRowId)
     : result_(std::move(result)), hash_(std::move(hashKeys)), isFromRowId_(isFromRowId)
 {
-    for (auto &[_, priKey] : hash_) {
-        if (priKey.index() != Traits::variant_index_of_v<std::string, PRIKey>) {
-            break;
-        }
-        auto *val = Traits::get_if<std::string>(&priKey);
-        if (val != nullptr && maxOriginKeySize_ <= val->length()) {
-            maxOriginKeySize_ = val->length() + 1;
-        }
-    }
 }
 
 RdbStore::ModifyTime::operator std::map<PRIKey, Date>()
@@ -159,8 +150,8 @@ RdbStore::ModifyTime::operator std::map<PRIKey, Date>()
         result_->GetLong(1, timeStamp);
         PRIKey index = 0;
         if (isFromRowId_) {
-            int64_t rowid = 0;
-            result_->GetLong(0, rowid);
+            int rowid = 0;
+            result_->GetInt(0, rowid);
             index = rowid;
         } else {
             std::vector<uint8_t> hashKey;
@@ -181,16 +172,6 @@ RdbStore::PRIKey RdbStore::ModifyTime::GetOriginKey(const std::vector<uint8_t> &
 {
     auto it = hash_.find(hash);
     return it != hash_.end() ? it->second : std::monostate();
-}
-
-size_t RdbStore::ModifyTime::GetMaxOriginKeySize()
-{
-    return maxOriginKeySize_;
-}
-
-bool RdbStore::ModifyTime::NeedConvert() const
-{
-    return !hash_.empty();
 }
 
 RdbStore::ModifyTime RdbStoreImpl::GetModifyTime(const std::string &table, const std::string &columnName,
@@ -223,7 +204,7 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTime(const std::string &table, const
     }
 
     std::string sql;
-    sql.append("select hash_key as key, timestamp/10000 as modify_time from ");
+    sql.append("select hash_key, timestamp/10000 from ");
     sql.append(logTable);
     sql.append(" where hash_key in (");
     sql.append(GetSqlArgs(hashKeys.size()));
@@ -240,7 +221,7 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTime(const std::string &table, const
 RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTable, std::vector<PRIKey> &keys)
 {
     std::string sql;
-    sql.append("select data_key as key, timestamp/10000 as modify_time from ");
+    sql.append("select data_key, timestamp/10000 from ");
     sql.append(logTable);
     sql.append(" where data_key in (");
     sql.append(GetSqlArgs(keys.size()));
