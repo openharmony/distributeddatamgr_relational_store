@@ -104,7 +104,7 @@ void RdbNativeStoreTest::SetUp(void)
                             "data3 FLOAT, data4 BLOB, data5 TEXT);";
     int errCode = OH_Rdb_Execute(storeTestRdbStore_, createTableSql);
     EXPECT_EQ(errCode, 0);
-
+    
     OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
     valueBucket->putInt64(valueBucket, "id", 1);
     valueBucket->putText(valueBucket, "data1", "zhangSan");
@@ -134,7 +134,7 @@ void RdbNativeStoreTest::TearDown(void)
     EXPECT_EQ(errCode, 0);
 }
 
-void CloudSyncObserverCallback(void *context, Rdb_ProgressDetails *progressDetails)
+void CloudSyncCallback(Rdb_ProgressDetails *progressDetails)
 {
     EXPECT_NE(progressDetails, nullptr);
     EXPECT_EQ(progressDetails->version, DISTRIBUTED_PROGRESS_DETAIL_VERSION);
@@ -144,14 +144,6 @@ void CloudSyncObserverCallback(void *context, Rdb_ProgressDetails *progressDetai
     Rdb_TableDetails *tableDetails = OH_Rdb_GetTableDetails(progressDetails, DISTRIBUTED_PROGRESS_DETAIL_VERSION);
     EXPECT_NE(tableDetails, nullptr);
 }
-
-void CloudSyncCallback(Rdb_ProgressDetails *progressDetails)
-{
-    CloudSyncObserverCallback(nullptr, progressDetails);
-}
-
-Rdb_ProgressCallback callback = CloudSyncObserverCallback;
-Rdb_ProgressObserver observer = { nullptr, callback };
 
 /**
  * @tc.name: RDB_Native_store_test_001
@@ -638,7 +630,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_011, TestSize.Level1)
     // store is nullptr
     cursor = OH_Rdb_ExecuteQuery(nullptr, querySql);
     EXPECT_EQ(cursor, NULL);
-
+    
     // store is nullptr
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("store_test");
     cursor = OH_Rdb_Query(nullptr, predicates, NULL, 0);
@@ -681,20 +673,17 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_013, TestSize.Level1)
     const char *table[TABLE_COUNT];
     table[0] = "store_test";
     EXPECT_EQ(table[0], "store_test");
-    Rdb_ProgressObserver observer;
-    void *context = nullptr;
-    observer.context = &context;
-    observer.callback = CloudSyncObserverCallback;
+    Rdb_SyncCallback callback = CloudSyncCallback;
     auto errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, &observer);
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, &callback);
     EXPECT_EQ(errorCode, RDB_OK);
 
     errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, &observer);
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, &callback);
     EXPECT_EQ(errorCode, RDB_OK);
 
     errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_NATIVE_FIRST, table, TABLE_COUNT, &observer);
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_NATIVE_FIRST, table, TABLE_COUNT, &callback);
     EXPECT_EQ(errorCode, RDB_OK);
 
     errorCode =
@@ -734,20 +723,17 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_015, TestSize.Level1)
     constexpr int TABLE_COUNT = 1;
     const char *table[TABLE_COUNT];
     table[0] = "store_test";
-    Rdb_ProgressObserver observer;
-    void *context = nullptr;
-    observer.context = context;
-    observer.callback = CloudSyncObserverCallback;
+    Rdb_SyncCallback callback = CloudSyncCallback;
     auto errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, &observer);
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, &callback);
     EXPECT_EQ(errorCode, RDB_OK);
 
     errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, &observer);
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, &callback);
     EXPECT_EQ(errorCode, RDB_OK);
 
     errorCode =
-        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_NATIVE_FIRST, table, TABLE_COUNT, &observer);
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_NATIVE_FIRST, table, TABLE_COUNT, &callback);
     EXPECT_EQ(errorCode, RDB_OK);
 }
 
@@ -762,14 +748,11 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_016, TestSize.Level1)
     constexpr int TABLE_COUNT = 1;
     const char *table[TABLE_COUNT];
     table[0] = "store_test";
-    Rdb_ProgressObserver observer;
-    void *context = nullptr;
-    observer.context = context;
-    observer.callback = CloudSyncObserverCallback;
+    Rdb_SyncCallback callback = CloudSyncCallback;
     auto errorCode =
         OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST, table, TABLE_COUNT, nullptr);
     EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
-    errorCode = OH_Rdb_CloudSync(nullptr, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, &observer);
+    errorCode = OH_Rdb_CloudSync(nullptr, Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST, table, TABLE_COUNT, &callback);
     EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
 }
 
@@ -885,39 +868,11 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_019
- * @tc.desc: testCase for OH_Rdb_SubscribeAutoSyncProgress test.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_019, TestSize.Level1)
-{
-    EXPECT_NE(storeTestRdbStore_, nullptr);
-    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(storeTestRdbStore_, &observer), RDB_OK);
-    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(storeTestRdbStore_, &observer), RDB_OK);
-    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(storeTestRdbStore_, nullptr), RDB_E_INVALID_ARGS);
-    EXPECT_EQ(OH_Rdb_SubscribeAutoSyncProgress(nullptr, &observer), RDB_E_INVALID_ARGS);
-}
-
-/**
- * @tc.name: RDB_Native_store_test_020
- * @tc.desc: testCase for OH_Rdb_UnsubscribeAutoSyncProgress test.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_020, TestSize.Level1)
-{
-    EXPECT_NE(storeTestRdbStore_, nullptr);
-    EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(storeTestRdbStore_, &observer), RDB_OK);
-    EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(storeTestRdbStore_, &observer), RDB_OK);
-    EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(storeTestRdbStore_, nullptr), RDB_OK);
-    EXPECT_EQ(OH_Rdb_UnsubscribeAutoSyncProgress(nullptr, &observer), RDB_E_INVALID_ARGS);
-}
-
-/**
- * @tc.name: Abnormal_RDB_OH_interface_test_021
+ * @tc.name: Abnormal_RDB_OH_interface_test_019
  * @tc.desc: Abnormal testCase of store for OH interface.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_021, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_019, TestSize.Level1)
 {
     OH_Rdb_Config config;
     int errCode = E_OK;
@@ -958,18 +913,18 @@ HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_021, TestSize.Level1
 
 
 /**
- * @tc.name: Abnormal_RDB_OH_interface_test_022
+ * @tc.name: Abnormal_RDB_OH_interface_test_020
  * @tc.desc: Abnormal testCase of store for OH interface.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_022, TestSize.Level1)
+HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_020, TestSize.Level1)
 {
     char createTableSql[] = "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER);";
     int errCode = OH_Rdb_Execute(nullptr, createTableSql);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
     errCode = OH_Rdb_Execute(storeTestRdbStore_, nullptr);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
-
+    
     errCode = OH_Rdb_Backup(nullptr, RDB_TEST_PATH);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
     errCode = OH_Rdb_Backup(storeTestRdbStore_, nullptr);
