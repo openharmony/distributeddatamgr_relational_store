@@ -32,7 +32,6 @@ RdbNotifierStub::RdbNotifierStub(const SyncCompleteHandler &completeNotifier,
 
 RdbNotifierStub::~RdbNotifierStub() noexcept
 {
-    LOG_INFO("destroy");
 }
 
 bool RdbNotifierStub::CheckInterfaceToken(MessageParcel& data)

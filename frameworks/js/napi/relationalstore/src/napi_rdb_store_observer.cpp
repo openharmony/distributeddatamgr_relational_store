@@ -25,22 +25,19 @@ namespace OHOS::RelationalStoreJsKit {
 NapiRdbStoreObserver::NapiRdbStoreObserver(napi_env env, napi_value callback, int32_t mode)
     : NapiUvQueue(env, callback), mode_(mode)
 {
-    LOG_INFO("NapiRdbStoreObserver construct");
 }
 
 NapiRdbStoreObserver::~NapiRdbStoreObserver() noexcept
 {
-    LOG_INFO("NapiRdbStoreObserver destroy");
 }
 
 void NapiRdbStoreObserver::OnChange(const std::vector<std::string> &devices)
 {
-    LOG_INFO("NapiRdbStoreObserver::OnChange begin");
+    LOG_DEBUG("NapiRdbStoreObserver::OnChange begin");
     CallFunction([devices](napi_env env, int &argc, napi_value *argv) {
         argc = 1;
         argv[0] = JSUtils::Convert2JSValue(env, devices);
     });
-    LOG_INFO("NapiRdbStoreObserver::OnChange end");
 }
 
 void NapiRdbStoreObserver::OnChange(const Origin &origin, const PrimaryFields &fields, ChangeInfo &&changeInfo)
