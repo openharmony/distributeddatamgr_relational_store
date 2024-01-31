@@ -702,9 +702,8 @@ void RdbStorePredicateTest::BasicDataTypeTest(RdbPredicates predicates1)
     predicates1.Clear();
     predicates1.EqualTo("blobValue", std::vector<uint8_t>{1, 2, 3});
     std::shared_ptr<ResultSet> allDataTypes9 = RdbStorePredicateTest::store->Query(predicates1, columns);
-    int count = 0;
-    allDataTypes9->GetRowCount(count);
-    EXPECT_EQ(3, count);
+    // 3 rows in the resultSet when blobValue={1, 2, 3}
+    EXPECT_EQ(3, ResultSize(allDataTypes9));
 }
 
 int RdbStorePredicateTest::ResultSize(std::shared_ptr<ResultSet> &resultSet)
