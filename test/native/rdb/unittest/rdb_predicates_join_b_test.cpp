@@ -33,6 +33,8 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
+constexpr int CYCLENUM = 13;
+
 class RdbStorePredicateJoinBTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -176,161 +178,13 @@ void RdbStorePredicateJoinBTest::InsertJobDates()
 
 void RdbStorePredicateJoinBTest::InsertEmpDates()
 {
-    int64_t  id;
-    ValuesBucket values;
+    int64_t id;
 
-    values.PutInt("id", 1001);
-    values.PutString("eName", std::string("SunWuKong"));
-    values.PutInt("jobId", 4);
-    values.PutInt("mgr", 1004);
-    values.PutString("joinDate", std::string("2000-12-17"));
-    values.PutDouble("salary", 8000.00);
-    values.PutNull("bonus");
-    values.PutInt("deptId", 20);
-    store->Insert(id, "emp", values);
-
-    values.Clear();
-    values.PutInt("id", 1002);
-    values.PutString("eName", std::string("LuJunYi"));
-    values.PutInt("jobId", 3);
-    values.PutInt("mgr", 1006);
-    values.PutString("joinDate", std::string("2001-02-20"));
-    values.PutDouble("salary", 16000.00);
-    values.PutDouble("bonus", 3000.00);
-    values.PutInt("deptId", 30);
-    store->Insert(id, "emp", values);
-
-    values.Clear();
-    values.PutInt("id", 1003);
-    values.PutString("eName", std::string("LinChong"));
-    values.PutInt("jobId", 3);
-    values.PutInt("mgr", 1006);
-    values.PutString("joinDate", std::string("2001-02-22"));
-    values.PutDouble("salary", 12500.00);
-    values.PutDouble("bonus", 5000.00);
-    values.PutInt("deptId", 30);
-    store->Insert(id, "emp", values);
-
-    values.Clear();
-    values.PutInt("id", 1004);
-    values.PutString("eName", std::string("TangCeng"));
-    values.PutInt("jobId", 2);
-    values.PutInt("mgr", 1009);
-    values.PutString("joinDate", std::string("2001-04-02"));
-    values.PutDouble("salary", 29750.00);
-    values.PutNull("bonus");
-    values.PutInt("deptId", 20);
-    store->Insert(id, "emp", values);
-
-    values.Clear();
-    values.PutInt("id", 1005);
-    values.PutString("eName", std::string("LiKui"));
-    values.PutInt("jobId", 4);
-    values.PutInt("mgr", 1006);
-    values.PutString("joinDate", std::string("2001-09-28"));
-    values.PutDouble("salary", 12500.00);
-    values.PutDouble("bonus", 14000.00);
-    values.PutInt("deptId", 30);
-    store->Insert(id, "emp", values);
-
-    values.Clear();
-    values.PutInt("id", 1006);
-    values.PutString("eName", std::string("SongJiang"));
-    values.PutInt("jobId", 2);
-    values.PutInt("mgr", 1009);
-    values.PutString("joinDate", std::string("2001-05-01"));
-    values.PutDouble("salary", 28500.00);
-    values.PutNull("bonus");
-    values.PutInt("deptId", 30);
-    store->Insert(id, "emp", values);
-
-    values.Clear();
-    values.PutInt("id", 1007);
-    values.PutString("eName", std::string("LiuBei"));
-    values.PutInt("jobId", 2);
-    values.PutInt("mgr", 1009);
-    values.PutString("joinDate", std::string("2001-09-01"));
-    values.PutDouble("salary", 24500.00);
-    values.PutNull("bonus");
-    values.PutInt("deptId", 10);
-    store->Insert(id, "emp", values);
-
-    values.Clear();
-    values.PutInt("id", 1008);
-    values.PutString("eName", std::string("ZhuBaJie"));
-    values.PutInt("jobId", 4);
-    values.PutInt("mgr", 1004);
-    values.PutString("joinDate", std::string("2007-04-19"));
-    values.PutDouble("salary", 30000.00);
-    values.PutNull("bonus");
-    values.PutInt("deptId", 20);
-    store->Insert(id, "emp", values);
-
-    values.Clear();
-    values.PutInt("id", 1009);
-    values.PutString("eName", std::string("LuoGuanZhong"));
-    values.PutInt("jobId", 1);
-    values.PutNull("mgr");
-    values.PutString("joinDate", std::string("2001-11-17"));
-    values.PutDouble("salary", 50000.00);
-    values.PutNull("bonus");
-    values.PutInt("deptId", 10);
-    store->Insert(id, "emp", values);
-
-    values.Clear();
-    values.PutInt("id", 1010);
-    values.PutString("eName", std::string("WuYong"));
-    values.PutInt("jobId", 3);
-    values.PutInt("mgr", 1006);
-    values.PutString("joinDate", std::string("2001-09-08"));
-    values.PutDouble("salary", 15000.00);
-    values.PutNull("bonus");
-    values.PutInt("deptId", 30);
-    store->Insert(id, "emp", values);
-
-    values.Clear();
-    values.PutInt("id", 1011);
-    values.PutString("eName", std::string("ShaCeng"));
-    values.PutInt("jobId", 4);
-    values.PutInt("mgr", 1004);
-    values.PutString("joinDate", std::string("2007-05-23"));
-    values.PutDouble("salary", 11000.00);
-    values.PutNull("bonus");
-    values.PutInt("deptId", 20);
-    store->Insert(id, "emp", values);
-
-    values.Clear();
-    values.PutInt("id", 1012);
-    values.PutString("eName", std::string("LiKui"));
-    values.PutInt("jobId", 4);
-    values.PutInt("mgr", 1006);
-    values.PutString("joinDate", std::string("2001-12-03"));
-    values.PutDouble("salary", 9500.00);
-    values.PutNull("bonus");
-    values.PutInt("deptId", 30);
-    store->Insert(id, "emp", values);
-
-    values.Clear();
-    values.PutInt("id", 1013);
-    values.PutString("eName", std::string("XiaoBaiLong"));
-    values.PutInt("jobId", 4);
-    values.PutInt("mgr", 1004);
-    values.PutString("joinDate", std::string("2001-12-03"));
-    values.PutDouble("salary", 30000.00);
-    values.PutNull("bonus");
-    values.PutInt("deptId", 20);
-    store->Insert(id, "emp", values);
-
-    values.Clear();
-    values.PutInt("id", 1014);
-    values.PutString("eName", std::string("GuanYu"));
-    values.PutInt("jobId", 4);
-    values.PutInt("mgr", 1007);
-    values.PutString("joinDate", std::string("2002-01-23"));
-    values.PutDouble("salary", 13000.00);
-    values.PutNull("bonus");
-    values.PutInt("deptId", 10);
-    store->Insert(id, "emp", values);
+    int ret = 0;
+    for (int i = 0; i <= CYCLENUM; i++) {
+        ret = store->Insert(id, "test", UTUtils::SetRowDatas(UTUtils::gRowDatas[i]));
+    }
+    EXPECT_EQ(ret, E_OK);
 }
 
 void RdbStorePredicateJoinBTest::InsertSalarygradeDates()
