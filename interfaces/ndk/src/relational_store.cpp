@@ -441,7 +441,7 @@ int OH_Rdb_Subscribe(OH_Rdb_Store *store, Rdb_SubscribeType type, const Rdb_Data
 int OH_Rdb_Unsubscribe(OH_Rdb_Store *store, Rdb_SubscribeType type, const Rdb_DataObserver *observer)
 {
     auto rdbStore = GetRelationalStore(store);
-    if (rdbStore == nullptr || observer == nullptr) {
+    if (rdbStore == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     return (OH_Rdb_ErrCode)rdbStore->DoUnsubScribe(type, observer);
