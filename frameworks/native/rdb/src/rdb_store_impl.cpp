@@ -873,7 +873,7 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
         // 2 represents two characters starting from the len - 2 position
         if (!PathToRealPath(ExtractFilePath(databasePath), backupFilePath) || databasePath.back() == '/' ||
             databasePath.substr(databasePath.length() - 2, 2) == "\\") {
-            LOG_ERROR("Invalid databasePath: %{public}s", databasePath.c_str());
+            LOG_ERROR("Invalid databasePath: %{public}s", SqliteUtils::Anonymous(databasePath).c_str());
             return E_INVALID_FILE_PATH;
         }
         backupFilePath = databasePath;
