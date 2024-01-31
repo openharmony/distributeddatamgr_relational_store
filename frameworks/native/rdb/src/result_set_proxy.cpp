@@ -25,13 +25,11 @@ using Code = RemoteResultSet::Code;
 
 ResultSetProxy::ResultSetProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IResultSet>(impl)
 {
-    LOG_INFO("Init result set proxy.");
     remote_ = Remote();
 }
 
 ResultSetProxy::~ResultSetProxy()
 {
-    LOG_INFO("Result set destroy, close result.");
     Close();
 }
 

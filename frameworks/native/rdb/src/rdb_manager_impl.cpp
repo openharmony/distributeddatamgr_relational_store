@@ -81,7 +81,6 @@ RdbManagerImpl::RdbManagerImpl()
 
 RdbManagerImpl::~RdbManagerImpl()
 {
-    LOG_INFO("destroy");
 }
 
 RdbManagerImpl& RdbManagerImpl::GetInstance()

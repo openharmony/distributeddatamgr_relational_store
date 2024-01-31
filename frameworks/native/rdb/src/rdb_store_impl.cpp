@@ -873,18 +873,18 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
         // 2 represents two characters starting from the len - 2 position
         if (!PathToRealPath(ExtractFilePath(databasePath), backupFilePath) || databasePath.back() == '/' ||
             databasePath.substr(databasePath.length() - 2, 2) == "\\") {
-            LOG_ERROR("Invalid databasePath.");
+            LOG_ERROR("Invalid databasePath: %{public}s", databasePath.c_str());
             return E_INVALID_FILE_PATH;
         }
         backupFilePath = databasePath;
     }
 
     if (backupFilePath == path) {
-        LOG_ERROR("The backupPath and path should not be same.");
+        LOG_ERROR("The backupPath and path should not be same. %{public}s", SqliteUtils::Anonymous(backupFilePath).c_str());
         return E_INVALID_FILE_PATH;
     }
 
-    LOG_INFO("databasePath is %{public}s.", SqliteUtils::Anonymous(backupFilePath).c_str());
+    LOG_DEBUG("databasePath is %{public}s.", SqliteUtils::Anonymous(backupFilePath).c_str());
     return E_OK;
 }
 
@@ -1128,7 +1128,7 @@ int RdbStoreImpl::BeginTransaction()
 
     connection->SetInTransaction(true);
     connectionPool->GetTransactionStack().push(transaction);
-    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
+    LOG_DEBUG("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
     return E_OK;
 }
 
@@ -1164,7 +1164,7 @@ int RdbStoreImpl::RollBack()
     }
 	
     // size + 1 means the number of transactions in process
-    LOG_INFO("transaction id: %{public}zu, , storeName: %{public}s, errCode:%{public}d",
+    LOG_DEBUG("transaction id: %{public}zu, , storeName: %{public}s, errCode:%{public}d",
         transactionId + 1, name.c_str(), errCode);
     return E_OK;
 }
@@ -1179,13 +1179,13 @@ int RdbStoreImpl::Commit()
     size_t transactionId = connectionPool->GetTransactionStack().size();
 
     if (connectionPool->GetTransactionStack().empty()) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
+        LOG_DEBUG("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
         return E_OK;
     }
     BaseTransaction transaction = connectionPool->GetTransactionStack().top();
     std::string sqlStr = transaction.GetCommitStr();
     if (sqlStr.size() <= 1) {
-        LOG_INFO("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
+        LOG_DEBUG("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
         connectionPool->GetTransactionStack().pop();
         return E_OK;
     }
@@ -1200,7 +1200,7 @@ int RdbStoreImpl::Commit()
     connectionPool->ReleaseConnection(connection);
     connection->SetInTransaction(false);
 
-    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s errCode:%{public}d",
+    LOG_DEBUG("transaction id: %{public}zu, storeName: %{public}s errCode:%{public}d",
         transactionId, name.c_str(), errCode);
     connectionPool->GetTransactionStack().pop();
     return E_OK;

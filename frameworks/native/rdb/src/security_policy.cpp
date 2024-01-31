@@ -55,7 +55,7 @@ int SecurityPolicy::SetSecurityLabel(const RdbStoreConfig &config)
         } else {
             errCode = currentLevel == toSetLevel ? E_OK : E_ERROR;
         }
-        LOG_INFO("Set security level from %{public}s to %{public}s, result:%{public}d.", currentLevel.c_str(),
+        LOG_DEBUG("Set security level from %{public}s to %{public}s, result:%{public}d.", currentLevel.c_str(),
             toSetLevel.c_str(), errCode);
         return errCode;
     }

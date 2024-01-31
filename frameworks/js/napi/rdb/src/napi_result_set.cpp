@@ -123,7 +123,6 @@ napi_value ResultSetProxy::GetConstructor(napi_env env, int version)
         return cons;
     }
 
-    LOG_INFO("GetConstructor result set constructor");
     napi_property_descriptor clzDes[] = {
         DECLARE_NAPI_FUNCTION("goToRow", GoToRow),
         DECLARE_NAPI_FUNCTION("getLong", GetLong),

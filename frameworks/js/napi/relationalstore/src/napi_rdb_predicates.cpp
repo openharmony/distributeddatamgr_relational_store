@@ -30,7 +30,6 @@ static __thread napi_ref constructor_ = nullptr;
 
 void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
 {
-    LOG_INFO("RdbPredicatesProxy::Init");
     napi_property_descriptor descriptors[] = {
         DECLARE_NAPI_FUNCTION("equalTo", EqualTo),
         DECLARE_NAPI_FUNCTION("notEqualTo", NotEqualTo),
