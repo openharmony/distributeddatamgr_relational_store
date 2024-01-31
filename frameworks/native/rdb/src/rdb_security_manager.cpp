@@ -448,7 +448,9 @@ int32_t RdbSecurityManager::Init(const std::string &bundleName)
             usleep(RETRY_TIME_INTERVAL_MILLISECOND);
         }
     }
-    LOG_DEBUG("retry:%{public}u, error:%{public}d", retryCount, ret);
+    if (ret != HKS_SUCCESS) {
+        LOG_ERROR("retry:%{public}u, error:%{public}d", retryCount, ret);
+    }
     return ret;
 }
 
