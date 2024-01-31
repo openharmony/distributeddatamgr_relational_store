@@ -798,7 +798,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
         errCode = connectionPool->ReOpenAvailableReadConnections();
     }
 
-    if (errCode == E_OK) {
+    if (errCode == E_OK && sqlType == SqliteUtils::STATEMENT_UPDATE) {
         DoCloudSync("");
     }
     return errCode;
@@ -1476,9 +1476,6 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
     {
         std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
         cloudTables_.insert(tables.begin(), tables.end());
-    }
-    for (auto &table : tables) {
-        DoCloudSync(table);
     }
     return E_OK;
 }
