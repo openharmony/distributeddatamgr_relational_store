@@ -187,6 +187,7 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetails &tab
     int index = 0;
     for (const auto &[device, result] : tableDetails) {
         napi_value jsElement = nullptr;
+        // The length of the converted JavaScript array is 2
         status = napi_create_array_with_length(env, 2, &jsElement);
         if (status != napi_ok) {
             return nullptr;
