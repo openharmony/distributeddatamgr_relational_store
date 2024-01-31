@@ -144,10 +144,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
     }
 
     if (isWriteConnection) {
-        errCode = sqlite3_wal_checkpoint_v2(dbHandle, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
-        if (errCode != SQLITE_OK) {
-            LOG_WARN("sqlite checkpoint errCode is %{public}d", errCode);
-        }
+        TryCheckPoint();
     }
 
     filePath = dbPath;
