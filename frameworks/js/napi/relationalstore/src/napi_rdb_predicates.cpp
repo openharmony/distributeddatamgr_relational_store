@@ -244,6 +244,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValueArray(napi_env env, na
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    // Ensure that argc contains 2 parameters
     RDB_NAPI_ASSERT(env, argc == 2, std::make_shared<ParamNumError>("2"));
 
     field = JSUtils::Convert2String(env, args[0]);
@@ -265,6 +266,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValue(napi_env env, napi_ca
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    // Ensure that argc contains 2 parameters
     RDB_NAPI_ASSERT(env, argc == 2, std::make_shared<ParamNumError>("2"));
 
     field = JSUtils::Convert2String(env, args[0]);
@@ -286,6 +288,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndStringValue(napi_env env, n
     size_t argc = 2;
     napi_value args[2] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    // Ensure that argc contains 2 parameters
     RDB_NAPI_ASSERT(env, argc == 2, std::make_shared<ParamNumError>("2"));
 
     field = JSUtils::Convert2String(env, args[0]);
@@ -304,6 +307,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldLowAndHigh(
     napi_env env, napi_callback_info info, napi_value &thiz, std::string &field, ValueObject &low, ValueObject &high)
 {
     size_t argc = 3;
+    // 3 parameters need to converte to field, low, high
     napi_value args[3] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RDB_NAPI_ASSERT(env, argc == 3, std::make_shared<ParamNumError>("3"));
@@ -314,6 +318,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldLowAndHigh(
     int32_t ret = JSUtils::Convert2Value(env, args[1], low);
     RDB_NAPI_ASSERT(env, ret == napi_ok, std::make_shared<ParamError>("low", "a valueType."));
 
+    // 2 is the index of argument high
     ret = JSUtils::Convert2Value(env, args[2], high);
     RDB_NAPI_ASSERT(env, ret == napi_ok, std::make_shared<ParamError>("high", "a valueType."));
 
