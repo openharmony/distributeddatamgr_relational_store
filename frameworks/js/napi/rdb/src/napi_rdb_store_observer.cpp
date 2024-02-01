@@ -32,6 +32,7 @@ NapiRdbStoreObserver::~NapiRdbStoreObserver() noexcept
 
 void NapiRdbStoreObserver::OnChange(const std::vector<std::string> &devices)
 {
+    LOG_INFO("NapiRdbStoreObserver::OnChange begin");
     CallFunction([devices](napi_env env, int &argc, napi_value *argv) {
         argc = 1;
         if (argv == nullptr) {
