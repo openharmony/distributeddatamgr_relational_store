@@ -61,7 +61,7 @@
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
-
+using namespace std::chrono;
 int RdbStoreImpl::InnerOpen()
 {
     LOG_DEBUG("open %{public}s.", SqliteUtils::Anonymous(rdbStoreConfig.GetPath()).c_str());
@@ -1131,7 +1131,8 @@ int RdbStoreImpl::BeginTransaction()
     connection->SetInTransaction(true);
     connectionPool->GetTransactionStack().push(transaction);
     auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
-    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s times %{public}" PRIu64 ".", transactionId, name.c_str(), time);
+    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s times %{public}" PRIu64 ".",
+        transactionId, name.c_str(), time);
     return E_OK;
 }
 
@@ -1189,7 +1190,7 @@ int RdbStoreImpl::Commit()
     BaseTransaction transaction = connectionPool->GetTransactionStack().top();
     std::string sqlStr = transaction.GetCommitStr();
     if (sqlStr.size() <= 1) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
+        LOG_INFO("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
         connectionPool->GetTransactionStack().pop();
         return E_OK;
     }
