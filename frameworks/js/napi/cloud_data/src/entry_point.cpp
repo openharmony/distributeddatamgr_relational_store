@@ -25,10 +25,10 @@ static napi_value Init(napi_env env, napi_value exports)
 {
     auto sharingExport = InitCloudSharing(env, exports);
     napi_status status = InitSharingConstProperties(env, sharingExport);
-    LOG_DEBUG("init Enumerate Constants %{public}d", status);
+    LOG_INFO("init Enumerate Constants %{public}d", status);
     exports = JsConfig::InitConfig(env, exports);
     status = InitConstProperties(env, exports);
-    LOG_DEBUG("init Enumerate Constants %{public}d", status);
+    LOG_INFO("init Enumerate Constants %{public}d", status);
     return exports;
 }
 
@@ -42,5 +42,5 @@ static __attribute__((constructor)) void RegisterModule()
         .nm_priv = ((void *)0),
         .reserved = { 0 } };
     napi_module_register(&module);
-    LOG_DEBUG("module register data.cloudData");
+    LOG_INFO("module register data.cloudData");
 }
