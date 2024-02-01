@@ -36,7 +36,7 @@ StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb_, SqliteConnectio
 {
     int errCode = PrepareStep();
     if (errCode) {
-        LOG_ERROR("StepResultSet Step ret %{public}d", errCode);
+        LOG_ERROR("step resultset ret %{public}d", errCode);
     }
 }
 
@@ -60,7 +60,7 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 
     int errCode = PrepareStep();
     if (errCode) {
-        LOG_ERROR("GetAllColumnNames Step ret %{public}d", errCode);
+        LOG_ERROR("get all column names Step ret %{public}d", errCode);
         return errCode;
     }
 
@@ -194,7 +194,7 @@ int StepResultSet::GoToNextRow()
 
     int errCode = PrepareStep();
     if (errCode) {
-        LOG_ERROR("GoToNextRow Step ret %{public}d", errCode);
+        LOG_ERROR("go to nextrow step ret %{public}d", errCode);
         return errCode;
     }
 

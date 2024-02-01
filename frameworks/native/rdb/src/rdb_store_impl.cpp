@@ -19,8 +19,6 @@
 
 #include <algorithm>
 #include <sstream>
-#include <chrono>
-#include <cinttypes>
 #include "logger.h"
 #include "cache_result_set.h"
 #include "rdb_errno.h"
@@ -61,7 +59,6 @@
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
-using namespace std::chrono;
 int RdbStoreImpl::InnerOpen()
 {
     LOG_DEBUG("open %{public}s.", SqliteUtils::Anonymous(rdbStoreConfig.GetPath()).c_str());
@@ -1165,9 +1162,8 @@ int RdbStoreImpl::RollBack()
     }
 	
     // size + 1 means the number of transactions in process
-    auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
-    LOG_INFO("transaction id: %{public}zu, , storeName: %{public}s, errCode:%{public}d times %{public}" PRIu64 ".",
-        transactionId + 1, name.c_str(), errCode, time);
+    LOG_INFO("transaction id: %{public}zu, , storeName: %{public}s, errCode:%{public}d",
+        transactionId + 1, name.c_str(), errCode);
     return E_OK;
 }
 

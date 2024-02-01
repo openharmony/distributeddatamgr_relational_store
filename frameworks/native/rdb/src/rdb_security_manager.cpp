@@ -247,7 +247,7 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &dbPath, RdbSecur
 
 bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, RdbSecretKeyData &keyData)
 {
-     LOG_INFO("SaveSecretKeyToDisk begin.");
+    LOG_INFO("SaveSecretKeyToDisk begin.");
     std::vector<uint8_t> distributedInByte = { &keyData.distributed, &keyData.distributed + sizeof(uint8_t) };
     std::vector<uint8_t> timeInByte = { reinterpret_cast<uint8_t *>(&keyData.timeValue),
         reinterpret_cast<uint8_t *>(&keyData.timeValue) + sizeof(time_t) };
