@@ -19,7 +19,8 @@
 
 #include <algorithm>
 #include <sstream>
-
+#include <chrono>
+#include <cinttypes>
 #include "logger.h"
 #include "cache_result_set.h"
 #include "rdb_errno.h"
@@ -1129,7 +1130,8 @@ int RdbStoreImpl::BeginTransaction()
 
     connection->SetInTransaction(true);
     connectionPool->GetTransactionStack().push(transaction);
-    LOG_DEBUG("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
+    auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
+    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s times %{public}" PRIu64 ".", transactionId, name.c_str(), time);
     return E_OK;
 }
 
@@ -1165,8 +1167,9 @@ int RdbStoreImpl::RollBack()
     }
 	
     // size + 1 means the number of transactions in process
-    LOG_DEBUG("transaction id: %{public}zu, , storeName: %{public}s, errCode:%{public}d",
-        transactionId + 1, name.c_str(), errCode);
+    auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
+    LOG_INFO("transaction id: %{public}zu, , storeName: %{public}s, errCode:%{public}d times %{public}" PRIu64 ".",
+        transactionId + 1, name.c_str(), errCode, time);
     return E_OK;
 }
 
@@ -1180,13 +1183,13 @@ int RdbStoreImpl::Commit()
     size_t transactionId = connectionPool->GetTransactionStack().size();
 
     if (connectionPool->GetTransactionStack().empty()) {
-        LOG_DEBUG("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
         return E_OK;
     }
     BaseTransaction transaction = connectionPool->GetTransactionStack().top();
     std::string sqlStr = transaction.GetCommitStr();
     if (sqlStr.size() <= 1) {
-        LOG_DEBUG("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
         connectionPool->GetTransactionStack().pop();
         return E_OK;
     }
@@ -1200,9 +1203,9 @@ int RdbStoreImpl::Commit()
     int errCode = connection->ExecuteSql(sqlStr);
     connectionPool->ReleaseConnection(connection);
     connection->SetInTransaction(false);
-
-    LOG_DEBUG("transaction id: %{public}zu, storeName: %{public}s errCode:%{public}d",
-        transactionId, name.c_str(), errCode);
+    auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
+    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s errCode:%{public}d times %{public}" PRIu64 ".",
+        transactionId, name.c_str(), errCode, time);
     connectionPool->GetTransactionStack().pop();
     return E_OK;
 }

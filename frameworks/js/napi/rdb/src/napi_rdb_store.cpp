@@ -1203,7 +1203,7 @@ void RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *arg
         LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: first argument value is invalid");
         return;
     }
-    LOG_DEBUG("RdbStoreProxy::OnDataChangeEvent: mode=%{public}d", mode);
+    LOG_INFO("RdbStoreProxy::OnDataChangeEvent: mode=%{public}d", mode);
 
     napi_typeof(env, argv[1], &type);
     if (type != napi_function) {
@@ -1214,7 +1214,7 @@ void RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *arg
     std::lock_guard<std::mutex> lockGuard(mutex_);
     for (const auto &observer : observers_[mode]) {
         if (observer != nullptr && *observer == argv[1]) {
-            LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: duplicate subscribe");
+            LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: duplicate subscribe",);
             return;
         }
     }
@@ -1227,7 +1227,7 @@ void RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *arg
         return;
     }
     observers_[mode].push_back(observer);
-    LOG_INFO("RdbStoreProxy::OnDataChangeEvent: subscribe success");
+    LOG_INFO("RdbStoreProxy::OnDataChangeEvent: subscribe success.");
 }
 
 void RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *argv)
@@ -1244,7 +1244,7 @@ void RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *ar
         LOG_ERROR("RdbStoreProxy::OffDataChangeEvent: first argument value is invalid");
         return;
     }
-    LOG_DEBUG("RdbStoreProxy::OffDataChangeEvent: mode=%{public}d", mode);
+    LOG_INFO("RdbStoreProxy::OffDataChangeEvent: mode=%{public}d", mode);
 
     napi_typeof(env, argv[1], &type);
     if (type != napi_function) {
@@ -1263,7 +1263,7 @@ void RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *ar
             }
             rdbStore_->UnSubscribe(option, it->get());
             observers_[mode].erase(it);
-            LOG_DEBUG("RdbStoreProxy::OffDataChangeEvent: unsubscribe success");
+            LOG_INFO("RdbStoreProxy::OffDataChangeEvent: unsubscribe success");
             return;
         }
     }
@@ -1290,6 +1290,7 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
         proxy->OnDataChangeEvent(env, argc - 1, argv + 1);
     }
 
+    LOG_INFO("RdbStoreProxy::OnEvent end");
     return nullptr;
 }
 
@@ -1313,6 +1314,7 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
         proxy->OffDataChangeEvent(env, argc - 1, argv + 1);
     }
 
+    LOG_INFO("RdbStoreProxy::OffEvent end");
     return nullptr;
 }
 #endif

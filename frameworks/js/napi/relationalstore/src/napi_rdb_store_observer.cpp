@@ -33,7 +33,7 @@ NapiRdbStoreObserver::~NapiRdbStoreObserver() noexcept
 
 void NapiRdbStoreObserver::OnChange(const std::vector<std::string> &devices)
 {
-    LOG_DEBUG("NapiRdbStoreObserver::OnChange begin");
+    LOG_INFO("NapiRdbStoreObserver::OnChange begin");
     CallFunction([devices](napi_env env, int &argc, napi_value *argv) {
         argc = 1;
         argv[0] = JSUtils::Convert2JSValue(env, devices);

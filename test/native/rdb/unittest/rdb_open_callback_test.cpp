@@ -88,7 +88,7 @@ int OpenCallbackA::OnCreate(RdbStore &store)
 
 int OpenCallbackA::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 {
-    LOG_DEBUG("RdbOpenCallbackTest onUpgrade begin.");
+    LOG_INFO("RdbOpenCallbackTest onUpgrade begin.");
     if (oldVersion < newVersion) {
         if (oldVersion <= 1) {
             return store.ExecuteSql(CreateTableSQL("test2"));
@@ -99,7 +99,7 @@ int OpenCallbackA::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 
 int OpenCallbackA::OnDowngrade(RdbStore &store, int oldVersion, int newVersion)
 {
-    LOG_DEBUG("RdbOpenCallbackTest OnDowngrade begin");
+    LOG_INFO("RdbOpenCallbackTest OnDowngrade begin");
     if (oldVersion > newVersion) {
         if (oldVersion >= 2) {
             return store.ExecuteSql(DropTableSQL("test2"));
