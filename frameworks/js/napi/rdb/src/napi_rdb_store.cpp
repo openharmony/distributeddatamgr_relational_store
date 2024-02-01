@@ -561,7 +561,7 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
         return OK;
     };
     auto exec = [context]() {
-        LOG_DEBUG("RdbStoreProxy::BatchInsert Async.");
+        LOG_INFO("RdbStoreProxy::BatchInsert Async.");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         if (context->insertNum == -1UL) {
             return E_OK;
@@ -574,7 +574,8 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
         napi_status status = napi_create_int64(env, context->insertNum, &result);
-        LOG_DEBUG("RdbStoreProxy::BatchInsert end.");
+        LOG_DEBUG("RdbStoreProxy::BatchInsert end. tableName is: %{public}s, insertNum is: %{public}d",
+            context->tableName, context->insertNum);
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(env, info, input, exec, output);
