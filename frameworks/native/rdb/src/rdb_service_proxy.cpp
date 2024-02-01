@@ -136,7 +136,7 @@ int32_t RdbServiceProxy::DoSync(const RdbSyncerParam &param, const Option &optio
         LOG_INFO("failed");
         return RDB_ERROR;
     }
-
+    LOG_INFO("success");
     if (async != nullptr) {
         async(std::move(details));
     }

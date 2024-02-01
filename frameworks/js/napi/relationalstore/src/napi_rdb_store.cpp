@@ -1316,7 +1316,7 @@ napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
     int errCode = rdbStore_->Subscribe(option, observer.get());
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     observers_[mode].push_back(observer);
-    LOG_DEBUG("subscribe success");
+    LOG_INFO("subscribe success");
     return nullptr;
 }
 
@@ -1337,7 +1337,7 @@ napi_value RdbStoreProxy::RegisteredObserver(napi_env env, const DistributedRdb:
     int errCode = rdbStore_->Subscribe(option, localObserver.get());
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     observers[option.event].push_back(localObserver);
-    LOG_DEBUG("subscribe success event: %{public}s", option.event.c_str());
+    LOG_INFO("subscribe success event: %{public}s", option.event.c_str());
     return nullptr;
 }
 
@@ -1413,7 +1413,7 @@ napi_value RdbStoreProxy::UnRegisteredObserver(napi_env env, const DistributedRd
         RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
         observers.erase(option.event);
     }
-    LOG_DEBUG("unsubscribe success, event: %{public}s", option.event.c_str());
+    LOG_INFO("unsubscribe success, event: %{public}s", option.event.c_str());
     return nullptr;
 }
 
@@ -1570,7 +1570,7 @@ napi_value RdbStoreProxy::RegisterSyncCallback(napi_env env, size_t argc, napi_v
     int errCode = rdbStore_->RegisterAutoSyncCallback(observer);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     syncObservers_.push_back(std::move(observer));
-    LOG_DEBUG("progress subscribe success");
+    LOG_INFO("progress subscribe success");
     return nullptr;
 }
 

@@ -34,7 +34,10 @@ StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb_, SqliteConnectio
     : rdb_(rdb_), sqliteStatement_(nullptr), args_(std::move(selectionArgs)), sql_(sql_),
       connectionPool_(connectionPool), rowCount_(INIT_POS), isAfterLast_(false)
 {
-    PrepareStep();
+    int errCode = PrepareStep();
+    if (errCode) {
+        LOG_ERROR("StepResultSet Step ret %{public}d", errCode);
+    }
 }
 
 StepResultSet::~StepResultSet()
@@ -57,7 +60,7 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 
     int errCode = PrepareStep();
     if (errCode) {
-        LOG_ERROR("PrepareStep ret %{public}d", errCode);
+        LOG_ERROR("GetAllColumnNames Step ret %{public}d", errCode);
         return errCode;
     }
 
@@ -191,7 +194,7 @@ int StepResultSet::GoToNextRow()
 
     int errCode = PrepareStep();
     if (errCode) {
-        LOG_ERROR("PrepareStep ret %{public}d", errCode);
+        LOG_ERROR("GoToNextRow Step ret %{public}d", errCode);
         return errCode;
     }
 
@@ -263,7 +266,6 @@ int StepResultSet::PrepareStep()
     sqliteStatement_ = SqliteStatement::CreateStatement(connection, sql_);
     connectionPool_->ReleaseConnection(connection);
     if (sqliteStatement_ == nullptr) {
-        LOG_DEBUG("Connection create statement failed!");
         return E_STATEMENT_NOT_PREPARED;
     }
 

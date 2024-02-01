@@ -874,19 +874,18 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
         // 2 represents two characters starting from the len - 2 position
         if (!PathToRealPath(ExtractFilePath(databasePath), backupFilePath) || databasePath.back() == '/' ||
             databasePath.substr(databasePath.length() - 2, 2) == "\\") {
-            LOG_ERROR("Invalid databasePath: %{public}s", SqliteUtils::Anonymous(databasePath).c_str());
+            LOG_ERROR("Invalid databasePath.");
             return E_INVALID_FILE_PATH;
         }
         backupFilePath = databasePath;
     }
 
     if (backupFilePath == path) {
-        LOG_ERROR("The backupPath and path should not be same. %{public}s",
-            SqliteUtils::Anonymous(backupFilePath).c_str());
+        LOG_ERROR("The backupPath and path should not be same.");
         return E_INVALID_FILE_PATH;
     }
 
-    LOG_DEBUG("databasePath is %{public}s.", SqliteUtils::Anonymous(backupFilePath).c_str());
+    LOG_INFO("databasePath is %{public}s.", SqliteUtils::Anonymous(backupFilePath).c_str());
     return E_OK;
 }
 
@@ -1130,9 +1129,7 @@ int RdbStoreImpl::BeginTransaction()
 
     connection->SetInTransaction(true);
     connectionPool->GetTransactionStack().push(transaction);
-    auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
-    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s times %{public}" PRIu64 ".",
-        transactionId, name.c_str(), time);
+    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
     return E_OK;
 }
 
@@ -1204,9 +1201,8 @@ int RdbStoreImpl::Commit()
     int errCode = connection->ExecuteSql(sqlStr);
     connectionPool->ReleaseConnection(connection);
     connection->SetInTransaction(false);
-    auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
-    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s errCode:%{public}d times %{public}" PRIu64 ".",
-        transactionId, name.c_str(), errCode, time);
+    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s errCode:%{public}d.",
+        transactionId, name.c_str(), errCode);
     connectionPool->GetTransactionStack().pop();
     return E_OK;
 }
