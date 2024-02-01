@@ -1227,6 +1227,7 @@ void RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *arg
         return;
     }
     observers_[mode].push_back(observer);
+    LOG_INFO("RdbStoreProxy::OnDataChangeEvent: subscribe success");
 }
 
 void RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *argv)
