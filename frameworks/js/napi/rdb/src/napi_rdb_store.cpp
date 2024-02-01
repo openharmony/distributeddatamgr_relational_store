@@ -1172,11 +1172,8 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
         }
         int res = obj->rdbStore_->Sync(option, *context->predicatesProxy->GetPredicates(),
             [context](const SyncResult &result) { context->syncResult = result; });
-        if (res != E_OK) {
-            LOG_ERROR("RdbStoreProxy::Sync res is : %{public}d", res);
-            return ERR;
-        }
-        return OK;
+        LOG_INFO("RdbStoreProxy::Sync res is : %{public}d", res);
+        return res == E_OK ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
         result = JSUtils::Convert2JSValue(env, context->syncResult);
@@ -1227,7 +1224,7 @@ void RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *arg
         return;
     }
     observers_[mode].push_back(observer);
-    LOG_INFO("RdbStoreProxy::OnDataChangeEvent: subscribe success.");
+    LOG_INFO("RdbStoreProxy::OnDataChangeEvent: subscribe success, mode is: %{public}d", mode);
 }
 
 void RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *argv)
