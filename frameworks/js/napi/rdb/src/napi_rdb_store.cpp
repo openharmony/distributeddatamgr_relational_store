@@ -1214,7 +1214,7 @@ void RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *arg
     std::lock_guard<std::mutex> lockGuard(mutex_);
     for (const auto &observer : observers_[mode]) {
         if (observer != nullptr && *observer == argv[1]) {
-            LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: duplicate subscribe",);
+            LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: duplicate subscribe");
             return;
         }
     }
