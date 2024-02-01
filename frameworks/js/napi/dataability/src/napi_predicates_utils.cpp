@@ -58,6 +58,7 @@ napi_value CreateRdbPredicates(napi_env env, napi_callback_info info)
 
 napi_value InitPredicatesUtils(napi_env env, napi_value exports)
 {
+    LOG_INFO("Init InitPredicatesUtils");
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("createRdbPredicates", CreateRdbPredicates),
     };
