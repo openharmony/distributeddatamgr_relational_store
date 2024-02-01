@@ -219,6 +219,7 @@ std::vector<uint8_t> RdbSecurityManager::GenerateRandomNum(int32_t len)
 
 bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFileType)
 {
+    LOG_INFO("SaveSecretKeyToFile begin.");
     if (!HasRootKey()) {
         LOG_ERROR("Root key not exists!");
         return false;
@@ -246,6 +247,7 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &dbPath, RdbSecur
 
 bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, RdbSecretKeyData &keyData)
 {
+     LOG_INFO("SaveSecretKeyToDisk begin.");
     std::vector<uint8_t> distributedInByte = { &keyData.distributed, &keyData.distributed + sizeof(uint8_t) };
     std::vector<uint8_t> timeInByte = { reinterpret_cast<uint8_t *>(&keyData.timeValue),
         reinterpret_cast<uint8_t *>(&keyData.timeValue) + sizeof(time_t) };
@@ -267,6 +269,7 @@ bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, RdbSecr
 
 int RdbSecurityManager::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias)
 {
+    LOG_INFO("RDB GenerateRootKey begin.");
     std::vector<uint8_t> tempRootKeyAlias = rootKeyAlias;
     struct HksBlob rootKeyName = { uint32_t(rootKeyAlias.size()), tempRootKeyAlias.data() };
     struct HksParamSet *params = nullptr;
@@ -587,6 +590,7 @@ std::vector<uint8_t> RdbSecurityManager::GenerateRootKeyAlias(const std::string 
 
 void RdbSecurityManager::DelRdbSecretDataFile(const std::string &dbPath)
 {
+    LOG_INFO("Delete all key files begin.");
     std::lock_guard<std::mutex> lock(mutex_);
     auto keyPaths = ConcatenateKeyPath(dbPath);
     SqliteUtils::DeleteFile(keyPaths.first);
