@@ -46,7 +46,6 @@ RdbStoreManager &RdbStoreManager::GetInstance()
 
 RdbStoreManager::~RdbStoreManager()
 {
-    LOG_INFO("Start");
     Clear();
 }
 

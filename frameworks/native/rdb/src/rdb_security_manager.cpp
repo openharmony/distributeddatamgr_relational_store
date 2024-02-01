@@ -248,7 +248,6 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &dbPath, RdbSecur
 bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, RdbSecretKeyData &keyData)
 {
     LOG_INFO("SaveSecretKeyToDisk begin.");
-
     std::vector<uint8_t> distributedInByte = { &keyData.distributed, &keyData.distributed + sizeof(uint8_t) };
     std::vector<uint8_t> timeInByte = { reinterpret_cast<uint8_t *>(&keyData.timeValue),
         reinterpret_cast<uint8_t *>(&keyData.timeValue) + sizeof(time_t) };
@@ -452,7 +451,9 @@ int32_t RdbSecurityManager::Init(const std::string &bundleName)
             usleep(RETRY_TIME_INTERVAL_MILLISECOND);
         }
     }
-    LOG_INFO("retry:%{public}u, error:%{public}d", retryCount, ret);
+    if (ret != HKS_SUCCESS) {
+        LOG_ERROR("retry:%{public}u, error:%{public}d", retryCount, ret);
+    }
     return ret;
 }
 

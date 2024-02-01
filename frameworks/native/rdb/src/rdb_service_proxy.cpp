@@ -137,7 +137,6 @@ int32_t RdbServiceProxy::DoSync(const RdbSyncerParam &param, const Option &optio
         return RDB_ERROR;
     }
     LOG_INFO("success");
-
     if (async != nullptr) {
         async(std::move(details));
     }
@@ -310,7 +309,6 @@ RdbServiceProxy::Observers RdbServiceProxy::ExportObservers()
 
 void RdbServiceProxy::ImportObservers(Observers &observers)
 {
-    LOG_INFO("enter");
     observers.ForEach([this](const std::string &key, const std::list<ObserverParam> &value) {
         RdbSyncerParam syncerParam;
         for (const auto &param : value) {
