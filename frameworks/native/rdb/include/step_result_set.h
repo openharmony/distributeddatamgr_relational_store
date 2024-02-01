@@ -80,9 +80,6 @@ private:
     // Whether reach the end of this result set or not
     bool isAfterLast_;
     mutable std::shared_mutex mutex_;
-
-    int printCnt_ = 0;
-    static const int PRINT_COUNT = 0;
 };
 } // namespace NativeRdb
 } // namespace OHOS
