@@ -17,7 +17,8 @@
 
 #include <iomanip>
 #include <sstream>
-
+#include <chrono>
+#include <cinttypes>
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
@@ -28,7 +29,7 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
+using namespace std::chrono;
 // Setting Data Precision
 const int SET_DATA_PRECISION = 15;
 SqliteStatement::SqliteStatement() : sql(""), stmtHandle(nullptr), readOnly(false), columnCount(0), numParameters(0)
@@ -46,7 +47,8 @@ std::shared_ptr<SqliteStatement> SqliteStatement::CreateStatement(
     sqlite3_stmt *stmt = nullptr;
     int errCode = sqlite3_prepare_v2(connection->dbHandle, sql.c_str(), sql.length(), &stmt, nullptr);
     if (errCode != SQLITE_OK) {
-        LOG_ERROR("prepare_v2 ret is %{public}d", errCode);
+        auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
+        LOG_ERROR("prepare_v2 ret is %{public}d %{public}" PRIu64 ".", errCode, time);
         if (stmt != nullptr) {
             sqlite3_finalize(stmt);
         }

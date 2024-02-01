@@ -19,7 +19,6 @@
 
 #include <algorithm>
 #include <sstream>
-
 #include "logger.h"
 #include "cache_result_set.h"
 #include "rdb_errno.h"
@@ -60,7 +59,6 @@
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
-
 int RdbStoreImpl::InnerOpen()
 {
     LOG_DEBUG("open %{public}s.", SqliteUtils::Anonymous(rdbStoreConfig.GetPath()).c_str());
@@ -1199,8 +1197,7 @@ int RdbStoreImpl::Commit()
     int errCode = connection->ExecuteSql(sqlStr);
     connectionPool->ReleaseConnection(connection);
     connection->SetInTransaction(false);
-
-    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s errCode:%{public}d",
+    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s errCode:%{public}d.",
         transactionId, name.c_str(), errCode);
     connectionPool->GetTransactionStack().pop();
     return E_OK;

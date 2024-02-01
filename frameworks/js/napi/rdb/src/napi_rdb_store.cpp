@@ -574,7 +574,8 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
         napi_status status = napi_create_int64(env, context->insertNum, &result);
-        LOG_DEBUG("RdbStoreProxy::BatchInsert end.");
+        LOG_DEBUG("RdbStoreProxy::BatchInsert end. tableName is: %{public}s",
+            context->tableName.c_str());
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(env, info, input, exec, output);
@@ -1223,7 +1224,7 @@ void RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *arg
         return;
     }
     observers_[mode].push_back(observer);
-    LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: subscribe success");
+    LOG_INFO("RdbStoreProxy::OnDataChangeEvent: subscribe success, mode is: %{public}d", mode);
 }
 
 void RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *argv)

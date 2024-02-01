@@ -63,7 +63,6 @@ napi_value InitPredicatesUtils(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("createRdbPredicates", CreateRdbPredicates),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
-    LOG_INFO("Init InitPredicatesUtils end");
     return exports;
 }
 } // namespace DataAbilityJsKit
