@@ -263,7 +263,7 @@ int StepResultSet::PrepareStep()
     sqliteStatement_ = SqliteStatement::CreateStatement(connection, sql_);
     connectionPool_->ReleaseConnection(connection);
     if (sqliteStatement_ == nullptr) {
-        LOG_ERROR("Connection create statement failed!");
+        LOG_DEBUG("Connection create statement failed!");
         return E_STATEMENT_NOT_PREPARED;
     }
 

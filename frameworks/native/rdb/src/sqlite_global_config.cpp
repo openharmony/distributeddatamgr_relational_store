@@ -17,7 +17,8 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
-
+#include <chrono>
+#include <cinttypes>
 #include "logger.h"
 #include "sqlite3sym.h"
 #include "sqlite_utils.h"
@@ -25,7 +26,7 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
+using namespace std::chrono;
 void SqliteGlobalConfig::InitSqliteGlobalConfig()
 {
     static SqliteGlobalConfig globalConfig;
@@ -62,7 +63,8 @@ void SqliteGlobalConfig::SqliteLogCallback(const void *data, int err, const char
     } else if (errType == SQLITE_WARNING) {
         LOG_WARN("SQLite WARNING(%{public}d) %{public}s ", err, SqliteUtils::Anonymous(msg).c_str());
     } else {
-        LOG_ERROR("SQLite Error(%{public}d) %{public}s", err, msg);
+        auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
+        LOG_ERROR("SQLite Error(%{public}d) %{public}s times %{public}" PRIu64 ".", err, msg, time);
     }
 }
 
