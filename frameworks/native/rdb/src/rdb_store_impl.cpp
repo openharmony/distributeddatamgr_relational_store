@@ -880,7 +880,8 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
     }
 
     if (backupFilePath == path) {
-        LOG_ERROR("The backupPath and path should not be same. %{public}s", SqliteUtils::Anonymous(backupFilePath).c_str());
+        LOG_ERROR("The backupPath and path should not be same. %{public}s",
+            SqliteUtils::Anonymous(backupFilePath).c_str());
         return E_INVALID_FILE_PATH;
     }
 
