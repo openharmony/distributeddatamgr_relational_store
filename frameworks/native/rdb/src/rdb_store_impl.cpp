@@ -61,6 +61,7 @@
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
+using namespace std::chrono;
 int RdbStoreImpl::InnerOpen()
 {
     LOG_DEBUG("open %{public}s.", SqliteUtils::Anonymous(rdbStoreConfig.GetPath()).c_str());
