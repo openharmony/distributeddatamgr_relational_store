@@ -164,12 +164,14 @@ HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_003, TestSize.Level2)
     EXPECT_EQ(1, rowId);
 
     std::vector<RdbStore::PRIKey> PKey = { 1 };
-    std::map<RdbStore::PRIKey, RdbStore::Date> resultMap =
+    RdbStore::ModifyTime resultMapTmp =
         RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
+    std::map<RdbStore::PRIKey, RdbStore::Date> resultMap = std::map<RdbStore::PRIKey, RdbStore::Date>(resultMapTmp);
     EXPECT_EQ(1, resultMap.size());
 
-    std::shared_ptr<ResultSet> resultPtr =
+    RdbStore::ModifyTime resultPtrTmp =
         RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
+    std::shared_ptr<ResultSet> resultPtr = std::shared_ptr<ResultSet>(resultPtrTmp);
     int count = 0;
     resultPtr->GetRowCount(count);
     EXPECT_EQ(1, count);
