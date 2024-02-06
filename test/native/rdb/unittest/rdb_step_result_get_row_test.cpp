@@ -114,6 +114,20 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_001, TestSize
     int idValueByIndex = rowEntity.Get(0);
     EXPECT_EQ(1, idValueByIndex);
 
+    std::map<std::string, ValueObject> rowEntityTmp = rowEntity.Get();
+    ValueObject valueObjectTmp = rowEntityTmp["id"];
+    int id;
+    valueObjectTmp.GetInt(id);
+    EXPECT_EQ(1, id);
+
+    std::map<std::string, ValueObject> rowEntityTmp2 = rowEntity.Steal();
+    ValueObject valueObjectTmp2 = rowEntityTmp2["id"];
+    id = 0;
+    valueObjectTmp2.GetInt(id);
+    EXPECT_EQ(1, id);
+    rowEntityTmp = rowEntity.Get();
+    EXPECT_EQ(0, rowEntityTmp.size());
+
     resultSet->Close();
 }
 
