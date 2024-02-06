@@ -431,7 +431,7 @@ if (is_ohos && !build_ohos_sdk) {
     ]
   }
 
-  base_deps = [ "//third_party/icu/icu4c:shared_icuuc" ]
+  base_deps = [ "${plugins_path}/libs/icu:icu_android" ]
 
   ohos_source_set("native_rdb") {
     defines = [ "ANDROID_PLATFORM" ]
@@ -497,10 +497,7 @@ if (is_ohos && !build_ohos_sdk) {
     ]
   }
 
-  base_deps = [
-    "//third_party/icu/icu4c:static_icui18n",
-    "//third_party/icu/icu4c:static_icuuc",
-  ]
+  base_deps = [ "${plugins_path}/libs/icu:icu_ios" ]
 
   ohos_source_set("native_rdb") {
     defines = [ "IOS_PLATFORM" ]
