@@ -24,7 +24,7 @@ using namespace OHOS::Rdb;
 RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode, bool isReadOnly,
     const std::vector<uint8_t> &encryptKey, const std::string &journalMode, const std::string &syncMode,
     const std::string &databaseFileType, SecurityLevel securityLevel, bool isCreateNecessary, bool autoCheck,
-    int journalSize, int pageSize, const std::string &encryptAlgo)
+    int journalSize, int pageSize, const std::string& encryptAlgo)
     : name(name),
       path(name),
       storageMode(storageMode),
@@ -427,5 +427,25 @@ bool RdbStoreConfig::IsSearchable() const
 void RdbStoreConfig::SetSearchable(bool isSearchable)
 {
     isSearchable_ = isSearchable;
+}
+
+int RdbStoreConfig::GetWriteTime() const
+{
+    return writeTimeout_;
+}
+
+void RdbStoreConfig::SetWriteTime(int timeout)
+{
+    writeTimeout_ = timeout;
+}
+
+int RdbStoreConfig::GetReadTime() const
+{
+    return readTimeout_;
+}
+
+void RdbStoreConfig::SetReadTime(int timeout)
+{
+    readTimeout_ = timeout;
 }
 } // namespace OHOS::NativeRdb
