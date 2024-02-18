@@ -145,6 +145,10 @@ public:
     std::map<std::string, ScalarFunctionInfo> GetScalarFunctions() const;
     bool IsSearchable() const;
     void SetSearchable(bool searchable);
+    int GetWriteConnectionTimeout() const;
+    void SetWriteConnectionTimeout(int timeout);
+    int GetReadConnectionTimeout() const;
+    void SetReadConnectionTimeout(int timeout);
 
     bool operator==(const RdbStoreConfig &config) const
     {
@@ -210,6 +214,8 @@ private:
 
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
     bool isSearchable_ = false;
+    int writeTimeout_ = 2; // seconds
+    int readTimeout_ = 1; // seconds
 };
 } // namespace OHOS::NativeRdb
 

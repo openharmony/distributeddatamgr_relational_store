@@ -171,11 +171,10 @@ public:
      */
     API_EXPORT RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK,
         bool readOnly = false, const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(),
-        const std::string &journalMode = DB_DEFAULT_JOURNAL_MODE,
-        const std::string &syncMode = "", const std::string &databaseFileType = "",
-        SecurityLevel securityLevel = SecurityLevel::LAST, bool isCreateNecessary = true,
-        bool autoCheck = false, int journalSize = DB_JOURNAL_SIZE, int pageSize = DB_PAGE_SIZE,
-        const std::string &encryptAlgo = DB_DEFAULT_ENCRYPT_ALGO);
+        const std::string &journalMode = DB_DEFAULT_JOURNAL_MODE, const std::string &syncMode = "",
+        const std::string &databaseFileType = "", SecurityLevel securityLevel = SecurityLevel::LAST,
+        bool isCreateNecessary = true, bool autoCheck = false, int journalSize = DB_JOURNAL_SIZE,
+        int pageSize = DB_PAGE_SIZE, const std::string &encryptAlgo = DB_DEFAULT_ENCRYPT_ALGO);
 
     /**
      * @brief Destructor.
@@ -516,6 +515,26 @@ public:
      */
     void SetSearchable(bool searchable);
 
+    /**
+     * @brief Sets the timeout to get write connection for the object.
+     */
+    int GetWriteConnectionTimeout() const;
+
+    /**
+     * @brief Gets the timeout to get write connection for the object.
+     */
+    void SetWriteConnectionTimeout(int timeout);
+
+    /**
+     * @brief Sets the timeout to get read connection for the object.
+     */
+    int GetReadConnectionTimeout() const;
+
+    /**
+     * @brief Gets the timeout to get read connection for the object.
+     */
+    void SetReadConnectionTimeout(int timeout);
+
 private:
     void ClearEncryptKey();
 
@@ -553,6 +572,8 @@ private:
 
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
     bool isSearchable_ = false;
+    int writeTimeout_ = 2; // seconds
+    int readTimeout_ = 1; // seconds
 };
 } // namespace OHOS::NativeRdb
 
