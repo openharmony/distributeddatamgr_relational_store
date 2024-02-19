@@ -145,10 +145,10 @@ public:
     std::map<std::string, ScalarFunctionInfo> GetScalarFunctions() const;
     bool IsSearchable() const;
     void SetSearchable(bool searchable);
-    int GetWriteConnectionTimeout() const;
-    void SetWriteConnectionTimeout(int timeout);
-    int GetReadConnectionTimeout() const;
-    void SetReadConnectionTimeout(int timeout);
+    int GetWriteTime() const;
+    void SetWriteTime(int timeout);
+    int GetReadTime() const;
+    void SetReadTime(int timeout);
 
     bool operator==(const RdbStoreConfig &config) const
     {

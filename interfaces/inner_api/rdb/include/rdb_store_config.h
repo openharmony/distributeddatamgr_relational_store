@@ -518,22 +518,22 @@ public:
     /**
      * @brief Sets the timeout to get write connection for the object.
      */
-    int GetWriteConnectionTimeout() const;
+    int GetWriteTime() const;
 
     /**
      * @brief Gets the timeout to get write connection for the object.
      */
-    void SetWriteConnectionTimeout(int timeout);
+    void SetWriteTime(int timeout);
 
     /**
      * @brief Sets the timeout to get read connection for the object.
      */
-    int GetReadConnectionTimeout() const;
+    int GetReadTime() const;
 
     /**
      * @brief Gets the timeout to get read connection for the object.
      */
-    void SetReadConnectionTimeout(int timeout);
+    void SetReadTime(int timeout);
 
 private:
     void ClearEncryptKey();

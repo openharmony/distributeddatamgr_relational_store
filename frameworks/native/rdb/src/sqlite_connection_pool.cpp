@@ -81,8 +81,8 @@ int SqliteConnectionPool::Init()
 
     writeConnectionUsed_ = false;
     idleReadConnectionCount_ = readConnectionCount_;
-    writeTimeout_ = std::chrono::seconds(config_.GetWriteConnectionTimeout());
-    readTimeout_ = std::chrono::seconds(config_.GetReadConnectionTimeout());
+    writeTimeout_ = std::chrono::seconds(config_.GetWriteTime());
+    readTimeout_ = std::chrono::seconds(config_.GetReadTime());
     return E_OK;
 }
 
