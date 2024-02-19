@@ -429,22 +429,22 @@ void RdbStoreConfig::SetSearchable(bool isSearchable)
     isSearchable_ = isSearchable;
 }
 
-int RdbStoreConfig::GetWriteConnectionTimeout() const
+int RdbStoreConfig::GetWriteTime() const
 {
     return writeTimeout_;
 }
 
-void RdbStoreConfig::SetWriteConnectionTimeout(int timeout)
+void RdbStoreConfig::SetWriteTime(int timeout)
 {
     writeTimeout_ = timeout;
 }
 
-int RdbStoreConfig::GetReadConnectionTimeout() const
+int RdbStoreConfig::GetReadTime() const
 {
     return readTimeout_;
 }
 
-void RdbStoreConfig::SetReadConnectionTimeout(int timeout)
+void RdbStoreConfig::SetReadTime(int timeout)
 {
     readTimeout_ = timeout;
 }
