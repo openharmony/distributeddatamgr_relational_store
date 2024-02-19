@@ -77,6 +77,8 @@ private:
     std::condition_variable transCondition_;
     std::mutex transMutex_;
     bool transactionUsed_;
+    std::chrono::seconds writeTimeout_ = std::chrono::seconds(2);
+    std::chrono::seconds readTimeout_ = std::chrono::seconds(1);
 };
 
 } // namespace NativeRdb
