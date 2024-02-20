@@ -631,6 +631,46 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_001, TestSize.Level1)
     CalendarTest(predicates1);
 }
 
+/* *
+ * @tc.name: RdbStore_EqualTo_002
+ * @tc.desc: Normal testCase of RdbPredicates for EqualTo
+ * @tc.type: FUNC
+ * @tc.require: AR000FKD4F
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_002, TestSize.Level1)
+{
+    ValuesBucket values;
+    int64_t id;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsi"));
+    values.PutInt("age", 18);
+    values.PutInt("REAL", 100);
+    int ret = store->Insert(id, "person", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("zhangsi"));
+    values.PutInt("age", 18);
+    values.PutInt("REAL", 100);
+    ret = store->Insert(id, "person", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    RdbPredicates predicates("person");
+    predicates.EqualTo("name", "");
+    std::vector<std::string> columns;
+    std::shared_ptr<ResultSet> allPerson = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allPerson));
+
+    RdbPredicates predicates1("person");
+    predicates1.EqualTo("name", "zhangsi");
+    allPerson = RdbStorePredicateTest::store->Query(predicates1, columns);
+    EXPECT_EQ(2, ResultSize(allPerson));
+    RdbStorePredicateTest::store->ExecuteSql("delete from person where id < 3;");
+}
+
 void RdbStorePredicateTest::CalendarTest(RdbPredicates predicates1)
 {
     std::vector<std::string> columns;
@@ -748,6 +788,57 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotEqualTo_002, TestSize.Level1)
     BasicDataTypeTest002(predicates1);
 
     CalendarTest002(predicates1);
+}
+
+/* *
+ * @tc.name: RdbStore_NotEqualTo_003
+ * @tc.desc: Normal testCase of RdbPredicates for EqualTo
+ * @tc.type: FUNC
+ * @tc.require: AR000FKD4F
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_NotEqualTo_003, TestSize.Level1)
+{
+    ValuesBucket values;
+    int64_t id;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsi"));
+    values.PutInt("age", 18);
+    values.PutInt("REAL", 100);
+    int ret = store->Insert(id, "person", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("zhangsi"));
+    values.PutInt("age", 18);
+    values.PutInt("REAL", 100);
+    ret = store->Insert(id, "person", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    values.Clear();
+    values.PutInt("id", 3);
+    values.PutString("name", std::string(""));
+    values.PutInt("age", 18);
+    values.PutInt("REAL", 100);
+    ret = store->Insert(id, "person", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(3, id);
+
+    RdbPredicates predicates("person");
+    predicates.NotEqualTo("name", "");
+    std::vector<std::string> columns;
+    std::shared_ptr<ResultSet> allPerson = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(2, ResultSize(allPerson));
+
+    RdbPredicates predicates1("person");
+    predicates1.NotEqualTo("name", "zhangsi");
+
+    allPerson = RdbStorePredicateTest::store->Query(predicates1, columns);
+    EXPECT_EQ(1, ResultSize(allPerson));
+
+    RdbStorePredicateTest::store->ExecuteSql("delete from person where id < 4;");
 }
 
 void RdbStorePredicateTest::CalendarTest002(RdbPredicates predicates1)
