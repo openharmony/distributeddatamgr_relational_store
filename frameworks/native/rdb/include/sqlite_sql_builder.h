@@ -55,6 +55,8 @@ private:
         const std::string &clause, const std::string &table = "");
     static void AppendColumns(
         std::string &builder, const std::vector<std::string> &columns, const std::string &table = "");
+
+    static constexpr const char *SHARING_RESOURCE = "sharing_resource";
 };
 } // namespace NativeRdb
 } // namespace OHOS
