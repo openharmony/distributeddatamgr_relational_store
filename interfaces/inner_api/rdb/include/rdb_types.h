@@ -263,8 +263,6 @@ struct Field {
     static constexpr const char *SHARING_RESOURCE_FIELD = "#_sharing_resource_field";
 };
 
-static constexpr const char *SHARING_RESOURCE = "SHARING_RESOURCE";
-
 struct RdbChangeProperties {
     bool isTrackedDataChange = false;
 };

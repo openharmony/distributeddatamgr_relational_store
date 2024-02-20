@@ -251,8 +251,10 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(const AbsRdbPredicates &pre
         sql.append(table + ".*");
     }
     if (queryStatus.first) {
+        std::string field = DistributedRdb::Field::SHARING_RESOURCE_FIELD;
+        SqliteUtils::Replace(field, SqliteUtils::REP, "");
         SqliteUtils::Replace(sql, table + "." + DistributedRdb::Field::SHARING_RESOURCE_FIELD,
-            logTable + "." + DistributedRdb::SHARING_RESOURCE);
+            logTable + "." + SHARING_RESOURCE + " AS " + field);
     }
     if (queryStatus.second) {
         sql.append(", " + logTable + ".cursor");
