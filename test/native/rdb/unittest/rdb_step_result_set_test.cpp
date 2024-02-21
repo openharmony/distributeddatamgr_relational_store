@@ -1429,7 +1429,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep017, TestSize.Level1)
 
     std::string outSql;
     int errCode = SqliteSqlBuilder::BuildQueryString(false, "", "", columns, "", "", "", "", 0, 0, outSql);
-    EXPECT_EQ(E_EMPTq:qY_TABLE_NAME, errCode);
+    EXPECT_EQ(qY_TABLE_NAME, errCode);
 }
 
 /* *
