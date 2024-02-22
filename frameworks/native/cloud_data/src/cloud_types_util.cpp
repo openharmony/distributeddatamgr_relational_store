@@ -126,4 +126,10 @@ bool Unmarshalling(ValuesBucket &output, MessageParcel &data)
 {
     return Unmarshal(data, output.values_);
 }
+
+template<>
+bool Unmarshalling(StatisticInfo &output, MessageParcel &data)
+{
+    return ITypesUtil::Unmarshal(data, output.table, output.inserted, output.updated, output.normal);
+}
 } // namespace OHOS::ITypesUtil
