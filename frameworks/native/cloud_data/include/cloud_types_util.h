@@ -28,6 +28,7 @@ using SharingCode = OHOS::CloudData::SharingCode;
 using Asset = OHOS::NativeRdb::AssetValue;
 using ValueObject = OHOS::NativeRdb::ValueObject;
 using ValuesBucket = OHOS::NativeRdb::ValuesBucket;
+using StatisticInfo = OHOS::CloudData::StatisticInfo;
 
 template<>
 bool Marshalling(const Participant &input, MessageParcel &data);
@@ -66,5 +67,8 @@ template<>
 bool Marshalling(const ValuesBucket &input, MessageParcel &data);
 template<>
 bool Unmarshalling(ValuesBucket &output, MessageParcel &data);
+
+template<>
+bool Unmarshalling(StatisticInfo &output, MessageParcel &data);
 } // namespace OHOS::ITypesUtil
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_UTIL_H

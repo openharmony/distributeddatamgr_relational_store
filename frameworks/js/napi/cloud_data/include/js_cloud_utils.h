@@ -28,6 +28,7 @@ using Privilege = OHOS::CloudData::Privilege;
 using RdbPredicates = OHOS::NativeRdb::RdbPredicates;
 using ResultSet = OHOS::NativeRdb::ResultSet;
 using ExtraData = OHOS::CloudData::JsConfig::ExtraData;
+using StatisticInfo = OHOS::CloudData::StatisticInfo;
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, ExtraData &output);
@@ -52,6 +53,9 @@ napi_value Convert2JSValue(napi_env env, const std::shared_ptr<ResultSet> &value
 
 template<>
 napi_value Convert2JSValue(napi_env env, const std::pair<int32_t, std::string> &value);
+
+template<>
+napi_value Convert2JSValue(napi_env env, const StatisticInfo &value);
 
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit

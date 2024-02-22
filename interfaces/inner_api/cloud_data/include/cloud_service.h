@@ -34,6 +34,7 @@ public:
         TRANS_CLEAN,
         TRANS_NOTIFY_DATA_CHANGE,
         TRANS_NOTIFY_DATA_CHANGE_EXT,
+        TRANS_QUERY_STATISTICS,
         TRANS_ALLOC_RESOURCE_AND_SHARE,
         TRANS_SHARE,
         TRANS_UNSHARE,
@@ -43,7 +44,7 @@ public:
         TRANS_QUERY_BY_INVITATION,
         TRANS_CONFIRM_INVITATION,
         TRANS_CHANGE_CONFIRMATION,
-        TRANS_BUTT = 17,
+        TRANS_BUTT,
     };
     enum Action : int32_t {
         CLEAR_CLOUD_INFO,
@@ -80,8 +81,9 @@ public:
     virtual int32_t Clean(const std::string &id, const std::map<std::string, int32_t> &actions) = 0;
     virtual int32_t NotifyDataChange(const std::string &id, const std::string &bundleName) = 0;
     virtual int32_t NotifyDataChange(const std::string &eventId, const std::string &extraData, int32_t userId) = 0;
-    virtual int32_t QueryGid(const std::string &id, const std::string &bundleName) = 0;
-    virtual int32_t QueryGid(const std::string &id, const std::string &bundleName, int32_t userId) = 0;
+    virtual std::pair<int32_t, std::map<std::string, StatisticInfos>> QueryStatistics(const std::string &id,
+        const std::string &bundleName, const std::string &storeId) = 0;
+
     virtual std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> AllocResourceAndShare(const std::string &storeId,
         const DistributedRdb::PredicatesMemo &predicates, const std::vector<std::string> &columns,
         const Participants &participants) = 0;
