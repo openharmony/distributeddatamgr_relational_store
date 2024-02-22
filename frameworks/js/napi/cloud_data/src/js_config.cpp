@@ -314,6 +314,75 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute);
 }
 
+/*
+ * [JS API Prototype]
+ * [AsyncCallback]
+ *      QueryGid(accountId: string, bundleName: string, userId?: number, callback: AsyncCallback<void>): void;
+ * [Promise]
+ *      QueryGid(accountId: string, bundleName: string, userId?: number): Promise<void>;
+ */
+napi_value JsConfig::QueryGid(napi_env env, napi_callback_info info)
+{
+    struct QueryGidContext : public ContextBase {
+        std::string accountId;
+        std::string bundleName;
+        int32_t userId = CloudService::INVALID_USER_ID;
+        bool queryStatus = false;
+        OHOS::CloudData::JsConfig::ExtraData extInfo;
+    };
+    auto ctxt = std::make_shared<QueryGidContext>();
+    ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value* argv) {
+        // required 2 arguments :: <accountId> <bundleName>
+        ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
+        napi_valuetype type = napi_undefined;
+        if (argc > 2 && napi_typeof(env, argv[0], &type) == napi_ok && type != napi_object) {
+            // 0 is the index of argument accountId, 1 is the index of argument bundleName, 2 is the index of argument userId
+            int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                "The type of accountId must be string.");
+            status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                "The type of bundleName must be string.");
+            status = JSUtils::Convert2ValueExt(env, argv[2], ctxt->userId);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                "The type of user must be number.");
+        } else {
+            // 0 is the index of argument accountId, 1 is the index of argument bundleName
+            int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                "The type of accountId must be string.");
+            status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                "The type of bundleName must be string.");
+            ctxt->queryStatus = true;
+        }
+    });
+
+    ASSERT_NULL(!ctxt->isThrowError, "QueryGid exit");
+
+    auto execute = [ctxt]() {
+        auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+        if (proxy == nullptr) {
+            if (state != CloudService::SERVER_UNAVAILABLE) {
+                state = CloudService::NOT_SUPPORT;
+            }
+            ctxt->status = (GenerateNapiError(state, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+                               ? napi_ok
+                               : napi_generic_failure;
+            return;
+        }
+        int32_t status;
+        if (ctxt->queryStatus == true) {
+            status = proxy->QueryGid(ctxt->accountId, ctxt->bundleName);
+        } else {
+            status = proxy->QueryGid(ctxt->accountId, ctxt->bundleName, ctxt->userId);
+        }
+        ctxt->status =
+            (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
+    };
+    return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute);
+}
+
 napi_value JsConfig::New(napi_env env, napi_callback_info info)
 {
     napi_value self = nullptr;
@@ -352,6 +421,7 @@ napi_value JsConfig::InitConfig(napi_env env, napi_value exports)
             DECLARE_NAPI_STATIC_FUNCTION("clear", JsConfig::Clean),
             DECLARE_NAPI_STATIC_FUNCTION("clean", JsConfig::Clean),
             DECLARE_NAPI_STATIC_FUNCTION("notifyDataChange", JsConfig::NotifyDataChange),
+            DECLARE_NAPI_STATIC_FUNCTION("QueryGid", JsConfig::QueryGid),
         };
         return properties;
     };
