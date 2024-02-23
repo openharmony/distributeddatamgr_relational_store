@@ -87,16 +87,28 @@ SqliteConnection::SqliteConnection(bool isWriteConnection)
 
 int SqliteConnection::GetDbPath(const RdbStoreConfig &config, std::string &dbPath)
 {
+    std::string path;
+    if (config.GetRoleType() == VISITOR) {
+        path = config.GetVisitorDir();
+    } else {
+        path = config.GetPath();
+    }
+
     if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
+        if (config.GetRoleType() == VISITOR) {
+            LOG_ERROR("not support MODE_MEMORY, storeName:%{public}s, role:%{public}d", config.GetName().c_str(),
+                config.GetRoleType());
+            return E_NOT_SUPPORT;
+        }
         dbPath = SqliteGlobalConfig::GetMemoryDbPath();
-    } else if (config.GetPath().empty()) {
+    } else if (path.empty()) {
         LOG_ERROR("SqliteConnection GetDbPath input empty database path");
         return E_EMPTY_FILE_NAME;
-    } else if (config.GetPath().front() != '/' && config.GetPath().at(1) != ':') {
+    } else if (path.front() != '/' && path.at(1) != ':') {
         LOG_ERROR("SqliteConnection GetDbPath input relative path");
         return E_RELATIVE_PATH;
     } else {
-        dbPath = config.GetPath();
+        dbPath = path;
     }
     return E_OK;
 }
@@ -223,6 +235,10 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, uint32_t retry, st
     }
 
     if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
+        return E_OK;
+    }
+
+    if (config.GetRoleType() == VISITOR) {
         return E_OK;
     }
 
