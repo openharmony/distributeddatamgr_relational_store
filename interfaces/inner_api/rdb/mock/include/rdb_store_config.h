@@ -58,6 +58,11 @@ enum class SecurityLevel : int32_t {
     LAST
 };
 
+enum RoleType : uint32_t {
+    OWNER = 0,
+    VISITOR,
+};
+
 static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
 static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
 static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "WAL";
@@ -149,6 +154,10 @@ public:
     void SetWriteTime(int timeout);
     int GetReadTime() const;
     void SetReadTime(int timeout);
+    void SetVisitorDir(const std::string &visitorDir);
+    std::string GetVisitorDir() const;
+    void SetRoleType(RoleType role);
+    uint32_t GetRoleType() const;
 
     bool operator==(const RdbStoreConfig &config) const
     {
@@ -216,6 +225,9 @@ private:
     bool isSearchable_ = false;
     int writeTimeout_ = 2; // seconds
     int readTimeout_ = 1; // seconds
+
+    RoleType role_ = OWNER;
+    std::string visitorDir_;
 };
 } // namespace OHOS::NativeRdb
 

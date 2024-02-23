@@ -59,9 +59,11 @@ SqliteConnectionPool::SqliteConnectionPool(const RdbStoreConfig &storeConfig)
 int SqliteConnectionPool::Init()
 {
     int errCode = E_OK;
-    writeConnection_ = SqliteConnection::Open(config_, true, errCode);
-    if (writeConnection_ == nullptr) {
-        return errCode;
+    if (config_.GetRoleType() == OWNER) {
+        writeConnection_ = SqliteConnection::Open(config_, true, errCode);
+        if (writeConnection_ == nullptr) {
+            return errCode;
+        }
     }
 
     InitReadConnectionCount();
@@ -140,6 +142,9 @@ void SqliteConnectionPool::ReleaseConnection(std::shared_ptr<SqliteConnection> c
 std::shared_ptr<SqliteConnection> SqliteConnectionPool::AcquireWriteConnection()
 {
     std::unique_lock<std::mutex> lock(writeMutex_);
+    if (writeConnection_ == nullptr) {
+        return nullptr;
+    }
     if (writeCondition_.wait_for(lock, writeTimeout_, [this] {
             return !writeConnectionUsed_;
         })) {
