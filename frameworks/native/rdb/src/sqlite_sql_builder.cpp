@@ -233,8 +233,8 @@ std::string SqliteSqlBuilder::BuildCountString(const AbsRdbPredicates &predicate
     return "SELECT COUNT(*) FROM " + tableName + BuildSqlStringFromPredicates(predicates);
 }
 
-std::string SqliteSqlBuilder::BuildCursorQueryString(
-    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, const std::string &logTable)
+std::string SqliteSqlBuilder::BuildCursorQueryString(const AbsRdbPredicates &predicates,
+    const std::vector<std::string> &columns, const std::string &logTable,  const std::pair<bool, bool> &queryStatus)
 {
     std::string sql;
     std::string table = predicates.GetTableName();
@@ -250,10 +250,18 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(
     } else {
         sql.append(table + ".*");
     }
-    sql.append(", " + logTable + ".cursor");
-    sql.append(", CASE WHEN ").append(logTable).append(".")
-        .append("flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag ");
-    sql.append("FROM ").append(table);
+    if (queryStatus.first) {
+        std::string field = DistributedRdb::Field::SHARING_RESOURCE_FIELD;
+        SqliteUtils::Replace(field, SqliteUtils::REP, "");
+        SqliteUtils::Replace(sql, table + "." + DistributedRdb::Field::SHARING_RESOURCE_FIELD,
+            logTable + "." + SHARING_RESOURCE + " AS " + field);
+    }
+    if (queryStatus.second) {
+        sql.append(", " + logTable + ".cursor");
+        sql.append(", CASE WHEN ").append(logTable).append(".")
+            .append("flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag");
+    }
+    sql.append(" FROM ").append(table);
     AppendClause(sql, " INDEXED BY ", predicates.GetIndex());
     sql.append(" INNER JOIN ").append(logTable).append(" ON ").append(table)
         .append(".ROWID = ").append(logTable).append(".data_key");
