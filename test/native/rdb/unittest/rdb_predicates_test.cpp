@@ -323,7 +323,7 @@ public:
     int ResultSize(std::shared_ptr<ResultSet> &resultSet);
     void BasicDataTypeTest002(RdbPredicates predicates1);
     void CalendarTest002(RdbPredicates predicates1);
-    void SetJionList(RdbPredicates predicates1);
+    void SetJionList(RdbPredicates &predicates1);
 };
 
 std::shared_ptr<RdbStore> RdbStorePredicateTest::store = nullptr;
@@ -1495,7 +1495,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ComplexPredicate_021, TestSize.Level1)
     EXPECT_EQ(1, ResultSize(allDataTypes1));
 }
 
-void RdbStorePredicateTest::SetJionList(RdbPredicates predicates1)
+void RdbStorePredicateTest::SetJionList(RdbPredicates &predicates1)
 {
     std::vector<std::string> lists = { "ohos", "bazhahei", "zhaxidelie" };
     predicates1.SetJoinTableNames(lists);
@@ -1680,6 +1680,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
     ->Or()
     ->EqualTo("integerValue", std::to_string(INT_MAX))
     ->EndWrap()->OrderByDesc("integerValue")->Limit(2);
+
     std::vector<std::string> columns = {"booleanValue", "doubleValue", "orderr"};
     std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     allDataTypes1->GoToFirstRow();
