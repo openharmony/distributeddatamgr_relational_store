@@ -122,7 +122,16 @@ napi_value AsyncCall::Async(napi_env env, std::shared_ptr<Context> context)
 {
     napi_value promise = nullptr;
     if (context->callback_ == nullptr) {
-        napi_create_promise(env, &context->defer_, &promise);
+        napi_status status = napi_create_promise(env, &context->defer_, &promise);
+        if (status != napi_ok) {
+            bool hasExceptionPending = false;
+            napi_is_exception_pending(env, &hasExceptionPending);
+            if (hasExceptionPending) {
+                LOG_ERROR("napi_create_promise failed , there are pending exceptions");
+                return nullptr;
+            }
+            RDB_NAPI_ASSERT_BASE(env, false, std::make_shared<InnerError>("napi_create_promise failed"), nullptr);
+        }
     } else {
         napi_get_undefined(env, &promise);
     }
