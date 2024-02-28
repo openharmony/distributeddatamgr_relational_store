@@ -122,7 +122,9 @@ napi_value AsyncCall::Async(napi_env env, std::shared_ptr<Context> context)
 {
     napi_value promise = nullptr;
     if (context->callback_ == nullptr) {
-        napi_create_promise(env, &context->defer_, &promise);
+        napi_status status = napi_create_promise(env, &context->defer_, &promise);
+        RDB_NAPI_ASSERT_BASE(env, status == napi_ok,
+            std::make_shared<InnerError>("failed(" + std::to_string(status) + ") to create promise"), nullptr);
     } else {
         napi_get_undefined(env, &promise);
     }
