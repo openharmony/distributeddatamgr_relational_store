@@ -29,6 +29,7 @@ constexpr int ERR = -1;
 
 constexpr int E_PARAM_ERROR = 401;
 constexpr int E_NON_SYSTEM_APP_ERROR = 202;
+constexpr int E_INNER_ERROR = 14800000;
 constexpr int E_RESULT_GOTO_ERROR = 14800012;
 constexpr int E_NOT_STAGE_MODE = 14801001;
 constexpr int E_DATA_GROUP_ID_INVALID = 14801002;
@@ -106,14 +107,14 @@ public:
             code_ = code;
             msg_ = iter->second;
         } else {
-            code_ = NativeRdb::E_BASE;
-            msg_ = "Inner error. Inner code is " + std::to_string(code % NativeRdb::E_BASE);
+            code_ = E_INNER_ERROR;
+            msg_ = "Inner error. Inner code is " + std::to_string(code % E_INNER_ERROR);
         }
     }
 
     InnerError(const std::string &msg)
     {
-        code_ = NativeRdb::E_BASE;
+        code_ = E_INNER_ERROR;
         msg_ = std::string("Inner error. ") + msg;
     }
 
