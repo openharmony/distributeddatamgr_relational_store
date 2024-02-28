@@ -16,6 +16,7 @@
 #define RDB_JS_NAPI_ERROR_H
 
 #include <map>
+#include <string>
 
 #include "logger.h"
 #include "rdb_errno.h"
@@ -108,6 +109,12 @@ public:
             code_ = NativeRdb::E_BASE;
             msg_ = "Inner error. Inner code is " + std::to_string(code % NativeRdb::E_BASE);
         }
+    }
+
+    InnerError(const std::string &msg)
+    {
+        code_ = NativeRdb::E_BASE;
+        msg_ = std::string("Inner error. ") + msg;
     }
 
     std::string GetMessage() override
