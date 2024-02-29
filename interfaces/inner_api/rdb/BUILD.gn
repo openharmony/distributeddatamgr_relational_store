@@ -106,6 +106,7 @@ if (is_ohos && !build_ohos_sdk) {
     sources += [
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/delay_notify.cpp",
+      "${relational_store_native_path}/rdb/src/log_monitor.cpp",
       "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
       "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
       "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
@@ -117,7 +118,6 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
       "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/task_executor.cpp",
-      "${relational_store_native_path}/rdb/src/log_monitor.cpp",
       "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 

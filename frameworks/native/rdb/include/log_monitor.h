@@ -26,7 +26,7 @@ public:
     bool IsPrintLog(std::string);
 private:
     static constexpr uint32_t PRINT_CNT = 50;
-    static constexpr uint32_t MAX_SIZE = 10000;
+    static constexpr uint32_t MAX_SIZE = 5000;
     std::mutex mutex_;
     std::map<std::string, uint32_t> logRecord_;
 };
