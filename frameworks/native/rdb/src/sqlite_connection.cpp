@@ -21,6 +21,7 @@
 #include <cerrno>
 #include <memory>
 #include <new>
+#include <chrono>
 
 #ifdef RDB_SUPPORT_ICU
 #include <unicode/ucol.h>
@@ -47,7 +48,7 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
+using namespace std::chrono;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 // error status
 const int ERROR_STATUS = -1;
@@ -677,7 +678,9 @@ int SqliteConnection::ExecuteForLastInsertedRowId(
         statement.ResetStatementAndClearBindings();
         return E_QUERY_IN_EXECUTE;
     } else if (errCode != SQLITE_DONE) {
-        LOG_ERROR("SqliteConnection ExecuteForLastInsertedRowId : failed %{public}d", errCode);
+        auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
+        LOG_ERROR("SqliteConnection ExecuteForLastInsertedRowId : failed %{public}d times %{public}" PRIu64 ".",
+            errCode, time);
         statement.ResetStatementAndClearBindings();
         return SQLiteError::ErrNo(errCode);
     }
@@ -862,7 +865,9 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     SqliteConnectionS connection(this->dbHandle, this->openFlags, this->filePath);
     int errCode = PrepareAndBind(sql, bindArgs);
     if (errCode != E_OK) {
-        LOG_ERROR("PrepareAndBind sql and bindArgs error = %{public}d ", errCode);
+        auto time = static_cast<uint64_t>(duration_cast<milliseconds>(
+            system_clock::now().time_since_epoch()).count());
+        LOG_ERROR("PrepareAndBind sql and bindArgs error = %{public}d times %{public}" PRIu64 ".", errCode, time);
         return errCode;
     }
     if (ClearSharedBlock(sharedBlock) == ERROR_STATUS) {
