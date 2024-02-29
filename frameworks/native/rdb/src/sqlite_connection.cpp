@@ -22,6 +22,7 @@
 #include <memory>
 #include <new>
 #include <chrono>
+#include <cinttypes>
 
 #ifdef RDB_SUPPORT_ICU
 #include <unicode/ucol.h>
