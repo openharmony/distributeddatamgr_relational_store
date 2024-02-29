@@ -33,6 +33,7 @@
 #include "step_result_set.h"
 #include "task_executor.h"
 #include "traits.h"
+#include "log_monitor.h"
 
 #ifndef WINDOWS_PLATFORM
 #include "directory_ex.h"
@@ -1132,8 +1133,12 @@ int RdbStoreImpl::BeginTransaction()
 
     connection->SetInTransaction(true);
     connectionPool->GetTransactionStack().push(transaction);
-    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s times:%{public}" PRIu64 ".",
-        transactionId, name.c_str(), time);
+
+    std::string logMsg = std::string(__FUNCTION__) + std::to_string(transactionId) + name + std::to_string(errCode);
+    if (LogMonitor::GetInstance().IsPrintLog(logMsg)) {
+        LOG_INFO("transaction id: %{public}zu, storeName: %{public}s times:%{public}" PRIu64 ".",
+            transactionId, name.c_str(), time);
+    }
     return E_OK;
 }
 
@@ -1171,9 +1176,12 @@ int RdbStoreImpl::RollBack()
         connection->SetInTransaction(false);
     }
 	
-    // size + 1 means the number of transactions in process
-    LOG_INFO("transaction id: %{public}zu, , storeName: %{public}s, errCode:%{public}d time:%{public}" PRIu64 ".",
-        transactionId + 1, name.c_str(), errCode, time);
+    std::string logMsg = std::string(__FUNCTION__) + std::to_string(transactionId + 1) + name + std::to_string(errCode);
+    if (LogMonitor::GetInstance().IsPrintLog(logMsg)) {
+        // size + 1 means the number of transactions in process
+        LOG_INFO("transaction id: %{public}zu, , storeName: %{public}s, errCode:%{public}d time:%{public}" PRIu64 ".",
+            transactionId + 1, name.c_str(), errCode, time);
+    }
     return E_OK;
 }
 
@@ -1211,8 +1219,12 @@ int RdbStoreImpl::Commit()
     int errCode = connection->ExecuteSql(sqlStr);
     connectionPool->ReleaseConnection(connection);
     connection->SetInTransaction(false);
-    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s errCode:%{public}d time:%{public}" PRIu64 ".",
-        transactionId, name.c_str(), errCode, time);
+    
+    std::string logMsg = std::string(__FUNCTION__) + std::to_string(transactionId) + name + std::to_string(errCode);
+    if (LogMonitor::GetInstance().IsPrintLog(logMsg)) {
+        LOG_INFO("transaction id: %{public}zu, storeName: %{public}s errCode:%{public}d time:%{public}" PRIu64 ".",
+            transactionId, name.c_str(), errCode, time);
+    }
     connectionPool->GetTransactionStack().pop();
     return E_OK;
 }
