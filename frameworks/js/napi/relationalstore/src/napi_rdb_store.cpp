@@ -70,7 +70,7 @@ struct RdbStoreContext : public Context {
     std::vector<ValueObject> bindArgs;
     int64_t int64Output;
     int intOutput;
-    std::string stringOutput;
+    ValueObject sqlExeOutput;
     std::vector<uint8_t> newKey;
     std::shared_ptr<ResultSet> resultSet;
     std::string aliasName;
@@ -161,38 +161,21 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor descriptors[] = {
         DECLARE_NAPI_FUNCTION_WITH_DATA("delete", Delete, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("deleteSync", Delete, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("update", Update, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("updateSync", Update, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("insert", Insert, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("insertSync", Insert, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsert", BatchInsert, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsertSync", BatchInsert, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("querySql", QuerySql, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlSync", QuerySql, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("query", Query, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("querySync", Query, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("executeSql", ExecuteSql, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("executeSqlSync", ExecuteSql, SYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("executeSqlAndGetString", ExecuteSqlAndGetString, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("executeSqlAndGetStringSync", ExecuteSqlAndGetString, SYNC),
+        DECLARE_NAPI_FUNCTION_WITH_DATA("execute", Execute, ASYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("replace", Replace, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("replaceSync", Replace, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("queryByStep", QueryByStep, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("queryByStepSync", QueryByStep, SYNC),
         DECLARE_NAPI_FUNCTION("backup", Backup),
-        DECLARE_NAPI_FUNCTION("count", Count),
-        DECLARE_NAPI_FUNCTION("addAttach", Attach),
         DECLARE_NAPI_FUNCTION("beginTransaction", BeginTransaction),
         DECLARE_NAPI_FUNCTION("rollBack", RollBack),
         DECLARE_NAPI_FUNCTION("commit", Commit),
         DECLARE_NAPI_FUNCTION("restore", Restore),
         DECLARE_NAPI_GETTER_SETTER("version", GetVersion, SetVersion),
-        DECLARE_NAPI_GETTER("isInTransaction", IsInTransaction),
-        DECLARE_NAPI_GETTER("isOpen", IsOpen),
-        DECLARE_NAPI_GETTER("path", GetPath),
-        DECLARE_NAPI_GETTER("isReadOnly", IsReadOnly),
-        DECLARE_NAPI_GETTER("isMemoryRdb", IsMemoryRdb),
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
         DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery),
         DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables),
@@ -800,11 +783,11 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
     return AsyncCall::Call(env, context);
 }
 
-napi_value RdbStoreProxy::ExecuteSqlAndGetString(napi_env env, napi_callback_info info)
+napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 3"));
+        CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 2"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseSql(env, argv[0], context));
         if (argc == 2) {
@@ -814,12 +797,13 @@ napi_value RdbStoreProxy::ExecuteSqlAndGetString(napi_env env, napi_callback_inf
     auto exec = [context]() -> int {
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
-        return obj->rdbStore_->ExecuteAndGetString(context->stringOutput, context->sql, context->bindArgs);
+        auto status = E_ERROR;
+        std::tie(status, context->sqlExeOutput) = obj->rdbStore_->Execute(context->sql, context->bindArgs);
+        return status;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        std::string strOutput = context->stringOutput;
-        napi_status status = napi_create_string_utf8(env, strOutput.c_str(), strOutput.length(), &result);
-        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+        result = JSUtils::Convert2JSValue(env, context->sqlExeOutput);
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
 
