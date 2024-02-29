@@ -105,6 +105,7 @@ public:
         const std::vector<ValueObject> &bindArgs) override;
     int ExecuteSql(
         const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) override;
+    std::pair<int32_t, ValueObject> Execute(const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
