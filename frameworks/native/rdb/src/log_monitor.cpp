@@ -12,8 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include <sys/syscall.h>
 #include <unistd.h>
+#endif
 #include "log_monitor.h"
 
 namespace OHOS::NativeRdb {
@@ -25,6 +28,7 @@ LogMonitor &LogMonitor::GetInstance()
 
 bool LogMonitor::IsPrintLog(std::string logMsg)
 {
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     bool isPrint = false;
     std::lock_guard<std::mutex> lock(mutex_);
     if (logRecord_.size() > MAX_SIZE) {
@@ -42,5 +46,7 @@ bool LogMonitor::IsPrintLog(std::string logMsg)
         isPrint = true;
     }
     return isPrint;
+#endif
+    return true;
 }
 } // namespace OHOS::NativeRdb

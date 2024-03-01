@@ -19,6 +19,7 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/abs_result_set.cpp",
   "${relational_store_native_path}/rdb/src/base_transaction.cpp",
   "${relational_store_native_path}/rdb/src/cache_result_set.cpp",
+  "${relational_store_native_path}/rdb/src/log_monitor.cpp",
   "${relational_store_native_path}/rdb/src/raw_data_parser.cpp",
   "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
   "${relational_store_native_path}/rdb/src/rdb_predicates.cpp",
@@ -106,7 +107,6 @@ if (is_ohos && !build_ohos_sdk) {
     sources += [
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/delay_notify.cpp",
-      "${relational_store_native_path}/rdb/src/log_monitor.cpp",
       "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
       "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
       "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
@@ -167,7 +167,6 @@ if (is_ohos && !build_ohos_sdk) {
     sources += [
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/delay_notify.cpp",
-      "${relational_store_native_path}/rdb/src/log_monitor.cpp",
       "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
       "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
       "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
