@@ -154,14 +154,16 @@ napi_value JsConfig::ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
         // required 3 arguments :: <accountId> <bundleName> <state>
         ASSERT_BUSINESS_ERR(ctxt, argc >= 3, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
-        // 0 is the index of argument accountId, 1 is the index of argument bundleName, 2 is the index of argument state
+        // 0 is the index of argument accountId
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
         ASSERT_BUSINESS_ERR(
             ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
+        // 1 is the index of argument bundleName
         status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
         ASSERT_BUSINESS_ERR(
             ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
         bool state = false;
+        // 2 is the index of argument state
         status = JSUtils::Convert2Value(env, argv[2], state);
         ASSERT_BUSINESS_ERR(
             ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of status must be boolean.");

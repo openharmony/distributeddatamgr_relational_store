@@ -633,8 +633,7 @@ HWTEST_F(RdbNativeCursorTest, Abnormal_cursor_PutAssets_test_010, TestSize.Level
 
     valueBucket->putInt64(valueBucket, "id", curRow);
 
-    int errCode = OH_Rdb_ErrCode::RDB_OK;
-    errCode = OH_VBucket_PutAsset(nullptr, "data1", asset);
+    int errCode = OH_VBucket_PutAsset(nullptr, "data1", asset);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     errCode = OH_Rdb_ErrCode::RDB_OK;
     errCode = OH_VBucket_PutAsset(valueBucket, nullptr, asset);

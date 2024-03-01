@@ -550,9 +550,6 @@ void RdbStoreUpdateTest::ExpectValue(const std::shared_ptr<OHOS::NativeRdb::Resu
     EXPECT_NE(nullptr, resultSet);
     int columnIndex;
     int intVal;
-    std::string strVal;
-    double dVal;
-    std::vector<uint8_t> blob;
     int ret;
 
     if (expect.id != -1) {
@@ -563,6 +560,7 @@ void RdbStoreUpdateTest::ExpectValue(const std::shared_ptr<OHOS::NativeRdb::Resu
         EXPECT_EQ(expect.id, intVal);
     }
     if (expect.name != "") {
+        std::string strVal;
         ret = resultSet->GetColumnIndex("name", columnIndex);
         EXPECT_EQ(ret, E_OK);
         ret = resultSet->GetString(columnIndex, strVal);
@@ -577,6 +575,7 @@ void RdbStoreUpdateTest::ExpectValue(const std::shared_ptr<OHOS::NativeRdb::Resu
         EXPECT_EQ(expect.age, intVal);
     }
     if (expect.salary != -1) {
+        double dVal;
         ret = resultSet->GetColumnIndex("salary", columnIndex);
         EXPECT_EQ(ret, E_OK);
         ret = resultSet->GetDouble(columnIndex, dVal);
@@ -584,6 +583,7 @@ void RdbStoreUpdateTest::ExpectValue(const std::shared_ptr<OHOS::NativeRdb::Resu
         EXPECT_EQ(expect.salary, dVal);
     }
     if (expect.blobType.size() != 0) {
+        std::vector<uint8_t> blob;
         ret = resultSet->GetColumnIndex("blobType", columnIndex);
         EXPECT_EQ(ret, E_OK);
         ret = resultSet->GetBlob(columnIndex, blob);
