@@ -211,6 +211,7 @@ private:
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
     bool ColHasSpecificField(const std::vector<std::string> &columns);
+    bool IsPrintLog(std::string logMsg);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;
@@ -238,6 +239,10 @@ private:
     std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
     static constexpr uint32_t EXPANSION = 2;
     static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 3000;
+
+    static constexpr uint32_t PRINT_CNT = 30;
+    static constexpr uint32_t MAX_SIZE = 100;
+    std::map<std::string, uint32_t> logRecord_;
 };
 } // namespace OHOS::NativeRdb
 #endif
