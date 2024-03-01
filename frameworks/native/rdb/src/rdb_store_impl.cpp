@@ -1248,8 +1248,9 @@ bool RdbStoreImpl::IsPrintLog(std::string logMsg)
         isPrint = true;
     }
     return isPrint;
-#endif
+#else
     return true;
+#endif
 }
 
 int RdbStoreImpl::FreeTransaction(std::shared_ptr<SqliteConnection> connection, const std::string &sql)
