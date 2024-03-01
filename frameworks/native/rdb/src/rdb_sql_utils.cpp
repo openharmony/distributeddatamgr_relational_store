@@ -13,27 +13,22 @@
  * limitations under the License.
  */
 
+#include "rdb_sql_utils.h"
+
 #include <sys/stat.h>
 #include <unistd.h>
 
 #include <algorithm>
 #include <cstdio>
-#ifdef WINDOWS_PLATFORM
-#include <dir.h>
-#endif
 
+#include "acl.h"
 #include "rdb_errno.h"
-#include "rdb_sql_utils.h"
+#include "rdb_platform.h"
 #include "sqlite_sql_builder.h"
-
-#ifdef WINDOWS_PLATFORM
-#define MKDIR(filePath) (mkdir(filePath))
-#else
-#define MKDIR(filePath) (mkdir(filePath, 0771))
-#endif
-
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::DATABASE_UTILS;
+constexpr int32_t SERVICE_GID = 3012;
 int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
 {
     std::string tempDirectory = databaseDir;
@@ -52,9 +47,14 @@ int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
     for (const std::string& directory : directories) {
         databaseDirectory = databaseDirectory + "/" + directory;
         if (access(databaseDirectory.c_str(), F_OK) != 0) {
-            if (MKDIR(databaseDirectory.c_str())) {
+            if (MkDir(databaseDirectory)) {
                 return E_CREATE_FOLDER_FAIL;
             }
+            // Set the default ACL attribute to the database root directory to ensure that files created by the server
+            // also have permission to operate on the client side.
+            Acl acl(databaseDirectory);
+            acl.SetDefaultUser(GetUid(), Acl::R_RIGHT | Acl::W_RIGHT);
+            acl.SetDefaultGroup(SERVICE_GID, Acl::R_RIGHT | Acl::W_RIGHT);
         }
     }
     return E_OK;
