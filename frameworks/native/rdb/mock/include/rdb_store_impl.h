@@ -117,6 +117,7 @@ private:
         const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>());
     inline std::string GetSqlArgs(size_t size);
     int RegisterDataChangeCallback();
+    bool IsPrintLog(std::string logMsg);
 
     const RdbStoreConfig rdbStoreConfig;
     SqliteConnectionPool *connectionPool;
