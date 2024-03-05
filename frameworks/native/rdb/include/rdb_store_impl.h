@@ -227,7 +227,7 @@ private:
     std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
 
     mutable std::shared_mutex rwMutex_;
-    static inline constexpr uint32_t INTERVAL = 200;
+    static inline constexpr uint32_t INTERVAL = 10;
     static constexpr const char *ROW_ID = "ROWID";
     std::set<std::string> cloudTables_;
 
