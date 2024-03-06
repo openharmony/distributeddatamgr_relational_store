@@ -44,6 +44,7 @@ const int SqliteUtils::STATEMENT_COMMIT = 6;
 const int SqliteUtils::STATEMENT_ROLLBACK = 7;
 const int SqliteUtils::STATEMENT_PRAGMA = 8;
 const int SqliteUtils::STATEMENT_DDL = 9;
+const int SqliteUtils::STATEMENT_INSERT = 10;
 const int SqliteUtils::STATEMENT_OTHER = 99;
 
 constexpr int32_t HEAD_SIZE = 3;
@@ -54,7 +55,7 @@ constexpr const char *DEFAULT_ANONYMOUS = "******";
 
 const std::map<std::string, int> SqliteUtils::SQL_TYPE_MAP = {
     { "SEL", SqliteUtils::STATEMENT_SELECT },
-    { "INS", SqliteUtils::STATEMENT_UPDATE },
+    { "INS", SqliteUtils::STATEMENT_INSERT },
     { "UPD", SqliteUtils::STATEMENT_UPDATE },
     { "REP", SqliteUtils::STATEMENT_UPDATE },
     { "DEL", SqliteUtils::STATEMENT_UPDATE },

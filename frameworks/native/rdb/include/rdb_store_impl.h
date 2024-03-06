@@ -105,6 +105,7 @@ public:
         const std::vector<ValueObject> &bindArgs) override;
     int ExecuteSql(
         const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) override;
+    std::pair<int32_t, ValueObject> Execute(const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
@@ -228,7 +229,7 @@ private:
     std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
 
     mutable std::shared_mutex rwMutex_;
-    static inline constexpr uint32_t INTERVAL = 200;
+    static inline constexpr uint32_t INTERVAL = 10;
     static constexpr const char *ROW_ID = "ROWID";
     std::set<std::string> cloudTables_;
 
