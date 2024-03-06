@@ -1179,7 +1179,7 @@ int RdbStoreImpl::RollBack()
     std::string logMsg = std::to_string(transactionId + 1) + name + std::to_string(errCode);
     if (IsPrintLog(logMsg)) {
         // size + 1 means the number of transactions in process
-        LOG_INFO("transaction id: %{public}zu, , storeName: %{public}s, errCode:%{public}d time:%{public}" PRIu64 ".",
+        LOG_INFO("transaction id: %{public}zu, storeName: %{public}s, errCode:%{public}d time:%{public}" PRIu64 ".",
             transactionId + 1, name.c_str(), errCode, time);
     }
     return E_OK;
