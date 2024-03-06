@@ -17,11 +17,41 @@
 #define NATIVE_RDB_TEST_COMMON_H
 
 #include <string>
+#include "values_bucket.h"
 
 namespace OHOS {
 namespace NativeRdb {
 
 static const std::string RDB_TEST_PATH = "/data/test/";
+struct RowData {
+    int id;
+    std::string name;
+    int age;
+    double salary;
+    std::vector<uint8_t> blobType;
+};
+
+struct RowDatas {
+    int id;
+    std::string eName;
+    int jobId;
+    ValueObject mgr;
+    std::string joinDate;
+    double salary;
+    ValueObject bonus;
+    int deptId;
+};
+
+class UTUtils {
+public:
+    static ValuesBucket SetRowData(const RowData &rowData);
+
+    static ValuesBucket SetRowDatas(const RowDatas &rowDatas);
+
+    static const RowData g_rowData[3];
+
+    static const RowDatas gRowDatas[14];
+};
 
 } // namespace NativeRdb
 } // namespace OHOS
