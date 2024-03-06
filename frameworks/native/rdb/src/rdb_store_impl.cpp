@@ -801,10 +801,47 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
         errCode = connectionPool->ReOpenAvailableReadConnections();
     }
 
-    if (errCode == E_OK && sqlType == SqliteUtils::STATEMENT_UPDATE) {
+    if (errCode == E_OK && (sqlType == SqliteUtils::STATEMENT_UPDATE || sqlType == SqliteUtils::STATEMENT_INSERT)) {
         DoCloudSync("");
     }
     return errCode;
+}
+
+std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, const std::vector<ValueObject> &bindArgs)
+{
+    int errCode = E_OK;
+    ValueObject outValue;
+    int sqlType = SqliteUtils::GetSqlStatementType(sql);
+    if (sqlType == SqliteUtils::STATEMENT_SELECT) {
+        LOG_ERROR("Not support the sql: %{public}s", SqliteUtils::Anonymous(sql).c_str());
+        return { E_NOT_SUPPORT_THE_SQL, outValue };
+    }
+
+    if (sqlType == SqliteUtils::STATEMENT_INSERT) {
+        int64_t intOutValue = -1;
+        errCode = ExecuteForLastInsertedRowId(intOutValue, sql, bindArgs);
+        return { errCode, ValueObject(intOutValue) };
+    }
+
+    if (sqlType == SqliteUtils::STATEMENT_UPDATE) {
+        int64_t intOutValue = -1;
+        errCode = ExecuteForChangedRowCount(intOutValue, sql, bindArgs);
+        return { errCode, ValueObject(intOutValue) };
+    }
+
+    if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
+        std::string strOutValue;
+        errCode = ExecuteAndGetString(strOutValue, sql, bindArgs);
+        return { errCode, ValueObject(strOutValue) };
+    }
+
+    if (sqlType == SqliteUtils::STATEMENT_DDL) {
+        errCode = ExecuteSql(sql, bindArgs);
+        return { errCode, outValue };
+    } else {
+        LOG_ERROR("Not support the sql: %{public}s", SqliteUtils::Anonymous(sql).c_str());
+        return { E_NOT_SUPPORT_THE_SQL, outValue } ;
+    }
 }
 
 int RdbStoreImpl::ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs)
@@ -1113,7 +1150,7 @@ int RdbStoreImpl::BeginTransaction()
     std::lock_guard<std::mutex> lockGuard(connectionPool->GetTransactionStackMutex());
     // size + 1 means the number of transactions in process
     size_t transactionId = connectionPool->GetTransactionStack().size() + 1;
-    
+
     auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
     BaseTransaction transaction(connectionPool->GetTransactionStack().size());
     auto connection = connectionPool->AcquireConnection(false);
@@ -1193,7 +1230,7 @@ int RdbStoreImpl::Commit()
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::lock_guard<std::mutex> lockGuard(connectionPool->GetTransactionStackMutex());
     size_t transactionId = connectionPool->GetTransactionStack().size();
-    
+
     auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
     if (connectionPool->GetTransactionStack().empty()) {
         LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s time:%{public}" PRIu64 ".",
