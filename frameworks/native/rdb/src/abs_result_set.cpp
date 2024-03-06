@@ -346,7 +346,7 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
         columnIndex++;
     }
     columnIndex = -1;
-    LOG_ERROR("GetColumnIndex failed, columnName is: %{public}s", columnName.c_str());
+    LOG_DEBUG("GetColumnIndex failed, columnName is: %{public}s", columnName.c_str());
     return E_ERROR;
 }
 
