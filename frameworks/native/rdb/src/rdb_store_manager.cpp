@@ -57,20 +57,18 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
     int &errCode, int version, RdbOpenCallback &openCallback)
 {
     std::string path = config.GetPath();
-    std::lock_guard<std::mutex> lock(mutex_); // TOD this lock should only work on storeCache_, add one more lock for connectionpool
+    // TOD this lock should only work on storeCache_, add one more lock for connectionpool
+    std::lock_guard<std::mutex> lock(mutex_);
     if (storeCache_.find(path) != storeCache_.end()) {
         std::shared_ptr<RdbStoreImpl> rdbStore = storeCache_[path].lock();
         if (rdbStore != nullptr && rdbStore->GetConfig() == config) {
             return rdbStore;
         }
-        storeCache_.erase(path); // TOD reconfigure store should be repeated this
+        // TOD reconfigure store should be repeated this
+        storeCache_.erase(path);
     }
 
-    std::shared_ptr<RdbStoreImpl> rdbStore(new (std::nothrow) RdbStoreImpl(config, errCode),
-        [](RdbStoreImpl *ptr) {
-            LOG_DEBUG("delete %{public}s as no more used.", SqliteUtils::Anonymous(ptr->GetPath()).c_str());
-            delete ptr;
-        });
+    std::shared_ptr<RdbStoreImpl> rdbStore = std::make_shared<RdbStoreImpl>(config, errCode);
     if (errCode != E_OK) {
         LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore as memory issue, rc=%{public}d", errCode);
         return nullptr;

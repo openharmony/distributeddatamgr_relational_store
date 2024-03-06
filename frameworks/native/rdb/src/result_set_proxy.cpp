@@ -36,7 +36,8 @@ ResultSetProxy::~ResultSetProxy()
 
 int ResultSetProxy::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     if (!data.WriteInterfaceToken(ResultSetProxy::GetDescriptor())) {
         LOG_ERROR("Write descriptor failed, code is %{public}d.", CMD_GET_ALL_COLUMN_NAMES);
         return E_ERROR;
@@ -77,7 +78,8 @@ int ResultSetProxy::GetColumnType(int columnIndex, ColumnType &columnType)
 
 int ResultSetProxy::GetColumnIndex(const std::string &columnName, int &columnIndex)
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     if (!data.WriteInterfaceToken(ResultSetProxy::GetDescriptor())) {
         LOG_ERROR("Write descriptor failed, code is %{public}d.", CMD_GET_COLUMN_INDEX);
         return E_ERROR;
@@ -253,7 +255,8 @@ int ResultSetProxy::GetRow(RowEntity &rowEntity)
 
 bool ResultSetProxy::IsClosed() const
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     if (!data.WriteInterfaceToken(ResultSetProxy::GetDescriptor())) {
         LOG_ERROR("Write descriptor failed, code is %{public}d.", CMD_IS_CLOSED);
         return false;
@@ -274,7 +277,8 @@ int ResultSetProxy::Close()
 
 int ResultSetProxy::SendRequest(uint32_t code)
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     if (!data.WriteInterfaceToken(ResultSetProxy::GetDescriptor())) {
         LOG_ERROR("Write descriptor failed, code is %{public}d.", code);
         return E_ERROR;
@@ -295,7 +299,8 @@ int ResultSetProxy::SendRequest(uint32_t code)
 
 int ResultSetProxy::SendIntRequest(uint32_t code, int value)
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     if (!data.WriteInterfaceToken(ResultSetProxy::GetDescriptor())) {
         LOG_ERROR("Write descriptor failed, code is %{public}d.", code);
         return E_ERROR;
@@ -320,7 +325,8 @@ int ResultSetProxy::SendIntRequest(uint32_t code, int value)
 
 int ResultSetProxy::SendRequestRetBool(uint32_t code, bool &result) const
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     if (!data.WriteInterfaceToken(ResultSetProxy::GetDescriptor())) {
         LOG_ERROR("Write descriptor failed, code is %{public}d.", code);
         return E_ERROR;
@@ -342,7 +348,8 @@ int ResultSetProxy::SendRequestRetBool(uint32_t code, bool &result) const
 
 int ResultSetProxy::SendRequestRetInt(uint32_t code, int &result) const
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     if (!data.WriteInterfaceToken(ResultSetProxy::GetDescriptor())) {
         LOG_ERROR("Write descriptor failed, code is %{public}d.", code);
         return E_ERROR;

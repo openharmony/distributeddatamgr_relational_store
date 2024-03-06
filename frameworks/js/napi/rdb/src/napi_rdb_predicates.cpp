@@ -276,6 +276,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValueArray(napi_env env, na
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
     int version = predicatesProxy->apiversion;
+    // Ensure that argc contains 2 parameters
     RDB_NAPI_ASSERT_FROMV9(env, argc == 2, std::make_shared<ParamNumError>("2"), version);
 
     field = JSUtils::Convert2String(env, args[0]);
