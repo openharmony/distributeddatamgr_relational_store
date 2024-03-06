@@ -271,7 +271,10 @@ public:
      * @param bindArgs Indicates the {@link ValueObject} values of the parameters in the SQL statement.
      */
     virtual std::pair<int32_t, ValueObject> Execute(const std::string &sql,
-        const std::vector<ValueObject> &bindArgs = {}) = 0;
+        const std::vector<ValueObject> &bindArgs = {})
+    {
+        return { E_NOT_SUPPORT, ValueObject() };
+    }
 
     /**
      * @brief Executes an SQL statement that contains specified parameters and get a long integer value.
