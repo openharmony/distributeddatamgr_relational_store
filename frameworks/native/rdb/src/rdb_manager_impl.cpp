@@ -173,7 +173,7 @@ RdbStoreDataServiceProxy::RdbStoreDataServiceProxy(const sptr<IRemoteObject> &im
 
 sptr<IRemoteObject> RdbStoreDataServiceProxy::GetFeatureInterface(const std::string &name)
 {
-    LOG_INFO("%s", name.c_str());
+    LOG_DEBUG("%s", name.c_str());
     MessageParcel data;
     if (!data.WriteInterfaceToken(RdbStoreDataServiceProxy::GetDescriptor())) {
         LOG_ERROR("write descriptor failed");
