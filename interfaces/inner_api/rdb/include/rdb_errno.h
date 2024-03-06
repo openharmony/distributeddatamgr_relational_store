@@ -298,6 +298,11 @@ static constexpr int E_TYPE_MISMATCH = (E_BASE + 51);
  * @brief The error when database or disk is full.
  */
 static constexpr int E_DATABASE_FULL = (E_BASE + 52);
+
+/**
+ * @brief The error when sql is not supported in execute
+ */
+static constexpr int E_NOT_SUPPORT_THE_SQL = (E_BASE + 53);
 } // namespace NativeRdb
 } // namespace OHOS
 
