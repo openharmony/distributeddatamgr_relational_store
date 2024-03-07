@@ -470,7 +470,6 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
 
     int32_t result = -1;
     resultSetProxy->GetInstance()->GetColumnIndex(input, result);
-    RDB_NAPI_ASSERT(env, result != -1, std::make_shared<ParamError>("columnIndex " + input, "exists"));
 
     return JSUtils::Convert2JSValue(env, result);
 }

@@ -57,7 +57,7 @@ const static std::map<int, std::string> ERROR_MAPS = {
                 napi_throw_error((env), nullptr, "error message is empty");                                 \
                 return retVal;                                                                              \
             }                                                                                               \
-            LOG_DEBUG("throw error: code = %{public}d , message = %{public}s", (error)->GetCode(),            \
+            LOG_ERROR("throw error: code = %{public}d , message = %{public}s", (error)->GetCode(),            \
                 (error)->GetMessage().c_str());                                                               \
             napi_throw_error((env), std::to_string((error)->GetCode()).c_str(), (error)->GetMessage().c_str()); \
             return retVal;                                                                                  \

@@ -346,8 +346,29 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
         columnIndex++;
     }
     columnIndex = -1;
-    LOG_DEBUG("GetColumnIndex failed, columnName is: %{public}s", columnName.c_str());
+    if (IsPrintLog(columnName)) {
+        LOG_ERROR("GetColumnIndex failed, columnName is: %{public}s", columnName.c_str());
+    }
     return E_ERROR;
+}
+
+bool AbsResultSet::IsPrintLog(std::string logMsg)
+{
+    bool isPrint = false;
+    if (logRecord_.size() > MAX_SIZE) {
+        std::map<std::string, uint32_t>().swap(logRecord_);
+    }
+    std::string msgTemp = std::string(__FUNCTION__) + "_" + logMsg;
+    if (logRecord_.count(msgTemp) != 0) {
+        if ((++logRecord_[msgTemp] % PRINT_CNT) == 0) {
+            logRecord_[msgTemp] = 0;
+            isPrint = true;
+        }
+    } else {
+        logRecord_[msgTemp] = 0;
+        isPrint = true;
+    }
+    return isPrint;
 }
 
 int AbsResultSet::GetColumnName(int columnIndex, std::string &columnName)

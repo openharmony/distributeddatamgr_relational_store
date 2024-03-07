@@ -671,14 +671,11 @@ int SqliteConnection::ExecuteForLastInsertedRowId(
 
     errCode = statement.Step();
     if (errCode == SQLITE_ROW) {
-        LOG_ERROR("SqliteConnection ExecuteForLastInsertedRowId : Queries can be performed using query or QuerySql "
-                  "methods only");
+        LOG_ERROR("Queries can be performed using query or QuerySql methods only");
         statement.ResetStatementAndClearBindings();
         return E_QUERY_IN_EXECUTE;
     } else if (errCode != SQLITE_DONE) {
-        auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
-        LOG_ERROR("SqliteConnection ExecuteForLastInsertedRowId : failed %{public}d times %{public}" PRIu64 ".",
-            errCode, time);
+        LOG_ERROR("failed: %{public}d. sql: %{public}s", errCode, sql.c_str());
         statement.ResetStatementAndClearBindings();
         return SQLiteError::ErrNo(errCode);
     }
@@ -857,25 +854,24 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows)
 {
     if (sharedBlock == nullptr) {
-        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
+        LOG_ERROR("sharedBlock null.");
         return E_ERROR;
     }
     SqliteConnectionS connection(this->dbHandle, this->openFlags, this->filePath);
     int errCode = PrepareAndBind(sql, bindArgs);
     if (errCode != E_OK) {
-        auto time = static_cast<uint64_t>(duration_cast<milliseconds>(
-            system_clock::now().time_since_epoch()).count());
-        LOG_ERROR("PrepareAndBind sql and bindArgs error = %{public}d times %{public}" PRIu64 ".", errCode, time);
+        LOG_ERROR("error: %{public}d sql: %{public}s startPos: %{public}d requiredPos: %{public}d
+            isCountAllRows: %{public}d", errCode, sql.c_str(), startPos, requiredPos, isCountAllRows);
         return errCode;
     }
     if (ClearSharedBlock(sharedBlock) == ERROR_STATUS) {
-        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
+        LOG_ERROR("sharedBlock is null.");
         return E_ERROR;
     }
     sqlite3_stmt *tempSqlite3St = statement.GetSql3Stmt();
     int columnNum = sqlite3_column_count(tempSqlite3St);
     if (SharedBlockSetColumnNum(sharedBlock, columnNum) == ERROR_STATUS) {
-        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
+        LOG_ERROR("sharedBlock is null.");
         return E_ERROR;
     }
 

@@ -242,7 +242,7 @@ private:
     static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 3000;
 
     static constexpr uint32_t PRINT_CNT = 30;
-    static constexpr uint32_t MAX_SIZE = 100;
+    static constexpr uint32_t MAX_SIZE = 50;
     std::map<std::string, uint32_t> logRecord_;
 };
 } // namespace OHOS::NativeRdb
