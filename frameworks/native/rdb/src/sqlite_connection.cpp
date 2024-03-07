@@ -21,8 +21,6 @@
 #include <cerrno>
 #include <memory>
 #include <new>
-#include <chrono>
-#include <cinttypes>
 
 #ifdef RDB_SUPPORT_ICU
 #include <unicode/ucol.h>
@@ -49,7 +47,6 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-using namespace std::chrono;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 // error status
 const int ERROR_STATUS = -1;
