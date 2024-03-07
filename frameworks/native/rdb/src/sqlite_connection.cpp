@@ -860,8 +860,8 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     SqliteConnectionS connection(this->dbHandle, this->openFlags, this->filePath);
     int errCode = PrepareAndBind(sql, bindArgs);
     if (errCode != E_OK) {
-        LOG_ERROR("error: %{public}d sql: %{public}s startPos: %{public}d requiredPos: %{public}d isCountAllRows: %{public}d",
-            errCode, sql.c_str(), startPos, requiredPos, isCountAllRows);
+        LOG_ERROR("error: %{public}d sql: %{public}s startPos: %{public}d requiredPos: %{public}d"
+            "isCountAllRows: %{public}d", errCode, sql.c_str(), startPos, requiredPos, isCountAllRows);
         return errCode;
     }
     if (ClearSharedBlock(sharedBlock) == ERROR_STATUS) {
