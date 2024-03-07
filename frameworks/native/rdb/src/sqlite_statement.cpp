@@ -210,8 +210,7 @@ int SqliteStatement::ResetStatementAndClearBindings() const
 
     int errCode = sqlite3_reset(stmtHandle);
     if (errCode != SQLITE_OK) {
-        auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
-        LOG_ERROR("reset ret is %{public}d. times %{public}" PRIu64 ".", errCode, time);
+        LOG_ERROR("reset ret is %{public}d.", errCode);
         return SQLiteError::ErrNo(errCode);
     }
 

@@ -320,6 +320,12 @@ protected:
     int rowPos_;
     std::map<std::string, int> columnMap_;
     bool isClosed_;
+
+private:
+    bool IsPrintLog(std::string logMsg);
+    static constexpr uint32_t PRINT_CNT = 30;
+    static constexpr uint32_t MAX_SIZE = 50;
+    std::map<std::string, uint32_t> logRecord_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

@@ -1170,6 +1170,11 @@ int RdbStoreImpl::BeginTransaction()
 
     connection->SetInTransaction(true);
     connectionPool->GetTransactionStack().push(transaction);
+    
+    if(transactionId > 1) {
+        LOG_WARN("transaction id = %{public}zu , storeName: %{public}s times:%{public}" PRIu64 ".",
+            transactionId, name.c_str(), time);
+    }
 
     std::string logMsg = std::to_string(transactionId) + name + std::to_string(errCode);
     if (IsPrintLog(logMsg)) {
@@ -1268,13 +1273,11 @@ int RdbStoreImpl::Commit()
 
 bool RdbStoreImpl::IsPrintLog(std::string logMsg)
 {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     bool isPrint = false;
     if (logRecord_.size() > MAX_SIZE) {
         std::map<std::string, uint32_t>().swap(logRecord_);
     }
-    std::string msgTemp = std::string(__FUNCTION__) + "_" + std::to_string(getpid()) + "_"
-    + std::to_string(syscall(SYS_gettid)) + "_" + logMsg;
+    std::string msgTemp = std::string(__FUNCTION__) + "_" + logMsg;
     if (logRecord_.count(msgTemp) != 0) {
         if ((++logRecord_[msgTemp] % PRINT_CNT) == 0) {
             logRecord_[msgTemp] = 0;
@@ -1285,9 +1288,6 @@ bool RdbStoreImpl::IsPrintLog(std::string logMsg)
         isPrint = true;
     }
     return isPrint;
-#else
-    return true;
-#endif
 }
 
 int RdbStoreImpl::FreeTransaction(std::shared_ptr<SqliteConnection> connection, const std::string &sql)
