@@ -470,7 +470,6 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
 
     int32_t result = -1;
     resultSetProxy->GetInstance()->GetColumnIndex(input, result);
-
     return JSUtils::Convert2JSValue(env, result);
 }
 
