@@ -1171,7 +1171,7 @@ int RdbStoreImpl::BeginTransaction()
     connection->SetInTransaction(true);
     connectionPool->GetTransactionStack().push(transaction);
     
-    if(transactionId > 1) {
+    if (transactionId > 1) {
         LOG_WARN("transaction id = %{public}zu , storeName: %{public}s times:%{public}" PRIu64 ".",
             transactionId, name.c_str(), time);
     }
