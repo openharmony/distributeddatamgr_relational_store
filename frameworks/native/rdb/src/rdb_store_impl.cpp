@@ -64,7 +64,16 @@ using namespace OHOS::Rdb;
 using namespace std::chrono;
 int RdbStoreImpl::InnerOpen()
 {
-    LOG_DEBUG("open %{public}s.", SqliteUtils::Anonymous(rdbStoreConfig.GetPath()).c_str());
+    std::string path;
+    if (rdbStoreConfig.GetRoleType() == VISITOR) {
+        if (rdbStoreConfig.IsEncrypt()) {
+            return E_NOT_SUPPORT;
+        }
+        path = rdbStoreConfig.GetVisitorDir();
+    } else {
+        path = rdbStoreConfig.GetPath();
+    }
+    LOG_DEBUG("open %{public}s.", SqliteUtils::Anonymous(path).c_str());
     int errCode = E_OK;
     connectionPool = SqliteConnectionPool::Create(rdbStoreConfig, errCode);
     if (connectionPool == nullptr) {
@@ -82,7 +91,10 @@ int RdbStoreImpl::InnerOpen()
     syncerParam_.isAutoClean_ = rdbStoreConfig.GetAutoClean();
     syncerParam_.isSearchable_ = rdbStoreConfig.IsSearchable();
     syncerParam_.password_ = {};
-    GetSchema(rdbStoreConfig);
+    syncerParam_.roleType_ = rdbStoreConfig.GetRoleType();
+    if (rdbStoreConfig.GetRoleType() == OWNER) {
+        GetSchema(rdbStoreConfig);
+    }
 
     errCode = RegisterDataChangeCallback();
     if (errCode != E_OK) {
@@ -264,6 +276,9 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTa
 
 int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
+    if (rdbStoreConfig.GetRoleType() == VISITOR) {
+        return E_NOT_SUPPORT;
+    }
     if (table.empty()) {
         return E_INVALID_ARGS;
     }
@@ -286,11 +301,10 @@ std::string RdbStoreImpl::GetSqlArgs(size_t size)
     }
     return args;
 }
-
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
-    : rdbStoreConfig(config), connectionPool(nullptr), isOpen(true), path(config.GetPath()), orgPath(config.GetPath()),
-      isReadOnly(config.IsReadOnly()), isMemoryRdb(config.IsMemoryRdb()), name(config.GetName()),
-      fileType(config.GetDatabaseFileType()), isEncrypt_(config.IsEncrypt())
+    : rdbStoreConfig(config), connectionPool(nullptr), isOpen(true), path(config.GetPath()),
+      orgPath(config.GetPath()), isReadOnly(config.IsReadOnly()), isMemoryRdb(config.IsMemoryRdb()),
+      name(config.GetName()), fileType(config.GetDatabaseFileType()), isEncrypt_(config.IsEncrypt())
 {
     errCode = InnerOpen();
     if (errCode != E_OK) {
@@ -333,6 +347,9 @@ int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const Valu
 int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table,
     const std::vector<ValuesBucket> &initialBatchValues)
 {
+    if (rdbStoreConfig.GetRoleType() == VISITOR) {
+        return E_NOT_SUPPORT;
+    }
     if (initialBatchValues.empty()) {
         outInsertNum = 0;
         return E_OK;
@@ -469,6 +486,9 @@ int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const Val
 int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
     const ValuesBucket &initialValues, ConflictResolution conflictResolution)
 {
+    if (rdbStoreConfig.GetRoleType() == VISITOR) {
+        return E_NOT_SUPPORT;
+    }
     if (table.empty()) {
         return E_EMPTY_TABLE_NAME;
     }
@@ -576,6 +596,9 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
 int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
     const std::string &whereClause, const std::vector<ValueObject> &bindArgs, ConflictResolution conflictResolution)
 {
+    if (rdbStoreConfig.GetRoleType() == VISITOR) {
+        return E_NOT_SUPPORT;
+    }
     if (table.empty()) {
         return E_EMPTY_TABLE_NAME;
     }
@@ -644,6 +667,9 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
 int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
     const std::vector<ValueObject> &bindArgs)
 {
+    if (rdbStoreConfig.GetRoleType() == VISITOR) {
+        return E_NOT_SUPPORT;
+    }
     if (table.empty()) {
         return E_EMPTY_TABLE_NAME;
     }
@@ -874,6 +900,9 @@ int RdbStoreImpl::ExecuteAndGetString(
 int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql,
     const std::vector<ValueObject> &bindArgs)
 {
+    if (rdbStoreConfig.GetRoleType() == VISITOR) {
+        return E_NOT_SUPPORT;
+    }
     auto connection = connectionPool->AcquireConnection(false);
     if (connection == nullptr) {
         return E_CON_OVER_LIMIT;
@@ -887,6 +916,9 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
 int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
     const std::vector<ValueObject> &bindArgs)
 {
+    if (rdbStoreConfig.GetRoleType() == VISITOR) {
+        return E_NOT_SUPPORT;
+    }
     int changeRow = 0;
     auto connection = connectionPool->AcquireConnection(false);
     if (connection == nullptr) {
@@ -966,6 +998,9 @@ int RdbStoreImpl::ExecuteGetLongInner(const std::string &sql, const std::vector<
  */
 int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
 {
+    if (rdbStoreConfig.GetRoleType() == VISITOR) {
+        return E_NOT_SUPPORT;
+    }
     std::string backupFilePath;
     int ret = GetDataBasePath(databasePath, backupFilePath);
     if (ret != E_OK) {
@@ -994,6 +1029,9 @@ int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8
  */
 int RdbStoreImpl::InnerBackup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
 {
+    if (rdbStoreConfig.GetRoleType() == VISITOR) {
+        return E_NOT_SUPPORT;
+    }
     std::vector<ValueObject> bindArgs;
     bindArgs.push_back(ValueObject(databasePath));
     if (destEncryptKey.size() != 0 && !isEncrypt_) {
@@ -1137,6 +1175,9 @@ int RdbStoreImpl::GetVersion(int &version)
  */
 int RdbStoreImpl::SetVersion(int version)
 {
+    if (rdbStoreConfig.GetRoleType() == VISITOR) {
+        return E_NOT_SUPPORT;
+    }
     std::string sql = std::string(GlobalExpr::PRAGMA_VERSION) + " = " + std::to_string(version);
     return ExecuteSql(sql, std::vector<ValueObject>());
 }
@@ -1147,6 +1188,9 @@ int RdbStoreImpl::BeginTransaction()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::lock_guard<std::mutex> lockGuard(connectionPool->GetTransactionStackMutex());
+    if (rdbStoreConfig.GetRoleType() == VISITOR) {
+        return E_NOT_SUPPORT;
+    }
     // size + 1 means the number of transactions in process
     size_t transactionId = connectionPool->GetTransactionStack().size() + 1;
 
@@ -1181,6 +1225,9 @@ int RdbStoreImpl::RollBack()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::lock_guard<std::mutex> lockGuard(connectionPool->GetTransactionStackMutex());
+    if (rdbStoreConfig.GetRoleType() == VISITOR) {
+        return E_NOT_SUPPORT;
+    }
     size_t transactionId = connectionPool->GetTransactionStack().size();
 
     auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
@@ -1221,6 +1268,9 @@ int RdbStoreImpl::Commit()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::lock_guard<std::mutex> lockGuard(connectionPool->GetTransactionStackMutex());
+    if (rdbStoreConfig.GetRoleType() == VISITOR) {
+        return E_NOT_SUPPORT;
+    }
     size_t transactionId = connectionPool->GetTransactionStack().size();
 
     auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
@@ -1269,6 +1319,9 @@ int RdbStoreImpl::FreeTransaction(std::shared_ptr<SqliteConnection> connection, 
 
 bool RdbStoreImpl::IsInTransaction()
 {
+    if (rdbStoreConfig.GetRoleType() == VISITOR) {
+        return false;
+    }
     bool res = true;
     auto connection = connectionPool->AcquireConnection(false);
     if (connection != nullptr) {
@@ -1854,6 +1907,9 @@ int RdbStoreImpl::RegisterDataChangeCallback()
 {
     if (!rdbStoreConfig.IsSearchable()) {
         return E_OK;
+    }
+    if (rdbStoreConfig.GetRoleType() == VISITOR) {
+        return E_NOT_SUPPORT;
     }
     InitDelayNotifier();
     auto callBack = [this](ClientChangedData &clientChangedData) {
