@@ -1171,8 +1171,8 @@ int RdbStoreImpl::BeginTransaction()
     connectionPool->GetTransactionStack().push(transaction);
     
     if (transactionId > 1) {
-        LOG_WARN("transaction id = %{public}zu , storeName: %{public}s",
-            transactionId, name.c_str());
+        LOG_WARN("transaction id = %{public}zu , storeName: %{public}s, errCode:%{public}d",
+            transactionId, name.c_str(), errCode);
     }
 
     return E_OK;
@@ -1213,8 +1213,8 @@ int RdbStoreImpl::RollBack()
     }
 	
     if (transactionId > 1) {
-        LOG_WARN("transaction id = %{public}zu , storeName: %{public}s.",
-            transactionId + 1, name.c_str());
+        LOG_WARN("transaction id = %{public}zu , storeName: %{public}s, errCode:%{public}d",
+            transactionId + 1, name.c_str(), errCode);
     }
     return E_OK;
 }
@@ -1255,8 +1255,8 @@ int RdbStoreImpl::Commit()
     connection->SetInTransaction(false);
     
     if (transactionId > 1) {
-        LOG_WARN("transaction id = %{public}zu , storeName: %{public}s.",
-            transactionId, name.c_str());
+        LOG_WARN("transaction id = %{public}zu , storeName: %{public}s, errCode:%{public}d",
+            transactionId, name.c_str(), errCode);
     }
     connectionPool->GetTransactionStack().pop();
     return E_OK;
