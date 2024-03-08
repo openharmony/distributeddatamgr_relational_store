@@ -147,14 +147,8 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_03, TestSize.Level1)
     EXPECT_NE(store, nullptr);
 
     int64_t id;
-    ValuesBucket values;
 
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = store->Insert(id, "test", values);
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
@@ -167,8 +161,6 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_03, TestSize.Level1)
     int columnIndex;
     int intVal;
     std::string strVal;
-    double dVal;
-    std::vector<uint8_t> blob;
 
     ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
@@ -181,25 +173,6 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_03, TestSize.Level1)
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhangsan", strVal);
-
-    ret = resultSet->GetColumnIndex("age", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(18, intVal);
-
-    ret = resultSet->GetColumnIndex("salary", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(100.5, dVal);
-
-    ret = resultSet->GetColumnIndex("blobType", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, static_cast<int>(blob.size()));
-    EXPECT_EQ(1, blob[0]);
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ERROR);
@@ -313,6 +286,57 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_008, TestSize.Level1)
     int errCode;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStore_Encrypt_Decrypt_Test_009
+ * @tc.desc: test create encrypted Rdb and insert data ,then query,getcolumn dVal and blob
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_009, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.TestEncrypt9");
+    EncryptTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    int64_t id;
+
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
+
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_OK);
+
+    int columnIndex;
+    double dVal;
+    std::vector<uint8_t> blob;
+
+    ret = resultSet->GetColumnIndex("salary", columnIndex);
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->GetDouble(columnIndex, dVal);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(100.5, dVal);
+
+    ret = resultSet->GetColumnIndex("blobType", columnIndex);
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->GetBlob(columnIndex, blob);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(3, static_cast<int>(blob.size()));
+    EXPECT_EQ(1, blob[0]);
+
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_ERROR);
+
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
 }
 
 /**
