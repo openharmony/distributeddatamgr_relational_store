@@ -210,7 +210,7 @@ int SqliteStatement::ResetStatementAndClearBindings() const
 
     int errCode = sqlite3_reset(stmtHandle);
     if (errCode != SQLITE_OK) {
-        LOG_ERROR("reset ret is %{public}d.", errCode);
+        LOG_ERROR("reset ret is %{public}d", errCode);
         return SQLiteError::ErrNo(errCode);
     }
 

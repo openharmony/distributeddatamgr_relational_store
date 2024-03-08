@@ -668,7 +668,7 @@ int SqliteConnection::ExecuteForLastInsertedRowId(
 
     errCode = statement.Step();
     if (errCode == SQLITE_ROW) {
-        LOG_ERROR("Queries can be performed using query or QuerySql methods only");
+        LOG_ERROR("failed: %{public}d. sql: %{public}s", errCode, sql.c_str());
         statement.ResetStatementAndClearBindings();
         return E_QUERY_IN_EXECUTE;
     } else if (errCode != SQLITE_DONE) {
@@ -862,13 +862,13 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
         return errCode;
     }
     if (ClearSharedBlock(sharedBlock) == ERROR_STATUS) {
-        LOG_ERROR("sharedBlock is null.");
+        LOG_ERROR("sharedBlock null: %{public}d", ERROR_STATUS);
         return E_ERROR;
     }
     sqlite3_stmt *tempSqlite3St = statement.GetSql3Stmt();
     int columnNum = sqlite3_column_count(tempSqlite3St);
     if (SharedBlockSetColumnNum(sharedBlock, columnNum) == ERROR_STATUS) {
-        LOG_ERROR("sharedBlock is null.");
+        LOG_ERROR("sharedBlock null: %{public}d", ERROR_STATUS);
         return E_ERROR;
     }
 
@@ -886,7 +886,7 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     }
 
     if (!ResetStatement(&sharedBlockInfo)) {
-        LOG_ERROR("ExecuteForSharedBlock:ResetStatement Failed.");
+        LOG_ERROR("sharedBlock null: %{public}d", E_ERROR);
         return E_ERROR;
     }
     sharedBlock->SetStartPos(sharedBlockInfo.startPos);

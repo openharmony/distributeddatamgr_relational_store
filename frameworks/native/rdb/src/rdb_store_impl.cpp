@@ -39,7 +39,6 @@
 #endif
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-#include <sys/syscall.h>
 #include "delay_notify.h"
 #include "iresult_set.h"
 #include "raw_data_parser.h"
@@ -1176,11 +1175,6 @@ int RdbStoreImpl::BeginTransaction()
             transactionId, name.c_str(), time);
     }
 
-    std::string logMsg = std::to_string(transactionId) + name + std::to_string(errCode);
-    if (IsPrintLog(logMsg)) {
-        LOG_INFO("transaction id: %{public}zu, storeName: %{public}s times:%{public}" PRIu64 ".",
-            transactionId, name.c_str(), time);
-    }
     return E_OK;
 }
 
@@ -1218,11 +1212,9 @@ int RdbStoreImpl::RollBack()
         connection->SetInTransaction(false);
     }
 	
-    std::string logMsg = std::to_string(transactionId + 1) + name + std::to_string(errCode);
-    if (IsPrintLog(logMsg)) {
-        // size + 1 means the number of transactions in process
-        LOG_INFO("transaction id: %{public}zu, storeName: %{public}s, errCode:%{public}d time:%{public}" PRIu64 ".",
-            transactionId + 1, name.c_str(), errCode, time);
+    if (transactionId > 1) {
+        LOG_WARN("transaction id = %{public}zu , storeName: %{public}s.",
+            transactionId + 1, name.c_str());
     }
     return E_OK;
 }
@@ -1262,32 +1254,12 @@ int RdbStoreImpl::Commit()
     connectionPool->ReleaseConnection(connection);
     connection->SetInTransaction(false);
     
-    std::string logMsg = std::to_string(transactionId) + name + std::to_string(errCode);
-    if (IsPrintLog(logMsg)) {
-        LOG_INFO("transaction id: %{public}zu, storeName: %{public}s errCode:%{public}d time:%{public}" PRIu64 ".",
-            transactionId, name.c_str(), errCode, time);
+    if (transactionId > 1) {
+        LOG_WARN("transaction id = %{public}zu , storeName: %{public}s.",
+            transactionId, name.c_str());
     }
     connectionPool->GetTransactionStack().pop();
     return E_OK;
-}
-
-bool RdbStoreImpl::IsPrintLog(std::string logMsg)
-{
-    bool isPrint = false;
-    if (logRecord_.size() > MAX_SIZE) {
-        std::map<std::string, uint32_t>().swap(logRecord_);
-    }
-    std::string msgTemp = std::string(__FUNCTION__) + "_" + logMsg;
-    if (logRecord_.count(msgTemp) != 0) {
-        if ((++logRecord_[msgTemp] % PRINT_CNT) == 0) {
-            logRecord_[msgTemp] = 0;
-            isPrint = true;
-        }
-    } else {
-        logRecord_[msgTemp] = 0;
-        isPrint = true;
-    }
-    return isPrint;
 }
 
 int RdbStoreImpl::FreeTransaction(std::shared_ptr<SqliteConnection> connection, const std::string &sql)
