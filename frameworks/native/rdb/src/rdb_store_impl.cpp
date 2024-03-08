@@ -53,9 +53,9 @@
 #endif
 
 #ifdef WINDOWS_PLATFORM
-#define ISFILE(filePath) ((filePath.find("\\") == std::string::npos))
+#define ISFILE(filePath) (((filePath).find("\\") == std::string::npos))
 #else
-#define ISFILE(filePath) ((filePath.find("/") == std::string::npos))
+#define ISFILE(filePath) (((filePath).find("/") == std::string::npos))
 #endif
 
 namespace OHOS::NativeRdb {
