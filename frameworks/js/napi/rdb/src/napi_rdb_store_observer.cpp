@@ -24,12 +24,10 @@ using namespace OHOS::AppDataMgrJsKit;
 namespace OHOS::RdbJsKit {
 NapiRdbStoreObserver::NapiRdbStoreObserver(napi_env env, napi_value callback) : NapiUvQueue(env, callback)
 {
-    LOG_INFO("NapiRdbStoreObserver construct");
 }
 
 NapiRdbStoreObserver::~NapiRdbStoreObserver() noexcept
 {
-    LOG_INFO("NapiRdbStoreObserver destroy");
 }
 
 void NapiRdbStoreObserver::OnChange(const std::vector<std::string> &devices)
@@ -43,6 +41,5 @@ void NapiRdbStoreObserver::OnChange(const std::vector<std::string> &devices)
         }
         argv[0] = JSUtils::Convert2JSValue(env, devices);
     });
-    LOG_INFO("NapiRdbStoreObserver::OnChange end");
 }
 } // namespace OHOS::RdbJsKit

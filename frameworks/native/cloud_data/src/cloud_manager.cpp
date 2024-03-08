@@ -102,7 +102,6 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
 
 DataMgrService::DataMgrService(const sptr<IRemoteObject> &impl) : IRemoteProxy<CloudData::IKvStoreDataService>(impl)
 {
-    LOG_INFO("init proxy");
 }
 
 sptr<IRemoteObject> DataMgrService::GetFeatureInterface(const std::string &name)

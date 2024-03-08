@@ -35,7 +35,7 @@ public:
     static std::shared_ptr<SqliteConnectionPool> Create(const RdbStoreConfig &storeConfig, int &errCode);
     ~SqliteConnectionPool();
     std::shared_ptr<SqliteConnection> AcquireConnection(bool isReadOnly);
-    int ReOpenAvailableReadConnections();
+    int RestartReaders();
     int ConfigLocale(const std::string &localeStr);
     int ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
         const std::vector<uint8_t> &newKey);
@@ -92,6 +92,8 @@ private:
     std::condition_variable transCondition_;
     std::mutex transMutex_;
     bool transactionUsed_;
+    std::chrono::seconds writeTimeout_ = std::chrono::seconds(2);
+    std::chrono::seconds readTimeout_ = std::chrono::seconds(1);
 };
 
 } // namespace NativeRdb

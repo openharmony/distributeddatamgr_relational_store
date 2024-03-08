@@ -16,13 +16,25 @@
 #ifndef NATIVE_RDB_SQLITE_ERRNO_H
 #define NATIVE_RDB_SQLITE_ERRNO_H
 
+#include <sqlite3sym.h>
+
+#include <map>
+
+#include "rdb_errno.h"
+
 namespace OHOS {
 namespace NativeRdb {
-
+const static std::map<int, int> ERROR_CODE_MAPPINT_TABLE = {
+    { SQLITE_FULL, E_DATABASE_FULL },
+};
 class SQLiteError {
 public:
     static int ErrNo(int sqliteErr)
     {
+        auto iter = ERROR_CODE_MAPPINT_TABLE.find(sqliteErr);
+        if (iter != ERROR_CODE_MAPPINT_TABLE.end()) {
+            return iter->second;
+        }
         return -sqliteErr;
     }
 };

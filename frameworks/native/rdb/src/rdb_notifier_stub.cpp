@@ -28,12 +28,10 @@ RdbNotifierStub::RdbNotifierStub(const SyncCompleteHandler &completeNotifier,
     : IRemoteStub<RdbNotifierStubBroker>(), completeNotifier_(completeNotifier),
       autoSyncCompleteHandler_(autoSyncCompleteHandler), changeNotifier_(changeNotifier)
 {
-    LOG_INFO("construct");
 }
 
 RdbNotifierStub::~RdbNotifierStub() noexcept
 {
-    LOG_INFO("destroy");
 }
 
 bool RdbNotifierStub::CheckInterfaceToken(MessageParcel& data)

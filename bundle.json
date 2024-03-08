@@ -38,6 +38,9 @@
         "name": "relational_store",
         "subsystem": "distributeddatamgr",
         "syscap": [
+            "SystemCapability.DistributedDataManager.CloudSync.Client",
+            "SystemCapability.DistributedDataManager.CloudSync.Server",
+            "SystemCapability.DistributedDataManager.CloudSync.Config",
             "SystemCapability.DistributedDataManager.RelationalStore.Core",
             "SystemCapability.DistributedDataManager.CommonType"
         ],

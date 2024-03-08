@@ -95,7 +95,6 @@ HWTEST_F(CacheResultSetTest, GetBlobTest_001, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
-    std::set<std::string> columnNames = { "id", "data", "field" };
     valuesBucket.Put("id", 1);
     std::vector<uint8_t> blob = { 't', 'e', 's', 't' };
     valuesBucket.Put("data", blob);
@@ -214,7 +213,6 @@ HWTEST_F(CacheResultSetTest, GetAssetTest_001, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
-    std::set<std::string> columnNames = { "id", "data", "field" };
     valuesBucket.Put("id", 1);
     ValueObject::Asset value = {};
     valuesBucket.Put("data", value);
@@ -240,7 +238,6 @@ HWTEST_F(CacheResultSetTest, GetAssetsTest_001, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
-    std::set<std::string> columnNames = { "id", "data", "field" };
     valuesBucket.Put("id", 1);
     ValueObject::Assets value = {};
     valuesBucket.Put("data", value);

@@ -144,10 +144,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
     }
 
     if (isWriteConnection) {
-        errCode = sqlite3_wal_checkpoint_v2(dbHandle, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
-        if (errCode != SQLITE_OK) {
-            LOG_WARN("sqlite checkpoint errCode is %{public}d", errCode);
-        }
+        TryCheckPoint();
     }
 
     filePath = dbPath;
@@ -781,7 +778,7 @@ void SqliteConnection::LimitPermission(const std::string &dbPath) const
         if ((st.st_mode & (S_IXUSR | S_IXGRP | S_IRWXO)) != 0) {
             int ret = chmod(dbPath.c_str(), st.st_mode & (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP));
             if (ret != 0) {
-                LOG_ERROR("SqliteConnection LimitPermission chmod fail, err = %{public}d", errno);
+                LOG_DEBUG("SqliteConnection LimitPermission chmod fail, err = %{public}d", errno);
             }
         }
     } else {
@@ -793,7 +790,8 @@ void SqliteConnection::LimitPermission(const std::string &dbPath) const
 int Collate8Compare(void *p, int n1, const void *v1, int n2, const void *v2)
 {
     UCollator *coll = reinterpret_cast<UCollator *>(p);
-    UCharIterator i1, i2;
+    UCharIterator i1;
+    UCharIterator i2;
     UErrorCode status = U_ZERO_ERROR;
 
     uiter_setUTF8(&i1, (const char *)v1, n1);

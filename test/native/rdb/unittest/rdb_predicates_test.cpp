@@ -323,6 +323,7 @@ public:
     int ResultSize(std::shared_ptr<ResultSet> &resultSet);
     void BasicDataTypeTest002(RdbPredicates predicates1);
     void CalendarTest002(RdbPredicates predicates1);
+    void SetJionList(RdbPredicates &predicates1);
 };
 
 std::shared_ptr<RdbStore> RdbStorePredicateTest::store = nullptr;
@@ -630,6 +631,46 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_001, TestSize.Level1)
     CalendarTest(predicates1);
 }
 
+/* *
+ * @tc.name: RdbStore_EqualTo_002
+ * @tc.desc: Normal testCase of RdbPredicates for EqualTo
+ * @tc.type: FUNC
+ * @tc.require: AR000FKD4F
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_002, TestSize.Level1)
+{
+    ValuesBucket values;
+    int64_t id;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsi"));
+    values.PutInt("age", 18);
+    values.PutInt("REAL", 100);
+    int ret = store->Insert(id, "person", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("zhangsi"));
+    values.PutInt("age", 18);
+    values.PutInt("REAL", 100);
+    ret = store->Insert(id, "person", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    RdbPredicates predicates("person");
+    predicates.EqualTo("name", "");
+    std::vector<std::string> columns;
+    std::shared_ptr<ResultSet> allPerson = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allPerson));
+
+    RdbPredicates predicates1("person");
+    predicates1.EqualTo("name", "zhangsi");
+    allPerson = RdbStorePredicateTest::store->Query(predicates1, columns);
+    EXPECT_EQ(2, ResultSize(allPerson));
+    RdbStorePredicateTest::store->ExecuteSql("delete from person where id < 3;");
+}
+
 void RdbStorePredicateTest::CalendarTest(RdbPredicates predicates1)
 {
     std::vector<std::string> columns;
@@ -702,9 +743,8 @@ void RdbStorePredicateTest::BasicDataTypeTest(RdbPredicates predicates1)
     predicates1.Clear();
     predicates1.EqualTo("blobValue", std::vector<uint8_t>{1, 2, 3});
     std::shared_ptr<ResultSet> allDataTypes9 = RdbStorePredicateTest::store->Query(predicates1, columns);
-    int count = 0;
-    allDataTypes9->GetRowCount(count);
-    EXPECT_EQ(3, count);
+    // 3 rows in the resultSet when blobValue={1, 2, 3}
+    EXPECT_EQ(3, ResultSize(allDataTypes9));
 }
 
 int RdbStorePredicateTest::ResultSize(std::shared_ptr<ResultSet> &resultSet)
@@ -748,6 +788,57 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotEqualTo_002, TestSize.Level1)
     BasicDataTypeTest002(predicates1);
 
     CalendarTest002(predicates1);
+}
+
+/* *
+ * @tc.name: RdbStore_NotEqualTo_003
+ * @tc.desc: Normal testCase of RdbPredicates for EqualTo
+ * @tc.type: FUNC
+ * @tc.require: AR000FKD4F
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_NotEqualTo_003, TestSize.Level1)
+{
+    ValuesBucket values;
+    int64_t id;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsi"));
+    values.PutInt("age", 18);
+    values.PutInt("REAL", 100);
+    int ret = store->Insert(id, "person", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("zhangsi"));
+    values.PutInt("age", 18);
+    values.PutInt("REAL", 100);
+    ret = store->Insert(id, "person", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    values.Clear();
+    values.PutInt("id", 3);
+    values.PutString("name", std::string(""));
+    values.PutInt("age", 18);
+    values.PutInt("REAL", 100);
+    ret = store->Insert(id, "person", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(3, id);
+
+    RdbPredicates predicates("person");
+    predicates.NotEqualTo("name", "");
+    std::vector<std::string> columns;
+    std::shared_ptr<ResultSet> allPerson = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(2, ResultSize(allPerson));
+
+    RdbPredicates predicates1("person");
+    predicates1.NotEqualTo("name", "zhangsi");
+
+    allPerson = RdbStorePredicateTest::store->Query(predicates1, columns);
+    EXPECT_EQ(1, ResultSize(allPerson));
+
+    RdbStorePredicateTest::store->ExecuteSql("delete from person where id < 4;");
 }
 
 void RdbStorePredicateTest::CalendarTest002(RdbPredicates predicates1)
@@ -1404,6 +1495,17 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ComplexPredicate_021, TestSize.Level1)
     EXPECT_EQ(1, ResultSize(allDataTypes1));
 }
 
+void RdbStorePredicateTest::SetJionList(RdbPredicates &predicates1)
+{
+    std::vector<std::string> lists = { "ohos", "bazhahei", "zhaxidelie" };
+    predicates1.SetJoinTableNames(lists);
+    predicates1.SetJoinCount(1);
+    predicates1.SetJoinConditions(lists);
+    predicates1.SetJoinTypes(lists);
+    predicates1.SetOrder("ohos");
+    predicates1.Distinct();
+}
+
 /* *
  * @tc.name: RdbStore_ClearMethod_022
  * @tc.desc: Normal testCase of RdbPredicates for Clear Method
@@ -1435,13 +1537,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ClearMethod_022, TestSize.Level1)
     auto ret = find(agrs.begin(), agrs.end(), "ABCDEFGHIJKLMN");
     EXPECT_EQ(true, ret != agrs.end());
 
-    std::vector<std::string> lists = {"ohos", "bazhahei", "zhaxidelie"};
-    predicates1.SetJoinTableNames(lists);
-    predicates1.SetJoinCount(1);
-    predicates1.SetJoinConditions(lists);
-    predicates1.SetJoinTypes(lists);
-    predicates1.SetOrder("ohos");
-    predicates1.Distinct();
+    SetJionList(predicates1);
 
     agrs = predicates1.GetJoinTableNames();
     ret = find(agrs.begin(), agrs.end(), "zhaxidelie");
@@ -1584,6 +1680,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
     ->Or()
     ->EqualTo("integerValue", std::to_string(INT_MAX))
     ->EndWrap()->OrderByDesc("integerValue")->Limit(2);
+
     std::vector<std::string> columns = {"booleanValue", "doubleValue", "orderr"};
     std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     allDataTypes1->GoToFirstRow();
@@ -1598,13 +1695,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
     auto ret = find(args.begin(), args.end(), "ABCDEFGHIJKLMN");
     EXPECT_EQ(true, ret != args.end());
 
-    std::vector<std::string> lists = {"ohos", "bazhahei", "zhaxidelie"};
-    predicates1.SetJoinTableNames(lists);
-    predicates1.SetJoinCount(1);
-    predicates1.SetJoinConditions(lists);
-    predicates1.SetJoinTypes(lists);
-    predicates1.SetOrder("ohos");
-    predicates1.Distinct();
+    SetJionList(predicates1);
 
     args = predicates1.GetJoinTableNames();
     ret = find(args.begin(), args.end(), "zhaxidelie");

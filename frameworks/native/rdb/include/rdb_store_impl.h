@@ -105,6 +105,7 @@ public:
         const std::vector<ValueObject> &bindArgs) override;
     int ExecuteSql(
         const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) override;
+    std::pair<int32_t, ValueObject> Execute(const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
@@ -208,6 +209,7 @@ private:
     int UnSubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
+    bool ColHasSpecificField(const std::vector<std::string> &columns);
 
     const RdbStoreConfig config_;
     std::shared_ptr<SqliteConnectionPool> connectionPool_;
@@ -216,7 +218,7 @@ private:
     std::string orgPath;
     bool isReadOnly;
     bool isMemoryRdb;
-    std::string name;
+    std::string name_;
     std::string fileType;
     DistributedRdb::RdbSyncerParam syncerParam_;
     bool isEncrypt_;
@@ -224,7 +226,7 @@ private:
     std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
 
     mutable std::shared_mutex rwMutex_;
-    static inline constexpr uint32_t INTERVAL = 200;
+    static inline constexpr uint32_t INTERVAL = 10;
     static constexpr const char *ROW_ID = "ROWID";
     std::set<std::string> cloudTables_;
 
@@ -234,7 +236,7 @@ private:
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
     std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
     static constexpr uint32_t EXPANSION = 2;
-    static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 20000;
+    static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 3000;
 };
 } // namespace OHOS::NativeRdb
 #endif

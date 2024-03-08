@@ -548,7 +548,6 @@ napi_value DeleteRdbStoreV9(napi_env env, napi_callback_info info)
 
 napi_value InitRdbHelper(napi_env env, napi_value exports)
 {
-    LOG_INFO("RdbJsKit::InitRdbHelper begin");
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("getRdbStore", GetRdbStore),
         DECLARE_NAPI_FUNCTION("deleteRdbStore", DeleteRdbStore),
@@ -556,7 +555,6 @@ napi_value InitRdbHelper(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("deleteRdbStoreV9", DeleteRdbStoreV9),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
-    LOG_INFO("RdbJsKit::InitRdbHelper end");
     return exports;
 }
 } // namespace RdbJsKit

@@ -25,6 +25,7 @@ namespace NativeRdb {
 class SqliteUtils {
 public:
     static const int STATEMENT_SELECT;
+    static const int STATEMENT_INSERT;
     static const int STATEMENT_UPDATE;
     static const int STATEMENT_ATTACH;
     static const int STATEMENT_DETACH;

@@ -24,8 +24,8 @@ using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
-bool async = true; // do not reset the value, used in DECLARE_NAPI_FUNCTION_WITH_DATA only
-bool sync = !async; // do not reset the value, used in DECLARE_NAPI_FUNCTION_WITH_DATA only
+bool g_async = true; // do not reset the value, used in DECLARE_NAPI_FUNCTION_WITH_DATA only
+bool g_sync = false; // do not reset the value, used in DECLARE_NAPI_FUNCTION_WITH_DATA only
 void Context::SetAction(
     napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output)
 {
@@ -122,7 +122,9 @@ napi_value AsyncCall::Async(napi_env env, std::shared_ptr<Context> context)
 {
     napi_value promise = nullptr;
     if (context->callback_ == nullptr) {
-        napi_create_promise(env, &context->defer_, &promise);
+        napi_status status = napi_create_promise(env, &context->defer_, &promise);
+        RDB_NAPI_ASSERT_BASE(env, status == napi_ok,
+            std::make_shared<InnerError>("failed(" + std::to_string(status) + ") to create promise"), nullptr);
     } else {
         napi_get_undefined(env, &promise);
     }
@@ -133,7 +135,10 @@ napi_value AsyncCall::Async(napi_env env, std::shared_ptr<Context> context)
     napi_create_async_work(env, nullptr, resource, AsyncCall::OnExecute, AsyncCall::OnComplete,
         reinterpret_cast<void *>(context.get()), &context->work_);
     // add async work to execute queue
-    napi_queue_async_work(env, context->work_);
+    auto status = napi_queue_async_work_with_qos(env, context->work_, napi_qos_user_initiated);
+    if (status != napi_ok) {
+        napi_get_undefined(env, &promise);
+    }
     return promise;
 }
 

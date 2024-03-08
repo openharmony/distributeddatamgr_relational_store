@@ -177,13 +177,13 @@ int AbsSharedResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &value)
         }
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_INTEGER) {
-        LOG_ERROR("AbsSharedResultSet::GetBlob AppDataFwk::SharedBlock::CELL_UNIT_TYPE_INTEGER!");
+        LOG_DEBUG("AbsSharedResultSet::GetBlob AppDataFwk::SharedBlock::CELL_UNIT_TYPE_INTEGER!");
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL) {
-        LOG_ERROR("AbsSharedResultSet::GetBlob AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL!");
+        LOG_DEBUG("AbsSharedResultSet::GetBlob AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL!");
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT) {
-        LOG_ERROR("AbsSharedResultSet::GetBlob AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT!");
+        LOG_DEBUG("AbsSharedResultSet::GetBlob AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT!");
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET) {
         LOG_ERROR("AbsSharedResultSet::GetBlob AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET!");
@@ -330,11 +330,9 @@ int AbsSharedResultSet::GetDouble(int columnIndex, double &value)
         value = cellUnit->cell.longValue;
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL) {
-        LOG_ERROR("AbsSharedResultSet::GetDouble AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL!");
         value = 0.0;
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB) {
-        LOG_ERROR("AbsSharedResultSet::GetDouble AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB!");
         value = 0.0;
         return E_OK;
     } else if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET) {
