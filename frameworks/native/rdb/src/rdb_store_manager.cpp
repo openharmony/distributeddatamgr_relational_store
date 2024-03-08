@@ -56,9 +56,14 @@ RdbStoreManager::RdbStoreManager()
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &config,
     int &errCode, int version, RdbOpenCallback &openCallback)
 {
-    std::string path = config.GetPath();
+    std::string path;
     // TOD this lock should only work on storeCache_, add one more lock for connectionpool
     std::lock_guard<std::mutex> lock(mutex_);
+    if (config.GetRoleType() == VISITOR) {
+        path = config.GetVisitorDir();
+    } else {
+        path = config.GetPath();
+    }
     bundleName_ = config.GetBundleName();
     if (storeCache_.find(path) != storeCache_.end()) {
         std::shared_ptr<RdbStoreImpl> rdbStore = storeCache_[path].lock();
@@ -75,15 +80,19 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
         return nullptr;
     }
 
-    if (SetSecurityLabel(config) != E_OK) {
-        LOG_ERROR("RdbHelper set security label fail.");
-        return nullptr;
-    }
-
-    errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
-    if (errCode != E_OK) {
-        LOG_ERROR("RdbHelper GetRdbStore ProcessOpenCallback fail");
-        return nullptr;
+    if (config.GetRoleType() == OWNER) {
+        errCode = SetSecurityLabel(config);
+        if (errCode != E_OK) {
+            LOG_ERROR("fail, storeName:%{public}s security %{public}d errCode:%{public}d", config.GetName().c_str(),
+                config.GetSecurityLevel(), errCode);
+            return nullptr;
+        }
+        errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
+        if (errCode != E_OK) {
+            LOG_ERROR("fail, storeName:%{public}s path:%{public}s ProcessOpenCallback errCode:%{public}d",
+                config.GetName().c_str(), config.GetPath().c_str(), errCode);
+            return nullptr;
+        }
     }
 
     storeCache_[path] = rdbStore;
