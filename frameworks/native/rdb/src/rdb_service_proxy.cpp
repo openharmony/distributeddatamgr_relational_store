@@ -80,10 +80,10 @@ int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param)
 
     if (InitNotifier(param, notifier_->AsObject()) != RDB_OK) {
         notifier_ = nullptr;
+        LOG_ERROR("init notifier error");
         return RDB_ERROR;
     }
 
-    LOG_INFO("success");
     return RDB_OK;
 }
 
@@ -137,7 +137,6 @@ int32_t RdbServiceProxy::DoSync(const RdbSyncerParam &param, const Option &optio
         return RDB_ERROR;
     }
     LOG_INFO("success");
-
     if (async != nullptr) {
         async(std::move(details));
     }
@@ -310,7 +309,6 @@ RdbServiceProxy::Observers RdbServiceProxy::ExportObservers()
 
 void RdbServiceProxy::ImportObservers(Observers &observers)
 {
-    LOG_INFO("enter");
     observers.ForEach([this](const std::string &key, const std::list<ObserverParam> &value) {
         RdbSyncerParam syncerParam;
         for (const auto &param : value) {

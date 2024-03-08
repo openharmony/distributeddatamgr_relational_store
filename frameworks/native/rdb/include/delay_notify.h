@@ -31,10 +31,8 @@ public:
     void UpdateNotify(const DistributedRdb::RdbChangedData &changedData);
     void SetAutoSyncInterval(uint32_t autoSyncInterval);
 private:
-    static constexpr uint32_t FORCE_SYNC_INTERVAL = 100;
-    static constexpr uint32_t AUTO_SYNC_INTERVAL = 50;
+    static constexpr uint32_t AUTO_SYNC_INTERVAL = 200;
     ExecutorPool::TaskId delaySyncTaskId_ = ExecutorPool::INVALID_TASK_ID;
-    ExecutorPool::TaskId forceSyncTaskId_ = ExecutorPool::INVALID_TASK_ID;
     Task task_;
     std::shared_ptr<ExecutorPool> pool_ = nullptr;
     std::mutex mutex_;

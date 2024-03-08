@@ -30,10 +30,10 @@ namespace RelationalStoreJsKit {
 using InputAction = std::function<void(napi_env, size_t, napi_value *, napi_value)>;
 using OutputAction = std::function<void(napi_env, napi_value &)>;
 using ExecuteAction = std::function<int()>;
-extern bool async;
-extern bool sync;
-#define ASYNC &async
-#define SYNC &sync
+extern bool g_async;
+extern bool g_sync;
+#define ASYNC &g_async
+#define SYNC &g_sync
 
 class Context {
 public:

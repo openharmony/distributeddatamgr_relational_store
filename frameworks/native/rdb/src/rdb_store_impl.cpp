@@ -19,7 +19,8 @@
 
 #include <algorithm>
 #include <sstream>
-
+#include <chrono>
+#include <cinttypes>
 #include "logger.h"
 #include "cache_result_set.h"
 #include "rdb_errno.h"
@@ -60,7 +61,7 @@
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
-
+using namespace std::chrono;
 int RdbStoreImpl::InnerOpen()
 {
     LOG_DEBUG("open %{public}s.", SqliteUtils::Anonymous(config_.GetPath()).c_str());
@@ -126,6 +127,15 @@ RdbStore::ModifyTime::ModifyTime(std::shared_ptr<ResultSet> result, std::map<std
     bool isFromRowId)
     : result_(std::move(result)), hash_(std::move(hashKeys)), isFromRowId_(isFromRowId)
 {
+    for (auto &[_, priKey] : hash_) {
+        if (priKey.index() != Traits::variant_index_of_v<std::string, PRIKey>) {
+            break;
+        }
+        auto *val = Traits::get_if<std::string>(&priKey);
+        if (val != nullptr && maxOriginKeySize_ <= val->length()) {
+            maxOriginKeySize_ = val->length() + 1;
+        }
+    }
 }
 
 RdbStore::ModifyTime::operator std::map<PRIKey, Date>()
@@ -145,8 +155,8 @@ RdbStore::ModifyTime::operator std::map<PRIKey, Date>()
         result_->GetLong(1, timeStamp);
         PRIKey index = 0;
         if (isFromRowId_) {
-            int rowid = 0;
-            result_->GetInt(0, rowid);
+            int64_t rowid = 0;
+            result_->GetLong(0, rowid);
             index = rowid;
         } else {
             std::vector<uint8_t> hashKey;
@@ -167,6 +177,16 @@ RdbStore::PRIKey RdbStore::ModifyTime::GetOriginKey(const std::vector<uint8_t> &
 {
     auto it = hash_.find(hash);
     return it != hash_.end() ? it->second : std::monostate();
+}
+
+size_t RdbStore::ModifyTime::GetMaxOriginKeySize()
+{
+    return maxOriginKeySize_;
+}
+
+bool RdbStore::ModifyTime::NeedConvert() const
+{
+    return !hash_.empty();
 }
 
 RdbStore::ModifyTime RdbStoreImpl::GetModifyTime(const std::string &table, const std::string &columnName,
@@ -199,7 +219,7 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTime(const std::string &table, const
     }
 
     std::string sql;
-    sql.append("select hash_key, timestamp/10000 from ");
+    sql.append("select hash_key as key, timestamp/10000 as modify_time from ");
     sql.append(logTable);
     sql.append(" where hash_key in (");
     sql.append(GetSqlArgs(hashKeys.size()));
@@ -216,7 +236,7 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTime(const std::string &table, const
 RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTable, std::vector<PRIKey> &keys)
 {
     std::string sql;
-    sql.append("select data_key, timestamp/10000 from ");
+    sql.append("select data_key as key, timestamp/10000 as modify_time from ");
     sql.append(logTable);
     sql.append(" where data_key in (");
     sql.append(GetSqlArgs(keys.size()));
@@ -263,7 +283,7 @@ std::string RdbStoreImpl::GetSqlArgs(size_t size)
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
     : config_(config), connectionPool_(nullptr), isOpen(false), path(config.GetPath()), orgPath(config.GetPath()),
-      isReadOnly(config.IsReadOnly()), isMemoryRdb(config.IsMemoryRdb()), name(config.GetName()),
+      isReadOnly(config.IsReadOnly()), isMemoryRdb(config.IsMemoryRdb()), name_(config.GetName()),
       fileType(config.GetDatabaseFileType()), isEncrypt_(config.IsEncrypt())
 {
     connectionPool_ = SqliteConnectionPool::Create(config_, errCode);
@@ -632,10 +652,11 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::string sql;
-    if (predicates.HasSpecificField()) {
+    std::pair<bool, bool> queryStatus = {ColHasSpecificField(columns), predicates.HasSpecificField()};
+    if (queryStatus.first || queryStatus.second) {
         std::string table = predicates.GetTableName();
         std::string logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
-        sql = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable);
+        sql = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
     } else {
         sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
     }
@@ -758,10 +779,47 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
         errCode = connectionPool_->ReOpenAvailableReadConnections();
     }
 
-    if (errCode == E_OK) {
+    if (errCode == E_OK && (sqlType == SqliteUtils::STATEMENT_UPDATE || sqlType == SqliteUtils::STATEMENT_INSERT)) {
         DoCloudSync("");
     }
     return errCode;
+}
+
+std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, const std::vector<ValueObject> &bindArgs)
+{
+    int errCode = E_OK;
+    ValueObject outValue;
+    int sqlType = SqliteUtils::GetSqlStatementType(sql);
+    if (sqlType == SqliteUtils::STATEMENT_SELECT) {
+        LOG_ERROR("Not support the sql: %{public}s", SqliteUtils::Anonymous(sql).c_str());
+        return { E_NOT_SUPPORT_THE_SQL, outValue };
+    }
+
+    if (sqlType == SqliteUtils::STATEMENT_INSERT) {
+        int64_t intOutValue = -1;
+        errCode = ExecuteForLastInsertedRowId(intOutValue, sql, bindArgs);
+        return { errCode, ValueObject(intOutValue) };
+    }
+
+    if (sqlType == SqliteUtils::STATEMENT_UPDATE) {
+        int64_t intOutValue = -1;
+        errCode = ExecuteForChangedRowCount(intOutValue, sql, bindArgs);
+        return { errCode, ValueObject(intOutValue) };
+    }
+
+    if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
+        std::string strOutValue;
+        errCode = ExecuteAndGetString(strOutValue, sql, bindArgs);
+        return { errCode, ValueObject(strOutValue) };
+    }
+
+    if (sqlType == SqliteUtils::STATEMENT_DDL) {
+        errCode = ExecuteSql(sql, bindArgs);
+        return { errCode, outValue };
+    } else {
+        LOG_ERROR("Not support the sql: %{public}s", SqliteUtils::Anonymous(sql).c_str());
+        return { E_NOT_SUPPORT_THE_SQL, outValue } ;
+    }
 }
 
 int RdbStoreImpl::ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs)
@@ -1055,9 +1113,11 @@ int RdbStoreImpl::SetVersion(int version)
 int RdbStoreImpl::BeginTransaction()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
-        LOG_ERROR("no connect, storeName: %{public}s", name.c_str());
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d times:%{public}" PRIu64 ".",
+            transactionId, name_.c_str(), errCode, time);
         return E_CON_OVER_LIMIT;
     }
     std::lock_guard<std::mutex> lockGuard(connectionPool_->GetTransactionStackMutex());
@@ -1067,14 +1127,15 @@ int RdbStoreImpl::BeginTransaction()
     BaseTransaction transaction(connectionPool_->GetTransactionStack().size());
     int errCode = connection->ExecuteSql(transaction.GetTransactionStr());
     if (errCode != E_OK) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
-            transactionId, name.c_str(), errCode);
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d times:%{public}" PRIu64 ".",
+            transactionId, name_.c_str(), errCode, time);
         return errCode;
     }
 
     connection->SetInTransaction(true);
     connectionPool_->GetTransactionStack().push(transaction);
-    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
+    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s times:%{public}" PRIu64 ".",
+        transactionId, name_.c_str(), time);
     return E_OK;
 }
 
@@ -1084,10 +1145,12 @@ int RdbStoreImpl::BeginTransaction()
 int RdbStoreImpl::RollBack()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
     std::lock_guard<std::mutex> lockGuard(connectionPool_->GetTransactionStackMutex());
     size_t transactionId = connectionPool_->GetTransactionStack().size();
     if (connectionPool_->GetTransactionStack().empty()) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s, time:%{public}" PRIu64 ".",
+            transactionId, name_.c_str(), time);
         return E_NO_TRANSACTION_IN_SESSION;
     }
     BaseTransaction transaction = connectionPool_->GetTransactionStack().top();
@@ -1098,7 +1161,8 @@ int RdbStoreImpl::RollBack()
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
         // size + 1 means the number of transactions in process
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId + 1, name.c_str());
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s, time:%{public}" PRIu64 ".",
+            transactionId + 1, name_.c_str(), time);
         return E_CON_OVER_LIMIT;
     }
 
@@ -1108,8 +1172,8 @@ int RdbStoreImpl::RollBack()
     }
 
     // size + 1 means the number of transactions in process
-    LOG_INFO("transaction id: %{public}zu, , storeName: %{public}s, errCode:%{public}d",
-        transactionId + 1, name.c_str(), errCode);
+    LOG_INFO("transaction id: %{public}zu, , storeName: %{public}s, errCode:%{public}d time:%{public}" PRIu64 ".",
+        transactionId + 1, name_.c_str(), errCode, time);
     return E_OK;
 }
 
@@ -1119,31 +1183,35 @@ int RdbStoreImpl::RollBack()
 int RdbStoreImpl::Commit()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
     std::lock_guard<std::mutex> lockGuard(connectionPool_->GetTransactionStackMutex());
     size_t transactionId = connectionPool_->GetTransactionStack().size();
     if (connectionPool_->GetTransactionStack().empty()) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s time:%{public}" PRIu64 ".",
+            transactionId, name_.c_str(), time);
         return E_OK;
     }
     BaseTransaction transaction = connectionPool_->GetTransactionStack().top();
     std::string sqlStr = transaction.GetCommitStr();
     if (sqlStr.size() <= 1) {
-        LOG_INFO("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s time:%{public}" PRIu64 ".",
+            transactionId, name_.c_str(), time);
         connectionPool_->GetTransactionStack().pop();
         return E_OK;
     }
 
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId, name.c_str());
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s time:%{public}" PRIu64 ".",
+           transactionId, name_.c_str(), time);
         return E_CON_OVER_LIMIT;
     }
 
     int errCode = connection->ExecuteSql(sqlStr);
     connection->SetInTransaction(false);
 
-    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s errCode:%{public}d",
-        transactionId, name.c_str(), errCode);
+    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s time:%{public}" PRIu64 ".",
+        transactionId, name_.c_str(), time);
     connectionPool_->GetTransactionStack().pop();
     return E_OK;
 }
@@ -1277,7 +1345,7 @@ bool RdbStoreImpl::IsMemoryRdb() const
 
 std::string RdbStoreImpl::GetName()
 {
-    return name;
+    return name_;
 }
 
 void RdbStoreImpl::DoCloudSync(const std::string &table)
@@ -1413,9 +1481,6 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
     {
         std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
         cloudTables_.insert(tables.begin(), tables.end());
-    }
-    for (auto &table : tables) {
-        DoCloudSync(table);
     }
     return E_OK;
 }
@@ -1764,6 +1829,16 @@ int RdbStoreImpl::RegisterDataChangeCallback()
         return E_CON_OVER_LIMIT;
     }
     return connection->RegisterCallBackObserver(callBack);
+}
+
+bool RdbStoreImpl::ColHasSpecificField(const std::vector<std::string> &columns)
+{
+    for (const std::string &column : columns) {
+        if (column.find(SqliteUtils::REP) != std::string::npos) {
+            return true;
+        }
+    }
+    return false;
 }
 #endif
 } // namespace OHOS::NativeRdb

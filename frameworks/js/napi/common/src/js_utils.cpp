@@ -60,7 +60,7 @@ napi_value JSUtils::GetNamedProperty(napi_env env, napi_value object, const char
     return jsItem;
 }
 
-std::pair<int32_t , napi_value> JSUtils::GetOptionalNamedProperty(napi_env env, napi_value input, const char *name)
+std::pair<int32_t, napi_value> JSUtils::GetOptionalNamedProperty(napi_env env, napi_value input, const char *name)
 {
     bool hasProp = false;
     napi_status status = napi_has_named_property(env, input, name, &hasProp);

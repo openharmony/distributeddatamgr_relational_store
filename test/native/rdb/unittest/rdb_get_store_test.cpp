@@ -260,13 +260,12 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_002, TestSize.Level1)
     std::shared_ptr<RdbStore> store = CreateGetRDB(2);
 
     int currentVersion;
-    int ret;
     int64_t id;
     int changedRows;
     ValuesBucket values;
     int rowCount;
 
-    ret = store->GetVersion(currentVersion);
+    int ret = store->GetVersion(currentVersion);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(currentVersion, 1);
 

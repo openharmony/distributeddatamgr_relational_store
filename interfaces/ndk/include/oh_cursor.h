@@ -285,6 +285,18 @@ typedef struct OH_Cursor {
      * @since 11
      */
     int (*getAssets)(OH_Cursor *cursor, int32_t columnIndex, Data_Asset **value, uint32_t *length);
+
+    /**
+     * @brief Function pointer. Obtains the count of the {@Data_Asset} in the given column.
+     *
+     * @param cursor Represents a pointer to an {@link OH_Cursor} instance.
+     * @param columnIndex Indicates the zero-based column index.
+     * @param count Indicates the count of the assets int the column.
+     * @return Returns the status code of the execution.
+     * @see OH_Cursor.
+     * @since 11
+     */
+    int (*getAssetsCount)(OH_Cursor *cursor, int32_t columnIndex, uint32_t *count);
 } OH_Cursor;
 
 #ifdef __cplusplus

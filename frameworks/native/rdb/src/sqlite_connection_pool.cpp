@@ -32,8 +32,7 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-constexpr int32_t WRITER_TIMEOUT(2);
-constexpr int32_t READER_TIMEOUT(1);
+constexpr int32_t TRANSACTION_TIMEOUT(2);
 
 std::shared_ptr<SqliteConnectionPool> SqliteConnectionPool::Create(const RdbStoreConfig &storeConfig, int &errCode)
 {
@@ -56,7 +55,7 @@ SqliteConnectionPool::SqliteConnectionPool(const RdbStoreConfig& storeConfig)
 
 int SqliteConnectionPool::Init()
 {
-    auto errCode = writers_.Initialize(1, WRITER_TIMEOUT, [this]() {
+    auto errCode = writers_.Initialize(1, writeTimeout_, [this]() {
         int32_t errCode = E_OK;
         auto conn = SqliteConnection::Open(config_, true, errCode);
         return std::pair{ errCode, conn };
@@ -69,7 +68,8 @@ int SqliteConnectionPool::Init()
     if (maxReader_ > 64) {
         return E_ARGS_READ_CON_OVERLOAD;
     }
-    return readers_.Initialize(maxReader_, READER_TIMEOUT, [this]() {
+
+    return readers_.Initialize(maxReader_, readTimeout_, [this]() {
         int32_t errCode = E_OK;
         auto conn = SqliteConnection::Open(config_, false, errCode);
         return std::pair{ errCode, conn };
@@ -134,7 +134,8 @@ void SqliteConnectionPool::ReleaseNode(std::shared_ptr<ConnNode> node)
 int SqliteConnectionPool::AcquireTransaction()
 {
     std::unique_lock<std::mutex> lock(transMutex_);
-    if (transCondition_.wait_for(lock, std::chrono::seconds(WRITER_TIMEOUT), [this] { return !transactionUsed_; })) {
+    if (transCondition_.wait_for(lock, std::chrono::seconds(TRANSACTION_TIMEOUT), [this] {
+        return !transactionUsed_; })) {
         transactionUsed_ = true;
         return E_OK;
     }
@@ -151,10 +152,10 @@ void SqliteConnectionPool::ReleaseTransaction()
     transCondition_.notify_one();
 }
 
-int SqliteConnectionPool::ReOpenAvailableReadConnections()
+int SqliteConnectionPool::RestartReaders()
 {
     readers_.Clear();
-    return readers_.Initialize(maxReader_, READER_TIMEOUT, [this]() {
+    return readers_.Initialize(maxReader_, readTimeout_, [this]() {
         int32_t errCode = E_OK;
         auto conn = SqliteConnection::Open(config_, false, errCode);
         return std::pair{ errCode, conn };

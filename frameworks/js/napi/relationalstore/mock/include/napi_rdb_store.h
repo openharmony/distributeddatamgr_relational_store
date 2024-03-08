@@ -47,6 +47,7 @@ private:
     static napi_value Query(napi_env env, napi_callback_info info);
     static napi_value QuerySql(napi_env env, napi_callback_info info);
     static napi_value ExecuteSql(napi_env env, napi_callback_info info);
+    static napi_value Execute(napi_env env, napi_callback_info info);
     static napi_value Backup(napi_env env, napi_callback_info info);
     static napi_value Count(napi_env env, napi_callback_info info);
     static napi_value Replace(napi_env env, napi_callback_info info);
