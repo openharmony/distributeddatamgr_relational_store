@@ -1171,8 +1171,8 @@ int RdbStoreImpl::BeginTransaction()
     connectionPool->GetTransactionStack().push(transaction);
     
     if (transactionId > 1) {
-        LOG_WARN("transaction id = %{public}zu , storeName: %{public}s times:%{public}" PRIu64 ".",
-            transactionId, name.c_str(), time);
+        LOG_WARN("transaction id = %{public}zu , storeName: %{public}s",
+            transactionId, name.c_str());
     }
 
     return E_OK;
