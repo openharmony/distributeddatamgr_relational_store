@@ -1194,27 +1194,30 @@ int RdbStoreImpl::BeginTransaction()
     // size + 1 means the number of transactions in process
     size_t transactionId = connectionPool->GetTransactionStack().size() + 1;
 
-    auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
     BaseTransaction transaction(connectionPool->GetTransactionStack().size());
     auto connection = connectionPool->AcquireConnection(false);
     if (connection == nullptr) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s times:%{public}" PRIu64 ".",
-            transactionId, name.c_str(), time);
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s",
+            transactionId, name.c_str());
         return E_CON_OVER_LIMIT;
     }
 
     int errCode = connection->ExecuteSql(transaction.GetTransactionStr());
     connectionPool->ReleaseConnection(connection);
     if (errCode != E_OK) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d times:%{public}" PRIu64 ".",
-            transactionId, name.c_str(), errCode, time);
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
+            transactionId, name.c_str(), errCode);
         return errCode;
     }
 
     connection->SetInTransaction(true);
     connectionPool->GetTransactionStack().push(transaction);
-    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s times:%{public}" PRIu64 ".",
-        transactionId, name.c_str(), time);
+    
+    if (transactionId > 1) {
+        LOG_WARN("transaction id = %{public}zu , storeName: %{public}s, errCode:%{public}d",
+            transactionId, name.c_str(), errCode);
+    }
+
     return E_OK;
 }
 
@@ -1230,10 +1233,9 @@ int RdbStoreImpl::RollBack()
     }
     size_t transactionId = connectionPool->GetTransactionStack().size();
 
-    auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
     if (connectionPool->GetTransactionStack().empty()) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s time:%{public}" PRIu64 ".",
-            transactionId, name.c_str(), time);
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s",
+            transactionId, name.c_str());
         return E_NO_TRANSACTION_IN_SESSION;
     }
     BaseTransaction transaction = connectionPool->GetTransactionStack().top();
@@ -1244,8 +1246,8 @@ int RdbStoreImpl::RollBack()
     auto connection = connectionPool->AcquireConnection(false);
     if (connection == nullptr) {
         // size + 1 means the number of transactions in process
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s time:%{public}" PRIu64 ".",
-            transactionId + 1, name.c_str(), time);
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s",
+            transactionId + 1, name.c_str());
         return E_CON_OVER_LIMIT;
     }
 
@@ -1254,10 +1256,11 @@ int RdbStoreImpl::RollBack()
     if (connectionPool->GetTransactionStack().empty()) {
         connection->SetInTransaction(false);
     }
-
-    // size + 1 means the number of transactions in process
-    LOG_INFO("transaction id: %{public}zu, , storeName: %{public}s, errCode:%{public}d time:%{public}" PRIu64 ".",
-        transactionId + 1, name.c_str(), errCode, time);
+	
+    if (transactionId > 1) {
+        LOG_WARN("transaction id = %{public}zu , storeName: %{public}s, errCode:%{public}d",
+            transactionId + 1, name.c_str(), errCode);
+    }
     return E_OK;
 }
 
@@ -1273,33 +1276,35 @@ int RdbStoreImpl::Commit()
     }
     size_t transactionId = connectionPool->GetTransactionStack().size();
 
-    auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
     if (connectionPool->GetTransactionStack().empty()) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s time:%{public}" PRIu64 ".",
-            transactionId, name.c_str(), time);
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s",
+            transactionId, name.c_str());
         return E_OK;
     }
     BaseTransaction transaction = connectionPool->GetTransactionStack().top();
     std::string sqlStr = transaction.GetCommitStr();
     if (sqlStr.size() <= 1) {
-        LOG_INFO("transaction id: %{public}zu, storeName: %{public}s time:%{public}" PRIu64 ".",
-            transactionId, name.c_str(), time);
+        LOG_INFO("transaction id: %{public}zu, storeName: %{public}s",
+            transactionId, name.c_str());
         connectionPool->GetTransactionStack().pop();
         return E_OK;
     }
 
     auto connection = connectionPool->AcquireConnection(false);
     if (connection == nullptr) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s time:%{public}" PRIu64 ".",
-           transactionId, name.c_str(), time);
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s",
+            transactionId, name.c_str());
         return E_CON_OVER_LIMIT;
     }
 
     int errCode = connection->ExecuteSql(sqlStr);
     connectionPool->ReleaseConnection(connection);
     connection->SetInTransaction(false);
-    LOG_INFO("transaction id: %{public}zu, storeName: %{public}s errCode:%{public}d time:%{public}" PRIu64 ".",
-        transactionId, name.c_str(), errCode, time);
+    
+    if (transactionId > 1) {
+        LOG_WARN("transaction id = %{public}zu , storeName: %{public}s, errCode:%{public}d",
+            transactionId, name.c_str(), errCode);
+    }
     connectionPool->GetTransactionStack().pop();
     return E_OK;
 }
