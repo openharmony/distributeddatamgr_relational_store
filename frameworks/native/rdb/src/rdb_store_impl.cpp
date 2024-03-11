@@ -1243,7 +1243,7 @@ int RdbStoreImpl::Commit()
     auto connection = connectionPool->AcquireConnection(false);
     if (connection == nullptr) {
         LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s",
-           transactionId, name.c_str());
+            transactionId, name.c_str());
         return E_CON_OVER_LIMIT;
     }
 
