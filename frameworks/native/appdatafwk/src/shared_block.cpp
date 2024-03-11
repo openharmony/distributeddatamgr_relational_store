@@ -154,6 +154,7 @@ int SharedBlock::Clear()
         mHeader->groupOffset[0] = sizeof(SharedBlockHeader);
         return SHARED_BLOCK_OK;
     }
+    LOG_ERROR("SharedBlock::Clear mHeader is nullptr");
     return SHARED_BLOCK_BAD_VALUE;
 }
 
