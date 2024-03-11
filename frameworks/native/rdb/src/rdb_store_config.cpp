@@ -24,7 +24,7 @@ using namespace OHOS::Rdb;
 RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode, bool isReadOnly,
     const std::vector<uint8_t> &encryptKey, const std::string &journalMode, const std::string &syncMode,
     const std::string &databaseFileType, SecurityLevel securityLevel, bool isCreateNecessary, bool autoCheck,
-    int journalSize, int pageSize, const std::string& encryptAlgo)
+    int journalSize, int pageSize, const std::string &encryptAlgo)
     : name(name),
       path(name),
       storageMode(storageMode),
@@ -419,6 +419,16 @@ std::string RdbStoreConfig::GetCustomDir() const
     return customDir_;
 }
 
+void RdbStoreConfig::SetVisitorDir(const std::string &visitorDir)
+{
+    visitorDir_ = visitorDir;
+}
+
+std::string RdbStoreConfig::GetVisitorDir() const
+{
+    return visitorDir_;
+}
+
 bool RdbStoreConfig::IsSearchable() const
 {
     return isSearchable_;
@@ -447,5 +457,15 @@ int RdbStoreConfig::GetReadTime() const
 void RdbStoreConfig::SetReadTime(int timeout)
 {
     readTimeout_ = timeout;
+}
+
+void RdbStoreConfig::SetRoleType(RoleType role)
+{
+    role_ = role;
+}
+
+uint32_t RdbStoreConfig::GetRoleType() const
+{
+    return role_;
 }
 } // namespace OHOS::NativeRdb

@@ -33,14 +33,13 @@ public:
     RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
 #ifdef WINDOWS_PLATFORM
-    void Clear() override {};
+    void Clear() override;
 #endif
     const RdbStoreConfig &GetConfig();
-    int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
-    int BatchInsert(int64_t &outInsertNum, const std::string &table,
-        const std::vector<ValuesBucket> &initialBatchValues) override;
+    int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &values) override;
+    int BatchInsert(int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values) override;
     int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
-    int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues,
+    int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &values,
         ConflictResolution conflictResolution) override;
     int Update(int &changedRows, const std::string &table, const ValuesBucket &values, const std::string &whereClause,
         const std::vector<std::string> &whereArgs) override;
@@ -56,8 +55,7 @@ public:
         const std::vector<std::string> &whereArgs) override;
     int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
         const std::vector<ValueObject> &bindArgs) override;
-    int ExecuteSql(
-        const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) override;
+    int ExecuteSql(const std::string& sql, const std::vector<ValueObject>& bindArgs) override;
     std::pair<int32_t, ValueObject> Execute(const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql,
@@ -66,10 +64,9 @@ public:
         const std::vector<ValueObject> &bindArgs) override;
     int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
-    int Backup(const std::string databasePath,
-        const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>()) override;
+    int Backup(const std::string& databasePath, const std::vector<uint8_t>& destEncryptKey) override;
     int Attach(const std::string &alias, const std::string &pathName,
-        const std::vector<uint8_t> destEncryptKey) override;
+        const std::vector<uint8_t> &destEncryptKey) override;
     int GetVersion(int &version) override;
     int SetVersion(int version) override;
     int BeginTransaction() override;
@@ -82,7 +79,7 @@ public:
     bool IsMemoryRdb() const override;
     bool IsHoldingConnection() override;
     int ConfigLocale(const std::string &localeStr);
-    int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) override;
+    int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
     std::string GetName();
     std::string GetOrgPath();
     std::string GetFileType();
@@ -103,10 +100,8 @@ private:
     std::string ExtractFilePath(const std::string &fileFullName);
     int BeginExecuteSql(const std::string &sql, std::shared_ptr<SqliteConnection> &connection);
     int FreeTransaction(std::shared_ptr<SqliteConnection> connection, const std::string &sql);
-    ExecuteSqls GenerateSql(
-        const std::string &table, const std::vector<ValuesBucket> &initialBatchValues, int limitVariableNumber);
-    ExecuteSqls MakeExecuteSqls(
-        const std::string &sql, const std::vector<ValueObject> &args, int fieldSize, int limitVariableNumber);
+    ExecuteSqls GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit);
+    ExecuteSqls MakeExecuteSqls(const std::string& sql, std::vector<ValueObject>&& args, int fieldSize, int limit);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
@@ -117,18 +112,23 @@ private:
     inline std::string GetSqlArgs(size_t size);
     int RegisterDataChangeCallback();
 
-    const RdbStoreConfig config_;
-    std::shared_ptr<SqliteConnectionPool> connectionPool_;
-    bool isOpen;
-    std::string path;
-    std::string orgPath;
-    bool isReadOnly;
-    bool isMemoryRdb;
-    std::string name_;
-    std::string fileType;
-    bool isEncrypt_;
+    static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
     static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 20000;
+    static inline constexpr uint32_t INTERVAL = 200;
+    static constexpr const char *ROW_ID = "ROWID";
+
+    const RdbStoreConfig config_;
+    std::shared_ptr<SqliteConnectionPool> connectionPool_;
+    bool isOpen_ = false;
+    bool isReadOnly_;
+    bool isMemoryRdb_;
+    bool isEncrypt_;
+    int64_t vSchema_ = 0;
+    std::string path_;
+    std::string orgPath_;
+    std::string name_;
+    std::string fileType_;
 };
 } // namespace OHOS::NativeRdb
 #endif

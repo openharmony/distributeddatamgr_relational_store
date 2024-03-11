@@ -110,6 +110,17 @@ enum class SecurityLevel : int32_t {
     LAST
 };
 
+enum RoleType : uint32_t {
+    /**
+      * The user has administrative rights.
+    */
+    OWNER = 0,
+    /**
+      * The user has read-only permission.
+    */
+    VISITOR,
+};
+
 /**
  * @brief The constant indicates the database default page size.
  */
@@ -471,6 +482,17 @@ public:
      */
     std::string GetCustomDir() const;
 
+
+    /**
+     * @brief Sets the visitorDir for the object.
+     */
+    API_EXPORT void SetVisitorDir(const std::string &visitorDir);
+
+    /**
+     * @brief Obtains the visitorDir in this {@code StoreConfig} object.
+     */
+    API_EXPORT std::string GetVisitorDir() const;
+
     /**
      * @brief Overload the line number operator.
      */
@@ -535,6 +557,10 @@ public:
      */
     void SetReadTime(int timeout);
 
+    void SetRoleType(RoleType role);
+
+    uint32_t GetRoleType() const;
+
 private:
     void ClearEncryptKey();
 
@@ -574,6 +600,9 @@ private:
     bool isSearchable_ = false;
     int writeTimeout_ = 2; // seconds
     int readTimeout_ = 1; // seconds
+
+    RoleType role_ = OWNER;
+    std::string visitorDir_;
 };
 } // namespace OHOS::NativeRdb
 
