@@ -893,7 +893,7 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     }
 
     if (!ResetStatement(&sharedBlockInfo)) {
-        LOG_ERROR("failed.startPos %{public}d,addedRows %{public}d", sharedBlockInfo.startPos, sharedBlockInfo.addedRows);
+        LOG_ERROR("err.startPos:%{public}d,addedRows:%{public}d", sharedBlockInfo.startPos, sharedBlockInfo.addedRows);
         return E_ERROR;
     }
     sharedBlock->SetStartPos(sharedBlockInfo.startPos);
