@@ -32,6 +32,7 @@
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
+#include "relational_store_client.h"
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
@@ -39,7 +40,6 @@
 #include "directory_ex.h"
 #include "rdb_security_manager.h"
 #include "relational/relational_store_sqlite_ext.h"
-#include "relational_store_client.h"
 #include "share_block.h"
 #include "shared_block_serializer_info.h"
 #endif
@@ -47,7 +47,6 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 // error status
 const int ERROR_STATUS = -1;
@@ -295,6 +294,11 @@ SqliteConnection::~SqliteConnection()
         if (stepStatement != nullptr) {
             stepStatement->Finalize();
         }
+
+        if (hasClientObserver_) {
+            UnRegisterClientObserver(dbHandle);
+        }
+
         int errCode = sqlite3_close_v2(dbHandle);
         if (errCode != SQLITE_OK) {
             LOG_ERROR("SqliteConnection ~SqliteConnection: could not close database err = %{public}d", errCode);
@@ -685,12 +689,11 @@ int SqliteConnection::ExecuteForLastInsertedRowId(
 
     errCode = statement.Step();
     if (errCode == SQLITE_ROW) {
-        LOG_ERROR("SqliteConnection ExecuteForLastInsertedRowId : Queries can be performed using query or QuerySql "
-                  "methods only");
+        LOG_ERROR("failed: %{public}d. sql: %{public}s", errCode, SqliteUtils::Anonymous(sql).c_str());
         statement.ResetStatementAndClearBindings();
         return E_QUERY_IN_EXECUTE;
     } else if (errCode != SQLITE_DONE) {
-        LOG_ERROR("SqliteConnection ExecuteForLastInsertedRowId : failed %{public}d", errCode);
+        LOG_ERROR("failed: %{public}d. sql: %{public}s", errCode, SqliteUtils::Anonymous(sql).c_str());
         statement.ResetStatementAndClearBindings();
         return SQLiteError::ErrNo(errCode);
     }
@@ -870,23 +873,25 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows)
 {
     if (sharedBlock == nullptr) {
-        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
+        LOG_ERROR("sharedBlock null.");
         return E_ERROR;
     }
     SqliteConnectionS connection(this->dbHandle, this->openFlags, this->filePath);
     int errCode = PrepareAndBind(sql, bindArgs);
     if (errCode != E_OK) {
-        LOG_ERROR("PrepareAndBind sql and bindArgs error = %{public}d ", errCode);
+        LOG_ERROR("error: %{public}d sql: %{public}s startPos: %{public}d requiredPos: %{public}d"
+            "isCountAllRows: %{public}d", errCode, SqliteUtils::Anonymous(sql).c_str(),
+            startPos, requiredPos, isCountAllRows);
         return errCode;
     }
     if (ClearSharedBlock(sharedBlock) == ERROR_STATUS) {
-        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
+        LOG_ERROR("failed. %{public}d. sql: %{public}s.", errCode, SqliteUtils::Anonymous(sql).c_str());
         return E_ERROR;
     }
     sqlite3_stmt *tempSqlite3St = statement.GetSql3Stmt();
     int columnNum = sqlite3_column_count(tempSqlite3St);
     if (SharedBlockSetColumnNum(sharedBlock, columnNum) == ERROR_STATUS) {
-        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
+        LOG_ERROR("failed.columnNum: %{public}d,sql: %{public}s", columnNum, SqliteUtils::Anonymous(sql).c_str());
         return E_ERROR;
     }
 
@@ -904,7 +909,7 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     }
 
     if (!ResetStatement(&sharedBlockInfo)) {
-        LOG_ERROR("ExecuteForSharedBlock:ResetStatement Failed.");
+        LOG_ERROR("err.startPos:%{public}d,addedRows:%{public}d", sharedBlockInfo.startPos, sharedBlockInfo.addedRows);
         return E_ERROR;
     }
     sharedBlock->SetStartPos(sharedBlockInfo.startPos);
@@ -927,6 +932,7 @@ int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 int SqliteConnection::RegisterCallBackObserver(const DataChangeCallback &clientChangedData)
 {
     if (isWriteConnection && clientChangedData != nullptr) {
+        hasClientObserver_ = true;
         int32_t status = RegisterClientObserver(dbHandle, clientChangedData);
         if (status != E_OK) {
             LOG_ERROR("RegisterClientObserver error, status:%{public}d", status);

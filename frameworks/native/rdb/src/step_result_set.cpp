@@ -258,7 +258,6 @@ int StepResultSet::PrepareStep()
     }
     auto pool = connectionPool_.lock();
     if (pool == nullptr) {
-        LOG_ERROR("not a select sql_!");
         return E_STEP_RESULT_CLOSED;
     }
 

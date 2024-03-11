@@ -113,6 +113,7 @@ private:
 
     bool isConfigured_ = false;
     int maxVariableNumber_;
+    bool hasClientObserver_ = false;
 };
 
 } // namespace NativeRdb

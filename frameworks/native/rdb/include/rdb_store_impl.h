@@ -111,9 +111,9 @@ public:
         const std::vector<ValueObject> &bindArgs) override;
     int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
-    int Backup(const std::string& databasePath, const std::vector<uint8_t>& destEncryptKey) override;
+    int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey) override;
     int Attach(const std::string &alias, const std::string &pathName,
-        const std::vector<uint8_t> &destEncryptKey) override;
+        const std::vector<uint8_t> destEncryptKey) override;
     int GetVersion(int &version) override;
     int SetVersion(int version) override;
     int BeginTransaction() override;
@@ -126,7 +126,7 @@ public:
     bool IsMemoryRdb() const override;
     bool IsHoldingConnection() override;
     int ConfigLocale(const std::string &localeStr);
-    int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
+    int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey) override;
     void GetSchema(const RdbStoreConfig &config);
     std::string GetName();
     std::string GetOrgPath();
@@ -209,7 +209,7 @@ private:
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
     static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 3000;
-    static inline constexpr uint32_t INTERVAL = 200;
+    static inline constexpr uint32_t INTERVAL = 10;
     static constexpr const char *ROW_ID = "ROWID";
 
     const RdbStoreConfig config_;

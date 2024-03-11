@@ -63,9 +63,8 @@ using namespace std::chrono;
 int RdbStoreImpl::InnerOpen()
 {
     LOG_DEBUG("open %{public}s.", SqliteUtils::Anonymous(config_.GetPath()).c_str());
-    int errCode = E_OK;
-    pool_ = TaskExecutor::GetInstance().GetExecutor();
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    pool_ = TaskExecutor::GetInstance().GetExecutor();
     syncerParam_.bundleName_ = config_.GetBundleName();
     syncerParam_.hapName_ = config_.GetModuleName();
     syncerParam_.storeName_ = config_.GetName();
@@ -83,7 +82,7 @@ int RdbStoreImpl::InnerOpen()
         GetSchema(config_);
     }
 
-    errCode = RegisterDataChangeCallback();
+    int errCode = RegisterDataChangeCallback();
     if (errCode != E_OK) {
         LOG_ERROR("RegisterCallBackObserver is failed, err is %{public}d.", errCode);
     }
@@ -286,21 +285,19 @@ std::string RdbStoreImpl::GetSqlArgs(size_t size)
     return args;
 }
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
-    : config_(config), connectionPool_(nullptr), isOpen_(false), path_(config.GetPath()), orgPath_(config.GetPath()),
-      isReadOnly_(config.IsReadOnly()), isMemoryRdb_(config.IsMemoryRdb()), name_(config.GetName()),
-      fileType_(config.GetDatabaseFileType()), isEncrypt_(config.IsEncrypt())
+    : config_(config), connectionPool_(nullptr), isOpen_(false), isReadOnly_(config.IsReadOnly()),
+      isMemoryRdb_(config.IsMemoryRdb()), isEncrypt_(config.IsEncrypt()), path_(config.GetPath()),
+      orgPath_(config.GetPath()), name_(config.GetName()), fileType_(config.GetDatabaseFileType())
 {
     connectionPool_ = SqliteConnectionPool::Create(config_, errCode);
     if (connectionPool_ == nullptr || errCode != E_OK) {
         connectionPool_ = nullptr;
-        LOG_ERROR("InnerOpen failed, err is %{public}d, path:%{public}s", errCode, path.c_str());
+        LOG_ERROR("InnerOpen failed, err is %{public}d, path:%{public}s",
+            errCode, SqliteUtils::Anonymous(path_).c_str());
         return;
     }
 
     InnerOpen();
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    RegisterDataChangeCallback();
-#endif
 }
 
 RdbStoreImpl::~RdbStoreImpl()
@@ -311,7 +308,6 @@ RdbStoreImpl::~RdbStoreImpl()
 #ifdef WINDOWS_PLATFORM
 void RdbStoreImpl::Clear()
 {
-    delete connectionPool_;
     connectionPool_ = nullptr;
 }
 #endif
@@ -347,9 +343,11 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table, c
         return E_INVALID_ARGS;
     }
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     if (delayNotifier_ != nullptr) {
         delayNotifier_->SetAutoSyncInterval(AUTO_SYNC_MAX_INTERVAL);
     }
+#endif
 
     for (const auto &[sql, bindArgs] : executeSqlArgs) {
         for (const auto &args : bindArgs) {
@@ -389,7 +387,7 @@ RdbStoreImpl::ExecuteSqls RdbStoreImpl::GenerateSql(const std::string& table, co
             if (it == fields.end()) {
                 values.emplace_back(std::vector<ValueObject>(buckets.size()));
                 col = valuePosition;
-                fields.insert(std::pair{key, col});
+                fields.insert(std::make_pair(key, col));
                 valuePosition++;
             } else {
                 col = it->second;
@@ -938,7 +936,7 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
         backupFilePath = databasePath;
     }
 
-    if (backupFilePath == path) {
+    if (backupFilePath == path_) {
         LOG_ERROR("The backupPath and path should not be same.");
         return E_INVALID_FILE_PATH;
     }
@@ -980,7 +978,7 @@ int RdbStoreImpl::ExecuteGetLongInner(const std::string &sql, const std::vector<
 /**
  * Backup a database from a specified encrypted or unencrypted database file.
  */
-int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
+int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
 {
     if (config_.GetRoleType() == VISITOR) {
         return E_NOT_SUPPORT;
@@ -1092,7 +1090,7 @@ bool RdbStoreImpl::IsHoldingConnection()
  * Attaches a database.
  */
 int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
-    const std::vector<uint8_t> &destEncryptKey)
+    const std::vector<uint8_t> destEncryptKey)
 {
     std::shared_ptr<SqliteConnection> connection;
     std::string sql = GlobalExpr::PRAGMA_JOUR_MODE_EXP;
@@ -1187,10 +1185,12 @@ int RdbStoreImpl::BeginTransaction()
     if (errCode != E_OK) {
         LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
             transactionId, name_.c_str(), errCode);
+
         return errCode;
     }
 
     connection->SetInTransaction(true);
+
     connectionPool_->GetTransactionStack().push(transaction);
 
     // 1 means the number of transactions in process
@@ -1262,7 +1262,7 @@ int RdbStoreImpl::Commit()
     BaseTransaction transaction = connectionPool_->GetTransactionStack().top();
     std::string sqlStr = transaction.GetCommitStr();
     if (sqlStr.size() <= 1) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId, name_.c_str());
+        LOG_INFO("transaction id: %{public}zu, storeName: %{public}s", transactionId, name_.c_str());
         connectionPool_->GetTransactionStack().pop();
         return E_OK;
     }
@@ -1487,7 +1487,7 @@ int RdbStoreImpl::ConfigLocale(const std::string &localeStr)
     return connectionPool_->ConfigLocale(localeStr);
 }
 
-int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
+int RdbStoreImpl::Restore(const std::string backupPath, const std::vector<uint8_t> &newKey)
 {
     if (!isOpen_) {
         LOG_ERROR("The connection pool has been closed.");
@@ -1883,15 +1883,15 @@ int RdbStoreImpl::RegisterDataChangeCallback()
         return E_NOT_SUPPORT;
     }
     InitDelayNotifier();
-    auto callBack = [this](ClientChangedData &clientChangedData) {
+    auto callBack = [delayNotifier = delayNotifier_](ClientChangedData &clientChangedData) {
         DistributedRdb::RdbChangedData rdbChangedData;
         for (const auto& entry : clientChangedData.tableData) {
             DistributedRdb::RdbChangeProperties rdbProperties;
             rdbProperties.isTrackedDataChange = entry.second.isTrackedDataChange;
             rdbChangedData.tableData[entry.first] = rdbProperties;
         }
-        if (delayNotifier_ != nullptr) {
-            delayNotifier_->UpdateNotify(rdbChangedData);
+        if (delayNotifier != nullptr) {
+            delayNotifier->UpdateNotify(rdbChangedData);
         }
     };
     auto connection = connectionPool_->AcquireConnection(false);
