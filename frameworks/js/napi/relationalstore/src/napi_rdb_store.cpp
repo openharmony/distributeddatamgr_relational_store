@@ -112,6 +112,7 @@ RdbStoreProxy::~RdbStoreProxy()
     if (rdbStore_ == nullptr) {
         return;
     }
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     for (int32_t mode = DistributedRdb::REMOTE; mode < DistributedRdb::LOCAL; mode++) {
         for (auto &obs : observers_[mode]) {
             if (obs == nullptr) {
@@ -139,6 +140,7 @@ RdbStoreProxy::~RdbStoreProxy()
     for (const auto &obs : syncObservers_) {
         rdbStore_->UnregisterAutoSyncCallback(obs);
     }
+#endif
 }
 
 bool RdbStoreProxy::IsSystemAppCalled()
