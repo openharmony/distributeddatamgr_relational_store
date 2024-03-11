@@ -28,7 +28,6 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 
 const int ERROR_STATUS = -1;
-const int BAD_VALUE = -2;
 const unsigned int SLEEP_TIME = 1000;
 // move to the highest 32 bits of 64 bits number
 const int RETRY_TIME = 50;
@@ -91,11 +90,8 @@ int SeriPutOther(void *pCtx, int addedRows, int column)
 int ClearSharedBlock(AppDataFwk::SharedBlock *sharedBlock)
 {
     int status = sharedBlock->Clear();
-    if (status == AppDataFwk::SharedBlock::SHARED_BLOCK_INVALID_OPERATION) {
+    if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
         return ERROR_STATUS;
-    }
-    if (status == AppDataFwk::SharedBlock::SHARED_BLOCK_BAD_VALUE) {
-        return BAD_VALUE;
     }
     return status;
 }

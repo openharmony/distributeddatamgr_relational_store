@@ -50,7 +50,6 @@ using namespace OHOS::Rdb;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 // error status
 const int ERROR_STATUS = -1;
-const int BAD_VALUE = -2;
 #if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using RdbKeyFile = RdbSecurityManager::KeyFileType;
 #endif
@@ -863,12 +862,7 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
             startPos, requiredPos, isCountAllRows);
         return errCode;
     }
-    errCode = ClearSharedBlock(sharedBlock);
-    if (errCode == BAD_VALUE) {
-        LOG_ERROR("failed:%{public}d,sql:%{public}s,mheader nullptr", errCode, SqliteUtils::Anonymous(sql).c_str());
-        return E_ERROR;
-    }
-    if (errCode == ERROR_STATUS) {
+    if (ClearSharedBlock(sharedBlock) == ERROR_STATUS) {
         LOG_ERROR("failed. %{public}d. sql: %{public}s.", errCode, SqliteUtils::Anonymous(sql).c_str());
         return E_ERROR;
     }
