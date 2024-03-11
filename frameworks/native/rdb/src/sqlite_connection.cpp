@@ -865,8 +865,7 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     }
     errCode = ClearSharedBlock(sharedBlock);
     if (errCode == BAD_VALUE) {
-        LOG_ERROR("failed. %{public}d sql: %{public}s, mheader nullptr.", errCode,
-            SqliteUtils::Anonymous(sql).c_str());
+        LOG_ERROR("failed:%{public}d,sql:%{public}s,mheader nullptr", errCode, SqliteUtils::Anonymous(sql).c_str());
         return E_ERROR;
     }
     if (errCode == ERROR_STATUS) {
@@ -876,8 +875,7 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     sqlite3_stmt *tempSqlite3St = statement.GetSql3Stmt();
     int columnNum = sqlite3_column_count(tempSqlite3St);
     if (SharedBlockSetColumnNum(sharedBlock, columnNum) == ERROR_STATUS) {
-        LOG_ERROR("failed. columnNum: %{public}d, sql: %{public}s.", columnNum,
-            SqliteUtils::Anonymous(sql).c_str());
+        LOG_ERROR("failed.columnNum: %{public}d,sql: %{public}s", columnNum, SqliteUtils::Anonymous(sql).c_str());
         return E_ERROR;
     }
 
@@ -895,8 +893,7 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     }
 
     if (!ResetStatement(&sharedBlockInfo)) {
-        LOG_ERROR("failed. startPos %{public}d, addedRows %{public}d", sharedBlockInfo.startPos,
-            sharedBlockInfo.addedRows);
+        LOG_ERROR("failed.startPos %{public}d,addedRows %{public}d", sharedBlockInfo.startPos, sharedBlockInfo.addedRows);
         return E_ERROR;
     }
     sharedBlock->SetStartPos(sharedBlockInfo.startPos);
