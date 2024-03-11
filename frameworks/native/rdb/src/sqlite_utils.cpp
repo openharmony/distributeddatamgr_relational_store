@@ -42,7 +42,7 @@ constexpr const char *REPLACE_CHAIN = "***";
 constexpr const char *DEFAULT_ANONYMOUS = "******";
 
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
-constexpr const char * SqliteUtils::ON_CONFLICT_CLAUSE[];
+constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
 
 int SqliteUtils::GetSqlStatementType(const std::string &sql)
 {

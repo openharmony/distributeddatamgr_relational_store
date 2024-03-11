@@ -57,6 +57,7 @@ SqliteConnectionPool::SqliteConnectionPool(const RdbStoreConfig& storeConfig)
 int SqliteConnectionPool::Init()
 {
     if (config_.GetRoleType() == OWNER) {
+        // write connect count is 1
         auto errCode = writers_.Initialize(1, writeTimeout_, [this]() {
             int32_t errCode = E_OK;
             auto conn = SqliteConnection::Open(config_, true, errCode);
@@ -139,7 +140,8 @@ int SqliteConnectionPool::AcquireTransaction()
 {
     std::unique_lock<std::mutex> lock(transMutex_);
     if (transCondition_.wait_for(lock, std::chrono::seconds(TRANSACTION_TIMEOUT), [this] {
-        return !transactionUsed_; })) {
+            return !transactionUsed_;
+        })) {
         transactionUsed_ = true;
         return E_OK;
     }
@@ -227,7 +229,9 @@ SqliteConnectionPool::ConnNode::ConnNode(std::shared_ptr<SqliteConnection> conn)
 
 std::shared_ptr<SqliteConnection> SqliteConnectionPool::ConnNode::GetConnect()
 {
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     tid_ = gettid();
+#endif
     time_ = std::chrono::steady_clock::now();
     return connect_;
 }
@@ -283,7 +287,7 @@ int32_t SqliteConnectionPool::Container::ConfigLocale(const std::string& locale)
     if (max_ != count_) {
         return E_NO_ROW_IN_QUERY;
     }
-    for (auto it = details_.begin(); it != details_.end(); ) {
+    for (auto it = details_.begin(); it != details_.end();) {
         auto conn = it->lock();
         if (conn == nullptr || conn->connect_ == nullptr) {
             it = details_.erase(it);
@@ -358,6 +362,7 @@ int32_t SqliteConnectionPool::Container::Dump(const char *header)
             .append(",")
             .append(std::to_string(node->GetUsingTime()))
             .append(">");
+        // 256 represent that limit to info length
         if (info.size() > 256) {
             LOG_WARN("%{public}s: %{public}s", header, info.c_str());
             info.clear();
