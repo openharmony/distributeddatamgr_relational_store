@@ -21,6 +21,7 @@
 #include <iterator>
 #include <mutex>
 #include <sstream>
+#include <unistd.h>
 #include <vector>
 
 #include "logger.h"
@@ -55,14 +56,17 @@ SqliteConnectionPool::SqliteConnectionPool(const RdbStoreConfig& storeConfig)
 
 int SqliteConnectionPool::Init()
 {
-    auto errCode = writers_.Initialize(1, writeTimeout_, [this]() {
-        int32_t errCode = E_OK;
-        auto conn = SqliteConnection::Open(config_, true, errCode);
-        return std::pair{ errCode, conn };
-    });
-    if (errCode != E_OK) {
-        return errCode;
+    if (config_.GetRoleType() == OWNER) {
+        auto errCode = writers_.Initialize(1, writeTimeout_, [this]() {
+            int32_t errCode = E_OK;
+            auto conn = SqliteConnection::Open(config_, true, errCode);
+            return std::pair{ errCode, conn };
+        });
+        if (errCode != E_OK) {
+            return errCode;
+        }
     }
+
     maxReader_ = GetMaxReaders();
     // max read connect count is 64
     if (maxReader_ > 64) {
@@ -103,13 +107,13 @@ std::shared_ptr<SqliteConnection> SqliteConnectionPool::AcquireConnection(bool i
     if (node == nullptr) {
         const char *header = (isReadOnly && maxReader_ != 0) ? "readers_" : "writers_";
         container->Dump(header);
-    }
-
-    if (node == nullptr || node->connect_ == nullptr) {
         return nullptr;
     }
-
-    return std::shared_ptr<SqliteConnection>(node->connect_.get(), [pool = weak_from_this(), node](SqliteConnection*) {
+    auto conn = node->GetConnect();
+    if (conn == nullptr) {
+        return nullptr;
+    }
+    return std::shared_ptr<SqliteConnection>(conn.get(), [pool = weak_from_this(), node](SqliteConnection*) {
         auto realPool = pool.lock();
         if (realPool == nullptr) {
             return;
@@ -223,11 +227,12 @@ SqliteConnectionPool::ConnNode::ConnNode(std::shared_ptr<SqliteConnection> conn)
 
 std::shared_ptr<SqliteConnection> SqliteConnectionPool::ConnNode::GetConnect()
 {
+    tid_ = gettid();
     time_ = std::chrono::steady_clock::now();
     return connect_;
 }
 
-int64_t SqliteConnectionPool::ConnNode::GetUsingTime()
+int64_t SqliteConnectionPool::ConnNode::GetUsingTime() const
 {
     auto time = std::chrono::steady_clock::now() - time_;
     return std::chrono::duration_cast<std::chrono::milliseconds>(time).count();
@@ -262,6 +267,7 @@ int32_t SqliteConnectionPool::Container::Initialize(int32_t max, int32_t timeout
             return error;
         }
         auto node = std::make_shared<ConnNode>(conn);
+        node->id_ = right_++;
         nodes_.push_back(node);
         details_.push_back(node);
     }
@@ -277,7 +283,7 @@ int32_t SqliteConnectionPool::Container::ConfigLocale(const std::string& locale)
     if (max_ != count_) {
         return E_NO_ROW_IN_QUERY;
     }
-    for (auto it = details_.begin(); it != details_.end();) {
+    for (auto it = details_.begin(); it != details_.end(); ) {
         auto conn = it->lock();
         if (conn == nullptr || conn->connect_ == nullptr) {
             it = details_.erase(it);
@@ -304,11 +310,14 @@ int32_t SqliteConnectionPool::Container::Release(std::shared_ptr<ConnNode> node)
 {
     {
         std::unique_lock<decltype(mutex_)> lock(mutex_);
+        if (node->id_ < left_ || node->id_ >= right_) {
+            return E_OK;
+        }
         nodes_.push_back(node);
         count_++;
     }
     cond_.notify_one();
-    return 0;
+    return E_OK;
 }
 
 int32_t SqliteConnectionPool::Container::Clear()
@@ -321,6 +330,7 @@ int32_t SqliteConnectionPool::Container::Clear()
         details = std::move(details_);
         max_ = 0;
         count_ = 0;
+        left_ = right_;
     }
     nodes.clear();
     details.clear();
@@ -342,11 +352,12 @@ int32_t SqliteConnectionPool::Container::Dump(const char *header)
             continue;
         }
         info.append("<")
+            .append(std::to_string(node->id_))
+            .append(",")
             .append(std::to_string(node->tid_))
             .append(",")
             .append(std::to_string(node->GetUsingTime()))
             .append(">");
-        // limit info size to 256
         if (info.size() > 256) {
             LOG_WARN("%{public}s: %{public}s", header, info.c_str());
             info.clear();

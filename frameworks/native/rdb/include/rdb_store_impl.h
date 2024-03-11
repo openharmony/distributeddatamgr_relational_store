@@ -75,11 +75,10 @@ public:
     RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
     const RdbStoreConfig &GetConfig();
-    int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
-    int BatchInsert(int64_t &outInsertNum, const std::string &table,
-        const std::vector<ValuesBucket> &initialBatchValues) override;
+    int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &values) override;
+    int BatchInsert(int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values) override;
     int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
-    int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues,
+    int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &values,
         ConflictResolution conflictResolution) override;
     int Update(int &changedRows, const std::string &table, const ValuesBucket &values, const std::string &whereClause,
         const std::vector<std::string> &whereArgs) override;
@@ -103,8 +102,7 @@ public:
         const std::vector<std::string> &sqlArgs) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
-    int ExecuteSql(
-        const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) override;
+    int ExecuteSql(const std::string& sql, const std::vector<ValueObject>& bindArgs) override;
     std::pair<int32_t, ValueObject> Execute(const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql,
@@ -113,10 +111,9 @@ public:
         const std::vector<ValueObject> &bindArgs) override;
     int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
-    int Backup(const std::string databasePath,
-        const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>()) override;
+    int Backup(const std::string& databasePath, const std::vector<uint8_t>& destEncryptKey) override;
     int Attach(const std::string &alias, const std::string &pathName,
-        const std::vector<uint8_t> destEncryptKey) override;
+        const std::vector<uint8_t> &destEncryptKey) override;
     int GetVersion(int &version) override;
     int SetVersion(int version) override;
     int BeginTransaction() override;
@@ -129,7 +126,7 @@ public:
     bool IsMemoryRdb() const override;
     bool IsHoldingConnection() override;
     int ConfigLocale(const std::string &localeStr);
-    int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = std::vector<uint8_t>()) override;
+    int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
     void GetSchema(const RdbStoreConfig &config);
     std::string GetName();
     std::string GetOrgPath();
@@ -174,7 +171,7 @@ public:
     ModifyTime GetModifyTime(const std::string& table, const std::string& columnName,
         std::vector<PRIKey>& keys) override;
 
-    int CleanDirtyData(const std::string &table, uint64_t cursor = UINT64_MAX) override;
+    int CleanDirtyData(const std::string &table, uint64_t cursor) override;
 
 private:
     using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
@@ -182,10 +179,8 @@ private:
     int CheckAttach(const std::string &sql);
     int BeginExecuteSql(const std::string &sql, std::shared_ptr<SqliteConnection> &connection);
     int FreeTransaction(std::shared_ptr<SqliteConnection> connection, const std::string &sql);
-    ExecuteSqls GenerateSql(
-        const std::string &table, const std::vector<ValuesBucket> &initialBatchValues, int limitVariableNumber);
-    ExecuteSqls MakeExecuteSqls(
-        const std::string &sql, const std::vector<ValueObject> &args, int fieldSize, int limitVariableNumber);
+    ExecuteSqls GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit);
+    ExecuteSqls MakeExecuteSqls(const std::string& sql, std::vector<ValueObject>&& args, int fieldSize, int limit);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
@@ -193,8 +188,8 @@ private:
     void DoCloudSync(const std::string &table);
     int InnerSync(const DistributedRdb::RdbService::Option &option, const DistributedRdb::PredicatesMemo &predicates,
         const AsyncDetail &async);
-    int InnerBackup(const std::string databasePath,
-        const std::vector<uint8_t> destEncryptKey = std::vector<uint8_t>());
+    int InnerBackup(const std::string& databasePath,
+        const std::vector<uint8_t>& destEncryptKey = std::vector<uint8_t>());
     ModifyTime GetModifyTimeByRowId(const std::string& logTable, std::vector<PRIKey>& keys);
     inline std::string GetSqlArgs(size_t size);
     Uri GetUri(const std::string &event);
@@ -211,32 +206,36 @@ private:
     void InitDelayNotifier();
     bool ColHasSpecificField(const std::vector<std::string> &columns);
 
+    static constexpr char SCHEME_RDB[] = "rdb://";
+    static constexpr uint32_t EXPANSION = 2;
+    static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 3000;
+    static inline constexpr uint32_t INTERVAL = 200;
+    static constexpr const char *ROW_ID = "ROWID";
+
     const RdbStoreConfig config_;
-    std::shared_ptr<SqliteConnectionPool> connectionPool_;
-    bool isOpen;
-    std::string path;
-    std::string orgPath;
-    bool isReadOnly;
-    bool isMemoryRdb;
-    std::string name_;
-    std::string fileType;
-    DistributedRdb::RdbSyncerParam syncerParam_;
+    std::shared_ptr<SqliteConnectionPool> connectionPool_ = nullptr;
+    bool isOpen_ = false;
+    bool isReadOnly_;
+    bool isMemoryRdb_;
     bool isEncrypt_;
+    int64_t vSchema_ = 0;
+    std::string path_;
+    std::string orgPath_;
+    std::string name_;
+    std::string fileType_;
+    DistributedRdb::RdbSyncerParam syncerParam_;
+
     std::shared_ptr<ExecutorPool> pool_;
     std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
 
     mutable std::shared_mutex rwMutex_;
-    static inline constexpr uint32_t INTERVAL = 10;
-    static constexpr const char *ROW_ID = "ROWID";
+
     std::set<std::string> cloudTables_;
 
     std::mutex mutex_;
     std::shared_ptr<std::set<std::string>> syncTables_;
-    static constexpr char SCHEME_RDB[] = "rdb://";
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
     std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
-    static constexpr uint32_t EXPANSION = 2;
-    static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 3000;
 };
 } // namespace OHOS::NativeRdb
 #endif

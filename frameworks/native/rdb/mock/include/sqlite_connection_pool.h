@@ -47,12 +47,13 @@ private:
     struct ConnNode {
         bool using_ = false;
         uint32_t tid_ = 0;
+        uint32_t id_ = 0;
         std::chrono::steady_clock::time_point time_ = std::chrono::steady_clock::now();
         std::shared_ptr<SqliteConnection> connect_;
 
-        ConnNode(std::shared_ptr<SqliteConnection> conn);
+        explicit ConnNode(std::shared_ptr<SqliteConnection> conn);
         std::shared_ptr<SqliteConnection> GetConnect();
-        int64_t GetUsingTime();
+        int64_t GetUsingTime() const;
         bool IsWriter() const;
         void Unused();
     };
@@ -61,6 +62,8 @@ private:
         using Creator = std::function<std::pair<int32_t, std::shared_ptr<SqliteConnection>>()>;
         int max_ = 0;
         int count_ = 0;
+        uint32_t left_ = 0;
+        uint32_t right_ = 0;
         std::chrono::seconds timeout_;
         std::list<std::shared_ptr<ConnNode>> nodes_;
         std::list<std::weak_ptr<ConnNode>> details_;
@@ -92,8 +95,8 @@ private:
     std::condition_variable transCondition_;
     std::mutex transMutex_;
     bool transactionUsed_;
-    std::chrono::seconds writeTimeout_ = std::chrono::seconds(2);
-    std::chrono::seconds readTimeout_ = std::chrono::seconds(1);
+    int32_t writeTimeout_ = 2;
+    int32_t readTimeout_ = 2;
 };
 
 } // namespace NativeRdb
