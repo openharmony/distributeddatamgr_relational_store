@@ -57,7 +57,7 @@ public:
 
     Observers ExportObservers();
 
-    void ImportObservers(Observers & observers);
+    void ImportObservers(Observers &observers);
 
     int32_t GetSchema(const RdbSyncerParam &param) override;
 

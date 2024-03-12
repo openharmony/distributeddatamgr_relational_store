@@ -38,6 +38,8 @@ public:
     void GenerateDefaultTable();
     void GenerateAssetsTable();
     void GenerateTimeoutTable();
+    void CheckResultSetAttribute(std::shared_ptr<ResultSet> rstSet, int pos, bool isStart, bool isAtFirstRow,
+        bool isEnded);
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
@@ -172,6 +174,30 @@ void RdbSqliteSharedResultSetTest::GenerateTimeoutTable()
     values.Put("data5", ValueObject(assetValue1));
     values.Put("data6", ValueObject(assets));
     store->Insert(id, "test", values);
+}
+
+void RdbSqliteSharedResultSetTest::CheckResultSetAttribute(std::shared_ptr<ResultSet> rstSet, int pos, bool isStart,
+    bool isAtFirstRow, bool isEnded)
+{
+    int position = -1;
+    int iRet = rstSet->GetRowIndex(position);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(pos, position);
+
+    bool bResultSet = !isStart;
+    iRet = rstSet->IsStarted(bResultSet);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(isStart, bResultSet);
+
+    bResultSet = !isAtFirstRow;
+    iRet = rstSet->IsAtFirstRow(bResultSet);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(isAtFirstRow, bResultSet);
+
+    bResultSet = !isEnded;
+    iRet = rstSet->IsEnded(bResultSet);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(isEnded, bResultSet);
 }
 
 /* *
@@ -382,76 +408,25 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_002, TestSize.Le
         RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
     EXPECT_NE(rstSet, nullptr);
 
-    int pos = -2;
-    rstSet->GetRowIndex(pos);
-    EXPECT_EQ(pos, -1);
-    bool isStart = true;
-    rstSet->IsStarted(isStart);
-    EXPECT_EQ(isStart, false);
-    bool isAtFirstRow = true;
-    rstSet->IsAtFirstRow(isAtFirstRow);
-    EXPECT_EQ(isAtFirstRow, false);
-    bool isEnded = true;
-    rstSet->IsEnded(isEnded);
-    EXPECT_EQ(isEnded, false);
+    CheckResultSetAttribute(rstSet, -1, false, false, false);
 
-    int retN1 = rstSet->GoToNextRow();
-    EXPECT_EQ(retN1, E_OK);
-    rstSet->GetRowIndex(pos);
-    EXPECT_EQ(pos, 0);
-    rstSet->IsStarted(isStart);
-    EXPECT_EQ(isStart, true);
-    rstSet->IsAtFirstRow(isAtFirstRow);
-    EXPECT_EQ(isAtFirstRow, true);
-    isEnded = true;
-    rstSet->IsEnded(isEnded);
-    EXPECT_EQ(isEnded, false);
+    EXPECT_EQ(rstSet->GoToNextRow(), E_OK);
+    CheckResultSetAttribute(rstSet, 0, true, true, false);
 
-    int retN2 = rstSet->GoToNextRow();
-    EXPECT_EQ(retN2, E_OK);
-    rstSet->GetRowIndex(pos);
-    EXPECT_EQ(pos, 1);
-    isStart = false;
-    rstSet->IsStarted(isStart);
-    EXPECT_EQ(isStart, true);
-    isAtFirstRow = true;
-    rstSet->IsAtFirstRow(isAtFirstRow);
-    EXPECT_EQ(isAtFirstRow, false);
-    isEnded = true;
-    rstSet->IsEnded(isEnded);
-    EXPECT_EQ(isEnded, false);
+    EXPECT_EQ(rstSet->GoToNextRow(), E_OK);
+    CheckResultSetAttribute(rstSet, 1, true, false, false);
 
-    int retN3 = rstSet->GoToNextRow();
-    EXPECT_EQ(retN3, E_OK);
-    rstSet->GetRowIndex(pos);
-    EXPECT_EQ(pos, 2);
-    isStart = false;
-    rstSet->IsStarted(isStart);
-    EXPECT_EQ(isStart, true);
-    isAtFirstRow = true;
-    rstSet->IsAtFirstRow(isAtFirstRow);
-    EXPECT_EQ(isAtFirstRow, false);
+    EXPECT_EQ(rstSet->GoToNextRow(), E_OK);
+    CheckResultSetAttribute(rstSet, 2, true, false, false);
     bool isAtLastRow = false;
     rstSet->IsAtLastRow(isAtLastRow);
     EXPECT_EQ(isAtLastRow, true);
-
-    int retN = rstSet->GoToNextRow();
-    EXPECT_EQ(retN, E_ERROR);
-    rstSet->GetRowIndex(pos);
-    EXPECT_EQ(pos, 3);
-    isStart = false;
-    rstSet->IsStarted(isStart);
-    EXPECT_EQ(isStart, true);
-    isAtFirstRow = true;
-    rstSet->IsAtFirstRow(isAtFirstRow);
-    EXPECT_EQ(isAtFirstRow, false);
-    isEnded = false;
-    rstSet->IsEnded(isEnded);
-    EXPECT_EQ(isEnded, true);
+    
+    EXPECT_EQ(rstSet->GoToNextRow(), E_ERROR);
+    CheckResultSetAttribute(rstSet, 3, true, false, true);
 
     rstSet->Close();
-    bool isClosedFlag = rstSet->IsClosed();
-    EXPECT_EQ(isClosedFlag, true);
+    EXPECT_EQ(rstSet->IsClosed(), true);
 }
 
 /* *

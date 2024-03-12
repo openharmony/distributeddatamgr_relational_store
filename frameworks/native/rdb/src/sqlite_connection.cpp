@@ -743,7 +743,8 @@ void SqliteConnection::LimitPermission(const std::string &dbPath) const
 int Collate8Compare(void *p, int n1, const void *v1, int n2, const void *v2)
 {
     UCollator *coll = reinterpret_cast<UCollator *>(p);
-    UCharIterator i1, i2;
+    UCharIterator i1;
+    UCharIterator i2;
     UErrorCode status = U_ZERO_ERROR;
 
     uiter_setUTF8(&i1, (const char *)v1, n1);

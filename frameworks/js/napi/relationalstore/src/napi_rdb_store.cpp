@@ -310,6 +310,7 @@ int ParseDistributedConfigArg(const napi_env &env, size_t argc, napi_value * arg
     std::shared_ptr<RdbStoreContext> context)
 {
     context->distributedConfig = { false };
+    // '2' Ensure that the incoming argv contains 3 parameter
     if (argc > 2) {
         auto status = JSUtils::Convert2Value(env, argv[2], context->distributedConfig);
         bool checked = status == napi_ok || JSUtils::IsNull(env, argv[2]);

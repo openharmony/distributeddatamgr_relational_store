@@ -73,7 +73,6 @@ class DmDeathCallback : public DmInitCallback {
 public:
     explicit DmDeathCallback() {}
     void OnRemoteDied() override {}
-
 };
 
 void DistributedTest::InitDevManager()
