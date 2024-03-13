@@ -18,6 +18,7 @@
 #include "itypes_util.h"
 #include "cloud_types.h"
 #include "values_bucket.h"
+#include "common_types.h"
 
 namespace OHOS::ITypesUtil {
 using Participant = OHOS::CloudData::Participant;
@@ -28,6 +29,8 @@ using SharingCode = OHOS::CloudData::SharingCode;
 using Asset = OHOS::NativeRdb::AssetValue;
 using ValueObject = OHOS::NativeRdb::ValueObject;
 using ValuesBucket = OHOS::NativeRdb::ValuesBucket;
+using CommonAsset = CommonType::Asset;
+using Strategy = OHOS::CloudData::Strategy;
 
 template<>
 bool Marshalling(const Participant &input, MessageParcel &data);
@@ -66,5 +69,11 @@ template<>
 bool Marshalling(const ValuesBucket &input, MessageParcel &data);
 template<>
 bool Unmarshalling(ValuesBucket &output, MessageParcel &data);
+
+template<>
+bool Marshalling(const Strategy &input, MessageParcel &data);
+
+template<>
+bool Marshalling(const CommonAsset &input, MessageParcel &data);
 } // namespace OHOS::ITypesUtil
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_UTIL_H

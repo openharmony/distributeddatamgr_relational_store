@@ -319,7 +319,7 @@ napi_value JsConfig::SetGlobalCloudStrategy(napi_env env, napi_callback_info inf
 {
     auto ctxt = std::make_shared<CloudStrategyContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
-        // strategy 1 required parameter¡ê? param 1 Optional parameter
+        // strategy 1 required parameter, param 1 Optional parameter
         ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int32_t strategy = -1;
         int status = JSUtils::Convert2ValueExt(env, argv[0], strategy);

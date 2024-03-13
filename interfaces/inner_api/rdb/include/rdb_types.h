@@ -97,6 +97,7 @@ enum ProgressCode {
     LOCKED_BY_OTHERS,
     RECORD_LIMIT_EXCEEDED,
     NO_SPACE_FOR_ASSET,
+    BLOCKED_BY_NETWORK_STRATEGY,
 };
 
 struct Statistic {

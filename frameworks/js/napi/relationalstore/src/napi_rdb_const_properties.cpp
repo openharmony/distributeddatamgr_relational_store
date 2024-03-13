@@ -100,6 +100,7 @@ static napi_value ExportProgressCode(napi_env env)
     SET_NAPI_PROPERTY(progressCode, "LOCKED_BY_OTHERS", int32_t(ProgressCode::LOCKED_BY_OTHERS));
     SET_NAPI_PROPERTY(progressCode, "RECORD_LIMIT_EXCEEDED", int32_t(ProgressCode::RECORD_LIMIT_EXCEEDED));
     SET_NAPI_PROPERTY(progressCode, "NO_SPACE_FOR_ASSET", int32_t(ProgressCode::NO_SPACE_FOR_ASSET));
+    SET_NAPI_PROPERTY(progressCode, "BLOCKED_BY_NETWORK_STRATEGY", int32_t(ProgressCode::BLOCKED_BY_NETWORK_STRATEGY));
     napi_object_freeze(env, progressCode);
     return progressCode;
 }
