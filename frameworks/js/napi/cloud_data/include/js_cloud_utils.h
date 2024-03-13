@@ -17,6 +17,7 @@
 
 #include "js_utils.h"
 #include "cloud_types.h"
+#include "common_types.h"
 #include "rdb_predicates.h"
 #include "result_set.h"
 #include "js_config.h"
@@ -28,6 +29,7 @@ using Privilege = OHOS::CloudData::Privilege;
 using RdbPredicates = OHOS::NativeRdb::RdbPredicates;
 using ResultSet = OHOS::NativeRdb::ResultSet;
 using ExtraData = OHOS::CloudData::JsConfig::ExtraData;
+using Asset = OHOS::CommonType::AssetValue;
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, ExtraData &output);
@@ -40,6 +42,9 @@ int32_t Convert2Value(napi_env env, napi_value input, Privilege &output);
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, std::shared_ptr<RdbPredicates> &output);
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value input, Asset &output);
 
 template<>
 napi_value Convert2JSValue(napi_env env, const Participant &value);

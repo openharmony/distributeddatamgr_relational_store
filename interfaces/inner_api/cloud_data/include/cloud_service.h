@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include "cloud_types.h"
+#include "common_types.h"
 #include "rdb_types.h"
 #include "values_bucket.h"
 namespace OHOS {

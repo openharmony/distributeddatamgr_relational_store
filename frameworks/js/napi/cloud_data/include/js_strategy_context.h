@@ -1,10 +1,22 @@
-//
-// Created by HuTao on 2024/3/12.
-//
+/*
+* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
 #ifndef CLOUD_DATA_JS_STRATEGY_CONTEXT_H
 #define CLOUD_DATA_JS_STRATEGY_CONTEXT_H
 
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -23,7 +35,7 @@ struct CloudStrategyContext : public ContextBase {
     {
         switch (strategy) {
             case Strategy::STRATEGY_NETWORK:
-                param = { NetWorkStrategy::WIFI, NetWorkStrategy::CELLULAR };
+                param = {};
             default:
                 param = {};
         }
@@ -33,7 +45,7 @@ struct CloudStrategyContext : public ContextBase {
     {
         switch (strategy) {
             case Strategy::STRATEGY_NETWORK:
-                if (!CheckNetWorkParam()) {
+                if (!ConverNetWorkParam()) {
                     return { Status::INVALID_ARGUMENT, "member of param must be of type NetWorkStrategy" };
                 }
                 break;
@@ -44,13 +56,20 @@ struct CloudStrategyContext : public ContextBase {
     }
 
 private:
-    bool CheckNetWorkParam()
+    bool ConverNetWorkParam()
     {
+        std::vector<CommonType::Value> tmps = { 0 };
         for (auto &value : param) {
-            if (std::get_if<int64_t>(&value) == nullptr) {
+            if (std::get_if<double>(&value) == nullptr) {
                 return false;
             }
+            auto val = static_cast<int64_t>(std::round(std::get<double>(value)));
+            if (val < 0 || val > NetWorkStrategy::NETWORK_STRATEGY_BUTT) {
+                return false;
+            }
+            tmps.push_back(val);
         }
+        param = tmps;
         return true;
     }
 };

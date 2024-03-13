@@ -17,7 +17,6 @@ import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from '
 import cloudData from '@ohos.data.cloudData'
 import commonType from '@ohos.data.commonType';
 import featureAbility from '@ohos.ability.featureAbility';
-import cloudData from "../../../../../../interface_sdk/api/@ohos.data.cloudData";
 import StrategyType from "cloudData.StrategyType";
 import NetWorkStrategy from "cloudData.NetWorkStrategy";
 
