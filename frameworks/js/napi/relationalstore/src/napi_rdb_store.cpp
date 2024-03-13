@@ -978,28 +978,25 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    LOG_DEBUG("RdbStoreProxy::QueryByStep start");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseSql(env, argv[0], context));
         if (argc == 2) {
-            CHECK_RETURN(OK == ParseColumns(env, argv[1], context));
+            CHECK_RETURN(OK == ParseBindArgs(env, argv[1], context));
         }
     };
     auto exec = [context]() -> int {
-        LOG_DEBUG("RdbStoreProxy::QueryByStep Async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
-        context->resultSet = obj->rdbStore_->QueryByStep(context->sql, context->columns);
-        LOG_ERROR("RdbStoreProxy::QueryByStep is nullptr ? %{public}d ", context->resultSet == nullptr);
+        context->resultSet = obj->rdbStore_->QueryByStep(context->sql, context->bindArgs);
+        LOG_DEBUG("RdbStoreProxy::QueryByStep is nullptr ? %{public}d ", context->resultSet == nullptr);
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, context->resultSet);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
-        LOG_DEBUG("RdbStoreProxy::QueryByStep end");
     };
     context->SetAction(env, info, input, exec, output);
 
