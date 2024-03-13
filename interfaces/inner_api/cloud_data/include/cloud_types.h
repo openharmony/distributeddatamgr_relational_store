@@ -17,6 +17,8 @@
 #define OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_H
 
 #include <string>
+#include <tuple>
+#include <vector>
 
 namespace OHOS::CloudData {
 enum Role : int32_t {
@@ -130,6 +132,18 @@ enum SharingCode : int32_t {
      * @brief means error codes that exceed this enumerated value are custom error codes.
      */
     CUSTOM_ERROR = 1000,
+};
+
+enum Strategy : uint32_t {
+    STRATEGY_HEAD,
+    STRATEGY_NETWORK = STRATEGY_HEAD,
+    STRATEGY_BUTT
+};
+
+enum NetWorkStrategy : uint32_t {
+    WIFI = 0x01,
+    CELLULAR = 0x02,
+    NETWORK_STRATEGY_BUTT
 };
 } // namespace OHOS::CloudData
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_H

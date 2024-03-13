@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CLOUD_DATA_JS_CLOUD_SHARE_H
-#define CLOUD_DATA_JS_CLOUD_SHARE_H
+#ifndef CLOUD_DATA_JS_CLOUD_UTILS_H
+#define CLOUD_DATA_JS_CLOUD_UTILS_H
 
 #include "js_utils.h"
 #include "cloud_types.h"
@@ -55,4 +55,4 @@ napi_value Convert2JSValue(napi_env env, const std::pair<int32_t, std::string> &
 
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
-#endif // CLOUD_DATA_JS_CLOUD_SHARE_H
+#endif // CLOUD_DATA_JS_CLOUD_UTILS_H

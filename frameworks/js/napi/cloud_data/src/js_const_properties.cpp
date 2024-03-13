@@ -88,6 +88,25 @@ static napi_value ExportShareCode(napi_env env)
     return code;
 }
 
+static napi_value ExportStrategy(napi_env env)
+{
+    napi_value strategy = nullptr;
+    napi_create_object(env, &strategy);
+    SetNamedProperty(env, strategy, "NETWORK", Strategy::STRATEGY_NETWORK);
+    napi_object_freeze(env, strategy);
+    return strategy;
+}
+
+static napi_value ExportNetWorkStrategy(napi_env env)
+{
+    napi_value netStrategy = nullptr;
+    napi_create_object(env, &netStrategy);
+    SetNamedProperty(env, netStrategy, "WIFI", NetWorkStrategy::WIFI);
+    SetNamedProperty(env, netStrategy, "CELLULAR", NetWorkStrategy::CELLULAR);
+    napi_object_freeze(env, netStrategy);
+    return netStrategy;
+}
+
 napi_status InitConstProperties(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
@@ -110,6 +129,20 @@ napi_status InitSharingConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("Role", ExportRole(env)),
         DECLARE_NAPI_PROPERTY("State", ExportShareState(env)),
         DECLARE_NAPI_PROPERTY("SharingCode", ExportShareCode(env)),
+    };
+    size_t count = sizeof(properties) / sizeof(properties[0]);
+
+    return napi_define_properties(env, exports, count, properties);
+}
+
+napi_status InitClientProperties(napi_env env, napi_value exports)
+{
+    if (exports == nullptr) {
+        return napi_generic_failure;
+    }
+    const napi_property_descriptor properties[] = {
+        DECLARE_NAPI_PROPERTY("StrategyType", ExportStrategy(env)),
+        DECLARE_NAPI_PROPERTY("NetWorkStrategy", ExportNetWorkStrategy(env)),
     };
     size_t count = sizeof(properties) / sizeof(properties[0]);
 
