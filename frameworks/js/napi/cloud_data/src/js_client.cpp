@@ -46,7 +46,7 @@ napi_value SetCloudStrategy(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && strategy >= 0 && strategy < Strategy::STRATEGY_BUTT,
             Status::INVALID_ARGUMENT, "The type of strategy must be StrategyType.");
         ctxt->strategy = static_cast<Strategy>(strategy);
-        if (argc == 1) {
+        if (argc == 1 || JSUtils::IsNull(env, argv[1])) {
             ctxt->SetDefault();
         } else {
             // 'argv[1]' represents a vector<CommonType::Value> param
