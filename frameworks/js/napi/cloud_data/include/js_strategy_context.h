@@ -36,8 +36,10 @@ struct CloudStrategyContext : public ContextBase {
         switch (strategy) {
             case Strategy::STRATEGY_NETWORK:
                 param = {};
+                return;
             default:
                 param = {};
+                return;
         }
     }
 

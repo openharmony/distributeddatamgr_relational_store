@@ -15,12 +15,13 @@
 
 #include "abs_result_set.h"
 
+#include <algorithm>
+
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_trace.h"
 #include "result_set.h"
 #include "sqlite_utils.h"
-
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
@@ -327,7 +328,7 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
     if (periodIndex != std::string::npos) {
         columnNameLower = columnNameLower.substr(periodIndex + 1);
     }
-    transform(columnNameLower.begin(), columnNameLower.end(), columnNameLower.begin(), ::tolower);
+    std::transform(columnNameLower.begin(), columnNameLower.end(), columnNameLower.begin(), ::tolower);
     std::vector<std::string> columnNames;
     int ret = GetAllColumnNames(columnNames);
     if (ret != E_OK) {

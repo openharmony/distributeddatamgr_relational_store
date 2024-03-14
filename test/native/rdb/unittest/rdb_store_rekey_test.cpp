@@ -102,7 +102,7 @@ void RdbRekeyTest::TearDown()
     RdbHelper::DeleteRdbStore(RdbRekeyTest::encryptedDatabasePath);
 }
 
-std::string RdbRekeyTest::RemoveSuffix(const string &name)
+std::string RdbRekeyTest::RemoveSuffix(const std::string &name)
 {
     std::string suffix(".db");
     auto pos = name.rfind(suffix);
