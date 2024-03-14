@@ -47,7 +47,7 @@ struct CloudStrategyContext : public ContextBase {
     {
         switch (strategy) {
             case Strategy::STRATEGY_NETWORK:
-                if (!ConverNetWorkParam()) {
+                if (!ConvertNetworkParam()) {
                     return { Status::INVALID_ARGUMENT, "member of param must be of type NetWorkStrategy" };
                 }
                 break;
@@ -58,9 +58,9 @@ struct CloudStrategyContext : public ContextBase {
     }
 
 private:
-    bool ConverNetWorkParam()
+    bool ConvertNetworkParam()
     {
-        std::vector<CommonType::Value> tmps = { 0 };
+        std::vector<CommonType::Value> tmp = { 0 };
         for (auto &value : param) {
             if (std::get_if<double>(&value) == nullptr) {
                 return false;
@@ -69,9 +69,9 @@ private:
             if (val < 0 || val > NetWorkStrategy::NETWORK_STRATEGY_BUTT) {
                 return false;
             }
-            tmps.push_back(val);
+            tmp.push_back(val);
         }
-        param = tmps;
+        param = tmp;
         return true;
     }
 };
