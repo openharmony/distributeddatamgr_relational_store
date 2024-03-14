@@ -32,6 +32,7 @@
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
+#include "relational_store_client.h"
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
@@ -39,7 +40,6 @@
 #include "directory_ex.h"
 #include "rdb_security_manager.h"
 #include "relational/relational_store_sqlite_ext.h"
-#include "relational_store_client.h"
 #include "share_block.h"
 #include "shared_block_serializer_info.h"
 #endif
@@ -294,6 +294,11 @@ SqliteConnection::~SqliteConnection()
         if (stepStatement != nullptr) {
             stepStatement->Finalize();
         }
+
+        if (hasClientObserver_) {
+            UnRegisterClientObserver(dbHandle);
+        }
+
         int errCode = sqlite3_close_v2(dbHandle);
         if (errCode != SQLITE_OK) {
             LOG_ERROR("SqliteConnection ~SqliteConnection: could not close database err = %{public}d", errCode);
@@ -829,12 +834,14 @@ void LocalizedCollatorDestroy(UCollator *collator)
 {
     ucol_close(collator);
 }
+#endif
 
 /**
  * The database locale.
  */
-int SqliteConnection::ConfigLocale(const std::string localeStr)
+int SqliteConnection::ConfigLocale(const std::string& localeStr)
 {
+#ifdef RDB_SUPPORT_ICU
     std::unique_lock<std::mutex> lock(rdbMutex);
     UErrorCode status = U_ZERO_ERROR;
     UCollator *collator = ucol_open(localeStr.c_str(), &status);
@@ -854,10 +861,9 @@ int SqliteConnection::ConfigLocale(const std::string localeStr)
         LOG_ERROR("SCreate collator in sqlite3 failed.");
         return err;
     }
-
+#endif
     return E_OK;
 }
-#endif
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 /**
@@ -926,6 +932,7 @@ int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 int SqliteConnection::RegisterCallBackObserver(const DataChangeCallback &clientChangedData)
 {
     if (isWriteConnection && clientChangedData != nullptr) {
+        hasClientObserver_ = true;
         int32_t status = RegisterClientObserver(dbHandle, clientChangedData);
         if (status != E_OK) {
             LOG_ERROR("RegisterClientObserver error, status:%{public}d", status);
@@ -948,6 +955,10 @@ bool SqliteConnection::IsInTransaction()
 
 int SqliteConnection::TryCheckPoint()
 {
+    if (!isWriteConnection) {
+        return E_NOT_SUPPORT;
+    }
+
     std::string walName = sqlite3_filename_wal(sqlite3_db_filename(dbHandle, "main"));
     int fileSize = SqliteUtils::GetFileSize(walName);
     if (fileSize <= GlobalExpr::DB_WAL_SIZE_LIMIT_MIN) {

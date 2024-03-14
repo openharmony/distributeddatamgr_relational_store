@@ -24,34 +24,56 @@ namespace NativeRdb {
 
 class SqliteUtils {
 public:
-    static const int STATEMENT_SELECT;
-    static const int STATEMENT_INSERT;
-    static const int STATEMENT_UPDATE;
-    static const int STATEMENT_ATTACH;
-    static const int STATEMENT_DETACH;
-    static const int STATEMENT_BEGIN;
-    static const int STATEMENT_COMMIT;
-    static const int STATEMENT_ROLLBACK;
-    static const int STATEMENT_PRAGMA;
-    static const int STATEMENT_DDL;
-    static const int STATEMENT_OTHER;
-    static const int CONFLICT_CLAUSE_COUNT = 6;
+    static constexpr int STATEMENT_SELECT = 1;
+    static constexpr int STATEMENT_UPDATE = 2;
+    static constexpr int STATEMENT_ATTACH = 3;
+    static constexpr int STATEMENT_DETACH = 4;
+    static constexpr int STATEMENT_BEGIN = 5;
+    static constexpr int STATEMENT_COMMIT = 6;
+    static constexpr int STATEMENT_ROLLBACK = 7;
+    static constexpr int STATEMENT_PRAGMA = 8;
+    static constexpr int STATEMENT_DDL = 9;
+    static constexpr int STATEMENT_INSERT = 10;
+    static constexpr int STATEMENT_OTHER = 99;
+    static constexpr int CONFLICT_CLAUSE_COUNT = 6;
     static constexpr const char* REP = "#_";
 
     static int GetSqlStatementType(const std::string &sql);
     static bool IsSqlReadOnly(int sqlType);
     static bool IsSpecial(int sqlType);
-    static int GetConflictClause(int conflictResolution, std::string &conflictClause);
+    static const char *GetConflictClause(int conflictResolution);
     static std::string StrToUpper(std::string s);
     static void Replace(std::string &src, const std::string &rep, const std::string &dst);
-    static bool DeleteFile(const std::string path);
-    static int RenameFile(const std::string srcFile, const std::string destFile);
+    static bool DeleteFile(const std::string &filePath);
+    static int RenameFile(const std::string &srcFile, const std::string &destFile);
     static std::string Anonymous(const std::string &srcFile);
-    static int GetFileSize(const std::string fileName);
+    static int GetFileSize(const std::string &fileName);
 
 private:
-    static const std::map<std::string, int> SQL_TYPE_MAP;
-    static const std::string ON_CONFLICT_CLAUSE[CONFLICT_CLAUSE_COUNT];
+    struct SqlType {
+        const char *sql;
+        int32_t type;
+    };
+    static constexpr SqlType SQL_TYPE_MAP[] = {
+        { "ALT", SqliteUtils::STATEMENT_DDL },
+        { "ATT", SqliteUtils::STATEMENT_ATTACH },
+        { "BEG", SqliteUtils::STATEMENT_BEGIN },
+        { "COM", SqliteUtils::STATEMENT_COMMIT },
+        { "CRE", SqliteUtils::STATEMENT_DDL },
+        { "DEL", SqliteUtils::STATEMENT_UPDATE },
+        { "DET", SqliteUtils::STATEMENT_DETACH },
+        { "DRO", SqliteUtils::STATEMENT_DDL },
+        { "END", SqliteUtils::STATEMENT_COMMIT },
+        { "INS", SqliteUtils::STATEMENT_INSERT },
+        { "PRA", SqliteUtils::STATEMENT_PRAGMA },
+        { "REP", SqliteUtils::STATEMENT_UPDATE },
+        { "ROL", SqliteUtils::STATEMENT_ROLLBACK },
+        { "SEL", SqliteUtils::STATEMENT_SELECT },
+        { "UPD", SqliteUtils::STATEMENT_UPDATE }
+    };
+    static constexpr size_t TYPE_SIZE = sizeof(SQL_TYPE_MAP) / sizeof(SqlType);
+    static constexpr const char* ON_CONFLICT_CLAUSE[CONFLICT_CLAUSE_COUNT] = { "", " OR ROLLBACK", " OR ABORT",
+        " OR FAIL", " OR IGNORE", " OR REPLACE" };
 };
 
 } // namespace NativeRdb

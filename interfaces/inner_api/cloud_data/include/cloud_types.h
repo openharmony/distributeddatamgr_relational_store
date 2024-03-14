@@ -17,6 +17,7 @@
 #define OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_H
 
 #include <string>
+#include <vector>
 
 namespace OHOS::CloudData {
 enum Role : int32_t {
