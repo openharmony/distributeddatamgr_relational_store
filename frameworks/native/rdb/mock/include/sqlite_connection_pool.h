@@ -17,67 +17,86 @@
 #define NATIVE_RDB_SQLITE_CONNECTION_POOL_H
 
 #include <condition_variable>
+#include <memory>
 #include <mutex>
 #include <vector>
 #include <sstream>
 #include <iostream>
 #include <iterator>
 #include <stack>
-
+#include <list>
 #include "rdb_store_config.h"
 #include "sqlite_connection.h"
 #include "base_transaction.h"
 namespace OHOS {
 namespace NativeRdb {
-class SqliteConnectionPool {
+class SqliteConnectionPool : public std::enable_shared_from_this<SqliteConnectionPool> {
 public:
-    static SqliteConnectionPool *Create(const RdbStoreConfig &storeConfig, int &errCode);
+    static std::shared_ptr<SqliteConnectionPool> Create(const RdbStoreConfig &storeConfig, int &errCode);
     ~SqliteConnectionPool();
     std::shared_ptr<SqliteConnection> AcquireConnection(bool isReadOnly);
-    void ReleaseConnection(std::shared_ptr<SqliteConnection> connection);
-    int ReOpenAvailableReadConnections();
-#ifdef RDB_SUPPORT_ICU
-    int ConfigLocale(const std::string localeStr);
-#endif
-    int ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
+    int RestartReaders();
+    int ConfigLocale(const std::string &localeStr);
+    int ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
         const std::vector<uint8_t> &newKey);
     std::stack<BaseTransaction> &GetTransactionStack();
     std::mutex &GetTransactionStackMutex();
     int AcquireTransaction();
     void ReleaseTransaction();
-
 private:
+    struct ConnNode {
+        bool using_ = false;
+        uint32_t tid_ = 0;
+        uint32_t id_ = 0;
+        std::chrono::steady_clock::time_point time_ = std::chrono::steady_clock::now();
+        std::shared_ptr<SqliteConnection> connect_;
+
+        explicit ConnNode(std::shared_ptr<SqliteConnection> conn);
+        std::shared_ptr<SqliteConnection> GetConnect();
+        int64_t GetUsingTime() const;
+        bool IsWriter() const;
+        void Unused();
+    };
+
+    struct Container {
+        using Creator = std::function<std::pair<int32_t, std::shared_ptr<SqliteConnection>>()>;
+        int max_ = 0;
+        int count_ = 0;
+        uint32_t left_ = 0;
+        uint32_t right_ = 0;
+        std::chrono::seconds timeout_;
+        std::list<std::shared_ptr<ConnNode>> nodes_;
+        std::list<std::weak_ptr<ConnNode>> details_;
+        std::mutex mutex_;
+        std::condition_variable cond_;
+        int32_t Initialize(int32_t max, int32_t timeout, Creator creator);
+        int32_t ConfigLocale(const std::string &locale);
+        std::shared_ptr<ConnNode> Acquire();
+        int32_t Release(std::shared_ptr<ConnNode> node);
+        int32_t Clear();
+        bool IsFull();
+        int32_t Dump(const char *header);
+    };
+
     explicit SqliteConnectionPool(const RdbStoreConfig &storeConfig);
     int Init();
-    void InitReadConnectionCount();
-    std::shared_ptr<SqliteConnection> AcquireWriteConnection();
-    void ReleaseWriteConnection();
-    std::shared_ptr<SqliteConnection> AcquireReadConnection();
-    void ReleaseReadConnection(std::shared_ptr<SqliteConnection> connection);
+    int32_t GetMaxReaders();
+    void ReleaseNode(std::shared_ptr<ConnNode> node);
     void CloseAllConnections();
-    int InnerReOpenReadConnections();
 
+    static constexpr int LIMITATION = 1024;
     RdbStoreConfig config_;
-    std::shared_ptr<SqliteConnection> writeConnection_;
-    std::mutex writeMutex_;
-    std::condition_variable writeCondition_;
-    bool writeConnectionUsed_;
-
-    std::vector<std::shared_ptr<SqliteConnection>> readConnections_;
-    std::mutex readMutex_;
-    std::mutex rdbMutex_;
-    std::condition_variable readCondition_;
-    int readConnectionCount_;
-    int idleReadConnectionCount_;
-    const static int LIMITATION = 1024;
+    Container writers_;
+    Container readers_;
+    int32_t maxReader_ = 0;
 
     std::stack<BaseTransaction> transactionStack_;
     std::mutex transactionStackMutex_;
     std::condition_variable transCondition_;
     std::mutex transMutex_;
     bool transactionUsed_;
-    std::chrono::seconds writeTimeout_ = std::chrono::seconds(2);
-    std::chrono::seconds readTimeout_ = std::chrono::seconds(1);
+    int32_t writeTimeout_ = 2;
+    int32_t readTimeout_ = 2;
 };
 
 } // namespace NativeRdb

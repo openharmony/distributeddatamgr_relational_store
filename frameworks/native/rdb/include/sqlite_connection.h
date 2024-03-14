@@ -59,9 +59,7 @@ public:
     bool IsInTransaction();
     int TryCheckPoint();
     int LimitWalSize();
-#ifdef RDB_SUPPORT_ICU
-    int ConfigLocale(const std::string localeStr);
-#endif
+    int ConfigLocale(const std::string &localeStr);
     int ExecuteForSharedBlock(int &rowNum, std::string sql, const std::vector<ValueObject> &bindArgs,
         AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows);
     int CleanDirtyData(const std::string &table, uint64_t cursor);
@@ -115,6 +113,7 @@ private:
 
     bool isConfigured_ = false;
     int maxVariableNumber_;
+    bool hasClientObserver_ = false;
 };
 
 } // namespace NativeRdb
