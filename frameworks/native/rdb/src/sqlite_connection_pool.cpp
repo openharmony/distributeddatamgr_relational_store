@@ -123,6 +123,21 @@ std::shared_ptr<SqliteConnection> SqliteConnectionPool::AcquireConnection(bool i
     });
 }
 
+std::shared_ptr<SqliteConnection> SqliteConnectionPool::AcquireByID(int32_t id)
+{
+    Container *container = &readers_;
+    auto node = container->AcquireById(id);
+    if (node == nullptr) {
+        container->Dump("readers_");
+        return nullptr;
+    }
+    auto conn = node->GetConnect(true);
+    if (conn == nullptr) {
+        return nullptr;
+    }
+    return conn;
+}
+
 void SqliteConnectionPool::ReleaseNode(std::shared_ptr<ConnNode> node)
 {
     if (node == nullptr) {
@@ -227,10 +242,12 @@ std::mutex &SqliteConnectionPool::GetTransactionStackMutex()
 
 SqliteConnectionPool::ConnNode::ConnNode(std::shared_ptr<SqliteConnection> conn) : connect_(std::move(conn)) {}
 
-std::shared_ptr<SqliteConnection> SqliteConnectionPool::ConnNode::GetConnect()
+std::shared_ptr<SqliteConnection> SqliteConnectionPool::ConnNode::GetConnect(bool justHold)
 {
-    tid_ = gettid();
-    time_ = std::chrono::steady_clock::now();
+    if (!justHold) {
+        tid_ = gettid();
+        time_ = std::chrono::steady_clock::now();
+    }
     return connect_;
 }
 
@@ -270,6 +287,7 @@ int32_t SqliteConnectionPool::Container::Initialize(int32_t max, int32_t timeout
         }
         auto node = std::make_shared<ConnNode>(conn);
         node->id_ = right_++;
+        conn->SetId(node->id_);
         nodes_.push_back(node);
         details_.push_back(node);
     }
@@ -304,6 +322,20 @@ std::shared_ptr<SqliteConnectionPool::ConnNode> SqliteConnectionPool::Container:
         nodes_.pop_back();
         count_--;
         return node;
+    }
+    return nullptr;
+}
+
+std::shared_ptr<SqliteConnectionPool::ConnNode> SqliteConnectionPool::Container::AcquireById(int32_t id)
+{
+    for (auto& detail : details_) {
+        auto node = detail.lock();
+        if (node == nullptr) {
+            continue;
+        }
+        if (node->id_ == id) {
+            return node;
+        }
     }
     return nullptr;
 }

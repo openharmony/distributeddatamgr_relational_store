@@ -57,7 +57,7 @@ private:
     // The pick position of the shared block for search
     static const int PICK_POS = 3;
 
-    std::weak_ptr<SqliteConnectionPool> connectionPool_;
+    std::shared_ptr<SqliteConnectionPool> connectionPool_;
     int resultSetBlockCapacity_;
     // The number of rows in the cursor
     int rowNum_;

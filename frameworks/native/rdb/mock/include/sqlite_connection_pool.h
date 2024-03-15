@@ -43,6 +43,7 @@ public:
     std::mutex &GetTransactionStackMutex();
     int AcquireTransaction();
     void ReleaseTransaction();
+    std::shared_ptr<SqliteConnection> AcquireByID(int32_t id);
 private:
     struct ConnNode {
         bool using_ = false;
@@ -52,7 +53,7 @@ private:
         std::shared_ptr<SqliteConnection> connect_;
 
         explicit ConnNode(std::shared_ptr<SqliteConnection> conn);
-        std::shared_ptr<SqliteConnection> GetConnect();
+        std::shared_ptr<SqliteConnection> GetConnect(bool justHold = false);
         int64_t GetUsingTime() const;
         bool IsWriter() const;
         void Unused();
@@ -76,6 +77,7 @@ private:
         int32_t Clear();
         bool IsFull();
         int32_t Dump(const char *header);
+        std::shared_ptr<SqliteConnectionPool::ConnNode> AcquireById(int32_t id);
     };
 
     explicit SqliteConnectionPool(const RdbStoreConfig &storeConfig);

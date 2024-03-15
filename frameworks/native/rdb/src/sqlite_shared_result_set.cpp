@@ -63,7 +63,7 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
     if (isClosed_) {
         return E_STEP_RESULT_CLOSED;
     }
-    auto pool = connectionPool_.lock();
+    auto pool = connectionPool_;
     if (pool == nullptr) {
         return E_STEP_RESULT_CLOSED;
     }
@@ -152,7 +152,7 @@ int SqliteSharedResultSet::PickFillBlockStartPosition(int resultSetPosition, int
 void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
 {
     ClearBlock();
-    auto pool = connectionPool_.lock();
+    auto pool = connectionPool_;
     if (pool == nullptr) {
         return;
     }

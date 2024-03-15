@@ -59,6 +59,7 @@ private:
     template<typename T>
     int GetValue(int32_t col, T &value);
     std::pair<int, ValueObject> GetValueObject(int32_t col, size_t index);
+    std::pair<std::shared_ptr<SqliteStatement>, std::shared_ptr<SqliteConnection>> GetStatement();
     void Reset();
     int FinishStep();
     int PrepareStep();
@@ -74,12 +75,13 @@ private:
     std::vector<std::string> columnNames_;
     std::vector<ValueObject> args_;
     std::string sql_;
-    std::weak_ptr<SqliteConnectionPool> connectionPool_;
+    std::shared_ptr<SqliteConnectionPool> connectionPool_;
     // The value indicates the row count of the result set
     int rowCount_;
     // Whether reach the end of this result set or not
     bool isAfterLast_;
     mutable std::shared_mutex mutex_;
+    int connId_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
