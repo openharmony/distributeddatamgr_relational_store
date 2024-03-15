@@ -33,6 +33,7 @@ enum Confirmation : int32_t {
     CFM_ACCEPTED,
     CFM_REJECTED,
     CFM_SUSPENDED,
+    CFM_UNAVAILABLE,
     CFM_BUTT
 };
 
