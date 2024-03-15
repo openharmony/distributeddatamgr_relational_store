@@ -229,9 +229,7 @@ SqliteConnectionPool::ConnNode::ConnNode(std::shared_ptr<SqliteConnection> conn)
 
 std::shared_ptr<SqliteConnection> SqliteConnectionPool::ConnNode::GetConnect()
 {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     tid_ = gettid();
-#endif
     time_ = std::chrono::steady_clock::now();
     return connect_;
 }
