@@ -38,6 +38,11 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/values_bucket.cpp",
 ]
 
+if (!is_ohos) {
+  base_sources +=
+      [ "${relational_store_mock_path}/frameworks/native/rdb/mock.cpp" ]
+}
+
 if (is_ohos && !build_ohos_sdk) {
   config("native_rdb_config") {
     visibility = [ ":*" ]
@@ -210,7 +215,7 @@ if (is_ohos && !build_ohos_sdk) {
     visibility = [ ":*" ]
 
     include_dirs = [
-      "${relational_store_mock_path}/frameworks/native/rdb/mock",
+      "${relational_store_mock_path}/frameworks/native/rdb",
       "mock/include",
       "${relational_store_common_path}/include",
       "${relational_store_native_path}/rdb/mock/include",
@@ -221,6 +226,7 @@ if (is_ohos && !build_ohos_sdk) {
       "//third_party/libuv/src/win",
     ]
 
+    cflags = [ "-includemock.h" ]
     defines = [
       "RELATIONAL_STORE",
       "SQLITE_HAS_CODEC",
@@ -274,6 +280,7 @@ if (is_ohos && !build_ohos_sdk) {
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
     ]
+
     cflags_cc = [ "-std=c++17" ]
 
     public_configs = [ ":native_rdb_public_config" ]
@@ -308,7 +315,7 @@ if (is_ohos && !build_ohos_sdk) {
     visibility = [ ":*" ]
 
     include_dirs = [
-      "${relational_store_mock_path}/frameworks/native/rdb/mock",
+      "${relational_store_mock_path}/frameworks/native/rdb",
       "mock/include",
       "${relational_store_common_path}/include",
       "${relational_store_native_path}/rdb/mock/include",
@@ -318,6 +325,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/include",
     ]
 
+    cflags = [ "-includemock.h" ]
     defines = [
       "RELATIONAL_STORE",
       "SQLITE_HAS_CODEC",
@@ -401,6 +409,7 @@ if (is_ohos && !build_ohos_sdk) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "${relational_store_mock_path}/frameworks/native/rdb",
       "${distributedfile_path}/mod_securitylabel",
       "${relational_store_common_path}/include",
       "${relational_store_innerapi_path}/rdb/mock/include",
@@ -409,6 +418,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/include",
     ]
 
+    cflags = [ "-includemock.h" ]
     defines = [
       "RELATIONAL_STORE",
       "SQLITE_HAS_CODEC",
@@ -428,7 +438,6 @@ if (is_ohos && !build_ohos_sdk) {
     visibility = [ ":*" ]
 
     include_dirs = [
-      "${relational_store_mock_path}/frameworks/native/rdb/mock",
       "mock/include",
       "include",
       "${relational_store_native_path}/mock/rdb/include",
@@ -469,7 +478,7 @@ if (is_ohos && !build_ohos_sdk) {
     visibility = [ ":*" ]
 
     include_dirs = [
-      "${relational_store_mock_path}/frameworks/native/rdb/mock",
+      "${relational_store_mock_path}/frameworks/native/rdb",
       "${distributedfile_path}/mod_securitylabel",
       "${relational_store_common_path}/include",
       "${relational_store_innerapi_path}/rdb/mock/include",
@@ -478,6 +487,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/include",
     ]
 
+    cflags = [ "-includemock.h" ]
     defines = [
       "RELATIONAL_STORE",
       "SQLITE_HAS_CODEC",
