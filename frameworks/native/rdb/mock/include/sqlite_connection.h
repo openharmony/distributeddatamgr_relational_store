@@ -61,6 +61,8 @@ public:
 
     int RegisterCallBackObserver(const DataChangeCallback &clientChangedData);
     int GetMaxVariableNumber();
+    uint32_t GetId() const;
+    int32_t SetId(uint32_t id);
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     explicit SqliteConnection(bool isWriteConnection);
@@ -108,6 +110,7 @@ private:
     bool isConfigured_ = false;
     int maxVariableNumber_;
     bool hasClientObserver_ = false;
+    int id_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
