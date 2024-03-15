@@ -80,7 +80,8 @@ SqliteConnection::SqliteConnection(bool isWriteConnection)
       stepStatement(nullptr),
       filePath(""),
       openFlags(0),
-      inTransaction_(false)
+      inTransaction_(false),
+      id_(-1)
 {
 }
 
@@ -244,9 +245,7 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, uint32_t retry, st
     }
 
     SetBusyTimeout(DEFAULT_BUSY_TIMEOUT_MS);
-    if (errCode != E_OK) {
-        return errCode;
-    }
+
     LimitPermission(dbPath);
 
     errCode = SetPersistWal();
@@ -595,6 +594,17 @@ int SqliteConnection::SetWalSyncMode(const std::string &syncMode)
 bool SqliteConnection::IsWriteConnection() const
 {
     return isWriteConnection;
+}
+
+int32_t SqliteConnection::SetId(uint32_t id)
+{
+    id_ = id;
+    return E_OK;
+}
+
+uint32_t SqliteConnection::GetId() const
+{
+    return id_;
 }
 
 int SqliteConnection::Prepare(const std::string &sql, bool &outIsReadOnly)
