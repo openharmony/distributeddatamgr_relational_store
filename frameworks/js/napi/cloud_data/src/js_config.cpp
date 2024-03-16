@@ -315,6 +315,66 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute);
 }
 
+/*
+ * [JS API Prototype]
+ * [Promise]
+ *      QueryStatistics(accountId: string, bundleName: string,
+ *      storeId?: number): Promise<Record<string, Array<StatisticInfo>>>;
+ */
+napi_value JsConfig::QueryStatistics(napi_env env, napi_callback_info info)
+{
+    struct QueryStatisticsContext : public ContextBase {
+        std::string accountId;
+        std::string bundleName;
+        std::string storeId = "";
+        std::map<std::string, StatisticInfos> result;
+    };
+    auto ctxt = std::make_shared<QueryStatisticsContext>();
+    ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value* argv) {
+        // required 2 arguments :: <accountId> <bundleName>
+        ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
+        // 0 is the index of argument accountId
+        int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+            "The type of accountId must be string.");
+        // 1 is the index of argument bundleName
+        status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+            "The type of bundleName must be string.");
+        // 2 is the index of argument storeId
+        if (argc > 2 && !JSUtils::IsNull(ctxt->env, argv[2])) {
+            // 2 is the index of argument storeId
+            status = JSUtils::Convert2Value(env, argv[2], ctxt->storeId);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                "The type of storeId must be string.");
+        }
+    });
+
+    ASSERT_NULL(!ctxt->isThrowError, "QueryStatistics exit");
+
+    auto execute = [ctxt]() {
+        auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+        if (proxy == nullptr) {
+            if (state != CloudService::SERVER_UNAVAILABLE) {
+                state = CloudService::NOT_SUPPORT;
+            }
+            ctxt->status = (GenerateNapiError(state, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+                               ? napi_ok
+                               : napi_generic_failure;
+            return;
+        }
+        auto [status, result] = proxy->QueryStatistics(ctxt->accountId, ctxt->bundleName, ctxt->storeId);
+        ctxt->status =
+            (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
+        ctxt->result = std::move(result);
+    };
+    auto output = [env, ctxt](napi_value& result) {
+        result = JSUtils::Convert2JSValue(env, ctxt->result);
+        ASSERT_VALUE(ctxt,  result != nullptr, napi_generic_failure, "output failed");
+    };
+    return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute, output);
+}
+
 napi_value JsConfig::SetGlobalCloudStrategy(napi_env env, napi_callback_info info)
 {
     auto ctxt = std::make_shared<CloudStrategyContext>();
@@ -396,6 +456,7 @@ napi_value JsConfig::InitConfig(napi_env env, napi_value exports)
             DECLARE_NAPI_STATIC_FUNCTION("clear", JsConfig::Clean),
             DECLARE_NAPI_STATIC_FUNCTION("clean", JsConfig::Clean),
             DECLARE_NAPI_STATIC_FUNCTION("notifyDataChange", JsConfig::NotifyDataChange),
+            DECLARE_NAPI_STATIC_FUNCTION("queryStatistics", JsConfig::QueryStatistics),
             DECLARE_NAPI_STATIC_FUNCTION("setGlobalCloudStrategy", JsConfig::SetGlobalCloudStrategy),
         };
         return properties;

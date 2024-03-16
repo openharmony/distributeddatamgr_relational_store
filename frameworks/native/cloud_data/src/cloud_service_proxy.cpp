@@ -138,6 +138,20 @@ int32_t CloudServiceProxy::NotifyDataChange(const std::string &eventId, const st
     return static_cast<Status>(status);
 }
 
+std::pair<int32_t, std::map<std::string, StatisticInfos>> CloudServiceProxy::QueryStatistics(const std::string &id,
+    const std::string &bundleName, const std::string &storeId)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_QUERY_STATISTICS, reply, id, bundleName, storeId);
+    if (status != SUCCESS) {
+        LOG_ERROR("status:0x%{public}x bundleName:%{public}.6s storeId:%{public}.6s", status, id.c_str(),
+            storeId.c_str());
+    }
+    std::map<std::string, StatisticInfos> infos;
+    ITypesUtil::Unmarshal(reply, infos);
+    return { status, infos };
+}
+
 int32_t CloudServiceProxy::Share(
     const std::string &sharingRes, const Participants &participants, Results &results)
 {

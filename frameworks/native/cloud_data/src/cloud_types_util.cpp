@@ -128,6 +128,12 @@ bool Unmarshalling(ValuesBucket &output, MessageParcel &data)
 }
 
 template<>
+bool Unmarshalling(StatisticInfo &output, MessageParcel &data)
+{
+    return ITypesUtil::Unmarshal(data, output.table, output.inserted, output.updated, output.normal);
+}
+
+template<>
 bool Marshalling(const Strategy &input, MessageParcel &data)
 {
     return data.WriteUint32(static_cast<uint32_t>(input));

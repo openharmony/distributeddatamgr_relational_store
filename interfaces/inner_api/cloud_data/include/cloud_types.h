@@ -53,6 +53,14 @@ struct Participant {
     std::string attachInfo;
 };
 
+struct StatisticInfo {
+    std::string table;
+    int32_t inserted = 0;
+    int32_t updated = 0;
+    int32_t normal = 0;
+};
+
+using StatisticInfos = std::vector<StatisticInfo>;
 using Participants = std::vector<Participant>;
 using Results = std::tuple<int32_t, std::string, std::vector<std::pair<int32_t, std::string>>>;
 using QueryResults = std::tuple<int32_t, std::string, Participants>;
