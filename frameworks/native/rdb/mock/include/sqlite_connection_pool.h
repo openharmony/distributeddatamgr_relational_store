@@ -97,8 +97,6 @@ private:
     std::condition_variable transCondition_;
     std::mutex transMutex_;
     bool transactionUsed_;
-    int32_t writeTimeout_ = 2;
-    int32_t readTimeout_ = 2;
 };
 
 } // namespace NativeRdb
