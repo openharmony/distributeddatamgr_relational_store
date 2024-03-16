@@ -310,6 +310,179 @@ describe('CloudConfigPromiseTest', function () {
     })
 
     /**
+     * @tc.name queryStatisticsTest
+     * @tc.desc Test Js Api queryStatistics which parameters number are less
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('queryStatisticsTest1', 0, async function (done) {
+        console.info('queryStatisticsTest1');
+        try {
+            await cloudData.Config.queryStatistics().then((etc) => {
+                console.info('queryStatisticsTest1 success' + `, info is ${JSON.stringify(etc)}`);
+                expect(null).assertFail();
+            }).catch((error) => {
+                console.error('queryStatisticsTest1 fail' + `, error code is ${error.code}, message is ${error.message}`);
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            console.error('queryStatisticsTest1 fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+    })
+
+    /**
+     * @tc.name queryStatisticsTest
+     * @tc.desc Test Js Api queryStatistics with effective args
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('queryStatisticsTest2', 0, async function (done) {
+        console.info('queryStatisticsTest2');
+        try {
+            const accountId = "test_id";
+            await cloudData.Config.queryStatistics(accountId).then((etc) => {
+                console.info('queryStatisticsTest2 success' + `, info is ${JSON.stringify(etc)}`);
+                expect(null).assertFail();
+            }).catch((error) => {
+                console.error('queryStatisticsTest2 fail' + `, error code is ${error.code}, message is ${error.message}`);
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            console.error('queryStatisticsTest2 fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+    })
+
+    /**
+     * @tc.name queryStatisticsTest
+     * @tc.desc Test Js Api queryStatistics with effective args
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('queryStatisticsTest3', 0, async function (done) {
+        console.info('queryStatisticsTest3');
+        try {
+            const accountId = 123;
+            const bundleName = "bundleName";
+            await cloudData.Config.queryStatistics(accountId, bundleName).then((etc) => {
+                console.info('queryStatisticsTest3 success' + `, info is ${JSON.stringify(etc)}`);
+                expect(null).assertFail();
+            }).catch((error) => {
+                console.error('queryStatisticsTest3 fail' + `, error code is ${error.code}, message is ${error.message}`);
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            console.error('queryStatisticsTest3 fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+    })
+
+    /**
+     * @tc.name queryStatisticsTest
+     * @tc.desc Test Js Api queryStatistics with effective args
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('queryStatisticsTest4', 0, async function (done) {
+        console.info('queryStatisticsTest4');
+        try {
+            const accountId = "accountId";
+            const bundleName = "bundleName";
+            await cloudData.Config.queryStatistics(accountId, bundleName).then((etc) => {
+                console.info('queryStatisticsTest4 success' + `, info is ${JSON.stringify(etc)}`);
+                expect(etc != null).assertTrue();
+            }).catch((error) => {
+                console.error('queryStatisticsTest4 fail' + `, error code is ${error.code}, message is ${error.message}`);
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            console.error('queryStatisticsTest4 fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 201).assertTrue();
+        }
+        done();
+    })
+
+    /**
+     * @tc.name queryStatisticsTest
+     * @tc.desc Test Js Api queryStatistics with effective args
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('queryStatisticsTest5', 0, async function (done) {
+        console.info('queryStatisticsTest5');
+        try {
+            const accountId = "accountId";
+            const bundleName = "bundleName";
+            await cloudData.Config.queryStatistics(accountId, bundleName, null).then((etc) => {
+                console.info('queryStatisticsTest5 success' + `, info is ${JSON.stringify(etc)}`);
+                expect(etc != null).assertTrue();
+            }).catch((error) => {
+                console.error('queryStatisticsTest5 fail' + `, error code is ${error.code}, message is ${error.message}`);
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            console.error('queryStatisticsTest5 fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 201).assertTrue();
+        }
+        done();
+    })
+
+    /**
+     * @tc.name queryStatisticsTest
+     * @tc.desc Test Js Api queryStatistics with effective args
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('queryStatisticsTest6', 0, async function (done) {
+        console.info('queryStatisticsTest6');
+        try {
+            const accountId = "accountId";
+            const bundleName = "bundleName";
+            await cloudData.Config.queryStatistics(accountId, bundleName, undefined).then((etc) => {
+                console.info('queryStatisticsTest6 success' + `, info is ${JSON.stringify(etc)}`);
+                expect(etc != null).assertTrue();
+            }).catch((error) => {
+                console.error('queryStatisticsTest6 fail' + `, error code is ${error.code}, message is ${error.message}`);
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            console.error('queryStatisticsTest6 fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 201).assertTrue();
+        }
+        done();
+    })
+
+    /**
+     * @tc.name queryStatisticsTest
+     * @tc.desc Test Js Api queryStatistics with effective args
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('queryStatisticsTest7', 0, async function (done) {
+        console.info('queryStatisticsTest7');
+        try {
+            const accountId = "accountId";
+            const bundleName = "bundleName";
+            const storeId = "storeId";
+            await cloudData.Config.queryStatistics(accountId, bundleName, storeId).then((etc) => {
+                console.info('queryStatisticsTest7 success' + `, info is ${JSON.stringify(etc)}`);
+                expect(etc != null).assertTrue();
+            }).catch((error) => {
+                console.error('queryStatisticsTest7 fail' + `, error code is ${error.code}, message is ${error.message}`);
+                expect(null).assertFail();
+            });
+        } catch (e) {
+            console.error('queryStatisticsTest7 fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 201).assertTrue();
+        }
+        done();
+    })
+    
+    /**
      * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
      * @tc.name setGlobalCloudStrategyTest001
      * @tc.desc Test Js Api setGlobalCloudStrategy with invalid args.

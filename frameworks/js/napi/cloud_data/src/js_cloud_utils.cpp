@@ -226,5 +226,24 @@ napi_value Convert2JSValue(napi_env env, const std::pair<int32_t, std::string> &
     napi_set_named_property(env, jsValue, "value", val);
     return jsValue;
 }
+
+template<>
+napi_value Convert2JSValue(napi_env env, const StatisticInfo &value)
+{
+    napi_value jsValue = nullptr;
+    napi_status status = napi_create_object(env, &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    napi_value table = Convert2JSValue(env, value.table);
+    napi_value inserted = Convert2JSValue(env, value.inserted);
+    napi_value updated = Convert2JSValue(env, value.updated);
+    napi_value normal = Convert2JSValue(env, value.normal);
+    napi_set_named_property(env, jsValue, "table", table);
+    napi_set_named_property(env, jsValue, "inserted", inserted);
+    napi_set_named_property(env, jsValue, "updated", updated);
+    napi_set_named_property(env, jsValue, "normal", normal);
+    return jsValue;
+}
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit

@@ -36,6 +36,7 @@ public:
         TRANS_CLEAN,
         TRANS_NOTIFY_DATA_CHANGE,
         TRANS_NOTIFY_DATA_CHANGE_EXT,
+        TRANS_QUERY_STATISTICS,
         TRANS_SET_GLOBAL_CLOUD_STRATEGY,
         TRANS_CONFIG_BUTT,
         TRANS_SHARE_HEAD = TRANS_CONFIG_BUTT,
@@ -89,6 +90,8 @@ public:
     virtual int32_t Clean(const std::string &id, const std::map<std::string, int32_t> &actions) = 0;
     virtual int32_t NotifyDataChange(const std::string &id, const std::string &bundleName) = 0;
     virtual int32_t NotifyDataChange(const std::string &eventId, const std::string &extraData, int32_t userId) = 0;
+    virtual std::pair<int32_t, std::map<std::string, StatisticInfos>> QueryStatistics(const std::string &id,
+        const std::string &bundleName, const std::string &storeId) = 0;
     virtual int32_t SetGlobalCloudStrategy(Strategy strategy, const std::vector<CommonType::Value>& values) = 0;
 
     virtual std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> AllocResourceAndShare(const std::string &storeId,
