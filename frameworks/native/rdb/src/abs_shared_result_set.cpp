@@ -61,11 +61,6 @@ bool AbsSharedResultSet::OnGo(int oldRowIndex, int newRowIndex)
     return true;
 }
 
-void AbsSharedResultSet::FillBlock(int startRowIndex, AppDataFwk::SharedBlock *block)
-{
-    return;
-}
-
 /**
  * Get current shared block
  */
@@ -366,7 +361,7 @@ int AbsSharedResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
         LOG_ERROR("GetAsset the type of cell is null !");
         return E_NULL_OBJECT;
     }
-    
+
     if (cellUnit->type != AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET) {
         LOG_ERROR("GetAssets the type of cell is not assets, type is %{public}d, col is %{public}d!", cellUnit->type,
             col);
@@ -524,7 +519,7 @@ int AbsSharedResultSet::CheckState(int columnIndex)
     if (rowPos_ < 0 || rowPos_ >= count) {
         return E_INVALID_STATEMENT;
     }
-    
+
     GetColumnCount(count);
     if (columnIndex >= count || columnIndex < 0) {
         return E_INVALID_COLUMN_INDEX;

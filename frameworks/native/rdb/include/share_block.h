@@ -31,25 +31,10 @@ enum FillOneRowResult {
     FILL_ONE_ROW_FAIL,
 };
 
-struct SqliteConnectionS {
-    // Open flags.
-    // Must be kept in sync with the constants defined in SQLiteDatabase.java.
-    enum {
-        OPEN_READONLY = 0x00000001,
-        OPEN_READWRITE = 0x00000002,
-        CREATE_IF_NECESSARY = 0x00000004,
-    };
-    sqlite3 * const db;
-    const int openFlags;
-    std::string path;
-
-    SqliteConnectionS(sqlite3 *db, int openFlags, const std::string &path) : db(db), openFlags(openFlags), path(path) {}
-};
-
 struct SharedBlockInfo {
-    SqliteConnectionS *connection;
-    AppDataFwk::SharedBlock *sharedBlock;
-    sqlite3_stmt *statement;
+    AppDataFwk::SharedBlock *sharedBlock = nullptr;
+    sqlite3 *db = nullptr;
+    sqlite3_stmt *statement = nullptr;
 
     int startPos;
     int addedRows;
@@ -60,8 +45,8 @@ struct SharedBlockInfo {
     bool isFull;
     bool hasException;
 
-    SharedBlockInfo(SqliteConnectionS *connection, AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement)
-        : connection(connection), sharedBlock(sharedBlock), statement(statement)
+    SharedBlockInfo(AppDataFwk::SharedBlock* sharedBlock, sqlite3* db, sqlite3_stmt* statement)
+        : sharedBlock(sharedBlock), db(db), statement(statement)
     {
         startPos = 0;
         addedRows = 0;

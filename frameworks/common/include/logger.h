@@ -41,7 +41,7 @@ static inline OHOS::HiviewDFX::HiLogLabel LogLabel()
         using HiLog = OHOS::HiviewDFX::HiLog;                                             \
         auto lable = LogLabel();                                                          \
         if (HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_DEBUG)) {              \
-            HiLog::Debug(lable, "::[%{public}s:%{public}d]: " fmt, __FUNCTION__, __LINE__, \
+            HiLog::Debug(lable, "[%{public}s:%{public}d]: " fmt, __FUNCTION__, __LINE__,  \
                 ##__VA_ARGS__);                                                           \
         }                                                                                 \
     } while (0)
@@ -51,7 +51,7 @@ static inline OHOS::HiviewDFX::HiLogLabel LogLabel()
         using HiLog = OHOS::HiviewDFX::HiLog;                                             \
         auto lable = LogLabel();                                                          \
         if (HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_INFO)) {               \
-            HiLog::Info(lable, "::[%{public}s:%{public}d]: " fmt, __FUNCTION__, __LINE__, \
+            HiLog::Info(lable, "[%{public}s:%{public}d]: " fmt, __FUNCTION__, __LINE__,   \
                 ##__VA_ARGS__);                                                           \
         }                                                                                 \
     } while (0)
@@ -61,7 +61,7 @@ static inline OHOS::HiviewDFX::HiLogLabel LogLabel()
         using HiLog = OHOS::HiviewDFX::HiLog;                                             \
         auto lable = LogLabel();                                                          \
         if (HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_WARN)) {               \
-            HiLog::Warn(lable, "::[%{public}s:%{public}d]: " fmt, __FUNCTION__, __LINE__, \
+            HiLog::Warn(lable, "[%{public}s:%{public}d]: " fmt, __FUNCTION__, __LINE__,   \
                 ##__VA_ARGS__);                                                           \
         }                                                                                 \
     } while (0)
@@ -71,7 +71,7 @@ static inline OHOS::HiviewDFX::HiLogLabel LogLabel()
         using HiLog = OHOS::HiviewDFX::HiLog;                                             \
         auto lable = LogLabel();                                                          \
         if (HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_ERROR)) {              \
-            HiLog::Error(lable, "::[%{public}s:%{public}d]: " fmt, __FUNCTION__, __LINE__, \
+            HiLog::Error(lable, "[%{public}s:%{public}d]: " fmt, __FUNCTION__, __LINE__,  \
                 ##__VA_ARGS__);                                                           \
         }                                                                                 \
     } while (0)
@@ -81,7 +81,7 @@ static inline OHOS::HiviewDFX::HiLogLabel LogLabel()
         using HiLog = OHOS::HiviewDFX::HiLog;                                             \
         auto lable = LogLabel();                                                          \
         if (HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_FATAL)) {              \
-            HiLog::Fatal(lable, "::[%{public}s:%{public}d]: " fmt, __FUNCTION__, __LINE__, \
+            HiLog::Fatal(lable, "[%{public}s:%{public}d]: " fmt, __FUNCTION__, __LINE__,  \
                 ##__VA_ARGS__);                                                           \
         }                                                                                 \
     } while (0)

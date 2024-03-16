@@ -15,16 +15,18 @@
 
 #include "sqlite_statement.h"
 
-#include <iomanip>
-#include <sstream>
 #include <chrono>
 #include <cinttypes>
+#include <iomanip>
+#include <sstream>
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
+#include "sqlite3sym.h"
+#include "sqlite_connection.h"
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
-#include "sqlite_connection.h"
+#include "shared_block_serializer_info.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -56,7 +58,7 @@ std::shared_ptr<SqliteStatement> SqliteStatement::CreateStatement(
     }
     std::shared_ptr<SqliteStatement> sqliteStatement = std::make_shared<SqliteStatement>();
     sqliteStatement->stmtHandle = stmt;
-    sqliteStatement->readOnly = (sqlite3_stmt_readonly(stmt) != 0) ? true : false;
+    sqliteStatement->readOnly = (sqlite3_stmt_readonly(stmt) != 0);
     sqliteStatement->columnCount = sqlite3_column_count(stmt);
     sqliteStatement->numParameters = sqlite3_bind_parameter_count(stmt);
     return sqliteStatement;
@@ -499,6 +501,11 @@ int SqliteStatement::IsValid(int index) const
     }
 
     return E_OK;
+}
+
+bool SqliteStatement::SupportSharedBlock() const
+{
+    return (sqlite3_db_config(nullptr, SQLITE_USE_SHAREDBLOCK) == SQLITE_OK);
 }
 } // namespace NativeRdb
 } // namespace OHOS

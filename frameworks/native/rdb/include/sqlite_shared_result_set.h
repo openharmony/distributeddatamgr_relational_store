@@ -34,7 +34,7 @@ namespace OHOS {
 namespace NativeRdb {
 class SqliteSharedResultSet : public AbsSharedResultSet {
 public:
-    SqliteSharedResultSet(std::shared_ptr<SqliteConnectionPool> connectionPool, std::string path,
+    SqliteSharedResultSet(std::shared_ptr<SqliteConnectionPool> pool, std::string path,
         std::string sql, const std::vector<ValueObject> &bindArgs);
     ~SqliteSharedResultSet() override;
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
@@ -49,18 +49,20 @@ protected:
     void Finalize() override;
 
 private:
-    std::shared_ptr<SqliteStatement> PrepareStep(std::shared_ptr<SqliteConnection> connection, int &errCode);
-    void FillSharedBlock(int requiredPos);
+    std::pair<std::shared_ptr<SqliteStatement>, int> PrepareStep();
+    void FillBlock(int requiredPos);
+    int ExecuteForSharedBlock(AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows);
+
 private:
     // The specified value is -1 when there is no data
     static const int NO_COUNT = -1;
     // The pick position of the shared block for search
     static const int PICK_POS = 3;
-
-    std::shared_ptr<SqliteConnectionPool> connectionPool_;
     int resultSetBlockCapacity_;
     // The number of rows in the cursor
     int rowNum_;
+
+    std::shared_ptr<SqliteConnection> conn_;
     std::string qrySql_;
     std::vector<ValueObject> bindArgs_;
     std::vector<std::string> columnNames_;
