@@ -48,18 +48,16 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-// error status
-const int ERROR_STATUS = -1;
 #if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using RdbKeyFile = RdbSecurityManager::KeyFileType;
 #endif
 #endif
 
 std::shared_ptr<SqliteConnection> SqliteConnection::Open(
-    const RdbStoreConfig &config, bool isWriteConnection, int &errCode)
+    const RdbStoreConfig &config, bool isWrite, int &errCode)
 {
     for (size_t i = 0; i < ITERS_COUNT; i++) {
-        std::shared_ptr<SqliteConnection> connection(new (std::nothrow) SqliteConnection(isWriteConnection));
+        std::shared_ptr<SqliteConnection> connection(new (std::nothrow) SqliteConnection(isWrite));
         if (connection == nullptr) {
             LOG_ERROR("SqliteConnection::Open new failed, connection is nullptr");
             return nullptr;
@@ -76,12 +74,12 @@ SqliteConnection::SqliteConnection(bool isWriteConnection)
     : dbHandle(nullptr),
       isWriteConnection(isWriteConnection),
       isReadOnly(false),
+      inTransaction_(false),
+      openFlags(0),
+      id_(-1),
       statement(),
       stepStatement(nullptr),
-      filePath(""),
-      openFlags(0),
-      inTransaction_(false),
-      id_(-1)
+      filePath("")
 {
 }
 
@@ -596,13 +594,13 @@ bool SqliteConnection::IsWriteConnection() const
     return isWriteConnection;
 }
 
-int32_t SqliteConnection::SetId(uint32_t id)
+int32_t SqliteConnection::SetId(int32_t id)
 {
     id_ = id;
     return E_OK;
 }
 
-uint32_t SqliteConnection::GetId() const
+int32_t SqliteConnection::GetId() const
 {
     return id_;
 }
@@ -762,20 +760,6 @@ int SqliteConnection::ExecuteGetString(
     return errCode;
 }
 
-std::shared_ptr<SqliteStatement> SqliteConnection::BeginStepQuery(int &errCode, const std::string &sql,
-    const std::vector<ValueObject> &args) const
-{
-    errCode = stepStatement->Prepare(dbHandle, sql);
-    if (errCode != E_OK) {
-        return nullptr;
-    }
-    errCode = stepStatement->BindArguments(args);
-    if (errCode != E_OK) {
-        return nullptr;
-    }
-    return stepStatement;
-}
-
 int SqliteConnection::DesFinalize()
 {
     int errCode = 0;
@@ -793,11 +777,6 @@ int SqliteConnection::DesFinalize()
         sqlite3_db_release_memory(dbHandle);
     }
     return errCode;
-}
-
-int SqliteConnection::EndStepQuery()
-{
-    return stepStatement->ResetStatementAndClearBindings();
 }
 
 void SqliteConnection::LimitPermission(const std::string &dbPath) const
@@ -852,7 +831,7 @@ void LocalizedCollatorDestroy(UCollator *collator)
 int SqliteConnection::ConfigLocale(const std::string& localeStr)
 {
 #ifdef RDB_SUPPORT_ICU
-    std::unique_lock<std::mutex> lock(rdbMutex);
+    std::unique_lock<std::mutex> lock(mutex_);
     UErrorCode status = U_ZERO_ERROR;
     UCollator *collator = ucol_open(localeStr.c_str(), &status);
     if (U_FAILURE(status)) {
@@ -876,59 +855,6 @@ int SqliteConnection::ConfigLocale(const std::string& localeStr)
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-/**
- * Executes a statement and populates the specified with a range of results.
- */
-int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const std::vector<ValueObject> &bindArgs,
-    AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows)
-{
-    if (sharedBlock == nullptr) {
-        LOG_ERROR("sharedBlock null.");
-        return E_ERROR;
-    }
-    SqliteConnectionS connection(this->dbHandle, this->openFlags, this->filePath);
-    int errCode = PrepareAndBind(sql, bindArgs);
-    if (errCode != E_OK) {
-        LOG_ERROR("error: %{public}d sql: %{public}s startPos: %{public}d requiredPos: %{public}d"
-            "isCountAllRows: %{public}d", errCode, SqliteUtils::Anonymous(sql).c_str(),
-            startPos, requiredPos, isCountAllRows);
-        return errCode;
-    }
-    if (ClearSharedBlock(sharedBlock) == ERROR_STATUS) {
-        LOG_ERROR("failed. %{public}d. sql: %{public}s.", errCode, SqliteUtils::Anonymous(sql).c_str());
-        return E_ERROR;
-    }
-    sqlite3_stmt *tempSqlite3St = statement.GetSql3Stmt();
-    int columnNum = sqlite3_column_count(tempSqlite3St);
-    if (SharedBlockSetColumnNum(sharedBlock, columnNum) == ERROR_STATUS) {
-        LOG_ERROR("failed.columnNum: %{public}d,sql: %{public}s", columnNum, SqliteUtils::Anonymous(sql).c_str());
-        return E_ERROR;
-    }
-
-    SharedBlockInfo sharedBlockInfo(&connection, sharedBlock, tempSqlite3St);
-    sharedBlockInfo.requiredPos = requiredPos;
-    sharedBlockInfo.columnNum = columnNum;
-    sharedBlockInfo.isCountAllRows = isCountAllRows;
-    sharedBlockInfo.startPos = startPos;
-
-    int rc = sqlite3_db_config(connection.db, SQLITE_DBCONFIG_USE_SHAREDBLOCK);
-    if (rc == SQLITE_OK) {
-        FillSharedBlockOpt(&sharedBlockInfo);
-    } else {
-        FillSharedBlock(&sharedBlockInfo);
-    }
-
-    if (!ResetStatement(&sharedBlockInfo)) {
-        LOG_ERROR("err.startPos:%{public}d,addedRows:%{public}d", sharedBlockInfo.startPos, sharedBlockInfo.addedRows);
-        return E_ERROR;
-    }
-    sharedBlock->SetStartPos(sharedBlockInfo.startPos);
-    sharedBlock->SetBlockPos(requiredPos - sharedBlockInfo.startPos);
-    sharedBlock->SetLastPos(sharedBlockInfo.startPos + sharedBlock->GetRowNum());
-    rowNum = static_cast<int>(GetCombinedData(sharedBlockInfo.startPos, sharedBlockInfo.totalRows));
-    return statement.ResetStatementAndClearBindings();
-}
-
 int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
     if (table.empty()) {

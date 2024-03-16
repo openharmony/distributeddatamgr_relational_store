@@ -37,9 +37,11 @@ using DataChangeCallback = std::function<void(ClientChangedData &clientChangedDa
 
 class SqliteConnection {
 public:
-    static std::shared_ptr<SqliteConnection> Open(const RdbStoreConfig &config, bool isWriteConnection, int &errCode);
+    static std::shared_ptr<SqliteConnection> Open(const RdbStoreConfig &config, bool isWrite, int &errCode);
     ~SqliteConnection();
     bool IsWriteConnection() const;
+    int32_t SetId(int32_t id);
+    int32_t GetId() const;
     int Prepare(const std::string &sql, bool &outIsReadOnly);
     int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteForChangedRowCount(int &changedRows, const std::string &sql, const std::vector<ValueObject> &bindArgs);
@@ -49,24 +51,17 @@ public:
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteGetString(std::string &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
-    std::shared_ptr<SqliteStatement> BeginStepQuery(int &errCode, const std::string &sql,
-        const std::vector<ValueObject> &args) const;
     int ExecuteEncryptSql(const RdbStoreConfig &config, uint32_t iter);
     int ReSetKey(const RdbStoreConfig &config);
     int DesFinalize();
-    int EndStepQuery();
     void SetInTransaction(bool transaction);
     bool IsInTransaction();
     int TryCheckPoint();
     int LimitWalSize();
     int ConfigLocale(const std::string &localeStr);
-    int ExecuteForSharedBlock(int &rowNum, std::string sql, const std::vector<ValueObject> &bindArgs,
-        AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows);
     int CleanDirtyData(const std::string &table, uint64_t cursor);
     int RegisterCallBackObserver(const DataChangeCallback &clientChangedData);
     int GetMaxVariableNumber();
-    uint32_t GetId() const;
-    int32_t SetId(uint32_t id);
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     explicit SqliteConnection(bool isWriteConnection);
@@ -96,27 +91,26 @@ private:
 
     friend class SqliteStatement;
 
-    sqlite3 *dbHandle;
-    bool isWriteConnection;
-    bool isReadOnly;
-    SqliteStatement statement;
-    std::shared_ptr<SqliteStatement> stepStatement;
-    std::string filePath;
-    int openFlags;
-    std::mutex rdbMutex;
-    bool inTransaction_;
-    std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
-
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr uint32_t NO_ITER = 0;
     static constexpr uint32_t ITER_V1 = 5000;
     static constexpr uint32_t ITERS[] = {NO_ITER, ITER_V1};
     static constexpr uint32_t ITERS_COUNT = sizeof(ITERS) / sizeof(ITERS[0]);
 
+    sqlite3 *dbHandle;
+    bool isWriteConnection;
+    bool isReadOnly;
     bool isConfigured_ = false;
-    int maxVariableNumber_;
+    bool inTransaction_;
     bool hasClientObserver_ = false;
-    int id_;
+    int openFlags;
+    int maxVariableNumber_;
+    int32_t id_ = 0;
+    std::mutex mutex_;
+    SqliteStatement statement;
+    std::shared_ptr<SqliteStatement> stepStatement;
+    std::string filePath;
+    std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
 };
 
 } // namespace NativeRdb

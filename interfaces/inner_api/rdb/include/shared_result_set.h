@@ -46,11 +46,6 @@ public:
     virtual AppDataFwk::SharedBlock *GetBlock() = 0;
 
     /**
-     * @brief Adds the data of a {@code SharedResultSet} to a {@link SharedBlock}.
-     */
-    virtual void FillBlock(int startRowIndex, AppDataFwk::SharedBlock *block) = 0;
-
-    /**
      * @brief Called when the position of the result set changes.
      */
     virtual bool OnGo(int oldRowIndex, int newRowIndex) = 0;
