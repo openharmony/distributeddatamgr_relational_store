@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include "cloud_types.h"
+#include "common_types.h"
 #include "rdb_types.h"
 #include "values_bucket.h"
 namespace OHOS {
@@ -28,13 +29,17 @@ class CloudService {
 public:
     enum TransId : int32_t {
         TRANS_HEAD,
-        TRANS_ENABLE_CLOUD = TRANS_HEAD,
+        TRANS_CONFIG_HEAD = TRANS_HEAD,
+        TRANS_ENABLE_CLOUD = TRANS_CONFIG_HEAD,
         TRANS_DISABLE_CLOUD,
         TRANS_CHANGE_APP_SWITCH,
         TRANS_CLEAN,
         TRANS_NOTIFY_DATA_CHANGE,
         TRANS_NOTIFY_DATA_CHANGE_EXT,
-        TRANS_ALLOC_RESOURCE_AND_SHARE,
+        TRANS_SET_GLOBAL_CLOUD_STRATEGY,
+        TRANS_CONFIG_BUTT,
+        TRANS_SHARE_HEAD = TRANS_CONFIG_BUTT,
+        TRANS_ALLOC_RESOURCE_AND_SHARE = TRANS_SHARE_HEAD,
         TRANS_SHARE,
         TRANS_UNSHARE,
         TRANS_EXIT,
@@ -43,7 +48,11 @@ public:
         TRANS_QUERY_BY_INVITATION,
         TRANS_CONFIRM_INVITATION,
         TRANS_CHANGE_CONFIRMATION,
-        TRANS_BUTT,
+        TRANS_SHARE_BUTT,
+        TRANS_CLIENT_HEAD = TRANS_SHARE_BUTT,
+        TRANS_SET_CLOUD_STRATEGY = TRANS_CLIENT_HEAD,
+        TRANS_CLIENT_BUTT,
+        TRANS_BUTT = TRANS_CLIENT_BUTT,
     };
     enum Action : int32_t {
         CLEAR_CLOUD_INFO,
@@ -80,6 +89,7 @@ public:
     virtual int32_t Clean(const std::string &id, const std::map<std::string, int32_t> &actions) = 0;
     virtual int32_t NotifyDataChange(const std::string &id, const std::string &bundleName) = 0;
     virtual int32_t NotifyDataChange(const std::string &eventId, const std::string &extraData, int32_t userId) = 0;
+    virtual int32_t SetGlobalCloudStrategy(Strategy strategy, const std::vector<CommonType::Value>& values) = 0;
 
     virtual std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> AllocResourceAndShare(const std::string &storeId,
         const DistributedRdb::PredicatesMemo &predicates, const std::vector<std::string> &columns,
@@ -95,6 +105,8 @@ public:
         std::tuple<int32_t, std::string, std::string> &result) = 0;
     virtual int32_t ChangeConfirmation(const std::string &sharingRes,
         int32_t confirmation, std::pair<int32_t, std::string> &result) = 0;
+
+    virtual int32_t SetCloudStrategy(Strategy strategy, const std::vector<CommonType::Value>& values) = 0;
 
     inline static constexpr const char *SERVICE_NAME = "cloud";
 };

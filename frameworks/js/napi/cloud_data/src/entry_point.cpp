@@ -13,6 +13,7 @@
 * limitations under the License.
 */
 
+#include "js_client.h"
 #include "js_config.h"
 #include "js_const_properties.h"
 #include "logger.h"
@@ -25,10 +26,13 @@ static napi_value Init(napi_env env, napi_value exports)
 {
     auto sharingExport = InitCloudSharing(env, exports);
     napi_status status = InitSharingConstProperties(env, sharingExport);
-    LOG_INFO("init Enumerate Constants %{public}d", status);
+    LOG_INFO("init Enumerate Constants of Sharing: %{public}d", status);
     exports = JsConfig::InitConfig(env, exports);
     status = InitConstProperties(env, exports);
-    LOG_INFO("init Enumerate Constants %{public}d", status);
+    LOG_INFO("init Enumerate Constants of Config: %{public}d", status);
+    exports = InitClient(env, exports);
+    status = InitClientProperties(env, exports);
+    LOG_INFO("init Enumerate Constants of Client: %{public}d", status);
     return exports;
 }
 
