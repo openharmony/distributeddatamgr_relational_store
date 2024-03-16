@@ -58,7 +58,7 @@ int SqliteConnectionPool::Init()
 {
     if (config_.GetRoleType() == OWNER) {
         // write connect count is 1
-        auto errCode = writers_.Initialize(1, writeTimeout_, [this]() {
+        auto errCode = writers_.Initialize(1, config_.GetWriteTime(), [this]() {
             int32_t errCode = E_OK;
             auto conn = SqliteConnection::Open(config_, true, errCode);
             return std::pair{ errCode, conn };
@@ -74,7 +74,7 @@ int SqliteConnectionPool::Init()
         return E_ARGS_READ_CON_OVERLOAD;
     }
 
-    return readers_.Initialize(maxReader_, readTimeout_, [this]() {
+    return readers_.Initialize(maxReader_, config_.GetReadTime(), [this]() {
         int32_t errCode = E_OK;
         auto conn = SqliteConnection::Open(config_, false, errCode);
         return std::pair{ errCode, conn };
@@ -176,7 +176,7 @@ void SqliteConnectionPool::ReleaseTransaction()
 int SqliteConnectionPool::RestartReaders()
 {
     readers_.Clear();
-    return readers_.Initialize(maxReader_, readTimeout_, [this]() {
+    return readers_.Initialize(maxReader_, config_.GetReadTime(), [this]() {
         int32_t errCode = E_OK;
         auto conn = SqliteConnection::Open(config_, false, errCode);
         return std::pair{ errCode, conn };
