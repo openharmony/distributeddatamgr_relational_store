@@ -102,6 +102,17 @@ int32_t CloudServiceProxy::NotifyDataChange(const std::string &id, const std::st
     return static_cast<Status>(status);
 }
 
+int32_t CloudServiceProxy::SetGlobalCloudStrategy(Strategy strategy, const std::vector<CommonType::Value> &values)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_SET_GLOBAL_CLOUD_STRATEGY, reply, strategy, values);
+    if (status != SUCCESS) {
+        LOG_ERROR("status:0x%{public}x strategy:%{public}d values size:%{public}zu", status,
+            static_cast<uint32_t>(strategy), values.size());
+    }
+    return static_cast<Status>(status);
+}
+
 std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> CloudServiceProxy::AllocResourceAndShare(
     const std::string &storeId, const DistributedRdb::PredicatesMemo &predicates,
     const std::vector<std::string> &columns, const std::vector<Participant> &participants)
@@ -221,6 +232,17 @@ int32_t CloudServiceProxy::ChangeConfirmation(const std::string &sharingRes,
         LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s", status, sharingRes.c_str());
     }
     ITypesUtil::Unmarshal(reply, result);
+    return static_cast<Status>(status);
+}
+
+int32_t CloudServiceProxy::SetCloudStrategy(Strategy strategy, const std::vector<CommonType::Value> &values)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_SET_CLOUD_STRATEGY, reply, strategy, values);
+    if (status != SUCCESS) {
+        LOG_ERROR("status:0x%{public}x strategy:%{public}d values size:%{public}zu", status,
+            static_cast<uint32_t>(strategy), values.size());
+    }
     return static_cast<Status>(status);
 }
 } // namespace OHOS::CloudData

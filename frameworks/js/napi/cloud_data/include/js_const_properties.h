@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef LDBPROJ_JS_CONST_PROPERTIES_H
-#define LDBPROJ_JS_CONST_PROPERTIES_H
+#ifndef CLOUD_DATA_JS_CONST_PROPERTIES_H
+#define CLOUD_DATA_JS_CONST_PROPERTIES_H
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -22,5 +22,6 @@
 namespace OHOS::CloudData {
 napi_status InitConstProperties(napi_env env, napi_value exports);
 napi_status InitSharingConstProperties(napi_env env, napi_value exports);
+napi_status InitClientProperties(napi_env env, napi_value exports);
 } // namespace OHOS::CloudData
-#endif //LDBPROJ_JS_CONST_PROPERTIES_H
+#endif //CLOUD_DATA_JS_CONST_PROPERTIES_H

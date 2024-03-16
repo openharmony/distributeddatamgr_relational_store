@@ -23,6 +23,7 @@
 #include "js_error_utils.h"
 #include "js_utils.h"
 #include "js_cloud_utils.h"
+#include "js_strategy_context.h"
 #include "logger.h"
 #include "napi_queue.h"
 
@@ -314,6 +315,49 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute);
 }
 
+napi_value JsConfig::SetGlobalCloudStrategy(napi_env env, napi_callback_info info)
+{
+    auto ctxt = std::make_shared<CloudStrategyContext>();
+    ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
+        // strategy 1 required parameter, param 1 Optional parameter
+        ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
+        int32_t strategy = -1;
+        int status = JSUtils::Convert2ValueExt(env, argv[0], strategy);
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && strategy >= 0 && strategy < Strategy::STRATEGY_BUTT,
+            Status::INVALID_ARGUMENT, "The type of strategy must be StrategyType.");
+        ctxt->strategy = static_cast<Strategy>(strategy);
+        // 'argv[1]' represents a vector<CommonType::Value> param or null
+        if (argc == 1 || JSUtils::IsNull(env, argv[1])) {
+            ctxt->SetDefault();
+        } else {
+            // 'argv[1]' represents a vector<CommonType::Value> param
+            status = JSUtils::Convert2Value(env, argv[1], ctxt->param);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                "The type of param must be Array<commonType.ValueType>");
+            auto res = ctxt->CheckParam();
+            ASSERT_BUSINESS_ERR(ctxt, res.first == JSUtils::OK, Status::INVALID_ARGUMENT, res.second);
+        }
+    });
+    ASSERT_NULL(!ctxt->isThrowError, "SetGlobalCloudStrategy exit");
+    auto execute = [env, ctxt]() {
+        auto [status, proxy] = CloudManager::GetInstance().GetCloudService();
+        if (proxy == nullptr) {
+            if (status != CloudService::SERVER_UNAVAILABLE) {
+                status = CloudService::NOT_SUPPORT;
+            }
+            ctxt->status = (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+                               ? napi_ok: napi_generic_failure;
+            return;
+        }
+        LOG_DEBUG("SetGlobalCloudStrategy execute");
+
+        auto res = proxy->SetGlobalCloudStrategy(ctxt->strategy, ctxt->param);
+        ctxt->status =
+            (GenerateNapiError(res, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
+    };
+    return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute);
+}
+
 napi_value JsConfig::New(napi_env env, napi_callback_info info)
 {
     napi_value self = nullptr;
@@ -352,6 +396,7 @@ napi_value JsConfig::InitConfig(napi_env env, napi_value exports)
             DECLARE_NAPI_STATIC_FUNCTION("clear", JsConfig::Clean),
             DECLARE_NAPI_STATIC_FUNCTION("clean", JsConfig::Clean),
             DECLARE_NAPI_STATIC_FUNCTION("notifyDataChange", JsConfig::NotifyDataChange),
+            DECLARE_NAPI_STATIC_FUNCTION("setGlobalCloudStrategy", JsConfig::SetGlobalCloudStrategy),
         };
         return properties;
     };
