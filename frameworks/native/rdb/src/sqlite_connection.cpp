@@ -805,6 +805,7 @@ void SqliteConnection::LimitPermission(const std::string &dbPath) const
 #ifdef RDB_SUPPORT_ICU
 int Collate8Compare(void *p, int n1, const void *v1, int n2, const void *v2)
 {
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     UCollator *coll = reinterpret_cast<UCollator *>(p);
     UCharIterator i1;
     UCharIterator i2;
@@ -824,12 +825,15 @@ int Collate8Compare(void *p, int n1, const void *v1, int n2, const void *v2)
     } else if (result == UCOL_GREATER) {
         return 1;
     }
+#endif
     return 0;
 }
 
 void LocalizedCollatorDestroy(UCollator *collator)
 {
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     ucol_close(collator);
+#endif
 }
 
 /**
@@ -837,6 +841,7 @@ void LocalizedCollatorDestroy(UCollator *collator)
  */
 int SqliteConnection::ConfigLocale(const std::string localeStr)
 {
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     std::unique_lock<std::mutex> lock(rdbMutex);
     UErrorCode status = U_ZERO_ERROR;
     UCollator *collator = ucol_open(localeStr.c_str(), &status);
@@ -856,7 +861,7 @@ int SqliteConnection::ConfigLocale(const std::string localeStr)
         LOG_ERROR("SCreate collator in sqlite3 failed.");
         return err;
     }
-
+#endif
     return E_OK;
 }
 #endif
