@@ -341,6 +341,7 @@ napi_value JsConfig::QueryStatistics(napi_env env, napi_callback_info info)
         status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of bundleName must be string.");
+        // 2 is the index of argument storeId
         if (argc > 2 && !JSUtils::IsNull(ctxt->env, argv[2])) {
             // 2 is the index of argument storeId
             status = JSUtils::Convert2Value(env, argv[2], ctxt->storeId);
