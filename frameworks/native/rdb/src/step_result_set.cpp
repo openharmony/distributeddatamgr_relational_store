@@ -29,10 +29,10 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb_, SqliteConnectionPool *connectionPool,
-    const std::string &sql_, const std::vector<ValueObject> &selectionArgs)
-    : rdb_(rdb_), sqliteStatement_(nullptr), args_(std::move(selectionArgs)), sql_(sql_),
-      connectionPool_(connectionPool), rowCount_(INIT_POS), isAfterLast_(false)
+StepResultSet::StepResultSet(std::shared_ptr<SqliteConnectionPool> connectionPool, const std::string& sql_,
+    const std::vector<ValueObject>& selectionArgs)
+    : sqliteStatement_(nullptr), args_(std::move(selectionArgs)), sql_(sql_),
+      connectionPool_(std::move(connectionPool)), rowCount_(INIT_POS), isAfterLast_(false), connId_(INIT_POS)
 {
     int errCode = PrepareStep();
     if (errCode) {
@@ -43,7 +43,6 @@ StepResultSet::StepResultSet(std::shared_ptr<RdbStoreImpl> rdb_, SqliteConnectio
 StepResultSet::~StepResultSet()
 {
     Close();
-    rdb_.reset();
 }
 
 int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
@@ -63,9 +62,13 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
         LOG_ERROR("get all column names Step ret %{public}d", errCode);
         return errCode;
     }
-
+    auto [statement, connection] = GetStatement();
+    if (statement == nullptr) {
+        LOG_ERROR("resultSet closed");
+        return E_STEP_RESULT_CLOSED;
+    }
     int columnCount = 0;
-    errCode = sqliteStatement_->GetColumnCount(columnCount);
+    errCode = statement->GetColumnCount(columnCount);
     if (errCode) {
         LOG_ERROR("GetColumnCount ret %{public}d", errCode);
         return errCode;
@@ -74,7 +77,7 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
     columnNames.clear();
     for (int i = 0; i < columnCount; i++) {
         std::string columnName;
-        errCode = sqliteStatement_->GetColumnName(i, columnName);
+        errCode = statement->GetColumnName(i, columnName);
         if (errCode) {
             columnNames.clear();
             LOG_ERROR("GetColumnName ret %{public}d", errCode);
@@ -88,7 +91,8 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 
 int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 {
-    if (isClosed_) {
+    auto [statement, conn] = GetStatement();
+    if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
     }
@@ -97,12 +101,9 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
         LOG_ERROR("query not executed.");
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
-    if (sqliteStatement_ == nullptr) {
-        LOG_ERROR("sqliteStatement_ init failed!");
-        return E_CON_OVER_LIMIT;
-    }
+
     int sqliteType;
-    int errCode = sqliteStatement_->GetColumnType(columnIndex, sqliteType);
+    int errCode = statement->GetColumnType(columnIndex, sqliteType);
     if (errCode) {
         LOG_ERROR("GetColumnType ret %{public}d", errCode);
         return errCode;
@@ -198,8 +199,14 @@ int StepResultSet::GoToNextRow()
         return errCode;
     }
 
+    auto [statement, conn] = GetStatement();
+    if (statement == nullptr) {
+        LOG_ERROR("resultSet closed");
+        return E_STEP_RESULT_CLOSED;
+    }
+
     int retryCount = 0;
-    errCode = sqliteStatement_->Step();
+    errCode = statement->Step();
 
     while (errCode == SQLITE_LOCKED || errCode == SQLITE_BUSY) {
         // The table is locked, retry
@@ -209,7 +216,7 @@ int StepResultSet::GoToNextRow()
         } else {
             // Sleep to give the thread holding the lock a chance to finish
             usleep(STEP_QUERY_RETRY_INTERVAL);
-            errCode = sqliteStatement_->Step();
+            errCode = statement->Step();
             retryCount++;
         }
     }
@@ -236,9 +243,9 @@ int StepResultSet::Close()
     if (isClosed_) {
         return E_OK;
     }
-    rdb_.reset();
     auto args = std::move(args_);
-    sqliteStatement_.reset();
+    sqliteStatement_ = nullptr;
+    connId_ = -1;
     auto columnNames = std::move(columnNames_);
     isClosed_ = true;
     return FinishStep();
@@ -258,24 +265,31 @@ int StepResultSet::PrepareStep()
         return E_EXECUTE_IN_STEP_QUERY;
     }
 
-    auto connection = connectionPool_->AcquireConnection(true);
+    auto pool = connectionPool_;
+    if (pool == nullptr) {
+        return E_STEP_RESULT_CLOSED;
+    }
+
+    auto connection = pool->AcquireConnection(true);
     if (connection == nullptr) {
         LOG_ERROR("connectionPool_ AcquireConnection failed!");
         return E_CON_OVER_LIMIT;
     }
-    sqliteStatement_ = SqliteStatement::CreateStatement(connection, sql_);
-    connectionPool_->ReleaseConnection(connection);
-    if (sqliteStatement_ == nullptr) {
+    auto statement = SqliteStatement::CreateStatement(connection, sql_);
+    if (statement == nullptr) {
         return E_STATEMENT_NOT_PREPARED;
     }
 
-    int errCode = sqliteStatement_->BindArguments(args_);
+    int errCode = statement->BindArguments(args_);
     if (errCode != E_OK) {
         LOG_ERROR("Bind arg faild! Ret is %{public}d", errCode);
-        sqliteStatement_->ResetStatementAndClearBindings();
-        sqliteStatement_ = nullptr;
+        statement->ResetStatementAndClearBindings();
+        statement = nullptr;
         return errCode;
     }
+    sqliteStatement_ = std::move(statement);
+    connId_ = connection->GetId();
+    conn_ = pool->AcquireByID(connection->GetId());
     return E_OK;
 }
 
@@ -284,9 +298,13 @@ int StepResultSet::PrepareStep()
  */
 int StepResultSet::FinishStep()
 {
-    if (sqliteStatement_ != nullptr) {
-        sqliteStatement_->ResetStatementAndClearBindings();
+    auto [statement, connection] = GetStatement();
+    if (statement != nullptr) {
+        statement->ResetStatementAndClearBindings();
         sqliteStatement_ = nullptr;
+        conn_ = nullptr;
+        connId_ = -1;
+        connection = nullptr;
     }
     rowPos_ = INIT_POS;
     return E_OK;
@@ -331,20 +349,23 @@ int StepResultSet::IsAtFirstRow(bool &result) const
 
 int StepResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
 {
-    if (isClosed_) {
+    auto [statement, conn] = GetStatement();
+    if (statement == nullptr) {
+        LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
     }
     if (rowPos_ == INIT_POS) {
         LOG_ERROR("query not executed.");
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
-
-    return sqliteStatement_->GetColumnBlob(columnIndex, blob);
+    return statement->GetColumnBlob(columnIndex, blob);
 }
 
 int StepResultSet::GetString(int columnIndex, std::string &value)
 {
-    if (isClosed_) {
+    auto [statement, conn] = GetStatement();
+    if (statement == nullptr) {
+        LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
     }
 
@@ -352,7 +373,7 @@ int StepResultSet::GetString(int columnIndex, std::string &value)
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
 
-    int errCode = sqliteStatement_->GetColumnString(columnIndex, value);
+    int errCode = statement->GetColumnString(columnIndex, value);
     if (errCode != E_OK) {
         LOG_ERROR("ret is %{public}d", errCode);
         return errCode;
@@ -362,7 +383,9 @@ int StepResultSet::GetString(int columnIndex, std::string &value)
 
 int StepResultSet::GetInt(int columnIndex, int &value)
 {
-    if (isClosed_) {
+    auto [statement, conn] = GetStatement();
+    if (statement == nullptr) {
+        LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
     }
     if (rowPos_ == INIT_POS) {
@@ -370,7 +393,7 @@ int StepResultSet::GetInt(int columnIndex, int &value)
     }
 
     int64_t columnValue;
-    int errCode = sqliteStatement_->GetColumnLong(columnIndex, columnValue);
+    int errCode = statement->GetColumnLong(columnIndex, columnValue);
     if (errCode != E_OK) {
         LOG_ERROR("ret is %{public}d", errCode);
         return errCode;
@@ -381,13 +404,15 @@ int StepResultSet::GetInt(int columnIndex, int &value)
 
 int StepResultSet::GetLong(int columnIndex, int64_t &value)
 {
-    if (isClosed_) {
+    auto [statement, conn] = GetStatement();
+    if (statement == nullptr) {
+        LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
     }
     if (rowPos_ == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
-    int errCode = sqliteStatement_->GetColumnLong(columnIndex, value);
+    int errCode = statement->GetColumnLong(columnIndex, value);
     if (errCode != E_OK) {
         LOG_ERROR("ret is %{public}d", errCode);
         return errCode;
@@ -397,13 +422,15 @@ int StepResultSet::GetLong(int columnIndex, int64_t &value)
 
 int StepResultSet::GetDouble(int columnIndex, double &value)
 {
-    if (isClosed_) {
+    auto [statement, conn] = GetStatement();
+    if (statement == nullptr) {
+        LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
     }
     if (rowPos_ == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
-    int errCode = sqliteStatement_->GetColumnDouble(columnIndex, value);
+    int errCode = statement->GetColumnDouble(columnIndex, value);
     if (errCode != E_OK) {
         LOG_ERROR("ret is %{public}d", errCode);
         return errCode;
@@ -428,14 +455,16 @@ int StepResultSet::Get(int32_t col, ValueObject &value)
 
 int StepResultSet::GetModifyTime(std::string &modifyTime)
 {
-    if (isClosed_) {
+    auto [statement, conn] = GetStatement();
+    if (statement == nullptr) {
+        LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
     }
     if (rowPos_ == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
     auto index = std::find(columnNames_.begin(), columnNames_.end(), "modifyTime");
-    int errCode = sqliteStatement_->GetColumnString(index - columnNames_.begin(), modifyTime);
+    int errCode = statement->GetColumnString(index - columnNames_.begin(), modifyTime);
     if (errCode != E_OK) {
         LOG_ERROR("ret is %{public}d", errCode);
         return errCode;
@@ -445,12 +474,18 @@ int StepResultSet::GetModifyTime(std::string &modifyTime)
 
 int StepResultSet::GetSize(int columnIndex, size_t &size)
 {
+    auto [statement, conn] = GetStatement();
+    if (statement == nullptr) {
+        LOG_ERROR("resultSet closed");
+        return E_STEP_RESULT_CLOSED;
+    }
+
     if (rowPos_ == INIT_POS) {
         size = 0;
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
 
-    return sqliteStatement_->GetSize(columnIndex, size);
+    return statement->GetSize(columnIndex, size);
 }
 
 int StepResultSet::IsColumnNull(int columnIndex, bool &isNull)
@@ -487,7 +522,8 @@ int StepResultSet::GetValue(int32_t col, T &value)
 
 std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t index)
 {
-    if (isClosed_) {
+    auto [statement, conn] = GetStatement();
+    if (statement == nullptr) {
         return { E_STEP_RESULT_CLOSED, ValueObject() };
     }
 
@@ -496,11 +532,19 @@ std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t in
     }
 
     ValueObject value;
-    auto ret = sqliteStatement_->GetColumn(col, value);
+    auto ret = statement->GetColumn(col, value);
     if (index < ValueObject::TYPE_MAX && value.value.index() != index) {
         return { E_INVALID_COLUMN_TYPE, ValueObject() };
     }
     return { ret, std::move(value) };
+}
+
+std::pair<std::shared_ptr<SqliteStatement>, std::shared_ptr<SqliteConnection>> StepResultSet::GetStatement()
+{
+    if (isClosed_) {
+        return { nullptr, nullptr };
+    }
+    return {sqliteStatement_, conn_};
 }
 } // namespace NativeRdb
 } // namespace OHOS

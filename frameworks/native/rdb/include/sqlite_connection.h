@@ -59,14 +59,14 @@ public:
     bool IsInTransaction();
     int TryCheckPoint();
     int LimitWalSize();
-#ifdef RDB_SUPPORT_ICU
-    int ConfigLocale(const std::string localeStr);
-#endif
+    int ConfigLocale(const std::string &localeStr);
     int ExecuteForSharedBlock(int &rowNum, std::string sql, const std::vector<ValueObject> &bindArgs,
         AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows);
     int CleanDirtyData(const std::string &table, uint64_t cursor);
     int RegisterCallBackObserver(const DataChangeCallback &clientChangedData);
     int GetMaxVariableNumber();
+    uint32_t GetId() const;
+    int32_t SetId(uint32_t id);
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     explicit SqliteConnection(bool isWriteConnection);
@@ -115,6 +115,8 @@ private:
 
     bool isConfigured_ = false;
     int maxVariableNumber_;
+    bool hasClientObserver_ = false;
+    int id_;
 };
 
 } // namespace NativeRdb

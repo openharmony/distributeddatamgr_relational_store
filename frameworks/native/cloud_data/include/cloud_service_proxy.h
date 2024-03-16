@@ -33,6 +33,7 @@ public:
     int32_t NotifyDataChange(const std::string &eventId, const std::string &extraData, int32_t userId) override;
     std::pair<int32_t, std::map<std::string, StatisticInfos>> QueryStatistics(const std::string& id,
         const std::string& bundleName, const std::string& storeId) override;
+    int32_t SetGlobalCloudStrategy(Strategy strategy, const std::vector<CommonType::Value>& values) override;
 
     std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> AllocResourceAndShare(const std::string& storeId,
         const DistributedRdb::PredicatesMemo& predicates, const std::vector<std::string>& columns,
@@ -48,6 +49,8 @@ public:
         int32_t confirmation, std::tuple<int32_t, std::string, std::string> &result) override;
     int32_t ChangeConfirmation(const std::string &sharingRes,
         int32_t confirmation, std::pair<int32_t, std::string> &result) override;
+
+    int32_t SetCloudStrategy(Strategy strategy, const std::vector<CommonType::Value>& values) override;
 
 private:
     sptr<IRemoteObject> remote_;

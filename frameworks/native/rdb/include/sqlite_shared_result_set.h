@@ -34,7 +34,7 @@ namespace OHOS {
 namespace NativeRdb {
 class SqliteSharedResultSet : public AbsSharedResultSet {
 public:
-    SqliteSharedResultSet(std::shared_ptr<RdbStoreImpl> store, SqliteConnectionPool *connectionPool, std::string path,
+    SqliteSharedResultSet(std::shared_ptr<SqliteConnectionPool> connectionPool, std::string path,
         std::string sql, const std::vector<ValueObject> &bindArgs);
     ~SqliteSharedResultSet() override;
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
@@ -57,8 +57,7 @@ private:
     // The pick position of the shared block for search
     static const int PICK_POS = 3;
 
-    std::shared_ptr<RdbStoreImpl> store_;
-    SqliteConnectionPool *connectionPool_;
+    std::shared_ptr<SqliteConnectionPool> connectionPool_;
     int resultSetBlockCapacity_;
     // The number of rows in the cursor
     int rowNum_;

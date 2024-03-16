@@ -90,6 +90,35 @@ int32_t Convert2Value(napi_env env, napi_value input, Privilege &output)
 }
 
 template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
+{
+    napi_valuetype type = napi_undefined;
+    napi_status status = napi_typeof(env, jsValue, &type);
+    bool isArray;
+    napi_status status_array = napi_is_array(env, jsValue, &isArray);
+    if (status != napi_ok || type != napi_object || status_array != napi_ok || isArray) {
+        LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
+        return napi_invalid_arg;
+    }
+
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, name), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, uri), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, createTime), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, modifyTime), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, size), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, path), napi_invalid_arg);
+    output.hash = output.modifyTime + "_" + output.size;
+    auto jsStatus = GetNamedProperty(env, jsValue, "status");
+    if (jsStatus != nullptr) {
+        Convert2ValueExt(env, jsStatus, output.status);
+    }
+    if (output.status != Asset::STATUS_DELETE) {
+        output.status = Asset::STATUS_UNKNOWN;
+    }
+    return napi_ok;
+}
+
+template<>
 int32_t Convert2Value(napi_env env, napi_value input, std::shared_ptr<RdbPredicates> &output)
 {
     napi_valuetype type = napi_undefined;

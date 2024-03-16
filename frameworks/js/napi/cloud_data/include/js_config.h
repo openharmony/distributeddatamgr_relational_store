@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef LDBPROJ_JS_CONFIG_H
-#define LDBPROJ_JS_CONFIG_H
+#ifndef CLOUD_DATA_JS_CONFIG_H
+#define CLOUD_DATA_JS_CONFIG_H
 
 #include "cloud_manager.h"
 #include "js_const_properties.h"
@@ -49,8 +49,8 @@ public:
     static napi_value Clean(napi_env env, napi_callback_info info);
     static napi_value NotifyDataChange(napi_env env, napi_callback_info info);
     static napi_value QueryStatistics(napi_env env, napi_callback_info info);
+    static napi_value SetGlobalCloudStrategy(napi_env env, napi_callback_info info);
 };
 
 } // namespace OHOS::CloudData
-
-#endif //LDBPROJ_JS_CONFIG_H
+#endif //CLOUD_DATA_JS_CONFIG_H

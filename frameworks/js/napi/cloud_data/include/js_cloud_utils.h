@@ -12,11 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CLOUD_DATA_JS_CLOUD_SHARE_H
-#define CLOUD_DATA_JS_CLOUD_SHARE_H
+#ifndef CLOUD_DATA_JS_CLOUD_UTILS_H
+#define CLOUD_DATA_JS_CLOUD_UTILS_H
 
 #include "js_utils.h"
 #include "cloud_types.h"
+#include "common_types.h"
 #include "rdb_predicates.h"
 #include "result_set.h"
 #include "js_config.h"
@@ -29,6 +30,7 @@ using RdbPredicates = OHOS::NativeRdb::RdbPredicates;
 using ResultSet = OHOS::NativeRdb::ResultSet;
 using ExtraData = OHOS::CloudData::JsConfig::ExtraData;
 using StatisticInfo = OHOS::CloudData::StatisticInfo;
+using Asset = OHOS::CommonType::AssetValue;
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, ExtraData &output);
@@ -41,6 +43,9 @@ int32_t Convert2Value(napi_env env, napi_value input, Privilege &output);
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, std::shared_ptr<RdbPredicates> &output);
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value input, Asset &output);
 
 template<>
 napi_value Convert2JSValue(napi_env env, const Participant &value);
@@ -59,4 +64,4 @@ napi_value Convert2JSValue(napi_env env, const StatisticInfo &value);
 
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
-#endif // CLOUD_DATA_JS_CLOUD_SHARE_H
+#endif // CLOUD_DATA_JS_CLOUD_UTILS_H

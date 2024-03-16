@@ -35,10 +35,10 @@ struct RowDatas {
     int id;
     std::string eName;
     int jobId;
-    int mgr;
+    ValueObject mgr;
     std::string joinDate;
     double salary;
-    double bonus;
+    ValueObject bonus;
     int deptId;
 };
 

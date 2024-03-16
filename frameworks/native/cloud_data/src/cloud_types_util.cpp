@@ -132,4 +132,17 @@ bool Unmarshalling(StatisticInfo &output, MessageParcel &data)
 {
     return ITypesUtil::Unmarshal(data, output.table, output.inserted, output.updated, output.normal);
 }
+
+template<>
+bool Marshalling(const Strategy &input, MessageParcel &data)
+{
+    return data.WriteUint32(static_cast<uint32_t>(input));
+}
+
+template<>
+bool Marshalling(const CommonAsset &input, MessageParcel &data)
+{
+    return ITypesUtil::Marshal(data, input.name, input.uri, input.path, input.createTime,
+        input.modifyTime, input.size, input.status, input.hash);
+}
 } // namespace OHOS::ITypesUtil

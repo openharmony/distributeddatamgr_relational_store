@@ -32,6 +32,7 @@
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
+#include "relational_store_client.h"
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
@@ -39,7 +40,6 @@
 #include "directory_ex.h"
 #include "rdb_security_manager.h"
 #include "relational/relational_store_sqlite_ext.h"
-#include "relational_store_client.h"
 #include "share_block.h"
 #include "shared_block_serializer_info.h"
 #endif
@@ -47,7 +47,6 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 // error status
 const int ERROR_STATUS = -1;
@@ -81,22 +80,35 @@ SqliteConnection::SqliteConnection(bool isWriteConnection)
       stepStatement(nullptr),
       filePath(""),
       openFlags(0),
-      inTransaction_(false)
+      inTransaction_(false),
+      id_(-1)
 {
 }
 
 int SqliteConnection::GetDbPath(const RdbStoreConfig &config, std::string &dbPath)
 {
+    std::string path;
+    if (config.GetRoleType() == VISITOR) {
+        path = config.GetVisitorDir();
+    } else {
+        path = config.GetPath();
+    }
+
     if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
+        if (config.GetRoleType() == VISITOR) {
+            LOG_ERROR("not support MODE_MEMORY, storeName:%{public}s, role:%{public}d", config.GetName().c_str(),
+                config.GetRoleType());
+            return E_NOT_SUPPORT;
+        }
         dbPath = SqliteGlobalConfig::GetMemoryDbPath();
-    } else if (config.GetPath().empty()) {
+    } else if (path.empty()) {
         LOG_ERROR("SqliteConnection GetDbPath input empty database path");
         return E_EMPTY_FILE_NAME;
-    } else if (config.GetPath().front() != '/' && config.GetPath().at(1) != ':') {
+    } else if (path.front() != '/' && path.at(1) != ':') {
         LOG_ERROR("SqliteConnection GetDbPath input relative path");
         return E_RELATIVE_PATH;
     } else {
-        dbPath = config.GetPath();
+        dbPath = path;
     }
     return E_OK;
 }
@@ -144,10 +156,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
     }
 
     if (isWriteConnection) {
-        errCode = sqlite3_wal_checkpoint_v2(dbHandle, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
-        if (errCode != SQLITE_OK) {
-            LOG_WARN("sqlite checkpoint errCode is %{public}d", errCode);
-        }
+        TryCheckPoint();
     }
 
     filePath = dbPath;
@@ -226,15 +235,17 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, uint32_t retry, st
         return E_OK;
     }
 
+    if (config.GetRoleType() == VISITOR) {
+        return E_OK;
+    }
+
     auto errCode = RegDefaultFunctions(dbHandle);
     if (errCode != E_OK) {
         return errCode;
     }
 
     SetBusyTimeout(DEFAULT_BUSY_TIMEOUT_MS);
-    if (errCode != E_OK) {
-        return errCode;
-    }
+
     LimitPermission(dbPath);
 
     errCode = SetPersistWal();
@@ -282,6 +293,11 @@ SqliteConnection::~SqliteConnection()
         if (stepStatement != nullptr) {
             stepStatement->Finalize();
         }
+
+        if (hasClientObserver_) {
+            UnRegisterClientObserver(dbHandle);
+        }
+
         int errCode = sqlite3_close_v2(dbHandle);
         if (errCode != SQLITE_OK) {
             LOG_ERROR("SqliteConnection ~SqliteConnection: could not close database err = %{public}d", errCode);
@@ -580,6 +596,17 @@ bool SqliteConnection::IsWriteConnection() const
     return isWriteConnection;
 }
 
+int32_t SqliteConnection::SetId(uint32_t id)
+{
+    id_ = id;
+    return E_OK;
+}
+
+uint32_t SqliteConnection::GetId() const
+{
+    return id_;
+}
+
 int SqliteConnection::Prepare(const std::string &sql, bool &outIsReadOnly)
 {
     int errCode = statement.Prepare(dbHandle, sql);
@@ -672,12 +699,11 @@ int SqliteConnection::ExecuteForLastInsertedRowId(
 
     errCode = statement.Step();
     if (errCode == SQLITE_ROW) {
-        LOG_ERROR("SqliteConnection ExecuteForLastInsertedRowId : Queries can be performed using query or QuerySql "
-                  "methods only");
+        LOG_ERROR("failed: %{public}d. sql: %{public}s", errCode, SqliteUtils::Anonymous(sql).c_str());
         statement.ResetStatementAndClearBindings();
         return E_QUERY_IN_EXECUTE;
     } else if (errCode != SQLITE_DONE) {
-        LOG_ERROR("SqliteConnection ExecuteForLastInsertedRowId : failed %{public}d", errCode);
+        LOG_ERROR("failed: %{public}d. sql: %{public}s", errCode, SqliteUtils::Anonymous(sql).c_str());
         statement.ResetStatementAndClearBindings();
         return SQLiteError::ErrNo(errCode);
     }
@@ -818,12 +844,14 @@ void LocalizedCollatorDestroy(UCollator *collator)
 {
     ucol_close(collator);
 }
+#endif
 
 /**
  * The database locale.
  */
-int SqliteConnection::ConfigLocale(const std::string localeStr)
+int SqliteConnection::ConfigLocale(const std::string& localeStr)
 {
+#ifdef RDB_SUPPORT_ICU
     std::unique_lock<std::mutex> lock(rdbMutex);
     UErrorCode status = U_ZERO_ERROR;
     UCollator *collator = ucol_open(localeStr.c_str(), &status);
@@ -843,10 +871,9 @@ int SqliteConnection::ConfigLocale(const std::string localeStr)
         LOG_ERROR("SCreate collator in sqlite3 failed.");
         return err;
     }
-
+#endif
     return E_OK;
 }
-#endif
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 /**
@@ -856,23 +883,25 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows)
 {
     if (sharedBlock == nullptr) {
-        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
+        LOG_ERROR("sharedBlock null.");
         return E_ERROR;
     }
     SqliteConnectionS connection(this->dbHandle, this->openFlags, this->filePath);
     int errCode = PrepareAndBind(sql, bindArgs);
     if (errCode != E_OK) {
-        LOG_ERROR("PrepareAndBind sql and bindArgs error = %{public}d ", errCode);
+        LOG_ERROR("error: %{public}d sql: %{public}s startPos: %{public}d requiredPos: %{public}d"
+            "isCountAllRows: %{public}d", errCode, SqliteUtils::Anonymous(sql).c_str(),
+            startPos, requiredPos, isCountAllRows);
         return errCode;
     }
     if (ClearSharedBlock(sharedBlock) == ERROR_STATUS) {
-        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
+        LOG_ERROR("failed. %{public}d. sql: %{public}s.", errCode, SqliteUtils::Anonymous(sql).c_str());
         return E_ERROR;
     }
     sqlite3_stmt *tempSqlite3St = statement.GetSql3Stmt();
     int columnNum = sqlite3_column_count(tempSqlite3St);
     if (SharedBlockSetColumnNum(sharedBlock, columnNum) == ERROR_STATUS) {
-        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
+        LOG_ERROR("failed.columnNum: %{public}d,sql: %{public}s", columnNum, SqliteUtils::Anonymous(sql).c_str());
         return E_ERROR;
     }
 
@@ -890,7 +919,7 @@ int SqliteConnection::ExecuteForSharedBlock(int &rowNum, std::string sql, const 
     }
 
     if (!ResetStatement(&sharedBlockInfo)) {
-        LOG_ERROR("ExecuteForSharedBlock:ResetStatement Failed.");
+        LOG_ERROR("err.startPos:%{public}d,addedRows:%{public}d", sharedBlockInfo.startPos, sharedBlockInfo.addedRows);
         return E_ERROR;
     }
     sharedBlock->SetStartPos(sharedBlockInfo.startPos);
@@ -913,6 +942,7 @@ int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 int SqliteConnection::RegisterCallBackObserver(const DataChangeCallback &clientChangedData)
 {
     if (isWriteConnection && clientChangedData != nullptr) {
+        hasClientObserver_ = true;
         int32_t status = RegisterClientObserver(dbHandle, clientChangedData);
         if (status != E_OK) {
             LOG_ERROR("RegisterClientObserver error, status:%{public}d", status);
@@ -935,6 +965,10 @@ bool SqliteConnection::IsInTransaction()
 
 int SqliteConnection::TryCheckPoint()
 {
+    if (!isWriteConnection) {
+        return E_NOT_SUPPORT;
+    }
+
     std::string walName = sqlite3_filename_wal(sqlite3_db_filename(dbHandle, "main"));
     int fileSize = SqliteUtils::GetFileSize(walName);
     if (fileSize <= GlobalExpr::DB_WAL_SIZE_LIMIT_MIN) {
