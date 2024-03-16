@@ -34,6 +34,7 @@ public:
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
+    static const std::string CREATE_TABLE_TEST;
 };
 
 const std::string RdbExecuteTest::DATABASE_NAME = RDB_TEST_PATH + "execute_test.db";
@@ -43,17 +44,16 @@ class ExecuteTestOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &store) override;
     int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
-    static const std::string CREATE_TABLE_TEST;
 };
 
-const std::string ExecuteTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABLE IF NOT EXISTS test ")
-                                                               + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                                             "name TEXT NOT NULL, age INTEGER, salary "
-                                                                             "REAL, blobType BLOB)");
+const std::string RdbExecuteTest::CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test "
+                                                      "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                      "name TEXT NOT NULL, age INTEGER, salary REAL, "
+                                                      "blobType BLOB)";
 
 int ExecuteTestOpenCallback::OnCreate(RdbStore &store)
 {
-    return store.ExecuteSql(CREATE_TABLE_TEST);
+    return E_OK;
 }
 
 int ExecuteTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
@@ -74,17 +74,18 @@ void RdbExecuteTest::SetUpTestCase(void)
 
 void RdbExecuteTest::TearDownTestCase(void)
 {
-    store = nullptr;
     RdbHelper::DeleteRdbStore(RdbExecuteTest::DATABASE_NAME);
+    store = nullptr;
 }
 
 void RdbExecuteTest::SetUp(void)
 {
-    store->ExecuteSql("DELETE FROM test");
+    store->ExecuteSql(CREATE_TABLE_TEST);
 }
 
 void RdbExecuteTest::TearDown(void)
 {
+    store->ExecuteSql("DROP TABLE test");
 }
 
 /**
@@ -265,4 +266,304 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_006, TestSize.Level4)
     int64_t outValue;
     int ret = store->ExecuteForChangedRowCount(outValue, "", {});
     EXPECT_NE(E_OK, ret);
+}
+
+/**
+ * @tc.name: RdbStore_Execute_007
+ * @tc.desc: Normal testCase for ExecuteAndGetString, check integrity for store
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_007, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+
+    auto [ret, outValue] = store->Execute("PRAGMA integrity_check");
+    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(ValueObjectType::TYPE_STRING, outValue.GetType());
+
+    std::string outputResult;
+    outValue.GetString(outputResult);
+    EXPECT_EQ("ok", outputResult);
+}
+
+/**
+ * @tc.name: RdbStore_Execute_008
+ * @tc.desc: Normal testCase for Execute, check integrity for store
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_008, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+
+    auto [ret, outValue] = store->Execute("PRAGMA quick_check");
+    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(ValueObjectType::TYPE_STRING, outValue.GetType());
+
+    std::string outputResult;
+    outValue.GetString(outputResult);
+    EXPECT_EQ("ok", outputResult);
+}
+
+/**
+ * @tc.name: RdbStore_Execute_009
+ * @tc.desc: Normal testCase for Execute, get user_version of store
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_009, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+
+    // set user_version as 5
+    store->SetVersion(5);
+    auto [ret, outValue] = store->Execute("PRAGMA user_version");
+    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(ValueObjectType::TYPE_STRING, outValue.GetType());
+
+    std::string outputResult;
+    outValue.GetString(outputResult);
+    EXPECT_EQ("5", outputResult);
+
+    // set user_version as 0
+    store->SetVersion(0);
+}
+
+/**
+ * @tc.name: RdbStore_Execute_0010
+ * @tc.desc: AbNormal testCase for Execute, execute select sql
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_0010, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+
+    auto [ret, outValue] = store->Execute("SELECT * FROM test");
+    EXPECT_EQ(E_NOT_SUPPORT_THE_SQL, ret);
+}
+
+/**
+ * @tc.name: RdbStore_Execute_0011
+ * @tc.desc: Normal testCase for Execute, execute sql for inserting data
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_0011, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+
+    std::vector<ValueObject> args = {
+        ValueObject(std::string("tt")), ValueObject(int(28)), ValueObject(double(50000.0)) };
+    auto [ret, outValue] = store->Execute("INSERT INTO test(name, age, salary) VALUES (?, ?, ?);", args);
+    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(ValueObjectType::TYPE_INT, outValue.GetType());
+
+    int64_t outputResult;
+    outValue.GetLong(outputResult);
+    // 1 represent that the last data is inserted in the first row
+    EXPECT_EQ(1, outputResult);
+}
+
+/**
+ * @tc.name: RdbStore_Execute_0012
+ * @tc.desc: Normal testCase for Execute, execute sql for batch insert data
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_0012, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+
+    std::vector<ValueObject> args = { ValueObject(std::string("tt")), ValueObject(int(28)),
+        ValueObject(double(50000.0)), ValueObject(std::string("ttt")), ValueObject(int(58)),
+        ValueObject(double(500080.0)) };
+    auto [ret, outValue] = store->Execute("INSERT INTO test(name, age, salary) VALUES (?, ?, ?), (?, ?, ?)", args);
+    EXPECT_EQ(E_OK, ret);
+
+    EXPECT_EQ(ValueObjectType::TYPE_INT, outValue.GetType());
+
+    int64_t outputResult;
+    outValue.GetLong(outputResult);
+    // 2 represent that the last data is inserted in the second row
+    EXPECT_EQ(2, outputResult);
+}
+
+/**
+ * @tc.name: RdbStore_Execute_0013
+ * @tc.desc: Normal testCase for Execute, execute sql for updating data
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_0013, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+
+    std::vector<ValueObject> args = { ValueObject(std::string("tt")), ValueObject(int(28)),
+        ValueObject(double(50000.0)), ValueObject(std::string("ttt")), ValueObject(int(58)),
+        ValueObject(double(500080.0)) };
+    auto [ret1, outValue1] = store->Execute("INSERT INTO test(name, age, salary) VALUES (?, ?, ?), (?, ?, ?)", args);
+    EXPECT_EQ(E_OK, ret1);
+    EXPECT_EQ(ValueObjectType::TYPE_INT, outValue1.GetType());
+
+    int64_t outputResult;
+    outValue1.GetLong(outputResult);
+    // 2 represent that the last data is inserted in the second row
+    EXPECT_EQ(2, outputResult);
+
+    auto [ret2, outValue2] = store->Execute("UPDATE test SET name='dd' WHERE id = 2");
+    EXPECT_EQ(E_OK, ret2);
+    EXPECT_EQ(ValueObjectType::TYPE_INT, outValue2.GetType());
+
+    outValue2.GetLong(outputResult);
+    // 1 represent that effected row id
+    EXPECT_EQ(1, outputResult);
+}
+
+/**
+ * @tc.name: RdbStore_Execute_0014
+ * @tc.desc: Normal testCase for Execute, execute sql for deleting data
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_0014, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+
+    std::vector<ValueObject> args = { ValueObject(std::string("tt")), ValueObject(int(28)),
+        ValueObject(double(50000.0)), ValueObject(std::string("ttt")), ValueObject(int(82)),
+        ValueObject(double(500080.0)) };
+    auto [ret1, outValue1] = store->Execute("INSERT INTO test(name, age, salary) VALUES (?, ?, ?), (?, ?, ?)", args);
+    EXPECT_EQ(E_OK, ret1);
+    EXPECT_EQ(ValueObjectType::TYPE_INT, outValue1.GetType());
+
+    int64_t outputResult;
+    outValue1.GetLong(outputResult);
+    // 2 represent that the last data is inserted in the second row
+    EXPECT_EQ(2, outputResult);
+
+    auto [ret2, outValue2] = store->Execute("DELETE FROM test");
+    EXPECT_EQ(E_OK, ret2);
+    EXPECT_EQ(ValueObjectType::TYPE_INT, outValue2.GetType());
+
+    outValue2.GetLong(outputResult);
+    // 2 represent that effected row id
+    EXPECT_EQ(2, outputResult);
+}
+
+/**
+ * @tc.name: RdbStore_Execute_0015
+ * @tc.desc: AbNormal testCase for Execute, execute sql for attaching database and transaction
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_0015, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+
+    auto [ret1, outValue1] = store->Execute("ATTACH DATABASE 'execute_attach_test.db' AS 'attach.db'");
+    EXPECT_EQ(E_NOT_SUPPORT_THE_SQL, ret1);
+
+    auto [ret2, outValue2] = store->Execute("DETACH DATABASE 'attach.db'");
+    EXPECT_EQ(E_NOT_SUPPORT_THE_SQL, ret2);
+
+    auto [ret3, outValue3] = store->Execute("BEGIN TRANSACTION");
+    EXPECT_EQ(E_NOT_SUPPORT_THE_SQL, ret3);
+
+    auto [ret4, outValue4] = store->Execute("COMMIT");
+    EXPECT_EQ(E_NOT_SUPPORT_THE_SQL, ret4);
+
+    auto [ret5, outValue5] = store->Execute("ROLLBACK");
+    EXPECT_EQ(E_NOT_SUPPORT_THE_SQL, ret5);
+}
+
+/**
+ * @tc.name: RdbStore_Execute_0016
+ * @tc.desc: Normal testCase for Execute, execute DDL sql for creating and dropping table
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_0016, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    int64_t intOutValue;
+    std::string strOutValue;
+
+    const std::string CREATE_TABLE_TEST2 = "CREATE TABLE IF NOT EXISTS test2 "
+                                           "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                           "name TEXT NOT NULL, age INTEGER, salary REAL, "
+                                           "blobType BLOB)";
+    const std::string DROP_TABLE_TEST2 = "DROP TABLE test2";
+    const std::string TEST_TABLE_IS_EXIST = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='test2'";
+
+    auto [ret1, outValue1] = store->Execute(CREATE_TABLE_TEST2);
+    EXPECT_EQ(E_OK, ret1);
+    outValue1.GetString(strOutValue);
+    EXPECT_EQ("", strOutValue);
+
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql(TEST_TABLE_IS_EXIST);
+    EXPECT_NE(nullptr, resultSet);
+    resultSet->GoToFirstRow();
+    // 0 represent that get count of table test in the first row
+    resultSet->GetLong(0, intOutValue);
+    // 1 represent that the table exists
+    EXPECT_EQ(1, intOutValue);
+    resultSet->Close();
+
+    auto [ret2, outValue2] = store->Execute(DROP_TABLE_TEST2);
+    EXPECT_EQ(E_OK, ret2);
+    outValue2.GetString(strOutValue);
+    EXPECT_EQ("", strOutValue);
+
+    resultSet = store->QuerySql(TEST_TABLE_IS_EXIST);
+    EXPECT_NE(nullptr, resultSet);
+    resultSet->GoToFirstRow();
+    // 0 represent that get count of table test in the first column
+    resultSet->GetLong(0, intOutValue);
+    // 0 represent the table does not exist
+    EXPECT_EQ(0, intOutValue);
+    resultSet->Close();
+}
+
+/**
+ * @tc.name: RdbStore_Execute_0017
+ * @tc.desc: Normal testCase for Execute, execute sql for creating table and insert, query data
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_0017, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    int64_t intOutValue;
+    int intOutResultSet;
+
+    const std::string CREATE_TABLE_TEST2 = "CREATE TABLE IF NOT EXISTS test2 "
+                                           "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                           "name TEXT NOT NULL, age INTEGER, salary REAL, "
+                                           "blobType BLOB)";
+    const std::string DROP_TABLE_TEST2 = "DROP TABLE test2";
+
+    auto [ret1, outValue1] = store->Execute(CREATE_TABLE_TEST2);
+    EXPECT_EQ(E_OK, ret1);
+
+    std::vector<ValueObject> args = { ValueObject("tt"), ValueObject(28), ValueObject(50000) };
+    auto [ret2, outValue2] = store->Execute("INSERT INTO test2(name, age, salary) VALUES (?, ?, ?)", args);
+    EXPECT_EQ(E_OK, ret2);
+    outValue2.GetLong(intOutValue);
+    // 1 represent that the last data is inserted in the first row
+    EXPECT_EQ(1, intOutValue);
+
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test2");
+    EXPECT_NE(nullptr, resultSet);
+    EXPECT_EQ(E_OK, resultSet->GetRowCount(intOutResultSet));
+    // 1 represent that the row number of resultSet
+    EXPECT_EQ(1, intOutResultSet);
+    resultSet->Close();
+
+    auto [ret3, outValue3] = store->Execute(DROP_TABLE_TEST2);
+    EXPECT_EQ(E_OK, ret3);
+}
+
+/**
+ * @tc.name: RdbStore_Execute_0018
+ * @tc.desc: AbNormal testCase for Execute, execute sql for inserting data but args is []
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_0018, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    ValueObject outValue;
+
+    auto [ret1, outValue1] = store->Execute("INSERT INTO test(name, age, salary) VALUES (?, ?, ?), (?, ?, ?)");
+    EXPECT_NE(E_OK, ret1);
 }

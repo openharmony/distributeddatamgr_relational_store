@@ -1375,6 +1375,9 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep014, TestSize.Level1)
     EXPECT_EQ(E_OK, resultSet5->GoToRow(1));
 
     EXPECT_EQ(E_OK, resultSet1->Close());
+
+    EXPECT_EQ(E_OK, resultSet5->GoToRow(1));
+
     EXPECT_EQ(E_OK, resultSet2->Close());
     EXPECT_EQ(E_OK, resultSet3->Close());
     EXPECT_EQ(E_OK, resultSet4->Close());
@@ -1412,7 +1415,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep016, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
 
     size_t size;
-    EXPECT_EQ(E_STEP_RESULT_QUERY_NOT_EXECUTED, resultSet->GetSize(2, size));
+    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetSize(2, size));
 
     EXPECT_EQ(E_OK, resultSet->Close());
     EXPECT_EQ(true, resultSet->IsClosed());
@@ -1443,24 +1446,26 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep018, TestSize.Level1)
     std::vector<std::string> columns;
     std::string logTable = "naturalbase_rdb_aux_test_log";
     std::string sqlstr;
+    std::pair<bool, bool> queryStatus = {false, false};
 
     // logtable is empty && tableName is not empty
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, "");
+    queryStatus = {false, true};
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, "", queryStatus);
     EXPECT_EQ("", sqlstr);
 
     // logtable is empty && tableName is empty
     AbsRdbPredicates emptyPredicates("");
     std::string tableName = emptyPredicates.GetTableName();
     EXPECT_EQ("", tableName);
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(emptyPredicates, columns, "");
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(emptyPredicates, columns, "", queryStatus);
     EXPECT_EQ("", sqlstr);
 
     // logtable is not empty && tableName is empty
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(emptyPredicates, columns, logTable);
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(emptyPredicates, columns, logTable, queryStatus);
     EXPECT_EQ("", sqlstr);
 
     // Distinct is false, clumns is empty
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable);
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
     std::string value = "SELECT test.*, naturalbase_rdb_aux_test_log.cursor, CASE "
                         "WHEN naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 "
                         "THEN true ELSE false END AS deleted_flag "
@@ -1471,8 +1476,51 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep018, TestSize.Level1)
     // Distinct is true, clumns is not empty
     predicates.Distinct();
     columns.push_back("name");
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable);
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
     value = "SELECT DISTINCT test.name, naturalbase_rdb_aux_test_log.cursor, CASE "
+            "WHEN naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 "
+            "THEN true ELSE false END AS deleted_flag "
+            "FROM test INNER JOIN naturalbase_rdb_aux_test_log "
+            "ON test.ROWID = naturalbase_rdb_aux_test_log.data_key";
+    EXPECT_EQ(value, sqlstr);
+}
+
+/* *
+ * @tc.name: testSqlStep019
+ * @tc.desc: Abnormal testcase for build query string
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, testSqlStep019, TestSize.Level1)
+{
+    AbsRdbPredicates predicates("test");
+    std::vector<std::string> columns;
+    std::string logTable = "naturalbase_rdb_aux_test_log";
+    std::string sqlstr;
+    std::pair<bool, bool> queryStatus = {true, false};
+
+    //Distinct is false, columns has spacial field
+    queryStatus = {true, false};
+    columns.push_back("name");
+    columns.push_back("#_sharing_resource_field");
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
+    std::string value = "SELECT test.name, naturalbase_rdb_aux_test_log.sharing_resource AS sharing_resource_field"
+                        " FROM test INNER JOIN naturalbase_rdb_aux_test_log "
+                        "ON test.ROWID = naturalbase_rdb_aux_test_log.data_key";
+    EXPECT_EQ(value, sqlstr);
+
+    //Distinct is true, columns has spacial field
+    predicates.Distinct();
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
+    value = "SELECT DISTINCT test.name, naturalbase_rdb_aux_test_log.sharing_resource AS sharing_resource_field"
+            " FROM test INNER JOIN naturalbase_rdb_aux_test_log "
+            "ON test.ROWID = naturalbase_rdb_aux_test_log.data_key";
+    EXPECT_EQ(value, sqlstr);
+
+    //Distinct is true, columns and predicates have spacial fields
+    queryStatus = {true, true};
+    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
+    value = "SELECT DISTINCT test.name, naturalbase_rdb_aux_test_log.sharing_resource AS sharing_resource_field, "
+            "naturalbase_rdb_aux_test_log.cursor, CASE "
             "WHEN naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 "
             "THEN true ELSE false END AS deleted_flag "
             "FROM test INNER JOIN naturalbase_rdb_aux_test_log "

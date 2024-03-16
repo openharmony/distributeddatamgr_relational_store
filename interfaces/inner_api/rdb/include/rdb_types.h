@@ -42,6 +42,7 @@ struct RdbSyncerParam {
     int32_t area_ = 0;
     int32_t level_ = 0;
     int32_t type_ = RDB_DEVICE_COLLABORATION;
+    uint32_t roleType_ = 0;
     bool isEncrypt_ = false;
     bool isAutoClean_ = true;
     bool isSearchable_ = false;
@@ -96,6 +97,7 @@ enum ProgressCode {
     LOCKED_BY_OTHERS,
     RECORD_LIMIT_EXCEEDED,
     NO_SPACE_FOR_ASSET,
+    BLOCKED_BY_NETWORK_STRATEGY,
 };
 
 struct Statistic {

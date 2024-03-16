@@ -404,7 +404,6 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionTest_001, TestSize.Level2)
     EXPECT_NE(nullptr, tmp);
 }
 
-#ifdef RDB_SUPPORT_ICU
 /* *
  * @tc.name: Rdb_SqlitConnectionPoolTest_001
  * @tc.desc: Abnormal testCase for ConfigLocale
@@ -422,11 +421,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_001, TestSize.Level2)
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(E_OK, errCode);
 
-    // error condition does not affect the current program
-    errCode = store->ConfigLocale("AbnormalTest");
-    EXPECT_EQ(E_OK, errCode);
-
-    SqliteConnectionPool* connectionPool = SqliteConnectionPool::Create(config, errCode);
+    auto connectionPool = SqliteConnectionPool::Create(config, errCode);
     EXPECT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
 
@@ -437,10 +432,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_001, TestSize.Level2)
     EXPECT_EQ(OHOS::NativeRdb::E_NO_ROW_IN_QUERY, errCode);
 
     RdbHelper::DeleteRdbStore(DATABASE_NAME);
-    connectionPool->ReleaseConnection(connection);
-    delete connectionPool;
 }
-#endif
 
 /* *
  * @tc.name: Rdb_SqlitConnectionPoolTest_002
@@ -454,23 +446,21 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_002, TestSize.Level2)
     RdbStoreConfig config(DATABASE_NAME);
     config.SetReadConSize(1);
     config.SetStorageMode(StorageMode::MODE_DISK);
-    SqliteConnectionPool* connectionPool = SqliteConnectionPool::Create(config, errCode);
+    auto connectionPool = SqliteConnectionPool::Create(config, errCode);
     EXPECT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
 
-    // repeat AcquireReadConnection without release
+    // repeat AcquireReader without release
     auto connection = connectionPool->AcquireConnection(true);
     EXPECT_NE(nullptr, connection);
     connection = connectionPool->AcquireConnection(true);
     EXPECT_EQ(nullptr, connection);
-    connectionPool->ReleaseConnection(connection);
 
-    // repeat AcquireWriteConnection without release
+    // repeat AcquireWriter without release
     connection = connectionPool->AcquireConnection(false);
     EXPECT_NE(nullptr, connection);
     connection = connectionPool->AcquireConnection(false);
     EXPECT_EQ(nullptr, connection);
-    connectionPool->ReleaseConnection(connection);
 
     // repeat AcquireTransaction without release
     errCode = connectionPool->AcquireTransaction();
@@ -478,8 +468,6 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_002, TestSize.Level2)
     errCode = connectionPool->AcquireTransaction();
     EXPECT_NE(E_OK, errCode);
     connectionPool->ReleaseTransaction();
-
-    delete connectionPool;
 }
 
 
@@ -495,7 +483,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_0023, TestSize.Level2)
     RdbStoreConfig config(DATABASE_NAME);
     config.SetReadConSize(1);
     config.SetStorageMode(StorageMode::MODE_DISK);
-    SqliteConnectionPool* connectionPool = SqliteConnectionPool::Create(config, errCode);
+    auto connectionPool = SqliteConnectionPool::Create(config, errCode);
     EXPECT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
 
@@ -508,14 +496,11 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_0023, TestSize.Level2)
     auto connection = connectionPool->AcquireConnection(false);
     errCode = connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey);
     EXPECT_EQ(E_ERROR, errCode);
-    connectionPool->ReleaseConnection(connection);
 
     // newPath == currentPath, idleReadConnectionCount != readConnectionCount
     connection = connectionPool->AcquireConnection(true);
     errCode = connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey);
     EXPECT_EQ(E_ERROR, errCode);
-    connectionPool->ReleaseConnection(connection);
-
 
     // newPath == currentPath
     errCode = connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey);
@@ -524,8 +509,6 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_0023, TestSize.Level2)
     const std::string newPath2 = RDB_TEST_PATH + "tmp.db";
     errCode = connectionPool->ChangeDbFileForRestore(newPath2, backupPath, newKey);
     EXPECT_EQ(E_ERROR, errCode);
-
-    delete connectionPool;
 }
 
 HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_001, TestSize.Level2)

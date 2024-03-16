@@ -29,8 +29,8 @@ namespace OHOS {
 namespace NativeRdb {
 class StepResultSet : public AbsResultSet {
 public:
-    StepResultSet(std::shared_ptr<RdbStoreImpl> rdb, SqliteConnectionPool *connectionPool, const std::string &sql,
-        const std::vector<ValueObject> &selectionArgs);
+    StepResultSet(std::shared_ptr<SqliteConnectionPool> connectionPool, const std::string& sql,
+        const std::vector<ValueObject>& selectionArgs);
     ~StepResultSet() override;
 
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
@@ -59,6 +59,7 @@ private:
     template<typename T>
     int GetValue(int32_t col, T &value);
     std::pair<int, ValueObject> GetValueObject(int32_t col, size_t index);
+    std::pair<std::shared_ptr<SqliteStatement>, std::shared_ptr<SqliteConnection>> GetStatement();
     void Reset();
     int FinishStep();
     int PrepareStep();
@@ -69,17 +70,18 @@ private:
     // Interval of retrying step query in millisecond
     static const int STEP_QUERY_RETRY_INTERVAL = 1000;
 
-    std::shared_ptr<RdbStoreImpl> rdb_;
     std::shared_ptr<SqliteStatement> sqliteStatement_;
+    std::shared_ptr<SqliteConnection> conn_;
     std::vector<std::string> columnNames_;
     std::vector<ValueObject> args_;
     std::string sql_;
-    SqliteConnectionPool *connectionPool_;
+    std::shared_ptr<SqliteConnectionPool> connectionPool_;
     // The value indicates the row count of the result set
     int rowCount_;
     // Whether reach the end of this result set or not
     bool isAfterLast_;
     mutable std::shared_mutex mutex_;
+    int connId_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

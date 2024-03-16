@@ -17,6 +17,7 @@
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
 import cloudData from '@ohos.data.cloudData';
 
+const TAG = "[CLOUD_CONFIG_JSKITS_TEST]"
 describe('CloudConfigPromiseTest', function () {
     /**
      * @tc.name EnabledCloudInvalidArgsTest
@@ -480,4 +481,195 @@ describe('CloudConfigPromiseTest', function () {
         }
         done();
     })
+    
+    /**
+     * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
+     * @tc.name setGlobalCloudStrategyTest001
+     * @tc.desc Test Js Api setGlobalCloudStrategy with invalid args.
+     */
+    it('setGlobalCloudStrategyTest001', 0, async function (done) {
+        console.log(TAG + "************* setGlobalCloudStrategyTest001 start *************");
+        try {
+            cloudData.Config.setGlobalCloudStrategy().then(() => {
+                expect(null).assertFail();
+            }).catch(err => {
+                expect(null).assertFail();
+            });
+        } catch (err) {
+            expect(err.code == 401).assertTrue();
+        }
+        done()
+        console.log(TAG + "************* setGlobalCloudStrategyTest001 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
+     * @tc.name setGlobalCloudStrategyTest002
+     * @tc.desc Test Js Api setGlobalCloudStrategy with invalid args.
+     */
+    it('setGlobalCloudStrategyTest002', 0, async function (done) {
+        console.log(TAG + "************* setGlobalCloudStrategyTest002 start *************");
+        try {
+            cloudData.Config.setGlobalCloudStrategy(undefined).then(() => {
+                expect(null).assertFail();
+            }).catch(err => {
+                expect(null).assertFail();
+            });
+        } catch (err) {
+            expect(err.code == 401).assertTrue();
+        }
+        done()
+        console.log(TAG + "************* setGlobalCloudStrategyTest002 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
+     * @tc.name setGlobalCloudStrategyTest003
+     * @tc.desc Test Js Api setGlobalCloudStrategy with invalid args.
+     */
+    it('setGlobalCloudStrategyTest003', 0, async function (done) {
+        console.log(TAG + "************* setGlobalCloudStrategyTest003 start *************");
+        try {
+            cloudData.Config.setGlobalCloudStrategy(cloudData.StrategyType.NETWORK, [undefined, "test"]).then(() => {
+                expect(null).assertFail();
+            }).catch(err => {
+                expect(null).assertFail();
+            });
+        } catch (err) {
+            expect(err.code == 401).assertTrue();
+        }
+        done()
+        console.log(TAG + "************* setGlobalCloudStrategyTest003 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
+     * @tc.name setGlobalCloudStrategyTest004
+     * @tc.desc Test Js Api setGlobalCloudStrategy with invalid args.
+     */
+    it('setGlobalCloudStrategyTest004', 0, async function (done) {
+        console.log(TAG + "************* setGlobalCloudStrategyTest004 start *************");
+        try {
+            cloudData.Config.setGlobalCloudStrategy(cloudData.StrategyType.NETWORK, [cloudData.NetWorkStrategy.WIFI, "test"]).then(() => {
+                expect(null).assertFail();
+            }).catch(err => {
+                expect(null).assertFail();
+            });
+        } catch (err) {
+            expect(err.code == 401).assertTrue();
+        }
+        done()
+        console.log(TAG + "************* setGlobalCloudStrategyTest004 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
+     * @tc.name setGlobalCloudStrategyTest005
+     * @tc.desc Test Js Api setGlobalCloudStrategy with valid args.
+     */
+    it('setGlobalCloudStrategyTest005', 0, async function (done) {
+        console.log(TAG + "************* setGlobalCloudStrategyTest005 start *************");
+        try {
+            await cloudData.Config.setGlobalCloudStrategy(cloudData.StrategyType.NETWORK, [cloudData.NetWorkStrategy.WIFI]).then(() => {
+                expect(null).assertFail();
+            }).catch(err => {
+                console.error(TAG + `setGlobalCloudStrategyTest005, errcode:${JSON.stringify(err)}.`);
+                expect(err.code == 201).assertTrue();
+            });
+        } catch (err) {
+            console.error(TAG + `setGlobalCloudStrategyTest005, errcode:${JSON.stringify(err)}.`);
+            expect(err.code == 201).assertTrue();
+        }
+        done()
+        console.log(TAG + "************* setGlobalCloudStrategyTest005 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
+     * @tc.name setGlobalCloudStrategyTest006
+     * @tc.desc Test Js Api setGlobalCloudStrategy with valid args.
+     */
+    it('setGlobalCloudStrategyTest006', 0, async function (done) {
+        console.log(TAG + "************* setGlobalCloudStrategyTest006 start *************");
+        try {
+            await cloudData.Config.setGlobalCloudStrategy(cloudData.StrategyType.NETWORK, [cloudData.NetWorkStrategy.CELLULAR, cloudData.NetWorkStrategy.WIFI]).then(() => {
+                expect(null).assertFail();
+            }).catch(err => {
+                console.error(TAG + `setGlobalCloudStrategyTest006, errcode:${JSON.stringify(err)}.`);
+                expect(err.code == 201).assertTrue();
+            });
+        } catch (err) {
+            console.error(TAG + `setGlobalCloudStrategyTest006, errcode:${JSON.stringify(err)}.`);
+            expect(err.code == 201).assertTrue();
+        }
+        done()
+        console.log(TAG + "************* setGlobalCloudStrategyTest006 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
+     * @tc.name setGlobalCloudStrategyTest007
+     * @tc.desc Test Js Api setGlobalCloudStrategy with valid args.
+     */
+    it('setGlobalCloudStrategyTest007', 0, async function (done) {
+        console.log(TAG + "************* setGlobalCloudStrategyTest007 start *************");
+        try {
+            await cloudData.Config.setGlobalCloudStrategy(cloudData.StrategyType.NETWORK).then(() => {
+                expect(null).assertFail();
+            }).catch(err => {
+                console.error(TAG + `setGlobalCloudStrategyTest007, errcode:${JSON.stringify(err)}.`);
+                expect(err.code == 201).assertTrue();
+            });
+        } catch (err) {
+            console.error(TAG + `setGlobalCloudStrategyTest007, errcode:${JSON.stringify(err)}.`);
+            expect(err.code == 201).assertTrue();
+        }
+        done()
+        console.log(TAG + "************* setGlobalCloudStrategyTest007 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
+     * @tc.name setGlobalCloudStrategyTest008
+     * @tc.desc Test Js Api setGlobalCloudStrategy with valid args.
+     */
+    it('setGlobalCloudStrategyTest008', 0, async function (done) {
+        console.log(TAG + "************* setGlobalCloudStrategyTest008 start *************");
+        try {
+            await cloudData.Config.setGlobalCloudStrategy(cloudData.StrategyType.NETWORK, undefined).then(() => {
+                expect(null).assertFail();
+            }).catch(err => {
+                console.error(TAG + `setGlobalCloudStrategyTest008, errcode:${JSON.stringify(err)}.`);
+                expect(err.code == 201).assertTrue();
+            });
+        } catch (err) {
+            console.error(TAG + `setGlobalCloudStrategyTest008, errcode:${JSON.stringify(err)}.`);
+            expect(err.code == 201).assertTrue();
+        }
+        done()
+        console.log(TAG + "************* setGlobalCloudStrategyTest008 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
+     * @tc.name setGlobalCloudStrategyTest009
+     * @tc.desc Test Js Api setGlobalCloudStrategy with valid args.
+     */
+    it('setGlobalCloudStrategyTest009', 0, async function (done) {
+        console.log(TAG + "************* setGlobalCloudStrategyTest009 start *************");
+        try {
+            await cloudData.Config.setGlobalCloudStrategy(cloudData.StrategyType.NETWORK, null).then(() => {
+                expect(null).assertFail();
+            }).catch(err => {
+                console.error(TAG + `setGlobalCloudStrategyTest009, errcode:${JSON.stringify(err)}.`);
+                expect(err.code == 201).assertTrue();
+            });
+        } catch (err) {
+            console.error(TAG + `setGlobalCloudStrategyTest009, errcode:${JSON.stringify(err)}.`);
+            expect(err.code == 201).assertTrue();
+        }
+        done()
+        console.log(TAG + "************* setGlobalCloudStrategyTest009 end *************");
+    })
+
 })

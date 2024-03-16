@@ -18,6 +18,7 @@
 #include <map>
 #include <string>
 #include <variant>
+#include <vector>
 namespace OHOS::CommonType {
 struct AssetValue {
     enum Status : int32_t {

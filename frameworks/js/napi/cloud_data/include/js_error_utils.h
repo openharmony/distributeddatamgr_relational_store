@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef LDBPROJ_JS_ERROR_UTILS_H
-#define LDBPROJ_JS_ERROR_UTILS_H
+#ifndef CLOUD_DATA_JS_ERROR_UTILS_H
+#define CLOUD_DATA_JS_ERROR_UTILS_H
 
 #include <optional>
 #include <string>
@@ -66,4 +66,4 @@ napi_value GenerateErrorMsg(napi_env env, JsErrorCode jsInfo);
 
 } // namespace CloudData
 } // namespace OHOS
-#endif //LDBPROJ_JS_ERROR_UTILS_H
+#endif //CLOUD_DATA_JS_ERROR_UTILS_H

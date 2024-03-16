@@ -16,12 +16,12 @@
 #include "sqlite_connection_pool.h"
 
 #include <base_transaction.h>
-
 #include <condition_variable>
 #include <iostream>
 #include <iterator>
 #include <mutex>
 #include <sstream>
+#include <unistd.h>
 #include <vector>
 
 #include "logger.h"
@@ -33,57 +33,52 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-constexpr std::chrono::seconds TRANSACTION_TIMEOUT(2);
+constexpr int32_t TRANSACTION_TIMEOUT(2);
 
-SqliteConnectionPool *SqliteConnectionPool::Create(const RdbStoreConfig &storeConfig, int &errCode)
+std::shared_ptr<SqliteConnectionPool> SqliteConnectionPool::Create(const RdbStoreConfig &storeConfig, int &errCode)
 {
-    auto pool = new (std::nothrow) SqliteConnectionPool(storeConfig);
+    std::shared_ptr<SqliteConnectionPool> pool(new (std::nothrow) SqliteConnectionPool(storeConfig));
     if (pool == nullptr) {
         LOG_ERROR("SqliteConnectionPool::Create new failed, pool is nullptr");
         return nullptr;
     }
     errCode = pool->Init();
     if (errCode != E_OK) {
-        delete pool;
         return nullptr;
     }
     return pool;
 }
 
-SqliteConnectionPool::SqliteConnectionPool(const RdbStoreConfig &storeConfig)
-    : config_(storeConfig), writeConnection_(nullptr), writeConnectionUsed_(true), readConnections_(),
-      readConnectionCount_(0), idleReadConnectionCount_(0), transactionStack_(), transactionUsed_(false)
+SqliteConnectionPool::SqliteConnectionPool(const RdbStoreConfig& storeConfig)
+    : config_(storeConfig), writers_(), readers_(), transactionStack_(), transactionUsed_(false)
 {
 }
 
 int SqliteConnectionPool::Init()
 {
-    int errCode = E_OK;
-    writeConnection_ = SqliteConnection::Open(config_, true, errCode);
-    if (writeConnection_ == nullptr) {
-        return errCode;
-    }
-
-    InitReadConnectionCount();
-
-    // max read connect count is 64
-    if (readConnectionCount_ > 64) {
-        return E_ARGS_READ_CON_OVERLOAD;
-    }
-    for (int i = 0; i < readConnectionCount_; i++) {
-        auto connection = SqliteConnection::Open(config_, false, errCode);
-        if (connection == nullptr) {
-            CloseAllConnections();
+    if (config_.GetRoleType() == OWNER) {
+        // write connect count is 1
+        auto errCode = writers_.Initialize(1, writeTimeout_, [this]() {
+            int32_t errCode = E_OK;
+            auto conn = SqliteConnection::Open(config_, true, errCode);
+            return std::pair{ errCode, conn };
+        });
+        if (errCode != E_OK) {
             return errCode;
         }
-        readConnections_.push_back(connection);
     }
 
-    writeConnectionUsed_ = false;
-    idleReadConnectionCount_ = readConnectionCount_;
-    writeTimeout_ = std::chrono::seconds(config_.GetWriteTime());
-    readTimeout_ = std::chrono::seconds(config_.GetReadTime());
-    return E_OK;
+    maxReader_ = GetMaxReaders();
+    // max read connect count is 64
+    if (maxReader_ > 64) {
+        return E_ARGS_READ_CON_OVERLOAD;
+    }
+
+    return readers_.Initialize(maxReader_, readTimeout_, [this]() {
+        int32_t errCode = E_OK;
+        auto conn = SqliteConnection::Open(config_, false, errCode);
+        return std::pair{ errCode, conn };
+    });
 }
 
 SqliteConnectionPool::~SqliteConnectionPool()
@@ -91,69 +86,75 @@ SqliteConnectionPool::~SqliteConnectionPool()
     CloseAllConnections();
 }
 
-void SqliteConnectionPool::InitReadConnectionCount()
+int32_t SqliteConnectionPool::GetMaxReaders()
 {
-    if (config_.GetStorageMode() == StorageMode::MODE_MEMORY) {
-        readConnectionCount_ = 0;
-    } else if (config_.GetJournalMode() == "WAL") {
-        readConnectionCount_ = config_.GetReadConSize();
+    if (config_.GetStorageMode() != StorageMode::MODE_MEMORY && config_.GetJournalMode() == "WAL") {
+        return config_.GetReadConSize();
     } else {
-        readConnectionCount_ = 0;
+        return 0;
     }
 }
 
 void SqliteConnectionPool::CloseAllConnections()
 {
-    writeConnection_ = nullptr;
-    writeConnectionUsed_ = true;
-
-    for (auto &item : readConnections_) {
-        item = nullptr;
-    }
-    readConnections_.clear();
-    idleReadConnectionCount_ = 0;
+    writers_.Clear();
+    readers_.Clear();
 }
 
 std::shared_ptr<SqliteConnection> SqliteConnectionPool::AcquireConnection(bool isReadOnly)
 {
-    if (isReadOnly && readConnectionCount_ != 0) {
-        return AcquireReadConnection();
-    } else {
-        return AcquireWriteConnection();
+    Container *container = (isReadOnly && maxReader_ != 0) ? &readers_ : &writers_;
+    auto node = container->Acquire();
+    if (node == nullptr) {
+        const char *header = (isReadOnly && maxReader_ != 0) ? "readers_" : "writers_";
+        container->Dump(header);
+        return nullptr;
     }
+    auto conn = node->GetConnect();
+    if (conn == nullptr) {
+        return nullptr;
+    }
+    return std::shared_ptr<SqliteConnection>(conn.get(), [pool = weak_from_this(), node](SqliteConnection*) {
+        auto realPool = pool.lock();
+        if (realPool == nullptr) {
+            return;
+        }
+        realPool->ReleaseNode(node);
+    });
 }
 
-void SqliteConnectionPool::ReleaseConnection(std::shared_ptr<SqliteConnection> connection)
+std::shared_ptr<SqliteConnection> SqliteConnectionPool::AcquireByID(int32_t id)
 {
-    if (connection == nullptr) {
+    Container *container = &readers_;
+    auto node = container->AcquireById(id);
+    if (node == nullptr) {
+        container->Dump("readers_");
+        return nullptr;
+    }
+    auto conn = node->GetConnect(true);
+    if (conn == nullptr) {
+        return nullptr;
+    }
+    return conn;
+}
+
+void SqliteConnectionPool::ReleaseNode(std::shared_ptr<ConnNode> node)
+{
+    if (node == nullptr) {
         return;
     }
-    connection->DesFinalize();
-    if (connection == writeConnection_) {
-        ReleaseWriteConnection();
-        connection->TryCheckPoint();
+    node->Unused();
+    if (node->IsWriter()) {
+        writers_.Release(node);
     } else {
-        ReleaseReadConnection(connection);
+        readers_.Release(node);
     }
-}
-
-std::shared_ptr<SqliteConnection> SqliteConnectionPool::AcquireWriteConnection()
-{
-    std::unique_lock<std::mutex> lock(writeMutex_);
-    if (writeCondition_.wait_for(lock, writeTimeout_, [this] {
-            return !writeConnectionUsed_;
-        })) {
-        writeConnectionUsed_ = true;
-        return writeConnection_;
-    }
-    LOG_WARN("writeConnection_ is %{public}d",  writeConnectionUsed_);
-    return nullptr;
 }
 
 int SqliteConnectionPool::AcquireTransaction()
 {
     std::unique_lock<std::mutex> lock(transMutex_);
-    if (transCondition_.wait_for(lock, TRANSACTION_TIMEOUT, [this] {
+    if (transCondition_.wait_for(lock, std::chrono::seconds(TRANSACTION_TIMEOUT), [this] {
             return !transactionUsed_;
         })) {
         transactionUsed_ = true;
@@ -172,125 +173,43 @@ void SqliteConnectionPool::ReleaseTransaction()
     transCondition_.notify_one();
 }
 
-void SqliteConnectionPool::ReleaseWriteConnection()
+int SqliteConnectionPool::RestartReaders()
 {
-    {
-        std::unique_lock<std::mutex> lock(writeMutex_);
-        writeConnectionUsed_ = false;
-    }
-    writeCondition_.notify_one();
+    readers_.Clear();
+    return readers_.Initialize(maxReader_, readTimeout_, [this]() {
+        int32_t errCode = E_OK;
+        auto conn = SqliteConnection::Open(config_, false, errCode);
+        return std::pair{ errCode, conn };
+    });
 }
 
-/**
- * get last element from connectionPool
- * @return
- */
-std::shared_ptr<SqliteConnection> SqliteConnectionPool::AcquireReadConnection()
-{
-    std::unique_lock<std::mutex> lock(readMutex_);
-    if (readCondition_.wait_for(lock, readTimeout_, [this] {
-            return idleReadConnectionCount_ > 0;
-        })) {
-        auto connection = readConnections_.back();
-        readConnections_.pop_back();
-        idleReadConnectionCount_--;
-        return connection;
-    }
-    LOG_WARN("readConnectionCount_ is %{public}d, idleReadConnectionCount_ is %{public}d", readConnectionCount_,
-        idleReadConnectionCount_);
-    return nullptr;
-}
-
-/**
- * push connection back to last of connectionPool
- * @param connection
- */
-void SqliteConnectionPool::ReleaseReadConnection(std::shared_ptr<SqliteConnection> connection)
-{
-    {
-        std::unique_lock<std::mutex> lock(readMutex_);
-        readConnections_.push_back(connection);
-        idleReadConnectionCount_++;
-    }
-    readCondition_.notify_one();
-}
-
-int SqliteConnectionPool::InnerReOpenReadConnections()
-{
-    int errCode = E_OK;
-    for (auto &item : readConnections_) {
-        item = nullptr;
-    }
-    readConnections_.clear();
-
-    for (int i = 0; i < readConnectionCount_; i++) {
-        auto connection = SqliteConnection::Open(config_, false, errCode);
-        if (connection == nullptr) {
-            CloseAllConnections();
-            return errCode;
-        }
-        readConnections_.push_back(connection);
-    }
-
-    return errCode;
-}
-
-int SqliteConnectionPool::ReOpenAvailableReadConnections()
-{
-    std::unique_lock<std::mutex> lock(readMutex_);
-    return InnerReOpenReadConnections();
-}
-
-#ifdef RDB_SUPPORT_ICU
 /**
  * The database locale.
  */
-int SqliteConnectionPool::ConfigLocale(const std::string localeStr)
+int SqliteConnectionPool::ConfigLocale(const std::string &localeStr)
 {
-    std::unique_lock<std::mutex> lock(rdbMutex_);
-    if (idleReadConnectionCount_ != readConnectionCount_) {
-        return E_NO_ROW_IN_QUERY;
+    auto errCode = readers_.ConfigLocale(localeStr);
+    if (errCode != E_OK) {
+        return errCode;
     }
-
-    for (int i = 0; i < idleReadConnectionCount_; i++) {
-        auto connection = readConnections_[i];
-        if (connection == nullptr) {
-            LOG_ERROR("Read Connection is null.");
-            return E_ERROR;
-        }
-        connection->ConfigLocale(localeStr);
-    }
-
-    if (writeConnection_ == nullptr) {
-        LOG_ERROR("Write Connection is null.");
-        return E_ERROR;
-    } else {
-        writeConnection_->ConfigLocale(localeStr);
-    }
-
-    return E_OK;
+    return writers_.ConfigLocale(localeStr);
 }
-#endif
 
 /**
  * Rename the backed up database.
  */
-int SqliteConnectionPool::ChangeDbFileForRestore(const std::string newPath, const std::string backupPath,
+int SqliteConnectionPool::ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
     const std::vector<uint8_t> &newKey)
 {
-    if (writeConnectionUsed_ == true || idleReadConnectionCount_ != readConnectionCount_) {
+    if (!writers_.IsFull() || !readers_.IsFull()) {
         LOG_ERROR("Connection pool is busy now!");
         return E_ERROR;
     }
 
-    LOG_ERROR("restore.");
     CloseAllConnections();
 
     std::string currentPath = config_.GetPath();
-    bool ret = SqliteUtils::DeleteFile(currentPath);
-    if (ret == false) {
-        LOG_ERROR("DeleteFile error");
-    }
+    SqliteUtils::DeleteFile(currentPath);
     SqliteUtils::DeleteFile(currentPath + "-shm");
     SqliteUtils::DeleteFile(currentPath + "-wal");
     SqliteUtils::DeleteFile(currentPath + "-journal");
@@ -319,6 +238,168 @@ std::stack<BaseTransaction> &SqliteConnectionPool::GetTransactionStack()
 std::mutex &SqliteConnectionPool::GetTransactionStackMutex()
 {
     return transactionStackMutex_;
+}
+
+SqliteConnectionPool::ConnNode::ConnNode(std::shared_ptr<SqliteConnection> conn) : connect_(std::move(conn)) {}
+
+std::shared_ptr<SqliteConnection> SqliteConnectionPool::ConnNode::GetConnect(bool justHold)
+{
+    if (!justHold) {
+        tid_ = gettid();
+        time_ = std::chrono::steady_clock::now();
+    }
+    return connect_;
+}
+
+int64_t SqliteConnectionPool::ConnNode::GetUsingTime() const
+{
+    auto time = std::chrono::steady_clock::now() - time_;
+    return std::chrono::duration_cast<std::chrono::milliseconds>(time).count();
+}
+
+void SqliteConnectionPool::ConnNode::Unused()
+{
+    tid_ = 0;
+    time_ = std::chrono::steady_clock::now();
+    if (connect_ != nullptr) {
+        connect_->DesFinalize();
+        connect_->TryCheckPoint();
+    }
+}
+
+bool SqliteConnectionPool::ConnNode::IsWriter() const
+{
+    if (connect_ != nullptr) {
+        return connect_->IsWriteConnection();
+    }
+    return false;
+}
+
+int32_t SqliteConnectionPool::Container::Initialize(int32_t max, int32_t timeout, Creator creator)
+{
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    for (int i = 0; i < max; ++i) {
+        auto [error, conn] = creator();
+        if (conn == nullptr) {
+            nodes_.clear();
+            details_.clear();
+            return error;
+        }
+        auto node = std::make_shared<ConnNode>(conn);
+        node->id_ = right_++;
+        conn->SetId(node->id_);
+        nodes_.push_back(node);
+        details_.push_back(node);
+    }
+    max_ = max;
+    count_ = max;
+    timeout_ = std::chrono::seconds(timeout);
+    return E_OK;
+}
+
+int32_t SqliteConnectionPool::Container::ConfigLocale(const std::string& locale)
+{
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    if (max_ != count_) {
+        return E_NO_ROW_IN_QUERY;
+    }
+    for (auto it = details_.begin(); it != details_.end();) {
+        auto conn = it->lock();
+        if (conn == nullptr || conn->connect_ == nullptr) {
+            it = details_.erase(it);
+            continue;
+        }
+        conn->connect_->ConfigLocale(locale);
+    }
+    return E_OK;
+}
+
+std::shared_ptr<SqliteConnectionPool::ConnNode> SqliteConnectionPool::Container::Acquire()
+{
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    if (cond_.wait_for(lock, timeout_, [this] { return count_ > 0; })) {
+        auto node = nodes_.back();
+        nodes_.pop_back();
+        count_--;
+        return node;
+    }
+    return nullptr;
+}
+
+std::shared_ptr<SqliteConnectionPool::ConnNode> SqliteConnectionPool::Container::AcquireById(int32_t id)
+{
+    for (auto& detail : details_) {
+        auto node = detail.lock();
+        if (node == nullptr) {
+            continue;
+        }
+        if (node->id_ == id) {
+            return node;
+        }
+    }
+    return nullptr;
+}
+
+int32_t SqliteConnectionPool::Container::Release(std::shared_ptr<ConnNode> node)
+{
+    {
+        std::unique_lock<decltype(mutex_)> lock(mutex_);
+        if (node->id_ < left_ || node->id_ >= right_) {
+            return E_OK;
+        }
+        nodes_.push_back(node);
+        count_++;
+    }
+    cond_.notify_one();
+    return E_OK;
+}
+
+int32_t SqliteConnectionPool::Container::Clear()
+{
+    std::list<std::shared_ptr<ConnNode>> nodes;
+    std::list<std::weak_ptr<ConnNode>> details;
+    {
+        std::unique_lock<decltype(mutex_)> lock(mutex_);
+        nodes = std::move(nodes_);
+        details = std::move(details_);
+        max_ = 0;
+        count_ = 0;
+        left_ = right_;
+    }
+    nodes.clear();
+    details.clear();
+    return 0;
+}
+
+bool SqliteConnectionPool::Container::IsFull()
+{
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    return max_ == count_;
+}
+
+int32_t SqliteConnectionPool::Container::Dump(const char *header)
+{
+    std::string info;
+    for (auto& detail : details_) {
+        auto node = detail.lock();
+        if (node == nullptr) {
+            continue;
+        }
+        info.append("<")
+            .append(std::to_string(node->id_))
+            .append(",")
+            .append(std::to_string(node->tid_))
+            .append(",")
+            .append(std::to_string(node->GetUsingTime()))
+            .append(">");
+        // 256 represent that limit to info length
+        if (info.size() > 256) {
+            LOG_WARN("%{public}s: %{public}s", header, info.c_str());
+            info.clear();
+        }
+    }
+    LOG_WARN("%{public}s: %{public}s", header, info.c_str());
+    return 0;
 }
 } // namespace NativeRdb
 } // namespace OHOS

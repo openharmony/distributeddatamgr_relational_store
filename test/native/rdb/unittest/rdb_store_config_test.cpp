@@ -58,6 +58,23 @@ int ConfigTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVe
     return E_OK;
 }
 
+class ConfigTestVisitorOpenCallback : public RdbOpenCallback {
+public:
+    int OnCreate(RdbStore &store) override;
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
+    static const std::string CREATE_TABLE_TEST;
+};
+
+int ConfigTestVisitorOpenCallback::OnCreate(RdbStore &store)
+{
+    return E_OK;
+}
+
+int ConfigTestVisitorOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
+{
+    return E_OK;
+}
+
 void RdbStoreConfigTest::SetUpTestCase(void)
 {
     RdbHelper::DeleteRdbStore(RDB_TEST_PATH + "config_test.db");
@@ -893,4 +910,45 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_029, TestSize.Level1)
     bool autoClean = false;
     config.SetAutoClean(autoClean);
     EXPECT_EQ(autoClean, config.GetAutoClean());
+}
+
+/**
+ * @tc.name: RdbStoreConfigVisitor_001
+ * @tc.desc: test RdbStoreConfigVisitor
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfigVisitor_001, TestSize.Level1)
+{
+    int errCode = E_OK;
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath, StorageMode::MODE_DISK, false);
+    ConfigTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+
+    const std::string visitorDir = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig visitorConfig("", StorageMode::MODE_DISK, true);
+    ConfigTestVisitorOpenCallback visitorHelper;
+    visitorConfig.SetRoleType(OHOS::NativeRdb::VISITOR);
+    visitorConfig.SetVisitorDir(visitorDir);
+    visitorConfig.SetCreateNecessary(false);
+    std::shared_ptr<RdbStore> visitorStore = RdbHelper::GetRdbStore(visitorConfig, 1, visitorHelper, errCode);
+    EXPECT_NE(visitorStore, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = visitorStore->Insert(id, "test", values);
+    EXPECT_NE(ret, E_OK);
+
+    store = nullptr;
+    visitorStore = nullptr;
+    ret = RdbHelper::DeleteRdbStore(dbPath);
+    EXPECT_EQ(ret, E_OK);
 }

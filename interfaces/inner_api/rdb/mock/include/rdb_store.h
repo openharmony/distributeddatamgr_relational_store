@@ -63,6 +63,8 @@ public:
         const std::vector<std::string> &sqlArgs) = 0;
     virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const std::vector<ValueObject> &args) = 0;
     virtual int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = {}) = 0;
+    virtual std::pair<int32_t, ValueObject> Execute(const std::string &sql,
+        const std::vector<ValueObject> &bindArgs = {}) = 0;
     virtual int ExecuteAndGetLong(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = {}) = 0;
     virtual int ExecuteAndGetString(std::string &outValue, const std::string &sql,
