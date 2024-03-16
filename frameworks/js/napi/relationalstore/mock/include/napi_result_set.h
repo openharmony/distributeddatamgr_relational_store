@@ -34,7 +34,7 @@ public:
     ResultSetProxy &operator=(std::shared_ptr<NativeRdb::ResultSet> resultSet);
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet);
     static napi_value GetConstructor(napi_env env);
-
+    static void Init(napi_env env, napi_value exports);
 private:
     static ResultSetProxy *GetInnerResultSet(napi_env env, napi_callback_info info);
     static ResultSetProxy *ParseInt32FieldByName(
