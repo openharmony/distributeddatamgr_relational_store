@@ -82,6 +82,8 @@ if (is_ohos && !build_ohos_sdk) {
     include_dirs = [
       "include",
       "${relational_store_native_path}/rdb/include",
+      "../cloud_data/include",
+      "../common_type/include",
     ]
   }
 
@@ -256,6 +258,8 @@ if (is_ohos && !build_ohos_sdk) {
       "mock/include",
       "include",
       "//third_party/libuv/src/win",
+      "../cloud_data/include",
+      "../common_type/include",
     ]
   }
 
@@ -353,6 +357,8 @@ if (is_ohos && !build_ohos_sdk) {
     include_dirs = [
       "mock/include",
       "include",
+      "../cloud_data/include",
+      "../common_type/include",
     ]
   }
 
@@ -442,6 +448,8 @@ if (is_ohos && !build_ohos_sdk) {
       "include",
       "${relational_store_native_path}/mock/rdb/include",
       "${relational_store_native_path}/rdb/include",
+      "../cloud_data/include",
+      "../common_type/include",
     ]
   }
 
@@ -510,6 +518,8 @@ if (is_ohos && !build_ohos_sdk) {
       "mock/include",
       "include",
       "${relational_store_native_path}/rdb/include",
+      "../cloud_data/include",
+      "../common_type/include",
     ]
   }
 

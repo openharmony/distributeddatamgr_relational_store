@@ -26,8 +26,8 @@ using namespace testing::ext;
 using namespace OHOS::Security::AccessToken;
 using namespace OHOS::Rdb;
 uint64_t g_selfTokenID = 0;
-static constexpr const char *TEST_BUNDLE_NAME = "testId";
-static constexpr const char *TEST_ACCOUNT_ID = "bundleName";
+static constexpr const char *TEST_BUNDLE_NAME = "bundleName";
+static constexpr const char *TEST_ACCOUNT_ID = "testId";
 static constexpr const char *TEST_STORE_ID = "storeId";
 void AllocHapToken(HapPolicyParams policy)
 {
@@ -76,6 +76,7 @@ HWTEST_F(CloudDataTest, CloudDataTest_001, TestSize.Level0)
     } else {
         auto [status, info] = proxy->QueryStatistics(TEST_ACCOUNT_ID, TEST_BUNDLE_NAME, TEST_STORE_ID);
         EXPECT_EQ(status, CloudService::PERMISSION_DENIED);
+        EXPECT_TRUE(info.empty());
     }
 }
 
@@ -109,6 +110,7 @@ HWTEST_F(CloudDataTest, CloudDataTest_002, TestSize.Level0)
     } else {
         auto [status, info] = proxy->QueryStatistics(TEST_ACCOUNT_ID, TEST_BUNDLE_NAME, TEST_STORE_ID);
         EXPECT_EQ(status, CloudService::CLOUD_CONFIG_PERMISSION_DENIED);
+        EXPECT_TRUE(info.empty());
     }
 }
 
@@ -142,6 +144,7 @@ HWTEST_F(CloudDataTest, CloudDataTest_003, TestSize.Level0)
     } else {
         auto [status, info] = proxy->QueryStatistics(TEST_ACCOUNT_ID, TEST_BUNDLE_NAME, TEST_STORE_ID);
         EXPECT_EQ(status, CloudService::ERROR);
+        EXPECT_TRUE(info.empty());
     }
 }
 } // namespace OHOS::CloudData
