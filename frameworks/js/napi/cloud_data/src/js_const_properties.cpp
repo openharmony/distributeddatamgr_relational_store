@@ -62,6 +62,7 @@ static napi_value ExportShareState(napi_env env)
     SetNamedProperty(env, state, "STATE_ACCEPTED", Confirmation::CFM_ACCEPTED);
     SetNamedProperty(env, state, "STATE_REJECTED", Confirmation::CFM_REJECTED);
     SetNamedProperty(env, state, "STATE_SUSPENDED", Confirmation::CFM_SUSPENDED);
+    SetNamedProperty(env, state, "STATE_UNAVAILABLE", Confirmation::CFM_UNAVAILABLE);
     napi_object_freeze(env, state);
     return state;
 }
