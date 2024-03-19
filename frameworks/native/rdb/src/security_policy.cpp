@@ -12,7 +12,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-
+#define LOG_TAG "SecurityPolicy"
 #include "security_policy.h"
 
 #include "logger.h"

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "SqliteGlobalConfig"
 #include "sqlite_global_config.h"
 
 #include <sys/stat.h>

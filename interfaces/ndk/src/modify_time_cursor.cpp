@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "ModifyTimeCursor"
 #include "modify_time_cursor.h"
 #include "logger.h"
 #include "relational_store_error_code.h"

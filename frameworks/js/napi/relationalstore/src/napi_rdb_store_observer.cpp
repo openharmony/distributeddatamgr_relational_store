@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "NapiRdbStoreObserver"
 #include "napi_rdb_store_observer.h"
 
 #include "js_utils.h"
