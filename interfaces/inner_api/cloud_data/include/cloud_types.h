@@ -17,6 +17,7 @@
 #define OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_H
 
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace OHOS::CloudData {
@@ -33,6 +34,7 @@ enum Confirmation : int32_t {
     CFM_ACCEPTED,
     CFM_REJECTED,
     CFM_SUSPENDED,
+    CFM_UNAVAILABLE,
     CFM_BUTT
 };
 
@@ -52,6 +54,14 @@ struct Participant {
     std::string attachInfo;
 };
 
+struct StatisticInfo {
+    std::string table;
+    int32_t inserted = 0;
+    int32_t updated = 0;
+    int32_t normal = 0;
+};
+
+using StatisticInfos = std::vector<StatisticInfo>;
 using Participants = std::vector<Participant>;
 using Results = std::tuple<int32_t, std::string, std::vector<std::pair<int32_t, std::string>>>;
 using QueryResults = std::tuple<int32_t, std::string, Participants>;
@@ -131,6 +141,18 @@ enum SharingCode : int32_t {
      * @brief means error codes that exceed this enumerated value are custom error codes.
      */
     CUSTOM_ERROR = 1000,
+};
+
+enum Strategy : uint32_t {
+    STRATEGY_HEAD,
+    STRATEGY_NETWORK = STRATEGY_HEAD,
+    STRATEGY_BUTT
+};
+
+enum NetWorkStrategy : uint32_t {
+    WIFI = 0x01,
+    CELLULAR = 0x02,
+    NETWORK_STRATEGY_BUTT
 };
 } // namespace OHOS::CloudData
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_H

@@ -33,7 +33,6 @@ enum FillOneRowResult {
 
 struct SharedBlockInfo {
     AppDataFwk::SharedBlock *sharedBlock = nullptr;
-    sqlite3 *db = nullptr;
     sqlite3_stmt *statement = nullptr;
 
     int startPos;
@@ -45,8 +44,8 @@ struct SharedBlockInfo {
     bool isFull;
     bool hasException;
 
-    SharedBlockInfo(AppDataFwk::SharedBlock* sharedBlock, sqlite3* db, sqlite3_stmt* statement)
-        : sharedBlock(sharedBlock), db(db), statement(statement)
+    SharedBlockInfo(AppDataFwk::SharedBlock* sharedBlock, sqlite3_stmt* statement)
+        : sharedBlock(sharedBlock), statement(statement)
     {
         startPos = 0;
         addedRows = 0;

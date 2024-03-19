@@ -90,6 +90,35 @@ int32_t Convert2Value(napi_env env, napi_value input, Privilege &output)
 }
 
 template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
+{
+    napi_valuetype type = napi_undefined;
+    napi_status status = napi_typeof(env, jsValue, &type);
+    bool isArray;
+    napi_status status_array = napi_is_array(env, jsValue, &isArray);
+    if (status != napi_ok || type != napi_object || status_array != napi_ok || isArray) {
+        LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
+        return napi_invalid_arg;
+    }
+
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, name), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, uri), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, createTime), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, modifyTime), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, size), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, path), napi_invalid_arg);
+    output.hash = output.modifyTime + "_" + output.size;
+    auto jsStatus = GetNamedProperty(env, jsValue, "status");
+    if (jsStatus != nullptr) {
+        Convert2ValueExt(env, jsStatus, output.status);
+    }
+    if (output.status != Asset::STATUS_DELETE) {
+        output.status = Asset::STATUS_UNKNOWN;
+    }
+    return napi_ok;
+}
+
+template<>
 int32_t Convert2Value(napi_env env, napi_value input, std::shared_ptr<RdbPredicates> &output)
 {
     napi_valuetype type = napi_undefined;
@@ -195,6 +224,25 @@ napi_value Convert2JSValue(napi_env env, const std::pair<int32_t, std::string> &
     napi_set_named_property(env, jsValue, "code", code);
     napi_set_named_property(env, jsValue, "description", description);
     napi_set_named_property(env, jsValue, "value", val);
+    return jsValue;
+}
+
+template<>
+napi_value Convert2JSValue(napi_env env, const StatisticInfo &value)
+{
+    napi_value jsValue = nullptr;
+    napi_status status = napi_create_object(env, &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    napi_value table = Convert2JSValue(env, value.table);
+    napi_value inserted = Convert2JSValue(env, value.inserted);
+    napi_value updated = Convert2JSValue(env, value.updated);
+    napi_value normal = Convert2JSValue(env, value.normal);
+    napi_set_named_property(env, jsValue, "table", table);
+    napi_set_named_property(env, jsValue, "inserted", inserted);
+    napi_set_named_property(env, jsValue, "updated", updated);
+    napi_set_named_property(env, jsValue, "normal", normal);
     return jsValue;
 }
 }; // namespace JSUtils

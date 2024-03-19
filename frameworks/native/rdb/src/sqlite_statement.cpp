@@ -505,7 +505,8 @@ int SqliteStatement::IsValid(int index) const
 
 bool SqliteStatement::SupportSharedBlock() const
 {
-    return (sqlite3_db_config(nullptr, SQLITE_USE_SHAREDBLOCK) == SQLITE_OK);
+    auto db = sqlite3_db_handle(stmtHandle);
+    return (sqlite3_db_config(db, SQLITE_USE_SHAREDBLOCK) == SQLITE_OK);
 }
 } // namespace NativeRdb
 } // namespace OHOS
