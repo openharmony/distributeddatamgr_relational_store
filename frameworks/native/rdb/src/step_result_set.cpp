@@ -36,6 +36,10 @@ StepResultSet::StepResultSet(std::shared_ptr<SqliteConnectionPool> pool, const s
         return;
     }
     conn_ = pool->AcquireByID(connection->GetId());
+    if (conn_ == nullptr) {
+        conn_ = connection;
+    }
+
     int errCode = PrepareStep();
     if (errCode) {
         LOG_ERROR("step resultset ret %{public}d", errCode);

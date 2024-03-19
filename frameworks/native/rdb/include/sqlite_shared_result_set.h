@@ -51,7 +51,8 @@ protected:
 private:
     std::pair<std::shared_ptr<SqliteStatement>, int> PrepareStep();
     void FillBlock(int requiredPos);
-    int ExecuteForSharedBlock(AppDataFwk::SharedBlock *sharedBlock, int startPos, int requiredPos, bool isCountAllRows);
+    std::pair<int, int32_t> ExecuteForSharedBlock(AppDataFwk::SharedBlock* block, int start, int required,
+        bool needCount);
 
 private:
     // The specified value is -1 when there is no data

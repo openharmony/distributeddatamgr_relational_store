@@ -125,10 +125,11 @@ std::shared_ptr<SqliteConnection> SqliteConnectionPool::AcquireConnection(bool i
 
 std::shared_ptr<SqliteConnection> SqliteConnectionPool::AcquireByID(int32_t id)
 {
-    Container *container = &readers_;
+    Container *container = (maxReader_ != 0) ? &readers_ : &writers_;
     auto node = container->AcquireById(id);
     if (node == nullptr) {
-        container->Dump("readers_");
+        const char *header = (maxReader_ != 0) ? "readers_" : "writers_";
+        container->Dump(header);
         return nullptr;
     }
     auto conn = node->GetConnect(true);
