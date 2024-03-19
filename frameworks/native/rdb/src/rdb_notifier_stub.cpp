@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "RdbNotifierStub"
 #include "rdb_notifier_stub.h"
 
 #include <ipc_skeleton.h>

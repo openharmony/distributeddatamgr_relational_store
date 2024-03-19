@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "JSCloudShare"
 #include "js_cloud_share.h"
 
 #include "cache_result_set.h"

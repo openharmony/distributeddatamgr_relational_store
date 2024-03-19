@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "JSUtils"
 #include "js_utils.h"
 #include "logger.h"
 #include <cstring>

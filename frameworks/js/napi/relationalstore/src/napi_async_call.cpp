@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "AsyncCall"
 #include "napi_async_call.h"
 
 #include "logger.h"

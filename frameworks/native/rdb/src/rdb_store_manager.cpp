@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "RdbStoreManager"
 #include "rdb_store_manager.h"
 
 #include <algorithm>
