@@ -26,28 +26,31 @@ constexpr int MAX_INPUT_COUNT = 10;
 constexpr int OK = 0;
 constexpr int ERR = -1;
 
-constexpr int E_PARAM_ERROR = 401;
 constexpr int E_NON_SYSTEM_APP_ERROR = 202;
+constexpr int E_PARAM_ERROR = 401;
+constexpr int E_NOT_SUPPORTED = 801;
 constexpr int E_INNER_ERROR = 14800000;
 constexpr int E_RESULT_GOTO_ERROR = 14800012;
 constexpr int E_NOT_STAGE_MODE = 14801001;
 constexpr int E_DATA_GROUP_ID_INVALID = 14801002;
 
-const static std::map<int, std::string> ERROR_MAPS = {
-    { NativeRdb::E_WAL_SIZE_OVER_LIMIT, "The WAL file size over default limit." },
-    { NativeRdb::E_EMPTY_FILE_NAME, "Failed to open or delete database by invalid database path." },
-    { NativeRdb::E_INVALID_FILE_PATH, "Failed to open database by database corrupted" },
-    { NativeRdb::E_NOT_SUPPORTED, "Capability not supported" },
-    { E_RESULT_GOTO_ERROR, "The result set is empty or the specified location is invalid." },
-    { NativeRdb::E_INVALID_STATEMENT, "The column value is null or the column type is incompatible." },
-    { E_NOT_STAGE_MODE, "Only supported in stage mode." },
-    { E_DATA_GROUP_ID_INVALID, "The data group id is invalid." },
-    { NativeRdb::E_GET_DATAOBSMGRCLIENT_FAIL, "Failed to get DataObsMgrClient." },
-    { NativeRdb::E_TYPE_MISMATCH, "The type of the distributed table does not match" },
-    { NativeRdb::E_DATABASE_FULL, "database or disk is full." }
+struct JsErrorCode {
+    int32_t status;
+    int32_t jsCode;
+    const char *message;
 };
+const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode);
+
+#define ASSERT(condition, message, retVal)                             \
+    do {                                                               \
+        if (!(condition)) {                                            \
+            LOG_ERROR("test (" #condition ") failed: " message);       \
+            return retVal;                                             \
+        }                                                              \
+    } while (0)
 
 #define RDB_REVT_NOTHING
+#define RDB_DO_NOTHING
 
 #define RDB_NAPI_ASSERT_BASE(env, assertion, error, retVal)                                                 \
     do {                                                                                                    \
@@ -101,10 +104,11 @@ class InnerError : public Error {
 public:
     InnerError(int code)
     {
-        auto iter = ERROR_MAPS.find(code);
-        if (iter != ERROR_MAPS.end()) {
-            code_ = code;
-            msg_ = iter->second;
+        auto errorMsg = GetJsErrorCode(code);
+        if (errorMsg.has_value()) {
+            auto napiError = errorMsg.value();
+            code_ = napiError.jsCode;
+            msg_ = napiError.message;
         } else {
             code_ = E_INNER_ERROR;
             msg_ = "Inner error. Inner code is " + std::to_string(code % E_INNER_ERROR);
@@ -133,19 +137,28 @@ private:
 
 class ParamError : public Error {
 public:
-    ParamError(const std::string &needed, const std::string &mustbe) : needed_(needed), mustbe_(mustbe){};
+    ParamError(const std::string &needed, const std::string &mustbe)
+    {
+        msg_ = "Parameter error. The " + needed + " must be " + mustbe;
+    };
+
+    ParamError(const std::string &errMsg)
+    {
+        msg_ = "Parameter error." + errMsg;
+    }
+
     std::string GetMessage() override
     {
-        return "Parameter error. The " + needed_ + " must be " + mustbe_;
+        return msg_;
     };
+
     int GetCode() override
     {
         return E_PARAM_ERROR;
     };
 
 private:
-    std::string needed_;
-    std::string mustbe_;
+    std::string msg_;
 };
 
 class NonSystemError : public Error {

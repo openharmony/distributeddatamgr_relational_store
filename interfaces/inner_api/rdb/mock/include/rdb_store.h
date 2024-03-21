@@ -21,12 +21,13 @@
 #include <vector>
 
 #include "abs_rdb_predicates.h"
+#include "rdb_common.h"
+#include "rdb_errno.h"
+#include "rdb_store_config.h"
+#include "rdb_types.h"
 #include "result_set.h"
 #include "value_object.h"
 #include "values_bucket.h"
-#include "rdb_common.h"
-#include "rdb_types.h"
-
 namespace OHOS::NativeRdb {
 class RdbStore {
 public:
@@ -75,7 +76,10 @@ public:
         const std::vector<ValueObject> &bindArgs = {}) = 0;
     virtual int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey = {}) = 0;
     virtual int Attach(
-        const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey) = 0;
+        const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey)
+    {
+        return E_OK;
+    }
 
     virtual int Count(int64_t &outValue, const AbsRdbPredicates &predicates) = 0;
     virtual std::shared_ptr<ResultSet> Query(
@@ -95,6 +99,9 @@ public:
     virtual bool IsReadOnly() const = 0;
     virtual bool IsMemoryRdb() const = 0;
     virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = {}) = 0;
+    virtual std::pair<int32_t, int32_t> Attach(
+        const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) = 0;
+    virtual std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif

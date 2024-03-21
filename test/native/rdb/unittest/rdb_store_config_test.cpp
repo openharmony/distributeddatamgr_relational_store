@@ -205,7 +205,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_003, TestSize.Level1)
     ConfigTestOpenCallback helper;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(store, nullptr);
-    EXPECT_EQ(errCode, E_EMPTY_FILE_NAME);
+    EXPECT_EQ(errCode, E_INVALID_FILE_PATH);
 }
 
 /**
@@ -221,7 +221,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_004, TestSize.Level1)
     ConfigTestOpenCallback helper;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(store, nullptr);
-    EXPECT_EQ(errCode, E_RELATIVE_PATH);
+    EXPECT_EQ(errCode, E_INVALID_FILE_PATH);
 }
 
 /**
