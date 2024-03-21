@@ -290,6 +290,9 @@ int StepResultSet::PrepareStep()
     sqliteStatement_ = std::move(statement);
     connId_ = connection->GetId();
     conn_ = pool->AcquireByID(connection->GetId());
+    if (conn_ == nullptr) {
+        conn_ = connection;
+    }
     return E_OK;
 }
 
