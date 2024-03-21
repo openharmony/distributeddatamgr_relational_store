@@ -42,6 +42,10 @@ RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode,
 {
 }
 
+RdbStoreConfig::RdbStoreConfig()
+{
+}
+
 RdbStoreConfig::~RdbStoreConfig()
 {
     ClearEncryptKey();
