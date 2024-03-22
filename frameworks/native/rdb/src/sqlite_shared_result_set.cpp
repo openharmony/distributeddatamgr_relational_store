@@ -19,38 +19,49 @@
 
 #include "logger.h"
 #include "rdb_sql_utils.h"
+#include "share_block.h"
+#include "shared_block_serializer_info.h"
 #include "sqlite_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<SqliteConnectionPool> connectionPool, std::string path,
+SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<SqliteConnectionPool> pool, std::string path,
     std::string sql, const std::vector<ValueObject>& bindArgs)
-    : AbsSharedResultSet(path), connectionPool_(connectionPool), resultSetBlockCapacity_(0), rowNum_(NO_COUNT),
-      qrySql_(sql), bindArgs_(std::move(bindArgs)), isOnlyFillResultSetBlock_(false)
+    : AbsSharedResultSet(std::move(path)), resultSetBlockCapacity_(0), rowNum_(NO_COUNT), qrySql_(std::move(sql)),
+      bindArgs_(std::move(bindArgs)), isOnlyFillResultSetBlock_(false)
 {
+    auto connection = pool->AcquireConnection(true);
+    if (connection == nullptr) {
+        return;
+    }
+    conn_ = pool->AcquireByID(connection->GetId());
+    if (conn_ == nullptr) {
+        conn_ = connection;
+    }
 }
 
-SqliteSharedResultSet::~SqliteSharedResultSet() {
-}
+SqliteSharedResultSet::~SqliteSharedResultSet() {}
 
-std::shared_ptr<SqliteStatement> SqliteSharedResultSet::PrepareStep(
-    std::shared_ptr<SqliteConnection> connection, int &errCode)
+std::pair<std::shared_ptr<SqliteStatement>, int> SqliteSharedResultSet::PrepareStep()
 {
     if (SqliteUtils::GetSqlStatementType(qrySql_) != SqliteUtils::STATEMENT_SELECT) {
         LOG_ERROR("StoreSession BeginStepQuery fail : not select sql !");
-        errCode = E_EXECUTE_IN_STEP_QUERY;
-        return nullptr;
+        return {nullptr, E_EXECUTE_IN_STEP_QUERY};
     }
-
-    std::shared_ptr<SqliteStatement> sqliteStatement = connection->BeginStepQuery(errCode,
-        qrySql_, bindArgs_);
-    if (sqliteStatement == nullptr) {
-        connection->EndStepQuery();
+    auto statement = SqliteStatement::CreateStatement(conn_, qrySql_);
+    if (statement == nullptr) {
+        return {nullptr, E_ERROR};
     }
-
-    return sqliteStatement;
+    auto errCode = statement->BindArguments(bindArgs_);
+    if (errCode != E_OK) {
+        LOG_ERROR("Bind arg faild! Ret is %{public}d", errCode);
+        statement->ResetStatementAndClearBindings();
+        statement = nullptr;
+        return {nullptr, E_ERROR};
+    }
+    return {statement, E_OK};
 }
 
 int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
@@ -63,25 +74,15 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
     if (isClosed_) {
         return E_STEP_RESULT_CLOSED;
     }
-    auto pool = connectionPool_;
-    if (pool == nullptr) {
-        return E_STEP_RESULT_CLOSED;
-    }
 
-    auto connection = pool->AcquireConnection(true);
-    if (connection == nullptr) {
-        return E_CON_OVER_LIMIT;
-    }
-
-    int errCode = E_OK;
-    std::shared_ptr<SqliteStatement> sqliteStatement = PrepareStep(connection, errCode);
-    if (sqliteStatement == nullptr) {
+    auto [statement, errCode] = PrepareStep();
+    if (statement == nullptr) {
         return errCode;
     }
 
     int columnCount = 0;
     // Get the total number of columns
-    errCode = sqliteStatement->GetColumnCount(columnCount);
+    errCode = statement->GetColumnCount(columnCount);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -89,8 +90,8 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
     std::lock_guard<std::mutex> lock(columnNamesLock_);
     for (int i = 0; i < columnCount; i++) {
         std::string columnName;
-        errCode = sqliteStatement->GetColumnName(i, columnName);
-        if (errCode != E_OK) {
+        errCode = statement->GetColumnName(i, columnName);
+        if (errCode) {
             columnNames_.clear();
             return errCode;
         }
@@ -99,7 +100,6 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
 
     columnNames = columnNames_;
     columnCount_ = static_cast<int>(columnNames_.size());
-    connection->EndStepQuery();
     return E_OK;
 }
 
@@ -114,7 +114,7 @@ int SqliteSharedResultSet::GetRowCount(int &count)
         return E_STEP_RESULT_CLOSED;
     }
 
-    FillSharedBlock(0);
+    FillBlock(0);
     count = rowNum_;
     return E_OK;
 }
@@ -131,12 +131,12 @@ int SqliteSharedResultSet::Close()
 bool SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
 {
     if (GetBlock() == nullptr) {
-        FillSharedBlock(newPosition);
+        FillBlock(newPosition);
         return true;
     }
     if ((uint32_t)newPosition < GetBlock()->GetStartPos() || (uint32_t)newPosition >= GetBlock()->GetLastPos() ||
         oldPosition == rowNum_) {
-        FillSharedBlock(newPosition);
+        FillBlock(newPosition);
     }
     return true;
 }
@@ -149,40 +149,91 @@ int SqliteSharedResultSet::PickFillBlockStartPosition(int resultSetPosition, int
     return std::max(resultSetPosition - blockCapacity / PICK_POS, 0);
 }
 
-void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
+void SqliteSharedResultSet::FillBlock(int requiredPos)
 {
-    ClearBlock();
-    auto pool = connectionPool_;
-    if (pool == nullptr) {
-        return;
-    }
-    auto connection = pool->AcquireConnection(true);
-    if (connection == nullptr) {
-        return;
-    }
-    AppDataFwk::SharedBlock *sharedBlock = GetBlock();
-    if (sharedBlock == nullptr) {
+    auto block = GetBlock();
+    if (block == nullptr) {
         LOG_ERROR("FillSharedBlock GetBlock failed.");
         return;
     }
+    ClearBlock();
+    if (block == nullptr) {
+        LOG_ERROR("GetBlock failed.");
+        return;
+    }
+
     if (rowNum_ == NO_COUNT) {
-        auto errCode = connection->ExecuteForSharedBlock(rowNum_, qrySql_, bindArgs_,
-            sharedBlock, requiredPos, requiredPos, true);
+        auto [errCode, rowNum] = ExecuteForSharedBlock(block, requiredPos, requiredPos, true);
         if (errCode != E_OK) {
             return;
         }
-        resultSetBlockCapacity_ = static_cast<int>(sharedBlock->GetRowNum());
+        resultSetBlockCapacity_ = static_cast<int>(block->GetRowNum());
+        rowNum_ = rowNum;
     } else {
         int blockRowNum = rowNum_;
         int startPos =
             isOnlyFillResultSetBlock_ ? requiredPos : PickFillBlockStartPosition(requiredPos, resultSetBlockCapacity_);
-        connection->ExecuteForSharedBlock(blockRowNum, qrySql_, bindArgs_, sharedBlock, startPos, requiredPos, false);
-        resultSetBlockCapacity_ = sharedBlock->GetRowNum();
+        ExecuteForSharedBlock(block, startPos, requiredPos, false);
+        resultSetBlockCapacity_ = block->GetRowNum();
         LOG_INFO("blockRowNum=%{public}d, requiredPos= %{public}d, startPos_= %{public}" PRIu32
                  ", lastPos_= %{public}" PRIu32 ", blockPos_= %{public}" PRIu32 ".",
-            blockRowNum, requiredPos, sharedBlock->GetStartPos(), sharedBlock->GetLastPos(),
-            sharedBlock->GetBlockPos());
+            blockRowNum, requiredPos, block->GetStartPos(), block->GetLastPos(),
+                 block->GetBlockPos());
     }
+}
+/**
+ * Executes a statement and populates the specified with a range of results.
+ */
+std::pair<int, int32_t> SqliteSharedResultSet::ExecuteForSharedBlock(AppDataFwk::SharedBlock* block, int start,
+    int required, bool needCount)
+{
+    int32_t rowNum = NO_COUNT;
+    if (block == nullptr) {
+        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
+        return { E_ERROR, rowNum };
+    }
+
+    auto [statement, errCode] = PrepareStep();
+    if (errCode != E_OK) {
+        LOG_ERROR("PrepareStep error = %{public}d ", errCode);
+        return { errCode, rowNum };
+    }
+
+    auto code = block->Clear();
+    if (code != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
+        LOG_ERROR("Clear %{public}d.", code);
+        return { E_ERROR, rowNum };
+    }
+
+    SharedBlockInfo blockInfo(block, statement->GetSql3Stmt());
+    blockInfo.requiredPos = required;
+    statement->GetColumnCount(blockInfo.columnNum);
+    blockInfo.isCountAllRows = needCount;
+    blockInfo.startPos = start;
+    code = block->SetColumnNum(blockInfo.columnNum);
+    if (code != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
+        LOG_ERROR("SetColumnNum %{public}d.", code);
+        return { E_ERROR, rowNum };
+    }
+
+    if (statement->SupportSharedBlock()) {
+        FillSharedBlockOpt(&blockInfo);
+    } else {
+        FillSharedBlock(&blockInfo);
+    }
+
+    if (!ResetStatement(&blockInfo)) {
+        LOG_ERROR("ResetStatement Failed.");
+        return { E_ERROR, rowNum };
+    }
+    block->SetStartPos(blockInfo.startPos);
+    block->SetBlockPos(required - blockInfo.startPos);
+    block->SetLastPos(blockInfo.startPos + block->GetRowNum());
+    if (needCount) {
+        rowNum = static_cast<int>(GetCombinedData(blockInfo.startPos, blockInfo.totalRows));
+    }
+    errCode = statement->ResetStatementAndClearBindings();
+    return { errCode, rowNum };
 }
 
 void SqliteSharedResultSet::SetBlock(AppDataFwk::SharedBlock *block)

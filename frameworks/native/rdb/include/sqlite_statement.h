@@ -21,7 +21,7 @@
 
 #include "sqlite3sym.h"
 #include "value_object.h"
-
+#include "share_block.h"
 namespace OHOS {
 namespace NativeRdb {
 class SqliteConnection;
@@ -48,16 +48,18 @@ public:
     int GetSize(int index, size_t &size) const;
     int GetColumn(int index, ValueObject &value) const;
     bool IsReadOnly() const;
+    bool SupportSharedBlock() const;
     sqlite3_stmt *GetSql3Stmt() const
     {
         return stmtHandle;
     }
-
     static constexpr int COLUMN_TYPE_ASSET = 1000;
     static constexpr int COLUMN_TYPE_ASSETS = 1001;
 private:
     using Asset = ValueObject::Asset;
     using Assets = ValueObject::Assets;
+    static const int SQLITE_SET_SHAREDBLOCK = 2004;
+    static const int SQLITE_USE_SHAREDBLOCK = 2005;
 
     int InnerBindArguments(const std::vector<ValueObject> &bindArgs) const;
     int IsValid(int index) const;

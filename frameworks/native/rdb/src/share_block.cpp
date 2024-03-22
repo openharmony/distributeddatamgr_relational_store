@@ -113,8 +113,8 @@ void FillSharedBlockOpt(SharedBlockInfo *info)
         SeriFinish, SeriPutString, SeriPutLong,          SeriPutDouble,  SeriPutBlob,       SeriPutNull, SeriPutOther
     };
 
-    int rc =
-        sqlite3_db_config(info->connection->db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, info->statement, &sqliteSharedBlock);
+    auto db = sqlite3_db_handle(info->statement);
+    int rc = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, info->statement, &sqliteSharedBlock);
     if (rc != SQLITE_OK) {
         LOG_ERROR("set sqlite shared block methods error. rc=%{private}d", rc);
         return;
@@ -136,7 +136,7 @@ void FillSharedBlockOpt(SharedBlockInfo *info)
     info->startPos = serializer.GetStartPos();
     info->addedRows = serializer.GetAddedRows();
 
-    rc = sqlite3_db_config(info->connection->db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, info->statement, 0);
+    rc = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, info->statement, 0);
     if (rc != SQLITE_OK) {
         LOG_ERROR("clear sqlite shared block methods error. rc=%{private}d", rc);
         return;

@@ -191,11 +191,6 @@ public:
     API_EXPORT bool OnGo(int oldRowIndex, int newRowIndex) override;
 
     /**
-     * @brief Adds the data of a {@code SharedResultSet} to a {@link SharedBlock}.
-     */
-    API_EXPORT void FillBlock(int startRowIndex, AppDataFwk::SharedBlock *block) override;
-
-    /**
      * @brief Allocates a new shared block to an {@link AbsSharedResultSet}
      */
     API_EXPORT virtual void SetBlock(AppDataFwk::SharedBlock *block);
