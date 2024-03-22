@@ -83,7 +83,7 @@ void SqliteUtils::Replace(std::string &src, const std::string &rep, const std::s
 
 bool SqliteUtils::IsSqlReadOnly(int sqlType)
 {
-    return (sqlType == STATEMENT_SELECT) ? true : false;
+    return (sqlType == STATEMENT_SELECT);
 }
 
 bool SqliteUtils::IsSpecial(int sqlType)

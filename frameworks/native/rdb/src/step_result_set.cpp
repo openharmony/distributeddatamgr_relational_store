@@ -19,8 +19,6 @@
 
 #include "logger.h"
 #include "rdb_errno.h"
-#include "rdb_sql_utils.h"
-#include "rdb_trace.h"
 #include "sqlite3sym.h"
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
@@ -29,11 +27,19 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-StepResultSet::StepResultSet(std::shared_ptr<SqliteConnectionPool> connectionPool, const std::string& sql_,
+StepResultSet::StepResultSet(std::shared_ptr<SqliteConnectionPool> pool, const std::string& sql_,
     const std::vector<ValueObject>& selectionArgs)
-    : sqliteStatement_(nullptr), args_(std::move(selectionArgs)), sql_(sql_),
-      connectionPool_(std::move(connectionPool)), rowCount_(INIT_POS), isAfterLast_(false), connId_(INIT_POS)
+    : sqliteStatement_(nullptr), args_(std::move(selectionArgs)), sql_(sql_), rowCount_(INIT_POS), isAfterLast_(false)
 {
+    auto connection = pool->AcquireConnection(true);
+    if (connection == nullptr) {
+        return;
+    }
+    conn_ = pool->AcquireByID(connection->GetId());
+    if (conn_ == nullptr) {
+        conn_ = connection;
+    }
+
     int errCode = PrepareStep();
     if (errCode) {
         LOG_ERROR("step resultset ret %{public}d", errCode);
@@ -62,7 +68,7 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
         LOG_ERROR("get all column names Step ret %{public}d", errCode);
         return errCode;
     }
-    auto [statement, connection] = GetStatement();
+    auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
@@ -91,7 +97,7 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 
 int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 {
-    auto [statement, conn] = GetStatement();
+    auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
@@ -199,7 +205,7 @@ int StepResultSet::GoToNextRow()
         return errCode;
     }
 
-    auto [statement, conn] = GetStatement();
+    auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
@@ -243,11 +249,12 @@ int StepResultSet::Close()
     if (isClosed_) {
         return E_OK;
     }
+    isClosed_ = true;
+
     auto args = std::move(args_);
     sqliteStatement_ = nullptr;
-    connId_ = -1;
+    conn_ = nullptr;
     auto columnNames = std::move(columnNames_);
-    isClosed_ = true;
     return FinishStep();
 }
 
@@ -260,22 +267,16 @@ int StepResultSet::PrepareStep()
         return E_OK;
     }
 
+    if (conn_ == nullptr) {
+        return E_STEP_RESULT_CLOSED;
+    }
+
     if (SqliteUtils::GetSqlStatementType(sql_) != SqliteUtils::STATEMENT_SELECT) {
         LOG_ERROR("not a select sql_!");
         return E_EXECUTE_IN_STEP_QUERY;
     }
 
-    auto pool = connectionPool_;
-    if (pool == nullptr) {
-        return E_STEP_RESULT_CLOSED;
-    }
-
-    auto connection = pool->AcquireConnection(true);
-    if (connection == nullptr) {
-        LOG_ERROR("connectionPool_ AcquireConnection failed!");
-        return E_CON_OVER_LIMIT;
-    }
-    auto statement = SqliteStatement::CreateStatement(connection, sql_);
+    auto statement = SqliteStatement::CreateStatement(conn_, sql_);
     if (statement == nullptr) {
         return E_STATEMENT_NOT_PREPARED;
     }
@@ -288,11 +289,6 @@ int StepResultSet::PrepareStep()
         return errCode;
     }
     sqliteStatement_ = std::move(statement);
-    connId_ = connection->GetId();
-    conn_ = pool->AcquireByID(connection->GetId());
-    if (conn_ == nullptr) {
-        conn_ = connection;
-    }
     return E_OK;
 }
 
@@ -301,13 +297,10 @@ int StepResultSet::PrepareStep()
  */
 int StepResultSet::FinishStep()
 {
-    auto [statement, connection] = GetStatement();
+    auto statement = GetStatement();
     if (statement != nullptr) {
         statement->ResetStatementAndClearBindings();
         sqliteStatement_ = nullptr;
-        conn_ = nullptr;
-        connId_ = -1;
-        connection = nullptr;
     }
     rowPos_ = INIT_POS;
     return E_OK;
@@ -352,11 +345,12 @@ int StepResultSet::IsAtFirstRow(bool &result) const
 
 int StepResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
 {
-    auto [statement, conn] = GetStatement();
+    auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
     }
+
     if (rowPos_ == INIT_POS) {
         LOG_ERROR("query not executed.");
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
@@ -366,7 +360,7 @@ int StepResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
 
 int StepResultSet::GetString(int columnIndex, std::string &value)
 {
-    auto [statement, conn] = GetStatement();
+    auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
@@ -386,11 +380,12 @@ int StepResultSet::GetString(int columnIndex, std::string &value)
 
 int StepResultSet::GetInt(int columnIndex, int &value)
 {
-    auto [statement, conn] = GetStatement();
+    auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
     }
+
     if (rowPos_ == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
@@ -407,11 +402,12 @@ int StepResultSet::GetInt(int columnIndex, int &value)
 
 int StepResultSet::GetLong(int columnIndex, int64_t &value)
 {
-    auto [statement, conn] = GetStatement();
+    auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
     }
+
     if (rowPos_ == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
@@ -425,11 +421,12 @@ int StepResultSet::GetLong(int columnIndex, int64_t &value)
 
 int StepResultSet::GetDouble(int columnIndex, double &value)
 {
-    auto [statement, conn] = GetStatement();
+    auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
     }
+
     if (rowPos_ == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
@@ -458,11 +455,12 @@ int StepResultSet::Get(int32_t col, ValueObject &value)
 
 int StepResultSet::GetModifyTime(std::string &modifyTime)
 {
-    auto [statement, conn] = GetStatement();
+    auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
     }
+
     if (rowPos_ == INIT_POS) {
         return E_STEP_RESULT_QUERY_NOT_EXECUTED;
     }
@@ -477,7 +475,7 @@ int StepResultSet::GetModifyTime(std::string &modifyTime)
 
 int StepResultSet::GetSize(int columnIndex, size_t &size)
 {
-    auto [statement, conn] = GetStatement();
+    auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
         return E_STEP_RESULT_CLOSED;
@@ -525,7 +523,7 @@ int StepResultSet::GetValue(int32_t col, T &value)
 
 std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t index)
 {
-    auto [statement, conn] = GetStatement();
+    auto statement = GetStatement();
     if (statement == nullptr) {
         return { E_STEP_RESULT_CLOSED, ValueObject() };
     }
@@ -542,12 +540,13 @@ std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t in
     return { ret, std::move(value) };
 }
 
-std::pair<std::shared_ptr<SqliteStatement>, std::shared_ptr<SqliteConnection>> StepResultSet::GetStatement()
+std::shared_ptr<SqliteStatement> StepResultSet::GetStatement()
 {
-    if (isClosed_) {
-        return { nullptr, nullptr };
+    if (isClosed_ || conn_ == nullptr) {
+        return nullptr;
     }
-    return {sqliteStatement_, conn_};
+
+    return sqliteStatement_;
 }
 } // namespace NativeRdb
 } // namespace OHOS

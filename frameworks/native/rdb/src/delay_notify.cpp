@@ -53,6 +53,9 @@ void DelayNotify::UpdateNotify(const DistributedRdb::RdbChangedData &changedData
 
 void DelayNotify::SetExecutorPool(std::shared_ptr<ExecutorPool> pool)
 {
+    if (pool_ != nullptr) {
+        return;
+    }
     pool_ = pool;
 }
 
