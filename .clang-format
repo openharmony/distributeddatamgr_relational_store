@@ -29,13 +29,13 @@ AlwaysBreakAfterReturnType: None
 
 AlwaysBreakBeforeMultilineStrings: false
 
-AlwaysBreakTemplateDeclarations: false
+AlwaysBreakTemplateDeclarations: true
 
 BinPackArguments: true
 
 BinPackParameters: true
 
-BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeBinaryOperators: false
 
 BreakBeforeBraces: Custom
 

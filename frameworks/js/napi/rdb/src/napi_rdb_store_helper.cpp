@@ -515,7 +515,7 @@ napi_value InnerDeleteRdbStore(napi_env env, napi_callback_info info, std::share
         int errCode = RdbHelper::DeleteRdbStore(context->config.GetPath());
         LOG_DEBUG("RdbJsKit::DeleteRdbStore failed %{public}d", errCode);
         std::shared_ptr<Error> dbInvalidError = std::make_shared<DbInvalidError>();
-        RDB_CHECK_RETURN_CALL_RESULT(errCode != E_EMPTY_FILE_NAME, context->SetError(dbInvalidError));
+        RDB_CHECK_RETURN_CALL_RESULT(errCode != E_INVALID_FILE_PATH, context->SetError(dbInvalidError));
         return (errCode == E_OK) ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
