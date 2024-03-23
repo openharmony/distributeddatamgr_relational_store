@@ -62,18 +62,18 @@ public:
     int CleanDirtyData(const std::string &table, uint64_t cursor);
     int RegisterCallBackObserver(const DataChangeCallback &clientChangedData);
     int GetMaxVariableNumber();
+    JournalMode GetJournalMode();
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     explicit SqliteConnection(bool isWriteConnection);
     int InnerOpen(const RdbStoreConfig &config, uint32_t retry);
-    int GetDbPath(const RdbStoreConfig &config, std::string &dbPath);
     int Configure(const RdbStoreConfig &config, uint32_t retry, std::string &dbPath);
     int SetPageSize(const RdbStoreConfig &config);
     int SetEncryptKey(const RdbStoreConfig &config, uint32_t iter);
     int SetJournalMode(const RdbStoreConfig &config);
     int SetJournalSizeLimit(const RdbStoreConfig &config);
     int SetAutoCheckpoint(const RdbStoreConfig &config);
-    int SetWalSyncMode(const std::string &syncMode);
+    int SetSyncMode(const std::string &syncMode);
     int PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void LimitPermission(const std::string &dbPath) const;
 
@@ -103,6 +103,7 @@ private:
     bool isConfigured_ = false;
     bool inTransaction_;
     bool hasClientObserver_ = false;
+    JournalMode mode_ = JournalMode::MODE_WAL;
     int openFlags;
     int maxVariableNumber_;
     int32_t id_ = 0;

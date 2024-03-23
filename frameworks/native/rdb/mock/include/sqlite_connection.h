@@ -63,6 +63,7 @@ public:
     int GetMaxVariableNumber();
     int32_t GetId() const;
     int32_t SetId(int32_t id);
+    JournalMode GetJournalMode();
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     explicit SqliteConnection(bool isWriteConnection);
@@ -74,7 +75,7 @@ private:
     int SetJournalMode(const RdbStoreConfig &config);
     int SetJournalSizeLimit(const RdbStoreConfig &config);
     int SetAutoCheckpoint(const RdbStoreConfig &config);
-    int SetWalSyncMode(const std::string &syncMode);
+    int SetSyncMode(const std::string &syncMode);
     int PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void LimitPermission(const std::string &dbPath) const;
 
@@ -102,6 +103,7 @@ private:
     bool isConfigured_ = false;
     bool inTransaction_;
     bool hasClientObserver_ = false;
+    JournalMode mode_ = JournalMode::MODE_WAL;
     int openFlags;
     int maxVariableNumber_;
     int32_t id_ = 0;

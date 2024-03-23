@@ -22,6 +22,7 @@
 #include "logger.h"
 #include "sqlite3sym.h"
 #include "sqlite_utils.h"
+#include "rdb_errno.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -78,9 +79,9 @@ int SqliteGlobalConfig::GetPageSize()
     return GlobalExpr::DB_PAGE_SIZE;
 }
 
-std::string SqliteGlobalConfig::GetWalSyncMode()
+std::string SqliteGlobalConfig::GetSyncMode()
 {
-    return GlobalExpr::WAL_SYNC_MODE;
+    return GlobalExpr::DEFAULE_SYNC_MODE;
 }
 
 int SqliteGlobalConfig::GetJournalFileSize()
@@ -95,7 +96,32 @@ int SqliteGlobalConfig::GetWalAutoCheckpoint()
 
 std::string SqliteGlobalConfig::GetDefaultJournalMode()
 {
-    return GlobalExpr::DEFAULT_JOURNAL_MODE;
+    return GlobalExpr::JOURNAL_MODE_WAL;
+}
+
+int SqliteGlobalConfig::GetDbPath(const RdbStoreConfig &config, std::string &dbPath)
+{
+    std::string path;
+    if (config.GetRoleType() == VISITOR) {
+        path = config.GetVisitorDir();
+    } else {
+        path = config.GetPath();
+    }
+
+    if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
+        if (config.GetRoleType() == VISITOR) {
+            LOG_ERROR("not support MODE_MEMORY, storeName:%{public}s, role:%{public}d", config.GetName().c_str(),
+                config.GetRoleType());
+            return E_NOT_SUPPORT;
+        }
+        dbPath = SqliteGlobalConfig::GetMemoryDbPath();
+    } else if (path.empty() || (path.front() != '/' && path.at(1) != ':')) {
+        LOG_ERROR("SqliteConnection GetDbPath input empty database path");
+        return E_INVALID_FILE_PATH;
+    } else {
+        dbPath = path;
+    }
+    return E_OK;
 }
 } // namespace NativeRdb
 } // namespace OHOS
