@@ -97,7 +97,12 @@ void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
     std::vector<uint8_t> key = config.GetEncryptKey();
     RdbPassword rdbPwd;
     if (config.IsEncrypt()) {
-        auto ret = RdbSecurityManager::GetInstance().Init(config.GetBundleName());
+        auto ret = config.GetBundleName();
+        if (name.empty()) {
+            LOG_WARN("Bundle name is empty, using path instead.")
+            name = std::string(config.GetPath()).substr(0, config.GetPath().rfind("/") + 1);
+        }
+        auto ret = RdbSecurityManager::GetInstance().Init(name);
         if (ret != E_OK) {
             return;
         }
