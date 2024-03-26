@@ -99,7 +99,7 @@ void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
     if (config.IsEncrypt()) {
         auto ret = config.GetBundleName();
         if (name.empty()) {
-            LOG_WARN("Bundle name is empty, using path instead.")
+            LOG_WARN("Bundle name is empty, using path instead.");
             name = std::string(config.GetPath()).substr(0, config.GetPath().rfind("/") + 1);
         }
         auto ret = RdbSecurityManager::GetInstance().Init(name);
