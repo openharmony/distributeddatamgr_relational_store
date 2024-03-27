@@ -138,6 +138,18 @@ public:
     API_EXPORT int GetAssets(int32_t col, ValueObject::Assets &value) override;
 
     /**
+     * @brief Obtains the value of the specified column in the current row as vector.
+     *
+     * The implementation class determines whether to throw an exception if the value of the specified column
+     * in the current row is null or the specified column is not of the vector type.
+     *
+     * @param columnIndex Indicates the specified column index, which starts from 0.
+     *
+     * @return Returns the value of the specified column as a double.
+     */
+    API_EXPORT int GetFloat32Array(int32_t index, ValueObject::Vecs &vecs) override;
+
+    /**
     * @brief Obtains the value of the specified column in the current row as ValueObject.
     *
     * The implementation class determines whether to throw an exception if the value of the specified column

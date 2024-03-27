@@ -285,9 +285,10 @@ std::string RdbStoreImpl::GetSqlArgs(size_t size)
     return args;
 }
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
-    : config_(config), connectionPool_(nullptr), isOpen_(false), isReadOnly_(config.IsReadOnly()),
+    : config_(config), isOpen_(false), isReadOnly_(config.IsReadOnly()),
       isMemoryRdb_(config.IsMemoryRdb()), isEncrypt_(config.IsEncrypt()), path_(config.GetPath()),
-      orgPath_(config.GetPath()), name_(config.GetName()), fileType_(config.GetDatabaseFileType())
+      orgPath_(config.GetPath()), name_(config.GetName()), fileType_(config.GetDatabaseFileType()),
+      connectionPool_(nullptr)
 {
     connectionPool_ = SqliteConnectionPool::Create(config_, errCode);
     if (connectionPool_ == nullptr || errCode != E_OK) {
@@ -822,7 +823,8 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
     return errCode;
 }
 
-std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, const std::vector<ValueObject> &bindArgs)
+std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, const std::vector<ValueObject> &bindArgs,
+    int64_t trxId)
 {
     int errCode = E_OK;
     ValueObject outValue;
@@ -1270,6 +1272,11 @@ int RdbStoreImpl::BeginTransaction()
     return E_OK;
 }
 
+std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
+{
+    return { E_NOT_SUPPORT, 0 };
+}
+
 /**
 * Begins a transaction in EXCLUSIVE mode.
 */
@@ -1309,6 +1316,12 @@ int RdbStoreImpl::RollBack()
             transactionId, name_.c_str(), errCode);
     }
     return E_OK;
+}
+
+int RdbStoreImpl::RollBack(int64_t trxId)
+{
+    (void)trxId;
+    return E_NOT_SUPPORT;
 }
 
 /**
@@ -1351,6 +1364,12 @@ int RdbStoreImpl::Commit()
     }
     connectionPool_->GetTransactionStack().pop();
     return E_OK;
+}
+
+int RdbStoreImpl::Commit(int64_t trxId)
+{
+    (void)trxId;
+    return E_NOT_SUPPORT;
 }
 
 int RdbStoreImpl::FreeTransaction(std::shared_ptr<SqliteConnection> connection, const std::string &sql)
