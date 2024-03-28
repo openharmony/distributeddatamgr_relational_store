@@ -817,8 +817,8 @@ napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
             }
         }
         if (argc == 3) {
-            CHECK_RETURN(OK == ParseTxId(env, argv[0], context));
-            CHECK_RETURN(OK == ParseBindArgs(env, argv[1], context));
+            CHECK_RETURN(OK == ParseTxId(env, argv[1], context));
+            CHECK_RETURN(OK == ParseBindArgs(env, argv[2], context));
         }
     };
     auto exec = [context]() -> int {
@@ -1059,14 +1059,27 @@ napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info
 
 napi_value RdbStoreProxy::BeginTrans(napi_env env, napi_callback_info info)
 {
-    napi_value thisObj = nullptr;
-    NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr));
-    RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    RDB_NAPI_ASSERT(env, rdbStoreProxy && rdbStoreProxy->rdbStore_, std::make_shared<ParamError>("RdbStore", "valid"));
-    std::pair<int, int64_t> res = rdbStoreProxy->rdbStore_->BeginTrans();
-    RDB_NAPI_ASSERT(env, res.first == E_OK, std::make_shared<InnerError>(res.first));
-    LOG_DEBUG("RdbStoreProxy::BeginTransaction end, errCode is:%{public}d", res.first);
-    return JSUtils::Convert2JSValue(env, res.second);
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN_SET_E(argc == 0, std::make_shared<ParamNumError>("0"));
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+    };
+    auto exec = [context]() -> int {
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
+        LOG_DEBUG("RdbStoreProxy::BeginTrans start");
+        auto status = E_ERROR;
+        std::tie(status, context->intOutput) = obj->rdbStore_->BeginTrans();
+        return status;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_status status = napi_create_int64(env, context->intOutput, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(!(context->error) || context->error->GetCode() == OK);
+    return AsyncCall::Call(env, context);
 }
 
 napi_value RdbStoreProxy::RollBack(napi_env env, napi_callback_info info)
@@ -1085,13 +1098,14 @@ napi_value RdbStoreProxy::RollBackByTxId(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc == 0 || argc == 1, std::make_shared<ParamNumError>("1 to 3"));
+        CHECK_RETURN_SET_E(argc == 0 || argc == 1, std::make_shared<ParamNumError>("1 to 2"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         if (argc == 1) {
             CHECK_RETURN(OK == ParseTxId(env, argv[0], context));
         }
     };
     auto exec = [context]() -> int {
+        LOG_DEBUG("RdbStoreProxy::roll back by txId start async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
         return obj->rdbStore_->RollBack(context->txId);
@@ -1101,7 +1115,9 @@ napi_value RdbStoreProxy::RollBackByTxId(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
-    return nullptr;
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return AsyncCall::Call(env, context);
 }
 
 napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
@@ -1111,7 +1127,7 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
     napi_value argv[MAX_INPUT_COUNT] = { nullptr };
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisObj, nullptr);
     RDB_NAPI_ASSERT(
-        env, status == napi_ok && (argc == 0 || argc == 1), std::make_shared<ParamError>("parameter", "0 to 1"));
+        env, status == napi_ok && (argc == 0 || argc == 1), std::make_shared<ParamError>("parameter", "1 to 2"));
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
     RDB_NAPI_ASSERT(env, rdbStoreProxy && rdbStoreProxy->rdbStore_, std::make_shared<ParamError>("parameter", "valid"));
     if (argc == 0) {
@@ -1123,11 +1139,12 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
 
     auto context = std::make_shared<RdbStoreContext>();
     context->boundObj = rdbStoreProxy;
-    int innerStatus = ParseTxId(env, argv[0], context);
-    RDB_NAPI_ASSERT(env, OK == innerStatus, std::make_shared<ParamError>("parameter", "valid"));
+
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN(OK == ParseTxId(env, argv[0], context));
     };
     auto exec = [context]() -> int {
+        LOG_DEBUG("RdbStoreProxy::commit by txId start async");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
         return obj->rdbStore_->Commit(context->txId);
@@ -1137,7 +1154,9 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
-    return nullptr;
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return AsyncCall::Call(env, context);
 }
 
 napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)

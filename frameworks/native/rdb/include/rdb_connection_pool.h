@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -60,7 +60,7 @@ protected:
 private:
     static constexpr uint32_t MAX_WRITE_CONN_NUM = 16;
     static constexpr uint32_t MAX_READ_CONN_NUM = 64;
-    static constexpr uint32_t DEFAULT_WRITE_CONN_NUM = 4;
+    static constexpr uint32_t DEFAULT_WRITE_CONN_NUM = 2;
     static constexpr uint32_t DEFAULT_READ_CONN_NUM = 8;
 
     virtual int Init();

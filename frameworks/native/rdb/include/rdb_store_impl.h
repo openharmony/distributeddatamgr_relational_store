@@ -75,6 +75,7 @@ private:
 
 class RdbStoreImpl : public RdbStore {
 public:
+    RdbStoreImpl(const RdbStoreConfig &config);
     RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
     const RdbStoreConfig &GetConfig();

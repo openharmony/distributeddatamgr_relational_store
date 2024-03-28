@@ -36,8 +36,8 @@ public:
     using Blob = std::vector<uint8_t>;
     using Asset = AssetValue;
     using Assets = std::vector<Asset>;
-    using Vecs = std::vector<float>;
-    using Type = std::variant<Nil, int64_t, double, std::string, bool, Blob, Asset, Assets, Vecs>;
+    using FloatVector = std::vector<float>;
+    using Type = std::variant<Nil, int64_t, double, std::string, bool, Blob, Asset, Assets, FloatVector>;
     template<typename Tp, typename... Types>
     struct index_of : std::integral_constant<size_t, 0> {};
 
@@ -91,7 +91,7 @@ public:
         /** Indicates the ValueObject type is assets.*/
         TYPE_ASSETS = TYPE_INDEX<Assets>,
         /** Indicates the ValueObject type is vecs.*/
-        TYPE_VECS = TYPE_INDEX<Vecs>,
+        TYPE_VECS = TYPE_INDEX<FloatVector>,
         /** the BUTT.*/
         TYPE_BUTT = TYPE_MAX
     };
@@ -216,11 +216,11 @@ public:
     /**
      * @brief Constructor.
      *
-     * This constructor is used to convert the Vecs input parameter to a value of type ValueObject.
+     * This constructor is used to convert the FloatVector input parameter to a value of type ValueObject.
      *
-     * @param val Indicates an Vecs input parameter.
+     * @param val Indicates an FloatVector input parameter.
      */
-    API_EXPORT ValueObject(Vecs val);
+    API_EXPORT ValueObject(FloatVector val);
 
     /**
      * @brief Move assignment operator overloaded function.
@@ -280,7 +280,7 @@ public:
     /**
      * @brief Obtains the vector<float> value in this {@code ValueObject} object.
      */
-    API_EXPORT int GetVecs(Vecs &val) const;
+    API_EXPORT int GetVecs(FloatVector &val) const;
 
     /**
      * @brief Type conversion function.
@@ -367,9 +367,9 @@ public:
     *
     * @return Returns the vector<uint8_t> type ValueObject.
     */
-    operator Vecs() const
+    operator FloatVector() const
     {
-        return std::get<Vecs>(value);
+        return std::get<FloatVector>(value);
     }
 
     /**

@@ -247,7 +247,7 @@ public:
     }
 
 private:
-    std::shared_ptr<RdbConnectionPool> connectionPool_ = nullptr;
+    std::shared_ptr<RdbConnectionPool> rdConnectionPool_ = nullptr;
 };
 } // namespace OHOS::NativeRdb
 #endif
