@@ -19,6 +19,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <map>
 
 namespace OHOS::CloudData {
 enum Role : int32_t {
@@ -61,10 +62,27 @@ struct StatisticInfo {
     int32_t normal = 0;
 };
 
+struct QueryKey {
+    std::string accountId;
+    std::string bundleName;
+    std::string storeId;
+    bool operator<(const QueryKey &queryKey) const
+    {
+        return accountId < queryKey.accountId && bundleName < queryKey.bundleName && storeId < queryKey.storeId;
+    }
+};
+
+struct CloudSyncInfo {
+    int64_t startTime = 0;
+    int64_t finishTime = 0;
+    int32_t code = -1;
+};
+
 using StatisticInfos = std::vector<StatisticInfo>;
 using Participants = std::vector<Participant>;
 using Results = std::tuple<int32_t, std::string, std::vector<std::pair<int32_t, std::string>>>;
 using QueryResults = std::tuple<int32_t, std::string, Participants>;
+using QueryLastResults = std::map<std::string, CloudSyncInfo>;
 
 constexpr const char *DATA_CHANGE_EVENT_ID = "cloud_data_change";
 

@@ -145,4 +145,15 @@ bool Marshalling(const CommonAsset &input, MessageParcel &data)
     return ITypesUtil::Marshal(data, input.name, input.uri, input.path, input.createTime,
         input.modifyTime, input.size, input.status, input.hash);
 }
+
+template<>
+bool Marshalling(const CloudSyncInfo &input, MessageParcel &data)
+{
+    return Marshal(data, input.startTime, input.finishTime, input.code);
+}
+template<>
+bool Unmarshalling(CloudSyncInfo &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.startTime, output.finishTime, output.code);
+}
 } // namespace OHOS::ITypesUtil

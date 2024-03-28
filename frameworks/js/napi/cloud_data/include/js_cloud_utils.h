@@ -31,6 +31,7 @@ using ResultSet = OHOS::NativeRdb::ResultSet;
 using ExtraData = OHOS::CloudData::JsConfig::ExtraData;
 using StatisticInfo = OHOS::CloudData::StatisticInfo;
 using Asset = OHOS::CommonType::AssetValue;
+using CloudSyncInfo = OHOS::CloudData::CloudSyncInfo;
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, ExtraData &output);
@@ -62,6 +63,8 @@ napi_value Convert2JSValue(napi_env env, const std::pair<int32_t, std::string> &
 template<>
 napi_value Convert2JSValue(napi_env env, const StatisticInfo &value);
 
+template<>
+napi_value Convert2JSValue(napi_env env, const CloudSyncInfo &value);
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
 #endif // CLOUD_DATA_JS_CLOUD_UTILS_H

@@ -242,5 +242,31 @@ napi_value Convert2JSValue(napi_env env, const StatisticInfo &value)
     napi_set_named_property(env, jsValue, "normal", normal);
     return jsValue;
 }
+
+template<>
+napi_value Convert2JSValue(napi_env env, const CloudSyncInfo &value)
+{
+    napi_value jsValue = nullptr;
+    napi_status status = napi_create_object(env, &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    napi_value startTime = nullptr;
+    status = napi_create_date(env, static_cast<double>(value.startTime), &startTime);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    napi_value finishTime = nullptr;
+    status = napi_create_date(env, static_cast<double>(value.finishTime), &finishTime);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    napi_set_named_property(env, jsValue, "startTime", startTime);
+    napi_set_named_property(env, jsValue, "finishTime", finishTime);
+    napi_set_named_property(env, jsValue, "code", Convert2JSValue(env, value.code));
+    return jsValue;
+}
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
