@@ -284,6 +284,15 @@ std::string RdbStoreImpl::GetSqlArgs(size_t size)
     }
     return args;
 }
+
+RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
+    : config_(config), isOpen_(false), isReadOnly_(config.IsReadOnly()),
+      isMemoryRdb_(config.IsMemoryRdb()), isEncrypt_(config.IsEncrypt()), path_(config.GetPath()),
+      orgPath_(config.GetPath()), name_(config.GetName()), fileType_(config.GetDatabaseFileType()),
+      connectionPool_(nullptr)
+{
+}
+
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
     : config_(config), isOpen_(false), isReadOnly_(config.IsReadOnly()),
       isMemoryRdb_(config.IsMemoryRdb()), isEncrypt_(config.IsEncrypt()), path_(config.GetPath()),

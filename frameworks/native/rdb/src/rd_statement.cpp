@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -124,7 +124,7 @@ int RdStatement::InnerBindBlobTypeArgs(const ValueObject &arg, uint32_t index) c
             break;
         }
         case ValueObjectType::TYPE_VECS: {
-            Vecs vectors;
+            FloatVector vectors;
             arg.GetVecs(vectors);
             ret = RdUtils::RdSqlBindFloatVector(stmtHandle_, index,
                 static_cast<float *>(vectors.data()), vectors.size(), nullptr);

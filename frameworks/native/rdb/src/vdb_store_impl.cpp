@@ -39,32 +39,28 @@ namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
 
-VdbStoreImpl::VdbStoreImpl(const RdbStoreConfig &config, int &errCode) : RdbStoreImpl(config, errCode),
-    connectionPool_(nullptr)
+VdbStoreImpl::VdbStoreImpl(const RdbStoreConfig &config, int &errCode) : RdbStoreImpl(config),
+    rdConnectionPool_(nullptr)
 {
-    connectionPool_ = RdbConnectionPool::Create(config_, errCode);
-    if (connectionPool_ == nullptr || errCode != E_OK) {
-        connectionPool_ = nullptr;
+    rdConnectionPool_ = RdbConnectionPool::Create(config_, errCode);
+    if (rdConnectionPool_ == nullptr || errCode != E_OK) {
+        rdConnectionPool_ = nullptr;
         LOG_ERROR("InnerOpen failed, err is %{public}d", errCode);
         return;
     }
-    InnerOpen();
 }
 
 VdbStoreImpl::~VdbStoreImpl()
 {
-    connectionPool_ = nullptr;
+    rdConnectionPool_ = nullptr;
 }
 
 std::pair<int, int64_t> VdbStoreImpl::BeginTrans()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (!config_.IsVector()) {
-        return {E_NOT_SUPPORT, 0};
-    }
     auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
     int64_t tmpTrxId = 0;
-    auto connection = connectionPool_->AcquireNewConnection(false, tmpTrxId);
+    auto connection = rdConnectionPool_->AcquireNewConnection(false, tmpTrxId);
     if (connection == nullptr) {
         LOG_ERROR("Get null connection, storeName: %{public}s time:%{public}" PRIu64 ".", name_.c_str(), time);
         return {E_CON_OVER_LIMIT, 0};
@@ -82,11 +78,8 @@ std::pair<int, int64_t> VdbStoreImpl::BeginTrans()
 int VdbStoreImpl::Commit(int64_t trxId)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (!config_.IsVector()) {
-        return E_NOT_SUPPORT;
-    }
     auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
-    auto connection = connectionPool_->AcquireConnection(false, trxId);
+    auto connection = rdConnectionPool_->AcquireConnection(false, trxId);
     if (connection == nullptr) {
         LOG_ERROR("Get null connection, storeName: %{public}s time:%{public}" PRIu64 ".", name_.c_str(), time);
         return E_CON_OVER_LIMIT;
@@ -98,18 +91,15 @@ int VdbStoreImpl::Commit(int64_t trxId)
         return ret;
     }
     connection->SetInTransaction(false);
-    connectionPool_->ReleaseConnection(connection);
+    rdConnectionPool_->ReleaseConnection(connection);
     return E_OK;
 }
 
 int VdbStoreImpl::RollBack(int64_t trxId)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (!config_.IsVector()) {
-        return E_NOT_SUPPORT;
-    }
     auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
-    auto connection = connectionPool_->AcquireConnection(false, trxId);
+    auto connection = rdConnectionPool_->AcquireConnection(false, trxId);
     if (connection == nullptr) {
         LOG_ERROR("Get null connection, storeName: %{public}s time:%{public}" PRIu64 ".", name_.c_str(), time);
         return E_CON_OVER_LIMIT;
@@ -122,7 +112,7 @@ int VdbStoreImpl::RollBack(int64_t trxId)
         return ret;
     }
     connection->SetInTransaction(false);
-    connectionPool_->ReleaseConnection(connection);
+    rdConnectionPool_->ReleaseConnection(connection);
     return E_OK;
 }
 
@@ -140,17 +130,14 @@ std::pair<int32_t, ValueObject> VdbStoreImpl::Execute(const std::string &sql,
         return { E_NOT_SUPPORT_THE_SQL, outValue };
     }
     int32_t ret = E_OK;
-    txId < 0 ? ret = E_ERROR : ret = ExecuteSqlByTrxId(sql, bindArgs, (uint64_t)txId);
+    txId < 0 ? ret = E_INVALID_ARGS : ret = ExecuteSqlByTrxId(sql, bindArgs, (uint64_t)txId);
     return { ret, ValueObject() };
 }
 
 int VdbStoreImpl::ExecuteSqlByTrxId(const std::string &sql, const std::vector<ValueObject> &bindArgs, int64_t trxId)
 {
-    if (!config_.IsVector()) {
-        return E_NOT_SUPPORT;
-    }
     bool isRead = trxId == 0 ? true : false;
-    auto connection = connectionPool_->AcquireConnection(isRead, trxId);
+    auto connection = rdConnectionPool_->AcquireConnection(isRead, trxId);
     if (connection == nullptr) {
         LOG_ERROR("Get null connection");
         return E_CON_OVER_LIMIT;
@@ -160,7 +147,9 @@ int VdbStoreImpl::ExecuteSqlByTrxId(const std::string &sql, const std::vector<Va
         LOG_ERROR("RdbStore unable to execute sql");
         return ret;
     }
-    connectionPool_->ReleaseConnection(connection);
+    if (trxId == 0) {
+        rdConnectionPool_->ReleaseConnection(connection);
+    }
     return E_OK;
 }
 
@@ -168,7 +157,7 @@ std::shared_ptr<AbsSharedResultSet> VdbStoreImpl::QuerySql(const std::string &sq
     const std::vector<ValueObject> &bindArgs)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    return std::make_shared<RdSharedResultSet>(connectionPool_, sql, bindArgs);
+    return std::make_shared<RdSharedResultSet>(rdConnectionPool_, sql, bindArgs);
 }
 
 int VdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &values)

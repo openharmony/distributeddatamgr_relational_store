@@ -126,7 +126,7 @@ public:
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) override;
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
 private:
-    std::shared_ptr<RdbConnectionPool> connectionPool_ = nullptr;
+    std::shared_ptr<RdbConnectionPool> rdConnectionPool_ = nullptr;
 };
 } // namespace OHOS::NativeRdb
 #endif

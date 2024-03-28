@@ -147,7 +147,7 @@ public:
      *
      * @return Returns the value of the specified column as a double.
      */
-    API_EXPORT int GetFloat32Array(int32_t index, ValueObject::Vecs &vecs) override;
+    API_EXPORT int GetFloat32Array(int32_t index, ValueObject::FloatVector &vecs) override;
 
     /**
     * @brief Obtains the value of the specified column in the current row as ValueObject.

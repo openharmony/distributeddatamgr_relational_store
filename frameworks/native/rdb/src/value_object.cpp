@@ -84,7 +84,7 @@ ValueObject::ValueObject(ValueObject::Assets val) : value(std::move(val))
 {
 }
 
-ValueObject::ValueObject(ValueObject::Vecs val) : value(std::move(val))
+ValueObject::ValueObject(ValueObject::FloatVector val) : value(std::move(val))
 {
 }
 
@@ -175,7 +175,7 @@ int ValueObject::GetAssets(Assets &val) const
     return Get(val);
 }
 
-int ValueObject::GetVecs(Vecs &val) const
+int ValueObject::GetVecs(FloatVector &val) const
 {
     return Get(val);
 }

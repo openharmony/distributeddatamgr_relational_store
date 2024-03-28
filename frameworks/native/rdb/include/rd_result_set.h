@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -61,7 +61,7 @@ public:
     int IsColumnNull(int columnIndex, bool &isNull) override;
     bool IsClosed() const override;
     int Close() override;
-    int GetFloat32Array(int32_t col, ValueObject::Vecs &value) override;
+    int GetFloat32Array(int32_t col, ValueObject::FloatVector &value) override;
 
 protected:
     virtual int PrepareStep();
@@ -84,7 +84,7 @@ protected:
     std::vector<std::string> columnNames_ = {};
     std::vector<ValueObject> args_ = {};
     std::string sql_ = "";
-    std::shared_ptr<RdbConnectionPool> connectionPool_ = nullptr;
+    std::shared_ptr<RdbConnectionPool> rdConnectionPool_ = nullptr;
     // The value indicates the row count of the result set
     int rowCount_;
     // Whether reach the end of this result set or not

@@ -25,7 +25,7 @@ namespace NativeRdb {
 
 using Asset = ValueObject::Asset;
 using Assets = ValueObject::Assets;
-using Vecs = ValueObject::Vecs;
+using FloatVector = ValueObject::FloatVector;
 
 class RdbStatement {
 public:

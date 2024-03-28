@@ -29,7 +29,7 @@ using namespace OHOS::Rdb;
 RdSharedResultSet::RdSharedResultSet(std::shared_ptr<RdbConnectionPool> connectionPool, const std::string &sql,
     const std::vector<ValueObject>& selectionArgs)
     : sqliteStatement_(nullptr), args_(std::move(selectionArgs)), sql_(sql),
-      connectionPool_(std::move(connectionPool)), rowCount_(INIT_POS), isAfterLast_(false), connId_(INIT_POS)
+      rdConnectionPool_(std::move(connectionPool)), rowCount_(INIT_POS), isAfterLast_(false), connId_(INIT_POS)
 {
     int errCode = PrepareStep();
     if (errCode) {
@@ -40,7 +40,7 @@ RdSharedResultSet::RdSharedResultSet(std::shared_ptr<RdbConnectionPool> connecti
 RdSharedResultSet::RdSharedResultSet(std::shared_ptr<RdbConnectionPool> connectionPool, const std::string &sql_,
     const std::vector<ValueObject>& selectionArgs, int rowCount)
     : sqliteStatement_(nullptr), args_(std::move(selectionArgs)), sql_(sql_),
-      connectionPool_(std::move(connectionPool)), rowCount_(rowCount), isAfterLast_(false), connId_(INIT_POS)
+      rdConnectionPool_(std::move(connectionPool)), rowCount_(rowCount), isAfterLast_(false), connId_(INIT_POS)
 {
 }
 
@@ -169,7 +169,7 @@ int RdSharedResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
     return E_NOT_SUPPORT;
 }
 
-int RdSharedResultSet::GetFloat32Array(int32_t col, ValueObject::Vecs &value)
+int RdSharedResultSet::GetFloat32Array(int32_t col, ValueObject::FloatVector &value)
 {
     auto [statement, conn] = GetStatement();
     if (statement == nullptr) {
@@ -228,14 +228,14 @@ int RdSharedResultSet::PrepareStep()
         return E_EXECUTE_IN_STEP_QUERY;
     }
 
-    auto pool = connectionPool_;
+    auto pool = rdConnectionPool_;
     if (pool == nullptr) {
         return E_STEP_RESULT_CLOSED;
     }
 
     auto connection = pool->AcquireConnection(true, 0);
     if (connection == nullptr) {
-        LOG_ERROR("connectionPool_ AcquireConnection failed!");
+        LOG_ERROR("rdConnectionPool_ AcquireConnection failed!");
         return E_CON_OVER_LIMIT;
     }
     auto statement = RdStatement::CreateStatement(std::static_pointer_cast<RdConnection>(connection), sql_);
@@ -286,7 +286,7 @@ int RdSharedResultSet::FinishStep()
             sqliteStatement_ = nullptr;
         }
         if (conn_ != nullptr) {
-            connectionPool_->ReleaseConnection(conn_);
+            rdConnectionPool_->ReleaseConnection(conn_);
             conn_ = nullptr;
         }
         connId_ = -1;
