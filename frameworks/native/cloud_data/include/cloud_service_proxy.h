@@ -51,6 +51,8 @@ public:
         int32_t confirmation, std::pair<int32_t, std::string> &result) override;
 
     int32_t SetCloudStrategy(Strategy strategy, const std::vector<CommonType::Value>& values) override;
+    std::pair<int32_t, QueryLastResults> QueryLastSyncInfo(
+        const std::string &id, const std::string &bundleName, const std::string &storeId) override;
 
 private:
     sptr<IRemoteObject> remote_;
