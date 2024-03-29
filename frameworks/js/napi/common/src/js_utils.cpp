@@ -433,12 +433,14 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<float> &valu
     napi_value buffer = nullptr;
     napi_status status = napi_create_arraybuffer(env, value.size() * sizeof(float), &native, &buffer);
     if (status != napi_ok) {
+        delete[] static_cast<float *>(native);
         return nullptr;
     }
     for (size_t i = 0; i < value.size(); i++) {
         *(static_cast<float *>(native) + i) = value[i];
     }
     status = napi_create_typedarray(env, napi_float32_array, value.size(), buffer, 0, &jsValue);
+    delete[] static_cast<float *>(native);
     if (status != napi_ok) {
         return nullptr;
     }

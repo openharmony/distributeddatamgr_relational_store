@@ -74,7 +74,6 @@ ColumnType RdUtils::TransferGrdTypeToColType(int grdColType)
 
 int RdUtils::RdDbOpen(const char *dbPath, const char *configStr, uint32_t flags, GRD_DB **db)
 {
-    LOG_DEBUG("[RdUtils::RdDbOpen] dbPath is %{public}s, configStr is %{public}s", dbPath, configStr);
     if (GRD_KVApiInfo.DBOpenApi == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }

@@ -35,7 +35,7 @@ namespace OHOS {
 namespace RelationalStoreJsKit {
 using Asset = AssetValue;
 using Assets = std::vector<Asset>;
-using Vecs = std::vector<float>;
+using FloatVector = std::vector<float>;
 static const int E_OK = 0;
 
 napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet)
@@ -443,7 +443,7 @@ napi_value ResultSetProxy::GetFloat32Array(napi_env env, napi_callback_info info
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
-    Vecs result;
+    FloatVector result = {};
     int errCode = resultSetProxy->GetInstance()->GetFloat32Array(columnIndex, result);
     if (errCode == E_NULL_OBJECT) {
         LOG_DEBUG("GetFloat32Array col %{public}d is null ", columnIndex);

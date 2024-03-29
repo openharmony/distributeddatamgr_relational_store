@@ -33,8 +33,6 @@
 #include "rdb_store_config.h"
 #include "rdb_store_impl.h"
 #include "refbase.h"
-#include "sqlite_connection_pool.h"
-#include "sqlite_statement.h"
 
 namespace OHOS::NativeRdb {
 

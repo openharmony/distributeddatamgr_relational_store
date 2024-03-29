@@ -28,7 +28,7 @@ using namespace OHOS::Rdb;
 
 RdSharedResultSet::RdSharedResultSet(std::shared_ptr<RdbConnectionPool> connectionPool, const std::string &sql,
     const std::vector<ValueObject>& selectionArgs)
-    : sqliteStatement_(nullptr), args_(std::move(selectionArgs)), sql_(sql),
+    : statement_(nullptr), args_(std::move(selectionArgs)), sql_(sql),
       rdConnectionPool_(std::move(connectionPool)), rowCount_(INIT_POS), isAfterLast_(false), connId_(INIT_POS)
 {
     int errCode = PrepareStep();
@@ -39,7 +39,7 @@ RdSharedResultSet::RdSharedResultSet(std::shared_ptr<RdbConnectionPool> connecti
 
 RdSharedResultSet::RdSharedResultSet(std::shared_ptr<RdbConnectionPool> connectionPool, const std::string &sql_,
     const std::vector<ValueObject>& selectionArgs, int rowCount)
-    : sqliteStatement_(nullptr), args_(std::move(selectionArgs)), sql_(sql_),
+    : statement_(nullptr), args_(std::move(selectionArgs)), sql_(sql_),
       rdConnectionPool_(std::move(connectionPool)), rowCount_(rowCount), isAfterLast_(false), connId_(INIT_POS)
 {
 }
@@ -219,8 +219,8 @@ int RdSharedResultSet::GoToNextRow()
 
 int RdSharedResultSet::PrepareStep()
 {
-    if (sqliteStatement_ != nullptr) {
-        LOG_INFO("sqliteStatement_ is not nullptr");
+    if (statement_ != nullptr) {
+        LOG_INFO("statement_ is not nullptr");
         return E_OK;
     }
     if (SqliteUtils::GetSqlStatementType(sql_) != SqliteUtils::STATEMENT_SELECT) {
@@ -255,7 +255,7 @@ int RdSharedResultSet::PrepareStep()
         statement = nullptr;
         return errCode;
     }
-    sqliteStatement_ = std::move(statement);
+    statement_ = std::move(statement);
     conn_ = connection;
     return E_OK;
 }
@@ -266,7 +266,7 @@ int RdSharedResultSet::Close()
         return E_OK;
     }
     auto args = std::move(args_);
-    sqliteStatement_ = nullptr;
+    statement_ = nullptr;
     connId_ = -1;
     auto columnNames = std::move(columnNames_);
     isClosed_ = true;
@@ -281,9 +281,9 @@ int RdSharedResultSet::FinishStep()
     auto [statement, connection] = GetStatement();
     if (statement != nullptr) {
         statement->ResetStatementAndClearBindings();
-        sqliteStatement_ = nullptr;
-        if (sqliteStatement_ != nullptr) {
-            sqliteStatement_ = nullptr;
+        statement_ = nullptr;
+        if (statement_ != nullptr) {
+            statement_ = nullptr;
         }
         if (conn_ != nullptr) {
             rdConnectionPool_->ReleaseConnection(conn_);
@@ -509,7 +509,7 @@ std::pair<std::shared_ptr<RdbStatement>, std::shared_ptr<RdbConnection>> RdShare
     if (isClosed_) {
         return { nullptr, nullptr };
     }
-    return {sqliteStatement_, conn_};
+    return {statement_, conn_};
 }
 
 } // namespace NativeRdb

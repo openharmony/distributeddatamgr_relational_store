@@ -302,7 +302,7 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
     ASSERT(OK == status, "get isSearchable failed.", napi_invalid_arg);
 
     GetNamedProperty(env, jsValue, "vector", rdbConfig.vector, true);
-    ASSERT(OK == status, "get isSearchable failed.", napi_invalid_arg);
+    ASSERT(OK == status, "get vector failed.", napi_invalid_arg);
     return napi_ok;
 }
 
