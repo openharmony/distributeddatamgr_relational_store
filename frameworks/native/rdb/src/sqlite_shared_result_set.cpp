@@ -157,11 +157,6 @@ void SqliteSharedResultSet::FillBlock(int requiredPos)
         return;
     }
     ClearBlock();
-    if (block == nullptr) {
-        LOG_ERROR("GetBlock failed.");
-        return;
-    }
-
     if (rowNum_ == NO_COUNT) {
         auto [errCode, rowNum] = ExecuteForSharedBlock(block, requiredPos, requiredPos, true);
         if (errCode != E_OK) {
@@ -188,11 +183,6 @@ std::pair<int, int32_t> SqliteSharedResultSet::ExecuteForSharedBlock(AppDataFwk:
     int required, bool needCount)
 {
     int32_t rowNum = NO_COUNT;
-    if (block == nullptr) {
-        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
-        return { E_ERROR, rowNum };
-    }
-
     auto [statement, errCode] = PrepareStep();
     if (errCode != E_OK) {
         LOG_ERROR("PrepareStep error = %{public}d ", errCode);

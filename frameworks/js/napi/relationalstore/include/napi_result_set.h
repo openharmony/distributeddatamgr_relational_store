@@ -74,6 +74,7 @@ private:
     static napi_value GetDouble(napi_env env, napi_callback_info info);
     static napi_value IsColumnNull(napi_env env, napi_callback_info info);
     static napi_value GetRow(napi_env env, napi_callback_info info);
+    static napi_value GetValue(napi_env env, napi_callback_info info);
     static napi_value IsClosed(napi_env env, napi_callback_info info);
 };
 } // namespace RelationalStoreJsKit

@@ -472,4 +472,14 @@ uint32_t RdbStoreConfig::GetRoleType() const
 {
     return role_;
 }
+
+void RdbStoreConfig::SetDBType(int32_t dbType)
+{
+    dbType_ = dbType;
+}
+
+int32_t RdbStoreConfig::GetDBType() const
+{
+    return dbType_;
+}
 } // namespace OHOS::NativeRdb

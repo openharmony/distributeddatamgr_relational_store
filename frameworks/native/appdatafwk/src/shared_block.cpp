@@ -283,6 +283,11 @@ int SharedBlock::PutAssets(uint32_t row, uint32_t column, const void *value, siz
     return PutBlobOrString(row, column, value, size, CELL_UNIT_TYPE_ASSETS);
 }
 
+int SharedBlock::PutBigInt(uint32_t row, uint32_t column, const void* value, size_t size)
+{
+    return PutBlobOrString(row, column, value, size, CELL_UNIT_TYPE_BIGINT);
+}
+
 int SharedBlock::PutBlobOrString(uint32_t row, uint32_t column, const void *value, size_t size, int32_t type)
 {
     if (UNLIKELY(row >= mHeader->rowNums || column >= mHeader->columnNums)) {
@@ -387,6 +392,26 @@ size_t SharedBlock::SetRawData(const void *rawData, size_t size)
         return SHARED_BLOCK_NO_MEMORY;
     }
     return SHARED_BLOCK_OK;
+}
+
+std::string SharedBlock::CellUnit::GetString(SharedBlock *block) const
+{
+    auto value = static_cast<char*>(block->OffsetToPtr(cell.stringOrBlobValue.offset, cell.stringOrBlobValue.size));
+    if (cell.stringOrBlobValue.size < 1 || value == nullptr) {
+        return "";
+    }
+    return value;
+}
+
+std::vector<uint8_t> SharedBlock::CellUnit::GetBlob(SharedBlock* block) const
+{
+    auto value = static_cast<uint8_t*>(block->OffsetToPtr(cell.stringOrBlobValue.offset, cell.stringOrBlobValue.size));
+    return std::vector<uint8_t>(value, value + cell.stringOrBlobValue.size);
+}
+
+const uint8_t* SharedBlock::CellUnit::GetRowData(SharedBlock* block) const
+{
+    return static_cast<uint8_t*>(block->OffsetToPtr(cell.stringOrBlobValue.offset, cell.stringOrBlobValue.size));;
 }
 } // namespace AppDataFwk
 } // namespace OHOS

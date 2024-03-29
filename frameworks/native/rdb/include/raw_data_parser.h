@@ -29,9 +29,11 @@ public:
     static size_t ParserRawData(const uint8_t *data, size_t length, Asset &asset);
     static size_t ParserRawData(const uint8_t *data, size_t length, Assets &assets);
     static size_t ParserRawData(const uint8_t *data, size_t length, std::map<std::string, Asset> &assets);
+    static size_t ParserRawData(const uint8_t *data, size_t length, BigInteger &bigint);
     static std::vector<uint8_t> PackageRawData(const Asset &asset);
     static std::vector<uint8_t> PackageRawData(const Assets &assets);
     static std::vector<uint8_t> PackageRawData(const std::map<std::string, Asset> &assets);
+    static std::vector<uint8_t> PackageRawData(const BigInteger &bigint);
 
 private:
     struct InnerAsset : public Serializable {
@@ -58,8 +60,11 @@ private:
         }
         return Get<T, O, Rest...>(std::move(input), output);
     }
+
     static constexpr const uint32_t ASSET_MAGIC = 0x41534554;
     static constexpr const uint32_t ASSETS_MAGIC = 0x41534553;
+    static constexpr const uint32_t BIG_INT = 0x42494749;
+    static constexpr const uint32_t FLOUT32_ARRAY = 0x46333241;
 };
 
 template<typename T, typename... Rest>

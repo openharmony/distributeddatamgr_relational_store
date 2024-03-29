@@ -35,7 +35,7 @@ using PRIKey = OHOS::DistributedRdb::RdbStoreObserver::PrimaryKey;
 using Error = RelationalStoreJsKit::Error;
 using SecurityLevel = NativeRdb::SecurityLevel;
 using RdbStoreConfig = NativeRdb::RdbStoreConfig;
-
+using BigInt = OHOS::NativeRdb::BigInteger;
 struct RdbConfig {
     bool isEncrypt = false;
     bool isSearchable = false;
@@ -97,6 +97,10 @@ template<>
 napi_value Convert2JSValue(napi_env env, const JSChangeInfo &value);
 template<>
 napi_value Convert2JSValue(napi_env env, const Date &date);
+template<>
+napi_value Convert2JSValue(napi_env env, const BigInt &value);
+template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, BigInt &value);
 template<>
 std::string ToString(const PRIKey &key);
 

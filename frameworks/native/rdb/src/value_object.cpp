@@ -15,9 +15,11 @@
 
 #include "value_object.h"
 
+#include <iostream>
+#include <sstream>
+
 #include "rdb_errno.h"
 #include "sqlite_utils.h"
-
 namespace OHOS {
 namespace NativeRdb {
 ValueObject::ValueObject()
@@ -84,6 +86,10 @@ ValueObject::ValueObject(ValueObject::Assets val) : value(std::move(val))
 {
 }
 
+ValueObject::ValueObject(ValueObject::BigInt val) : value(std::move(val))
+{
+}
+
 ValueObject &ValueObject::operator=(ValueObject &&val) noexcept
 {
     if (this == &val) {
@@ -132,18 +138,18 @@ int ValueObject::GetBool(bool &val) const
 
 int ValueObject::GetString(std::string &val) const
 {
-    if (Get(val) == 0) {
+    if (Get(val) == E_OK) {
         return E_OK;
     }
 
     double ftmp;
-    if (Get(ftmp) == 0) {
+    if (Get(ftmp) == E_OK) {
         val = std::to_string(ftmp);
         return E_OK;
     }
 
     int64_t itmp;
-    if (Get(itmp) == 0) {
+    if (Get(itmp) == E_OK) {
         val = std::to_string(itmp);
         return E_OK;
     }
@@ -169,6 +175,123 @@ int ValueObject::GetAsset(Asset &val) const
 int ValueObject::GetAssets(Assets &val) const
 {
     return Get(val);
+}
+
+ValueObject::operator int() const
+{
+    return static_cast<int>(operator int64_t());
+}
+
+ValueObject::operator int64_t() const
+{
+    int64_t val = 0L;
+    int type = value.index();
+    if (type == ValueObject::TYPE_INT) {
+        val = std::get<int64_t>(value);
+    } else if (type == ValueObject::TYPE_DOUBLE) {
+        val = int64_t(std::get<double>(value));
+    } else if (type == ValueObject::TYPE_BOOL) {
+        val = std::get<bool>(value);
+    } else if (type == ValueObject::TYPE_STRING) {
+        auto temp = std::get<std::string>(value);
+        val = temp.empty() ? 0L : int64_t(strtoll(temp.c_str(), nullptr, 0));
+    }
+    return val;
+}
+
+ValueObject::operator double() const
+{
+    double val = 0.0L;
+    int type = value.index();
+    if (type == ValueObject::TYPE_INT) {
+        val = double(std::get<int64_t>(value));
+    } else if (type == ValueObject::TYPE_DOUBLE) {
+        val = std::get<double>(value);
+    } else if (type == ValueObject::TYPE_BOOL) {
+        val = std::get<bool>(value);
+    } else if (type == ValueObject::TYPE_STRING) {
+        auto temp = std::get<std::string>(value);
+        val = temp.empty() ? 0.0 : double(strtod(temp.c_str(), nullptr));
+    }
+    return val;
+}
+
+ValueObject::operator bool() const
+{
+    bool val = false;
+    int type = value.index();
+    if (type == ValueObject::TYPE_INT) {
+        val = std::get<int64_t>(value) != 0;
+    } else if (type == ValueObject::TYPE_DOUBLE) {
+        val = static_cast<int64_t>(std::get<double>(value)) != 0;
+    } else if (type == ValueObject::TYPE_BOOL) {
+        val = std::get<bool>(value);
+    } else if (type == ValueObject::TYPE_STRING) {
+        auto temp = std::get<std::string>(value);
+        val = temp == "true";
+    }
+    return val;
+}
+
+ValueObject::operator std::string() const
+{
+    std::string val;
+    int type = value.index();
+    if (type == ValueObject::TYPE_INT) {
+        auto temp = std::get<int64_t>(value);
+        val = std::to_string(temp);
+    } else if (type == ValueObject::TYPE_BOOL) {
+        val = std::get<bool>(value) ? "true" : "false";
+    } else if (type == ValueObject::TYPE_DOUBLE) {
+        double temp = std::get<double>(value);
+        std::ostringstream os;
+        if (os << temp) {
+            val = os.str();
+        }
+    } else if (type == ValueObject::TYPE_STRING) {
+        val = std::get<std::string>(value);
+    }
+    return val;
+}
+
+ValueObject::operator Blob() const
+{
+    Blob val;
+    int type = value.index();
+    if (type == ValueObject::TYPE_BLOB) {
+        val = std::get<std::vector<uint8_t>>(value);
+    } else if (type == ValueObject::TYPE_STRING) {
+        auto temp = std::get<std::string>(value);
+        val.assign(temp.begin(), temp.end());
+    }
+    return val;
+}
+
+ValueObject::operator Asset() const
+{
+    auto val = std::get_if<Asset>(&value);
+    if (val == nullptr) {
+        return {};
+    }
+    return *val;
+}
+
+ValueObject::operator Assets() const
+{
+    auto val = std::get_if<Assets>(&value);
+    if (val == nullptr) {
+        return {};
+    }
+    return *val;
+}
+
+ValueObject::operator BigInt() const
+{
+    auto val = std::get_if<BigInt>(&value);
+    if (val == nullptr) {
+        return {};
+    }
+    return *val;
 }
 
 template<class T>
