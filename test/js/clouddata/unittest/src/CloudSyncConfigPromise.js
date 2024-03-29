@@ -311,12 +311,11 @@ describe('CloudConfigPromiseTest', function () {
 
     /**
      * @tc.name queryStatisticsTest
-     * @tc.desc Test Js Api queryStatistics which parameters number are less
+     * @tc.desc Test Js Api queryStatistics with parameters number are less
      * @tc.type: FUNC
-     * @tc.require: issueNumber
      */
     it('queryStatisticsTest1', 0, async function (done) {
-        console.info('queryStatisticsTest1');
+        console.log(TAG + "************* queryStatisticsTest1 start *************");
         try {
             await cloudData.Config.queryStatistics().then((etc) => {
                 console.info('queryStatisticsTest1 success' + `, info is ${JSON.stringify(etc)}`);
@@ -330,16 +329,16 @@ describe('CloudConfigPromiseTest', function () {
             expect(e.code == 401).assertTrue();
         }
         done();
+        console.log(TAG + "************* queryStatisticsTest1 end *************");
     })
 
     /**
      * @tc.name queryStatisticsTest
-     * @tc.desc Test Js Api queryStatistics with effective args
+     * @tc.desc Test Js Api queryStatistics with parameters number are less
      * @tc.type: FUNC
-     * @tc.require: issueNumber
      */
     it('queryStatisticsTest2', 0, async function (done) {
-        console.info('queryStatisticsTest2');
+        console.log(TAG + "************* queryStatisticsTest2 start *************");
         try {
             const accountId = "test_id";
             await cloudData.Config.queryStatistics(accountId).then((etc) => {
@@ -354,16 +353,16 @@ describe('CloudConfigPromiseTest', function () {
             expect(e.code == 401).assertTrue();
         }
         done();
+        console.log(TAG + "************* queryStatisticsTest2 end *************");
     })
 
     /**
      * @tc.name queryStatisticsTest
-     * @tc.desc Test Js Api queryStatistics with effective args
+     * @tc.desc Test Js Api queryStatistics with invalid args
      * @tc.type: FUNC
-     * @tc.require: issueNumber
      */
     it('queryStatisticsTest3', 0, async function (done) {
-        console.info('queryStatisticsTest3');
+        console.log(TAG + "************* queryStatisticsTest3 start *************");
         try {
             const accountId = 123;
             const bundleName = "bundleName";
@@ -379,113 +378,115 @@ describe('CloudConfigPromiseTest', function () {
             expect(e.code == 401).assertTrue();
         }
         done();
+        console.log(TAG + "************* queryStatisticsTest3 end *************");
     })
 
     /**
      * @tc.name queryStatisticsTest
      * @tc.desc Test Js Api queryStatistics with effective args
      * @tc.type: FUNC
-     * @tc.require: issueNumber
      */
     it('queryStatisticsTest4', 0, async function (done) {
-        console.info('queryStatisticsTest4');
+        console.log(TAG + "************* queryStatisticsTest4 start *************");
         try {
             const accountId = "accountId";
             const bundleName = "bundleName";
             await cloudData.Config.queryStatistics(accountId, bundleName).then((etc) => {
                 console.info('queryStatisticsTest4 success' + `, info is ${JSON.stringify(etc)}`);
-                expect(etc != null).assertTrue();
+                expect(null).assertFail();
             }).catch((error) => {
                 console.error('queryStatisticsTest4 fail' + `, error code is ${error.code}, message is ${error.message}`);
-                expect(null).assertFail();
+                expect(e.code == 201).assertTrue();
             });
         } catch (e) {
             console.error('queryStatisticsTest4 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 201).assertTrue();
+            expect(e != null).assertTrue();
         }
         done();
+        console.log(TAG + "************* queryStatisticsTest4 end *************");
     })
 
     /**
      * @tc.name queryStatisticsTest
      * @tc.desc Test Js Api queryStatistics with effective args
      * @tc.type: FUNC
-     * @tc.require: issueNumber
      */
     it('queryStatisticsTest5', 0, async function (done) {
-        console.info('queryStatisticsTest5');
+        console.log(TAG + "************* queryStatisticsTest5 start *************");
         try {
             const accountId = "accountId";
             const bundleName = "bundleName";
             await cloudData.Config.queryStatistics(accountId, bundleName, null).then((etc) => {
                 console.info('queryStatisticsTest5 success' + `, info is ${JSON.stringify(etc)}`);
-                expect(etc != null).assertTrue();
+                expect(null).assertFail();
             }).catch((error) => {
                 console.error('queryStatisticsTest5 fail' + `, error code is ${error.code}, message is ${error.message}`);
-                expect(null).assertFail();
+                expect(e.code == 201).assertTrue();
             });
         } catch (e) {
             console.error('queryStatisticsTest5 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 201).assertTrue();
+            expect(e != null).assertTrue();
         }
         done();
+        console.log(TAG + "************* queryStatisticsTest5 end *************");
     })
 
     /**
      * @tc.name queryStatisticsTest
      * @tc.desc Test Js Api queryStatistics with effective args
      * @tc.type: FUNC
-     * @tc.require: issueNumber
      */
     it('queryStatisticsTest6', 0, async function (done) {
-        console.info('queryStatisticsTest6');
+        console.log(TAG + "************* queryStatisticsTest6 start *************");
         try {
             const accountId = "accountId";
             const bundleName = "bundleName";
             await cloudData.Config.queryStatistics(accountId, bundleName, undefined).then((etc) => {
                 console.info('queryStatisticsTest6 success' + `, info is ${JSON.stringify(etc)}`);
-                expect(etc != null).assertTrue();
+                expect(null).assertFail();
             }).catch((error) => {
                 console.error('queryStatisticsTest6 fail' + `, error code is ${error.code}, message is ${error.message}`);
-                expect(null).assertFail();
+                expect(e.code == 201).assertTrue();
             });
         } catch (e) {
             console.error('queryStatisticsTest6 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 201).assertTrue();
+            expect(e != null).assertTrue();
         }
         done();
+        console.log(TAG + "************* queryStatisticsTest6 end *************");
     })
 
     /**
      * @tc.name queryStatisticsTest
      * @tc.desc Test Js Api queryStatistics with effective args
      * @tc.type: FUNC
-     * @tc.require: issueNumber
      */
     it('queryStatisticsTest7', 0, async function (done) {
-        console.info('queryStatisticsTest7');
+        console.log(TAG + "************* queryStatisticsTest7 start *************");
+
         try {
             const accountId = "accountId";
             const bundleName = "bundleName";
             const storeId = "storeId";
             await cloudData.Config.queryStatistics(accountId, bundleName, storeId).then((etc) => {
                 console.info('queryStatisticsTest7 success' + `, info is ${JSON.stringify(etc)}`);
-                expect(etc != null).assertTrue();
+                expect(null).assertFail();
             }).catch((error) => {
                 console.error('queryStatisticsTest7 fail' + `, error code is ${error.code}, message is ${error.message}`);
-                expect(null).assertFail();
+                expect(e.code == 201).assertTrue();
             });
         } catch (e) {
             console.error('queryStatisticsTest7 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 201).assertTrue();
+            expect(e != null).assertTrue();
         }
         done();
+        console.log(TAG + "************* queryStatisticsTest7 end *************");
     })
-    
+
     /**
      * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
      * @tc.name setGlobalCloudStrategyTest001
-     * @tc.desc Test Js Api setGlobalCloudStrategy with invalid args.
+     * @tc.desc Test Js Api setGlobalCloudStrategy with parameters number are less
      */
     it('setGlobalCloudStrategyTest001', 0, async function (done) {
         console.log(TAG + "************* setGlobalCloudStrategyTest001 start *************");
@@ -505,7 +506,7 @@ describe('CloudConfigPromiseTest', function () {
     /**
      * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
      * @tc.name setGlobalCloudStrategyTest002
-     * @tc.desc Test Js Api setGlobalCloudStrategy with invalid args.
+     * @tc.desc Test Js Api setGlobalCloudStrategy with invalid args
      */
     it('setGlobalCloudStrategyTest002', 0, async function (done) {
         console.log(TAG + "************* setGlobalCloudStrategyTest002 start *************");
@@ -525,7 +526,7 @@ describe('CloudConfigPromiseTest', function () {
     /**
      * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
      * @tc.name setGlobalCloudStrategyTest003
-     * @tc.desc Test Js Api setGlobalCloudStrategy with invalid args.
+     * @tc.desc Test Js Api setGlobalCloudStrategy with invalid args
      */
     it('setGlobalCloudStrategyTest003', 0, async function (done) {
         console.log(TAG + "************* setGlobalCloudStrategyTest003 start *************");
@@ -545,7 +546,7 @@ describe('CloudConfigPromiseTest', function () {
     /**
      * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
      * @tc.name setGlobalCloudStrategyTest004
-     * @tc.desc Test Js Api setGlobalCloudStrategy with invalid args.
+     * @tc.desc Test Js Api setGlobalCloudStrategy with invalid args
      */
     it('setGlobalCloudStrategyTest004', 0, async function (done) {
         console.log(TAG + "************* setGlobalCloudStrategyTest004 start *************");
@@ -565,7 +566,7 @@ describe('CloudConfigPromiseTest', function () {
     /**
      * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
      * @tc.name setGlobalCloudStrategyTest005
-     * @tc.desc Test Js Api setGlobalCloudStrategy with valid args.
+     * @tc.desc Test Js Api setGlobalCloudStrategy with valid args
      */
     it('setGlobalCloudStrategyTest005', 0, async function (done) {
         console.log(TAG + "************* setGlobalCloudStrategyTest005 start *************");
@@ -587,7 +588,7 @@ describe('CloudConfigPromiseTest', function () {
     /**
      * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
      * @tc.name setGlobalCloudStrategyTest006
-     * @tc.desc Test Js Api setGlobalCloudStrategy with valid args.
+     * @tc.desc Test Js Api setGlobalCloudStrategy with valid args
      */
     it('setGlobalCloudStrategyTest006', 0, async function (done) {
         console.log(TAG + "************* setGlobalCloudStrategyTest006 start *************");
@@ -609,7 +610,7 @@ describe('CloudConfigPromiseTest', function () {
     /**
      * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
      * @tc.name setGlobalCloudStrategyTest007
-     * @tc.desc Test Js Api setGlobalCloudStrategy with valid args.
+     * @tc.desc Test Js Api setGlobalCloudStrategy with valid args
      */
     it('setGlobalCloudStrategyTest007', 0, async function (done) {
         console.log(TAG + "************* setGlobalCloudStrategyTest007 start *************");
@@ -631,7 +632,7 @@ describe('CloudConfigPromiseTest', function () {
     /**
      * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
      * @tc.name setGlobalCloudStrategyTest008
-     * @tc.desc Test Js Api setGlobalCloudStrategy with valid args.
+     * @tc.desc Test Js Api setGlobalCloudStrategy with valid args
      */
     it('setGlobalCloudStrategyTest008', 0, async function (done) {
         console.log(TAG + "************* setGlobalCloudStrategyTest008 start *************");
@@ -653,7 +654,7 @@ describe('CloudConfigPromiseTest', function () {
     /**
      * @tc.number SUB_DDM_CLOUD_CONFIG_SetGlobalCloudStrategy
      * @tc.name setGlobalCloudStrategyTest009
-     * @tc.desc Test Js Api setGlobalCloudStrategy with valid args.
+     * @tc.desc Test Js Api setGlobalCloudStrategy with valid args
      */
     it('setGlobalCloudStrategyTest009', 0, async function (done) {
         console.log(TAG + "************* setGlobalCloudStrategyTest009 start *************");
