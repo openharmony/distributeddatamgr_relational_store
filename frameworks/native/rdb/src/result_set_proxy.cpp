@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "ResultSetProxy"
 #include "result_set_proxy.h"
 
 #include "logger.h"
