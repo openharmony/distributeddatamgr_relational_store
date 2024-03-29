@@ -82,7 +82,7 @@ int VdbStoreImpl::Commit(int64_t trxId)
     auto connection = rdConnectionPool_->AcquireConnection(false, trxId);
     if (connection == nullptr) {
         LOG_ERROR("Get null connection, storeName: %{public}s time:%{public}" PRIu64 ".", name_.c_str(), time);
-        return E_CON_OVER_LIMIT;
+        return E_INVALID_ARGS;
     }
     int ret = connection->ExecuteSql(RdUtils::COMMIT_TRANSACTION_SQL);
     if (ret != E_OK) {
@@ -102,7 +102,7 @@ int VdbStoreImpl::RollBack(int64_t trxId)
     auto connection = rdConnectionPool_->AcquireConnection(false, trxId);
     if (connection == nullptr) {
         LOG_ERROR("Get null connection, storeName: %{public}s time:%{public}" PRIu64 ".", name_.c_str(), time);
-        return E_CON_OVER_LIMIT;
+        return E_INVALID_ARGS;
     }
     int ret = connection->ExecuteSql(RdUtils::ROLLBACK_TRANSACTION_SQL);
     if (ret != E_OK) {
@@ -140,7 +140,7 @@ int VdbStoreImpl::ExecuteSqlByTrxId(const std::string &sql, const std::vector<Va
     auto connection = rdConnectionPool_->AcquireConnection(isRead, trxId);
     if (connection == nullptr) {
         LOG_ERROR("Get null connection");
-        return E_CON_OVER_LIMIT;
+        return E_INVALID_ARGS;
     }
     int ret = connection->ExecuteSql(sql, bindArgs);
     if (ret != E_OK) {

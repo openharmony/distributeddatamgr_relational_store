@@ -100,6 +100,7 @@ std::shared_ptr<RdbConnection> RdbConnectionPool::AcquireWriteConnByTrxId(int64_
         if (it != trxConnMap_.end()) {
             return it->second;
         }
+        return nullptr;
     }
     std::shared_ptr<RdbConnection> connection = nullptr;
     if (idleWriteConns_.empty()) {

@@ -26,8 +26,6 @@
 #include "abs_shared_result_set.h"
 #include "rd_statement.h"
 #include "rdb_connection_pool.h"
-#include "shared_block.h"
-#include "step_result_set.h"
 #include "value_object.h"
 
 namespace OHOS {
@@ -79,7 +77,7 @@ protected:
     // Interval of retrying step query in millisecond
     static const int STEP_QUERY_RETRY_INTERVAL = 1000;
 
-    std::shared_ptr<RdbStatement> sqliteStatement_ = nullptr;
+    std::shared_ptr<RdbStatement> statement_ = nullptr;
     std::shared_ptr<RdbConnection> conn_ = nullptr;
     std::vector<std::string> columnNames_ = {};
     std::vector<ValueObject> args_ = {};
@@ -89,7 +87,6 @@ protected:
     int rowCount_;
     // Whether reach the end of this result set or not
     bool isAfterLast_;
-    mutable std::shared_mutex mutex_;
     int connId_;
 };
 

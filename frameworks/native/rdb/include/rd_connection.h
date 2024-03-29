@@ -53,7 +53,7 @@ public:
         return dbHandle_;
     }
 private:
-    static constexpr const char *GRD_OPEN_CONFIG_STR = "{\"pagesize\":16}";
+    static constexpr const char *GRD_OPEN_CONFIG_STR = "{\"pageSize\":16, \"redoFlushByTrx\":1}";
 
     int PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int InnerOpen(const RdbStoreConfig &config);
