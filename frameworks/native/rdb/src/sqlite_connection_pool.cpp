@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "SqliteConnectionPool"
 #include "sqlite_connection_pool.h"
 
 #include <base_transaction.h>

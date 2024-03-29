@@ -12,7 +12,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-
+#define LOG_TAG "DelayNotify"
 #include "delay_notify.h"
 #include "logger.h"
 namespace OHOS::NativeRdb {
