@@ -21,6 +21,7 @@ uint16_t Endian::LeToH(uint16_t value)
 {
     return le16toh(value);
 }
+
 uint16_t Endian::HToLe(uint16_t value)
 {
     return htole16(value);
@@ -30,8 +31,19 @@ uint32_t Endian::LeToH(uint32_t value)
 {
     return le32toh(value);
 }
+
 uint32_t Endian::HToLe(uint32_t value)
 {
     return htole32(value);
+}
+
+uint64_t Endian::LeToH(uint64_t value)
+{
+    return le64toh(value);
+}
+
+uint64_t Endian::HToLe(uint64_t value)
+{
+    return htole64(value);
 }
 }

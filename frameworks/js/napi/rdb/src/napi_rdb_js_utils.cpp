@@ -80,5 +80,39 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, ValueObject &valueObject
     }
     return napi_ok;
 }
+
+template<>
+napi_value JSUtils::Convert2JSValue(napi_env env, const BigInt& value)
+{
+    napi_value val = nullptr;
+    napi_status status = napi_create_bigint_words(env, value.Sign(), value.Size(), value.TrueForm(), &val);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    return val;
+}
+
+template<>
+int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, BigInt& value)
+{
+    napi_valuetype type = napi_undefined;
+    napi_status status = napi_typeof(env, jsValue, &type);
+    if (status != napi_ok || type != napi_bigint) {
+        return napi_invalid_arg;
+    }
+    int sign = 0;
+    size_t count = 0;
+    status = napi_get_value_bigint_words(env, jsValue, &sign, &count, nullptr);
+    if (status != napi_ok) {
+        return napi_bigint_expected;
+    }
+    std::vector<uint64_t> words(count, 0);
+    status = napi_get_value_bigint_words(env, jsValue, &sign, &count, words.data());
+    if (status != napi_ok) {
+        return napi_bigint_expected;
+    }
+    value = BigInteger(sign, std::move(words));
+    return napi_ok;
+}
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit

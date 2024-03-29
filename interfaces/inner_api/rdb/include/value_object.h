@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "asset_value.h"
+#include "big_integer.h"
 #include "rdb_visibility.h"
 namespace OHOS {
 namespace NativeRdb {
@@ -36,7 +37,8 @@ public:
     using Blob = std::vector<uint8_t>;
     using Asset = AssetValue;
     using Assets = std::vector<Asset>;
-    using Type = std::variant<Nil, int64_t, double, std::string, bool, Blob, Asset, Assets>;
+    using BigInt = BigInteger;
+    using Type = std::variant<Nil, int64_t, double, std::string, bool, Blob, Asset, Assets, BigInt>;
     template<typename Tp, typename... Types>
     struct index_of : std::integral_constant<size_t, 0> {};
 
@@ -89,6 +91,8 @@ public:
         TYPE_ASSET = TYPE_INDEX<Asset>,
         /** Indicates the ValueObject type is assets.*/
         TYPE_ASSETS = TYPE_INDEX<Assets>,
+        /** Indicates the ValueObject type is bigint.*/
+        TYPE_BIGINT = TYPE_INDEX<BigInt>,
         /** the BUTT.*/
         TYPE_BUTT = TYPE_MAX
     };
@@ -211,6 +215,15 @@ public:
     API_EXPORT ValueObject(Assets val);
 
     /**
+     * @brief Constructor.
+     *
+     * This constructor is used to convert the Assets input parameter to a value of type ValueObject.
+     *
+     * @param val Indicates an Assets input parameter.
+     */
+    API_EXPORT ValueObject(BigInt val);
+
+    /**
      * @brief Move assignment operator overloaded function.
      */
     API_EXPORT ValueObject &operator=(ValueObject &&valueObject) noexcept;
@@ -270,80 +283,63 @@ public:
      *
      * @return Returns the int type ValueObject.
      */
-    operator int() const
-    {
-        return static_cast<int>(std::get<int64_t>(value));
-    }
+    API_EXPORT operator int() const;
 
     /**
      * @brief Type conversion function.
      *
      * @return Returns the int64_t type ValueObject.
      */
-    operator int64_t() const
-    {
-        return std::get<int64_t>(value);
-    }
+    API_EXPORT operator int64_t() const;
 
     /**
      * @brief Type conversion function.
      *
      * @return Returns the double type ValueObject.
      */
-    operator double() const
-    {
-        return std::get<double>(value);
-    }
+    API_EXPORT operator double() const;
 
     /**
      * @brief Type conversion function.
      *
      * @return Returns the bool type ValueObject.
      */
-    operator bool() const
-    {
-        return std::get<bool>(value);
-    }
+    API_EXPORT operator bool() const;
 
     /**
      * @brief Type conversion function.
      *
      * @return Returns the string type ValueObject.
      */
-    operator std::string() const
-    {
-        return std::get<std::string>(value);
-    }
+    API_EXPORT operator std::string() const;
 
     /**
      * @brief Type conversion function.
      *
      * @return Returns the vector<uint8_t> type ValueObject.
      */
-    operator Blob() const
-    {
-        return std::get<Blob>(value);
-    }
+    API_EXPORT operator Blob() const;
 
     /**
      * @brief Type conversion function.
      *
      * @return Returns the vector<uint8_t> type ValueObject.
      */
-    operator Asset() const
-    {
-        return std::get<Asset>(value);
-    }
+    API_EXPORT operator Asset() const;
 
     /**
     * @brief Type conversion function.
     *
     * @return Returns the vector<uint8_t> type ValueObject.
     */
-    operator Assets() const
-    {
-        return std::get<Assets>(value);
-    }
+    API_EXPORT operator Assets() const;
+
+    /**
+    * @brief Type conversion function.
+    *
+    * @return Returns the BigInt type ValueObject.
+    */
+    API_EXPORT operator BigInt() const;
 
     /**
      * @brief Type conversion function.
@@ -374,7 +370,9 @@ private:
         /** Indicates the ValueObject type is asset.*/
         "ASSET",
         /** Indicates the ValueObject type is assets.*/
-        "ASSETS"
+        "ASSETS",
+        /** Indicates the ValueObject type is bigint.*/
+        "BIGINT"
     };
 };
 using ValueObjectType = ValueObject::TypeId;

@@ -55,6 +55,8 @@ public:
         CELL_UNIT_TYPE_ASSET = 5,
         /** Indicates the current Cell Unit data type is Assets at the specified row and column.*/
         CELL_UNIT_TYPE_ASSETS = 6,
+        /** Indicates the current Cell Unit data type is bigint at the specified row and column.*/
+        CELL_UNIT_TYPE_BIGINT = 7,
     };
 
     /**
@@ -88,6 +90,9 @@ public:
                 uint32_t size;
             } stringOrBlobValue;
         } cell;
+        API_EXPORT std::string GetString(SharedBlock *block) const;
+        API_EXPORT std::vector<uint8_t> GetBlob(SharedBlock *block) const;
+        API_EXPORT const uint8_t *GetRowData(SharedBlock *block) const;
     } __attribute((packed));
 
     /**
@@ -159,6 +164,11 @@ public:
      * @brief Put Assets data to the shared block.
      */
     API_EXPORT int PutAssets(uint32_t row, uint32_t column, const void *value, size_t size);
+
+    /**
+     * @brief Put BigInt data to the shared block.
+     */
+    API_EXPORT int PutBigInt(uint32_t row, uint32_t column, const void *value, size_t size);
 
     /**
      * @brief Put Null data to the shared block.

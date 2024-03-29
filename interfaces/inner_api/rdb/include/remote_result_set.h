@@ -43,6 +43,8 @@ enum class ColumnType {
     TYPE_ASSET,
     /** Indicates the column type is ASSETS.*/
     TYPE_ASSETS,
+    /** Indicates the column type is BigInt.*/
+    TYPE_BIGINT
 };
 
 /**
