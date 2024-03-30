@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "RdUtils"
 #include "rd_utils.h"
 #include "grd_error.h"
 #include "grd_api_manager.h"

@@ -12,7 +12,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-
+#define LOG_TAG "GRD_API_MANAGER"
 #include "grd_api_manager.h"
 #include "logger.h"
 
