@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "RdSharedResultSet"
 #include "rd_result_set.h"
 #include "step_result_set.h"
 #include <unistd.h>
@@ -66,10 +66,16 @@ int RdSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
     }
     auto [statement, connection] = GetStatement();
     if (statement == nullptr) {
-        LOG_ERROR("the resultSet is closed");
         return E_STEP_RESULT_CLOSED;
     }
-
+    bool needReset = false;
+    if (rowPos_ == INIT_POS) {
+        errCode = statement->Step();
+        if (errCode != E_OK && errCode != E_STEP_RESULT_IS_AFTER_LAST) {
+            return errCode;
+        }
+        needReset = true;
+    }
     int columnCount = 0;
     errCode = statement->GetColumnCount(columnCount);
     if (errCode) {
@@ -88,6 +94,11 @@ int RdSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
         columnNames.push_back(columnName);
     }
     columnNames_ = columnNames;
+    columnCount_ = columnNames.size();
+    if (needReset) {
+        rowPos_ = INIT_POS;
+        return statement->ResetStatementAndClearBindings();
+    }
     return E_OK;
 }
 

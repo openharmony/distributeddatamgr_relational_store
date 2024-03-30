@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "VdbStoreImpl"
 #include "vdb_store_impl.h"
 
 #include <algorithm>
