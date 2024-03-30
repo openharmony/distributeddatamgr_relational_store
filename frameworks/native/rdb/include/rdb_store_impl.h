@@ -20,20 +20,17 @@
 #include <map>
 #include <memory>
 #include <mutex>
-#include <shared_mutex>
 #include <thread>
+#include <shared_mutex>
 
-#include "concurrent_map.h"
-#include "data_ability_observer_stub.h"
 #include "dataobs_mgr_client.h"
-#include "rdb_errno.h"
+#include "data_ability_observer_stub.h"
 #include "rdb_service.h"
 #include "rdb_store.h"
 #include "rdb_store_config.h"
 #include "refbase.h"
 #include "sqlite_connection_pool.h"
 #include "sqlite_statement.h"
-
 
 namespace OHOS {
 class ExecutorPool;
@@ -115,6 +112,8 @@ public:
     int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
     int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey) override;
+    int Attach(const std::string &alias, const std::string &pathName,
+        const std::vector<uint8_t> destEncryptKey) override;
     int GetVersion(int &version) override;
     int SetVersion(int version) override;
     int BeginTransaction() override;
@@ -173,9 +172,6 @@ public:
         std::vector<PRIKey>& keys) override;
 
     int CleanDirtyData(const std::string &table, uint64_t cursor) override;
-    std::pair<int32_t, int32_t> Attach(
-        const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) override;
-    std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
 
 private:
     using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
@@ -209,8 +205,6 @@ private:
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
     bool ColHasSpecificField(const std::vector<std::string> &columns);
-    int AttachInner(const std::string &attachName,
-        const std::string &dbPath, const std::vector<uint8_t> &key, int32_t waitTime);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
@@ -242,7 +236,6 @@ private:
     std::shared_ptr<std::set<std::string>> syncTables_;
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
     std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
-    ConcurrentMap<std::string, const RdbStoreConfig> attachedInfo_;
 };
 } // namespace OHOS::NativeRdb
 #endif
