@@ -129,8 +129,6 @@ public:
     void SetCreateNecessary(bool isCreateNecessary);
     void SetAutoClean(bool isAutoClean);
     bool GetAutoClean() const;
-    void SetIsVector(bool isVector);
-    bool IsVector() const;
 
     static std::string GetJournalModeValue(JournalMode journalMode);
     static std::string GetSyncModeValue(SyncMode syncMode);
@@ -208,7 +206,6 @@ private:
     std::string moduleName_;
 
     bool isAutoClean_ = false;
-    bool isVector_ = false;
     bool isEncrypt_ = false;
     std::vector<uint8_t> encryptKey_;
     SecurityLevel securityLevel = SecurityLevel::LAST;

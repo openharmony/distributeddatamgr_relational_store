@@ -36,8 +36,7 @@ public:
     using Blob = std::vector<uint8_t>;
     using Asset = AssetValue;
     using Assets = std::vector<Asset>;
-    using FloatVector = std::vector<float>;
-    using Type = std::variant<Nil, int64_t, double, std::string, bool, Blob, Asset, Assets, FloatVector>;
+    using Type = std::variant<Nil, int64_t, double, std::string, bool, Blob, Asset, Assets>;
     template<typename Tp, typename... Types>
     struct index_of : std::integral_constant<size_t, 0> {};
 
@@ -90,8 +89,6 @@ public:
         TYPE_ASSET = TYPE_INDEX<Asset>,
         /** Indicates the ValueObject type is assets.*/
         TYPE_ASSETS = TYPE_INDEX<Assets>,
-        /** Indicates the ValueObject type is vecs.*/
-        TYPE_VECS = TYPE_INDEX<FloatVector>,
         /** the BUTT.*/
         TYPE_BUTT = TYPE_MAX
     };
@@ -214,15 +211,6 @@ public:
     API_EXPORT ValueObject(Assets val);
 
     /**
-     * @brief Constructor.
-     *
-     * This constructor is used to convert the FloatVector input parameter to a value of type ValueObject.
-     *
-     * @param val Indicates an FloatVector input parameter.
-     */
-    API_EXPORT ValueObject(FloatVector val);
-
-    /**
      * @brief Move assignment operator overloaded function.
      */
     API_EXPORT ValueObject &operator=(ValueObject &&valueObject) noexcept;
@@ -276,11 +264,6 @@ public:
      * @brief Obtains the vector<uint8_t> value in this {@code ValueObject} object.
      */
     API_EXPORT int GetAssets(Assets &val) const;
-
-    /**
-     * @brief Obtains the vector<float> value in this {@code ValueObject} object.
-     */
-    API_EXPORT int GetVecs(FloatVector &val) const;
 
     /**
      * @brief Type conversion function.
@@ -363,16 +346,6 @@ public:
     }
 
     /**
-    * @brief Type conversion function.
-    *
-    * @return Returns the vector<uint8_t> type ValueObject.
-    */
-    operator FloatVector() const
-    {
-        return std::get<FloatVector>(value);
-    }
-
-    /**
      * @brief Type conversion function.
      *
      * @return Returns the Type type ValueObject.
@@ -401,9 +374,7 @@ private:
         /** Indicates the ValueObject type is asset.*/
         "ASSET",
         /** Indicates the ValueObject type is assets.*/
-        "ASSETS",
-        /** Indicates the ValueObject type is vecs.*/
-        "VECS"
+        "ASSETS"
     };
 };
 using ValueObjectType = ValueObject::TypeId;
