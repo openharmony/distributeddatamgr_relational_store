@@ -175,6 +175,12 @@ int AbsResultSet::GetRow(RowEntity &rowEntity)
                 rowEntity.Put(columnNames[columnIndex], ValueObject(value));
                 break;
             }
+            case ColumnType::TYPE_FLOAT32_ARRAY: {
+                ValueObject::FloatVector value;
+                GetFloat32Array(columnIndex, value);
+                rowEntity.Put(columnNames[columnIndex], ValueObject(value));
+                break;
+            }
             default: {
                 return E_ERROR;
             }
@@ -393,6 +399,11 @@ int AbsResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
 }
 
 int AbsResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
+{
+    return E_NOT_SUPPORT;
+}
+
+int AbsResultSet::GetFloat32Array(int32_t col, ValueObject::FloatVector &value)
 {
     return E_NOT_SUPPORT;
 }

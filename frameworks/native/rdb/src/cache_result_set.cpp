@@ -310,6 +310,11 @@ int CacheResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
     return valueBuckets_[row_].values_[name].GetAssets(value);
 }
 
+int CacheResultSet::GetFloat32Array(int32_t index, ValueObject::FloatVector &vecs)
+{
+    return E_NOT_SUPPORTED;
+}
+
 int CacheResultSet::Get(int32_t col, ValueObject &value)
 {
     if (col < 0 || col >= maxCol_) {

@@ -65,7 +65,7 @@ public:
     virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const std::vector<ValueObject> &args) = 0;
     virtual int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = {}) = 0;
     virtual std::pair<int32_t, ValueObject> Execute(const std::string &sql,
-        const std::vector<ValueObject> &bindArgs = {}) = 0;
+        const std::vector<ValueObject> &bindArgs = {}, int64_t txId = 0) = 0;
     virtual int ExecuteAndGetLong(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = {}) = 0;
     virtual int ExecuteAndGetString(std::string &outValue, const std::string &sql,
@@ -90,8 +90,11 @@ public:
     virtual int GetVersion(int &version) = 0;
     virtual int SetVersion(int version) = 0;
     virtual int BeginTransaction() = 0;
+    virtual std::pair<int, int64_t> BeginTrans() = 0;
     virtual int RollBack() = 0;
+    virtual int RollBack(int64_t trxId) = 0;
     virtual int Commit() = 0;
+    virtual int Commit(int64_t trxId) = 0;
     virtual bool IsInTransaction() = 0;
     virtual std::string GetPath() = 0;
     virtual bool IsHoldingConnection() = 0;
