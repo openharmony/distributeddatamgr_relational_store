@@ -14,7 +14,6 @@
  */
 
 #include "js_utils.h"
-#include "js_native_api_types.h"
 #include "logger.h"
 #include <cstring>
 using namespace OHOS::Rdb;
@@ -54,24 +53,29 @@ const std::optional<JSUtils::JsFeatureSpace> JSUtils::GetJsFeatureSpace(const st
     return std::nullopt;
 }
 
-std::pair<napi_status, napi_value> JSUtils::GetInnerValue(
-    napi_env env, napi_value in, const std::string& prop, bool optional)
+napi_value JSUtils::GetNamedProperty(napi_env env, napi_value object, const char *name)
+{
+    napi_value jsItem = nullptr;
+    napi_get_named_property(env, object, name, &jsItem);
+    return jsItem;
+}
+
+std::pair<int32_t, napi_value> JSUtils::GetOptionalNamedProperty(napi_env env, napi_value input, const char *name)
 {
     bool hasProp = false;
-    napi_status status = napi_has_named_property(env, in, prop.c_str(), &hasProp);
+    napi_status status = napi_has_named_property(env, input, name, &hasProp);
     if (status != napi_ok) {
         return std::make_pair(napi_generic_failure, nullptr);
     }
     if (!hasProp) {
-        status = optional ? napi_ok : napi_generic_failure;
-        return std::make_pair(status, nullptr);
+        return std::make_pair(napi_ok, nullptr);
     }
     napi_value inner = nullptr;
-    status = napi_get_named_property(env, in, prop.c_str(), &inner);
+    status = napi_get_named_property(env, input, name, &inner);
     if (status != napi_ok || inner == nullptr) {
         return std::make_pair(napi_generic_failure, nullptr);
     }
-    if (optional && JSUtils::IsNull(env, inner)) {
+    if (JSUtils::IsNull(env, inner)) {
         return std::make_pair(napi_ok, nullptr);
     }
     return std::make_pair(napi_ok, inner);
@@ -118,12 +122,6 @@ int32_t JSUtils::Convert2ValueExt(napi_env env, napi_value jsValue, int32_t &out
     return status;
 }
 
-int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, napi_value &output)
-{
-    output = jsValue;
-    return napi_ok;
-}
-
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, bool &output)
 {
     napi_valuetype type = napi_undefined;
@@ -154,7 +152,7 @@ int32_t JSUtils::Convert2ValueExt(napi_env env, napi_value jsValue, int64_t &out
 
     status = napi_get_value_int64(env, jsValue, &output);
     if (status != napi_ok) {
-        LOG_DEBUG("napi_get_value_int64 failed, status = %{public}d", status);
+        LOG_DEBUG("napi_get_value_int32 failed, status = %{public}d", status);
         return status;
     }
     return status;

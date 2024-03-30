@@ -35,12 +35,12 @@ extern bool g_sync;
 #define ASYNC &g_async
 #define SYNC &g_sync
 
-class ContextBase {
+class Context {
 public:
     void SetAction(napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output);
     void SetAll(napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output);
     void SetError(std::shared_ptr<Error> error);
-    virtual ~ContextBase();
+    virtual ~Context();
 
     napi_env env_ = nullptr;
     bool isAsync_ = true;
@@ -56,12 +56,12 @@ public:
     OutputAction output_ = nullptr;
     ExecuteAction exec_ = nullptr;
     napi_value result_ = nullptr;
-    std::shared_ptr<ContextBase> keep_;
+    std::shared_ptr<Context> keep_;
 };
 
 class AsyncCall final {
 public:
-    static napi_value Call(napi_env env, std::shared_ptr<ContextBase> context);
+    static napi_value Call(napi_env env, std::shared_ptr<Context> context);
 
 private:
     enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
@@ -70,8 +70,8 @@ private:
     static void OnReturn(napi_env env, napi_status status, void *data);
     static void OnComplete(napi_env env, napi_status status, void *data);
     static void SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError);
-    static napi_value Async(napi_env env, std::shared_ptr<ContextBase> context);
-    static napi_value Sync(napi_env env, std::shared_ptr<ContextBase> context);
+    static napi_value Async(napi_env env, std::shared_ptr<Context> context);
+    static napi_value Sync(napi_env env, std::shared_ptr<Context> context);
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

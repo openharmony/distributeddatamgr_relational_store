@@ -26,7 +26,7 @@ namespace OHOS {
 namespace RelationalStoreJsKit {
 bool g_async = true; // do not reset the value, used in DECLARE_NAPI_FUNCTION_WITH_DATA only
 bool g_sync = false; // do not reset the value, used in DECLARE_NAPI_FUNCTION_WITH_DATA only
-void ContextBase::SetAction(
+void Context::SetAction(
     napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output)
 {
     env_ = env;
@@ -59,7 +59,7 @@ void ContextBase::SetAction(
     napi_create_reference(env, self, 1, &self_);
 }
 
-void ContextBase::SetAll(
+void Context::SetAll(
     napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output)
 {
     env_ = env;
@@ -78,12 +78,12 @@ void ContextBase::SetAll(
     napi_create_reference(env, self, 1, &self_);
 }
 
-void ContextBase::SetError(std::shared_ptr<Error> err)
+void Context::SetError(std::shared_ptr<Error> err)
 {
     error = err;
 }
 
-ContextBase::~ContextBase()
+Context::~Context()
 {
     if (env_ == nullptr) {
         return;
@@ -113,12 +113,12 @@ void AsyncCall::SetBusinessError(napi_env env, std::shared_ptr<Error> error, nap
     }
 }
 
-napi_value AsyncCall::Call(napi_env env, std::shared_ptr<ContextBase> context)
+napi_value AsyncCall::Call(napi_env env, std::shared_ptr<Context> context)
 {
     return context->isAsync_ ? Async(env, context) : Sync(env, context);
 }
 
-napi_value AsyncCall::Async(napi_env env, std::shared_ptr<ContextBase> context)
+napi_value AsyncCall::Async(napi_env env, std::shared_ptr<Context> context)
 {
     napi_value promise = nullptr;
     if (context->callback_ == nullptr) {
@@ -142,7 +142,7 @@ napi_value AsyncCall::Async(napi_env env, std::shared_ptr<ContextBase> context)
     return promise;
 }
 
-napi_value AsyncCall::Sync(napi_env env, std::shared_ptr<ContextBase> context)
+napi_value AsyncCall::Sync(napi_env env, std::shared_ptr<Context> context)
 {
     OnExecute(env, reinterpret_cast<void *>(context.get()));
     OnComplete(env, reinterpret_cast<void *>(context.get()));
@@ -152,7 +152,7 @@ napi_value AsyncCall::Sync(napi_env env, std::shared_ptr<ContextBase> context)
 void AsyncCall::OnExecute(napi_env env, void *data)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    ContextBase *context = reinterpret_cast<ContextBase *>(data);
+    Context *context = reinterpret_cast<Context *>(data);
     if (context->error == nullptr && context->exec_) {
         context->execCode_ = context->exec_();
     }
@@ -161,7 +161,7 @@ void AsyncCall::OnExecute(napi_env env, void *data)
 
 void AsyncCall::OnComplete(napi_env env, void *data)
 {
-    ContextBase *context = reinterpret_cast<ContextBase *>(data);
+    Context *context = reinterpret_cast<Context *>(data);
     if (context->execCode_ != NativeRdb::E_OK) {
         context->SetError(std::make_shared<InnerError>(context->execCode_));
     }
@@ -181,7 +181,7 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
 
 void AsyncCall::OnReturn(napi_env env, napi_status status, void *data)
 {
-    ContextBase *context = reinterpret_cast<ContextBase *>(data);
+    Context *context = reinterpret_cast<Context *>(data);
     napi_value result[ARG_BUTT] = { 0 };
     // if out function status is ok then async renturn output data, else return error.
     if (context->error == nullptr) {
