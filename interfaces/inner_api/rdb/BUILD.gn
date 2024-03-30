@@ -113,10 +113,18 @@ if (is_ohos && !build_ohos_sdk) {
     sources += [
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/delay_notify.cpp",
+      "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
+      "${relational_store_native_path}/rdb/src/rd_connection.cpp",
+      "${relational_store_native_path}/rdb/src/rd_result_set.cpp",
+      "${relational_store_native_path}/rdb/src/rd_statement.cpp",
+      "${relational_store_native_path}/rdb/src/rd_utils.cpp",
+      "${relational_store_native_path}/rdb/src/rdb_connection.cpp",
+      "${relational_store_native_path}/rdb/src/rdb_connection_pool.cpp",
       "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
       "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
       "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
       "${relational_store_native_path}/rdb/src/rdb_service_proxy.cpp",
+      "${relational_store_native_path}/rdb/src/rdb_statement.cpp",
       "${relational_store_native_path}/rdb/src/rdb_types_util.cpp",
       "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
       "${relational_store_native_path}/rdb/src/security_policy.cpp",
@@ -124,6 +132,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
       "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/task_executor.cpp",
+      "${relational_store_native_path}/rdb/src/vdb_store_impl.cpp",
       "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
@@ -174,10 +183,18 @@ if (is_ohos && !build_ohos_sdk) {
     sources += [
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/delay_notify.cpp",
+      "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
+      "${relational_store_native_path}/rdb/src/rd_connection.cpp",
+      "${relational_store_native_path}/rdb/src/rd_result_set.cpp",
+      "${relational_store_native_path}/rdb/src/rd_statement.cpp",
+      "${relational_store_native_path}/rdb/src/rd_utils.cpp",
+      "${relational_store_native_path}/rdb/src/rdb_connection.cpp",
+      "${relational_store_native_path}/rdb/src/rdb_connection_pool.cpp",
       "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
       "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
       "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
       "${relational_store_native_path}/rdb/src/rdb_service_proxy.cpp",
+      "${relational_store_native_path}/rdb/src/rdb_statement.cpp",
       "${relational_store_native_path}/rdb/src/rdb_types_util.cpp",
       "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
       "${relational_store_native_path}/rdb/src/security_policy.cpp",
@@ -185,6 +202,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
       "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/task_executor.cpp",
+      "${relational_store_native_path}/rdb/src/vdb_store_impl.cpp",
       "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 

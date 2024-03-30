@@ -38,7 +38,8 @@ public:
     using Asset = AssetValue;
     using Assets = std::vector<Asset>;
     using BigInt = BigInteger;
-    using Type = std::variant<Nil, int64_t, double, std::string, bool, Blob, Asset, Assets, BigInt>;
+    using FloatVector = std::vector<float>;
+    using Type = std::variant<Nil, int64_t, double, std::string, bool, Blob, Asset, Assets, FloatVector, BigInt>;
     template<typename Tp, typename... Types>
     struct index_of : std::integral_constant<size_t, 0> {};
 
@@ -91,6 +92,8 @@ public:
         TYPE_ASSET = TYPE_INDEX<Asset>,
         /** Indicates the ValueObject type is assets.*/
         TYPE_ASSETS = TYPE_INDEX<Assets>,
+        /** Indicates the ValueObject type is vecs.*/
+        TYPE_VECS = TYPE_INDEX<FloatVector>,
         /** Indicates the ValueObject type is bigint.*/
         TYPE_BIGINT = TYPE_INDEX<BigInt>,
         /** the BUTT.*/
@@ -222,6 +225,14 @@ public:
      * @param val Indicates an Assets input parameter.
      */
     API_EXPORT ValueObject(BigInt val);
+    
+    /**
+     * @brief Constructor.
+     * This constructor is used to convert the FloatVector input parameter to a value of type ValueObject.
+     *
+     * @param val Indicates an FloatVector input parameter.
+     */
+    API_EXPORT ValueObject(FloatVector val);
 
     /**
      * @brief Move assignment operator overloaded function.
@@ -277,6 +288,11 @@ public:
      * @brief Obtains the vector<uint8_t> value in this {@code ValueObject} object.
      */
     API_EXPORT int GetAssets(Assets &val) const;
+
+    /**
+     * @brief Obtains the vector<float> value in this {@code ValueObject} object.
+     */
+    API_EXPORT int GetVecs(FloatVector &val) const;
 
     /**
      * @brief Type conversion function.
@@ -342,6 +358,13 @@ public:
     API_EXPORT operator BigInt() const;
 
     /**
+    * @brief Type conversion function.
+    *
+    * @return Returns the vector<uint8_t> type ValueObject.
+    */
+    API_EXPORT operator FloatVector() const
+
+    /**
      * @brief Type conversion function.
      *
      * @return Returns the Type type ValueObject.
@@ -371,8 +394,11 @@ private:
         "ASSET",
         /** Indicates the ValueObject type is assets.*/
         "ASSETS",
+        /** Indicates the ValueObject type is vecs.*/
+        "VECS",
         /** Indicates the ValueObject type is bigint.*/
         "BIGINT"
+
     };
 };
 using ValueObjectType = ValueObject::TypeId;
