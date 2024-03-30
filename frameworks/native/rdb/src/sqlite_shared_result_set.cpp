@@ -50,6 +50,12 @@ std::pair<std::shared_ptr<SqliteStatement>, int> SqliteSharedResultSet::PrepareS
         LOG_ERROR("StoreSession BeginStepQuery fail : not select sql !");
         return {nullptr, E_EXECUTE_IN_STEP_QUERY};
     }
+
+    if (conn_ == nullptr) {
+        LOG_ERROR("Already close");
+        return {nullptr, E_STEP_RESULT_CLOSED};
+    }
+
     auto statement = SqliteStatement::CreateStatement(conn_, qrySql_);
     if (statement == nullptr) {
         return {nullptr, E_ERROR};
