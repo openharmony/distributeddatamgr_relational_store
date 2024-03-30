@@ -50,30 +50,6 @@ static void DeleteRdbKeyFiles(const std::string &dbFileName)
 #endif
 }
 
-static std::vector<std::string> rdPostFixes = {
-    "",
-    ".redo",
-    ".undo",
-    ".ctrl",
-    ".safe",
-};
-
-int DeleteRdFiles(const std::string &dbFileName)
-{
-    int errCode = E_OK;
-    for (std::string &postFix : rdPostFixes) {
-        std::string shmFileName = dbFileName + postFix;
-        if (access(shmFileName.c_str(), F_OK) == 0) {
-            int result = remove(shmFileName.c_str());
-            if (result < 0) {
-                LOG_ERROR("RdbHelper DeleteRdbStore failed to delete the shm file err = %{public}d", errno);
-                errCode = E_REMOVE_FILE;
-            }
-        }
-    }
-    return errCode;
-}
-
 int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -90,7 +66,7 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
         return E_REMOVE_FILE;
     }
 
-    int errCode = DeleteRdFiles(dbFileName);
+    int errCode = E_OK;
     std::string shmFileName = dbFileName + "-shm";
     if (access(shmFileName.c_str(), F_OK) == 0) {
         result = remove(shmFileName.c_str());

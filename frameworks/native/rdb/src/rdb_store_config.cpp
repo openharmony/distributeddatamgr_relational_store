@@ -413,16 +413,6 @@ bool RdbStoreConfig::GetAutoClean() const
     return isAutoClean_;
 }
 
-void RdbStoreConfig::SetIsVector(bool isVector)
-{
-    isVector_ = isVector;
-}
-
-bool RdbStoreConfig::IsVector() const
-{
-    return isVector_;
-}
-
 void RdbStoreConfig::SetCustomDir(const std::string &customDir)
 {
     customDir_ = customDir;

@@ -184,29 +184,6 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, int64_t &output
     return napi_invalid_arg;
 }
 
-int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<float> &output)
-{
-    bool isTypedArray = false;
-    napi_is_typedarray(env, jsValue, &isTypedArray);
-    if (!isTypedArray) {
-        return napi_invalid_arg;
-    }
-
-    napi_typedarray_type type;
-    napi_value input_buffer = nullptr;
-    size_t byte_offset = 0;
-    size_t length = 0;
-    void *tmp = nullptr;
-    auto status = napi_get_typedarray_info(env, jsValue, &type, &length, &tmp, &input_buffer, &byte_offset);
-    if (status != napi_ok || type != napi_float32_array) {
-        return napi_invalid_arg;
-    }
-
-    output = (tmp != nullptr ? std::vector<float>(static_cast<float*>(tmp),
-        static_cast<float*>(tmp) + length) : std::vector<float>());
-    return status;
-}
-
 int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &output)
 {
     napi_valuetype type = napi_undefined;
@@ -420,27 +397,6 @@ napi_value JSUtils::Convert2JSValue(napi_env env, bool value)
 {
     napi_value jsValue = nullptr;
     napi_status status = napi_get_boolean(env, value, &jsValue);
-    if (status != napi_ok) {
-        return nullptr;
-    }
-    return jsValue;
-}
-
-napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<float> &value)
-{
-    napi_value jsValue = nullptr;
-    void *native = new float[value.size()];
-    napi_value buffer = nullptr;
-    napi_status status = napi_create_arraybuffer(env, value.size() * sizeof(float), &native, &buffer);
-    if (status != napi_ok) {
-        delete[] static_cast<float *>(native);
-        return nullptr;
-    }
-    for (size_t i = 0; i < value.size(); i++) {
-        *(static_cast<float *>(native) + i) = value[i];
-    }
-    status = napi_create_typedarray(env, napi_float32_array, value.size(), buffer, 0, &jsValue);
-    delete[] static_cast<float *>(native);
     if (status != napi_ok) {
         return nullptr;
     }

@@ -24,7 +24,6 @@
 #include "rdb_trace.h"
 #include "sqlite_global_config.h"
 #include "task_executor.h"
-#include "vdb_store_impl.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -57,10 +56,6 @@ RdbStoreManager::RdbStoreManager()
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &config,
     int &errCode, int version, RdbOpenCallback &openCallback)
 {
-    if (config.IsVector() && config.GetStorageMode() == StorageMode::MODE_MEMORY) {
-        LOG_ERROR("GetRdbStore type not support memory mode");
-        return nullptr;
-    }
     std::string path;
     // TOD this lock should only work on storeCache_, add one more lock for connectionpool
     std::lock_guard<std::mutex> lock(mutex_);
@@ -79,12 +74,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
         storeCache_.erase(path);
     }
 
-    std::shared_ptr<RdbStoreImpl> rdbStore = nullptr;
-    if (config.IsVector()) {
-        rdbStore = std::make_shared<VdbStoreImpl>(config, errCode);
-    } else {
-        rdbStore = std::make_shared<RdbStoreImpl>(config, errCode);
-    }
+    std::shared_ptr<RdbStoreImpl> rdbStore = std::make_shared<RdbStoreImpl>(config, errCode);
     if (errCode != E_OK) {
         LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore as memory issue, rc=%{public}d", errCode);
         return nullptr;
@@ -96,9 +86,6 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
             LOG_ERROR("fail, storeName:%{public}s security %{public}d errCode:%{public}d", config.GetName().c_str(),
                 config.GetSecurityLevel(), errCode);
             return nullptr;
-        }
-        if (config.IsVector()) {
-            return rdbStore;
         }
         errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
         if (errCode != E_OK) {
