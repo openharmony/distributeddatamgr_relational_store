@@ -57,6 +57,7 @@ std::shared_ptr<SubObserver> RdbStoreSubTest::observer_ = nullptr;
 
 void RdbStoreSubTest::SetUpTestCase(void)
 {
+    RdbHelper::DeleteRdbStore(MAIN_DATABASE_NAME);
     store = CreateRDB(1);
     if (observer_ == nullptr) {
         observer_ = std::make_shared<SubObserver>();
@@ -65,6 +66,7 @@ void RdbStoreSubTest::SetUpTestCase(void)
 
 void RdbStoreSubTest::TearDownTestCase(void)
 {
+    store = nullptr;
     RdbHelper::DeleteRdbStore(MAIN_DATABASE_NAME);
 }
 

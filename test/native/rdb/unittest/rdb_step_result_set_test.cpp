@@ -1536,7 +1536,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep019, TestSize.Level1)
 HWTEST_F(RdbStepResultSetTest, Abnormal_ResultSetProxy001, TestSize.Level1)
 {
     int errCode = 0;
-    std::shared_ptr<OHOS::NativeRdb::ResultSetProxy> resultSet;
+    auto resultSet = std::make_shared<OHOS::NativeRdb::ResultSetProxy>(nullptr);
     ColumnType columnType;
     errCode = resultSet->GetColumnType(1, columnType);
     EXPECT_NE(E_OK, errCode);

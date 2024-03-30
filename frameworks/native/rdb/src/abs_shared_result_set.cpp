@@ -361,6 +361,67 @@ int AbsSharedResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
     return E_OK;
 }
 
+int AbsSharedResultSet::Get(int32_t col, ValueObject& value)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    auto block = GetBlock();
+    int errorCode = CheckState(col);
+    if (errorCode != E_OK || block == nullptr) {
+        return errorCode;
+    }
+
+    auto *cellUnit = block->GetCellUnit(block->GetBlockPos(), col);
+    if (cellUnit == nullptr) {
+        LOG_ERROR("cellUnit is null, col is %{public}d!", col);
+        return E_ERROR;
+    }
+
+    switch (cellUnit->type) {
+        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL:
+            break;
+        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_INTEGER:
+            value = cellUnit->cell.longValue;
+            break;
+        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT:
+            value = cellUnit->cell.doubleValue;
+            break;
+        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_STRING:
+            value = cellUnit->GetString(block);
+            break;
+        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB:
+            value = cellUnit->GetBlob(block);
+            break;
+        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET: {
+            size_t size = cellUnit->cell.stringOrBlobValue.size;
+            auto data = cellUnit->GetRowData(block);
+            ValueObject::Asset asset;
+            RawDataParser::ParserRawData(data, size, asset);
+            value = std::move(asset);
+            break;
+        }
+        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS: {
+            size_t size = cellUnit->cell.stringOrBlobValue.size;
+            auto data = cellUnit->GetRowData(block);
+            ValueObject::Assets assets;
+            RawDataParser::ParserRawData(data, size, assets);
+            value = std::move(assets);
+            break;
+        }
+        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BIGINT: {
+            size_t size = cellUnit->cell.stringOrBlobValue.size;
+            auto data = cellUnit->GetRowData(block);
+            ValueObject::BigInt bigInt;
+            RawDataParser::ParserRawData(data, size, bigInt);
+            value = std::move(bigInt);
+            break;
+        }
+        default:
+            LOG_ERROR("invalid type is %{public}d, col is %{public}d!", cellUnit->type, col);
+            return E_INVALID_OBJECT_TYPE;
+    }
+    return E_OK;
+}
+
 int AbsSharedResultSet::GetSize(int columnIndex, size_t &size)
 {
     size = 0;

@@ -82,7 +82,8 @@ private:
         BindBool,
         BindBlob,
         BindAsset,
-        BindAssets
+        BindAssets,
+        BindBigInt
     };
 
     int InnerBindArguments(const std::vector<ValueObject> &bindArgs) const;
