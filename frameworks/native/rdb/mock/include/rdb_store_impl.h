@@ -32,72 +32,92 @@
 namespace OHOS::NativeRdb {
 class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
 public:
+    RdbStoreImpl(const RdbStoreConfig &config);
     RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
 #ifdef WINDOWS_PLATFORM
     void Clear() override;
 #endif
     const RdbStoreConfig &GetConfig();
-    int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &values) override;
-    int BatchInsert(int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values) override;
-    int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
-    int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &values,
+    virtual int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &values) override;
+    virtual int BatchInsert(
+        int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values) override;
+    virtual int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
+    virtual int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &values,
         ConflictResolution conflictResolution) override;
-    int Update(int &changedRows, const std::string &table, const ValuesBucket &values, const std::string &whereClause,
-        const std::vector<std::string> &whereArgs) override;
-    int Update(int &changedRows, const std::string &table, const ValuesBucket &values, const std::string &whereClause,
-        const std::vector<ValueObject> &bindArgs) override;
-    int UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
+    virtual int Update(int &changedRows, const std::string &table, const ValuesBucket &values,
+        const std::string &whereClause, const std::vector<std::string> &whereArgs) override;
+    virtual int Update(int &changedRows, const std::string &table, const ValuesBucket &values,
+        const std::string &whereClause, const std::vector<ValueObject> &bindArgs) override;
+    virtual int UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
         const std::string &whereClause, const std::vector<std::string> &whereArgs,
         ConflictResolution conflictResolution) override;
-    int UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
+    virtual int UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
         const std::string &whereClause, const std::vector<ValueObject> &bindArgs,
         ConflictResolution conflictResolution) override;
-    int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
+    virtual int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
         const std::vector<std::string> &whereArgs) override;
-    int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
+    virtual int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
         const std::vector<ValueObject> &bindArgs) override;
-    int ExecuteSql(const std::string& sql, const std::vector<ValueObject>& bindArgs) override;
-    std::pair<int32_t, ValueObject> Execute(const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
-    int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
-    int ExecuteAndGetString(std::string &outValue, const std::string &sql,
+    virtual int ExecuteSql(const std::string& sql, const std::vector<ValueObject>& bindArgs) override;
+    std::pair<int32_t, ValueObject> Execute(const std::string &sql, const std::vector<ValueObject> &bindArgs = {},
+        int64_t trxId = 0) override;
+    virtual int ExecuteAndGetLong(
+        int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
+    virtual int ExecuteAndGetString(std::string &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
-    int ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql,
+    virtual int ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
-    int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
+    virtual int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
-    int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey) override;
-    int GetVersion(int &version) override;
-    int SetVersion(int version) override;
-    int BeginTransaction() override;
-    int RollBack() override;
-    int Commit() override;
-    bool IsInTransaction() override;
-    bool IsOpen() const override;
-    std::string GetPath() override;
-    bool IsReadOnly() const override;
-    bool IsMemoryRdb() const override;
-    bool IsHoldingConnection() override;
+    virtual int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey) override;
+    virtual int GetVersion(int &version) override;
+    virtual int SetVersion(int version) override;
+    virtual int BeginTransaction() override;
+    virtual std::pair<int, int64_t> BeginTrans() override;
+    virtual int RollBack() override;
+    virtual int RollBack(int64_t trxId) override;
+    virtual int Commit() override;
+    virtual int Commit(int64_t trxId) override;
+    virtual bool IsInTransaction() override;
+    virtual bool IsOpen() const override;
+    virtual std::string GetPath() override;
+    virtual bool IsReadOnly() const override;
+    virtual bool IsMemoryRdb() const override;
+    virtual bool IsHoldingConnection() override;
     int ConfigLocale(const std::string &localeStr);
-    int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey) override;
-    std::string GetName();
-    std::string GetOrgPath();
-    std::string GetFileType();
-    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql,
+    virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey) override;
+    virtual std::string GetName();
+    virtual std::string GetOrgPath();
+    virtual std::string GetFileType();
+    virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &sqlArgs) override;
-    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const std::vector<ValueObject> &args) override;
-    std::shared_ptr<ResultSet> Query(
+    virtual std::shared_ptr<ResultSet> QueryByStep(
+        const std::string &sql, const std::vector<ValueObject> &args) override;
+    virtual std::shared_ptr<ResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
-    int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
-    int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
-    int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
-    std::pair<int32_t, int32_t> Attach(
+    virtual int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
+    virtual int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
+    virtual int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
+    virtual std::pair<int32_t, int32_t> Attach(
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) override;
-    std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
+    virtual std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
+
+protected:
+    int InnerOpen();
+    const RdbStoreConfig config_;
+    bool isOpen_ = false;
+    bool isReadOnly_;
+    bool isMemoryRdb_;
+    bool isEncrypt_;
+    int64_t vSchema_ = 0;
+    std::string path_;
+    std::string orgPath_;
+    std::string name_;
+    std::string fileType_;
 
 private:
     using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
-    int InnerOpen();
     int CheckAttach(const std::string &sql);
     bool PathToRealPath(const std::string &path, std::string &realPath);
     std::string ExtractFilePath(const std::string &fileFullName);
@@ -123,18 +143,8 @@ private:
     static inline constexpr uint32_t INTERVAL = 10;
     static constexpr const char *ROW_ID = "ROWID";
 
-    const RdbStoreConfig config_;
     std::shared_ptr<SqliteConnectionPool> connectionPool_;
     ConcurrentMap<std::string, const RdbStoreConfig> attachedInfo_;
-    bool isOpen_ = false;
-    bool isReadOnly_;
-    bool isMemoryRdb_;
-    bool isEncrypt_;
-    int64_t vSchema_ = 0;
-    std::string path_;
-    std::string orgPath_;
-    std::string name_;
-    std::string fileType_;
 };
 } // namespace OHOS::NativeRdb
 #endif

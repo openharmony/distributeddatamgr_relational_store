@@ -352,6 +352,11 @@ int AbsResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
     return E_NOT_SUPPORT;
 }
 
+int AbsResultSet::GetFloat32Array(int32_t col, ValueObject::FloatVector &value)
+{
+    return E_NOT_SUPPORT;
+}
+
 int AbsResultSet::Get(int32_t col, ValueObject &value)
 {
     return E_NOT_SUPPORT;

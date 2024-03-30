@@ -87,6 +87,7 @@ ValueObject::ValueObject(ValueObject::Assets val) : value(std::move(val))
 }
 
 ValueObject::ValueObject(ValueObject::BigInt val) : value(std::move(val))
+ValueObject::ValueObject(ValueObject::FloatVector val) : value(std::move(val))
 {
 }
 
@@ -292,6 +293,9 @@ ValueObject::operator BigInt() const
         return {};
     }
     return *val;
+int ValueObject::GetVecs(FloatVector &val) const
+{
+    return Get(val);
 }
 
 template<class T>
