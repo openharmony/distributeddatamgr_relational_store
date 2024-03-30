@@ -62,6 +62,14 @@ BigInteger& BigInteger::operator=(BigInteger&& other)
     return *this;
 }
 
+bool BigInteger::operator==(const BigInteger& other)
+{
+    if (sign_ != other.sign_) {
+        return false;
+    }
+    return value_ == other.value_;
+}
+
 int32_t BigInteger::Sign() const
 {
     return sign_;
