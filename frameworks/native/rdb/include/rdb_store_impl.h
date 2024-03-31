@@ -103,16 +103,14 @@ public:
         const std::string &table, const std::vector<std::string> &columns,
         const std::string &whereClause, const std::vector<ValueObject> &bindArgs, const std::string &groupBy,
         const std::string &indexName, const std::string &orderBy, const int &limit, const int &offset) override;
-    virtual std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql,
+    std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql,
         const std::vector<std::string> &sqlArgs) override;
-    virtual std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql,
+    std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
-    virtual int ExecuteSql(const std::string& sql, const std::vector<ValueObject>& bindArgs) override;
-    virtual std::pair<int32_t, ValueObject> Execute(const std::string &sql,
-        const std::vector<ValueObject> &bindArgs = {}, int64_t trxId = 0) override;
-    virtual int ExecuteAndGetLong(
-        int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
-    virtual int ExecuteAndGetString(std::string &outValue, const std::string &sql,
+    int ExecuteSql(const std::string& sql, const std::vector<ValueObject>& bindArgs) override;
+        int64_t trxId) override;
+    int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
+    int ExecuteAndGetString(std::string &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
     virtual int ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;

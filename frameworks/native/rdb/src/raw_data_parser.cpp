@@ -169,6 +169,33 @@ size_t RawDataParser::ParserRawData(const uint8_t* data, size_t length, BigInteg
     return used;
 }
 
+size_t RawDataParser::ParserRawData(const uint8_t* data, size_t length, RawDataParser::Floats& floats)
+{
+    size_t used = 0;
+    if (sizeof(FLOUT32_ARRAY) > length - used) {
+        return 0;
+    }
+    auto magic = Endian::LeToH(*(reinterpret_cast<decltype(&FLOUT32_ARRAY)>(data)));
+    used += sizeof(FLOUT32_ARRAY);
+    if (magic != FLOUT32_ARRAY) {
+        return 0;
+    }
+
+    if (sizeof(uint32_t) > length - used) {
+        return 0;
+    }
+
+    uint32_t count = Endian::LeToH(*(reinterpret_cast<const uint32_t *>(data + used)));
+    used += sizeof(uint32_t);
+
+    if (sizeof(float) * count > length - used) {
+        return 0;
+    }
+    floats.assign(((const float *)data), ((const float *)data) + count);
+    used += sizeof(float ) * count;
+    return used;
+}
+
 std::vector<uint8_t> RawDataParser::PackageRawData(const std::map<std::string, Asset> &assets)
 {
     Assets res;
@@ -197,6 +224,23 @@ std::vector<uint8_t> RawDataParser::PackageRawData(const BigInteger& bigint)
     for (size_t i = 0; i < bigint.Size(); ++i) {
         *(reinterpret_cast<uint64_t *>(&data[offset])) = Endian::HToLe(trueForm[i]);
         offset += sizeof(uint64_t);
+    }
+    return rawData;
+}
+
+std::vector<uint8_t> RawDataParser::PackageRawData(const RawDataParser::Floats& floats)
+{
+    size_t offset = 0;
+    auto size = sizeof(FLOUT32_ARRAY) + sizeof(uint32_t) + sizeof(float) * floats.size();
+    std::vector<uint8_t> rawData(size, 0);
+    uint8_t* data = rawData.data();
+    *(reinterpret_cast<uint32_t *>(&data[offset])) = Endian::HToLe(FLOUT32_ARRAY);
+    offset += sizeof(FLOUT32_ARRAY);
+    *(reinterpret_cast<uint32_t *>(&data[offset])) = Endian::HToLe(uint32_t(floats.size()));
+    offset += sizeof(uint32_t);
+    for (size_t i = 0; i < floats.size(); ++i) {
+        *(reinterpret_cast<float *>(&data[offset])) = floats[i];
+        offset += sizeof(float);
     }
     return rawData;
 }

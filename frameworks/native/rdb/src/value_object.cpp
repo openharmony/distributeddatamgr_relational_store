@@ -87,6 +87,9 @@ ValueObject::ValueObject(ValueObject::Assets val) : value(std::move(val))
 }
 
 ValueObject::ValueObject(ValueObject::BigInt val) : value(std::move(val))
+{
+}
+
 ValueObject::ValueObject(ValueObject::FloatVector val) : value(std::move(val))
 {
 }
@@ -286,6 +289,15 @@ ValueObject::operator Assets() const
     return *val;
 }
 
+ValueObject::operator FloatVector() const
+{
+    auto val = std::get_if<FloatVector>(&value);
+    if (val == nullptr) {
+        return {};
+    }
+    return *val;
+}
+
 ValueObject::operator BigInt() const
 {
     auto val = std::get_if<BigInt>(&value);
@@ -293,6 +305,8 @@ ValueObject::operator BigInt() const
         return {};
     }
     return *val;
+}
+
 int ValueObject::GetVecs(FloatVector &val) const
 {
     return Get(val);

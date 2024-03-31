@@ -62,6 +62,7 @@ private:
     using Asset = ValueObject::Asset;
     using Assets = ValueObject::Assets;
     using BigInt = ValueObject::BigInt;
+    using Floats = ValueObject::FloatVector;
     using Binder = int32_t (*)(sqlite3_stmt *stat, int index, const ValueObject::Type &object);
     static int32_t BindNil(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
     static int32_t BindInteger(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
@@ -71,6 +72,7 @@ private:
     static int32_t BindBlob(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
     static int32_t BindAsset(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
     static int32_t BindAssets(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
+    static int32_t BindFloats(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
     static int32_t BindBigInt(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
     static const int SQLITE_SET_SHAREDBLOCK = 2004;
     static const int SQLITE_USE_SHAREDBLOCK = 2005;
@@ -83,9 +85,11 @@ private:
         BindBlob,
         BindAsset,
         BindAssets,
+        BindFloats,
         BindBigInt
     };
 
+    int GetCustomerValue(int index, ValueObject &value) const;
     int InnerBindArguments(const std::vector<ValueObject> &bindArgs) const;
     int IsValid(int index) const;
     std::string sql;

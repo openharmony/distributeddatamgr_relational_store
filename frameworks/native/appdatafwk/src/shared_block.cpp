@@ -283,6 +283,11 @@ int SharedBlock::PutAssets(uint32_t row, uint32_t column, const void *value, siz
     return PutBlobOrString(row, column, value, size, CELL_UNIT_TYPE_ASSETS);
 }
 
+int SharedBlock::PutFloats(uint32_t row, uint32_t column, const void* value, size_t size)
+{
+    return PutBlobOrString(row, column, value, size, CELL_UNIT_TYPE_FLOATS);
+}
+
 int SharedBlock::PutBigInt(uint32_t row, uint32_t column, const void* value, size_t size)
 {
     return PutBlobOrString(row, column, value, size, CELL_UNIT_TYPE_BIGINT);
