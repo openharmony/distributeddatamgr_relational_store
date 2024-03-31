@@ -84,6 +84,10 @@ ValueObject::ValueObject(ValueObject::Assets val) : value(std::move(val))
 {
 }
 
+ValueObject::ValueObject(ValueObject::FloatVector val) : value(std::move(val))
+{
+}
+
 ValueObject &ValueObject::operator=(ValueObject &&val) noexcept
 {
     if (this == &val) {
@@ -167,6 +171,11 @@ int ValueObject::GetAsset(Asset &val) const
 }
 
 int ValueObject::GetAssets(Assets &val) const
+{
+    return Get(val);
+}
+
+int ValueObject::GetVecs(FloatVector &val) const
 {
     return Get(val);
 }
