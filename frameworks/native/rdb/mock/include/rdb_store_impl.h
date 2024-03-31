@@ -60,8 +60,8 @@ public:
     virtual int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
         const std::vector<ValueObject> &bindArgs) override;
     virtual int ExecuteSql(const std::string& sql, const std::vector<ValueObject>& bindArgs) override;
-    std::pair<int32_t, ValueObject> Execute(const std::string &sql, const std::vector<ValueObject> &bindArgs = {},
-        int64_t trxId = 0) override;
+    std::pair<int32_t, ValueObject> Execute(const std::string &sql, const std::vector<ValueObject> &bindArgs,
+        int64_t trxId) override;
     virtual int ExecuteAndGetLong(
         int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     virtual int ExecuteAndGetString(std::string &outValue, const std::string &sql,

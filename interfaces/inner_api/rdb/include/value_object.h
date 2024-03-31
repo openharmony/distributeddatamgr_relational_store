@@ -353,16 +353,16 @@ public:
     /**
     * @brief Type conversion function.
     *
-    * @return Returns the BigInt type ValueObject.
+    * @return Returns the vector<float> type ValueObject.
     */
-    API_EXPORT operator BigInt() const;
+    API_EXPORT operator FloatVector() const;
 
     /**
     * @brief Type conversion function.
     *
-    * @return Returns the vector<uint8_t> type ValueObject.
+    * @return Returns the BigInt type ValueObject.
     */
-    API_EXPORT operator FloatVector() const
+    API_EXPORT operator BigInt() const;
 
     /**
      * @brief Type conversion function.
@@ -398,7 +398,6 @@ private:
         "VECS",
         /** Indicates the ValueObject type is bigint.*/
         "BIGINT"
-
     };
 };
 using ValueObjectType = ValueObject::TypeId;

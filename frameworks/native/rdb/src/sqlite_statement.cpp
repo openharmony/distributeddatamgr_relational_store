@@ -365,7 +365,7 @@ int SqliteStatement::GetColumnDouble(int index, double &value) const
     return E_OK;
 }
 
-int SqliteStatement::GetColumn(int index, ValueObject &value) const
+int SqliteStatement::GetColumn(int index, ValueObject& value) const
 {
     int ret = IsValid(index);
     if (ret != E_OK) {
@@ -376,23 +376,33 @@ int SqliteStatement::GetColumn(int index, ValueObject &value) const
     switch (type) {
         case SQLITE_FLOAT:
             value = sqlite3_column_double(stmtHandle, index);
-            return E_OK;
+            break;
         case SQLITE_INTEGER:
             value = static_cast<int64_t>(sqlite3_column_int64(stmtHandle, index));
-            return E_OK;
-        case SQLITE_TEXT:
-            value = reinterpret_cast<const char *>(sqlite3_column_text(stmtHandle, index));
-            return E_OK;
+            break;
+        case SQLITE_TEXT: {
+            int size = sqlite3_column_bytes(stmtHandle, index);
+            auto text = reinterpret_cast<const char*>(sqlite3_column_text(stmtHandle, index));
+            value = ValueObject(text == nullptr ? std::string("") : std::string(text, size));
+        }
+            break;
+        case SQLITE_BLOB:
+            return GetCustomerValue(index, value);
         case SQLITE_NULL:
-            return E_OK;
         default:
             break;
     }
+    return E_OK;
+}
+
+int SqliteStatement::GetCustomerValue(int index, ValueObject& value) const
+{
     const char *decl = sqlite3_column_decltype(stmtHandle, index);
-    if (type != SQLITE_BLOB || decl == nullptr) {
-        LOG_ERROR("invalid type %{public}d.", type);
+    if (decl == nullptr) {
+        LOG_ERROR("index %{public}d invalid type.", index);
         return E_ERROR;
     }
+
     int size = sqlite3_column_bytes(stmtHandle, index);
     auto blob = static_cast<const uint8_t *>(sqlite3_column_blob(stmtHandle, index));
     std::string declType = SqliteUtils::StrToUpper(decl);
@@ -406,6 +416,12 @@ int SqliteStatement::GetColumn(int index, ValueObject &value) const
         Assets assets;
         RawDataParser::ParserRawData(blob, size, assets);
         value = std::move(assets);
+        return E_OK;
+    }
+    if (declType == ValueObject::DeclType<Floats>()) {
+        Floats floats;
+        RawDataParser::ParserRawData(blob, size, floats);
+        value = std::move(floats);
         return E_OK;
     }
     if (declType == ValueObject::DeclType<BigInt>()) {
@@ -516,6 +532,14 @@ int32_t SqliteStatement::BindAssets(sqlite3_stmt* stat, int index, const ValueOb
     auto val = std::get_if<Assets>(&arg);
     auto rawData = RawDataParser::PackageRawData(*val);
     return sqlite3_bind_blob(stat, index, static_cast<const void*>(rawData.data()), rawData.size(), SQLITE_TRANSIENT);
+}
+
+int32_t SqliteStatement::BindFloats(sqlite3_stmt* stat, int index, const ValueObject::Type& object)
+{
+    auto val = std::get_if<Floats>(&object);
+    auto rawData = RawDataParser::PackageRawData(*val);
+    return sqlite3_bind_blob(stat, index, static_cast<const void*>(rawData.data()), rawData.size(), SQLITE_TRANSIENT);
+
 }
 
 int32_t SqliteStatement::BindBigInt(sqlite3_stmt* stat, int index, const ValueObject::Type& arg)
