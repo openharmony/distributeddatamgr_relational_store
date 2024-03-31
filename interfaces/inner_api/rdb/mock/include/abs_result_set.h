@@ -40,6 +40,7 @@ public:
     int GetDouble(int columnIndex, double &value) override;
     int GetAsset(int32_t col, ValueObject::Asset &value) override;
     int GetAssets(int32_t col, ValueObject::Assets &value) override;
+    int GetFloat32Array(int32_t index, ValueObject::FloatVector &vecs) override;
     int Get(int32_t col, ValueObject &value) override;
     int GetModifyTime(std::string &modifyTime) override;
     int IsColumnNull(int columnIndex, bool &isNull) override;

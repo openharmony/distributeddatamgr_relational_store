@@ -473,6 +473,16 @@ public:
     bool GetAutoClean() const;
 
     /**
+     * @brief Set the isVector field in this {@code StoreConfig} object.
+     */
+    void SetIsVector(bool isVector);
+
+    /**
+     * @brief Obtains the isVector field in this {@code StoreConfig} object.
+     */
+    bool IsVector() const;
+
+    /**
      * @brief Sets the customDir directory for the object.
      */
     void SetCustomDir(const std::string &customDir);
@@ -589,6 +599,7 @@ private:
 
     bool autoCheck;
     bool isAutoClean_ = true;
+    bool isVector_ = false;
     int journalSize;
     int pageSize;
     int readConSize_ = 4;
