@@ -16,9 +16,11 @@
 #ifndef NATIVE_RDB_RESULT_SET_H
 #define NATIVE_RDB_RESULT_SET_H
 
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
+
+#include "rdb_errno.h"
 #include "remote_result_set.h"
 #include "value_object.h"
 
@@ -51,6 +53,10 @@ public:
 
     virtual int GetAsset(int32_t col, ValueObject::Asset &value) = 0;
     virtual int GetAssets(int32_t col, ValueObject::Assets &value) = 0;
+    virtual int GetFloat32Array(int32_t index, ValueObject::FloatVector &vecs)
+    {
+        return E_NOT_SUPPORT;
+    }
     virtual int Get(int32_t col, ValueObject &value) = 0;
     /**
      * @brief Gets the entire row of data for the current row from the result set.
