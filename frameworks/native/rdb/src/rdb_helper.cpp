@@ -54,7 +54,7 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (dbFileName.empty()) {
-        return E_INVALID_FILE_PATH;
+        return E_EMPTY_FILE_NAME;
     }
     if (access(dbFileName.c_str(), F_OK) != 0) {
         return E_OK; // not not exist
