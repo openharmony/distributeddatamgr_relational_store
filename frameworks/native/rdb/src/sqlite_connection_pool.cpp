@@ -413,6 +413,7 @@ std::shared_ptr<ConnPool::ConnNode> ConnPool::Container::Acquire(std::chrono::mi
 
 std::shared_ptr<ConnPool::ConnNode> ConnPool::Container::AcquireById(int32_t id)
 {
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
     for (auto& detail : details_) {
         auto node = detail.lock();
         if (node == nullptr) {
@@ -465,11 +466,20 @@ bool ConnPool::Container::IsFull()
 int32_t ConnPool::Container::Dump(const char *header)
 {
     std::string info;
-    for (auto& detail : details_) {
-        auto node = detail.lock();
-        if (node == nullptr) {
-            continue;
+    std::vector<std::shared_ptr<ConnNode>> details;
+    {
+        std::unique_lock<decltype(mutex_)> lock(mutex_);
+        details.reserve(details_.size());
+        for (auto& detail : details_) {
+            auto node = detail.lock();
+            if (node == nullptr) {
+                continue;
+            }
+            details.push_back(node);
         }
+    }
+
+    for (auto& node : details) {
         info.append("<")
             .append(std::to_string(node->id_))
             .append(",")
