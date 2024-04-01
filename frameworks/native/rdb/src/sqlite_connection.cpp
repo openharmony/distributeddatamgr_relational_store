@@ -17,7 +17,6 @@
 
 #include <sqlite3sym.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 
 #include <cerrno>
 #include <memory>
@@ -84,10 +83,38 @@ SqliteConnection::SqliteConnection(bool isWriteConnection)
 {
 }
 
+int SqliteConnection::GetDbPath(const RdbStoreConfig &config, std::string &dbPath)
+{
+    std::string path;
+    if (config.GetRoleType() == VISITOR) {
+        path = config.GetVisitorDir();
+    } else {
+        path = config.GetPath();
+    }
+
+    if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
+        if (config.GetRoleType() == VISITOR) {
+            LOG_ERROR("not support MODE_MEMORY, storeName:%{public}s, role:%{public}d", config.GetName().c_str(),
+                config.GetRoleType());
+            return E_NOT_SUPPORT;
+        }
+        dbPath = SqliteGlobalConfig::GetMemoryDbPath();
+    } else if (path.empty()) {
+        LOG_ERROR("SqliteConnection GetDbPath input empty database path");
+        return E_EMPTY_FILE_NAME;
+    } else if (path.front() != '/' && path.at(1) != ':') {
+        LOG_ERROR("SqliteConnection GetDbPath input relative path");
+        return E_RELATIVE_PATH;
+    } else {
+        dbPath = path;
+    }
+    return E_OK;
+}
+
 int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
 {
     std::string dbPath;
-    auto ret = SqliteGlobalConfig::GetDbPath(config, dbPath);
+    auto ret = GetDbPath(config, dbPath);
     if (ret != E_OK) {
         return ret;
     }
@@ -451,18 +478,15 @@ int SqliteConnection::RegDefaultFunctions(sqlite3 *dbHandle)
 
 int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
 {
-    if (isReadOnly) {
+    if (isReadOnly || config.GetJournalMode().compare(GlobalExpr::DB_DEFAULT_JOURNAL_MODE) == 0) {
         return E_OK;
     }
+
     std::string currentMode;
     int errCode = ExecuteGetString(currentMode, "PRAGMA journal_mode");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetJournalMode fail to get journal mode : %{public}d", errCode);
         return errCode;
-    }
-
-    if (config.GetJournalMode().compare(currentMode) == 0) {
-        return E_OK;
     }
 
     currentMode = SqliteUtils::StrToUpper(currentMode);
@@ -481,11 +505,9 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
     }
 
     if (config.GetJournalMode() == "WAL") {
-        errCode = SetSyncMode(config.GetSyncMode());
+        errCode = SetWalSyncMode(config.GetSyncMode());
     }
-    if (config.GetJournalMode() == "TRUNCATE") {
-        mode_ = JournalMode::MODE_TRUNCATE;
-    }
+
     return errCode;
 }
 
@@ -541,9 +563,9 @@ int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
     return errCode;
 }
 
-int SqliteConnection::SetSyncMode(const std::string &syncMode)
+int SqliteConnection::SetWalSyncMode(const std::string &syncMode)
 {
-    std::string targetValue = SqliteGlobalConfig::GetSyncMode();
+    std::string targetValue = SqliteGlobalConfig::GetWalSyncMode();
     if (syncMode.length() != 0) {
         targetValue = syncMode;
     }
@@ -607,7 +629,6 @@ int SqliteConnection::PrepareAndBind(const std::string &sql, const std::vector<V
 
     errCode = statement.Prepare(dbHandle, sql);
     if (errCode != E_OK) {
-        LOG_ERROR("failed to prepare. code %{public}d", errCode);
         return errCode;
     }
 
@@ -990,11 +1011,6 @@ void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Ass
 int SqliteConnection::GetMaxVariableNumber()
 {
     return maxVariableNumber_;
-}
-
-JournalMode SqliteConnection::GetJournalMode()
-{
-    return mode_;
 }
 } // namespace NativeRdb
 } // namespace OHOS

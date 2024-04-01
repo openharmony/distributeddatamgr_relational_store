@@ -18,8 +18,6 @@
 
 #include <string>
 
-#include "rdb_store_config.h"
-
 namespace OHOS {
 namespace NativeRdb {
 
@@ -36,15 +34,14 @@ public:
     static constexpr int APP_DEFAULT_UMASK = 0002;
     static constexpr int SQLITE_MAX_COLUMN = 2000;
     static constexpr char ATTACH_BACKUP_SQL[] = "ATTACH ? AS backup KEY ?";
-    static constexpr char ATTACH_SQL[] = "ATTACH DATABASE ? AS ? KEY ?";
-    static constexpr char DETACH_SQL[] = "DETACH DATABASE ?";
+    static constexpr char ATTACH_SQL[] = "ATTACH ? AS ? KEY ?";
     static constexpr char EXPORT_SQL[] = "SELECT export_database('backup')";
     static constexpr char DETACH_BACKUP_SQL[] = "detach backup";
     static constexpr char PRAGMA_JOUR_MODE_EXP[] = "PRAGMA journal_mode";
     static constexpr char PRAGMA_VERSION[] = "PRAGMA user_version";
-    static constexpr char JOURNAL_MODE_WAL[] = "WAL";
-    static constexpr char JOURNAL_MODE_DELETE[] = "DELETE";
-    static constexpr char DEFAULE_SYNC_MODE[] = "FULL";
+    static constexpr char DEFAULT_JOURNAL_MODE[] = "WAL";
+    static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "DELETE";
+    static constexpr char WAL_SYNC_MODE[] = "FULL";
     static constexpr char MEMORY_DB_PATH[] = ":memory:";
     static constexpr char ENCRYPT_ALGO[] = "sha256";
     static constexpr char CODEC_HMAC_ALGO[] = "PRAGMA codec_hmac_algo=sha256";
@@ -63,11 +60,10 @@ public:
     static int GetReadConnectionCount();
     static std::string GetMemoryDbPath();
     static int GetPageSize();
-    static std::string GetSyncMode();
+    static std::string GetWalSyncMode();
     static int GetJournalFileSize();
     static int GetWalAutoCheckpoint();
     static std::string GetDefaultJournalMode();
-    static int GetDbPath(const RdbStoreConfig &config, std::string &dbPath);
 };
 
 } // namespace NativeRdb

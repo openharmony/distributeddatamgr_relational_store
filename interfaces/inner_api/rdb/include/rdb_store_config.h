@@ -186,7 +186,7 @@ public:
         const std::string &databaseFileType = "", SecurityLevel securityLevel = SecurityLevel::LAST,
         bool isCreateNecessary = true, bool autoCheck = false, int journalSize = DB_JOURNAL_SIZE,
         int pageSize = DB_PAGE_SIZE, const std::string &encryptAlgo = DB_DEFAULT_ENCRYPT_ALGO);
-    RdbStoreConfig();
+
     /**
      * @brief Destructor.
      */

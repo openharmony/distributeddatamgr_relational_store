@@ -85,9 +85,9 @@ constexpr int E_INVALID_COLUMN_INDEX = (E_BASE + 8);
 constexpr int E_INVALID_COLUMN_TYPE = (E_BASE + 9);
 
 /**
-* @brief The error for the database corrupted.
+* @brief The error code for a file name is empty.
 */
-constexpr int E_DATA_BASE_CORRUPTED = (E_BASE + 10);
+constexpr int E_EMPTY_FILE_NAME = (E_BASE + 10);
 
 /**
 * @brief The error for the current file path is invalid.
@@ -205,9 +205,9 @@ constexpr int E_EMPTY_NEW_ENCRYPT_KEY = (E_BASE + 32);
 constexpr int E_CHANGE_UNENCRYPTED_TO_ENCRYPTED = (E_BASE + 33);
 
 /**
-* @brief The error code for database busy.
+* @brief The error code for change encrypt in busy.
 */
-constexpr int E_DATABASE_BUSY = (E_BASE + 34);
+constexpr int E_CHANGE_ENCRYPT_KEY_IN_BUSY = (E_BASE + 34);
 
 /**
 * @brief The error code when the statement not initialized.
@@ -303,11 +303,6 @@ static constexpr int E_DATABASE_FULL = (E_BASE + 52);
  * @brief The error when sql is not supported in execute
  */
 static constexpr int E_NOT_SUPPORT_THE_SQL = (E_BASE + 53);
-
-/**
- * @brief The database is already attached.
- */
-static constexpr int E_ATTACHED_DATABASE_EXIST = (E_BASE + 54);
 } // namespace NativeRdb
 } // namespace OHOS
 

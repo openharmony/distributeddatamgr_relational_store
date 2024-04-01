@@ -16,18 +16,14 @@
 #ifndef DISTRIBUTEDDATAMGR_APPDATAMGR_JSUTILS_H
 #define DISTRIBUTEDDATAMGR_APPDATAMGR_JSUTILS_H
 
-#include <stdint.h>
-
 #include <functional>
 #include <iostream>
 #include <map>
 #include <memory>
-#include <optional>
 #include <string>
-#include <type_traits>
 #include <variant>
 #include <vector>
-
+#include <optional>
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -35,24 +31,35 @@
 namespace OHOS {
 namespace AppDataMgrJsKit {
 namespace JSUtils {
-
-static constexpr int OK = 0;
-static constexpr int ERR = -1;
-static constexpr uint32_t ASYNC_RST_SIZE = 2;
-static constexpr uint32_t DEFAULT_VALUE_LENGTH = 1024;
-static constexpr uint32_t MAX_VALUE_LENGTH = 1024 * 1024 * 8; // the max length of all kand of out string value
-static constexpr uint32_t SYNC_RESULT_ELEMENT_NUM = 2;
+constexpr int OK = 0;
+constexpr int ERR = -1;
+constexpr uint32_t ASYNC_RST_SIZE = 2;
+constexpr uint32_t DEFAULT_VALUE_LENGTH = 1024;
+constexpr uint32_t MAX_VALUE_LENGTH = 1024 * 1024 * 8; // the max length of all kand of out string value
+constexpr uint32_t SYNC_RESULT_ELEMENT_NUM = 2;
 struct JsFeatureSpace {
-    const char *spaceName;
-    const char *nameBase64;
+    const char* spaceName;
+    const char* nameBase64;
     bool isComponent;
 };
+
+#ifndef ADD_JS_PROPERTY
+#define ADD_JS_PROPERTY(env, object, value, member) \
+    napi_set_named_property((env), (object), #member, Convert2JSValue((env), (value).member))
+#endif
+
+#ifndef GET_PROPERTY
+#define GET_PROPERTY(env, object, value, member) \
+    Convert2Value((env), GetNamedProperty((env), (object), #member), (value).member)
+#endif
+
+napi_value GetNamedProperty(napi_env env, napi_value object, const char *name);
+std::pair<int32_t, napi_value> GetOptionalNamedProperty(napi_env env, napi_value input, const char *name);
 
 int32_t Convert2ValueExt(napi_env env, napi_value jsValue, uint32_t &output);
 int32_t Convert2ValueExt(napi_env env, napi_value jsValue, int32_t &output);
 int32_t Convert2ValueExt(napi_env env, napi_value jsValue, int64_t &output);
 
-int32_t Convert2Value(napi_env env, napi_value jsValue, napi_value &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, bool &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, double &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, int64_t &output);
@@ -70,7 +77,7 @@ template<typename T>
 int32_t Convert2Value(napi_env env, napi_value jsValue, T &output);
 
 template<typename T>
-int32_t Convert2ValueExt(napi_env env, napi_value jsValue, T &output);
+int32_t Convert2ValueExt(napi_env env,  napi_value jsValue, T &output);
 
 template<typename T>
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::vector<T> &value);
@@ -122,6 +129,22 @@ napi_value Convert2JSValue(napi_env env, const std::variant<Types...> &value);
 template<typename T>
 std::string ToString(const T &key);
 
+template <typename T>
+int32_t GetOptionalValue(napi_env env, napi_value in, const char *name, T& out)
+{
+    auto [status, value] = GetOptionalNamedProperty(env, in, name);
+    if (status != napi_ok) {
+        return status;
+    }
+    if (value == nullptr) {
+        return napi_ok;
+    }
+    if (std::is_same_v<T, int32_t>) {
+        return JSUtils::Convert2ValueExt(env, value, out);
+    }
+    return JSUtils::Convert2Value(env, value, out);
+}
+
 template<typename K>
 std::enable_if_t<!std::is_same_v<K, std::string>, std::string> ConvertMapKey(const K &key)
 {
@@ -167,36 +190,6 @@ napi_value GetJSValue(napi_env env, const T &value)
     }
     return GetJSValue<T, Types...>(env, value);
 }
-
-std::pair<napi_status, napi_value> GetInnerValue(napi_env env, napi_value in, const std::string &prop, bool optional);
-
-template<typename T>
-inline std::enable_if_t<std::is_same_v<T, int32_t> || std::is_same_v<T, uint32_t>, int32_t> GetNamedProperty(
-    napi_env env, napi_value in, const std::string &prop, T &value, bool optional = false)
-{
-    auto [status, jsValue] = GetInnerValue(env, in, prop, optional);
-    if (jsValue == nullptr) {
-        return status;
-    }
-    return Convert2ValueExt(env, jsValue, value);
-};
-
-template<typename T>
-inline std::enable_if_t<!std::is_same_v<T, int32_t> && !std::is_same_v<T, uint32_t>, int32_t> GetNamedProperty(
-    napi_env env, napi_value in, const std::string &prop, T &value, bool optional = false)
-{
-    auto [status, jsValue] = GetInnerValue(env, in, prop, optional);
-    if (jsValue == nullptr) {
-        return status;
-    }
-    return Convert2Value(env, jsValue, value);
-};
-
-template<typename T>
-inline int32_t SetNamedProperty(napi_env env, napi_value in, const std::string &prop, T value)
-{
-    return napi_set_named_property(env, in, prop.c_str(), Convert2JSValue(env, value));
-};
 } // namespace JSUtils
 
 template<typename T>
