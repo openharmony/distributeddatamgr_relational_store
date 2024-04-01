@@ -362,7 +362,6 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
     RdbSecurityManager::GetInstance().UpdateKeyFile(config.GetPath());
     return E_OK;
 }
-#endif
 
 int SqliteConnection::InitName(const RdbStoreConfig &config)
 {
@@ -374,6 +373,7 @@ int SqliteConnection::InitName(const RdbStoreConfig &config)
     int32_t errCode = RdbSecurityManager::GetInstance().Init(name);
     return errCode;
 }
+#endif
 
 int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
 {
