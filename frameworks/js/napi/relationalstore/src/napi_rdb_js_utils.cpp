@@ -300,6 +300,9 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
 
     GetNamedProperty(env, jsValue, "isSearchable", rdbConfig.isSearchable, true);
     ASSERT(OK == status, "get isSearchable failed.", napi_invalid_arg);
+
+    GetNamedProperty(env, jsValue, "vector", rdbConfig.vector, true);
+    ASSERT(OK == status, "get vector failed.", napi_invalid_arg);
     return napi_ok;
 }
 
@@ -407,6 +410,7 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     RdbStoreConfig rdbStoreConfig(rdbConfig.path);
     rdbStoreConfig.SetEncryptStatus(rdbConfig.isEncrypt);
     rdbStoreConfig.SetSearchable(rdbConfig.isSearchable);
+    rdbStoreConfig.SetIsVector(rdbConfig.vector);
     rdbStoreConfig.SetAutoClean(rdbConfig.isAutoClean);
     rdbStoreConfig.SetSecurityLevel(rdbConfig.securityLevel);
     rdbStoreConfig.SetDataGroupId(rdbConfig.dataGroupId);

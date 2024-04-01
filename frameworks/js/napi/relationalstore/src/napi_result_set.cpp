@@ -35,6 +35,7 @@ namespace OHOS {
 namespace RelationalStoreJsKit {
 using Asset = AssetValue;
 using Assets = std::vector<Asset>;
+using FloatVector = std::vector<float>;
 static const int E_OK = 0;
 
 napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet)
@@ -435,6 +436,23 @@ napi_value ResultSetProxy::GetAssets(napi_env env, napi_callback_info info)
     return JSUtils::Convert2JSValue(env, result);
 }
 
+napi_value ResultSetProxy::GetFloat32Array(napi_env env, napi_callback_info info)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    int32_t columnIndex;
+    auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
+
+    FloatVector result = {};
+    int errCode = resultSetProxy->GetInstance()->GetFloat32Array(columnIndex, result);
+    if (errCode == E_NULL_OBJECT) {
+        LOG_DEBUG("GetFloat32Array col %{public}d is null ", columnIndex);
+        return JSUtils::Convert2JSValue(env, std::monostate());
+    }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    return JSUtils::Convert2JSValue(env, result);
+}
+
 napi_value ResultSetProxy::GetString(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -540,6 +558,7 @@ void ResultSetProxy::Init(napi_env env, napi_value exports)
             DECLARE_NAPI_FUNCTION("getBlob", GetBlob),
             DECLARE_NAPI_FUNCTION("getAsset", GetAsset),
             DECLARE_NAPI_FUNCTION("getAssets", GetAssets),
+            DECLARE_NAPI_FUNCTION("getFloat32Array", GetFloat32Array),
             DECLARE_NAPI_FUNCTION("getString", GetString),
             DECLARE_NAPI_FUNCTION("getDouble", GetDouble),
             DECLARE_NAPI_FUNCTION("isColumnNull", IsColumnNull),

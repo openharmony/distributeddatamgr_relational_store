@@ -70,6 +70,7 @@ private:
     static napi_value GetBlob(napi_env env, napi_callback_info info);
     static napi_value GetAsset(napi_env env, napi_callback_info info);
     static napi_value GetAssets(napi_env env, napi_callback_info info);
+    static napi_value GetFloat32Array(napi_env env, napi_callback_info info);
     static napi_value GetString(napi_env env, napi_callback_info info);
     static napi_value GetDouble(napi_env env, napi_callback_info info);
     static napi_value IsColumnNull(napi_env env, napi_callback_info info);
