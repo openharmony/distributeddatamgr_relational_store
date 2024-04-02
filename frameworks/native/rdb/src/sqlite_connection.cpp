@@ -381,8 +381,7 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
     bool isKeyExpired = false;
     int32_t errCode = E_OK;
     if (config.IsEncrypt()) {
-        auto name = GetSecManagerName(config);
-        errCode = RdbSecurityManager::GetInstance().Init(name);
+        errCode = RdbSecurityManager::GetInstance().Init(GetSecManagerName(config));
         if (errCode != E_OK) {
             key.assign(key.size(), 0);
             return errCode;
