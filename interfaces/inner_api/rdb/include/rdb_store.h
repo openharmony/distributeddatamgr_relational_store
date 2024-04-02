@@ -417,7 +417,7 @@ public:
     virtual int BeginTransaction() = 0;
     virtual std::pair<int, int64_t> BeginTrans()
     {
-        return { E_NOT_SUPPORT, 0};
+        return { E_NOT_SUPPORT, 0 };
     }
 
     /**
