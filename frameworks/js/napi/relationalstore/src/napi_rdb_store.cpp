@@ -483,7 +483,7 @@ int ParseSql(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreC
 int ParseTxId(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     int64_t txId = 0;
-    auto status = JSUtils::Convert2Value(env, arg, txId);
+    auto status = JSUtils::Convert2ValueExt(env, arg, txId);
     CHECK_RETURN_SET(status == napi_ok && txId >= 0, std::make_shared<ParamError>("txId", "not invalid txId"));
     context->txId = txId;
     return OK;

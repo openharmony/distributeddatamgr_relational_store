@@ -45,7 +45,7 @@ public:
     int Commit(int64_t trxId) override;
     int RollBack(int64_t trxId) override;
     std::pair<int32_t, ValueObject> Execute(const std::string &sql,
-        const std::vector<ValueObject> &bindArgs = {}, int64_t trxId = 0) override;
+        const std::vector<ValueObject> &bindArgs, int64_t trxId) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
     int ExecuteSqlByTrxId(
