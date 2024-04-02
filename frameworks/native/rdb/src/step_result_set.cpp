@@ -271,7 +271,8 @@ int StepResultSet::PrepareStep()
         return E_STEP_RESULT_CLOSED;
     }
 
-    if (SqliteUtils::GetSqlStatementType(sql_) != SqliteUtils::STATEMENT_SELECT) {
+    auto type = SqliteUtils::GetSqlStatementType(sql_);
+    if (type != SqliteUtils::STATEMENT_SELECT && type != SqliteUtils::STATEMENT_OTHER) {
         LOG_ERROR("not a select sql_!");
         return E_EXECUTE_IN_STEP_QUERY;
     }

@@ -1397,7 +1397,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep015, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
 
     std::vector<std::string> columnNames;
-    EXPECT_EQ(E_EXECUTE_IN_STEP_QUERY, resultSet->GetAllColumnNames(columnNames));
+    EXPECT_EQ(E_STATEMENT_NOT_PREPARED, resultSet->GetAllColumnNames(columnNames));
 
     EXPECT_EQ(E_OK, resultSet->Close());
 }
@@ -1526,6 +1526,24 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep019, TestSize.Level1)
             "FROM test INNER JOIN naturalbase_rdb_aux_test_log "
             "ON test.ROWID = naturalbase_rdb_aux_test_log.data_key";
     EXPECT_EQ(value, sqlstr);
+}
+
+/* *
+ * @tc.name: testSqlStep020
+ * @tc.desc: normal testcase of SqlStep for QueryByStep, if sql is WITH
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, testSqlStep020, TestSize.Level1)
+{
+    GenerateDefaultTable();
+
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("WITH tem AS ( SELECT * FROM test) SELECT * FROM tem");
+    EXPECT_NE(nullptr, resultSet);
+
+    std::vector<std::string> columnNames;
+    EXPECT_EQ(E_OK, resultSet->GetAllColumnNames(columnNames));
+
+    EXPECT_EQ(E_OK, resultSet->Close());
 }
 
 /**
