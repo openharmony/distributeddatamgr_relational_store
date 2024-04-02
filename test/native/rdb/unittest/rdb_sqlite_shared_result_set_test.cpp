@@ -1158,7 +1158,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_021, TestSize.Le
 
     std::vector<std::string> columnNames;
     int ret = resultSet->GetAllColumnNames(columnNames);
-    EXPECT_EQ(E_EXECUTE_IN_STEP_QUERY, ret);
+    EXPECT_EQ(E_ERROR, ret);
     resultSet->Close();
 }
 
@@ -1496,4 +1496,22 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_034, TestSize.Le
         EXPECT_EQ(E_OK, resultSet->GetString(columnIndex, value)) << "Current position:" << i;
         EXPECT_EQ(value.size(), position * 100 * 1024) << "Current position:" << i;
     }
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_035
+ * @tc.desc: normal testcase of SqliteSharedResultSet for qrySql is WITH
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_035, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =RdbSqliteSharedResultSetTest::store->QuerySql(
+        "WITH tem AS ( SELECT * FROM test) SELECT * FROM tem");
+    EXPECT_NE(resultSet, nullptr);
+
+    std::vector<std::string> columnNames;
+    int ret = resultSet->GetAllColumnNames(columnNames);
+    EXPECT_EQ(E_OK, ret);
 }
