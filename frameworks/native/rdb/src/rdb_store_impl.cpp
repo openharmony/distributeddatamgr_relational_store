@@ -97,7 +97,7 @@ void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
     std::vector<uint8_t> key = config.GetEncryptKey();
     RdbPassword rdbPwd;
     if (config.IsEncrypt()) {
-        auto ret = RdbSecurityManager::GetInstance().Init(GetSecManagerName(config));
+        auto ret = RdbSecurityManager::GetInstance().Init(SqliteConnection::GetSecManagerName(config));
         if (ret != E_OK) {
             return;
         }
