@@ -362,18 +362,17 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
     RdbSecurityManager::GetInstance().UpdateKeyFile(config.GetPath());
     return E_OK;
 }
+#endif
 
-int SqliteConnection::InitName(const RdbStoreConfig &config)
+std::string SqliteConnection::GetSecManagerName(const RdbStoreConfig &config)
 {
     auto name = config.GetBundleName();
     if (name.empty()) {
         LOG_WARN("Bundle name is empty, using path instead.");
-        name = std::string(config.GetPath()).substr(0, config.GetPath().rfind("/") + 1);
+        return std::string(config.GetPath()).substr(0, config.GetPath().rfind("/") + 1);
     }
-    int32_t errCode = RdbSecurityManager::GetInstance().Init(name);
-    return errCode;
+    return name;
 }
-#endif
 
 int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
 {
@@ -382,7 +381,8 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
     bool isKeyExpired = false;
     int32_t errCode = E_OK;
     if (config.IsEncrypt()) {
-        errCode = InitName(config);
+        auto name = GetSecManagerName(config);
+        errCode = RdbSecurityManager::GetInstance().Init(name);
         if (errCode != E_OK) {
             key.assign(key.size(), 0);
             return errCode;
