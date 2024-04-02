@@ -69,7 +69,7 @@ private:
     int InnerOpen(const RdbStoreConfig &config, uint32_t retry);
     int Configure(const RdbStoreConfig &config, uint32_t retry, std::string &dbPath);
     int SetPageSize(const RdbStoreConfig &config);
-    int InitName(const RdbStoreConfig &config);
+    std::string GetSecManagerName(const RdbStoreConfig &config);
     int SetEncryptKey(const RdbStoreConfig &config, uint32_t iter);
     int SetJournalMode(const RdbStoreConfig &config);
     int SetJournalSizeLimit(const RdbStoreConfig &config);
