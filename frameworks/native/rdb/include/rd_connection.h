@@ -39,7 +39,7 @@ public:
     ~RdConnection();
     int Prepare(const std::string &sql, bool &outIsReadOnly) override;
     int ExecuteSql(
-        const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>()) override;
+        const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
 
     std::shared_ptr<RdbStatement> BeginStepQuery(int &errCode, const std::string &sql,
         const std::vector<ValueObject> &args) const override;

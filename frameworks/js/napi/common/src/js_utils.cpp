@@ -203,7 +203,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<flo
     }
 
     output = (tmp != nullptr ? std::vector<float>(static_cast<float*>(tmp),
-        static_cast<float*>(tmp) + length) : std::vector<float>());
+        static_cast<float*>(tmp) + length / sizeof(float)) : std::vector<float>());
     return status;
 }
 

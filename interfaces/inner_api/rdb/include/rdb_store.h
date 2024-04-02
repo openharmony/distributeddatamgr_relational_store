@@ -415,19 +415,28 @@ public:
      * @brief Begins a transaction in EXCLUSIVE mode.
      */
     virtual int BeginTransaction() = 0;
-    virtual std::pair<int, int64_t> BeginTrans() = 0;
+    virtual std::pair<int, int64_t> BeginTrans()
+    {
+        return { E_NOT_SUPPORT, 0};
+    }
 
     /**
      * @brief Rollback a transaction in EXCLUSIVE mode.
      */
     virtual int RollBack() = 0;
-    virtual int RollBack(int64_t trxId) = 0;
+    virtual int RollBack(int64_t trxId)
+    {
+        return E_NOT_SUPPORT;
+    }
 
     /**
      * @brief Commit a transaction in EXCLUSIVE mode.
      */
     virtual int Commit() = 0;
-    virtual int Commit(int64_t trxId) = 0;
+    virtual int Commit(int64_t trxId)
+    {
+        return E_NOT_SUPPORT;
+    }
 
     /**
      * @brief Check the current connection is in transaction.
