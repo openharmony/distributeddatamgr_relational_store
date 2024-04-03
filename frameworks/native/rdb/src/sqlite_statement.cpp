@@ -493,36 +493,54 @@ int32_t SqliteStatement::BindNil(sqlite3_stmt* stat, int index, const ValueObjec
 int32_t SqliteStatement::BindInteger(sqlite3_stmt* stat, int index, const ValueObject::Type& arg)
 {
     auto val = std::get_if<int64_t>(&arg);
+    if (val == nullptr) {
+        return SQLITE_MISMATCH;
+    }
     return sqlite3_bind_int64(stat, index, *val);
 }
 
 int32_t SqliteStatement::BindDouble(sqlite3_stmt* stat, int index, const ValueObject::Type& arg)
 {
     auto val = std::get_if<double>(&arg);
+    if (val == nullptr) {
+        return SQLITE_MISMATCH;
+    }
     return sqlite3_bind_double(stat, index, *val);
 }
 
 int32_t SqliteStatement::BindText(sqlite3_stmt* stat, int index, const ValueObject::Type& arg)
 {
     auto val = std::get_if<std::string>(&arg);
+    if (val == nullptr) {
+        return SQLITE_MISMATCH;
+    }
     return sqlite3_bind_text(stat, index, val->c_str(), val->length(), SQLITE_TRANSIENT);
 }
 
 int32_t SqliteStatement::BindBool(sqlite3_stmt* stat, int index, const ValueObject::Type& arg)
 {
     auto val = std::get_if<bool>(&arg);
+    if (val == nullptr) {
+        return SQLITE_MISMATCH;
+    }
     return sqlite3_bind_int64(stat, index, *val ? 1 : 0);
 }
 
 int32_t SqliteStatement::BindBlob(sqlite3_stmt* stat, int index, const ValueObject::Type& arg)
 {
     auto val = std::get_if<std::vector<uint8_t>>(&arg);
+    if (val == nullptr) {
+        return SQLITE_MISMATCH;
+    }
     return sqlite3_bind_blob(stat, index, static_cast<const void*>((*val).data()), (*val).size(), SQLITE_TRANSIENT);
 }
 
 int32_t SqliteStatement::BindAsset(sqlite3_stmt* stat, int index, const ValueObject::Type& arg)
 {
     auto val = std::get_if<Asset>(&arg);
+    if (val == nullptr) {
+        return SQLITE_MISMATCH;
+    }
     auto rawData = RawDataParser::PackageRawData(*val);
     return sqlite3_bind_blob(stat, index, static_cast<const void*>(rawData.data()), rawData.size(), SQLITE_TRANSIENT);
 }
@@ -530,6 +548,9 @@ int32_t SqliteStatement::BindAsset(sqlite3_stmt* stat, int index, const ValueObj
 int32_t SqliteStatement::BindAssets(sqlite3_stmt* stat, int index, const ValueObject::Type& arg)
 {
     auto val = std::get_if<Assets>(&arg);
+    if (val == nullptr) {
+        return SQLITE_MISMATCH;
+    }
     auto rawData = RawDataParser::PackageRawData(*val);
     return sqlite3_bind_blob(stat, index, static_cast<const void*>(rawData.data()), rawData.size(), SQLITE_TRANSIENT);
 }
@@ -537,14 +558,19 @@ int32_t SqliteStatement::BindAssets(sqlite3_stmt* stat, int index, const ValueOb
 int32_t SqliteStatement::BindFloats(sqlite3_stmt* stat, int index, const ValueObject::Type& object)
 {
     auto val = std::get_if<Floats>(&object);
+    if (val == nullptr) {
+        return SQLITE_MISMATCH;
+    }
     auto rawData = RawDataParser::PackageRawData(*val);
     return sqlite3_bind_blob(stat, index, static_cast<const void*>(rawData.data()), rawData.size(), SQLITE_TRANSIENT);
-
 }
 
 int32_t SqliteStatement::BindBigInt(sqlite3_stmt* stat, int index, const ValueObject::Type& arg)
 {
     auto val = std::get_if<BigInt>(&arg);
+    if (val == nullptr) {
+        return SQLITE_MISMATCH;
+    }
     auto rawData = RawDataParser::PackageRawData(*val);
     return sqlite3_bind_blob(stat, index, static_cast<const void*>(rawData.data()), rawData.size(), SQLITE_TRANSIENT);
 }

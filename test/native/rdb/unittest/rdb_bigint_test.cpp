@@ -42,9 +42,10 @@ protected:
     };
     static constexpr const char* PATH_NAME = "/data/test/bigint_test.db";
     static constexpr const char* DATABASE_NAME = "bigint_test.db";
-    static constexpr const char* CREATE_TABLE = "CREATE TABLE IF NOT EXISTS bigint_table(id INTEGER PRIMARY KEY "
-                                                "AUTOINCREMENT, value1 BIGINT NOT NULL, value2 BIGINT)";
-    static constexpr const char* DROP_TABLE = "DROP TABLE IF NOT EXISTS bigint_table";
+    static constexpr const char* CREATE_TABLE =
+        "CREATE TABLE IF NOT EXISTS bigint_table(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "value1 UNLIMITED INT NOT NULL, value2 UNLIMITED INT, value3 UNLIMITED INT NOT NULL DEFAULT 0)";
+    static constexpr const char* DROP_TABLE = "DROP TABLE IF EXISTS bigint_table";
     static std::shared_ptr<RdbStore> rdbStore_;
 };
 std::shared_ptr<RdbStore> RdbBigIntTest::rdbStore_;
@@ -77,11 +78,11 @@ void RdbBigIntTest::TearDown(void)
 }
 
 /**
- * @tc.name: Insert_BigInt
+ * @tc.name: Insert_BigInt_INT64
  * @tc.desc: test insert bigint to rdb store
  * @tc.type: FUNC
  */
-HWTEST_F(RdbBigIntTest, Insert_BigInt, TestSize.Level1)
+HWTEST_F(RdbBigIntTest, Insert_BigInt_INT64, TestSize.Level1)
 {
     int64_t outRowId = -1;
     ValuesBucket bucket;
@@ -106,6 +107,41 @@ HWTEST_F(RdbBigIntTest, Insert_BigInt, TestSize.Level1)
         EXPECT_NE(val, nullptr);
         if (val != nullptr) {
             EXPECT_EQ(*val, BigInteger(-158));
+        }
+    }
+}
+/**
+ * @tc.name: Insert_BigInt_INT128
+ * @tc.desc: test insert bigint to rdb store
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbBigIntTest, Insert_BigInt_INT128, TestSize.Level1)
+{
+    int64_t outRowId = -1;
+    BigInteger value1 = BigInteger(0, std::vector<uint64_t>{158, 0xDEADDEADDEADDEAD});
+    BigInteger value2 = BigInteger(1, std::vector<uint64_t>{158, 0xDEADDEADDEADDEAD});
+    ValuesBucket bucket;
+    bucket.Put("value1", value1);
+    bucket.Put("value2", value2);
+    auto status = rdbStore_->Insert(outRowId, "bigint_table", bucket);
+    EXPECT_EQ(status, E_OK);
+    auto resultSet = rdbStore_->QuerySql("select value1, value2 from bigint_table");
+    EXPECT_NE(resultSet, nullptr);
+    while (resultSet->GoToNextRow() == E_OK) {
+        RowEntity entity;
+        status = resultSet->GetRow(entity);
+        EXPECT_EQ(status, E_OK);
+        auto value = entity.Get("value1");
+        auto val = std::get_if<BigInteger>(&value.value);
+        EXPECT_NE(val, nullptr);
+        if (val != nullptr) {
+            EXPECT_EQ(*val, value1);
+        }
+        value = entity.Get("value2");
+        val = std::get_if<BigInteger>(&value.value);
+        EXPECT_NE(val, nullptr);
+        if (val != nullptr) {
+            EXPECT_EQ(*val, value2);
         }
     }
 }
