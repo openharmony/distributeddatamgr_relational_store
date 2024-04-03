@@ -122,6 +122,12 @@ int SqliteSharedResultSet::GetRowCount(int &count)
 
     FillBlock(0);
     count = rowNum_;
+
+    if (count == 0) {
+        rowNum_ = NO_COUNT;
+        FillBlock(0);
+        count = rowNum_;
+    }
     return E_OK;
 }
 
