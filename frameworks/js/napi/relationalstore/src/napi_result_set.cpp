@@ -82,6 +82,10 @@ napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto finalize = [](napi_env env, void *data, void *hint) {
+        if (data == nullptr) {
+            LOG_ERROR("ResultSetProxy finalize failed, data is null.");
+            return;
+        }
         ResultSetProxy *proxy = reinterpret_cast<ResultSetProxy *>(data);
         delete proxy;
     };
