@@ -129,7 +129,6 @@ public:
     int ConfigLocale(const std::string &localeStr);
     int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey) override;
     void GetSchema(const RdbStoreConfig &config);
-    std::string GetSecManagerName(const RdbStoreConfig &config);
     std::string GetName();
     std::string GetOrgPath();
     std::string GetFileType();
@@ -212,6 +211,7 @@ private:
     bool ColHasSpecificField(const std::vector<std::string> &columns);
     int AttachInner(const std::string &attachName,
         const std::string &dbPath, const std::vector<uint8_t> &key, int32_t waitTime);
+    std::string GetSecManagerName(const RdbStoreConfig &config);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
