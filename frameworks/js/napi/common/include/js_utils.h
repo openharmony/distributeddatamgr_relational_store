@@ -199,8 +199,6 @@ inline int32_t SetNamedProperty(napi_env env, napi_value in, const std::string &
 {
     return napi_set_named_property(env, in, prop.c_str(), Convert2JSValue(env, value));
 };
-
-uint32_t Anonymous(const void *ptr);
 } // namespace JSUtils
 
 template<typename T>

@@ -600,12 +600,5 @@ bool JSUtils::Equal(napi_env env, napi_ref ref, napi_value value)
     napi_strict_equals(env, value, callback, &isEquals);
     return isEquals;
 }
-
-uint32_t JSUtils::Anonymous(const void *ptr)
-{
-    uint32_t hash = (uintptr_t(ptr) & 0xFFFFFFFF);
-    hash = (hash & 0xFFFF) ^ ((hash >> 16) & 0xFFFF);
-    return hash;
-}
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
