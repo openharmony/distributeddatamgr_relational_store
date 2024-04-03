@@ -364,6 +364,16 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
 }
 #endif
 
+std::string SqliteConnection::GetSecManagerName(const RdbStoreConfig &config)
+{
+    auto name = config.GetBundleName();
+    if (name.empty()) {
+        LOG_WARN("Bundle name is empty, using path instead.");
+        return std::string(config.GetPath()).substr(0, config.GetPath().rfind("/") + 1);
+    }
+    return name;
+}
+
 int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -371,7 +381,7 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
     bool isKeyExpired = false;
     int32_t errCode = E_OK;
     if (config.IsEncrypt()) {
-        errCode = RdbSecurityManager::GetInstance().Init(config.GetBundleName());
+        errCode = RdbSecurityManager::GetInstance().Init(GetSecManagerName(config));
         if (errCode != E_OK) {
             key.assign(key.size(), 0);
             return errCode;

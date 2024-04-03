@@ -233,6 +233,7 @@ private:
     bool ColHasSpecificField(const std::vector<std::string> &columns);
     int AttachInner(const std::string &attachName,
         const std::string &dbPath, const std::vector<uint8_t> &key, int32_t waitTime);
+    std::string GetSecManagerName(const RdbStoreConfig &config);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
