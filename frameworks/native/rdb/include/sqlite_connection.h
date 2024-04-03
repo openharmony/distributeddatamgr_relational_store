@@ -63,13 +63,13 @@ public:
     int RegisterCallBackObserver(const DataChangeCallback &clientChangedData);
     int GetMaxVariableNumber();
     JournalMode GetJournalMode();
-    static std::string GetSecManagerName(const RdbStoreConfig &config);
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     explicit SqliteConnection(bool isWriteConnection);
     int InnerOpen(const RdbStoreConfig &config, uint32_t retry);
     int Configure(const RdbStoreConfig &config, uint32_t retry, std::string &dbPath);
     int SetPageSize(const RdbStoreConfig &config);
+    std::string GetSecManagerName(const RdbStoreConfig &config);
     int SetEncryptKey(const RdbStoreConfig &config, uint32_t iter);
     int SetJournalMode(const RdbStoreConfig &config);
     int SetJournalSizeLimit(const RdbStoreConfig &config);
