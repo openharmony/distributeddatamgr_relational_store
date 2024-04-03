@@ -129,6 +129,7 @@ public:
     int ConfigLocale(const std::string &localeStr);
     int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey) override;
     void GetSchema(const RdbStoreConfig &config);
+    std::string GetSecManagerName(const RdbStoreConfig &config);
     std::string GetName();
     std::string GetOrgPath();
     std::string GetFileType();
