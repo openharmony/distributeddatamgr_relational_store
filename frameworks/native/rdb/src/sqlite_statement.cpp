@@ -232,6 +232,10 @@ int SqliteStatement::GetColumnType(int index, int &columnType) const
                 columnType = COLUMN_TYPE_ASSETS;
                 return E_OK;
             }
+            if (declType == ValueObject::DeclType<ValueObject::FloatVector>()) {
+                columnType = COLUMN_TYPE_FLOATS;
+                return E_OK;
+            }
             if (declType == ValueObject::DeclType<ValueObject::BigInt>()) {
                 columnType = COLUMN_TYPE_BIGINT;
                 return E_OK;

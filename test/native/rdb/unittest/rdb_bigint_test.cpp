@@ -40,11 +40,12 @@ protected:
             return E_OK;
         }
     };
+    using Floats = ValueObject::FloatVector;
     static constexpr const char* PATH_NAME = "/data/test/bigint_test.db";
     static constexpr const char* DATABASE_NAME = "bigint_test.db";
     static constexpr const char* CREATE_TABLE =
         "CREATE TABLE IF NOT EXISTS bigint_table(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "value1 UNLIMITED INT NOT NULL, value2 UNLIMITED INT, value3 UNLIMITED INT NOT NULL DEFAULT 0)";
+        "value1 UNLIMITED INT NOT NULL, value2 UNLIMITED INT, value3 VECS)";
     static constexpr const char* DROP_TABLE = "DROP TABLE IF EXISTS bigint_table";
     static std::shared_ptr<RdbStore> rdbStore_;
 };
@@ -110,6 +111,41 @@ HWTEST_F(RdbBigIntTest, Insert_BigInt_INT64, TestSize.Level1)
         }
     }
 }
+
+/**
+ * @tc.name: Insert_Step_BigInt_INT64
+ * @tc.desc: test insert bigint to rdb store
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbBigIntTest, Insert_Step_BigInt_INT64, TestSize.Level1)
+{
+    int64_t outRowId = -1;
+    ValuesBucket bucket;
+    bucket.Put("value1", BigInteger(158));
+    bucket.Put("value2", BigInteger(-158));
+    auto status = rdbStore_->Insert(outRowId, "bigint_table", bucket);
+    EXPECT_EQ(status, E_OK);
+    auto resultSet = rdbStore_->QueryByStep("select value1, value2 from bigint_table");
+    EXPECT_NE(resultSet, nullptr);
+    while (resultSet->GoToNextRow() == E_OK) {
+        RowEntity entity;
+        status = resultSet->GetRow(entity);
+        EXPECT_EQ(status, E_OK);
+        auto value = entity.Get("value1");
+        auto val = std::get_if<BigInteger>(&value.value);
+        EXPECT_NE(val, nullptr);
+        if (val != nullptr) {
+            EXPECT_EQ(*val, BigInteger(158));
+        }
+        value = entity.Get("value2");
+        val = std::get_if<BigInteger>(&value.value);
+        EXPECT_NE(val, nullptr);
+        if (val != nullptr) {
+            EXPECT_EQ(*val, BigInteger(-158));
+        }
+    }
+}
+
 /**
  * @tc.name: Insert_BigInt_INT128
  * @tc.desc: test insert bigint to rdb store
@@ -142,6 +178,202 @@ HWTEST_F(RdbBigIntTest, Insert_BigInt_INT128, TestSize.Level1)
         EXPECT_NE(val, nullptr);
         if (val != nullptr) {
             EXPECT_EQ(*val, value2);
+        }
+    }
+}
+
+/**
+ * @tc.name: Insert_Step_BigInt_INT128
+ * @tc.desc: test insert bigint to rdb store
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbBigIntTest, Insert_Step_BigInt_INT128, TestSize.Level1)
+{
+    int64_t outRowId = -1;
+    BigInteger value1 = BigInteger(0, std::vector<uint64_t>{158, 0xDEADDEADDEADDEAD});
+    BigInteger value2 = BigInteger(1, std::vector<uint64_t>{158, 0xDEADDEADDEADDEAD});
+    ValuesBucket bucket;
+    bucket.Put("value1", value1);
+    bucket.Put("value2", value2);
+    auto status = rdbStore_->Insert(outRowId, "bigint_table", bucket);
+    EXPECT_EQ(status, E_OK);
+    auto resultSet = rdbStore_->QueryByStep("select value1, value2 from bigint_table");
+    EXPECT_NE(resultSet, nullptr);
+    while (resultSet->GoToNextRow() == E_OK) {
+        RowEntity entity;
+        status = resultSet->GetRow(entity);
+        EXPECT_EQ(status, E_OK);
+        auto value = entity.Get("value1");
+        auto val = std::get_if<BigInteger>(&value.value);
+        EXPECT_NE(val, nullptr);
+        if (val != nullptr) {
+            EXPECT_EQ(*val, value1);
+        }
+        value = entity.Get("value2");
+        val = std::get_if<BigInteger>(&value.value);
+        EXPECT_NE(val, nullptr);
+        if (val != nullptr) {
+            EXPECT_EQ(*val, value2);
+        }
+    }
+}
+
+/**
+ * @tc.name: Insert_BigInt_INTRand
+ * @tc.desc: test insert bigint to rdb store
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbBigIntTest, Insert_BigInt_INTRand, TestSize.Level1)
+{
+    int64_t outRowId = -1;
+    std::vector<uint64_t> u64Val(2 + rand() % 100, 0);
+    for (int i = 0; i < u64Val.size(); ++i) {
+        uint64_t high = uint64_t(rand());
+        uint64_t low = uint64_t(rand());
+        u64Val[i] = (high << 32) |  low;
+    }
+    BigInteger value1 = BigInteger(0, std::vector<uint64_t>(u64Val));
+    BigInteger value2 = BigInteger(1, std::vector<uint64_t>(u64Val));
+    ValuesBucket bucket;
+    bucket.Put("value1", value1);
+    bucket.Put("value2", value2);
+    auto status = rdbStore_->Insert(outRowId, "bigint_table", bucket);
+    EXPECT_EQ(status, E_OK);
+    auto resultSet = rdbStore_->QuerySql("select value1, value2 from bigint_table");
+    EXPECT_NE(resultSet, nullptr);
+    while (resultSet->GoToNextRow() == E_OK) {
+        RowEntity entity;
+        status = resultSet->GetRow(entity);
+        EXPECT_EQ(status, E_OK);
+        auto value = entity.Get("value1");
+        auto val = std::get_if<BigInteger>(&value.value);
+        EXPECT_NE(val, nullptr);
+        if (val != nullptr) {
+            EXPECT_EQ(*val, value1);
+        }
+        value = entity.Get("value2");
+        val = std::get_if<BigInteger>(&value.value);
+        EXPECT_NE(val, nullptr);
+        if (val != nullptr) {
+            EXPECT_EQ(*val, value2);
+        }
+    }
+}
+
+/**
+ * @tc.name: Insert_Step_BigInt_INTRand
+ * @tc.desc: test insert bigint to rdb store
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbBigIntTest, Insert_Step_BigInt_INTRand, TestSize.Level1)
+{
+    int64_t outRowId = -1;
+    std::vector<uint64_t> u64Val(2 + rand() % 100, 0);
+    for (int i = 0; i < u64Val.size(); ++i) {
+        uint64_t high = uint64_t(rand());
+        uint64_t low = uint64_t(rand());
+        u64Val[i] = (high << 32) |  low;
+    }
+    BigInteger value1 = BigInteger(0, std::vector<uint64_t>(u64Val));
+    BigInteger value2 = BigInteger(1, std::vector<uint64_t>(u64Val));
+    ValuesBucket bucket;
+    bucket.Put("value1", value1);
+    bucket.Put("value2", value2);
+    auto status = rdbStore_->Insert(outRowId, "bigint_table", bucket);
+    EXPECT_EQ(status, E_OK);
+    auto resultSet = rdbStore_->QueryByStep("select value1, value2 from bigint_table");
+    EXPECT_NE(resultSet, nullptr);
+    while (resultSet->GoToNextRow() == E_OK) {
+        RowEntity entity;
+        status = resultSet->GetRow(entity);
+        EXPECT_EQ(status, E_OK);
+        auto value = entity.Get("value1");
+        auto val = std::get_if<BigInteger>(&value.value);
+        EXPECT_NE(val, nullptr);
+        if (val != nullptr) {
+            EXPECT_EQ(*val, value1);
+        }
+        value = entity.Get("value2");
+        val = std::get_if<BigInteger>(&value.value);
+        EXPECT_NE(val, nullptr);
+        if (val != nullptr) {
+            EXPECT_EQ(*val, value2);
+        }
+    }
+}
+
+/**
+ * @tc.name: Insert_Floats
+ * @tc.desc: test insert bigint to rdb store
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbBigIntTest, Insert_Floats, TestSize.Level1)
+{
+    int64_t outRowId = -1;
+    std::vector<uint64_t> u64Val(2 + rand() % 100, 0);
+    for (int i = 0; i < u64Val.size(); ++i) {
+        uint64_t high = uint64_t(rand());
+        uint64_t low = uint64_t(rand());
+        u64Val[i] = (high << 32) |  low;
+    }
+    BigInteger value1 = BigInteger(0, std::vector<uint64_t>(u64Val));
+    BigInteger value2 = BigInteger(1, std::vector<uint64_t>(u64Val));
+    Floats value3 = { 0.1, 2.2, 3.3, 0.5 };
+    ValuesBucket bucket;
+    bucket.Put("value1", value1);
+    bucket.Put("value2", value2);
+    bucket.Put("value3", value3);
+    auto status = rdbStore_->Insert(outRowId, "bigint_table", bucket);
+    EXPECT_EQ(status, E_OK);
+    auto resultSet = rdbStore_->QuerySql("select * from bigint_table");
+    EXPECT_NE(resultSet, nullptr);
+    while (resultSet->GoToNextRow() == E_OK) {
+        RowEntity entity;
+        status = resultSet->GetRow(entity);
+        EXPECT_EQ(status, E_OK);
+        auto value = entity.Get("value3");
+        auto val = std::get_if<Floats>(&value.value);
+        EXPECT_NE(val, nullptr);
+        if (val != nullptr) {
+            EXPECT_EQ(*val, value3);
+        }
+    }
+}
+
+/**
+ * @tc.name: Insert_Step_Floats
+ * @tc.desc: test insert bigint to rdb store
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbBigIntTest, Insert_Step_Floats, TestSize.Level1)
+{
+    int64_t outRowId = -1;
+    std::vector<uint64_t> u64Val(2 + rand() % 100, 0);
+    for (int i = 0; i < u64Val.size(); ++i) {
+        uint64_t high = uint64_t(rand());
+        uint64_t low = uint64_t(rand());
+        u64Val[i] = (high << 32) |  low;
+    }
+    BigInteger value1 = BigInteger(0, std::vector<uint64_t>(u64Val));
+    BigInteger value2 = BigInteger(1, std::vector<uint64_t>(u64Val));
+    Floats value3 = { 0.1, 2.2, 3.3, 0.5 };
+    ValuesBucket bucket;
+    bucket.Put("value1", value1);
+    bucket.Put("value2", value2);
+    bucket.Put("value3", value3);
+    auto status = rdbStore_->Insert(outRowId, "bigint_table", bucket);
+    EXPECT_EQ(status, E_OK);
+    auto resultSet = rdbStore_->QueryByStep("select * from bigint_table");
+    EXPECT_NE(resultSet, nullptr);
+    while (resultSet->GoToNextRow() == E_OK) {
+        RowEntity entity;
+        status = resultSet->GetRow(entity);
+        EXPECT_EQ(status, E_OK);
+        auto value = entity.Get("value3");
+        auto val = std::get_if<Floats>(&value.value);
+        EXPECT_NE(val, nullptr);
+        if (val != nullptr) {
+            EXPECT_EQ(*val, value3);
         }
     }
 }
