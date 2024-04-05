@@ -407,6 +407,14 @@ int AbsSharedResultSet::Get(int32_t col, ValueObject& value)
             value = std::move(assets);
             break;
         }
+        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOATS: {
+            size_t size = cellUnit->cell.stringOrBlobValue.size;
+            auto data = cellUnit->GetRowData(block);
+            ValueObject::FloatVector floats;
+            RawDataParser::ParserRawData(data, size, floats);
+            value = std::move(floats);
+            break;
+        }
         case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BIGINT: {
             size_t size = cellUnit->cell.stringOrBlobValue.size;
             auto data = cellUnit->GetRowData(block);
