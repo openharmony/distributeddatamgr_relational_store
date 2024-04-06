@@ -138,7 +138,7 @@ int SqliteStatement::InnerBindArguments(const std::vector<ValueObject> &bindArgs
 {
     int index = 1;
     for (auto &arg : bindArgs) {
-        auto action = BINDERS[arg.value.index()];
+        auto action = ACTIONS[arg.value.index()];
         if (action == nullptr) {
             LOG_ERROR("not support the type %{public}zu", arg.value.index());
             return E_INVALID_ARGS;

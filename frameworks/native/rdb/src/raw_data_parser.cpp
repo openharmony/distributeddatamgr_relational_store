@@ -193,7 +193,7 @@ size_t RawDataParser::ParserRawData(const uint8_t* data, size_t length, RawDataP
     }
     auto values = reinterpret_cast<const float *>(data + used);
     floats.assign(values, values + count);
-    used += sizeof(float ) * count;
+    used += sizeof(float) * count;
     return used;
 }
 

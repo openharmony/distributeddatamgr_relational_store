@@ -499,7 +499,7 @@ int AbsSharedResultSet::GetCustomerValue(int index, ValueObject& value, AppDataF
     switch (cellUnit->type) {
         case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET: {
             size_t size = cellUnit->cell.stringOrBlobValue.size;
-            auto data = cellUnit->GetRowData(block);
+            auto data = cellUnit->GetRawData(block);
             ValueObject::Asset asset;
             RawDataParser::ParserRawData(data, size, asset);
             value = std::move(asset);
@@ -507,7 +507,7 @@ int AbsSharedResultSet::GetCustomerValue(int index, ValueObject& value, AppDataF
         }
         case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS: {
             size_t size = cellUnit->cell.stringOrBlobValue.size;
-            auto data = cellUnit->GetRowData(block);
+            auto data = cellUnit->GetRawData(block);
             ValueObject::Assets assets;
             RawDataParser::ParserRawData(data, size, assets);
             value = std::move(assets);
@@ -515,7 +515,7 @@ int AbsSharedResultSet::GetCustomerValue(int index, ValueObject& value, AppDataF
         }
         case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOATS: {
             size_t size = cellUnit->cell.stringOrBlobValue.size;
-            auto data = cellUnit->GetRowData(block);
+            auto data = cellUnit->GetRawData(block);
             ValueObject::FloatVector floats;
             RawDataParser::ParserRawData(data, size, floats);
             value = std::move(floats);
@@ -523,7 +523,7 @@ int AbsSharedResultSet::GetCustomerValue(int index, ValueObject& value, AppDataF
         }
         case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BIGINT: {
             size_t size = cellUnit->cell.stringOrBlobValue.size;
-            auto data = cellUnit->GetRowData(block);
+            auto data = cellUnit->GetRawData(block);
             ValueObject::BigInt bigInt;
             RawDataParser::ParserRawData(data, size, bigInt);
             value = std::move(bigInt);

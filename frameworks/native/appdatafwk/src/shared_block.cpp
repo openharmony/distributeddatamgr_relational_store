@@ -414,9 +414,9 @@ std::vector<uint8_t> SharedBlock::CellUnit::GetBlob(SharedBlock* block) const
     return std::vector<uint8_t>(value, value + cell.stringOrBlobValue.size);
 }
 
-const uint8_t* SharedBlock::CellUnit::GetRowData(SharedBlock* block) const
+const uint8_t* SharedBlock::CellUnit::GetRawData(SharedBlock* block) const
 {
-    return static_cast<uint8_t*>(block->OffsetToPtr(cell.stringOrBlobValue.offset, cell.stringOrBlobValue.size));;
+    return static_cast<uint8_t*>(block->OffsetToPtr(cell.stringOrBlobValue.offset, cell.stringOrBlobValue.size));
 }
 } // namespace AppDataFwk
 } // namespace OHOS
