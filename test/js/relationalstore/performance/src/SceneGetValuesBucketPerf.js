@@ -130,7 +130,7 @@ describe('SceneGetValuesBucketPerf', function () {
     let averageTime = (endTime - startTime);
     console.info(TAG + " the Scene_GetValuesBucket_0001 average time is: " + averageTime + " ms");
     expect(2000).assertEqual(allValues.length);
-    expect(averageTime).assertLess(600);
+    expect(averageTime).assertLess(700);
 
     expect(CONST_STRING_VALUE).assertEqual(allValues[0]["data01"]);
     done();

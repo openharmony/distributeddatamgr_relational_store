@@ -63,7 +63,7 @@ std::pair<int, int64_t> VdbStoreImpl::BeginTrans()
     auto connection = rdConnectionPool_->AcquireNewConnection(false, tmpTrxId);
     if (connection == nullptr) {
         LOG_ERROR("Get null connection, storeName: %{public}s time:%{public}" PRIu64 ".", name_.c_str(), time);
-        return {E_CON_OVER_LIMIT, 0};
+        return {E_DATABASE_BUSY, 0};
     }
     int ret = connection->ExecuteSql(RdUtils::BEGIN_TRANSACTION_SQL);
     if (ret != E_OK) {

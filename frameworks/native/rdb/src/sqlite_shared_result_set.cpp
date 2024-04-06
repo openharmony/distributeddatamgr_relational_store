@@ -48,12 +48,12 @@ std::pair<std::shared_ptr<SqliteStatement>, int> SqliteSharedResultSet::PrepareS
 {
     if (SqliteUtils::GetSqlStatementType(qrySql_) != SqliteUtils::STATEMENT_SELECT) {
         LOG_ERROR("StoreSession BeginStepQuery fail : not select sql !");
-        return {nullptr, E_EXECUTE_IN_STEP_QUERY};
+        return {nullptr, E_NOT_SELECT};
     }
 
     if (conn_ == nullptr) {
         LOG_ERROR("Already close");
-        return {nullptr, E_STEP_RESULT_CLOSED};
+        return {nullptr, E_ALREADY_CLOSED};
     }
 
     auto statement = SqliteStatement::CreateStatement(conn_, qrySql_);
@@ -78,7 +78,7 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
     }
 
     if (isClosed_) {
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     auto [statement, errCode] = PrepareStep();
@@ -117,7 +117,7 @@ int SqliteSharedResultSet::GetRowCount(int &count)
     }
 
     if (isClosed_) {
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     FillBlock(0);

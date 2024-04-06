@@ -112,7 +112,7 @@ int RdConnection::ExecuteSql(const std::string &sql, const std::vector<ValueObje
         return ret;
     }
     ret = statement_->Step();
-    if (ret != E_OK && ret != E_STEP_RESULT_IS_AFTER_LAST) {
+    if (ret != E_OK && ret != E_NO_MORE_ROWS) {
         LOG_ERROR("RdConnection Execute : err %{public}d", ret);
         statement_->ResetStatementAndClearBindings();
         return ret;
