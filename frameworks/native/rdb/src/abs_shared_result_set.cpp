@@ -522,7 +522,7 @@ int AbsSharedResultSet::CheckState(int columnIndex)
 
     GetColumnCount(count);
     if (columnIndex >= count || columnIndex < 0) {
-        return E_INVALID_COLUMN_INDEX;
+        return E_OUT_RANGE;
     }
 
     return E_OK;

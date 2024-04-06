@@ -277,7 +277,7 @@ int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
     }
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
-        return E_CON_OVER_LIMIT;
+        return E_DATABASE_BUSY;
     }
     int errCode = connection->CleanDirtyData(table, cursor);
     return errCode;
@@ -353,7 +353,7 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table, c
     }
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
-        return E_CON_OVER_LIMIT;
+        return E_DATABASE_BUSY;
     }
     auto executeSqlArgs = GenerateSql(table, values, connection->GetMaxVariableNumber());
     if (executeSqlArgs.empty()) {
@@ -528,7 +528,7 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
     {
         auto connection = connectionPool_->AcquireConnection(false);
         if (connection == nullptr) {
-            return E_CON_OVER_LIMIT;
+            return E_DATABASE_BUSY;
         }
 
         errCode = connection->ExecuteForLastInsertedRowId(outRowId, sql, bindArgs);
@@ -638,7 +638,7 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
     {
         auto connection = connectionPool_->AcquireConnection(false);
         if (connection == nullptr) {
-            return E_CON_OVER_LIMIT;
+            return E_DATABASE_BUSY;
         }
 
         errCode = connection->ExecuteForChangedRowCount(changedRows, sql, tmpBindArgs);
@@ -684,7 +684,7 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
     {
         auto connection = connectionPool_->AcquireConnection(false);
         if (connection == nullptr) {
-            return E_CON_OVER_LIMIT;
+            return E_DATABASE_BUSY;
         }
 
         errCode = connection->ExecuteForChangedRowCount(deletedRows, sql, bindArgs);
@@ -913,7 +913,7 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
     }
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
-        return E_CON_OVER_LIMIT;
+        return E_DATABASE_BUSY;
     }
 
     int errCode = connection->ExecuteForLastInsertedRowId(outValue, sql, bindArgs);
@@ -929,7 +929,7 @@ int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string
     int changeRow = 0;
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
-        return E_CON_OVER_LIMIT;
+        return E_DATABASE_BUSY;
     }
 
     int errCode = connection->ExecuteForChangedRowCount(changeRow, sql, bindArgs);
@@ -1072,14 +1072,14 @@ int RdbStoreImpl::BeginExecuteSql(const std::string &sql, std::shared_ptr<Sqlite
 {
     int type = SqliteUtils::GetSqlStatementType(sql);
     if (SqliteUtils::IsSpecial(type)) {
-        return E_TRANSACTION_IN_EXECUTE;
+        return E_DATABASE_BUSY;
     }
 
     bool assumeReadOnly = SqliteUtils::IsSqlReadOnly(type);
     bool isReadOnly = false;
     connection = connectionPool_->AcquireConnection(assumeReadOnly);
     if (connection == nullptr) {
-        return E_CON_OVER_LIMIT;
+        return E_DATABASE_BUSY;
     }
 
     int errCode = connection->Prepare(sql, isReadOnly);
@@ -1091,7 +1091,7 @@ int RdbStoreImpl::BeginExecuteSql(const std::string &sql, std::shared_ptr<Sqlite
         connection = nullptr;
         connection = connectionPool_->AcquireConnection(isReadOnly);
         if (connection == nullptr) {
-            return E_CON_OVER_LIMIT;
+            return E_DATABASE_BUSY;
         }
 
         if (!isReadOnly && !connection->IsWriteConnection()) {
@@ -1265,7 +1265,7 @@ int RdbStoreImpl::BeginTransaction()
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
         LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId, name_.c_str());
-        return E_CON_OVER_LIMIT;
+        return E_DATABASE_BUSY;
     }
 
     BaseTransaction transaction(connectionPool_->GetTransactionStack().size());
@@ -1320,7 +1320,7 @@ int RdbStoreImpl::RollBack()
     if (connection == nullptr) {
         // size + 1 means the number of transactions in process
         LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId + 1, name_.c_str());
-        return E_CON_OVER_LIMIT;
+        return E_DATABASE_BUSY;
     }
 
     int errCode = connection->ExecuteSql(transaction.GetRollbackStr());
@@ -1369,7 +1369,7 @@ int RdbStoreImpl::Commit()
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
         LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId, name_.c_str());
-        return E_CON_OVER_LIMIT;
+        return E_DATABASE_BUSY;
     }
 
     int errCode = connection->ExecuteSql(sqlStr);
@@ -1431,7 +1431,7 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
 
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
-        return E_CON_OVER_LIMIT;
+        return E_DATABASE_BUSY;
     }
 
     std::string journalMode;
@@ -2001,7 +2001,7 @@ int RdbStoreImpl::RegisterDataChangeCallback()
     };
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
-        return E_CON_OVER_LIMIT;
+        return E_DATABASE_BUSY;
     }
     return connection->RegisterCallBackObserver(callBack);
 }
