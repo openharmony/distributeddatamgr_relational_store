@@ -15,6 +15,9 @@
 #ifndef RDB_JS_NAPI_ASYNC_CALL_H
 #define RDB_JS_NAPI_ASYNC_CALL_H
 
+#include <cinttypes>
+#include <chrono>
+#include <atomic>
 #include <functional>
 #include <memory>
 
@@ -37,6 +40,22 @@ extern bool g_sync;
 
 class ContextBase {
 public:
+    struct RecordData {
+        std::atomic_uint64_t times_{0};
+        int64_t lastTime_ = 0;
+        RecordData() = default;
+        RecordData(const RecordData &record)
+        {
+            times_.store(record.times_);
+            lastTime_ = record.lastTime_;
+        }
+        RecordData& operator= (const RecordData &record)
+        {
+            times_.store(record.times_);
+            lastTime_ = record.lastTime_;
+            return *this;
+        }
+    };
     void SetAction(napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output);
     void SetAll(napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output);
     void SetError(std::shared_ptr<Error> error);
@@ -46,6 +65,7 @@ public:
     bool isAsync_ = true;
     void *boundObj = nullptr;
     std::shared_ptr<Error> error;
+    std::shared_ptr<RecordData> executed_;
 
     napi_ref self_ = nullptr;
     napi_ref callback_ = nullptr;
@@ -65,6 +85,15 @@ public:
 
 private:
     enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
+    using RecordData = ContextBase::RecordData;
+    struct Record {
+    public:
+        RecordData total_;
+        RecordData completed_;
+        uint64_t reportTimes_ = 0;
+        std::shared_ptr<RecordData> executed_ = std::make_shared<RecordData>();
+    };
+    static constexpr uint64_t EXCEPT_DELTA = 20;
     static void OnExecute(napi_env env, void *data);
     static void OnComplete(napi_env env, void *data);
     static void OnReturn(napi_env env, napi_status status, void *data);
@@ -72,6 +101,7 @@ private:
     static void SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError);
     static napi_value Async(napi_env env, std::shared_ptr<ContextBase> context);
     static napi_value Sync(napi_env env, std::shared_ptr<ContextBase> context);
+    static thread_local Record record_;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
