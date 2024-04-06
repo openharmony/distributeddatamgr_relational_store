@@ -209,7 +209,7 @@ int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
     } else if (type == Block::CELL_UNIT_TYPE_NULL || type == Block::CELL_UNIT_TYPE_BLOB) {
         value = "";
     } else if (type == Block::CELL_UNIT_TYPE_ASSET || type == Block::CELL_UNIT_TYPE_ASSETS ||
-               type == Block::CELL_UNIT_TYPE_BIGINT) {
+               type == Block::CELL_UNIT_TYPE_FLOATS || type == Block::CELL_UNIT_TYPE_BIGINT) {
         LOG_ERROR("Invalid Type CELL_UNIT_TYPE %{public}d!", type);
         return E_INVALID_OBJECT_TYPE;
     } else {
