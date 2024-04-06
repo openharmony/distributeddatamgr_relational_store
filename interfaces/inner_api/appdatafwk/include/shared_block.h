@@ -94,7 +94,7 @@ public:
         } cell;
         API_EXPORT std::string GetString(SharedBlock *block) const;
         API_EXPORT std::vector<uint8_t> GetBlob(SharedBlock *block) const;
-        API_EXPORT const uint8_t *GetRowData(SharedBlock *block) const;
+        API_EXPORT const uint8_t *GetRawData(SharedBlock *block) const;
     } __attribute((packed));
 
     /**

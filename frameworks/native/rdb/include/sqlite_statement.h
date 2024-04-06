@@ -64,7 +64,7 @@ private:
     using Assets = ValueObject::Assets;
     using BigInt = ValueObject::BigInt;
     using Floats = ValueObject::FloatVector;
-    using Binder = int32_t (*)(sqlite3_stmt *stat, int index, const ValueObject::Type &object);
+    using Action = int32_t (*)(sqlite3_stmt *stat, int index, const ValueObject::Type &object);
     static int32_t BindNil(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
     static int32_t BindInteger(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
     static int32_t BindDouble(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
@@ -77,7 +77,7 @@ private:
     static int32_t BindBigInt(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
     static const int SQLITE_SET_SHAREDBLOCK = 2004;
     static const int SQLITE_USE_SHAREDBLOCK = 2005;
-    static constexpr Binder BINDERS[ValueObject::TYPE_MAX] = {
+    static constexpr Action ACTIONS[ValueObject::TYPE_MAX] = {
         BindNil,
         BindInteger,
         BindDouble,
