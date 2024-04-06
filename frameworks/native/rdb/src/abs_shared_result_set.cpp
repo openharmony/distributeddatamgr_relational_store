@@ -391,41 +391,8 @@ int AbsSharedResultSet::Get(int32_t col, ValueObject& value)
         case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB:
             value = cellUnit->GetBlob(block);
             break;
-        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET: {
-            size_t size = cellUnit->cell.stringOrBlobValue.size;
-            auto data = cellUnit->GetRowData(block);
-            ValueObject::Asset asset;
-            RawDataParser::ParserRawData(data, size, asset);
-            value = std::move(asset);
-            break;
-        }
-        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS: {
-            size_t size = cellUnit->cell.stringOrBlobValue.size;
-            auto data = cellUnit->GetRowData(block);
-            ValueObject::Assets assets;
-            RawDataParser::ParserRawData(data, size, assets);
-            value = std::move(assets);
-            break;
-        }
-        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOATS: {
-            size_t size = cellUnit->cell.stringOrBlobValue.size;
-            auto data = cellUnit->GetRowData(block);
-            ValueObject::FloatVector floats;
-            RawDataParser::ParserRawData(data, size, floats);
-            value = std::move(floats);
-            break;
-        }
-        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BIGINT: {
-            size_t size = cellUnit->cell.stringOrBlobValue.size;
-            auto data = cellUnit->GetRowData(block);
-            ValueObject::BigInt bigInt;
-            RawDataParser::ParserRawData(data, size, bigInt);
-            value = std::move(bigInt);
-            break;
-        }
         default:
-            LOG_ERROR("invalid type is %{public}d, col is %{public}d!", cellUnit->type, col);
-            return E_INVALID_OBJECT_TYPE;
+            return GetCustomerValue(col, value, block);
     }
     return E_OK;
 }
@@ -520,6 +487,55 @@ void AbsSharedResultSet::Finalize()
 {
     Close();
 }
+
+int AbsSharedResultSet::GetCustomerValue(int index, ValueObject& value, AppDataFwk::SharedBlock *block) const
+{
+    auto *cellUnit = block->GetCellUnit(block->GetBlockPos(), index);
+    if (cellUnit == nullptr) {
+        LOG_ERROR("cellUnit is null, col is %{public}d!", index);
+        return E_ERROR;
+    }
+
+    switch (cellUnit->type) {
+        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET: {
+            size_t size = cellUnit->cell.stringOrBlobValue.size;
+            auto data = cellUnit->GetRowData(block);
+            ValueObject::Asset asset;
+            RawDataParser::ParserRawData(data, size, asset);
+            value = std::move(asset);
+            break;
+        }
+        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS: {
+            size_t size = cellUnit->cell.stringOrBlobValue.size;
+            auto data = cellUnit->GetRowData(block);
+            ValueObject::Assets assets;
+            RawDataParser::ParserRawData(data, size, assets);
+            value = std::move(assets);
+            break;
+        }
+        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOATS: {
+            size_t size = cellUnit->cell.stringOrBlobValue.size;
+            auto data = cellUnit->GetRowData(block);
+            ValueObject::FloatVector floats;
+            RawDataParser::ParserRawData(data, size, floats);
+            value = std::move(floats);
+            break;
+        }
+        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BIGINT: {
+            size_t size = cellUnit->cell.stringOrBlobValue.size;
+            auto data = cellUnit->GetRowData(block);
+            ValueObject::BigInt bigInt;
+            RawDataParser::ParserRawData(data, size, bigInt);
+            value = std::move(bigInt);
+            break;
+        }
+        default:
+            LOG_ERROR("invalid type is %{public}d, col is %{public}d!", cellUnit->type, index);
+            return E_INVALID_OBJECT_TYPE;
+    }
+    return E_OK;
+}
+
 
 /**
  * Check current status

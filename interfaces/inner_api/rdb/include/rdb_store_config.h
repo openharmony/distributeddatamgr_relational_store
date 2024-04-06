@@ -597,7 +597,7 @@ private:
     bool isEncrypt_ = false;
     bool isCreateNecessary_;
     bool isSearchable_ = false;
-    bool autoCheck;
+    bool autoCheck_;
     bool isAutoClean_ = true;
     bool isVector_ = false;
     int32_t journalSize;

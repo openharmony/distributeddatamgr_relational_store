@@ -47,7 +47,6 @@ enum class ColumnType {
     TYPE_FLOAT32_ARRAY,
     /** Indicates the column type is BigInt.*/
     TYPE_BIGINT
-
 };
 
 /**

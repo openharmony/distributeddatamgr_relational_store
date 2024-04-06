@@ -138,12 +138,12 @@ int SqliteStatement::InnerBindArguments(const std::vector<ValueObject> &bindArgs
 {
     int index = 1;
     for (auto &arg : bindArgs) {
-        auto binder = BINDERS[arg.value.index()];
-        if (binder == nullptr) {
-            LOG_ERROR("not support the type %{public}d", arg.value.index());
+        auto action = BINDERS[arg.value.index()];
+        if (action == nullptr) {
+            LOG_ERROR("not support the type %{public}zu", arg.value.index());
             return E_INVALID_ARGS;
         }
-        auto errCode = binder(stmtHandle, index, arg.value);
+        auto errCode = action(stmtHandle, index, arg.value);
         if (errCode != SQLITE_OK) {
             LOG_ERROR("bind ret is %{public}d", errCode);
             return SQLiteError::ErrNo(errCode);
