@@ -27,7 +27,8 @@ class Statement {
 public:
     static constexpr int COLUMN_TYPE_ASSET = 1000;
     static constexpr int COLUMN_TYPE_ASSETS = 1001;
-    static constexpr int COLUMN_TYPE_BIGINT = 1002;
+    static constexpr int COLUMN_TYPE_FLOATS = 1002;
+    static constexpr int COLUMN_TYPE_BIGINT = 1003;
 
     virtual ~Statement() = default;
     virtual int Prepare(const std::string& sql) = 0;

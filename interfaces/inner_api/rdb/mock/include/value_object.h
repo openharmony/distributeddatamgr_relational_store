@@ -385,17 +385,17 @@ private:
         /** Indicates the ValueObject type is string.*/
         "TEXT",
         /** Indicates the ValueObject type is bool.*/
-        "INT",
+        "BOOL",
         /** Indicates the ValueObject type is blob.*/
         "BLOB",
         /** Indicates the ValueObject type is asset.*/
         "ASSET",
         /** Indicates the ValueObject type is assets.*/
         "ASSETS",
+        /** Indicates the ValueObject type is vecs.*/
+        "VECS",
         /** Indicates the ValueObject type is bigint.*/
-        "VECS"
-        /** Indicates the ValueObject type is bigint.*/
-        "BIGINT"
+        "UNLIMITED INT"
     };
 };
 using ValueObjectType = ValueObject::TypeId;
