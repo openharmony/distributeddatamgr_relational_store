@@ -63,6 +63,21 @@ enum RoleType : uint32_t {
     VISITOR,
 };
 
+enum DBType : uint32_t {
+    /**
+     * The SQLITE database.
+    */
+    DB_SQLITE = 0,
+
+    /**
+     * The vector database.
+    */
+    DB_VECTOR,
+    /**
+     * The BUTT of database.
+    */
+    DB_BUTT
+};
 static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
 static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
 static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "WAL";
@@ -194,44 +209,45 @@ public:
                && this->readConSize_ == config.readConSize_ && this->customDir_ == config.customDir_;
     }
 
+    void SetDBType(int32_t dbType);
+
+    int32_t GetDBType() const;
+
 private:
+    bool readOnly = false;
+    bool isEncrypt_ = false;
+    bool isCreateNecessary_;
+    bool isSearchable_ = false;
+    bool autoCheck_;
+    bool isAutoClean_ = true;
+    bool isVector_ = false;
+    int32_t journalSize;
+    int32_t pageSize;
+    int32_t readConSize_ = 4;
+    int32_t area_ = 0;
+    int32_t writeTimeout_ = 2; // seconds
+    int32_t readTimeout_ = 1; // seconds
+    int32_t dbType_ = DB_SQLITE;
+    SecurityLevel securityLevel = SecurityLevel::LAST;
+    RoleType role_ = OWNER;
+    StorageMode storageMode;
     std::string name;
     std::string path;
-    StorageMode storageMode;
     std::string journalMode;
     std::string syncMode;
-    bool readOnly;
     std::string databaseFileType;
-
-    int32_t area_ = 0;
-    std::string bundleName_;
-    std::string moduleName_;
-
-    bool isAutoClean_ = false;
-    bool isVector_ = false;
-    bool isEncrypt_ = false;
-    std::vector<uint8_t> encryptKey_;
-    SecurityLevel securityLevel = SecurityLevel::LAST;
     std::string uri_;
     std::string readPermission_;
     std::string writePermission_;
-    bool isCreateNecessary_;
-
-    bool autoCheck;
-    int journalSize;
-    int pageSize;
-    int readConSize_ = 4;
+    // distributed rdb
+    std::string bundleName_;
+    std::string moduleName_;
+    std::string visitorDir_;
     std::string encryptAlgo;
     std::string dataGroupId_;
     std::string customDir_;
-
+    std::vector<uint8_t> encryptKey_{};
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
-    bool isSearchable_ = false;
-    int writeTimeout_ = 2; // seconds
-    int readTimeout_ = 1; // seconds
-
-    RoleType role_ = OWNER;
-    std::string visitorDir_;
 };
 } // namespace OHOS::NativeRdb
 

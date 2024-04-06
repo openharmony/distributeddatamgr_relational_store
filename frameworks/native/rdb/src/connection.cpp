@@ -20,7 +20,7 @@ static Connection::Creator g_creators[DB_BUTT] = { nullptr, nullptr };
 std::pair<int, std::shared_ptr<Connection>> Connection::Create(const RdbStoreConfig& config, bool isWriter)
 {
     auto dbType = config.GetDBType();
-    if (dbType < DB_SQLITE || dbType >= DB_BUTT) {
+    if (dbType < static_cast<int32_t>(DB_SQLITE) || dbType >= static_cast<int32_t>(DB_BUTT)) {
         return {E_INVALID_ARGS, nullptr};
     }
     auto creator = g_creators[dbType];
@@ -33,7 +33,7 @@ std::pair<int, std::shared_ptr<Connection>> Connection::Create(const RdbStoreCon
 
 int32_t Connection::RegisterCreator(int32_t dbType, Creator creator)
 {
-    if (dbType < DB_SQLITE || dbType >= DB_BUTT) {
+    if (dbType < static_cast<int32_t>(DB_SQLITE) || dbType >= static_cast<int32_t>(DB_BUTT)) {
         return E_INVALID_ARGS;
     }
     if (g_creators[dbType] != nullptr) {
@@ -46,6 +46,7 @@ int32_t Connection::RegisterCreator(int32_t dbType, Creator creator)
 int Connection::SetId(int id)
 {
     id_ = id;
+    return id_;
 }
 
 int Connection::GetId() const

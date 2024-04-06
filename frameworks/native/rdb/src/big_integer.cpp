@@ -15,7 +15,6 @@
 
 #include "big_integer.h"
 
-#include <tuple>
 namespace OHOS::NativeRdb {
 BigInteger::BigInteger(int64_t value)
 {

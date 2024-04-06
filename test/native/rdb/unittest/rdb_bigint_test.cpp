@@ -101,13 +101,13 @@ HWTEST_F(RdbBigIntTest, Insert_BigInt_INT64, TestSize.Level1)
         auto val = std::get_if<BigInteger>(&value.value);
         EXPECT_NE(val, nullptr);
         if (val != nullptr) {
-            EXPECT_EQ(*val, BigInteger(158));
+            EXPECT_TRUE(*val == BigInteger(158));
         }
         value = entity.Get("value2");
         val = std::get_if<BigInteger>(&value.value);
         EXPECT_NE(val, nullptr);
         if (val != nullptr) {
-            EXPECT_EQ(*val, BigInteger(-158));
+            EXPECT_TRUE(*val == BigInteger(-158));
         }
     }
 }
@@ -135,13 +135,13 @@ HWTEST_F(RdbBigIntTest, Insert_Step_BigInt_INT64, TestSize.Level1)
         auto val = std::get_if<BigInteger>(&value.value);
         EXPECT_NE(val, nullptr);
         if (val != nullptr) {
-            EXPECT_EQ(*val, BigInteger(158));
+            EXPECT_TRUE(*val == BigInteger(158));
         }
         value = entity.Get("value2");
         val = std::get_if<BigInteger>(&value.value);
         EXPECT_NE(val, nullptr);
         if (val != nullptr) {
-            EXPECT_EQ(*val, BigInteger(-158));
+            EXPECT_TRUE(*val == BigInteger(-158));
         }
     }
 }
@@ -171,13 +171,13 @@ HWTEST_F(RdbBigIntTest, Insert_BigInt_INT128, TestSize.Level1)
         auto val = std::get_if<BigInteger>(&value.value);
         EXPECT_NE(val, nullptr);
         if (val != nullptr) {
-            EXPECT_EQ(*val, value1);
+            EXPECT_TRUE(*val == value1);
         }
         value = entity.Get("value2");
         val = std::get_if<BigInteger>(&value.value);
         EXPECT_NE(val, nullptr);
         if (val != nullptr) {
-            EXPECT_EQ(*val, value2);
+            EXPECT_TRUE(*val == value2);
         }
     }
 }
@@ -207,13 +207,13 @@ HWTEST_F(RdbBigIntTest, Insert_Step_BigInt_INT128, TestSize.Level1)
         auto val = std::get_if<BigInteger>(&value.value);
         EXPECT_NE(val, nullptr);
         if (val != nullptr) {
-            EXPECT_EQ(*val, value1);
+            EXPECT_TRUE(*val == value1);
         }
         value = entity.Get("value2");
         val = std::get_if<BigInteger>(&value.value);
         EXPECT_NE(val, nullptr);
         if (val != nullptr) {
-            EXPECT_EQ(*val, value2);
+            EXPECT_TRUE(*val == value2);
         }
     }
 }
@@ -249,13 +249,13 @@ HWTEST_F(RdbBigIntTest, Insert_BigInt_INTRand, TestSize.Level1)
         auto val = std::get_if<BigInteger>(&value.value);
         EXPECT_NE(val, nullptr);
         if (val != nullptr) {
-            EXPECT_EQ(*val, value1);
+            EXPECT_TRUE(*val == value1);
         }
         value = entity.Get("value2");
         val = std::get_if<BigInteger>(&value.value);
         EXPECT_NE(val, nullptr);
         if (val != nullptr) {
-            EXPECT_EQ(*val, value2);
+            EXPECT_TRUE(*val == value2);
         }
     }
 }
@@ -291,13 +291,13 @@ HWTEST_F(RdbBigIntTest, Insert_Step_BigInt_INTRand, TestSize.Level1)
         auto val = std::get_if<BigInteger>(&value.value);
         EXPECT_NE(val, nullptr);
         if (val != nullptr) {
-            EXPECT_EQ(*val, value1);
+            EXPECT_TRUE(*val == value1);
         }
         value = entity.Get("value2");
         val = std::get_if<BigInteger>(&value.value);
         EXPECT_NE(val, nullptr);
         if (val != nullptr) {
-            EXPECT_EQ(*val, value2);
+            EXPECT_TRUE(*val == value2);
         }
     }
 }

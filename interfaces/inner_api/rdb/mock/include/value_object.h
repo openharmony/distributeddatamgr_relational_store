@@ -222,7 +222,7 @@ public:
      *
      * @param val Indicates an Assets input parameter.
      */
-    API_EXPORT ValueObject(BigInt val);
+    ValueObject(BigInt val);
 
     /**
      * @brief Constructor.
@@ -351,16 +351,16 @@ public:
     /**
     * @brief Type conversion function.
     *
-    * @return Returns the BigInt type ValueObject.
+    * @return Returns the vector<float> type ValueObject.
     */
-    operator BigInt() const;
+    operator FloatVector() const;
 
     /**
     * @brief Type conversion function.
     *
-    * @return Returns the vector<uint8_t> type ValueObject.
+    * @return Returns the BigInt type ValueObject.
     */
-    operator FloatVector() const;
+    operator BigInt() const;
 
     /**
      * @brief Type conversion function.

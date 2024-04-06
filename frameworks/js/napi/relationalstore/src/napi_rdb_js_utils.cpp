@@ -235,7 +235,7 @@ napi_value Convert2JSValue(napi_env env, const Date &date)
     return jsDeta;
 }
 template<>
-napi_value JSUtils::Convert2JSValue(napi_env env, const BigInt& value)
+napi_value Convert2JSValue(napi_env env, const BigInt& value)
 {
     napi_value val = nullptr;
     napi_status status = napi_create_bigint_words(env, value.Sign(), value.Size(), value.TrueForm(), &val);
@@ -246,7 +246,7 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const BigInt& value)
 }
 
 template<>
-int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, BigInt& value)
+int32_t Convert2Value(napi_env env, napi_value jsValue, BigInt& value)
 {
     napi_valuetype type = napi_undefined;
     napi_status status = napi_typeof(env, jsValue, &type);
