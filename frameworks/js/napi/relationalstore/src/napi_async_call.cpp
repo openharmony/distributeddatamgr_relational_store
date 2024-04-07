@@ -15,6 +15,7 @@
 #define LOG_TAG "AsyncCall"
 #include "napi_async_call.h"
 
+#include "js_native_api_types.h"
 #include "logger.h"
 #include "napi_rdb_trace.h"
 #include "rdb_errno.h"
@@ -35,14 +36,13 @@ void ContextBase::SetAction(
     napi_value self = nullptr;
     napi_value argv[MAX_INPUT_COUNT] = { nullptr };
     void *data = nullptr;
-    NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, &data));
-
-    if (argc > 0) {
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &self, &data);
+    if (status == napi_ok && argc > 0) {
         napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, argv[argc - 1], &valueType);
-        if (valueType == napi_function) {
+        status = napi_typeof(env, argv[argc - 1], &valueType);
+        if (status == napi_ok && valueType == napi_function) {
             LOG_DEBUG("asyncCall set callback");
-            NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, argv[argc - 1], 1, &callback_));
+            status = napi_create_reference(env, argv[argc - 1], 1, &callback_);
             argc = argc - 1;
         }
     }
@@ -51,7 +51,11 @@ void ContextBase::SetAction(
     }
 
     // int -->input_(env, argc, argv, self)
-    input(env, argc, argv, self);
+    if (status == napi_ok) {
+        input(env, argc, argv, self);
+    } else {
+        error = std::make_shared<InnerError>("Failed to set action.");
+    }
 
     // if input return is not ok, then napi_throw_error context error
     RDB_NAPI_ASSERT_BASE(env, error == nullptr, error, NAPI_RETVAL_NOTHING);

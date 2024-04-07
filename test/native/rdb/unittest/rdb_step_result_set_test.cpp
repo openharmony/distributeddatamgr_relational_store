@@ -1318,34 +1318,34 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep013, TestSize.Level1)
 
     EXPECT_EQ(E_OK, resultSet->Close());
 
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GoToNextRow());
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToNextRow());
 
     std::vector<std::string> columnNames;
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetAllColumnNames(columnNames));
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetAllColumnNames(columnNames));
 
     ColumnType columnType;
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetColumnType(1, columnType));
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetColumnType(1, columnType));
 
     std::vector<uint8_t> blob;
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetBlob(1, blob));
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetBlob(1, blob));
 
     std::string valueString;
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetString(1, valueString));
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetString(1, valueString));
 
     int valueInt;
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetInt(1, valueInt));
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetInt(1, valueInt));
 
     int64_t valueInt64;
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetLong(1, valueInt64));
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetLong(1, valueInt64));
 
     double valuedouble;
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetDouble(1, valuedouble));
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetDouble(1, valuedouble));
 
     std::string modifyTime;
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetModifyTime(modifyTime));
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetModifyTime(modifyTime));
 
     ValueObject object;
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->Get(4, object));
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->Get(4, object));
 }
 
 /* *
@@ -1397,7 +1397,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep015, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
 
     std::vector<std::string> columnNames;
-    EXPECT_EQ(E_EXECUTE_IN_STEP_QUERY, resultSet->GetAllColumnNames(columnNames));
+    EXPECT_EQ(E_NOT_SELECT, resultSet->GetAllColumnNames(columnNames));
 
     EXPECT_EQ(E_OK, resultSet->Close());
 }
@@ -1415,7 +1415,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep016, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
 
     size_t size;
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetSize(2, size));
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetSize(2, size));
 
     EXPECT_EQ(E_OK, resultSet->Close());
     EXPECT_EQ(true, resultSet->IsClosed());

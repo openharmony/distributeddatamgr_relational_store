@@ -367,7 +367,7 @@ int AbsResultSet::GetColumnName(int columnIndex, std::string &columnName)
     }
     if (columnIndex >= rowCnt || columnIndex < 0) {
         LOG_ERROR("invalid column columnIndex as %{public}d", columnIndex);
-        return E_INVALID_COLUMN_INDEX;
+        return E_OUT_RANGE;
     }
     std::vector<std::string> columnNames;
     GetAllColumnNames(columnNames);

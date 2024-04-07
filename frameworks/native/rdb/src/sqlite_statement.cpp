@@ -227,8 +227,7 @@ int SqliteStatement::ResetStatementAndClearBindings() const
 
 int SqliteStatement::Step() const
 {
-    int errCode = sqlite3_step(stmtHandle);
-    return errCode;
+    return sqlite3_step(stmtHandle);
 }
 
 int SqliteStatement::GetColumnCount(int &count) const
@@ -471,7 +470,7 @@ int SqliteStatement::GetSize(int index, size_t &size) const
     }
 
     if (index >= columnCount) {
-        return E_INVALID_COLUMN_INDEX;
+        return E_OUT_RANGE;
     }
 
     int type = sqlite3_column_type(stmtHandle, index);
@@ -497,7 +496,7 @@ int SqliteStatement::IsValid(int index) const
 
     if (index >= columnCount) {
         LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount);
-        return E_INVALID_COLUMN_INDEX;
+        return E_OUT_RANGE;
     }
 
     return E_OK;
