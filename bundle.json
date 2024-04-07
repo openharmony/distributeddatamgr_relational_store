@@ -78,7 +78,6 @@
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/dataability:native_dataability",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_share_adapter:rdb_data_share_adapter",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
-                "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_bms_adapter:rdb_bms_adapter",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/cloud_data:clouddata",
                 "//foundation/distributeddatamgr/relational_store/interfaces/ndk/src:native_rdb_ndk",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/dataability:dataability",
@@ -155,16 +154,6 @@
                     }
                 },
                 {
-                    "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_bms_adapter:rdb_bms_adapter",
-                    "header": {
-                        "header_files": [
-                            "data_share_profile_info.h",
-                            "data_properties.h"
-                        ],
-                        "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_bms_adapter/include"
-                    }
-                },
-                {
                     "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_ability_adapter:rdb_data_ability_adapter",
                     "header": {
                         "header_files": [
@@ -187,8 +176,7 @@
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:fuzztest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb_data_ability_adapter:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb_data_share_adapter:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/native/rdb:distributedtest",
-                "//foundation/distributeddatamgr/relational_store/test/native/rdb_bms_adapter:unittest"
+                "//foundation/distributeddatamgr/relational_store/test/native/rdb:distributedtest"
             ]
         }
     }
