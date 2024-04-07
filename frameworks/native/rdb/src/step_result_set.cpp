@@ -131,6 +131,12 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
         case SqliteStatement::COLUMN_TYPE_ASSETS:
             columnType = ColumnType::TYPE_ASSETS;
             break;
+        case SqliteStatement::COLUMN_TYPE_FLOATS:
+            columnType = ColumnType::TYPE_FLOAT32_ARRAY;
+            break;
+        case SqliteStatement::COLUMN_TYPE_BIGINT:
+            columnType = ColumnType::TYPE_BIGINT;
+            break;
         case SQLITE_NULL:
             columnType = ColumnType::TYPE_NULL;
             break;
