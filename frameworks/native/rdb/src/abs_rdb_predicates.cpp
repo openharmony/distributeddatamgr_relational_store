@@ -254,6 +254,12 @@ AbsRdbPredicates *AbsRdbPredicates::Contains(const std::string &field, const std
     return (AbsRdbPredicates *)AbsPredicates::Contains(field, value);
 }
 
+AbsRdbPredicates *AbsRdbPredicates::NotContains(const std::string &field, const std::string &value)
+{
+    predicates_.AddOperation(DistributedRdb::NOT_CONTAINS, field, value);
+    return (AbsRdbPredicates *)AbsPredicates::NotContains(field, value);
+}
+
 AbsRdbPredicates *AbsRdbPredicates::BeginsWith(const std::string &field, const std::string &value)
 {
     predicates_.AddOperation(DistributedRdb::BEGIN_WITH, field, value);
@@ -278,6 +284,11 @@ AbsRdbPredicates *AbsRdbPredicates::Like(const std::string &field, const std::st
 {
     predicates_.AddOperation(DistributedRdb::LIKE, field, value);
     return (AbsRdbPredicates *)AbsPredicates::Like(field, value);
+}
+AbsRdbPredicates *AbsRdbPredicates::NotLike(const std::string &field, const std::string &value)
+{
+    predicates_.AddOperation(DistributedRdb::NOT_LIKE, field, value);
+    return (AbsRdbPredicates *)AbsPredicates::NotLike(field, value);
 }
 AbsRdbPredicates *AbsRdbPredicates::Glob(const std::string &field, const std::string &value)
 {

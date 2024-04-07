@@ -150,6 +150,20 @@ AbsPredicates *AbsPredicates::Contains(const std::string &field, const std::stri
 }
 
 /**
+ * Restricts the value of the field to not contain the specified string.
+ */
+AbsPredicates *AbsPredicates::NotContains(const std::string &field, const std::string &value)
+{
+    if (!CheckParameter("notContains", field, { value })) {
+        return this;
+    }
+    CheckIsNeedAnd();
+    whereClause += field + " NOT LIKE ? ";
+    bindArgs.push_back(ValueObject("%" + value + "%"));
+    return this;
+}
+
+/**
  * Restricts the field to start with the specified string.
  */
 AbsPredicates *AbsPredicates::BeginsWith(const std::string &field, const std::string &value)
@@ -213,6 +227,20 @@ AbsPredicates *AbsPredicates::Like(const std::string &field, const std::string &
     }
     CheckIsNeedAnd();
     whereClause += field + " LIKE ? ";
+    bindArgs.push_back(ValueObject(value));
+    return this;
+}
+
+/**
+ * Restricts the value of the field to have a pattern like field.
+ */
+AbsPredicates *AbsPredicates::NotLike(const std::string &field, const std::string &value)
+{
+    if (!CheckParameter("notLike", field, { value })) {
+        return this;
+    }
+    CheckIsNeedAnd();
+    whereClause += field + " NOT LIKE ? ";
     bindArgs.push_back(ValueObject(value));
     return this;
 }

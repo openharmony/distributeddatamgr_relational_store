@@ -111,6 +111,7 @@ private:
     static void In(const OperationItem &item, RdbPredicates &predicates);
     static void NotIn(const OperationItem &item, RdbPredicates &predicates);
     static void Like(const OperationItem &item, RdbPredicates &predicates);
+    static void NotLike(const OperationItem &item, RdbPredicates &predicates);
     static void OrderByAsc(const OperationItem &item, RdbPredicates &predicates);
     static void OrderByDesc(const OperationItem &item, RdbPredicates &predicates);
     static void Limit(const OperationItem &item, RdbPredicates &predicates);
@@ -123,6 +124,7 @@ private:
     static void GroupBy(const OperationItem &item, RdbPredicates &predicates);
     static void IndexedBy(const OperationItem &item, RdbPredicates &predicates);
     static void Contains(const OperationItem &item, RdbPredicates &predicates);
+    static void NotContains(const OperationItem &item, RdbPredicates &predicates);
     static void Glob(const OperationItem &item, RdbPredicates &predicates);
     static void Between(const OperationItem &item, RdbPredicates &predicates);
     static void NotBetween(const OperationItem &item, RdbPredicates &predicates);
