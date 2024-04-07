@@ -255,7 +255,7 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, BigInt& value)
     }
     int sign = 0;
     size_t count = 0;
-    status = napi_get_value_bigint_words(env, jsValue, &sign, &count, nullptr);
+    status = napi_get_value_bigint_words(env, jsValue, nullptr, &count, nullptr);
     if (status != napi_ok) {
         return napi_bigint_expected;
     }
