@@ -536,7 +536,6 @@ int AbsSharedResultSet::GetCustomerValue(int index, ValueObject& value, AppDataF
     return E_OK;
 }
 
-
 /**
  * Check current status
  */

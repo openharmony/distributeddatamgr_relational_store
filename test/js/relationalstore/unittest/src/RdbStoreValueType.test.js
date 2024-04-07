@@ -19,7 +19,7 @@ import featureAbility from '@ohos.ability.featureAbility'
 
 var context = featureAbility.getContext();
 
-const TAG = "[RELATIONAL_STORE_JSKITS_VALUE_TYPE_TEST]"
+const TAG = "[VALUE_TYPE_TEST]"
 
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS bigint_table(id INTEGER PRIMARY KEY AUTOINCREMENT, value1 UNLIMITED INT NOT NULL, value2 UNLIMITED INT, value3 VECS)";
 
@@ -27,7 +27,7 @@ const DROP_TABLE_TEST = "DROP TABLE IF EXISTS bigint_table";
 
 const STORE_CONFIG = {
     name: 'value_type.db',
-    securityLevel: data_relationalStore.SecurityLevel.S1,
+    securityLevel: relationalStore.SecurityLevel.S1,
 }
 var store = undefined;
 describe('ActsRdbStoreValueTypeTest', function () {
@@ -39,14 +39,13 @@ describe('ActsRdbStoreValueTypeTest', function () {
 
     beforeEach(async function () {
         console.info(TAG + 'beforeEach');
-        await relationalStore.execute(DROP_TABLE_TEST);
-        await relationalStore.execute(CREATE_TABLE_TEST);
-
+        await store.execute(DROP_TABLE_TEST);
+        await store.execute(CREATE_TABLE_TEST);
     })
 
     afterEach(async function () {
         console.info(TAG + 'afterEach')
-        await relationalStore.execute(DROP_TABLE_TEST);
+        await store.execute(DROP_TABLE_TEST);
     })
 
     afterAll(async function () {
@@ -62,29 +61,36 @@ describe('ActsRdbStoreValueTypeTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_attach_001
      * @tc.desc non encrypted database attach non encrypted database
      */
-    it('testValueType0001', 0, async function () {
+    it('testValueType0001', 0, async function (done) {
         console.log(TAG + "************* testValueType0001 start *************");
-        var bucket = {
-            'value1':bigint(158),
-            'value2':bigint(-158)
+        let bucket = {
+            "value1":BigInt(158),
+            "value2":BigInt(-158)
         };
         try {
-            await store.insert('bigint_table', bucket);
-            let resultSet = await store.querySql('select value1, value2 from bigint_table');
-            expect(resultSet === null).assertFail(null);
-            expect(true).assertEqual(resultSet.goToNextRow());
+            console.log(TAG + "insert(bigint_table," + bucket + ")");
+            let rowid = await store.insert("bigint_table", bucket);
+            console.log(TAG + "insert" + rowid);
+            let resultSet = await store.querySql("select value1, value2 from bigint_table");
+            console.log(TAG + "query" + resultSet);
+            expect(resultSet === null).assertFail();
+            expect(resultSet.goToNextRow()).assertTrue();
+            console.log(TAG + "goToNextRow");
             let value1 = resultSet.getValue(0);
-            expect(typeof value1).assertEqual('bigint');
-            expect(value1).assertEqual(bucket['value1']);
+            console.log(TAG + "getValue:0");
+            expect(typeof value1).assertEqual("bigint");
+            expect(value1).assertEqual(bucket["value1"]);
             let value2 = resultSet.getValue(1);
-            expect(typeof value2).assertEqual('bigint');
-            expect(value2).assertEqual(bucket['value2']);
+            console.log(TAG + "getValue:1");
+            expect(typeof value2).assertEqual("bigint");
+            expect(value2).assertEqual(bucket["value2"]);
         } catch (err) {
             expect(false).assertFail();
-            console.error(`failed, code:${err.code}, message: ${err.message}`);
+            console.error(TAG + `failed, code:${err.code}, message: ${err.message}`);
         }
         expect(true).assertTrue();
         console.log(TAG + "************* testValueType0001 end *************");
+        done()
     })
 
     /**
@@ -92,29 +98,36 @@ describe('ActsRdbStoreValueTypeTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_ValueType_002
      * @tc.desc the bigint
      */
-    it('testValueType0002', 0, async function () {
+    it('testValueType0002', 0, async function (done) {
         console.log(TAG + "************* testValueType0002 start *************");
-        var bucket = {
-            'value1':bigint('15822401018187971961171'),
-            'value2':bigint('-15822401018187971961171')
+        let bucket = {
+            "value1":BigInt("15822401018187971961171"),
+            "value2":BigInt("-15822401018187971961171")
         };
         try {
-            await store.insert('bigint_table', bucket);
-            let resultSet = await store.querySql('select value1, value2 from bigint_table');
-            expect(resultSet === null).assertFail(null);
-            expect(true).assertEqual(resultSet.goToNextRow());
+            console.log(TAG + "insert(bigint_table," + bucket + ")");
+            let rowid = await store.insert("bigint_table", bucket);
+            console.log(TAG + "insert" + rowid);
+            let resultSet = await store.querySql("select value1, value2 from bigint_table");
+            console.log(TAG + "query" + resultSet);
+            expect(resultSet === null).assertFail();
+            expect(resultSet.goToNextRow()).assertTrue();
+            console.log(TAG + "goToNextRow");
             let value1 = resultSet.getValue(0);
-            expect(typeof value1).assertEqual('bigint');
-            expect(value1).assertEqual(bucket['value1']);
+            console.log(TAG + "getValue:0");
+            expect(typeof value1).assertEqual("bigint");
+            expect(value1).assertEqual(bucket["value1"]);
             let value2 = resultSet.getValue(1);
-            expect(typeof value2).assertEqual('bigint');
-            expect(value2).assertEqual(bucket['value2']);
+            console.log(TAG + "getValue:1");
+            expect(typeof value2).assertEqual("bigint");
+            expect(value2).assertEqual(bucket["value2"]);
         } catch (err) {
             expect(false).assertFail();
-            console.error(`failed, code:${err.code}, message: ${err.message}`);
+            console.error(TAG + `failed, code:${err.code}, message: ${err.message}`);
         }
         expect(true).assertTrue();
         console.log(TAG + "************* testValueType0002 end *************");
+        done();
     })
 
     console.log(TAG + "*************Unit Test End*************");
