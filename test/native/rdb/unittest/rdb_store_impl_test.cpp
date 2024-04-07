@@ -429,7 +429,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_001, TestSize.Level2)
     auto connection = connectionPool->AcquireConnection(true);
     EXPECT_NE(nullptr, connection);
     errCode = connectionPool->ConfigLocale("AbnormalTest");
-    EXPECT_EQ(OHOS::NativeRdb::E_NO_ROW_IN_QUERY, errCode);
+    EXPECT_EQ(OHOS::NativeRdb::E_DATABASE_BUSY, errCode);
 
     RdbHelper::DeleteRdbStore(DATABASE_NAME);
 }

@@ -37,7 +37,7 @@ struct GrdErrnoPair {
 
 const GrdErrnoPair GRD_ERRNO_MAP[] = {
     { GRD_OK, E_OK },
-    { GRD_NO_DATA, E_STEP_RESULT_IS_AFTER_LAST },
+    { GRD_NO_DATA, E_NO_MORE_ROWS },
     { GRD_INNER_ERR, E_ERROR },
 };
 
