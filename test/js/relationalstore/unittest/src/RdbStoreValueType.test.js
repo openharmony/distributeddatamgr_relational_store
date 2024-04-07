@@ -70,19 +70,21 @@ describe('ActsRdbStoreValueTypeTest', function () {
         try {
             console.log(TAG + "insert(bigint_table," + bucket + ")");
             let rowid = await store.insert("bigint_table", bucket);
-            console.log(TAG + "insert" + rowid);
+            console.log(TAG + "insert():=>" + rowid);
             let resultSet = await store.querySql("select value1, value2 from bigint_table");
             console.log(TAG + "query" + resultSet);
-            expect(resultSet === null).assertFail();
-            expect(resultSet.goToNextRow()).assertTrue();
-            console.log(TAG + "goToNextRow");
+            let status = resultSet.goToNextRow();
+            expect(status).assertTrue();
+            console.log(TAG + "goToNextRow():=>" + status);
             let value1 = resultSet.getValue(0);
-            console.log(TAG + "getValue:0");
-            expect(typeof value1).assertEqual("bigint");
+            let type = typeof value1;
+            console.log(TAG + "getValue(0):=>" + value1 + " type:" + type);
+            expect(type).assertEqual("bigint");
             expect(value1).assertEqual(bucket["value1"]);
             let value2 = resultSet.getValue(1);
-            console.log(TAG + "getValue:1");
-            expect(typeof value2).assertEqual("bigint");
+            type = typeof value2;
+            console.log(TAG + "getValue(1):=>" + value2 + " type:" + type);
+            expect(type).assertEqual("bigint");
             expect(value2).assertEqual(bucket["value2"]);
         } catch (err) {
             expect(false).assertFail();
@@ -107,19 +109,21 @@ describe('ActsRdbStoreValueTypeTest', function () {
         try {
             console.log(TAG + "insert(bigint_table," + bucket + ")");
             let rowid = await store.insert("bigint_table", bucket);
-            console.log(TAG + "insert" + rowid);
+            console.log(TAG + "insert():=>" + rowid);
             let resultSet = await store.querySql("select value1, value2 from bigint_table");
             console.log(TAG + "query" + resultSet);
-            expect(resultSet === null).assertFail();
-            expect(resultSet.goToNextRow()).assertTrue();
-            console.log(TAG + "goToNextRow");
+            let status = resultSet.goToNextRow();
+            expect(status).assertTrue();
+            console.log(TAG + "goToNextRow():=>" + status);
             let value1 = resultSet.getValue(0);
-            console.log(TAG + "getValue:0");
-            expect(typeof value1).assertEqual("bigint");
+            let type = typeof value1;
+            console.log(TAG + "getValue(0):=>" + value1 + " type:" + type);
+            expect(type).assertEqual("bigint");
             expect(value1).assertEqual(bucket["value1"]);
             let value2 = resultSet.getValue(1);
-            console.log(TAG + "getValue:1");
-            expect(typeof value2).assertEqual("bigint");
+            type = typeof value2;
+            console.log(TAG + "getValue(1):=>" + value2 + " type:" + type);
+            expect(type).assertEqual("bigint");
             expect(value2).assertEqual(bucket["value2"]);
         } catch (err) {
             expect(false).assertFail();
