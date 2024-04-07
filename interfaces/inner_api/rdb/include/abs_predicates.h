@@ -74,11 +74,13 @@ public:
     API_EXPORT virtual AbsPredicates *Or();
     API_EXPORT virtual AbsPredicates *And();
     API_EXPORT virtual AbsPredicates *Contains(const std::string &field, const std::string &value);
+    API_EXPORT virtual AbsPredicates *NotContains(const std::string &field, const std::string &value);
     API_EXPORT virtual AbsPredicates *BeginsWith(const std::string &field, const std::string &value);
     API_EXPORT virtual AbsPredicates *EndsWith(const std::string &field, const std::string &value);
     API_EXPORT virtual AbsPredicates *IsNull(const std::string &field);
     API_EXPORT virtual AbsPredicates *IsNotNull(const std::string &field);
     API_EXPORT virtual AbsPredicates *Like(const std::string &field, const std::string &value);
+    API_EXPORT virtual AbsPredicates *NotLike(const std::string &field, const std::string &value);
     API_EXPORT virtual AbsPredicates *Glob(const std::string &field, const std::string &value);
     API_EXPORT virtual AbsPredicates *Between(
         const std::string &field, const ValueObject &low, const ValueObject &high);

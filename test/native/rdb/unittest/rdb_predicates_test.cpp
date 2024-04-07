@@ -1818,6 +1818,40 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotInMethod_028, TestSize.Level1)
     resultSet2->Close();
 }
 
+
+/* *
+ * @tc.name: RdbStore_NotContain_029
+ * @tc.desc: Normal testCase of RdbPredicates for Not Contain
+ * @tc.type: FUNC
+ * @tc.require: #I9EMOO
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_NotContain_029, TestSize.Level1)
+{
+    RdbPredicates predicates1("AllDataType");
+    std::vector<std::string> columns;
+
+    predicates1.NotContains("stringValue", "OPQ");
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    EXPECT_EQ(3, ResultSize(allDataTypes1));
+}
+
+
+/* *
+ * @tc.name: RdbStore_NotLike_030
+ * @tc.desc: Normal testCase of RdbPredicates for Not Like
+ * @tc.type: FUNC
+ * @tc.require: #I9EMOO
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_NotLike_030, TestSize.Level1)
+{
+    RdbPredicates predicates1("AllDataType");
+    std::vector<std::string> columns;
+
+    predicates1.NotLike("stringValue", "OPQ");
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    EXPECT_EQ(3, ResultSize(allDataTypes1));
+}
+
 /* *
  * @tc.name: RdbStore_EndWrap_001
  * @tc.desc: Abnormal testCase of RdbPredicates for EndWrap, fail to add ')'
