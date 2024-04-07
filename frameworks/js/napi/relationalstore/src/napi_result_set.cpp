@@ -298,7 +298,6 @@ napi_value ResultSetProxy::Close(napi_env env, napi_callback_info info)
 
     int errCode = resultSetProxy->GetInstance()->Close();
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-    resultSetProxy->SetInstance(nullptr);
     napi_value result = nullptr;
     napi_get_null(env, &result);
     return result;
