@@ -38,11 +38,12 @@ public:
     void TearDown();
 
     static const std::string DATABASE_NAME;
-    static std::shared_ptr<RdbStore> store;
+
+protected:
+    std::shared_ptr<RdbStore> store_;
 };
 
 const std::string RdbStoreImplTest::DATABASE_NAME = RDB_TEST_PATH + "stepResultSet_impl_test.db";
-std::shared_ptr<RdbStore> RdbStoreImplTest::store = nullptr;
 
 class RdbStoreImplTestOpenCallback : public RdbOpenCallback {
 public:
@@ -66,16 +67,19 @@ void RdbStoreImplTest::TearDownTestCase(void) {}
 
 void RdbStoreImplTest::SetUp(void)
 {
+    store_ = nullptr;
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
     int errCode = E_OK;
     RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
     RdbStoreImplTestOpenCallback helper;
-    RdbStoreImplTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(RdbStoreImplTest::store, nullptr);
+    store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store_, nullptr);
     EXPECT_EQ(errCode, E_OK);
 }
 
 void RdbStoreImplTest::TearDown(void)
 {
+    store_ = nullptr;
     RdbHelper::ClearCache();
     int errCode = RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
     EXPECT_EQ(E_OK, errCode);
@@ -88,26 +92,25 @@ void RdbStoreImplTest::TearDown(void)
  */
 HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_001, TestSize.Level2)
 {
-    RdbStoreImplTest::store->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
+    store_->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
         "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
         "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int64_t rowId;
     ValuesBucket valuesBucket;
     valuesBucket.PutInt("data_key", ValueObject(1));
     valuesBucket.PutInt("timestamp", ValueObject(1000000000));
-    int errorCode = RdbStoreImplTest::store->Insert(rowId,
-        "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", valuesBucket);
+    int errorCode = store_->Insert(rowId, "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", valuesBucket);
     EXPECT_EQ(E_OK, errorCode);
     EXPECT_EQ(1, rowId);
 
     std::vector<RdbStore::PRIKey> PKey = { 1 };
     std::map<RdbStore::PRIKey, RdbStore::Date> result =
-        RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
+        store_->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
     int size = result.size();
     EXPECT_EQ(1, size);
     EXPECT_EQ(100000, int64_t(result[1]));
 
-    RdbStoreImplTest::store->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
+    store_->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
 }
 
 /* *
@@ -118,30 +121,29 @@ HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_001, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_002, TestSize.Level2)
 {
-    RdbStoreImplTest::store->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
-                                        "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
-                                        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+    store_->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
+                       "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+                       "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int64_t rowId;
     ValuesBucket valuesBucket;
     valuesBucket.PutInt("data_key", ValueObject(2));
-    int errorCode = RdbStoreImplTest::store->Insert(rowId,
-        "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", valuesBucket);
+    int errorCode = store_->Insert(rowId, "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", valuesBucket);
     EXPECT_EQ(E_OK, errorCode);
     EXPECT_EQ(1, rowId);
 
     // resultSet is empty
     std::vector<RdbStore::PRIKey> PKey = { 1 };
     std::map<RdbStore::PRIKey, RdbStore::Date> result =
-        RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
+        store_->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
     int size = result.size();
     EXPECT_EQ(0, size);
 
     // table name is  not exist , resultSet is null
-    result = RdbStoreImplTest::store->GetModifyTime("test", "ROWID", PKey);
+    result = store_->GetModifyTime("test", "ROWID", PKey);
     size = result.size();
     EXPECT_EQ(0, size);
 
-    RdbStoreImplTest::store->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
+    store_->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
 }
 
 /* *
@@ -152,37 +154,33 @@ HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_002, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_003, TestSize.Level2)
 {
-    RdbStoreImplTest::store->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
-                                        "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
-                                        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+    store_->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
+                       "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+                       "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int64_t rowId;
     ValuesBucket valuesBucket;
     valuesBucket.PutInt("data_key", ValueObject(1));
-    int errorCode = RdbStoreImplTest::store->Insert(rowId,
-        "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", valuesBucket);
+    int errorCode = store_->Insert(rowId, "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", valuesBucket);
     EXPECT_EQ(E_OK, errorCode);
     EXPECT_EQ(1, rowId);
 
     std::vector<RdbStore::PRIKey> PKey = { 1 };
-    RdbStore::ModifyTime resultMapTmp =
-        RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
+    RdbStore::ModifyTime resultMapTmp = store_->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
     std::map<RdbStore::PRIKey, RdbStore::Date> resultMap = std::map<RdbStore::PRIKey, RdbStore::Date>(resultMapTmp);
     EXPECT_EQ(1, resultMap.size());
 
-    RdbStore::ModifyTime resultPtrTmp =
-        RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
+    RdbStore::ModifyTime resultPtrTmp = store_->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
     std::shared_ptr<ResultSet> resultPtr = std::shared_ptr<ResultSet>(resultPtrTmp);
     int count = 0;
     resultPtr->GetRowCount(count);
     EXPECT_EQ(1, count);
 
-    RdbStore::ModifyTime result =
-        RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
+    RdbStore::ModifyTime result = store_->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
     RdbStore::PRIKey key = result.GetOriginKey(std::vector<uint8_t>{});
     RdbStore::PRIKey monostate = std::monostate();
     EXPECT_EQ(monostate, key);
 
-    RdbStoreImplTest::store->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
+    store_->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
 }
 
 /* *
@@ -193,33 +191,33 @@ HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_003, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplTest, GetModifyTime_001, TestSize.Level2)
 {
-    RdbStoreImplTest::store->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
+    store_->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
         "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
         "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
 
     // table name is ""
     std::vector<RdbStore::PRIKey> PKey = {1};
-    std::map<RdbStore::PRIKey, RdbStore::Date> result = RdbStoreImplTest::store->GetModifyTime("", "data_key", PKey);
+    std::map<RdbStore::PRIKey, RdbStore::Date> result = store_->GetModifyTime("", "data_key", PKey);
     int size = result.size();
     EXPECT_EQ(0, size);
 
     // table name is not exist , query resultSet is null
-    result = RdbStoreImplTest::store->GetModifyTime("test", "data_key", PKey);
+    result = store_->GetModifyTime("test", "data_key", PKey);
     size = result.size();
     EXPECT_EQ(0, size);
 
     // columnName is ""
-    result = RdbStoreImplTest::store->GetModifyTime("test", "", PKey);
+    result = store_->GetModifyTime("test", "", PKey);
     size = result.size();
     EXPECT_EQ(0, size);
 
     // keys is empty
     std::vector<RdbStore::PRIKey> emptyPRIKey;
-    result = RdbStoreImplTest::store->GetModifyTime("test", "data_key", emptyPRIKey);
+    result = store_->GetModifyTime("test", "data_key", emptyPRIKey);
     size = result.size();
     EXPECT_EQ(0, size);
 
-    RdbStoreImplTest::store->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
+    store_->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
 }
 
 /* *
@@ -229,16 +227,16 @@ HWTEST_F(RdbStoreImplTest, GetModifyTime_001, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplTest, GetModifyTime_002, TestSize.Level2)
 {
-    RdbStoreImplTest::store->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
+    store_->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
         "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, hash_key INTEGER, "
         "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
 
     std::vector<RdbStore::PRIKey> PKey = {1};
     std::map<RdbStore::PRIKey, RdbStore::Date> result =
-        RdbStoreImplTest::store->GetModifyTime("rdbstoreimpltest_integer", "data3", PKey);
+        store_->GetModifyTime("rdbstoreimpltest_integer", "data3", PKey);
     EXPECT_EQ(0, result.size());
 
-    RdbStoreImplTest::store->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
+    store_->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
 }
 
 /* *
@@ -250,7 +248,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_BatchInsertTest_001, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
     int64_t insertNum = 1;
-    int ret = store->BatchInsert(insertNum, "test", valuesBuckets);
+    int ret = store_->BatchInsert(insertNum, "test", valuesBuckets);
     EXPECT_EQ(0, insertNum);
     EXPECT_EQ(E_OK, ret);
 }
@@ -263,8 +261,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_BatchInsertTest_001, TestSize.Level2)
 HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_001, TestSize.Level2)
 {
     int errCode = E_OK;
-    RdbStoreImplTest::store->Query(errCode, true, "", {}, "",
-        std::vector<ValueObject> {}, "", "", "", 1, 0);
+    store_->Query(errCode, true, "", {}, "", std::vector<ValueObject>{}, "", "", "", 1, 0);
     EXPECT_NE(E_OK, errCode);
 }
 
@@ -275,14 +272,13 @@ HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_001, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_002, TestSize.Level2)
 {
-    store->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
+    store_->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
                       "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int errCode = E_OK;
-    RdbStoreImplTest::store->Query(errCode, true, "test", {},
-        "", std::vector<ValueObject> {}, "", "", "", 1, 0);
+    store_->Query(errCode, true, "test", {}, "", std::vector<ValueObject>{}, "", "", "", 1, 0);
     EXPECT_EQ(E_OK, errCode);
 
-    store->ExecuteSql("DROP TABLE IF EXISTS test");
+    store_->ExecuteSql("DROP TABLE IF EXISTS test");
 }
 
 /* *
@@ -297,7 +293,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_RemoteQueryTest_001, TestSize.Level2)
     predicates.EqualTo("id", 1);
 
     // GetRdbService failed if rdbstoreconfig bundlename_ empty
-    auto ret = RdbStoreImplTest::store->RemoteQuery("", predicates, {}, errCode);
+    auto ret = store_->RemoteQuery("", predicates, {}, errCode);
     EXPECT_EQ(E_INVALID_ARGS, errCode);
     EXPECT_EQ(nullptr, ret);
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
@@ -314,6 +310,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_RemoteQueryTest_001, TestSize.Level2)
     EXPECT_NE(E_OK, errCode);
     EXPECT_EQ(nullptr, ret);
 
+    store = nullptr;
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
 }
 
@@ -324,7 +321,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_RemoteQueryTest_001, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplTest, Rdb_RollbackTest_001, TestSize.Level2)
 {
-    int ret = RdbStoreImplTest::store->RollBack();
+    int ret = store_->RollBack();
     EXPECT_EQ(OHOS::NativeRdb::E_NO_TRANSACTION_IN_SESSION, ret);
 }
 
@@ -335,7 +332,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_RollbackTest_001, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplTest, Rdb_CommitTest_001, TestSize.Level2)
 {
-    int ret = RdbStoreImplTest::store->Commit();
+    int ret = store_->Commit();
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -350,14 +347,15 @@ HWTEST_F(RdbStoreImplTest, Rdb_BackupTest_001, TestSize.Level2)
     std::string databasePath = RDB_TEST_PATH + "test.db";
     std::vector<uint8_t> destEncryptKey;
     // isEncrypt_ is false, and destEncryptKey is emtpy
-    errCode = RdbStoreImplTest::store->Backup(databasePath, destEncryptKey);
+    errCode = store_->Backup(databasePath, destEncryptKey);
     EXPECT_EQ(E_OK, errCode);
     RdbHelper::DeleteRdbStore(databasePath);
 
     // isEncrypt_ is false, and destEncryptKey is not emtpy
     destEncryptKey.push_back(1);
-    errCode = RdbStoreImplTest::store->Backup(databasePath, destEncryptKey);
+    errCode = store_->Backup(databasePath, destEncryptKey);
     EXPECT_EQ(E_OK, errCode);
+    store_ = nullptr;
     RdbHelper::DeleteRdbStore(DATABASE_NAME);
     RdbHelper::DeleteRdbStore(databasePath);
 
@@ -376,6 +374,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_BackupTest_001, TestSize.Level2)
     destEncryptKey.pop_back();
     errCode = store->Backup(databasePath, destEncryptKey);
     EXPECT_EQ(E_OK, errCode);
+    store = nullptr;
     RdbHelper::DeleteRdbStore(databasePath);
     RdbHelper::DeleteRdbStore(DATABASE_NAME);
 }
@@ -431,6 +430,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_001, TestSize.Level2)
     errCode = connectionPool->ConfigLocale("AbnormalTest");
     EXPECT_EQ(OHOS::NativeRdb::E_DATABASE_BUSY, errCode);
 
+    store = nullptr;
     RdbHelper::DeleteRdbStore(DATABASE_NAME);
 }
 
@@ -681,18 +681,18 @@ HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_002, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplTest, Abnormal_CleanDirtyDataTest_001, TestSize.Level2)
 {
-    store->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
+    store_->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
                       "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int errCode = E_OK;
 
     // tabel is empty
     std::string table = "";
     uint64_t cursor = UINT64_MAX;
-    errCode = RdbStoreImplTest::store->CleanDirtyData(table, cursor);
+    errCode = store_->CleanDirtyData(table, cursor);
     EXPECT_EQ(E_INVALID_ARGS, errCode);
 
     table = "test";
-    errCode = RdbStoreImplTest::store->CleanDirtyData(table, cursor);
+    errCode = store_->CleanDirtyData(table, cursor);
     EXPECT_EQ(E_ERROR, errCode);
-    store->ExecuteSql("DROP TABLE IF EXISTS test");
+    store_->ExecuteSql("DROP TABLE IF EXISTS test");
 }

@@ -16,6 +16,7 @@
 #define RDB_JS_NAPI_ERROR_H
 
 #include <map>
+#include <optional>
 #include <string>
 #include "logger.h"
 #include "rdb_errno.h"

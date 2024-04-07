@@ -15,6 +15,8 @@
 
 #include "napi_rdb_error.h"
 
+#include <algorithm>
+
 namespace OHOS {
 namespace RelationalStoreJsKit {
 using JsErrorCode = OHOS::RelationalStoreJsKit::JsErrorCode;

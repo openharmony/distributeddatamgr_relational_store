@@ -25,6 +25,8 @@ public:
     static uint16_t HToLe(uint16_t value);
     static uint32_t LeToH(uint32_t value);
     static uint32_t HToLe(uint32_t value);
+    static uint64_t LeToH(uint64_t value);
+    static uint64_t HToLe(uint64_t value);
 };
 } // namespace OHOS
 

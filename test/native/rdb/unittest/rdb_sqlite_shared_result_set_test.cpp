@@ -926,7 +926,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_014, TestSize.Le
 
     int retF = rstSet->GoToFirstRow();
     EXPECT_EQ(retF, E_OK);
-    OHOS::AppDataFwk::SharedBlock*  pBk = pSqlSharedRstSet->GetBlock();
+    auto pBk = pSqlSharedRstSet->GetBlock();
     EXPECT_NE(pBk, nullptr);
 
     std::string path = RdbSqliteSharedResultSetTest::store->GetPath();
@@ -961,7 +961,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_015, TestSize.Le
     EXPECT_EQ(retN, E_OK);
 
     std::string path = RdbSqliteSharedResultSetTest::store->GetPath();
-    OHOS::AppDataFwk::SharedBlock*  pBk = pSqlSharedRstSet->GetBlock();
+    auto pBk = pSqlSharedRstSet->GetBlock();
     std::string path1 = pBk->Name();
 
     EXPECT_EQ(path,  "/data/test/shared_test.db");
@@ -994,7 +994,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_016, TestSize.Le
     pSqlSharedRstSet->SetFillBlockForwardOnly(true);
     pSqlSharedRstSet->GoToFirstRow();
 
-    OHOS::AppDataFwk::SharedBlock*  pBk = pSqlSharedRstSet->GetBlock();
+    auto pBk = pSqlSharedRstSet->GetBlock();
     EXPECT_NE(pBk, nullptr);
     std::string path = RdbSqliteSharedResultSetTest::store->GetPath();
     std::string path1 = pBk->Name();

@@ -132,6 +132,71 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, std::map
     return used;
 }
 
+size_t RawDataParser::ParserRawData(const uint8_t* data, size_t length, BigInteger& bigint)
+{
+    size_t used = 0;
+    if (sizeof(BIG_INT) > length - used) {
+        return 0;
+    }
+    auto magic = Endian::LeToH(*(reinterpret_cast<decltype(&BIG_INT)>(data)));
+    used += sizeof(BIG_INT);
+    if (magic != BIG_INT) {
+        return 0;
+    }
+
+    if (sizeof(uint32_t) > length - used) {
+        return 0;
+    }
+    uint32_t sign = Endian::LeToH(*(reinterpret_cast<const uint32_t *>(data + used)));
+    used += sizeof(uint32_t);
+
+    if (sizeof(uint64_t) > length - used) {
+        return 0;
+    }
+    uint64_t count = Endian::LeToH(*(reinterpret_cast<const uint64_t *>(data + used)));
+    used += sizeof(uint64_t);
+
+    if (sizeof(uint64_t) * count > length - used) {
+        return 0;
+    }
+    const uint64_t *temp = (reinterpret_cast<const uint64_t *>(data + used));
+    std::vector<uint64_t> trueFrom(temp, temp + count);
+    used += sizeof(uint64_t) * count;
+    for (size_t i = 0; i < trueFrom.size(); ++i) {
+        trueFrom[i] = Endian::LeToH(trueFrom[i]);
+    }
+    bigint = BigInteger(static_cast<int32_t>(sign), std::move(trueFrom));
+    return used;
+}
+
+size_t RawDataParser::ParserRawData(const uint8_t* data, size_t length, RawDataParser::Floats& floats)
+{
+    size_t used = 0;
+    if (sizeof(FLOUT32_ARRAY) > length - used) {
+        return 0;
+    }
+    auto magic = Endian::LeToH(*(reinterpret_cast<decltype(&FLOUT32_ARRAY)>(data)));
+    used += sizeof(FLOUT32_ARRAY);
+    if (magic != FLOUT32_ARRAY) {
+        return 0;
+    }
+
+    if (sizeof(uint32_t) > length - used) {
+        return 0;
+    }
+
+    uint32_t count = Endian::LeToH(*(reinterpret_cast<const uint32_t *>(data + used)));
+    used += sizeof(uint32_t);
+
+    if (sizeof(float) * count > length - used) {
+        return 0;
+    }
+    auto values = reinterpret_cast<const float *>(data + used);
+    floats.assign(values, values + count);
+    used += sizeof(float) * count;
+    return used;
+}
+
 std::vector<uint8_t> RawDataParser::PackageRawData(const std::map<std::string, Asset> &assets)
 {
     Assets res;
@@ -139,6 +204,46 @@ std::vector<uint8_t> RawDataParser::PackageRawData(const std::map<std::string, A
         res.push_back(asset.second);
     }
     return PackageRawData(res);
+}
+
+std::vector<uint8_t> RawDataParser::PackageRawData(const BigInteger& bigint)
+{
+    size_t offset = 0;
+    auto size = sizeof(BIG_INT) + sizeof(uint32_t) + sizeof(uint64_t) * (bigint.Size() + 1);
+    std::vector<uint8_t> rawData(size, 0);
+    uint8_t* data = rawData.data();
+    *(reinterpret_cast<uint32_t *>(&data[offset])) = Endian::HToLe(BIG_INT);
+    offset += sizeof(BIG_INT);
+    *(reinterpret_cast<uint32_t *>(&data[offset])) = Endian::HToLe(uint32_t(bigint.Sign()));
+    offset += sizeof(uint32_t);
+    *(reinterpret_cast<uint64_t *>(&data[offset])) = Endian::HToLe(uint64_t(bigint.Size()));
+    offset += sizeof(uint64_t);
+    auto trueForm = bigint.TrueForm();
+    if (trueForm == nullptr) {
+        return {};
+    }
+    for (size_t i = 0; i < bigint.Size(); ++i) {
+        *(reinterpret_cast<uint64_t *>(&data[offset])) = Endian::HToLe(trueForm[i]);
+        offset += sizeof(uint64_t);
+    }
+    return rawData;
+}
+
+std::vector<uint8_t> RawDataParser::PackageRawData(const RawDataParser::Floats& floats)
+{
+    size_t offset = 0;
+    auto size = sizeof(FLOUT32_ARRAY) + sizeof(uint32_t) + sizeof(float) * floats.size();
+    std::vector<uint8_t> rawData(size, 0);
+    uint8_t* data = rawData.data();
+    *(reinterpret_cast<uint32_t *>(&data[offset])) = Endian::HToLe(FLOUT32_ARRAY);
+    offset += sizeof(FLOUT32_ARRAY);
+    *(reinterpret_cast<uint32_t *>(&data[offset])) = Endian::HToLe(uint32_t(floats.size()));
+    offset += sizeof(uint32_t);
+    for (size_t i = 0; i < floats.size(); ++i) {
+        *(reinterpret_cast<float *>(&data[offset])) = floats[i];
+        offset += sizeof(float);
+    }
+    return rawData;
 }
 
 bool RawDataParser::InnerAsset::Marshal(Serializable::json &node) const
