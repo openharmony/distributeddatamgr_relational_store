@@ -17,8 +17,10 @@
 #define RDB_JSKIT_NAPI_RDB_STORE_H
 
 #include <list>
+#include <memory>
 #include <mutex>
 
+#include "js_proxy.h"
 #include "js_uv_queue.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
@@ -26,19 +28,20 @@
 #include "napi_rdb_error.h"
 #include "napi_rdb_store_observer.h"
 #include "rdb_helper.h"
+#include "rdb_store.h"
 #include "rdb_types.h"
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
-class RdbStoreProxy {
+class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
     static void Init(napi_env env, napi_value exports);
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, bool isSystemAppCalled);
     RdbStoreProxy();
     ~RdbStoreProxy();
+    RdbStoreProxy(std::shared_ptr<NativeRdb::RdbStore> rdbStore);
+    RdbStoreProxy &operator=(std::shared_ptr<NativeRdb::RdbStore> rdbStore);
     bool IsSystemAppCalled();
-
-    std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
 
 private:
     static napi_value Initialize(napi_env env, napi_callback_info info);
@@ -69,6 +72,7 @@ private:
     static napi_value IsInTransaction(napi_env env, napi_callback_info info);
     static napi_value IsOpen(napi_env env, napi_callback_info info);
     static napi_value GetVersion(napi_env env, napi_callback_info info);
+    static napi_value GetRebuilt(napi_env env, napi_callback_info info);
     static napi_value SetVersion(napi_env env, napi_callback_info info);
     static napi_value Restore(napi_env env, napi_callback_info info);
     static napi_value SetDistributedTables(napi_env env, napi_callback_info info);
@@ -81,6 +85,11 @@ private:
     static napi_value OffEvent(napi_env env, napi_callback_info info);
     static napi_value Notify(napi_env env, napi_callback_info info);
     static napi_value QuerySharingResource(napi_env env, napi_callback_info info);
+    static napi_value Close(napi_env env, napi_callback_info info);
+    static napi_value DoLockRow(napi_env env, napi_callback_info info, bool isLock);
+    static napi_value LockRow(napi_env env, napi_callback_info info);
+    static napi_value UnlockRow(napi_env env, napi_callback_info info);
+    static napi_value QueryLockedRow(napi_env env, napi_callback_info info);
 
     static constexpr int EVENT_HANDLE_NUM = 2;
     static constexpr int WAIT_TIME_DEFAULT = 2;

@@ -609,6 +609,28 @@ public:
     {
         return std::pair<int32_t, int32_t>(0, E_OK);
     }
+
+    /**
+     * @brief Locks/Unlocks data from the database based on a specified instance object of AbsRdbPredicates.
+     *
+     * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
+     */
+    virtual int LockRow(const AbsRdbPredicates &predicates, bool isLock)
+    {
+        return E_ERROR;
+    }
+
+    /**
+     * @brief Queries lockded data in the database based on specified conditions.
+     *
+     * @param predicates Indicates the specified query condition by the instance object of {@link AbsRdbPredicates}.
+     * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
+     */
+    virtual std::shared_ptr<AbsSharedResultSet> QueryLockedRow(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
+    {
+        return nullptr;
+    }
 };
 } // namespace OHOS::NativeRdb
 #endif
