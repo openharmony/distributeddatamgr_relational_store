@@ -280,5 +280,47 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(const AbsRdbPredicates &pre
     AppendClause(sql, " OFFSET ", offsetClause);
     return sql;
 }
+
+std::string SqliteSqlBuilder::BuildLockRowQueryString(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, const std::string &logTable)
+{
+    std::string sql;
+    std::string table = predicates.GetTableName();
+    if (table.empty() || logTable.empty()) {
+        return sql;
+    }
+    sql.append("SELECT ");
+    if (predicates.IsDistinct()) {
+        sql.append("DISTINCT ");
+    }
+    if (!columns.empty()) {
+        AppendColumns(sql, columns, table);
+    } else {
+        sql.append(table + ".*");
+    }
+    sql.append(" FROM ").append(table);
+    AppendClause(sql, " INDEXED BY ", predicates.GetIndex());
+    sql.append(" INNER JOIN ").append(logTable).append(" ON ");
+    sql.append(table).append(".ROWID = ").append(logTable).append(".data_key");
+    auto whereClause = predicates.GetWhereClause();
+    if (whereClause.empty()) {
+        sql.append(" WHERE ").append(logTable).append(".status = 2 OR ").append(logTable).append(".status = 3 ");
+    } else {
+        SqliteUtils::Replace(whereClause, SqliteUtils::REP, logTable + ".");
+        AppendClause(sql, " WHERE ", whereClause);
+        sql.append(" AND (").append(logTable).append(".status = 2 OR ").append(logTable).append(".status = 3) ");
+    }
+    AppendClause(sql, " GROUP BY ", predicates.GetGroup(), table);
+    auto order = predicates.GetOrder();
+    SqliteUtils::Replace(order, SqliteUtils::REP, logTable + ".");
+    AppendClause(sql, " ORDER BY ", order);
+    int limit = predicates.GetLimit();
+    auto limitClause = (limit == AbsPredicates::INIT_LIMIT_VALUE) ? "" : std::to_string(limit);
+    int offset = predicates.GetOffset();
+    auto offsetClause = (offset == AbsPredicates::INIT_OFFSET_VALUE) ? "" : std::to_string(offset);
+    AppendClause(sql, " LIMIT ", limitClause);
+    AppendClause(sql, " OFFSET ", offsetClause);
+    return sql;
+}
 } // namespace NativeRdb
 } // namespace OHOS

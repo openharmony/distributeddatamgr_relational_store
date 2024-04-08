@@ -898,6 +898,46 @@ int OH_Rdb_SubscribeAutoSyncProgress(OH_Rdb_Store *store, const Rdb_ProgressObse
 * @since 11
 */
 int OH_Rdb_UnsubscribeAutoSyncProgress(OH_Rdb_Store *store, const Rdb_ProgressObserver *observer);
+
+/**
+ * @brief Lock data from the database based on specified conditions.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
+ * Indicates the specified lock condition.
+ * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
+ * @see OH_Rdb_Store, OH_Predicates, OH_Rdb_ErrCode.
+ * @since 12
+ */
+int OH_Rdb_LockRow(OH_Rdb_Store *store, OH_Predicates *predicates);
+
+/**
+ * @brief Unlock data from the database based on specified conditions.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
+ * Indicates the specified unlock condition.
+ * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
+ * @see OH_Rdb_Store, OH_Predicates, OH_Rdb_ErrCode.
+ * @since 12
+ */
+int OH_Rdb_UnlockRow(OH_Rdb_Store *store, OH_Predicates *predicates);
+
+/**
+ * @brief Queries data in the database based on specified conditions.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
+ * Indicates the specified query condition.
+ * @param columnNames Indicates the columns to query. If the value is empty array, the query applies to all columns.
+ * @param length Indicates the length of columnNames.
+ * @return If the query is successful, a pointer to the instance of the @link OH_Cursor} structure is returned,
+ * otherwise NULL is returned.
+ * @see OH_Rdb_Store, OH_Predicates, OH_Cursor.
+ * @since 12
+ */
+OH_Cursor *OH_Rdb_QueryLockedRow(
+    OH_Rdb_Store *store, OH_Predicates *predicates, const char *const *columnNames, int length);
 #ifdef __cplusplus
 };
 #endif

@@ -18,17 +18,25 @@
 #include <unistd.h>
 
 #include <algorithm>
-#include <sstream>
 #include <chrono>
 #include <cinttypes>
-#include "logger.h"
+#include <cstdint>
+#include <memory>
+#include <mutex>
+#include <sstream>
+#include <string>
+#include <utility>
+
 #include "cache_result_set.h"
+#include "logger.h"
+#include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"
 #include "rdb_store.h"
 #include "rdb_trace.h"
 #include "sqlite_global_config.h"
 #include "sqlite_sql_builder.h"
+#include "sqlite_statement.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
 #include "task_executor.h"
@@ -40,15 +48,17 @@
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "delay_notify.h"
+#include "iresult_set.h"
 #include "raw_data_parser.h"
 #include "rdb_device_manager_adapter.h"
 #include "rdb_manager_impl.h"
-#include "relational_store_manager.h"
 #include "rdb_security_manager.h"
-#include "runtime_config.h"
-#include "sqlite_shared_result_set.h"
-#include "sqlite_connection.h"
 #include "relational_store_client.h"
+#include "relational_store_manager.h"
+#include "result_set_proxy.h"
+#include "runtime_config.h"
+#include "sqlite_connection.h"
+#include "sqlite_shared_result_set.h"
 #endif
 
 #ifdef WINDOWS_PLATFORM
@@ -62,7 +72,7 @@ using namespace OHOS::Rdb;
 using namespace std::chrono;
 int RdbStoreImpl::InnerOpen()
 {
-    LOG_DEBUG("open %{public}s.", SqliteUtils::Anonymous(config_.GetPath()).c_str());
+    LOG_DEBUG("open %{public}s.", SqliteUtils::Anonymous(path_).c_str());
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     pool_ = TaskExecutor::GetInstance().GetExecutor();
     syncerParam_.bundleName_ = config_.GetBundleName();
@@ -282,7 +292,6 @@ int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
     int errCode = connection->CleanDirtyData(table, cursor);
     return errCode;
 }
-
 #endif
 
 std::string RdbStoreImpl::GetSqlArgs(size_t size)
@@ -303,16 +312,24 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
 }
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
-    : config_(config), isOpen_(false), isReadOnly_(config.IsReadOnly()),
-      isMemoryRdb_(config.IsMemoryRdb()), isEncrypt_(config.IsEncrypt()), path_(config.GetPath()),
-      orgPath_(config.GetPath()), name_(config.GetName()), fileType_(config.GetDatabaseFileType()),
-      connectionPool_(nullptr)
+    : config_(config), isReadOnly_(config.IsReadOnly()), isMemoryRdb_(config.IsMemoryRdb()),
+      isEncrypt_(config.IsEncrypt()), name_(config.GetName()), fileType_(config.GetDatabaseFileType()),
+      rebuild_(RebuiltType::NONE)
 {
+    path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
     connectionPool_ = SqliteConnectionPool::Create(config_, errCode);
+    if (connectionPool_ == nullptr && errCode == E_DATABASE_CORRUPT && config.GetAllowRebuild()) {
+        auto realPath = config.GetPath();
+        RemoveDbFiles(realPath);
+        connectionPool_ = SqliteConnectionPool::Create(config_, errCode);
+        if (errCode == E_OK) {
+            rebuild_ = RebuiltType::REBUILT;
+        }
+    }
     if (connectionPool_ == nullptr || errCode != E_OK) {
         connectionPool_ = nullptr;
-        LOG_ERROR("InnerOpen failed, err is %{public}d, path:%{public}s",
-            errCode, SqliteUtils::Anonymous(path_).c_str());
+        LOG_ERROR("Create connPool failed, err is %{public}d, path:%{public}s",
+            errCode, path_.c_str());
         return;
     }
 
@@ -330,6 +347,14 @@ void RdbStoreImpl::Clear()
     connectionPool_ = nullptr;
 }
 #endif
+
+void RdbStoreImpl::RemoveDbFiles(std::string &path)
+{
+    SqliteUtils::DeleteFile(path);
+    SqliteUtils::DeleteFile(path + "-shm");
+    SqliteUtils::DeleteFile(path + "-wal");
+    SqliteUtils::DeleteFile(path + "-journal");
+}
 
 const RdbStoreConfig &RdbStoreImpl::GetConfig()
 {
@@ -355,22 +380,24 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table, c
     if (connection == nullptr) {
         return E_DATABASE_BUSY;
     }
-    auto executeSqlArgs = GenerateSql(table, values, connection->GetMaxVariableNumber());
+    auto executeSqlArgs = GenerateSql(table, values, connection->GetMaxVariable());
     if (executeSqlArgs.empty()) {
         LOG_ERROR("empty, table=%{public}s, values:%{public}zu, max number:%{public}d.", table.c_str(),
-            values.size(), connection->GetMaxVariableNumber());
+            values.size(), connection->GetMaxVariable());
         return E_INVALID_ARGS;
     }
-
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     if (delayNotifier_ != nullptr) {
         delayNotifier_->SetAutoSyncInterval(AUTO_SYNC_MAX_INTERVAL);
     }
 #endif
-
     for (const auto &[sql, bindArgs] : executeSqlArgs) {
+        auto [errCode, statement] = GetStatement(sql, connection);
+        if (statement == nullptr) {
+            continue;
+        }
         for (const auto &args : bindArgs) {
-            auto errCode = connection->ExecuteSql(sql, args);
+            auto errCode = statement->Execute(args);
             if (errCode != E_OK) {
                 outInsertNum = -1;
                 LOG_ERROR("BatchInsert failed, errCode : %{public}d, bindArgs : %{public}zu,"
@@ -397,8 +424,7 @@ RdbStoreImpl::ExecuteSqls RdbStoreImpl::GenerateSql(const std::string& table, co
             values.reserve(vBucket.values_.size() * EXPANSION);
         }
         for (auto &[key, value] : vBucket.values_) {
-            if (value.GetType() == ValueObject::TYPE_ASSET ||
-                value.GetType() == ValueObject::TYPE_ASSETS) {
+            if (value.GetType() == ValueObject::TYPE_ASSET || value.GetType() == ValueObject::TYPE_ASSETS) {
                 SetAssetStatus(value, AssetValue::STATUS_INSERT);
             }
             int32_t col = 0;
@@ -475,9 +501,9 @@ RdbStoreImpl::ExecuteSqls RdbStoreImpl::MakeExecuteSqls(const std::string& sql, 
     return executeSqls;
 }
 
-int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues)
+int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &values)
 {
-    return InsertWithConflictResolution(outRowId, table, initialValues, ConflictResolution::ON_CONFLICT_REPLACE);
+    return InsertWithConflictResolution(outRowId, table, values, ConflictResolution::ON_CONFLICT_REPLACE);
 }
 
 int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
@@ -524,16 +550,10 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
     }
 
     sql.append(")");
-    int32_t errCode = E_OK;
-    {
-        auto connection = connectionPool_->AcquireConnection(false);
-        if (connection == nullptr) {
-            return E_DATABASE_BUSY;
-        }
-
-        errCode = connection->ExecuteForLastInsertedRowId(outRowId, sql, bindArgs);
+    auto errCode = ExecuteForLastInsertedRowId(outRowId, sql, bindArgs);
+    if (errCode != E_OK) {
+        return errCode;
     }
-
     if (errCode == E_OK) {
         DoCloudSync(table);
     }
@@ -624,7 +644,7 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
         } else {
             sql.append(key).append("=merge_assets(").append(key).append(", ?)"); // columnName
         }
-        tmpBindArgs.push_back(val);  // columnValue
+        tmpBindArgs.push_back(val); // columnValue
         split = ",";
     }
 
@@ -634,18 +654,13 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
 
     tmpBindArgs.insert(tmpBindArgs.end(), bindArgs.begin(), bindArgs.end());
 
-    int32_t errCode = E_OK;
-    {
-        auto connection = connectionPool_->AcquireConnection(false);
-        if (connection == nullptr) {
-            return E_DATABASE_BUSY;
-        }
-
-        errCode = connection->ExecuteForChangedRowCount(changedRows, sql, tmpBindArgs);
+    int64_t changes = -1;
+    auto errCode = ExecuteForChangedRowCount(changes, sql, tmpBindArgs);
+    if (errCode != E_OK) {
+        return errCode;
     }
-    if (errCode == E_OK) {
-        DoCloudSync(table);
-    }
+    changedRows = changes;
+    DoCloudSync(table);
     return errCode;
 }
 
@@ -679,21 +694,14 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
     if (!whereClause.empty()) {
         sql.append(" WHERE ").append(whereClause);
     }
-
-    int errCode = E_OK;
-    {
-        auto connection = connectionPool_->AcquireConnection(false);
-        if (connection == nullptr) {
-            return E_DATABASE_BUSY;
-        }
-
-        errCode = connection->ExecuteForChangedRowCount(deletedRows, sql, bindArgs);
+    int64_t changes = -1;
+    auto errCode = ExecuteForChangedRowCount(changes, sql, bindArgs);
+    if (errCode != E_OK) {
+        return errCode;
     }
-
-    if (errCode == E_OK) {
-        DoCloudSync(table);
-    }
-    return errCode;
+    deletedRows = changes;
+    DoCloudSync(table);
+    return E_OK;
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -702,7 +710,7 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::string sql;
-    std::pair<bool, bool> queryStatus = {ColHasSpecificField(columns), predicates.HasSpecificField()};
+    std::pair<bool, bool> queryStatus = { ColHasSpecificField(columns), predicates.HasSpecificField() };
     if (queryStatus.first || queryStatus.second) {
         std::string table = predicates.GetTableName();
         std::string logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
@@ -812,29 +820,36 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
         return errCode;
     }
 
-    std::shared_ptr<SqliteConnection> connection;
+    std::shared_ptr<Connection> connection;
     errCode = BeginExecuteSql(sql, connection);
     if (errCode != E_OK) {
+        LOG_ERROR("begin executesql failed, code is %{public}d, sql is %{public}s", errCode, sql.c_str());
         return errCode;
     }
-    errCode = connection->ExecuteSql(sql, bindArgs);
+    auto [err, statement] = GetStatement(sql, connection);
+    if (statement == nullptr) {
+        return E_SQLITE_ERROR;
+    }
+    errCode = statement->Execute(bindArgs);
     if (errCode != E_OK) {
         LOG_ERROR("RDB_STORE Execute SQL ERROR.");
         return errCode;
     }
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        int64_t version = 0;
-        connection->ExecuteGetLong(version, "PRAGMA schema_version");
+        statement->Reset();
+        statement->Prepare("PRAGMA schema_version");
+        auto [err, version] = statement->ExecuteForValue();
         connection = nullptr;
-        if (vSchema_ < version) {
+        statement = nullptr;
+        if (vSchema_ < static_cast<int64_t>(version)) {
             LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 "> sql:%{public}s.",
-                     name_.c_str(), vSchema_, version, sql.c_str());
+                     name_.c_str(), vSchema_, static_cast<int64_t>(version), sql.c_str());
             vSchema_ = version;
             errCode = connectionPool_->RestartReaders();
         }
     }
-
+    statement = nullptr;
     if (errCode == E_OK && (sqlType == SqliteUtils::STATEMENT_UPDATE || sqlType == SqliteUtils::STATEMENT_INSERT)) {
         DoCloudSync("");
     }
@@ -875,33 +890,48 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
         return { errCode, outValue };
     } else {
         LOG_ERROR("Not support the sql: %{public}s", SqliteUtils::Anonymous(sql).c_str());
-        return { E_NOT_SUPPORT_THE_SQL, outValue } ;
+        return { E_NOT_SUPPORT_THE_SQL, outValue };
     }
 }
 
 int RdbStoreImpl::ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
-    std::shared_ptr<SqliteConnection> connection;
+    std::shared_ptr<Connection> connection;
     int errCode = BeginExecuteSql(sql, connection);
     if (errCode != E_OK) {
         return errCode;
     }
-    errCode = connection->ExecuteGetLong(outValue, sql, bindArgs);
-    if (errCode != E_OK) {
-        LOG_ERROR("RDB_STORE ExecuteAndGetLong ERROR is %{public}d.", errCode);
+    auto [err, statement] = GetStatement(sql, connection);
+    if (err != E_OK) {
+        return err;
     }
+    ValueObject object;
+    std::tie(errCode, object) = statement->ExecuteForValue(bindArgs);
+    if (errCode != E_OK) {
+        LOG_ERROR("failed, sql %{public}s,  ERROR is %{public}d.", sql.c_str(), errCode);
+    }
+    outValue = object;
     return errCode;
 }
 
 int RdbStoreImpl::ExecuteAndGetString(
     std::string &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
-    std::shared_ptr<SqliteConnection> connection;
+    std::shared_ptr<Connection> connection;
     int errCode = BeginExecuteSql(sql, connection);
     if (errCode != E_OK) {
         return errCode;
     }
-    connection->ExecuteGetString(outValue, sql, bindArgs);
+    auto [err, statement] = GetStatement(sql, connection);
+    if (err != E_OK) {
+        return E_SQLITE_ERROR;
+    }
+    ValueObject object;
+    std::tie(errCode, object) = statement->ExecuteForValue(bindArgs);
+    if (errCode != E_OK) {
+        LOG_ERROR("failed, sql %{public}s,  ERROR is %{public}d.", sql.c_str(), errCode);
+    }
+    outValue = static_cast<std::string>(object);
     return errCode;
 }
 
@@ -911,13 +941,20 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
     if (config_.GetRoleType() == VISITOR) {
         return E_NOT_SUPPORT;
     }
-    auto connection = connectionPool_->AcquireConnection(false);
-    if (connection == nullptr) {
-        return E_DATABASE_BUSY;
+    auto connect = connectionPool_->AcquireConnection(false);
+    if (connect == nullptr) {
+        return E_CON_OVER_LIMIT;
     }
-
-    int errCode = connection->ExecuteForLastInsertedRowId(outValue, sql, bindArgs);
-    return errCode;
+    auto [errCode, statement] = GetStatement(sql, connect);
+    if (statement == nullptr) {
+        return E_SQLITE_ERROR;
+    }
+    errCode = statement->Execute(bindArgs);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    outValue = statement->Changes() > 0 ? statement->LastInsertRowId() : -1;
+    return E_OK;
 }
 
 int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
@@ -926,15 +963,20 @@ int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string
     if (config_.GetRoleType() == VISITOR) {
         return E_NOT_SUPPORT;
     }
-    int changeRow = 0;
-    auto connection = connectionPool_->AcquireConnection(false);
-    if (connection == nullptr) {
-        return E_DATABASE_BUSY;
+    auto connect = connectionPool_->AcquireConnection(false);
+    if (connect == nullptr) {
+        return E_CON_OVER_LIMIT;
     }
-
-    int errCode = connection->ExecuteForChangedRowCount(changeRow, sql, bindArgs);
-    outValue = changeRow;
-    return errCode;
+    auto [errCode, statement] = GetStatement(sql, connect);
+    if (statement == nullptr) {
+        return errCode;
+    }
+    errCode = statement->Execute(bindArgs);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    outValue = statement->Changes();
+    return E_OK;
 }
 
 int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &backupFilePath)
@@ -967,30 +1009,20 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
 
 int RdbStoreImpl::ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
-    std::shared_ptr<SqliteConnection> connection;
+    std::shared_ptr<Connection> connection;
     int errCode = BeginExecuteSql(sql, connection);
     if (errCode != 0) {
         return errCode;
     }
 
-    errCode = connection->ExecuteSql(sql, bindArgs);
+    auto [err, statement] = GetStatement(sql, connection);
+    if (statement == nullptr || err != E_OK) {
+        return err;
+    }
+
+    errCode = statement->Execute(bindArgs);
     if (errCode != E_OK) {
         LOG_ERROR("ExecuteSql ATTACH_BACKUP_SQL error %{public}d", errCode);
-    }
-    return errCode;
-}
-
-int RdbStoreImpl::ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs)
-{
-    int64_t count;
-    std::shared_ptr<SqliteConnection> connection;
-    int errCode = BeginExecuteSql(sql, connection);
-    if (errCode != 0) {
-        return errCode;
-    }
-    errCode = connection->ExecuteGetLong(count, sql, bindArgs);
-    if (errCode != E_OK) {
-        LOG_ERROR("ExecuteSql EXPORT_SQL error %{public}d", errCode);
     }
     return errCode;
 }
@@ -998,7 +1030,7 @@ int RdbStoreImpl::ExecuteGetLongInner(const std::string &sql, const std::vector<
 /**
  * Backup a database from a specified encrypted or unencrypted database file.
  */
-int RdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
+int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
 {
     if (config_.GetRoleType() == VISITOR) {
         return E_NOT_SUPPORT;
@@ -1034,41 +1066,42 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
     if (config_.GetRoleType() == VISITOR) {
         return E_NOT_SUPPORT;
     }
-    auto conn = connectionPool_->AcquireConnection(true);
-    if (conn == nullptr) {
+
+    auto [errCode, statement] = GetStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, true);
+    if (statement == nullptr) {
         return E_BASE;
     }
     std::vector<ValueObject> bindArgs;
     bindArgs.emplace_back(databasePath);
     if (!destEncryptKey.empty() && !isEncrypt_) {
         bindArgs.emplace_back(destEncryptKey);
-        conn->ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+        statement->Execute();
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     } else if (isEncrypt_) {
         RdbPassword rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(
             config_.GetPath(), RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
         std::vector<uint8_t> key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
         bindArgs.emplace_back(key);
-        conn->ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+        statement->Execute();
 #endif
     } else {
         std::string str = "";
         bindArgs.emplace_back(str);
     }
 
-    int ret = conn->ExecuteSql(GlobalExpr::ATTACH_BACKUP_SQL, bindArgs);
-    if (ret != E_OK) {
-        return ret;
+    errCode = statement->Prepare(GlobalExpr::ATTACH_BACKUP_SQL);
+    errCode = statement->Execute(bindArgs);
+    if (errCode != E_OK) {
+        return errCode;
     }
-    int64_t count;
-    ret = conn->ExecuteGetLong(count, GlobalExpr::EXPORT_SQL, std::vector<ValueObject>());
-
-    int res = conn->ExecuteSql(GlobalExpr::DETACH_BACKUP_SQL, std::vector<ValueObject>());
-
-    return res == E_OK ? ret : res;
+    errCode = statement->Prepare(GlobalExpr::EXPORT_SQL);
+    int ret = statement->Execute();
+    errCode = statement->Prepare(GlobalExpr::DETACH_BACKUP_SQL);
+    int res = statement->Execute();
+    return (res == E_OK) ? ret : res;
 }
 
-int RdbStoreImpl::BeginExecuteSql(const std::string &sql, std::shared_ptr<SqliteConnection> &connection)
+int RdbStoreImpl::BeginExecuteSql(const std::string &sql, std::shared_ptr<Connection> &connection)
 {
     int type = SqliteUtils::GetSqlStatementType(sql);
     if (SqliteUtils::IsSpecial(type)) {
@@ -1076,33 +1109,28 @@ int RdbStoreImpl::BeginExecuteSql(const std::string &sql, std::shared_ptr<Sqlite
     }
 
     bool assumeReadOnly = SqliteUtils::IsSqlReadOnly(type);
-    bool isReadOnly = false;
     connection = connectionPool_->AcquireConnection(assumeReadOnly);
     if (connection == nullptr) {
         return E_DATABASE_BUSY;
     }
 
-    int errCode = connection->Prepare(sql, isReadOnly);
-    if (errCode != 0) {
+    auto [errCode, statement] = connection->CreateStatement(sql, connection);
+    if (statement == nullptr) {
         return errCode;
     }
 
-    if (isReadOnly == connection->IsWriteConnection()) {
+    if (statement->ReadOnly() && connection->IsWriter()) {
+        statement = nullptr;
         connection = nullptr;
-        connection = connectionPool_->AcquireConnection(isReadOnly);
+        connection = connectionPool_->AcquireConnection(true);
         if (connection == nullptr) {
             return E_DATABASE_BUSY;
-        }
-
-        if (!isReadOnly && !connection->IsWriteConnection()) {
-            LOG_ERROR("StoreSession BeginExecutea : read connection can not execute write operation");
-            connection = nullptr;
-            return E_EXECUTE_WRITE_IN_READ_CONNECTION;
         }
     }
 
     return E_OK;
 }
+
 bool RdbStoreImpl::IsHoldingConnection()
 {
     return connectionPool_ != nullptr;
@@ -1116,12 +1144,12 @@ int RdbStoreImpl::AttachInner(
         return E_DATABASE_BUSY;
     }
 
-    if (conn->GetJournalMode() == JournalMode::MODE_WAL) {
+    if (conn->GetJournalMode() == static_cast<int32_t>(JournalMode::MODE_WAL)) {
         // close first to prevent the connection from being put back.
         connectionPool_->CloseAllConnections();
         conn = nullptr;
         readers.clear();
-        auto [err, newConn] = connectionPool_->DisableWalMode();
+        auto [err, newConn] = connectionPool_->DisableWal();
         if (err != E_OK) {
             return err;
         }
@@ -1131,10 +1159,27 @@ int RdbStoreImpl::AttachInner(
     bindArgs.emplace_back(ValueObject(dbPath));
     bindArgs.emplace_back(ValueObject(attachName));
     if (!key.empty()) {
-        conn->ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+        auto [errCode, statement] = conn->CreateStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, conn);
+        if (statement == nullptr) {
+            LOG_ERROR("Attach get statement failed, code is %{public}d", errCode);
+            return errCode;
+        }
+        errCode = statement->Execute();
         bindArgs.emplace_back(ValueObject(key));
+        std::tie(errCode, statement) = conn->CreateStatement(GlobalExpr::ATTACH_WITH_KEY_SQL, conn);
+        if (statement == nullptr || errCode != E_OK) {
+            LOG_ERROR("Attach get statement failed, code is %{public}d", errCode);
+            return E_ERROR;
+        }
+        return statement->Execute(bindArgs);
     }
-    return conn->ExecuteSql(GlobalExpr::ATTACH_SQL, bindArgs);
+
+    auto [errCode, statement] = conn->CreateStatement(GlobalExpr::ATTACH_SQL, conn);
+    if (statement == nullptr || errCode != E_OK) {
+        LOG_ERROR("Attach get statement failed, code is %{public}d", errCode);
+        return errCode;
+    }
+    return statement->Execute(bindArgs);
 }
 
 /**
@@ -1203,25 +1248,31 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
     std::vector<ValueObject> bindArgs;
     bindArgs.push_back(ValueObject(attachName));
 
-    int err = connection->ExecuteSql(GlobalExpr::DETACH_SQL, bindArgs);
-    if (err != E_OK) {
+    auto [errCode, statement] = connection->CreateStatement(GlobalExpr::DETACH_SQL, connection);
+    if (statement == nullptr || errCode != E_OK) {
+        LOG_ERROR("Detach get statement failed, errCode %{public}d", errCode);
+        return { errCode, 0 };
+    }
+    errCode = statement->Execute(bindArgs);
+    if (errCode != E_OK) {
         LOG_ERROR("failed, errCode[%{public}d] fileName[%{public}s] attachName[%{public}s] attach fileName"
                   "[%{public}s]",
-            err, config_.GetName().c_str(), attachName.c_str(), iter.second.GetName().c_str());
-        return { err, 0 };
+            errCode, config_.GetName().c_str(), attachName.c_str(), iter.second.GetName().c_str());
+        return { errCode, 0 };
     }
-    
+
     attachedInfo_.Erase(attachName);
     if (!attachedInfo_.Empty()) {
         return { E_OK, attachedInfo_.Size() };
     }
+    statement = nullptr;
     // close first to prevent the connection from being put back.
     connectionPool_->CloseAllConnections();
     connection = nullptr;
     readers.clear();
-    err = connectionPool_->EnableWalMode();
-    if (err != E_OK) {
-        return { err, 0 };
+    errCode = connectionPool_->EnableWal();
+    if (errCode != E_OK) {
+        return { errCode, 0 };
     }
     return { E_OK, 0 };
 }
@@ -1231,9 +1282,16 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
  */
 int RdbStoreImpl::GetVersion(int &version)
 {
-    int64_t value = 0;
-    int errCode = ExecuteAndGetLong(value, GlobalExpr::PRAGMA_VERSION, std::vector<ValueObject>());
-    version = static_cast<int>(value);
+    auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, config_.GetRoleType() == VISITOR);
+    if (statement == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+    ValueObject value;
+    std::tie(errCode, value) = statement->ExecuteForValue();
+    auto val = std::get_if<int64_t>(&value.value);
+    if (val != nullptr) {
+        version = static_cast<int>(*val);
+    }
     return errCode;
 }
 
@@ -1245,8 +1303,13 @@ int RdbStoreImpl::SetVersion(int version)
     if (config_.GetRoleType() == VISITOR) {
         return E_NOT_SUPPORT;
     }
+
     std::string sql = std::string(GlobalExpr::PRAGMA_VERSION) + " = " + std::to_string(version);
-    return ExecuteSql(sql, std::vector<ValueObject>());
+    auto [errCode, statement] = GetStatement(sql);
+    if (statement == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+    return statement->Execute();
 }
 /**
  * Begins a transaction in EXCLUSIVE mode.
@@ -1258,29 +1321,22 @@ int RdbStoreImpl::BeginTransaction()
     if (config_.GetRoleType() == VISITOR) {
         return E_NOT_SUPPORT;
     }
-
     // size + 1 means the number of transactions in process
     size_t transactionId = connectionPool_->GetTransactionStack().size() + 1;
-
-    auto connection = connectionPool_->AcquireConnection(false);
-    if (connection == nullptr) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId, name_.c_str());
-        return E_DATABASE_BUSY;
-    }
-
     BaseTransaction transaction(connectionPool_->GetTransactionStack().size());
-    int errCode = connection->ExecuteSql(transaction.GetTransactionStr());
+    auto [errCode, statement] = GetStatement(transaction.GetTransactionStr());
+    if (statement == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+    errCode = statement->Execute();
     if (errCode != E_OK) {
         LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
             transactionId, name_.c_str(), errCode);
 
         return errCode;
     }
-
-    connection->SetInTransaction(true);
-
+    connectionPool_->SetInTransaction(true);
     connectionPool_->GetTransactionStack().push(transaction);
-
     // 1 means the number of transactions in process
     if (transactionId > 1) {
         LOG_WARN("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
@@ -1316,18 +1372,16 @@ int RdbStoreImpl::RollBack()
     if (transaction.GetType() != TransType::ROLLBACK_SELF && !connectionPool_->GetTransactionStack().empty()) {
         connectionPool_->GetTransactionStack().top().SetChildFailure(true);
     }
-    auto connection = connectionPool_->AcquireConnection(false);
-    if (connection == nullptr) {
+    auto [errCode, statement] = GetStatement(transaction.GetRollbackStr());
+    if (statement == nullptr) {
         // size + 1 means the number of transactions in process
         LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId + 1, name_.c_str());
         return E_DATABASE_BUSY;
     }
-
-    int errCode = connection->ExecuteSql(transaction.GetRollbackStr());
+    errCode = statement->Execute();
     if (connectionPool_->GetTransactionStack().empty()) {
-        connection->SetInTransaction(false);
+        connectionPool_->SetInTransaction(false);
     }
-
     // 1 means the number of transactions in process
     if (transactionId > 1) {
         LOG_WARN("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
@@ -1365,16 +1419,13 @@ int RdbStoreImpl::Commit()
         connectionPool_->GetTransactionStack().pop();
         return E_OK;
     }
-
-    auto connection = connectionPool_->AcquireConnection(false);
-    if (connection == nullptr) {
+    auto [errCode, statement] = GetStatement(sqlStr);
+    if (statement == nullptr) {
         LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId, name_.c_str());
         return E_DATABASE_BUSY;
     }
-
-    int errCode = connection->ExecuteSql(sqlStr);
-    connection->SetInTransaction(false);
-
+    errCode = statement->Execute();
+    connectionPool_->SetInTransaction(false);
     // 1 means the number of transactions in process
     if (transactionId > 1) {
         LOG_WARN("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
@@ -1390,12 +1441,16 @@ int RdbStoreImpl::Commit(int64_t trxId)
     return E_NOT_SUPPORT;
 }
 
-int RdbStoreImpl::FreeTransaction(std::shared_ptr<SqliteConnection> connection, const std::string &sql)
+int RdbStoreImpl::FreeTransaction(std::shared_ptr<Connection> connection, const std::string &sql)
 {
-    int errCode = connection->ExecuteSql(sql);
+    auto [errCode, statement] = GetStatement(sql, connection);
+    if (statement == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+    errCode = statement->Execute();
     if (errCode == E_OK) {
-        connection->SetInTransaction(false);
         connectionPool_->ReleaseTransaction();
+        connectionPool_->SetInTransaction(false);
     } else {
         LOG_ERROR("%{public}s with error code %{public}d.", sql.c_str(), errCode);
     }
@@ -1407,12 +1462,7 @@ bool RdbStoreImpl::IsInTransaction()
     if (config_.GetRoleType() == VISITOR) {
         return false;
     }
-    bool res = true;
-    auto connection = connectionPool_->AcquireConnection(false);
-    if (connection != nullptr) {
-        res = connection->IsInTransaction();
-    }
-    return res;
+    return connectionPool_->IsInTransaction();
 }
 
 int RdbStoreImpl::CheckAttach(const std::string &sql)
@@ -1429,21 +1479,24 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
         return E_OK;
     }
 
-    auto connection = connectionPool_->AcquireConnection(false);
-    if (connection == nullptr) {
-        return E_DATABASE_BUSY;
+    auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_JOUR_MODE_EXP);
+    if (statement == nullptr) {
+        return E_CON_OVER_LIMIT;
     }
 
-    std::string journalMode;
-    int errCode =
-        connection->ExecuteGetString(journalMode, GlobalExpr::PRAGMA_JOUR_MODE_EXP, std::vector<ValueObject>());
+    errCode = statement->Execute();
     if (errCode != E_OK) {
         LOG_ERROR("RdbStoreImpl CheckAttach fail to get journal mode : %{public}d", errCode);
         return errCode;
     }
-
-    journalMode = SqliteUtils::StrToUpper(journalMode);
-    if (journalMode == GlobalExpr::JOURNAL_MODE_WAL) {
+    auto [errorCode, valueObject] = statement->GetColumn(0);
+    if (errorCode != E_OK) {
+        LOG_ERROR("RdbStoreImpl CheckAttach fail to get journal mode : %{public}d", errorCode);
+        return errorCode;
+    }
+    auto journal = std::get_if<std::string>(&valueObject.value);
+    auto journalMode = SqliteUtils::StrToUpper((journal == nullptr) ? "" : *journal);
+    if (journalMode == RdbStoreConfig::DB_DEFAULT_JOURNAL_MODE) {
         LOG_ERROR("RdbStoreImpl attach is not supported in WAL mode");
         return E_NOT_SUPPORTED_ATTACH_IN_WAL_MODE;
     }
@@ -1525,7 +1578,7 @@ std::string RdbStoreImpl::GetName()
     return name_;
 }
 
-void RdbStoreImpl::DoCloudSync(const std::string &table)
+void RdbStoreImpl::DoCloudSync(const std::string &table, bool isCompensation)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     {
@@ -1554,7 +1607,7 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
     }
     auto interval =
         std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::milliseconds(INTERVAL));
-    pool_->Schedule(interval, [this]() {
+    pool_->Schedule(interval, [this, isCompensation]() {
         std::shared_ptr<std::set<std::string>> ptr;
         {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -1564,7 +1617,7 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
         if (ptr == nullptr) {
             return;
         }
-        DistributedRdb::RdbService::Option option = { DistributedRdb::TIME_FIRST, 0, true, true };
+        DistributedRdb::RdbService::Option option = { DistributedRdb::TIME_FIRST, 0, true, true, isCompensation };
         InnerSync(option,
             AbsRdbPredicates(std::vector<std::string>(ptr->begin(), ptr->end())).GetDistributedPredicates(), nullptr);
     });
@@ -1592,7 +1645,7 @@ int RdbStoreImpl::ConfigLocale(const std::string &localeStr)
     return connectionPool_->ConfigLocale(localeStr);
 }
 
-int RdbStoreImpl::Restore(const std::string backupPath, const std::vector<uint8_t> &newKey)
+int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
 {
     if (!isOpen_) {
         LOG_ERROR("The connection pool has been closed.");
@@ -1988,12 +2041,10 @@ int RdbStoreImpl::RegisterDataChangeCallback()
         return E_NOT_SUPPORT;
     }
     InitDelayNotifier();
-    auto callBack = [delayNotifier = delayNotifier_](ClientChangedData &clientChangedData) {
+    auto callBack = [delayNotifier = delayNotifier_](const std::set<std::string> &tables) {
         DistributedRdb::RdbChangedData rdbChangedData;
-        for (const auto& entry : clientChangedData.tableData) {
-            DistributedRdb::RdbChangeProperties rdbProperties;
-            rdbProperties.isTrackedDataChange = entry.second.isTrackedDataChange;
-            rdbChangedData.tableData[entry.first] = rdbProperties;
+        for (const auto& table : tables) {
+            rdbChangedData.tableData[table].isTrackedDataChange = true;
         }
         if (delayNotifier != nullptr) {
             delayNotifier->UpdateNotify(rdbChangedData);
@@ -2003,7 +2054,7 @@ int RdbStoreImpl::RegisterDataChangeCallback()
     if (connection == nullptr) {
         return E_DATABASE_BUSY;
     }
-    return connection->RegisterCallBackObserver(callBack);
+    return connection->SubscribeTableChanges(callBack);
 }
 
 bool RdbStoreImpl::ColHasSpecificField(const std::vector<std::string> &columns)
@@ -2015,6 +2066,113 @@ bool RdbStoreImpl::ColHasSpecificField(const std::vector<std::string> &columns)
     }
     return false;
 }
+#endif
 
+std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
+    const std::string &sql, std::shared_ptr<Connection> conn) const
+{
+    if (conn == nullptr) {
+        return { E_CON_OVER_LIMIT, nullptr };
+    }
+    return conn->CreateStatement(sql, conn);
+}
+
+std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(const std::string& sql, bool read) const
+{
+    auto conn = connectionPool_->AcquireConnection(read);
+    if (conn == nullptr) {
+        return { E_CON_OVER_LIMIT, nullptr };
+    }
+    return conn->CreateStatement(sql, conn);
+}
+
+int RdbStoreImpl::GetRebuilt(RebuiltType &rebuilt)
+{
+    rebuilt = static_cast<RebuiltType>(rebuild_);
+    return E_OK;
+}
+
+int RdbStoreImpl::GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::vector<std::vector<uint8_t>> &hashKeys)
+{
+    std::string table = predicates.GetTableName();
+    if (table.empty()) {
+        return E_EMPTY_TABLE_NAME;
+    }
+    auto logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
+    std::string sql;
+    sql.append("SELECT ").append(logTable).append(".hash_key ").append("FROM ").append(logTable);
+    sql.append(" INNER JOIN ").append(table).append(" ON ");
+    sql.append(table).append(".ROWID = ").append(logTable).append(".data_key");
+    auto whereClause = predicates.GetWhereClause();
+    if (!whereClause.empty()) {
+        SqliteUtils::Replace(whereClause, SqliteUtils::REP, logTable + ".");
+        sql.append(" WHERE ").append(whereClause);
+    }
+
+    auto result = QuerySql(sql, predicates.GetBindArgs());
+    if (result == nullptr) {
+        return E_ERROR;
+    }
+    int count = 0;
+    if (result->GetRowCount(count) != E_OK || count <= 0) {
+        result->Close();
+        return E_NO_ROW_IN_QUERY;
+    }
+    if (result->GoToFirstRow() != E_OK) {
+        result->Close();
+        return E_ERROR;
+    }
+    do {
+        std::vector<uint8_t> hashKey;
+        if (result->GetBlob(0, hashKey) != E_OK) {
+            result->Close();
+            return E_ERROR;
+        }
+        hashKeys.push_back(hashKey);
+    } while (result->GoToNextRow() == E_OK);
+    result->Close();
+    return E_OK;
+}
+
+int RdbStoreImpl::LockRow(const AbsRdbPredicates &predicates, bool isLock)
+{
+    std::vector<std::vector<uint8_t>> hashKeys;
+    int ret = GetHashKeyForLockRow(predicates, hashKeys);
+    if (ret != E_OK) {
+        LOG_ERROR("GetHashKeyForLockRow failed, err is %{public}d.", ret);
+        return ret;
+    }
+    int errCode;
+    {
+        auto connection = connectionPool_->AcquireConnection(false);
+        if (connection == nullptr) {
+            return E_CON_OVER_LIMIT;
+        }
+
+        errCode = connection->DoLockRow(predicates.GetTableName(), hashKeys, isLock);
+    }
+    if (errCode == DistributedDB::DBStatus::WAIT_COMPENSATED_SYNC) {
+        LOG_DEBUG("Start compensation sync.");
+        DoCloudSync(predicates.GetTableName(), true);
+        return E_OK;
+    }
+    if (errCode != E_OK) {
+        LOG_ERROR("DoLockRow failed, err is %{public}d.", errCode);
+    }
+    if (errCode == DistributedDB::DBStatus::NOT_FOUND) {
+        return E_NO_ROW_IN_QUERY;
+    }
+    return errCode;
+}
+
+std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QueryLockedRow(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    std::string table = predicates.GetTableName();
+    std::string logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
+    std::string sql = SqliteSqlBuilder::BuildLockRowQueryString(predicates, columns, logTable);
+    return QuerySql(sql, predicates.GetBindArgs());
+}
 #endif
 } // namespace OHOS::NativeRdb

@@ -650,6 +650,50 @@ int OH_Rdb_UnsubscribeAutoSyncProgress(OH_Rdb_Store *store, const Rdb_ProgressOb
     return rdbStore->UnsubscribeAutoSyncProgress(callback);
 }
 
+int OH_Rdb_LockRow(OH_Rdb_Store *store, OH_Predicates *predicates)
+{
+    auto rdbStore = GetRelationalStore(store);
+    auto predicate = RelationalPredicate::GetSelf(predicates);
+    if (rdbStore == nullptr || predicate == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return rdbStore->GetStore()->LockRow(predicate->Get(), true);
+}
+
+int OH_Rdb_UnlockRow(OH_Rdb_Store *store, OH_Predicates *predicates)
+{
+    auto rdbStore = GetRelationalStore(store);
+    auto predicate = RelationalPredicate::GetSelf(predicates);
+    if (rdbStore == nullptr || predicate == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return rdbStore->GetStore()->LockRow(predicate->Get(), false);
+}
+
+OH_Cursor *OH_Rdb_QueryLockedRow(
+    OH_Rdb_Store *store, OH_Predicates *predicates, const char *const *columnNames, int length)
+{
+    auto rdbStore = GetRelationalStore(store);
+    auto predicate = RelationalPredicate::GetSelf(predicates);
+    if (rdbStore == nullptr || predicate == nullptr) {
+        return nullptr;
+    }
+    std::vector<std::string> columns;
+    if (columnNames != nullptr && length > 0) {
+        columns.reserve(length);
+        for (int i = 0; i < length; i++) {
+            columns.push_back(columnNames[i]);
+        }
+    }
+
+    std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet =
+        rdbStore->GetStore()->QueryLockedRow(predicate->Get(), columns);
+    if (resultSet == nullptr) {
+        return nullptr;
+    }
+    return new OHOS::RdbNdk::RelationalCursor(std::move(resultSet));
+}
+
 NDKDetailProgressObserver::NDKDetailProgressObserver(const Rdb_ProgressObserver *callback):callback_(callback)
 {
 }
