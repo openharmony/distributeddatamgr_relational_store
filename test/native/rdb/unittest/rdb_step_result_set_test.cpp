@@ -1397,8 +1397,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep015, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
 
     std::vector<std::string> columnNames;
-    EXPECT_EQ(E_STATEMENT_NOT_PREPARED, resultSet->GetAllColumnNames(columnNames));
-
+    EXPECT_EQ(E_NOT_SELECT, resultSet->GetAllColumnNames(columnNames));
     EXPECT_EQ(E_OK, resultSet->Close());
 }
 
@@ -1540,8 +1539,32 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep020, TestSize.Level1)
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("WITH tem AS ( SELECT * FROM test) SELECT * FROM tem");
     EXPECT_NE(nullptr, resultSet);
 
-    std::vector<std::string> columnNames;
-    EXPECT_EQ(E_OK, resultSet->GetAllColumnNames(columnNames));
+    std::vector<std::string> allColumnNames;
+    int ret = resultSet->GetAllColumnNames(allColumnNames);
+    EXPECT_EQ(E_OK, ret);
+
+    std::string columnName;
+    ret = resultSet->GetColumnName(1, columnName);
+    EXPECT_EQ("data1", columnName);
+    EXPECT_EQ(allColumnNames[1], columnName);
+
+    ret = resultSet->GetColumnName(2, columnName);
+    EXPECT_EQ("data2", columnName);
+    EXPECT_EQ(allColumnNames[2], columnName);
+
+    ret = resultSet->GetColumnName(3, columnName);
+    EXPECT_EQ("data3", columnName);
+    EXPECT_EQ(allColumnNames[3], columnName);
+
+    ret = resultSet->GetColumnName(4, columnName);
+    EXPECT_EQ("data4", columnName);
+    EXPECT_EQ(allColumnNames[4], columnName);
+
+    int columnCount = 0;
+    ret = resultSet->GetColumnCount(columnCount);
+    EXPECT_EQ(5, columnCount);
+    ret = resultSet->GetColumnName(columnCount, columnName);
+    EXPECT_NE(E_OK, ret);
 
     EXPECT_EQ(E_OK, resultSet->Close());
 }

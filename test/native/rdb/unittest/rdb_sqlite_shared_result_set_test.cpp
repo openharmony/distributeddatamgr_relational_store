@@ -1158,7 +1158,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_021, TestSize.Le
 
     std::vector<std::string> columnNames;
     int ret = resultSet->GetAllColumnNames(columnNames);
-    EXPECT_EQ(E_ERROR, ret);
+    EXPECT_EQ(E_NOT_SELECT, ret);
     resultSet->Close();
 }
 
@@ -1514,4 +1514,20 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_035, TestSize.Le
     std::vector<std::string> columnNames;
     int ret = resultSet->GetAllColumnNames(columnNames);
     EXPECT_EQ(E_OK, ret);
+
+    std::string colName = "";
+    resultSet->GetColumnName(1, colName);
+    EXPECT_EQ(colName, "data1");
+    EXPECT_EQ(columnNames[1], colName);
+
+    resultSet->GetColumnName(2, colName);
+    EXPECT_EQ(colName, "data2");
+    EXPECT_EQ(columnNames[2], colName);
+
+    resultSet->GetColumnName(3, colName);
+    EXPECT_EQ(colName, "data3");
+    resultSet->GetColumnName(4, colName);
+    EXPECT_EQ(colName, "data4");
+
+    resultSet->Close();
 }

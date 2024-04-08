@@ -72,7 +72,7 @@ constexpr int E_EMPTY_VALUES_BUCKET = (E_BASE + 6);
 /**
 * @brief The error code when the sql is not select.
 */
-constexpr int E_EXECUTE_IN_STEP_QUERY = (E_BASE + 7);
+constexpr int E_NOT_SELECT = (E_BASE + 7);
 
 /**
 * @brief The error code for the column index is invalid.

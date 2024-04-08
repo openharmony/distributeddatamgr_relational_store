@@ -48,7 +48,7 @@ int SqliteUtils::GetSqlStatementType(const std::string &sql)
 {
     /* the sql string length less than 3 can not be any type sql */
     if (sql.length() < 3) {
-        return STATEMENT_OTHER;
+        return STATEMENT_ERROR;
     }
     /* analyze the sql type through first 3 character */
     std::string prefixSql = StrToUpper(sql.substr(0, 3));

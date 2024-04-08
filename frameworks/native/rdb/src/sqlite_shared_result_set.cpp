@@ -49,7 +49,7 @@ std::pair<std::shared_ptr<SqliteStatement>, int> SqliteSharedResultSet::PrepareS
     auto type = SqliteUtils::GetSqlStatementType(qrySql_);
     if (type != SqliteUtils::STATEMENT_SELECT && type != SqliteUtils::STATEMENT_OTHER) {
         LOG_ERROR("StoreSession BeginStepQuery fail : not select sql !");
-        return {nullptr, E_EXECUTE_IN_STEP_QUERY};
+        return {nullptr, E_NOT_SELECT};
     }
 
     if (conn_ == nullptr) {
