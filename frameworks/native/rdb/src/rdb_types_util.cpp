@@ -201,4 +201,22 @@ bool Unmarshalling(Reference &output, MessageParcel &data)
 {
     return Unmarshal(data, output.sourceTable, output.targetTable, output.refFields);
 }
+
+template<>
+bool Marshalling(const BigInt& input, MessageParcel& data)
+{
+    return ITypesUtil::Marshal(data, input.Sign(), input.Value());
+}
+
+template<>
+bool Unmarshalling(BigInt& output, MessageParcel& data)
+{
+    int32_t sign = 0;
+    std::vector<uint64_t> value;
+    if (!ITypesUtil::Unmarshal(data, sign, value)) {
+        return false;
+    }
+    output = BigInt(sign, std::move(value));
+    return true;
+}
 }

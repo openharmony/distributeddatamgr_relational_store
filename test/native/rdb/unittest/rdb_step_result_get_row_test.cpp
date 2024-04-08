@@ -321,5 +321,5 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_006, TestSize
     EXPECT_EQ(E_OK, resultSet->Close());
 
     RowEntity rowEntity;
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetRow(rowEntity));
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetRow(rowEntity));
 }
