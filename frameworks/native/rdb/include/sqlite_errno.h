@@ -26,6 +26,10 @@ namespace OHOS {
 namespace NativeRdb {
 const static std::map<int, int> ERROR_CODE_MAPPINT_TABLE = {
     { SQLITE_FULL, E_DATABASE_FULL },
+    { SQLITE_BUSY, E_DATABASE_BUSY },
+    { SQLITE_LOCKED, E_DATABASE_BUSY },
+    { SQLITE_EMPTY, E_OK },
+    { SQLITE_MISMATCH, E_INVALID_ARGS },
 };
 class SQLiteError {
 public:

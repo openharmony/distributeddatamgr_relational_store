@@ -15,6 +15,7 @@
 #define LOG_TAG "AsyncCall"
 #include "napi_async_call.h"
 
+#include "js_native_api_types.h"
 #include "logger.h"
 #include "napi_rdb_trace.h"
 #include "rdb_errno.h"
@@ -26,6 +27,7 @@ namespace OHOS {
 namespace RelationalStoreJsKit {
 bool g_async = true; // do not reset the value, used in DECLARE_NAPI_FUNCTION_WITH_DATA only
 bool g_sync = false; // do not reset the value, used in DECLARE_NAPI_FUNCTION_WITH_DATA only
+thread_local AsyncCall::Record AsyncCall::record_;
 void ContextBase::SetAction(
     napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output)
 {
@@ -34,14 +36,13 @@ void ContextBase::SetAction(
     napi_value self = nullptr;
     napi_value argv[MAX_INPUT_COUNT] = { nullptr };
     void *data = nullptr;
-    NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, &data));
-
-    if (argc > 0) {
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &self, &data);
+    if (status == napi_ok && argc > 0) {
         napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, argv[argc - 1], &valueType);
-        if (valueType == napi_function) {
+        status = napi_typeof(env, argv[argc - 1], &valueType);
+        if (status == napi_ok && valueType == napi_function) {
             LOG_DEBUG("asyncCall set callback");
-            NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, argv[argc - 1], 1, &callback_));
+            status = napi_create_reference(env, argv[argc - 1], 1, &callback_);
             argc = argc - 1;
         }
     }
@@ -50,7 +51,11 @@ void ContextBase::SetAction(
     }
 
     // int -->input_(env, argc, argv, self)
-    input(env, argc, argv, self);
+    if (status == napi_ok) {
+        input(env, argc, argv, self);
+    } else {
+        error = std::make_shared<InnerError>("Failed to set action.");
+    }
 
     // if input return is not ok, then napi_throw_error context error
     RDB_NAPI_ASSERT_BASE(env, error == nullptr, error, NAPI_RETVAL_NOTHING);
@@ -115,6 +120,10 @@ void AsyncCall::SetBusinessError(napi_env env, std::shared_ptr<Error> error, nap
 
 napi_value AsyncCall::Call(napi_env env, std::shared_ptr<ContextBase> context)
 {
+    record_.total_.times_++;
+    record_.total_.lastTime_ = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    context->executed_ = record_.executed_;
     return context->isAsync_ ? Async(env, context) : Sync(env, context);
 }
 
@@ -139,6 +148,14 @@ napi_value AsyncCall::Async(napi_env env, std::shared_ptr<ContextBase> context)
     if (status != napi_ok) {
         napi_get_undefined(env, &promise);
     }
+    auto report = (record_.total_.times_.load() - record_.completed_.times_.load()) / EXCEPT_DELTA;
+    if (report > record_.reportTimes_ && record_.executed_ != nullptr) {
+        LOG_WARN("Warning:Times:(C:%{public}" PRId64 ", E:%{public}" PRId64 ", F:%{public}" PRId64") Last time("
+            "C:%{public}" PRId64 ", E:%{public}" PRId64 ", F:%{public}" PRId64")",
+            record_.total_.times_.load(), record_.executed_->times_.load(), record_.completed_.times_.load(),
+            record_.total_.lastTime_, record_.executed_->lastTime_, record_.completed_.lastTime_);
+    }
+    record_.reportTimes_ = report;
     return promise;
 }
 
@@ -157,6 +174,11 @@ void AsyncCall::OnExecute(napi_env env, void *data)
         context->execCode_ = context->exec_();
     }
     context->exec_ = nullptr;
+    if (context->executed_ != nullptr) {
+        context->executed_->times_++;
+        context->executed_->lastTime_ = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+    }
 }
 
 void AsyncCall::OnComplete(napi_env env, void *data)
@@ -170,6 +192,9 @@ void AsyncCall::OnComplete(napi_env env, void *data)
         context->output_(env, context->result_);
     }
     context->output_ = nullptr;
+    record_.completed_.times_++;
+    record_.completed_.lastTime_ = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
 void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)

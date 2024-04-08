@@ -60,12 +60,9 @@ public:
     static const std::string CREATE_TABLE_TEST;
 };
 
-std::string const EncryptTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABLE IF NOT EXISTS test ")
-                                                               + std::string("(id INTEGER PRIMARY KEY "
-                                                                             "AUTOINCREMENT, "
-                                                                             "name TEXT NOT NULL, age INTEGER, "
-                                                                             "salary "
-                                                                             "REAL, blobType BLOB)");
+std::string const EncryptTestOpenCallback::CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY "
+                                                               "KEY AUTOINCREMENT, name TEXT NOT NULL, age INTEGER, "
+                                                               "salary REAL, blobType BLOB)";
 
 int EncryptTestOpenCallback::OnCreate(RdbStore &store)
 {
@@ -269,6 +266,7 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_07, TestSize.Level1)
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
 
+    store = nullptr;
     errCode = RdbHelper::DeleteRdbStore(path);
     EXPECT_EQ(errCode, E_OK);
 }

@@ -93,9 +93,11 @@ int SharedBlockSerializerInfo::PutBlob(int row, int column, const void *blob, in
     if (declType != nullptr) {
         std::string type(declType);
         std::transform(type.begin(), type.end(), type.begin(), [](auto ch) { return std::toupper(ch); });
-        action = (type == ValueObject::DeclType<ValueObject::Asset>())   ? &AppDataFwk::SharedBlock::PutAsset
-                 : (type == ValueObject::DeclType<ValueObject::Assets>()) ? &AppDataFwk::SharedBlock::PutAssets
-                                                                         : &AppDataFwk::SharedBlock::PutBlob;
+        action = (type == ValueObject::DeclType<ValueObject::Asset>())         ? &AppDataFwk::SharedBlock::PutAsset
+                 : (type == ValueObject::DeclType<ValueObject::Assets>())      ? &AppDataFwk::SharedBlock::PutAssets
+                 : (type == ValueObject::DeclType<ValueObject::FloatVector>()) ? &AppDataFwk::SharedBlock::PutFloats
+                 : (type == ValueObject::DeclType<ValueObject::BigInt>())      ? &AppDataFwk::SharedBlock::PutBigInt
+                                                                               : &AppDataFwk::SharedBlock::PutBlob;
     }
 
     int status = (sharedBlock_->*action)(row, column, blob, len);

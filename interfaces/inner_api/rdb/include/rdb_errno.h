@@ -55,9 +55,9 @@ constexpr int E_CANNOT_UPDATE_READONLY = (E_BASE + 2);
 constexpr int E_REMOVE_FILE = (E_BASE + 3);
 
 /**
-* @brief The error code when deleting a file fails for rdb store in using.
+* @brief The error code indicates that the SQL statement is incorrect.
 */
-constexpr int E_RDB_STORE_IN_USING = (E_BASE + 4);
+constexpr int E_INCORRECT_SQL = (E_BASE + 4);
 
 /**
 * @brief The error code for a table name is empty.
@@ -72,12 +72,12 @@ constexpr int E_EMPTY_VALUES_BUCKET = (E_BASE + 6);
 /**
 * @brief The error code when the sql is not select.
 */
-constexpr int E_EXECUTE_IN_STEP_QUERY = (E_BASE + 7);
+constexpr int E_NOT_SELECT = (E_BASE + 7);
 
 /**
 * @brief The error code for the column index is invalid.
 */
-constexpr int E_INVALID_COLUMN_INDEX = (E_BASE + 8);
+constexpr int E_OUT_RANGE = (E_BASE + 8);
 
 /**
 * @brief The error code for the column type is invalid.
@@ -162,12 +162,12 @@ constexpr int E_STEP_RESULT_SET_CROSS_THREADS = (E_BASE + 24);
 /**
 * @brief The error code when the result query was not executed.
 */
-constexpr int E_STEP_RESULT_QUERY_NOT_EXECUTED = (E_BASE + 25);
+constexpr int E_NOT_INIT = (E_BASE + 25);
 
 /**
 * @brief The error code for the result set cursor is after the last row.
 */
-constexpr int E_STEP_RESULT_IS_AFTER_LAST = (E_BASE + 26);
+constexpr int E_NO_MORE_ROWS = (E_BASE + 26);
 
 /**
 * @brief The error code for the result set query exceeded.
@@ -187,7 +187,7 @@ constexpr int E_EXECUTE_RESULT_INCORRECT = (E_BASE + 29);
 /**
 * @brief The error code when the result set is closed.
 */
-constexpr int E_STEP_RESULT_CLOSED = (E_BASE + 30);
+constexpr int E_ALREADY_CLOSED = (E_BASE + 30);
 
 /**
 * @brief The error code when input relative path.

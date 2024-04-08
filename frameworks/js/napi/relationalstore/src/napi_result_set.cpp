@@ -82,6 +82,10 @@ napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto finalize = [](napi_env env, void *data, void *hint) {
+        if (data == nullptr) {
+            LOG_ERROR("ResultSetProxy finalize failed, data is null.");
+            return;
+        }
         ResultSetProxy *proxy = reinterpret_cast<ResultSetProxy *>(data);
         delete proxy;
     };
@@ -298,7 +302,6 @@ napi_value ResultSetProxy::Close(napi_env env, napi_callback_info info)
 
     int errCode = resultSetProxy->GetInstance()->Close();
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-
     napi_value result = nullptr;
     napi_get_null(env, &result);
     return result;
@@ -530,6 +533,18 @@ napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
     return JSUtils::Convert2JSValue(env, rowEntity);
 }
 
+napi_value ResultSetProxy::GetValue(napi_env env, napi_callback_info info)
+{
+    int32_t columnIndex;
+    auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
+
+    ValueObject object;
+    int errCode = resultSetProxy->GetInstance()->Get(columnIndex, object);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    return JSUtils::Convert2JSValue(env, object);
+}
+
 napi_value ResultSetProxy::IsClosed(napi_env env, napi_callback_info info)
 {
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
@@ -562,6 +577,7 @@ void ResultSetProxy::Init(napi_env env, napi_value exports)
             DECLARE_NAPI_FUNCTION("getString", GetString),
             DECLARE_NAPI_FUNCTION("getDouble", GetDouble),
             DECLARE_NAPI_FUNCTION("isColumnNull", IsColumnNull),
+            DECLARE_NAPI_FUNCTION("getValue", GetValue),
             DECLARE_NAPI_FUNCTION("getRow", GetRow),
 
             DECLARE_NAPI_GETTER("columnNames", GetAllColumnNames),
